@@ -22,16 +22,26 @@ const usage =
     \\
 ;
 
+/// What stops a command before it has a status: memory, an unwritable stream, or a
+/// test the runner cannot encode.
+pub const Error = test_runner.Error || std.Io.File.Writer.Error || frontend.Error || build.Error || error{ReadFailed};
+
 /// Dispatch one command; the process exit status is its result.
 pub fn main(init: std.process.Init) !u8 {
     const allocator = init.arena.allocator();
     const args = try init.minimal.args.toSlice(allocator);
-    if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-typed")) return dumpTyped(init, args[2], if (args.len >= 4) args[3] else null);
-    if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-ir")) return dumpIr(init, args[2], args.len == 4 and std.mem.eql(u8, args[3], "--facts"));
     if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return buildCommand(init, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "check")) return check_command.run(init, args[2..]);
-    if (args.len >= 3 and std.mem.eql(u8, args[1], "coverage")) return coverageCommand(init, args[2..]);
     if (args.len >= 3 and std.mem.eql(u8, args[1], "test")) return testCommand(init, args[2..]);
+    return developer(init, args);
+}
+
+/// The developer commands `mylang` shares (S5-D8): `dump-typed`, `dump-ir` and
+/// `coverage`, from `args` (argv, the program name first). Anything else prints the usage.
+pub fn developer(init: std.process.Init, args: []const []const u8) Error!u8 {
+    if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-typed")) return dumpTyped(init, args[2], if (args.len >= 4) args[3] else null);
+    if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-ir")) return dumpIr(init, args[2], args.len == 4 and std.mem.eql(u8, args[3], "--facts"));
+    if (args.len >= 3 and std.mem.eql(u8, args[1], "coverage")) return coverageCommand(init, args[2..]);
     try std.Io.File.stderr().writeStreamingAll(init.io, usage);
     return 2;
 }
@@ -180,8 +190,8 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
     return status;
 }
 
-/// `mylang-core test`: the per-test conformance runner (`test_runner.zig`).
-fn testCommand(init: std.process.Init, args: []const []const u8) !u8 {
+/// `mylang-core test` and `mylang test`: the per-test conformance runner (`test_runner.zig`).
+pub fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     var options: test_runner.Options = .{ .path = "", .build = .{ .zig = init.environ_map.get("ZIG") orelse "zig" } };
     var links: std.ArrayList([]const u8) = .empty;
     var index: usize = 0;

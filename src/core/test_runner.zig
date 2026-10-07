@@ -69,7 +69,7 @@ pub fn run(init: std.process.Init, requested: Options) Error!u8 {
     const located = project_entry.resolve(allocator, init.io, options.path, &problems) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         try writeAll(init, std.Io.File.stderr(), problems.items);
-        return 1;
+        return project_entry.status(err);
     };
     // A malformed byte ceiling or a frame budget it cannot back is refused like a usage error.
     if (!try applyLimits(init, &options, located)) return 2;
@@ -107,7 +107,7 @@ pub fn run(init: std.process.Init, requested: Options) Error!u8 {
     located.validate(allocator, &session, &problems) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         try writeAll(init, std.Io.File.stderr(), problems.items);
-        return 1;
+        return project_entry.status(err);
     };
     const entry_module = moduleName(checked.program, located.name);
     const modules = try moduleSources(allocator, &session, entry_module);
@@ -153,7 +153,7 @@ pub fn run(init: std.process.Init, requested: Options) Error!u8 {
             located.validate(allocator, &provider_session, &problems) catch |err| {
                 if (err == error.OutOfMemory) return error.OutOfMemory;
                 try writeAll(init, std.Io.File.stderr(), problems.items);
-                return 1;
+                return project_entry.status(err);
             };
             const provider_modules = try moduleSources(allocator, &provider_session, entry_module);
             const discovered = try discover.discover(allocator, selected_program.program, entry_module, provider_modules);
@@ -357,7 +357,8 @@ fn classify(scratch: std.mem.Allocator, keep: std.mem.Allocator, checked: fronte
             }
         }
     }
-    if (case.shape == .other and !expected) return refusal(case, "test result type is not bool", "");
+    // NEW-CORE-S5-TEST-1: an exported `test_*` with another result is a failed case, as the old runner reports it.
+    if (case.shape == .other and !expected) return .{ .name = case.name, .status = .failed, .reason = if (case.other_parameters != 0) "a property test returns bool or Result[bool, E]" else "test result type is not bool" };
     var why: build.Refusal = .{};
     const selected_roots = try rootsFor(scratch, checked.program, &.{case});
     const module = build.buildRootsSource(scratch, checked.program, selected_roots, checked.src, &why) catch |err| switch (err) {

@@ -6,8 +6,20 @@ const language = @import("mylang");
 const frontend = @import("frontend.zig");
 const config = language.project_config;
 
-/// Configuration and source failures have already been rendered to the caller.
-pub const Error = error{ SourceError, OutOfMemory };
+/// Configuration and source failures have already been rendered to the caller;
+/// `PolicyDenied` is an import the configured policy denies and `ConfigurationFailed`
+/// a `mylang.json` that does not load (NEW-CORE-S5-POLICY-1).
+pub const Error = error{ SourceError, OutOfMemory, PolicyDenied, ConfigurationFailed };
+
+/// The exit status of a rendered failure, as the old CLI's policy gate returns it: 3
+/// for a denied import policy, 2 for a configuration that does not load, else 1.
+pub fn status(err: Error) u8 {
+    return switch (err) {
+        error.PolicyDenied => 3,
+        error.ConfigurationFailed => 2,
+        else => 1,
+    };
+}
 
 /// Borrowed entry settings, owned by the command's allocator.
 pub const Entry = struct {
@@ -54,7 +66,7 @@ pub const Entry = struct {
             defer result.deinit();
             if (result.denied != 0) {
                 try report.appendSlice(allocator, try language.import_policy.render(allocator, result, &session.project, policy));
-                return error.SourceError;
+                return error.PolicyDenied;
             }
         }
         if (configured.document.interface_files) {
@@ -108,7 +120,7 @@ pub fn resolve(allocator: std.mem.Allocator, io: std.Io, path: []const u8, repor
         const configured = config.load(allocator, io, where, &failure) catch |err| {
             if (err == error.OutOfMemory) return error.OutOfMemory;
             try report.print(allocator, "{s}:{d}:{d}: error[E_PROJECT_CONFIG]: {s}\n", .{ failure.path, failure.location.line, failure.location.column, failure.detail });
-            return error.SourceError;
+            return error.ConfigurationFailed;
         };
         if (!configured.document.value_semantics) {
             try report.print(allocator, "{s}: error[E_CORE_UNSUPPORTED]: the new core requires value_semantics\n", .{configured.path});
@@ -147,4 +159,29 @@ test "nested module root resolution respects file boundaries and mismatched decl
     try std.testing.expect(rootFor("/project/main.my", "wrong.my") == null);
     try std.testing.expectEqualStrings("types.shape", declaredModule("# comment\n\nmodule types.shape\n").?);
     try std.testing.expect(declaredModule("module ../escape\n") == null);
+}
+
+// spec: NEW-CORE-S5-POLICY-1
+test "an import the configured policy denies is its own failure, with the policy gate's status 3" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var tmp = std.testing.tmpDir(.{});
+    defer tmp.cleanup();
+    try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = "module main\nimport helper\ndef main() -> int:\n    return helper.value()\n" });
+    try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "helper.my", .data = "module helper\npublic def value() -> int effects():\n    return 7\n" });
+    try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":1,\"import_policy\":\"policy.json\"}" });
+    try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "policy.json", .data = "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}" });
+    const path = try tmp.dir.realPathFileAlloc(std.testing.io, "main.my", a);
+    var report: std.ArrayList(u8) = .empty;
+    const entry = try resolve(a, std.testing.io, path, &report);
+    var session = frontend.Session.init(a, std.testing.io, entry.root);
+    entry.configure(&session);
+    _ = try session.checkFile(a, path, &report);
+    try std.testing.expectError(error.PolicyDenied, entry.validate(a, &session, &report));
+    try std.testing.expectEqual(@as(u8, 3), status(error.PolicyDenied));
+    try std.testing.expectEqual(@as(u8, 1), status(error.SourceError));
+    try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "mylang.json", .data = "{" });
+    try std.testing.expectError(error.ConfigurationFailed, resolve(a, std.testing.io, path, &report));
+    try std.testing.expectEqual(@as(u8, 2), status(error.ConfigurationFailed));
 }

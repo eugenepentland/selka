@@ -473,7 +473,17 @@ fn addCore(b: *std.Build, inputs: CoreInputs) void {
         .stack_protector = false,
         .link_libc = true,
     }) });
-    for ([_]*std.Build.Module{ exe.root_module, unit.root_module }) |module| {
+    // S5-A: `mylang` runs the new core for every command that builds, runs or tests
+    // code. Its commands live in `src/core/cli.zig`, a module of their own with the
+    // same imports as `mylang-core`; the core reaches the front end only as `mylang`.
+    const cli = b.createModule(.{
+        .root_source_file = b.path("src/core/cli.zig"),
+        .target = inputs.target,
+        .optimize = inputs.optimize,
+        .imports = &.{ .{ .name = "mylang", .module = inputs.front_end }, .{ .name = "core_tool_platform", .module = platform }, .{ .name = "qbe_build_assets", .module = inputs.build_assets }, .{ .name = "memory_budget", .module = budget } },
+    });
+    inputs.old_compiler.root_module.addImport("mylang_core", cli);
+    for ([_]*std.Build.Module{ exe.root_module, unit.root_module, cli }) |module| {
         module.addAnonymousImport("core_number_text_object", .{ .root_source_file = number_text.getEmittedBin() });
     }
     const step = b.step("test-core", "Run the new core's unit tests and its end-to-end slice (not part of test)");
@@ -599,24 +609,9 @@ pub fn build(b: *std.Build) void {
     const affected_compiler = b.step("affected-compiler", "Install only mylang and qbe to zig-out/focus, for scripts/affected_tests.py");
     affected_compiler.dependOn(&focus_exe_step.step);
     affected_compiler.dependOn(&focus_qbe_step.step);
-    // Prebuild the runtime archive (and text-formatter object) for each optimize
-    // mode with the freshly built compiler and install them beside it under
-    // `lib/mylang-runtime`, so a cold `mylang build` links a matching prebuilt
-    // archive instead of compiling the runtime from source on its first run.
-    const prebuild = b.addRunArtifact(exe);
-    // Name the compiler by its installed path every time, rather than by
-    // whichever path exists when this step happens to start, so an unchanged
-    // rerun reuses the prebuilt runtime instead of re-emitting it.
-    prebuild.step.dependOn(&install_exe.step);
-    prebuild.step.max_rss = rss.parity;
-    prebuild.addArgs(&.{ "emit-runtime", "--zig", b.graph.zig_exe, "--qbe" });
-    prebuild.addFileArg(qbe_exe.getEmittedBin());
-    prebuild.addArg("--out");
-    const runtime_out = prebuild.addOutputDirectoryArg("mylang-runtime");
-    prebuild.addArg("--work");
-    _ = prebuild.addOutputDirectoryArg("work");
-    const install_runtime = b.addInstallDirectory(.{ .source_dir = runtime_out, .install_dir = .lib, .install_subdir = "mylang-runtime" });
-    b.getInstallStep().dependOn(&install_runtime.step);
+    // S5-A: `mylang` builds with the new core, which compiles its runtime once per
+    // machine, so the old back end's prebuilt runtime archive is no longer installed
+    // (`emit-runtime` is retired, NEW-CORE-S5-RETIRED-1).
     install_all = b.getInstallStep();
     // Host applications build their own guests natively, so they carry the same
     // native build driver the compiler does rather than shelling out to it.

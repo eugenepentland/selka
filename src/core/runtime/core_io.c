@@ -1072,6 +1072,7 @@ static void core_io_initialize(void) {
         else if(!strncmp(arg,"--allow-random",14)&&(arg[14]==0||arg[14]=='=')){if(core_io_entropy||(arg[14]&&!arg[15]))core_io_bad_grant();core_io_entropy=1;core_io_seed=arg[14]?strtoull(arg+15,NULL,10):0;}
         else if(!strncmp(arg,"--allow-env",11)&&(arg[11]==0||arg[11]=='=')){if(core_io_environment||(arg[11]&&!arg[12]))core_io_bad_grant();core_io_environment=1;core_io_names=arg[11]?arg+12:"";}
         else if(!strcmp(arg,"--allow-all")){if(core_io_clock||core_io_entropy||core_io_environment||core_io_host||core_io_grant_count||core_io_real.endpoint_count)core_io_bad_grant();core_io_clock=core_io_entropy=core_io_environment=core_io_host=1;core_io_grant_request(".",1);core_io_scoped_endpoint(&core_io_real,"*");}
+        else if(!strcmp(arg,"--print-result")){/* read by myl_core_exit */}
         else if(!strncmp(arg,"--allow-",8)||!strncmp(arg,"--restrict",10))core_io_bad_grant();
         else core_io_option_error("mylang: MYLANG_OPTIONS names %s, which is not a runtime option\n",arg);
     }

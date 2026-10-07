@@ -14192,3 +14192,88 @@ comptime {
 test {
     _ = @import("qbe_algebra_test.zig");
 }
+
+const s5_loop =
+    \\def main() -> int:
+    \\    i = 0
+    \\    while True:
+    \\        i = i + 1
+    \\    return i
+;
+
+// spec: NEW-CORE-S5-RUN-1
+test "run on the new core keeps the exit, argument, budget and grant contract" {
+    try invokeOptions("run", "def main() -> int:\n    return 300\n", &.{}, 0, "300\n", "");
+    try invoke("run", "def main() -> int:\n    xs = [1]\n    return xs[3]\n", 1, "", "error[R_LIST_BOUNDS]");
+    try invokeOptions("run", "def main(args: list[str], out: Stream) -> int:\n    out.print(len(args), args[1])\n    return 0\n", &.{ "--", "--release", "b" }, 0, "2 b\n0\n", "");
+    try invokeOptions("run", s5_loop, &.{"--max-steps=1000"}, 1, "", "R_STEP_LIMIT");
+    try invokeOptions("run", s5_loop, &.{ "--timeout", "1" }, 1, "", "R_TIMEOUT");
+    const deep = "def down(n: int) -> int:\n    if n == 0:\n        return 0\n    return down(n - 1) + 1\n\ndef main() -> int:\n    return down(100000)\n";
+    try invokeOptions("run", deep, &.{"--max-frames=100"}, 1, "", "R_FRAME_LIMIT");
+    const grow = "def main() -> int:\n    xs: list[int] = []\n    i = 0\n    while i < 100000000:\n        xs.append(i)\n        i = i + 1\n    return len(xs)\n";
+    try invokeOptions("run", grow, &.{"--max-memory=16M"}, 1, "", "R_MEMORY_BUDGET");
+    try invokeOptions("run", "def main(clock: Clock) -> int:\n    _ = clock\n    return 0\n", &.{"--restrict"}, 2, "", "pass --allow-clock");
+    try invokeOptions("run", "def main() -> int:\n    return 0\n", &.{"--allow-read="}, 2, "", "usage: mylang run");
+}
+
+// spec: NEW-CORE-S5-RETIRED-1
+test "the old back end's commands and flags are refused by name with what replaces them" {
+    const program = "def main() -> int:\n    return 0\n";
+    try invoke("invoke", program, 2, "", "retired with host functions");
+    try invoke("emit-qbe", program, 2, "", "QBE IL emission was retired");
+    try invoke("dump-bytecode", program, 2, "", "mylang dump-ir");
+    try invokeOptions("run", program, &.{"--gc-stress"}, 2, "", "retired (S5-D4)");
+    try invokeOptions("check", program, &.{"--legacy-sharing"}, 2, "", "value semantics is the only mode");
+    try invokeOptions("test", program, &.{"--bench=x"}, 2, "", "dropped with the old test runner (S5-D6)");
+    try invokeOptions("run", program, &.{"--no-cache"}, 2, "", "not supported by the new core yet");
+}
+
+// spec: NEW-CORE-S5-ARENA-1
+test "an arena block checks and runs as an ordinary block and warns that arenas are retired" {
+    const program = "def main() -> int:\n    total = 0\n    with arena():\n        xs = [1, 2, 3]\n        total = len(xs)\n    return total\n";
+    try invoke("check", program, 0, "", "warning[W_ARENA_RETIRED]");
+    try invoke("run", program, 0, "3\n", "remove the `with arena():` line");
+}
+
+// spec: NEW-CORE-S5-CHECK-1
+test "check of a project entry checks the merged program and writes no per-module records" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport helper\n\ndef main() -> int:\n    return helper.two()\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def two() -> int:\n    return \"two\"\n" });
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const entry = try std.fs.path.join(testing.allocator, &.{ root, "main.my" });
+    defer testing.allocator.free(entry);
+    const cache = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}/cache", .{root});
+    defer testing.allocator.free(cache);
+    const rejected = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", entry, cache } });
+    defer testing.allocator.free(rejected.stdout);
+    defer testing.allocator.free(rejected.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
+    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "helper.my:4:") != null);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def two() -> int:\n    return 2\n" });
+    const accepted = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", entry, cache } });
+    defer testing.allocator.free(accepted.stdout);
+    defer testing.allocator.free(accepted.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, accepted.term);
+    try testing.expectEqualStrings("", accepted.stderr);
+    try testing.expectError(error.FileNotFound, temp.dir.statFile(testing.io, "cache/modules", .{}));
+}
+
+// spec: NEW-CORE-S5-CONTRACT-1
+test "a broken precondition traps with the old core's description of the clause" {
+    const program = "@requires(amount > 10)\ndef half(amount: int) -> int:\n    return amount // 2\n\ndef main() -> int:\n    return half(4)\n";
+    try invoke("run", program, 1, "", "error[R_REQUIRES]: precondition violated: half requires `amount > 10`");
+    try invoke("run", "def main() -> int:\n    assert 1 > 2, \"never\"\n    return 0\n", 1, "", "error[R_ASSERT]: native execution failed: never");
+}
+
+// spec: NEW-CORE-S5-TEST-1
+test "a test whose result is not bool fails its case and the run" {
+    const outcome = try runFixture("test", "public def test_bad() -> int:\n    return 1\n\npublic def test_ok() -> bool:\n    return True\n", &.{});
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, outcome.term);
+    try testing.expect(std.mem.indexOf(u8, outcome.stdout, "failed input::test_bad: test result type is not bool") != null);
+    try testing.expect(std.mem.indexOf(u8, outcome.stdout, "passed input::test_ok") != null);
+}

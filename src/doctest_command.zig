@@ -34,6 +34,8 @@ const legacy_sharing = "legacy-sharing";
 /// Directive that checks and runs its unit under the tracing collector
 /// (`--gc-runtime`), for examples documenting the GC opt-out (`RC-DEFAULT-1`).
 const gc_runtime = "gc-runtime";
+/// Why a unit documenting legacy sharing or the collector is skipped.
+const retired_mode = "documents a mode the new core retired (S5-D4)";
 /// Neutral entry point appended to declaration-only examples before checking.
 const stub = "def main() -> int:\n    return 0\n";
 /// Most bytes the runner reads from one documentation page.
@@ -637,6 +639,8 @@ fn plan(allocator: std.mem.Allocator, unit: *const Unit) !Plan {
         }
     }
     if (broken.items.len > 0) return .{ .action = .invalid, .detail = try join(allocator, broken.items, "; ") };
+    // NEW-CORE-S5-DOCTEST-1: legacy sharing and the collector were retired (S5-D4).
+    if (unitHasDirective(unit, legacy_sharing) or unitHasDirective(unit, gc_runtime)) return .{ .action = .skip, .detail = retired_mode };
     if (skips.items.len > 0) {
         var blank = false;
         for (skips.items) |reason| if (std.mem.trim(u8, reason, " \t\r").len == 0) {
@@ -807,6 +811,14 @@ fn commandOptions(allocator: std.mem.Allocator, unit: *const Unit, subcommand: [
     return argv.toOwnedSlice(allocator);
 }
 
+/// The options a unit's command is run with: value semantics is always on in the
+/// new core, which refuses the retired `--value-semantics` switch (NEW-CORE-S5-DOCTEST-1).
+fn invokedOptions(allocator: std.mem.Allocator, options: []const []const u8) ![]const []const u8 {
+    var kept: std.ArrayList([]const u8) = .empty;
+    for (options) |option| if (!eql(option, "--value-semantics")) try kept.append(allocator, option);
+    return kept.toOwnedSlice(allocator);
+}
+
 fn unitPrints(unit: *const Unit) bool {
     for (unit.members.items) |member| if (hasPrintCall(member.source)) return true;
     return false;
@@ -933,7 +945,7 @@ fn execute(session: Session, unit: *Unit, index: usize, total: usize, unit_dir: 
     const written = try write(session.allocator, session.io, unit, unit_dir);
     const project = unit.members.items.len > 1 or moduleLine(written.entry_source) != null;
     const subcommand = commandFor(decided.action, project);
-    const extra = try commandOptions(session.allocator, unit, subcommand, session.fixtures);
+    const extra = try invokedOptions(session.allocator, try commandOptions(session.allocator, unit, subcommand, session.fixtures));
     const invocation = invoke(session.allocator, session.io, session.compiler, subcommand, written.entry, extra) catch |err| switch (err) {
         error.Timeout => {
             unit.status = .failed;
@@ -1427,6 +1439,36 @@ test "doctest selects explicit value and legacy modes while plain units use the 
     for (plain) |argument| try testing.expect(!std.mem.eql(u8, argument, "--value-semantics"));
     const legacy = try commandOptions(allocator, units[2], "run", "fixtures");
     try testing.expectEqualStrings("--legacy-sharing", legacy[0]);
+}
+
+// spec: NEW-CORE-S5-DOCTEST-1
+test "doctest skips units of retired modes and runs value-semantics units without the retired switch" {
+    const text =
+        "```mylang\n" ++
+        "# doc: value-semantics\n" ++
+        "def main() -> int:\n" ++
+        "    return 1\n" ++
+        "```\n" ++
+        "```mylang\n" ++
+        "# doc: legacy-sharing\n" ++
+        "def main() -> int:\n" ++
+        "    return 2\n" ++
+        "```\n" ++
+        "```mylang\n" ++
+        "# doc: gc-runtime\n" ++
+        "def main() -> int:\n" ++
+        "    return 3\n" ++
+        "```\n";
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    const units = try group(allocator, try executableBlocks(allocator, try fences(allocator, "docs/modes.md", text)));
+    try testing.expectEqual(@as(usize, 3), units.len);
+    try testing.expectEqual(Action.run, (try plan(allocator, units[0])).action);
+    const options = try invokedOptions(allocator, try commandOptions(allocator, units[0], "run", "fixtures"));
+    for (options) |option| try testing.expect(!eql(option, "--value-semantics"));
+    try testing.expectEqual(Action.skip, (try plan(allocator, units[1])).action);
+    try testing.expectEqualStrings(retired_mode, (try plan(allocator, units[2])).detail);
 }
 
 // spec-case: RC-DEFAULT-1

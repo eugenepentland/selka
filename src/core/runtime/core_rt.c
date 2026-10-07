@@ -1031,8 +1031,30 @@ static void leak_report(void) {
     os_write(2, (const unsigned char *)text, (size_t)len);
 }
 
-/* `main`'s result is the exit status, truncated to the low 8 bits. */
+/* Whether `MYLANG_OPTIONS` names `--print-result`, bare or quoted, as `mylang run
+   --print-result` sets it (NEW-CORE-S5-RUN-1). Reads the variable only at exit. */
+static bool print_result_requested(void) {
+    const char *text = getenv("MYLANG_OPTIONS");
+    static const char wanted[] = "--print-result";
+    while (text && *text) {
+        while (*text == ' ' || *text == '\t' || *text == '\n' || *text == '\r') ++text;
+        const char *start = text;
+        while (*text && *text != ' ' && *text != '\t' && *text != '\n' && *text != '\r') ++text;
+        size_t length = (size_t)(text - start);
+        if (length >= 2 && start[0] == '"' && start[length - 1] == '"') { ++start; length -= 2; }
+        if (length == sizeof wanted - 1 && !memcmp(start, wanted, length)) return true;
+    }
+    return false;
+}
+
+/* `main`'s result is the exit status, truncated to the low 8 bits; `--print-result`
+   also prints the whole value on its own line. */
 int32_t myl_core_exit(int64_t status) {
+    if (print_result_requested()) {
+        char line[32];
+        int length = snprintf(line, sizeof line, "%lld\n", (long long)status);
+        stream_write(&streams[0], line, (size_t)length);
+    }
     flush_all();
     leak_report();
     core_io_cleanup();
@@ -1226,11 +1248,14 @@ myl_block *myl_core_list_sort(myl_block *list, int64_t kind) {
    carrying only the message. Exit status 1. */
 void myl_core_assert_fail(const myl_core_site *site) {
     static const char *const codes[] = {"R_ASSERT", "R_REQUIRES", "R_ENSURES", "R_INVARIANT"};
-    const char *code = site->width >= 0 && site->width < 4 ? codes[site->width] : codes[0];
+    /* The old core's description of each (NEW-CORE-S5-CONTRACT-1). */
+    static const char *const described[] = {"native execution failed", "precondition violated", "postcondition violated", "invariant violated"};
+    const int kind = site->width >= 0 && site->width < 4 ? site->width : 0;
+    const char *code = codes[kind];
     stream_flush(&streams[0]);
     char text[2048];
-    int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: native execution failed%s%s\n  in %s at %s:%d:%d\n",
-        site->path, site->line, site->column, code, site->operation[0] ? ": " : "", site->operation,
+    int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: %s%s%s\n  in %s at %s:%d:%d\n",
+        site->path, site->line, site->column, code, described[kind], site->operation[0] ? ": " : "", site->operation,
         site->function, site->path, site->line, site->column);
     stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
     trap_frames();

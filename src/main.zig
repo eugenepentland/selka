@@ -75,8 +75,8 @@ const everyday_help =
     \\  mylang check FILE.my              type-check without building
     \\  mylang fix FILE.my [--check]     apply safe diagnostic repairs
     \\  mylang run FILE.my [-- ARGS...]   build natively and run; arguments after --
-    \\  mylang build FILE.my -o OUT       native executable, built by QBE in about a second
-    \\  mylang build FILE.my -o OUT --release   optimized (LLVM -O3 + LTO), for shipping or timing
+    \\  mylang build FILE.my -o OUT       native executable, a debug build one unit per module
+    \\  mylang build FILE.my -o OUT --release   optimized whole-program LLVM build, for shipping or timing
     \\  mylang test FILE.my|DIR           run the public test_* functions
     \\  mylang fmt FILE.my [--check]      canonical formatting
     \\  mylang docs [TOPIC]               the user guides built into this compiler
@@ -296,43 +296,6 @@ fn buildCommand(process: std.process.Init, args: []const []const u8) !u8 {
     return status;
 }
 
-/// MODULE-CHECK-1: `mylang check` of a project entry, with no option but
-/// `--cache-dir`, checks it module by module; null hands it to the
-/// whole-program check (any other option, a friction log, or whatever the
-/// per-module check does not handle).
-fn checkModules(process: std.process.Init, args: []const []const u8) !?u8 {
-    var entry: ?[]const u8 = null;
-    var cache: ?[]const u8 = null;
-    for (args) |arg| {
-        if (std.mem.startsWith(u8, arg, cache_directory_prefix) and arg.len > cache_directory_prefix.len and cache == null) {
-            cache = arg[cache_directory_prefix.len..];
-        } else if (std.mem.startsWith(u8, arg, "-") or entry != null) return null else entry = arg;
-    }
-    const source = entry orelse return null;
-    if (process.environ_map.get("MYLANG_FRICTION_LOG") != null) return null;
-    // MODULE-CHECK-2: the detached seeder builds module records and reports
-    // nothing, whatever the per-module check could not do.
-    const seed = if (process.environ_map.get("MYLANG_CHECK_SEED")) |value| std.mem.eql(u8, value, "1") else false;
-    const outcome = try module_build.check(process.gpa, .{
-        .io = process.io,
-        .environ = process.environ_map,
-        .source = source,
-        .cache = cache orelse process.environ_map.get("MYLANG_FRONTEND_CACHE") orelse ".mylang-cache",
-        .identity = &build_identity,
-        .seed = seed,
-    });
-    if (seed) return 0;
-    return switch (outcome) {
-        .status => |status| status,
-        .fallback => null,
-    };
-}
-
-fn checkModuleDispatch(process: std.process.Init, args: []const []const u8) !?u8 {
-    if (args.len < 2 or !std.mem.eql(u8, args[1], "check")) return null;
-    return checkModules(process, args[2..]);
-}
-
 /// Record each phase a native build actually measured. A phase that never ran
 /// stays absent rather than reporting a zero it did not observe.
 fn addBuildPhases(timings: *language.timings.Profile, phases: native_build.PhaseTimings) void {
@@ -380,6 +343,8 @@ fn moduleCommand(process: std.process.Init, args: []const [:0]const u8) !?u8 {
 }
 
 fn dispatch(process: std.process.Init) !u8 {
+    // S5-A: building, running and testing go to the new core before any old mode settles.
+    if (try @import("mylang_core").dispatch(process, try process.minimal.args.toSlice(process.arena.allocator()))) |status| return status;
     const args = switch (try settleModes(process)) {
         .run => |normalized| normalized,
         .status => |status| return status,
@@ -396,7 +361,6 @@ fn dispatch(process: std.process.Init) !u8 {
     }
     if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return buildCommand(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "fix")) return @import("fix_command.zig").run(process, args[2..]);
-    if (try checkModuleDispatch(process, args)) |status| return status;
     if (args.len >= 2 and std.mem.eql(u8, args[1], "emit-runtime")) return @import("qbe_build.zig").emitRuntime(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "test")) return @import("native_test_command.zig").run(process, args[2..]) catch |err| switch (err) {
         // `run` already rendered the child compiler's located diagnostic; exit 1

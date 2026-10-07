@@ -9,6 +9,7 @@ const std = @import("std");
 const ir = @import("ir.zig");
 const tools = @import("test_builder.zig");
 const options = @import("test_runner_options.zig");
+const run_budget = @import("run_budget.zig");
 
 /// Instrument only original program functions, resetting the counter per trial.
 pub fn instrument(a: std.mem.Allocator, module: *ir.Module, originals: usize, controls: options.Controls) error{OutOfMemory}!void {
@@ -38,27 +39,5 @@ pub fn instrument(a: std.mem.Allocator, module: *ir.Module, originals: usize, co
     }
 }
 
-/// Count one frame from the entry block until each return.
-fn frame(b: *tools.Builder, module: *const ir.Module, enter: u32, leave: u32) error{OutOfMemory}!void {
-    for (b.function.blocks.items, 0..) |block, block_index| {
-        const list = block.insts.items;
-        if (list.len == 0 or b.function.inst(list[list.len - 1]).op != .ret) continue;
-        const ref = try b.call(@fromBackingInt(@intCast(block_index)), module, leave, &.{});
-        const insts = &b.function.blocks.items[block_index].insts;
-        insts.items.len -= 1;
-        try insts.insert(b.arena, insts.items.len - 1, ref);
-    }
-    try prepend(b, @fromBackingInt(0), module, enter, &.{});
-}
-
-fn prepend(b: *tools.Builder, block: ir.BlockId, module: *const ir.Module, helper: u32, arguments: []const ir.Ref) error{OutOfMemory}!void {
-    const ref = try b.call(block, module, helper, arguments);
-    const list = &b.function.blocks.items[block.index()].insts;
-    list.items.len -= 1;
-    var first: usize = 0;
-    while (first < list.items.len) : (first += 1) {
-        const op = b.function.inst(list.items[first]).op;
-        if (op != .phi and op != .copy) break;
-    }
-    try list.insert(b.arena, first, ref);
-}
+const frame = run_budget.frame;
+const prepend = run_budget.prepend;
