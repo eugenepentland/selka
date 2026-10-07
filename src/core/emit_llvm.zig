@@ -549,12 +549,13 @@ const ModuleState = struct {
         const release_args = cleanup.items;
         const ret = entry.signature.ret;
         const callee = try symbol(self.allocator, entry.name);
+        const tail = if (self.options.target.traps == .dwarf_lines) "notail " else "";
         if (ret == .void) {
-            try out.print(self.allocator, "  call fastcc void {s}({s}){s}\n{s}  %s = call i32 @myl_core_exit(i64 0)\n", .{ callee, arguments.items, at, release_args });
+            try out.print(self.allocator, "  {s}call fastcc void {s}({s}){s}\n{s}  %s = call i32 @myl_core_exit(i64 0)\n", .{ tail, callee, arguments.items, at, release_args });
         } else if (ret == .i64) {
-            try out.print(self.allocator, "  %r = call fastcc i64 {s}({s}){s}\n{s}  %s = call i32 @myl_core_exit(i64 %r)\n", .{ callee, arguments.items, at, release_args });
+            try out.print(self.allocator, "  %r = {s}call fastcc i64 {s}({s}){s}\n{s}  %s = call i32 @myl_core_exit(i64 %r)\n", .{ tail, callee, arguments.items, at, release_args });
         } else if (self.options.main.result != null and self.module.kind(ret) == .@"union" and !self.module.passedInMemory(ret)) {
-            try out.print(self.allocator, "  %r = call fastcc {s} {s}({s}){s}\n", .{ try self.llvmType(ret), callee, arguments.items, at });
+            try out.print(self.allocator, "  %r = {s}call fastcc {s} {s}({s}){s}\n", .{ tail, try self.llvmType(ret), callee, arguments.items, at });
             return self.resultEntry(out, ret, release_args);
         } else return error.UnsupportedEntry;
         try out.appendSlice(self.allocator, "  ret i32 %s\n}\n");
@@ -2456,11 +2457,13 @@ const FunctionEmitter = struct {
             try self.state.functionSymbol(@intCast(inst.a.index()))
         else
             try self.functionPointer(@intCast(inst.a.index()));
+        // A trap's DWARF caller chain must survive a call in return position.
+        const tail = if (program and self.state.options.target.traps == .dwarf_lines) "notail " else "";
         if (ret == .void or sret) {
-            try out.print(self.a(), "  call {s}void {s}({s}){s}\n", .{ if (program) "fastcc " else "", target, arguments.items, try self.callLocation(inst.span) });
+            try out.print(self.a(), "  {s}call {s}void {s}({s}){s}\n", .{ tail, if (program) "fastcc " else "", target, arguments.items, try self.callLocation(inst.span) });
             if (sret) try out.print(self.a(), identity_line, .{ name, result_slot });
         } else {
-            try out.print(self.a(), "  {s} = call {s}{s} {s}({s}){s}\n", .{ name, if (program) "fastcc " else "", try self.ty(ret), target, arguments.items, try self.callLocation(inst.span) });
+            try out.print(self.a(), "  {s} = {s}call {s}{s} {s}({s}){s}\n", .{ name, tail, if (program) "fastcc " else "", try self.ty(ret), target, arguments.items, try self.callLocation(inst.span) });
         }
     }
 

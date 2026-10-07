@@ -119,6 +119,19 @@ test "S4 native cross-unit traps carry their source path and callers through all
     try std.testing.expect(std.mem.indexOf(u8, result.stderr, "in app::main at app.my:6:") != null);
 }
 
+// spec-case: NEW-CORE-S4-SITES-1
+test "S4 a release tail-position cross-unit trap retains its caller frame" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const caller = "module app\nimport leaf\ndef main() -> int:\n    return leaf.compute(7)\n";
+    const failing = "module leaf\npublic def compute(x: int) -> int:\n    assert x == 0, \"leaf check\"\n    return x\n";
+    const result = try native(a, try snapshot(a, .{ caller, failing, other }, true));
+    try std.testing.expect(result.term == .exited and result.term.exited == 1);
+    try std.testing.expect(std.mem.indexOf(u8, result.stderr, "leaf.my:3:12: error[R_ASSERT]") != null);
+    try std.testing.expect(std.mem.indexOf(u8, result.stderr, "in app::main at app.my:4:12") != null);
+}
+
 fn preserved(before: []const units.Unit, after: []const units.Unit, path: []const u8) !void {
     try std.testing.expectEqualStrings(try textOf(before, path), try textOf(after, path));
     for (before) |old| {
