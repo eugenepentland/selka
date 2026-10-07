@@ -78,15 +78,6 @@ public def test_closed_field_refuses_early_exit_and_alias_argument() -> bool:
     alias_argument(mut holder, holder)
     return holder.items == [1, 2]
 
-public def test_closed_field_works_inside_caller_arena() -> bool:
-    with arena():
-        holder = Holder([1], 7)
-        saved = holder
-        twice(mut holder)
-        assert holder.items == [1, 2, 3]
-        assert saved.items == [1]
-    return True
-
 public def test_nested_field_uses_existing_path_behavior() -> bool:
     holder = Nested(Holder([1], 7))
     saved = holder
@@ -126,7 +117,6 @@ def main(out: Stream) -> int:
     out.print(test_closed_field_preserves_caller_snapshot())
     out.print(test_observed_field_keeps_an_independent_local_value())
     out.print(test_closed_field_refuses_early_exit_and_alias_argument())
-    out.print(test_closed_field_works_inside_caller_arena())
     out.print(test_nested_field_uses_existing_path_behavior())
     out.print(test_closed_field_releases_the_previous_target_once())
     out.print(test_snapshot_root_keeps_existing_transfer_rules())

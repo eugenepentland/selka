@@ -1,0 +1,1110 @@
+{
+ "count": 105,
+ "tests": [
+  {
+   "file": "tests/lang/arena_class_escape.my",
+   "test": "arena_class_escape::test_escape_copies_a_record_and_the_values_it_reaches",
+   "tags": [],
+   "whole_file": true
+  },
+  {
+   "file": "tests/lang/arena_class_escape.my",
+   "test": "arena_class_escape::test_escape_copies_a_finite_recursive_record",
+   "tags": [],
+   "whole_file": true
+  },
+  {
+   "file": "tests/lang/arena_class_escape.my",
+   "test": "arena_class_escape::test_escape_copies_records_inside_lists_and_lists_inside_records",
+   "tags": [],
+   "whole_file": true
+  },
+  {
+   "file": "tests/lang/arena_class_escape.my",
+   "test": "arena_class_escape::test_escape_keeps_an_older_value_independent",
+   "tags": [],
+   "whole_file": true
+  },
+  {
+   "file": "tests/lang/arena_class_escape.my",
+   "test": "arena_class_escape::test_an_escaped_record_keeps_a_young_value_stored_after_promotion",
+   "tags": [],
+   "whole_file": true
+  },
+  {
+   "file": "tests/lang/arena_class_escape.my",
+   "test": "arena_class_escape::test_escape_into_an_enclosing_arena_copies_the_record_there",
+   "tags": [],
+   "whole_file": true
+  },
+  {
+   "file": "tests/lang/arena_class_escape.my",
+   "test": "arena_class_escape::test_escape_copies_a_record_with_no_fields",
+   "tags": [
+    [
+     "spec",
+     "ARENA-ESCAPE-VALUE-1"
+    ],
+    [
+     "spec-case",
+     "ARENA-ESCAPE-VALUE-1"
+    ],
+    [
+     "spec-case",
+     "ARENA-ESCAPE-VALUE-1"
+    ],
+    [
+     "spec-case",
+     "ARENA-ESCAPE-VALUE-1"
+    ],
+    [
+     "spec-case",
+     "ARENA-ESCAPE-VALUE-1"
+    ],
+    [
+     "spec-case",
+     "ARENA-ESCAPE-VALUE-1"
+    ],
+    [
+     "spec-case",
+     "ARENA-ESCAPE-VALUE-1"
+    ]
+   ],
+   "whole_file": true
+  },
+  {
+   "file": "tests/lang/closed_record_inout.my",
+   "test": "closed_record_inout::test_closed_carrier_works_in_owned_arena_storage",
+   "tags": [
+    [
+     "spec-case",
+     "RC-FIELD-INOUT-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/constant_list_image.my",
+   "test": "constant_list_image::test_constant_list_image_arena_escape",
+   "tags": [
+    [
+     "spec-case",
+     "LIST-LITERAL-PAYLOAD-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/constant_list_image.my",
+   "test": "constant_list_image::test_immortal_list_elements_survive_arena_escape_and_reads",
+   "tags": [
+    [
+     "spec-case",
+     "LIST-LITERAL-PAYLOAD-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/dictionary_hash_index.my",
+   "test": "dictionary_hash_index::test_a_dictionary_built_and_read_inside_an_arena_escapes_intact",
+   "tags": [
+    [
+     "spec-case",
+     "PY-DICT-2"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/dictionary_hashing.my",
+   "test": "dictionary_hashing::test_an_integer_keyed_dictionary_escapes_an_arena_with_a_working_index",
+   "tags": [
+    [
+     "spec-case",
+     "PY-DICT-4"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/dictionary_views.my",
+   "test": "dictionary_views::test_views_work_inside_arena_and_snapshots_stay_independent",
+   "tags": [
+    [
+     "spec-case",
+     "DICT-VIEWS-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/discard_names.my",
+   "test": "discard_names::test_nested_arena_scopes_may_both_bind_the_discard_name",
+   "tags": [
+    [
+     "spec-case",
+     "DISCARD-NAME-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/element_access.my",
+   "test": "element_access::test_element_write_inside_an_arena_scope",
+   "tags": [],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/gc_arena_root_lifetimes.my",
+   "test": "gc_arena_root_lifetimes::test_arena_keeps_named_values_without_retaining_old_receiver_temporaries",
+   "tags": [],
+   "whole_file": true
+  },
+  {
+   "file": "tests/lang/gc_arena_root_lifetimes.my",
+   "test": "gc_arena_root_lifetimes::test_an_iteration_receiver_used_after_arena_close_stays_live",
+   "tags": [
+    [
+     "spec",
+     "GC-ARENA-LOCAL-LIFETIME-1"
+    ],
+    [
+     "spec-case",
+     "GC-ARENA-LOCAL-LIFETIME-1"
+    ]
+   ],
+   "whole_file": true
+  },
+  {
+   "file": "tests/lang/gc_footprint.my",
+   "test": "gc_footprint::test_inner_arenas_open_and_close_under_a_large_outer_arena",
+   "tags": [
+    [
+     "spec",
+     "ARENA-CHUNKS-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/gc_generations.my",
+   "test": "gc_generations::test_class_bodies_bumped_out_of_nested_arenas_keep_their_fields",
+   "tags": [
+    [
+     "spec-case",
+     "QBE-INLINE-ALLOC-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/iteration_identity.my",
+   "test": "iteration_identity::test_arena_iteration_and_nested_sources_keep_balanced_holds",
+   "tags": [
+    [
+     "spec-case",
+     "COW-ITERATION-IDENTITY-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/mut_argument_places.my",
+   "test": "mut_argument_places::test_heap_mut_argument_retains_its_region_inside_an_arena",
+   "tags": [
+    [
+     "spec-case",
+     "COW-MUT-ARGUMENT-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/operand_snapshots.my",
+   "test": "operand_snapshots::test_call_inside_arena",
+   "tags": [
+    [
+     "spec-case",
+     "VALUE-SEMANTICS-14"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/positive_list_index.my",
+   "test": "positive_list_index::test_plain_variant_read_and_arena_owned_receiver",
+   "tags": [
+    [
+     "spec-case",
+     "QBE-POSITIVE-INDEX-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_aggregate_values.my",
+   "test": "rc_aggregate_values::test_constructor_publication_keeps_pinned_copies_through_arena_escape",
+   "tags": [
+    [
+     "spec-case",
+     "RC-AGGREGATE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_append_loops.my",
+   "test": "rc_append_loops::test_fresh_receiver_inherits_callers_arena",
+   "tags": [
+    [
+     "spec-case",
+     "RC-PLAIN-APPEND-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_arena_values.my",
+   "test": "rc_arena_values::test_an_inner_binding_releases_its_older_heap_owner",
+   "tags": [],
+   "whole_file": true
+  },
+  {
+   "file": "tests/lang/rc_arena_values.my",
+   "test": "rc_arena_values::test_inline_owners_close_before_nested_chunks_are_reused",
+   "tags": [],
+   "whole_file": true
+  },
+  {
+   "file": "tests/lang/rc_arena_values.my",
+   "test": "rc_arena_values::test_break_and_continue_drop_inner_heap_aliases",
+   "tags": [],
+   "whole_file": true
+  },
+  {
+   "file": "tests/lang/rc_arena_values.my",
+   "test": "rc_arena_values::test_escape_return_preserves_shared_children_and_source_owners",
+   "tags": [],
+   "whole_file": true
+  },
+  {
+   "file": "tests/lang/rc_arena_values.my",
+   "test": "rc_arena_values::test_result_propagation_releases_nested_arena_frame_owners",
+   "tags": [],
+   "whole_file": true
+  },
+  {
+   "file": "tests/lang/rc_arena_values.my",
+   "test": "rc_arena_values::test_heap_receivers_grow_through_helpers_inside_an_arena",
+   "tags": [],
+   "whole_file": true
+  },
+  {
+   "file": "tests/lang/rc_arena_values.my",
+   "test": "rc_arena_values::test_outer_arena_receivers_survive_inner_detachment_and_growth",
+   "tags": [],
+   "whole_file": true
+  },
+  {
+   "file": "tests/lang/rc_arena_values.my",
+   "test": "rc_arena_values::test_inline_field_detachment_preserves_its_older_allocation",
+   "tags": [
+    [
+     "spec",
+     "RC-ARENA-FRAME-1"
+    ],
+    [
+     "spec-case",
+     "RC-ARENA-FRAME-1"
+    ],
+    [
+     "spec-case",
+     "RC-ARENA-FRAME-1"
+    ],
+    [
+     "spec-case",
+     "RC-ARENA-FRAME-1"
+    ],
+    [
+     "spec-case",
+     "RC-ARENA-FRAME-1"
+    ],
+    [
+     "spec-case",
+     "RC-ARENA-FRAME-1"
+    ],
+    [
+     "spec-case",
+     "RC-ARENA-FRAME-1"
+    ],
+    [
+     "spec-case",
+     "RC-ARENA-FRAME-1"
+    ]
+   ],
+   "whole_file": true
+  },
+  {
+   "file": "tests/lang/rc_borrowed_calls.my",
+   "test": "rc_borrowed_calls::test_composed_result_escapes_caller_arena",
+   "tags": [
+    [
+     "spec-case",
+     "RC-BORROW-COMPOSE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_borrowed_loops.my",
+   "test": "rc_borrowed_loops::test_return_bits_outlive_arena_and_parent_replacement",
+   "tags": [
+    [
+     "spec-case",
+     "RC-BORROW-LOOP-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_borrowed_readonly_entries.my",
+   "test": "rc_borrowed_readonly_entries::test_immortal_fallback_and_borrowed_result_keep_caller_arena",
+   "tags": [
+    [
+     "spec-case",
+     "RC-IMMORTAL-ENTRY-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_box_writeback.my",
+   "test": "rc_box_writeback::test_arena_option_mapping_write_updates_the_owner_after_a_snapshot",
+   "tags": [
+    [
+     "spec-case",
+     "RC-BOX-WRITEBACK-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_box_writeback.my",
+   "test": "rc_box_writeback::test_reboxed_heap_owner_survives_an_inner_arena",
+   "tags": [
+    [
+     "spec-case",
+     "RC-BOX-WRITEBACK-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_byte_loop_versions.my",
+   "test": "rc_byte_loop_versions::test_arena_byte_anchor_and_nested_loop_reentry",
+   "tags": [
+    [
+     "spec-case",
+     "RC-READ-BYTES-VERSION-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_caller_field_reads.my",
+   "test": "rc_caller_field_reads::test_heap_and_parent_arena_authority_survives_forwarding",
+   "tags": [
+    [
+     "spec-case",
+     "RC-CALLER-FIELD-READ-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_compact_journal.my",
+   "test": "rc_compact_journal::test_plain_local_gaps_preserve_nested_arena_cleanup_boundaries",
+   "tags": [
+    [
+     "spec-case",
+     "RC-COMPACT-JOURNAL-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_dictionary_keys.my",
+   "test": "rc_dictionary_keys::test_inherited_arena_owners_remain_live",
+   "tags": [],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_dictionary_loops.my",
+   "test": "rc_dictionary_loops::test_inherited_arena_keeps_original_region_and_growth",
+   "tags": [],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_dictionary_tails.my",
+   "test": "rc_dictionary_tails::test_arena_growth_and_heap_root_inside_arena",
+   "tags": [],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_dictionary_text_loops.my",
+   "test": "rc_dictionary_text_loops::test_owned_text_keys_in_arena",
+   "tags": [
+    [
+     "spec-case",
+     "RC-DICTIONARY-TEXT-LOOP-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_empty_frames.my",
+   "test": "rc_empty_frames::test_inherited_arena_preserves_older_receiver_and_snapshot",
+   "tags": [
+    [
+     "spec-case",
+     "RC-EMPTY-FRAME-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_empty_frames.my",
+   "test": "rc_empty_frames::test_arena_owned_caller_keeps_pin_until_plain_loop_returns",
+   "tags": [
+    [
+     "spec-case",
+     "RC-EMPTY-FRAME-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_field_transfers.my",
+   "test": "rc_field_transfers::test_closed_field_works_inside_caller_arena",
+   "tags": [],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_fresh_constructors.my",
+   "test": "rc_fresh_constructors::test_inherited_arena_region_can_escape_the_complete_result",
+   "tags": [
+    [
+     "spec-case",
+     "RC-FRESH-CONSTRUCTOR-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_fresh_loop_roots.my",
+   "test": "rc_fresh_loop_roots::test_inherited_arena_and_escaped_result_keep_region_rules",
+   "tags": [
+    [
+     "spec-case",
+     "RC-FRESH-ROOT-HOIST-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_fresh_returns.my",
+   "test": "rc_fresh_returns::test_recursive_return_preserves_the_callers_inherited_arena",
+   "tags": [
+    [
+     "spec-case",
+     "RC-FRESH-RETURN-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_fresh_spans.my",
+   "test": "rc_fresh_spans::test_nested_parent_arena_keeps_every_completed_child_alive",
+   "tags": [
+    [
+     "spec-case",
+     "RC-FRESH-SPAN-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_glue_values.my",
+   "test": "rc_glue_values::test_arena_values_escape_through_glue",
+   "tags": [
+    [
+     "spec-case",
+     "RC-GLUE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_inert_receivers.my",
+   "test": "rc_inert_receivers::test_nested_plain_record_writes_preserve_arena_values",
+   "tags": [
+    [
+     "spec-case",
+     "RC-INERT-PLAIN-UPDATE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_inert_returns.my",
+   "test": "rc_inert_returns::test_null_result_inside_an_arena_keeps_outer_values_alive",
+   "tags": [
+    [
+     "spec-case",
+     "RC-INERT-RETURN-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_loop_guard_context.my",
+   "test": "rc_loop_guard_context::test_adjacent_loops_keep_inherited_arena_cleanup",
+   "tags": [
+    [
+     "spec-case",
+     "QBE-LOOP-VERSION-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_loop_operand_isolation.my",
+   "test": "rc_loop_operand_isolation::test_isolated_words_keep_inherited_arena_lifetime",
+   "tags": [
+    [
+     "spec-case",
+     "QBE-LOOP-VERSION-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_named_record_writes.my",
+   "test": "rc_named_record_writes::test_named_home_in_caller_arena_preserves_heap_children",
+   "tags": [
+    [
+     "spec-case",
+     "RC-NAMED-RECORD-WRITE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_named_record_writes.my",
+   "test": "rc_named_record_writes::test_named_loop_in_caller_arena_balances_children",
+   "tags": [
+    [
+     "spec-case",
+     "RC-NAMED-RECORD-WRITE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_named_record_writes.my",
+   "test": "rc_named_record_writes::test_inner_arena_cleanup_requires_new_named_definition",
+   "tags": [
+    [
+     "spec-case",
+     "RC-NAMED-RECORD-WRITE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_nested_read_loans.my",
+   "test": "rc_nested_read_loans::test_nested_reads_inside_arena_escape_only_scalars",
+   "tags": [
+    [
+     "spec-case",
+     "RC-NESTED-READ-LOAN-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_nonheld_captures.my",
+   "test": "rc_nonheld_captures::test_parameter_snapshot_and_arena_cleanup",
+   "tags": [],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_plain_aggregates.my",
+   "test": "rc_plain_aggregates::test_older_receiver_accepts_plain_values_from_inner_arena",
+   "tags": [
+    [
+     "spec-case",
+     "RC-PLAIN-AGGREGATE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_plain_appends.my",
+   "test": "rc_plain_appends::test_older_receiver_keeps_backing_alive_after_arena_growth",
+   "tags": [
+    [
+     "spec-case",
+     "RC-PLAIN-APPEND-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_plain_appends.my",
+   "test": "rc_plain_appends::test_arena_local_room_and_growth_share_the_same_lifetime",
+   "tags": [
+    [
+     "spec-case",
+     "RC-PLAIN-APPEND-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_plain_appends.my",
+   "test": "rc_plain_appends::test_plain_tail_removal_preserves_aliases_and_arena_results",
+   "tags": [
+    [
+     "spec-case",
+     "RC-PLAIN-POP-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_plain_field_loans.my",
+   "test": "rc_plain_field_loans::test_caller_arena_keeps_the_root_until_field_read",
+   "tags": [
+    [
+     "spec-case",
+     "RC-PLAIN-FIELD-LOAN-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_plain_record_writes.my",
+   "test": "rc_plain_record_writes::test_arena_caller_and_heap_child_keep_their_lifetimes",
+   "tags": [
+    [
+     "spec-case",
+     "RC-PLAIN-RECORD-WRITE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_plain_record_writes.my",
+   "test": "rc_plain_record_writes::test_arena_owned_children_keep_real_snapshot_marks",
+   "tags": [
+    [
+     "spec-case",
+     "RC-PLAIN-RECORD-WRITE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_plain_replacements.my",
+   "test": "rc_plain_replacements::test_nested_plain_arrays_replace_inside_an_arena",
+   "tags": [],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_read_list_versions.my",
+   "test": "rc_read_list_versions::test_parent_and_nested_arenas_keep_held_storage",
+   "tags": [
+    [
+     "spec-case",
+     "RC-READ-LIST-VERSION-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_read_loans.my",
+   "test": "rc_read_loans::test_scalar_reads_inside_an_arena_escape_only_their_result",
+   "tags": [
+    [
+     "spec-case",
+     "RC-READ-LOAN-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_read_loans.my",
+   "test": "rc_read_loans::test_plain_record_reads_preserve_arena_and_pending_write_semantics",
+   "tags": [
+    [
+     "spec-case",
+     "RC-PLAIN-READ-LOAN-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_readonly_bytes.my",
+   "test": "rc_readonly_bytes::test_readonly_octets_keep_caller_arena_storage_live",
+   "tags": [
+    [
+     "spec-case",
+     "RC-READONLY-MANAGED-CALLS-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_readonly_calls.my",
+   "test": "rc_readonly_calls::test_composed_reader_accepts_inherited_arena_values",
+   "tags": [
+    [
+     "spec-case",
+     "RC-READONLY-CALLS-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_readonly_managed_calls.my",
+   "test": "rc_readonly_managed_calls::test_borrowed_results_stay_inside_caller_arena",
+   "tags": [
+    [
+     "spec-case",
+     "RC-READONLY-MANAGED-CALLS-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_record_field_reads.my",
+   "test": "rc_record_field_reads::test_parent_and_nested_arenas_keep_roots",
+   "tags": [
+    [
+     "spec-case",
+     "RC-RECORD-FIELD-READ-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_scalar_loops.my",
+   "test": "rc_scalar_loops::test_inherited_arena_survives_numeric_activation",
+   "tags": [
+    [
+     "spec-case",
+     "RC-SCALAR-LOOP-VERSION-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_scalar_replacements.my",
+   "test": "rc_scalar_replacements::test_scalar_updates_inside_an_arena_preserve_an_older_receiver",
+   "tags": [
+    [
+     "spec-case",
+     "RC-SCALAR-REPLACE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_scope_inline.my",
+   "test": "rc_scope_inline::test_arena_receiver_uses_the_same_nested_scope_contract",
+   "tags": [
+    [
+     "spec-case",
+     "RC-SCOPE-IL-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_semantic_publication.my",
+   "test": "rc_semantic_publication::test_arena_setdefault_read_does_not_share_the_selected_mapping",
+   "tags": [
+    [
+     "spec-case",
+     "RC-SEMANTIC-LOWERING-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_semantic_publication.my",
+   "test": "rc_semantic_publication::test_fresh_dictionary_insertion_keeps_its_child_live_in_an_arena",
+   "tags": [
+    [
+     "spec-case",
+     "RC-SEMANTIC-LOWERING-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_semantic_publication.my",
+   "test": "rc_semantic_publication::test_arena_field_capture_preserves_its_loan_during_replacement",
+   "tags": [
+    [
+     "spec-case",
+     "RC-PLACE-ROLE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_site_eliminations.my",
+   "test": "rc_site_eliminations::test_relocated_loans_inside_arenas",
+   "tags": [
+    [
+     "spec-case",
+     "RC-LOAN-RELOCATE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_site_eliminations.my",
+   "test": "rc_site_eliminations::test_field_receivers_inside_arenas",
+   "tags": [
+    [
+     "spec-case",
+     "RC-INERT-FIELD-RECEIVER-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_site_eliminations.my",
+   "test": "rc_site_eliminations::test_nested_field_copies_inside_arenas",
+   "tags": [
+    [
+     "spec-case",
+     "RC-TRANSIENT-FIELD-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_site_eliminations.my",
+   "test": "rc_site_eliminations::test_readonly_reads_inside_arenas",
+   "tags": [
+    [
+     "spec-case",
+     "RC-READONLY-ANCHOR-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_site_eliminations.my",
+   "test": "rc_site_eliminations::test_mut_root_list_reads_inside_arenas",
+   "tags": [
+    [
+     "spec-case",
+     "RC-INTERVAL-ANCHOR-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_variant_reads.my",
+   "test": "rc_variant_reads::test_arena_match_keeps_heap_children_during_arm_growth",
+   "tags": [
+    [
+     "spec-case",
+     "RC-ADJACENT-VARIANT-READ-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_variant_reads.my",
+   "test": "rc_variant_reads::test_arena_children_preserve_an_independent_snapshot",
+   "tags": [
+    [
+     "spec-case",
+     "RC-ADJACENT-VARIANT-READ-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/rc_writeback_moves.my",
+   "test": "rc_writeback_moves::test_repeated_moves_inside_arena",
+   "tags": [],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/record_field_snapshots.my",
+   "test": "record_field_snapshots::test_arena_record_field_mutation_preserves_snapshot",
+   "tags": [
+    [
+     "spec-case",
+     "OWNERSHIP-FIELD-WRITE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/record_field_snapshots.my",
+   "test": "record_field_snapshots::test_nested_arena_field_mut_argument_preserves_snapshot",
+   "tags": [
+    [
+     "spec-case",
+     "OWNERSHIP-FIELD-WRITE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/recursive_values.my",
+   "test": "recursive_values::test_arena_escape_copies_the_boxes",
+   "tags": [
+    [
+     "spec-case",
+     "RECURSIVE-VALUES-2"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/root_liveness.my",
+   "test": "root_liveness::test_an_arena_scope_closes_over_locals_it_scans",
+   "tags": [
+    [
+     "spec-case",
+     "QBE-ROOTLIVE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/sets.my",
+   "test": "sets::test_a_set_built_inside_an_arena_escapes_with_its_elements",
+   "tags": [
+    [
+     "spec-case",
+     "SET-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/text_literal_index.my",
+   "test": "text_literal_index::test_literal_indexed_views_and_arena_escape",
+   "tags": [
+    [
+     "spec-case",
+     "TEXT-INDEX-4"
+    ],
+    [
+     "spec-case",
+     "TEXT-VIEW-5"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/text_views.my",
+   "test": "text_views::test_pieces_in_arenas_read_and_escape",
+   "tags": [
+    [
+     "spec-case",
+     "TEXT-VIEW-2"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/text_views.my",
+   "test": "text_views::test_streaming_arena_tails_escape_as_independent_text",
+   "tags": [
+    [
+     "spec-case",
+     "TEXT-VIEW-5"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/lang/tuples.my",
+   "test": "tuples::test_a_tuple_carrying_a_managed_element_escapes_an_arena",
+   "tags": [
+    [
+     "spec-case",
+     "TUPLE-2"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/value_semantics/interactions.my",
+   "test": "interactions::test_a_copy_made_in_an_arena_leaves_through_escape",
+   "tags": [
+    [
+     "spec-case",
+     "VALUE-SEMANTICS-2"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/value_semantics/nested_array_callbacks.my",
+   "test": "nested_array_callbacks::test_a_current_receiver_updated_inside_an_arena_can_escape_afterward",
+   "tags": [
+    [
+     "spec-case",
+     "ARENA-ESCAPE-VALUE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/value_semantics/nested_arrays.my",
+   "test": "nested_arrays::test_fixed_array_nested_copies_escape_an_arena",
+   "tags": [
+    [
+     "spec-case",
+     "ARENA-ESCAPE-VALUE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/value_semantics/nested_collections.my",
+   "test": "nested_collections::test_nested_dictionary_copies_survive_arena_escape",
+   "tags": [
+    [
+     "spec-case",
+     "ARENA-ESCAPE-VALUE-1"
+    ]
+   ],
+   "whole_file": false
+  },
+  {
+   "file": "tests/value_semantics/recursive.my",
+   "test": "recursive::test_a_boxed_collection_survives_arena_escape",
+   "tags": [
+    [
+     "spec-case",
+     "COW-NESTED-1"
+    ]
+   ],
+   "whole_file": false
+  }
+ ]
+}

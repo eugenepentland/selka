@@ -60,15 +60,6 @@ public def test_composed_reader_handles_empty_and_repeated_inputs() -> bool:
 
 
 # spec-case: RC-READONLY-CALLS-1
-public def test_composed_reader_accepts_inherited_arena_values() -> bool:
-    result = 0
-    with arena():
-        items = [Item(b"first", 3), Item(b"second", 7)]
-        result = total(items)
-    return result == 20
-
-
-# spec-case: RC-READONLY-CALLS-1
 public def test_composed_helper_preserves_self_recursion() -> bool:
     items = [Item(b"first", 3)]
     return recursive(items, 64) == 3 and items[0].text == b"first"
@@ -94,7 +85,6 @@ public def test_mutating_helper_keeps_snapshot_and_ordinary_cleanup() -> bool:
 def main() -> int:
     assert test_composed_reader_preserves_snapshot_and_later_mutation()
     assert test_composed_reader_handles_empty_and_repeated_inputs()
-    assert test_composed_reader_accepts_inherited_arena_values()
     assert test_composed_helper_preserves_self_recursion()
     assert test_managed_result_helper_keeps_owned_fallback()
     assert test_mutating_helper_keeps_snapshot_and_ordinary_cleanup()

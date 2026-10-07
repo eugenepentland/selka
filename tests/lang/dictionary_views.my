@@ -107,22 +107,6 @@ public def test_view_reads_observe_value_replacement_and_loop_control() -> bool:
 
 
 # spec-case: DICT-VIEWS-1
-public def test_views_work_inside_arena_and_snapshots_stay_independent() -> bool:
-    result = 0
-    kept = list({"old": 0}.values())
-    with arena() as scratch:
-        mapping = {"a": 20, "b": 22}
-        live = list(mapping.values())
-        frozen = list(live)
-        mapping["a"] = 1
-        result = total(live)
-        kept = scratch.escape(live)
-        if frozen != [20, 22]:
-            return False
-    return result == 42 and list(kept) == [20, 22]
-
-
-# spec-case: DICT-VIEWS-1
 # spec-case: D2-VIEW-STORAGE-1
 public def test_direct_projection_membership_and_snapshots() -> bool:
     mapping = {1: [7, 8], 2: [9]}

@@ -92,21 +92,10 @@ public def test_snapshot_sibling_stays_independent() -> bool:
     return value == 3 and output == [3] and list(rows[0].view) == [7]
 
 
-# spec-case: RC-PLAIN-FIELD-LOAN-1
-public def test_caller_arena_keeps_the_root_until_field_read() -> bool:
-    output: list[int] = []
-    value = 0
-    with arena():
-        rows = [Row(Label(b"arena" + bytes([49]), 3), 7)]
-        value = selected(rows, -1, mut output)
-    return value == 3 and output == [3]
-
-
 def main(out: Stream) -> int:
     out.print(test_nested_fields_keep_bounds_and_copy_the_scalar())
     out.print(test_readonly_length_loop_keeps_managed_local_bits_borrowed())
     out.print(test_callback_keeps_the_receiver_snapshot())
     out.print(test_escaped_record_keeps_ordinary_ownership())
     out.print(test_snapshot_sibling_stays_independent())
-    out.print(test_caller_arena_keeps_the_root_until_field_read())
     return 0

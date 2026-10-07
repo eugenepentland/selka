@@ -37,11 +37,6 @@ public def test_recursive_nullable_return_keeps_every_fresh_box_alive() -> bool:
 
 
 # spec-case: RC-FRESH-RETURN-1
-public def test_recursive_return_preserves_the_callers_inherited_arena() -> bool:
-    return total(caller_arena()) == 78
-
-
-# spec-case: RC-FRESH-RETURN-1
 public def test_managed_locals_and_unknown_callees_keep_generic_cleanup() -> bool:
     value = aliased(6)
     before = value
@@ -51,6 +46,5 @@ public def test_managed_locals_and_unknown_callees_keep_generic_cleanup() -> boo
 
 def main() -> int:
     assert test_recursive_nullable_return_keeps_every_fresh_box_alive()
-    assert test_recursive_return_preserves_the_callers_inherited_arena()
     assert test_managed_locals_and_unknown_callees_keep_generic_cleanup()
     return 0

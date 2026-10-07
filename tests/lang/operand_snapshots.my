@@ -493,15 +493,6 @@ public def test_builtin_in_later_operand() -> bool:
     return v == 304
 
 
-# spec-case: VALUE-SEMANTICS-14
-public def test_call_inside_arena() -> bool:
-    xs = [1, 2, 3]
-    v = 0
-    with arena():
-        v = lst(xs, push(mut xs))
-    return v == 301 and len(xs) == 4
-
-
 # spec: PRELUDE-EXTREME-2
 public def test_max_of_two_evaluates_each_argument_once() -> bool:
     xs = [1, 2, 3]

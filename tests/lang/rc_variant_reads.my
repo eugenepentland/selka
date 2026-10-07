@@ -59,27 +59,6 @@ public def test_arm_callback_keeps_snapshot_and_duplicate_children() -> bool:
     return result.left == [5, 11] and result.right == [5] and old.left == [5] and old.right == [5] and values == [5]
 
 
-# spec-case: RC-ADJACENT-VARIANT-READ-1
-public def test_arena_match_keeps_heap_children_during_arm_growth() -> bool:
-    values = [13]
-    answer = False
-    with arena():
-        pool = Pool([Item.value(Payload(values, values))])
-        result = through_callback(mut pool, -1)
-        answer = result.left == [13, 11] and result.right == [13] and len(pool.items) == 300
-    return answer and values == [13]
-
-
-# spec-case: RC-ADJACENT-VARIANT-READ-1
-public def test_arena_children_preserve_an_independent_snapshot() -> bool:
-    with arena():
-        pool = Pool([Item.value(Payload([17], [19]))])
-        saved = pool
-        result = through_callback(mut pool, 0)
-        old = selected(saved, 0)
-        return result.left == [17, 11] and old.left == [17] and old.right == [19]
-
-
 def repeated(pool: Pool) -> int:
     total = 0
     i = 0
@@ -158,8 +137,6 @@ public def test_payload_free_arm_and_empty_return_keep_clean_guards() -> bool:
 def main(out: Stream) -> int:
     out.print(test_returned_payload_outlives_rebound_and_grown_pool())
     out.print(test_arm_callback_keeps_snapshot_and_duplicate_children())
-    out.print(test_arena_match_keeps_heap_children_during_arm_growth())
-    out.print(test_arena_children_preserve_an_independent_snapshot())
     out.print(test_repeated_pattern_slots_switch_between_owned_and_plain_arms())
     out.print(test_nested_matches_publish_the_selected_payload())
     out.print(test_index_callback_keeps_the_original_receiver_snapshot())

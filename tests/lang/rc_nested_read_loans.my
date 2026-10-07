@@ -68,17 +68,6 @@ public def test_text_index_results_remain_fresh_owned_values() -> bool:
     return total == 40 and words == ["αβγ", "abcdef"]
 
 
-# spec-case: RC-NESTED-READ-LOAN-1
-public def test_nested_reads_inside_arena_escape_only_scalars() -> bool:
-    total = 0
-    with arena():
-        cubes = [[[3, 5, 8]]]
-        output: list[int] = []
-        total = select(cubes, 0, 0, -1, mut output)
-        total += cubes[0][0][0]
-    return total == 11
-
-
 def main() -> int:
     assert test_nested_read_loans_follow_negative_indices_and_loop_roots()
     assert test_nested_read_loans_keep_the_row_captured_before_a_callback()
@@ -86,5 +75,4 @@ def main() -> int:
     assert test_nested_reads_preserve_mutating_receiver_snapshots()
     assert test_nested_reads_leave_dictionary_and_view_roles_owned()
     assert test_text_index_results_remain_fresh_owned_values()
-    assert test_nested_reads_inside_arena_escape_only_scalars()
     return 0

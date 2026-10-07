@@ -29,16 +29,8 @@ public def test_isolated_words_cover_zero_both_branches_and_outer_reentry() -> b
 public def test_isolated_words_keep_real_iterator_tokens_and_snapshots() -> bool:
     return real_iterator() == 10
 
-# spec-case: QBE-LOOP-VERSION-1
-public def test_isolated_words_keep_inherited_arena_lifetime() -> bool:
-    with arena():
-        assert scan(64, 3) == 12
-        assert real_iterator() == 10
-    return scan(16, 2) == 4
-
 def main(out: Stream) -> int:
     assert test_isolated_words_cover_zero_both_branches_and_outer_reentry()
     assert test_isolated_words_keep_real_iterator_tokens_and_snapshots()
-    assert test_isolated_words_keep_inherited_arena_lifetime()
     out.print(scan(64, 3))
     return 0

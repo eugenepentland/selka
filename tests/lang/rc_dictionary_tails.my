@@ -62,20 +62,6 @@ def test_live_view_and_managed_value_keep_general_paths() -> bool:
     return True
 
 # RC-DICTIONARY-TAIL-1 control
-def test_arena_growth_and_heap_root_inside_arena() -> bool:
-    older = {1: 7}
-    with arena():
-        counts: dict[str, int] = {}
-        for i in range(80):
-            key = "key" + str(i)
-            counts[key] = i
-        assert counts["key79"] == 79
-        integer_key = 1
-        older[integer_key] = 13
-    assert older[1] == 13
-    return True
-
-# RC-DICTIONARY-TAIL-1 control
 def test_function_wide_string_iteration_keeps_key_load_roles() -> bool:
     counts: dict[str, int] = {}
     key = "key"

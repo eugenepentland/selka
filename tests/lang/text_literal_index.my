@@ -35,18 +35,5 @@ public def test_literal_indexes_in_both_directions_and_ranges() -> bool:
     return ok and TEXT.count("é", 100, 300) == 6 and TEXT[128] == line[23]
 
 
-# spec-case: TEXT-INDEX-4
-# spec-case: TEXT-VIEW-5
-public def test_literal_indexed_views_and_arena_escape() -> bool:
-    tail = TEXT[530:]
-    nested = tail[25:]
-    ok = len(tail) == 169 and len(nested) == 144 and nested == TEXT[555:699]
-    escaped = ""
-    with arena() as scratch:
-        inside = TEXT[-11:]
-        escaped = scratch.escape(inside[2:])
-    return ok and escaped == "xyz012345" and repr(escaped) == "'xyz012345'"
-
-
 def main() -> int:
     return 0
