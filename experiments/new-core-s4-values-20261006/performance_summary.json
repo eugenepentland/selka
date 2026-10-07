@@ -1,0 +1,1022 @@
+{
+  "qualified": true,
+  "implementation_source": "d4d8c4e5639c6f6470883eca97ba160a3b4de627",
+  "core_sha256": "3c86ebb5ac9db377a2a2b7ae0cffd48cce09bee554aabfec856c9c5a2a6fc2bc",
+  "cpu": 10,
+  "rounds": 7,
+  "rows": {
+    "record_reads": {
+      "4096": {
+        "iterations": 4000000,
+        "checksum": 744472322,
+        "new_over_old": 0.713587861199863,
+        "new_over_zig": 0.7278732634185177,
+        "new_over_rust": 1.0019658348055265,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 4000000,
+        "checksum": 492812486,
+        "new_over_old": 0.7073726390906863,
+        "new_over_zig": 0.7250406465223227,
+        "new_over_rust": 1.0039758168428192,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "tagged_stack": {
+      "4096": {
+        "iterations": 4000000,
+        "checksum": 80535481,
+        "new_over_old": 0.5265348123765736,
+        "new_over_zig": 0.6967919758271255,
+        "new_over_rust": 1.287306932658655,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 4000000,
+        "checksum": 80535481,
+        "new_over_old": 0.5263557324228775,
+        "new_over_zig": 0.696941807284805,
+        "new_over_rust": 1.2847450030966792,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "mutate_unique": {
+      "4096": {
+        "iterations": 4000000,
+        "checksum": 287462445,
+        "new_over_old": 0.834805950240728,
+        "new_over_zig": 0.8575858893242795,
+        "new_over_rust": 1.105552012695749,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 4000000,
+        "checksum": 785313548,
+        "new_over_old": 0.8531415056916299,
+        "new_over_zig": 0.857919812043877,
+        "new_over_rust": 1.1078515367912563,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "mutate_shared": {
+      "4096": {
+        "iterations": 400,
+        "checksum": 2620424,
+        "new_over_old": 0.6581251361068042,
+        "new_over_zig": 0.5606264426932792,
+        "new_over_rust": 0.9966379867020277,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 25000,
+        "checksum": 522538080,
+        "new_over_old": 0.08889684463870788,
+        "new_over_zig": 0.6337976888365656,
+        "new_over_rust": 0.9586664581488415,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "record_construct": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 870968511,
+        "new_over_old": 0.19842280322296438,
+        "new_over_zig": 0.2191744084408834,
+        "new_over_rust": 0.33367984933820105,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 853718613,
+        "new_over_old": 0.20509967914318808,
+        "new_over_zig": 0.21756394081362648,
+        "new_over_rust": 0.3268989262562021,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "record_update": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 870968511,
+        "new_over_old": 0.5278078952413693,
+        "new_over_zig": 0.554170727201057,
+        "new_over_rust": 0.8966034894845909,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 853718613,
+        "new_over_old": 0.534426782252308,
+        "new_over_zig": 0.5410942328713279,
+        "new_over_rust": 0.8596243684442932,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "option_handle": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 927015754,
+        "new_over_old": 0.49681026493864644,
+        "new_over_zig": 0.3085750783569233,
+        "new_over_rust": 0.8313879341547717,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 753747773,
+        "new_over_old": 0.5932440242074328,
+        "new_over_zig": 0.3246556269778624,
+        "new_over_rust": 0.7593185714369391,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "result_propagate": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 166728930,
+        "new_over_old": 0.5907208644668789,
+        "new_over_zig": 0.48847243887519753,
+        "new_over_rust": 1.0289445891866082,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 330997534,
+        "new_over_old": 0.6248691994809968,
+        "new_over_zig": 0.47095685558259726,
+        "new_over_rust": 0.8483195358795266,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "list_scan": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 257772632,
+        "new_over_old": 1.0379789417765755,
+        "new_over_zig": 0.8735853839004633,
+        "new_over_rust": 1.477759671411212,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 64949387,
+        "new_over_old": 1.0350712259962358,
+        "new_over_zig": 0.8796559671005467,
+        "new_over_rust": 1.4687630205986177,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "list_append": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 665442961,
+        "new_over_old": 0.8783053727242568,
+        "new_over_zig": 0.5117466905093832,
+        "new_over_rust": 1.0188521799370416,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 99170437,
+        "new_over_old": 0.4834305564121086,
+        "new_over_zig": 0.417416590730293,
+        "new_over_rust": 0.675291665871033,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "list_filter": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 852403740,
+        "new_over_old": 0.809864155422742,
+        "new_over_zig": 0.710410314269041,
+        "new_over_rust": 1.3128459577258218,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 113257332,
+        "new_over_old": 0.5060564772113695,
+        "new_over_zig": 0.6471335479316277,
+        "new_over_rust": 0.8967108891726774,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "alloc_short": {
+      "4096": {
+        "iterations": 1000,
+        "checksum": 869311713,
+        "new_over_old": 0.01990187528168127,
+        "new_over_zig": 0.2217517884686242,
+        "new_over_rust": 0.9633962193100455,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 60000,
+        "checksum": 406716773,
+        "new_over_old": 0.020707268403529336,
+        "new_over_zig": 0.2293490927513005,
+        "new_over_rust": 0.9737510308671945,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "alloc_retained": {
+      "4096": {
+        "iterations": 1000,
+        "checksum": 869311713,
+        "new_over_old": 0.24473389269305987,
+        "new_over_zig": 0.4367706182773701,
+        "new_over_rust": 0.44176246411352593,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 60000,
+        "checksum": 406716773,
+        "new_over_old": 0.2545894745080262,
+        "new_over_zig": 0.5052358094940725,
+        "new_over_rust": 0.4833509113376985,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "mutate_nested": {
+      "4096": {
+        "iterations": 400,
+        "checksum": 8794306,
+        "new_over_old": 0.41598483986638746,
+        "new_over_zig": 0.15821585990299705,
+        "new_over_rust": 0.14759972842318184,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 25000,
+        "checksum": 522668432,
+        "new_over_old": 0.3229614831252397,
+        "new_over_zig": 0.19905390005966198,
+        "new_over_rust": 0.203978030363377,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "bytes_scan": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 88959986,
+        "new_over_old": 0.581475883404081,
+        "new_over_zig": 0.03643311287860982,
+        "new_over_rust": 0.04423545222684962,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 40001010,
+        "new_over_old": 0.966539845288464,
+        "new_over_zig": 0.14148575622341125,
+        "new_over_rust": 0.20040368074039613,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "string_equal": {
+      "4096": {
+        "iterations": 200000,
+        "checksum": 100000,
+        "new_over_old": 0.9425344190948279,
+        "new_over_zig": 0.18202395056819184,
+        "new_over_rust": 0.37202292706296325,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 200000,
+        "checksum": 100000,
+        "new_over_old": 0.9140806122817333,
+        "new_over_zig": 0.906458018501184,
+        "new_over_rust": 1.202514823786506,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "string_search": {
+      "4096": {
+        "iterations": 40000,
+        "checksum": 82050000,
+        "new_over_old": 1.031297104997522,
+        "new_over_zig": 0.03347202383063015,
+        "new_over_rust": 0.07746095303963856,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 40000,
+        "checksum": 1410000,
+        "new_over_old": 0.8532638995941604,
+        "new_over_zig": 0.17652970491264539,
+        "new_over_rust": 0.3745526709074399,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "string_split": {
+      "4096": {
+        "iterations": 400,
+        "checksum": 703954400,
+        "new_over_old": 0.29664977099527107,
+        "new_over_zig": 0.9150761180410704,
+        "new_over_rust": 2.139453536916501,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 25000,
+        "checksum": 684850000,
+        "new_over_old": 0.3113052565142969,
+        "new_over_zig": 0.943232867005585,
+        "new_over_rust": 1.8183320771028475,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "string_join": {
+      "4096": {
+        "iterations": 1000,
+        "checksum": 228756486,
+        "new_over_old": 0.7325511917377789,
+        "new_over_zig": 0.2559307690717953,
+        "new_over_rust": 0.3338455703522511,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 60000,
+        "checksum": 76029986,
+        "new_over_old": 0.5410324090881659,
+        "new_over_zig": 0.27075998170162896,
+        "new_over_rust": 0.37686600563538786,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "dict_lookup": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 260753752,
+        "new_over_old": 0.4975751907102056,
+        "new_over_zig": 0.2953843700483638,
+        "new_over_rust": 0.3663878860676298,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 468011855,
+        "new_over_old": 0.8966006417022929,
+        "new_over_zig": 0.4896613365264071,
+        "new_over_rust": 0.3694148772010244,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "dict_lookup_str": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 260753752,
+        "new_over_old": 0.3766028530591276,
+        "new_over_zig": 0.3714107675523994,
+        "new_over_rust": 0.3820246210992424,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 468011855,
+        "new_over_old": 0.6958450727945148,
+        "new_over_zig": 0.6223078396655324,
+        "new_over_rust": 0.3455113947486914,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "dict_update": {
+      "4096": {
+        "iterations": 1000,
+        "checksum": 327973489,
+        "new_over_old": 0.22956112542101062,
+        "new_over_zig": 0.3452955691207276,
+        "new_over_rust": 0.4580049337915705,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 60000,
+        "checksum": 43838369,
+        "new_over_old": 0.25188228260698253,
+        "new_over_zig": 0.5974460477645498,
+        "new_over_rust": 0.45078958367297584,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "dict_update_str": {
+      "4096": {
+        "iterations": 1000,
+        "checksum": 327973489,
+        "new_over_old": 0.26584280663855026,
+        "new_over_zig": 0.3734168480464097,
+        "new_over_rust": 0.2964529738949769,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 60000,
+        "checksum": 43838369,
+        "new_over_old": 0.2853026676887456,
+        "new_over_zig": 0.6227961452270184,
+        "new_over_rust": 0.2917590360727674,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "set_dedup": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 95103986,
+        "new_over_old": 0.14082991753343713,
+        "new_over_zig": 0.30504531838740506,
+        "new_over_rust": 0.3949753045251142,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 30000000,
+        "new_over_old": 0.17003196297708442,
+        "new_over_zig": 0.7609411192999629,
+        "new_over_rust": 0.4579448270719198,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "int_parse": {
+      "4096": {
+        "iterations": 4000000,
+        "checksum": 202584371,
+        "new_over_old": 0.626748193926683,
+        "new_over_zig": 1.0076623156452442,
+        "new_over_rust": 1.2724529776635878,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 4000000,
+        "checksum": 112562479,
+        "new_over_old": 0.6400799823440696,
+        "new_over_zig": 1.0906611550088314,
+        "new_over_rust": 1.3812663757776973,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "int_format": {
+      "4096": {
+        "iterations": 4000000,
+        "checksum": 296726930,
+        "new_over_old": 0.323797678476434,
+        "new_over_zig": 0.32026290088170695,
+        "new_over_rust": 1.0834230035683825,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 4000000,
+        "checksum": 885687500,
+        "new_over_old": 0.3013579276377048,
+        "new_over_zig": 0.32025360575108686,
+        "new_over_rust": 1.0130196004297531,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "call_indirect": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 89389306,
+        "new_over_old": 0.06020027979537526,
+        "new_over_zig": 0.03352928304212194,
+        "new_over_rust": 0.04186481107266202,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 859744941,
+        "new_over_old": 0.06153854308333943,
+        "new_over_zig": 0.03290730889039821,
+        "new_over_rust": 0.04092533077540151,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "sort_int": {
+      "4096": {
+        "iterations": 400,
+        "checksum": 793872127,
+        "new_over_old": 1.0323365455332707,
+        "new_over_zig": 0.693716095563203,
+        "new_over_rust": 0.6702514856853936,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 25000,
+        "checksum": 583627978,
+        "new_over_old": 0.8031864279582528,
+        "new_over_zig": 0.5373670090208843,
+        "new_over_rust": 0.6188250777341158,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "sort_records": {
+      "4096": {
+        "iterations": 400,
+        "checksum": 870748407,
+        "new_over_old": 0.598373945841319,
+        "new_over_zig": 0.27918686948682314,
+        "new_over_rust": 0.8060866028632445,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 25000,
+        "checksum": 107677455,
+        "new_over_old": 0.6356898800142682,
+        "new_over_zig": 0.8315571305282643,
+        "new_over_rust": 0.9426081370154732,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "int_math": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 488688792,
+        "new_over_old": 0.04103245902512877,
+        "new_over_zig": 0.04569630667186638,
+        "new_over_rust": 0.06252529963886412,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 309603053,
+        "new_over_old": 0.05461786230043884,
+        "new_over_zig": 0.0595655569152127,
+        "new_over_rust": 0.08009338434120868,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "float_math": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 232907868,
+        "new_over_old": 0.189280437368616,
+        "new_over_zig": 0.24112107747628023,
+        "new_over_rust": 0.2252276381024373,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 258794523,
+        "new_over_old": 0.20216041740697166,
+        "new_over_zig": 0.2424357350166184,
+        "new_over_rust": 0.23268264485360157,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "call_direct": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 260187185,
+        "new_over_old": 0.09932475461256765,
+        "new_over_zig": 0.09985236762628788,
+        "new_over_rust": 0.1495285071008051,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 722246966,
+        "new_over_old": 0.10188164810009856,
+        "new_over_zig": 0.07783258031970282,
+        "new_over_rust": 0.10913566639400417,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "branch_predictable": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 211971818,
+        "new_over_old": 0.09838483910225225,
+        "new_over_zig": 0.051417994592416055,
+        "new_over_rust": 0.12399213559157837,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 429246839,
+        "new_over_old": 0.11969168674846178,
+        "new_over_zig": 0.06263549229604756,
+        "new_over_rust": 0.15279482654676815,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "branch_mixed": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 668567049,
+        "new_over_old": 0.09684837697737768,
+        "new_over_zig": 0.04308561474762064,
+        "new_over_rust": 0.08202482863266776,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 251245927,
+        "new_over_old": 0.12068155449524622,
+        "new_over_zig": 0.05544372421494708,
+        "new_over_rust": 0.11022633520216084,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "binary_search": {
+      "4096": {
+        "iterations": 400,
+        "checksum": 93672238,
+        "new_over_old": 0.2149110710615397,
+        "new_over_zig": 0.22556489808876462,
+        "new_over_rust": 0.839015555787761,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 25000,
+        "checksum": 16497084,
+        "new_over_old": 0.5565255727756372,
+        "new_over_zig": 0.6585065674626138,
+        "new_over_rust": 0.9442650895017128,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "word_count": {
+      "4096": {
+        "iterations": 400,
+        "checksum": 19267570,
+        "new_over_old": 0.11528978916562174,
+        "new_over_zig": 0.7111698856930044,
+        "new_over_rust": 0.5661071938192551,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 25000,
+        "checksum": 894524930,
+        "new_over_old": 0.12227498229787129,
+        "new_over_zig": 0.8997551659806792,
+        "new_over_rust": 0.693269608217765,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "csv_aggregate": {
+      "4096": {
+        "iterations": 40,
+        "checksum": 801808057,
+        "new_over_old": 0.2291300078037343,
+        "new_over_zig": 1.0744998852868535,
+        "new_over_rust": 0.958938971043325,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 2500,
+        "checksum": 280792500,
+        "new_over_old": 0.2563054006269012,
+        "new_over_zig": 1.0763627924255323,
+        "new_over_rust": 1.001539128522099,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "json_transform": {
+      "4096": {
+        "iterations": 20,
+        "checksum": 225765931,
+        "new_over_old": 0.20385107672647218,
+        "new_over_zig": 0.9862230258528991,
+        "new_over_rust": 1.5663924273746312,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 1250,
+        "checksum": 206667525,
+        "new_over_old": 0.20986661185835823,
+        "new_over_zig": 1.0295737119968558,
+        "new_over_rust": 1.4864019615374389,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "packet_decode": {
+      "4096": {
+        "iterations": 400,
+        "checksum": 635993509,
+        "new_over_old": 1.0367483797617554,
+        "new_over_zig": 0.8286458503459367,
+        "new_over_rust": 1.4928674217507705,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 25000,
+        "checksum": 105199993,
+        "new_over_old": 1.0492585515848474,
+        "new_over_zig": 0.8149428993111484,
+        "new_over_rust": 1.4786568415551076,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "lox_eval": {
+      "4096": {
+        "iterations": 40,
+        "checksum": 19955744,
+        "new_over_old": 0.3264732967657067,
+        "new_over_zig": 0.4062701177184771,
+        "new_over_rust": 1.24773144174908,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 2500,
+        "checksum": 250256292,
+        "new_over_old": 0.3244233041322037,
+        "new_over_zig": 0.4067208318021995,
+        "new_over_rust": 1.2451750639111476,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "tree_build_walk": {
+      "4096": {
+        "iterations": 272,
+        "checksum": 181448421,
+        "new_over_old": 0.2348751476723998,
+        "new_over_zig": 0.6913663407128444,
+        "new_over_rust": 0.7336677676163552,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 12952,
+        "checksum": 144645150,
+        "new_over_old": 0.23115366665098874,
+        "new_over_zig": 0.6804184968473879,
+        "new_over_rust": 0.7485697829940094,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "record_pass": {
+      "4096": {
+        "iterations": 923,
+        "checksum": 36686933,
+        "new_over_old": 0.5049364113147021,
+        "new_over_zig": 0.6835647294732664,
+        "new_over_rust": 1.0474561639197661,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 65088,
+        "checksum": 551484558,
+        "new_over_old": 0.5286191671487125,
+        "new_over_zig": 0.7065533972700504,
+        "new_over_rust": 1.0842958987105606,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "grid_dp": {
+      "4096": {
+        "iterations": 1542,
+        "checksum": 115143130,
+        "new_over_old": 0.6857024336767638,
+        "new_over_zig": 0.9820804271770543,
+        "new_over_rust": 1.1534130782907084,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 70968,
+        "checksum": 900700040,
+        "new_over_old": 0.23240964227853883,
+        "new_over_zig": 1.0276451941705103,
+        "new_over_rust": 1.0990782865821842,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "union_find": {
+      "4096": {
+        "iterations": 698,
+        "checksum": 777875623,
+        "new_over_old": 0.5230567338098608,
+        "new_over_zig": 1.0574966965356798,
+        "new_over_rust": 1.0549136296569068,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 37157,
+        "checksum": 231998124,
+        "new_over_old": 0.3912211096360623,
+        "new_over_zig": 1.0322367814563584,
+        "new_over_rust": 1.159175852720692,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "float_format": {
+      "4096": {
+        "iterations": 40,
+        "checksum": 659497267,
+        "new_over_old": 0.5794514325845093,
+        "new_over_zig": 0.7471647652059639,
+        "new_over_rust": 0.746123181361197,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 2930,
+        "checksum": 197274656,
+        "new_over_old": 0.5713937681392596,
+        "new_over_zig": 0.7474939202468073,
+        "new_over_rust": 0.7911346799835393,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "buffer_write": {
+      "4096": {
+        "iterations": 115,
+        "checksum": 89591540,
+        "new_over_old": 0.7852192220487294,
+        "new_over_zig": 0.6730909781599718,
+        "new_over_rust": 0.7709330289633496,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 8794,
+        "checksum": 692192056,
+        "new_over_old": 0.7985760817632361,
+        "new_over_zig": 0.6874053390847013,
+        "new_over_rust": 0.772758395751059,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    }
+  },
+  "gate_misses": []
+}
