@@ -370,7 +370,8 @@ test "warm project tests revalidate import policy and required generated interfa
     try context.write("mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
     try context.write("policy.json", "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}");
     const denied = try context.run("app.my", &.{});
-    try expectStatus(context, denied, 1);
+    // A denied import policy exits 3, as the old CLI's policy gate does (NEW-CORE-S5-POLICY-1).
+    try expectStatus(context, denied, 3);
     try std.testing.expect(std.mem.indexOf(u8, denied.stderr, "deny") != null);
     try context.write("policy.json", "{\"version\":1,\"default_action\":\"allow\",\"rules\":[]}");
     try expectStatus(context, try context.run("app.my", &.{}), 0);

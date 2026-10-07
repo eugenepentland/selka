@@ -13,6 +13,8 @@ const eImmutable = diagnostic.immutable;
 const eResultDiscard = diagnostic.result_discard;
 const variantDeclaredHere = sema_shared.variantDeclaredHere;
 const std = @import("std");
+/// The warning a `with arena():` block carries (NEW-CORE-S5-ARENA-1).
+pub const arena_retired_code = "W_ARENA_RETIRED";
 /// The `W_ARENA_RETIRED` warning: what an arena block now does and how to drop it.
 const arena_retired = "`with arena():` is retired (S5-D3): the block runs as an ordinary block and frees nothing early; remove the `with arena():` line and dedent its body";
 const ast = @import("ast.zig");
@@ -86,7 +88,7 @@ fn statementWithFile(comptime Checker: type, self: *Checker, stmt: ast.Statement
 fn statementWithScope(comptime Checker: type, self: *Checker, stmt: ast.Statement, scope: @FieldType(@FieldType(ast.Statement, "data"), "with_scope"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
     if (scope.resource != null) return statementWithFile(Checker, self, stmt, scope, flow);
     // NEW-CORE-S5-ARENA-1: the new core runs an arena block as an ordinary block (S5-D3).
-    try self.sink.items.append(self.allocator, .{ .severity = .warning, .code = "W_ARENA_RETIRED", .span = stmt.span, .message = arena_retired });
+    try self.sink.items.append(self.allocator, .{ .severity = .warning, .code = arena_retired_code, .span = stmt.span, .message = arena_retired });
     var name: []const u8 = "";
     if (scope.name) |declared| {
         name = self.src.text(declared);

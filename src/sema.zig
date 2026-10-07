@@ -1481,8 +1481,12 @@ fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool
 // source diagnostic once, ordered independently of specialization discovery.
 fn normalizeDiagnostics(sink: *diagnostic.Sink) void {
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
+    // NEW-CORE-S5-ARENA-1: a rejected program reports its errors as before; the
+    // retired-arena advice is for a program that otherwise checks.
+    const rejected = reportedError(sink.items.items);
     var count: usize = 0;
     for (sink.items.items) |item| {
+        if (rejected and std.mem.eql(u8, item.code, @import("sema_statements.zig").arena_retired_code)) continue;
         if (count != 0) {
             const previous = sink.items.items[count - 1];
             if (previous.span.start == item.span.start and previous.span.end == item.span.end and
