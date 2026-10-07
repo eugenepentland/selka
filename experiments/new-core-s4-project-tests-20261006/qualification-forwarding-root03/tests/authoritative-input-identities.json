@@ -1,0 +1,1378 @@
+{
+  "tests/lang/README.md": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/README.md",
+    "sha256": "a2abef7456f8ca47a65e15b49efb139fcf767dc48e987190177c17bb3491f5d0"
+  },
+  "tests/lang/aggregate_refs.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/aggregate_refs.my",
+    "sha256": "32e09bb6165679c25e2173d427363a315259633c91a7dcc3424b77ae98f9073f"
+  },
+  "tests/lang/aggregate_refs_probe.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/aggregate_refs_probe.my",
+    "sha256": "4c56a5de3010800df479236cb32e31f502abe214146e6dd9ef98171ff002d592"
+  },
+  "tests/lang/arena_class_escape.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/arena_class_escape.my",
+    "sha256": "1829247cae61125a3d390307efc669c5b0fa5f78d12598e4cbefc1f30214be66"
+  },
+  "tests/lang/arena_managed.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/arena_managed.my",
+    "sha256": "9b29eb2047c7d76da1ddc1ab08ecff09719211aef5ff8d562695217f66199a6e"
+  },
+  "tests/lang/arena_regions.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/arena_regions.my",
+    "sha256": "43d103d992ac90aca93f1fb86db9b464615357a4bad759c0807c34e4dccf8b66"
+  },
+  "tests/lang/arena_scopes.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/arena_scopes.my",
+    "sha256": "1c6014ee8f220691fb54bf40a97795444ffc6ea458dd7d3991b355ebc6b02c74"
+  },
+  "tests/lang/argument_evaluation_order.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/argument_evaluation_order.my",
+    "sha256": "9a59614883e20d7bc0dcb84616523075f219947d191899040a2c91a3b3118fdd"
+  },
+  "tests/lang/array_negative_index.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/array_negative_index.my",
+    "sha256": "a8c67c9811a2f9d853f7d0b7a03d60719d9edfa7e5edd180b0e16e6d752075eb"
+  },
+  "tests/lang/array_places.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/array_places.my",
+    "sha256": "ca2ffa749a61b15882afd4c4fce5e68b9db3022410ef70504d14d630b084c7be"
+  },
+  "tests/lang/array_writes.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/array_writes.my",
+    "sha256": "db09af32f1cc3898e836ae5a8ce6e5f9f5b682166643a6eb29051127a8c2dc5a"
+  },
+  "tests/lang/backlog/compiler___precedence_grouping_left_associativity_and_o.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/compiler___precedence_grouping_left_associativity_and_o.my",
+    "sha256": "adc5d56e300db2d6299c199d59151635d4443b8832c03c8cd7edebd22fb42f08"
+  },
+  "tests/lang/backlog/compiler___precedence_grouping_left_associativity_and_o_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/compiler___precedence_grouping_left_associativity_and_o_2.my",
+    "sha256": "042bb36d21fc96b021d846b6216657717b268220662b8f765567c0d7d89d0970"
+  },
+  "tests/lang/backlog/compiler___precedence_grouping_left_associativity_and_o_3.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/compiler___precedence_grouping_left_associativity_and_o_3.my",
+    "sha256": "8146d083ce5bcb02f4d4d40088eb343e7b30e92ccdbc6039dea04cde10fa1b35"
+  },
+  "tests/lang/backlog/compiler___precedence_grouping_left_associativity_and_o_4.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/compiler___precedence_grouping_left_associativity_and_o_4.my",
+    "sha256": "a730f313a697a5ee16e52d882b723a7c94c2eef93c62dbf756499453d55cf3dd"
+  },
+  "tests/lang/backlog/compiler___precedence_grouping_left_associativity_and_o_5.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/compiler___precedence_grouping_left_associativity_and_o_5.my",
+    "sha256": "723665f28b74cd86774dc2845c562d1f2c272761e098c9ac40506a9d75f660b4"
+  },
+  "tests/lang/backlog/compiler___signed_division_and_remainder_implement_trun.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/compiler___signed_division_and_remainder_implement_trun.my",
+    "sha256": "ce960d553b9632f50822c1ef3a76ec5aa06a0aa1e97806ba6e497fc2bd530bf7"
+  },
+  "tests/lang/backlog/compiler___signed_division_and_remainder_implement_trun_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/compiler___signed_division_and_remainder_implement_trun_2.my",
+    "sha256": "dc3f2fbf3139088666e5393e49a520892608a65b1e0035112868bbf4af423314"
+  },
+  "tests/lang/backlog/compiler___signed_division_and_remainder_implement_trun_3.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/compiler___signed_division_and_remainder_implement_trun_3.my",
+    "sha256": "7010008b30bbd3af6aae7c67194abac42ce55c2a228371fedd4500f2b7a0df6e"
+  },
+  "tests/lang/backlog/compiler___signed_division_and_remainder_implement_trun_4.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/compiler___signed_division_and_remainder_implement_trun_4.my",
+    "sha256": "346105419a614e05d4d47ae7df4042c7b58ada19e26d9bc32aa453c5c964d064"
+  },
+  "tests/lang/backlog/compiler___signed_division_and_remainder_implement_trun_5.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/compiler___signed_division_and_remainder_implement_trun_5.my",
+    "sha256": "d5ea7ab5489bf0dbc5638b4556fa1300860482dacdb15a0203c121495e051254"
+  },
+  "tests/lang/backlog/compiler___signed_division_and_remainder_implement_trun_6.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/compiler___signed_division_and_remainder_implement_trun_6.my",
+    "sha256": "5ee325349d019049fc8a2568eedd37c6e98d6c2c8eb2da28f8b791c80425586b"
+  },
+  "tests/lang/backlog/compiler___signed_division_and_remainder_implement_trun_7.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/compiler___signed_division_and_remainder_implement_trun_7.my",
+    "sha256": "c2b74afdb11a188c2378ac25c3fdb05f9f58800b901472e9b0981d9e20819dec"
+  },
+  "tests/lang/backlog/compiler___signed_division_and_remainder_implement_trun_8.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/compiler___signed_division_and_remainder_implement_trun_8.my",
+    "sha256": "73407c6fd73369b78c5c372b0dd25fa703353260863017563df3d80d28637b6c"
+  },
+  "tests/lang/backlog/const_lengths___const_length_function_parameters_specialize.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/const_lengths___const_length_function_parameters_specialize.my",
+    "sha256": "1317e0528b57c205f84a502920e7f11c937698b09249dd9fad2ee7a38fca670e"
+  },
+  "tests/lang/backlog/const_lengths___one_helper_serves_distinct_nominal_element_t.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/const_lengths___one_helper_serves_distinct_nominal_element_t.my",
+    "sha256": "0583f6629e87efb34930396e71bb4a624d82991c3d853f786ebe2e89675a3d6e"
+  },
+  "tests/lang/backlog/float_operations___ordinary_float_values_reach_the_same_binary6.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/float_operations___ordinary_float_values_reach_the_same_binary6.my",
+    "sha256": "0b6773a34cce8ded317268c7503aad353782553612f9461c940eabcc41109da5"
+  },
+  "tests/lang/backlog/python_syntax___match_merges_definite_assignment_across_cont.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/python_syntax___match_merges_definite_assignment_across_cont.my",
+    "sha256": "2adb33c6be5dcb3082ee16121d47b7f7b766cab7e06a131e5a2d3a7217cf4aa6"
+  },
+  "tests/lang/backlog/python_syntax___match_merges_definite_assignment_across_cont_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/python_syntax___match_merges_definite_assignment_across_cont_2.my",
+    "sha256": "c517bd69f13aa9d19d955f1e815e013b6c3b9b4746a2e1c48c3bbe74184fdcca"
+  },
+  "tests/lang/backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple.my",
+    "sha256": "fe285ca98e2ce0d48db14e9b5a4adeaf5e17f53342cf466babc7c774c2ed988a"
+  },
+  "tests/lang/backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple_2.my",
+    "sha256": "10f884daa5f8a818446a1165953f16aa8857135f284c546991424010e09903e9"
+  },
+  "tests/lang/backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple_3.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple_3.my",
+    "sha256": "907e0ed4278cc3e9fc0f16462967224311d2c1731b4ce808e74456eb009835df"
+  },
+  "tests/lang/backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple_4.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple_4.my",
+    "sha256": "a07b65c460b92a97d5bb520cf6465b748ef8fd8da399e14258b422e37136efe1"
+  },
+  "tests/lang/backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple_5.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple_5.my",
+    "sha256": "dcd6b420834f3d4c3129d7673a68c083b993e410d999b5cff883337a9f1c61cf"
+  },
+  "tests/lang/backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple_6.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/python_syntax___py_scope_1_predeclared_loop_state_and_comple_6.my",
+    "sha256": "92d571d02ee366a90b7aeca7131180bb95ed63eb935e59cb6215c70871f5667e"
+  },
+  "tests/lang/backlog/python_syntax___python_generic_value_records_use_square_cons.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/python_syntax___python_generic_value_records_use_square_cons.my",
+    "sha256": "7491f8ec5fec21479c5c29741641308f3e51d2e87aee4a96eb125a65ec06d5dd"
+  },
+  "tests/lang/backlog/python_syntax___python_generics_default_to_copy_and_none_mea.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/python_syntax___python_generics_default_to_copy_and_none_mea.my",
+    "sha256": "0f0df738b045f4e6eea151c5ecdb6537e9c3c94d79a0f7bc3714a3ed334a5456"
+  },
+  "tests/lang/backlog/python_syntax___record_is_the_canonical_declaration_head_wit.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/python_syntax___record_is_the_canonical_declaration_head_wit.my",
+    "sha256": "8b66c5f01b848cf865d2cc7325ff25f97c6a5b708060c6a5e3bb8865c2714b1b"
+  },
+  "tests/lang/backlog/python_syntax___record_is_the_canonical_declaration_head_wit_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/python_syntax___record_is_the_canonical_declaration_head_wit_2.my",
+    "sha256": "f108edc39af0a53e3486ab61aaf7f23bae29d3ac3e5687915ee5eb1442f0b8f8"
+  },
+  "tests/lang/backlog/unit___unit_fallthrough_and_early_return_release_ma.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/backlog/unit___unit_fallthrough_and_early_return_release_ma.my",
+    "sha256": "9bb196deeb396ff0eb274f50a6255f4b616636f3e5613553dcb55fafcd5a02cb"
+  },
+  "tests/lang/borrowed_roots.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/borrowed_roots.my",
+    "sha256": "b6f599a418fa70b516edf308c2bd5c0a6c1c7476751fc8e1f1941dc076a39d6b"
+  },
+  "tests/lang/bounded_loop_ranges.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/bounded_loop_ranges.my",
+    "sha256": "4c6e5bc402dd7e2511530c97a4b2f5ad2b40fa6dec177dbf03af8fd7602022b9"
+  },
+  "tests/lang/builtin_context.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/builtin_context.my",
+    "sha256": "1b23323f01bd5c37242f046fcca232b9a69cea173851ae23dcd18821593b38eb"
+  },
+  "tests/lang/byte_buffer.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/byte_buffer.my",
+    "sha256": "fe48ad7a0fed4f4ed37f1e14e13348ef2a76b0007686a72c32de3a88f2f73c51"
+  },
+  "tests/lang/byte_buffer_from_list.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/byte_buffer_from_list.my",
+    "sha256": "c66498dfde582ca27917053291591f1ce0d6e63b01976bfbd9a3f6971fc1a789"
+  },
+  "tests/lang/byte_iteration_reductions.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/byte_iteration_reductions.my",
+    "sha256": "c6226992f27e72283ec8368a8a0a62510aeaf8d3bc59ab2a5592c94ddbe9d906"
+  },
+  "tests/lang/byte_range_fusion.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/byte_range_fusion.my",
+    "sha256": "87f79cd49b7f6c33f39afeabc17ab8d3067f00c7be2987e5ad284a840eeadb21"
+  },
+  "tests/lang/byte_ranges_llvm.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/byte_ranges_llvm.my",
+    "sha256": "9d1d1cdf9c93a689f44e61111c21d398985fde0e632e790c6fe1183e94484fc6"
+  },
+  "tests/lang/byte_views.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/byte_views.my",
+    "sha256": "5483a3c9d3bf62e1cfe56122e2e158caa5146beaae424fcec8533e77fb25893c"
+  },
+  "tests/lang/callback_slots.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/callback_slots.my",
+    "sha256": "7d8201ec7004e225f74a85d2e1114eaaa3a81ca8dc9ee5cd2c48864562e67053"
+  },
+  "tests/lang/callbacks.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/callbacks.my",
+    "sha256": "a26e3f1438fb53c44d06c69e2eedf7fd2707cc31885b3c66f554f336fcd5d31b"
+  },
+  "tests/lang/capability_fields.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/capability_fields.my",
+    "sha256": "c9f5feae4a8e52c3b6aa3922850cefd110e01e37319a762609c83c3761fa449a"
+  },
+  "tests/lang/checked_arithmetic.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/checked_arithmetic.my",
+    "sha256": "1005dbf43b21b4fa903d179cf966a20c8eeab0d9c8fbd90fabfa0d05689a65e4"
+  },
+  "tests/lang/closed_record_inout.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/closed_record_inout.my",
+    "sha256": "37d89eafb076605b9b9a4c0c61649a4245383d8ab5e386df42654496ed86b4c7"
+  },
+  "tests/lang/collection_read_callbacks.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/collection_read_callbacks.my",
+    "sha256": "37c2a81c0d5e145b1e1a262b02a016e0af177c7f442ba443d58917d2f7f98f67"
+  },
+  "tests/lang/conditional_expression.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/conditional_expression.my",
+    "sha256": "26685b88c15769e425c53648fb26ec6bc6a7626fe3d788940929ba0949f6be50"
+  },
+  "tests/lang/constant_divisors.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/constant_divisors.my",
+    "sha256": "a8de4ca06b91f133cbed3fe5dc4ee2e2b4b2eb605316db61590a9d22c66a6b52"
+  },
+  "tests/lang/constant_list_image.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/constant_list_image.my",
+    "sha256": "310e6a2d7ce7aa12a333034487c2207d6c4315f414060bcc13664a6e5c267098"
+  },
+  "tests/lang/constant_methods.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/constant_methods.my",
+    "sha256": "5ff2abfc163a3e93fc5604ca714afef7ae4177955646982bfc8dd395def20e80"
+  },
+  "tests/lang/constant_methods_support.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/constant_methods_support.my",
+    "sha256": "3d1c76a45e9920707847c45dc871d673843808465fa96efbdf358bb870fcba5e"
+  },
+  "tests/lang/contracts.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/contracts.my",
+    "sha256": "1e49bc18325c349c89d3a985166d24bf2fb916636a062ed8d98cef325793507c"
+  },
+  "tests/lang/dict_comprehensions.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/dict_comprehensions.my",
+    "sha256": "314048d879d822c9c1bc800b9ddb8aadef788b4fcffbf67c3a15d6ea4878e5aa"
+  },
+  "tests/lang/dictionary_hash_index.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/dictionary_hash_index.my",
+    "sha256": "631c8b738f988b4594cf80d72014c8c807b99c9426fa53fd12205431ecbf4e51"
+  },
+  "tests/lang/dictionary_hashing.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/dictionary_hashing.my",
+    "sha256": "4c2fe378d0928f72f33fae6e7361746af33514bee93ca3b0eb0e6b121a2c74d1"
+  },
+  "tests/lang/dictionary_range_keys.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/dictionary_range_keys.my",
+    "sha256": "25b5871911289b1234478ea575cea64c1dce2d6c2ee4c6e4612a0551a5622608"
+  },
+  "tests/lang/dictionary_views.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/dictionary_views.my",
+    "sha256": "2c8c738d198aba2e329a2636970715733caf4f8cda8e77b4947bd34781cb6ea2"
+  },
+  "tests/lang/discard_names.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/discard_names.my",
+    "sha256": "57e4954181115823af4d5f178181b51d73cbabdd13bdc35bb1d2503637160987"
+  },
+  "tests/lang/element_access.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/element_access.my",
+    "sha256": "c748eb1686a61139ad69360e20d096478083256e9384a1ac8747872a83013646"
+  },
+  "tests/lang/element_borrows.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/element_borrows.my",
+    "sha256": "c54f85625bea6efcfa1cf8b75738bab7505fa89a2ea4269268f449bd9a0a8940"
+  },
+  "tests/lang/embed.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/embed.my",
+    "sha256": "cb96318862692dc57cf331275e542578bfe9e0bee4a49113c1b1b6e4702188e9"
+  },
+  "tests/lang/embed_fixtures/binary.bin": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/embed_fixtures/binary.bin",
+    "sha256": "42c1831a39c69b73bba9f3c7ca1357af60b4506bd0743a38f68e52c9dd5062e2"
+  },
+  "tests/lang/embed_fixtures/empty.bin": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/embed_fixtures/empty.bin",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "tests/lang/embed_fixtures/lines.txt": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/embed_fixtures/lines.txt",
+    "sha256": "4fdbc441ea7b546100e086ac1e4fc5ae6749b7314311c99db05be450eca12996"
+  },
+  "tests/lang/embed_fixtures/multi.txt": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/embed_fixtures/multi.txt",
+    "sha256": "d90e49754397bafe2e75993679ce4aa7138beed47640a7bcd5f5665bbf71e377"
+  },
+  "tests/lang/embed_fixtures/nul.bin": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/embed_fixtures/nul.bin",
+    "sha256": "1bd95cf6379b94fd3b6ceb1390b70b822c76442c4bfb8273b941e09d8dfd9b56"
+  },
+  "tests/lang/embed_fixtures/support.txt": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/embed_fixtures/support.txt",
+    "sha256": "4f57473fa4d1626177901b15fb8ad76dbcde04d592519dea2cf65f7098a62aaa"
+  },
+  "tests/lang/embed_support.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/embed_support.my",
+    "sha256": "192c1b03aafc550c9336f11635075feaa21ec12c0bf5c0becf99407b655f5179"
+  },
+  "tests/lang/error_traces.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/error_traces.my",
+    "sha256": "e164dadf07df1774c9e7f1b0d23549c1b4e133efb092d4425073ccb0bfdf3b08"
+  },
+  "tests/lang/exclusive_ownership.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/exclusive_ownership.my",
+    "sha256": "12a5b1c98c0d5f0507c2d6d92b5bf5a16d6c6c8449f1713ac3c7091a7776a7b7"
+  },
+  "tests/lang/expected_type_inference.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/expected_type_inference.my",
+    "sha256": "ede48a81b968ec334ec43524ac63fa68f79fe6c77c692e7b38703c3c8f21b17c"
+  },
+  "tests/lang/field_augmented.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/field_augmented.my",
+    "sha256": "b5ba3c929e8ed74e315d499b9557c2b8dec8c82f66e6dc71d73ca01308913913"
+  },
+  "tests/lang/float_constants.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/float_constants.my",
+    "sha256": "b8db5748c78f37c0c52ea7e974976c070b69501f8f5b302b324aadeb9bb72c51"
+  },
+  "tests/lang/float_constants_support.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/float_constants_support.my",
+    "sha256": "bed73fb647e4ce78f2a97bc06689eba3ebcf3fb155711571ff4264342823b820"
+  },
+  "tests/lang/float_environment.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/float_environment.my",
+    "sha256": "1bba458d935f12f46ba5d0ca7a15363f6df75a004d6da165fdce5204167d4a7f"
+  },
+  "tests/lang/float_integer_casts.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/float_integer_casts.my",
+    "sha256": "ed7fa8f6d42b43e884ae325bdb4da87fd125b5b16a22d33901f550858a7bb5c6"
+  },
+  "tests/lang/float_nan.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/float_nan.my",
+    "sha256": "b41a9625bea3764cd73ffc9e7c4de4d94290098e6efc09514e6a15481bed1186"
+  },
+  "tests/lang/format_specs.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/format_specs.my",
+    "sha256": "96fd8d37209074d544d239f3f77ea61616b41ad662ac1638dc79c7dfc0089da0"
+  },
+  "tests/lang/gc_arena_root_lifetimes.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/gc_arena_root_lifetimes.my",
+    "sha256": "17240a9fada08659f365e518491fb60497712fb8fb648d959ef5fd5e6073f277"
+  },
+  "tests/lang/gc_footprint.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/gc_footprint.my",
+    "sha256": "d623c59985db2f0744efba8344986cf9548551035f19e702206c6dd21ab22a31"
+  },
+  "tests/lang/gc_generations.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/gc_generations.my",
+    "sha256": "a58d7aad411db35282a980ca6b75494a62ccb671faa14c5b189c1afcbe8d6b6a"
+  },
+  "tests/lang/gc_mut_argument_roots.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/gc_mut_argument_roots.my",
+    "sha256": "f7fc6ff8f435312ff8db9c5fccdfe23b078d35a8910cf184c9cf04bd0fe46d93"
+  },
+  "tests/lang/generator_arguments.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/generator_arguments.my",
+    "sha256": "40cedc653276cd48e7e5c94387b7c89aa6cf1c42eaaf1992522ab68f6ad31e78"
+  },
+  "tests/lang/immutable_equal.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/immutable_equal.my",
+    "sha256": "5db0c8d488b271fcae76e73492fc000f5a1e7b6e7e41f25d4ceab24989b68d12"
+  },
+  "tests/lang/integer_float_rounding.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/integer_float_rounding.my",
+    "sha256": "d51e3d3eec96a6a4b0861b08ecacb7cb2d483efd5d44acc962abc969f5d3fb5a"
+  },
+  "tests/lang/integer_text.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/integer_text.my",
+    "sha256": "830f95a93b980af3638ff2bb934c8fe3f8a8fa91a43a470985a2b4a3b1e5ed7d"
+  },
+  "tests/lang/iteration_identity.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/iteration_identity.my",
+    "sha256": "7d5d880248fa1d6a904e92ea0a59aa09056a29bb1053a09e900c938ba8ed7388"
+  },
+  "tests/lang/keyed_sorting.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/keyed_sorting.my",
+    "sha256": "85320bc410a1938dadd96d0be9a4e5881ff17ed6f43fffa4371c00aadbcb8d55"
+  },
+  "tests/lang/keyword_only.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/keyword_only.my",
+    "sha256": "b86a1c04ea709ff3deaa6d6be217635a3c89189d72ea61f5b1a5063c63810bb5"
+  },
+  "tests/lang/lambda_sort_keys.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/lambda_sort_keys.my",
+    "sha256": "0d489cd6d640c5ba5e260d7bf9e414efeaae2647a5d2b93829d429db1c457bef"
+  },
+  "tests/lang/live_place_iteration.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/live_place_iteration.my",
+    "sha256": "f23dc0582799a7a8922c09fcc1c950d7c0fbc905c271d023e920058d9da68836"
+  },
+  "tests/lang/live_view_snapshots.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/live_view_snapshots.my",
+    "sha256": "82e844bde400ea8f4ceb0adea99e999c8cc0cdee581ce019a02a8a122559ec1e"
+  },
+  "tests/lang/local_stack_list.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/local_stack_list.my",
+    "sha256": "0a90b2d6431dfb2f1ccf64c90429d9594da2d10000d71fde2f7e49260e0a2385"
+  },
+  "tests/lang/loop_rebinding.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/loop_rebinding.my",
+    "sha256": "778ddd139f27b30bf06196547f84316b958df2bc10bb70fac67ded3509c095dd"
+  },
+  "tests/lang/math_trig.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/math_trig.my",
+    "sha256": "95b51718498661dd060d385aa6f2308a998ddef738ba31258d7713f59a03bce1"
+  },
+  "tests/lang/migrated/compiler.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/compiler.my",
+    "sha256": "9bc2aacf68eee2fe44a08301f386a29a0560649fd8e16cf4014bea1e9aed057f"
+  },
+  "tests/lang/migrated/compiler_case_1.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/compiler_case_1.my",
+    "sha256": "d6bcc452e2978bfad883d4e9b0eb0ad8742ce066b20cfb6f160fb1cd4d85c10c"
+  },
+  "tests/lang/migrated/compiler_case_10.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/compiler_case_10.my",
+    "sha256": "fad0bab14e437fcfc84ad2675a098bea886d6cf3f6f4fc0af272b09eeaed4d18"
+  },
+  "tests/lang/migrated/compiler_case_11.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/compiler_case_11.my",
+    "sha256": "0bb8dc8a64b0a9c860973f29450620e659c3af1eb1b810723bbbdae61fba4b2f"
+  },
+  "tests/lang/migrated/compiler_case_12.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/compiler_case_12.my",
+    "sha256": "2f7b7815ce7adf519f9ee331c5cce378a36580d25054a2c87f65b43fbbdf27f8"
+  },
+  "tests/lang/migrated/compiler_case_13.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/compiler_case_13.my",
+    "sha256": "d667b56107821d2734a56745acfb8c4e5c5025b879fd13b6ec5f418db6fbd15d"
+  },
+  "tests/lang/migrated/compiler_case_14.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/compiler_case_14.my",
+    "sha256": "30dd401881eddcc353698bb5a217b9093d69bc289d0054adc362c21af4079fb4"
+  },
+  "tests/lang/migrated/compiler_case_15.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/compiler_case_15.my",
+    "sha256": "23e9138b23a3ee27360f104c23e5211ffc3cd6617eb5b1bfa5492ea6d50e0f9b"
+  },
+  "tests/lang/migrated/compiler_case_16.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/compiler_case_16.my",
+    "sha256": "1d2a63192ff8f4915aadf8dd44d3cc3bf3fa192cccabcac0593bd4f6b198f92a"
+  },
+  "tests/lang/migrated/compiler_case_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/compiler_case_2.my",
+    "sha256": "3008974ca5284dd40848eef97ea49caeadcd79e89f2654df73532c93e4fc0eac"
+  },
+  "tests/lang/migrated/compiler_case_3.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/compiler_case_3.my",
+    "sha256": "b01dc6190c5aff8a63b348b635c21a98affb3b13da9581eb9a4d7aa68ec0c24f"
+  },
+  "tests/lang/migrated/compiler_case_4.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/compiler_case_4.my",
+    "sha256": "d52c3d0c39ffccd75e08fbd6899355733c9a624544d4b4278f78951d6324d0e6"
+  },
+  "tests/lang/migrated/compiler_case_5.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/compiler_case_5.my",
+    "sha256": "835434e172676a11fd57d7bf40438b77b0f691eba698339fb1eb009855b434da"
+  },
+  "tests/lang/migrated/compiler_case_6.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/compiler_case_6.my",
+    "sha256": "32f40d6cdfa36156e65c8c6e8ffa2bf42d4e817a3a74b6c35ee84023af6839a0"
+  },
+  "tests/lang/migrated/compiler_case_7.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/compiler_case_7.my",
+    "sha256": "a0bffe018cc4083d032d4d9d823ab46aa76d9fd641fd21dd34fc5b46413ea81e"
+  },
+  "tests/lang/migrated/compiler_case_8.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/compiler_case_8.my",
+    "sha256": "a7c30033a0fde7d4c2fb0f29d7461876dc7ba114d320c50baa0ec7fa4e54da51"
+  },
+  "tests/lang/migrated/compiler_case_9.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/compiler_case_9.my",
+    "sha256": "35a4ddddf0cc050d764f032132db9b5f900f925296239f619bcc09a396f18746"
+  },
+  "tests/lang/migrated/domain_equality.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/domain_equality.my",
+    "sha256": "f6e8f6f943ba39db16d8e7e205ec2c5a09f26e3a0e29d89bc8540415396e1e0c"
+  },
+  "tests/lang/migrated/domain_equality_case_1.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/domain_equality_case_1.my",
+    "sha256": "47984b1020b57cbcc447e58da57ac7195d0f3c7091be739d9f4a41f91dafd3e5"
+  },
+  "tests/lang/migrated/effects.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/effects.my",
+    "sha256": "637951110e37155c9110a772de9804cae5c35819b57f43f31faf1fd513989a3a"
+  },
+  "tests/lang/migrated/effects_case_1.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/effects_case_1.my",
+    "sha256": "419fde90788fc4426475c8c7dfd630cc6ca69e6ffff44bb8f06630c19ea46b03"
+  },
+  "tests/lang/migrated/effects_case_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/effects_case_2.my",
+    "sha256": "8828ffeeca1c09f13cff3e49bddb579373d499e1dc3af4d96ca73b949a8fd858"
+  },
+  "tests/lang/migrated/effects_case_3.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/effects_case_3.my",
+    "sha256": "18db678ab2b031b42b2892280578cc80362346e1293881d7c78177797a110a7c"
+  },
+  "tests/lang/migrated/effects_case_4.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/effects_case_4.my",
+    "sha256": "7438713fa9201ad3660c17256a75fc769c0eda1f0d55cbf72935d91930708c65"
+  },
+  "tests/lang/migrated/effects_case_5.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/effects_case_5.my",
+    "sha256": "3761e2a8c2879e5b43d81272216f86411c8ba71de77da7899e5891896281298c"
+  },
+  "tests/lang/migrated/generic_arrays.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/generic_arrays.my",
+    "sha256": "4c62c4a8b2256e4c2e145e4b7018cf3e177ba82280dad4f6832c501cc27ec504"
+  },
+  "tests/lang/migrated/generic_arrays_case_1.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/generic_arrays_case_1.my",
+    "sha256": "c367636c647b0ae2a198c1c108fffa912b7ae7e6161a80860bb56bb39b36f5c4"
+  },
+  "tests/lang/migrated/generic_arrays_case_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/generic_arrays_case_2.my",
+    "sha256": "c9d788256852bedb65966a053c21f92c6a3a17ea59e00d902133b021ce50e95e"
+  },
+  "tests/lang/migrated/generic_arrays_case_3.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/generic_arrays_case_3.my",
+    "sha256": "31b78823b656e9101fbc086f3849ad9b3c86bb3359f21acbe10c8926ea0a7bed"
+  },
+  "tests/lang/migrated/generic_inference.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/generic_inference.my",
+    "sha256": "d49464e9a600873bfd081db64a494b40d5a70635059d34bf0856a4eea886815f"
+  },
+  "tests/lang/migrated/generic_inference_case_1.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/generic_inference_case_1.my",
+    "sha256": "76c8d4fe3336390b243e40451af9f2e07b2354bd2f478b087333e69c83e4e26d"
+  },
+  "tests/lang/migrated/generic_inference_case_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/generic_inference_case_2.my",
+    "sha256": "d8e819e6af20aec25e44b208c034131d2bae525616c331d00518e2ddecbeede7"
+  },
+  "tests/lang/migrated/generic_inference_case_3.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/generic_inference_case_3.my",
+    "sha256": "19e893c16864376607eca2d4dd5a8ea6782efcbb1a983c161e2d6c5a12fa043f"
+  },
+  "tests/lang/migrated/generic_inference_case_4.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/generic_inference_case_4.my",
+    "sha256": "5c2fd853002308c191fad0bd73e1e90aae20e5eafac791240c953fc2593252ec"
+  },
+  "tests/lang/migrated/generic_results.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/generic_results.my",
+    "sha256": "d4fa6f10a2301d4fc9e64ead42f25b6ead5bb9425f4013ffd3805c038ab40df5"
+  },
+  "tests/lang/migrated/generic_results_case_1.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/generic_results_case_1.my",
+    "sha256": "28105fcd94b8c12e92503d4c0a697a448d7eb9bf835b8af556f7a330cdea96a1"
+  },
+  "tests/lang/migrated/managed_values.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/managed_values.my",
+    "sha256": "b0597c82670d13248a1e238880cf3f168a5e633c380fa37580258145b48ea6f7"
+  },
+  "tests/lang/migrated/managed_values_case_1.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/managed_values_case_1.my",
+    "sha256": "8e30e9eebc85f830e4a3c6ba795d857a4c242ee4f1bd7fe638587edde972d991"
+  },
+  "tests/lang/migrated/managed_values_case_10.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/managed_values_case_10.my",
+    "sha256": "4d9288b1ad2239bbf4f38a17d844f6d1f2eb21ec67f1522ead24f082e095000a"
+  },
+  "tests/lang/migrated/managed_values_case_11.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/managed_values_case_11.my",
+    "sha256": "68308b0ddbc1cff2eb14d0db7bb7b5a691d58a8362324bfd47a3d54e6ac17f5f"
+  },
+  "tests/lang/migrated/managed_values_case_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/managed_values_case_2.my",
+    "sha256": "edc2ee7deb88be888575256d110ec9ee634f96e1a80c6789239595caec16c037"
+  },
+  "tests/lang/migrated/managed_values_case_3.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/managed_values_case_3.my",
+    "sha256": "f1c88741b1b70240acc899b1549a16aa562dcc62ce129eab1c93fcb062a2c24b"
+  },
+  "tests/lang/migrated/managed_values_case_4.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/managed_values_case_4.my",
+    "sha256": "5e0887c3b7b8548401701fb5c25905d5cecebe819972ebcce7a378bab0b1d652"
+  },
+  "tests/lang/migrated/managed_values_case_5.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/managed_values_case_5.my",
+    "sha256": "94f3a60eebf1d1f0196dabfb7787d645894ae70dcaa003e2c40b2ce74ec065ec"
+  },
+  "tests/lang/migrated/managed_values_case_6.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/managed_values_case_6.my",
+    "sha256": "fd113a34a024af03623ac696bef160a0fff2b65f755d9bded29a308314fc5061"
+  },
+  "tests/lang/migrated/managed_values_case_7.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/managed_values_case_7.my",
+    "sha256": "2586c1e5d5fc01891908fda79a713647fb0e25174d6ddb2d1876d1f84ac07e1b"
+  },
+  "tests/lang/migrated/managed_values_case_8.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/managed_values_case_8.my",
+    "sha256": "3c78970eee70fbf6dd3a0c2ea3f4a88d53789bed95832c062a4a7afcb60da0cc"
+  },
+  "tests/lang/migrated/managed_values_case_9.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/managed_values_case_9.my",
+    "sha256": "54f2aa21adec6baeb10469e3c6a95cdf197196a9d4e65d88bf203d7a09e4b9e4"
+  },
+  "tests/lang/migrated/prelude_builtins.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/prelude_builtins.my",
+    "sha256": "3879c291b05150ebb4e4a6a2af960992fea70e7b43bffde6c2de0f90413f86bb"
+  },
+  "tests/lang/migrated/prelude_builtins_case_1.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/prelude_builtins_case_1.my",
+    "sha256": "a3dd244e51bad7fc71aac48e9ca8f2af78d74b96453e995142c7e9cbe7017b74"
+  },
+  "tests/lang/migrated/prelude_builtins_case_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/prelude_builtins_case_2.my",
+    "sha256": "49faa52157b06d3a025a86c226a3871999be2f1ba5303b8492bac5b4b624033e"
+  },
+  "tests/lang/migrated/prelude_builtins_case_3.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/prelude_builtins_case_3.my",
+    "sha256": "3c1455bcf0b3e62f99e50c09b68f9de47ea928888c8fe12be81d04d659a98761"
+  },
+  "tests/lang/migrated/prelude_builtins_case_4.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/prelude_builtins_case_4.my",
+    "sha256": "b0d478262d5e4bc014aac210f85bd472963317d6d68de6fc3e560e6a5a0a6e20"
+  },
+  "tests/lang/migrated/propagation.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/propagation.my",
+    "sha256": "37dc7bc502d4e371d78b97d846f38773804515799fe8200cb06c44395b7c683c"
+  },
+  "tests/lang/migrated/propagation_case_1.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/propagation_case_1.my",
+    "sha256": "4e803f0060904572d5ad7dc9adcd5b06d6c3348b7e844eeb33b4f84ba4ab7533"
+  },
+  "tests/lang/migrated/propagation_case_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/propagation_case_2.my",
+    "sha256": "37866587d93d1d8d6a1027a8da75141abd57a6d14d3ae60d20e923166d9807ed"
+  },
+  "tests/lang/migrated/propagation_case_3.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/propagation_case_3.my",
+    "sha256": "0d82924df3e665d2f0a636e2b1db3f64f9b3be41ea981c8991018d858adfa017"
+  },
+  "tests/lang/migrated/propagation_case_4.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/propagation_case_4.my",
+    "sha256": "c1eb31d756c8cdcb14368eadf63a9a15f981753daec23c9c34da26c053c4fab1"
+  },
+  "tests/lang/migrated/propagation_case_5.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/propagation_case_5.my",
+    "sha256": "80e4adf072ea3e829f3095f31b434e236da9fabe2855c9c1bb30ebd4da8f8042"
+  },
+  "tests/lang/migrated/propagation_case_6.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/propagation_case_6.my",
+    "sha256": "1ca20dfbdeca2803bb5ace4270439524a0059753d1979887c48e07d775faf5dd"
+  },
+  "tests/lang/migrated/propagation_case_7.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/propagation_case_7.my",
+    "sha256": "457452fed4d15521ff08193d29a3e9351894f24583912e0cd4b41882ee290c17"
+  },
+  "tests/lang/migrated/propagation_case_8.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/propagation_case_8.my",
+    "sha256": "ab55fd6c84e6cfbc259141d3fefc516fea9bf31a40099b9a5fb2f597fb4b8b2f"
+  },
+  "tests/lang/migrated/propagation_case_9.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/propagation_case_9.my",
+    "sha256": "6d4dff399e5587c9ef365a5c36a6666e414ea1a3e6cd26a9986d2c1b8cca2313"
+  },
+  "tests/lang/migrated/python_format.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/python_format.my",
+    "sha256": "0b63ae56ce74212bb184fc4044b3064dd8c4b9804c45eae3b549b0fc9e53e421"
+  },
+  "tests/lang/migrated/python_format_case_1.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/python_format_case_1.my",
+    "sha256": "d6d35cd4dc91faf2fe845fd0dd878e3d62f8e42228e44a603dafcc5a86e8bb36"
+  },
+  "tests/lang/migrated/python_format_case_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/python_format_case_2.my",
+    "sha256": "723a560df10a90c2f24ff1748fa446885529a1cb55d4c80a4e3474240a0841be"
+  },
+  "tests/lang/migrated/python_format_case_3.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/python_format_case_3.my",
+    "sha256": "6a65f5d55bb56c5514a8b194d32f225cf064b7b60bc561e424db9e30bfcc6870"
+  },
+  "tests/lang/migrated/python_generics.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/python_generics.my",
+    "sha256": "12c3fef97e55c8b2e4bc83d329d02d4f8fcaab569b096d4d4b91beb68602c2cd"
+  },
+  "tests/lang/migrated/python_generics_case_1.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/python_generics_case_1.my",
+    "sha256": "6c8bc22103c0b0996e9ee4e43d0d7c0ca707ef953e710c6d7c275cd896c7188a"
+  },
+  "tests/lang/migrated/python_generics_case_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/python_generics_case_2.my",
+    "sha256": "f8d84d8c4d2c41d12a432cca809548c7cd2dd233030ff59e09d44b0bc0ae38c2"
+  },
+  "tests/lang/migrated/python_surface.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/python_surface.my",
+    "sha256": "ddf5800b677868f08729fdd878d4af9eec154d21775e2f653b0489a535f55a22"
+  },
+  "tests/lang/migrated/python_surface_case_1.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/python_surface_case_1.my",
+    "sha256": "0c8bbfa524582c44089cb7b266bc23f23a4b9b4a5b12ef7d5b92faa647795be1"
+  },
+  "tests/lang/migrated/python_surface_case_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/python_surface_case_2.my",
+    "sha256": "ec4f3b7aa171c98633fa84fc16a0a37446ee88def99ed841db56a8d56d1bf670"
+  },
+  "tests/lang/migrated/python_surface_case_3.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/python_surface_case_3.my",
+    "sha256": "99ae9570eeeceb18927db8f6a9982270f4e2991e0c23114a75f3b226052f12e4"
+  },
+  "tests/lang/migrated/records.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/records.my",
+    "sha256": "674677538a78db9beaec2e3b35f082de42bf8d466603233b9ee5149a74d025b0"
+  },
+  "tests/lang/migrated/records_case_1.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/records_case_1.my",
+    "sha256": "85c37d0c0cd50cc798cb19e4dfa12c1e7dc9d209fd06bc16250ca729bce33c0e"
+  },
+  "tests/lang/migrated/records_case_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/records_case_2.my",
+    "sha256": "f6091c831ed4d9d6aa2bdf41f03b7351e19716459ac86fc646f16d3d424d57e2"
+  },
+  "tests/lang/migrated/records_case_3.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/records_case_3.my",
+    "sha256": "7afe0e6b242f626827cebc7c480e97a9ff4e8b1e533cb7c96d0fd57a05ab79ef"
+  },
+  "tests/lang/migrated/records_case_4.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/records_case_4.my",
+    "sha256": "485f19d5a25a6519741a5db09ca357413cd41c07fc7ce68a8d9114729ce96fbf"
+  },
+  "tests/lang/migrated/structural_constraints.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/structural_constraints.my",
+    "sha256": "4d6e4383d5a1826407b734e0cf66c758792b91dfda937912dda259a5b2c659ed"
+  },
+  "tests/lang/migrated/structural_constraints_case_1.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/structural_constraints_case_1.my",
+    "sha256": "c6f6b5198c02f515cbb43df4f43c355604f1000fdbc8113b0c39c60e6ea81d9a"
+  },
+  "tests/lang/migrated/structural_constraints_case_10.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/structural_constraints_case_10.my",
+    "sha256": "f80fd4ec1f5d0f1755cd351118e53509d7532cff2b867bfbbb39c809bdca2cc2"
+  },
+  "tests/lang/migrated/structural_constraints_case_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/structural_constraints_case_2.my",
+    "sha256": "51f926181942464fb61774a5dba87c125d7f104aa231d55ac2eb471d1c15e6ff"
+  },
+  "tests/lang/migrated/structural_constraints_case_3.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/structural_constraints_case_3.my",
+    "sha256": "a4504f4525e979595c6cfc78e4923205c8962833e8eb7c63024c2d0d227f755e"
+  },
+  "tests/lang/migrated/structural_constraints_case_4.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/structural_constraints_case_4.my",
+    "sha256": "738414a72f2959debe561d828e7bdf5468c64d66b80684c6f4fb1bd1c35bd777"
+  },
+  "tests/lang/migrated/structural_constraints_case_5.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/structural_constraints_case_5.my",
+    "sha256": "65acb1df9656089d8bb72db11925a4964d93e5ca2b42d1b7fb1645f457655d48"
+  },
+  "tests/lang/migrated/structural_constraints_case_6.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/structural_constraints_case_6.my",
+    "sha256": "8a3b8d407d0cea3b00c8db39a3a7451d195ac238e38f06787f899c28c91f81eb"
+  },
+  "tests/lang/migrated/structural_constraints_case_7.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/structural_constraints_case_7.my",
+    "sha256": "29b8609d427658a8d1a219d58d8267ccb9e5c2507d449af9daf9b001abe55012"
+  },
+  "tests/lang/migrated/structural_constraints_case_8.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/structural_constraints_case_8.my",
+    "sha256": "7b19998b916ca2090fd145438171376954f5391d326e2f10454801327f1a99e0"
+  },
+  "tests/lang/migrated/structural_constraints_case_9.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/structural_constraints_case_9.my",
+    "sha256": "8a4c9cb1466af88e6250b814e860982c6993c7e24c9ec168a4ac17cb72daa8c3"
+  },
+  "tests/lang/migrated/surface_collections.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/surface_collections.my",
+    "sha256": "a80f21a9c31344fb4b7c49b00dc4ad8d362301bec982592264905dbac6e3cc41"
+  },
+  "tests/lang/migrated/surface_collections_case_1.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/surface_collections_case_1.my",
+    "sha256": "bbbfc757638670fb974eff9e757196af65203ed8fe6e41aa7b890bbb0dcedaa4"
+  },
+  "tests/lang/migrated/surface_collections_case_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/surface_collections_case_2.my",
+    "sha256": "279e44825fd07864ed2ffeff71900dc84fab81467f369efbfb9b6b97f746bb8f"
+  },
+  "tests/lang/migrated/surface_collections_case_3.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/surface_collections_case_3.my",
+    "sha256": "d33b60fb3447fa41357ee474a6ee4cbbce2a42e6807b9f1cfb3db73c67769ba4"
+  },
+  "tests/lang/migrated/surface_statements.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/surface_statements.my",
+    "sha256": "18b4a63b1f7cf4897c24d421535642baaf6f1a432f84cac9058bdbe6dc84d22e"
+  },
+  "tests/lang/migrated/surface_statements_case_1.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/surface_statements_case_1.my",
+    "sha256": "de754a34fea4d6740103633d3c9c72b482d0dcaec8fb1be8a764a2eeba49dba0"
+  },
+  "tests/lang/migrated/surface_statements_case_2.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/surface_statements_case_2.my",
+    "sha256": "feff3d50340fcdb9eaadfc606f609d4941703a094c56a1389ab97b1c2f820818"
+  },
+  "tests/lang/migrated/surface_statements_case_3.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/surface_statements_case_3.my",
+    "sha256": "7ac678ce6fb061852292a88f98017b5bb99dd636c4844bee9bb422094135363f"
+  },
+  "tests/lang/migrated/surface_statements_case_4.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/surface_statements_case_4.my",
+    "sha256": "7e0150593a0164a3529ddc1bafdd7317fbe02b59740144dfd53e8f48d2be8f31"
+  },
+  "tests/lang/migrated/surface_statements_case_5.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/surface_statements_case_5.my",
+    "sha256": "baec5b41e6445abc6ce0baaccaeefe5ff7f8812346f32f09602f4828b9d43028"
+  },
+  "tests/lang/migrated/surface_statements_case_6.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/surface_statements_case_6.my",
+    "sha256": "c3afda74c5a6cb14ca613c020681bc81f9d15e6679fc73b1cdf665daae566f0c"
+  },
+  "tests/lang/migrated/surface_statements_case_7.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/surface_statements_case_7.my",
+    "sha256": "914939c1c1f9eddbb327b63d2349d94b74b131eef143b4bcc947809a7a49708e"
+  },
+  "tests/lang/migrated/surface_statements_case_8.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/migrated/surface_statements_case_8.my",
+    "sha256": "79b902c02371b966febf4f592826d0fa00e3588cb5a7360caa27bc0733247788"
+  },
+  "tests/lang/move_elision.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/move_elision.my",
+    "sha256": "c9c4d7f8dce0c1e5697ca9735cf28c08f0920ff5c2092b03ac6ca94518da0cdb"
+  },
+  "tests/lang/mut_argument_places.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/mut_argument_places.my",
+    "sha256": "030cda7a39bd9ee2302ac8647e69cfc697c5c2822d9abff7fb44235ae398685b"
+  },
+  "tests/lang/mut_collection_call_window.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/mut_collection_call_window.my",
+    "sha256": "f4e1661412551ee8e0b51b92d4f21c111c84eb049a4411761c9442f506d469f6"
+  },
+  "tests/lang/mut_dictionary_arguments.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/mut_dictionary_arguments.my",
+    "sha256": "c1e1623436b86bca624a1b390a738c8a01ac0a3156eff98c01b40fe3f4264ab5"
+  },
+  "tests/lang/mut_rebind_caller.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/mut_rebind_caller.my",
+    "sha256": "4fbe8f9d6578ff3389c1dff9ad5b878816b5f66c352857bd78fde2537d4fe42f"
+  },
+  "tests/lang/mut_rebind_helpers.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/mut_rebind_helpers.my",
+    "sha256": "838f6c22b5f7d758c0eebf10e06d6e0c620952f4102abaa8a9ae7390027590c6"
+  },
+  "tests/lang/mut_rebind_modules.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/mut_rebind_modules.my",
+    "sha256": "9425a4e92b77be33715a811bdf7550748e8efaae22467011f3706c2eebb1a6d7"
+  },
+  "tests/lang/mut_rebinding.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/mut_rebinding.my",
+    "sha256": "d05345d9fed6152861f496b7f9a434f9abd843c5c32d02f9fd1b70084caa5fef"
+  },
+  "tests/lang/mut_record_call_window.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/mut_record_call_window.my",
+    "sha256": "b726634e8872b27391479261202bde389f4aea054362ca1d12d9d0adaa887575"
+  },
+  "tests/lang/mut_reference_roots.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/mut_reference_roots.my",
+    "sha256": "3cbf43f3f487b6d06e5497c96695ad669be16c0f1848af85b0a34267a1703a18"
+  },
+  "tests/lang/nominal_bodies.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/nominal_bodies.my",
+    "sha256": "5f8fd440371f945a2a442050ef66a52613e7e5bd9290b0a4f57b9d41d5c8a5d6"
+  },
+  "tests/lang/nominal_instances.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/nominal_instances.my",
+    "sha256": "61f0b6bfcbfbde8644e40a5923bdf09bc26c3a439735ca572c3cebb76aead7c8"
+  },
+  "tests/lang/number_literal_helpers.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/number_literal_helpers.my",
+    "sha256": "083c0ca1e241c4b24046e39160151f79f17ffa6eb20817a15eb5c6d3db3691ce"
+  },
+  "tests/lang/number_literals.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/number_literals.my",
+    "sha256": "8e40cbea66303421730c1fdf0537d00610dda5f06fc075825324554b7baaaef8"
+  },
+  "tests/lang/operand_snapshot_helpers.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/operand_snapshot_helpers.my",
+    "sha256": "d00e60577a5d25d987ea6a0f2c322c2fe575b7a31a8ac90a3ffb97946622b99b"
+  },
+  "tests/lang/operand_snapshots.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/operand_snapshots.my",
+    "sha256": "67ebc5822d9cb388d53c00fed2a20f5debfd00c70b18e0cd828473ad4098c365"
+  },
+  "tests/lang/option_equality.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/option_equality.my",
+    "sha256": "0a476e5b8423dd8bdaad2cc32c882e509f5a8f31e22b827ab2df58effdc43c26"
+  },
+  "tests/lang/option_methods.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/option_methods.my",
+    "sha256": "1278e1157cce061d6b4ce82bfc248cd037f0a15f140388d382558767db5cfa82"
+  },
+  "tests/lang/option_narrowing.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/option_narrowing.my",
+    "sha256": "86f3f9886123e7296d6881f98cf37bedda6deaa2a3f1442be99d4fa5e0b8d392"
+  },
+  "tests/lang/option_niche.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/option_niche.my",
+    "sha256": "26343a6aa88943cb9c8b780ffb07f27518066c35469d9a48db31f97f0a37ac45"
+  },
+  "tests/lang/option_propagation.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/option_propagation.my",
+    "sha256": "decbfecec5c11291ee8723a3257e98492ee91acc05ac9f3ade28ee28fcd5cdd8"
+  },
+  "tests/lang/positive_list_index.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/positive_list_index.my",
+    "sha256": "a2e8490f51cc07b20b9dd3ae1c45ec071102e915c1f38dc2b3c1f9bffcd18ecc"
+  },
+  "tests/lang/print_rendering.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/print_rendering.my",
+    "sha256": "320d9b76da41e4b4c281abee6f4b68e8d896da38d3716d89b73d3a8ed4060211"
+  },
+  "tests/lang/properties.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/properties.my",
+    "sha256": "b9c130f9b8f8e1d47422e11b4ea5b024729461a20cd65566cda0ba83fd2027fe"
+  },
+  "tests/lang/python_arrays.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/python_arrays.my",
+    "sha256": "01ff76ec89155ae66784de263db85948072aae108b4fad12711930a970d77de1"
+  },
+  "tests/lang/python_bytes.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/python_bytes.my",
+    "sha256": "b1b2311cb06d6b91dc4f9a5082b8864a5cb9a3af091b876b485268989ec0087c"
+  },
+  "tests/lang/python_calls.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/python_calls.my",
+    "sha256": "3db0cd0870f1000cf4c6f511068b3935c1ed6837630a0ce5a1bfb7b111797ed4"
+  },
+  "tests/lang/python_collections.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/python_collections.my",
+    "sha256": "4ad3b311b0c83e977ac9c59979fba4de71e2bd49e8c08f38c78a988d514c9d96"
+  },
+  "tests/lang/python_comprehension.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/python_comprehension.my",
+    "sha256": "07aebe76ee52b597dc4e3cc02b9e8692b2800ed331f5c5c7e41010dc4af4d2bc"
+  },
+  "tests/lang/python_core.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/python_core.my",
+    "sha256": "b33ac5c034df22147d407b4c956d8958aae8916247035a91a2639b814ab5c4a2"
+  },
+  "tests/lang/python_expressions.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/python_expressions.my",
+    "sha256": "9c4441c4672144341b9ad2b2388d905e57dccc68d56d61815425cc517fdba33c"
+  },
+  "tests/lang/python_split_scalar.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/python_split_scalar.my",
+    "sha256": "937dfbea3f9cfa8777bf8cd673be7a42aa31f0ee2cb272c89a775f52aaf90c44"
+  },
+  "tests/lang/python_strings.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/python_strings.my",
+    "sha256": "8e43073f1d78973d41d539e7ea6bbc0e60fcf709966410620d0d84d29b2bce35"
+  },
+  "tests/lang/python_text_surface.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/python_text_surface.my",
+    "sha256": "39a3d2ad6929afb0b91c95f61399bd59aba3ba1580913e8488891802935d07c8"
+  },
+  "tests/lang/python_values.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/python_values.my",
+    "sha256": "fde352447bc919ac02535555f78e3097b2ba93381f51c1cfd9ea209745bc19cd"
+  },
+  "tests/lang/python_variants.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/python_variants.my",
+    "sha256": "82c8a62ac47b12bdd188c7bbbfbc3a758c1e4151a6037633ca50a1820c7c52aa"
+  },
+  "tests/lang/rc_aggregate_values.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_aggregate_values.my",
+    "sha256": "cce8c1a6b6cfb8ec835a260b36635659382fe09f53e7bfba6aa256312c704c9f"
+  },
+  "tests/lang/rc_anchored_shares.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_anchored_shares.my",
+    "sha256": "f38a62506b741b4bac753adeeaef60d59aab9ed95a5464bcf0b1e9ab532e5dac"
+  },
+  "tests/lang/rc_append_loops.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_append_loops.my",
+    "sha256": "d46a8a6912721cbc909d138806693ca5fb08bd798df485e6326d878289d691d7"
+  },
+  "tests/lang/rc_arena_values.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_arena_values.my",
+    "sha256": "d827f26d6257a134bacca2665c6f0472e55f58becfda2543eace26a438bc0c84"
+  },
+  "tests/lang/rc_borrowed_calls.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_borrowed_calls.my",
+    "sha256": "4f883c1a8e18d7bc45b1ddde62ad9157fc5d2d1c67d2cb1edae49568f2c13925"
+  },
+  "tests/lang/rc_borrowed_loops.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_borrowed_loops.my",
+    "sha256": "93df10e5d1d3dff2eedab350be9bb0d86de93c2debf574940ad16eaa695a6c3a"
+  },
+  "tests/lang/rc_borrowed_readonly_entries.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_borrowed_readonly_entries.my",
+    "sha256": "ef91aabf0db99b9f76e3c4d83461f5bb74f4b4ea6a55df6308eeb4bb373f9590"
+  },
+  "tests/lang/rc_borrowed_results.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_borrowed_results.my",
+    "sha256": "6b86dd9f0b5de85b80f2bf312343695307aad39d8ea9744a4cc857f914e9f0fb"
+  },
+  "tests/lang/rc_box_writeback.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_box_writeback.my",
+    "sha256": "840e9120c792aa86b4d8c798a5a3ed28754b6956e841eaed26e49903e19e2d2d"
+  },
+  "tests/lang/rc_buffer_loops.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_buffer_loops.my",
+    "sha256": "d761277a2a30b458645d736c40f7627a1661a0c828eb708acbf4a5ae66ede9c0"
+  },
+  "tests/lang/rc_byte_loop_versions.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_byte_loop_versions.my",
+    "sha256": "e664e15cda5bd7e2aec549f7ee6e1aeef3f539db54c97d48dc671d5aa3323471"
+  },
+  "tests/lang/rc_byte_receivers.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_byte_receivers.my",
+    "sha256": "1e35df4fec146c158519adf421a374d3ea10f422737cf7aeac71764431ab0fd6"
+  },
+  "tests/lang/rc_call_lifetimes.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_call_lifetimes.my",
+    "sha256": "4c78e5ce48887fe6a5529297df3223491df14bde17efcf2500ef72d739d38bd1"
+  },
+  "tests/lang/rc_caller_field_reads.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_caller_field_reads.my",
+    "sha256": "8a112743a37f52dce02b4bc4e705afaf960e33d9101b5e5726c84ca05d967c33"
+  },
+  "tests/lang/rc_capability_values.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_capability_values.my",
+    "sha256": "0c9f44d9b87533f9d5a6a3100237d4cb0519800398749c9558cb62e748a868c0"
+  },
+  "tests/lang/rc_collection_builtins.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_collection_builtins.my",
+    "sha256": "e23b4bdde8d6e18b2fee68af9d22079816c78a3b68a074b007f462b32521c556"
+  },
+  "tests/lang/rc_compact_journal.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_compact_journal.my",
+    "sha256": "16ddc1223c8cc2c4dcc161816a6a0e336ef8c05be6a9b2e72ca5f1ef406d8e9c"
+  },
+  "tests/lang/rc_contract_results.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_contract_results.my",
+    "sha256": "ae563f4070893ff007d9ff4dc983bf75d3a06cfc9a75a9c856b625c728306296"
+  },
+  "tests/lang/rc_counted_receivers.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_counted_receivers.my",
+    "sha256": "cf9eb65dd0561e00cc6e285000c6c70adb07904433fa26673ba94c3e9819328f"
+  },
+  "tests/lang/rc_dictionary_keys.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_dictionary_keys.my",
+    "sha256": "9243bf942abcd4f0e0db914c0b60de171ef89bc4f872139d39b56739004456d3"
+  },
+  "tests/lang/rc_dictionary_loops.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_dictionary_loops.my",
+    "sha256": "9ae9543163c906ebeb2b3d44115a3df1d021c212bea70b7f037fe17919912c41"
+  },
+  "tests/lang/rc_dictionary_tails.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_dictionary_tails.my",
+    "sha256": "800c1b26867abc9c792ebeb855b68b18c1d770021209f06c03db95d145f34180"
+  },
+  "tests/lang/rc_dictionary_text_loops.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_dictionary_text_loops.my",
+    "sha256": "54a80cc51800b8af785de44f467330a56e39309c93439b26eb0d4b0af9676afb"
+  },
+  "tests/lang/rc_dictionary_views.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_dictionary_views.my",
+    "sha256": "ca6096c19597e6c7ca8548347b79321259439d819c132312bf08408b37eadc1c"
+  },
+  "tests/lang/rc_element_moves.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_element_moves.my",
+    "sha256": "34954b184026c2564fe217f05fdd8954c551c211414b94e24e441410153d18be"
+  },
+  "tests/lang/rc_empty_frames.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_empty_frames.my",
+    "sha256": "07666c900ad2733108ea8088bc2f84cfb20b45381dae756e1b715d7c9ac69ba6"
+  },
+  "tests/lang/rc_field_transfers.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_field_transfers.my",
+    "sha256": "8e26183d597c2f3191285cd229c6a6b46944f36a1dc049f0c5638da641c5d9a1"
+  },
+  "tests/lang/rc_fresh_constructors.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_fresh_constructors.my",
+    "sha256": "303ffa74512d28ef2fed75820c301b250ce057685a985f7793e15798ed9d0d77"
+  },
+  "tests/lang/rc_fresh_loop_roots.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_fresh_loop_roots.my",
+    "sha256": "b6e46c971293590e8c35ac9f31a1372a8476f570ebe092028f94176d79100def"
+  },
+  "tests/lang/rc_fresh_returns.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_fresh_returns.my",
+    "sha256": "00e9656e1b5a948a6e7bf5a6c16aeb5bd10f7e61ffb99f781805392eb9728082"
+  },
+  "tests/lang/rc_fresh_spans.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_fresh_spans.my",
+    "sha256": "d8171453cb19ce18fe2875a84e6f00f6e07b86b6b87029cd6e22634ab0fd3760"
+  },
+  "tests/lang/rc_glue_values.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_glue_values.my",
+    "sha256": "ac92bba1ea42657b4717b9c49c589be582ca05c7fc4c04212d1b76cd85c6b73e"
+  },
+  "tests/lang/rc_inert_receivers.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_inert_receivers.my",
+    "sha256": "8e6fc1f36e42a38ff09bb955207adc9ebb392a32f12c8ed9c8edc02111058c0e"
+  },
+  "tests/lang/rc_inert_returns.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_inert_returns.my",
+    "sha256": "663318ca7b16800f2a9aaeec89ce82dc5110571d33404f6298b7d3f7d0a23ff4"
+  },
+  "tests/lang/rc_inline_glue.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_inline_glue.my",
+    "sha256": "6ce1185d5061c5476f1f59a301bdacf803d813dc05e7a19e98d33c8c6493f0f3"
+  },
+  "tests/lang/rc_interval_anchors.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_interval_anchors.my",
+    "sha256": "a7a5e852baea2314659afdaa51ec5b210ac7c606d3903a53ed7b4cb0f77daaad"
+  },
+  "tests/lang/rc_journal_types.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_journal_types.my",
+    "sha256": "d6bf9d4699dd4426406bfe8bd53695be8fa672f35b112f827cbebcaf78989d3b"
+  },
+  "tests/lang/rc_loop_guard_context.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_loop_guard_context.my",
+    "sha256": "0e8fc4441d830d3151ac1cef5add1bf0fa2d3256c9b44b6fffe1f8e688bbed96"
+  },
+  "tests/lang/rc_loop_operand_isolation.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_loop_operand_isolation.my",
+    "sha256": "a0ab72576255608882a8f2f1dabd89183e7abc149aebaf3a51f8db924eded3db"
+  },
+  "tests/lang/rc_loop_uniqueness.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_loop_uniqueness.my",
+    "sha256": "3330602c0407c4bb3459dfc5fa9bf082b0589f8a0d4317af0912a8c9904a5645"
+  },
+  "tests/lang/rc_loop_versions.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_loop_versions.my",
+    "sha256": "797100143b3013261db2776a8ce528bdb4b9c27994284c0eed46cb4bff90ff64"
+  },
+  "tests/lang/rc_match_scalars.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_match_scalars.my",
+    "sha256": "cb094fcbfdcca38d37abbb728259fbfd5c6acc655cb981121b80bfc8bb37d581"
+  },
+  "tests/lang/rc_mut_aliases.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_mut_aliases.my",
+    "sha256": "b678f59ec680781eeab2da09e701e1daa2854011bec7dc5c33fa318e21a1df94"
+  },
+  "tests/lang/rc_mut_list_aliases.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_mut_list_aliases.my",
+    "sha256": "cc5b9756bd88895720abc8dbd19bf5aecac7bfc5b8d16dea9c14722695a9f250"
+  },
+  "tests/lang/rc_mut_payload_snapshots.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_mut_payload_snapshots.my",
+    "sha256": "f7c0925f37469c27a96bdb725a7630c9b24270efccdd56d21aeeabdf4adb3856"
+  },
+  "tests/lang/rc_mut_uniqueness.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_mut_uniqueness.my",
+    "sha256": "96478f077c466bb0201512db4d5a79e49a0ebebadd5cce0f48e188832e04f215"
+  },
+  "tests/lang/rc_named_record_writes.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_named_record_writes.my",
+    "sha256": "0fc5882022721cc97e9ea984c2529282067d785d9345df88b0ee91971a3725a4"
+  },
+  "tests/lang/rc_named_releases.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_named_releases.my",
+    "sha256": "34d7fb0bd38aa56706f529d84ac835179a9d5586c04a273a496e7d208c6892ce"
+  },
+  "tests/lang/rc_nested_read_loans.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_nested_read_loans.my",
+    "sha256": "dbf8e1b36ce1e56a917a2fbd5058c4679be046d0ee913c9eb939f246fa3a5989"
+  },
+  "tests/lang/rc_nonheld_captures.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_nonheld_captures.my",
+    "sha256": "3ebc51820294cf89310c080ed74b095f832af8836650c91f078852d429b17921"
+  },
+  "tests/lang/rc_owned_values.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_owned_values.my",
+    "sha256": "13704edbae65db311f676f1d65fafc878129efeb644f30f6ee88d3d36968f44f"
+  },
+  "tests/lang/rc_owning_element_borrows.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_owning_element_borrows.my",
+    "sha256": "e764a2f033fd7e3fa53bbc83e496826cd6e62f1b1d1626c89655fe43c5efc7db"
+  },
+  "tests/lang/rc_pin_elide.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_pin_elide.my",
+    "sha256": "6d56594f01a56a340ae88e85a0a6d84759d72bb8b27e25add7245ab4d3e22ff4"
+  },
+  "tests/lang/rc_plain_aggregates.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_plain_aggregates.my",
+    "sha256": "bcbfeebfd23692d387556718b2eeac2d692a3e64e422e81c1bc495f12086e9bf"
+  },
+  "tests/lang/rc_plain_appends.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_plain_appends.my",
+    "sha256": "9bc3ce882e165f536cfdd2f97a653013dc417412102843da96e508860f3f5182"
+  },
+  "tests/lang/rc_plain_field_loans.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_plain_field_loans.my",
+    "sha256": "c3552ef6c4a723f933d3ba74a79bb2980780824b7211bb165fb642ea4ad602e6"
+  },
+  "tests/lang/rc_plain_list_writes.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_plain_list_writes.my",
+    "sha256": "405229687c9684373b1ad0bd68a670252ff7972f5bf578839f5c14c25ef5fd73"
+  },
+  "tests/lang/rc_plain_projection.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_plain_projection.my",
+    "sha256": "d4ffde7504b3805897ed606630b0bc911071d9d67207c9f004912f0218d48331"
+  },
+  "tests/lang/rc_plain_record_writes.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_plain_record_writes.my",
+    "sha256": "329f304e057bf3b387c7e72c5469058580397ab2456ac75c40beb23d7b60f6ff"
+  },
+  "tests/lang/rc_plain_replacements.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_plain_replacements.my",
+    "sha256": "be52cae5a129f55d469512a77bd95f8e653b22116754369582cbda6136c91902"
+  },
+  "tests/lang/rc_plain_retains.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_plain_retains.my",
+    "sha256": "0e5ef1d15d9f7edc3f23fd9165f132a172fb66afe5b9409602e1c6ceb6e0c1ef"
+  },
+  "tests/lang/rc_plain_update_paths.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_plain_update_paths.my",
+    "sha256": "3febd8423743c08c19fe078390860b396c0e4342ced0c7fc93778e131f92769f"
+  },
+  "tests/lang/rc_range_key_anchors.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_range_key_anchors.my",
+    "sha256": "7018a377cc212535b0d64ae3f3af4e972620a7aa8ab77f1908d62b5abd33f174"
+  },
+  "tests/lang/rc_read_list_versions.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_read_list_versions.my",
+    "sha256": "bbfc8552f53e563d9b8aea957737dda5af59c821fa29b074b747cdefa91e51af"
+  },
+  "tests/lang/rc_read_loans.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_read_loans.my",
+    "sha256": "310ab1d93778e1ff1c9db237d778a84bed77394993e1e7850991d442729ab4e4"
+  },
+  "tests/lang/rc_readonly_body.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_readonly_body.my",
+    "sha256": "63cb3cbaaf5f4de0890e03864b5f3ff017a575b73016158399c0240a329edb68"
+  },
+  "tests/lang/rc_readonly_bytes.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_readonly_bytes.my",
+    "sha256": "552cb1c95310535bdfd5debba431a8a70e32ac703fb4ae7aea4b9c0cd41161c2"
+  },
+  "tests/lang/rc_readonly_calls.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_readonly_calls.my",
+    "sha256": "07f1ab9b69d4bb501c0471b337bf9184ad568283419f3404ee51e1fd2f9e87ed"
+  },
+  "tests/lang/rc_readonly_managed_calls.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_readonly_managed_calls.my",
+    "sha256": "e86fc09c672c80bf39c82b96171796503032aca61e42e0e697c6ff39e71479a7"
+  },
+  "tests/lang/rc_record_field_reads.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_record_field_reads.my",
+    "sha256": "1d9e98f057566ecc3b51727d5984b499773b3b38235967581c0f514b2e8ec244"
+  },
+  "tests/lang/rc_scalar_loops.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_scalar_loops.my",
+    "sha256": "591696610b0bffe32726ad36bbfa53c0cb58a6cc8d025d07329c9539143385ec"
+  },
+  "tests/lang/rc_scalar_replacements.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_scalar_replacements.my",
+    "sha256": "f2676f1684d2f2976a95f5f26c7f924a140581882148a3fa9bebb114b89ce3fe"
+  },
+  "tests/lang/rc_scope_inline.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_scope_inline.my",
+    "sha256": "ae92cef0e55ac1db20478dbe2fba21493efcf5a5477a7e526c772cd6582c4ccb"
+  },
+  "tests/lang/rc_semantic_history.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_semantic_history.my",
+    "sha256": "4229fe66a3dc0b215ef2007494c98497af7bb89ea2f705a0eb6826a1fc6c2d5e"
+  },
+  "tests/lang/rc_semantic_publication.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_semantic_publication.my",
+    "sha256": "e5de68885dc1dabb51b2d9c77c521db20bfc4a40c73c70d9ec129078546f9afd"
+  },
+  "tests/lang/rc_site_eliminations.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_site_eliminations.my",
+    "sha256": "e965570e689c9cfac97d02af8338d5dadefc593e1183e79625384fa1d37fa966"
+  },
+  "tests/lang/rc_temporary_lifetimes.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_temporary_lifetimes.my",
+    "sha256": "638f797be90ee0f86f34aa5f7b7d5324979411dbe9210b7b73a6309386bdda83"
+  },
+  "tests/lang/rc_tree_drains.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_tree_drains.my",
+    "sha256": "9443bedefe0d3ae4094dea97234502a2e5d3326ab08a7701b4ee3fec7e2806f7"
+  },
+  "tests/lang/rc_variant_reads.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_variant_reads.my",
+    "sha256": "ee1fafed462ed32fc6f2d3683ca412d4d3220a5289d35603730768ba1ab0af58"
+  },
+  "tests/lang/rc_view_receivers.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_view_receivers.my",
+    "sha256": "971fec9ab4de8871dbc8aa9c05742c7b2b4f0c2ec58ddecdff171e2332aa398a"
+  },
+  "tests/lang/rc_writeback_moves.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rc_writeback_moves.my",
+    "sha256": "e498f10500a8d73e2000021d9bbff55150204f8a8f1322d79ee20cbdcae5bdde"
+  },
+  "tests/lang/record_field_snapshots.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/record_field_snapshots.my",
+    "sha256": "828f846028fd937434c80ed1c73c91c357efe8956d904a21add9b355e5135d58"
+  },
+  "tests/lang/recursive_values.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/recursive_values.my",
+    "sha256": "b306fa6a1e643fea4ef8977f0cc0f21a67e31c120393cfb4c7adeec4afb712a0"
+  },
+  "tests/lang/repr_shadowing.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/repr_shadowing.my",
+    "sha256": "44cbe853912f7166d01dfb60556eae3e3541d5a6a7821c9f96afb6017f9ea348"
+  },
+  "tests/lang/root_liveness.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/root_liveness.my",
+    "sha256": "d2844f3f0eed7084c543e5e39604287223d57dc7cfa88a9c858fdba666ccff82"
+  },
+  "tests/lang/rounding.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/rounding.my",
+    "sha256": "a64af04d0630e50a2b4b8031e7eec312d02c7d233b1fe46fcb7e228667e1a15b"
+  },
+  "tests/lang/scalable_sorting.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/scalable_sorting.my",
+    "sha256": "8dcd05a616c2dedf694ef248bcb18443eaf1c32a195f38892b8cae62dbe6e45c"
+  },
+  "tests/lang/scalar_dictionary_publication.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/scalar_dictionary_publication.my",
+    "sha256": "eee545ef9e49d62b955090532cf9d180f4e65b246150f8188b5ea541ac09a76c"
+  },
+  "tests/lang/sets.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/sets.my",
+    "sha256": "7e3e7d6d020668b088c3729ae27a5724a9827dbd5da5353c611e82c7e7ad8b6d"
+  },
+  "tests/lang/sorted_keys.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/sorted_keys.my",
+    "sha256": "0f3432efb969a9606d202ea8ae394d595370f9be2686ebe1c4de5749b9fec3d7"
+  },
+  "tests/lang/stable_sorting.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/stable_sorting.my",
+    "sha256": "a39d46f5f7994173d032c711ca477bf7ffc6ac1426abee48d40027ba6435f3d4"
+  },
+  "tests/lang/standard_json.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/standard_json.my",
+    "sha256": "9e46b5477e59f2c89539397480a89ceec94a63c2c439ad73111800b2b1a4012c"
+  },
+  "tests/lang/standard_strings.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/standard_strings.my",
+    "sha256": "af0f2e6b856887c0288c90e79c1afd0b4e227a9c88b115a602d2cef928653e18"
+  },
+  "tests/lang/test_capabilities.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/test_capabilities.my",
+    "sha256": "74e1f8287202fb672cfc8b8cc1e0c242b520848df776ffa5ab1e2fefa163b735"
+  },
+  "tests/lang/text_index.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/text_index.my",
+    "sha256": "a2e7473010d5946ea93c444d655ce2ea4eba5d9fe65e5667e26b21c45bf86a19"
+  },
+  "tests/lang/text_literal_index.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/text_literal_index.my",
+    "sha256": "f47bf9d0fe62c630f1d43843fa72bbbcffdabe4ad64a2bc89652b2414b2b3b85"
+  },
+  "tests/lang/text_scanning.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/text_scanning.my",
+    "sha256": "7b978a05989cbdeb9fe8cb8086948fa4b625efd40b9277c98d286693537b2812"
+  },
+  "tests/lang/text_views.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/text_views.my",
+    "sha256": "08c10945beb030f90196afaf53639094884e4b65b061316ab89e7c42fd8a451a"
+  },
+  "tests/lang/tuples.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/tuples.my",
+    "sha256": "74bbf9ba66b58b18478fa8615b2adca5859094dd3c98c6e156d136e78da8f6d7"
+  },
+  "tests/lang/value_equality.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/value_equality.my",
+    "sha256": "e15953f02b9b5b1adf6404c2e42d24cc27b07444daacf5ce4f4540fd64367e99"
+  },
+  "tests/lang/wide_signatures.my": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/tests/lang/wide_signatures.my",
+    "sha256": "085e2d3a5ad6680ee31b9ad1fec66e0c5cf08d06074721259b90dd535a3e98d9"
+  }
+}
