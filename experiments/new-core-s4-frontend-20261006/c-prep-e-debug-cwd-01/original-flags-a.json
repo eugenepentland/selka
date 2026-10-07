@@ -1,0 +1,31 @@
+{
+  "command": [
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "cc",
+    "-c",
+    "-O0",
+    "-march=native",
+    "-mllvm",
+    "-x86-experimental-pref-innermost-loop-alignment=6",
+    "-Wno-override-module",
+    "-o",
+    "fresh.o",
+    "canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-e-debug-cwd-01/original-flags-a",
+  "status": 0,
+  "seconds": 0.034211368998512626,
+  "native_cache_dirs": {
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-e-debug-cwd-01/original-flags-a/zig-local",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-e-debug-cwd-01/original-flags-a/zig-global"
+  },
+  "input": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-e-debug-cwd-01/original-flags-a/canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll",
+    "sha256": "1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48"
+  },
+  "object": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-e-debug-cwd-01/original-flags-a/fresh.o",
+    "size": 3184,
+    "sha256": "d8dd5741be1e8c641748d89dec8810ff602a9203e1b8afeaf4006e4cfe7a0b37"
+  }
+}
