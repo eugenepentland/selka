@@ -1,0 +1,4 @@
+$ /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-final-checker/mylang test /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/test/core/v_dynamic_repeat.my --json --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/supplement/final-supplement-v3/old-debug
+stdout=''
+stderr='mylang: host failure: ToolNotFound\n'
+exit=2
