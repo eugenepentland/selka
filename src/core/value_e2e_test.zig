@@ -610,3 +610,36 @@ test "a list of None holds its length: append, write, read, pop, iteration, copi
     defer arena.deinit();
     try std.testing.expect(try matches(arena.allocator(), "v_units", v_units_output, 0));
 }
+
+const v_capability_arrays_output =
+    \\zero
+    \\grid 0
+    \\the record keeps its copy
+    \\filled 1
+    \\nested
+    \\one route
+    \\many routes
+    \\in a
+    \\in b
+    \\in a
+    \\
+;
+
+const v_capability_arrays_errors =
+    \\one
+    \\grid 1
+    \\swapped
+    \\rewritten
+    \\filled 0
+    \\row replaced
+    \\many routes
+    \\
+;
+
+// spec: NEW-CORE-S5-CAP-COLLECTIONS-1
+test "fixed arrays of Stream, Host and Filesystem as locals, fields, payloads and mut parameters print and exit as the old core does" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_capability_arrays", v_capability_arrays_output, 5));
+    try std.testing.expectEqualStrings(v_capability_arrays_errors, try stderrOf(arena.allocator(), "v_capability_arrays", .release));
+}
