@@ -1,0 +1,95 @@
+{
+  "classification": "GREEN: frozen corrected helper rejects resource addition and preexisting unreviewed sibling root",
+  "source_snapshot": "source-native-18.json",
+  "probe_sha256": "85964314eafa855e7c32a110d987b72fc26cbc0fdc93a45decf90db410d4552c",
+  "tool_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "cases": [
+    {
+      "case": "initially-absent",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-guard-probe",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-current-replay-21/tool/distribution/zig",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-current-replay-21/tool/lib/clang/22/share/ubsan_ignorelist.txt",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-current-replay-21/helper-cache"
+      ],
+      "status": 0,
+      "values": {
+        "cacheable_before": "true",
+        "before_inputs": "21203",
+        "before_digest": "d1a2e55db583b9a952b63b41f996970881af57dd8c2c0fd2663f3caa146160f8",
+        "before_generation": "7d088cace8b22b8c15635c6835b8712e14209500f2d782d6f9cf6415f00d60e5",
+        "ready": "true",
+        "cacheable_after": "false",
+        "after_inputs": "21203",
+        "unchanged": "false",
+        "provisional_present": "true",
+        "provisional_unchanged": "false",
+        "after_digest": "a96d062cef1d6d79f8c9250e41f8828b72e7e7624b37b6f5742f69998a568531",
+        "after_generation": "0be7cd1ac2e6c51fb73d900893f74a5391b28fd2b22027653dfbf88b20b51206"
+      },
+      "resource_sha256": "76802ff3c3a16102a0ecb3181cbd7fa7fa5b2f65b02dcc1c21f7a3d7055f2983",
+      "affinity": [
+        0,
+        1,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ]
+    },
+    {
+      "case": "preexisting-lib-root",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-guard-probe",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-current-replay-21/tool/distribution/zig",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-current-replay-21/tool/lib/clang/22/share/ubsan_ignorelist.txt",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-current-replay-21/helper-cache"
+      ],
+      "status": 0,
+      "values": {
+        "cacheable_before": "false",
+        "before_inputs": "21203",
+        "before_digest": "a96d062cef1d6d79f8c9250e41f8828b72e7e7624b37b6f5742f69998a568531",
+        "before_generation": "6e92e80708bb13cf2186fdf0b14dd6dd0478687a7a651fd41c69224bdc5f4107",
+        "ready": "true",
+        "cacheable_after": "false",
+        "after_inputs": "21203",
+        "unchanged": "true",
+        "provisional_present": "false",
+        "provisional_unchanged": "false",
+        "after_digest": "a96d062cef1d6d79f8c9250e41f8828b72e7e7624b37b6f5742f69998a568531",
+        "after_generation": "6e92e80708bb13cf2186fdf0b14dd6dd0478687a7a651fd41c69224bdc5f4107"
+      },
+      "resource_sha256": "76802ff3c3a16102a0ecb3181cbd7fa7fa5b2f65b02dcc1c21f7a3d7055f2983",
+      "affinity": [
+        0,
+        1,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ]
+    }
+  ],
+  "scope": "Helper-only replay; native probes paused for E uncontended Core window. No performance qualification."
+}

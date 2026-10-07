@@ -1,0 +1,21 @@
+{
+  "compiler_sha256": "9a3ca0bc10282eaac16cc581c016cd1ea0bc68559813a085cb98bc85bc9188ea",
+  "binary": "actual test-core run09 artifact, not stale zig-out install",
+  "source_head": "7877aa5d369f57aeb8fb850e8198c08c520b3a51",
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.zig-cache/o/000b11d649f157a4ad57792f939ec9a3/mylang-core",
+    "test",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/runtime-race-corrected-run04/project",
+    "--json",
+    "--jobs",
+    "2",
+    "--zig",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/runtime-race-corrected-run04/zig-barrier",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/corrected-run04"
+  ],
+  "status": 0,
+  "seconds": 5.377507192082703,
+  "qualified": true,
+  "barrier": "Both runtime compilers complete before either child publishes; original RED condition."
+}

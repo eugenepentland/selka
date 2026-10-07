@@ -1,0 +1,15 @@
+{
+  "source_commit": "25d9e95317bbf674ba948d6f4ad3081e0ea7faf2",
+  "core_sha256": "2b79fc47b1c5c882d8fcc1c2b0b6fb0b909746b6f7752b4176f18ceac34328e0",
+  "kind": "pre-V preliminary full core; final combined qualification still required",
+  "qualified": false,
+  "status": 1,
+  "shards": 64,
+  "actual_passed": 330,
+  "actual_failed": 1,
+  "shard_skips": 20853,
+  "wall_seconds": 440.61585203395225,
+  "longest_shard_seconds": 249.42,
+  "failure": "own_test: zero-trip undef phi list/record, expected exit0 found232",
+  "timing_context": "Concurrent admitted builds; command still exceeds <=300 seconds. Final combined gate required."
+}

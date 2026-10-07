@@ -1,0 +1,63 @@
+[
+  {
+    "probe": "unsupported",
+    "defect_reproduced": true,
+    "input": {
+      "version": "native-tests-v1",
+      "tests": [
+        {
+          "name": "sample::test_one",
+          "status": "unsupported"
+        }
+      ],
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "unsupported": 1
+    },
+    "accepted": true
+  },
+  {
+    "probe": "duplicate_names",
+    "defect_reproduced": true,
+    "input": {
+      "version": "native-tests-v1",
+      "tests": [
+        {
+          "name": "sample::test_one",
+          "status": "passed"
+        },
+        {
+          "name": "sample::test_one",
+          "status": "passed"
+        }
+      ],
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "unsupported": 0
+    },
+    "accepted": true
+  },
+  {
+    "probe": "wrong_counts",
+    "defect_reproduced": true,
+    "input": {
+      "version": "native-tests-v1",
+      "tests": [
+        {
+          "name": "sample::test_one",
+          "status": "passed"
+        }
+      ],
+      "passed": 99,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "unsupported": 0
+    },
+    "accepted": true
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "core": {
+    "source_snapshot": "source-notdir-23.json",
+    "build_mode": "Debug",
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-core-26/bin/mylang-core",
+    "sha256": "70d461e9ee318af7115f37d82ec22732a71f9a159aba698a69ee4ec418f1a539"
+  },
+  "probe": {
+    "build_mode": "ReleaseFast",
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-guard-probe-25",
+    "sha256": "c32907052c667c7dc93d347bcc8792c26fa39e109d7a9ffe6bf561cad5114a2d",
+    "source_sha256": "fa3a7e04b3b6905d808bd4451ad9fcca93f5db040e0de17a36bcdc231fdb6aa0"
+  },
+  "source_unchanged": true
+}

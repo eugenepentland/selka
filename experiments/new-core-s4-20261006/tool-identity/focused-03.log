@@ -1,0 +1,10 @@
+1/1 tool_identity.test.tool memo is reusable and corruption is a content rehash...FAIL (TestUnexpectedResult)
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1250949 in expect (std.zig)
+    if (!ok) return error.TestUnexpectedResult;
+             ^
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/core/tool_identity.zig:326:5: 0x1254b62 in test.tool memo is reusable and corruption is a content rehash (tool_identity.zig)
+    try std.testing.expect(warm.memo_hit);
+    ^
+0 passed; 0 skipped; 1 failed.
+error: the following test command failed with exit code 1:
+.mylang-cache/s4-m/tool-identity-zig/o/28d7e529309fa9e9fd93ed3f11d66a82/test --seed=0xf8a7212c

@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+"""Replay corrected immutable Core against the preserved stale cache and header8."""
+from pathlib import Path
+
+source = Path(__file__).with_name('reproduce.py').read_text()
+exec(compile(source.split('\nenvironment = os.environ.copy()')[0],
+             str(Path(__file__).with_name('reproduce.py')), 'exec'))
+EXPECTED = 'd6e4220ad8a833f3d56510eb5958637e25f9c367071949db281d64584d3bface'
+assert fingerprint(WORK / 'mylang-core-corrected')['sha256'] == EXPECTED
+assert (WORK / 'value.h').read_text() == '#define VALUE 8\n'
+local = WORK / 'core-cache/zig-local'
+local.rename(WORK / 'zig-local-after-both-control')
+(WORK / 'zig-local-before-controls').rename(local)
+(WORK / 'zig-global').rename(WORK / 'zig-global-after-both-control')
+(WORK / 'zig-global-before-both-control').rename(WORK / 'zig-global')
+old_object = local / 'o/28bc771cd113958732d1c3162b526349/value.o'
+before = fingerprint(old_object)
+assert before['sha256'] == '7c860790acfdfa3c6d6a09aa892a8947c2c8bf23b3e8dbd72a354e76af2fb3c9'
+environment = os.environ.copy()
+environment['ZIG'] = str(Path('/home/epentland/.local/bin/zig').resolve())
+environment['ZIG_GLOBAL_CACHE_DIR'] = str(WORK / 'zig-global')
+argv = json.loads((EVIDENCE / 'invocation.json').read_text())['argv']
+argv[0] = str(WORK / 'mylang-core-corrected')
+# phase() verifies its historical named binary; keep that protected binary
+# untouched and verify the new command's artifact explicitly instead.
+historical_expected = EXPECTED
+EXPECTED = '591886dc7d20409c878ee0a5b15c9faa0394b5b836eeaaa8c75e43a31350f120'
+result = phase('corrected-stale-cache', 8, environment, argv)
+result['actual_compiler'] = fingerprint(WORK / 'mylang-core-corrected')
+assert result['actual_compiler']['sha256'] == historical_expected
+result['preserved_stale_object_before'] = before
+result['preserved_stale_object_after'] = fingerprint(old_object)
+result['owned_cache_cleanup'] = not any(
+    path.name.startswith('native-link-')
+    for path in (WORK / 'core-cache').iterdir())
+save(EVIDENCE / 'corrected-stale-cache.json', result)
+assert result['correct'] and result['owned_cache_cleanup']
+assert result['preserved_stale_object_after'] == before

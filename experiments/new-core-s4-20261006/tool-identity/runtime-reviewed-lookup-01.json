@@ -1,0 +1,31 @@
+[
+  {
+    "argv": [
+      "ldconfig",
+      "-p"
+    ],
+    "status": 0,
+    "stdout": "\tlibm.so.6 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libm.so.6\n\tlibc.so.6 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libc.so.6\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "readelf",
+      "-l",
+      "/lib/x86_64-linux-gnu/libc.so.6"
+    ],
+    "status": 0,
+    "stdout": "\nElf file type is DYN (Shared object file)\nEntry point 0x2a820\nThere are 15 program headers, starting at offset 64\n\nProgram Headers:\n  Type           Offset             VirtAddr           PhysAddr\n                 FileSiz            MemSiz              Flags  Align\n  PHDR           0x0000000000000040 0x0000000000000040 0x0000000000000040\n                 0x0000000000000348 0x0000000000000348  R      0x8\n  INTERP         0x00000000001e67c0 0x00000000001e67c0 0x00000000001e67c0\n                 0x000000000000001c 0x000000000000001c  R      0x10\n      [Requesting program interpreter: /lib64/ld-linux-x86-64.so.2]\n  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x00000000000279f8 0x00000000000279f8  R      0x1000\n  LOAD           0x0000000000028000 0x0000000000028000 0x0000000000028000\n                 0x00000000001977d9 0x00000000001977d9  R E    0x1000\n  LOAD           0x00000000001c0000 0x00000000001c0000 0x00000000001c0000\n                 0x000000000004dbb0 0x000000000004dbb0  R      0x1000\n  LOAD           0x000000000020eb98 0x000000000020eb98 0x000000000020eb98\n                 0x0000000000004af0 0x00000000000121f8  RW     0x1000\n  DYNAMIC        0x0000000000211940 0x0000000000211940 0x0000000000211940\n                 0x0000000000000240 0x0000000000000240  RW     0x8\n  NOTE           0x0000000000000388 0x0000000000000388 0x0000000000000388\n                 0x0000000000000024 0x0000000000000024  R      0x4\n  NOTE           0x000000000020db60 0x000000000020db60 0x000000000020db60\n                 0x0000000000000030 0x0000000000000030  R      0x8\n  NOTE           0x000000000020db90 0x000000000020db90 0x000000000020db90\n                 0x0000000000000020 0x0000000000000020  R      0x4\n  TLS            0x000000000020eb98 0x000000000020eb98 0x000000000020eb98\n                 0x0000000000000030 0x0000000000000080  R      0x8\n  GNU_PROPERTY   0x000000000020db60 0x000000000020db60 0x000000000020db60\n                 0x0000000000000030 0x0000000000000030  R      0x8\n  GNU_EH_FRAME   0x00000000001e67dc 0x00000000001e67dc 0x00000000001e67dc\n                 0x00000000000077b4 0x00000000000077b4  R      0x4\n  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000\n                 0x0000000000000000 0x0000000000000000  RW     0x10\n  GNU_RELRO      0x000000000020eb98 0x000000000020eb98 0x000000000020eb98\n                 0x0000000000003468 0x0000000000003468  R      0x1\n\n Section to Segment mapping:\n  Segment Sections...\n   00     \n   01     .interp \n   02     .note.gnu.build-id .hash .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_d .gnu.version_r .rela.dyn .rela.plt .relr.dyn \n   03     .plt .plt.got .plt.sec .text \n   04     .rodata .stapsdt.base rodata.cst32 .interp .eh_frame_hdr .eh_frame .gcc_except_table .note.gnu.property .note.ABI-tag \n   05     .tdata .init_array .data.rel.ro .dynamic .got .data .bss \n   06     .dynamic \n   07     .note.gnu.build-id \n   08     .note.gnu.property \n   09     .note.ABI-tag \n   10     .tdata .tbss \n   11     .note.gnu.property \n   12     .eh_frame_hdr \n   13     \n   14     .tdata .init_array .data.rel.ro .dynamic .got \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/lib64/ld-linux-x86-64.so.2",
+      "--list",
+      ".mylang-cache/s4-m/bundled-runtime-probe-01"
+    ],
+    "status": 0,
+    "stdout": "\tlinux-vdso.so.1 (0x000073e805072000)\n\tlibm.so.6 => /usr/lib/x86_64-linux-gnu/libm.so.6 (0x000073e804f39000)\n\tlibc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x000073e804c00000)\n\t/lib64/ld-linux-x86-64.so.2 (0x000073e805074000)\n",
+    "stderr": ""
+  }
+]

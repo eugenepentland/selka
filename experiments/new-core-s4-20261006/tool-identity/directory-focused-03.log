@@ -1,0 +1,18 @@
+test-core
++- run test w
+guardian/test: 6 test(s) selected
+guardian/test: test wall 0.00s
+guardian/test: PASS — 6 passed
+guardian/test: RESULT {"passed":6,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/cf69b240f1f6b0bb7a9372ffeea87871/test --cache-dir=./.zig-cache --seed=0xec349631 --listen=-
+
+Build Summary: 7/7 steps succeeded; 6/6 tests passed
+test-core success
++- run test 6 pass (6 total) 17ms MaxRSS:7M
+   +- compile test debug native success 816ms MaxRSS:198M
+      +- run exe qbe-build-assets (qbe_build_assets) success 75ms
+      |  +- compile exe qbe-build-assets debug native cached 8ms MaxRSS:41M
+      +- options success
+         +- compile exe mylang-core debug native success 4s MaxRSS:384M
+            +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

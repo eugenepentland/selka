@@ -1,0 +1,26 @@
+core
++- install mylang-core
+   +- compile exe mylang-core debug native 1 errors
+src/core/test_runner.zig:106:20: error: expected type 'error{InvalidTestValue,OutOfMemory,ReadFailed,UnsupportedTestType,WriteFailed}!u8', found 'error{InvalidTestCases,InvalidTestProviders,OutOfMemory,ReadFailed,UnknownTestCase}'
+    const groups = try case_settings.groups(allocator, configured_cases, selected_cases.items);
+                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/core/test_runner.zig:106:20: note: 'error.InvalidTestCases' not a member of destination error set
+src/core/test_runner.zig:106:20: note: 'error.UnknownTestCase' not a member of destination error set
+src/core/test_runner.zig:106:20: note: 'error.InvalidTestProviders' not a member of destination error set
+src/core/test_runner.zig:51:61: note: function return type declared here
+pub fn run(init: std.process.Init, requested: Options) Error!u8 {
+                                                       ~~~~~^~~
+referenced by:
+    testCommand: src/core/main.zig:250:27
+    main: src/core/main.zig:34:79
+    5 reference(s) hidden; use '-freference-trace=7' to see all references
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang --dep qbe_build_assets -Mroot=src/core/main.zig -ODebug --dep runtime_contract --dep memory_budget -Mmylang=src/compiler.zig -ODebug -Mqbe_build_assets=.zig-cache/o/2f50617765e7211f79da1c3586ca9b23/qbe_build_assets/assets.zig -ODebug -Mruntime_contract=src/runtime_contract.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 2/5 steps succeeded (1 failed)
+core transitive failure
++- install mylang-core transitive failure
+   +- compile exe mylang-core debug native 1 errors
+      +- run exe qbe-build-assets (qbe_build_assets) success 71ms
+         +- compile exe qbe-build-assets debug native cached 6ms MaxRSS:38M
+

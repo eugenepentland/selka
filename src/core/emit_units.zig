@@ -8,6 +8,9 @@ const imports = @import("emit_imports.zig");
 const clone_policy = @import("emit_clone_policy.zig");
 const number_runtime = @import("number_runtime.zig");
 
+/// Native input suffix shared by the driver and ordered test-program identity.
+pub const native_extension = ".ll";
+
 /// One object input and its link dependencies, independent of other units' contents.
 pub const Unit = struct {
     name: []const u8,

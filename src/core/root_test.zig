@@ -7,6 +7,8 @@ comptime {
     _ = @import("emit_units_test.zig");
     _ = @import("inline_origins_test.zig");
     _ = @import("driver_test.zig");
+    _ = @import("pipeline_emission_test.zig");
+    _ = @import("driver_native_cache_test.zig");
     _ = @import("facts_test.zig");
     _ = @import("vector_test.zig");
     _ = @import("e2e_test.zig");
@@ -17,8 +19,18 @@ comptime {
     _ = @import("value_facts_test.zig");
     _ = @import("value_emit_test.zig");
     _ = @import("test_runner_test.zig");
+    _ = @import("project_entry.zig");
+    _ = @import("test_runner_options.zig");
+    _ = @import("test_runner_directory.zig");
+    _ = @import("test_runner_receipt.zig");
+    _ = @import("test_runner_cases.zig");
+    _ = @import("test_runner_project_test.zig");
+    _ = @import("tool_identity.zig");
+    _ = @import("tool_discovery.zig");
+    _ = @import("tool_ticket.zig");
     _ = @import("runner_property_test.zig");
     _ = @import("property_codec.zig");
+    _ = @import("property_validate.zig");
     _ = @import("property_types.zig");
     _ = @import("property_generate.zig");
     _ = @import("property_shrink.zig");

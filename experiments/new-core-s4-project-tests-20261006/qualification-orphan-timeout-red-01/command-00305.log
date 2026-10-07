@@ -1,0 +1,21 @@
+$ python3 -c 'from pathlib import Path; import hashlib; p=Path("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-orphan-timeout-red-01/reconstruct.py"); scope={"__file__":str(p)}; exec(p.read_text().split("assert actual == expected")[0],scope); s=scope["source"]; print("before class",repr(s[s.index("class Capture")-32:s.index("class Capture")+16])); print("end",repr(s[-32:])); expected=scope["expected"]; [(print(a,b,hashlib.sha256(s.replace("\n\n\n\nclass Capture:",a+"class Capture:").rstrip("\n").encode()+b).hexdigest())) for a in ("\n\n","\n\n\n") for b in (b"\n",b"\n\n")]'
+reconstructed SHA256: 8c21a74bf281c93b64b230649303b145ac771646f79ccf77fb744206910a3dfc
+before class 'R:\n                    raise\n\n\n\nclass Capture:\n '
+end '.stderr)\n        return result\n\n'
+
+
+ b'\n' f3ef8bd572ba784c2f8ae99dbb66a6d51d3a57248b34adc551a370035b2dcc3f
+
+
+ b'\n\n' 970e02334b8f0826d17418a2a68a2b9b86fd9d45202c5f1b4ac1235c449eeb1c
+
+
+
+ b'\n' b708dd0023ec89a5c2e156ee71027030116ce9e4355a76c157d6eab22769eb62
+
+
+
+ b'\n\n' bec6fd818273c2147ea89410c3458373cdb3083cfa551959387322c04a15ccb0
+
+exit=0
+elapsed_seconds=0.018949

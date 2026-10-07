@@ -1,0 +1,18 @@
+{
+  "version": "native-tests-v1",
+  "tests": [
+    {
+      "name": "app::test_one",
+      "status": "passed"
+    },
+    {
+      "name": "app::test_one",
+      "status": "passed"
+    }
+  ],
+  "passed": 2,
+  "cached": 0,
+  "failed": 0,
+  "skipped": 0,
+  "unsupported": 0
+}

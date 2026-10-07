@@ -1,0 +1,9 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 4 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 2 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 128 finding(s) — report-only (--verbose for detail)
+guardian: repeated-string-literal: 2 finding(s) — report-only (--verbose for detail)
+guardian: try-in-return: 2 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 checks — 0 blocking, 4 report-only
+[main 10a7fda] feedback: mylang — S4 foreign-header native cache correction
+ 1 file changed, 3 insertions(+)

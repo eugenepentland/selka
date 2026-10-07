@@ -1,0 +1,7 @@
+{
+  "protected_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/oracles/pre-v-canonical-0eb/mylang-core",
+  "copy": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/mylang-core",
+  "sha256": "591886dc7d20409c878ee0a5b15c9faa0394b5b836eeaaa8c75e43a31350f120",
+  "source_commit": "0ebc9c8f0",
+  "qualification": "focused immutable diagnostic artifact, not final Wave A qualification"
+}

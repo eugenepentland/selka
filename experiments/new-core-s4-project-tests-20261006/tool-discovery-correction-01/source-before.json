@@ -1,0 +1,10 @@
+{
+  "head": "df6e6ad8b6610d5cd53b70475a050a5d7751607f",
+  "source": {
+    "src/core/tool_identity.zig": "e3f8f09bae559a843391b24f8c79aa9676adccd0511b78c11d2629b4bf20f8a7",
+    "src/config_core_tool_platform.zig": "b9468ccefd4037fca68a2bb4ff53354e0da2006b1110860d66afa4cbc9f0d8c5",
+    "src/core/root_test.zig": "8c826c24cde8095acef9216e56bb3f82b8a8c664d6f3f29ed202a0b3b7cdbdab",
+    "src/core/ir.zig": "7232a25ca00d51c16b3cd552ae86859769a3ffb48d7a4f20ed4323708b651d5d"
+  },
+  "no_other_source_edits": []
+}

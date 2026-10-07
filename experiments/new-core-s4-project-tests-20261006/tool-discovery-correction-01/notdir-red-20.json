@@ -1,0 +1,35 @@
+{
+  "classification": "RED: unreachable descendants of owned regular-file discovery parent raise ReadFailed, preventing unproved fallback capture",
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-guard-probe",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-notdir-red-20/tool/distribution/zig",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-notdir-red-20/tool/lib/clang/22/share/ubsan_ignorelist.txt",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-notdir-red-20/memo"
+  ],
+  "status": 1,
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "probe_sha256": "85964314eafa855e7c32a110d987b72fc26cbc0fdc93a45decf90db410d4552c",
+  "source_snapshot": "source-native-18.json",
+  "parent": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-notdir-red-20/tool/lib",
+  "parent_kind": "regular file",
+  "parent_sha256": "a7b36e712ef0962c6dc8713f4cf6469c511e190c83565aa8befe308ca8fd894f",
+  "input_tool": "owned copy of /bin/true; no native tool invocation",
+  "stderr": "error: ReadFailed\n"
+}

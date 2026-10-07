@@ -1,0 +1,3 @@
+src/core/tool_identity.zig:645:28: error: binary operator '*' has whitespace on one side, but not the other
+    const empty = [_]u8{0} ** 4;
+                           ^

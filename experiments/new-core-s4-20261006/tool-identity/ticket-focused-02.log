@@ -1,0 +1,10 @@
+src/core/tool_identity.zig:344:26: error: root source file struct 'meta' has no member named 'intToEnum'
+    const kind = std.meta.intToEnum(std.Io.File.Kind, try reader.takeByte()) catch return error.MalformedHint;
+                 ~~~~~~~~^~~~~~~~~~
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/meta.zig:1:1: note: struct declared here
+const builtin = @import("builtin");
+^~~~~
+referenced by:
+    decodeHint: src/core/tool_identity.zig:328:80
+    inventoryHint: src/core/tool_identity.zig:311:22
+    4 reference(s) hidden; use '-freference-trace=6' to see all references

@@ -1,0 +1,6 @@
+module app
+
+extern def linked_value(host: Host) -> i32 effects(host)
+
+def main(host: Host) -> int:
+    return int(linked_value(host))

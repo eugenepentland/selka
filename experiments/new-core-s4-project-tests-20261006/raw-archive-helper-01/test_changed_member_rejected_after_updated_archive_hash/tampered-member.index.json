@@ -1,0 +1,90 @@
+{
+  "archive_sha256": "369d5719eea115e41f6e7dd125f60808ff81255565c277c8b0c8e835eb79cbb4",
+  "directories": {
+    ".": [
+      66309,
+      118531803,
+      16893,
+      4096,
+      1791345739348751722,
+      1791345739348751722,
+      3
+    ],
+    "nested": [
+      66309,
+      118531804,
+      16893,
+      4096,
+      1791345739351626691,
+      1791345739351626691,
+      3
+    ],
+    "nested/empty-dir": [
+      66309,
+      118531805,
+      16893,
+      4096,
+      1791345739348483757,
+      1791345739348483757,
+      2
+    ]
+  },
+  "file_count": 4,
+  "files": {
+    "00001.stderr": {
+      "fingerprint": [
+        66309,
+        118531807,
+        33204,
+        0,
+        1791345739348751722,
+        1791345739348751722,
+        1
+      ],
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "00001.stdout": {
+      "fingerprint": [
+        66309,
+        118531806,
+        33204,
+        21,
+        1791345739348751722,
+        1791345739348751722,
+        1
+      ],
+      "sha256": "5785a59345acc4c2ee10a0f4f254312644f2f9bb52c729874c82933a3e8cd6c4",
+      "size": 21
+    },
+    "nested/00002.stderr": {
+      "fingerprint": [
+        66309,
+        118531809,
+        33204,
+        17,
+        1791345739352399181,
+        1791345739352399181,
+        1
+      ],
+      "sha256": "d04a075a76b562390b7d918a32bdc4667d928210424687289d386137ce7200aa",
+      "size": 17
+    },
+    "nested/00002.stdout": {
+      "fingerprint": [
+        66309,
+        118531808,
+        33204,
+        2097408,
+        1791345739348780308,
+        1791345739348780308,
+        1
+      ],
+      "sha256": "ad4707187ce2c9c3d16909bd20eb1c440fa9d2717bff5b836db2d32f997da4d2",
+      "size": 2097408
+    }
+  },
+  "format": "mylang-s4-raw-process-archive-v1",
+  "raw_directory": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/raw-archive-selftest-01/test_changed_member_rejected_after_updated_archive_hash/processes",
+  "total_bytes": 2097446
+}

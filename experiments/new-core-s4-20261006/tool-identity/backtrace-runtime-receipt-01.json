@@ -1,0 +1,30 @@
+{
+  "identities": [
+    {
+      "inputs": 20907,
+      "memo_hit": false,
+      "cacheable": true,
+      "digest": "0857a59f7471a35d17e3bf28c19979a79e3ae9bc712cc6c4be87930a1e1c3cc2",
+      "generation": "788ee0a448dead0e7bec2bd00e061aa27055b27b49e65ae63efd3ac2a33df363"
+    },
+    {
+      "inputs": 20907,
+      "memo_hit": true,
+      "cacheable": true,
+      "digest": "0857a59f7471a35d17e3bf28c19979a79e3ae9bc712cc6c4be87930a1e1c3cc2",
+      "generation": "788ee0a448dead0e7bec2bd00e061aa27055b27b49e65ae63efd3ac2a33df363"
+    }
+  ],
+  "source_hashes": {
+    "src/core/tool_identity.zig": "e3f8f09bae559a843391b24f8c79aa9676adccd0511b78c11d2629b4bf20f8a7",
+    "src/core/tool_ticket.zig": "5e529827b943e53e1c25db3a7adea6d570bd49c2e9504ce5e3ce03b27aa2094d",
+    "src/config_core_tool_platform.zig": "b9468ccefd4037fca68a2bb4ff53354e0da2006b1110860d66afa4cbc9f0d8c5"
+  },
+  "focused": "20/20",
+  "guardian": "88/88",
+  "inventory_inputs": 20907,
+  "inventory_payload_codec": "unchanged",
+  "inventory_hint_domain": "v3",
+  "content_memo_codec": "v1 unchanged",
+  "approval_memo": "v2 includes runtime descriptors"
+}

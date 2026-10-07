@@ -1,0 +1,16 @@
+$ env PYTHONDONTWRITEBYTECODE=1 python3 /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification_selftest.py --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-selftest-02
+test_authoritative_baselines_and_discovery_agree (__main__.QualificationTests.test_authoritative_baselines_and_discovery_agree) ... ok
+test_empty_test_selection_cannot_qualify (__main__.QualificationTests.test_empty_test_selection_cannot_qualify) ... ok
+test_force_cannot_normalize_cached_to_passed (__main__.QualificationTests.test_force_cannot_normalize_cached_to_passed) ... ok
+test_identical_oracles_and_before_after_snapshots (__main__.QualificationTests.test_identical_oracles_and_before_after_snapshots) ... ok
+test_legitimate_support_rows_and_exact_file_coverage (__main__.QualificationTests.test_legitimate_support_rows_and_exact_file_coverage) ... ok
+test_report_duplicates_counts_status_and_unsupported_fail_closed (__main__.QualificationTests.test_report_duplicates_counts_status_and_unsupported_fail_closed) ... ok
+test_timeout_kills_reaps_descendants_and_retains_partial_raw_output (__main__.QualificationTests.test_timeout_kills_reaps_descendants_and_retains_partial_raw_output) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.508s
+
+OK
+
+exit=0
+elapsed_seconds=0.575862

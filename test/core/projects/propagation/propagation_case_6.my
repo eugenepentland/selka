@@ -1,0 +1,35 @@
+module propagation_case_6
+
+
+enum E:
+    missing
+
+
+result Input:
+    err: E,
+    ok: i64
+
+
+result Output:
+    ok: bool,
+    err: E
+
+
+def mig_test_value(r: Input) -> Output:
+    return Ok(r? > 5)
+
+
+def handle(r: Output) -> i64:
+    match r:
+        case Output.ok(value):
+            if value:
+                return 7
+            return 1
+        case Output.err(e):
+            match e:
+                case E.missing:
+                    return 3
+
+
+public def program() -> i64:
+    return handle(mig_test_value(Ok(8))) + handle(mig_test_value(Err(E.missing)))

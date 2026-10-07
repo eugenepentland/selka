@@ -1,0 +1,30 @@
+{"argv": ["/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/backtrace-core-guests-03/debug"], "status": 1, "LD_DEBUG": "libs"}
+STDOUT
+1.25
+STDERR
+   3268592:	find library=libc.so.6 [0]; searching
+   3268592:	 search cache=/etc/ld.so.cache
+   3268592:	  trying file=/usr/lib/x86_64-linux-gnu/libc.so.6
+   3268592:	
+   3268592:	
+   3268592:	calling init: /lib64/ld-linux-x86-64.so.2
+   3268592:	
+   3268592:	
+   3268592:	calling init: /usr/lib/x86_64-linux-gnu/libc.so.6
+   3268592:	
+   3268592:	
+   3268592:	initialize program: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/backtrace-core-guests-03/debug
+   3268592:	
+   3268592:	
+   3268592:	transferring control: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/backtrace-core-guests-03/debug
+   3268592:	
+   3268592:	find library=libgcc_s.so.1 [0]; searching
+   3268592:	 search cache=/etc/ld.so.cache
+   3268592:	  trying file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   3268592:	
+   3268592:	
+   3268592:	calling init: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   3268592:	
+main.my:5:12: error[R_DIVISION_BY_ZERO]: native execution failed (div: left 1, right 0)
+  in main::main at main.my:5:12
+MYLANG-TRAP {"version":1,"operation":"div","left":1,"right":0}

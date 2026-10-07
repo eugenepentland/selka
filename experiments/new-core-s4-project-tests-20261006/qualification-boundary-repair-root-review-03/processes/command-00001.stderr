@@ -1,0 +1,2 @@
+usage: qualification_selftest.py [-h] --evidence EVIDENCE
+qualification_selftest.py: error: the following arguments are required: --evidence

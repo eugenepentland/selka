@@ -81,7 +81,9 @@ fn trial(context: *adapters.Context, target: entry.Target) Error!u32 {
     const module = context.module;
     const signature = target.data orelse return error.UnsupportedTestType;
     const source = module.functions.items[target.function].signature;
-    var b: tools.Builder = .{ .arena = a, .function = .{ .name = try std.fmt.allocPrint(a, "__test_trial_{d}", .{target.function}), .signature = .{ .params = &.{}, .ret = .void } } };
+    var digest: [16]u8 = undefined;
+    std.crypto.hash.Blake3.hash(module.functions.items[target.function].name, &digest, .{});
+    var b: tools.Builder = .{ .arena = a, .function = .{ .name = try std.fmt.allocPrint(a, "__test_trial_{s}", .{std.fmt.bytesToHex(digest, .lower)}), .signature = .{ .params = &.{}, .ret = .void } } };
     const start = try b.block();
     const arguments = try a.alloc(ir.Ref, source.params.len);
     var stream_index: usize = 0;

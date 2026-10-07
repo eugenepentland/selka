@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "fixtures": [
+    {
+      "path": "tests/supplied-core-fixture",
+      "target": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/canonical-old-fixture",
+      "purpose": "Retained test alias receipt; the original symlink remains local and is excluded from Git curation."
+    },
+    {
+      "path": "tests/live-phase/selected.api",
+      "target": "dep.my",
+      "purpose": "Retained test alias receipt; the original symlink remains local and is excluded from Git curation."
+    }
+  ]
+}

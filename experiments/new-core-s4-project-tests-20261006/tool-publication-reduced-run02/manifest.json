@@ -1,0 +1,72 @@
+{
+  "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/zig-out/bin/mylang-core",
+  "sha256": "ae95edc2e2d473fe052810345335e3558ad553b325bd0394af48c39ceafcaf98",
+  "source_commit": "7877aa5d369f57aeb8fb850e8198c08c520b3a51",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "private_zig": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-publication-reduced-run02/tools/zig",
+  "qualified": false,
+  "expect": "defect",
+  "trials": [
+    {
+      "mode": "runtime",
+      "mutated_during_compile": true,
+      "compile_process": {
+        "pid": 2694209,
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-publication-reduced-run02/tools/zig",
+          "cc",
+          "-c",
+          "-O2",
+          "-march=native",
+          "-mllvm",
+          "-x86-experimental-pref-innermost-loop-alignment=6",
+          "-std=c11",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-publication-reduced-run02/runtime/core_rt-22ebc24bdd06af58.o.bda2ca25496f0d888beb1003d7d824d7.partial",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-publication-reduced-run02/runtime/core_rt-22ebc24bdd06af58.c"
+        ]
+      },
+      "status": 1,
+      "seconds": 33.113400728907436,
+      "published_objects": [
+        "core_rt-22ebc24bdd06af58.o"
+      ],
+      "guest_private_objects": [
+        "zig-local/o/aee6cce309f6caa95584bea14932c8c1/core_rt-22ebc24bdd06af58.o"
+      ],
+      "refused_tool_change": true,
+      "expected_observed": true
+    },
+    {
+      "mode": "number",
+      "mutated_during_compile": true,
+      "compile_process": {
+        "pid": 2702801,
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-publication-reduced-run02/tools/zig",
+          "build-obj",
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-publication-reduced-run02/number/number-tool-c9b9d23caff8a3f581ec583f877b4fed3fd025baf9289d49dcc114ba057a5664/core_number_text-714db03fe3fa391c9b5a852fe8b845a55a788be7cbede44ff2b90ac1dbe77348-4466da2f85cc4b31/core_number_text.zig",
+          "-target",
+          "x86_64-linux-gnu",
+          "-mcpu",
+          "baseline",
+          "-O",
+          "ReleaseFast",
+          "-fPIC",
+          "-fno-stack-check",
+          "-fno-stack-protector",
+          "-lc",
+          "-femit-bin=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-publication-reduced-run02/number/number-tool-c9b9d23caff8a3f581ec583f877b4fed3fd025baf9289d49dcc114ba057a5664/core_number_text-714db03fe3fa391c9b5a852fe8b845a55a788be7cbede44ff2b90ac1dbe77348.o.4466da2f85cc4b31.partial"
+        ]
+      },
+      "status": 1,
+      "seconds": 29.306158870924264,
+      "published_objects": [
+        "number-tool-c9b9d23caff8a3f581ec583f877b4fed3fd025baf9289d49dcc114ba057a5664/core_number_text-714db03fe3fa391c9b5a852fe8b845a55a788be7cbede44ff2b90ac1dbe77348.o"
+      ],
+      "guest_private_objects": [],
+      "refused_tool_change": true,
+      "expected_observed": true
+    }
+  ]
+}

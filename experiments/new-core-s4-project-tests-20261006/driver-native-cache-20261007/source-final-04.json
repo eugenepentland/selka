@@ -1,0 +1,42 @@
+{
+  "head": "9c51dd126cbf9a60e3c495ca05fa7446e9138479",
+  "files": {
+    "src/core/driver.zig": "c1d38f8c7274bc1a64197723461f709ea9563d3bc37fd3a9bec883c9bd7c1248",
+    "src/core/root_test.zig": "8c826c24cde8095acef9216e56bb3f82b8a8c664d6f3f29ed202a0b3b7cdbdab",
+    "src/core/ir.zig": "7232a25ca00d51c16b3cd552ae86859769a3ffb48d7a4f20ed4323708b651d5d",
+    "src/core/tool_identity.zig": "e3f8f09bae559a843391b24f8c79aa9676adccd0511b78c11d2629b4bf20f8a7",
+    "src/config_core_tool_platform.zig": "b9468ccefd4037fca68a2bb4ff53354e0da2006b1110860d66afa4cbc9f0d8c5",
+    "src/core/target.zig": "ddce9416c892f018ce4a8836d6d68e516a8071fb6bf857b596c840a3d088ddff",
+    "src/core/number_runtime.zig": "854b34725a02731d532383ec774d6bf24ddcdb41095d80ec85078cd901923e80",
+    "src/core/driver_native_cache_test.zig": "6d4f8ff88931865a04b82b7c19a5da9c908c08626906e0e07f11cde6cba0f1ed"
+  },
+  "new_test": "src/core/driver_native_cache_test.zig",
+  "patch_sha256": "de3d98cfd48e8e071b61ba8eaa1f02396b58e3fbbd166f3c6a516956d8a7fb53",
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.zig-cache/o/fa5c448bb1a8942f305a00e54d00855d/mylang-core",
+    "protected_copy": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/mylang-core-corrected",
+    "sha256": "d6e4220ad8a833f3d56510eb5958637e25f9c367071949db281d64584d3bface",
+    "build_mode": "Debug",
+    "core_inputs_assets": ".zig-cache/o/dfa564c27654ff69ce222211bd3e71fe/qbe_build_assets/assets.zig",
+    "compiler_identity": "81a692c36ab55b72375e7b3d2742c0eae9217948eb7cea2c49ba134707045035",
+    "core_inputs_assets_sha256": "dfcdf0c6dc7889a0ddd7730c011a1cc6c8ea2c5324840ada7ce869903f5dd78f"
+  },
+  "focus": {
+    "passed": 2,
+    "failed": 0,
+    "test_seconds": 34.98,
+    "log": "focus-03.log"
+  },
+  "guardian": {
+    "passed": 88,
+    "log": "guardian-04.log"
+  },
+  "actual_reducer": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/c-prep-core-foreign-header-01/corrected-stale-cache.json",
+    "build": 0,
+    "native": 8,
+    "expected": 8,
+    "stale_object_retained_unchanged": true,
+    "owned_cache_cleaned": true
+  }
+}

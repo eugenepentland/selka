@@ -1,0 +1,23 @@
+{
+  "fixture_kind": "pure synthetic report",
+  "report": {
+    "version": "native-tests-v1",
+    "tests": [
+      {
+        "name": "app::test_one",
+        "status": "passed"
+      }
+    ],
+    "passed": 1,
+    "cached": 0,
+    "failed": 0,
+    "skipped": 0,
+    "unsupported": 0,
+    "executed": 0
+  },
+  "status": 0,
+  "validator_accepts": true,
+  "counts": {
+    "passed": 1
+  }
+}

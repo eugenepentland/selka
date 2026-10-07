@@ -1,0 +1,46 @@
+$ env MYLANG_SLOT_DIR=/run/user/1000/mylang-slots /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/scripts/build-slot.sh build -- bash -c 'cd "$1" && exec "$2" build test-core -Dtest-filter="typed case values" -Dtest-filter="case verdicts" -j2' -- /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig
+test-core
++- run test 1 pass, 1 crash (2 total)
+guardian/test: 2 test(s) selected
+guardian/test: test wall 0.00s
+guardian/test: PASS — 1 passed
+guardian/test: RESULT {"passed":1,"failed":0,"skipped":0}
+error: 'property_validate.test.typed case values reject wrong JSON shapes integer overflow and malformed members' terminated with signal ABRT with stderr:
+       guardian/test: 2 test(s) selected
+       thread 3501713 panic: integer overflow
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/core/property_validate.zig:120:36: 0x1297d90 in cases (root_test.zig)
+                   const count: usize = 1 + @intFromBool(payload == .string);
+                                          ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/core/property_validate.zig:58:47: 0x129753e in value (root_test.zig)
+                   .cases => |choices| try self.cases(choices, input, depth),
+                                                     ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/core/property_validate.zig:12:22: 0x1296caf in validate (root_test.zig)
+           try checker.value(name, value, 0);
+                            ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/core/property_validate.zig:166:69: 0x1294e92 in test.typed case values reject wrong JSON shapes integer overflow and malformed members (root_test.zig)
+               try std.testing.expectError(error.InvalidTestValue, validate(schema, example.name, input, 0));
+                                                                           ^
+       /home/epentland/ai/canopy/mylang-worktrees/guardian-zig/src/test_runner.zig:685:39: 0x1200073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/ai/canopy/mylang-worktrees/guardian-zig/src/test_runner.zig:610:42: 0x12008c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/ai/canopy/mylang-worktrees/guardian-zig/src/test_runner.zig:306:39: 0x1200f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x11fd7ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x11fd1d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+failed command: ./.zig-cache/o/512f274591bba440bba43ab11813040e/test --cache-dir=./.zig-cache --seed=0x89faac16 --listen=-
+
+Build Summary: 5/7 steps succeeded (1 failed); 1/2 tests passed (1 crashed)
+test-core transitive failure
++- run test 1 pass, 1 crash (2 total)
+
+
+exit=1
+elapsed_seconds=1.905728

@@ -1,0 +1,6 @@
+{"argv": ["scripts/build-slot.sh", "build", "--", "strace", "-f", "-e", "trace=execve", "-s", "4096", "-o", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-20261006/tool-identity/backtrace-core-debug-exec-02.log", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/zig-out/bin/mylang-core", "build", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/backtrace-core-guests-02/main.my", "-o", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/backtrace-core-guests-02/debug", "--emit-llvm", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/backtrace-core-guests-02/debug.ll", "--cache-dir", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/backtrace-core-guests-02/debug-cache"], "core_sha256": "67ad628f8743dd803c81bbd071f5c3e7816ff2977ad44bb10c52bb4e36672906"}
+main.my:3:27: error[E_UNUSED_CAPABILITY]: `host` is never used, so this signature claims an effect the body cannot have; remove the parameter or use it
+  def main(args: list[str], host: Host, out: Stream) -> int:
+                            ^
+strace: Exit of unknown pid 3265753 ignored
+{"status": 1, "seconds": 5.1507577910088}

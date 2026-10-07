@@ -1,0 +1,5 @@
+$ scripts/build-slot.sh build zig fmt src/core/driver.zig src/core/number_runtime.zig
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 5s (all 3 build slot(s) busy)
+
+status: 0

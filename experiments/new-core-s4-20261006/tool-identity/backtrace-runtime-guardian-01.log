@@ -1,0 +1,8 @@
+{"argv": ["taskset", "-c", "0-9", "guardian-check", "all", ".", "--full"]}
+guardian: run-all: whole-tree run — --full was requested
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 29 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10532 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+{"status": 0, "seconds": 1.9742861650884151}

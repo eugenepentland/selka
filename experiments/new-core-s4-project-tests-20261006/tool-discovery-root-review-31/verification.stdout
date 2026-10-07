@@ -1,0 +1,20 @@
+{
+  "classification": "GREEN",
+  "scope": "read-only source, handoff, artifact and native receipt verification",
+  "manifest_sha256": "e4bd0f1b4c7456ae8f09b041517bbd0bebd4743043f02db749379b6a8811388d",
+  "handoff_files": 126,
+  "handoff_bytes": 1195387,
+  "source_sha256": {
+    "src/core/tool_identity.zig": "f1427e6b4794ad96853d5040eb8d73036aad5bb4ac1597f335d28ba96c3bb114",
+    "src/core/tool_discovery.zig": "e27736ce9c5be10ece6f5ecff7a65494cb4ef2098be562744fdcf3c9d667fb9d",
+    "src/config_core_tool_platform.zig": "d7afd49d7542aa6b18fdc8141589dfeb81a4f4dee63764297b270757f391a661",
+    "src/core/root_test.zig": "f215d730c098f5e4440b1ed6977148b23b93f63613ae321dc000f8480d722ffc",
+    "src/core/ir.zig": "7232a25ca00d51c16b3cd552ae86859769a3ffb48d7a4f20ed4323708b651d5d"
+  },
+  "native_receipt_sha256": "b750ae507f0d5e1009a9967813cf5d3a6008b12909d57d9ea9c5d4f0684f6c16",
+  "actual_native_objects": 6,
+  "unknown_layout_fallback_builds": 2,
+  "focused_tests": 27,
+  "guardian_checks": 88,
+  "full_package_qualification": false
+}

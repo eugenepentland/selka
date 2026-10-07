@@ -1,0 +1,48 @@
+{
+  "codec": "reviewed-control-compiler-origin-v1",
+  "receipt": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/site-control-core-origin-02/summary.json",
+    "sha256": "f025ae21738e07c1ceae0bcb08ba7d534012e4c69eeb36a85a997d1d6b816936"
+  },
+  "chain": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/qualification_support.py",
+      "sha256": "6f78a8ff7627b38c89aa4b5bd9e461aa1cdac214d78ab53297b3192da873f49f"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/control_core_origin.py",
+      "sha256": "93c8c64a3dbec5bd562e1fbf4fde24aecd35c8c328aa16c1575a3776fa38b035"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/site-control-core-origin-02/processes/command-00001.json",
+      "sha256": "300c25006fa15a0597b229118c38a7a52cf61e9c5220df8ade3d06562d5f479b"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/site-control-core-origin-02/processes/command-00001.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/site-control-core-origin-02/processes/command-00001.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/site-control-core-origin-02/processes/command-00001.job.json",
+      "sha256": "1ec74e813ab285c05e1fa8cb92ee16d2bde010ea0cc8802047b943195f8e71ad"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/site-control-core-origin-02/processes/command-00001.result.json",
+      "sha256": "f82372ac752db544237ae5832c38c7ffdd7816c5cd176153a14addcfb3f3b0e1"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/site-control-core-origin-02/processes/command-00001.supervisor.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/site-control-core-origin-02/processes/command-00001.supervisor.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "production_source_commit": "3c86c3122fdcc186aa777b52bbcf7f25b03c172f",
+  "build_source_commit": "f0f37baa713d8f4f1a99af8be9a83809d0ec7929",
+  "artifact_sha256": "23d384282e229705a08e12a5d83fd153672ecabadf27e1235f8dc5d959ee95c0"
+}

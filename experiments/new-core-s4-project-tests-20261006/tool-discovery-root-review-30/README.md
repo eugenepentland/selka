@@ -1,0 +1,1 @@
+Root review30 retained an invalid verifier: it selected strace's first -o trace output instead of the actual Zig cc -o object. The SHA assertion failed before any compiler or native invocation. Review31 changes only the output selection to the cc argument region and starts fresh receipts. Production source and the original handoff manifest remain unchanged.

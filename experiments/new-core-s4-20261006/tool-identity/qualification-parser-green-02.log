@@ -1,0 +1,55 @@
+[
+  {
+    "probe": "unsupported",
+    "rejected": true,
+    "reason": "new core debug: invalid report: selected test is unsupported"
+  },
+  {
+    "probe": "duplicate_names",
+    "rejected": true,
+    "reason": "new core debug: invalid report: invalid or duplicate test name"
+  },
+  {
+    "probe": "wrong_counts",
+    "rejected": true,
+    "reason": "new core debug: invalid report: report total disagrees with passed verdicts"
+  },
+  {
+    "probe": "missing_tests",
+    "rejected": true,
+    "reason": "tests must be an array"
+  },
+  {
+    "probe": "wrong_version",
+    "rejected": true,
+    "reason": "invalid native test report version/schema"
+  },
+  {
+    "probe": "unknown_status",
+    "rejected": true,
+    "reason": "invalid test status"
+  },
+  {
+    "probe": "status_not_string",
+    "rejected": true,
+    "reason": "invalid test status"
+  },
+  {
+    "probe": "boolean_count",
+    "rejected": true,
+    "reason": "report total disagrees with passed verdicts"
+  },
+  {
+    "probe": "negative_count",
+    "rejected": true,
+    "reason": "report total disagrees with failed verdicts"
+  },
+  {
+    "probe": "forced_cached",
+    "rejected": true
+  },
+  {
+    "probe": "directory_guest_exec",
+    "rejected": true
+  }
+]

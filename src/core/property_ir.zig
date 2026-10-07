@@ -26,7 +26,11 @@ pub const Context = struct {
         const index: u32 = @intCast(self.module.functions.items.len);
         try self.known.put(self.arena, key, index);
         try self.pending.append(self.arena, .{ .name = name, .ty = ty, .index = index, .encode = encode });
-        const symbol = try std.fmt.allocPrint(self.arena, "__test_{s}_{d}", .{ if (encode) "encode" else "decode", index });
+        const kind = if (self.module.kind(ty)) |found| @tagName(found) else @tagName(ty);
+        const semantic = try std.fmt.allocPrint(self.arena, "{s}:{s}", .{ kind, name });
+        var digest: [16]u8 = undefined;
+        std.crypto.hash.Blake3.hash(semantic, &digest, .{});
+        const symbol = try std.fmt.allocPrint(self.arena, "__test_{s}_{s}", .{ if (encode) "encode" else "decode", std.fmt.bytesToHex(digest, .lower) });
         try self.module.functions.append(self.arena, .{ .name = symbol, .signature = .{
             .params = if (encode) try self.arena.dupe(ir.Type, &.{ty}) else &.{},
             .ret = if (encode) .void else ty,

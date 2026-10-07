@@ -1,0 +1,20 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 20s (all 3 build slot(s) busy)
+guardian: run-all: whole-tree run — --full was requested
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 29 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10535 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 2/88 failed (ban-hardcoded-paths, test-no-conditional)
+guardian: failures grouped by check (2):
+  ban-hardcoded-paths (2 findings)
+    - src/core/tool_identity.zig:30: hardcoded literal (absolute /etc path)
+      fix: read the value from config or pass as a parameter; keep config under config/.
+    - src/core/tool_identity.zig:32: hardcoded literal (absolute /etc path)
+  test-no-conditional (4 findings)
+    - src/core/tool_identity.zig:1067: more than one top-level loop — a test may keep one; the loop at line 1067 asserts nothing, so hoist that one into a named helper
+      fix: one top-level loop is fine; merge multiple loops into one table-driven loop, split a branch into two independent tests, or hoist the computation into a helper. A multi-loop finding names the loop to hoist — the assertion-free one when there is one, otherwise the extra loop itself.
+    - src/core/tool_identity.zig:1067: if at top level of test body
+    - src/core/tool_identity.zig:1072: more than one top-level loop — a test may keep one; the loop at line 1067 asserts nothing, so hoist that one into a named helper
+    - +1 more — use --verbose for full detail
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

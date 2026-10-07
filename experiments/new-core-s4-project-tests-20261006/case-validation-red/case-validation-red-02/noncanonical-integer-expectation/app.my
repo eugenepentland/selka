@@ -1,0 +1,7 @@
+module app
+
+public def test_zero() -> int:
+    return 0
+
+public def test_z_survivor() -> bool:
+    return True

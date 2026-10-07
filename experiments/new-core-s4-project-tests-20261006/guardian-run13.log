@@ -1,0 +1,11 @@
+guardian: run-all: whole-tree run — --full was requested
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 29 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10523 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (doc-comments)
+guardian: failures grouped by check (1):
+  doc-comments (1 finding)
+    - src/core/driver.zig: pub fn check: has no /// doc comment
+      fix: add a real /// doc comment above each public declaration (>= 12 non-whitespace chars, no TODO/FIXME).
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

@@ -1,0 +1,163 @@
+1806869 renameat(AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/frontend/d31bcc00bb3d004af4f42ee2026095adfdd338506ea571d2b379d8067243bf40/6f9b28723bdc48f2f4d917eaa4ca85060f9cda57c4c18a9e9fdeff0e5ec7fb67.b4dc53a4141bf2d0.tmp", AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/frontend/d31bcc00bb3d004af4f42ee2026095adfdd338506ea571d2b379d8067243bf40/6f9b28723bdc48f2f4d917eaa4ca85060f9cda57c4c18a9e9fdeff0e5ec7fb67") = 0
+1806869 renameat(AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/semantic/semantic-cache-v3/3777c22dd2fc44c984ac8c19ce98ce45fed5d4d5f0f4741a9774f81b182d04db/f0b353c44c048da6c695a1b74fcb15bdb6ee3068ee3c6671d614d9a8aa25cd78.44e05a4056472275.tmp", AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/semantic/semantic-cache-v3/3777c22dd2fc44c984ac8c19ce98ce45fed5d4d5f0f4741a9774f81b182d04db/f0b353c44c048da6c695a1b74fcb15bdb6ee3068ee3c6671d614d9a8aa25cd78") = 0
+1806869 renameat(AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/semantic/semantic-cache-v3/3777c22dd2fc44c984ac8c19ce98ce45fed5d4d5f0f4741a9774f81b182d04db/64da212abdb42c0a85941d4c812964a3cdd77f7d1d87998cb38608afa1f1634b.bf0c320ca8b8192b.tmp", AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/semantic/semantic-cache-v3/3777c22dd2fc44c984ac8c19ce98ce45fed5d4d5f0f4741a9774f81b182d04db/64da212abdb42c0a85941d4c812964a3cdd77f7d1d87998cb38608afa1f1634b") = 0
+1806870 renameat(AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/frontend/d31bcc00bb3d004af4f42ee2026095adfdd338506ea571d2b379d8067243bf40/8aa68a77607c32752b896909db9f5b7972148259637db05cfdd105ada1a44650.f6e606ecf7e965d6.tmp", AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/frontend/d31bcc00bb3d004af4f42ee2026095adfdd338506ea571d2b379d8067243bf40/8aa68a77607c32752b896909db9f5b7972148259637db05cfdd105ada1a44650") = 0
+1806870 renameat(AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/semantic/semantic-cache-v3/3777c22dd2fc44c984ac8c19ce98ce45fed5d4d5f0f4741a9774f81b182d04db/b950bdcdcac3251d7f720a722f6d8b77a9ff5561c2b0460a47eff830af84e17e.385a6c9ee2bdb3c2.tmp", AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/semantic/semantic-cache-v3/3777c22dd2fc44c984ac8c19ce98ce45fed5d4d5f0f4741a9774f81b182d04db/b950bdcdcac3251d7f720a722f6d8b77a9ff5561c2b0460a47eff830af84e17e") = 0
+1806870 renameat(AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/semantic/semantic-cache-v3/3777c22dd2fc44c984ac8c19ce98ce45fed5d4d5f0f4741a9774f81b182d04db/5a23ef91af6fc78da10a4db32c0e476691f39e361b50f08e0c28258162e0d9a7.4a8129176964a782.tmp", AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/semantic/semantic-cache-v3/3777c22dd2fc44c984ac8c19ce98ce45fed5d4d5f0f4741a9774f81b182d04db/5a23ef91af6fc78da10a4db32c0e476691f39e361b50f08e0c28258162e0d9a7") = 0
+1806869 renameat(AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/frontend/d31bcc00bb3d004af4f42ee2026095adfdd338506ea571d2b379d8067243bf40/4255a809efca2a24ab71f6aec2c808cd1f20bd203821401d1a639e19d7dc83f6.1fa80b0381c55e5a.tmp", AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/frontend/d31bcc00bb3d004af4f42ee2026095adfdd338506ea571d2b379d8067243bf40/4255a809efca2a24ab71f6aec2c808cd1f20bd203821401d1a639e19d7dc83f6") = 0
+1806870 renameat(AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/frontend/d31bcc00bb3d004af4f42ee2026095adfdd338506ea571d2b379d8067243bf40/6eacdfba96c48c1e5523baa3ed1eb1dd70804556f80ac50eea211f9b1e4c75db.7a2c942fdcddc3cd.tmp", AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/frontend/d31bcc00bb3d004af4f42ee2026095adfdd338506ea571d2b379d8067243bf40/6eacdfba96c48c1e5523baa3ed1eb1dd70804556f80ac50eea211f9b1e4c75db") = 0
+1806876 +++ exited with 0 +++
+1806875 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1806876, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1806875 +++ exited with 0 +++
+1806873 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1806875, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1806881 +++ exited with 0 +++
+1806873 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1806881, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1806878 +++ exited with 0 +++
+1806877 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1806878, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1806877 +++ exited with 0 +++
+1806874 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1806877, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1806885 +++ exited with 0 +++
+1806874 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1806885, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1806887 rename("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/zig-local/tmp/76c93168ebe9eed3-core_rt-140380a5390ec0ca-fcce53b5.o.tmp", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/zig-local/tmp/76c93168ebe9eed3-core_rt-140380a5390ec0ca.o") = 0
+1806887 +++ exited with 0 +++
+1806883 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1806887, si_uid=1000, si_status=0, si_utime=354 /* 3.54 s */, si_stime=19 /* 0.19 s */} ---
+1806883 renameat(17, "76c93168ebe9eed3-core_rt-140380a5390ec0ca.o", 19, "core_rt-140380a5390ec0ca.o") = 0
+1807551 rename("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/core_rt-140380a5390ec0ca.o.partial.tmp3d0df90", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/core_rt-140380a5390ec0ca.o.partial") = 0
+1807567 +++ exited with 0 +++
+1807554 +++ exited with 0 +++
+1807564 +++ exited with 0 +++
+1807553 +++ exited with 0 +++
+1807557 +++ exited with 0 +++
+1807558 +++ exited with 0 +++
+1807561 +++ exited with 0 +++
+1807566 +++ exited with 0 +++
+1807559 +++ exited with 0 +++
+1807565 +++ exited with 0 +++
+1807562 +++ exited with 0 +++
+1807563 +++ exited with 0 +++
+1807560 +++ exited with 0 +++
+1807555 +++ exited with 0 +++
+1807568 +++ exited with 0 +++
+1807556 +++ exited with 0 +++
+1807551 +++ exited with 0 +++
+1806873 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807551, si_uid=1000, si_status=0, si_utime=0, si_stime=1 /* 0.01 s */} ---
+1806882 +++ exited with 0 +++
+1806884 +++ exited with 0 +++
+1806883 +++ exited with 0 +++
+1806873 +++ exited with 0 +++
+1806869 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1806873, si_uid=1000, si_status=0, si_utime=0, si_stime=1 /* 0.01 s */} ---
+1806869 renameat(AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/core_rt-140380a5390ec0ca.o.partial", AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/core_rt-140380a5390ec0ca.o") = 0
+1807552 rename("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/core_rt-140380a5390ec0ca.o.partial.tmp5eebb63", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/core_rt-140380a5390ec0ca.o.partial") = 0
+1807582 +++ exited with 0 +++
+1807584 +++ exited with 0 +++
+1807570 +++ exited with 0 +++
+1807569 +++ exited with 0 +++
+1807575 +++ exited with 0 +++
+1807573 +++ exited with 0 +++
+1807577 +++ exited with 0 +++
+1807572 +++ exited with 0 +++
+1807581 +++ exited with 0 +++
+1807579 +++ exited with 0 +++
+1807578 +++ exited with 0 +++
+1807583 +++ exited with 0 +++
+1807580 +++ exited with 0 +++
+1807574 +++ exited with 0 +++
+1807571 +++ exited with 0 +++
+1807576 +++ exited with 0 +++
+1807552 +++ exited with 0 +++
+1806874 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807552, si_uid=1000, si_status=0, si_utime=0, si_stime=1 /* 0.01 s */} ---
+1806889 +++ exited with 0 +++
+1806888 +++ exited with 0 +++
+1806890 +++ exited with 0 +++
+1806874 +++ exited with 0 +++
+1806870 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1806874, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1806870 renameat(AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/core_rt-140380a5390ec0ca.o.partial", AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/core_rt-140380a5390ec0ca.o") = 0
+1807587 +++ exited with 0 +++
+1807586 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807587, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1807586 +++ exited with 0 +++
+1807585 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807586, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1807591 +++ exited with 0 +++
+1807585 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807591, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1807590 +++ exited with 0 +++
+1807589 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807590, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1807589 +++ exited with 0 +++
+1807588 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807589, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1807598 +++ exited with 0 +++
+1807588 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807598, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1807597 rename("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/zig-local/tmp/7ef566226a0eb438-app-928b180b739de5e9-debug-fe0143dc8acadce5-3a3bb499.o.tmp", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/zig-local/tmp/7ef566226a0eb438-app-928b180b739de5e9-debug-fe0143dc8acadce5.o") = 0
+1807597 +++ exited with 0 +++
+1807594 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807597, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1807596 renameat(25, "7ef566226a0eb438-app-928b180b739de5e9-debug-fe0143dc8acadce5.o", 30, "app-928b180b739de5e9-debug-fe0143dc8acadce5.o") = 0
+1807604 rename("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/zig-local/tmp/6f4066931d98f46a-orphan-4b6a5eb9f45e1b40-debug-5a84f976c0b25f7e-984197a2.o.tmp", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/zig-local/tmp/6f4066931d98f46a-orphan-4b6a5eb9f45e1b40-debug-5a84f976c0b25f7e.o") = 0
+1807604 +++ exited with 0 +++
+1807603 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807604, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1807603 renameat(25, "6f4066931d98f46a-orphan-4b6a5eb9f45e1b40-debug-5a84f976c0b25f7e.o", 28, "orphan-4b6a5eb9f45e1b40-debug-5a84f976c0b25f7e.o") = 0
+1807607 rename("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/tests/app-928b180b739de5e9-debug.tmp1c94ee1", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/tests/app-928b180b739de5e9-debug") = 0
+1807630 +++ exited with 0 +++
+1807638 +++ exited with 0 +++
+1807629 +++ exited with 0 +++
+1807637 +++ exited with 0 +++
+1807635 +++ exited with 0 +++
+1807640 +++ exited with 0 +++
+1807636 +++ exited with 0 +++
+1807639 +++ exited with 0 +++
+1807634 +++ exited with 0 +++
+1807627 +++ exited with 0 +++
+1807626 +++ exited with 0 +++
+1807628 +++ exited with 0 +++
+1807641 +++ exited with 0 +++
+1807632 +++ exited with 0 +++
+1807633 +++ exited with 0 +++
+1807631 +++ exited with 0 +++
+1807607 +++ exited with 0 +++
+1807585 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807607, si_uid=1000, si_status=0, si_utime=0, si_stime=2 /* 0.02 s */} ---
+1807596 +++ exited with 0 +++
+1807595 +++ exited with 0 +++
+1807594 +++ exited with 0 +++
+1807593 +++ exited with 0 +++
+1807592 +++ exited with 0 +++
+1807585 +++ exited with 0 +++
+1806869 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807585, si_uid=1000, si_status=0, si_utime=0, si_stime=2 /* 0.02 s */} ---
+1807645 +++ exited with 0 +++
+1807643 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807645, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1807643 +++ exited with 0 +++
+1806869 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807643, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1806869 renameat(AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/tests/receipts-v1/71d129eadeb589faabc61a447731f463d74e350318858545bd342a070a6ec1d9.a0fb24d32db730e25092118a27383e99.partial", AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/tests/receipts-v1/71d129eadeb589faabc61a447731f463d74e350318858545bd342a070a6ec1d9") = 0
+1806869 renameat(AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/tests/manifests-v1/0e9b73bf3730cb9d0ea6226ba86a18bfb1fd8ed9a5eaa719816120bbab679cb7.json.d895e0de8fa3554c7f412a066dcec818.partial", AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/tests/manifests-v1/0e9b73bf3730cb9d0ea6226ba86a18bfb1fd8ed9a5eaa719816120bbab679cb7.json") = 0
+1806869 +++ exited with 0 +++
+1806868 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1806869, si_uid=1000, si_status=0, si_utime=3 /* 0.03 s */, si_stime=1 /* 0.01 s */} ---
+1807646 rename("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/tests/orphan-4b6a5eb9f45e1b40-debug.tmp9b396a1", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/tests/orphan-4b6a5eb9f45e1b40-debug") = 0
+1807658 +++ exited with 0 +++
+1807655 +++ exited with 0 +++
+1807657 +++ exited with 0 +++
+1807649 +++ exited with 0 +++
+1807662 +++ exited with 0 +++
+1807659 +++ exited with 0 +++
+1807647 +++ exited with 0 +++
+1807654 +++ exited with 0 +++
+1807653 +++ exited with 0 +++
+1807661 +++ exited with 0 +++
+1807656 +++ exited with 0 +++
+1807652 +++ exited with 0 +++
+1807648 +++ exited with 0 +++
+1807660 +++ exited with 0 +++
+1807650 +++ exited with 0 +++
+1807651 +++ exited with 0 +++
+1807646 +++ exited with 0 +++
+1807588 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807646, si_uid=1000, si_status=0, si_utime=0, si_stime=1 /* 0.01 s */} ---
+1807599 +++ exited with 0 +++
+1807603 +++ exited with 0 +++
+1807602 +++ exited with 0 +++
+1807601 +++ exited with 0 +++
+1807600 +++ exited with 0 +++
+1807588 +++ exited with 0 +++
+1806870 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807588, si_uid=1000, si_status=0, si_utime=0, si_stime=2 /* 0.02 s */} ---
+1807664 +++ exited with 0 +++
+1807663 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807664, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1807663 +++ exited with 0 +++
+1806870 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1807663, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+1806870 renameat(AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/tests/receipts-v1/d05bcdbfcb016a799ea906927b9be026d3126827f39692f8568d36b88bf8950f.29910304ead3afd7483363af28ee82d2.partial", AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/tests/receipts-v1/d05bcdbfcb016a799ea906927b9be026d3126827f39692f8568d36b88bf8950f") = 0
+1806870 renameat(AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/tests/manifests-v1/b429aac467b7d090f5208b89c0c34759dc441a31946f7884e89828329857eefd.json.233dcc43904d05f0fb662cf399ac62fd.partial", AT_FDCWD, "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01/tests/manifests-v1/b429aac467b7d090f5208b89c0c34759dc441a31946f7884e89828329857eefd.json") = 0
+1806870 +++ exited with 0 +++
+1806868 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=1806870, si_uid=1000, si_status=0, si_utime=4 /* 0.04 s */, si_stime=0} ---
+1806868 +++ exited with 0 +++

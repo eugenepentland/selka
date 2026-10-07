@@ -1,0 +1,122 @@
+$ python3 -c 'from pathlib import Path; root=Path("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006"); files={"conformance_checked.py":(62,100),"fuzz_matrix.py":(32,95),"project_matrix.py":(169,193)}; [(print(str(root/name)), [print(f"{i}: {line}") for i,line in enumerate((root/name).read_text().splitlines(),1) if start<=i<=end]) for name,(start,end) in files.items()]'
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/conformance_checked.py
+62: def checked_report(original, done, what, selected):
+63:     if done is None:
+64:         return original(done, what)
+65:     value = original(done, what)
+66:     if isinstance(value, str):
+67:         return value
+68:     try:
+69:         validate_report(value, done.returncode, allow_cached=not what.startswith("new core"), selected=selected)
+70:     except (ValueError, TypeError) as error:
+71:         return f"{what}: invalid report: {error}"
+72:     return value
+73: 
+74: 
+75: def main():
+76:     sweep = imported("s4_conformance", ROOT / "experiments/new-core-s1-20261005/conformance.py")
+77:     original = sweep.parse
+78:     selected = lambda name: sweep.keep(name, "--include-arena" in sys.argv)
+79:     sweep.parse = lambda done, what: checked_report(original, done, what, selected)
+80:     sweep.EXCLUDED.pop("migrated/propagation", None)
+81:     parent = sweep.Tool
+82: 
+83:     class Fresh(parent):
+84:         def run(self, argv, *args, **kwargs):
+85:             if len(argv) > 1 and argv[0] == self.core and argv[1] == "test":
+86:                 argv = [*argv, "--force"]
+87:             return super().run(argv, *args, **kwargs)
+88: 
+89:     sweep.Tool = Fresh
+90:     return sweep.main()
+91: 
+92: 
+93: if __name__ == "__main__":
+94:     raise SystemExit(main())
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/fuzz_matrix.py
+32: 
+33: 
+34: def main():
+35:     parser = argparse.ArgumentParser(description=__doc__)
+36:     parser.add_argument("--old", type=Path, required=True)
+37:     parser.add_argument("--core", type=Path, required=True)
+38:     parser.add_argument("--evidence", type=Path, required=True)
+39:     parser.add_argument("--cache", type=Path, required=True)
+40:     parser.add_argument("--jobs", type=int, choices=(1, 2, 3), default=3)
+41:     args = parser.parse_args()
+42:     if git("status", "--porcelain", "--untracked-files=no"):
+43:         parser.error("tracked files must be clean for the whole matrix")
+44:     args.evidence, args.cache = args.evidence.resolve(), args.cache.resolve()
+45:     if args.evidence.exists() or args.cache.exists():
+46:         parser.error("fresh evidence and cache paths are required")
+47:     oracles = {"old": identity(args.old.resolve()), "new": identity(args.core.resolve())}
+48:     commit = git("rev-parse", "HEAD")
+49:     args.evidence.mkdir(parents=True)
+50:     args.cache.mkdir(parents=True)
+51:     manifest = {"source_commit": commit, "oracles": oracles, "cases_per_kind": 50,
+52:                 "kinds": list(KINDS), "jobs": args.jobs}
+53:     (args.evidence / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+54: 
+55:     def run(kind):
+56:         command = [str(ROOT / "scripts/build-slot.sh"), "build", "--", "nice", "-n", "10",
+57:                    sys.executable, str(WRAPPER), "--kind", kind, "--cases", "50",
+58:                    "--seed", str(4401 + KINDS.index(kind)),
+59:                    "--old", oracles["old"]["path"], "--new", oracles["new"]["path"],
+60:                    "--evidence", str(args.evidence / kind), "--cache-root", str(args.cache / kind)]
+61:         if kind in HARNESSES:
+62:             command.extend(["--harness", str(HARNESSES[kind])])
+63:         with (args.evidence / f"{kind}.log").open("x") as stream:
+64:             stream.write(f"source_commit={commit}\n$ {shlex.join(command)}\n")
+65:             stream.flush()
+66:             result = subprocess.run(command, cwd=ROOT, stdout=stream, stderr=subprocess.STDOUT)
+67:             stream.write(f"\nexit={result.returncode}\n")
+68:         path = args.evidence / kind / "summary.json"
+69:         summary = json.loads(path.read_text()) if path.exists() else {"missing_summary": True}
+70:         passed = (result.returncode == 0 and summary.get("qualified") is True
+71:                   and summary.get("accepted") == 50 and summary.get("cases_requested") == 50
+72:                   and summary.get("oracles") == oracles)
+73:         print(f"{kind}: {'PASS' if passed else 'STOP'}; {summary.get('elapsed_seconds', '?')}s", flush=True)
+74:         return kind, {"passed": passed, "summary": summary}
+75: 
+76:     order = ("number",) + tuple(kind for kind in KINDS if kind != "number")
+77:     with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as workers:
+78:         results = dict(workers.map(run, order))
+79:     unchanged = git("rev-parse", "HEAD") == commit and not git("status", "--porcelain", "--untracked-files=no")
+80:     same_oracles = all(identity(Path(item["path"])) == item for item in oracles.values())
+81:     summary = {**manifest, "source_unchanged": unchanged, "oracles_unchanged": same_oracles,
+82:                "results": results, "qualified": unchanged and same_oracles and all(item["passed"] for item in results.values())}
+83:     (args.evidence / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+84:     return 0 if summary["qualified"] else 1
+85: 
+86: 
+87: if __name__ == "__main__":
+88:     raise SystemExit(main())
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/project_matrix.py
+169:             if provider != run(folder, "core", "app.my", ("--filter", "test_dependency")) or provider != [("app::test_dependency", "passed")]:
+170:                 raise ValueError("provider comparison differs")
+171:             run(folder, "core", "app.my", ("--filter", "test_dependency"), traced=True,
+172:                 required_statuses={"app::test_dependency": "cached"})
+173:             if number % 5 == 0:
+174:                 a = folder / "provider-a.json"
+175:                 b = folder / "provider-b.json"
+176:                 a.write_bytes((folder / "app.cases.json").read_bytes())
+177:                 b.write_text(json.dumps({"app::test_dependency": {"providers": {"dep.my": "module dep\n\npublic def value() -> int:\n    return " + str(expected + 1) + "\n"}, "expected": False}}) + "\n")
+178:                 with ThreadPoolExecutor(max_workers=2) as workers:
+179:                     results = list(workers.map(lambda cases: run(folder, "core", "app.my", ("--force", "--filter", "test_dependency", "--cases", str(cases))), (a, b)))
+180:                 if results != [[("app::test_dependency", "passed")]] * 2:
+181:                     raise ValueError("concurrent provider selections shared an output or returned a wrong result")
+182:             manifest["accepted"] += 1
+183:             (area / "summary.json").write_text(json.dumps(manifest, indent=2) + "\n")
+184:             print(f"project {number + 1}/{args.cases}: PASS", flush=True)
+185:         manifest["source_unchanged"] = git("rev-parse", "HEAD") == head and not git("status", "--porcelain", "--untracked-files=no")
+186:         manifest["oracles_unchanged"] = all(identity(Path(item["path"])) == item for item in oracles.values())
+187:         manifest["qualified"] = manifest["source_unchanged"] and manifest["oracles_unchanged"] and manifest["accepted"] == args.cases
+188:     except (ValueError, OSError, KeyError, subprocess.SubprocessError) as error:
+189:         manifest["error"] = str(error)
+190:         print(f"STOP: {error}", flush=True)
+191:     (area / "summary.json").write_text(json.dumps(manifest, indent=2) + "\n")
+192:     return 0 if manifest["qualified"] else 1
+193: 
+
+exit=0
+elapsed_seconds=0.018874

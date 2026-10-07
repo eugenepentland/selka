@@ -1,0 +1,19 @@
+{
+  "schema": "pure-canonical-oracle-path-reducer-v1",
+  "compiler_processes": 0,
+  "native_guest_processes": 0,
+  "historical_tool_source": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s1-20261005/conformance.py",
+    "sha256": "e6207024207f03ccd56a7f12494eb6538d98c3c9d75c94d39cc6c9a5f3f1ea7b"
+  },
+  "recorded": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/site-control-core-02/bin/mylang-core",
+    "sha256": "23d384282e229705a08e12a5d83fd153672ecabadf27e1235f8dc5d959ee95c0"
+  },
+  "historical_tool_executable_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/supplied-core-alias",
+  "after_alias_retarget_selected": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang",
+    "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+  },
+  "recorded_canonical_binary_unchanged": true
+}

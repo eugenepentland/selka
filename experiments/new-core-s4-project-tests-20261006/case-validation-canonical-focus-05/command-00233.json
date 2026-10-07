@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "from pathlib import Path; import hashlib,json,shutil,subprocess; src=Path(\".mylang-cache/s4-v/m-review-25d9\"); w=Path(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests\"); exp=w/\"experiments/new-core-s4-project-tests-20261006\"; out=exp/\"case-validation-canonical-red-04\"; out.mkdir(exist_ok=False); red=src/\"case-validation-red-04\"; summary=json.loads((red/\"summary.json\").read_text()); assert summary[\"complete\"] and summary[\"all_tools_unchanged\"]; shutil.copy2(red/\"summary.json\",out/\"summary.json\"); shutil.copy2(src/\"case_canonical_argument_reducers.py\",out/\"driver.py\"); [shutil.copy2(Path(\".mylang-cache/s4-v/final-receipts/command-00224\"+suffix),out/(\"command\"+suffix)) for suffix in (\".log\",\".json\")]; [(shutil.copy2(p,(out/row[\"name\"]).mkdir(exist_ok=True) or out/row[\"name\"]/p.name)) for row in summary[\"cases\"] for p in (red/row[\"name\"]).iterdir() if p.is_file()]; files={str(p.relative_to(out)):hashlib.sha256(p.read_bytes()).hexdigest() for p in out.rglob(\"*\") if p.is_file()}; (out/\"archive.json\").write_text(json.dumps({\"files_sha256\":files,\"scope\":\"four integer canonical-input wrongpasses, six accepted float grammar controls\"},indent=2)+\"\\n\"); final=exp/\"case-validation-canonical-focus-05\"; final.mkdir(exist_ok=False); names=[\"emit_llvm.zig\",\"emit_llvm_test.zig\",\"own_test.zig\",\"property_validate.zig\",\"property_codec.zig\",\"property_execute.zig\",\"test_runner.zig\",\"test_runner_project_test.zig\",\"root_test.zig\"]; d={\"scope\":\"focused WIP canonical spelling repair; not final package\", \"head\":subprocess.check_output([\"git\",\"-C\",str(w),\"rev-parse\",\"HEAD\"],text=True).strip(),\"file_sha256\":{str(Path(\"src/core\")/n):hashlib.sha256((w/\"src/core\"/n).read_bytes()).hexdigest() for n in names}, \"ir_sha256\":hashlib.sha256((w/\"src/core/ir.zig\").read_bytes()).hexdigest()}; (final/\"source.json\").write_text(json.dumps(d,indent=2)+\"\\n\"); print(len(files)); print(json.dumps(d,indent=2))"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3517173,
+  "status": 0,
+  "elapsed_seconds": 0.04331360897049308
+}

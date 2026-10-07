@@ -429,12 +429,14 @@ const CoreInputs = struct {
 /// - `-Dcore-diff=true` also builds each slice program with the old compiler
 ///   and requires the same stdout and exit status (it builds the old compiler).
 fn addCore(b: *std.Build, inputs: CoreInputs) void {
+    const platform = b.createModule(.{ .root_source_file = b.path("src/config_core_tool_platform.zig") });
     const exe = b.addExecutable(.{ .max_rss = rss.compile, .name = "mylang-core", .root_module = b.createModule(.{
         .root_source_file = b.path("src/core/main.zig"),
         .target = inputs.target,
         .optimize = inputs.optimize,
         .imports = &.{.{ .name = "mylang", .module = inputs.front_end }},
     }) });
+    exe.root_module.addImport("core_tool_platform", platform);
     exe.root_module.addImport("qbe_build_assets", inputs.build_assets);
     b.step("core", "Build and install the new compiler core, zig-out/bin/mylang-core").dependOn(&b.addInstallArtifact(exe, .{}).step);
     const differential = b.option(bool, "core-diff", "test-core: also compare each slice program with the old compiler's build of it") orelse false;
@@ -452,6 +454,7 @@ fn addCore(b: *std.Build, inputs: CoreInputs) void {
         .optimize = inputs.optimize,
         .imports = &.{.{ .name = "mylang", .module = inputs.front_end }},
     }) });
+    unit.root_module.addImport("core_tool_platform", platform);
     unit.root_module.addImport("qbe_build_assets", inputs.build_assets);
     unit.root_module.addOptions("core_test_options", options);
     const step = b.step("test-core", "Run the new core's unit tests and its end-to-end slice (not part of test)");

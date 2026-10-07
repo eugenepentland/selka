@@ -12,7 +12,7 @@ pub const sources = [_]SourceUnit{
 };
 
 /// Explicit target and options: all are hashed into the formatter object's key.
-pub const options: []const []const u8 = &.{ "-target", "x86_64-linux-gnu", "-mcpu", "baseline", "-O", "ReleaseFast", "-fPIC", "-fno-stack-check", "-fno-stack-protector", "-lc" };
+pub const options: []const []const u8 = &.{ "-target", @import("target.zig").native_link_target, "-mcpu", "baseline", "-O", "ReleaseFast", "-fPIC", "-fno-stack-check", "-fno-stack-protector", "-lc" };
 
 /// Allocation, filesystem and tool failures share the native driver's errors.
 pub const Error = error{ ToolFailed, OutOfMemory, WriteFailed };
@@ -52,7 +52,7 @@ pub fn fingerprint(version: []const u8, units: []const SourceUnit, settings: []c
 }
 
 /// Compile the independent helper only on a cache miss; rename a unique partial atomically.
-pub fn object(allocator: std.mem.Allocator, io: std.Io, environment: *const std.process.Environ.Map, request: anytype, log: *std.ArrayList(u8)) Error![]const u8 {
+pub fn object(allocator: std.mem.Allocator, io: std.Io, environment: *const std.process.Environ.Map, request: anytype, log: *std.ArrayList(u8), guard: anytype) Error![]const u8 {
     const version = try execute(allocator, io, environment, &.{ request.zig, "version" }, log);
     const stem = try std.fmt.allocPrint(allocator, "core_number_text-{x}", .{key(std.mem.trim(u8, version, " \t\r\n"))});
     const path = try std.fs.path.join(allocator, &.{ request.work, try std.fmt.allocPrint(allocator, "{s}.o", .{stem}) });
@@ -62,33 +62,36 @@ pub fn object(allocator: std.mem.Allocator, io: std.Io, environment: *const std.
         if (report) try log.print(allocator, "number-text cache hit: {s}\n", .{path});
         return path;
     } else |_| {}
-    // Every cold builder owns its staging and partial; concurrent publication is atomic.
-    var nonce: [16]u8 = undefined;
-    std.Io.random(io, &nonce);
-    const directory = try std.fs.path.join(allocator, &.{ request.work, try std.fmt.allocPrint(allocator, "{s}-{x}", .{ stem, nonce }) });
+    // Keep both source staging and output private to each program during concurrent misses.
+    var output_digest: [16]u8 = undefined;
+    std.Io.random(io, &output_digest);
+    const directory = try std.fs.path.join(allocator, &.{ request.work, try std.fmt.allocPrint(allocator, "{s}-{x}", .{ stem, output_digest }) });
     cwd.createDirPath(io, directory) catch return error.WriteFailed;
-    defer removeTree(io, directory);
+    defer retireDirectory(io, directory);
     for (sources) |source| {
         const file = try std.fs.path.join(allocator, &.{ directory, source.name });
         cwd.writeFile(io, .{ .sub_path = file, .data = source.bytes }) catch return error.WriteFailed;
     }
-    const partial = try std.fmt.allocPrint(allocator, "{s}.{x}.partial", .{ path, nonce });
-    defer removeFile(io, partial);
+    const partial = try std.fmt.allocPrint(allocator, "{s}.{x}.partial", .{ path, output_digest });
+    defer retireFile(io, partial);
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(allocator, &.{ request.zig, "build-obj", try std.fs.path.join(allocator, &.{ directory, sources[0].name }) });
     try argv.appendSlice(allocator, options);
     try argv.append(allocator, try std.fmt.allocPrint(allocator, "-femit-bin={s}", .{partial}));
     if (report) try log.print(allocator, "number-text cache miss: {s}\n", .{path});
     _ = try execute(allocator, io, environment, argv.items, log);
+    try guard.check(log);
     cwd.rename(partial, cwd, path, io) catch return error.WriteFailed;
     return path;
 }
 
-fn removeTree(io: std.Io, path: []const u8) void {
+fn retireDirectory(io: std.Io, path: []const u8) void {
+    // This invocation owns staging; removing it after success or failure is best effort.
     std.Io.Dir.cwd().deleteTree(io, path) catch return;
 }
 
-fn removeFile(io: std.Io, path: []const u8) void {
+fn retireFile(io: std.Io, path: []const u8) void {
+    // A published partial already moved away; otherwise discard this invocation's file.
     std.Io.Dir.cwd().deleteFile(io, path) catch return;
 }
 

@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "from pathlib import Path; import hashlib,json; w=Path(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests\"); out=w/\"experiments/new-core-s4-project-tests-20261006/case-validation-focus-wip\"; prev=json.loads((out/\"source-with-validator-tests.json\").read_text()); prev[\"file_sha256\"]={p:hashlib.sha256((w/p).read_bytes()).hexdigest() for p in prev[\"file_sha256\"]}; prev[\"note\"]=\"Final focused WIP source: capture names, union count usize, explicit root test import, function-named native regression, OOM validator test.\"; (out/\"source-final-focus.json\").write_text(json.dumps(prev,indent=2)+\"\\n\"); print(json.dumps(prev,indent=2)); opts=[]; cache=w/\".zig-cache\"; opts=[p for p in cache.rglob(\"*.zig\") if p.name in (\"options.zig\",\"core_test_options.zig\") and \"core_path\" in p.read_text()]; print([(str(p),p.read_text()) for p in sorted(opts,key=lambda p:p.stat().st_mtime,reverse=True)[:2]])"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3504187,
+  "status": 0,
+  "elapsed_seconds": 0.08471229090355337
+}

@@ -1,0 +1,100 @@
+const std = @import("std");
+const ir = @import("core/ir.zig");
+const support = @import("core/test_support.zig");
+const Hand = support.Hand;
+const own = @import("core/own.zig");
+const emit = @import("core/emit_llvm.zig");
+const driver = @import("core/driver.zig");
+const output_root = "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/undef-phi-diagnostic-01/natives";
+fn firstLine(_: *const anyopaque, offset: u32) emit.Location { return .{ .line = 1, .column = offset + 1 }; }
+fn pushed(h: *Hand, ty: ir.Type, values: []const i64) !ir.Ref {
+    var list = try h.emit(.{ .op = .list_new, .ty = ty, .a = try h.int(.i64, 1) });
+    for (values) |value| list = try h.emit(.{ .op = .list_push, .ty = ty, .a = list, .b = try h.int(.i64, value) });
+    return list;
+}
+
+fn undefLoopProgram(arena: std.mem.Allocator, record_shaped: bool) !ir.Module {
+    var m: ir.Module = .{};
+    const ints = try m.intern(arena, .{ .list = .i64 });
+    const holder = try m.intern(arena, .{ .record = &.{ .i64, ints, ints, ints, ints } });
+    const ty = if (record_shaped) holder else ints;
+    var h = try Hand.init(arena, &m, "main", .{ .params = try arena.dupe(ir.Type, &.{.cap}), .ret = .i64 });
+    const out = try h.param(0);
+    const header = try h.newBlock();
+    const body = try h.newBlock();
+    const read = try h.newBlock();
+    const latch = try h.newBlock();
+    const exit = try h.newBlock();
+    const undef = try h.loose(.{ .op = .undef, .ty = ty });
+    try h.jump(header);
+    // header: i = phi(0, i + 1); p = phi(undef, next); i < 0?
+    h.block = header;
+    const i = try h.loose(.{ .op = .phi, .ty = .i64 });
+    const p = try h.loose(.{ .op = .phi, .ty = ty });
+    try h.function.blocks.items[header.index()].insts.appendSlice(arena, &.{ i, p });
+    const more = try h.emit(.{ .op = .cmp, .ty = .bool, .a = i, .b = try h.int(.i64, 0), .data = @backingInt(ir.Predicate.lt) });
+    try h.branch(more, body, exit);
+    // body: if i > 0: read len(p)
+    h.block = body;
+    const later = try h.emit(.{ .op = .cmp, .ty = .bool, .a = i, .b = try h.int(.i64, 0), .data = @backingInt(ir.Predicate.gt) });
+    try h.branch(later, read, latch);
+    h.block = read;
+    const list = if (record_shaped) try h.emit(.{ .op = .record_get, .ty = ints, .a = p, .data = 1 }) else p;
+    const n = try h.emit(.{ .op = .list_len, .ty = .u64, .a = list });
+    try h.printValues(out, &.{n});
+    try h.jump(latch);
+    // latch: next = a fresh value; i + 1
+    h.block = latch;
+    const fresh = try pushed(&h, ints, &.{ 1, 2 });
+    const next = if (record_shaped) try h.emit(.{ .op = .record_make, .ty = holder, .data = try h.extra(&.{ try h.int(.i64, 1), fresh, try pushed(&h, ints, &.{3}), try pushed(&h, ints, &.{4}), try pushed(&h, ints, &.{5}) }) }) else fresh;
+    const step = try h.emit(.{ .op = .add, .ty = .i64, .a = i, .b = try h.int(.i64, 1), .check = .exact });
+    try h.jump(header);
+    h.function.insts.items[i.index()].data = try h.extra(&.{ try h.int(.i64, 0), step });
+    h.function.insts.items[p.index()].data = try h.extra(&.{ undef, next });
+    h.block = exit;
+    _ = try h.emit(.{ .op = .ret, .ty = .void, .a = try h.int(.i64, 0) });
+    _ = try h.finish();
+    return m;
+}
+
+
+test "S4 diagnostic raw undef loop all four cases" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const io = std.testing.io;
+    const cwd = std.Io.Dir.cwd();
+    for ([_]bool{false,true}) |record_shaped| {
+        for ([_]bool{false,true}) |release| {
+            const name = try std.fmt.allocPrint(a, "{s}-{s}", .{ if (record_shaped) "record" else "list", if (release) "release" else "debug" });
+            const directory = try std.fs.path.join(a, &.{output_root,name});
+            try cwd.createDirPath(io,directory);
+            var module = try undefLoopProgram(a,record_shaped);
+            try support.verified(a,&module,&.{});
+            _ = try own.run(a,&module,.{});
+            try support.verified(a,&module,&.{});
+            const context:u8 = 0;
+            const llvm = try emit.emitModule(a,&module,.{ .locator=.{.context=&context,.locate=firstLine}, .source_path="hand.my", .main=.{.parameters=&.{"out"}} });
+            const program = try std.fs.path.join(a,&.{directory,"hand.ll"});
+            const output = try std.fs.path.join(a,&.{directory,"hand"});
+            try cwd.writeFile(io,.{.sub_path=program,.data=llvm});
+            var environment = try std.testing.environ.createMap(a);
+            const zig = environment.get("ZIG") orelse "zig";
+            var log:std.ArrayList(u8)=.empty;
+            driver.link(a,io,&environment,.{.zig=zig,.work=directory,.program=program,.output=output,.release=release,.links=&.{},.llvm=llvm},&log) catch |err| {
+                try cwd.writeFile(io,.{.sub_path=try std.fs.path.join(a,&.{directory,"build.log"}),.data=log.items});
+                std.debug.print("S4_OWN_DIAG {s} build_error={s}\n",.{name,@errorName(err)});
+                continue;
+            };
+            try cwd.writeFile(io,.{.sub_path=try std.fs.path.join(a,&.{directory,"build.log"}),.data=log.items});
+            try environment.put("MYL_CORE_LEAKCHECK","1");
+            const ran=try std.process.run(a,io,.{.argv=&.{output},.environ_map=&environment});
+            try cwd.writeFile(io,.{.sub_path=try std.fs.path.join(a,&.{directory,"native.stdout"}),.data=ran.stdout});
+            try cwd.writeFile(io,.{.sub_path=try std.fs.path.join(a,&.{directory,"native.stderr"}),.data=ran.stderr});
+            const status:u8= switch(ran.term){.exited=>|code|code,else=>255};
+            const json = try std.json.Stringify.valueAlloc(a,.{.case=name,.argv=[_] []const u8{output},.status=status,.term=@tagName(ran.term),.stdout=ran.stdout,.stderr=ran.stderr,.expected=status==0 and ran.stdout.len==0 and ran.stderr.len==0},.{});
+            try cwd.writeFile(io,.{.sub_path=try std.fs.path.join(a,&.{directory,"native.json"}),.data=json});
+            std.debug.print("S4_OWN_DIAG {s}\n",.{json});
+        }
+    }
+}

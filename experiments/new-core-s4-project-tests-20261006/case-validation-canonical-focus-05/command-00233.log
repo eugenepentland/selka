@@ -1,0 +1,21 @@
+$ python3 -c 'from pathlib import Path; import hashlib,json,shutil,subprocess; src=Path(".mylang-cache/s4-v/m-review-25d9"); w=Path("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests"); exp=w/"experiments/new-core-s4-project-tests-20261006"; out=exp/"case-validation-canonical-red-04"; out.mkdir(exist_ok=False); red=src/"case-validation-red-04"; summary=json.loads((red/"summary.json").read_text()); assert summary["complete"] and summary["all_tools_unchanged"]; shutil.copy2(red/"summary.json",out/"summary.json"); shutil.copy2(src/"case_canonical_argument_reducers.py",out/"driver.py"); [shutil.copy2(Path(".mylang-cache/s4-v/final-receipts/command-00224"+suffix),out/("command"+suffix)) for suffix in (".log",".json")]; [(shutil.copy2(p,(out/row["name"]).mkdir(exist_ok=True) or out/row["name"]/p.name)) for row in summary["cases"] for p in (red/row["name"]).iterdir() if p.is_file()]; files={str(p.relative_to(out)):hashlib.sha256(p.read_bytes()).hexdigest() for p in out.rglob("*") if p.is_file()}; (out/"archive.json").write_text(json.dumps({"files_sha256":files,"scope":"four integer canonical-input wrongpasses, six accepted float grammar controls"},indent=2)+"\n"); final=exp/"case-validation-canonical-focus-05"; final.mkdir(exist_ok=False); names=["emit_llvm.zig","emit_llvm_test.zig","own_test.zig","property_validate.zig","property_codec.zig","property_execute.zig","test_runner.zig","test_runner_project_test.zig","root_test.zig"]; d={"scope":"focused WIP canonical spelling repair; not final package", "head":subprocess.check_output(["git","-C",str(w),"rev-parse","HEAD"],text=True).strip(),"file_sha256":{str(Path("src/core")/n):hashlib.sha256((w/"src/core"/n).read_bytes()).hexdigest() for n in names}, "ir_sha256":hashlib.sha256((w/"src/core/ir.zig").read_bytes()).hexdigest()}; (final/"source.json").write_text(json.dumps(d,indent=2)+"\n"); print(len(files)); print(json.dumps(d,indent=2))'
+84
+{
+  "scope": "focused WIP canonical spelling repair; not final package",
+  "head": "2c57e5cff0784ad7fdefc6ee637a25e9d0bd830a",
+  "file_sha256": {
+    "src/core/emit_llvm.zig": "f9611dd0dc685814057ee59cc1ad66bf736cdc69112cec78388caece54dd5395",
+    "src/core/emit_llvm_test.zig": "15d3c783e51549d29e53f35d05bf0ab70525274d419f2cc411a237165407c858",
+    "src/core/own_test.zig": "c70a10fcb4779973446fb3049ee8f22eeb887932c9b1bbaf4cb5daf89bfedeb5",
+    "src/core/property_validate.zig": "ba367f3d29cd4a85623901266fc1864d2050f154593a82161a3bc5248604f397",
+    "src/core/property_codec.zig": "7dd15700ad24a2fdbc83fa76d32a8e86d7fc4d3482e03eb4a327471cf31f1e1d",
+    "src/core/property_execute.zig": "5640d91c03d97820f5b54b002d88b31d1a377777d9573982a83c7e2d76a508b3",
+    "src/core/test_runner.zig": "fd623ce227b91d4cbad5a02643198ada136409e18ff680df374d805071f410c5",
+    "src/core/test_runner_project_test.zig": "7ecf7f8eed2aad73878a582439f50ad6ea6f4b8bbb0708a18c29371654851379",
+    "src/core/root_test.zig": "606949fb034214d75ea6b48dcbd99836b2534c75307dce2134a0dd462a769360"
+  },
+  "ir_sha256": "7232a25ca00d51c16b3cd552ae86859769a3ffb48d7a4f20ed4323708b651d5d"
+}
+
+exit=0
+elapsed_seconds=0.043314

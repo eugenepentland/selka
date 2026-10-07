@@ -1,0 +1,10 @@
+$ python3 /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-orphan-timeout-red-01/reconstruct.py
+reconstructed SHA256: 8c21a74bf281c93b64b230649303b145ac771646f79ccf77fb744206910a3dfc
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-orphan-timeout-red-01/reconstruct.py", line 49, in <module>
+    assert actual == expected, "not publishing a nonidentical reconstruction"
+           ^^^^^^^^^^^^^^^^^^
+AssertionError: not publishing a nonidentical reconstruction
+
+exit=1
+elapsed_seconds=0.086827

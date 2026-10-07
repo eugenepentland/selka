@@ -1,0 +1,7 @@
+{
+  "source_commit": "25d9e95317bbf674ba948d6f4ad3081e0ea7faf2",
+  "own_test_sha256": "fd7d12652490c09701eebe47c8fab61d00ba3895f5872c5e6ff9a9a93aa9a275",
+  "diagnostic_sha256": "74d751ae96a51fba562404a3c4c57987a2e1d13aa7a4b464b8f4326a397a229d",
+  "fixture_copied_exactly": true,
+  "production_edited": false
+}

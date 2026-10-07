@@ -1,0 +1,106 @@
+{
+  "compiler_sha256": "536fc1baf3e3883ee6175fff808dcf90a0e9c35234d0a17da6486b4cfcd58b19",
+  "source_head": "7877aa5d369f57aeb8fb850e8198c08c520b3a51",
+  "attempts": [
+    {
+      "argv": [
+        "strace",
+        "-f",
+        "-e",
+        "trace=rename,renameat,renameat2",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/runtime-race-reduced-run01/attempt-01.trace",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/zig-out/bin/mylang-core",
+        "test",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/runtime-race-reduced-run01/project",
+        "--json",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-01"
+      ],
+      "status": 0,
+      "seconds": 4.293174077058211
+    },
+    {
+      "argv": [
+        "strace",
+        "-f",
+        "-e",
+        "trace=rename,renameat,renameat2",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/runtime-race-reduced-run01/attempt-02.trace",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/zig-out/bin/mylang-core",
+        "test",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/runtime-race-reduced-run01/project",
+        "--json",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-02"
+      ],
+      "status": 0,
+      "seconds": 4.402047475101426
+    },
+    {
+      "argv": [
+        "strace",
+        "-f",
+        "-e",
+        "trace=rename,renameat,renameat2",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/runtime-race-reduced-run01/attempt-03.trace",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/zig-out/bin/mylang-core",
+        "test",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/runtime-race-reduced-run01/project",
+        "--json",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-03"
+      ],
+      "status": 0,
+      "seconds": 4.548453826922923
+    },
+    {
+      "argv": [
+        "strace",
+        "-f",
+        "-e",
+        "trace=rename,renameat,renameat2",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/runtime-race-reduced-run01/attempt-04.trace",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/zig-out/bin/mylang-core",
+        "test",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/runtime-race-reduced-run01/project",
+        "--json",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-04"
+      ],
+      "status": 0,
+      "seconds": 5.057668136199936
+    },
+    {
+      "argv": [
+        "strace",
+        "-f",
+        "-e",
+        "trace=rename,renameat,renameat2",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/runtime-race-reduced-run01/attempt-05.trace",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/zig-out/bin/mylang-core",
+        "test",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/runtime-race-reduced-run01/project",
+        "--json",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/attempt-05"
+      ],
+      "status": 0,
+      "seconds": 4.142335553187877
+    }
+  ]
+}

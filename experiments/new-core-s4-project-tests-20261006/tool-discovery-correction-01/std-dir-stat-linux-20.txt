@@ -1,0 +1,45 @@
+3633: fn dirStatFileLinux(
+3634:     userdata: ?*anyopaque,
+3635:     dir: Dir,
+3636:     sub_path: []const u8,
+3637:     options: Dir.StatFileOptions,
+3638: ) Dir.StatFileError!File.Stat {
+3639:     const t: *Threaded = @ptrCast(@alignCast(userdata));
+3640:     _ = t;
+3641:     const linux = std.os.linux;
+3642:     const sys = if (statx_use_c) std.c else std.os.linux;
+3643: 
+3644:     var path_buffer: [posix.PATH_MAX]u8 = undefined;
+3645:     const sub_path_posix = try pathToPosix(sub_path, &path_buffer);
+3646: 
+3647:     const flags: u32 = linux.AT.NO_AUTOMOUNT |
+3648:         @as(u32, if (!options.follow_symlinks) linux.AT.SYMLINK_NOFOLLOW else 0);
+3649: 
+3650:     const syscall: Syscall = try .start();
+3651:     while (true) {
+3652:         var statx = std.mem.zeroes(linux.Statx);
+3653:         switch (sys.errno(sys.statx(dir.handle, sub_path_posix, flags, linux_statx_request, &statx))) {
+3654:             .SUCCESS => {
+3655:                 syscall.finish();
+3656:                 return statFromLinux(&statx);
+3657:             },
+3658:             .INTR => {
+3659:                 try syscall.checkCancel();
+3660:                 continue;
+3661:             },
+3662:             else => |e| {
+3663:                 syscall.finish();
+3664:                 switch (e) {
+3665:                     .ACCES => return error.AccessDenied,
+3666:                     .BADF => |err| return errnoBug(err), // File descriptor used after closed.
+3667:                     .FAULT => |err| return errnoBug(err),
+3668:                     .INVAL => |err| return errnoBug(err),
+3669:                     .LOOP => return error.SymLinkLoop,
+3670:                     .NAMETOOLONG => |err| return errnoBug(err), // Handled by pathToPosix() above.
+3671:                     .NOENT => return error.FileNotFound,
+3672:                     .NOTDIR => return error.NotDir,
+3673:                     .NOMEM => return error.SystemResources,
+3674:                     else => |err| return posix.unexpectedErrno(err),
+3675:                 }
+3676:             },
+3677:         }

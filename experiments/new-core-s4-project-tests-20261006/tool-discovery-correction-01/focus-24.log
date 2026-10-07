@@ -1,0 +1,28 @@
+1/27 tool_identity.test.tool identity resolves executable PATH and propagates allocation failure...OK
+2/27 tool_identity.test.tool memo is reusable and corruption is a content rehash...OK
+3/27 tool_identity.test.same-size executable edit with restored mtime invalidates tool identity...OK
+4/27 tool_identity.test.library edits additions removals and an override invalidate tool identity...OK
+5/27 tool_identity.test.PATH selection and linked library content are command dependencies...OK
+6/27 tool_identity.test.inventoryHint corruption rediscovers libraries and invalid library roots refuse reuse...OK
+7/27 tool_identity.test.inventoryHint allocation failure propagates instead of becoming a cache miss...OK
+8/27 tool_identity.test.MalformedHint rejects invalid count relative paths presence and timestamps...OK
+9/27 tool_identity.test.fileContent refuses SourceChanged generations and standalone rejects delegated scripts...OK
+10/27 tool_identity.test.lookupReplayCandidate misses damaged memos executable edits and allocation failure...OK
+11/27 tool_identity.test.lookupReplayCandidate library edits and additions require final unchanged refusal...OK
+12/27 tool_identity.test.closure approval refuses unknown static executables and unknown library contents...OK
+13/27 tool_identity.test.approval memo damage is a miss and library aliases cannot hide outside inputs...OK
+14/27 tool_identity.test.approval rejects uncaptured compiler environment paths without publishing trust...OK
+15/27 tool_identity.test.approvedLibrary refuses missing trees and propagates allocation failure...OK
+16/27 tool_identity.test.approvedRuntime refuses missing unknown preload and SourceChanged runtime inputs...OK
+17/27 tool_identity.test.runtime generation refresh refuses changed bytes absence and alias retarget...OK
+18/27 tool_identity.test.discovery predicates tolerate output neighbors but membership guards refuse additions...OK
+19/27 tool_identity.test.discovery file restored mtime and absent resource invalidate provisional generation...OK
+20/27 tool_identity.test.discovery roles roundtrip and invalid role bytes cannot become warm hints...OK
+21/27 tool_identity.test.discovery higher priority resource addition refuses old replay and unknown copy reuse...OK
+22/27 tool_identity.test.discovery NotDir fallback retains parent contents and old content refusal...OK
+23/27 tool_discovery.test.paths cover distro fallback GCC candidates and refuse invalid paths allocation...OK
+24/27 tool_discovery.test.discovery version membership changes but predicate directory writes do not...OK
+25/27 tool_discovery.test.discovery absent roots additions removals and symlink retarget change state...OK
+26/27 tool_discovery.test.discovery consumed file restored mtime edits and unreadable member refuse...OK
+27/27 tool_discovery.test.discovery unreachable descendants retain non-directory parent selection...OK
+All 27 tests passed.

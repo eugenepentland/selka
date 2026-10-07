@@ -1,0 +1,194 @@
+$ python3 -c 'from pathlib import Path; import hashlib; root=Path("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests"); ranges={"experiments/new-core-s4-project-tests-20261006/project_matrix.py":((29,60),(86,101),(112,128),(145,164)),"experiments/new-core-s1-20261005/conformance.py":((79,86),(222,290)),"experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py":((120,141),(286,335))}; [(print(str(root/name)), [print(f"{i}: {line}") for i,line in enumerate((root/name).read_text().splitlines(),1) if any(a<=i<=b for a,b in bounds)]) for name,bounds in ranges.items()]; [print(name,hashlib.sha256((root/"experiments/new-core-s4-project-tests-20261006"/name).read_bytes()).hexdigest()) for name in ("conformance_checked.py","project_matrix.py","fuzz_matrix.py")]'
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/project_matrix.py
+29: def git(*args):
+30:     return subprocess.check_output(["git", *args], cwd=ROOT, text=True).strip()
+31: 
+32: 
+33: def identity(path):
+34:     path = path.resolve()
+35:     with path.open("rb") as stream:
+36:         digest = hashlib.file_digest(stream, "sha256").hexdigest()
+37:     return {"path": str(path), "sha256": digest}
+38: 
+39: 
+40: def verdicts(result):
+41:     value = json.loads(result.stdout)
+42:     counts = reports.validate_report(value, result.returncode)
+43:     tests = value["tests"]
+44:     normalized = sorted((test["name"], "passed" if test["status"] == "cached" else test["status"]) for test in tests)
+45:     return normalized, counts
+46: 
+47: 
+48: def execute(argv, timeout):
+49:     """Always reap the command's process group and retain partial timeout output."""
+50:     with subprocess.Popen(argv, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+51:                           text=True, start_new_session=True) as process:
+52:         timed_out = False
+53:         try:
+54:             stdout, stderr = process.communicate(timeout=timeout)
+55:         except subprocess.TimeoutExpired:
+56:             timed_out = True
+57:             try:
+58:                 os.killpg(process.pid, signal.SIGKILL)
+59:             except ProcessLookupError:
+60:                 pass
+86:     if args.cases < 1 or git("status", "--porcelain", "--untracked-files=no"):
+87:         parser.error("positive cases and clean frozen tracked source are required")
+88:     area, cache = args.evidence.resolve(), args.cache.resolve()
+89:     if area.exists() or cache.exists() or not area.is_relative_to(ROOT / "experiments"):
+90:         parser.error("fresh evidence under experiments and fresh cache are required")
+91:     area.mkdir(parents=True)
+92:     cache.mkdir(parents=True)
+93:     oracles = {"old": identity(args.old), "core": identity(args.core)}
+94:     head = git("rev-parse", "HEAD")
+95:     rng = random.Random(args.seed)
+96:     manifest = {"source_commit": head, "oracles": oracles, "cases": args.cases, "seed": args.seed,
+97:                 "accepted": 0, "commands": [], "qualified": False}
+98:     (area / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+99:     command_lock = threading.Lock()
+100:     next_command = [1]
+101: 
+112:         result, timed_out = execute(argv, 120)
+113:         stem.with_suffix(".stdout").write_text(result.stdout)
+114:         stem.with_suffix(".stderr").write_text(result.stderr)
+115:         item = {"argv": argv, "status": result.returncode, "seconds": time.monotonic() - started,
+116:                 "timed_out": timed_out, "stdout": str(stem.with_suffix(".stdout")), "stderr": str(stem.with_suffix(".stderr"))}
+117:         with command_lock:
+118:             manifest["commands"].append(item)
+119:         stem.with_suffix(".command").write_text(shlex.join(argv) + "\n" + json.dumps(item) + "\n")
+120:         if timed_out:
+121:             raise ValueError("command timed out; partial outputs retained and process group terminated")
+122:         normalized, counts = verdicts(result)
+123:         statuses = {test["name"]: test["status"] for test in json.loads(result.stdout)["tests"]}
+124:         if required_statuses is not None and statuses != required_statuses:
+125:             raise ValueError(f"per-test reuse statuses differ: {statuses}")
+126:         if traced:
+127:             trace_replay(stem.with_suffix(".trace"), oracles[engine]["path"], target == ".")
+128:             if counts["cached"] != len(normalized):
+145:             for name, source in (("app", app), ("dep", dependency), ("leaf", leaf)):
+146:                 (folder / f"{name}.my").write_text(source)
+147:             (folder / "orphan.my").write_text("module orphan\n\npublic def test_orphan() -> bool:\n    return True\n")
+148:             (folder / "mylang.json").write_text('{"version":1}\n')
+149:             cold = run(folder, "old", ".")
+150:             if cold != run(folder, "core", ".", ("--force",)):
+151:                 raise ValueError("cold directory comparison differs")
+152:             if cold != [("app::test_constant", "passed"), ("app::test_dependency", "passed"), ("orphan::test_orphan", "passed")]:
+153:                 raise ValueError("cold directory did not account for the exact three expected tests")
+154:             if run(folder, "core", ".", traced=True,
+155:                    required_statuses={name: "cached" for name, _ in cold}) != cold:
+156:                 raise ValueError("unchanged directory dropped tests")
+157:             if run(folder, "old", "app.my") != run(folder, "core", "app.my"):
+158:                 raise ValueError("file comparison differs")
+159:             run(folder, "core", "app.my", traced=True,
+160:                 required_statuses={"app::test_constant": "cached", "app::test_dependency": "cached"})
+161:             # Changed dependency: one test fails, the unaffected constant remains reusable.
+162:             (folder / "leaf.my").write_text(leaf.replace(str(value) + "\n", str(value + 1) + "\n"))
+163:             changed = run(folder, "old", "app.my")
+164:             if changed != run(folder, "core", "app.my", required_statuses={"app::test_constant": "cached", "app::test_dependency": "failed"}) or changed != [("app::test_constant", "passed"), ("app::test_dependency", "failed")]:
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s1-20261005/conformance.py
+79:     def run(self, argv, timeout=600, env=None):
+80:         if self.cpus and os.path.exists("/usr/bin/taskset"):
+81:             argv = ["taskset", "-c", self.cpus] + argv
+82:         try:
+83:             done = subprocess.run(argv, capture_output=True, text=True, cwd=ROOT, timeout=timeout, env=env)
+84:         except subprocess.TimeoutExpired:
+85:             return None
+86:         return done
+222:             mode, t["match"], t["mismatch"], t["unsupported"], all_tests, t["match"] + t["mismatch"]))
+223:     return "\n".join(lines), totals
+224: 
+225: 
+226: def explain(results, verbose):
+227:     """Unsupported tests grouped by the construct that blocks them, then the blocking features of each file."""
+228:     by_reason = collections.Counter()
+229:     files = collections.defaultdict(set)
+230:     for r in results:
+231:         for reason, n in r["reasons"].items():
+232:             by_reason[reason] += n
+233:             files[reason].add(r["file"])
+234:     lines = ["", "blocking features of the unsupported tests (tests / files):"]
+235:     for reason, n in by_reason.most_common():
+236:         lines.append("  %4d / %2d  %s" % (n, len(files[reason]), reason))
+237:     lines += ["", "blocking features per file (file: tests unsupported of tests; the features, most common first):"]
+238:     for r in results:
+239:         if not r["reasons"]:
+240:             continue
+241:         total = sum(r["reasons"].values())
+242:         lines.append("  %-30s %3d of %3d: %s" % (r["file"], total, r["tests"], ", ".join("%s x%d" % kv for kv in r["reasons"].most_common())))
+243:         if verbose:
+244:             for name, reason in sorted(r["unsupported"].items()):
+245:                 lines.append("      %s: %s" % (name, reason))
+246:     return "\n".join(lines)
+247: 
+248: 
+249: def main():
+250:     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+251:     ap.add_argument("files", nargs="*")
+252:     ap.add_argument("--set", choices=["clean13", "s1", "excluded", "all"], default=None)
+253:     ap.add_argument("--modes", default="debug,release")
+254:     ap.add_argument("--why", action="store_true", help="list each blocking feature, and why excluded files are excluded")
+255:     ap.add_argument("--jobs", type=int, default=3)
+256:     ap.add_argument("--leakcheck", action="store_true", help="run the new core's tests with MYL_CORE_LEAKCHECK=1: a leak fails the test")
+257:     ap.add_argument("--verify", action="store_true", help="build the release mode with --verify-facts (facts, uniqueness and stack capacity asserted)")
+258:     ap.add_argument("--pin", default=None, help="write the pins file test-core checks (tests passing everywhere)")
+259:     ap.add_argument("--include-arena", action="store_true")
+260:     ap.add_argument("--verbose", action="store_true")
+261:     ap.add_argument("--mylang", default=os.path.join(ROOT, "zig-out/bin/mylang"))
+262:     ap.add_argument("--core", default=os.path.join(ROOT, "zig-out/bin/mylang-core"))
+263:     ap.add_argument("--cache-dir", default=os.path.join(ROOT, ".mylang-cache", "core-conformance"))
+264:     args = ap.parse_args()
+265:     modes = args.modes.split(",")
+266:     if args.set == "clean13":
+267:         names = CLEAN13
+268:     elif args.set == "excluded":
+269:         names = [n for n in EXCLUDED if n not in ARENA_FILES or args.include_arena]
+270:     elif args.set == "all":
+271:         names = sorted(short(os.path.join(dp, f)) for dp, _, fs in os.walk(LANG) for f in fs if f.endswith(".my"))
+272:     elif args.files:
+273:         names = args.files
+274:     else:
+275:         names = S1
+276:     if not args.include_arena and args.set != "excluded":
+277:         names = [n for n in names if n not in ARENA_FILES]
+278:     paths = [resolve(n) for n in names]
+279:     tool = Tool(args)
+280:     os.makedirs(args.cache_dir, exist_ok=True)
+281: 
+282:     def one(path):
+283:         old = tool.old(path)
+284:         news = {mode: tool.new(path, mode == "release") for mode in modes}
+285:         return compare(path, old, news, args.include_arena)
+286: 
+287:     # The first build compiles the runtime object; do it alone so parallel builds do not race on it.
+288:     results = [one(paths[0])] if paths else []
+289:     with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
+290:         results += list(pool.map(one, paths[1:]))
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py
+120:         # cannot hide a stdout mismatch, then return their expected text result.
+121:         text_flag = options.pop("text", False)
+122:         text_mode = options.pop("universal_newlines", False) or text_flag
+123:         encoding = options.pop("encoding", None)
+124:         errors = options.pop("errors", None)
+125:         text_mode = text_mode or encoding is not None or errors is not None
+126:         began = time.monotonic()
+127:         try:
+128:             result = self.original_run(argv, *arguments, **options)
+129:         except subprocess.TimeoutExpired as error:
+130:             self.fail(source, "compile_timeout" if building else "native_timeout", argv,
+131:                       timeout=options["timeout"], stdout_b64=encoded(error.stdout), stderr_b64=encoded(error.stderr))
+132:         except OSError as error:
+133:             self.fail(source, "child_launch_failed", argv, reason=str(error))
+134:         self.command_count += 1
+135:         self.journal.write(json.dumps({"command_id": self.command_count, "command": argv,
+136:                                       "source": self.retained.get(source), "role": role,
+137:                                       "building": building, "status": result.returncode,
+138:                                       "stdout_b64": encoded(result.stdout), "stderr_b64": encoded(result.stderr),
+139:                                       "elapsed_seconds": time.monotonic() - began}) + "\n")
+140:         self.journal.flush()
+141:         if result.returncode < 0:
+conformance_checked.py aa5621ea59cc14c790784fcce973a81ed317d51a9eb465e43fa9f4996ffae7ce
+project_matrix.py 32e4cb38e28228a00e15093083220f9b230ab780a791931bc3d2ddf5351fda62
+fuzz_matrix.py 4fb3f570b18d8e4fe4ff3e4c08c5db3ed453b49a8fa82d25bd07f1fadc401848
+
+exit=0
+elapsed_seconds=0.025092

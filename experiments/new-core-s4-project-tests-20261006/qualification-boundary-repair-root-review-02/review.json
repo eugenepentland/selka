@@ -1,0 +1,8 @@
+{
+  "green": false,
+  "qualification_claim": false,
+  "tests_executed": 0,
+  "error": "AssertionError in manually transcribed expected-hash preflight",
+  "followup": "A separate fresh comparison matched all six reviewed IDs; review03 reads the authoritative source handoff and retains full pre/post IDs.",
+  "compiler_processes": 0
+}

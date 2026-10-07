@@ -1,0 +1,7 @@
+{
+  "schema": "tool-recipe-failure-v1",
+  "status": 1,
+  "compiler_processes": 0,
+  "test_processes": 0,
+  "error": "shell output redirection failed: evidence parent directory did not yet exist"
+}

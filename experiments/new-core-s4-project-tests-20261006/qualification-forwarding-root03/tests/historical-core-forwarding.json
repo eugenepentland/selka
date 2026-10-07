@@ -1,0 +1,130 @@
+[
+  {
+    "argv": [
+      "--evidence",
+      "/owned/evidence",
+      "--old-source",
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "--core-source",
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "--mylang",
+      "/oracles/old",
+      "--core",
+      "/oracles/core",
+      "--set",
+      "all",
+      "--modes",
+      "debug,release",
+      "--leakcheck",
+      "--verify"
+    ],
+    "core_source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "forwarded": [
+      "--mylang",
+      "/oracles/old",
+      "--core",
+      "/oracles/core",
+      "--set",
+      "all",
+      "--modes",
+      "debug,release",
+      "--leakcheck",
+      "--verify"
+    ]
+  },
+  {
+    "argv": [
+      "--mylang",
+      "/oracles/old",
+      "--core",
+      "/oracles/core",
+      "--set",
+      "all",
+      "--modes",
+      "debug,release",
+      "--leakcheck",
+      "--verify",
+      "--evidence",
+      "/owned/evidence",
+      "--old-source",
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "--core-source",
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
+    "core_source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "forwarded": [
+      "--mylang",
+      "/oracles/old",
+      "--core",
+      "/oracles/core",
+      "--set",
+      "all",
+      "--modes",
+      "debug,release",
+      "--leakcheck",
+      "--verify"
+    ]
+  },
+  {
+    "argv": [
+      "--evidence",
+      "/owned/evidence",
+      "--old-source",
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "--core-source",
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "--mylang",
+      "/oracles/old",
+      "--core=/oracles/core",
+      "--set",
+      "all",
+      "--modes",
+      "debug,release",
+      "--leakcheck",
+      "--verify"
+    ],
+    "core_source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "forwarded": [
+      "--mylang",
+      "/oracles/old",
+      "--core=/oracles/core",
+      "--set",
+      "all",
+      "--modes",
+      "debug,release",
+      "--leakcheck",
+      "--verify"
+    ]
+  },
+  {
+    "argv": [
+      "--mylang",
+      "/oracles/old",
+      "--core=/oracles/core",
+      "--set",
+      "all",
+      "--modes",
+      "debug,release",
+      "--leakcheck",
+      "--verify",
+      "--evidence",
+      "/owned/evidence",
+      "--old-source",
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "--core-source",
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
+    "core_source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "forwarded": [
+      "--mylang",
+      "/oracles/old",
+      "--core=/oracles/core",
+      "--set",
+      "all",
+      "--modes",
+      "debug,release",
+      "--leakcheck",
+      "--verify"
+    ]
+  }
+]

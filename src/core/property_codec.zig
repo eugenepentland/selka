@@ -3,6 +3,7 @@
 const std = @import("std");
 const types = @import("property_types.zig");
 const v = @import("property_value.zig");
+const validate = @import("property_validate.zig");
 const Value = std.json.Value;
 /// Bad internal transport or allocation stops the trial rather than passing it.
 pub const Error = error{ OutOfMemory, InvalidTestValue, UnsupportedTestType };
@@ -19,6 +20,10 @@ pub const Codec = struct {
     }
     /// Append one typed generated value.
     pub fn encode(self: *Codec, name: []const u8, value: Value) Error!void {
+        try validate.validate(self.schema, name, value, self.words.items.len / 2);
+        try self.append(name, value);
+    }
+    fn append(self: *Codec, name: []const u8, value: Value) Error!void {
         const shape = try self.schema.shape(name);
         const slot = self.words.items.len;
         try self.words.appendSlice(self.allocator, &.{ 0, 0 });
@@ -45,29 +50,29 @@ pub const Codec = struct {
                 },
                 .bytes => {
                     self.words.items[slot + 1] = v.array(value).len;
-                    for (v.array(value)) |item| try self.encode("u8", item);
+                    for (v.array(value)) |item| try self.append("u8", item);
                 },
             },
             .sequence => |sequence| {
                 self.words.items[slot + 1] = v.array(value).len;
-                for (v.array(value)) |item| try self.encode(sequence.element, item);
+                for (v.array(value)) |item| try self.append(sequence.element, item);
             },
             .keyed => |pair| {
                 if (pair.table) {
                     const keys = (try self.schema.shape(pair.key)).cases.cases;
                     self.words.items[slot + 1] = keys.len;
-                    for (keys) |key| try self.encode(pair.value, v.get(value, v.text(v.get(key, "name"))));
+                    for (keys) |key| try self.append(pair.value, v.get(value, v.text(v.get(key, "name"))));
                 } else {
                     self.words.items[slot + 1] = v.array(value).len;
                     for (v.array(value)) |entry| {
-                        try self.encode(pair.key, entry.array.items[0]);
-                        try self.encode(pair.value, entry.array.items[1]);
+                        try self.append(pair.key, entry.array.items[0]);
+                        try self.append(pair.value, entry.array.items[1]);
                     }
                 }
             },
             .record => |fields| {
                 self.words.items[slot + 1] = fields.len;
-                for (fields) |field| try self.encode(field.type, v.get(value, field.name));
+                for (fields) |field| try self.append(field.type, v.get(value, field.name));
             },
             .cases => |cases| {
                 const selected = if (cases.payloads) v.text(v.get(value, "case")) else v.text(value);
@@ -76,7 +81,7 @@ pub const Codec = struct {
                     const payload = v.get(case, "payload");
                     if (payload == .string) {
                         self.words.items[slot + 1] = 1;
-                        try self.encode(payload.string, v.get(value, "value"));
+                        try self.append(payload.string, v.get(value, "value"));
                     }
                     return;
                 };

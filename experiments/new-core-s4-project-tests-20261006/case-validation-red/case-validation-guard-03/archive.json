@@ -1,0 +1,26 @@
+{
+  "files_sha256": {
+    "command.json": "2dd873b571b0d8faaca31573394cfeddbb12fbbc22fa97b08175a6165d6ef447",
+    "summary.json": "ab9e3d8ca5d42e39416d94bcba668f5018cbc8a746e1a318d6b18083b0a1628a",
+    "command.log": "9d1c0c94bcc31de6179a23ead78fc69f962582735f889b155ef6170282164863",
+    "NOTE.md": "22d9cc81d7bd523b7490b29a729ddf372dd8264a9c243d425be213a57aaa0fe7",
+    "driver.py": "dfd1273b0b64181ed42cf7f9019cf1c90aadae8aed9ac0ba8aa286f576d47ea0",
+    "missing-fixed-arguments/old-cold.stderr": "b2d6ac4b52161c4499b651a2010b7d0c40147bd80f7d4541d09f8df5f310432a",
+    "missing-fixed-arguments/core-cold.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "missing-fixed-arguments/core-cold.stdout": "75a0d2b5eb9cc95438e4cb105d4380f9b55b042c032dadaab1059c6f729e9ec5",
+    "missing-fixed-arguments/core-warm.stdout": "4ae842a558042ee6fcaf01d81744fbdad7a2e96979f53bbde99ff40d2d31673f",
+    "missing-fixed-arguments/app.my": "6bbcacec696efe70d952ca01c5b1451b74b2898bcc1ca19e203bf8d79daa95fe",
+    "missing-fixed-arguments/core-warm.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "missing-fixed-arguments/old-cold.stdout": "f62c5e6dbbc972353e07ec64647e8f65454451f3ef840862f4a8bf44c4ebd5d8",
+    "missing-fixed-arguments/explicit.json": "2f6f7db8a9c4b85065b4609863b6f6266f80428e02ac85a47abb157239e38a7a",
+    "nonobject-arguments/old-cold.stderr": "3194192950101f92c0dc2ca6b0f7ea6fa915b354ec10ff00d1f3d4a9956badeb",
+    "nonobject-arguments/core-cold.stderr": "42f86fd65568c07e2d0b64a1d0be8cf9d6be327f0086012543446c71cb56babc",
+    "nonobject-arguments/core-cold.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "nonobject-arguments/core-warm.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "nonobject-arguments/app.my": "19688ffb7b8be3d86c14001d61286b2df51ec1bcef57446c51052d8f8a2b3746",
+    "nonobject-arguments/core-warm.stderr": "42f86fd65568c07e2d0b64a1d0be8cf9d6be327f0086012543446c71cb56babc",
+    "nonobject-arguments/old-cold.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "nonobject-arguments/explicit.json": "be940b775668b73ca65c42075ad408804f8ff1ecefaa43c0af58a9ca41ce730d"
+  },
+  "scope": "closed guard probe"
+}

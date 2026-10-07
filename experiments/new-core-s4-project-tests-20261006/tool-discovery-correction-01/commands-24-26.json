@@ -1,0 +1,20 @@
+[
+  {
+    "command": "env MYLANG_SLOT_DIR=/run/user/1000/mylang-slots MYLANG_TIMING_CPUS=2,3,10,11 scripts/build-slot.sh build -- /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test -ODebug --dep core_tool_platform -Mroot=src/core/tool_identity.zig -Mcore_tool_platform=src/config_core_tool_platform.zig > experiments/new-core-s4-project-tests-20261006/tool-discovery-correction-01/focus-24.log 2>&1",
+    "exit_code": 0,
+    "log": "focus-24.log",
+    "source": "source-notdir-23.json"
+  },
+  {
+    "command": "env MYLANG_SLOT_DIR=/run/user/1000/mylang-slots MYLANG_TIMING_CPUS=2,3,10,11 scripts/build-slot.sh build -- /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -OReleaseFast --dep tool -Mroot=experiments/new-core-s4-project-tests-20261006/tool-discovery-correction-01/guard_probe.zig --dep core_tool_platform -Mtool=src/core/tool_identity.zig -Mcore_tool_platform=src/config_core_tool_platform.zig -femit-bin=.mylang-cache/s4-m/tool-discovery-guard-probe-25 > experiments/new-core-s4-project-tests-20261006/tool-discovery-correction-01/probe-build-25.log 2>&1",
+    "exit_code": 0,
+    "log": "probe-build-25.log",
+    "source": "source-notdir-23.json"
+  },
+  {
+    "command": "env MYLANG_SLOT_DIR=/run/user/1000/mylang-slots MYLANG_TIMING_CPUS=2,3,10,11 scripts/build-slot.sh build -- /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build core --prefix .mylang-cache/s4-m/tool-discovery-core-26 -j2 > experiments/new-core-s4-project-tests-20261006/tool-discovery-correction-01/core-build-26.log 2>&1",
+    "exit_code": 0,
+    "log": "core-build-26.log",
+    "source": "source-notdir-23.json"
+  }
+]

@@ -1,0 +1,19 @@
+{
+  "synthetic_process_results": true,
+  "compiler_processes": 0,
+  "calls": [
+    [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/strict-guard-False/old-fixture",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/strict-guard-False/inputs/case.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/strict-guard-False/old-output",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/strict-guard-False/cache/frontend-old"
+    ]
+  ],
+  "inventory": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/strict-guard-False/evidence/input-guards/inventory.json",
+    "sha256": "067f10880184cbb7b02d435724845c204177480cc82e76a43b68a63f858f2397"
+  }
+}

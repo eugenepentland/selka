@@ -1,0 +1,7 @@
+module app
+
+public def test_list() -> list[int]:
+    return []
+
+public def test_z_survivor() -> bool:
+    return True

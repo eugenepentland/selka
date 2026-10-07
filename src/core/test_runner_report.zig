@@ -6,6 +6,8 @@ const std = @import("std");
 /// How one test ended.
 pub const Status = enum {
     passed,
+    cached,
+    skipped,
     failed,
     /// The new core refuses a feature the test uses (`E_CORE_UNSUPPORTED`): neither a pass nor a failure.
     unsupported,
@@ -44,6 +46,8 @@ pub fn text(allocator: std.mem.Allocator, verdicts: []const Verdict) std.mem.All
     var out: std.ArrayList(u8) = .empty;
     for (verdicts) |verdict| switch (verdict.status) {
         .passed => try out.print(allocator, "passed {s}\n", .{verdict.name}),
+        .cached => try out.print(allocator, "cached {s}\n", .{verdict.name}),
+        .skipped => try out.print(allocator, "skipped {s}: {s}\n", .{ verdict.name, verdict.reason }),
         .failed => try out.print(allocator, "failed {s}: {s}\n", .{ verdict.name, std.mem.trimEnd(u8, verdict.reason, "\n") }),
         .unsupported => {
             try out.print(allocator, "unsupported {s}: E_CORE_UNSUPPORTED ({s})", .{ verdict.name, verdict.reason });
@@ -51,7 +55,7 @@ pub fn text(allocator: std.mem.Allocator, verdicts: []const Verdict) std.mem.All
             try out.appendSlice(allocator, "\n");
         },
     };
-    try out.print(allocator, "{d} passed, 0 cached, {d} failed, 0 skipped", .{ count(verdicts, .passed), count(verdicts, .failed) });
+    try out.print(allocator, "{d} passed, {d} cached, {d} failed, {d} skipped", .{ count(verdicts, .passed), count(verdicts, .cached), count(verdicts, .failed), count(verdicts, .skipped) });
     const refused = count(verdicts, .unsupported);
     if (refused != 0) try out.print(allocator, ", {d} unsupported", .{refused});
     try out.appendSlice(allocator, "\n");
@@ -76,8 +80,18 @@ pub fn json(allocator: std.mem.Allocator, verdicts: []const Verdict) std.mem.All
         }
         try out.appendSlice(allocator, "}");
     }
-    try out.print(allocator, "],\"passed\":{d},\"failed\":{d},\"skipped\":0,\"cached\":0,\"unsupported\":{d}}}\n", .{ count(verdicts, .passed), count(verdicts, .failed), count(verdicts, .unsupported) });
+    const counts = .{ count(verdicts, .passed), count(verdicts, .failed), count(verdicts, .skipped), count(verdicts, .cached), count(verdicts, .unsupported) };
+    try out.print(allocator, "],\"passed\":{d},\"failed\":{d},\"skipped\":{d},\"cached\":{d},\"unsupported\":{d}}}\n", counts);
     return out.toOwnedSlice(allocator);
+}
+
+/// Add the checked source inventory used to account for directory test programs.
+pub fn jsonSources(allocator: std.mem.Allocator, verdicts: []const Verdict, sources: []const []const u8) std.mem.Allocator.Error![]u8 {
+    const basic = try json(allocator, verdicts);
+    defer allocator.free(basic);
+    const encoded = try std.json.Stringify.valueAlloc(allocator, sources, .{});
+    defer allocator.free(encoded);
+    return std.fmt.allocPrint(allocator, "{s},\"sources\":{s}}}\n", .{ basic[0 .. basic.len - 2], encoded });
 }
 
 fn quoted(allocator: std.mem.Allocator, out: *std.ArrayList(u8), value: []const u8) std.mem.Allocator.Error!void {

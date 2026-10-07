@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-forwarding-audit-01/audit.py", line 62, in <module>
+    parser, kind = parser_only(files[0])
+                   ~~~~~~~~~~~^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-forwarding-audit-01/audit.py", line 49, in parser_only
+    exec(compile(ast.Module(body=statements, type_ignores=[]), str(path), 'exec'), namespace)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/conformance_checked.py", line 185, in <module>
+    parser.add_argument("--baseline", type=Path, default=BASELINE)
+                                                         ^^^^^^^^
+NameError: name 'BASELINE' is not defined
