@@ -1,0 +1,3 @@
+app.my:4:12: error[R_ASSERT]: native execution failed: False
+  in app::main at app.my:4:12
+MYLANG-TRAP {"version":1,"operation":"False"}

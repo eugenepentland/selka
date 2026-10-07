@@ -1,0 +1,2 @@
+#include_next <unistd.h>
+#define _exit(x) _Exit(8)

@@ -1,0 +1,5 @@
+module app
+
+def main() -> int:
+    assert False
+    return 0
