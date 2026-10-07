@@ -87,6 +87,32 @@ module, the overflow check would stay and the loop would stay scalar.
 - **The edit loop is still too slow.** Debug builds use plain per-module separate
   compilation, and release builds keep S4-1.
 
+### S4-1a. Release builds are one unit (the user, 2026-10-07)
+
+**Debug builds keep S4-1:** one codegen unit per module, cached by its text. That covers
+`mylang test` and `build` without `--release`, which is the edit loop.
+
+**A release build emits the whole program as one unit,** as S3 did. That unit is still
+cached by the hash of its text, so an unchanged program starts no `zig cc`. Any edit
+recompiles the whole program at `-O3`.
+
+**Why:** a split release build loses LLVM's inlining across units.
+- In S4-E's measurements, applications split one module per file ran up to 1.39× their
+  single-unit build (`Result` at 4096), and Lox missed as well.
+- Five inlining and code-layout variants did not close the gap.
+- Release code is what the 1.10× gates measure; the edit loop's speed is debug's.
+- ThinLTO, which keeps per-unit caching with cross-unit inlining, is a possible spike
+  after S4.
+
+**What changes:**
+- **S4-E** has no split-application timing gate. Code that exists only to speed up split
+  release builds goes in the same change, for example the cross-unit private entry copies
+  and their block limits. Anything that also helps the single-unit build stays only if the
+  46 rows show it.
+- **§6:** the two release-rebuild targets become reported numbers.
+- **S4-P** compares debug builds on both sides, as the Wave 0 baselines did. Those used
+  `mylang build` and `mylang test` without `--release`.
+
 ### S4-2. Front-end caching (accepted 2026-10-06)
 
 Wire the old core's `semantic_cache` into `frontend.Session` (`checkWithCache`), so an
@@ -485,8 +511,9 @@ files mean the full old gate.
 - conformance at 0 mismatches, debug and release, with the leak and verify sweeps;
 - trap and trace output identical;
 - the 46 rows unchanged within noise as single-module programs;
-- the five applications, split one module per file, within noise of their single-unit
-  build.
+- a release build emits exactly one unit (S4-1a);
+- debug builds of the five applications, split one module per file, give output
+  identical to their single-unit build. There is no timing gate on split builds.
 
 #### S4-M. Module projects and project tests (one agent; about 3–4 h; parallel with S4-E)
 
@@ -584,10 +611,10 @@ steps and the build CPUs for parallel compilation, reported separately.
 | Measure | Target |
 |---|---|
 | Debug rebuild after a one-function edit, 48k lines | ≤ 2 s |
-| Release rebuild after a one-function edit, 48k lines | ≤ 1.5× the edited unit's `-O3` time plus 1 s |
-| Unchanged rebuild, any size | no `zig cc` process |
-| Cold release build, 192k lines, 16 workers | ≤ 60 s |
+| Unchanged rebuild, any size, debug or release | no `zig cc` process |
 | Check after a one-function edit, 96k lines | ≤ 0.45 s |
+| Release rebuild after a one-function edit, 48k lines | reported; whole-program `-O3` under S4-1a |
+| Cold release build, 192k lines | reported; one unit under S4-1a |
 
 ## 7. Rules
 
@@ -597,6 +624,32 @@ S3's §6 rules still apply:
 - one log per command run;
 - persisted formats bump their version when they change;
 - no pushes and nothing merged into `main`.
+
+**How much qualification (the user, 2026-10-07).** In Wave A's first 13 hours nothing
+was merged. One fuzz kind took 51 minutes, of which 4 were compiling and running.
+From now on:
+- **Qualify with S3's tools unchanged:**
+  - `qualify_merge.py`;
+  - `full_old_gate.py`;
+  - `fuzz_matrix.py`: 50 cases per kind per package, 200 at S4-X;
+  - the all-rows timing tool, extended to 46 rows, 7 rounds.
+- **Don't build more qualification machinery.** That means:
+  - no new fuzz adapters;
+  - no capture envelopes;
+  - no prospective timing protocol;
+  - no independent replays of passing results;
+  - no reviews of helper scripts.
+- **A 9-kind × 50-case matrix should take 15–20 minutes** at 3 jobs. Much longer means
+  stop and report.
+- **Commit summary JSON and command logs only,** at most 10 MB per package.
+  - Raw outputs, binaries, LLVM text and archives stay untracked under `.mylang-cache`
+    and may be deleted.
+  - A failed run gets a short note in the state file, not an archive.
+  - A harness defect is fixed and the run repeated; the failed run is not kept.
+- **Native cache keys follow `docs/design/new-core-s4.md` §6.** Foreign C sources add
+  their compiler depfile (`-MD`). Don't inventory host toolchain files.
+- **"A wrong answer is never acceptable" is about the compiler's output.** It does not
+  mean every qualification tool needs its own proof.
 
 **New in S4:**
 - **`ir.zig` stays frozen.** S4 needs no IR change. A package that thinks it needs one

@@ -27,6 +27,12 @@ catch it.
 
 ## 2. Units
 
+**Release builds are one unit (the user, 2026-10-07; plan S4-1a).** Everything in §2–§5
+applies to debug builds, which include `mylang test` and the edit loop. A release build
+emits the whole program as one unit under the same naming rules, cached by its text like
+any unit. Splitting release builds lost LLVM's inlining across units: up to 1.39× on the
+split applications.
+
 - **One unit per source module** (file). A function belongs to the module its
   declaration came from; `"my.<module>::<name>"` already carries it.
 - **The entry unit** holds `@main`, the entry wrapper and the program-wide constants
@@ -170,3 +176,7 @@ once over the Lox port and the EDA slice.
   - trap and error-trace text identical across a multi-unit build;
   - the 46 rows, all single-module programs, emit one unit plus the entry unit, and
     their timings stay unchanged.
+- **Release mode (S4-1a):**
+  - a release build of a multi-module program emits exactly one unit;
+  - an unchanged release build starts no `zig cc`;
+  - a split debug build's output equals the release build's on the five applications.
