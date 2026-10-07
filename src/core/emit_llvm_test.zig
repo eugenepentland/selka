@@ -198,6 +198,24 @@ const narrow_extern =
     \\
 ;
 
+const runtime_bool_helpers =
+    \\def main(out: Stream) -> int:
+    \\    word = "Mixed"
+    \\    out.print(word.upper(), word.lower(), repr(word))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-S5-RUNTIME-ABI-1
+test "a C runtime helper's bool parameter carries zeroext on its declaration and its calls" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.llvmText(arena.allocator(), runtime_bool_helpers);
+    try std.testing.expect(std.mem.indexOf(u8, text, "@myl_core_text_case(ptr, i1 zeroext)") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "call ptr @myl_core_text_case(ptr @myl.str.0, i1 zeroext true)") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "call ptr @myl_core_text_repr(ptr @myl.str.0, i1 zeroext false)") != null);
+}
+
 // spec: NEW-CORE-S5-EXTERN-ABI-1
 test "a source extern's i8, i16, u8, u16 and bool parameters carry their SysV extension; an i32 passes as it is" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
