@@ -94,7 +94,9 @@ test "test --affected runs only the tests that reach a declaration changed since
     try context.git(&.{ "add", "app.my" });
     try context.git(&.{ "commit", "-q", "-m", "init" });
     const affected = [_][]const u8{ "test", "app.my", "--affected", "--against=HEAD", "--cache-dir", "cache" };
-    // An unchanged tree selects nothing and exits 3, as a filter matching nothing does.
+    // An untracked module changes on every line, but this program does not load it.
+    try context.write("other.my", "module other\n\n\nconst OTHER: int = 1\n\n\ndef test_other() -> bool:\n    return OTHER == 1\n");
+    // An unchanged program selects nothing and exits 3, as a filter matching nothing does.
     const unchanged = try context.compiler(&affected);
     try std.testing.expectEqual(@as(u8, 3), unchanged.status);
     try std.testing.expect(contains(unchanged.stderr, "affected: 0 selected, 2 skipped against HEAD"));

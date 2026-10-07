@@ -64,16 +64,20 @@ pub fn narrow(request: Request, checked: frontend.Checked, cases: []const discov
     return .{ .kept = kept.items };
 }
 
-/// Whether a changed name is carried by no checked `def`: a constant (the checker keeps
-/// its initializer as a function, but every reader folds its value) or a deleted
-/// function. Such a change cannot be traced through calls, so every test is affected.
+/// Whether a changed name of a module this program loads is carried by no checked
+/// `def`: a constant (the checker keeps its initializer as a function, but every reader
+/// folds its value) or a deleted function. Such a change cannot be traced through
+/// calls, so every test is affected. A module the program does not load changes nothing.
 fn untraced(changes: language.affected_tests.Changes, checked: frontend.Checked) bool {
     for (changes.names) |changed| {
+        const separator = std.mem.indexOf(u8, changed, "::") orelse continue;
+        var loaded = false;
         const traced = for (checked.program.functions) |function| {
+            loaded = loaded or std.mem.startsWith(u8, function.name, changed[0 .. separator + 2]);
             const named = std.mem.startsWith(u8, function.name, changed) and (function.name.len == changed.len or function.name[changed.len] == '[');
             if (named and !constant(checked.src.bytes, function.declaration.start)) break true;
         } else false;
-        if (!traced) return true;
+        if (loaded and !traced) return true;
     }
     return false;
 }
