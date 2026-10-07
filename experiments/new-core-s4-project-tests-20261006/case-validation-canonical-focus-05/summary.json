@@ -1,0 +1,29 @@
+{
+  "scope": "source-exact final focused canonical spelling repair; package full gates remain outstanding",
+  "source": "source.json",
+  "source_after": "source-after.json",
+  "core_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.zig-cache/o/b290baf432d0c238fa71491cc4595b63/mylang-core",
+  "core_sha256": "591886dc7d20409c878ee0a5b15c9faa0394b5b836eeaaa8c75e43a31350f120",
+  "options_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.zig-cache/o/79f15863a8b85352a7b28e86c692f3fb/options.zig",
+  "focus": {
+    "selected": 5,
+    "passed": 5,
+    "failed": 0,
+    "native_invalid_fixtures": 12,
+    "test_seconds": 53.79,
+    "native_test_seconds": 53.78,
+    "command_seconds": 56.481294,
+    "receipt": "command-00232.json"
+  },
+  "guardian": {
+    "checks": 88,
+    "passed": 88,
+    "seconds": 1.720908,
+    "receipt": "command-00237.json"
+  },
+  "float_controls": "All six input spellings accepted identically by native commands; pinned parseInfOrNan ignores NaN sign and returns std.math.nan, matching old positive quiet NaN transport.",
+  "implementation_files": [
+    "src/core/property_validate.zig",
+    "src/core/test_runner_project_test.zig"
+  ]
+}

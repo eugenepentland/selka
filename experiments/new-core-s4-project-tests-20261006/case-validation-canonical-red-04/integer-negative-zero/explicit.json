@@ -1,0 +1,7 @@
+{
+  "app::test_argument": {
+    "arguments": {
+      "x": "-0"
+    }
+  }
+}

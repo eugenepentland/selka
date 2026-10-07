@@ -1,0 +1,15 @@
+{
+  "command": [
+    "env",
+    "MYLANG_SLOT_DIR=/run/user/1000/mylang-slots",
+    "scripts/build-slot.sh",
+    "build",
+    "--",
+    "python3",
+    ".mylang-cache/s4-v/m-review-25d9/case_canonical_argument_reducers.py"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3509713,
+  "status": 0,
+  "elapsed_seconds": 124.47460695495829
+}

@@ -1,7 +1,7 @@
 # S4-M implementation and qualification state
 
-The corrected pre-V implementation is frozen at `68ff263b5`, after the managed
-undef-phi and typed-case repairs below. Its preceding unwind-dependency checkpoint
+The corrected pre-V implementation is frozen at `0ebc9c8f0`, after the managed
+undef-phi, typed-case and canonical-integer repairs below. Its preceding unwind-dependency checkpoint
 is `25d9e9531`; its initial production checkpoint is `7bc4a745f`, based on S4-F corrected
 production checkpoint `7877aa5d369f57aeb8fb850e8198c08c520b3a51`. Final combined
 package qualification is still pending. Negative runs remain evidence, never
@@ -137,6 +137,20 @@ independent surviving test. Its emitted compiler is `c6944963`; the installed
 compiler was unchanged. Source hashes match the same nine-file snapshot used by
 the ownership focus, and the production commit passes all 88 Guardian checks.
 These focused checks do not replace the final S4-M package gates.
+
+Independent comparison against the old native wire grammar then reduces four
+remaining argument spelling failures on immutable focused compiler `c6944963`:
+`00`, `+0`, `-0` and `1_0` are accepted and cached by Core, while the old runner
+refuses them with InvalidTestValue. Thirty native probes retain both cold/warm
+Core and old outputs for these integers and six float controls. All float
+spellings agree, so their grammar is unchanged. Correction `0ebc9c8f0` applies
+the old integer grammar before conversion: bounded decimal text, ASCII digits,
+optional minus and canonical zero. The fresh five-test focus passes all twelve
+invalid native fixtures cold and warm with their independent survivor, generated
+round trips, unit shape/comparison checks and allocation failure. It takes
+56.481 command seconds; emitted compiler SHA256 is `591886dc`, and all nine
+source hashes match before and after. Whole-tree Guardian passes 88/88. Earlier
+focused successes remain historical; final combined package gates are pending.
 
 Copied propagation fixtures are byte-identical to tests/lang, which was not edited.
 The focused CLI cases cover directory/orphan accounting, changed dependency versus
