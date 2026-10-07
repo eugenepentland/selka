@@ -1,0 +1,21 @@
+{
+ "lines": 96197,
+ "core": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-p/.mylang-cache/s4-fix/core-rf2/bin/mylang-core",
+ "cold_s": 0.613,
+ "unchanged_s": 0.2222,
+ "edits": [
+  {
+   "module": 1200,
+   "s": 0.221
+  },
+  {
+   "module": 1201,
+   "s": 0.22
+  },
+  {
+   "module": 1202,
+   "s": 0.223
+  }
+ ],
+ "edit_median_s": 0.221
+}
