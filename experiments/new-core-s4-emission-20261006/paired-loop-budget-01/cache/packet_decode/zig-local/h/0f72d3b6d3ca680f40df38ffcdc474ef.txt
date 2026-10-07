@@ -1,0 +1,2 @@
+0
+88266 118523574 1791343717667477837 0287cdb08c185d8d5d9b7768266dea25 0 experiments/new-core-s4-emission-20261006/paired-loop-budget-01/cache/packet_decode/program-9b8c5a4c7cb3104d/module-819b813edb0e06e8dfdd7ff60e54b591b15e01e8a00977de40701a326bcc3d4d.ll

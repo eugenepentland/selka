@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/import-loop-budget-01/result/app.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-loop-budget-01/result-release/old",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-loop-budget-01/result-release/old-cache",
+    "--release"
+  ],
+  "status": 0,
+  "stdout": "",
+  "stderr": "leaf.my:2:19: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  public def origin(x: int) -> Result[int, str]:\n                    ^\n",
+  "seconds": 4.697752249892801
+}

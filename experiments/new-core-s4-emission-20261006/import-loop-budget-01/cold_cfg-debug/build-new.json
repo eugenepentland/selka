@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-loop-budget-02/bin/mylang-core",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/import-loop-budget-01/cold_cfg/app.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-loop-budget-01/cold_cfg-debug/split",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-loop-budget-01/cold_cfg-debug/new",
+    "--emit-llvm",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/import-loop-budget-01/cold_cfg-debug/whole.ll"
+  ],
+  "status": 0,
+  "stdout": "",
+  "stderr": "",
+  "seconds": 2.605868806829676
+}

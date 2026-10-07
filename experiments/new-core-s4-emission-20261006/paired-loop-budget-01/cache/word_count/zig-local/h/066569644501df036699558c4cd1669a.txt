@@ -1,0 +1,2 @@
+0
+71600 118526136 1791343868126145020 173dfd43844268761491c14dbfb71839 0 experiments/new-core-s4-emission-20261006/paired-loop-budget-01/cache/word_count/program-556e857baed794b5/module-2ba6fe24c624a8200217cbaaa38092ee7becce804e727d55a01781aa0d2b482a.ll

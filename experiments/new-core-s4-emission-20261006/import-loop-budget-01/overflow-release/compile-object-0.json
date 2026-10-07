@@ -1,0 +1,19 @@
+{
+  "command": [
+    "zig",
+    "cc",
+    "-c",
+    "-O3",
+    "-march=native",
+    "-mllvm",
+    "-x86-experimental-pref-innermost-loop-alignment=6",
+    "-Wno-override-module",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/import-loop-budget-01/overflow-release/unit-0.o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-loop-budget-01/overflow-release/new/program-7b1855c206b20eb2/entry.ll"
+  ],
+  "status": 0,
+  "stdout": "",
+  "stderr": "",
+  "seconds": 0.029211641987785697
+}
