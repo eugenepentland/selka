@@ -1,0 +1,13 @@
+$ scripts/build-slot.sh build zig test --test-no-exec -fno-emit-bin -ODebug --dep mylang --dep core_test_options -Mroot=src/core/root_test.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -Mcore_test_options=.zig-cache/o/6587c5e57c7eb12d659e71b5c543d189/options.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --test-runner ../guardian-zig/src/test_runner.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name test
+src/core/frontend_reuse.zig:9:39: error: no module named 'qbe_build_assets' available within module 'root'
+pub const compiler_identity = @import("qbe_build_assets").compiler_identity;
+                                      ^~~~~~~~~~~~~~~~~~
+referenced by:
+    compiler_identity: src/core/frontend.zig:10:36
+    settings: src/core/test_runner_receipt.zig:35:26
+    2 reference(s) hidden; use '-freference-trace=4' to see all references
+src/project_config.zig:12:24: error: no module named 'memory_budget' available within module 'mylang'
+const budget = @import("memory_budget");
+                       ^~~~~~~~~~~~~~~
+
+{"argv": ["scripts/build-slot.sh", "build", "zig", "test", "--test-no-exec", "-fno-emit-bin", "-ODebug", "--dep", "mylang", "--dep", "core_test_options", "-Mroot=src/core/root_test.zig", "-ODebug", "--dep", "runtime_contract", "-Mmylang=src/compiler.zig", "-Mcore_test_options=.zig-cache/o/6587c5e57c7eb12d659e71b5c543d189/options.zig", "-ODebug", "-Mruntime_contract=src/runtime_contract.zig", "--test-runner", "../guardian-zig/src/test_runner.zig", "--cache-dir", ".zig-cache", "--global-cache-dir", "/home/epentland/ai/canopy/.zig-global-cache", "--name", "test"], "status": 1, "wall_seconds": 2.59511177893728}

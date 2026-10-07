@@ -1,0 +1,13 @@
+$ scripts/build-slot.sh build zig build core --summary all --verbose
+info(verbose): /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug -Mroot=build_qbe_assets.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name qbe-build-assets --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+info(verbose): /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang --dep core_tool_platform --dep qbe_build_assets -Mroot=src/core/main.zig -ODebug --dep runtime_contract --dep memory_budget -Mmylang=src/compiler.zig -Mcore_tool_platform=src/config_core_tool_platform.zig -ODebug -Mqbe_build_assets=.zig-cache/o/0b7d6c04d880bb1c9617411a5bba71ea/qbe_build_assets/assets.zig -ODebug -Mruntime_contract=src/runtime_contract.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+info(verbose): install -C .zig-cache/o/a48d9b2d3e0b50aa6ac35a45d24f8526/mylang-core zig-out/bin/mylang-core
+Build Summary: 5/5 steps succeeded
+core success
++- install mylang-core success
+   +- compile exe mylang-core debug native cached 7ms MaxRSS:41M
+      +- run exe qbe-build-assets (qbe_build_assets) cached
+         +- compile exe qbe-build-assets debug native cached 6ms MaxRSS:41M
+
+
+{"argv": ["scripts/build-slot.sh", "build", "zig", "build", "core", "--summary", "all", "--verbose"], "status": 0, "wall_seconds": 4.75675136805512}

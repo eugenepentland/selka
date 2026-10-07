@@ -1,0 +1,24 @@
+test-core
++- run test
+   +- compile test debug native
+      +- options
+         +- compile exe mylang-core debug native 1 errors
+src/core/test_runner_cases.zig:90:102: error: function parameter shadows declaration of 'before'
+pub fn compatible(a: std.mem.Allocator, original: *frontend.Session, replacement: *frontend.Session, before: frontend.Checked, after: frontend.Checked) Error!void {
+                                                                                                     ^~~~~~
+src/core/test_runner_cases.zig:134:1: note: declared here
+fn before(_: void, left: frontend.Provider, right: frontend.Provider) bool {
+^~
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang --dep qbe_build_assets -Mroot=src/core/main.zig -ODebug --dep runtime_contract --dep memory_budget -Mmylang=src/compiler.zig -ODebug -Mqbe_build_assets=.zig-cache/o/1ec9cd0b7b0be280fb8853074ccf9f06/qbe_build_assets/assets.zig -ODebug -Mruntime_contract=src/runtime_contract.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 2/7 steps succeeded (1 failed)
+test-core transitive failure
++- run test transitive failure
+   +- compile test debug native transitive failure
+      +- run exe qbe-build-assets (qbe_build_assets) success 98ms
+      |  +- compile exe qbe-build-assets debug native cached 10ms MaxRSS:38M
+      +- options transitive failure
+         +- compile exe mylang-core debug native 1 errors
+            +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

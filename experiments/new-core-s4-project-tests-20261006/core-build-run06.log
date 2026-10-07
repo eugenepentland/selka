@@ -1,0 +1,22 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 50s (all 3 build slot(s) busy)
+core
++- install mylang-core
+   +- compile exe mylang-core debug native 1 errors
+src/core/property_ir.zig:29:100: error: expected enum or union; found '?@typeInfo(ir.Compound).@"union".tag_type.?'
+        const semantic = try std.fmt.allocPrint(self.arena, "{s}:{s}", .{ @tagName(self.module.kind(ty)), name });
+                                                                                   ~~~~~~~~~~~~~~~~^~~~
+referenced by:
+    trial: src/core/test_runner_batch.zig:99:71
+    add: src/core/test_runner_batch.zig:16:70
+    11 reference(s) hidden; use '-freference-trace=13' to see all references
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang --dep qbe_build_assets -Mroot=src/core/main.zig -ODebug --dep runtime_contract --dep memory_budget -Mmylang=src/compiler.zig -ODebug -Mqbe_build_assets=.zig-cache/o/48a523fe894f9b25fc0a69229ab86d94/qbe_build_assets/assets.zig -ODebug -Mruntime_contract=src/runtime_contract.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 2/5 steps succeeded (1 failed)
+core transitive failure
++- install mylang-core transitive failure
+   +- compile exe mylang-core debug native 1 errors
+      +- run exe qbe-build-assets (qbe_build_assets) success 89ms
+         +- compile exe qbe-build-assets debug native cached 8ms MaxRSS:38M
+

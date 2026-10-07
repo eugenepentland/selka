@@ -1,0 +1,4 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 26s (all 3 build slot(s) busy)
+info: to list available steps: zig build -l
+error: no such step: install-core

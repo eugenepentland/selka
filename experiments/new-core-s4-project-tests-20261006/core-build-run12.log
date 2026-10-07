@@ -1,0 +1,10 @@
+$ scripts/build-slot.sh build zig build core --summary all
+Build Summary: 5/5 steps succeeded
+core success
++- install mylang-core success
+   +- compile exe mylang-core debug native cached 8ms MaxRSS:41M
+      +- run exe qbe-build-assets (qbe_build_assets) cached
+         +- compile exe qbe-build-assets debug native cached 4ms MaxRSS:41M
+
+
+{"argv": ["scripts/build-slot.sh", "build", "zig", "build", "core", "--summary", "all"], "status": 0, "wall_seconds": 0.9773806578014046}

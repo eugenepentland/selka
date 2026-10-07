@@ -1,0 +1,9 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 55s (all 3 build slot(s) busy)
+Build Summary: 5/5 steps succeeded
+core success
++- install mylang-core success
+   +- compile exe mylang-core debug native success 3s MaxRSS:358M
+      +- run exe qbe-build-assets (qbe_build_assets) success 93ms
+         +- compile exe qbe-build-assets debug native cached 8ms MaxRSS:38M
+

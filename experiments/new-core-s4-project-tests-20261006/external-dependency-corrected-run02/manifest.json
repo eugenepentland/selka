@@ -1,0 +1,49 @@
+{
+  "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/zig-out/bin/mylang-core",
+  "sha256": "ae95edc2e2d473fe052810345335e3558ad553b325bd0394af48c39ceafcaf98",
+  "cache": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/external-dependency-corrected-run02",
+  "source_commit": "7877aa5d369f57aeb8fb850e8198c08c520b3a51",
+  "qualified": false,
+  "expect": "refusal",
+  "mutated_after_cached_report": true,
+  "untracked_helpers": {
+    "tool_identity.zig": "01b54a3c9c4bb1396a730980d6e55325381fb85f7df6a07e71f026a39bdffc97",
+    "tool_ticket.zig": "5e529827b943e53e1c25db3a7adea6d570bd49c2e9504ce5e3ce03b27aa2094d"
+  },
+  "status": 1,
+  "seconds": 2.9282639489974827,
+  "report": {
+    "version": "native-tests-v1",
+    "tests": [
+      {
+        "name": "tests.slow_test::test_slow_changed",
+        "status": "passed",
+        "reason": "",
+        "at": ""
+      },
+      {
+        "name": "tests.suite_test::test_dependency",
+        "status": "cached",
+        "reason": "",
+        "at": ""
+      },
+      {
+        "name": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/external-dependency-corrected-run02/project/tests",
+        "status": "failed",
+        "reason": "SourceChanged: directory discovery inputs changed during execution",
+        "at": ""
+      }
+    ],
+    "passed": 1,
+    "failed": 1,
+    "skipped": 0,
+    "cached": 1,
+    "unsupported": 0,
+    "sources": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/external-dependency-corrected-run02/project/dep.my",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/external-dependency-corrected-run02/project/tests/slow_test.my",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/external-dependency-corrected-run02/project/tests/suite_test.my"
+    ]
+  },
+  "expected_observed": true
+}

@@ -1,0 +1,36 @@
+test-core
++- run test 1 pass, 1 fail (2 total)
+00000" }), 0);
+    ^
+guardian/test: test wall 0.68s; slowest over 50ms:
+guardian/test:   0.68s  test_runner_project_test.test.native test step and wall bounds are honored while force bypasses reuse
+guardian/test: FAIL — 1 failed of 2
+guardian/test: RESULT {"passed":1,"failed":1,"skipped":0}
+error: 'test_runner_project_test.test.native test step and wall bounds are honored while force bypasses reuse' failed:
+       guardian/test: 2 test(s) selected
+       unexpected project test result: 
+       {"version":"native-tests-v1","tests":[{"name":"loop::test_loop","status":"failed","reason":"build error (InvalidIr): internal error[E_CORE_INVALID_IR]: invalid Core IR in loop::test_loop b1 %8: phi after a non-phi instruction","at":""}],"passed":0,"failed":1,"skipped":0,"cached":0,"unsupported":0,"sources":["/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.zig-cache/tmp/0kssvUAXRTbRj16H/loop.my"]}
+       expected 0, found 1
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x128d2d4 in expectEqualInner__anon_43362 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x128d52a in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/core/test_runner_project_test.zig:64:5: 0x128d583 in expectStatus (root_test.zig)
+           try std.testing.expectEqual(status, found.status);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/core/test_runner_project_test.zig:159:5: 0x128e188 in test.native test step and wall bounds are honored while force bypasses reuse (root_test.zig)
+           try expectStatus(try context.run("loop.my", &.{ "--max-steps", "1
+failed command: ./.zig-cache/o/04c560dc3fff67bfb292dfefd022c029/test --cache-dir=./.zig-cache --seed=0xc549282f --listen=-
+
+Build Summary: 5/7 steps succeeded (1 failed); 1/2 tests passed (1 failed)
+test-core transitive failure
++- run test 1 pass, 1 fail (2 total)
+   +- compile test debug native success 1s MaxRSS:184M
+      +- run exe qbe-build-assets (qbe_build_assets) success 236ms
+      |  +- compile exe qbe-build-assets debug native cached 27ms MaxRSS:38M
+      +- options success
+         +- compile exe mylang-core debug native success 9s MaxRSS:348M
+            +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

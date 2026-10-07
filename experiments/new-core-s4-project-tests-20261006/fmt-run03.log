@@ -1,0 +1,3 @@
+src/core/test_runner.zig:108:6: error: expected statement, found ';'
+    };
+     ^

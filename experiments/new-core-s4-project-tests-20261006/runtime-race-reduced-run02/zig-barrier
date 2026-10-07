@@ -1,0 +1,12 @@
+#!/usr/bin/python3
+import os,subprocess,sys,time
+from pathlib import Path
+args=sys.argv[1:]
+r=subprocess.run(['/home/epentland/.local/bin/zig',*args])
+if r.returncode==0 and "cc" in args and "-std=c11" in args and "-c" in args:
+    folder=Path('/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/runtime-race-reduced-run02/barrier')
+    (folder/str(os.getpid())).write_text("completed runtime compile")
+    until=time.monotonic()+30
+    while len(list(folder.iterdir()))<2 and time.monotonic()<until:
+        time.sleep(.01)
+sys.exit(r.returncode)

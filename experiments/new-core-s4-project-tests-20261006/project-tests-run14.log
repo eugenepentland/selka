@@ -1,0 +1,43 @@
+$ scripts/build-slot.sh build zig build test-core -Dtest-filter=project_entry -Dtest-filter=test_runner_options -Dtest-filter=test_runner_directory -Dtest-filter=test_runner_receipt -Dtest-filter=test_runner_cases -Dtest-filter=test_runner_project_test -Dtest-filter=tool_identity -Dtest-filter=tool_ticket -Dtest-filter=programIdentity --summary all
+test-core
++- run test w
+guardian/test: 48 test(s) selected
+guardian/test: SLOW  14.12s  test_runner_project_test.test.directory receipts account for orphan libraries and rerun only the edited reachable program
+guardian/test: SLOW  13.00s  test_runner_project_test.test.localReplay invalidates provider edits and explicit expectations in successful test receipts
+guardian/test: SLOW  12.18s  test_runner_project_test.test.provider-only imports and embedded assets participate in receipt invalidation
+guardian/test: SLOW  7.39s  test_runner_project_test.test.configuredCases require canonical discovered names and never ignore an expectation
+guardian/test: SLOW  11.48s  test_runner_project_test.test.embedded bytes and stricter project budgets invalidate unchanged test manifests
+guardian/test: SLOW  14.23s  test_runner_project_test.test.native test step and wall bounds are honored while force bypasses reuse
+guardian/test: SLOW  15.54s  test_runner_project_test.test.warm project tests revalidate import policy and required generated interfaces
+guardian/test: SLOW  6.66s  test_runner_project_test.test.providers preserve exported record layouts behind unchanged function signatures
+guardian/test: SLOW  6.62s  test_runner_project_test.test.providers preserve private parameter layouts of marked property tests
+guardian/test: SLOW  5.58s  test_runner_project_test.test.nested standalone test entries use the configured project import root
+guardian/test: SLOW  5.68s  test_runner_project_test.test.copied migrated propagation project retains all nine passing tests
+guardian/test: SLOW  6.29s  test_runner_project_test.test.reserved embedded module names cannot account for an untested disk source
+guardian/test: test wall 123.07s; slowest over 50ms:
+guardian/test:   15.54s  test_runner_project_test.test.warm project tests revalidate import policy and required generated interfaces
+guardian/test:   14.23s  test_runner_project_test.test.native test step and wall bounds are honored while force bypasses reuse
+guardian/test:   14.12s  test_runner_project_test.test.directory receipts account for orphan libraries and rerun only the edited reachable program
+guardian/test:   13.00s  test_runner_project_test.test.localReplay invalidates provider edits and explicit expectations in successful test receipts
+guardian/test:   12.18s  test_runner_project_test.test.provider-only imports and embedded assets participate in receipt invalidation
+guardian/test:   11.48s  test_runner_project_test.test.embedded bytes and stricter project budgets invalidate unchanged test manifests
+guardian/test:   7.39s  test_runner_project_test.test.configuredCases require canonical discovered names and never ignore an expectation
+guardian/test:   6.66s  test_runner_project_test.test.providers preserve exported record layouts behind unchanged function signatures
+guardian/test:   6.62s  test_runner_project_test.test.providers preserve private parameter layouts of marked property tests
+guardian/test:   6.29s  test_runner_project_test.test.reserved embedded module names cannot account for an untested disk source
+guardian/test: PASS — 48 passed
+guardian/test: RESULT {"passed":48,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/433f381f1c09502b016af9b9bdf71556/test --cache-dir=./.zig-cache --seed=0x5f3da958 --listen=-
+
+Build Summary: 7/7 steps succeeded; 48/48 tests passed
+test-core success
++- run test 48 pass (48 total) 2m MaxRSS:251M
+   +- compile test debug native success 2s MaxRSS:375M
+      +- run exe qbe-build-assets (qbe_build_assets) cached
+      |  +- compile exe qbe-build-assets debug native cached 6ms MaxRSS:41M
+      +- options cached
+         +- compile exe mylang-core debug native cached 8ms MaxRSS:41M
+            +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+
+
+{"argv": ["scripts/build-slot.sh", "build", "zig", "build", "test-core", "-Dtest-filter=project_entry", "-Dtest-filter=test_runner_options", "-Dtest-filter=test_runner_directory", "-Dtest-filter=test_runner_receipt", "-Dtest-filter=test_runner_cases", "-Dtest-filter=test_runner_project_test", "-Dtest-filter=tool_identity", "-Dtest-filter=tool_ticket", "-Dtest-filter=programIdentity", "--summary", "all"], "status": 0, "wall_seconds": 125.64042684901506}
