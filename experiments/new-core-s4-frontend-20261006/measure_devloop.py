@@ -115,7 +115,9 @@ class Runner:
             stream.write(f"\nexit={result.returncode} elapsed_seconds={seconds:.9f}\n")
         receipt = {"seconds": seconds, "exit": result.returncode,
                    "log": str(log.relative_to(ROOT)), "cpu10": cpu10,
-                   "records": json_lines(result.stderr)}
+                   "records": json_lines(result.stderr),
+                   "stdout_sha256": hashlib.sha256(result.stdout.encode()).hexdigest(),
+                   "stderr_sha256": hashlib.sha256(result.stderr.encode()).hexdigest()}
         if trace:
             receipt.update(trace=str(trace_path.relative_to(ROOT)),
                            zig_cc=process_trace(trace_path), trace_includes_overhead=True)
@@ -177,6 +179,12 @@ def build_command(compiler, role, project, output, cache, mode, extras):
     return command
 
 
+def same_execution(left, right):
+    """Fresh standalone executions must agree on status and both output streams."""
+    return all(left.get(key) == right.get(key)
+               for key in ("exit", "stdout_sha256", "stderr_sha256"))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--core", type=Path, required=True)
@@ -205,9 +213,17 @@ def main():
                "source_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
                "compilers": {role: {"path": str(path), "sha256": digest(path)} for role, path in compilers.items()},
                "rows": [], "parallel": [], "gates": []}
+    summary["gates"].append({"target": "old and core execution oracles available",
+                             "passed": set(args.roles) == {"old", "core"}})
 
     def publish():
         (args.evidence / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+
+    def compare(size, mode, phase, old, core):
+        summary["gates"].append({"target": "synthetic execution matches old core",
+                                 "size": size, "mode": mode, "phase": phase,
+                                 "old_log": old["log"], "core_log": core["log"],
+                                 "passed": same_execution(old, core)})
 
     environment = dict(os.environ, MYLANG_JOBS="1", MYL_CORE_BUILD_REPORT="1")
     for size in args.sizes:
@@ -215,6 +231,7 @@ def main():
         row = {"modules": size, "lines": sum(len(p.read_text().splitlines()) for p in project.path.glob("*.my")),
                "roles": {}}
         commands = {}
+        outputs = {}
         for role in args.roles:
             row["roles"][role] = {}
             for mode in ("debug", "release"):
@@ -222,19 +239,33 @@ def main():
                 output = args.work / f"out-{size}-{role}-{mode}"
                 command = build_command(compilers[role], role, project, output, cache, mode, args.core_extra)
                 commands[role, mode] = command
+                outputs[role, mode] = output
                 data = row["roles"][role][mode] = {"edits": []}
                 data["cold"] = runner.run(f"{size}-{role}-{mode}-cold", command, environment, True)
+                data["cold_execution"] = runner.run(f"{size}-{role}-{mode}-cold-execute", [output], environment, True)
                 data["unchanged"] = runner.run(f"{size}-{role}-{mode}-unchanged", command, environment, True)
+                data["unchanged_execution"] = runner.run(f"{size}-{role}-{mode}-unchanged-execute", [output], environment, True)
                 data["unchanged_trace"] = runner.run(f"{size}-{role}-{mode}-unchanged-trace", command, environment, True, True)
                 if role == "core":
                     summary["gates"].append({"target": "unchanged has zero zig cc", "size": size, "mode": mode,
                                              "passed": not data["unchanged_trace"]["zig_cc"]})
+        if set(args.roles) == {"old", "core"}:
+            for mode in ("debug", "release"):
+                for phase in ("cold", "unchanged"):
+                    compare(size, mode, phase, row["roles"]["old"][mode][phase + "_execution"],
+                            row["roles"]["core"][mode][phase + "_execution"])
         for _ in range(args.rounds):
             edit = project.edit()
             for (role, mode), command in commands.items():
                 receipt = runner.run(f"{size}-{role}-{mode}-edit", command, environment, True)
                 receipt["edit"] = edit
+                receipt["execution"] = runner.run(f"{size}-{role}-{mode}-edit-execute", [outputs[role, mode]], environment, True)
                 row["roles"][role][mode]["edits"].append(receipt)
+            if set(args.roles) == {"old", "core"}:
+                for mode in ("debug", "release"):
+                    compare(size, mode, f"edit-{project.serial}",
+                            row["roles"]["old"][mode]["edits"][-1]["execution"],
+                            row["roles"]["core"][mode]["edits"][-1]["execution"])
         for role, modes in row["roles"].items():
             for mode, data in modes.items():
                 data["edit_seconds"] = statistics.median(item["seconds"] for item in data["edits"])
@@ -244,6 +275,11 @@ def main():
             edit = project.edit()
             trace = runner.run(f"{size}-core-release-edit-trace", commands["core", "release"], environment, True, True)
             trace["edit"] = edit
+            trace["execution"] = runner.run(f"{size}-core-release-trace-execute", [outputs["core", "release"]], environment, True)
+            if "old" in args.roles:
+                trace["oracle_build"] = runner.run(f"{size}-old-release-trace-oracle", commands["old", "release"], environment, True)
+                trace["oracle_execution"] = runner.run(f"{size}-old-release-trace-execute", [outputs["old", "release"]], environment, True)
+                compare(size, "release", "traced-fresh-edit", trace["oracle_execution"], trace["execution"])
             unit = edited_unit(trace, project.edited_module)
             row["edited_unit_trace"] = trace
             if unit:
@@ -269,6 +305,17 @@ def main():
         command = build_command(compilers["core"], "core", project, args.work / "parallel-out",
                                 args.work / "parallel-cache", "release", args.core_extra)
         receipt = runner.run("192k-core-release-cold-parallel", command, parallel)
+        receipt["execution"] = runner.run("parallel-core-cold-execute", [args.work / "parallel-out"], environment, True)
+        oracle = next((row["roles"]["old"]["release"]["cold_execution"]
+                       for row in summary["rows"] if row["modules"] == args.parallel_size and "old" in row["roles"]), None)
+        if oracle is None:
+            output = args.work / "parallel-old-oracle"
+            old_command = build_command(compilers["old"], "old", project, output,
+                                        args.work / "parallel-old-cache", "release", args.core_extra)
+            receipt["oracle_build"] = runner.run("parallel-old-cold-oracle", old_command, environment, True)
+            oracle = runner.run("parallel-old-cold-execute", [output], environment, True)
+        receipt["oracle_execution"] = oracle
+        compare(args.parallel_size, "release", "parallel-cold", oracle, receipt["execution"])
         receipt.update(modules=args.parallel_size, workers=args.parallel_workers,
                        affinity=sorted(os.sched_getaffinity(0)))
         summary["parallel"].append(receipt)

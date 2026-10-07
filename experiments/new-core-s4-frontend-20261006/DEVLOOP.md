@@ -6,6 +6,13 @@ edit. Each role/mode has its own fresh semantic/object/link cache. It retains
 the compiler hashes, source commit, exact commands, per-command logs, edit hashes,
 machine reports, process traces and gate decisions in `summary.json`.
 
+Cold, unchanged and every edited output executable also runs on CPU 10, with
+its own command log and output hashes. Old/new exit status, stdout and stderr
+must match in each mode. These execution durations are separate from build
+timings. The traced fresh edit receives its own old-core build/run oracle, and
+the parallel cold output is checked against the old cold output at the same
+size. A run selecting only one compiler role is an unqualified tool smoke.
+
 Build both compiler hosts in the same explicitly recorded mode, normally
 ReleaseFast. Debug/release below select the guest's optimization mode. The old
 Wave-0 ReleaseFast pin is
