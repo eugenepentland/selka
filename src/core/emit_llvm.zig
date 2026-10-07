@@ -335,10 +335,12 @@ const ModuleState = struct {
         const returns = try self.llvmType(function.signature.ret);
         try self.externs.print(self.allocator, "declare {s}{s}{s} @{s}(", .{ if (emit_values.generated(function)) "hidden fastcc " else "", if (function.signature.ret == .bool) "zeroext " else "", returns, symbol_name });
         var first = true;
+        const source_extern = function.signature.linkage == .extern_c and c_abi.source(function.name);
         for (function.signature.params, 0..) |param, i| {
             if (function.signature.linkage == .extern_c and !c_abi.passes(param)) continue;
             const span = i < 64 and function.signature.views & (@as(u64, 1) << @intCast(i)) != 0;
-            try self.externs.print(self.allocator, "{s}{s}", .{ if (first) "" else ", ", if (span) "ptr, i64" else try self.llvmType(param) });
+            const extension = if (source_extern) c_abi.argumentExtension(param) else "";
+            try self.externs.print(self.allocator, "{s}{s}{s}{s}", .{ if (first) "" else ", ", if (span) "ptr, i64" else try self.llvmType(param), if (extension.len == 0) "" else " ", extension });
             first = false;
         }
         // The runtime's string helpers only read their arguments, so LLVM may merge and hoist calls.
@@ -2563,6 +2565,7 @@ const FunctionEmitter = struct {
             try arguments.print(self.a(), "ptr sret({s}) align 8 {s}", .{ try self.state.memoryType(ret), result_slot });
             first = false;
         }
+        const source_extern = inst.op == .call and signature.linkage == .extern_c and c_abi.source(m.functions.items[inst.a.index()].name);
         for (self.function.operands(inst.data), signature.params, 0..) |argument, param, i| {
             if (signature.linkage == .extern_c and !c_abi.passes(param)) continue;
             const separator = if (first) "" else ", ";
@@ -2582,6 +2585,11 @@ const FunctionEmitter = struct {
             }
             if (!external and m.passedInMemory(param)) {
                 try arguments.print(self.a(), "{s}ptr {s}", .{ separator, try self.value(argument) });
+                continue;
+            }
+            const extension = if (source_extern) c_abi.argumentExtension(param) else "";
+            if (extension.len != 0) {
+                try arguments.print(self.a(), "{s}{s} {s} {s}", .{ separator, try self.ty(self.typeOf(argument)), extension, try self.value(argument) });
                 continue;
             }
             try arguments.print(self.a(), "{s}{s}", .{ separator, try self.typedValue(argument) });

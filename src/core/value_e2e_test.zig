@@ -27,6 +27,8 @@ fn runFixture(arena: std.mem.Allocator, root: []const u8, name: []const u8, mode
     const cache = try std.fmt.allocPrint(arena, "{s}/cache-{s}", .{ root, if (mode == .old) "old" else "new" });
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(arena, &.{ if (mode == .old) options.old_path else options.core_path, "build", source, "-o", output, "--link", options.clock_path, "--cache-dir", cache });
+    // An `extern def` fixture (`v_extern_*`) also links its C source, `test/core/NAME.c`.
+    if (std.mem.startsWith(u8, name, "v_extern_")) try argv.appendSlice(arena, &.{ "--link", try std.fmt.allocPrint(arena, "{s}/{s}.c", .{ options.fixtures, name }) });
     switch (mode) {
         .debug => {},
         .release, .old => try argv.append(arena, release_flag),
@@ -642,4 +644,20 @@ test "fixed arrays of Stream, Host and Filesystem as locals, fields, payloads an
     defer arena.deinit();
     try std.testing.expect(try matches(arena.allocator(), "v_capability_arrays", v_capability_arrays_output, 5));
     try std.testing.expectEqualStrings(v_capability_arrays_errors, try stderrOf(arena.allocator(), "v_capability_arrays", .release));
+}
+
+const v_extern_narrow_output =
+    \\-5 -300 250 65000 -70000 4000000000
+    \\7 3 7
+    \\-5 44 -300 4464
+    \\-5 -300 255 65535
+    \\195
+    \\
+;
+
+// spec-case: NEW-CORE-S5-EXTERN-ABI-1
+test "source extern calls pass i8, i16, u8, u16 and bool arguments widened as C reads them, at debug, release and verify" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_extern_narrow", v_extern_narrow_output, 0));
 }
