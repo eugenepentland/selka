@@ -74,6 +74,9 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         slot.* = try facts.analyze(arena, function, .{ .fold = !verify, .sabotage = sabotage, .mark = false });
     }
     const parameters = try parameterRanges(arena, module, first);
+    // Closed caller bounds can prove an affine callback safe only after the
+    // all-call parameter pass. Deliberately corrupted facts cannot prove safety.
+    if (sabotage == .none) result.counts.inlined += try inline_leaves.withParameters(arena, module, parameters);
     for (module.functions.items, result.known, result.plans, parameters) |*function, *slot, *plan, params| {
         if (function.signature.linkage != .internal) continue;
         const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage, .params = params };

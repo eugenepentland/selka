@@ -56,4 +56,17 @@ test "two constant callback targets become direct branches and unswitch the inne
     try std.testing.expect(std.mem.indexOf(u8, after, "call_indirect") == null);
     try std.testing.expect(std.mem.indexOf(u8, after, "call i64 first") == null);
     try std.testing.expect(std.mem.indexOf(u8, after, "call i64 second") == null);
+    try std.testing.expect(std.mem.indexOf(u8, after, "mul.proven i64") != null);
+}
+
+// spec-case: NEW-CORE-S2-IR-1
+test "an escaped callback caller keeps unproved arithmetic as real source callees" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const entry = try std.mem.replaceOwned(u8, a, choice, "total(4, 7)", "apply(total, 4, 7)");
+    const source = try std.mem.concat(a, u8, &.{ entry, "\ndef apply(f: def(int, int) -> int, n: int, seed: int) -> int:\n    return f(n, seed)\n" });
+    const text = try support.optimizedText(a, source);
+    try std.testing.expect(std.mem.indexOf(u8, text, "call i64 first") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "call i64 second") != null);
 }

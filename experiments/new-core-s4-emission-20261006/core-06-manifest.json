@@ -1,0 +1,19 @@
+{
+  "qualified": false,
+  "source_commit": "13cfae9833228460191d788883c78cefb9525e28",
+  "command": [
+    "zig",
+    "build",
+    "test-core",
+    "-Dcore-shards=64",
+    "--summary",
+    "all"
+  ],
+  "seconds": 178.54,
+  "passed": 291,
+  "failed": 1,
+  "total": 292,
+  "reason": "callback affine leaf safety needs the existing closed-caller parameter bounds",
+  "max_unit_rss_bytes": 268435456.0,
+  "source_ir_changed": false
+}

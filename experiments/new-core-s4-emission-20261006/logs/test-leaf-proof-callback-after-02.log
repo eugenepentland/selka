@@ -1,0 +1,17 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 55s (all 3 build slot(s) busy)
+test-core
++- run test w
+guardian/test: 2 test(s) selected
+guardian/test: test wall 0.02s
+guardian/test: PASS — 2 passed
+guardian/test: RESULT {"passed":2,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/ce1ba48109438770fd88d76430366013/test --cache-dir=./.zig-cache --seed=0x9d3f8d3a --listen=-
+
+Build Summary: 5/5 steps succeeded; 2/2 tests passed
+test-core success
++- run test 2 pass (2 total) 106ms MaxRSS:16M
+   +- compile test debug native success 11s MaxRSS:306M
+      +- options cached
+         +- compile exe mylang-core debug native cached 46ms MaxRSS:41M
+

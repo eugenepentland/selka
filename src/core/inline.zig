@@ -19,6 +19,12 @@ pub const Error = std.mem.Allocator.Error;
 
 /// Inline every qualifying call in `module`'s internal functions; returns how many.
 pub fn inlineLeaves(arena: std.mem.Allocator, module: *ir.Module) Error!u32 {
+    return withParameters(arena, module, &.{});
+}
+
+/// Revisit checked leaves with sound caller parameter intervals, retaining every
+/// unproved callee frame. This only copies single-block leaves, never CFG helpers.
+pub fn withParameters(arena: std.mem.Allocator, module: *ir.Module, parameters: []const []const ?facts.Interval) Error!u32 {
     var count: u32 = 0;
     for (module.functions.items, 0..) |*caller, index| {
         if (caller.signature.linkage != .internal) continue;
@@ -34,7 +40,7 @@ pub fn inlineLeaves(arena: std.mem.Allocator, module: *ir.Module) Error!u32 {
                 const callee = &module.functions.items[call.a.index()];
                 const result = leaf(callee) orelse continue;
                 if (proof.needsProof(callee)) {
-                    if (known == null) known = try facts.analyze(arena, caller, .{ .fold = false, .mark = false });
+                    if (known == null) known = try facts.analyze(arena, caller, .{ .fold = false, .mark = false, .params = if (index < parameters.len) parameters[index] else &.{} });
                     if (!try proof.trapFree(arena, caller, call, callee, known.?)) continue;
                 }
                 const cloned = try splice(arena, caller, callee, .{ .block = block, .at = at, .call = ref, .result = result });

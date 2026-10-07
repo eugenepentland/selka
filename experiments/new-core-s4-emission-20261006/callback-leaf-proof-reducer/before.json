@@ -1,0 +1,13 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-proof-range/bin/mylang-core",
+    "dump-ir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/callback-leaf-proof-reducer/choice.my",
+    "--facts"
+  ],
+  "status": 0,
+  "source_commit": "13cfae9833228460191d788883c78cefb9525e28",
+  "compiler_sha256": "2190eb6d250c26b3e1e369320c3ba3dbfba19f1fd3b5706178f6afacd466aba5",
+  "first_call_retained": true,
+  "second_call_retained": true
+}
