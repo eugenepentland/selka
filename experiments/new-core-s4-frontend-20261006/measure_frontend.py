@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import json
 import os
+import random
 from pathlib import Path
 import shlex
 import shutil
@@ -62,6 +63,7 @@ def main():
     parser.add_argument("--work", type=Path, required=True)
     parser.add_argument("--sizes", nargs="+", type=int, default=[120, 1200, 2400, 4800])
     parser.add_argument("--rounds", type=int, default=3)
+    parser.add_argument("--counterbalance", action="store_true")
     args = parser.parse_args()
     args.core, args.old = args.core.resolve(), args.old.resolve()
     args.evidence, args.work = args.evidence.resolve(), args.work.resolve()
@@ -73,7 +75,7 @@ def main():
         "compiler_mode": "ReleaseFast",
         "core": {"path": str(args.core), "sha256": digest(args.core)},
         "old": {"path": str(args.old), "sha256": digest(args.old)},
-        "cpu": 10, "edit_rounds": args.rounds, "rows": [],
+        "cpu": 10, "edit_rounds": args.rounds, "counterbalanced": args.counterbalance, "rows": [],
     }
     for size in args.sizes:
         project = args.work / f"synthetic-{size}"
@@ -115,13 +117,26 @@ def main():
             text = text.replace(needle, f"out.append((j * {multiplier}) % 101)")
             file.write_text(text)
             row.setdefault("edit_versions", []).append({"function": f"m{edited}_build", "multiplier": multiplier, "sha256": digest(file)})
-            for role in ("old", "validation", "typed"):
+            order = ("old", "validation", "typed")
+            if args.counterbalance:
+                offset = round_index % len(order)
+                order = order[offset:] + order[:offset]
+            row.setdefault("edit_role_order", []).append(list(order))
+            for role in order:
                 item = runner.run(f"{size}-{role}-edited", commands[role], True)
                 row["roles"][role]["edits"].append(item)
         for data in row["roles"].values():
             data["edited_seconds"] = statistics.median(item["seconds"] for item in data["edits"])
         row["validation_at_or_below_old"] = row["roles"]["validation"]["edited_seconds"] <= row["roles"]["old"]["edited_seconds"]
         row["edited_96k_gate"] = size != 2400 or row["roles"]["validation"]["edited_seconds"] <= 0.45
+        old_edits = row["roles"]["old"]["edits"]
+        new_edits = row["roles"]["validation"]["edits"]
+        paired = [new["seconds"] - old["seconds"] for old, new in zip(old_edits, new_edits)]
+        rng = random.Random(44000 + size)
+        bootstrap = sorted(statistics.median(rng.choices(paired, k=len(paired))) for _ in range(10000))
+        row["paired_validation_minus_old"] = {"samples": paired,
+            "median": statistics.median(paired), "stdev": statistics.stdev(paired) if len(paired) > 1 else 0,
+            "median_bootstrap_95_percent": [bootstrap[250], bootstrap[9749]]}
         summary["rows"].append(row)
         (args.evidence / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
         print(json.dumps({"lines": row["lines"], **{role: {name: round(data[name], 6) for name in ("cold_seconds", "warm_seconds", "edited_seconds")} for role, data in row["roles"].items()}, "gate": row["validation_at_or_below_old"] and row["edited_96k_gate"]}), flush=True)
