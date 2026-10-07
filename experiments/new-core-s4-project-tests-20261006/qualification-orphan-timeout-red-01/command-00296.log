@@ -1,0 +1,5 @@
+$ python3 -c 'from pathlib import Path; import json,os; a=Path("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-orphan-timeout-red-01"); s=json.loads((a/"summary.json").read_text()); alive=[]; [(alive.append(pid) if Path(f"/proc/{pid}").exists() else None) for pid in s["fixture_pids"].values()]; s["remaining_fixture_pids"]=alive; s["captured_partial_stdout_hex"]=(a/"inner-timeout.stdout").read_bytes().hex(); (a/"summary.json").write_text(json.dumps(s,indent=2)+"\n"); print("partial stdout",s["captured_partial_stdout_hex"],"remaining",alive); assert not alive'
+partial stdout 6f727068616e2d7061727469616cff0a remaining []
+
+exit=0
+elapsed_seconds=0.022329

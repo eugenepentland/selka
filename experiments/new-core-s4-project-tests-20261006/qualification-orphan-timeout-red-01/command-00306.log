@@ -1,0 +1,4 @@
+$ python3 -c 'from pathlib import Path; p=Path("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-orphan-timeout-red-01/reconstruct.py"); p.with_name("reconstruct.attempt01.py.txt").write_bytes(p.read_bytes()); t=p.read_text().replace("source = source[:start] + \"\\n\" + source[end:]", "source = source[:start] + source[end:]"); t=t.replace("source = source[:source.index(\x27\\n\\nif __name__ == \"__main__\":\x27)] + \"\\n\"", "source = source[:source.index(\x27\\n\\nif __name__ == \"__main__\":\x27)].rstrip(\"\\n\") + \"\\n\""); p.write_text(t)'
+
+exit=0
+elapsed_seconds=0.018285
