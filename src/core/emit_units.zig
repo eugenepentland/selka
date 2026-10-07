@@ -4,8 +4,6 @@ const ir = @import("ir.zig");
 const llvm = @import("emit_llvm.zig");
 const values = @import("emit_values.zig");
 const constants = @import("emit_constants.zig");
-const imports = @import("emit_imports.zig");
-const clone_policy = @import("emit_clone_policy.zig");
 const number_runtime = @import("number_runtime.zig");
 
 /// Native input suffix shared by the driver and ordered test-program identity.
@@ -21,17 +19,27 @@ pub const Unit = struct {
     math: bool,
 };
 
-/// Source modules, instantiated functions, compiler adapters and the C entry.
-pub const Kind = enum { module, generic, helper, entry };
+/// Source modules, instantiated functions, compiler adapters, the C entry, and the
+/// one whole-program unit of a release build (S4-1a).
+pub const Kind = enum { module, generic, helper, entry, program };
 
 const Group = struct {
     path: []const u8,
     kind: Kind,
     functions: std.ArrayList(u32) = .empty,
-    imports: []const u32 = &.{},
 };
 
+/// A release build's single unit: the whole program, so LLVM optimizes across every
+/// module boundary. Like any unit it is keyed by its exact text.
+pub fn whole(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Options) llvm.Error![]Unit {
+    const text = try llvm.emitModule(a, module, options);
+    const units = try a.alloc(Unit, 1);
+    units[0] = unit("program", options.source_path, .program, text);
+    return units;
+}
+
 /// Partition the frozen IR, then emit each unit with only its reached constants.
+/// Debug builds use this: an edit recompiles only the units whose text changed.
 pub fn emit(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Options) llvm.Error![]Unit {
     var groups: std.ArrayList(Group) = .empty;
     const owner = try a.alloc(?u32, module.functions.items.len);
@@ -69,13 +77,6 @@ pub fn emit(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Option
         }
     }
     exported[module.entry] = true;
-    const entry_imports = if (options.analysis.facts.len != 0) try imports.entry(a, module, owner) else &.{};
-    const entry_private = try clone_policy.privateBodies(a, module, entry_imports);
-    exportImports(module, owner, exported, entry_imports);
-    if (options.analysis.facts.len != 0) for (groups.items, 0..) |*group, index| {
-        group.imports = try imports.select(a, module, owner, group.functions.items, @intCast(index));
-        exportImports(module, owner, exported, group.imports);
-    };
     const catalog = try constants.Catalog.init(a, module);
     // Hash an adapter's complete closed text with a fixed self-name. Neither an IR
     // type ID nor the eventual hash can enter this seed, including recursively.
@@ -86,7 +87,6 @@ pub fn emit(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Option
         symbols[index] = "myl.helper.self";
         const seed = try llvm.emitUnit(a, module, options, .{
             .functions = group.functions.items,
-            .imports = .{ .functions = group.imports },
             .exported = exported,
             .symbols = symbols,
             .source_path = group.path,
@@ -100,7 +100,6 @@ pub fn emit(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Option
     for (groups.items) |group| {
         const text = try llvm.emitUnit(a, module, options, .{
             .functions = group.functions.items,
-            .imports = .{ .functions = group.imports },
             .exported = exported,
             .symbols = symbols,
             .source_path = group.path,
@@ -111,7 +110,6 @@ pub fn emit(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Option
     }
     const entry = try llvm.emitUnit(a, module, options, .{
         .functions = &.{},
-        .imports = .{ .functions = entry_imports, .private_functions = entry_private },
         .exported = exported,
         .symbols = symbols,
         .entry = true,
@@ -120,21 +118,6 @@ pub fn emit(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Option
     });
     try units.append(a, unit("entry", options.source_path, .entry, entry));
     return units.toOwnedSlice(a);
-}
-
-fn exportImports(module: *const ir.Module, owner: []const ?u32, exported: []bool, selected: []const u32) void {
-    for (selected) |imported| {
-        exported[imported] = true;
-        // Imported bodies may retain a call or stored reference to a private owner.
-        for (module.functions.items[imported].insts.items) |inst| {
-            const target: usize = switch (inst.op) {
-                .call => inst.a.index(),
-                .func_ref => @intCast(inst.data),
-                else => continue,
-            };
-            if (owner[target] != null) exported[target] = true;
-        }
-    }
 }
 
 fn append(a: std.mem.Allocator, units: *std.ArrayList(Unit), names: *std.StringHashMapUnmanaged(usize), next: Unit) llvm.Error!void {

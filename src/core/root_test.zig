@@ -6,6 +6,7 @@ comptime {
     _ = @import("emit_llvm_test.zig");
     _ = @import("emit_units_test.zig");
     _ = @import("inline_origins_test.zig");
+    _ = @import("driver.zig");
     _ = @import("driver_test.zig");
     _ = @import("pipeline_emission_test.zig");
     _ = @import("driver_native_cache_test.zig");

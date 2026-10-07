@@ -1,8 +1,8 @@
 //! Turn emitted LLVM IR into an executable with the bundled clang (`zig cc`).
 //!
-//! The runtime is compiled once per content into the work directory at -O2,
-//! whatever the program's level, so a debug build pays only for the program's
-//! own code. The program's `.ll` is compiled at -O0 (debug) or -O3 for the
+//! The runtime is compiled once per content at -O2, whatever the program's level,
+//! into a per-user shared directory (`runtimeDirectory`), so a debug build pays only
+//! for the program's own code and a fresh work directory reuses the runtime. The program's `.ll` is compiled at -O0 (debug) or -O3 for the
 //! target CPU (release, L4; `target.zig`) and linked with the runtime and any `--link` C files.
 //! A minimal driver rather than the old core's `qbe_build_llvm_compile.zig`:
 //! that one is bound to the QBE manifest, fragment store and object cache.
@@ -57,7 +57,10 @@ const Guard = struct {
     }
 };
 
-const NativeCache = struct { work: []const u8, isolate: bool };
+/// Where the final native compile caches: `isolate` gives it a fresh local cache
+/// (foreign sources, unproved tools); `private_global` also a fresh global cache, so
+/// an unproved tool never writes Zig's shared libc and compiler-rt builds.
+const NativeCache = struct { work: []const u8, isolate: bool, private_global: bool };
 
 /// Compile and link `request.llvm` into `request.output`; failures append the tool's stderr to `log`.
 pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8)) Error!void {
@@ -82,7 +85,11 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
         cwd.createDirPath(io, resolved.work) catch return error.WriteFailed;
     }
     defer if (!guest.cacheable) removeDirectory(io, resolved.work);
-    const runtime_object = try runtimeObject(allocator, io, &environment, resolved, log, guard);
+    // Content-keyed runtime objects are shared, so a fresh work directory does not
+    // recompile the runtime; an unproved tool keeps them private to this build.
+    var shared = resolved;
+    if (guest.cacheable) shared.work = try runtimeDirectory(allocator, io, environ, resolved.work);
+    const runtime_object = try runtimeObject(allocator, io, &environment, shared, log, guard);
     const staging = try programDirectory(allocator, io, resolved.work);
     var retain_program = false;
     defer if (!retain_program) removeDirectory(io, staging);
@@ -95,12 +102,12 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     try argv.append(allocator, runtime_object);
     if (dependencies.number) {
         var numeric = resolved;
-        numeric.work = try std.fs.path.join(allocator, &.{ resolved.work, try std.fmt.allocPrint(allocator, "number-tool-v2-{s}", .{std.fmt.bytesToHex(guest.digest, .lower)}) });
+        numeric.work = try std.fs.path.join(allocator, &.{ shared.work, try std.fmt.allocPrint(allocator, "number-tool-v2-{s}", .{std.fmt.bytesToHex(guest.digest, .lower)}) });
         try argv.append(allocator, try number_runtime.object(allocator, io, &environment, numeric, log, guard));
     }
     try argv.appendSlice(allocator, request.links);
     if (dependencies.math) try argv.append(allocator, "-lm");
-    try linkNative(allocator, io, &environment, .{ .work = resolved.work, .isolate = request.links.len != 0 or !guest.cacheable }, argv.items, log);
+    try linkNative(allocator, io, &environment, .{ .work = resolved.work, .isolate = request.links.len != 0 or !guest.cacheable, .private_global = !guest.cacheable }, argv.items, log);
     try guard.check(log);
     // Successful proved-tool inputs remain available as native build witnesses.
     // Failure and unproved-tool paths retire only this invocation's staging.
@@ -108,6 +115,30 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
 }
 
 const Dependencies = struct { number: bool = false, math: bool = false };
+
+/// The directory for content-keyed runtime objects: `MYLANG_CORE_RUNTIME_CACHE`, else
+/// `$XDG_CACHE_HOME/mylang/core-runtime`, else `$HOME/.cache/mylang/core-runtime`, so
+/// a new project or a test's temporary directory reuses a runtime another build
+/// compiled. An empty `MYLANG_CORE_RUNTIME_CACHE`, no usable variable, or a directory
+/// that cannot be created keeps the objects in `work`.
+pub fn runtimeDirectory(allocator: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, work: []const u8) Error![]const u8 {
+    const directory = (try sharedRuntimeDirectory(allocator, environ)) orelse return work;
+    std.Io.Dir.cwd().createDirPath(io, directory) catch return work;
+    return directory;
+}
+
+fn sharedRuntimeDirectory(allocator: std.mem.Allocator, environ: *const std.process.Environ.Map) Error!?[]const u8 {
+    if (environ.get("MYLANG_CORE_RUNTIME_CACHE")) |explicit| return if (explicit.len == 0) null else explicit;
+    const parts: []const []const u8 = if (environ.get("XDG_CACHE_HOME")) |base| (if (std.fs.path.isAbsolute(base)) &.{ base, "mylang", "core-runtime" } else &.{}) else &.{};
+    if (parts.len != 0) {
+        const directory = try std.fs.path.join(allocator, parts);
+        return directory;
+    }
+    const home = environ.get("HOME") orelse return null;
+    if (!std.fs.path.isAbsolute(home)) return null;
+    const directory = try std.fs.path.join(allocator, &.{ home, ".cache", "mylang", "core-runtime" });
+    return directory;
+}
 
 fn programDirectory(allocator: std.mem.Allocator, io: std.Io, work: []const u8) Error![]const u8 {
     var nonce: [16]u8 = undefined;
@@ -139,8 +170,10 @@ fn programArguments(allocator: std.mem.Allocator, io: std.Io, request: Request, 
 fn linkNative(allocator: std.mem.Allocator, io: std.Io, environment: *const std.process.Environ.Map, cache: NativeCache, argv: []const []const u8, log: *std.ArrayList(u8)) Error!void {
     if (!cache.isolate) return run(allocator, io, environment, argv, log);
     // Zig's foreign-source cache can miss same-size header edits with restored
-    // mtimes. Unproved inputs get fresh caches; the captured Guard environment
-    // stays unchanged, and closed runtime/numeric objects keep their own keys.
+    // mtimes, so foreign sources and unproved tools compile in a fresh local cache.
+    // The global cache holds only Zig's own libc and compiler-rt builds, which no
+    // program input reaches; a fresh one rebuilds them, about 6 s per build, so only
+    // an unproved tool gets one.
     var linking = environment.clone(allocator) catch return error.OutOfMemory;
     defer linking.deinit();
     var nonce: [16]u8 = undefined;
@@ -149,7 +182,7 @@ fn linkNative(allocator: std.mem.Allocator, io: std.Io, environment: *const std.
     std.Io.Dir.cwd().createDirPath(io, private) catch return error.WriteFailed;
     defer removeDirectory(io, private);
     linking.put("ZIG_LOCAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ private, "local" })) catch return error.OutOfMemory;
-    linking.put("ZIG_GLOBAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ private, "global" })) catch return error.OutOfMemory;
+    if (cache.private_global) linking.put("ZIG_GLOBAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ private, "global" })) catch return error.OutOfMemory;
     try run(allocator, io, &linking, argv, log);
 }
 

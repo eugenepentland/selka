@@ -150,17 +150,22 @@ pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, opt
         .verify = verify and options.release,
         .target = targetFor(options.show),
     };
-    const units = emit_units.emit(allocator, module, emission) catch |err| switch (err) {
+    // S4-1a: a release build is one unit, so LLVM optimizes across every module
+    // boundary; a debug build is one unit per module, so an edit recompiles one unit.
+    const split = if (options.release) emit_units.whole(allocator, module, emission) else emit_units.emit(allocator, module, emission);
+    const units = split catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => {
             try report.print(allocator, "error[E_CORE_UNSUPPORTED]: LLVM emission failed: {s}\n", .{@errorName(err)});
             return error.Unsupported;
         },
     };
-    const whole = if (options.show.llvm != null) emit_llvm.emitModule(allocator, module, emission) catch |err| switch (err) {
+    if (options.show.llvm == null) return .{ .units = units };
+    if (options.release) return .{ .units = units, .whole = units[0].llvm };
+    const whole = emit_llvm.emitModule(allocator, module, emission) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.Unsupported,
-    } else null;
+    };
     return .{ .units = units, .whole = whole };
 }
 

@@ -195,12 +195,6 @@ pub fn emitModule(allocator: std.mem.Allocator, module: *const ir.Module, option
     return render(allocator, module, options, null);
 }
 
-/// Reached bodies and the subset safe to copy privately in the C entry unit.
-pub const Imports = struct {
-    functions: []const u32 = &.{},
-    private_functions: []const u32 = &.{},
-};
-
 /// Functions and cross-unit ABI decisions for one independent LLVM module.
 pub const Selection = struct {
     functions: []const u32,
@@ -209,7 +203,6 @@ pub const Selection = struct {
     entry: bool = false,
     source_path: []const u8,
     constants: *const emit_constants.Catalog,
-    imports: Imports = .{},
 };
 
 /// Emit only selected functions or the entry, with on-demand dependency declarations.
@@ -222,7 +215,6 @@ fn render(allocator: std.mem.Allocator, module: *const ir.Module, options: Optio
     var body: Out = .empty;
     if (selection) |chosen| {
         for (chosen.functions) |index| try renderFunction(&state, &body, index);
-        for (chosen.imports.functions) |index| try renderFunction(&state, &body, index);
     } else for (module.functions.items, 0..) |_, index| try renderFunction(&state, &body, @intCast(index));
     if (selection == null or selection.?.entry) try state.emitEntry(&body);
     var out: Out = .empty;
@@ -295,34 +287,17 @@ const ModuleState = struct {
 
     fn contains(self: *ModuleState, index: u32) bool {
         const selected = self.local.selection orelse return true;
-        return std.mem.indexOfScalar(u32, selected.functions, index) != null or std.mem.indexOfScalar(u32, selected.imports.functions, index) != null;
+        return std.mem.indexOfScalar(u32, selected.functions, index) != null;
     }
 
     fn linkage(self: *ModuleState, index: u32) []const u8 {
         const selected = self.local.selection orelse return internal_linkage;
-        if (self.privateImported(index)) return internal_linkage;
-        if (self.imported(index)) return "available_externally hidden";
         return if (selected.exported[index]) "hidden" else internal_linkage;
-    }
-
-    fn imported(self: *ModuleState, index: u32) bool {
-        const selected = self.local.selection orelse return false;
-        return std.mem.indexOfScalar(u32, selected.imports.functions, index) != null;
-    }
-
-    fn privateImported(self: *ModuleState, index: u32) bool {
-        const selected = self.local.selection orelse return false;
-        return std.mem.indexOfScalar(u32, selected.imports.private_functions, index) != null;
     }
 
     fn functionName(self: *ModuleState, index: u32) []const u8 {
         if (self.local.selection) |selected| if (selected.symbols[index]) |name| return name;
         return self.module.functions.items[index].name;
-    }
-
-    fn functionSymbol(self: *ModuleState, index: u32) ![]const u8 {
-        if (self.privateImported(index)) return std.fmt.allocPrint(self.allocator, "@\"my.{s}.s4.entry.clone\"", .{self.functionName(index)});
-        return self.originalSymbol(index);
     }
 
     fn originalSymbol(self: *ModuleState, index: u32) ![]const u8 {
@@ -332,11 +307,6 @@ const ModuleState = struct {
 
     fn dependency(self: *ModuleState, index: u32) !void {
         if (self.contains(index)) return;
-        return self.originalDependency(index);
-    }
-
-    fn originalDependency(self: *ModuleState, index: u32) !void {
-        if (self.contains(index) and !self.privateImported(index)) return;
         const function = &self.module.functions.items[index];
         if (function.signature.linkage != .internal) return self.declareExtern(index);
         const name = try self.originalSymbol(index);
@@ -591,7 +561,7 @@ const ModuleState = struct {
         if (owns_args) try cleanup.appendSlice(self.allocator, "  call void @myl_core_release(ptr %args)\n");
         const release_args = cleanup.items;
         const ret = entry.signature.ret;
-        const callee = if (self.privateImported(self.module.entry)) try self.functionSymbol(self.module.entry) else try symbol(self.allocator, entry.name);
+        const callee = try symbol(self.allocator, entry.name);
         const tail = if (self.options.target.traps == .dwarf_lines) "notail " else "";
         if (ret == .void) {
             try out.print(self.allocator, "  {s}call fastcc void {s}({s}){s}\n{s}  %s = call i32 @myl_core_exit(i64 0)\n", .{ tail, callee, arguments.items, at, release_args });
@@ -876,7 +846,7 @@ const FunctionEmitter = struct {
         // Records and unions over four words cross calls in memory: by a read-only
         // pointer in, through `sret` out (docs/design/new-core-s1.md §3).
         const sret = m.passedInMemory(f.signature.ret);
-        try out.print(self.a(), "define {s} fastcc {s} {s}(", .{ self.state.linkage(self.index), if (sret) "void" else try self.ty(f.signature.ret), try self.state.functionSymbol(self.index) });
+        try out.print(self.a(), "define {s} fastcc {s} {s}(", .{ self.state.linkage(self.index), if (sret) "void" else try self.ty(f.signature.ret), try self.state.originalSymbol(self.index) });
         if (sret) try out.print(self.a(), "ptr noalias sret({s}) align 8 %ret", .{try self.state.memoryType(f.signature.ret)});
         var entry: Out = .empty;
         // A value over four words is used where the caller keeps it: the parameter is its pointer.
@@ -889,10 +859,7 @@ const FunctionEmitter = struct {
         try self.analyzeMemory(&entry);
         try self.collectBoundLengths();
         // `uwtable`: a trap walks the stack through `.eh_frame`, which needs every frame's CFI.
-        // The fixed import budgets bound expansion. Without this incentive LLVM
-        // can retain a loop call it inlines in the single-use owning module.
-        const forced = self.state.imported(self.index) and !self.state.privateImported(self.index);
-        try out.print(self.a(), ") nounwind uwtable{s}{s} {{\n", .{ if (forced) " alwaysinline" else "", try self.functionScope() });
+        try out.print(self.a(), ") nounwind uwtable{s} {{\n", .{try self.functionScope()});
         const bodies = try self.a().alloc(Out, f.blocks.items.len);
         try self.exit_labels.resize(self.a(), f.blocks.items.len);
         for (f.blocks.items, 0..) |block, b| {
@@ -2557,10 +2524,9 @@ const FunctionEmitter = struct {
         try self.trapIf(out, failed, try self.site(.fact, inst, "counted fill capacity and index"), index, cap);
     }
 
-    /// Emit a direct or indirect call under the internal aggregate ABI.
-    /// Resolve a function value to its original owner, never a private direct-call copy.
+    /// Resolve a function value to its owner's symbol, declaring it when another unit owns it.
     pub fn functionPointer(self: *FunctionEmitter, index: u32) Error![]const u8 {
-        try self.state.originalDependency(index);
+        try self.state.dependency(index);
         return self.state.originalSymbol(index);
     }
 
@@ -2623,7 +2589,7 @@ const FunctionEmitter = struct {
         const target = if (inst.op == .call_indirect)
             try self.value(inst.a)
         else
-            try self.state.functionSymbol(@intCast(inst.a.index()));
+            try self.state.originalSymbol(@intCast(inst.a.index()));
         // A trap's DWARF caller chain must survive a call in return position.
         const tail = if (program and self.state.options.target.traps == .dwarf_lines) "notail " else "";
         if (ret == .void or sret) {
