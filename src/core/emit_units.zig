@@ -4,6 +4,7 @@ const ir = @import("ir.zig");
 const llvm = @import("emit_llvm.zig");
 const values = @import("emit_values.zig");
 const constants = @import("emit_constants.zig");
+const imports = @import("emit_imports.zig");
 const number_runtime = @import("number_runtime.zig");
 
 /// One object input and its link dependencies, independent of other units' contents.
@@ -23,6 +24,7 @@ const Group = struct {
     path: []const u8,
     kind: Kind,
     functions: std.ArrayList(u32) = .empty,
+    imports: []const u32 = &.{},
 };
 
 /// Partition the frozen IR, then emit each unit with only its reached constants.
@@ -63,6 +65,22 @@ pub fn emit(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Option
         }
     }
     exported[module.entry] = true;
+    if (options.facts.len != 0) for (groups.items, 0..) |*group, index| {
+        group.imports = try imports.select(a, module, owner, group.functions.items, @intCast(index));
+        for (group.imports) |imported| {
+            exported[imported] = true;
+            // An imported body can keep an out-of-line reference to a private
+            // function in its source unit, including a stored function value.
+            for (module.functions.items[imported].insts.items) |inst| {
+                const target: usize = switch (inst.op) {
+                    .call => inst.a.index(),
+                    .func_ref => @intCast(inst.data),
+                    else => continue,
+                };
+                if (owner[target] != null) exported[target] = true;
+            }
+        }
+    };
     const catalog = try constants.Catalog.init(a, module);
     // Hash an adapter's complete closed text with a fixed self-name. Neither an IR
     // type ID nor the eventual hash can enter this seed, including recursively.
@@ -71,14 +89,14 @@ pub fn emit(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Option
         const index = group.functions.items[0];
         if (!values.generated(&module.functions.items[index])) continue;
         symbols[index] = "myl.helper.self";
-        const seed = try llvm.emitUnit(a, module, options, .{ .functions = group.functions.items, .exported = exported, .symbols = symbols, .source_path = group.path, .constants = &catalog });
+        const seed = try llvm.emitUnit(a, module, options, .{ .functions = group.functions.items, .imports = group.imports, .exported = exported, .symbols = symbols, .source_path = group.path, .constants = &catalog });
         symbols[index] = try std.fmt.allocPrint(a, "myl.helper.{s}", .{try digest(a, seed)});
     }
     var units: std.ArrayList(Unit) = .empty;
     var names: std.StringHashMapUnmanaged(usize) = .empty;
     defer names.deinit(a);
     for (groups.items) |group| {
-        const text = try llvm.emitUnit(a, module, options, .{ .functions = group.functions.items, .exported = exported, .symbols = symbols, .source_path = group.path, .constants = &catalog });
+        const text = try llvm.emitUnit(a, module, options, .{ .functions = group.functions.items, .imports = group.imports, .exported = exported, .symbols = symbols, .source_path = group.path, .constants = &catalog });
         const name = if (group.kind == .module) try std.fmt.allocPrint(a, "module-{s}", .{try digest(a, group.path)}) else try std.fmt.allocPrint(a, "{s}-{s}", .{ @tagName(group.kind), try digest(a, text) });
         try append(a, &units, &names, unit(name, group.path, group.kind, text));
     }

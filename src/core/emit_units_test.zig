@@ -299,3 +299,84 @@ test "S4 direct and indirect cross-unit fastcc calls preserve the aggregate sret
     try std.testing.expectEqualStrings("8 6\n", result.stdout);
     try std.testing.expectEqualStrings("", result.stderr);
 }
+
+// spec-case: NEW-CORE-S4-UNITS-1
+test "S4 release imports counted and conditional loop callees without cold-call or entry ripple" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const caller =
+        \\module app
+        \\import leaf
+        \\def main(out: Stream) -> int:
+        \\    total = leaf.cold(2)
+        \\    for i in range(3):
+        \\        total += leaf.compute(i)
+        \\    j = 0
+        \\    while j < 2:
+        \\        total += leaf.compute(2)
+        \\        j += 1
+        \\    out.print(total)
+        \\    return 0
+    ;
+    const source = leaf ++ "\npublic def cold(x: int) -> int:\n    if x > 0:\n        return x\n    return 0\n";
+    const first = try snapshot(a, .{ caller, source, other }, true);
+    const body = try textOf(first, "app.my");
+    try std.testing.expect(std.mem.indexOf(u8, body, "define available_externally hidden fastcc i64 @\"my.leaf::compute\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "define available_externally hidden fastcc i64 @\"my.leaf::cold\"") == null);
+    try changed(first, try snapshot(a, .{ caller, source, other }, true), &.{});
+    const hot = try std.mem.replaceOwned(u8, a, source, "total += i", "total += i * 2");
+    try changed(first, try snapshot(a, .{ caller, hot, other }, true), &.{ "app.my", "leaf.my" });
+    const cold = try std.mem.replaceOwned(u8, a, source, "return x\n", "return x + 1\n");
+    try changed(first, try snapshot(a, .{ caller, cold, other }, true), &.{"leaf.my"});
+    const debug = try snapshot(a, .{ caller, source, other }, false);
+    try std.testing.expect(std.mem.indexOf(u8, try textOf(debug, "app.my"), "available_externally") == null);
+    try changed(debug, try snapshot(a, .{ caller, hot, other }, false), &.{"leaf.my"});
+}
+
+// spec-case: NEW-CORE-S4-UNITS-1
+test "S4 imported aggregate bodies close rendering dependencies and export excluded private callees" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const caller =
+        \\module app
+        \\import leaf
+        \\def main(out: Stream) -> int:
+        \\    total = 0
+        \\    for i in range(3):
+        \\        value = leaf.compute(i)
+        \\        total += value.a + value.f
+        \\    out.print(total)
+        \\    return 0
+    ;
+    var source: std.ArrayList(u8) = .empty;
+    try source.appendSlice(a, "module leaf\npublic record Big:\n    a: int\n    b: int\n    c: int\n    d: int\n    e: int\n    f: int\n");
+    try source.appendSlice(a, "public def compute(x: int) -> Big:\n    return Big(callee(x), 2, 3, 4, 5, len(f\"{[1.25]}\"))\ndef callee(x: int) -> int:\n");
+    for (0..40) |index| try source.print(a, "    if x == -{d}:\n        return 0\n", .{index + 1});
+    try source.appendSlice(a, "    return x + 1\n");
+    const emitted = try snapshot(a, .{ caller, source.items, other }, true);
+    const body = try textOf(emitted, "app.my");
+    try std.testing.expect(std.mem.indexOf(u8, body, "define available_externally hidden fastcc void @\"my.leaf::compute\"(ptr noalias sret([48 x i8])") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "define available_externally hidden fastcc i64 @\"my.leaf::callee\"") == null);
+    try std.testing.expect(std.mem.indexOf(u8, try textOf(emitted, "leaf.my"), "define hidden fastcc i64 @\"my.leaf::callee\"") != null);
+    const result = try native(a, emitted);
+    try std.testing.expect(result.term == .exited and result.term.exited == 0);
+    try std.testing.expectEqualStrings("24\n", result.stdout);
+    try std.testing.expectEqualStrings("", result.stderr);
+}
+
+// spec-case: NEW-CORE-S4-SITES-1
+test "S4 an imported Result origin retains its callee path and function inside a counted loop" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const caller = "module app\nimport leaf\ndef main() -> Result[int, str]:\n" ++
+        "    for i in range(2):\n        value = leaf.origin(i)?\n        assert value >= 0\n    return Ok(0)\n";
+    const failing = "module leaf\npublic def origin(x: int) -> Result[int, str]:\n    return Err(\"loop failure\")\n";
+    const emitted = try snapshot(a, .{ caller, failing, other }, true);
+    try std.testing.expect(std.mem.indexOf(u8, try textOf(emitted, "app.my"), "define available_externally hidden fastcc") != null);
+    const result = try native(a, emitted);
+    try std.testing.expect(result.term == .exited and result.term.exited == 1);
+    try std.testing.expectEqualStrings("error: loop failure\n  leaf.my:3:12  leaf::origin  Err(...) created\n  app.my:5:17   app::main     ? propagated\n", result.stderr);
+}

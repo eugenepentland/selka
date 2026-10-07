@@ -1,0 +1,104 @@
+test-core
++- run test 12 pass, 1 fail (13 total)
+guardian/test: SLOW  9.85s  emit_units_test.test.S4 an imported Result origin retains its callee path and function inside a counted loop
+guardian/test: test wall 144.12s; slowest over 50ms:
+guardian/test:   47.97s  emit_units_test.test.S4 Result origins distinguish specializations sharing one declaration and body span
+guardian/test:   23.43s  emit_units_test.test.S4 an inlined cross-module Result origin retains its source function
+guardian/test:   17.23s  emit_units_test.test.S4 a float renderer outside entry carries the formatter link dependency on its helper unit
+guardian/test:   12.32s  emit_units_test.test.S4 identical record renderers in separate modules share one native helper unit
+guardian/test:   11.79s  emit_units_test.test.S4 native cross-unit traps carry their source path and callers through all compile units
+guardian/test:   10.80s  emit_units_test.test.S4 direct and indirect cross-unit fastcc calls preserve the aggregate sret ABI
+guardian/test:   9.85s  emit_units_test.test.S4 an imported Result origin retains its callee path and function inside a counted loop
+guardian/test:   9.54s  emit_units_test.test.S4 a release tail-position cross-unit trap retains its caller frame
+guardian/test:   0.95s  emit_units_test.test.S4 imported aggregate bodies close rendering dependencies and export excluded private callees
+guardian/test:   0.10s  emit_units_test.test.S4 release imports counted and conditional loop callees without cold-call or entry ripple
+guardian/test: FAIL — 1 failed of 13
+guardian/test: RESULT {"passed":12,"failed":1,"skipped":0}
+error: 'emit_units_test.test.S4 imported aggregate bodies close rendering dependencies and export excluded private callees' failed:
+       guardian/test: 13 test(s) selected
+       guardian/test: SLOW  11.79s  emit_units_test.test.S4 native cross-unit traps carry their source path and callers through all compile units
+       guardian/test: SLOW  9.54s  emit_units_test.test.S4 a release tail-position cross-unit trap retains its caller frame
+       guardian/test: SLOW  23.43s  emit_units_test.test.S4 an inlined cross-module Result origin retains its source function
+       guardian/test: SLOW  47.97s  emit_units_test.test.S4 Result origins distinguish specializations sharing one declaration and body span
+       guardian/test: SLOW  17.23s  emit_units_test.test.S4 a float renderer outside entry carries the formatter link dependency on its helper unit
+       guardian/test: SLOW  12.32s  emit_units_test.test.S4 identical record renderers in separate modules share one native helper unit
+       guardian/test: SLOW  10.80s  emit_units_test.test.S4 direct and indirect cross-unit fastcc calls preserve the aggregate sret ABI
+       unit fixture: leaf.my:10:16: error[E_EXPRESSION]: expected an expression
+             return Big(private(x), 2, 3, 4, 5, len(f"{[1.25]}"))
+                        ^
+       
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/diagnostic.zig:189:9: 0x1e861fb in fail (compiler.zig)
+               return error.SourceError;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/parser.zig:229:9: 0x216b566 in pythonExpressionFailure (compiler.zig)
+               return self.sink.fail(expression_code, token.span, expected_expression);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/parser.zig:1801:21: 0x2153f0d in expression (compiler.zig)
+                   else => return self.pythonExpressionFailure(token),
+                           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/parser.zig:372:36: 0x215c8a9 in argumentValue (compiler.zig)
+               if (!self.atMutArgument()) return self.expression(0);
+                                          ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/parser.zig:2481:45: 0x215b7dd in callArguments (compiler.zig)
+                   try values.append(self.storage, try self.argumentValue());
+                                                   ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/parser.zig:2583:31: 0x2162479 in parseLeaf (compiler.zig)
+                   const arguments = try self.callArguments();
+                                     ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/parser.zig:1778:62: 0x21538fe in expression (compiler.zig)
+                   .integer, .bytes, .ident, .kw_true, .kw_false => try self.parseLeaf(token),
+                                                                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/parser.zig:1500:129: 0x212ce2c in statement (compiler.zig)
+                       break :ret .{ .ret = if (empty) try self.append(.{ .span = first.span, .data = .unit }) else try self.bareTuple(try self.expression(0)) };
+                                                                                                                                       ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/parser.zig:1397:49: 0x21279c1 in block (compiler.zig)
+                   try statements.append(self.storage, try self.statement());
+                                                       ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/parser.zig:1011:144: 0x21258f0 in function (compiler.zig)
+               const body = if (host != null) try self.addStatement(.{ .span = (try self.expect(.semicolon)).span, .data = .{ .block = &.{} } }) else try self.block(name.span);
+                                                                                                                                                      ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/parser.zig:948:39: 0x211d2ca in parse (compiler.zig)
+                   const declared_function = try self.function(null);
+                                             ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/parser.zig:606:9: 0x21143f8 in parseModule (compiler.zig)
+               return self.parse();
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/interfaces.zig:1591:5: 0x20e4379 in parseModule (compiler.zig)
+           return parse.parseModule();
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/project.zig:136:9: 0x1934090 in fail (compiler.zig)
+               return error.SourceError;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/interfaces.zig:1575:9: 0x20b154b in moduleSyntax (compiler.zig)
+               return project.fail(problem.code, problem.message, .{ .module = module_id, .span = problem.span }, null);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/interfaces.zig:1498:24: 0x209708e in buildWithCacheTimed (compiler.zig)
+               const syntax = try moduleSyntax(project, module_id, cache, frontend, &replayed);
+                              ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/interfaces.zig:1476:5: 0x20963e0 in buildWithCache (compiler.zig)
+           return buildWithCacheTimed(project, cache, frontend, null);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/interfaces.zig:1470:5: 0x2087964 in build (compiler.zig)
+           return buildWithCache(project, null, null);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/core/frontend.zig:116:9: 0x21e02fb in loadFailure (root_test.zig)
+               return error.SourceError;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/core/frontend.zig:76:75: 0x170c319 in check (root_test.zig)
+               self.index = language.interfaces.build(&self.project) catch |err| return self.loadFailure(allocator, err, report);
+                                                                                 ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/core/emit_units_test.zig:33:9: 0x133b588 in snapshot (root_test.zig)
+               return err;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/core/emit_units_test.zig:358:21: 0x2208d15 in test.S4 imported aggregate bodies close rendering dependencies and export excluded private callees (root_test.zig)
+           const emitted = try snapshot(a, .{ caller, source.items, other }, true);
+                           ^
+failed command: ./.zig-cache/o/2cbd9f11f61d39507271622f76838eed/test --cache-dir=./.zig-cache --seed=0x2bb58c68 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 12/13 tests passed (1 failed)
+test-core transitive failure
++- run test 12 pass, 1 fail (13 total)
+   +- compile test debug native success 8s MaxRSS:343M
+      +- options success
+         +- compile exe mylang-core debug native success 9s MaxRSS:352M
+
