@@ -960,7 +960,7 @@ test "RC flag passes report allocation failure without leaking a partial rewrite
 }
 const dead_zero: std.StringHashMapUnmanaged(void) = .empty;
 
-// spec-case: RC-EXIT-SKIP-1
+// spec: RC-EXIT-SKIP-1
 test "RC-EXIT-SKIP-1 the skip test goes when every drop it brackets was dead and stays otherwise" {
     const a = std.testing.allocator;
     const empty = " ret 0\n # RC-EXIT-SKIP-1\n %v7 =w call $myl_qbe_exit_skip(l %ctx)\n jnz %v7, @rcexitdone8, @rcexitdrop8\n@rcexitdrop8\n # RC-DICTIONARY-EMPTY-DROPS-1 slot 0\n@rcexitdone8\n ret %v1";

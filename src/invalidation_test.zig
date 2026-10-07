@@ -322,7 +322,7 @@ test "invalidation explain rejects InvalidCurrent and allMiss baseline is covere
 
 // spec-case: INVALIDATION-REPORT-1
 // spec: INVALIDATION-BASELINE-1
-// spec-case: INVALIDATION-EXECUTION-1
+// spec: INVALIDATION-EXECUTION-1
 test "skipped stages are never reported as reuse and a structurally empty baseline is corrupt" {
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();

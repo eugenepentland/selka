@@ -111,7 +111,7 @@ test "records, invariant callbacks and the modules dependency rows name are cons
     try t.expect(!std.mem.eql(u8, &before, &(try digestOf(a, dependent, reached))));
 }
 
-// spec-case: MODULE-SYMBOL-CUTOFF-5
+// spec: MODULE-SYMBOL-CUTOFF-5
 test "positions read through some stretches ignore the others and every source offset" {
     const text = "def a():\n    pass\n\ndef b():\n    pass\n";
     const origins = [_]language.module_interface.Origin{

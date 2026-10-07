@@ -669,7 +669,7 @@ fn shareUnit(allocator: std.mem.Allocator, name: []const u8, calls: []const []co
     };
 }
 
-// spec-case: MODULE-TEST-1
+// spec: MODULE-TEST-1
 test "merged shares add the program-wide indirect and codec edges and keep the roots' closure" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();

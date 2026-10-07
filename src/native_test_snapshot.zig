@@ -1272,7 +1272,7 @@ test "the stable snapshot root is one path per seed, held by one run at a time a
     // The last release leaves the scratch root as it found it.
     try std.testing.expect(!context.exists(try std.fs.path.join(context.allocator, &.{ scratch, ".pending" })));
 }
-// spec-case: MODULE-TEST-5
+// spec: MODULE-TEST-5
 test "a stable snapshot a seeder holds is marked as its, and a waiting claim takes the path once it is released" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
     defer environment.deinit();

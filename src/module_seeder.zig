@@ -124,7 +124,7 @@ fn waitState(pid: linux.pid_t, stopped: bool) !bool {
 fn sleeper() !std.process.Child {
     return std.process.spawn(std.testing.io, .{ .argv = &.{ "sleep", "600" }, .pgid = 0, .stdin = .ignore, .stdout = .ignore, .stderr = .ignore });
 }
-// spec-case: MODULE-TEST-6
+// spec: MODULE-TEST-6
 test "an owned pause resumes normally and refuses self or nonexistent groups" {
     var child = try sleeper();
     defer child.kill(std.testing.io);

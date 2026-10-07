@@ -36,7 +36,7 @@ fn option(arg: []const u8) error{InvalidRuntimeOption}!?contract.Selection {
     return null;
 }
 
-// spec-case: RC-RUNTIME-CLI-1
+// spec: RC-RUNTIME-CLI-1
 test "runtime options preserve guest flags and reject duplicate and invalid selections" {
     const a = std.testing.allocator;
     const parsed = try parse(a, &.{ "mylang", "run", "--rc-runtime=stats", "main.my", "--", "--gc-runtime" });

@@ -200,7 +200,7 @@ test "receipt identity binds its semantic key contract and provider, not the who
     try std.testing.expect(!hit(context, filename, result.key, result.name, result.expected, .{ .contract = identity.contract, .provider = "provider-b", .source = identity.source }));
 }
 
-// spec-case: PURE-SKIP-1
+// spec: PURE-SKIP-1
 test "a recorded pure failure replays with its message and rejects changed identity" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
     defer environment.deinit();
