@@ -13,7 +13,7 @@ const test_runner = @import("test_runner.zig");
 const check_command = @import("check_command.zig");
 
 const usage =
-    \\usage: mylang-core build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR]
+    \\usage: mylang-core build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR] [--verify-cache] [--cache-report]
     \\       mylang-core check FILE.my [--typed] [--stats] [--timings=json] [--cache-dir DIR] [--no-cache]
     \\       mylang-core test FILE.my|DIR [--release] [--json] [--filter S] [--jobs N] [--force] [--cases PATH] [--max-steps N] [--timeout-ms N]
     \\       mylang-core coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
@@ -128,6 +128,10 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
             options.show.trap_frames = frames;
         } else if (std.mem.eql(u8, arg, "--stats")) {
             options.show.stats = true;
+        } else if (std.mem.eql(u8, arg, "--verify-cache")) {
+            options.show.verify_cache = true;
+        } else if (std.mem.eql(u8, arg, "--cache-report")) {
+            options.show.cache_report = true;
         } else if (std.mem.eql(u8, arg, "--verify-facts")) {
             options.facts = .verify;
         } else if (std.mem.eql(u8, arg, "--sabotage-facts")) {

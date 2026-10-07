@@ -15,6 +15,19 @@
 #         cache as a whole (Zig cannot drop single entries: a manifest naming a
 #         deleted artifact fails the next build).
 #
+#   store The new core's per-user object store ($MYLANG_CORE_RUNTIME_CACHE, else
+#         $XDG_CACHE_HOME/mylang/core-runtime, else ~/.cache/mylang/core-runtime)
+#         loses unit objects (`units-v1/<key>.o` with its `.sum`), runtime objects
+#         and number-text objects nobody read for --store-days (by access time;
+#         every build that uses an object reads it), then the least recently
+#         read ones until it fits --store-cap-gb, and `.partial` files over a day
+#         old. Entries are keyed by content, so a deleted one is only recompiled.
+#   core  In every worktree that is not idle, `.mylang-cache/core` loses linked
+#         programs (`programs-v1`), `--link` objects (`foreign-v1`) and replay
+#         records (`replay-v1`) unread for --store-days, and staging directories
+#         (`native-link-*`, and the `program-*` ones older drivers left behind)
+#         older than --quiet-minutes.
+#
 # A worktree is skipped while any process has its working directory inside it
 # or its caches changed in the last --quiet-minutes. Checkouts, branches,
 # commits and uncommitted files are never touched, and neither is the primary
@@ -39,6 +52,8 @@ usage: scripts/prune-caches.sh [--apply] [--repo DIR] [--idle-days N] [--cap-gb 
   --quiet-minutes N  skip a worktree whose caches changed this recently (default 30)
   --exclude GLOB     skip worktrees whose path matches GLOB (repeatable)
   --include-primary  also prune the primary worktree
+  --store-days N     store/core rules: unread for N days (default 14)
+  --store-cap-gb N   store rule: per-user object store cap in GiB (default 10)
 USAGE
 }
 
@@ -48,6 +63,8 @@ idle_days=3
 cap_gb=15
 quiet_minutes=30
 include_primary=0
+store_days=14
+store_cap_gb=10
 excludes=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -58,6 +75,8 @@ while [ $# -gt 0 ]; do
         --quiet-minutes) quiet_minutes="$2"; shift ;;
         --exclude) excludes+=("$2"); shift ;;
         --include-primary) include_primary=1 ;;
+        --store-days) store_days="$2"; shift ;;
+        --store-cap-gb) store_cap_gb="$2"; shift ;;
         -h|--help) usage; exit 0 ;;
         *) usage >&2; exit 2 ;;
     esac
@@ -163,6 +182,77 @@ prune_scratch() {
     fi
 }
 
+# Delete one file (and say so in a dry run), counting its size.
+remove_file() {
+    local file="$1" bytes
+    bytes=$(stat -c %s -- "$file" 2>/dev/null || echo 0)
+    pruned_bytes=$((pruned_bytes + bytes))
+    if [ "$apply" = 1 ]; then rm -f -- "$file"; fi
+}
+
+# Report what one rule removed (or would remove) under a directory.
+report_bytes() {
+    local where="$1" reason="$2" kib=$((pruned_bytes / 1024))
+    if [ "$kib" -gt 0 ]; then
+        total_kib=$((total_kib + kib))
+        echo "$([ "$apply" = 1 ] && echo "deleted  " || echo "would del") $(human "$kib")  $where  ($reason)"
+    fi
+    pruned_bytes=0
+}
+
+# The new core's per-user object store: unread entries go, then the least
+# recently read ones until the store fits its cap. A unit object and its
+# `.sum` record go together.
+prune_store() {
+    local store="$1" days_ago=$((now - store_days * 86400)) kib atime file
+    [ -d "$store" ] || return 0
+    pruned_bytes=0
+    while IFS= read -r -d '' file; do
+        remove_file "$file"
+    done < <(find "$store" -name '*.partial' -mmin +1440 -print0 2>/dev/null)
+    while IFS=$'\t' read -r atime file; do
+        [ "${atime%%.*}" -lt "$days_ago" ] || continue
+        remove_file "$file"
+        if [ "${file%.o}" != "$file" ] && [ -e "$file.sum" ]; then remove_file "$file.sum"; fi
+    done < <(find "$store" \( -path "$store/units-v1/*.o" -o -name 'core_rt-*.o' -o -name 'core_rt-*.c' -o -name 'core_number_text-*.o' \) -printf '%A@\t%p\n' 2>/dev/null)
+    report_bytes "$store" "unread for ${store_days}d"
+    kib=$(size_kib "$store")
+    if [ "$apply" = 1 ] && [ "$kib" -gt $((store_cap_gb * 1024 * 1024)) ]; then
+        while IFS=$'\t' read -r atime file; do
+            [ "$kib" -gt $((store_cap_gb * 1024 * 1024)) ] || break
+            kib=$((kib - $(stat -c %s -- "$file" 2>/dev/null || echo 0) / 1024))
+            remove_file "$file"
+            if [ -e "$file.sum" ]; then remove_file "$file.sum"; fi
+        done < <(find "$store/units-v1" -name '*.o' -printf '%A@\t%p\n' 2>/dev/null | sort -n)
+        report_bytes "$store" "over ${store_cap_gb} GiB cap"
+    fi
+}
+
+# One worktree's core cache directory: unread programs, foreign objects and
+# replay records, and staging directories no build still owns.
+prune_core() {
+    local core="$1" dir
+    [ -d "$core" ] || return 0
+    pruned_bytes=0
+    while IFS= read -r -d '' file; do
+        remove_file "$file"
+    done < <(find "$core/programs-v1" "$core/foreign-v1" "$core/replay-v1" -type f -atime +"$store_days" -print0 2>/dev/null)
+    report_bytes "$core" "core caches unread for ${store_days}d"
+    while IFS= read -r -d '' dir; do
+        remove_dir "$dir" "stale core staging"
+    done < <(find "$core" -mindepth 1 -maxdepth 1 -type d \( -name 'native-link-*' -o -name 'program-*' -o -name 'unproved-tool-*' \) -mmin +"$quiet_minutes" -print0 2>/dev/null)
+}
+
+pruned_bytes=0
+store_root="${MYLANG_CORE_RUNTIME_CACHE-}"
+if [ -z "${MYLANG_CORE_RUNTIME_CACHE+set}" ]; then
+    case "${XDG_CACHE_HOME:-}" in
+        /*) store_root="$XDG_CACHE_HOME/mylang/core-runtime" ;;
+        *) store_root="$HOME/.cache/mylang/core-runtime" ;;
+    esac
+fi
+if [ -n "$store_root" ]; then prune_store "$store_root"; fi
+
 primary=""
 while IFS= read -r line; do
     case "$line" in
@@ -196,14 +286,17 @@ while IFS= read -r line; do
         for scratch in "$tree"/.tmp*; do
             if [ -d "$scratch" ]; then prune_scratch "$scratch"; fi
         done
-    elif [ -d "$tree/.zig-cache" ]; then
-        stamp=$(stat -c %Y "$tree/.zig-cache/o" 2>/dev/null || echo 0)
-        known="${sizes[$tree]:-}"
-        if [ -n "$known" ] && [ "${known%% *}" = "$stamp" ]; then kib="${known#* }"; else kib=$(size_kib "$tree/.zig-cache"); fi
-        if [ "$kib" -gt "$cap_kib" ]; then
-            remove_dir "$tree/.zig-cache" "over ${cap_gb} GiB cap"
-        else
-            measured["$tree"]="$stamp $kib"
+    else
+        prune_core "$tree/.mylang-cache/core"
+        if [ -d "$tree/.zig-cache" ]; then
+            stamp=$(stat -c %Y "$tree/.zig-cache/o" 2>/dev/null || echo 0)
+            known="${sizes[$tree]:-}"
+            if [ -n "$known" ] && [ "${known%% *}" = "$stamp" ]; then kib="${known#* }"; else kib=$(size_kib "$tree/.zig-cache"); fi
+            if [ "$kib" -gt "$cap_kib" ]; then
+                remove_dir "$tree/.zig-cache" "over ${cap_gb} GiB cap"
+            else
+                measured["$tree"]="$stamp $kib"
+            fi
         fi
     fi
 done < <(git -C "$repo" worktree list --porcelain)

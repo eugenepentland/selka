@@ -118,12 +118,11 @@ test "linkNative refuses unproved tool native reuse and cleans private caches af
         .output = try std.fs.path.join(a, &.{ root, "output" }),
         .release = false,
         .links = &.{},
-        .llvm = "",
     };
     var log: std.ArrayList(u8) = .empty;
     for ([_][]const u8{ "7", "8" }) |value| {
         try temporary.dir.writeFile(io, .{ .sub_path = "value", .data = value });
-        try driver.link(a, io, &environment, request, &log);
+        _ = try driver.link(a, io, &environment, request, &log);
         try std.testing.expectEqualStrings(value, try cwd.readFileAlloc(io, request.output, a, .limited(64)));
         try cleanCache(request.work);
     }

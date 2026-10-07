@@ -258,13 +258,13 @@ fn runLlvm(arena: std.mem.Allocator, llvm: []const u8, options: RunOptions) RunE
     const zig = environment.get("ZIG") orelse "zig";
     const output = try std.fs.path.join(arena, &.{ root, "hand" });
     var log: std.ArrayList(u8) = .empty;
-    driver.link(arena, std.testing.io, &environment, .{
+    _ = driver.link(arena, std.testing.io, &environment, .{
         .zig = zig,
         .work = root,
         .output = output,
         .release = release,
         .links = &.{},
-        .llvm = llvm,
+        .units = &.{driver.wholeUnit(llvm)},
     }, &log) catch |err| {
         report("zig cc rejected the emitted module:\n{s}\n{s}\n", .{ log.items, llvm });
         return err;

@@ -58,14 +58,13 @@ fn native(a: std.mem.Allocator, emission: pipeline.Emission, split: bool) !std.p
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     const output = try std.fs.path.join(a, &.{ root, "program" });
     var report: std.ArrayList(u8) = .empty;
-    try driver.link(a, std.testing.io, &environment, .{
+    _ = try driver.link(a, std.testing.io, &environment, .{
         .zig = environment.get("MYLANG_ZIG") orelse "zig",
         .work = root,
         .output = output,
         .release = true,
         .links = &.{},
-        .units = if (split) emission.units else &.{},
-        .llvm = if (split) "" else emission.whole.?,
+        .units = if (split) emission.units else &.{driver.wholeUnit(emission.whole.?)},
     }, &report);
     return std.process.run(a, std.testing.io, .{ .argv = &.{output}, .environ_map = &environment });
 }

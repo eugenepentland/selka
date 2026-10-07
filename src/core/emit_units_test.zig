@@ -148,7 +148,7 @@ fn nativeArgs(a: std.mem.Allocator, emitted: []const units.Unit, arguments: []co
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     const output = try std.fs.path.join(a, &.{ root, "program" });
     var log: std.ArrayList(u8) = .empty;
-    driver.link(a, std.testing.io, &environment, .{ .zig = environment.get("ZIG") orelse "zig", .work = root, .output = output, .release = true, .links = &.{}, .units = emitted }, &log) catch |err| {
+    _ = driver.link(a, std.testing.io, &environment, .{ .zig = environment.get("ZIG") orelse "zig", .work = root, .output = output, .release = true, .links = &.{}, .units = emitted }, &log) catch |err| {
         report("unit native build: {s}\n", .{log.items});
         return err;
     };

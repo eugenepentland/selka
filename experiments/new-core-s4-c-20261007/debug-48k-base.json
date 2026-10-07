@@ -1,0 +1,29 @@
+{
+ "lines": 48101,
+ "mode": "debug",
+ "core": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-c/.mylang-cache/s4c/core-base/bin/mylang-core",
+ "cold_s": 1.979,
+ "cold_report": "",
+ "output": "614273",
+ "unchanged_s": {
+  "median": 4.1853,
+  "min": 4.1528,
+  "max": 4.2926
+ },
+ "unchanged_processes": 6,
+ "edits": [
+  {
+   "module": 600,
+   "pinned": true,
+   "s": 4.21,
+   "report": ""
+  },
+  {
+   "module": 601,
+   "pinned": false,
+   "s": 1.571,
+   "report": ""
+  }
+ ],
+ "unchanged_after_edit_s": 4.6044
+}

@@ -1,9 +1,17 @@
-//! Turn emitted LLVM IR into an executable with the bundled clang (`zig cc`).
-//!
-//! The runtime is compiled once per content at -O2, whatever the program's level,
-//! into a per-user shared directory (`runtimeDirectory`), so a debug build pays only
-//! for the program's own code and a fresh work directory reuses the runtime. The program's `.ll` is compiled at -O0 (debug) or -O3 for the
-//! target CPU (release, L4; `target.zig`) and linked with the runtime and any `--link` C files.
+//! Turn emitted LLVM units into an executable with the bundled clang (`zig cc`),
+//! through the core's own content-keyed stores (docs/design/new-core-s4.md §6):
+//! - the runtime (-O2, whatever the program's level) and the number-text object,
+//!   once per content, in the per-user directory `runtimeDirectory` names;
+//! - one object per unit in that directory's `units-v1` store (`unit_cache.zig`),
+//!   keyed by the unit's text, level, target, toolchain and runtime ABI. Misses
+//!   compile in parallel with `zig cc -c`; hits start no process;
+//! - each `--link` C source in the work directory's `foreign-v1` store, keyed by
+//!   its bytes and the bytes of every header its compiler depfile listed;
+//! - the linked program in the work directory's `programs-v1` store, keyed by
+//!   every object it links, so a build whose objects all match links nothing.
+//! Every `zig` process gets a fresh local cache inside this build's private
+//! staging directory, removed when the build ends: these stores are the cache,
+//! and Zig's own would only keep a second copy of every object and program.
 //! A minimal driver rather than the old core's `qbe_build_llvm_compile.zig`:
 //! that one is bound to the QBE manifest, fragment store and object cache.
 const std = @import("std");
@@ -12,6 +20,8 @@ const target = target_policy.current;
 const number_runtime = @import("number_runtime.zig");
 const tool_identity = @import("tool_identity.zig");
 const emit_units = @import("emit_units.zig");
+const unit_cache = @import("unit_cache.zig");
+const Digest = unit_cache.Digest;
 
 /// The runtime C source, compiled into every program.
 pub const runtime_source = @embedFile("runtime/core_rt.c") ++ "\n" ++
@@ -26,19 +36,55 @@ pub const runtime_source = @embedFile("runtime/core_rt.c") ++ "\n" ++
 pub const Request = struct {
     /// The `zig` executable whose `cc` compiles and links.
     zig: []const u8,
-    /// Scratch directory for the runtime object and clang's cache.
+    /// The build's cache directory: foreign objects, linked programs and staging.
     work: []const u8,
     output: []const u8,
     release: bool,
     /// Extra C sources to compile and link (`--link`).
     links: []const []const u8,
-    llvm: []const u8 = "",
-    /// Independent LLVM inputs; an empty list uses the legacy single-module input.
+    /// Independent LLVM inputs, in link order (`emit_units`, or `wholeUnit`).
     units: []const emit_units.Unit = &.{},
+    /// `--verify-cache`: also recompile every unit the store served and require
+    /// the same object bytes.
+    verify: bool = false,
 };
 
 /// Why a native build failed; the tool's output was written to `log`.
 pub const Error = error{ ToolFailed, OutOfMemory, WriteFailed };
+
+/// What one build did, for `--cache-report` and the tests.
+pub const Counts = struct {
+    /// Distinct units linked.
+    units: u32 = 0,
+    /// Units whose verified object the store served.
+    reused: u32 = 0,
+    /// Units compiled by this build.
+    compiled: u32 = 0,
+    /// Served units recompiled by `--verify-cache` and found byte-identical.
+    verified: u32 = 0,
+    /// Every `zig` process this build started.
+    processes: u32 = 0,
+};
+
+/// The result of a successful `link`.
+pub const Outcome = struct {
+    counts: Counts = .{},
+    /// The program came from the program store: no tool linked it.
+    program_reused: bool = false,
+    /// The program store entry the output was copied from (proved toolchains only).
+    program: ?unit_cache.Found = null,
+    /// The `--link` sources and the headers their depfiles listed, with the bytes
+    /// the compiles read; null when a file changed while it was compiled, so no
+    /// later build may trust these digests.
+    foreign: ?[]const unit_cache.Dependency = &.{},
+    /// The toolchain identity the build ran under.
+    tool: tool_identity.Identity,
+};
+
+/// A whole-program LLVM text as the one unit of a build.
+pub fn wholeUnit(llvm: []const u8) emit_units.Unit {
+    return emit_units.unit("whole", "", .program, llvm);
+}
 
 const Guard = struct {
     resources: tool_identity.Request,
@@ -57,70 +103,386 @@ const Guard = struct {
     }
 };
 
-/// Where the final native compile caches: `isolate` gives it a fresh local cache
-/// (foreign sources, unproved tools); `private_global` also a fresh global cache, so
-/// an unproved tool never writes Zig's shared libc and compiler-rt builds.
-const NativeCache = struct { work: []const u8, isolate: bool, private_global: bool };
+/// The tools and accounting every native step of one build shares.
+const Native = struct {
+    arena: std.mem.Allocator,
+    io: std.Io,
+    environment: *const std.process.Environ.Map,
+    zig: []const u8,
+    log: *std.ArrayList(u8),
+    guard: Guard,
+    counts: *Counts,
 
-/// Compile and link `request.llvm` into `request.output`; failures append the tool's stderr to `log`.
-pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8)) Error!void {
+    fn resources(self: Native) unit_cache.Resources {
+        return .{ .arena = self.arena, .io = self.io, .environment = self.environment };
+    }
+};
+
+/// Where one build keeps what it caches: `shared` (per-user, content keys only)
+/// and `local` (the work directory), or both inside `staging` for an unproved tool.
+const Places = struct { shared: []const u8, local: []const u8, staging: []const u8, cacheable: bool };
+
+/// One object to link and the digest of its bytes (or of its store key, for the
+/// runtime objects, whose key covers their whole input).
+const Object = struct { path: []const u8, digest: Digest };
+
+/// Compile and link `request.units` into `request.output`; failures append the tool's stderr to `log`.
+pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8)) Error!Outcome {
     const cwd = std.Io.Dir.cwd();
     cwd.createDirPath(io, request.work) catch return error.WriteFailed;
     var environment = environ.clone(allocator) catch return error.OutOfMemory;
     defer environment.deinit();
-    environment.put("ZIG_LOCAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ request.work, "zig-local" })) catch return error.OutOfMemory;
+    const staging = try privateDirectory(allocator, io, request.work, "native-link");
+    defer removeDirectory(io, staging);
+    environment.put("ZIG_LOCAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ staging, "local" })) catch return error.OutOfMemory;
     const resources: tool_identity.Request = .{ .arena = allocator, .io = io, .environment = &environment, .executable = request.zig, .cache = request.work };
     const guest = tool_identity.capture(resources) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         try log.print(allocator, "error: cannot run {s}: cannot identify guest toolchain: {s}\n", .{ request.zig, @errorName(err) });
         return error.ToolFailed;
     };
-    const guard: Guard = .{ .resources = resources, .identity = guest };
-    var resolved = request;
-    resolved.zig = guest.path;
-    if (!guest.cacheable) {
-        var nonce: [16]u8 = undefined;
-        std.Io.random(io, &nonce);
-        resolved.work = try std.fs.path.join(allocator, &.{ request.work, try std.fmt.allocPrint(allocator, "unproved-tool-{s}", .{std.fmt.bytesToHex(nonce, .lower)}) });
-        cwd.createDirPath(io, resolved.work) catch return error.WriteFailed;
+    // Zig's global cache holds only its own libc and compiler-rt builds, which no
+    // program input reaches; a fresh one rebuilds them (about 6 s), so only an
+    // unproved tool gets one, and it never writes the shared builds.
+    if (!guest.cacheable) environment.put("ZIG_GLOBAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ staging, "global" })) catch return error.OutOfMemory;
+    var outcome: Outcome = .{ .tool = guest };
+    const native: Native = .{ .arena = allocator, .io = io, .environment = &environment, .zig = guest.path, .log = log, .guard = .{ .resources = resources, .identity = guest }, .counts = &outcome.counts };
+    // Content-keyed objects are shared, so a fresh work directory (a new worktree,
+    // a test's temporary directory) reuses them; an unproved tool keeps every
+    // object private to this build.
+    const places: Places = .{
+        .shared = if (guest.cacheable) try runtimeDirectory(allocator, io, environ, request.work) else staging,
+        .local = if (guest.cacheable) request.work else staging,
+        .staging = staging,
+        .cacheable = guest.cacheable,
+    };
+    var abi: Digest = undefined;
+    std.crypto.hash.Blake3.hash(runtime_source, &abi, .{});
+    const settings: unit_cache.Settings = .{ .tool = guest.digest, .cpu = guest.native_target, .release = request.release, .runtime = abi };
+    var objects: std.ArrayList(Object) = .empty;
+    try objects.append(allocator, try runtimeObject(native, places.shared, abi));
+    var needs: Dependencies = .{};
+    for (request.units) |unit| needs = .{ .number = needs.number or unit.number, .math = needs.math or unit.math };
+    try unitObjects(native, places, settings, request, &objects);
+    if (needs.number) {
+        const directory = try std.fs.path.join(allocator, &.{ places.shared, try std.fmt.allocPrint(allocator, "number-tool-v2-{s}", .{std.fmt.bytesToHex(guest.digest, .lower)}) });
+        const path = try number_runtime.object(native, directory, guest.digest);
+        try objects.append(allocator, .{ .path = path, .digest = number_runtime.key(&guest.digest) });
     }
-    defer if (!guest.cacheable) removeDirectory(io, resolved.work);
-    // Content-keyed runtime objects are shared, so a fresh work directory does not
-    // recompile the runtime; an unproved tool keeps them private to this build.
-    var shared = resolved;
-    if (guest.cacheable) shared.work = try runtimeDirectory(allocator, io, environ, resolved.work);
-    const runtime_object = try runtimeObject(allocator, io, &environment, shared, log, guard);
-    const staging = try programDirectory(allocator, io, resolved.work);
-    var retain_program = false;
-    defer if (!retain_program) removeDirectory(io, staging);
+    outcome.foreign = try foreignObjects(native, places, settings, request.links, &objects);
+    const program_key = programKey(settings, objects.items, needs.math);
+    const programs: unit_cache.Store = .{ .directory = try std.fs.path.join(allocator, &.{ places.local, "programs-v1" }) };
+    if (places.cacheable) if (try programs.lookup(allocator, io, program_key, "")) |found| {
+        try publishOutput(native, found.path, request.output);
+        outcome.program_reused = true;
+        outcome.program = found;
+        return outcome;
+    };
+    const linked = try std.fs.path.join(allocator, &.{ staging, "program" });
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(allocator, &.{ guest.path, "cc", if (request.release) "-O3" else "-O0" });
-    try argv.appendSlice(allocator, &.{ "-target", target_policy.native_link_target });
+    try argv.appendSlice(allocator, &.{ guest.path, "cc", unit_cache.level(request.release), "-target", target_policy.native_link_target });
     try argv.appendSlice(allocator, target.cpu_flags);
-    try argv.appendSlice(allocator, &.{ "-Wno-override-module", "-o", request.output });
-    const dependencies = try programArguments(allocator, io, resolved, staging, &argv);
-    try argv.append(allocator, runtime_object);
-    if (dependencies.number) {
-        var numeric = resolved;
-        numeric.work = try std.fs.path.join(allocator, &.{ shared.work, try std.fmt.allocPrint(allocator, "number-tool-v2-{s}", .{std.fmt.bytesToHex(guest.digest, .lower)}) });
-        try argv.append(allocator, try number_runtime.object(allocator, io, &environment, numeric, log, guard));
+    try argv.appendSlice(allocator, &.{ "-Wno-override-module", "-o", linked });
+    for (objects.items) |object| try argv.append(allocator, object.path);
+    if (needs.math) try argv.append(allocator, "-lm");
+    try run(native, argv.items);
+    try native.guard.check(log);
+    if (!places.cacheable) {
+        try publishOutput(native, linked, request.output);
+        return outcome;
     }
-    try argv.appendSlice(allocator, request.links);
-    if (dependencies.math) try argv.append(allocator, "-lm");
-    try linkNative(allocator, io, &environment, .{ .work = resolved.work, .isolate = request.links.len != 0 or !guest.cacheable, .private_global = !guest.cacheable }, argv.items, log);
-    try guard.check(log);
-    // Successful proved-tool inputs remain available as native build witnesses.
-    // Failure and unproved-tool paths retire only this invocation's staging.
-    retain_program = guest.cacheable;
+    const published = try programs.publish(allocator, io, program_key, "", linked);
+    try publishOutput(native, published.path, request.output);
+    outcome.program = published;
+    return outcome;
 }
 
 const Dependencies = struct { number: bool = false, math: bool = false };
 
-/// The directory for content-keyed runtime objects: `MYLANG_CORE_RUNTIME_CACHE`, else
-/// `$XDG_CACHE_HOME/mylang/core-runtime`, else `$HOME/.cache/mylang/core-runtime`, so
-/// a new project or a test's temporary directory reuses a runtime another build
-/// compiled. An empty `MYLANG_CORE_RUNTIME_CACHE`, no usable variable, or a directory
-/// that cannot be created keeps the objects in `work`.
+/// Copy `program` to `output` under a temporary name and rename it into place.
+/// An existing output is removed first: ext4 flushes a file renamed over another
+/// one to disk before the rename returns (`auto_da_alloc`), which cost an unchanged
+/// build 50-300 ms for a 10 MB program; a rename to a free name does not.
+pub fn copyOutput(io: std.Io, program: []const u8, output: []const u8) std.Io.Dir.CopyFileError!void {
+    const cwd = std.Io.Dir.cwd();
+    // A missing output is the usual case; any other failure surfaces in the copy.
+    removeFile(io, output);
+    try cwd.copyFile(program, cwd, output, io, .{});
+}
+
+/// The program store key: the link command's settings and every linked object's
+/// bytes, in link order.
+fn programKey(settings: unit_cache.Settings, objects: []const Object, math: bool) Digest {
+    var hash = std.crypto.hash.Blake3.init(.{});
+    unit_cache.field(&hash, "core-program-v1");
+    unit_cache.field(&hash, unit_cache.format);
+    unit_cache.field(&hash, unit_cache.level(settings.release));
+    unit_cache.field(&hash, target_policy.native_link_target);
+    for (target.cpu_flags) |flag| unit_cache.field(&hash, flag);
+    unit_cache.field(&hash, &settings.cpu);
+    unit_cache.field(&hash, &settings.tool);
+    for (objects) |object| unit_cache.field(&hash, &object.digest);
+    unit_cache.field(&hash, if (math) "-lm" else "");
+    var digest: Digest = undefined;
+    hash.final(&digest);
+    return digest;
+}
+
+/// Copy a finished program to the requested output path (`copyOutput`).
+fn publishOutput(native: Native, program: []const u8, output: []const u8) Error!void {
+    copyOutput(native.io, program, output) catch |err| {
+        try native.log.print(native.arena, "error: cannot write {s}: {s}\n", .{ output, @errorName(err) });
+        return error.WriteFailed;
+    };
+}
+
+/// One unit this build compiles: a store miss, or a hit `--verify-cache` checks.
+const Pending = struct { unit: emit_units.Unit, key: Digest, object: []const u8, slot: usize, served: ?unit_cache.Found };
+
+/// Serve each distinct unit from the store, compile the rest in parallel, and
+/// append every object in unit order.
+fn unitObjects(native: Native, places: Places, settings: unit_cache.Settings, request: Request, objects: *std.ArrayList(Object)) Error!void {
+    const a = native.arena;
+    const store: unit_cache.Store = .{ .directory = try std.fs.path.join(a, &.{ places.shared, "units-v1" }) };
+    var seen: std.AutoHashMapUnmanaged(Digest, void) = .empty;
+    var pending: std.ArrayList(Pending) = .empty;
+    var jobs: std.ArrayList(unit_cache.Job) = .empty;
+    for (request.units) |unit| {
+        const key = unit_cache.key(settings, unit.llvm);
+        // Equal text is one object: linking it twice would define its symbols twice.
+        if ((try seen.getOrPut(a, key)).found_existing) continue;
+        native.counts.units += 1;
+        const served = if (places.cacheable) try store.lookup(a, native.io, key, ".o") else null;
+        if (served != null) native.counts.reused += 1;
+        try objects.append(a, if (served) |hit| .{ .path = hit.path, .digest = hit.digest } else .{ .path = "", .digest = key });
+        if (served != null and !request.verify) continue;
+        const stem = try std.fs.path.join(a, &.{ places.staging, &std.fmt.bytesToHex(key, .lower) });
+        // A miss compiles beside its store entry, so publishing is a rename even
+        // when the store is on another file system than the work directory.
+        const object = if (served != null) try std.fmt.allocPrint(a, "{s}.verify.o", .{stem}) else if (places.cacheable) try store.partial(a, native.io, key, ".o") else try std.fmt.allocPrint(a, "{s}.o", .{stem});
+        const source = try std.fmt.allocPrint(a, "{s}.ll", .{stem});
+        // Only units that compile are written out; a hit never rewrites its text.
+        std.Io.Dir.cwd().writeFile(native.io, .{ .sub_path = source, .data = unit.llvm }) catch return error.WriteFailed;
+        try pending.append(a, .{ .unit = unit, .key = key, .object = object, .slot = objects.items.len - 1, .served = served });
+        try jobs.append(a, .{ .argv = try compileArguments(native, request.release, object, source), .weight = unit.llvm.len });
+    }
+    // Partials of a failed build are removed; published ones already moved away.
+    defer for (pending.items) |item| removeFile(native.io, item.object);
+    try unit_cache.compileAll(native.resources(), jobs.items, unit_cache.width(native.environment, jobs.items.len));
+    native.counts.processes += @intCast(jobs.items.len);
+    for (jobs.items) |job| try native.log.appendSlice(a, job.log.items);
+    for (jobs.items) |job| if (!job.ok) return error.ToolFailed;
+    if (jobs.items.len != 0) try native.guard.check(native.log);
+    for (pending.items) |item| {
+        if (item.served) |hit| {
+            try verifyServed(native, item, hit);
+            continue;
+        }
+        native.counts.compiled += 1;
+        const stored = if (places.cacheable) try store.publish(a, native.io, item.key, ".o", item.object) else try unit_cache.found(a, native.io, item.object);
+        objects.items[item.slot] = .{ .path = stored.path, .digest = stored.digest };
+    }
+}
+
+/// `--verify-cache`: a served object must equal a fresh compile of its text.
+fn verifyServed(native: Native, item: Pending, served: unit_cache.Found) Error!void {
+    const fresh = try unit_cache.found(native.arena, native.io, item.object);
+    if (!std.mem.eql(u8, &fresh.digest, &served.digest)) {
+        try native.log.print(native.arena, "error: --verify-cache: unit {s} ({s}) compiles to different bytes than its cached object {s}\n", .{ item.unit.name, item.unit.source_path, served.path });
+        return error.ToolFailed;
+    }
+    native.counts.verified += 1;
+}
+
+fn compileArguments(native: Native, release: bool, object: []const u8, source: []const u8) Error![]const []const u8 {
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(native.arena, &.{ native.zig, "cc", "-c", unit_cache.level(release), "-target", target_policy.native_link_target });
+    try argv.appendSlice(native.arena, target.cpu_flags);
+    try argv.appendSlice(native.arena, &.{ "-Wno-override-module", "-o", object, source });
+    return argv.items;
+}
+
+/// One `--link` source this build compiles, and where its depfile goes.
+const Foreign = struct { manifest: []const u8, manifest_key: Digest, object: []const u8, depfile: []const u8, slot: usize };
+
+/// Serve or compile every `--link` C source. A source is served only while its
+/// bytes and those of every header its last depfile listed are unchanged.
+/// Returns the dependencies a later build must find unchanged, or null when a
+/// file changed while it compiled (nothing is then cached).
+fn foreignObjects(native: Native, places: Places, settings: unit_cache.Settings, links: []const []const u8, objects: *std.ArrayList(Object)) Error!?[]const unit_cache.Dependency {
+    if (links.len == 0) return &.{};
+    const a = native.arena;
+    const cwd = std.Io.Dir.cwd();
+    const store: unit_cache.Store = .{ .directory = try std.fs.path.join(a, &.{ places.local, "foreign-v1" }) };
+    cwd.createDirPath(native.io, store.directory) catch return error.WriteFailed;
+    var dependencies: std.ArrayList(unit_cache.Dependency) = .empty;
+    var compiles: std.ArrayList(Foreign) = .empty;
+    var jobs: std.ArrayList(unit_cache.Job) = .empty;
+    // A file whose status changes after this marker exists may differ from the
+    // bytes its compile read, so its digest is not trusted (see `pinned`).
+    const marker = try std.fs.path.join(a, &.{ places.staging, "foreign-marker" });
+    cwd.writeFile(native.io, .{ .sub_path = marker, .data = "" }) catch return error.WriteFailed;
+    const started = cwd.statFile(native.io, marker, .{}) catch return error.WriteFailed;
+    for (links, 0..) |source, index| {
+        const manifest_key = try foreignKey(native, settings, source);
+        const manifest = try store.path(a, manifest_key, ".deps");
+        if (places.cacheable) if (try servedForeign(native, store, manifest_key, manifest)) |served| {
+            try objects.append(a, served.object);
+            try dependencies.appendSlice(a, served.dependencies);
+            continue;
+        };
+        try objects.append(a, .{ .path = "", .digest = manifest_key });
+        const stem = try std.fmt.allocPrint(a, "{s}/foreign-{d}", .{ places.staging, index });
+        const object = try std.fmt.allocPrint(a, "{s}.o", .{stem});
+        const depfile = try std.fmt.allocPrint(a, "{s}.d", .{stem});
+        var argv: std.ArrayList([]const u8) = .empty;
+        try argv.appendSlice(a, &.{ native.zig, "cc", "-c", unit_cache.level(settings.release), "-target", target_policy.native_link_target });
+        try argv.appendSlice(a, target.cpu_flags);
+        try argv.appendSlice(a, &.{ "-MMD", "-MF", depfile, "-o", object, source });
+        try jobs.append(a, .{ .argv = argv.items, .weight = links.len - index });
+        try compiles.append(a, .{ .manifest = manifest, .manifest_key = manifest_key, .object = object, .depfile = depfile, .slot = objects.items.len - 1 });
+    }
+    try unit_cache.compileAll(native.resources(), jobs.items, unit_cache.width(native.environment, jobs.items.len));
+    native.counts.processes += @intCast(jobs.items.len);
+    for (jobs.items) |job| try native.log.appendSlice(a, job.log.items);
+    for (jobs.items) |job| if (!job.ok) return error.ToolFailed;
+    if (jobs.items.len != 0) try native.guard.check(native.log);
+    var stable = true;
+    for (compiles.items) |compiled| {
+        const fresh = try unit_cache.found(a, native.io, compiled.object);
+        objects.items[compiled.slot] = .{ .path = fresh.path, .digest = fresh.digest };
+        const inputs = try pinned(native, try readDepfile(native, compiled.depfile), started.ctime.nanoseconds) orelse {
+            stable = false;
+            continue;
+        };
+        try dependencies.appendSlice(a, inputs);
+        if (!places.cacheable) continue;
+        const text = try manifestText(a, inputs);
+        const stored = try store.publish(a, native.io, objectKey(compiled.manifest_key, text), ".o", compiled.object);
+        objects.items[compiled.slot] = .{ .path = stored.path, .digest = stored.digest };
+        try atomicWrite(native, compiled.manifest, text);
+    }
+    return if (stable) dependencies.items else null;
+}
+
+const ServedForeign = struct { object: Object, dependencies: []const unit_cache.Dependency };
+
+fn servedForeign(native: Native, store: unit_cache.Store, manifest_key: Digest, manifest: []const u8) Error!?ServedForeign {
+    const a = native.arena;
+    const text = std.Io.Dir.cwd().readFileAlloc(native.io, manifest, a, .limited(16 << 20)) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return null;
+    };
+    const dependencies = try parseManifest(a, text) orelse return null;
+    if (!try unit_cache.unchanged(a, native.io, dependencies)) return null;
+    const found = try store.lookup(a, native.io, objectKey(manifest_key, text), ".o") orelse return null;
+    return .{ .object = .{ .path = found.path, .digest = found.digest }, .dependencies = dependencies };
+}
+
+/// The manifest slot of one `--link` source: its absolute path and bytes, the
+/// compile settings and the toolchain.
+fn foreignKey(native: Native, settings: unit_cache.Settings, source: []const u8) Error!Digest {
+    const a = native.arena;
+    const absolute = std.Io.Dir.cwd().realPathFileAlloc(native.io, source, a) catch source;
+    const content = unit_cache.fileDigest(a, native.io, source) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.ReadFailed => null,
+    };
+    var hash = std.crypto.hash.Blake3.init(.{});
+    unit_cache.field(&hash, "core-foreign-v1");
+    unit_cache.field(&hash, absolute);
+    // The source's spelling and the working directory reach its debug information.
+    unit_cache.field(&hash, source);
+    unit_cache.field(&hash, std.Io.Dir.cwd().realPathFileAlloc(native.io, ".", a) catch "");
+    unit_cache.field(&hash, if (content) |*digest| digest else "absent");
+    unit_cache.field(&hash, unit_cache.level(settings.release));
+    unit_cache.field(&hash, target_policy.native_link_target);
+    for (target.cpu_flags) |flag| unit_cache.field(&hash, flag);
+    unit_cache.field(&hash, &settings.cpu);
+    unit_cache.field(&hash, &settings.tool);
+    var digest: Digest = undefined;
+    hash.final(&digest);
+    return digest;
+}
+
+fn objectKey(manifest_key: Digest, manifest: []const u8) Digest {
+    var hash = std.crypto.hash.Blake3.init(.{});
+    unit_cache.field(&hash, "core-foreign-object-v1");
+    unit_cache.field(&hash, &manifest_key);
+    unit_cache.field(&hash, manifest);
+    var digest: Digest = undefined;
+    hash.final(&digest);
+    return digest;
+}
+
+const manifest_magic = "core-foreign-deps-v1\n";
+
+fn manifestText(a: std.mem.Allocator, dependencies: []const unit_cache.Dependency) Error![]const u8 {
+    var text: std.ArrayList(u8) = .empty;
+    try text.appendSlice(a, manifest_magic);
+    for (dependencies) |dependency| try text.print(a, "{s}\t{s}\n", .{ std.fmt.bytesToHex(dependency.digest.?, .lower), dependency.path });
+    return text.items;
+}
+
+fn parseManifest(a: std.mem.Allocator, text: []const u8) Error!?[]const unit_cache.Dependency {
+    const framed = std.mem.startsWith(u8, text, manifest_magic) and std.mem.endsWith(u8, text, "\n");
+    if (!framed or text.len == manifest_magic.len) return null;
+    var dependencies: std.ArrayList(unit_cache.Dependency) = .empty;
+    var lines = std.mem.splitScalar(u8, text[manifest_magic.len .. text.len - 1], '\n');
+    while (lines.next()) |line| {
+        if (line.len < 66 or line[64] != '\t') return null;
+        var digest: Digest = undefined;
+        _ = std.fmt.hexToBytes(&digest, line[0..64]) catch return null;
+        try dependencies.append(a, .{ .path = line[65..], .digest = digest });
+    }
+    return dependencies.items;
+}
+
+fn readDepfile(native: Native, path: []const u8) Error![]const []const u8 {
+    const bytes = std.Io.Dir.cwd().readFileAlloc(native.io, path, native.arena, .limited(16 << 20)) catch {
+        try native.log.print(native.arena, "error: the C compiler wrote no dependency file {s}\n", .{path});
+        return error.ToolFailed;
+    };
+    return unit_cache.depfileInputs(native.arena, bytes);
+}
+
+/// Digest every listed input by absolute path. A file whose status changed at or
+/// after `since` (this build's marker, created before the compile started) may
+/// differ from the bytes the compiler read, so the set is not pinned (null).
+fn pinned(native: Native, inputs: []const []const u8, since: i96) Error!?[]const unit_cache.Dependency {
+    const a = native.arena;
+    const cwd = std.Io.Dir.cwd();
+    const working = cwd.realPathFileAlloc(native.io, ".", a) catch return null;
+    const dependencies = try a.alloc(unit_cache.Dependency, inputs.len);
+    for (inputs, dependencies) |input, *dependency| {
+        const absolute = try std.fs.path.resolve(a, &.{ working, input });
+        const digest = unit_cache.fileDigest(a, native.io, absolute) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.ReadFailed => return null,
+        } orelse return null;
+        const after = cwd.statFile(native.io, absolute, .{}) catch return null;
+        if (after.ctime.nanoseconds >= since or after.mtime.nanoseconds >= since) return null;
+        dependency.* = .{ .path = absolute, .digest = digest };
+    }
+    return dependencies;
+}
+
+fn atomicWrite(native: Native, path: []const u8, bytes: []const u8) Error!void {
+    const cwd = std.Io.Dir.cwd();
+    var nonce: [16]u8 = undefined;
+    std.Io.random(native.io, &nonce);
+    const partial = try std.fmt.allocPrint(native.arena, "{s}.{s}.partial", .{ path, std.fmt.bytesToHex(nonce, .lower) });
+    defer removeFile(native.io, partial);
+    cwd.writeFile(native.io, .{ .sub_path = partial, .data = bytes }) catch return error.WriteFailed;
+    cwd.rename(partial, cwd, path, native.io) catch return error.WriteFailed;
+}
+
+/// The directory for content-keyed runtime and unit objects: `MYLANG_CORE_RUNTIME_CACHE`,
+/// else `$XDG_CACHE_HOME/mylang/core-runtime`, else `$HOME/.cache/mylang/core-runtime`,
+/// so a new project, a fresh worktree or a test's temporary directory reuses objects
+/// another build compiled. Sharing is safe because every key is the object's complete
+/// input. An empty `MYLANG_CORE_RUNTIME_CACHE`, no usable variable, or a directory that
+/// cannot be created keeps the objects in `work`.
 pub fn runtimeDirectory(allocator: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, work: []const u8) Error![]const u8 {
     const directory = (try sharedRuntimeDirectory(allocator, environ)) orelse return work;
     std.Io.Dir.cwd().createDirPath(io, directory) catch return work;
@@ -140,67 +502,32 @@ fn sharedRuntimeDirectory(allocator: std.mem.Allocator, environ: *const std.proc
     return directory;
 }
 
-fn programDirectory(allocator: std.mem.Allocator, io: std.Io, work: []const u8) Error![]const u8 {
+/// A fresh directory `<work>/<prefix>-<nonce>` this build alone owns.
+fn privateDirectory(allocator: std.mem.Allocator, io: std.Io, work: []const u8, prefix: []const u8) Error![]const u8 {
     var nonce: [16]u8 = undefined;
     std.Io.random(io, &nonce);
-    const path = try std.fs.path.join(allocator, &.{ work, try std.fmt.allocPrint(allocator, "program-{s}", .{std.fmt.bytesToHex(nonce, .lower)}) });
+    const path = try std.fs.path.join(allocator, &.{ work, try std.fmt.allocPrint(allocator, "{s}-{s}", .{ prefix, std.fmt.bytesToHex(nonce, .lower) }) });
     std.Io.Dir.cwd().createDirPath(io, path) catch return error.WriteFailed;
     return path;
 }
 
-fn programArguments(allocator: std.mem.Allocator, io: std.Io, request: Request, staging: []const u8, argv: *std.ArrayList([]const u8)) Error!Dependencies {
-    const cwd = std.Io.Dir.cwd();
-    if (request.units.len == 0) {
-        const path = try std.fs.path.join(allocator, &.{ staging, "whole" ++ emit_units.native_extension });
-        cwd.writeFile(io, .{ .sub_path = path, .data = request.llvm }) catch return error.WriteFailed;
-        try argv.append(allocator, path);
-        return .{ .number = number_runtime.needed(request.llvm), .math = std.mem.indexOf(u8, request.llvm, "llvm.sin.f64") != null or std.mem.indexOf(u8, request.llvm, "llvm.cos.f64") != null };
-    }
-    var dependencies: Dependencies = .{};
-    for (request.units) |unit| {
-        const path = try std.fs.path.join(allocator, &.{ staging, try std.fmt.allocPrint(allocator, "{s}{s}", .{ unit.name, emit_units.native_extension }) });
-        cwd.writeFile(io, .{ .sub_path = path, .data = unit.llvm }) catch return error.WriteFailed;
-        try argv.append(allocator, path);
-        dependencies.number = dependencies.number or unit.number;
-        dependencies.math = dependencies.math or unit.math;
-    }
-    return dependencies;
-}
-
-fn linkNative(allocator: std.mem.Allocator, io: std.Io, environment: *const std.process.Environ.Map, cache: NativeCache, argv: []const []const u8, log: *std.ArrayList(u8)) Error!void {
-    if (!cache.isolate) return run(allocator, io, environment, argv, log);
-    // Zig's foreign-source cache can miss same-size header edits with restored
-    // mtimes, so foreign sources and unproved tools compile in a fresh local cache.
-    // The global cache holds only Zig's own libc and compiler-rt builds, which no
-    // program input reaches; a fresh one rebuilds them, about 6 s per build, so only
-    // an unproved tool gets one.
-    var linking = environment.clone(allocator) catch return error.OutOfMemory;
-    defer linking.deinit();
-    var nonce: [16]u8 = undefined;
-    std.Io.random(io, &nonce);
-    const private = try std.fs.path.join(allocator, &.{ cache.work, try std.fmt.allocPrint(allocator, "native-link-{s}", .{std.fmt.bytesToHex(nonce, .lower)}) });
-    std.Io.Dir.cwd().createDirPath(io, private) catch return error.WriteFailed;
-    defer removeDirectory(io, private);
-    linking.put("ZIG_LOCAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ private, "local" })) catch return error.OutOfMemory;
-    if (cache.private_global) linking.put("ZIG_GLOBAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ private, "global" })) catch return error.OutOfMemory;
-    try run(allocator, io, &linking, argv, log);
-}
-
 /// The runtime object for this runtime source, compiled on first use.
-fn runtimeObject(allocator: std.mem.Allocator, io: std.Io, environment: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8), guard: Guard) Error![]const u8 {
-    var digest: [32]u8 = undefined;
+fn runtimeObject(native: Native, directory: []const u8, abi: Digest) Error!Object {
+    const allocator = native.arena;
+    const io = native.io;
+    var digest: Digest = undefined;
     var hash = std.crypto.hash.Blake3.init(.{});
     hash.update("core-runtime-object-v2\x00-O2\x00-std=c11\x00");
     hash.update(target_policy.native_link_target);
     hash.update("\x00");
-    hash.update(runtime_source);
-    hash.update(&guard.identity.digest);
+    hash.update(&abi);
+    hash.update(&native.guard.identity.digest);
     hash.final(&digest);
     const stem = try std.fmt.allocPrint(allocator, "core_rt-{x}", .{digest});
-    const object = try std.fs.path.join(allocator, &.{ request.work, try std.fmt.allocPrint(allocator, "{s}.o", .{stem}) });
+    const object = try std.fs.path.join(allocator, &.{ directory, try std.fmt.allocPrint(allocator, "{s}.o", .{stem}) });
     const cwd = std.Io.Dir.cwd();
-    if (cwd.access(io, object, .{})) |_| return object else |_| {}
-    const source = try std.fs.path.join(allocator, &.{ request.work, try std.fmt.allocPrint(allocator, "{s}.c", .{stem}) });
+    if (cwd.access(io, object, .{})) |_| return .{ .path = object, .digest = digest } else |_| {}
+    const source = try std.fs.path.join(allocator, &.{ directory, try std.fmt.allocPrint(allocator, "{s}.c", .{stem}) });
     var nonce: [16]u8 = undefined;
     std.Io.random(io, &nonce);
     const staging = try std.fmt.allocPrint(allocator, "{s}.{x}.partial", .{ source, nonce });
@@ -210,14 +537,14 @@ fn runtimeObject(allocator: std.mem.Allocator, io: std.Io, environment: *const s
     const partial = try std.fmt.allocPrint(allocator, "{s}.{x}.partial", .{ object, nonce });
     defer removeFile(io, partial);
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(allocator, &.{ request.zig, "cc", "-c", "-O2" });
+    try argv.appendSlice(allocator, &.{ native.zig, "cc", "-c", "-O2" });
     try argv.appendSlice(allocator, &.{ "-target", target_policy.native_link_target });
     try argv.appendSlice(allocator, target.cpu_flags);
     try argv.appendSlice(allocator, &.{ "-std=c11", "-o", partial, source });
-    try run(allocator, io, environment, argv.items, log);
-    try guard.check(log);
+    try run(native, argv.items);
+    try native.guard.check(native.log);
     cwd.rename(partial, cwd, object, io) catch return error.WriteFailed;
-    return object;
+    return .{ .path = object, .digest = digest };
 }
 
 fn removeFile(io: std.Io, path: []const u8) void {
@@ -226,16 +553,18 @@ fn removeFile(io: std.Io, path: []const u8) void {
 }
 
 fn removeDirectory(io: std.Io, path: []const u8) void {
-    // Best-effort cleanup of this build's owned random runtime staging directory.
+    // Best-effort cleanup of this build's owned random staging directory.
     std.Io.Dir.cwd().deleteTree(io, path) catch return;
 }
 
-fn run(allocator: std.mem.Allocator, io: std.Io, environment: *const std.process.Environ.Map, argv: []const []const u8, log: *std.ArrayList(u8)) Error!void {
-    const result = std.process.run(allocator, io, .{ .argv = argv, .environ_map = environment }) catch |err| {
-        try log.print(allocator, "error: cannot run {s}: {s}\n", .{ argv[0], @errorName(err) });
+/// Run one tool process (counted), appending its stderr to the log.
+fn run(native: Native, argv: []const []const u8) Error!void {
+    native.counts.processes += 1;
+    const result = std.process.run(native.arena, native.io, .{ .argv = argv, .environ_map = native.environment }) catch |err| {
+        try native.log.print(native.arena, "error: cannot run {s}: {s}\n", .{ argv[0], @errorName(err) });
         return error.ToolFailed;
     };
-    try log.appendSlice(allocator, result.stderr);
+    try native.log.appendSlice(native.arena, result.stderr);
     const ok = switch (result.term) {
         .exited => |code| code == 0,
         else => false,
@@ -270,50 +599,69 @@ test "Guard.check refuses changed and missing tool inputs and propagates allocat
     try std.testing.expectError(error.OutOfMemory, failing.check(&log));
 }
 
-// spec-case: NEW-CORE-S4-UNITS-1
-test "programArguments preserves native unit order basenames bytes and dependency unions" {
+// spec-case: NEW-CORE-S4-CACHE-1
+test "foreign manifests round-trip and damaged ones are misses" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    var dir = std.testing.tmpDir(.{});
-    defer dir.cleanup();
-    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
-    const emitted = [_]emit_units.Unit{
-        .{ .name = "module-one", .source_path = "one.my", .kind = .module, .llvm = "first", .number = false, .math = true },
-        .{ .name = "helper-two", .source_path = "two.my", .kind = .helper, .llvm = "second", .number = true, .math = false },
-        .{ .name = "entry", .source_path = "app.my", .kind = .entry, .llvm = "third", .number = false, .math = false },
-    };
-    var argv: std.ArrayList([]const u8) = .empty;
-    const request: Request = .{ .zig = "unused", .work = root, .output = "unused", .release = false, .links = &.{}, .llvm = "unused compatibility text", .units = &emitted };
-    const dependencies = try programArguments(a, std.testing.io, request, root, &argv);
-    try std.testing.expect(dependencies.number and dependencies.math);
-    try std.testing.expectEqual(emitted.len, argv.items.len);
-    for (emitted, argv.items) |unit, path| {
-        try std.testing.expectEqualStrings(try std.fmt.allocPrint(a, "{s}.ll", .{unit.name}), std.fs.path.basename(path));
-        try std.testing.expectEqualStrings(unit.llvm, try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(1024)));
-    }
-    try std.testing.expectError(error.FileNotFound, dir.dir.access(std.testing.io, "whole.ll", .{}));
+    const dependencies = [_]unit_cache.Dependency{ .{ .path = "/src/value.c", .digest = @splat(1) }, .{ .path = "/src/with space.h", .digest = @splat(2) } };
+    const text = try manifestText(a, &dependencies);
+    const parsed = (try parseManifest(a, text)).?;
+    try std.testing.expectEqual(@as(usize, 2), parsed.len);
+    try std.testing.expectEqualStrings("/src/with space.h", parsed[1].path);
+    try std.testing.expectEqual(dependencies[1].digest.?, parsed[1].digest.?);
+    try std.testing.expectEqual(@as(?[]const unit_cache.Dependency, null), try parseManifest(a, text[0 .. text.len - 1]));
+    try std.testing.expectEqual(@as(?[]const unit_cache.Dependency, null), try parseManifest(a, manifest_magic));
+    try std.testing.expectEqual(@as(?[]const unit_cache.Dependency, null), try parseManifest(a, "core-foreign-deps-v0\n"));
+    try std.testing.expect(!std.mem.eql(u8, &objectKey(@splat(3), text), &objectKey(@splat(3), try manifestText(a, dependencies[0..1]))));
 }
 
 // spec-case: NEW-CORE-DRIVER-1
-test "programArguments and programDirectory refuse unwritable paths and allocation failure" {
+test "privateDirectory refuses unwritable paths and allocation failure" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
-    const blocked = try std.fs.path.join(a, &.{ root, "blocked" });
     try dir.dir.writeFile(std.testing.io, .{ .sub_path = "blocked", .data = "file" });
-    var argv: std.ArrayList([]const u8) = .empty;
-    const request: Request = .{ .zig = "unused", .work = root, .output = "unused", .release = false, .links = &.{}, .llvm = "fallback" };
-    try std.testing.expectError(error.WriteFailed, programArguments(a, std.testing.io, request, blocked, &argv));
-    try std.testing.expectError(error.WriteFailed, programDirectory(a, std.testing.io, blocked));
-    try std.testing.expectError(error.OutOfMemory, programArguments(std.testing.failing_allocator, std.testing.io, request, root, &argv));
-    try std.testing.expectError(error.OutOfMemory, programDirectory(std.testing.failing_allocator, std.testing.io, root));
-    const staging = try programDirectory(a, std.testing.io, root);
-    const dependencies = try programArguments(a, std.testing.io, request, staging, &argv);
-    try std.testing.expect(!dependencies.number and !dependencies.math);
-    try std.testing.expectEqualStrings("whole.ll", std.fs.path.basename(argv.items[0]));
-    try std.testing.expectEqualStrings("fallback", try std.Io.Dir.cwd().readFileAlloc(std.testing.io, argv.items[0], a, .limited(1024)));
+    try std.testing.expectError(error.WriteFailed, privateDirectory(a, std.testing.io, try std.fs.path.join(a, &.{ root, "blocked" }), "native-link"));
+    try std.testing.expectError(error.OutOfMemory, privateDirectory(std.testing.failing_allocator, std.testing.io, root, "native-link"));
+    const first = try privateDirectory(a, std.testing.io, root, "native-link");
+    const second = try privateDirectory(a, std.testing.io, root, "native-link");
+    try std.testing.expect(!std.mem.eql(u8, first, second));
+    try std.testing.expect(std.mem.startsWith(u8, std.fs.path.basename(first), "native-link-"));
+}
+
+fn testNative(a: std.mem.Allocator, environment: *const std.process.Environ.Map, log: *std.ArrayList(u8), counts: *Counts) Native {
+    const resources: tool_identity.Request = .{ .arena = a, .io = std.testing.io, .environment = environment, .executable = "zig", .cache = "" };
+    const identity: tool_identity.Identity = .{ .path = "zig", .digest = @splat(0), .generation = @splat(0), .native_target = @splat(0), .inputs = 0, .memo_hit = false };
+    return .{ .arena = a, .io = std.testing.io, .environment = environment, .zig = "zig", .log = log, .guard = .{ .resources = resources, .identity = identity }, .counts = counts };
+}
+
+// spec-case: NEW-CORE-S4-CACHE-1
+test "publishOutput reports an unwritable output and servedForeign misses on damaged or stale manifests" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var environment: std.process.Environ.Map = .init(a);
+    var log: std.ArrayList(u8) = .empty;
+    var counts: Counts = .{};
+    const native = testNative(a, &environment, &log, &counts);
+    try dir.dir.writeFile(std.testing.io, .{ .sub_path = "program", .data = "binary" });
+    const program = try std.fs.path.join(a, &.{ root, "program" });
+    try std.testing.expectError(error.WriteFailed, publishOutput(native, program, try std.fs.path.join(a, &.{ root, "missing", "out" })));
+    try std.testing.expect(std.mem.indexOf(u8, log.items, "cannot write") != null);
+    try publishOutput(native, program, try std.fs.path.join(a, &.{ root, "out" }));
+    try std.testing.expectEqualStrings("binary", try dir.dir.readFileAlloc(std.testing.io, "out", a, .limited(64)));
+    const store: unit_cache.Store = .{ .directory = root };
+    try std.testing.expectEqual(@as(?ServedForeign, null), try servedForeign(native, store, @splat(1), try std.fs.path.join(a, &.{ root, "absent.deps" })));
+    try dir.dir.writeFile(std.testing.io, .{ .sub_path = "damaged.deps", .data = "core-foreign-deps-v1\nnot a line\n" });
+    try std.testing.expectEqual(@as(?ServedForeign, null), try servedForeign(native, store, @splat(1), try std.fs.path.join(a, &.{ root, "damaged.deps" })));
+    const stale = try manifestText(a, &.{.{ .path = program, .digest = @splat(7) }});
+    try dir.dir.writeFile(std.testing.io, .{ .sub_path = "stale.deps", .data = stale });
+    try std.testing.expectEqual(@as(?ServedForeign, null), try servedForeign(native, store, @splat(1), try std.fs.path.join(a, &.{ root, "stale.deps" })));
 }

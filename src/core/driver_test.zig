@@ -17,7 +17,6 @@ test "a compiler that cannot run fails the build with ToolFailed and says why" {
         .output = try std.fs.path.join(arena.allocator(), &.{ root, "p" }),
         .release = false,
         .links = &.{},
-        .llvm = "",
     }, &log);
     try std.testing.expectError(error.ToolFailed, outcome);
     try std.testing.expect(std.mem.indexOf(u8, log.items, "cannot run /nonexistent/mylang-core-test/zig") != null);

@@ -12,6 +12,7 @@ const driver = @import("driver.zig");
 const passes = @import("passes.zig");
 const verify_ir = @import("verify_ir.zig");
 const target_description = @import("target.zig");
+const build_replay = @import("build_replay.zig");
 
 /// What the command line asked for.
 pub const Options = struct {
@@ -43,15 +44,27 @@ pub const Show = struct {
     /// How trap reports find their caller frames (`--trap-frames=dwarf|labels|none`;
     /// default: the target's).
     trap_frames: ?target_description.Traps = null,
+    /// `--verify-cache`: recompile every unit the object store served and require
+    /// identical object bytes; such a build never replays.
+    verify_cache: bool = false,
+    /// `--cache-report`: say what the caches served and how many tools ran.
+    cache_report: bool = false,
 };
 
 /// Why a build stopped after its report was written.
 pub const Error = error{ SourceError, Unsupported, ToolFailed, WriteFailed, OutOfMemory, InvalidIr };
 
-/// Build `path` into `options.output`.
+/// Build `path` into `options.output`. An unchanged build replays its last
+/// identical build's executable (`build_replay.zig`) before checking anything.
 pub fn build(init: std.process.Init, path: []const u8, options: Options, report: *std.ArrayList(u8)) Error!u8 {
     const allocator = init.arena.allocator();
     const entry = try project_entry.resolve(allocator, init.io, path, report);
+    const replaying = options.show.llvm == null;
+    const context: build_replay.Context = .{ .arena = allocator, .io = init.io, .environment = init.environ_map, .cache = options.cache, .zig = options.zig, .flags = try flags(init, options), .entry = entry };
+    if (replaying and !options.show.verify_cache) if (try build_replay.replay(context, options.output, report)) {
+        if (options.show.cache_report) try report.appendSlice(allocator, "mylang-core: cache: replayed the last identical build\n");
+        return 0;
+    };
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
     entry.configure(&session);
@@ -60,6 +73,7 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.SourceError,
     };
+    const sources = if (replaying) try build_replay.inputs(context, &session) else null;
     try entry.validate(allocator, &session, report);
     var refusal: build_ir.Refusal = .{};
     var module = build_ir.buildModuleSource(allocator, checked.program, checked.src, &refusal) catch |err| switch (err) {
@@ -82,7 +96,36 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
             .capabilities = try mainCapabilities(allocator, checked.program),
         },
     };
-    return finish(init, &module, unit, options, report);
+    const outcome = try linkEmitted(init, &module, unit, options, report);
+    // A record that cannot be written costs the next build its replay, nothing more.
+    if (replaying) build_replay.remember(context, sources, outcome.tool, .{ .program = outcome.program, .foreign = outcome.foreign }, report.items) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.WriteFailed => {},
+    };
+    if (options.show.cache_report) try cacheReport(allocator, outcome, report);
+    return 0;
+}
+
+/// The canonical encoding of every build flag that changes the executable or the
+/// report, with `--link` sources by absolute path.
+fn flags(init: std.process.Init, options: Options) Error![]const u8 {
+    const allocator = init.arena.allocator();
+    const links = try allocator.alloc([]const u8, options.links.len);
+    for (options.links, links) |link, *absolute| absolute.* = std.Io.Dir.cwd().realPathFileAlloc(init.io, link, allocator) catch link;
+    return std.json.Stringify.valueAlloc(allocator, .{
+        .release = options.release,
+        .facts = options.facts,
+        .stats = options.show.stats,
+        .vectors = options.show.generic_vectors,
+        .frames = options.show.trap_frames,
+        .links = links,
+    }, .{}) catch return error.OutOfMemory;
+}
+
+fn cacheReport(allocator: std.mem.Allocator, outcome: driver.Outcome, report: *std.ArrayList(u8)) Error!void {
+    const c = outcome.counts;
+    const format = "mylang-core: cache: {d} units, {d} reused, {d} compiled, {d} verified; program {s}; {d} processes\n";
+    try report.print(allocator, format, .{ c.units, c.reused, c.compiled, c.verified, if (outcome.program_reused) "reused" else "linked", c.processes });
 }
 
 /// What the back half of a build needs to know about the checked source.
@@ -100,18 +143,24 @@ pub const Unit = struct {
 /// The back half of `build`: run the release passes on `module`, emit LLVM IR, and
 /// link the executable. `mylang-core test` reaches it with a module of its own making.
 pub fn finish(init: std.process.Init, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error!u8 {
+    _ = try linkEmitted(init, module, unit, options, report);
+    return 0;
+}
+
+fn linkEmitted(init: std.process.Init, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error!driver.Outcome {
     const allocator = init.arena.allocator();
     const emission = try emitted(allocator, module, unit, options, report);
     if (options.show.llvm) |where| std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = where, .data = emission.whole.? }) catch return error.WriteFailed;
-    driver.link(allocator, init.io, init.environ_map, .{
+    const outcome = driver.link(allocator, init.io, init.environ_map, .{
         .zig = options.zig,
         .work = options.cache,
         .output = options.output,
         .release = options.release,
         .links = options.links,
         .units = emission.units,
+        .verify = options.show.verify_cache,
     }, report) catch |err| return err;
-    return 0;
+    return outcome;
 }
 
 /// Arena-owned native units and optional compatibility LLVM from one pass run.
