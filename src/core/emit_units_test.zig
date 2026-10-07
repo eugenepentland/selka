@@ -323,6 +323,8 @@ test "S4 release imports counted and conditional loop callees without cold-call 
     const first = try snapshot(a, .{ caller, source, other }, true);
     const body = try textOf(first, "app.my");
     try std.testing.expect(std.mem.indexOf(u8, body, "define available_externally hidden fastcc i64 @\"my.leaf::compute\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, ") nounwind uwtable alwaysinline !dbg") != null);
+    try std.testing.expect(std.mem.indexOf(u8, try textOf(first, "leaf.my"), ") nounwind uwtable alwaysinline !dbg") == null);
     try std.testing.expect(std.mem.indexOf(u8, body, "define available_externally hidden fastcc i64 @\"my.leaf::cold\"") == null);
     try changed(first, try snapshot(a, .{ caller, source, other }, true), &.{});
     const hot = try std.mem.replaceOwned(u8, a, source, "total += i", "total += i * 2");

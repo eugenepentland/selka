@@ -1,0 +1,13 @@
+{
+  "source_commit": "98c19ddcb4e4aa1d35d7bbf92c09f724f24dc351",
+  "binaries": {
+    "split": {
+      "path": "experiments/new-core-s4-emission-20261006/paired-packet-imports-01/split-packet_decode",
+      "sha256": "11f72b4fa406945b89c2820409ef4a11c420584a09066fd6d69f048f0e1672c5"
+    },
+    "whole": {
+      "path": ".mylang-cache/s4-emission/whole-packet-imports-01/row_packet_decode",
+      "sha256": "47203c88bfaaae1fe2a910b807be67bb012e22b85aeaa2bdab63e54edcb4784e"
+    }
+  }
+}

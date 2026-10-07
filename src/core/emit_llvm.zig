@@ -286,8 +286,13 @@ const ModuleState = struct {
 
     fn linkage(self: *ModuleState, index: u32) []const u8 {
         const selected = self.local.selection orelse return "internal";
-        if (std.mem.indexOfScalar(u32, selected.imports, index) != null) return "available_externally hidden";
+        if (self.imported(index)) return "available_externally hidden";
         return if (selected.exported[index]) "hidden" else "internal";
+    }
+
+    fn imported(self: *ModuleState, index: u32) bool {
+        const selected = self.local.selection orelse return false;
+        return std.mem.indexOfScalar(u32, selected.imports, index) != null;
     }
 
     fn functionName(self: *ModuleState, index: u32) []const u8 {
@@ -834,7 +839,9 @@ const FunctionEmitter = struct {
         try self.analyzeMemory(&entry);
         try self.collectBoundLengths();
         // `uwtable`: a trap walks the stack through `.eh_frame`, which needs every frame's CFI.
-        try out.print(self.a(), ") nounwind uwtable{s} {{\n", .{try self.functionScope()});
+        // The fixed import budgets bound expansion. Without this incentive LLVM
+        // can retain a loop call it inlines in the single-use owning module.
+        try out.print(self.a(), ") nounwind uwtable{s}{s} {{\n", .{ if (self.state.imported(self.index)) " alwaysinline" else "", try self.functionScope() });
         const bodies = try self.a().alloc(Out, f.blocks.items.len);
         try self.exit_labels.resize(self.a(), f.blocks.items.len);
         for (f.blocks.items, 0..) |block, b| {
