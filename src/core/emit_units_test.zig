@@ -57,6 +57,11 @@ fn textOf(emitted: []const units.Unit, path: []const u8) ![]const u8 {
     return error.MissingUnit;
 }
 
+fn numericHelper(emitted: []const units.Unit) bool {
+    for (emitted) |unit| if (unit.kind == .helper and unit.number) return true;
+    return false;
+}
+
 fn entryText(emitted: []const units.Unit) ![]const u8 {
     for (emitted) |unit| if (unit.kind == .entry) return unit.llvm;
     return error.MissingUnit;
@@ -377,8 +382,9 @@ test "S4 release loop imports include the bounded entry consumed closure and sta
     try std.testing.expect(std.mem.indexOf(u8, try textOf(first, "leaf.my"), ") nounwind uwtable alwaysinline !dbg") == null);
     try std.testing.expect(std.mem.indexOf(u8, body, "define available_externally hidden fastcc i64 @\"my.leaf::cold\"") == null);
     const entry_body = try entryText(first);
-    try std.testing.expect(std.mem.indexOf(u8, entry_body, "define available_externally hidden fastcc i64 @\"my.app::main\"") != null);
-    try std.testing.expect(std.mem.indexOf(u8, entry_body, "define available_externally hidden fastcc i64 @\"my.leaf::cold\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, entry_body, "define internal fastcc i64 @\"my.app::main.s4.entry.clone\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, entry_body, "define internal fastcc i64 @\"my.leaf::cold.s4.entry.clone\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, entry_body, ") nounwind uwtable alwaysinline !dbg") == null);
     try changed(first, try snapshot(a, .{ caller, source, other }, true), &.{});
     const hot = try std.mem.replaceOwned(u8, a, source, "total += i", "total += i * 2");
     try changed(first, try snapshot(a, .{ caller, hot, other }, true), &.{ "app.my", "leaf.my", "<entry>" });
@@ -502,7 +508,7 @@ test "S4 imported aggregate bodies close rendering dependencies and export exclu
     ;
     var source: std.ArrayList(u8) = .empty;
     try source.appendSlice(a, "module leaf\npublic record Big:\n    a: int\n    b: int\n    c: int\n    d: int\n    e: int\n    f: int\n");
-    try source.appendSlice(a, "public def compute(x: int) -> Big:\n    return Big(callee(x), 2, 3, 4, 5, len(f\"{[1.25]}\"))\ndef callee(x: int) -> int:\n");
+    try source.appendSlice(a, "public def compute(x: int) -> Big:\n    return Big(callee(x), 2, 3, 4, 5, len(f\"{[float(x) + 1.25]}\"))\ndef callee(x: int) -> int:\n");
     for (0..40) |index| try source.print(a, "    if x == -{d}:\n        return 0\n", .{index + 1});
     try source.appendSlice(a, "    return x + 1\n");
     const emitted = try snapshot(a, .{ caller, source.items, other }, true);
@@ -510,10 +516,104 @@ test "S4 imported aggregate bodies close rendering dependencies and export exclu
     try std.testing.expect(std.mem.indexOf(u8, body, "define available_externally hidden fastcc void @\"my.leaf::compute\"(ptr noalias sret([48 x i8])") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "define available_externally hidden fastcc i64 @\"my.leaf::callee\"") == null);
     try std.testing.expect(std.mem.indexOf(u8, try textOf(emitted, "leaf.my"), "define hidden fastcc i64 @\"my.leaf::callee\"") != null);
+    const entry_body = try entryText(emitted);
+    try std.testing.expect(std.mem.indexOf(u8, entry_body, "define internal fastcc void @\"my.leaf::compute.s4.entry.clone\"(ptr noalias sret([48 x i8])") != null);
+    try std.testing.expect(std.mem.indexOf(u8, entry_body, "declare hidden fastcc i64 @\"my.leaf::callee\"") != null);
+    try std.testing.expect(numericHelper(emitted));
     const result = try native(a, emitted);
     try std.testing.expect(result.term == .exited and result.term.exited == 0);
     try std.testing.expectEqualStrings("24\n", result.stdout);
     try std.testing.expectEqualStrings("", result.stderr);
+}
+
+// spec-case: NEW-CORE-S4-UNITS-1
+test "S4 private entry bodies keep addressed and recursive callees at their real symbols" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const caller =
+        \\module app
+        \\import leaf
+        \\import other
+        \\def main(args: list[str], out: Stream) -> int:
+        \\    f = other.pick(args)
+        \\    total = 0
+        \\    for i in range(3):
+        \\        total += leaf.closed(i)
+        \\        total += other.apply(f, i)
+        \\        total += leaf.recursive(i)
+        \\    out.print(total)
+        \\    return 0
+    ;
+    const source =
+        \\module leaf
+        \\public def closed(x: int) -> int:
+        \\    total = 0
+        \\    for i in range(2):
+        \\        total += x
+        \\    return total
+        \\public def addressed(x: int) -> int:
+        \\    total = 0
+        \\    for i in range(2):
+        \\        total += x + 1
+        \\    return total
+        \\public def alternate(x: int) -> int:
+        \\    total = 0
+        \\    for i in range(3):
+        \\        total += x
+        \\    return total
+        \\public def recursive(x: int) -> int:
+        \\    if x == 0:
+        \\        return 0
+        \\    return x + partner(x - 1)
+        \\def partner(x: int) -> int:
+        \\    if x == 0:
+        \\        return 0
+        \\    return x + recursive(x - 1)
+    ;
+    // The addresses appear only in another Core owner, never in main's own IR.
+    const callback = "module other\nimport leaf\npublic def pick(args: list[str]) -> def(int) -> int:\n" ++
+        "    return leaf.addressed if len(args) == 0 else leaf.alternate\n" ++
+        "public def apply(f: def(int) -> int, x: int) -> int:\n    return f(x)\n";
+    const emitted = try snapshot(a, .{ caller, source, callback }, true);
+    const body = try entryText(emitted);
+    try std.testing.expect(std.mem.indexOf(u8, body, "define internal fastcc i64 @\"my.leaf::closed.s4.entry.clone\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "my.leaf::addressed.s4.entry.clone") == null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "my.leaf::recursive.s4.entry.clone") == null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "my.leaf::partner.s4.entry.clone") == null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "@\"my.leaf::addressed\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "define available_externally hidden fastcc i64 @\"my.leaf::recursive\"") != null);
+    const result = try native(a, emitted);
+    try std.testing.expect(result.term == .exited and result.term.exited == 0);
+    try std.testing.expectEqualStrings("22\n", result.stdout);
+    try std.testing.expectEqualStrings("", result.stderr);
+}
+
+// spec-case: NEW-CORE-S4-UNITS-1
+test "S4 private body classification handles a deep call graph without native recursion" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const ir = @import("ir.zig");
+    var module: ir.Module = .{};
+    const n = 6000;
+    for (0..n) |index| {
+        var function: ir.Function = .{ .name = try std.fmt.allocPrint(a, "chain{d}", .{index}), .signature = .{ .params = &.{}, .ret = .i64 } };
+        try function.insts.append(a, if (index + 1 < n) .{ .op = .call, .ty = .i64, .a = @fromBackingInt(@intCast(index + 1)) } else .{ .op = .iconst, .ty = .i64, .data = 1 });
+        try function.insts.append(a, .{ .op = .ret, .ty = .void, .a = @fromBackingInt(0) });
+        try function.blocks.append(a, .{});
+        try function.blocks.items[0].insts.appendSlice(a, &.{ @fromBackingInt(0), @fromBackingInt(1) });
+        try module.functions.append(a, function);
+    }
+    const selected = [_]u32{ 20, 0, n - 1 };
+    const policy = @import("emit_clone_policy.zig");
+    try std.testing.expectEqualSlices(u32, &selected, try policy.privateBodies(a, &module, &selected));
+    const callback = try module.intern(a, .{ .@"fn" = .{ .params = &.{}, .ret = .i64 } });
+    // The only address is in a different function, outside the selected caller.
+    try module.functions.items[n - 1].insts.append(a, .{ .op = .func_ref, .ty = callback, .data = 20 });
+    try std.testing.expectEqualSlices(u32, &.{ 0, n - 1 }, try policy.privateBodies(a, &module, &selected));
+    module.functions.items[n - 1].insts.items[0] = .{ .op = .call, .ty = .i64, .a = @fromBackingInt(0) };
+    try std.testing.expectEqualSlices(u32, &.{}, try policy.privateBodies(a, &module, &selected));
 }
 
 // spec-case: NEW-CORE-S4-SITES-1

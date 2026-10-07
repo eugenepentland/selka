@@ -1,0 +1,16 @@
+{
+  "source_commit": "07cca615721429ff5cd9eb4a5c9d03ae18e8ef70",
+  "adaptation": "Core direct-mode command builder removes --force; count/status/supervisor/input checks unchanged",
+  "files": {
+    "conformance_checked.py": {
+      "source_sha256": "67a69be4c0e3c7f96b8350de8b211ab2528bc2b6e859836ff014320ff54cd70d",
+      "adapted_sha256": "a9bf51ea761e9d00b6e0883ed8266e106eea0266909d855c8fe01f18a8ee67fc",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/conformance_checked.py"
+    },
+    "qualification_support.py": {
+      "source_sha256": "6f78a8ff7627b38c89aa4b5bd9e461aa1cdac214d78ab53297b3192da873f49f",
+      "adapted_sha256": "6f78a8ff7627b38c89aa4b5bd9e461aa1cdac214d78ab53297b3192da873f49f",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/qualification_support.py"
+    }
+  }
+}

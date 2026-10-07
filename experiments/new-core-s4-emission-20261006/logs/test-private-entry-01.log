@@ -1,0 +1,3 @@
+error: invalid option: -Dcore-test-filter
+error:   access the help menu with 'zig build -h'
+error: configure command exited with code 1: .zig-cache/o/b5b5991101c470a5f48ae67a9c527ad1/configurer --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --build-root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission "-Dcore-test-filter=S4 private entry bodies"

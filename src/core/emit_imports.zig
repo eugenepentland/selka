@@ -38,6 +38,7 @@ pub fn select(a: std.mem.Allocator, module: *const ir.Module, owner: []const ?u3
 
 /// Expose only a bounded loop-bearing entry and its consumed bodies to C main.
 /// Large dispatch entries remain a call; no entry arguments are specialized here.
+/// Entry-only private-copy eligibility is evaluated separately without changing IR.
 pub fn entry(a: std.mem.Allocator, module: *const ir.Module, owner: []const ?u32) std.mem.Allocator.Error![]const u32 {
     if (!hasLoop(&module.functions.items[module.entry])) return &.{};
     var selected: Selection = .{ .visited = try a.alloc(bool, owner.len), .entry = true };

@@ -1,0 +1,16 @@
+test-core
++- run test w
+guardian/test: 1 test(s) selected
+guardian/test: test wall 2.63s; slowest over 50ms:
+guardian/test:   2.63s  emit_units_test.test.S4 private entry bodies keep addressed and recursive callees at their real symbols
+guardian/test: PASS — 1 passed
+guardian/test: RESULT {"passed":1,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/af750905fdfc23c0b0b1d2667b31a185/test --cache-dir=./.zig-cache --seed=0xb124944f --listen=-
+
+Build Summary: 5/5 steps succeeded; 1/1 tests passed
+test-core success
++- run test 1 pass (1 total) 2s MaxRSS:249M
+   +- compile test debug native success 1s MaxRSS:349M
+      +- options success
+         +- compile exe mylang-core debug native success 1s MaxRSS:359M
+

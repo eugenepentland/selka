@@ -1,0 +1,14 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10494 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 2/88 failed (error-discipline, test-no-conditional)
+guardian: failures grouped by check (2):
+  error-discipline (1 finding)
+    - src/core/emit_clone_policy.zig: pub fn privateBodies uses inferred error set `!T` (use `MyErr!T`)
+      fix: declare an explicit error set — `pub const MyError = error{ Foo, Bar };` — and return `MyError!void`.
+  test-no-conditional (1 finding)
+    - src/core/emit_units_test.zig:518: more than one top-level loop — a test may keep one; hoist the loop at line 518 into a named helper, or merge the loops into one table-driven loop
+      fix: one top-level loop is fine; merge multiple loops into one table-driven loop, split a branch into two independent tests, or hoist the computation into a helper. A multi-loop finding names the loop to hoist — the assertion-free one when there is one, otherwise the extra loop itself.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
