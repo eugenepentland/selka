@@ -1,0 +1,12 @@
+packet_decode 4096 {'split': 1.0060284742751588, 'original_row': 1.020309628952213}
+packet_decode 64 {'split': 1.015406116603785, 'original_row': 0.9939198606784092}
+lox_eval 4096 {'split': 1.0018743281627671, 'original_row': 0.9941458173197261}
+lox_eval 64 {'split': 1.0026963736682741, 'original_row': 0.9973875579856286}
+word_count 4096 {'split': 0.9889312935946696, 'original_row': 0.9798454038002262}
+word_count 64 {'split': 1.0052019987427987, 'original_row': 1.0024062546592094}
+csv_aggregate 4096 {'split': 0.9816646636495989, 'original_row': 0.9998033378514257}
+csv_aggregate 64 {'split': 0.9955294923645084, 'original_row': 0.9985449871127287}
+json_transform 4096 {'split': 1.0275204336082608, 'original_row': 1.001221350140152}
+json_transform 64 {'split': 1.035960428236973, 'original_row': 0.9986869130578756}
+result_propagate 4096 {'split': 0.9999643727382628, 'index_base': 1.0033637072507735}
+result_propagate 64 {'split': 1.0000257169675502, 'index_base': 0.9984228056854665}

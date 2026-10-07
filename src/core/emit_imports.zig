@@ -3,7 +3,8 @@ const std = @import("std");
 const ir = @import("ir.zig");
 
 const instruction_limit = 512;
-const block_limit = 64;
+const block_limit = 32;
+const loop_block_limit = 64;
 const unit_limit = 2048;
 
 const Selection = struct {
@@ -63,7 +64,9 @@ fn admit(a: std.mem.Allocator, module: *const ir.Module, owner: []const ?u32, gr
             instructions += 1;
         };
     }
-    if (blocks > block_limit or instructions > instruction_limit or selected.instructions + instructions > unit_limit) return;
+    // Small loop kernels can have broad CFGs; branch-heavy dispatch remains separate.
+    const allowed_blocks: usize = if (hasLoop(function)) loop_block_limit else block_limit;
+    if (blocks > allowed_blocks or instructions > instruction_limit or selected.instructions + instructions > unit_limit) return;
     try selected.functions.append(a, index);
     selected.instructions += instructions;
 }

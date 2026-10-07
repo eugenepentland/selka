@@ -1,0 +1,21 @@
+core
++- install mylang-core
+   +- compile exe mylang-core debug native 1 errors
+src/core/emit_imports.zig:68:28: error: value with comptime-only type 'comptime_int' depends on runtime control flow
+    const allowed_blocks = if (hasLoop(function)) loop_block_limit else block_limit;
+                           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/core/emit_imports.zig:68:39: note: runtime control flow here
+    const allowed_blocks = if (hasLoop(function)) loop_block_limit else block_limit;
+                               ~~~~~~~^~~~~~~~~~
+referenced by:
+    select: src/core/emit_imports.zig:30:108
+    emit: src/core/emit_units.zig:69:43
+    9 reference(s) hidden; use '-freference-trace=11' to see all references
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang -Mroot=src/core/main.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 0/3 steps succeeded (1 failed)
+core transitive failure
++- install mylang-core transitive failure
+   +- compile exe mylang-core debug native 1 errors
+

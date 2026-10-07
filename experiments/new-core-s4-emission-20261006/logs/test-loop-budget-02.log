@@ -1,0 +1,17 @@
+test-core
++- run test w
+guardian/test: 2 test(s) selected
+guardian/test: test wall 5.44s; slowest over 50ms:
+guardian/test:   2.72s  emit_units_test.test.S4 imports bounded branch-heavy loops and refuses larger bodies without caller ripple
+guardian/test:   2.71s  emit_units_test.test.S4 branch-heavy non-loop callees retain their owner when called inside a loop
+guardian/test: PASS — 2 passed
+guardian/test: RESULT {"passed":2,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/968ccd2acd666ec45ec7ca4f7c1f2759/test --cache-dir=./.zig-cache --seed=0xd8971163 --listen=-
+
+Build Summary: 5/5 steps succeeded; 2/2 tests passed
+test-core success
++- run test 2 pass (2 total) 5s MaxRSS:248M
+   +- compile test debug native success 1s MaxRSS:344M
+      +- options success
+         +- compile exe mylang-core debug native cached 9ms MaxRSS:41M
+

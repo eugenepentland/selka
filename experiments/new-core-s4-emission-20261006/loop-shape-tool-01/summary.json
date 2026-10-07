@@ -1,0 +1,569 @@
+{
+  "json_transform": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/loop-shape-tool-01/diagnostic",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/paired-entry-first-01/sources/json_transform/app.my"
+    ],
+    "status": 0,
+    "functions": {
+      "app::main": {
+        "active_blocks": 14,
+        "active_noncopy_instructions": 51,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "workload::number": {
+        "active_blocks": 4,
+        "active_noncopy_instructions": 8,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "workload::inputs": {
+        "active_blocks": 17,
+        "active_noncopy_instructions": 70,
+        "recorded_loops": 1,
+        "reachable_recorded_loops": 1
+      },
+      "app::runtime_bench_now": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_host_check": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "workload::kernel": {
+        "active_blocks": 15,
+        "active_noncopy_instructions": 49,
+        "recorded_loops": 2,
+        "reachable_recorded_loops": 2
+      },
+      "myl_core_text_encode": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::integer": {
+        "active_blocks": 1,
+        "active_noncopy_instructions": 2,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::text": {
+        "active_blocks": 1,
+        "active_noncopy_instructions": 3,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "workload::row_name": {
+        "active_blocks": 6,
+        "active_noncopy_instructions": 18,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::boolean": {
+        "active_blocks": 1,
+        "active_noncopy_instructions": 2,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::object": {
+        "active_blocks": 1,
+        "active_noncopy_instructions": 3,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::dumps": {
+        "active_blocks": 9,
+        "active_noncopy_instructions": 32,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::array": {
+        "active_blocks": 1,
+        "active_noncopy_instructions": 3,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "workload::json_job": {
+        "active_blocks": 56,
+        "active_noncopy_instructions": 134,
+        "recorded_loops": 1,
+        "reachable_recorded_loops": 1
+      },
+      "myl_core_str_from_i64": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_bytes_valid_list": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_buffer_from_list": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::write_value": {
+        "active_blocks": 41,
+        "active_noncopy_instructions": 104,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_buffer_snapshot": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_bytes_utf8_count": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_bytes_decode_text": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_bytes_utf8_error": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::loads": {
+        "active_blocks": 5,
+        "active_noncopy_instructions": 37,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "workload::json_active": {
+        "active_blocks": 4,
+        "active_noncopy_instructions": 8,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "workload::json_integer": {
+        "active_blocks": 4,
+        "active_noncopy_instructions": 8,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "workload::score": {
+        "active_blocks": 5,
+        "active_noncopy_instructions": 17,
+        "recorded_loops": 1,
+        "reachable_recorded_loops": 1
+      },
+      "myl_core_buffer_range_valid": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_buffer_append_i64": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::write_number": {
+        "active_blocks": 15,
+        "active_noncopy_instructions": 39,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::write_quoted": {
+        "active_blocks": 42,
+        "active_noncopy_instructions": 127,
+        "recorded_loops": 1,
+        "reachable_recorded_loops": 1
+      },
+      "json::write_array": {
+        "active_blocks": 19,
+        "active_noncopy_instructions": 59,
+        "recorded_loops": 1,
+        "reachable_recorded_loops": 1
+      },
+      "json::write_object": {
+        "active_blocks": 25,
+        "active_noncopy_instructions": 80,
+        "recorded_loops": 1,
+        "reachable_recorded_loops": 1
+      },
+      "json::scanner_of": {
+        "active_blocks": 1,
+        "active_noncopy_instructions": 3,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::read_value": {
+        "active_blocks": 34,
+        "active_noncopy_instructions": 126,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::skip_whitespace": {
+        "active_blocks": 10,
+        "active_noncopy_instructions": 22,
+        "recorded_loops": 1,
+        "reachable_recorded_loops": 1
+      },
+      "json::at_end": {
+        "active_blocks": 1,
+        "active_noncopy_instructions": 6,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::fail": {
+        "active_blocks": 4,
+        "active_noncopy_instructions": 17,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::as_bool": {
+        "active_blocks": 14,
+        "active_noncopy_instructions": 29,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::as_int": {
+        "active_blocks": 14,
+        "active_noncopy_instructions": 29,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_buffer_append_f64": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_bytes_index_offset": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::write_control": {
+        "active_blocks": 66,
+        "active_noncopy_instructions": 181,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_dict_ordinal": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::max_depth": {
+        "active_blocks": 1,
+        "active_noncopy_instructions": 1,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::peek": {
+        "active_blocks": 3,
+        "active_noncopy_instructions": 14,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::read_object": {
+        "active_blocks": 13,
+        "active_noncopy_instructions": 63,
+        "recorded_loops": 1,
+        "reachable_recorded_loops": 1
+      },
+      "json::read_array": {
+        "active_blocks": 13,
+        "active_noncopy_instructions": 65,
+        "recorded_loops": 1,
+        "reachable_recorded_loops": 1
+      },
+      "json::read_string": {
+        "active_blocks": 31,
+        "active_noncopy_instructions": 121,
+        "recorded_loops": 1,
+        "reachable_recorded_loops": 1
+      },
+      "json::read_literal": {
+        "active_blocks": 5,
+        "active_noncopy_instructions": 36,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::null_value": {
+        "active_blocks": 1,
+        "active_noncopy_instructions": 2,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::is_digit_byte": {
+        "active_blocks": 3,
+        "active_noncopy_instructions": 6,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::read_number": {
+        "active_blocks": 18,
+        "active_noncopy_instructions": 81,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::advance": {
+        "active_blocks": 1,
+        "active_noncopy_instructions": 4,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "strings::format_int": {
+        "active_blocks": 17,
+        "active_noncopy_instructions": 56,
+        "recorded_loops": 1,
+        "reachable_recorded_loops": 1
+      },
+      "json::read_member": {
+        "active_blocks": 18,
+        "active_noncopy_instructions": 89,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::decoded": {
+        "active_blocks": 7,
+        "active_noncopy_instructions": 27,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::read_escape": {
+        "active_blocks": 45,
+        "active_noncopy_instructions": 149,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_bytes_slice": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_str_eq": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::read_integer_part": {
+        "active_blocks": 11,
+        "active_noncopy_instructions": 45,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::read_fraction": {
+        "active_blocks": 7,
+        "active_noncopy_instructions": 31,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::read_exponent": {
+        "active_blocks": 12,
+        "active_noncopy_instructions": 46,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_parse_int_range": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_parse_float_range": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::number": {
+        "active_blocks": 1,
+        "active_noncopy_instructions": 2,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "strings::base_digits": {
+        "active_blocks": 1,
+        "active_noncopy_instructions": 1,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_str_index_offset": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::read_unicode_escape": {
+        "active_blocks": 18,
+        "active_noncopy_instructions": 83,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::skip_digits": {
+        "active_blocks": 6,
+        "active_noncopy_instructions": 15,
+        "recorded_loops": 1,
+        "reachable_recorded_loops": 1
+      },
+      "json::read_hex4": {
+        "active_blocks": 9,
+        "active_noncopy_instructions": 35,
+        "recorded_loops": 1,
+        "reachable_recorded_loops": 1
+      },
+      "json::append_code_point": {
+        "active_blocks": 47,
+        "active_noncopy_instructions": 171,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "json::hex_value": {
+        "active_blocks": 9,
+        "active_noncopy_instructions": 18,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      }
+    }
+  },
+  "lox_eval": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/loop-shape-tool-01/diagnostic",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/paired-entry-first-01/sources/lox_eval/app.my"
+    ],
+    "status": 0,
+    "functions": {
+      "app::main": {
+        "active_blocks": 20,
+        "active_noncopy_instructions": 141,
+        "recorded_loops": 1,
+        "reachable_recorded_loops": 1
+      },
+      "workload::parse_number": {
+        "active_blocks": 4,
+        "active_noncopy_instructions": 8,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "app::runtime_bench_now": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_host_check": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "workload::batch_result": {
+        "active_blocks": 1,
+        "active_noncopy_instructions": 3,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "workload::execute": {
+        "active_blocks": 55,
+        "active_noncopy_instructions": 210,
+        "recorded_loops": 1,
+        "reachable_recorded_loops": 1
+      },
+      "workload::integer": {
+        "active_blocks": 4,
+        "active_noncopy_instructions": 7,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "workload::boolean": {
+        "active_blocks": 4,
+        "active_noncopy_instructions": 7,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      }
+    }
+  },
+  "packet_decode": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/loop-shape-tool-01/diagnostic",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/paired-entry-first-01/sources/packet_decode/app.my"
+    ],
+    "status": 0,
+    "functions": {
+      "app::main": {
+        "active_blocks": 54,
+        "active_noncopy_instructions": 175,
+        "recorded_loops": 4,
+        "reachable_recorded_loops": 4
+      },
+      "workload::parse_number": {
+        "active_blocks": 4,
+        "active_noncopy_instructions": 8,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "workload::make_frame": {
+        "active_blocks": 33,
+        "active_noncopy_instructions": 110,
+        "recorded_loops": 3,
+        "reachable_recorded_loops": 3
+      },
+      "app::runtime_bench_now": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_host_check": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "workload::decode": {
+        "active_blocks": 19,
+        "active_noncopy_instructions": 80,
+        "recorded_loops": 2,
+        "reachable_recorded_loops": 2
+      },
+      "myl_core_bytes_valid_list": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_bytes_from_list": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      },
+      "myl_core_bytes_index_offset": {
+        "active_blocks": 0,
+        "active_noncopy_instructions": 0,
+        "recorded_loops": 0,
+        "reachable_recorded_loops": 0
+      }
+    }
+  }
+}

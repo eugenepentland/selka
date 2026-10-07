@@ -436,6 +436,24 @@ fn branchLoop(a: std.mem.Allocator, branches: usize) ![]const u8 {
 }
 
 // spec-case: NEW-CORE-S4-UNITS-1
+test "S4 branch-heavy non-loop callees retain their owner when called inside a loop" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const caller = "module app\nimport leaf\ndef main(args: list[str], out: Stream) -> int:\n" ++
+        "    total = 0\n    for i in range(2):\n        total += leaf.compute(len(args)) + i\n    out.print(total)\n    return 0\n";
+    const source = try std.mem.replaceOwned(u8, a, try branchLoop(a, 16), "    total = 0\n    for i in range(2):\n        total += x + 1\n    return total\n", "    return x + 1\n");
+    const first = try snapshot(a, .{ caller, source, other }, true);
+    try std.testing.expect(std.mem.indexOf(u8, try textOf(first, "app.my"), "available_externally") == null);
+    const update = try std.mem.replaceOwned(u8, a, source, "return 16", "return 17");
+    try changed(first, try snapshot(a, .{ caller, update, other }, true), &.{"leaf.my"});
+    const result = try native(a, first);
+    try std.testing.expect(result.term == .exited and result.term.exited == 0);
+    try std.testing.expectEqualStrings("3\n", result.stdout);
+    try std.testing.expectEqualStrings("", result.stderr);
+}
+
+// spec-case: NEW-CORE-S4-UNITS-1
 test "S4 imported aggregate bodies close rendering dependencies and export excluded private callees" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();

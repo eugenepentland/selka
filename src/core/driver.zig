@@ -61,32 +61,18 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
         cwd.writeFile(io, .{ .sub_path = program, .data = request.llvm }) catch return error.WriteFailed;
         try argv.append(allocator, program);
     }
-    const programs = try allocator.alloc([]const u8, request.units.len);
-    for (request.units, programs) |unit, *program| {
-        program.* = try std.fs.path.join(allocator, &.{ staging, try std.fmt.allocPrint(allocator, "{s}.ll", .{unit.name}) });
-        cwd.writeFile(io, .{ .sub_path = program.*, .data = unit.llvm }) catch return error.WriteFailed;
+    for (request.units) |unit| {
+        const program = try std.fs.path.join(allocator, &.{ staging, try std.fmt.allocPrint(allocator, "{s}.ll", .{unit.name}) });
+        cwd.writeFile(io, .{ .sub_path = program, .data = unit.llvm }) catch return error.WriteFailed;
+        try argv.append(allocator, program);
         number = number or unit.number;
         math = math or unit.math;
     }
-    try appendPrograms(allocator, &argv, request.units, programs);
     try argv.append(allocator, runtime_object);
     if (number) try argv.append(allocator, try number_runtime.object(allocator, io, &environment, request, log));
     try argv.appendSlice(allocator, request.links);
     if (math) try argv.append(allocator, "-lm");
     try run(allocator, io, &environment, argv.items, log);
-}
-
-fn appendPrograms(allocator: std.mem.Allocator, argv: *std.ArrayList([]const u8), units: []const emit_units.Unit, programs: []const []const u8) Error!void {
-    // Emission and reports stay in IR order. Native layout uses stable unit names,
-    // independent of staging paths, object content keys and worker completion.
-    const order = try allocator.alloc(usize, units.len);
-    for (order, 0..) |*index, i| index.* = i;
-    std.mem.sort(usize, order, units, programLessThan);
-    for (order) |index| try argv.append(allocator, programs[index]);
-}
-
-fn programLessThan(units: []const emit_units.Unit, lhs: usize, rhs: usize) bool {
-    return std.mem.lessThan(u8, units[lhs].name, units[rhs].name);
 }
 
 /// The runtime object for this runtime source, compiled on first use.
