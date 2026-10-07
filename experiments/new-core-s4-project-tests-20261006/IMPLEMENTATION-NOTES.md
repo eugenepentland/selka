@@ -207,3 +207,24 @@ Large raw process receipts will be retained in verified lossless archives with
 readable member hashes before evidence commits; originals remain untouched.
 No full old gate or fuzz matrix overlaps the other, and no later compiler may
 claim qualification from these local tool checks or earlier-source receipts.
+
+## Additive native-tool discovery correction, 2026-10-07
+
+The retained production-helper closure failure from F's `8d7952f86` is repaired
+by preserving all existing full executable/library/runtime guards and adding
+296 reviewed discovery selection paths. Inventory hints, approval, content and
+generation namespaces change versions. Unknown sibling resources, distro
+contents, aliases or GCC membership refuse persistent reuse. Only proved
+directory existence predicates ignore membership timestamps; consumed files
+and enumerated directories retain their guards. The new discovery roles handle
+`NotDir` beneath a guarded regular-file ancestor, while legacy content errors
+remain unchanged.
+
+Frozen source23 passes 27 focused tests, all 88 Guardian checks, and fresh
+replay28's three actual native scenarios. Initially absent sibling resources
+invalidate reuse; preexisting sibling directories and regular-file parents
+still build and run through the private fallback. Root independently verifies
+all 126 handoff files, five frozen source hashes, the actual Core/probe binaries,
+six native objects and both fallback guests. Historical discovery and `NotDir`
+failures and the invalid `export def` evidence fixture remain retained. This
+qualifies the correction's focused behavior, not final M or Wave A integration.

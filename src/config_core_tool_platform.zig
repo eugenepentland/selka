@@ -38,3 +38,26 @@ pub const runtime_files = [_]struct { path: []const u8, resolved: []const u8, sh
     },
 };
 pub const preload_path = "/etc/ld.so.preload";
+
+// Full native-driver discovery is additional to the runtime/bundled closure.
+// Exact fixed-layout state comes from retained actual native traces and the
+// reviewed 22.1.8 discovery branches. No exact tag-to-binary build attestation
+// is claimed. Unknown content, member sets or sibling resources refuse reuse.
+pub const discovery_files = [_]struct { path: []const u8 }{
+    .{ .path = "/etc/os-release" },
+    .{ .path = "/usr/lib/os-release" },
+    .{ .path = "/etc/lsb-release" },
+    .{ .path = "/etc/redhat-release" },
+    .{ .path = "/etc/debian_version" },
+    .{ .path = "/etc/SuSE-release" },
+    .{ .path = "/etc/gentoo-release" },
+};
+pub const discovery_state = "614ce9f2e514299aea9aea24086e224bb2c8ed8467fcf4a98e453d2d86057ab1";
+
+pub const discovery_predicates = [_][]const u8{
+    "/opt/rh",                   "/etc/env.d/gcc",                       "/lib",                                 "/lib64",                    "/lib/x86_64-linux-gnu",
+    "/usr/lib/x86_64-linux-gnu", "/usr/x86_64-linux-gnu/lib",            "/usr/x86_64-linux-gnu/lib64",          "/usr/x86_64-linux-gnu/bin", "/usr/lib/gcc/x86_64-linux-gnu/lib64",
+    "/usr/include/c++/15",       "/usr/include/x86_64-linux-gnu/c++/15", "/usr/x86_64-linux-gnu/include/c++/15",
+};
+pub const discovery_installation = "/usr/lib/gcc/x86_64-linux-gnu/15";
+pub const discovery_system_prefix = "/usr";

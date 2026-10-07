@@ -23,6 +23,7 @@ comptime {
     _ = @import("test_runner_cases.zig");
     _ = @import("test_runner_project_test.zig");
     _ = @import("tool_identity.zig");
+    _ = @import("tool_discovery.zig");
     _ = @import("tool_ticket.zig");
     _ = @import("runner_property_test.zig");
     _ = @import("property_codec.zig");

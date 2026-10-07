@@ -6,15 +6,17 @@
 const std = @import("std");
 const builtin = @import("builtin");
 const target_policy = @import("target.zig");
+const discovery = @import("tool_discovery.zig");
 const target = target_policy.current;
 const Digest = [32]u8;
 const magic = "core-tool-content-v1\x00";
 const memo_length = magic.len + 96;
-// Codec unchanged; v3 also keys every expected runtime descriptor.
-const hint_magic = "core-tool-inventory-v3\x00";
+// v4 adds a validated directory-role byte (Input codec v2), retains all old
+// full-stat/content inputs, and keys the additive reviewed discovery policy.
+const hint_magic = "core-tool-inventory-v4\x00";
 const hint_limit = 32 << 20;
 const lib_directory = "ZIG_LIB_DIR";
-const approval_magic = "core-tool-approval-v2\x00";
+const approval_magic = "core-tool-approval-v3\x00";
 const approval_length = approval_magic.len + 65;
 // Reviewed pinned distribution; names, version strings and static ELF metadata
 // cannot establish that an arbitrary executable has no delegated dependencies.
@@ -46,7 +48,12 @@ pub const Identity = struct {
 
 /// Missing tools and racing inputs cannot establish a reusable identity.
 pub const Error = error{ OutOfMemory, ToolNotFound, ReadFailed, WriteFailed, SourceChanged };
-const Input = struct { path: []const u8, resolved: []const u8, info: ?std.Io.File.Stat };
+const Input = struct {
+    path: []const u8,
+    resolved: []const u8,
+    info: ?std.Io.File.Stat,
+    role: discovery.Role = .content,
+};
 const Inventory = struct { inputs: []const Input, generation: Digest, hinted: bool = false };
 
 /// Resolve explicit paths or PATH like a direct guest-tool spawn. The caller
@@ -189,13 +196,18 @@ fn inventory(request: Request, path: []const u8, cpu: Digest) Error!Inventory {
     }
     for (runtime_files) |input| _ = try addInput(request, &inputs, input.path);
     _ = try addInput(request, &inputs, preload_path);
+    for (try discovery.paths(request.arena, path)) |entry| {
+        // An already inventoried library/runtime path retains its full guard.
+        if (namedInput(inputs.items, entry.name) != null) continue;
+        try inputs.append(request.arena, try snapshot(request, entry.name, entry.role));
+    }
     std.mem.sort(Input, inputs.items, {}, before);
     return .{ .inputs = inputs.items, .generation = inventoryDigest(inputs.items, cpu) };
 }
 
 fn inventoryDigest(inputs: []const Input, cpu: Digest) Digest {
     var hash = std.crypto.hash.Blake3.init(.{});
-    field(&hash, "core-tool-generations-v2");
+    field(&hash, "core-tool-generations-v3");
     field(&hash, &cpu);
     for (inputs) |input| generation(&hash, input);
     var digest: Digest = undefined;
@@ -208,18 +220,19 @@ fn refresh(request: Request, inputs: []const Input, cpu: Digest) Error!?Inventor
     for (inputs, current) |old, *input| {
         const info: ?std.Io.File.Stat = std.Io.Dir.cwd().statFile(request.io, old.path, .{}) catch |err| switch (err) {
             error.FileNotFound => null,
+            error.NotDir => if (old.role != .content) null else return error.ReadFailed,
             else => return error.ReadFailed,
         };
         if (old.info == null or info == null) {
             if (old.info != null or info != null) return null;
-        } else if (old.info.?.kind == .directory or info.?.kind == .directory) {
+        } else if ((old.info.?.kind == .directory or info.?.kind == .directory) and old.role != .predicate) {
             if (!sameStat(old.info.?, info.?)) return null;
         } else if (old.info.?.kind != info.?.kind) return null;
-        if (!std.mem.eql(u8, old.path, old.resolved)) {
+        if (info != null and (old.role != .content or !std.mem.eql(u8, old.path, old.resolved))) {
             const resolved = std.Io.Dir.cwd().realPathFileAlloc(request.io, old.path, request.arena) catch |err| return readError(err);
             if (!std.mem.eql(u8, resolved, old.resolved)) return null;
         }
-        input.* = .{ .path = old.path, .resolved = old.resolved, .info = info };
+        input.* = .{ .path = old.path, .resolved = old.resolved, .info = info, .role = old.role };
     }
     return .{ .inputs = current, .generation = inventoryDigest(current, cpu), .hinted = true };
 }
@@ -248,23 +261,29 @@ fn library(request: Request, inputs: *std.ArrayList(Input), visited: *std.String
 }
 
 fn addInput(request: Request, inputs: *std.ArrayList(Input), path: []const u8) Error!Input {
-    const info: ?std.Io.File.Stat = std.Io.Dir.cwd().statFile(request.io, path, .{}) catch |err| switch (err) {
-        error.FileNotFound => null,
-        else => return error.ReadFailed,
-    };
-    const resolved = if (info != null) std.Io.Dir.cwd().realPathFileAlloc(request.io, path, request.arena) catch |err| return readError(err) else path;
-    const input: Input = .{ .path = path, .resolved = resolved, .info = info };
+    const input = try snapshot(request, path, .content);
     try inputs.append(request.arena, input);
     return input;
 }
 
+fn snapshot(request: Request, path: []const u8, role: discovery.Role) Error!Input {
+    const info: ?std.Io.File.Stat = std.Io.Dir.cwd().statFile(request.io, path, .{}) catch |err| switch (err) {
+        error.FileNotFound => null,
+        error.NotDir => if (role != .content) null else return error.ReadFailed,
+        else => return error.ReadFailed,
+    };
+    const resolved = if (info != null) std.Io.Dir.cwd().realPathFileAlloc(request.io, path, request.arena) catch |err| return readError(err) else path;
+    return .{ .path = path, .resolved = resolved, .info = info, .role = role };
+}
+
 fn contents(request: Request, inputs: []const Input, cpu: Digest) Error!Digest {
     var hash = std.crypto.hash.Blake3.init(.{});
-    field(&hash, "core-tool-content-v1");
+    field(&hash, "core-tool-content-v3");
     field(&hash, &cpu);
     for (inputs) |input| {
         field(&hash, input.path);
         field(&hash, input.resolved);
+        field(&hash, @tagName(input.role));
         const info = input.info orelse {
             field(&hash, "absent");
             continue;
@@ -354,6 +373,7 @@ fn hintKey(request: Request, path: []const u8, cpu: Digest) Error!Digest {
     field(&hash, path);
     field(&hash, &cpu);
     runtimePolicy(&hash);
+    discovery.policy(&hash);
     if (request.environment.get(lib_directory)) |override| {
         field(&hash, try absolutePath(request, override));
     } else field(&hash, "");
@@ -394,7 +414,8 @@ fn decodeHint(a: std.mem.Allocator, bytes: []const u8) HintError![]const Input {
         const path = try reader.take(try reader.takeInt(u32, .little));
         const resolved = try reader.take(try reader.takeInt(u32, .little));
         if (!std.fs.path.isAbsolute(path) or !std.fs.path.isAbsolute(resolved)) return error.MalformedHint;
-        input.* = .{ .path = path, .resolved = resolved, .info = try decodeStat(&reader) };
+        const role = std.enums.fromInt(discovery.Role, try reader.takeByte()) orelse return error.MalformedHint;
+        input.* = .{ .path = path, .resolved = resolved, .info = try decodeStat(&reader), .role = role };
         if (index != 0 and before({}, input.*, inputs[index - 1])) return error.MalformedHint;
     }
     if (reader.bufferedLen() != 0) return error.MalformedHint;
@@ -434,6 +455,7 @@ fn encodeInput(writer: *std.Io.Writer, input: Input) Error!void {
     try writer.writeAll(input.path);
     try writer.writeInt(u32, @intCast(input.resolved.len), .little);
     try writer.writeAll(input.resolved);
+    try writer.writeByte(@backingInt(input.role));
     const info = input.info orelse return writer.writeByte(0);
     try writer.writeByte(1);
     try writer.writeInt(u64, info.inode, .little);
@@ -452,12 +474,17 @@ fn absolutePath(request: Request, path: []const u8) Error![]const u8 {
 fn generation(hash: *std.crypto.hash.Blake3, input: Input) void {
     field(hash, input.path);
     field(hash, input.resolved);
+    field(hash, @tagName(input.role));
     const info = input.info orelse {
         field(hash, "absent");
         return;
     };
     field(hash, @tagName(info.kind));
     integer(hash, info.inode);
+    if (input.role == .predicate and info.kind == .directory) {
+        integer(hash, info.permissions.toMode());
+        return;
+    }
     integer(hash, info.size);
     integer(hash, info.mtime.nanoseconds);
     integer(hash, info.ctime.nanoseconds);
@@ -528,6 +555,7 @@ fn approvalKey(identity: Digest) Digest {
     field(&hash, approved_zig);
     field(&hash, approved_library);
     runtimePolicy(&hash);
+    discovery.policy(&hash);
     field(&hash, if (builtin.is_test) "owned-test-fixtures-v1" else "production");
     var digest: Digest = undefined;
     hash.final(&digest);
@@ -544,7 +572,7 @@ fn runtimePolicy(hash: *std.crypto.hash.Blake3) void {
 }
 
 fn approvalPath(request: Request, identity: Digest) Error![]const u8 {
-    return std.fmt.allocPrint(request.arena, "{s}/approval-v2/{s}.memo", .{ try cacheRoot(request), std.fmt.bytesToHex(approvalKey(identity), .lower) });
+    return std.fmt.allocPrint(request.arena, "{s}/approval-v3/{s}.memo", .{ try cacheRoot(request), std.fmt.bytesToHex(approvalKey(identity), .lower) });
 }
 
 fn approvalMemo(request: Request, identity: Digest) Error!?bool {
@@ -613,7 +641,8 @@ fn reviewClosure(request: Request, path: []const u8, inputs: []const Input) Erro
     if (request.environment.get(lib_directory)) |override| {
         if (!try approvedLibrary(request, inputs, try absolutePath(request, override))) return false;
     }
-    return approvedRuntime(request, inputs);
+    if (!try approvedRuntime(request, inputs)) return false;
+    return discovery.approved(request.arena, request.io, path);
 }
 
 fn namedInput(inputs: []const Input, path: []const u8) ?Input {
@@ -880,7 +909,8 @@ test "inventoryHint corruption rediscovers libraries and invalid library roots r
     try std.testing.expect((try inventoryHint(request, original.path, original.native_target)) != null);
     const damaged = try hintPath(request, original.path, original.native_target);
     const old_hint = try std.Io.Dir.cwd().readFileAlloc(request.io, damaged, request.arena, .limited(hint_limit));
-    @memcpy(old_hint[0..hint_magic.len], "core-tool-inventory-v2\x00");
+    @memcpy(old_hint[0..hint_magic.len], "core-tool-inventory-v3\x00");
+    std.crypto.hash.Blake3.hash(old_hint[0 .. old_hint.len - 32], old_hint[old_hint.len - 32 ..][0..32], .{});
     std.crypto.hash.Blake3.hash(old_hint[0 .. old_hint.len - 32], old_hint[old_hint.len - 32 ..][0..32], .{});
     try std.Io.Dir.cwd().writeFile(request.io, .{ .sub_path = damaged, .data = old_hint });
     try std.testing.expect((try inventoryHint(request, original.path, original.native_target)) == null);
@@ -1115,4 +1145,116 @@ test "runtime generation refresh refuses changed bytes absence and alias retarge
     try fixture.temporary.dir.deleteFile(request.io, "loader");
     try fixture.temporary.dir.symLink(request.io, "other-loader", "loader", .{});
     try std.testing.expect((try refresh(request, changed.inputs, cpu)) == null);
+}
+
+// spec-case: NEW-CORE-S4-TEST-3
+test "discovery predicates tolerate output neighbors but membership guards refuse additions" {
+    var fixture = Fixture.init(std.testing.allocator);
+    defer fixture.deinit();
+    const request = try fixture.request();
+    try fixture.tool("first");
+    try fixture.temporary.dir.createDirPath(request.io, "query");
+    try fixture.temporary.dir.createDirPath(request.io, "versions/15");
+    const root = std.fs.path.dirname(try resolve(request)).?;
+    var inputs: std.ArrayList(Input) = .empty;
+    _ = try addInput(request, &inputs, try std.fs.path.join(request.arena, &.{ root, "query" }));
+    inputs.items[0].role = .predicate;
+    _ = try addInput(request, &inputs, try std.fs.path.join(request.arena, &.{ root, "versions" }));
+    inputs.items[1].role = .membership;
+    const cpu = try nativeTarget(request.io);
+    const original = inventoryDigest(inputs.items, cpu);
+    try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "query/native-output", .data = "owned staging" });
+    const output = (try refresh(request, inputs.items, cpu)).?;
+    try std.testing.expectEqual(original, output.generation);
+    try fixture.temporary.dir.createDirPath(request.io, "versions/16");
+    try std.testing.expect((try refresh(request, inputs.items, cpu)) == null);
+}
+
+// spec-case: NEW-CORE-S4-TEST-3
+test "discovery file restored mtime and absent resource invalidate provisional generation" {
+    var fixture = Fixture.init(std.testing.allocator);
+    defer fixture.deinit();
+    const request = try fixture.request();
+    try fixture.tool("first");
+    try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "distro", .data = "first" });
+    const root = std.fs.path.dirname(try resolve(request)).?;
+    var inputs: std.ArrayList(Input) = .empty;
+    _ = try addInput(request, &inputs, try std.fs.path.join(request.arena, &.{ root, "distro" }));
+    inputs.items[0].role = .discovery_file;
+    _ = try addInput(request, &inputs, try std.fs.path.join(request.arena, &.{ root, "resource" }));
+    inputs.items[1].role = .predicate;
+    const cpu = try nativeTarget(request.io);
+    const original = inventoryDigest(inputs.items, cpu);
+    const info = try fixture.temporary.dir.statFile(request.io, "distro", .{});
+    try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "distro", .data = "other" });
+    try fixture.temporary.dir.setTimestamps(request.io, "distro", .{ .modify_timestamp = .init(info.mtime) });
+    const edited = (try refresh(request, inputs.items, cpu)).?;
+    try std.testing.expect(!std.mem.eql(u8, &original, &edited.generation));
+    try fixture.temporary.dir.createDirPath(request.io, "resource/share");
+    try std.testing.expect((try refresh(request, edited.inputs, cpu)) == null);
+}
+
+// spec-case: NEW-CORE-S4-TEST-3
+test "discovery roles roundtrip and invalid role bytes cannot become warm hints" {
+    var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
+    defer arena.deinit();
+    var bytes: std.Io.Writer.Allocating = .init(arena.allocator());
+    try bytes.writer.writeInt(u32, 1, .little);
+    const input: Input = .{ .path = "/owned", .resolved = "/owned", .info = null, .role = .discovery_file };
+    try encodeInput(&bytes.writer, input);
+    const decoded = try decodeHint(arena.allocator(), bytes.written());
+    try std.testing.expectEqual(input.role, decoded[0].role);
+    bytes.written()[4 + 4 + input.path.len + 4 + input.resolved.len] = 255;
+    try std.testing.expectError(error.MalformedHint, decodeHint(arena.allocator(), bytes.written()));
+}
+
+// spec-case: NEW-CORE-S4-TEST-3
+test "discovery higher priority resource addition refuses old replay and unknown copy reuse" {
+    var fixture = Fixture.init(std.testing.allocator);
+    defer fixture.deinit();
+    var request = try fixture.request();
+    try fixture.staticTool(1);
+    const bytes = try fixture.temporary.dir.readFileAlloc(request.io, "zig", request.arena, .limited(121));
+    try fixture.temporary.dir.createDirPath(request.io, "tool/distribution/lib/std");
+    try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "tool/distribution/zig", .data = bytes });
+    try fixture.temporary.dir.setFilePermissions(request.io, "tool/distribution/zig", .executable_file, .{});
+    try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "tool/distribution/lib/std/std.zig", .data = "first" });
+    request.executable = try std.fs.path.join(request.arena, &.{ std.fs.path.dirname(try resolve(request)).?, "tool/distribution/zig" });
+    const initial = try capture(request);
+    try std.testing.expect(initial.cacheable);
+    try std.testing.expect((try lookupReplayCandidate(request)) != null);
+    try fixture.temporary.dir.createDirPath(request.io, "tool/lib/clang/22/share");
+    try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "tool/lib/clang/22/share/ubsan_ignorelist.txt", .data = "# owned outside resource\n" });
+    const provisional = (try lookupReplayCandidate(request)).?;
+    try std.testing.expect(!try unchanged(request, provisional));
+    const after = try capture(request);
+    try std.testing.expect(!after.cacheable);
+    try std.testing.expect(!std.mem.eql(u8, &initial.digest, &after.digest));
+    try std.testing.expect((try lookupReplayCandidate(request)) == null);
+}
+
+// spec-case: NEW-CORE-S4-TEST-3
+test "discovery NotDir fallback retains parent contents and old content refusal" {
+    var fixture = Fixture.init(std.testing.allocator);
+    defer fixture.deinit();
+    var request = try fixture.request();
+    try fixture.temporary.dir.createDirPath(request.io, "tool/distribution");
+    try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "tool/distribution/zig", .data = "unproved" });
+    try fixture.temporary.dir.setFilePermissions(request.io, "tool/distribution/zig", .executable_file, .{});
+    try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "tool/lib", .data = "first" });
+    request.executable = try std.fs.path.join(request.arena, &.{ std.fs.path.dirname(request.cache).?, "tool/distribution/zig" });
+    const initial = try capture(request);
+    try std.testing.expect(!initial.cacheable);
+    try std.testing.expect(try unchanged(request, initial));
+    const root = std.fs.path.dirname(std.fs.path.dirname(initial.path).?).?;
+    const parent_path = try std.fs.path.join(request.arena, &.{ root, "lib" });
+    const child_path = try std.fs.path.join(request.arena, &.{ parent_path, "gcc" });
+    try std.testing.expectError(error.ReadFailed, snapshot(request, child_path, .content));
+    const child = try snapshot(request, child_path, .membership);
+    try std.testing.expect(child.info == null);
+    const info = try std.Io.Dir.cwd().statFile(request.io, parent_path, .{});
+    try std.Io.Dir.cwd().writeFile(request.io, .{ .sub_path = parent_path, .data = "other" });
+    try std.Io.Dir.cwd().setTimestamps(request.io, parent_path, .{ .modify_timestamp = .init(info.mtime) });
+    try std.testing.expect(!try unchanged(request, initial));
+    try std.testing.expect(!std.mem.eql(u8, &initial.digest, &(try capture(request)).digest));
 }
