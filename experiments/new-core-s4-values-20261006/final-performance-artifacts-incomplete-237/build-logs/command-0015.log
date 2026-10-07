@@ -1,0 +1,3 @@
+$ go build -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/grid_dp-go /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-rows-20261006/grid_dp/main.go
+
+exit=0

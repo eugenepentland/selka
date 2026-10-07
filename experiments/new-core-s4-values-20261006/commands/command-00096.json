@@ -1,0 +1,22 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "gate",
+    "bash",
+    "-c",
+    "\"$@\"; s4_v_status=$?; exit \"$s4_v_status\"",
+    "--",
+    "scripts/build-slot.sh",
+    "build",
+    "python3",
+    "experiments/new-core-s4-values-20261006/verify_values.py",
+    "--old",
+    "zig-out/bin/mylang",
+    "--evidence",
+    "experiments/new-core-s4-values-20261006/final-supplement-v2"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 1403402,
+  "status": 0,
+  "elapsed_seconds": 307.66308593796566
+}

@@ -1,0 +1,13 @@
+$ git commit -m 'test(core): qualify S4-V core and full native conformance'
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+[codex/new-core-s4-values d6c52c86b] test(core): qualify S4-V core and full native conformance
+ 6 files changed, 1742 insertions(+)
+ create mode 100644 experiments/new-core-s4-values-20261006/final-core-conformance-v7/core-component.json
+ create mode 100644 experiments/new-core-s4-values-20261006/final-core-conformance-v7/full-conformance.log
+ create mode 100644 experiments/new-core-s4-values-20261006/final-core-conformance-v7/full-conformance.seconds
+ create mode 100644 experiments/new-core-s4-values-20261006/final-core-conformance-v7/summary.json
+ create mode 100644 experiments/new-core-s4-values-20261006/final-core-conformance-v7/test-core.log
+ create mode 100644 experiments/new-core-s4-values-20261006/final-core-conformance-v7/test-core.seconds
+
+exit=0
+elapsed_seconds=0.133632

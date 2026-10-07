@@ -1,0 +1,17 @@
+$ scripts/build-slot.sh gate bash -c '"$@"; s4_v_status=$?; exit "$s4_v_status"' -- scripts/build-slot.sh build zig build test-core -Dtest-filter=uniform --summary all
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (61s so far)
+build-slot: all 1 gate slot(s) busy; waiting (121s so far)
+build-slot: all 1 gate slot(s) busy; waiting (181s so far)
+build-slot: all 1 gate slot(s) busy; waiting (241s so far)
+build-slot: all 1 gate slot(s) busy; waiting (301s so far)
+build-slot: all 1 gate slot(s) busy; waiting (361s so far)
+build-slot: all 1 gate slot(s) busy; waiting (421s so far)
+build-slot: all 1 gate slot(s) busy; waiting (481s so far)
+build-slot: all 1 gate slot(s) busy; waiting (542s so far)
+build-slot: all 1 gate slot(s) busy; waiting (602s so far)
+build-slot: all 1 gate slot(s) busy; waiting (662s so far)
+build-slot: all 1 gate slot(s) busy; waiting (722s so far)
+
+exit=-15
+elapsed_seconds=724.185632

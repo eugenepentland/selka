@@ -1,0 +1,11 @@
+{
+  "command": [
+    "git",
+    "add",
+    "experiments/new-core-s4-values-20261006/final-supplement-v4"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2665103,
+  "status": 0,
+  "elapsed_seconds": 0.0804966778960079
+}

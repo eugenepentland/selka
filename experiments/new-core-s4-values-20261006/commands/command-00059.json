@@ -1,0 +1,27 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "flock",
+    "/run/user/1000/mylang-slots/cpu10.lock",
+    "python3",
+    "experiments/new-core-s4-20261006/integration/measure_all46.py",
+    "--build",
+    "--rows",
+    "grid_dp,union_find",
+    "--bin",
+    ".mylang-cache/s4-v/fifth-two",
+    "--mylang",
+    ".mylang-cache/s3/oracle/mylang",
+    "--core",
+    "zig-out/bin/mylang-core",
+    "--rounds",
+    "7",
+    "--json",
+    "experiments/new-core-s4-values-20261006/fifth-two.json"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 851220,
+  "status": 0,
+  "elapsed_seconds": 156.29964944999665
+}

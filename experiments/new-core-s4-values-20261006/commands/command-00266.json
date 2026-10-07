@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "from pathlib import Path; import json; e=Path(\"experiments/new-core-s4-values-20261006\"); d=json.loads((e/\"final-rows-leak-verify-v2/summary.json\").read_text()); print(\"rows\",type(d[\"rows\"]).__name__,str(d[\"rows\"])[:240]); print(\"oracles\",list(json.loads((e/\"final-fuzz-v3/values/summary.json\").read_text())[\"oracles\"])); print(\"supplement\",len(json.loads((e/\"supplement-v6/summary.json\").read_text())[\"commands\"])); print((e/\"final-fuzz-v3/s1.log\").read_text()[-650:])"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3258925,
+  "status": 0,
+  "elapsed_seconds": 0.022339730989187956
+}

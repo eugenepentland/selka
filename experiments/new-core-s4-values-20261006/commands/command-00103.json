@@ -1,0 +1,11 @@
+{
+  "command": [
+    "git",
+    "add",
+    "src/core/value_facts_test.zig"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 1543663,
+  "status": 0,
+  "elapsed_seconds": 0.1354953481350094
+}

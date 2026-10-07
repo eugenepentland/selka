@@ -1,0 +1,42 @@
+$ scripts/build-slot.sh gate scripts/build-slot.sh build python3 experiments/new-core-s4-values-20261006/verify_values.py --old zig-out/bin/mylang --evidence experiments/new-core-s4-values-20261006/supplement-v1
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (61s so far)
+build-slot: all 1 gate slot(s) busy; waiting (121s so far)
+build-slot: all 1 gate slot(s) busy; waiting (181s so far)
+build-slot: all 1 gate slot(s) busy; waiting (241s so far)
+build-slot: all 1 gate slot(s) busy; waiting (301s so far)
+build-slot: all 1 gate slot(s) busy; waiting (361s so far)
+build-slot: all 1 gate slot(s) busy; waiting (421s so far)
+build-slot: all 1 gate slot(s) busy; waiting (481s so far)
+build-slot: all 1 gate slot(s) busy; waiting (542s so far)
+build-slot: all 1 gate slot(s) busy; waiting (602s so far)
+build-slot: all 1 gate slot(s) busy; waiting (662s so far)
+build-slot: all 1 gate slot(s) busy; waiting (722s so far)
+build-slot: all 1 gate slot(s) busy; waiting (782s so far)
+build-slot: all 1 gate slot(s) busy; waiting (842s so far)
+build-slot: all 1 gate slot(s) busy; waiting (902s so far)
+build-slot: all 1 gate slot(s) busy; waiting (962s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1023s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1083s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1143s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1203s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1263s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1323s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1383s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1443s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1504s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1564s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1624s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1684s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1744s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1804s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1864s so far)
+build-slot: gate slot 1 after 1914s (all 1 gate slot(s) busy)
+v_dynamic_repeat: old debug/release and new debug/release/verify agree
+v_nested_places: old debug/release and new debug/release/verify agree
+v_buffer_format: old debug/release and new debug/release/verify agree
+v_inline_loops: old debug/release and new debug/release/verify agree
+v_nested_lengths: old debug/release and new debug/release/verify agree
+
+exit=0
+elapsed_seconds=1959.980986

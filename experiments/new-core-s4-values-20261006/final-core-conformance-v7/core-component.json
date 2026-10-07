@@ -1,0 +1,14 @@
+{
+  "source_commit": "3c86c3122",
+  "core_sha256": "db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1",
+  "shards": 64,
+  "tests": {
+    "passed": 279,
+    "failed": 0,
+    "skipped": 0
+  },
+  "seconds": 157.28,
+  "longest_shard_seconds": 57.88,
+  "max_test_rss_bytes": 271581184.0,
+  "inspection_errors": []
+}

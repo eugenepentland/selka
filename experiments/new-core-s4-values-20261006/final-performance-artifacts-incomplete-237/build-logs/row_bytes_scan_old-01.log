@@ -1,0 +1,9 @@
+$ .mylang-cache/s3/oracle/mylang build /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/test/core/row_bytes_scan.my -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_bytes_scan_old --release --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/cache/old --link /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/benchmarks/runtime/ports/native_clock.c
+row_bytes_scan.my:35:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_bytes_scan.my:44:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+
+exit=0

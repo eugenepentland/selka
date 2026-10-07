@@ -1,0 +1,21 @@
+$ scripts/build-slot.sh build flock /run/user/1000/mylang-slots/cpu10.lock python3 experiments/new-core-s4-values-20261006/alternatives/measure_return.py --rows union_find --bin .mylang-cache/s4-v/measure-first --rounds 7 --json experiments/new-core-s4-values-20261006/alternatives/cheaper-return-seven-v2.json
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 15s (all 3 build slot(s) busy)
+
+### union_find (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 84.254 | 74.835 | same |
+| new core release | 58.841 | 39.600 | same |
+| Rust | 41.809 | 25.329 | same |
+| Zig ReleaseSafe | 41.698 | 28.309 | same |
+| Go | 49.750 | 38.408 | same |
+| new / old | 0.698 | 0.529 | same |
+| new / Zig | 1.411 | 1.399 | same |
+| new / Rust | 1.407 | 1.563 | same |
+
+valid rows: 1; speed gate misses: ['union_find/4096', 'union_find/64']
+Both new/old and new/Zig must be at most 1.10. binary_search misses require the plan's identical-code/layout-noise review; all other misses require repair.
+
+exit=0
+elapsed_seconds=20.113334

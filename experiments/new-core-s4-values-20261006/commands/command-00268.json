@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "from pathlib import Path; import json,subprocess; p=Path(\"experiments/new-core-s4-values-20261006/commands\"); files=[];\nfor receipt in p.glob(\"*.json\"):\n d=json.loads(receipt.read_text()); log=receipt.with_suffix(\".log\");\n if \"status\" in d and log.exists(): files.extend([str(receipt),str(log)])\nsubprocess.run([\"git\",\"add\",\"--\",*files],check=True); print(\"staged completed command receipt files\",len(files))"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3259645,
+  "status": 0,
+  "elapsed_seconds": 0.217211363138631
+}

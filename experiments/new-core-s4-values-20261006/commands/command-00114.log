@@ -1,0 +1,17 @@
+$ scripts/build-slot.sh build /home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check all . --gate
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 15s (all 3 build slot(s) busy)
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10371 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (change-classification)
+guardian: failures grouped by check (1):
+  change-classification (1 finding)
+    - src/core/s3_number_test.zig: 1 behavioral line(s) added
+      fix: commit these lines WITH a test — add or update a `// spec:`-tagged test, or add the behavior as a SPEC.md bullet, in this same change.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+
+exit=1
+elapsed_seconds=23.723434

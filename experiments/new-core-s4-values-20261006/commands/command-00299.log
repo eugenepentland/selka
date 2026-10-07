@@ -1,0 +1,5 @@
+$ python3 -c 'import json,subprocess,pathlib; p=pathlib.Path("experiments/new-core-s4-values-20261006/guardian-feedback-commit.json"); commit=json.loads(p.read_text())["commit"]; subprocess.run(["python3","experiments/new-core-s4-values-20261006/final_report.py",commit],check=True)'
+400 accepted cases / 5700 comparisons; listed gates pass; native trap provenance integration blocker remains
+
+exit=0
+elapsed_seconds=0.830803

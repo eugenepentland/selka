@@ -1,0 +1,4 @@
+$ git add experiments/new-core-s4-values-20261006/final-all46-v1.json experiments/new-core-s4-values-20261006/performance_summary.json experiments/new-core-s4-values-20261006/immutable-core-d4.json
+
+exit=0
+elapsed_seconds=0.114057

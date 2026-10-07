@@ -1,0 +1,8 @@
+$ scripts/build-slot.sh build env MYL_CORE_LEAKCHECK=1 zig-out/bin/mylang-core test test/core/v_nested_places.my --release --verify-facts --cache-dir .mylang-cache/s4-v/focused-nested-v4
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 15s (all 3 build slot(s) busy)
+passed v_nested_places::test_nested_unique_and_shared_paths
+1 passed, 0 cached, 0 failed, 0 skipped
+
+exit=0
+elapsed_seconds=24.989558

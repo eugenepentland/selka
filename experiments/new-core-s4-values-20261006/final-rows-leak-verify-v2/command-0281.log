@@ -1,0 +1,4 @@
+$ /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang-core build /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/test/core/row_dict_lookup_str.my -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-rows-leak-verify-v2/row_dict_lookup_str_debug --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-rows-leak-verify-v2/frontend --link /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/benchmarks/runtime/ports/native_clock.c
+stdout=''
+stderr=''
+exit=0

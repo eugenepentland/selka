@@ -1,0 +1,623 @@
+{
+  "source_commit": "d6c52c86b68f73134d7fb531e3c2dae0681eff33",
+  "root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "expected_steps": [
+    "test",
+    "test-qbe",
+    "test-qbe-build",
+    "fmt-check"
+  ],
+  "unit_shard_rss_limit_bytes": 2684354560,
+  "results": [
+    {
+      "build_summaries": [
+        "115/115 steps succeeded; 3004/33622 tests passed (30618 skipped)"
+      ],
+      "maxrss": [
+        {
+          "line": "+- run test 7 pass (7 total) 54ms MaxRSS:7M",
+          "display": "7M",
+          "bytes": 7340032.0,
+          "test_run": true
+        },
+        {
+          "line": "|  +- compile test debug native cached 8ms MaxRSS:41M",
+          "display": "41M",
+          "bytes": 42991616.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  +- compile exe mylang debug native cached 8ms MaxRSS:41M",
+          "display": "41M",
+          "bytes": 42991616.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  |     +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:41M",
+          "display": "41M",
+          "bytes": 42991616.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  +- compile exe qbe fast native cached 14ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  +- compile exe board-trial debug native cached 9ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  +- compile exe schematic-svg debug native cached 9ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  +- compile exe mylang-io debug native cached 10ms MaxRSS:41M",
+          "display": "41M",
+          "bytes": 42991616.0,
+          "test_run": false
+        },
+        {
+          "line": "+- run test 231 pass, 2407 skip (2638 total) 2m MaxRSS:739M",
+          "display": "739M",
+          "bytes": 774897664.0,
+          "test_run": true
+        },
+        {
+          "line": "|  +- compile test debug native success 1m MaxRSS:852M",
+          "display": "852M",
+          "bytes": 893386752.0,
+          "test_run": false
+        },
+        {
+          "line": "+- run test 219 pass, 2419 skip (2638 total) 1m MaxRSS:251M",
+          "display": "251M",
+          "bytes": 263192576.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 219 pass, 2419 skip (2638 total) 2m MaxRSS:1G",
+          "display": "1G",
+          "bytes": 1073741824.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 219 pass, 2419 skip (2638 total) 1m MaxRSS:1G",
+          "display": "1G",
+          "bytes": 1073741824.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 219 pass, 2419 skip (2638 total) 2m MaxRSS:1G",
+          "display": "1G",
+          "bytes": 1073741824.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 219 pass, 2419 skip (2638 total) 2m MaxRSS:787M",
+          "display": "787M",
+          "bytes": 825229312.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 219 pass, 2419 skip (2638 total) 2m MaxRSS:1G",
+          "display": "1G",
+          "bytes": 1073741824.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 219 pass, 2419 skip (2638 total) 1m MaxRSS:382M",
+          "display": "382M",
+          "bytes": 400556032.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 219 pass, 2419 skip (2638 total) 3m MaxRSS:988M",
+          "display": "988M",
+          "bytes": 1035993088.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 219 pass, 2419 skip (2638 total) 2m MaxRSS:447M",
+          "display": "447M",
+          "bytes": 468713472.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 218 pass, 2420 skip (2638 total) 1m MaxRSS:516M",
+          "display": "516M",
+          "bytes": 541065216.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 218 pass, 2420 skip (2638 total) 1m MaxRSS:527M",
+          "display": "527M",
+          "bytes": 552599552.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 11 pass (11 total) 68ms MaxRSS:8M",
+          "display": "8M",
+          "bytes": 8388608.0,
+          "test_run": true
+        },
+        {
+          "line": "|  +- compile test debug native success 434ms MaxRSS:180M",
+          "display": "180M",
+          "bytes": 188743680.0,
+          "test_run": false
+        },
+        {
+          "line": "+- run test 56 pass, 264 skip (320 total) 3m MaxRSS:143M",
+          "display": "143M",
+          "bytes": 149946368.0,
+          "test_run": true
+        },
+        {
+          "line": "|  +- compile test debug native success 688ms MaxRSS:190M",
+          "display": "190M",
+          "bytes": 199229440.0,
+          "test_run": false
+        },
+        {
+          "line": "+- run test 53 pass, 267 skip (320 total) 2m MaxRSS:144M",
+          "display": "144M",
+          "bytes": 150994944.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 53 pass, 267 skip (320 total) 2m MaxRSS:144M",
+          "display": "144M",
+          "bytes": 150994944.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 53 pass, 267 skip (320 total) 3m MaxRSS:144M",
+          "display": "144M",
+          "bytes": 150994944.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 53 pass, 267 skip (320 total) 3m MaxRSS:145M",
+          "display": "145M",
+          "bytes": 152043520.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 52 pass, 268 skip (320 total) 6m MaxRSS:143M",
+          "display": "143M",
+          "bytes": 149946368.0,
+          "test_run": true
+        },
+        {
+          "line": "+- run test 7 pass (7 total) 45ms MaxRSS:7M",
+          "display": "7M",
+          "bytes": 7340032.0,
+          "test_run": true
+        },
+        {
+          "line": "|  +- compile test debug native success 473ms MaxRSS:182M",
+          "display": "182M",
+          "bytes": 190840832.0,
+          "test_run": false
+        },
+        {
+          "line": "+- run test 21 pass (21 total) 2m MaxRSS:125M",
+          "display": "125M",
+          "bytes": 131072000.0,
+          "test_run": true
+        },
+        {
+          "line": "|  +- compile test debug native success 3s MaxRSS:454M",
+          "display": "454M",
+          "bytes": 476053504.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- compile exe native-cow-test debug native cached 13ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- compile exe native-heap-test debug native cached 12ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- compile exe native-arena-chunks-test debug native cached 15ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- compile exe error-trace-abi-test debug native cached 14ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        }
+      ],
+      "rss_overrun_notices": [],
+      "reported_admission_seconds": {
+        "gate": 0,
+        "build": 0
+      },
+      "errors": [],
+      "step": "test",
+      "source_commit": "d6c52c86b68f73134d7fb531e3c2dae0681eff33",
+      "command": [
+        "zig",
+        "build",
+        "test",
+        "--summary",
+        "all"
+      ],
+      "wrapped_command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "/usr/bin/time",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-full-old-v3/test-seconds.txt",
+        "zig",
+        "build",
+        "test",
+        "--summary",
+        "all"
+      ],
+      "exit": 0,
+      "command_seconds": 942.34,
+      "wall_including_admission_seconds": 950.7023373050615,
+      "admission_and_wrapper_seconds": 8.362337305061487,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-full-old-v3/test.log",
+      "qualified": true
+    },
+    {
+      "build_summaries": [
+        "51/51 steps succeeded; 520/520 tests passed"
+      ],
+      "maxrss": [
+        {
+          "line": "|  +- compile exe native-cow-test debug native cached 15ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- compile exe native-heap-test debug native cached 15ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- compile exe native-arena-chunks-test debug native cached 15ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- compile exe error-trace-abi-test debug native cached 16ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- run test 256 pass (256 total) 11s MaxRSS:103M",
+          "display": "103M",
+          "bytes": 108003328.0,
+          "test_run": true
+        },
+        {
+          "line": "|  |  +- compile test debug native success 2s MaxRSS:296M",
+          "display": "296M",
+          "bytes": 310378496.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |     +- compile exe qbe-build-assets debug native cached 8ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  |  +- compile exe mylang debug native cached 11ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  |  +- compile exe qbe fast native cached 15ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  |  +- compile exe board-trial debug native cached 9ms MaxRSS:41M",
+          "display": "41M",
+          "bytes": 42991616.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  |  +- compile exe schematic-svg debug native cached 9ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  |  +- compile exe mylang-io debug native cached 8ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- run test 119 pass (119 total) 214ms MaxRSS:71M",
+          "display": "71M",
+          "bytes": 74448896.0,
+          "test_run": true
+        },
+        {
+          "line": "|  |  +- compile test debug native cached 8ms MaxRSS:41M",
+          "display": "41M",
+          "bytes": 42991616.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- run test 4 pass (4 total) 2s MaxRSS:102M",
+          "display": "102M",
+          "bytes": 106954752.0,
+          "test_run": true
+        },
+        {
+          "line": "|  |  +- compile test debug native success 1s MaxRSS:231M",
+          "display": "231M",
+          "bytes": 242221056.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- run test 140 pass (140 total) 59s MaxRSS:292M",
+          "display": "292M",
+          "bytes": 306184192.0,
+          "test_run": true
+        },
+        {
+          "line": "|  |  +- compile test debug native success 1s MaxRSS:234M",
+          "display": "234M",
+          "bytes": 245366784.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  +- compile exe host-bridge-test debug native cached 13ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- run test 1 pass (1 total) 1m MaxRSS:142M",
+          "display": "142M",
+          "bytes": 148897792.0,
+          "test_run": true
+        },
+        {
+          "line": "|     +- compile test debug native success 615ms MaxRSS:159M",
+          "display": "159M",
+          "bytes": 166723584.0,
+          "test_run": false
+        }
+      ],
+      "rss_overrun_notices": [],
+      "reported_admission_seconds": {
+        "gate": 0,
+        "build": 5
+      },
+      "errors": [],
+      "step": "test-qbe",
+      "source_commit": "d6c52c86b68f73134d7fb531e3c2dae0681eff33",
+      "command": [
+        "zig",
+        "build",
+        "test-qbe",
+        "--summary",
+        "all"
+      ],
+      "wrapped_command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "/usr/bin/time",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-full-old-v3/test-qbe-seconds.txt",
+        "zig",
+        "build",
+        "test-qbe",
+        "--summary",
+        "all"
+      ],
+      "exit": 0,
+      "command_seconds": 89.33,
+      "wall_including_admission_seconds": 94.47451536101289,
+      "admission_and_wrapper_seconds": 5.144515361012893,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-full-old-v3/test-qbe.log",
+      "qualified": true
+    },
+    {
+      "build_summaries": [
+        "29/29 steps succeeded"
+      ],
+      "maxrss": [
+        {
+          "line": "|  +- compile test debug native cached 7ms MaxRSS:41M",
+          "display": "41M",
+          "bytes": 42991616.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  +- compile exe qbe fast native cached 14ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |     +- compile exe qbe-build-assets debug native cached 8ms MaxRSS:41M",
+          "display": "41M",
+          "bytes": 42991616.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  +- compile exe mylang debug native cached 8ms MaxRSS:41M",
+          "display": "41M",
+          "bytes": 42991616.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  +- compile exe board-trial debug native cached 6ms MaxRSS:41M",
+          "display": "41M",
+          "bytes": 42991616.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  +- compile exe schematic-svg debug native cached 6ms MaxRSS:41M",
+          "display": "41M",
+          "bytes": 42991616.0,
+          "test_run": false
+        },
+        {
+          "line": "|  |  |  +- compile exe mylang-io debug native cached 10ms MaxRSS:41M",
+          "display": "41M",
+          "bytes": 42991616.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- compile test debug native cached 7ms MaxRSS:41M",
+          "display": "41M",
+          "bytes": 42991616.0,
+          "test_run": false
+        },
+        {
+          "line": "|  +- compile exe host-bridge-test debug native cached 14ms MaxRSS:40M",
+          "display": "40M",
+          "bytes": 41943040.0,
+          "test_run": false
+        }
+      ],
+      "rss_overrun_notices": [],
+      "reported_admission_seconds": {
+        "gate": 0,
+        "build": 0
+      },
+      "errors": [],
+      "step": "test-qbe-build",
+      "source_commit": "d6c52c86b68f73134d7fb531e3c2dae0681eff33",
+      "command": [
+        "zig",
+        "build",
+        "test-qbe-build",
+        "--summary",
+        "all"
+      ],
+      "wrapped_command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "/usr/bin/time",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-full-old-v3/test-qbe-build-seconds.txt",
+        "zig",
+        "build",
+        "test-qbe-build",
+        "--summary",
+        "all"
+      ],
+      "exit": 0,
+      "command_seconds": 3.59,
+      "wall_including_admission_seconds": 8.65825348510407,
+      "admission_and_wrapper_seconds": 5.068253485104069,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-full-old-v3/test-qbe-build.log",
+      "qualified": true
+    },
+    {
+      "build_summaries": [
+        "2/2 steps succeeded"
+      ],
+      "maxrss": [],
+      "rss_overrun_notices": [],
+      "reported_admission_seconds": {
+        "gate": 0,
+        "build": 0
+      },
+      "errors": [],
+      "step": "fmt-check",
+      "source_commit": "d6c52c86b68f73134d7fb531e3c2dae0681eff33",
+      "command": [
+        "zig",
+        "build",
+        "fmt-check",
+        "--summary",
+        "all"
+      ],
+      "wrapped_command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "/usr/bin/time",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-full-old-v3/fmt-check-seconds.txt",
+        "zig",
+        "build",
+        "fmt-check",
+        "--summary",
+        "all"
+      ],
+      "exit": 0,
+      "command_seconds": 0.24,
+      "wall_including_admission_seconds": 6.59467963501811,
+      "admission_and_wrapper_seconds": 6.35467963501811,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-full-old-v3/fmt-check.log",
+      "qualified": true
+    }
+  ],
+  "complete": true,
+  "qualified": true,
+  "error": null
+}

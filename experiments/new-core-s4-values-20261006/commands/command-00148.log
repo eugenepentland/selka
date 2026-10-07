@@ -1,0 +1,4 @@
+$ kill -TERM 2185520
+
+exit=0
+elapsed_seconds=0.004722

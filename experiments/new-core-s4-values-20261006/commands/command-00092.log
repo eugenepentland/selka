@@ -1,0 +1,8 @@
+$ git commit -m 'core: prove uniform row lengths and reserve counted fills'
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+[codex/new-core-s4-values d4d8c4e56] core: prove uniform row lengths and reserve counted fills
+ 8 files changed, 180 insertions(+), 10 deletions(-)
+ create mode 100644 test/core/v_nested_lengths.my
+
+exit=0
+elapsed_seconds=0.187269

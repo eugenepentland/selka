@@ -1,0 +1,22 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "zig",
+    "cc",
+    "-O3",
+    "-march=native",
+    "-mllvm",
+    "-x86-experimental-pref-innermost-loop-alignment=6",
+    "-Wno-override-module",
+    "experiments/new-core-s4-values-20261006/alternatives/union-find-cheaper-return-alias.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-integration/.mylang-cache/s4/registered-six/cache/new/core_rt-08f627e9cf4cf913.o",
+    "benchmarks/runtime/ports/native_clock.c",
+    "-o",
+    ".mylang-cache/s4-v/union-find-cheaper-return-alias"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 723948,
+  "status": 0,
+  "elapsed_seconds": 0.24090692796744406
+}

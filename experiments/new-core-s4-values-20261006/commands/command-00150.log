@@ -1,0 +1,4 @@
+$ git add experiments/new-core-s4-values-20261006/fuzz_values.py experiments/new-core-s4-values-20261006/qualify_fuzz_values.py experiments/new-core-s4-values-20261006/qualify_correctness.py experiments/new-core-s4-values-20261006/qualify_values.py experiments/new-core-s4-values-20261006/verify_values.py experiments/new-core-s4-values-20261006/verify_rows.py experiments/new-core-s4-values-20261006/measure_grid.py experiments/new-core-s4-values-20261006/final-fresh-old-oracle.json experiments/new-core-s4-values-20261006/final-input-identity.json experiments/new-core-s4-values-20261006/fresh-old-oracle.json experiments/new-core-s4-values-20261006/frozen-oracle-identity.json experiments/new-core-s4-values-20261006/frozen-source-identity.json experiments/new-core-s4-values-20261006/ports_recipe.md
+
+exit=0
+elapsed_seconds=0.027971

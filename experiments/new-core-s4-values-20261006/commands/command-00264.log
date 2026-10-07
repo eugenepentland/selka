@@ -1,0 +1,23 @@
+$ python3 -c 'import pathlib,json; e=pathlib.Path("experiments/new-core-s4-values-20261006"); d=json.loads((e/"final-core-conformance-v7/summary.json").read_text()); print(d["results"][1]); print(pathlib.Path(d["results"][1]["log"]).read_text()[-1600:])'
+{'command': ['scripts/build-slot.sh', 'gate', '--', 'bash', '-c', '"$@"; result=$?; exit "$result"', '--', 'scripts/build-slot.sh', 'build', '--', '/usr/bin/time', '-f', '%e', '-o', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-core-conformance-v7/full-conformance.seconds', 'python3', 'experiments/new-core-s2-20261005/wave-b/integration/conformance_checked.py', '--set', 'all', '--mylang', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang', '--core', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/zig-out/bin/mylang-core', '--cache-dir', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/qualification/final-core-conformance-v7/conformance', '--jobs', '4', '--why', '--leakcheck', '--verify'], 'log': 'experiments/new-core-s4-values-20261006/final-core-conformance-v7/full-conformance.log', 'status': 0, 'seconds': 171.27, 'wall_including_admission': 176.32690925290808}
+   13     0     0
+text_index                                                                 13 |            13     0     0 |            13     0     0
+text_literal_index                                                          1 |             1     0     0 |             1     0     0
+text_scanning                                                               8 |             8     0     0 |             8     0     0
+text_views                                                                  8 |             8     0     0 |             8     0     0
+tuples                                                                      5 |             5     0     0 |             5     0     0
+value_equality                                                              7 |             7     0     0 |             7     0     0
+wide_signatures                                                             4 |             4     0     0 |             4     0     0
+-------------------------------------------------------------------------------------------------------------------------------------
+TOTAL                                                                    1518
+  debug    matching 1518, mismatching 0, unsupported 0 (of 1518 tests; 1518 supported)
+  release  matching 1518, mismatching 0, unsupported 0 (of 1518 tests; 1518 supported)
+
+blocking features of the unsupported tests (tests / files):
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+  excluded migrated/propagation         imports (R-3; a split single-module copy goes in test/core)
+
+
+exit=0
+elapsed_seconds=0.025863

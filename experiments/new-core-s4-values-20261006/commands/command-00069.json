@@ -1,0 +1,20 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "env",
+    "MYL_CORE_LEAKCHECK=1",
+    "zig-out/bin/mylang-core",
+    "test",
+    "test/core/v_nested_lengths.my",
+    "--release",
+    "--verify-facts",
+    "--json",
+    "--cache-dir",
+    ".mylang-cache/s4-v/nested-lengths-check"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 1011562,
+  "status": 1,
+  "elapsed_seconds": 3.5182020938955247
+}

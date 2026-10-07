@@ -1,0 +1,5 @@
+$ python3 experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py --kind rebinding --old /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s3/oracle/mylang --new /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang-core --cases 50 --seed 410601 --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/rebinding --cache-root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-fuzz-v3/rebinding
+qualification progress: rebinding: seen=25 elapsed=75.15s
+qualification progress: rebinding: seen=50 elapsed=146.94s
+mut,records,alias                  cases=50 old_rejected=0 refused=0 compared=750 mismatch=0 fact=0 traps=34 caught=0
+qualification {"kind": "rebinding", "qualified": true, "accepted": 50, "native_comparisons": 750, "elapsed_seconds": 149.63588582910597}

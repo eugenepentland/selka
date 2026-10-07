@@ -1,0 +1,12 @@
+{
+  "command": [
+    "git",
+    "commit",
+    "-m",
+    "S4-V retain exact frozen full old gate"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3216713,
+  "status": 0,
+  "elapsed_seconds": 1.8378205220215023
+}

@@ -1,0 +1,5 @@
+$ tail -n 12 experiments/new-core-s4-values-20261006/final-core-conformance-v7/conformance.log
+tail: cannot open 'experiments/new-core-s4-values-20261006/final-core-conformance-v7/conformance.log' for reading: No such file or directory
+
+exit=1
+elapsed_seconds=0.002897

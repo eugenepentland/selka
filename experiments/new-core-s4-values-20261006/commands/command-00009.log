@@ -1,0 +1,65 @@
+$ scripts/build-slot.sh build flock /run/user/1000/mylang-slots/cpu10.lock python3 experiments/new-core-s4-20261006/integration/measure_all46.py --build --rows grid_dp,union_find,float_format,buffer_write --bin .mylang-cache/s4-v/measure-first --mylang .mylang-cache/s3/oracle/mylang --core zig-out/bin/mylang-core --rounds 7 --json experiments/new-core-s4-values-20261006/first-four.json
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 11s (all 3 build slot(s) busy)
+build grid_dp old: status=0
+build grid_dp new: status=0
+build union_find old: status=0
+build union_find new: status=0
+build float_format old: status=0
+build float_format new: status=0
+build buffer_write old: status=0
+build buffer_write new: status=0
+
+### grid_dp (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 21.004 | 71.432 | same |
+| new core release | 50.433 | 55.791 | same |
+| Rust | 12.666 | 15.074 | same |
+| Zig ReleaseSafe | 14.844 | 15.986 | same |
+| Go | 18.552 | 29.870 | same |
+| new / old | 2.401 | 0.781 | same |
+| new / Zig | 3.398 | 3.490 | same |
+| new / Rust | 3.982 | 3.701 | same |
+
+### union_find (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 84.124 | 74.795 | same |
+| new core release | 85.966 | 64.587 | same |
+| Rust | 41.755 | 25.368 | same |
+| Zig ReleaseSafe | 41.629 | 28.337 | same |
+| Go | 49.567 | 38.149 | same |
+| new / old | 1.022 | 0.864 | same |
+| new / Zig | 2.065 | 2.279 | same |
+| new / Rust | 2.059 | 2.546 | same |
+
+### float_format (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 480.442 | 479.036 | same |
+| new core release | 280.373 | 276.481 | same |
+| Rust | 371.549 | 349.450 | same |
+| Zig ReleaseSafe | 372.738 | 366.792 | same |
+| Go | 236.391 | 233.895 | same |
+| new / old | 0.584 | 0.577 | same |
+| new / Zig | 0.752 | 0.754 | same |
+| new / Rust | 0.755 | 0.791 | same |
+
+### buffer_write (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 143.475 | 133.658 | same |
+| new core release | 113.100 | 107.321 | same |
+| Rust | 146.538 | 138.351 | same |
+| Zig ReleaseSafe | 167.504 | 155.554 | same |
+| Go | 136.109 | 124.772 | same |
+| new / old | 0.788 | 0.803 | same |
+| new / Zig | 0.675 | 0.690 | same |
+| new / Rust | 0.772 | 0.776 | same |
+
+valid rows: 4; speed gate misses: ['grid_dp/4096', 'grid_dp/64', 'union_find/4096', 'union_find/64']
+Both new/old and new/Zig must be at most 1.10. binary_search misses require the plan's identical-code/layout-noise review; all other misses require repair.
+
+exit=0
+elapsed_seconds=122.430941

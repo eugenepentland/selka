@@ -1,0 +1,37 @@
+$ python3 -c 'from pathlib import Path; import hashlib,json,shutil,subprocess; root=Path.cwd(); area=root/".mylang-cache/s4-v/immutable-3c86c"; area.mkdir(exist_ok=False); items={};
+for name in ("mylang","mylang-core","qbe"):
+ source=root/"zig-out/bin"/name; target=area/name; shutil.copyfile(source,target); target.chmod(0o555); items[name]={"path":str(target),"sha256":hashlib.sha256(target.read_bytes()).hexdigest(),"build_mode":"Debug" if name!="qbe" else "ReleaseFast"}
+zig=Path(shutil.which("zig")).resolve(); items["zig"]={"path":str(zig),"sha256":hashlib.sha256(zig.read_bytes()).hexdigest()}; source=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip(); inputs=subprocess.check_output(["git","diff","--name-only","491caf1c98e2aa647872064f23b3ae42b301c3b7","HEAD","--",".",":!experiments"],text=True).splitlines(); result={"source_commit":source,"compiler_source_commit":"3c86c3122","old_build_log":"commands/command-00189.log","core_build_log":"commands/command-00184.log","shared_checker_sha256":hashlib.sha256((root/"src/sema.zig").read_bytes()).hexdigest(),"tools":items,"MYLANG_QBE":str(area/"qbe"),"MYLANG_ZIG":str(zig),"frozen_inputs":{p:hashlib.sha256((root/p).read_bytes()).hexdigest() for p in inputs}}; (root/"experiments/new-core-s4-values-20261006/final-frozen-source-v3.json").write_text(json.dumps(result,indent=2)+"\n"); print(json.dumps({k:v for k,v in result.items() if k!="frozen_inputs"},indent=2))'
+{
+  "source_commit": "adb638e72d3b682c29a42ec22dbe251b89873d7c",
+  "compiler_source_commit": "3c86c3122",
+  "old_build_log": "commands/command-00189.log",
+  "core_build_log": "commands/command-00184.log",
+  "shared_checker_sha256": "6139f41ddc628a6d26427d76fa8f238779126a7c1baffb0e33428de2aae57e2f",
+  "tools": {
+    "mylang": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang",
+      "sha256": "abce00c53bb842b475b19c0815209207e89a859faebfc0714edd8d9d6b49049b",
+      "build_mode": "Debug"
+    },
+    "mylang-core": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang-core",
+      "sha256": "db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1",
+      "build_mode": "Debug"
+    },
+    "qbe": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/qbe",
+      "sha256": "f485cd7750ac153feed0be6ee14f4ca525ef5f50a61c44519a05813d3f5e461d",
+      "build_mode": "ReleaseFast"
+    },
+    "zig": {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+    }
+  },
+  "MYLANG_QBE": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/qbe",
+  "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+}
+
+exit=0
+elapsed_seconds=0.688752

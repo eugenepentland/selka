@@ -1,0 +1,144 @@
+$ python3 -c 'import json,pathlib; e=pathlib.Path("experiments/new-core-s4-values-20261006"); print((e/"final-rows-leak-verify-v2/summary.json").read_text()[:1300]); print((e/"final-fuzz-v3/values/summary.json").read_text()[:1400]); print((e/"final-fuzz-v3/rebinding/summary.json").read_text()[:1400]); print((e/"performance_summary_v2.json").read_text()[-250:])'
+{
+  "qualified": true,
+  "source_commit": "97916aca5425ec03b4caa10ca832d50d65d29f6b",
+  "commands": [
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/test/core/row_record_reads.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-rows-leak-verify-v2/row_record_reads_debug",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-rows-leak-verify-v2/frontend",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/benchmarks/runtime/ports/native_clock.c"
+      ],
+      "status": 0,
+      "log": "command-0001.log"
+    },
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/test/core/row_record_reads.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-rows-lea
+{
+  "kind": "functions",
+  "cases_requested": 50,
+  "seed": 410607,
+  "cases_seen": 50,
+  "accepted": 50,
+  "old_rejected": 0,
+  "core_refused": 0,
+  "core_build_failed": 0,
+  "comparisons_expected": 750,
+  "native_runs": 1000,
+  "harness": {
+    "cases": 50,
+    "old_rejected": 0,
+    "refused": 0,
+    "compared": 750,
+    "mismatch": 0,
+    "fact": 0,
+    "traps": 0,
+    "caught": 0
+  },
+  "harness_status": 0,
+  "complete": true,
+  "qualified": true,
+  "error": null,
+  "failures": [],
+  "elapsed_seconds": 231.34221391100436,
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-fuzz-v3/values",
+  "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-fuzz-v3/values/tmp",
+  "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/values/sources",
+  "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-fuzz-v3/values/zig",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang",
+      "sha256": "abce00
+{
+  "kind": "rebinding",
+  "cases_requested": 50,
+  "seed": 410601,
+  "cases_seen": 50,
+  "accepted": 50,
+  "old_rejected": 0,
+  "core_refused": 0,
+  "core_build_failed": 0,
+  "comparisons_expected": 750,
+  "native_runs": 1000,
+  "harness": {
+    "cases": 50,
+    "old_rejected": 0,
+    "refused": 0,
+    "compared": 750,
+    "mismatch": 0,
+    "fact": 0,
+    "traps": 34,
+    "caught": 0
+  },
+  "harness_status": 0,
+  "complete": true,
+  "qualified": true,
+  "error": null,
+  "failures": [],
+  "elapsed_seconds": 149.63588582910597,
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-fuzz-v3/rebinding",
+  "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-fuzz-v3/rebinding/tmp",
+  "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/rebinding/sources",
+  "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-fuzz-v3/rebinding/zig",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s3/oracle/mylang",
+      "sha256": "d366
+alues/.mylang-cache/s4-v/final-all46-v2/buffer_write-go": {
+      "sha256": "a6380d9968de796a6e36d7ea4473ab2bb22da687bac0dcec3c523a9c5e333f80",
+      "bytes": 2383147
+    }
+  },
+  "artifact_manifest": "final-performance-artifacts-v2/manifest.json"
+}
+
+
+exit=0
+elapsed_seconds=0.025144

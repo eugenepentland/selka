@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "from pathlib import Path; import hashlib,json,shutil; root=Path.cwd(); source=root/\"zig-out/bin/qbe\"; sibling=root/\".mylang-cache/s4-v/immutable-final-checker/qbe\"; assert not sibling.exists(); shutil.copyfile(source,sibling); sibling.chmod(0o555); zig=Path(shutil.which(\"zig\")).resolve(); tools={\"qbe_source\":{\"path\":str(source),\"sha256\":hashlib.sha256(source.read_bytes()).hexdigest()},\"qbe_immutable_sibling\":{\"path\":str(sibling),\"sha256\":hashlib.sha256(sibling.read_bytes()).hexdigest()},\"zig\":{\"path\":str(zig),\"sha256\":hashlib.sha256(zig.read_bytes()).hexdigest()}}; assert tools[\"qbe_source\"][\"sha256\"]==tools[\"qbe_immutable_sibling\"][\"sha256\"]; result={\"tools\":tools,\"MYLANG_QBE\":str(sibling),\"MYLANG_ZIG\":str(zig),\"old_sha256\":hashlib.sha256((sibling.parent/\"mylang\").read_bytes()).hexdigest(),\"core_sha256\":hashlib.sha256((root/\"zig-out/bin/mylang-core\").read_bytes()).hexdigest()}; (root/\"experiments/new-core-s4-values-20261006/final-oracle-tool-identity.json\").write_text(json.dumps(result,indent=2)+\"\\n\"); print(json.dumps(result,indent=2))"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2555251,
+  "status": 0,
+  "elapsed_seconds": 0.7558316350914538
+}

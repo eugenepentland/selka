@@ -1,0 +1,4 @@
+$ git add SPEC.md src/core/own.zig test/core/v_nested_lengths.my experiments/new-core-s4-values-20261006/fuzz_values.py
+
+exit=0
+elapsed_seconds=0.033032

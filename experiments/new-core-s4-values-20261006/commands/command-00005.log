@@ -1,0 +1,25 @@
+$ scripts/build-slot.sh build zig build core
+core
++- install mylang-core
+   +- compile exe mylang-core debug native 1 errors
+src/core/inline_cfg.zig:113:28: error: no field or member function named 'next' in 'ir.Operands'
+            while (operands.next()) |operand| if (callee.resolve(operand) == result and user.op != .ret) { return &.{}; };
+                   ~~~~~~~~^~~~~
+src/core/ir.zig:544:22: note: struct declared here
+pub const Operands = struct {
+                     ^~~~~~
+referenced by:
+    splice: src/core/inline_cfg.zig:26:38
+    inlineLeaves: src/core/inline.zig:32:35
+    8 reference(s) hidden; use '-freference-trace=10' to see all references
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang -Mroot=src/core/main.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 0/3 steps succeeded (1 failed)
+core transitive failure
++- install mylang-core transitive failure
+   +- compile exe mylang-core debug native 1 errors
+
+
+exit=1
+elapsed_seconds=1.763210

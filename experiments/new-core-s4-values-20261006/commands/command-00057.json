@@ -1,0 +1,17 @@
+{
+  "command": [
+    "git",
+    "add",
+    "SPEC.md",
+    "src/sema.zig",
+    "src/core",
+    "test/core/v_buffer_format.my",
+    "test/core/v_dynamic_repeat.my",
+    "test/core/v_nested_places.my",
+    "test/core/v_inline_loops.my"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 788840,
+  "status": 0,
+  "elapsed_seconds": 0.1970816319808364
+}

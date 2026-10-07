@@ -1,0 +1,15 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "zig",
+    "build",
+    "install-core",
+    "--summary",
+    "all"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2703296,
+  "status": 1,
+  "elapsed_seconds": 0.051454291911795735
+}

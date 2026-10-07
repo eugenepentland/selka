@@ -1,0 +1,304 @@
+$ zig-out/bin/mylang-core dump-ir test/core/row_union_find.my
+fn row_union_find::main(list[str], cap, cap) -> i64
+b0:
+  %3 = list_len u64 param0
+  %4 = convert.exact i64 %3
+  %6 = cmp.ne bool %4, 3:i64
+  branch %6, b1, b2
+b1: ; preds b0
+  ret 2:i64
+b2: ; preds b0
+  %12 = cmp.lt bool 0:i64, 0:i64
+  branch %12, b3, b4
+b3: ; preds b2
+  %14 = list_len u64 param0
+  %15 = convert.exact i64 %14
+  %16 = add.exact i64 %15, 0:i64
+  jump b4
+b4: ; preds b2 b3
+  %18 = phi i64 0:i64, %16
+  %20 = list_get.exact str param0, %18
+  %21 = call i64 row_union_find::parse_number(%20)
+  %25 = cmp.lt bool 1:i64, 0:i64
+  branch %25, b5, b6
+b5: ; preds b4
+  %27 = list_len u64 param0
+  %28 = convert.exact i64 %27
+  %29 = add.exact i64 %28, 1:i64
+  jump b6
+b6: ; preds b4 b5
+  %31 = phi i64 1:i64, %29
+  %33 = list_get.exact str param0, %31
+  %34 = call i64 row_union_find::parse_number(%33)
+  %38 = cmp.lt bool 2:i64, 0:i64
+  branch %38, b7, b8
+b7: ; preds b6
+  %40 = list_len u64 param0
+  %41 = convert.exact i64 %40
+  %42 = add.exact i64 %41, 2:i64
+  jump b8
+b8: ; preds b6 b7
+  %44 = phi i64 2:i64, %42
+  %46 = list_get.exact str param0, %44
+  %47 = call i64 row_union_find::parse_number(%46)
+  %51 = cmp.lt bool %21, 2:i64
+  branch %51, b9, b13
+b9: ; preds b8 b13 b12 b11
+  ret 2:i64
+b10: ; preds b11
+  call myl_core_host_check(param1)
+  %70 = call i64 row_union_find::runtime_bench_now(param1)
+  jump b14
+b11: ; preds b12
+  %61 = cmp.gt bool %47, 1000000:i64
+  branch %61, b9, b10
+b12: ; preds b13
+  %58 = cmp.lt bool %47, 1:i64
+  branch %58, b9, b11
+b13: ; preds b8
+  %55 = cmp.lt bool %34, 1:i64
+  branch %55, b9, b12
+b14: ; preds b10 b16
+  %73 = phi i64 0:i64, %91
+  %85 = phi i64 0:i64, %88
+  %75 = cmp.lt bool %73, %34
+  branch %75, b15, b17
+b15: ; preds b14
+  %79 = call i64 row_union_find::batch_result(%21, %73, %47)
+  %81 = cmp.lt bool %79, 0:i64
+  branch %81, b18, b19
+b16: ; preds b19
+  %91 = add.exact i64 %73, 1:i64
+  jump b14
+b17: ; preds b14
+  call myl_core_host_check(param1)
+  %95 = call i64 row_union_find::runtime_bench_now(param1)
+  %97 = sub.exact i64 %95, %70
+  print param2, %85, %97
+  ret 0:i64
+b18: ; preds b15
+  ret 2:i64
+b19: ; preds b15
+  %86 = add.exact i64 %85, %79
+  %88 = floor_rem.exact i64 %86, 1000000007:i64
+  jump b16
+fn row_union_find::parse_number(str) -> i64
+b0:
+  %1 = str_parse_int option[i64] param0
+  %2 = union_tag u32 %1
+  %4 = cmp.eq bool %2, 1:u32
+  branch %4, b2, b3
+b1:
+b2: ; preds b0
+  %6 = union_payload i64 tag1 %1
+  ret %6
+b3: ; preds b0
+  jump b4
+b4: ; preds b3
+  ret 0:i64
+fn row_union_find::runtime_bench_now(cap) -> i64 extern
+fn myl_core_host_check(cap) -> void runtime
+fn row_union_find::batch_result(i64, i64, i64) -> i64
+b0:
+  %5 = cmp.lt bool 0:i64, param0
+  branch %5, b1, b2
+b1: ; preds b0
+  %8 = cmp.lt bool 0:i64, 0:i64
+  branch %8, b3, b5
+b2: ; preds b0 b4
+  %30 = phi u64 0:u64, %31
+  %33 = list_new list[i64] %30
+  jump b9
+b3: ; preds b1
+  %11 = cmp.lt bool param0, 0:i64
+  branch %11, b6, b8
+b4: ; preds b7 b5
+  %31 = phi u64 %32, %27
+  jump b2
+b5: ; preds b1
+  %26 = sub.exact i64 param0, 0:i64
+  %27 = convert.exact u64 %26
+  jump b4
+b6: ; preds b3
+  %13 = sub.exact i64 param0, 0:i64
+  %14 = convert.exact u64 %13
+  jump b7
+b7: ; preds b6 b8
+  %32 = phi u64 %14, %23
+  jump b4
+b8: ; preds b3
+  %16 = convert.exact u64 param0
+  %18 = add.exact i64 0:i64, 1:i64
+  %19 = neg.exact i64 %18
+  %20 = convert.exact u64 %19
+  %21 = add.exact u64 %16, %20
+  %23 = add.exact u64 %21, 1:u64
+  jump b7
+b9: ; preds b2 b11
+  %35 = phi i64 0:i64, %42
+  %39 = phi list[i64] %33, %40
+  %37 = cmp.lt bool %35, param0
+  branch %37, b10, b12
+b10: ; preds b9
+  %40 = list_push list[i64] %39, %35
+  %42 = add.exact i64 %35, 1:i64
+  jump b11
+b11: ; preds b10
+  jump b9
+b12: ; preds b9
+  jump b13
+b13: ; preds b12 b15
+  %57 = phi i64 0:i64, %104
+  %78 = phi list[i64] %39, %122
+  %59 = cmp.lt bool %57, param0
+  branch %59, b14, b16
+b14: ; preds b13
+  %63 = add.exact i64 param2, param1
+  %65 = mul.exact i64 13:i64, %57
+  %66 = add.exact i64 %63, %65
+  %68 = floor_rem.exact i64 %66, param0
+  %70 = mul.exact i64 7:i64, param1
+  %71 = add.exact i64 param2, %70
+  %73 = mul.exact i64 17:i64, %57
+  %74 = add.exact i64 %71, %73
+  %76 = add.exact i64 %74, 1:i64
+  %77 = floor_rem.exact i64 %76, param0
+  %79 = call record{i64, list[i64]} row_union_find::find(%78, %68)
+  %80 = record_get i64 %79, field0
+  %81 = record_get list[i64] %79, field1
+  %82 = call record{i64, list[i64]} row_union_find::find(%81, %77)
+  %83 = record_get i64 %82, field0
+  %84 = record_get list[i64] %82, field1
+  %85 = cmp.ne bool %80, %83
+  branch %85, b17, b18
+b15: ; preds b18
+  %104 = add.exact i64 %57, 1:i64
+  jump b13
+b16: ; preds b13
+  jump b21
+b17: ; preds b14
+  %88 = cmp.lt bool %80, 0:i64
+  branch %88, b19, b20
+b18: ; preds b14 b20
+  %122 = phi list[i64] %84, %97
+  jump b15
+b19: ; preds b17
+  %90 = list_len u64 %84
+  %91 = convert.exact i64 %90
+  %92 = add.exact i64 %91, %80
+  jump b20
+b20: ; preds b17 b19
+  %94 = phi i64 %80, %92
+  %97 = list_set.exact list[i64] %84, %94, %83
+  jump b18
+b21: ; preds b16 b23
+  %126 = phi i64 0:i64, %143
+  %130 = phi list[i64] %78, %133
+  %136 = phi i64 0:i64, %147
+  %128 = cmp.lt bool %126, param0
+  branch %128, b22, b24
+b22: ; preds b21
+  %131 = call record{i64, list[i64]} row_union_find::find(%130, %126)
+  %132 = record_get i64 %131, field0
+  %133 = record_get list[i64] %131, field1
+  %134 = cmp.eq bool %132, %126
+  branch %134, b25, b26
+b23: ; preds b26
+  %143 = add.exact i64 %126, 1:i64
+  jump b21
+b24: ; preds b21
+  jump b27
+b25: ; preds b22
+  %138 = add.exact i64 %136, 1:i64
+  jump b26
+b26: ; preds b22 b25
+  %147 = phi i64 %136, %138
+  jump b23
+b27: ; preds b24 b29
+  %153 = phi i64 0:i64, %165
+  %157 = phi i64 0:i64, %162
+  %158 = phi list[i64] %130, %161
+  %155 = cmp.lt bool %153, param0
+  branch %155, b28, b30
+b28: ; preds b27
+  %159 = call record{i64, list[i64]} row_union_find::find(%158, %153)
+  %160 = record_get i64 %159, field0
+  %161 = record_get list[i64] %159, field1
+  %162 = add.exact i64 %157, %160
+  jump b29
+b29: ; preds b28
+  %165 = add.exact i64 %153, 1:i64
+  jump b27
+b30: ; preds b27
+  %169 = mul.exact i64 %136, 1000003:i64
+  %170 = add.exact i64 %169, %157
+  %172 = floor_rem.exact i64 %170, 1000000007:i64
+  ret %172
+fn row_union_find::find(list[i64], i64) -> record{i64, list[i64]}
+b0:
+  jump b1
+b1: ; preds b0 b5
+  %3 = phi list[i64] param0, %54
+  %4 = phi i64 param1, %66
+  %6 = cmp.lt bool %4, 0:i64
+  branch %6, b2, b3
+b2: ; preds b1
+  %8 = list_len u64 %3
+  %9 = convert.exact i64 %8
+  %10 = add.exact i64 %9, %4
+  jump b3
+b3: ; preds b1 b2
+  %12 = phi i64 %4, %10
+  %14 = list_get.exact i64 %3, %12
+  %16 = cmp.ne bool %14, %4
+  branch %16, b4, b6
+b4: ; preds b3
+  %20 = cmp.lt bool %4, 0:i64
+  branch %20, b7, b8
+b5: ; preds b14
+  jump b1
+b6: ; preds b3
+  %70 = record_make record{i64, list[i64]} %4, %3
+  ret %70
+b7: ; preds b4
+  %22 = list_len u64 %3
+  %23 = convert.exact i64 %22
+  %24 = add.exact i64 %23, %4
+  jump b8
+b8: ; preds b4 b7
+  %26 = phi i64 %4, %24
+  %28 = list_get.exact i64 %3, %26
+  %30 = cmp.lt bool %28, 0:i64
+  branch %30, b9, b10
+b9: ; preds b8
+  %33 = list_len u64 %3
+  %34 = convert.exact i64 %33
+  %35 = add.exact i64 %34, %28
+  jump b10
+b10: ; preds b8 b9
+  %37 = phi i64 %28, %35
+  %39 = list_get.exact i64 %3, %37
+  %45 = cmp.lt bool %4, 0:i64
+  branch %45, b11, b12
+b11: ; preds b10
+  %47 = list_len u64 %3
+  %48 = convert.exact i64 %47
+  %49 = add.exact i64 %48, %4
+  jump b12
+b12: ; preds b10 b11
+  %51 = phi i64 %4, %49
+  %54 = list_set.exact list[i64] %3, %51, %39
+  %58 = cmp.lt bool %4, 0:i64
+  branch %58, b13, b14
+b13: ; preds b12
+  %60 = list_len u64 %54
+  %61 = convert.exact i64 %60
+  %62 = add.exact i64 %61, %4
+  jump b14
+b14: ; preds b12 b13
+  %64 = phi i64 %4, %62
+  %66 = list_get.exact i64 %54, %64
+  jump b5
+
+exit=0
+elapsed_seconds=0.016451

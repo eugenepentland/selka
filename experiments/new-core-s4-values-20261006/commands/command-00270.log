@@ -1,0 +1,13 @@
+$ python3 -c 'from pathlib import Path; import json; p=Path("experiments/new-core-s4-values-20261006/final-fuzz-v3"); print([(x.parent.name,json.loads(x.read_text())["accepted"]) for x in p.glob("*/summary.json")]); print((p/"s1.log").read_text()[-650:]); print((p/"dict.log").read_text()[-650:] if (p/"dict.log").exists() else "dict not yet started")'
+[('s1', 50), ('rc', 50), ('values', 50), ('rebinding', 50), ('functions', 50)]
+le-3c86c/mylang-core --cases 50 --seed 410603 --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/s1 --cache-root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-fuzz-v3/s1
+qualification progress: s1: seen=25 elapsed=77.79s
+qualification progress: s1: seen=50 elapsed=147.50s
+records,unions,propagate,mut,alias cases=50 old_rejected=0 refused=0 compared=750 mismatch=0 fact=0 traps=44 caught=0
+qualification {"kind": "s1", "qualified": true, "accepted": 50, "native_comparisons": 750, "elapsed_seconds": 150.85921107511967}
+
+$ python3 experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py --kind dict --old /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s3/oracle/mylang --new /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang-core --cases 50 --seed 410604 --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/dict --cache-root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-fuzz-v3/dict
+
+
+exit=0
+elapsed_seconds=0.020643

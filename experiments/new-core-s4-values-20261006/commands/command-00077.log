@@ -1,0 +1,4 @@
+$ scripts/build-slot.sh build zig-out/bin/mylang-core build test/core/row_grid_dp.my --release --emit-llvm .mylang-cache/s4-v/grid-seventh.ll --link benchmarks/runtime/ports/native_clock.c -o .mylang-cache/s4-v/grid-seventh --cache-dir .mylang-cache/s4-v/grid-seventh-cache
+
+exit=0
+elapsed_seconds=7.916365

@@ -1,0 +1,66 @@
+$ git commit -m 'S4-V qualify functions differential cases'
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10371 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s4-values 5fe5023b6] S4-V qualify functions differential cases
+ 54 files changed, 4224 insertions(+)
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions.log
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/commands.jsonl
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/harness.txt
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias0-fa5a4fdac783.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias1-d4fbc37bdf03.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias10-e4d28907ced8.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias11-72e248390e90.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias12-8b36f36de5c2.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias13-f278b4978d6b.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias14-ce8187e101b6.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias15-b247f4b7ee70.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias16-156e31c2f3a8.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias17-ec3ea2c4b726.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias18-7a60d0cd1476.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias19-9900f891327f.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias2-cd81f2249fe0.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias20-b2deb8d47e53.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias21-4b2b04fd0016.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias22-a667da6f1804.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias23-88af9d2eb766.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias24-009e3869491f.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias25-25fbdae6b10f.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias26-7df21b48def9.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias27-7a4b3ea19384.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias28-1b63540221c3.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias29-04c862326731.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias3-dc2052020e7f.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias30-dbc31a573a14.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias31-27fb2385bccc.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias32-f9b791153657.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias33-497d82e87c4a.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias34-b49cb393a7b1.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias35-a506ba1e9780.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias36-3ca0419201a7.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias37-f5f33924909e.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias38-c9d02e1c3345.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias39-91312823d2c3.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias4-22725b387211.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias40-f6600fa2456b.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias41-a35d2abd1711.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias42-f1f9747335bd.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias43-359337d7a197.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias44-f8c3144f0807.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias45-0b43cf8b1e5b.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias46-1ad03d4b468e.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias47-4bfeb8b7b11f.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias48-2f869d3808e1.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias49-c896e8b50a23.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias5-5fd6bdb71d0c.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias6-14c47eba81d9.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias7-8b43dd10bcb7.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias8-987717c9a1b9.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/sources/records_unions_propagate_mut_alias9-c8a24bf1e488.my
+ create mode 100644 experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/summary.json
+
+exit=0
+elapsed_seconds=1.653212

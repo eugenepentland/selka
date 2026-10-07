@@ -1,0 +1,13 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "env",
+    "MYL_CORE_LEAKCHECK=1",
+    ".mylang-cache/s4-v/v_nested"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 739449,
+  "status": 0,
+  "elapsed_seconds": 0.04384625400416553
+}

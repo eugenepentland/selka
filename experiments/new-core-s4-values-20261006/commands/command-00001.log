@@ -1,0 +1,4 @@
+$ scripts/build-slot.sh build zig build core
+
+exit=0
+elapsed_seconds=2.797112

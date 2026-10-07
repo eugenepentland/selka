@@ -1,0 +1,33 @@
+$ git commit -m 'evidence: retain S4-V counted fill red and green regression'
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10371 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s4-values c3931c9b0] evidence: retain S4-V counted fill red and green regression
+ 21 files changed, 432 insertions(+)
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/check.py
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/green-new-debug.log
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/green-new-release.log
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/green-new-verify.log
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/green-old-debug.log
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/green-old-release.log
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/green-summary.json
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/module-name-stop/red-new-debug.log
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/module-name-stop/red-new-release.log
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/module-name-stop/red-new-verify.log
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/module-name-stop/red-old-debug.log
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/module-name-stop/red-old-release.log
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/module-name-stop/repro.my
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/module-name-stop/summary.json
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/red-new-debug.log
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/red-new-release.log
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/red-new-verify.log
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/red-old-debug.log
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/red-old-release.log
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/red-summary.json
+ create mode 100644 experiments/new-core-s4-values-20261006/fill-boundary-repair/repro.my
+
+exit=0
+elapsed_seconds=2.092798

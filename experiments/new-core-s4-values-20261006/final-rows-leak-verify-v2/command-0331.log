@@ -1,0 +1,4 @@
+$ /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-rows-leak-verify-v2/row_set_dedup_debug 64 3 7
+stdout='360 7856\n'
+stderr=''
+exit=0

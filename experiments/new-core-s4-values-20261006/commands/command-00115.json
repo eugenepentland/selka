@@ -1,0 +1,14 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check",
+    "all",
+    ".",
+    "--gate"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2098781,
+  "status": 1,
+  "elapsed_seconds": 2.8085047281347215
+}

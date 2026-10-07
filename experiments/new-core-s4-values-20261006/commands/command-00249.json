@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "from pathlib import Path; import shutil,json,hashlib; src=Path(\"/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02\"); dst=Path(\"experiments/new-core-s4-values-20261006/provenance-reference-receipts\"); dst.mkdir(); manifest={}; files=list(src.rglob(\"*.json\"))+list(src.rglob(\"*.my\")); builder=src.parent/\"mut_references.py\"; files.append(builder); print(\"files\",len(files));\nfor original in files:\n relative=original.relative_to(src) if original.is_relative_to(src) else Path(original.name); target=dst/relative; target.parent.mkdir(parents=True,exist_ok=True); shutil.copyfile(original,target); manifest[str(relative)]={\"origin\":str(original),\"sha256\":hashlib.sha256(original.read_bytes()).hexdigest()}\n(dst/\"copy-manifest.json\").write_text(json.dumps(manifest,indent=2)+\"\\n\")"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3242900,
+  "status": 0,
+  "elapsed_seconds": 0.038331577088683844
+}

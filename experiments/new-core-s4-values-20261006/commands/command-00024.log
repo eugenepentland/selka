@@ -1,0 +1,32 @@
+$ scripts/build-slot.sh build /home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check all . --gate
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 5/88 failed (spec, cognitive-complexity, bool-ops-per-condition, line-length, repeated-string-literal)
+guardian: failures grouped by check (5):
+  spec (4 findings)
+    - unverified: New core S3 foundation - [PY-REPEAT-2] A contextual list constructor in repetition keeps its list element type independently of a runtime integer count: `[0] * width` and `width * [0]` typecheck in both cores, including a declared `list[u8]` result.
+    - unverified: New core S3 foundation - [NEW-CORE-BUFFER-S4-1] Numeric byte-buffer append formats integers and binary64 values in bounded stack storage with the ordinary string spelling, then reserves once and copies the fragment once. COW and fact-verification uniqueness checks precede the consuming append; no temporary string block or per-octet append loop is constructed.
+    - unverified: New core S3 foundation - [NEW-CORE-PLACE-S4-1] Nested indexed assignments detach the outer collection before reading its managed child and transfer the selected slot owner through the child update and replacement. Each parent detachment and child update follows ordinary COW, preserving both root aliases and shared inner rows; verification builds assert every transferred parent is unique.
+    - +1 more — use --verbose for full detail
+  cognitive-complexity (1 finding)
+    - src/core/inline_cfg.zig: fn splice cognitive complexity 28 (limit: 25)
+      fix: extract helpers; reduce nested control flow.
+  bool-ops-per-condition (2 findings)
+    - src/core/inline_cfg.zig:7: condition has 4 boolean ops (cap 3)
+      fix: split into nested/sequential ifs, or extract into a named bool.
+    - src/core/emit_dict.zig:63: condition has 4 boolean ops (cap 3)
+  line-length (3 findings)
+    - src/core/inline_cfg.zig:73: line is 319 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+    - src/core/inline_cfg.zig:84: line is 241 chars (hard limit 240)
+    - src/core/s3_number_test.zig:48: line is 303 chars (hard limit 240)
+  repeated-string-literal (1 finding)
+    - src/core/s3_number_test.zig: string literal 1 passed appears 4 times (lines 48, 48, 48, 48) — extract a const
+      fix: extract the literal/const into a shared file-scope const and import it.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+
+exit=1
+elapsed_seconds=5.807360

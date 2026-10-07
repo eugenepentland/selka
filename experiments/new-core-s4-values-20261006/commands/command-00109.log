@@ -1,0 +1,4 @@
+$ git add experiments/new-core-s4-values-20261006/final-rows-leak-verify-v1
+
+exit=0
+elapsed_seconds=1.028583

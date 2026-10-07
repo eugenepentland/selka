@@ -1,0 +1,226 @@
+{
+  "build-assert-release-s3.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-assert-release-s3.json",
+    "sha256": "f4ba2df268fb5920345a09632a0dea2825c768860fcfd08b284c03b3056da278"
+  },
+  "build-overflow-release-s3.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-overflow-release-s3.json",
+    "sha256": "191f1cc428f20ed937d4e558a80a4797016a154c75991ca2c04a903b63d46436"
+  },
+  "run-bounds-debug-old.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-bounds-debug-old.json",
+    "sha256": "f090130b2a24926444ff5b86bf7fed2b1d1563f919e42ab3271a4af93ee9ede6"
+  },
+  "run-overflow-debug-values.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-overflow-debug-values.json",
+    "sha256": "de7ec0c50efb9f8f60b2534f4bddbdffc00c6aece6f7eefe2c65071dd89418ba"
+  },
+  "build-bounds-debug-values.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-bounds-debug-values.json",
+    "sha256": "f20f38e17ca69fffae94db43b823d0987c49e0994f93c96e143ef5f44a4da917"
+  },
+  "build-assert-debug-new.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-assert-debug-new.json",
+    "sha256": "39f77e07d811c8bd083bcc148b3b364b4a55cdc43eea32ccd42e8d2f8573e9a8"
+  },
+  "build-assert-release-new.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-assert-release-new.json",
+    "sha256": "e29946293f085b833ec735aaf8af03d2ca1e38ac889ffe6aa28b09ff25fb1ace"
+  },
+  "build-overflow-release-values.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-overflow-release-values.json",
+    "sha256": "0c9ca61a9347bd1893084d98b9315f9e07046a92d469988fea1fae5514bf0e91"
+  },
+  "build-assert-release-old.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-assert-release-old.json",
+    "sha256": "c7a18df11be43e7457c1b22d4ae6c7c32d77b49b4617451fc4e8782d00427ec7"
+  },
+  "build-overflow-debug-new.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-overflow-debug-new.json",
+    "sha256": "2b54d4ea6eaa15afb351b3ee47e6639a43ffecdfd4f2e1c8ef921ded925b2aab"
+  },
+  "summary.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/summary.json",
+    "sha256": "32d39e021c771be91dea56c9bca9cb0d567fe1e2c013af9bdab251d591cb82db"
+  },
+  "build-bounds-release-new.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-bounds-release-new.json",
+    "sha256": "98681bca5fdc6e6658d949c97eebb82c298ce67ae68387ca02b9eb2d6f8c2cf3"
+  },
+  "run-assert-release-values.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-assert-release-values.json",
+    "sha256": "23aa94a358d03293e8f763798409ae6ea72a84f7d9fa2f418f795b22c4885db6"
+  },
+  "build-overflow-debug-old.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-overflow-debug-old.json",
+    "sha256": "e9ef952107dfec9014e13d77820edc566a5f19a2534099fec6b83f9d7b11c1e3"
+  },
+  "build-bounds-debug-new.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-bounds-debug-new.json",
+    "sha256": "98d34d8e26c1a88f3d5d580e1ffb7ce437db167d16ca896f1f4c072f2114594e"
+  },
+  "run-bounds-release-old.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-bounds-release-old.json",
+    "sha256": "85ca1144db2f48962387e5c47a4c857e4c047ab77c7b73556668689598788850"
+  },
+  "run-overflow-release-new.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-overflow-release-new.json",
+    "sha256": "daa6837c6ca4b9e5fe01276d8afeab4c0131eb43e2a8063d9fd09e43c3ffc662"
+  },
+  "build-assert-debug-s3.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-assert-debug-s3.json",
+    "sha256": "335d5a18304dea61ce3d7cfe4001893d581c7233b2197284f25f3330b53ed1ed"
+  },
+  "run-overflow-debug-s3.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-overflow-debug-s3.json",
+    "sha256": "41a120f245856ce7d0418a9f5f1f4f96fbb584a2b20594115a70fb8604cc7839"
+  },
+  "build-bounds-release-s3.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-bounds-release-s3.json",
+    "sha256": "55823e7dbc3e81df6109336ed1077289850447e935721480b8800897ff81bb3e"
+  },
+  "build-overflow-debug-s3.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-overflow-debug-s3.json",
+    "sha256": "954c76b0c2389586050093a90d6fe05f97c22939d6378aacb539f46d654933cd"
+  },
+  "build-assert-release-values.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-assert-release-values.json",
+    "sha256": "41586b66775ffccffa9bec07d4e145bde42753868398f56719801a450d0d96c3"
+  },
+  "build-overflow-debug-values.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-overflow-debug-values.json",
+    "sha256": "52f332d6cee7b05bbb4ebdcba07524303137070ef912e15f347e13b02d01d69f"
+  },
+  "run-bounds-debug-values.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-bounds-debug-values.json",
+    "sha256": "90547e44399d8aa9b9b3d6e6a84927ece039f3bf6a81daff9b989201f2dd2250"
+  },
+  "run-overflow-release-values.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-overflow-release-values.json",
+    "sha256": "7aad89d59cf9d79f799b6b3d3a817da553978ffe4d361f51e031ee2dd03066e1"
+  },
+  "build-assert-debug-values.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-assert-debug-values.json",
+    "sha256": "fb69015e1261a07b145385a9fa963b70b58ef2ed5f41ad5f0b06e48f0181623b"
+  },
+  "build-bounds-debug-old.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-bounds-debug-old.json",
+    "sha256": "100718d60a5a09356ab47764e53f7738ae54223f51a6a8df5f552bd9d16ce965"
+  },
+  "run-bounds-debug-new.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-bounds-debug-new.json",
+    "sha256": "6f66072838df6b99f06934d4a44f8ee421a631379dd36b7ce344cb269af56820"
+  },
+  "run-bounds-release-new.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-bounds-release-new.json",
+    "sha256": "058e069d52839b03c39afe54833c86871208f8c9ed00c7472c8475794786219f"
+  },
+  "run-bounds-release-values.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-bounds-release-values.json",
+    "sha256": "fff78a22e788a820d7b33c72e8d95ea78befa249dfc22b5629671c666d486496"
+  },
+  "run-overflow-debug-old.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-overflow-debug-old.json",
+    "sha256": "290f3d1f2c98de9b0608e5db4b081c4c45985e49905a6b0ddf1e754cf8e3e4cd"
+  },
+  "run-overflow-release-old.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-overflow-release-old.json",
+    "sha256": "e732f8351575ee0a1f7772f91a9f760e1ab18bf80da2b7c574c857cc966ec7ce"
+  },
+  "run-assert-debug-old.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-assert-debug-old.json",
+    "sha256": "74c110292156f01ea7b65e0c39894d989b821f7b7a1c712ebbce47950e1b2345"
+  },
+  "run-assert-release-new.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-assert-release-new.json",
+    "sha256": "29a1959ff0539b570e84e8475dbbad4daf20e590e3678c748f35a6ac8c16c505"
+  },
+  "build-assert-debug-old.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-assert-debug-old.json",
+    "sha256": "bf3f522dbe83411f86a9e32da89dd366009c66660df76aa6497f711b558b1b58"
+  },
+  "build-bounds-release-old.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-bounds-release-old.json",
+    "sha256": "3a524cf1995a5d88a9b6849f1b555f01e58c8352d9cd42c8075f3572f3d9892e"
+  },
+  "run-overflow-debug-new.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-overflow-debug-new.json",
+    "sha256": "7784e53c9b106f309a521900d0a943aa9f2336a09d876a90cdf7ecfa1e14aa89"
+  },
+  "build-bounds-debug-s3.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-bounds-debug-s3.json",
+    "sha256": "a435b0a6a6220810a5f2c331a561047cfded51b162fe3eb42b12f97d0e3d088f"
+  },
+  "run-assert-debug-s3.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-assert-debug-s3.json",
+    "sha256": "e6cfb811d4fdbdfa6b9387335d5372d03b50939d505a82c523f4a29c2e1d0d70"
+  },
+  "run-bounds-release-s3.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-bounds-release-s3.json",
+    "sha256": "0d3e0e0940b3e808de3a891a13dda1062bf19f6946cca0c3f2c7656c1b4ca068"
+  },
+  "run-assert-debug-new.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-assert-debug-new.json",
+    "sha256": "056c9abff177af3e185735ef0c2fef6b8145931495a30219b7226a67a1ec02af"
+  },
+  "run-assert-debug-values.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-assert-debug-values.json",
+    "sha256": "f4398b8d31350fccef01987b0542b6e8e755c4713ef0e672ebe336ab848d3313"
+  },
+  "run-assert-release-old.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-assert-release-old.json",
+    "sha256": "207538e718c664b6b0be7f250d5ae6f6507dfd4440b1257d89f3829a8550d967"
+  },
+  "run-bounds-debug-s3.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-bounds-debug-s3.json",
+    "sha256": "b2bcf1290ef740fc480dc3bcb14d44c5a36ca627a01b923c41270ed2b76c76b6"
+  },
+  "build-bounds-release-values.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-bounds-release-values.json",
+    "sha256": "5359b27545d40062464917dee95805a97ebd366cc02a205ff82f6626cbe11225"
+  },
+  "run-assert-release-s3.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-assert-release-s3.json",
+    "sha256": "b255496911bc27c40858402d3accd3ae157da90aec3f343f70213b269589c009"
+  },
+  "build-overflow-release-new.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-overflow-release-new.json",
+    "sha256": "8cd30a1d583a9023812a93ad40a6b6d4cdb2cfa6057261d31cddd7bd35802de9"
+  },
+  "build-overflow-release-old.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/build-overflow-release-old.json",
+    "sha256": "7bfad29179f2890766dbc575e3d854acd327523d098b9492b3aee54c591213c1"
+  },
+  "run-overflow-release-s3.json": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/run-overflow-release-s3.json",
+    "sha256": "8fc4c16ff55326fbc8daab39fb2e13e73c2c1cc0ce8a0a23ce7e4e8d24bc8375"
+  },
+  "assert/leaf.my": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/assert/leaf.my",
+    "sha256": "155668d9a17ec8d305ebdf5182f2ab964cd131b045c07bda7d07d2124ad2c9dc"
+  },
+  "assert/app.my": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/assert/app.my",
+    "sha256": "00ca2c61c1816c7fdb9be6a13261f91a4b5d5982bbde140a95371818b08f0f6d"
+  },
+  "overflow/leaf.my": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/overflow/leaf.my",
+    "sha256": "cc0d73747122f505dec10836cda226d6491f38cb60016a299a9eeb96ed4dbce5"
+  },
+  "overflow/app.my": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/overflow/app.my",
+    "sha256": "a80f0fd6f62d1f8da8dba416b2818b68b9a1daa0f90dbeeabb90829012227bba"
+  },
+  "bounds/leaf.my": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/bounds/leaf.my",
+    "sha256": "610c034a47179ce8cf6601e5711d3aadda351260d94d2eac6c9492f131f18078"
+  },
+  "bounds/app.my": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/bounds/app.my",
+    "sha256": "9538993d2d7924998732b6dd7face14e507f698a56d71066dab34e4b04349c46"
+  },
+  "mut_references.py": {
+    "origin": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut_references.py",
+    "sha256": "ff1b4ddb9c1be5c07dc9c11d1cefb4650f53b704cd07efb53a4af9b3d3ec55be"
+  }
+}

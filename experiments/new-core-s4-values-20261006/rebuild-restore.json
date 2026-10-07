@@ -1,0 +1,7 @@
+{
+  "preserved_rebuild_compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-rebuild/mylang-core",
+  "rebuild_sha256": "47948b7a3b1f0d59077edbb7f3a6a474e2887cfdf45b1fdbde05496ca8c8c30c",
+  "installed_inspection_artifact_sha256": "ac642b82320bd4ff017ae420d9efb5f8bdd83909eeb1a71bcfda455efe78f263",
+  "restored_qualified_core_sha256": "db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1",
+  "note": "objcopy inspection rewrote only installed ELF; original qualified immutable and real rebuild private compile artifact were preserved. Final functional gates use restored correctness-qualified immutable compiler."
+}

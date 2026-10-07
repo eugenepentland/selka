@@ -1,0 +1,21 @@
+$ scripts/build-slot.sh build zig build core
+core
++- install mylang-core
+   +- compile exe mylang-core debug native 1 errors
+src/core/emit_llvm.zig:2360:30: error: capture shadows declaration of 'counted'
+        for (known.counted) |counted| for (self.function.blocks.items[counted.loop.header.index()].insts.items) |phi| {
+                             ^~~~~~~
+src/core/emit_llvm.zig:2083:5: note: declared here
+    fn counted(self: *FunctionEmitter, out: *Out, mode: Counting, value_type: ir.Type, text: []const u8) Error!void {
+    ^~
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang -Mroot=src/core/main.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 0/3 steps succeeded (1 failed)
+core transitive failure
++- install mylang-core transitive failure
+   +- compile exe mylang-core debug native 1 errors
+
+
+exit=1
+elapsed_seconds=10.192472

@@ -1,0 +1,4 @@
+$ /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-rows-leak-verify-v2/row_bytes_scan_verify 4096 3 7
+stdout='1566720 10610\n'
+stderr=''
+exit=0

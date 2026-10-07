@@ -1,0 +1,23 @@
+{
+  "command": [
+    "env",
+    "MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/qbe",
+    "MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "scripts/build-slot.sh",
+    "build",
+    "python3",
+    "experiments/new-core-s4-values-20261006/verify_rows.py",
+    "--bin",
+    ".mylang-cache/s4-v/final-all46-v2",
+    "--evidence",
+    "experiments/new-core-s4-values-20261006/final-rows-leak-verify-v2",
+    "--cache",
+    ".mylang-cache/s4-v/final-rows-leak-verify-v2",
+    "--core",
+    ".mylang-cache/s4-v/immutable-3c86c/mylang-core"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3077981,
+  "status": 0,
+  "elapsed_seconds": 224.47951634507626
+}

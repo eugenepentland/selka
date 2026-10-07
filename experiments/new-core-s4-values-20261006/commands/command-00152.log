@@ -1,0 +1,24 @@
+$ python3 -c 'from pathlib import Path; import hashlib,json,shutil; root=Path.cwd(); source=root/"zig-out/bin/qbe"; sibling=root/".mylang-cache/s4-v/immutable-final-checker/qbe"; assert not sibling.exists(); shutil.copyfile(source,sibling); sibling.chmod(0o555); zig=Path(shutil.which("zig")).resolve(); tools={"qbe_source":{"path":str(source),"sha256":hashlib.sha256(source.read_bytes()).hexdigest()},"qbe_immutable_sibling":{"path":str(sibling),"sha256":hashlib.sha256(sibling.read_bytes()).hexdigest()},"zig":{"path":str(zig),"sha256":hashlib.sha256(zig.read_bytes()).hexdigest()}}; assert tools["qbe_source"]["sha256"]==tools["qbe_immutable_sibling"]["sha256"]; result={"tools":tools,"MYLANG_QBE":str(sibling),"MYLANG_ZIG":str(zig),"old_sha256":hashlib.sha256((sibling.parent/"mylang").read_bytes()).hexdigest(),"core_sha256":hashlib.sha256((root/"zig-out/bin/mylang-core").read_bytes()).hexdigest()}; (root/"experiments/new-core-s4-values-20261006/final-oracle-tool-identity.json").write_text(json.dumps(result,indent=2)+"\n"); print(json.dumps(result,indent=2))'
+{
+  "tools": {
+    "qbe_source": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/zig-out/bin/qbe",
+      "sha256": "f485cd7750ac153feed0be6ee14f4ca525ef5f50a61c44519a05813d3f5e461d"
+    },
+    "qbe_immutable_sibling": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-final-checker/qbe",
+      "sha256": "f485cd7750ac153feed0be6ee14f4ca525ef5f50a61c44519a05813d3f5e461d"
+    },
+    "zig": {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+    }
+  },
+  "MYLANG_QBE": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-final-checker/qbe",
+  "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "old_sha256": "5f9fd4599bb8de25c7db51de8191e5724026a5dcc49603dfd7221d41a0c6e460",
+  "core_sha256": "3c86ebb5ac9db377a2a2b7ae0cffd48cce09bee554aabfec856c9c5a2a6fc2bc"
+}
+
+exit=0
+elapsed_seconds=0.755832

@@ -1,0 +1,4 @@
+$ python3 -c 'from pathlib import Path; import hashlib,json,shutil; area=Path("experiments/new-core-s4-values-20261006/fill-boundary-repair"); stop=area/"module-name-stop"; stop.mkdir(); shutil.copyfile(area/"repro.my",stop/"repro.my"); [(p.rename(stop/p.name)) for p in area.glob("red-*.log")]; (stop/"summary.json").write_text(json.dumps({"qualified":False,"reason":"E_MODULE_NAME in reducer before native execution","source_sha256":hashlib.sha256((stop/"repro.my").read_bytes()).hexdigest()},indent=2)+"\n")'
+
+exit=0
+elapsed_seconds=0.030698

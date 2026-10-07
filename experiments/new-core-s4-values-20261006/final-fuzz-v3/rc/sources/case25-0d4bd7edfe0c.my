@@ -1,0 +1,71 @@
+def make_ints(n: int) -> list[int]:
+    out: list[int] = []
+    for i in range(n):
+        out.append(i)
+    return out
+
+def grow_int(xs: list[int], n: int) -> list[int]:
+    ys = xs
+    if n > 1:
+        return xs
+    ys.append(n)
+    return ys
+
+def grow_str(xs: list[str], n: int) -> list[str]:
+    ys = xs
+    if n > 1:
+        return xs
+    ys.append("bc")
+    return ys
+
+def grow_row(xs: list[list[int]], n: int) -> list[list[int]]:
+    ys = xs
+    if n > 1:
+        return xs
+    ys.append(make_ints(3))
+    return ys
+
+def body(seed: int, out: Stream) -> int:
+    acc = 0
+    il1: list[int] = []
+    il1.append(seed)
+    sl2: list[str] = []
+    sl2.append("a")
+    rl3: list[list[int]] = []
+    rl3.append(make_ints(2))
+    sl2.append("xyz")
+    ra4 = rl3
+    if len(rl3) > 1:
+        ig5 = grow_int(il1, seed)
+        ra4.append(make_ints(seed))
+        rl3.append(make_ints(2))
+        ra6 = ra4
+        if len(il1) > 1:
+            acc = acc + len(ig5)
+            acc = acc + len(ra4)
+    ra7 = ra4
+    for i2 in range(0):
+        sg8 = grow_str(sl2, i2)
+        sa9 = sg8
+        sa10 = sg8
+        sl2.append("xyz")
+        sa10.append("bc")
+    if len(ra4) > 1:
+        if len(ra7) > 0:
+            inner11 = ra7[0]
+            inner11.append(5)
+            acc = acc + len(inner11) + len(ra7[0])
+        sl2.append("a")
+        return acc + len(ra4)
+    acc = acc + len(il1)
+    if len(sl2) > 0:
+        out.print(sl2[len(sl2) - 1])
+    acc = acc + len(sl2)
+    acc = acc + len(rl3)
+    acc = acc + len(ra4)
+    acc = acc + len(ra7)
+    return acc
+
+def main(args: list[str], out: Stream) -> int:
+    out.print(body(len(args), out))
+    return 0

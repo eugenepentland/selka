@@ -1,0 +1,8 @@
+$ python3 -c 'from pathlib import Path; p=Path("experiments/new-core-s4-values-20261006/final-fuzz-v3"); print((p/"dict.log").read_text()[-600:]); print((p/"number.log").read_text()[-400:] if (p/"number.log").exists() else "number not started")'
+ion/fuzz_qualification.py --kind dict --old /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s3/oracle/mylang --new /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang-core --cases 50 --seed 410604 --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/dict --cache-root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-fuzz-v3/dict
+qualification progress: dict: seen=25 elapsed=151.73s
+
+number not started
+
+exit=0
+elapsed_seconds=0.025494

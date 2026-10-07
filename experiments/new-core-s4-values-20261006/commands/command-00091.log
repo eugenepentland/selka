@@ -1,0 +1,4 @@
+$ git add SPEC.md src/core/facts.zig src/core/flags.zig src/core/own.zig src/core/emit_llvm.zig src/core/value_facts_test.zig src/core/s3_number_test.zig test/core/v_nested_lengths.my
+
+exit=0
+elapsed_seconds=0.061503

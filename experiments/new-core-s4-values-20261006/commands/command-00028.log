@@ -1,0 +1,17 @@
+$ scripts/build-slot.sh build /home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check all . --gate
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10357 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (spec)
+guardian: failures grouped by check (1):
+  spec (3 findings)
+    - duplicate tag: id:new-core-s3-number-1
+    - in: src/core/s3_number_test.zig
+    - in: src/core/s3_number_test.zig
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+
+exit=1
+elapsed_seconds=8.537884

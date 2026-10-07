@@ -1,0 +1,5 @@
+$ scripts/build-slot.sh build env MYL_CORE_LEAKCHECK=1 .mylang-cache/s4-v/grid-seventh-verify 64 3 7
+95115 5872
+
+exit=0
+elapsed_seconds=0.777631

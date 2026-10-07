@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "import hashlib,json,pathlib,shutil,subprocess; src=pathlib.Path(\"zig-out/bin/mylang\"); expected=\"5f9fd4599bb8de25c7db51de8191e5724026a5dcc49603dfd7221d41a0c6e460\"; assert hashlib.sha256(src.read_bytes()).hexdigest()==expected; dst=pathlib.Path(\".mylang-cache/s4-v/immutable-final-checker/mylang\"); dst.parent.mkdir(parents=True,exist_ok=False); shutil.copyfile(src,dst); dst.chmod(0o555); manifest={\"path\":str(dst.resolve()),\"sha256\":expected,\"compiler_mode\":\"Debug\",\"source_commit\":subprocess.check_output([\"git\",\"rev-parse\",\"HEAD\"],text=True).strip(),\"shared_checker_sha256\":hashlib.sha256(pathlib.Path(\"src/sema.zig\").read_bytes()).hexdigest(),\"build_log\":\"commands/command-00128.log\",\"core_sha256\":hashlib.sha256(pathlib.Path(\"zig-out/bin/mylang-core\").read_bytes()).hexdigest()}; pathlib.Path(\"experiments/new-core-s4-values-20261006/final-fresh-old-oracle.json\").write_text(json.dumps(manifest,indent=2)+\"\\n\"); print(json.dumps(manifest))"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2236232,
+  "status": 0,
+  "elapsed_seconds": 0.5528686579782516
+}

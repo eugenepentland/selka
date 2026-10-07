@@ -1,0 +1,35 @@
+$ scripts/build-slot.sh build flock /run/user/1000/mylang-slots/cpu10.lock python3 experiments/new-core-s4-20261006/integration/measure_all46.py --build --rows grid_dp,union_find --bin .mylang-cache/s4-v/fifth-two --mylang .mylang-cache/s3/oracle/mylang --core zig-out/bin/mylang-core --rounds 7 --json experiments/new-core-s4-values-20261006/fifth-two.json
+build grid_dp old: status=0
+build grid_dp new: status=0
+build union_find old: status=0
+build union_find new: status=0
+
+### grid_dp (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 21.140 | 75.112 | same |
+| new core release | 16.191 | 21.337 | same |
+| Rust | 12.783 | 15.317 | same |
+| Zig ReleaseSafe | 15.034 | 16.133 | same |
+| Go | 18.903 | 30.956 | same |
+| new / old | 0.766 | 0.284 | same |
+| new / Zig | 1.077 | 1.323 | same |
+| new / Rust | 1.267 | 1.393 | same |
+
+### union_find (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 85.493 | 75.194 | same |
+| new core release | 45.693 | 30.635 | same |
+| Rust | 42.081 | 25.451 | same |
+| Zig ReleaseSafe | 42.181 | 28.679 | same |
+| Go | 50.103 | 38.778 | same |
+| new / old | 0.534 | 0.407 | same |
+| new / Zig | 1.083 | 1.068 | same |
+| new / Rust | 1.086 | 1.204 | same |
+
+valid rows: 2; speed gate misses: ['grid_dp/64']
+Both new/old and new/Zig must be at most 1.10. binary_search misses require the plan's identical-code/layout-noise review; all other misses require repair.
+
+exit=0
+elapsed_seconds=156.299649

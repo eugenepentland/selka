@@ -1,0 +1,4 @@
+$ git add experiments/new-core-s4-values-20261006/final-all46-v2.json experiments/new-core-s4-values-20261006/performance_summary_v2.json experiments/new-core-s4-values-20261006/archive_performance_v2.py experiments/new-core-s4-values-20261006/final-performance-artifacts-v2 experiments/new-core-s4-values-20261006/final-performance-artifacts-incomplete-233 experiments/new-core-s4-values-20261006/final-performance-artifacts-incomplete-237
+
+exit=0
+elapsed_seconds=0.114123

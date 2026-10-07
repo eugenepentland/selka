@@ -1,0 +1,1523 @@
+{
+  "qualified": true,
+  "scope": "46-row performance gate; Release trap-frame provenance remains an integration blocker",
+  "implementation_source": "3c86c3122fdcc186aa777b52bbcf7f25b03c172f",
+  "core_sha256": "db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1",
+  "tools": {
+    "mylang": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang",
+      "sha256": "abce00c53bb842b475b19c0815209207e89a859faebfc0714edd8d9d6b49049b",
+      "build_mode": "Debug"
+    },
+    "mylang-core": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang-core",
+      "sha256": "db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1",
+      "build_mode": "Debug"
+    },
+    "qbe": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/qbe",
+      "sha256": "f485cd7750ac153feed0be6ee14f4ca525ef5f50a61c44519a05813d3f5e461d",
+      "build_mode": "ReleaseFast"
+    },
+    "zig": {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+    }
+  },
+  "cpu": 10,
+  "rounds": 7,
+  "row_count": 46,
+  "rows": {
+    "record_reads": {
+      "4096": {
+        "iterations": 4000000,
+        "checksum": 744472322,
+        "new_over_old": 0.719439162799677,
+        "new_over_zig": 0.7341498927358691,
+        "new_over_rust": 1.008785654039297,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 4000000,
+        "checksum": 492812486,
+        "new_over_old": 0.7091632408705414,
+        "new_over_zig": 0.7271967029581576,
+        "new_over_rust": 1.0079635582078248,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "tagged_stack": {
+      "4096": {
+        "iterations": 4000000,
+        "checksum": 80535481,
+        "new_over_old": 0.5260467712842773,
+        "new_over_zig": 0.6970212801748066,
+        "new_over_rust": 1.2850619278993147,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 4000000,
+        "checksum": 80535481,
+        "new_over_old": 0.5262325026299084,
+        "new_over_zig": 0.6929475507745995,
+        "new_over_rust": 1.284483706577935,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "mutate_unique": {
+      "4096": {
+        "iterations": 4000000,
+        "checksum": 287462445,
+        "new_over_old": 0.840952709943789,
+        "new_over_zig": 0.857947461823706,
+        "new_over_rust": 1.104046696790271,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 4000000,
+        "checksum": 785313548,
+        "new_over_old": 0.8495368299609144,
+        "new_over_zig": 0.861878328874463,
+        "new_over_rust": 1.1162358030611403,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "mutate_shared": {
+      "4096": {
+        "iterations": 400,
+        "checksum": 2620424,
+        "new_over_old": 0.66514893457915,
+        "new_over_zig": 0.5625101539474732,
+        "new_over_rust": 1.0233433010498336,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 25000,
+        "checksum": 522538080,
+        "new_over_old": 0.09066810913434703,
+        "new_over_zig": 0.631331538697301,
+        "new_over_rust": 0.9552630476181606,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "record_construct": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 870968511,
+        "new_over_old": 0.19620482967636763,
+        "new_over_zig": 0.21848615426009377,
+        "new_over_rust": 0.3293931249769365,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 853718613,
+        "new_over_old": 0.20481677652057054,
+        "new_over_zig": 0.21681625208225636,
+        "new_over_rust": 0.32604974086293004,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "record_update": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 870968511,
+        "new_over_old": 0.5250821479603652,
+        "new_over_zig": 0.5527113916265454,
+        "new_over_rust": 0.8944309183211816,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 853718613,
+        "new_over_old": 0.5489706037799776,
+        "new_over_zig": 0.5569390497894432,
+        "new_over_rust": 0.8803312660788444,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "option_handle": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 927015754,
+        "new_over_old": 0.49498733841179265,
+        "new_over_zig": 0.304636505034537,
+        "new_over_rust": 0.825760998202638,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 753747773,
+        "new_over_old": 0.5901457173226206,
+        "new_over_zig": 0.32794302969606803,
+        "new_over_rust": 0.7697238758738355,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "result_propagate": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 166728930,
+        "new_over_old": 0.5948709278774507,
+        "new_over_zig": 0.49868128171979004,
+        "new_over_rust": 1.0351378492280292,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 330997534,
+        "new_over_old": 0.6307799195463228,
+        "new_over_zig": 0.4726206575618959,
+        "new_over_rust": 0.8569537071668929,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "list_scan": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 257772632,
+        "new_over_old": 1.0271603708596864,
+        "new_over_zig": 0.8716966209249949,
+        "new_over_rust": 1.4750008552698275,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 64949387,
+        "new_over_old": 1.0032200323756004,
+        "new_over_zig": 0.8639288602852114,
+        "new_over_rust": 1.445298270955313,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "list_append": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 665442961,
+        "new_over_old": 0.8690596429942157,
+        "new_over_zig": 0.5146313303928844,
+        "new_over_rust": 1.016925932426369,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 99170437,
+        "new_over_old": 0.46755862740208115,
+        "new_over_zig": 0.389887308360919,
+        "new_over_rust": 0.6455928294432837,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "list_filter": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 852403740,
+        "new_over_old": 0.8105497402219655,
+        "new_over_zig": 0.7106193289807946,
+        "new_over_rust": 1.3154463830632888,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 113257332,
+        "new_over_old": 0.5084575511151268,
+        "new_over_zig": 0.6457998716287638,
+        "new_over_rust": 0.894973890123105,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "alloc_short": {
+      "4096": {
+        "iterations": 1000,
+        "checksum": 869311713,
+        "new_over_old": 0.019763000399788743,
+        "new_over_zig": 0.22068926939449365,
+        "new_over_rust": 0.9608005614480629,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 60000,
+        "checksum": 406716773,
+        "new_over_old": 0.020505254023455384,
+        "new_over_zig": 0.2279106031045463,
+        "new_over_rust": 0.9719536516317528,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "alloc_retained": {
+      "4096": {
+        "iterations": 1000,
+        "checksum": 869311713,
+        "new_over_old": 0.23582506608787698,
+        "new_over_zig": 0.42384681517649553,
+        "new_over_rust": 0.42389202380691826,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 60000,
+        "checksum": 406716773,
+        "new_over_old": 0.24348786540353615,
+        "new_over_zig": 0.490795281022014,
+        "new_over_rust": 0.4732461858741918,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "mutate_nested": {
+      "4096": {
+        "iterations": 400,
+        "checksum": 8794306,
+        "new_over_old": 0.41905729589446467,
+        "new_over_zig": 0.16170226879979846,
+        "new_over_rust": 0.150067924388869,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 25000,
+        "checksum": 522668432,
+        "new_over_old": 0.3231868530986174,
+        "new_over_zig": 0.19894546102374305,
+        "new_over_rust": 0.20404066599159598,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "bytes_scan": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 88959986,
+        "new_over_old": 0.5912126160634624,
+        "new_over_zig": 0.034815635316855824,
+        "new_over_rust": 0.043189940440350016,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 40001010,
+        "new_over_old": 0.9850719850311974,
+        "new_over_zig": 0.1271416099124982,
+        "new_over_rust": 0.19988815772727508,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "string_equal": {
+      "4096": {
+        "iterations": 200000,
+        "checksum": 100000,
+        "new_over_old": 0.95631010116039,
+        "new_over_zig": 0.18120832533532677,
+        "new_over_rust": 0.3744359191856593,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 200000,
+        "checksum": 100000,
+        "new_over_old": 0.9118106530222547,
+        "new_over_zig": 0.8887528199455661,
+        "new_over_rust": 1.1980304469654075,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "string_search": {
+      "4096": {
+        "iterations": 40000,
+        "checksum": 82050000,
+        "new_over_old": 1.02737736406253,
+        "new_over_zig": 0.03341938520280277,
+        "new_over_rust": 0.07743003922237741,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 40000,
+        "checksum": 1410000,
+        "new_over_old": 0.8578043230693244,
+        "new_over_zig": 0.1752725733132386,
+        "new_over_rust": 0.37376191561160227,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "string_split": {
+      "4096": {
+        "iterations": 400,
+        "checksum": 703954400,
+        "new_over_old": 0.2968725352909523,
+        "new_over_zig": 0.9154312032717795,
+        "new_over_rust": 2.1155189710977056,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 25000,
+        "checksum": 684850000,
+        "new_over_old": 0.3113869555157246,
+        "new_over_zig": 0.9514414361708876,
+        "new_over_rust": 1.8389622640518792,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "string_join": {
+      "4096": {
+        "iterations": 1000,
+        "checksum": 228756486,
+        "new_over_old": 0.7495102698010934,
+        "new_over_zig": 0.25279817893756956,
+        "new_over_rust": 0.32634247819119544,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 60000,
+        "checksum": 76029986,
+        "new_over_old": 0.5463582987779425,
+        "new_over_zig": 0.27193681728421426,
+        "new_over_rust": 0.3794048425563487,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "dict_lookup": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 260753752,
+        "new_over_old": 0.49717172591247705,
+        "new_over_zig": 0.29632091779508934,
+        "new_over_rust": 0.36831099523725,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 468011855,
+        "new_over_old": 0.8922613846797322,
+        "new_over_zig": 0.48839879483500753,
+        "new_over_rust": 0.3702390483972031,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "dict_lookup_str": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 260753752,
+        "new_over_old": 0.3750755007434518,
+        "new_over_zig": 0.3672149740752715,
+        "new_over_rust": 0.3769502950777526,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 468011855,
+        "new_over_old": 0.6875510723663887,
+        "new_over_zig": 0.6230041130631627,
+        "new_over_rust": 0.3471445450741479,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "dict_update": {
+      "4096": {
+        "iterations": 1000,
+        "checksum": 327973489,
+        "new_over_old": 0.22905019798781898,
+        "new_over_zig": 0.3460570451080878,
+        "new_over_rust": 0.45872948742032776,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 60000,
+        "checksum": 43838369,
+        "new_over_old": 0.251897577787751,
+        "new_over_zig": 0.5956127528076418,
+        "new_over_rust": 0.4575594808333486,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "dict_update_str": {
+      "4096": {
+        "iterations": 1000,
+        "checksum": 327973489,
+        "new_over_old": 0.2652528475232644,
+        "new_over_zig": 0.37230281224524575,
+        "new_over_rust": 0.29444434796385477,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 60000,
+        "checksum": 43838369,
+        "new_over_old": 0.28317154019005925,
+        "new_over_zig": 0.6206660692083407,
+        "new_over_rust": 0.2877310306396728,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "set_dedup": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 95103986,
+        "new_over_old": 0.14107441520509845,
+        "new_over_zig": 0.3067298453377507,
+        "new_over_rust": 0.39449759815015994,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 30000000,
+        "new_over_old": 0.1690367433095402,
+        "new_over_zig": 0.7603113423524295,
+        "new_over_rust": 0.4565216025287314,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "int_parse": {
+      "4096": {
+        "iterations": 4000000,
+        "checksum": 202584371,
+        "new_over_old": 0.6229307426907942,
+        "new_over_zig": 0.9956716757621931,
+        "new_over_rust": 1.3016590276850657,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 4000000,
+        "checksum": 112562479,
+        "new_over_old": 0.6398883798724921,
+        "new_over_zig": 1.0906088277820876,
+        "new_over_rust": 1.3796521399118147,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "int_format": {
+      "4096": {
+        "iterations": 4000000,
+        "checksum": 296726930,
+        "new_over_old": 0.3210542067264255,
+        "new_over_zig": 0.32074976099472674,
+        "new_over_rust": 1.0790862690182628,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 4000000,
+        "checksum": 885687500,
+        "new_over_old": 0.30139720724901164,
+        "new_over_zig": 0.3176848562493065,
+        "new_over_rust": 1.0382996324610854,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "call_indirect": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 89389306,
+        "new_over_old": 0.06082429195922547,
+        "new_over_zig": 0.03389677042020897,
+        "new_over_rust": 0.042076741980925036,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 859744941,
+        "new_over_old": 0.061278745589493394,
+        "new_over_zig": 0.03277829888841672,
+        "new_over_rust": 0.04107716862160113,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "sort_int": {
+      "4096": {
+        "iterations": 400,
+        "checksum": 793872127,
+        "new_over_old": 1.033167470976729,
+        "new_over_zig": 0.6960479635442871,
+        "new_over_rust": 0.6707653754044396,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 25000,
+        "checksum": 583627978,
+        "new_over_old": 0.8188639235575257,
+        "new_over_zig": 0.542301619206029,
+        "new_over_rust": 0.6261458407936964,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "sort_records": {
+      "4096": {
+        "iterations": 400,
+        "checksum": 870748407,
+        "new_over_old": 0.5799323997360559,
+        "new_over_zig": 0.2685279564397366,
+        "new_over_rust": 0.7641245366729761,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 25000,
+        "checksum": 107677455,
+        "new_over_old": 0.6265998751765595,
+        "new_over_zig": 0.8289009404857764,
+        "new_over_rust": 0.9432566926026018,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "int_math": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 488688792,
+        "new_over_old": 0.04098321667562458,
+        "new_over_zig": 0.04566380805114761,
+        "new_over_rust": 0.06251925834459068,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 309603053,
+        "new_over_old": 0.05433938615815337,
+        "new_over_zig": 0.05926218116814418,
+        "new_over_rust": 0.0796464030546715,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "float_math": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 232907868,
+        "new_over_old": 0.1892859692675419,
+        "new_over_zig": 0.24108074649434091,
+        "new_over_rust": 0.2251352573750725,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 258794523,
+        "new_over_old": 0.20294105198425227,
+        "new_over_zig": 0.24316591485131053,
+        "new_over_rust": 0.23339867990806396,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "call_direct": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 260187185,
+        "new_over_old": 0.09925873601845453,
+        "new_over_zig": 0.09986935764995025,
+        "new_over_rust": 0.150240200218434,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 722246966,
+        "new_over_old": 0.10101086457115105,
+        "new_over_zig": 0.07725024827151684,
+        "new_over_rust": 0.10826877538748232,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "branch_predictable": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 211971818,
+        "new_over_old": 0.09935594912156513,
+        "new_over_zig": 0.05167252896785453,
+        "new_over_rust": 0.12482694695286525,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 429246839,
+        "new_over_old": 0.11959599296186385,
+        "new_over_zig": 0.06277505806215027,
+        "new_over_rust": 0.15275577718877895,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "branch_mixed": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 668567049,
+        "new_over_old": 0.09755416045299072,
+        "new_over_zig": 0.04302755820167235,
+        "new_over_rust": 0.08185224756086627,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 251245927,
+        "new_over_old": 0.12091238062058361,
+        "new_over_zig": 0.05526479188073315,
+        "new_over_rust": 0.11050800014004451,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "binary_search": {
+      "4096": {
+        "iterations": 400,
+        "checksum": 93672238,
+        "new_over_old": 0.215409066357657,
+        "new_over_zig": 0.22598260265646916,
+        "new_over_rust": 0.841975997947009,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 25000,
+        "checksum": 16497084,
+        "new_over_old": 0.5581591347855177,
+        "new_over_zig": 0.6583734916662074,
+        "new_over_rust": 0.9426128150104648,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "word_count": {
+      "4096": {
+        "iterations": 400,
+        "checksum": 19267570,
+        "new_over_old": 0.1152033818632535,
+        "new_over_zig": 0.714218828535607,
+        "new_over_rust": 0.5659484303410478,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 25000,
+        "checksum": 894524930,
+        "new_over_old": 0.12170120982216237,
+        "new_over_zig": 0.9018526105686782,
+        "new_over_rust": 0.6934003182626476,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "csv_aggregate": {
+      "4096": {
+        "iterations": 40,
+        "checksum": 801808057,
+        "new_over_old": 0.2287026055610976,
+        "new_over_zig": 1.072278055847494,
+        "new_over_rust": 0.9549020057730931,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 2500,
+        "checksum": 280792500,
+        "new_over_old": 0.2548573084147241,
+        "new_over_zig": 1.0778639590666312,
+        "new_over_rust": 0.9946577699672333,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "json_transform": {
+      "4096": {
+        "iterations": 20,
+        "checksum": 225765931,
+        "new_over_old": 0.20434825405729973,
+        "new_over_zig": 0.9844377967402954,
+        "new_over_rust": 1.5730808321925458,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 1250,
+        "checksum": 206667525,
+        "new_over_old": 0.20805956834078937,
+        "new_over_zig": 1.0276353779190501,
+        "new_over_rust": 1.4852138921358515,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "packet_decode": {
+      "4096": {
+        "iterations": 400,
+        "checksum": 635993509,
+        "new_over_old": 1.0626983729315382,
+        "new_over_zig": 0.8323319291468091,
+        "new_over_rust": 1.5469066272120646,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 25000,
+        "checksum": 105199993,
+        "new_over_old": 1.0585367007075408,
+        "new_over_zig": 0.8170988306032178,
+        "new_over_rust": 1.4718758296737877,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "lox_eval": {
+      "4096": {
+        "iterations": 40,
+        "checksum": 19955744,
+        "new_over_old": 0.3265781534095928,
+        "new_over_zig": 0.4068650927389784,
+        "new_over_rust": 1.243138307346024,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 2500,
+        "checksum": 250256292,
+        "new_over_old": 0.3244005186473497,
+        "new_over_zig": 0.407319824811333,
+        "new_over_rust": 1.2277776361385326,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "tree_build_walk": {
+      "4096": {
+        "iterations": 272,
+        "checksum": 181448421,
+        "new_over_old": 0.23476509208804275,
+        "new_over_zig": 0.6911795545361056,
+        "new_over_rust": 0.7300688215922185,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 12952,
+        "checksum": 144645150,
+        "new_over_old": 0.23211745789407803,
+        "new_over_zig": 0.6826974830894784,
+        "new_over_rust": 0.750148350094531,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "record_pass": {
+      "4096": {
+        "iterations": 923,
+        "checksum": 36686933,
+        "new_over_old": 0.5044240142209222,
+        "new_over_zig": 0.6807257163629922,
+        "new_over_rust": 1.0476330793105109,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 65088,
+        "checksum": 551484558,
+        "new_over_old": 0.5311481444562008,
+        "new_over_zig": 0.7076573361202497,
+        "new_over_rust": 1.0886406705041438,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "grid_dp": {
+      "4096": {
+        "iterations": 1542,
+        "checksum": 115143130,
+        "new_over_old": 0.695596524343995,
+        "new_over_zig": 0.9846506977681126,
+        "new_over_rust": 1.1541083470595095,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 70968,
+        "checksum": 900700040,
+        "new_over_old": 0.23322952771713687,
+        "new_over_zig": 1.032609266280858,
+        "new_over_rust": 1.1004494317383624,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "union_find": {
+      "4096": {
+        "iterations": 698,
+        "checksum": 777875623,
+        "new_over_old": 0.5234187201482863,
+        "new_over_zig": 1.0558417358734786,
+        "new_over_rust": 1.052576212965862,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 37157,
+        "checksum": 231998124,
+        "new_over_old": 0.391184274522877,
+        "new_over_zig": 1.030927524038136,
+        "new_over_rust": 1.1562892259535735,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "float_format": {
+      "4096": {
+        "iterations": 40,
+        "checksum": 659497267,
+        "new_over_old": 0.5797019136386914,
+        "new_over_zig": 0.7445856829654242,
+        "new_over_rust": 0.7490293675524778,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 2930,
+        "checksum": 197274656,
+        "new_over_old": 0.5711961257579309,
+        "new_over_zig": 0.747828100269331,
+        "new_over_rust": 0.7903713126917046,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    },
+    "buffer_write": {
+      "4096": {
+        "iterations": 115,
+        "checksum": 89591540,
+        "new_over_old": 0.7871743439543908,
+        "new_over_zig": 0.6708388534084502,
+        "new_over_rust": 0.7721202889609242,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      },
+      "64": {
+        "iterations": 8794,
+        "checksum": 692192056,
+        "new_over_old": 0.7984497487334316,
+        "new_over_zig": 0.6868230637640039,
+        "new_over_rust": 0.7703700155316744,
+        "within_old_limit": true,
+        "within_zig_limit": true,
+        "within_both_limits": true
+      }
+    }
+  },
+  "max_new_over_old": 1.0626983729315382,
+  "max_new_over_zig": 1.0906088277820876,
+  "misses": [],
+  "all_within_both_limits": true,
+  "binaries": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_record_reads_old": {
+      "sha256": "858f8ec38643eae5ba5000f7098055e53f0425a81f9151c3bd8e54903ce3e745",
+      "bytes": 234600
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_record_reads_new": {
+      "sha256": "2988a7b1bee1df7923a974bf1998bac0c530b153fa57e67511304650a5927305",
+      "bytes": 952824
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/legacy-rust": {
+      "sha256": "cc6488c8f54e33c93e483b78db70d21ef88309bbb38856394a5e94abde17099f",
+      "bytes": 4526224
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/legacy-zig-safe": {
+      "sha256": "ed51d49b2018d1543fff0e80b7d23cb8b941e232fd93033cfc7f4b0175b8b4cd",
+      "bytes": 3324424
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_tagged_stack_old": {
+      "sha256": "835bc1fa5e454133a12d86c3066e5ab84e08af8ea659083118b5e9e672e5b866",
+      "bytes": 241760
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_tagged_stack_new": {
+      "sha256": "f6490aebce310f8fdc45a7d404113852f48bb68852183dc363c9875613e01b6b",
+      "bytes": 956456
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_mutate_unique_old": {
+      "sha256": "07328005d4bca876b4a154070e278baa3b8375a2825cc8c01d9d5c0f2a72fe22",
+      "bytes": 232792
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_mutate_unique_new": {
+      "sha256": "fba0a86ac231be6a3e00110eba28818f20ab04351f976439113241151e7993b5",
+      "bytes": 952120
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_mutate_shared_old": {
+      "sha256": "7908dba768444ce1b8cd18a09c56b03e5ed42fa6dd2c7d22c112888280d1bf7d",
+      "bytes": 238672
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_mutate_shared_new": {
+      "sha256": "59b966d1c3ec12949a4e43c0a36e152c7880e788ec5514cb83c332a871c234aa",
+      "bytes": 952192
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_record_construct_old": {
+      "sha256": "ad74ff50abcb5d1fc7a0b07a340f30e6ba2e69fb3af2887820252c865f6e1bf1",
+      "bytes": 232160
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_record_construct_new": {
+      "sha256": "b49239ce8d913c0526cad5d9e2a4dcb76488c264b278e8c85246bf235a493104",
+      "bytes": 952632
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust": {
+      "sha256": "342de880685aeee869ada3a39ad109b59795221d944b5e0b2089a7eaebc83655",
+      "bytes": 4528256
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe": {
+      "sha256": "807a12c75a50a9e59590e710a84ed874132e3d2e273b83a23475b04f1c8eec2a",
+      "bytes": 3322064
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_record_update_old": {
+      "sha256": "31d31405fda489071d390152a6aaa9b4207060679bdc318a20905ff58857547b",
+      "bytes": 238736
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_record_update_new": {
+      "sha256": "5571bf5c41ef24df0f2466baa02bccf6c3a5e326d6fe09e92df190a01513742b",
+      "bytes": 952472
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_option_handle_old": {
+      "sha256": "a1226aa127beb5cfa9d12eade20932dbad99e98cb26b4a8cb80e635055730c0a",
+      "bytes": 231384
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_option_handle_new": {
+      "sha256": "136c098a691ded6a953555492f160cc6cd6bdeb9c0c3f51768739ab2953d65ae",
+      "bytes": 951312
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_result_propagate_old": {
+      "sha256": "b06db9f88c71acaa4f349c8cbbcef4a6f8afe695ba772b38c7630b022383e7d9",
+      "bytes": 233584
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_result_propagate_new": {
+      "sha256": "3008aa01cc6a0db6d947e97e624c455bd845eb0818808061b55a230a84307487",
+      "bytes": 951880
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_list_scan_old": {
+      "sha256": "b2c3d4e11eda76db470e978af93db059546078ae2e0828ce368f02fc703d8687",
+      "bytes": 230408
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_list_scan_new": {
+      "sha256": "269ec6752f5e4e69b0681e7414f3aa76feb9935aac639b610e56b3e2d3f2352e",
+      "bytes": 951280
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/collections-rust": {
+      "sha256": "4b7ee53e36cbc6eefaf6bf2b559906eecf348a18ee2fc5acc90b3aceb9d93d21",
+      "bytes": 4586600
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/collections-zig-safe": {
+      "sha256": "77f77faf4a8a3f4f5956b81efc737f598933ff48cd0938f6df3a8d005a2e096b",
+      "bytes": 3678912
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_list_append_old": {
+      "sha256": "6349f9501f0ba67963d570429d909b954b733f6595a70a937f699fac1f8ebf7f",
+      "bytes": 230328
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_list_append_new": {
+      "sha256": "2bc0ad4788d3889339d53b45bfe635029de838a5b814c818d0a78d0f215e16c3",
+      "bytes": 951256
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_list_filter_old": {
+      "sha256": "420949c9ff4307a8d01ffd7c26ed7abc561081f25d23c8bf6f77fa5574992515",
+      "bytes": 234936
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_list_filter_new": {
+      "sha256": "8b61864b89fa6ca79fd95ff46b4e058b5485cd3130e89b09b9a813f27bc7170e",
+      "bytes": 952376
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_alloc_short_old": {
+      "sha256": "88c26085234a3067753d47eff4097ed7e99840f31a69fb60654debb78bca8b4e",
+      "bytes": 232312
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_alloc_short_new": {
+      "sha256": "9e19163c73804d3457f271790f69eb2741e4e8b435b35239afe2b362395bfc4a",
+      "bytes": 951296
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_alloc_retained_old": {
+      "sha256": "4626e454247846b07ccb20024fe69a378025909296e1eee31282b6117507bbe2",
+      "bytes": 235112
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_alloc_retained_new": {
+      "sha256": "6b19064c2a5e1d8d81b7f4d36cbce8163564e01c64aabb233354422250735e45",
+      "bytes": 952376
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_mutate_nested_old": {
+      "sha256": "82d641f0f59361f9b161ea62b3b94e88a25fce9b1899c818508e0f6bba9cba90",
+      "bytes": 251368
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_mutate_nested_new": {
+      "sha256": "309e6e2887ec4d25ece78e9e692f9a827e300c1620bfc1711295b6ec8e24488b",
+      "bytes": 955744
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_bytes_scan_old": {
+      "sha256": "98d634b8d066d19f67b0abcdcb42dff23cf3c2ca0412f2e775686263c9b26335",
+      "bytes": 245208
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_bytes_scan_new": {
+      "sha256": "667c0fe3bb726c0d770b2220f3e24fb368fca809d0e4584fc909e2927f649427",
+      "bytes": 952656
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust": {
+      "sha256": "230ff4317181142193c29c7ee5f260fa6866d527fb59caf512aefe33c1a0b7d4",
+      "bytes": 687800
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe": {
+      "sha256": "6ae0410adb082a0a657a5b23ddc24751a9cfbe31763f082b84f7376a01835649",
+      "bytes": 3712200
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_string_equal_old": {
+      "sha256": "a211085abd0b0fb8cc6f802fbbccfe504338c7b10ef52f03240443ad255ee9e5",
+      "bytes": 250008
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_string_equal_new": {
+      "sha256": "93fb9aef16a1cec4bebd70dea40f6db3a8e680e429d4dd930098ef241eeeb7da",
+      "bytes": 954120
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_string_search_old": {
+      "sha256": "59d87dc3b71a8315feab0665b04f6b18ffca0bd1be34e289ac40b4b4e845ac79",
+      "bytes": 250784
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_string_search_new": {
+      "sha256": "03ebb2ff382a2289c06a234d05b2380aad4a4d2bda4b35c6825a00064f26df8d",
+      "bytes": 953632
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_string_split_old": {
+      "sha256": "570b798ee085a271b1e7186cdbf676f684d04956d9d81ecc1533a360fdcd0adb",
+      "bytes": 267144
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_string_split_new": {
+      "sha256": "bbb3b470b7a9363240a8cc98d1fbd572113ed766d8af96c485c6fa7c2cc8ebfe",
+      "bytes": 955000
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_string_join_old": {
+      "sha256": "63ac4fdc6acbe8523dbfd0bef761a8094ba58796ac22f39d735971007cb7575b",
+      "bytes": 256536
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_string_join_new": {
+      "sha256": "76d72d4630b0931531d568b254c4703015c2d1bf69cff1932aa543ca5855e413",
+      "bytes": 954320
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_dict_lookup_old": {
+      "sha256": "990881e43128a9ef805c9d1322257f7ffd8d356f26307c482e83167ba5e82e60",
+      "bytes": 267592
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_dict_lookup_new": {
+      "sha256": "0d646748a87e2f072d9be74878aaddf340da8779092f7ade6933b8be7e630eee",
+      "bytes": 953424
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_dict_lookup_str_old": {
+      "sha256": "923f7cde287ac1a09e5500c447283e398afba9e2cf4d2c021388f86047445222",
+      "bytes": 277464
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_dict_lookup_str_new": {
+      "sha256": "7e23463aae13e20a526ce0401fa7346fec2ce64515a1c1a5d8c4a15b8914fbd2",
+      "bytes": 955240
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_dict_update_old": {
+      "sha256": "bd99132ca427c7522eb8e2f17614acb43c2ba07ca85ebdebfdab769e8ee42759",
+      "bytes": 281616
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_dict_update_new": {
+      "sha256": "e2c0bea8f1558bf9ee06c2329c208bc9c8c38d94d5c8e003552c6001a9f5d6e4",
+      "bytes": 954568
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_dict_update_str_old": {
+      "sha256": "b19287fb91a9fba8455b82967e6063a10e82070b5651630af7092e613bcda54c",
+      "bytes": 285856
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_dict_update_str_new": {
+      "sha256": "b1423ba9ad828569daa9d9d887bac2c4f54d6e563d02d18734472d618c91b41b",
+      "bytes": 958624
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_set_dedup_old": {
+      "sha256": "472909465061c1c4dd4e85f8c42afa2b16ab10d3ae0bb9be50b5b8d232c1676c",
+      "bytes": 272720
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_set_dedup_new": {
+      "sha256": "f83078e930e624838f199aff1d4eb9fd291f74fb1cb92e6d803d9f1fe44b29c5",
+      "bytes": 953104
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_int_parse_old": {
+      "sha256": "c262ce3f52c98b681a8784011471a5b5f667b18a33eb52d03c747b7ea6d251df",
+      "bytes": 246312
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_int_parse_new": {
+      "sha256": "f732721fcfd9610c88dbe7f191840f9b7fd93160f2818303c3c6c2f1de52a1a7",
+      "bytes": 953048
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_int_format_old": {
+      "sha256": "498d8be63c9207c35309bc5adc37ffcfd5aea7d8451f888fbb005041ac9ba251",
+      "bytes": 243960
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_int_format_new": {
+      "sha256": "f33d48c93da27d68530cdd2e13c7de5fd328ffc4ab99e19517fde88d4798ba17",
+      "bytes": 952224
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_call_indirect_old": {
+      "sha256": "366e0a4f35c12ff5b4284774e2f05c3f07b9751c3de0e7a25e1e1ee986e92bdb",
+      "bytes": 231336
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_call_indirect_new": {
+      "sha256": "5c4eea3a0af3b1ca8e85e1d2db4e958cc4b5c45c84a13f724e3c10824706ed4d",
+      "bytes": 952528
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_sort_int_old": {
+      "sha256": "a78fde514a1d9f74199d09c15fa08b4e5c8fbdcd1253c6df19bd9e4113af5833",
+      "bytes": 237616
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_sort_int_new": {
+      "sha256": "2b2b9899ef7a26bba26907944f3b2ffc3ff2e65e9a1690315b50fcbeb3c2d363",
+      "bytes": 951480
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_sort_records_old": {
+      "sha256": "b8991c89f1f6bc71657c9e6564913ca3309afd30bf61c6b831dad785526247e9",
+      "bytes": 252096
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_sort_records_new": {
+      "sha256": "e9913564ad2ca2e8deebf8aee0a3fe02e7a15349146b6f1b4f24a600c0556703",
+      "bytes": 951992
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/int_math_old": {
+      "sha256": "c16f0ece72bb48ac376614cf2b836e3e99b2bea7c3693ba06fc0f27aba1f89a3",
+      "bytes": 230624
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/int_math_new": {
+      "sha256": "07c4a3f7ef43ba07b9a5dddd36f354d823d99243fb24ce29031cfdd6c7ab8b25",
+      "bytes": 950928
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/float_math_old": {
+      "sha256": "4d679cda71534536f7bef86886141605a90c5b9ee20aa40aa533577a378c23ce",
+      "bytes": 233008
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/float_math_new": {
+      "sha256": "17d8f9547eaa96359b15572438a31f29814786e0d2b16ca85e09aa67d9ba3a4f",
+      "bytes": 952568
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/call_direct_old": {
+      "sha256": "f3ea30c34b4bd0bd4237518614945d8add780ff4db4acbd2fccea1f473e03234",
+      "bytes": 230720
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/call_direct_new": {
+      "sha256": "b616c4b43c27bdc23ae7b7e6dc57341c59f2c7b1f4e8805ccb4f54b18b446891",
+      "bytes": 951488
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/branch_predictable_old": {
+      "sha256": "045d2136403e41539b861b3374e286d91673e29f77db8921b9218d1a52abe6b1",
+      "bytes": 236976
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/branch_predictable_new": {
+      "sha256": "6f708adeaf1eb6f6d128d6da6d151dbcf0f76dc031db5106781f11b5542e6a41",
+      "bytes": 952616
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/branch_mixed_old": {
+      "sha256": "bbb82c717939996da3d55d6be82fe0d7eb4e686d62918ed2e1b557babd2407fe",
+      "bytes": 236864
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/branch_mixed_new": {
+      "sha256": "92b82f5e4ee68b9d87d98ceae7100ca1842331fe4fc527dddc02640f84442572",
+      "bytes": 952832
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/binary_search_old": {
+      "sha256": "455a4174f1901760c156de23536adcc018c3ec7bd311d6cedf62e261e03655fa",
+      "bytes": 238344
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/binary_search_new": {
+      "sha256": "8a1911b51a6df5e3e5da03a572bc5e9e0258488b00a9ca1efc1a7dd999a586e9",
+      "bytes": 952504
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_word_count_old": {
+      "sha256": "185ba2de82ee29e42dd7bac1192a189365f9364bffe83fe7beb46c07c6a1ad1a",
+      "bytes": 310168
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_word_count_new": {
+      "sha256": "d57ad40102ea341a1302b2412bc3e9010d26545584a5c7f6dd8f24e8a66eeb9e",
+      "bytes": 958208
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_csv_aggregate_old": {
+      "sha256": "6fdbc0a0217662f70b784908bf5cc9e66988180d5e123bbad9f8167d2420e992",
+      "bytes": 342200
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_csv_aggregate_new": {
+      "sha256": "8f562a81b63bc242730ee28e0b876ebc51bbc007e7bd064f744da5b05e0921ac",
+      "bytes": 984960
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_json_transform_old": {
+      "sha256": "9d489e5dc5999d1cc4f88bc32009a61b6e5e56267766759d9e7e9bec6c410ba4",
+      "bytes": 581336
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_json_transform_new": {
+      "sha256": "0ff558bf859385808bdf10507a4a05c50d09396fb0ac3bca987c33cb5e3ea9f6",
+      "bytes": 1259632
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_packet_decode_old": {
+      "sha256": "5d7aa62a55b2ab803278886a181474da872dee3de276ad49e824f622144ba7b7",
+      "bytes": 255352
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_packet_decode_new": {
+      "sha256": "62714f2ff68737caab218b5178c914ec5875e2f6ce1312f2fb06e95c6aac3d55",
+      "bytes": 958184
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_lox_eval_old": {
+      "sha256": "000ac8c8a191f5fd94a64be7e1009934dd3aaf1611ccc55d26aea7dd98a4c114",
+      "bytes": 266880
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_lox_eval_new": {
+      "sha256": "fdf0d473f1de701b0cbe7e2a1f73d46ca32807eb8791fa22c35ba8982d83c26e",
+      "bytes": 956816
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_tree_build_walk_old": {
+      "sha256": "fd872892c2f8ef6130c518ace835c8e845506c12456febce5d4d2822cfcdf88a",
+      "bytes": 230312
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_tree_build_walk_new": {
+      "sha256": "215e632766d3b801cb74355d83a323e216e3581764e06699443538b3ddaa3230",
+      "bytes": 951824
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/tree_build_walk-rust": {
+      "sha256": "af16324367468b7af9ecae1e96568c1104fa9e7980dfa1d7147295b719c008b7",
+      "bytes": 4522416
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/tree_build_walk-zig-safe": {
+      "sha256": "256c917f34c358945f57e345445ee68fb053931ddf8f9f99a46335c0dbf54a14",
+      "bytes": 3303944
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/tree_build_walk-go": {
+      "sha256": "84ad0a5f2d817162ad30a0ece4562b2a0127a8df684c921dc71709d7d53ae357",
+      "bytes": 2382891
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_record_pass_old": {
+      "sha256": "7c7b6c70b40a19c9192b4473e1f70dae5212e7eee04b847cf4d019395f0e069f",
+      "bytes": 231208
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_record_pass_new": {
+      "sha256": "5ff98ba49843509940d33f6b3bb815b48fc5d3c0d45e33009aab7ded716d0c61",
+      "bytes": 955416
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/record_pass-rust": {
+      "sha256": "298612e499e89165935b885f8431d31e4e06fb1313c8cceafcc2e69ceb601581",
+      "bytes": 4522248
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/record_pass-zig-safe": {
+      "sha256": "f2c799fb093a6f2654a4e3d2bc56c32dde7f9c8ae45097c81a75aa60f8ab0c38",
+      "bytes": 3306232
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/record_pass-go": {
+      "sha256": "3aaff33dff40e8b62382a163ff24143a6edc1c9f834c8c40468b196947b38938",
+      "bytes": 2387196
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_grid_dp_old": {
+      "sha256": "1f832a6b8b27431c173e7ef59ddf1c941af3b4f61457e48842355ef3fde2c793",
+      "bytes": 263896
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_grid_dp_new": {
+      "sha256": "5aa52cb639fcc467e0752f7af0d97862897627b2c534332a7107bb924ca8fa40",
+      "bytes": 985064
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/grid_dp-rust": {
+      "sha256": "3779f328430cc1c90450c59e1bf88615861af70c53c6b30337d2d949827dbb32",
+      "bytes": 4525672
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/grid_dp-zig-safe": {
+      "sha256": "3c5d19ee397406372e4ee19975aab3e312631f1f6e5cda4eebe7c0bf75ecdd49",
+      "bytes": 3312576
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/grid_dp-go": {
+      "sha256": "a4be9b275be5a88ae4c2ad923d9533efda545528cc4d2117cefe679b4574f361",
+      "bytes": 2387495
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_union_find_old": {
+      "sha256": "1e7ddb6fbfb4e19bc999c1835ea4c474330bd223ca04a9716c4a39648cdc7c08",
+      "bytes": 239192
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_union_find_new": {
+      "sha256": "cccccd0539d975a9de6687b17ec23e216c3f2c65505593f92713f2dd7a61cd95",
+      "bytes": 956664
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/union_find-rust": {
+      "sha256": "66f693e06979a89b148a3f3362b969252d4f7bbe6a8a6670a1b05e936f3cdd58",
+      "bytes": 4522776
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/union_find-zig-safe": {
+      "sha256": "e93557d0150b15aafdd0085859ccd1a9ec2abe1c68d70fd062e62ad1fd61a7c0",
+      "bytes": 3309344
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/union_find-go": {
+      "sha256": "1172d7ad314b8efc1384d27cd1b21bb91f6151ea2d7b020537269a76ec6bffa7",
+      "bytes": 2383295
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_float_format_old": {
+      "sha256": "4cbfbc582c1f63b4fe17d74e9be2ab15b394df91c6f6bef2d4bb6800b689147d",
+      "bytes": 228728
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_float_format_new": {
+      "sha256": "61b4ee40784d1139f13aac8c1a2f0ea3d3999091d727bf3c01e7123e86e1905d",
+      "bytes": 1210584
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/float_format-rust": {
+      "sha256": "2dce5a3144ce464daebfb0f9f0ffe285194c9e1af25e07eaa018f4dd03c578a5",
+      "bytes": 4550552
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/float_format-zig-safe": {
+      "sha256": "edbdda99e87237f219fc52ff97654753dfdbb2bc36a6d6afc1f56651737ed3a8",
+      "bytes": 3340360
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/float_format-go": {
+      "sha256": "2df5c646936c1a2fb396b0b4a3787c50204b37fe08e1a32080bba3e44a263b10",
+      "bytes": 2383086
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_buffer_write_old": {
+      "sha256": "d782c43c74be99328d82d8d7b03957544cdd0b61b8c69780831a25f72e9ae61f",
+      "bytes": 231032
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_buffer_write_new": {
+      "sha256": "ae162c685fe2fbc8ebeb00e4902ffbd88a550d816c8a598b1fdf875fbf5cbe48",
+      "bytes": 951560
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/buffer_write-rust": {
+      "sha256": "a52fdd9975d92aa2279c33c44840e4ed6acd36618ecc42fca142bd520c4fdcf1",
+      "bytes": 4525584
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/buffer_write-zig-safe": {
+      "sha256": "a8b9f05c8efe8e334530dc8bf4b6cc11833a843bac26b95dd7855754b2bab2d6",
+      "bytes": 3313208
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/buffer_write-go": {
+      "sha256": "a6380d9968de796a6e36d7ea4473ab2bb22da687bac0dcec3c523a9c5e333f80",
+      "bytes": 2383147
+    }
+  },
+  "artifact_manifest": "final-performance-artifacts-v2/manifest.json"
+}

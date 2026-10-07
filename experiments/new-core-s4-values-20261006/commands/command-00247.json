@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "import json,pathlib; e=pathlib.Path(\"experiments/new-core-s4-values-20261006\"); print((e/\"final-rows-leak-verify-v2/summary.json\").read_text()[:1300]); print((e/\"final-fuzz-v3/values/summary.json\").read_text()[:1400]); print((e/\"final-fuzz-v3/rebinding/summary.json\").read_text()[:1400]); print((e/\"performance_summary_v2.json\").read_text()[-250:])"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3233126,
+  "status": 0,
+  "elapsed_seconds": 0.025144251994788647
+}

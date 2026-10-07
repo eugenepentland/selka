@@ -1,0 +1,12 @@
+{
+  "command": [
+    "git",
+    "commit",
+    "-m",
+    "evidence(core): retain S4-V independent row probes"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2036846,
+  "status": 0,
+  "elapsed_seconds": 2.0600477438420057
+}

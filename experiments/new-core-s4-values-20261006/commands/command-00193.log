@@ -1,0 +1,18 @@
+$ git commit -m 'test(core): retain snapshot-length conformance failure'
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10371 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s4-values adb638e72] test(core): retain snapshot-length conformance failure
+ 6 files changed, 1755 insertions(+)
+ create mode 100644 experiments/new-core-s4-values-20261006/final-core-conformance-v6/core-component.json
+ create mode 100644 experiments/new-core-s4-values-20261006/final-core-conformance-v6/full-conformance.log
+ create mode 100644 experiments/new-core-s4-values-20261006/final-core-conformance-v6/full-conformance.seconds
+ create mode 100644 experiments/new-core-s4-values-20261006/final-core-conformance-v6/summary.json
+ create mode 100644 experiments/new-core-s4-values-20261006/final-core-conformance-v6/test-core.log
+ create mode 100644 experiments/new-core-s4-values-20261006/final-core-conformance-v6/test-core.seconds
+
+exit=0
+elapsed_seconds=2.040492

@@ -1,0 +1,5 @@
+$ git commit -q -m 'test(core): complete nested value fixture verdicts'
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+
+exit=0
+elapsed_seconds=0.184850

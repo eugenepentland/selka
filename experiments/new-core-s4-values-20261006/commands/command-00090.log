@@ -1,0 +1,8 @@
+$ scripts/build-slot.sh build env MYL_CORE_LEAKCHECK=1 zig-out/bin/mylang-core test test/core/v_dynamic_repeat.my --release --verify-facts --json --cache-dir .mylang-cache/s4-v/final-repeat-capacity
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 1 after 105s (all 3 build slot(s) busy)
+{"version":"native-tests-v1","tests":[{"name":"v_dynamic_repeat::test_dynamic_repeat_list_context_and_cow","status":"passed","reason":"","at":""}],"passed":1,"failed":0,"skipped":0,"cached":0,"unsupported":0}
+
+exit=0
+elapsed_seconds=127.113361

@@ -1,0 +1,18 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "gate",
+    "scripts/build-slot.sh",
+    "build",
+    "zig",
+    "build",
+    "test-core",
+    "-Dcore-shards=64",
+    "--summary",
+    "all"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 623261,
+  "status": 1,
+  "elapsed_seconds": 194.93653481802903
+}

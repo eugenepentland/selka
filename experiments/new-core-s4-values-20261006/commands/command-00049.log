@@ -1,0 +1,7 @@
+$ scripts/build-slot.sh build zig fmt src/core/own.zig src/core/flags.zig src/core/emit_llvm.zig
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 1 after 120s (all 3 build slot(s) busy)
+
+exit=0
+elapsed_seconds=120.359415

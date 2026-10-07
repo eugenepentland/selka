@@ -1,0 +1,6 @@
+$ scripts/build-slot.sh build zig fmt src/core/inline_cfg.zig src/core/s3_number_test.zig src/core/vector_test.zig
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 40s (all 3 build slot(s) busy)
+
+exit=0
+elapsed_seconds=40.146012

@@ -1,0 +1,4 @@
+## 2026-10-07 · codex · mylang — S4-V value paths
+
+- **good:** Whole-tree `guardian-check all . --gate` ran all 88 checks for mylang's nested COW, CFG inlining and numeric buffer formatting; cognitive-complexity caught a 28-point CFG splicer and spec coverage caught duplicate/missing tags before the final green source commits.
+- **bug:** During mylang S4-V qualification, a selected Zig unit test panicked on a null lookup and terminated with SIGABRT, yet Guardian's test runner printed `PASS — 0 passed` and `RESULT {"passed":0,"failed":0,"skipped":0}`. Zig's enclosing build summary correctly reported one crashed test and returned status 1; consumers of RESULT alone would miss the crash. This cost one failed focused test run. Reproduction was `zig build test-core -Dtest-filter=uniform --summary all` with a fixture whose uncalled function had been pruned; the complete retained receipt is mylang's `experiments/new-core-s4-values-20261006/commands/command-00101.log`.

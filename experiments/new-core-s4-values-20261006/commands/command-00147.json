@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "import hashlib,json,subprocess; from pathlib import Path; root=Path.cwd(); paths=subprocess.check_output([\"git\",\"diff\",\"--name-only\",\"491caf1c98e2aa647872064f23b3ae42b301c3b7\",\"HEAD\",\"--\",\".\",\":!experiments\"],text=True).splitlines(); result={\"functional_source\":\"d4d8c4e5639c6f6470883eca97ba160a3b4de627\",\"test_source\":\"8923ce3f19ea08afaa373e13ca54f2f19a945372\",\"evidence_head\":subprocess.check_output([\"git\",\"rev-parse\",\"HEAD\"],text=True).strip(),\"core_sha256\":hashlib.sha256((root/\"zig-out/bin/mylang-core\").read_bytes()).hexdigest(),\"fresh_old_sha256\":hashlib.sha256((root/\".mylang-cache/s4-v/immutable-final-checker/mylang\").read_bytes()).hexdigest(),\"frozen_inputs\":{p:hashlib.sha256((root/p).read_bytes()).hexdigest() for p in paths}}; (root/\"experiments/new-core-s4-values-20261006/final-input-identity.json\").write_text(json.dumps(result,indent=2)+\"\\n\"); print(json.dumps({k:v for k,v in result.items() if k!=\"frozen_inputs\"})); print(\"frozen input files=\"+str(len(paths)))"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2417631,
+  "status": 0,
+  "elapsed_seconds": 0.5686601060442626
+}

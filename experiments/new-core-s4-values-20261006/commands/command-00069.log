@@ -1,0 +1,7 @@
+$ scripts/build-slot.sh build env MYL_CORE_LEAKCHECK=1 zig-out/bin/mylang-core test test/core/v_nested_lengths.my --release --verify-facts --json --cache-dir .mylang-cache/s4-v/nested-lengths-check
+v_nested_lengths.my:8:5: error[E_EXPLICIT_DISCARD_REQUIRED]: a standalone non-unit value requires `_ =` or result handling
+      grid[1].pop()
+      ^
+
+exit=1
+elapsed_seconds=3.518202

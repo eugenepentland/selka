@@ -1,0 +1,11 @@
+{
+  "command": [
+    "git",
+    "status",
+    "--short"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3321475,
+  "status": 0,
+  "elapsed_seconds": 0.07463533896952868
+}

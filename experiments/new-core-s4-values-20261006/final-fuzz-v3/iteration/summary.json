@@ -1,0 +1,66 @@
+{
+  "kind": "iteration",
+  "cases_requested": 50,
+  "seed": 410606,
+  "cases_seen": 50,
+  "accepted": 50,
+  "old_rejected": 0,
+  "core_refused": 0,
+  "core_build_failed": 0,
+  "comparisons_expected": 750,
+  "native_runs": 1000,
+  "harness": {
+    "cases": 50,
+    "old_rejected": 0,
+    "refused": 0,
+    "compared": 750,
+    "mismatch": 0,
+    "fact": 0,
+    "traps": 90,
+    "caught": 0
+  },
+  "harness_status": 0,
+  "complete": true,
+  "qualified": true,
+  "error": null,
+  "failures": [],
+  "elapsed_seconds": 287.44487683381885,
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-fuzz-v3/iteration",
+  "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-fuzz-v3/iteration/tmp",
+  "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/iteration/sources",
+  "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-fuzz-v3/iteration/zig",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s3/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang-core",
+      "sha256": "db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1"
+    }
+  },
+  "oracle_unchanged": true,
+  "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s2-20261005/wave-b/fuzz_iteration.py",
+  "harness_sha256": "f60f7b45bdebf6bf39744153de7dd37148db1d6fb4afe6438f80de8531d78d00",
+  "native_comparisons": 750,
+  "native_complete": true,
+  "command_count": 1200
+}
