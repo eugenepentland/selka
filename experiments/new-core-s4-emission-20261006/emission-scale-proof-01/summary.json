@@ -1,0 +1,17 @@
+{
+  "complete": false,
+  "native_validation": false,
+  "source_commit": "1887302fda0f43cf3bddcb1def87b8c236883bad",
+  "compilers": {
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-proof/bin/mylang-core",
+      "sha256": "4c4ef42a09b7a18bace8ea881fec83764b60a5195354f789a5f7920259269093"
+    },
+    "before": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-imports-always/bin/mylang-core",
+      "sha256": "de7d67e6a1961dd3a0077f9eaf9c202cd5a6bc9a9381e2ff7a5222c56054504a"
+    }
+  },
+  "sizes": {},
+  "ripple": []
+}

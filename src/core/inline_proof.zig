@@ -17,7 +17,7 @@ pub fn trapFree(a: std.mem.Allocator, caller: *const ir.Function, call: ir.Inst,
     const parameters = try a.alloc(?facts.Interval, arguments.len);
     for (arguments, parameters) |argument, *range| {
         const ref = caller.resolve(argument);
-        range.* = if (ref.index() < known.ranges.len) known.ranges[ref.index()] else null;
+        range.* = facts.valueRange(&known, caller, ref);
         if (range.* == null) range.* = facts.typeRange(caller.inst(ref).ty);
     }
     var trial = callee.*;
@@ -37,11 +37,11 @@ fn divisionSafe(function: *const ir.Function, inst: ir.Inst, known: facts.Facts)
         .div, .rem, .floor_div, .floor_rem => {},
         else => return false,
     }
-    const divisor = known.ranges[function.resolve(inst.b).index()] orelse return false;
+    const divisor = facts.valueRange(&known, function, inst.b) orelse return false;
     if (divisor.lo <= 0 and divisor.hi >= 0) return false;
     const limits = facts.typeRange(inst.ty) orelse return false;
     if (limits.lo >= 0 or divisor.lo > -1 or divisor.hi < -1) return true;
-    const dividend = known.ranges[function.resolve(inst.a).index()] orelse return false;
+    const dividend = facts.valueRange(&known, function, inst.a) orelse return false;
     // Signed floor division can be safe without the non-negative operands
     // required by facts' `proven` flag (which selects unsigned LLVM division).
     return dividend.lo > limits.lo;

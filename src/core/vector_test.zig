@@ -33,6 +33,17 @@ test "a release build inlines a single-block helper, so its arithmetic is proven
     try std.testing.expect(std.mem.indexOf(u8, main_text, "mul.proven i64") != null);
 }
 
+// spec-case: NEW-CORE-INLINE-1
+test "a bounded signed remainder leaf inlines for both unknown and constant negative inputs" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.optimizedText(arena.allocator(), "def bounded(x: int) -> int:\n    return x % 1000 + 1\n" ++
+        "def main(args: list[str], out: Stream) -> int:\n    out.print(bounded(len(args) - 2000), bounded(-1))\n    return 0\n");
+    const start = std.mem.indexOf(u8, text, "fn main(").?;
+    const main_text = text[start..][0..std.mem.indexOf(u8, text[start..], "fn bounded").?];
+    try std.testing.expect(std.mem.indexOf(u8, main_text, "call i64 bounded") == null);
+}
+
 const kernel =
     \\def main(args: list[str], out: Stream) -> int:
     \\    n = len(args) + 100
