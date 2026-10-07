@@ -192,7 +192,7 @@ pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, opt
         try report.print(allocator, counting, .{ o.in_place, o.tested, o.copied, o.retains, o.releases, o.elided, o.promoted });
     }
     const emission: emit_llvm.Options = .{
-        .locator = .{ .context = &unit.src, .locate = locate },
+        .locator = locator(&unit.src),
         .source_path = unit.source_path,
         .main = unit.main,
         .analysis = .{ .facts = result.known, .vectors = result.plans, .provenance = &result.provenance },
@@ -216,6 +216,11 @@ pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, opt
         else => return error.Unsupported,
     };
     return .{ .units = units, .whole = whole };
+}
+
+/// How emission finds a span's file, line and column in the merged source `src`.
+pub fn locator(src: *const language.source.Source) emit_llvm.Locator {
+    return .{ .context = src, .locate = locate };
 }
 
 fn locate(context: *const anyopaque, offset: u32) emit_llvm.Location {

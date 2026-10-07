@@ -170,7 +170,8 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
         try objects.append(allocator, .{ .path = path, .digest = number_runtime.key(&guest.digest) });
     }
     outcome.foreign = try foreignObjects(native, places, settings, request.links, &objects);
-    const program_key = programKey(settings, objects.items, needs.math);
+    const sanitizer = linkSanitizer(request.release, request.links.len);
+    const program_key = programKey(settings, objects.items, needs.math, sanitizer);
     const programs: unit_cache.Store = .{ .directory = try std.fs.path.join(allocator, &.{ places.local, "programs-v1" }) };
     if (places.cacheable) if (try programs.lookup(allocator, io, program_key, "")) |found| {
         try publishOutput(native, found.path, request.output);
@@ -182,6 +183,7 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(allocator, &.{ guest.path, "cc", unit_cache.level(request.release), "-target", target_policy.native_link_target });
     try argv.appendSlice(allocator, target.cpu_flags);
+    if (sanitizer.len != 0) try argv.append(allocator, sanitizer);
     try argv.appendSlice(allocator, &.{ "-Wno-override-module", "-o", linked });
     for (objects.items) |object| try argv.append(allocator, object.path);
     if (needs.math) try argv.append(allocator, "-lm");
@@ -210,11 +212,21 @@ pub fn copyOutput(io: std.Io, program: []const u8, output: []const u8) std.Io.Di
     try cwd.copyFile(program, cwd, output, io, .{});
 }
 
+/// The link flag that keeps Zig from building and linking its UBSan runtime: `zig cc
+/// -O0` links it by default (about 10 s to build in a fresh Zig cache), but core units
+/// are LLVM text and the runtime is built at -O2, so nothing calls it. A `--link` C
+/// source compiled at -O0 may, so those builds keep Zig's default; release links
+/// never link it.
+fn linkSanitizer(release: bool, foreign: usize) []const u8 {
+    return if (release or foreign != 0) "" else "-fno-sanitize=undefined";
+}
+
 /// The program store key: the link command's settings and every linked object's
 /// bytes, in link order.
-fn programKey(settings: unit_cache.Settings, objects: []const Object, math: bool) Digest {
+fn programKey(settings: unit_cache.Settings, objects: []const Object, math: bool, sanitizer: []const u8) Digest {
     var hash = std.crypto.hash.Blake3.init(.{});
     unit_cache.field(&hash, "core-program-v1");
+    unit_cache.field(&hash, sanitizer);
     unit_cache.field(&hash, unit_cache.format);
     unit_cache.field(&hash, unit_cache.level(settings.release));
     unit_cache.field(&hash, target_policy.native_link_target);
@@ -570,6 +582,13 @@ fn run(native: Native, argv: []const []const u8) Error!void {
         else => false,
     };
     if (!ok) return error.ToolFailed;
+}
+
+// spec: NEW-CORE-S4-LINK-1
+test "a debug link without foreign C objects leaves out Zig's UBSan runtime" {
+    try std.testing.expectEqualStrings("-fno-sanitize=undefined", linkSanitizer(false, 0));
+    try std.testing.expectEqualStrings("", linkSanitizer(false, 1));
+    try std.testing.expectEqualStrings("", linkSanitizer(true, 0));
 }
 
 // spec-case: NEW-CORE-S4-TEST-3

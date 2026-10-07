@@ -276,16 +276,13 @@ fn programIdentity(resources: IdentityResources, options: Options, checked: fron
     defer scratch.deinit();
     const a = scratch.allocator();
     var why: build.Refusal = .{};
-    var module = programFor(a, options, checked, &.{case}, &why) catch |err| {
+    const module = programFor(a, options, checked, &.{case}, &why) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         return null;
     };
-    var log: std.ArrayList(u8) = .empty;
-    const emission = pipeline.emitted(a, &module, .{ .src = checked.src, .source_path = std.Io.Dir.cwd().realPathFileAlloc(resources.io, options.path, a) catch options.path, .main = .{} }, options.build, &log) catch |err| {
-        if (err == error.OutOfMemory) return error.OutOfMemory;
-        return null;
-    };
-    return receipt.key(base, case.name, emission.units);
+    const source_path = std.Io.Dir.cwd().realPathFileAlloc(resources.io, options.path, a) catch options.path;
+    const identity = receipt.programKey(base, case.name, .{ .module = &module, .source_path = source_path, .locator = pipeline.locator(&checked.src) });
+    return identity;
 }
 
 fn select(init: std.process.Init, options: Options, checked: frontend.Checked, cases: []const discover.Case, settings: case_settings.File, selection: SelectionContext) Error![]Selected {

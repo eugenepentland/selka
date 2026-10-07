@@ -1,5 +1,5 @@
-//! Successful test receipts key the reachable emitted program and all execution
-//! inputs. A checked-file manifest only bypasses checking while every dependency
+//! Successful test receipts key the reachable program's IR and source positions and
+//! all execution inputs. A checked-file manifest only bypasses checking while every dependency
 //! still has its recorded bytes. Damaged records are ordinary cache misses.
 const std = @import("std");
 const frontend = @import("frontend.zig");
@@ -9,6 +9,8 @@ const report = @import("test_runner_report.zig");
 const tool_identity = @import("tool_identity.zig");
 const tool_ticket = @import("tool_ticket.zig");
 const emit_units = @import("emit_units.zig");
+const emit_llvm = @import("emit_llvm.zig");
+const ir = @import("ir.zig");
 const Error = @import("test_runner_property.zig").Error;
 const Digest = [32]u8;
 
@@ -27,8 +29,9 @@ pub const Dependency = struct { path: []const u8, digest: ?Digest };
 const Snapshot = struct { base: Digest, dependencies: []const Dependency, report: []const u8 };
 const Envelope = struct { version: []const u8, payload: []const u8, checksum: Digest };
 
-/// Complete settings, compiler/runtime/toolchain identity, native inputs and
-/// guest environment. Field lengths prevent concatenation ambiguities.
+/// Complete settings, compiler/runtime/toolchain identity, native inputs and the
+/// environment variables that can change an outcome. Field lengths prevent
+/// concatenation ambiguities.
 pub fn settings(context: Context, inputs: *std.ArrayList(Dependency)) Error!Digest {
     const a = context.arena;
     var hash = std.crypto.hash.Blake3.init(.{});
@@ -76,7 +79,7 @@ pub fn settings(context: Context, inputs: *std.ArrayList(Dependency)) Error!Dige
     var environment: std.ArrayList([]const u8) = .empty;
     var entries = context.environment.iterator();
     while (entries.next()) |item| {
-        if (std.mem.eql(u8, item.key_ptr.*, tool_ticket.hint)) continue;
+        if (!keyedVariable(item.key_ptr.*)) continue;
         try environment.append(a, try std.fmt.allocPrint(a, "{s}={s}", .{ item.key_ptr.*, item.value_ptr.* }));
     }
     std.mem.sort([]const u8, environment.items, {}, before);
@@ -86,29 +89,119 @@ pub fn settings(context: Context, inputs: *std.ArrayList(Dependency)) Error!Dige
     return digest;
 }
 
-/// Bind every native unit in its emitted order, including canonical filenames
-/// and dependency flags; LLVM includes the copied-value schema and seed adapter.
-pub fn key(base: Digest, name: []const u8, units: []const emit_units.Unit) Digest {
-    var hash = std.crypto.hash.Blake3.init(.{});
-    field(&hash, "core-test-program-v2");
-    field(&hash, &base);
-    field(&hash, name);
-    field(&hash, emit_units.native_extension);
-    var count: [8]u8 = undefined;
-    std.mem.writeInt(u64, &count, @intCast(units.len), .little);
-    field(&hash, &count);
-    for (units) |unit| {
-        field(&hash, unit.name);
-        field(&hash, unit.source_path);
-        field(&hash, @tagName(unit.kind));
-        field(&hash, unit.llvm);
-        field(&hash, if (unit.number) "number" else "no-number");
-        field(&hash, if (unit.math) "math" else "no-math");
-    }
+/// The C compiler and Zig toolchain inputs a receipt keys besides every `MYL_` and
+/// `MYLANG_` variable, which the runtime and the core read.
+const toolchain_variables = [_][]const u8{
+    "CCC_OVERRIDE_OPTIONS", "COMPILER_PATH",     "CPATH",             "C_INCLUDE_PATH", "CPLUS_INCLUDE_PATH", "GCC_EXEC_PREFIX",
+    "LIBRARY_PATH",         "OBJC_INCLUDE_PATH", "SOURCE_DATE_EPOCH", "ZIG",            "ZIG_LIB_DIR",        "ZIG_LIBC",
+};
+/// `MYLANG_` variables that place caches or size the worker pool and so change no outcome.
+const placement_variables = [_][]const u8{ "MYLANG_JOBS", "MYLANG_CORE_RUNTIME_CACHE", tool_ticket.hint };
+
+/// Whether a variable can change a test's outcome. A shell's `_` and `OLDPWD` or a
+/// terminal's variables cannot; a test that reads the environment is never reused.
+fn keyedVariable(name: []const u8) bool {
+    for (placement_variables) |placement| if (std.mem.eql(u8, name, placement)) return false;
+    if (std.mem.startsWith(u8, name, "MYL_") or std.mem.startsWith(u8, name, "MYLANG_")) return true;
+    for (toolchain_variables) |variable| if (std.mem.eql(u8, name, variable)) return true;
+    return false;
+}
+
+/// What emission reads from one test's program besides the keyed settings.
+pub const Program = struct {
+    /// The test's Core IR before passes.
+    module: *const ir.Module,
+    /// The entry path traps report when a span has no file of its own.
+    source_path: []const u8,
+    /// Where each span is: the only way emission reads the source.
+    locator: emit_llvm.Locator,
+};
+
+/// A test's program key, computed without emitting it: passes and LLVM emission are
+/// pure functions of the IR, the settings in `base` and the positions the locator
+/// gives, so the IR is hashed field by field with every span replaced by its file,
+/// line and column. An edit that only moves code in other files keeps the key.
+pub fn programKey(base: Digest, name: []const u8, program: Program) Digest {
+    var walker: Walker = .{ .locator = program.locator };
+    field(&walker.hash, "core-test-ir-v1");
+    field(&walker.hash, &base);
+    field(&walker.hash, name);
+    field(&walker.hash, emit_units.native_extension);
+    field(&walker.hash, program.source_path);
+    walker.value(program.module.*);
+    walker.flush();
     var digest: Digest = undefined;
-    hash.final(&digest);
+    walker.hash.final(&digest);
     return digest;
 }
+
+/// Feeds a value's fields to the hash in declaration order through a small buffer.
+const Walker = struct {
+    hash: std.crypto.hash.Blake3 = .init(.{}),
+    locator: emit_llvm.Locator,
+    buffer: [4096]u8 = undefined,
+    used: usize = 0,
+    last: ?struct { span: u32, at: emit_llvm.Location } = null,
+
+    fn bytes(self: *Walker, data: []const u8) void {
+        if (self.used + data.len > self.buffer.len) self.flush();
+        if (data.len > self.buffer.len) return self.hash.update(data);
+        @memcpy(self.buffer[self.used..][0..data.len], data);
+        self.used += data.len;
+    }
+
+    fn flush(self: *Walker) void {
+        self.hash.update(self.buffer[0..self.used]);
+        self.used = 0;
+    }
+
+    fn integer(self: *Walker, wide: u64) void {
+        var encoded: [8]u8 = undefined;
+        std.mem.writeInt(u64, &encoded, wide, .little);
+        self.bytes(&encoded);
+    }
+
+    fn value(self: *Walker, item: anytype) void {
+        const T = @TypeOf(item);
+        switch (@typeInfo(T)) {
+            .void => {},
+            .bool => self.integer(@intFromBool(item)),
+            .int => |info| self.integer(if (info.signedness == .signed) @bitCast(@as(i64, item)) else item),
+            .@"enum" => self.value(@backingInt(item)),
+            .optional => if (item) |present| {
+                self.integer(1);
+                self.value(present);
+            } else self.integer(0),
+            .pointer => |info| switch (info.size) {
+                .slice => {
+                    self.integer(item.len);
+                    if (info.child == u8) self.bytes(item) else for (item) |element| self.value(element);
+                },
+                .one => self.value(item.*),
+                else => @compileError("no receipt hashing for " ++ @typeName(T)),
+            },
+            .@"union" => switch (item) {
+                inline else => |payload, tag| {
+                    self.value(tag);
+                    self.value(payload);
+                },
+            },
+            .@"struct" => |info| if (@hasField(T, "items") and @hasField(T, "capacity")) self.value(item.items) else inline for (info.field_names, info.field_types) |member, Member| {
+                if (comptime std.mem.eql(u8, member, "span") and Member == u32) self.position(@field(item, member)) else self.value(@field(item, member));
+            },
+            else => @compileError("no receipt hashing for " ++ @typeName(T)),
+        }
+    }
+
+    fn position(self: *Walker, span: u32) void {
+        const at = if (self.last) |last| if (last.span == span) last.at else self.locator.locate(self.locator.context, span) else self.locator.locate(self.locator.context, span);
+        self.last = .{ .span = span, .at = at };
+        self.integer(at.line);
+        self.integer(at.column);
+        self.integer(at.path.len);
+        self.bytes(at.path);
+    }
+};
 
 /// A selected case's declarative arguments and expectation join its program key.
 pub fn configuredKey(program: Digest, json: []const u8) Digest {
@@ -339,35 +432,54 @@ fn before(_: void, lhs: []const u8, rhs: []const u8) bool {
     return std.mem.lessThan(u8, lhs, rhs);
 }
 
-// spec-case: NEW-CORE-S4-TEST-3
-test "receipt keys delimit fields and include the exact ordered native units" {
+/// Test positions: files of 1000 bytes and 100-byte lines, `a.my` first; `shift` is
+/// how far an edit to `a.my` moved `b.my`.
+const Lines = struct {
+    shift: u32,
+    fn locate(context: *const anyopaque, offset: u32) emit_llvm.Location {
+        const self: *const Lines = @ptrCast(@alignCast(context));
+        const in_b = offset >= 1000 + self.shift;
+        const local = if (in_b) offset - 1000 - self.shift else offset;
+        return .{ .line = local / 100 + 1, .column = local % 100 + 1, .path = if (in_b) "b.my" else "a.my" };
+    }
+};
+
+fn sampleModule(a: std.mem.Allocator, span: u32, data: u64) !ir.Module {
+    var module: ir.Module = .{};
+    var function: ir.Function = .{ .name = "b.helper", .signature = .{ .params = &.{.i64}, .ret = .i64 }, .span = span };
+    try function.insts.append(a, .{ .op = .copy, .ty = .i64, .data = data, .span = span + 7 });
+    try module.functions.append(a, function);
+    try module.strings.append(a, "text");
+    return module;
+}
+
+// spec: NEW-CORE-S4-TEST-6
+test "receipt keys hash the test's IR and source positions, not where other files moved them" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const unmoved: Lines = .{ .shift = 0 };
+    const shifted: Lines = .{ .shift = 200 };
     const base: Digest = @splat(9);
-    const first: emit_units.Unit = .{ .name = "module-a", .source_path = "a.my", .kind = .module, .llvm = "c", .number = false, .math = false };
-    const second: emit_units.Unit = .{ .name = "entry", .source_path = "entry", .kind = .entry, .llvm = "entry", .number = false, .math = false };
-    const one = key(base, "ab", &.{first});
-    var changed = first;
-    changed.llvm = "bc";
-    try std.testing.expect(!std.mem.eql(u8, &one, &key(base, "a", &.{changed})));
-    changed.llvm = "changed";
-    try std.testing.expect(!std.mem.eql(u8, &one, &key(base, "ab", &.{changed})));
-    const ordered = key(base, "ab", &.{ first, second });
-    try std.testing.expect(!std.mem.eql(u8, &one, &ordered));
-    try std.testing.expect(!std.mem.eql(u8, &ordered, &key(base, "ab", &.{ second, first })));
-    try std.testing.expect(!std.mem.eql(u8, &one, &key(@splat(8), "ab", &.{first})));
+    const module = try sampleModule(a, 1105, 3);
+    const one = programKey(base, "ab", .{ .module = &module, .source_path = "app.my", .locator = .{ .context = &unmoved, .locate = Lines.locate } });
+    const moved = try sampleModule(a, 1305, 3);
+    try std.testing.expectEqual(one, programKey(base, "ab", .{ .module = &moved, .source_path = "app.my", .locator = .{ .context = &shifted, .locate = Lines.locate } }));
+    const line = try sampleModule(a, 1205, 3);
+    try std.testing.expect(!std.mem.eql(u8, &one, &programKey(base, "ab", .{ .module = &line, .source_path = "app.my", .locator = .{ .context = &unmoved, .locate = Lines.locate } })));
+    const data = try sampleModule(a, 1105, 4);
+    try std.testing.expect(!std.mem.eql(u8, &one, &programKey(base, "ab", .{ .module = &data, .source_path = "app.my", .locator = .{ .context = &unmoved, .locate = Lines.locate } })));
+    var named = try sampleModule(a, 1105, 3);
+    named.strings.items[0] = "texts";
+    try std.testing.expect(!std.mem.eql(u8, &one, &programKey(base, "ab", .{ .module = &named, .source_path = "app.my", .locator = .{ .context = &unmoved, .locate = Lines.locate } })));
+    try std.testing.expect(!std.mem.eql(u8, &one, &programKey(base, "a", .{ .module = &module, .source_path = "app.my", .locator = .{ .context = &unmoved, .locate = Lines.locate } })));
+    try std.testing.expect(!std.mem.eql(u8, &one, &programKey(base, "ab", .{ .module = &module, .source_path = "other.my", .locator = .{ .context = &unmoved, .locate = Lines.locate } })));
+    try std.testing.expect(!std.mem.eql(u8, &one, &programKey(@splat(8), "ab", .{ .module = &module, .source_path = "app.my", .locator = .{ .context = &unmoved, .locate = Lines.locate } })));
 }
 
 // spec-case: NEW-CORE-S4-TEST-3
-test "receipt keys bind canonical basenames unit metadata dependencies and declarative cases" {
-    const base: Digest = @splat(7);
-    const unit: emit_units.Unit = .{ .name = "module-a", .source_path = "a.my", .kind = .module, .llvm = "program", .number = false, .math = false };
-    const original = key(base, "test", &.{unit});
-    var changed = [_]emit_units.Unit{ unit, unit, unit, unit, unit };
-    changed[0].name = "module-b";
-    changed[1].source_path = "b.my";
-    changed[2].kind = .helper;
-    changed[3].number = true;
-    changed[4].math = true;
-    for (changed) |other| try std.testing.expect(!std.mem.eql(u8, &original, &key(base, "test", &.{other})));
+test "receipt keys bind declarative cases" {
+    const original: Digest = @splat(7);
     const configured = configuredKey(original, "{\"expected\":7}");
     try std.testing.expect(!std.mem.eql(u8, &configured, &configuredKey(original, "{\"expected\":8}")));
     try std.testing.expect(!std.mem.eql(u8, &configured, &configuredKey(@splat(8), "{\"expected\":7}")));
@@ -431,4 +543,42 @@ test "readDigest fileDigest and toolUnchanged refuse missing inputs and damaged 
     try std.testing.expect(try replay(context, identity) == null);
     try temporary.dir.deleteFile(context.io, "zig");
     try std.testing.expect(!try toolUnchanged(context));
+}
+
+fn fakeToolContext(a: std.mem.Allocator, root: []const u8, environment: *const std.process.Environ.Map) !Context {
+    const tool = try std.fs.path.join(a, &.{ root, "zig" });
+    try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = tool, .data = "owned fake tool" });
+    try std.Io.Dir.cwd().setFilePermissions(std.testing.io, tool, .executable_file, .{});
+    const identity = try tool_identity.capture(.{ .arena = a, .io = std.testing.io, .environment = environment, .executable = tool, .cache = root });
+    return .{
+        .arena = a,
+        .io = std.testing.io,
+        .environment = environment,
+        .options = .{ .path = "app.my", .build = .{ .zig = tool, .cache = root }, .json = true },
+        .entry = .{ .path = try std.fs.path.join(a, &.{ root, "app.my" }), .root = root, .name = "app" },
+        .tool = identity,
+    };
+}
+
+// spec: NEW-CORE-S4-TEST-5
+test "receipt settings ignore shell and terminal variables and key toolchain and runtime ones" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    const context = try fakeToolContext(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a), &environment);
+    var inputs: std.ArrayList(Dependency) = .empty;
+    const plain = try settings(context, &inputs);
+    try environment.put("_", "/usr/bin/time");
+    try environment.put("OLDPWD", "/elsewhere");
+    try environment.put("MYLANG_JOBS", "3");
+    try std.testing.expectEqual(plain, try settings(context, &inputs));
+    try environment.put("MYLANG_OPTIONS", "--allow-random=7");
+    const optioned = try settings(context, &inputs);
+    try std.testing.expect(!std.mem.eql(u8, &plain, &optioned));
+    try environment.put("ZIG_LIB_DIR", "/other-lib");
+    try std.testing.expect(!std.mem.eql(u8, &optioned, &try settings(context, &inputs)));
 }
