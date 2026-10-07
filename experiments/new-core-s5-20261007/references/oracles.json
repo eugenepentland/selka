@@ -1,0 +1,10 @@
+{
+ "purpose": "mylang old core (QBE back end) kept as the differential oracle after S5 deletes it from the repo",
+ "archived": "2026-10-07",
+ "use": "MYLANG_QBE=<dir>/qbe <dir>/mylang test FILE --json",
+ "files": {
+  "mylang": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+  "qbe": "b6139650a99b39131cd791fa1fdc84c09472dc303930bbadd3f8a5348487af4c"
+ },
+ "provenance": "copied from the S3/S4 qualification oracle (.mylang-cache/s3/oracle, used for S3 exit 82c125dd and S4 exit cbb1d69b)"
+}
