@@ -17,6 +17,8 @@ const Settings = struct {
     options: language.project.Options = .{},
     entry: ?[]const u8 = null,
     providers: []const Provider = &.{},
+    /// How diagnostics are rendered into a report: terminal text or `diagnostic-v1` lines.
+    format: language.diagnostic_output.Format = .text,
 };
 const Graph = struct {
     index: language.interfaces.Index = undefined,
@@ -74,6 +76,31 @@ pub const Session = struct {
         self.graph.settings.entry = entry;
     }
 
+    /// Render diagnostics as `format` (`mylang run --diagnostics=json`).
+    pub fn setFormat(self: *Session, format: language.diagnostic_output.Format) void {
+        self.graph.settings.format = format;
+    }
+
+    /// Call only after a successful check. The warnings of that check, rendered in the session's format,
+    /// as the old CLI printed them before building or running (NEW-CORE-S5-CLI-1).
+    pub fn warnings(self: *Session, allocator: std.mem.Allocator) error{OutOfMemory}![]const u8 {
+        var out: std.ArrayList(u8) = .empty;
+        if (self.single) |*unit| {
+            try self.renderAll(allocator, unit.diagnostics.items, unit.src, &out);
+        } else {
+            try self.renderAll(allocator, self.graph.compilation.diagnostics.items.items, self.graph.compilation.src, &out);
+        }
+        return out.items;
+    }
+
+    fn renderAll(self: *const Session, allocator: std.mem.Allocator, items: []const language.diagnostic.Diagnostic, src: language.source.Source, out: *std.ArrayList(u8)) error{OutOfMemory}!void {
+        for (items) |item| {
+            const text = try language.diagnostic_output.render(allocator, item, src, self.graph.settings.format);
+            defer allocator.free(text);
+            try out.appendSlice(allocator, text);
+        }
+    }
+
     /// Overlay exact relative module paths with explicit test-provider sources.
     pub fn setProviders(self: *Session, providers: []const Provider) void {
         self.graph.settings.providers = providers;
@@ -126,11 +153,7 @@ pub const Session = struct {
         self.checkSingle(unit) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => {
-                for (unit.diagnostics.items) |item| {
-                    const text = try item.render(allocator, unit.src);
-                    defer allocator.free(text);
-                    try report.appendSlice(allocator, text);
-                }
+                try self.renderAll(allocator, unit.diagnostics.items, unit.src, report);
                 return error.SourceError;
             },
         };
@@ -158,11 +181,7 @@ pub const Session = struct {
         self.graph.compilation.checkWithCache(self.semanticCache()) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => {
-                for (self.graph.compilation.diagnostics.items.items) |item| {
-                    const text = try item.render(allocator, self.graph.compilation.src);
-                    defer allocator.free(text);
-                    try report.appendSlice(allocator, text);
-                }
+                try self.renderAll(allocator, self.graph.compilation.diagnostics.items.items, self.graph.compilation.src, report);
                 return error.SourceError;
             },
         };
@@ -198,7 +217,7 @@ pub const Session = struct {
     fn loadFailure(self: *Session, allocator: std.mem.Allocator, err: anyerror, report: *std.ArrayList(u8)) Error {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         if (self.project.problem != null) {
-            const text = self.project.renderProblem(allocator) catch return error.OutOfMemory;
+            const text = language.diagnostic_output.renderProject(allocator, &self.project, self.graph.settings.format) catch return error.OutOfMemory;
             defer allocator.free(text);
             try report.appendSlice(allocator, text);
         } else {

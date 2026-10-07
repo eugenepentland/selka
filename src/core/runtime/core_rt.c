@@ -1031,8 +1031,30 @@ static void leak_report(void) {
     os_write(2, (const unsigned char *)text, (size_t)len);
 }
 
-/* `main`'s result is the exit status, truncated to the low 8 bits. */
+/* Whether `MYLANG_OPTIONS` names `--print-result`, bare or quoted, as `mylang run
+   --print-result` sets it (NEW-CORE-S5-RUN-1). Reads the variable only at exit. */
+static bool print_result_requested(void) {
+    const char *text = getenv("MYLANG_OPTIONS");
+    static const char wanted[] = "--print-result";
+    while (text && *text) {
+        while (*text == ' ' || *text == '\t' || *text == '\n' || *text == '\r') ++text;
+        const char *start = text;
+        while (*text && *text != ' ' && *text != '\t' && *text != '\n' && *text != '\r') ++text;
+        size_t length = (size_t)(text - start);
+        if (length >= 2 && start[0] == '"' && start[length - 1] == '"') { ++start; length -= 2; }
+        if (length == sizeof wanted - 1 && !memcmp(start, wanted, length)) return true;
+    }
+    return false;
+}
+
+/* `main`'s result is the exit status, truncated to the low 8 bits; `--print-result`
+   also prints the whole value on its own line. */
 int32_t myl_core_exit(int64_t status) {
+    if (print_result_requested()) {
+        char line[32];
+        int length = snprintf(line, sizeof line, "%lld\n", (long long)status);
+        stream_write(&streams[0], line, (size_t)length);
+    }
     flush_all();
     leak_report();
     core_io_cleanup();

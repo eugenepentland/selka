@@ -45,6 +45,36 @@ void myl_core_test_ceilings(uint32_t frames, uint64_t memory) {
     limit.rlim_cur = wanted;
     (void)setrlimit(RLIMIT_AS, &limit);
 }
+/* `mylang run`'s budgets (NEW-CORE-S5-RUN-1), installed once by the program's entry:
+ * steps and frames as a test's, the byte ceiling with its `RLIMIT_AS` backstop, and a
+ * wall-clock limit that ends the process as the old core's `--timeout` does. */
+static void core_run_timed_out(int signal_number) {
+    (void)signal_number;
+    static const char message[] = "R_TIMEOUT: wall-clock budget exhausted; raise it with --timeout=SECONDS\n";
+    ssize_t ignored = write(STDERR_FILENO, message, sizeof message - 1);
+    (void)ignored;
+    _exit(1);
+}
+void myl_core_run_controls(uint64_t steps, uint32_t frames, uint64_t memory, uint32_t timeout_seconds) {
+    static bool installed;
+    if (installed) return;
+    installed = true;
+    core_test_steps = steps;
+    core_test_bounded = steps != 0;
+    myl_core_test_ceilings(frames, memory);
+    if (!timeout_seconds) return;
+    struct sigaction action;
+    memset(&action, 0, sizeof action);
+    action.sa_handler = core_run_timed_out;
+    sigemptyset(&action.sa_mask);
+    if (sigaction(SIGALRM, &action, NULL)) {
+        static const char refused[] = "mylang: cannot arm the --timeout wall-clock guard\n";
+        ssize_t ignored = write(STDERR_FILENO, refused, sizeof refused - 1);
+        (void)ignored;
+        _exit(2);
+    }
+    alarm(timeout_seconds);
+}
 void myl_core_test_enter(void) {
     if (++core_test_depth > core_test_frame_limit && core_test_frame_limit) core_io_fail("R_FRAME_LIMIT");
 }

@@ -2,6 +2,8 @@
 //! each stage, then the end-to-end slice programs under `test/core`.
 comptime {
     _ = @import("frontend_test.zig");
+    _ = @import("cli.zig");
+    _ = @import("cli_args.zig");
     _ = @import("build_test.zig");
     _ = @import("emit_llvm_test.zig");
     _ = @import("emit_units_test.zig");

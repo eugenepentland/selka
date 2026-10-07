@@ -13,6 +13,7 @@ const passes = @import("passes.zig");
 const verify_ir = @import("verify_ir.zig");
 const target_description = @import("target.zig");
 const build_replay = @import("build_replay.zig");
+const run_budget = @import("run_budget.zig");
 
 /// What the command line asked for.
 pub const Options = struct {
@@ -49,7 +50,14 @@ pub const Show = struct {
     verify_cache: bool = false,
     /// `--cache-report`: say what the caches served and how many tools ran.
     cache_report: bool = false,
+    /// How the front end's diagnostics reach the report: `errors` only, as text
+    /// (`mylang-core`), or every diagnostic, warnings included, as the `mylang` CLI
+    /// prints them in `text` or `json` (`--diagnostics=json`, NEW-CORE-S5-CLI-1).
+    diagnostics: Diagnostics = .errors,
 };
+
+/// What `Show.diagnostics` selects.
+pub const Diagnostics = enum { errors, text, json };
 
 /// Why a build stopped after its report was written.
 pub const Error = error{ SourceError, Unsupported, ToolFailed, WriteFailed, OutOfMemory, InvalidIr };
@@ -57,10 +65,25 @@ pub const Error = error{ SourceError, Unsupported, ToolFailed, WriteFailed, OutO
 /// Build `path` into `options.output`. An unchanged build replays its last
 /// identical build's executable (`build_replay.zig`) before checking anything.
 pub fn build(init: std.process.Init, path: []const u8, options: Options, report: *std.ArrayList(u8)) Error!u8 {
+    return buildWith(init, path, options, null, report);
+}
+
+/// `build` for `mylang run`: the program also installs `budget` when `main` starts
+/// (NEW-CORE-S5-RUN-1). The budget is part of the replay key.
+pub fn buildRun(init: std.process.Init, path: []const u8, options: Options, budget: run_budget.RunBudget, report: *std.ArrayList(u8)) Error!u8 {
+    return buildWith(init, path, options, budget, report);
+}
+
+/// The project entry `path` resolves to, with its configuration (`mylang.json`).
+pub fn resolveEntry(init: std.process.Init, path: []const u8, report: *std.ArrayList(u8)) Error!project_entry.Entry {
+    return project_entry.resolve(init.arena.allocator(), init.io, path, report);
+}
+
+fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget: ?run_budget.RunBudget, report: *std.ArrayList(u8)) Error!u8 {
     const allocator = init.arena.allocator();
     const entry = try project_entry.resolve(allocator, init.io, path, report);
     const replaying = options.show.llvm == null;
-    const context: build_replay.Context = .{ .arena = allocator, .io = init.io, .environment = init.environ_map, .cache = options.cache, .zig = options.zig, .flags = try flags(init, options), .entry = entry };
+    const context: build_replay.Context = .{ .arena = allocator, .io = init.io, .environment = init.environ_map, .cache = options.cache, .zig = options.zig, .flags = try flags(init, options, budget), .entry = entry };
     if (replaying and !options.show.verify_cache) if (try build_replay.replay(context, options.output, report)) {
         if (options.show.cache_report) try report.appendSlice(allocator, "mylang-core: cache: replayed the last identical build\n");
         return 0;
@@ -68,22 +91,24 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
     entry.configure(&session);
+    if (options.show.diagnostics == .json) session.setFormat(.json);
     try session.enableCache(init.gpa, options.cache);
     const checked = session.checkFile(allocator, entry.path, report) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.SourceError,
     };
+    if (options.show.diagnostics != .errors) try report.appendSlice(allocator, try session.warnings(allocator));
     const sources = if (replaying) try build_replay.inputs(context, &session) else null;
     try entry.validate(allocator, &session, report);
     var refusal: build_ir.Refusal = .{};
     var module = build_ir.buildModuleSource(allocator, checked.program, checked.src, &refusal) catch |err| switch (err) {
         error.Unsupported => {
-            const at = frontend.position(checked.src, .{ .start = refusal.span, .end = refusal.span });
-            try report.print(allocator, "{s}:{d}:{d}: error[E_CORE_UNSUPPORTED]: the new core does not support {s} yet\n", .{ at.path, at.line, at.column, refusal.reason });
+            try refused(allocator, checked.src, refusal, options.show.diagnostics, report);
             return error.Unsupported;
         },
         else => |other| return other,
     };
+    if (budget) |installed| try run_budget.instrumentRun(allocator, &module, installed);
     // A header-less file is checked alone; the old core shows its absolute path.
     const absolute = std.Io.Dir.cwd().realPathFileAlloc(init.io, path, allocator) catch path;
     const shown = if (session.single != null) absolute else shownPath(checked.src, checked.program);
@@ -106,9 +131,21 @@ pub fn build(init: std.process.Init, path: []const u8, options: Options, report:
     return 0;
 }
 
+/// Report the new core's refusal of a construct at `refusal`, as text or as a
+/// `diagnostic-v1` record.
+fn refused(allocator: std.mem.Allocator, src: language.source.Source, refusal: build_ir.Refusal, diagnostics: Diagnostics, report: *std.ArrayList(u8)) Error!void {
+    const message = try std.fmt.allocPrint(allocator, "the new core does not support {s} yet", .{refusal.reason});
+    if (diagnostics == .json) {
+        const item: language.diagnostic.Diagnostic = .{ .severity = .err, .code = "E_CORE_UNSUPPORTED", .span = .{ .start = refusal.span, .end = refusal.span }, .message = message };
+        return report.appendSlice(allocator, try language.diagnostic_output.render(allocator, item, src, .json));
+    }
+    const at = frontend.position(src, .{ .start = refusal.span, .end = refusal.span });
+    try report.print(allocator, "{s}:{d}:{d}: error[E_CORE_UNSUPPORTED]: {s}\n", .{ at.path, at.line, at.column, message });
+}
+
 /// The canonical encoding of every build flag that changes the executable or the
 /// report, with `--link` sources by absolute path.
-fn flags(init: std.process.Init, options: Options) Error![]const u8 {
+fn flags(init: std.process.Init, options: Options, budget: ?run_budget.RunBudget) Error![]const u8 {
     const allocator = init.arena.allocator();
     const links = try allocator.alloc([]const u8, options.links.len);
     for (options.links, links) |link, *absolute| absolute.* = std.Io.Dir.cwd().realPathFileAlloc(init.io, link, allocator) catch link;
@@ -119,6 +156,8 @@ fn flags(init: std.process.Init, options: Options) Error![]const u8 {
         .vectors = options.show.generic_vectors,
         .frames = options.show.trap_frames,
         .links = links,
+        .diagnostics = options.show.diagnostics,
+        .run = budget,
     }, .{}) catch return error.OutOfMemory;
 }
 
