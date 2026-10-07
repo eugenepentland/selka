@@ -77,11 +77,16 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
 }
 
 fn appendPrograms(allocator: std.mem.Allocator, argv: *std.ArrayList([]const u8), units: []const emit_units.Unit, programs: []const []const u8) Error!void {
-    // Keep emission in IR order; native inputs place the entry first, followed by
-    // every other unit in its original order. Worker completion cannot affect layout.
-    for ([_]bool{ true, false }) |entry| {
-        for (units, programs) |unit, program| if ((unit.kind == .entry) == entry) try argv.append(allocator, program);
-    }
+    // Emission and reports stay in IR order. Native layout uses stable unit names,
+    // independent of staging paths, object content keys and worker completion.
+    const order = try allocator.alloc(usize, units.len);
+    for (order, 0..) |*index, i| index.* = i;
+    std.mem.sort(usize, order, units, programLessThan);
+    for (order) |index| try argv.append(allocator, programs[index]);
+}
+
+fn programLessThan(units: []const emit_units.Unit, lhs: usize, rhs: usize) bool {
+    return std.mem.lessThan(u8, units[lhs].name, units[rhs].name);
 }
 
 /// The runtime object for this runtime source, compiled on first use.

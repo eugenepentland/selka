@@ -1,0 +1,11 @@
+{
+  "command": [
+    "nm",
+    "--defined-only",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/import-entry-first-01/integer-release/unit-1.o"
+  ],
+  "status": 0,
+  "stdout": "0000000000000000 T my.leaf::origin[i64]\n",
+  "stderr": "",
+  "seconds": 0.0024737759958952665
+}
