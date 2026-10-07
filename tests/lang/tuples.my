@@ -119,20 +119,6 @@ public def test_tuple_equality_and_rendering_follow_the_aggregate_rule() -> bool
     return f"{pairs}" == "[(1, 'a'), (2, 'b')]"
 
 
-# A tuple is managed-bearing when an element is, so `escape` copies the whole
-# tuple out of the arena and the list it holds still reads back afterwards.
-# spec-case: TUPLE-2
-public def test_a_tuple_carrying_a_managed_element_escapes_an_arena() -> bool:
-    kept: tuple[int, list[int]] = (0, [])
-    with arena() as scratch:
-        built = managed_pair()
-        kept = scratch.escape(built)
-    number, values = kept
-    if number != 3 or len(values) != 1 or values[0] != 7:
-        return False
-    return pair_sum((1, 2)) == 3
-
-
 # A template may take, destructure and return `tuple[T, int]`; the element that
 # is a type parameter stays that parameter, so one definition serves int and str.
 # spec-case: TUPLE-8

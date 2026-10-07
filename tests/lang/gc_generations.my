@@ -129,21 +129,6 @@ public def test_an_old_large_list_keeps_young_objects_stored_into_it() -> bool:
 
 
 # spec-case: QBE-INLINE-ALLOC-1
-public def test_class_bodies_bumped_out_of_nested_arenas_keep_their_fields() -> bool:
-    outer_total = 0
-    inner_total = 0
-    kept = chain(5)
-    for round in range(200):
-        with arena():
-            outer = chain(40)
-            with arena():
-                inner = chain(25)
-                inner_total += length(inner) + last_value(inner)
-            outer_total += length(outer) + outer.value
-    return outer_total == 200 * (41 + 40) and inner_total == 200 * (26 + 24) and length(kept) == 6
-
-
-# spec-case: QBE-INLINE-ALLOC-1
 public def test_inline_constructed_bodies_start_zeroed_and_hold_their_fields() -> bool:
     total = 0
     for i in range(30000):

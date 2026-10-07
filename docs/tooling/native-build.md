@@ -130,9 +130,9 @@ retired adapter and requires identical IR.
 
 ```console
 $ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/cache --report
-{"version":"qbe-build-v1",...,"mode":"ReleaseFast",...,"backend":"qbe","optimization":"default","lto":false,"thin_lto":false}
-$ mylang build examples/factorial.my --release -o /tmp/factorial-release --cache-dir /tmp/cache --report
-{"version":"qbe-build-v1",...,"mode":"ReleaseFast",...,"backend":"llvm","optimization":"3","lto":true,"thin_lto":false}
+{"version":"cache-report-v1","program":"linked","units":2,"reused":1,"compiled":1,"verified":0,"processes":2}
+$ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/cache --report
+{"version":"cache-report-v1","program":"replayed","units":0,"reused":0,"compiled":0,"verified":0,"processes":0}
 $ mylang build examples/factorial.my --mode Debug -o /tmp/factorial-debug --cache-dir /tmp/cache
 $ mylang run examples/factorial.my --release
 ```
@@ -296,15 +296,16 @@ program using a construct the native backend does not implement fails with
 module by module and relinks only what changed; `--whole-program` asks for the
 single whole-program compile (see
 [building a project module by module](module-interfaces.md#building-a-project-module-by-module)).
-`--report` adds one
-`qbe-build-v1` JSON line naming every compiled function, its own cache key, the
-cached object that holds it, whether that object was reused, how many distinct
-objects hold the guest functions (`function_objects`) and how many of them this
-build compiled (`compiled_function_objects`), and the resolved `backend`,
-`optimization` and `lto` (and `thin_lto` for a ThinLTO build); `zig build
-test-qbe-build` repeats the builds through a relocated compiler with no Python
-on `PATH` using the Zig-native build driver tests, and neither backend needs
-one.
+`--report` (on `build`, `build --run`, `run` and `run-project`) adds one
+`cache-report-v1` JSON line on stderr saying what the new core's caches served:
+the units linked, reused from the object store, compiled and verified, the tool
+processes started, and whether the program was `linked`, `reused` from the
+program store or `replayed` from the last identical build (every count 0). The
+old `qbe-build-v1` and `work-report-v1` reports were retired with the old back
+end (S5-D6); `--cache-report` prints the same counts as one text line.
+`--no-cache` builds through an empty private cache removed when the command
+ends, while the per-user store of content-keyed runtime and unit objects is
+still used.
 
 ```console
 $ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/qbe-cache

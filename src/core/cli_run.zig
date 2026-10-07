@@ -2,6 +2,8 @@
 //! build the program with its budget installed by `main`, run it with the grants and
 //! `--print-result` in `MYLANG_OPTIONS` and the arguments after `--`, and adopt its
 //! exit status. A trap exits 1, a check error 1, a usage or host failure 2.
+//! `--no-cache` builds through a private cache (NEW-CORE-S5-NO-CACHE-1) and
+//! `--timings` reports the program's run time (NEW-CORE-S5-TIMINGS-1).
 const std = @import("std");
 const language = @import("mylang");
 const pipeline = @import("pipeline.zig");
@@ -23,6 +25,57 @@ const stack_slack: u64 = 8 << 20;
 /// error cannot be written.
 pub const Error = error{ OutOfMemory, WriteFailed };
 
+/// `mylang run`'s usage, which a malformed run command line prints.
+pub const run_usage =
+    \\usage: mylang run <file.my> [options] [-- ARGS...]
+    \\       mylang run-project <entry.my> [options] [-- ARGS...]
+    \\  builds the program natively and runs it; every value after -- is a guest argument
+    \\  budgets (each takes --flag N or --flag=N; N is a positive integer):
+    \\    --max-steps N      instruction ceiling (default: unbounded)
+    \\    --max-frames N     call-depth ceiling (default: unbounded); each frame reserves 32 KiB of --max-memory
+    \\    --timeout N        elapsed-time cap in seconds
+    \\    --max-memory SIZE  guest byte ceiling, K/M/G suffixes (default 4G; MYLANG_MEMORY_LIMIT names the same)
+    \\  output: --print-result --diagnostics=text|json --timings (the program's run time on stderr)
+    \\  build: --release --zig=PATH --cache-dir=DIR --no-cache --report (one cache-report-v1 line on stderr)
+    \\  authority: --restrict --allow-read=DIR --allow-write=DIR --allow-endpoint=IP:PORT --allow-clock
+    \\             --allow-random[=SEED] --allow-env[=NAME,...] --allow-host --allow-all
+    \\  `mylang --help` lists every command
+    \\
+;
+
+/// The guest `zig`: `ZIG`, else `MYLANG_ZIG`, else `zig` from `PATH`; `--zig` outranks it.
+pub fn zigPath(init: std.process.Init) []const u8 {
+    return init.environ_map.get("ZIG") orelse init.environ_map.get("MYLANG_ZIG") orelse "zig";
+}
+
+/// Parse a `build` or `run` command line, or print `usage` (or the retirement an option
+/// names) and return null.
+pub fn parseRequest(init: std.process.Init, command: cli_args.Command, args: []const []const u8, usage: []const u8) Error!?cli_args.Request {
+    var failure: cli_args.Failure = .usage;
+    const request = cli_args.parse(init.arena.allocator(), command, args, zigPath(init), &failure) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.Usage => {
+            switch (failure) {
+                .usage => try writeStderr(init, usage),
+                .retired => |message| try writeStderr(init, try std.fmt.allocPrint(init.arena.allocator(), "mylang: {s}\n", .{message})),
+            }
+            return null;
+        },
+    };
+    return request;
+}
+
+/// `mylang run` and `run-project` (`name`): the same command; a project entry is found
+/// from the file.
+pub fn runCommand(init: std.process.Init, name: []const u8, args: []const []const u8) Error!u8 {
+    const request = try parseRequest(init, .run, args, run_usage) orelse return 2;
+    return run(init, request, name);
+}
+
+fn writeStderr(init: std.process.Init, text: []const u8) Error!void {
+    std.Io.File.stderr().writeStreamingAll(init.io, text) catch return error.WriteFailed;
+}
+
 /// Build `request.path` and run it as `command` (`run`, `run-project` or `build`).
 pub fn run(init: std.process.Init, request: cli_args.Request, command: []const u8) Error!u8 {
     const a = init.arena.allocator();
@@ -42,6 +95,8 @@ pub fn run(init: std.process.Init, request: cli_args.Request, command: []const u
     defer discard(init.io, directory);
     const absolute = std.Io.Dir.cwd().realPathFileAlloc(init.io, directory, a) catch |err| return hostFailure(init, command, "create", err);
     options.output = try std.fs.path.join(a, &.{ absolute, std.fs.path.stem(request.path) });
+    // `--no-cache` builds through a cache private to this run, removed with its directory.
+    if (request.no_cache) options.cache = try privateCache(init, absolute);
     _ = pipeline.buildRun(init, request.path, options, budget, &report) catch |err| {
         try emit(init, report.items, json);
         return switch (err) {
@@ -57,6 +112,15 @@ pub fn run(init: std.process.Init, request: cli_args.Request, command: []const u
     return status;
 }
 
+/// An empty private cache under `base` for `build --no-cache` and `test --no-cache`; the
+/// build and the runner create its directories, and the caller removes it with `discard`.
+pub fn privateCache(init: std.process.Init, base: []const u8) error{OutOfMemory}![]const u8 {
+    const directory = try std.fmt.allocPrint(init.arena.allocator(), "{s}/no-cache-{d}", .{ base, std.os.linux.getpid() });
+    // A directory a killed run with the same process id left behind must not be read.
+    discard(init.io, directory);
+    return directory;
+}
+
 /// Report a failure of the host around the program (its directory, its process) and
 /// return the host-failure status.
 fn hostFailure(init: std.process.Init, command: []const u8, what: []const u8, err: anyerror) Error!u8 {
@@ -66,7 +130,7 @@ fn hostFailure(init: std.process.Init, command: []const u8, what: []const u8, er
 }
 
 /// Remove a run's private directory; one left behind costs disk, not correctness.
-fn discard(io: std.Io, directory: []const u8) void {
+pub fn discard(io: std.Io, directory: []const u8) void {
     std.Io.Dir.cwd().deleteTree(io, directory) catch return;
 }
 
@@ -136,6 +200,7 @@ fn execute(init: std.process.Init, program: []const u8, settings: cli_args.Run, 
     // ceiling, and a stack deep enough for its frame budget.
     restoreAddressSpace(init.environ_map);
     deepenStack(frames);
+    const started = std.Io.Timestamp.now(init.io, .awake);
     var child = std.process.spawn(init.io, .{ .argv = argv, .environ_map = &environment, .stderr = .pipe }) catch |err| return hostFailure(init, "run", "start", err);
     if (json) {
         var buffer: [4096]u8 = undefined;
@@ -144,6 +209,11 @@ fn execute(init: std.process.Init, program: []const u8, settings: cli_args.Run, 
         std.Io.File.stderr().writeStreamingAll(init.io, try translate(a, captured)) catch return error.WriteFailed;
     } else try forward(init, &child);
     const term = child.wait(init.io) catch |err| return hostFailure(init, "run", "wait for", err);
+    if (settings.timings) {
+        const elapsed: u64 = @intCast(@max(started.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds, 0));
+        const line = try std.fmt.allocPrint(a, "timings: native_ns={d}\n", .{elapsed});
+        std.Io.File.stderr().writeStreamingAll(init.io, line) catch return error.WriteFailed;
+    }
     return switch (term) {
         .exited => |code| code,
         .signal => |signal| @intCast(@min(255, 128 + @as(u32, @backingInt(signal)))),

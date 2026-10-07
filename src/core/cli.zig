@@ -58,6 +58,12 @@ const dropped_test_flags = [_][]const u8{
     "--bench-timeout-ms",
 };
 
+/// `build` and `run` flags `mylang test` has no use for, with the reason (S5-B2).
+const test_only_retired = [_]Retirement{
+    .{ .name = "--report", .message = "`mylang test --report` printed the old runner's work report (retired, S5-B2); `--json` reports each test, `cached` for a replayed receipt" },
+    .{ .name = "--timings", .message = "`mylang test --timings` was retired with the old runner (S5-B2); `mylang run FILE.my --timings` times one program" },
+};
+
 /// Run `args` (argv, the program name first) when it names a command of the new
 /// core or a retired one, returning its exit status; null leaves it to the caller.
 pub fn dispatch(init: std.process.Init, args: []const []const u8) Error!?u8 {
@@ -68,7 +74,7 @@ pub fn dispatch(init: std.process.Init, args: []const []const u8) Error!?u8 {
         for (retired_commands) |retired| if (std.mem.eql(u8, command, retired.name)) break :status try refuse(init, command, retired.message);
         if (retiredFlag(rest)) |retired| break :status try refuse(init, command, retired.message);
         if (std.mem.eql(u8, command, "build")) break :status try buildCommand(init, rest);
-        if (std.mem.eql(u8, command, "run") or std.mem.eql(u8, command, "run-project")) break :status try runCommand(init, command, rest);
+        if (std.mem.eql(u8, command, "run") or std.mem.eql(u8, command, "run-project")) break :status try cli_run.runCommand(init, command, rest);
         if (std.mem.eql(u8, command, "test")) break :status try testCommand(init, rest);
         for ([_][]const u8{ "dump-ir", "dump-typed", "coverage" }) |name| if (std.mem.eql(u8, command, name)) break :status try core_main.developer(init, args);
         return null;
@@ -97,52 +103,19 @@ fn write(init: std.process.Init, text: []const u8) Error!void {
 
 const build_usage =
     \\usage: mylang build <file.my> (-o <output> | --run [run options] [-- ARGS...]) [--release] [--link FILE.c]... [--emit-llvm PATH]
-    \\       [--cache-dir DIR] [--zig PATH] [--cache-report] [--verify-cache] [--stats] [--diagnostics=text|json]
+    \\       [--cache-dir DIR] [--no-cache] [--zig PATH] [--report] [--cache-report] [--verify-cache] [--stats] [--diagnostics=text|json]
     \\
 ;
-
-const run_usage =
-    \\usage: mylang run <file.my> [options] [-- ARGS...]
-    \\       mylang run-project <entry.my> [options] [-- ARGS...]
-    \\  builds the program natively and runs it; every value after -- is a guest argument
-    \\  budgets (each takes --flag N or --flag=N; N is a positive integer):
-    \\    --max-steps N      instruction ceiling (default: unbounded)
-    \\    --max-frames N     call-depth ceiling (default: unbounded); each frame reserves 32 KiB of --max-memory
-    \\    --timeout N        elapsed-time cap in seconds
-    \\    --max-memory SIZE  guest byte ceiling, K/M/G suffixes (default 4G; MYLANG_MEMORY_LIMIT names the same)
-    \\  output: --print-result --diagnostics=text|json
-    \\  build: --release --zig=PATH --cache-dir=DIR
-    \\  authority: --restrict --allow-read=DIR --allow-write=DIR --allow-endpoint=IP:PORT --allow-clock
-    \\             --allow-random[=SEED] --allow-env[=NAME,...] --allow-host --allow-all
-    \\  `mylang --help` lists every command
-    \\
-;
-
-fn zigPath(init: std.process.Init) []const u8 {
-    return init.environ_map.get("ZIG") orelse init.environ_map.get("MYLANG_ZIG") orelse "zig";
-}
-
-fn parseRequest(init: std.process.Init, command: cli_args.Command, args: []const []const u8, usage: []const u8) Error!?cli_args.Request {
-    var failure: cli_args.Failure = .usage;
-    const request = cli_args.parse(init.arena.allocator(), command, args, zigPath(init), &failure) catch |err| switch (err) {
-        error.OutOfMemory => return error.OutOfMemory,
-        error.Usage => {
-            switch (failure) {
-                .usage => try write(init, usage),
-                .retired => |message| try write(init, try std.fmt.allocPrint(init.arena.allocator(), "mylang: {s}\n", .{message})),
-            }
-            return null;
-        },
-    };
-    return request;
-}
 
 /// `mylang build FILE.my -o OUT` and `build --run`.
 fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
-    const request = try parseRequest(init, .build, args, build_usage) orelse return 2;
+    const request = try cli_run.parseRequest(init, .build, args, build_usage) orelse return 2;
     if (request.run != null) return cli_run.run(init, request, "build");
+    var options = request.build;
+    if (request.no_cache) options.cache = try cli_run.privateCache(init, options.cache);
+    defer if (request.no_cache) cli_run.discard(init.io, options.cache);
     var report: std.ArrayList(u8) = .empty;
-    const status = pipeline.build(init, request.path, request.build, &report) catch |err| switch (err) {
+    const status = pipeline.build(init, request.path, options, &report) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.SourceError, error.Unsupported => 1,
         error.PolicyDenied => 3,
@@ -153,19 +126,13 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     return status;
 }
 
-/// `mylang run` and `run-project`: the same command; a project entry is found from the file.
-fn runCommand(init: std.process.Init, command: []const u8, args: []const []const u8) Error!u8 {
-    const request = try parseRequest(init, .run, args, run_usage) orelse return 2;
-    return cli_run.run(init, request, command);
-}
-
 /// `mylang test`: the new core's runner (`test_runner.zig`), with the old CLI's
 /// `--flag=VALUE` spellings, `--qbe` ignored and `--whole-program` accepted (S5-D6).
 fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     const a = init.arena.allocator();
     var normalized: std.ArrayList([]const u8) = .empty;
     // A later `--zig` wins over the environment's.
-    try normalized.appendSlice(a, &.{ "--zig", zigPath(init) });
+    try normalized.appendSlice(a, &.{ "--zig", cli_run.zigPath(init) });
     var index: usize = 0;
     while (index < args.len) : (index += 1) {
         const arg = args[index];
@@ -175,6 +142,7 @@ fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
             return refuse(init, "test", try std.fmt.allocPrint(a, "{s} was dropped with the old test runner (S5-D6)", .{name}));
         };
         if (cli_args.unported(arg)) |message| return refuse(init, "test", message);
+        for (test_only_retired) |retired| if (std.mem.eql(u8, name, retired.name)) return refuse(init, "test", retired.message);
         if (std.mem.eql(u8, arg, "--whole-program")) continue;
         if (std.mem.eql(u8, name, "--qbe")) {
             if (split == arg.len) index += 1;

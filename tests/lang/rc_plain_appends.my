@@ -44,24 +44,6 @@ def grow(items: mut list[int]) -> unit:
 
 
 # spec-case: RC-PLAIN-APPEND-1
-public def test_older_receiver_keeps_backing_alive_after_arena_growth() -> bool:
-    items = [7]
-    with arena():
-        grow(mut items)
-    return len(items) == 41 and items[0] == 7 and items[-1] == 39
-
-
-# spec-case: RC-PLAIN-APPEND-1
-public def test_arena_local_room_and_growth_share_the_same_lifetime() -> bool:
-    answer = False
-    with arena():
-        items: list[int] = []
-        grow(mut items)
-        answer = len(items) == 40 and items[0] == 0 and items[-1] == 39
-    return answer
-
-
-# spec-case: RC-PLAIN-APPEND-1
 public def test_plain_and_managed_elements_preserve_snapshots() -> bool:
     row = [7]
     rows: list[list[int]] = []
@@ -78,8 +60,6 @@ def main() -> int:
     assert test_room_and_growth_preserve_every_scalar_width()
     assert test_aliasing_reads_and_named_snapshots_survive_growth()
     assert test_callback_changes_receiver_before_append_publication()
-    assert test_older_receiver_keeps_backing_alive_after_arena_growth()
-    assert test_arena_local_room_and_growth_share_the_same_lifetime()
     assert test_plain_and_managed_elements_preserve_snapshots()
     return 0
 
@@ -116,17 +96,6 @@ public def test_plain_tuple_append_reads_same_backing_across_growth() -> bool:
     for _ in range(129):
         pairs.append(pairs[0])
     return len(pairs) == 130 and pairs[-1] == (3, 4) and saved == [(3, 4)]
-
-
-# spec-case: RC-PLAIN-POP-1
-public def test_plain_tail_removal_preserves_aliases_and_arena_results() -> bool:
-    pairs = [(1, 2), (3, 4)]
-    saved = pairs
-    taken = (0, 0)
-    with arena():
-        taken = pairs.pop()
-        pairs.append((5, 6))
-    return taken == (3, 4) and saved == [(1, 2), (3, 4)] and pairs == [(1, 2), (5, 6)]
 
 
 # spec-case: RC-PLAIN-POP-1

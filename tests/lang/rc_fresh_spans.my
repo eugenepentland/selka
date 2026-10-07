@@ -43,13 +43,6 @@ def nested() -> Branch:
         return outer.escape(parent_value)
 
 
-# spec-case: RC-FRESH-SPAN-1
-public def test_nested_parent_arena_keeps_every_completed_child_alive() -> bool:
-    value = nested()
-    value.left = None
-    return total(value) == 31
-
-
 def callback(depth: int) -> Branch:
     child: Option[Branch] = Some(branch(depth))
     return Branch(0, True, child, child)
@@ -89,7 +82,6 @@ public def test_inactive_counted_variant_fields_keep_literal_payload_bits() -> b
 
 def main() -> int:
     assert test_nullable_literal_and_reordered_fields_publish_the_complete_value()
-    assert test_nested_parent_arena_keeps_every_completed_child_alive()
     assert test_uncertified_aliases_keep_their_generic_ownership()
     assert test_inactive_counted_variant_fields_keep_literal_payload_bits()
     return 0

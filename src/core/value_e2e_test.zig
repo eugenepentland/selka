@@ -600,6 +600,18 @@ test "xs.sort() and sorted(xs) of integers, floats and text give the old core's 
     try std.testing.expect(try matches(arena.allocator(), "v_sort", v_sort_output, 0));
 }
 
+const v_dict_view_len_output =
+    \\3 3 3
+    \\
+;
+
+// spec: NEW-CORE-S5-VIEW-LEN-1
+test "len of a dictionary's keys or values view is an int, and a program may return it" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try matches(arena.allocator(), "v_dict_view_len", v_dict_view_len_output, 2));
+}
+
 const v_units_output =
     \\455 122
     \\0 True

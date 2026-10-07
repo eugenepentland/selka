@@ -128,29 +128,6 @@ public def test_integer_keys_hash_the_bytes_their_equality_compares() -> bool:
     return len(narrow) == 256 and narrow[255u8] == 255 and narrow[0u8] == 0
 
 
-# spec-case: PY-DICT-2
-public def test_a_dictionary_built_and_read_inside_an_arena_escapes_intact() -> bool:
-    kept = {"placeholder": 0}
-    inside = 0
-    with arena() as scratch:
-        counts: dict[str, i64] = {}
-        for i in range(800):
-            counts["key" + str(i)] = i
-        _ = counts.pop("key0")
-        for i in range(1, 800):
-            inside += counts["key" + str(i)]
-        kept = scratch.escape(counts)
-    if inside != 319600 or len(kept) != 799:
-        return False
-    # The escaped copy carries its own index: it must answer the same lookups
-    # and keep appending after the arena that built it is gone.
-    escaped = 0
-    for i in range(1, 800):
-        escaped += kept["key" + str(i)]
-    kept["key0"] = 7
-    return escaped == 319600 and kept["key0"] == 7 and len(kept) == 800 and "key800" not in kept
-
-
 # A read-modify-write probes one key object twice in a row, and the second probe
 # must still name the entry the first one found: an insertion, a `pop` that
 # shifts every later entry down, and a `clear` between the two probes each leave

@@ -1,0 +1,43 @@
+source_commit=e3e155b5e5518a7cf32fa05f2d5a4d30fe4f53d5
+$ scripts/build-slot.sh gate -- bash -c '"$@"; result=$?; exit "$result"' -- scripts/build-slot.sh build -- python3 experiments/new-core-s3-20261006/wave-a/exclusive_core.py -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/claude-s5-b2/experiments/new-core-s5-20261007/b2/qualify-flags-01/install-core.seconds zig build install --summary all
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: gate slot 1 after 10s (all 1 gate slot(s) busy)
+core-exclusive: all 3 build slots held; other-build wait=55.287s; gate wrapper excludes gate execution
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 299/911 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 18 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 5759 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 299 file(s) in scope
+Build Summary: 18/18 steps succeeded
+install success
++- install mylang cached
+|  +- compile exe mylang debug native cached 7ms MaxRSS:42M
+|  |  +- run exe qbe-build-assets (qbe_build_assets) cached
+|  |  |  +- compile exe qbe-build-assets debug native cached 6ms MaxRSS:42M
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:42M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 5ms
++- install qbe cached
+|  +- compile exe qbe fast native cached 13ms MaxRSS:41M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install board-trial cached
+|  +- compile exe board-trial debug native cached 8ms MaxRSS:41M
+|  |  +- options cached
+|  |  |  +- compile exe qbe fast native (reused)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install schematic-svg cached
+|  +- compile exe schematic-svg debug native cached 8ms MaxRSS:42M
+|  |  +- options (+1 more reused dependencies)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install mylang-io cached
+|  +- compile exe mylang-io debug native cached 8ms MaxRSS:41M
+|  |  +- options (+1 more reused dependencies)
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+

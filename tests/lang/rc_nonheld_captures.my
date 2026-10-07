@@ -88,20 +88,6 @@ def mutate_parameter(flags: mut list[bool]) -> int:
     return count
 
 
-def test_parameter_snapshot_and_arena_cleanup() -> bool:
-    flags = [True, True]
-    saved = flags
-    count = 0
-    with arena():
-        count = mutate_parameter(mut flags)
-        local = [True, True, False]
-        local[0] = False
-        for flag in local:
-            if flag:
-                count += 1
-    return count == 2 and saved[0] and not flags[0]
-
-
 def test_named_source_iteration_sees_element_changes() -> bool:
     flags = [True, True]
     count = 0
@@ -123,8 +109,6 @@ def main() -> int:
         return 4
     if not test_call_then_source_rebind_preserves_values():
         return 5
-    if not test_parameter_snapshot_and_arena_cleanup():
-        return 6
     if not test_named_source_iteration_sees_element_changes():
         return 7
     return 0

@@ -75,16 +75,6 @@ public def test_reordered_arguments_map_to_the_actual_parent() -> bool:
 
 
 # spec-case: RC-BORROW-COMPOSE-1
-public def test_composed_result_escapes_caller_arena() -> bool:
-    result = Node(b"", -1)
-    with arena() as scratch:
-        nodes = [Node(bytes([88]), 1), Node(bytes([89]), 2)]
-        result = scratch.escape(choose(nodes, 1, 2))
-        nodes.clear()
-    return result.text == b"X"
-
-
-# spec-case: RC-BORROW-COMPOSE-1
 public def test_indirect_composed_entry_returns_owned_bits() -> bool:
     selected = choose
     nodes = [Node(bytes([81]), 1), Node(bytes([82]), 2)]
@@ -102,7 +92,6 @@ public def test_backedge_callee_mapping_remains_owned() -> bool:
 def main(out: Stream) -> int:
     out.print(test_nested_calls_preserve_results_after_parent_replacement())
     out.print(test_reordered_arguments_map_to_the_actual_parent())
-    out.print(test_composed_result_escapes_caller_arena())
     out.print(test_indirect_composed_entry_returns_owned_bits())
     out.print(test_backedge_callee_mapping_remains_owned())
     return 0

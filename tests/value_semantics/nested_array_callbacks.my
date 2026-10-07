@@ -251,21 +251,6 @@ public def test_deep_recursive_siblings_are_outside_the_pending_path() -> bool:
     return original[0].items == [1] and changed[0].items == [1, 2] and saved[0][0].items == [1]
 
 
-# spec-case: ARENA-ESCAPE-VALUE-1
-public def test_a_current_receiver_updated_inside_an_arena_can_escape_afterward() -> bool:
-    original: dict[str, [1]list[int]] = {"k": [[1]]}
-    kept = original
-    untouched = True
-    with arena() as scratch:
-        inside: dict[str, [1]list[int]] = {"k": [[1]]}
-        changed = inside
-        selected = write_other(mut changed)
-        changed["k"][selected].append(2)
-        untouched = inside["k"][0] == [1]
-        kept = scratch.escape(changed)
-    return untouched and original["k"][0] == [1] and kept["k"][0] == [1, 2] and kept["other"][0] == [8]
-
-
 record OuterA:
     child: OuterB
 

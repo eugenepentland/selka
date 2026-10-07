@@ -425,10 +425,11 @@ const CoreInputs = struct {
 /// - `zig build core` installs `zig-out/bin/mylang-core`;
 /// - `zig build test-core` runs its unit tests and the end-to-end slice, split into
 ///   `-Dcore-shards=N` concurrent shards of one test binary (default 8; a
-///   `-Dtest-filter` run is one process);
+///   `-Dtest-filter` run is one process); it returns that step, which
+///   `zig build test` depends on (S5-C);
 /// - `-Dcore-diff=true` also builds each slice program with the old compiler
 ///   and requires the same stdout and exit status (it builds the old compiler).
-fn addCore(b: *std.Build, inputs: CoreInputs) void {
+fn addCore(b: *std.Build, inputs: CoreInputs) *std.Build.Step {
     const platform = b.createModule(.{ .root_source_file = b.path("src/config_core_tool_platform.zig") });
     const exe = b.addExecutable(.{ .max_rss = rss.compile, .name = "mylang-core", .root_module = b.createModule(.{
         .root_source_file = b.path("src/core/main.zig"),
@@ -486,7 +487,7 @@ fn addCore(b: *std.Build, inputs: CoreInputs) void {
     for ([_]*std.Build.Module{ exe.root_module, unit.root_module, cli }) |module| {
         module.addAnonymousImport("core_number_text_object", .{ .root_source_file = number_text.getEmittedBin() });
     }
-    const step = b.step("test-core", "Run the new core's unit tests and its end-to-end slice (not part of test)");
+    const step = b.step("test-core", "Run the new core's unit tests and its end-to-end slice");
     // Most of the root's time is end-to-end builds of guest programs, so shards
     // of the one binary run concurrently; each test uses its own temporary tree.
     const requested = b.option(usize, "core-shards", "test-core: concurrent shards of the core test root (default 8)") orelse 8;
@@ -498,6 +499,7 @@ fn addCore(b: *std.Build, inputs: CoreInputs) void {
         if (shards > 1) guardian.announceShard(run, index, shards);
         step.dependOn(&run.step);
     }
+    return step;
 }
 
 pub fn build(b: *std.Build) void {
@@ -694,31 +696,31 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .imports = host_imports,
     });
-    // `-Dcompiler-only` installs the compiler, QBE and the prebuilt runtime but
-    // not the three application runners. Each runner links its own copy of the
-    // whole compiler, so a ReleaseFast install otherwise optimizes that code four
-    // times; a compiler built only to measure guest programs needs none of them.
-    // The application tests under `tests/application_comparison` and
+    // S5-D5 retires the three host applications (`board-trial`, `schematic-svg`,
+    // `mylang-io`) with host functions, so the default install no longer builds
+    // them; `zig build host-apps` installs them until S5-D deletes their code. The
+    // application tests under `tests/application_comparison` and
     // `tests/development_velocity` read the runners from `zig-out/bin`, so they
-    // need the default install.
-    addCore(b, .{ .target = target, .optimize = optimize, .front_end = core, .old_compiler = exe, .filters = test_filters, .test_runner = guardian.testRunner(guardian_dep), .build_assets = build_assets });
-    const compiler_only = b.option(bool, "compiler-only", "Install only mylang, qbe and the runtime, not board-trial, schematic-svg or mylang-io (for measurement installs)") orelse false;
+    // need that step. `-Dcompiler-only` is still accepted, as the default now.
+    const core_tests = addCore(b, .{ .target = target, .optimize = optimize, .front_end = core, .old_compiler = exe, .filters = test_filters, .test_runner = guardian.testRunner(guardian_dep), .build_assets = build_assets });
+    _ = b.option(bool, "compiler-only", "Accepted for older scripts: the default install is already only mylang and qbe (S5-D5)");
+    const host_apps = b.step("host-apps", "Install the retired host applications board-trial, schematic-svg and mylang-io (not part of install or test)");
     const board_runner = b.addExecutable(.{ .max_rss = rss.compile, .name = "board-trial", .root_module = board_module });
-    if (!compiler_only) b.installArtifact(board_runner);
+    host_apps.dependOn(&b.addInstallArtifact(board_runner, .{}).step);
     const schematic_runner = b.addExecutable(.{ .max_rss = rss.compile, .name = "schematic-svg", .root_module = b.createModule(.{
         .root_source_file = b.path("src/schematic/runner.zig"),
         .target = target,
         .optimize = optimize,
         .imports = host_imports,
     }) });
-    if (!compiler_only) b.installArtifact(schematic_runner);
+    host_apps.dependOn(&b.addInstallArtifact(schematic_runner, .{}).step);
     const byte_io_runner = b.addExecutable(.{ .max_rss = rss.compile, .name = "mylang-io", .root_module = b.createModule(.{
         .root_source_file = b.path("src/byte_io/runner.zig"),
         .target = target,
         .optimize = optimize,
         .imports = host_imports,
     }) });
-    if (!compiler_only) b.installArtifact(byte_io_runner);
+    host_apps.dependOn(&b.addInstallArtifact(byte_io_runner, .{}).step);
     const byte_io_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
         .root_source_file = b.path("src/byte_io/tests.zig"),
         .target = target,
@@ -771,7 +773,7 @@ pub fn build(b: *std.Build) void {
     compile_tests.dependOn(&integration.step);
     const run_integration = focused(b.addRunArtifact(integration), rss.suite);
     forwardFilters(b, run_integration, test_filters);
-    const test_step = b.step("test", "Run interpreter, checker, CLI, and tooling regression tests");
+    const test_step = b.step("test", "Run the compiler, new-core, CLI, guest-language and tooling regression tests");
     b.step("test-interpreter", "Run the default interpreter acceptance suite").dependOn(test_step);
     guardian.addAllChecks(b, guardian_exe, test_step, .{});
     boundedChecks(test_step);
@@ -813,13 +815,11 @@ pub fn build(b: *std.Build) void {
     const run_byte_io_unit = bounded(b.addRunArtifact(byte_io_unit), rss.host_suite);
     cached(run_byte_io_unit, "byte_io");
     byte_io_step.dependOn(&run_byte_io_unit.step);
-    test_step.dependOn(&run_byte_io_unit.step);
     guardian.addAllChecks(b, guardian_exe, byte_io_step, .{});
     boundedChecks(byte_io_step);
     dependOnAll(test_step, cli_runs);
     const run_board_unit = bounded(b.addRunArtifact(board_unit), rss.host_suite);
     cached(run_board_unit, "board");
-    test_step.dependOn(&run_board_unit.step);
     const schematic_step = b.step("test-schematic", "Verify guest SVG generation against Netlisp connectivity and source mutations");
     const run_schematic_unit = bounded(b.addRunArtifact(schematic_unit), rss.host_suite);
     cached(run_schematic_unit, "schematic");
@@ -832,7 +832,6 @@ pub fn build(b: *std.Build) void {
     audit_runtime.dependOn(&run_byte_io_unit.step);
     audit_runtime.dependOn(&run_schematic_unit.step);
     schematic_step.dependOn(&run_schematic_unit.step);
-    test_step.dependOn(&run_schematic_unit.step);
     guardian.addAllChecks(b, guardian_exe, schematic_step, .{});
     boundedChecks(schematic_step);
     const board_step = b.step("test-board-trial", "Verify the bounded board-validation trial against its independent oracle");
@@ -986,7 +985,6 @@ pub fn build(b: *std.Build) void {
     run_native_cow_test.expectExitCode(0);
     native_heap_step.dependOn(&run_native_cow_test.step);
     compile_tests.dependOn(&native_cow_test.step);
-    test_step.dependOn(&run_native_cow_test.step);
     qbe_step.dependOn(&run_native_cow_test.step);
     native_heap_step.dependOn(&run_native_arena_test.step);
     native_heap_step.dependOn(&run_native_heap_test.step);
@@ -994,8 +992,6 @@ pub fn build(b: *std.Build) void {
     boundedChecks(native_heap_step);
     compile_tests.dependOn(&native_heap_test.step);
     compile_tests.dependOn(&native_arena_test.step);
-    test_step.dependOn(&run_native_heap_test.step);
-    test_step.dependOn(&run_native_arena_test.step);
     qbe_step.dependOn(&run_native_heap_test.step);
     qbe_step.dependOn(&run_native_arena_test.step);
     // ERROR-TRACE-6: the trace recorders keep the registers their convention promises.
@@ -1046,7 +1042,6 @@ pub fn build(b: *std.Build) void {
     const error_trace_abi_step = b.step("test-error-trace-abi", "Verify the error trace recorders keep the registers their calling conventions promise");
     error_trace_abi_step.dependOn(&run_error_trace_abi_test.step);
     compile_tests.dependOn(&error_trace_abi_test.step);
-    test_step.dependOn(&run_error_trace_abi_test.step);
     qbe_step.dependOn(&run_error_trace_abi_test.step);
     const native_test_step = b.step("test-native-tests", "Verify native guest test discovery, execution, fixtures, and affected-test reuse");
     const native_test_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
@@ -1182,59 +1177,11 @@ pub fn build(b: *std.Build) void {
     oracle_run.addArgs(&.{ "tests/lang", "tests/fixtures/interfaces/main.my", "tests/fixtures/interfaces_generic/main.my", "tests/fixtures/incremental/main.my" });
     interfaces_step.dependOn(&oracle_run.step);
     test_step.dependOn(interfaces_step);
-    // MODULE-COMPILE-1..3: every module of `tests/lang` and the fixtures,
-    // compiled on its own from its imports' interfaces, emits the whole
-    // program's units key for key (Debug, and ReleaseFast switches) and links
-    // into the whole program's executable; the default build of each program
-    // (module by module, MODULE-SCHEDULE-1..4) makes the `--whole-program`
-    // build's executable and an unchanged rebuild compiles nothing; and an
-    // incremental default build after seeded edits builds what a clean
-    // whole-program build builds.
-    const module_compile_step = b.step("test-module-compile", "Per-module compilation and the default per-module build against the whole-program build, and its build differential");
-    const module_programs = [_][]const u8{ "tests/fixtures/interfaces/main.my", "tests/fixtures/interfaces_generic/main.my", "tests/fixtures/incremental/main.my", "tests/fixtures/module_compile/main.my", "tests/fixtures/module_projects/main.my" };
-    const module_oracle = driver(b, "python3 tests/module_compile_oracle.py", rss.driver, "module_compile");
-    module_oracle.addArgs(&.{ "python3", "tests/module_compile_oracle.py" });
-    module_oracle.addArtifactArg(exe);
-    module_oracle.addArg("tests/lang");
-    module_oracle.addArgs(&module_programs);
-    module_compile_step.dependOn(&module_oracle.step);
-    const module_release = driver(b, "python3 tests/module_compile_oracle.py --release", rss.driver, "module_compile");
-    module_release.addArgs(&.{ "python3", "tests/module_compile_oracle.py", "--release" });
-    module_release.addArtifactArg(exe);
-    module_release.addArgs(&module_programs);
-    module_compile_step.dependOn(&module_release.step);
-    const module_build = driver(b, "python3 tests/module_build_oracle.py", rss.driver, "module_compile");
-    module_build.addArgs(&.{ "python3", "tests/module_build_oracle.py" });
-    module_build.addArtifactArg(exe);
-    module_build.addArg("tests/lang");
-    module_build.addArgs(&module_programs);
-    module_compile_step.dependOn(&module_build.step);
-    // MODULE-CHECK-1: the default `check` (module by module) of the same
-    // programs against the whole-program check.
-    const module_check = driver(b, "python3 tests/module_check_oracle.py", rss.driver, "module_compile");
-    module_check.addArgs(&.{ "python3", "tests/module_check_oracle.py" });
-    module_check.addArtifactArg(exe);
-    module_check.addArg("tests/lang");
-    module_check.addArgs(&module_programs);
-    module_compile_step.dependOn(&module_check.step);
-    // MODULE-TEST-1: the default `test` (module by module) of the same
-    // programs against `test --whole-program`.
-    const module_tests = driver(b, "python3 tests/module_test_oracle.py", rss.driver, "module_compile");
-    module_tests.addArgs(&.{ "python3", "tests/module_test_oracle.py" });
-    module_tests.addArtifactArg(exe);
-    module_tests.addArg("tests/lang");
-    module_tests.addArgs(&module_programs);
-    module_compile_step.dependOn(&module_tests.step);
-    const module_diff = driver(b, "python3 tests/module_build_diff.py", rss.driver, "module_compile");
-    module_diff.addArgs(&.{ "python3", "tests/module_build_diff.py", "--steps", "20" });
-    module_diff.addArtifactArg(exe);
-    module_compile_step.dependOn(&module_diff.step);
-    // MODULE-PROJECT-1: the same differential over a project with a `mylang.json`.
-    const project_diff = driver(b, "python3 tests/module_build_diff.py --project tests/fixtures/module_projects", rss.driver, "module_compile");
-    project_diff.addArgs(&.{ "python3", "tests/module_build_diff.py", "--project", "tests/fixtures/module_projects", "--steps", "12" });
-    project_diff.addArtifactArg(exe);
-    module_compile_step.dependOn(&project_diff.step);
-    test_step.dependOn(module_compile_step);
+    // S5-C: `test-module-compile` (MODULE-COMPILE-*, MODULE-CHECK-1, MODULE-TEST-1,
+    // MODULE-PROJECT-1) compared the old back end's per-module `compile-module`
+    // records, builds and checks with its whole-program build under the retired
+    // runtime flags. The new core builds whole programs, so the step is gone;
+    // S5-D deletes its drivers (experiments/new-core-s5-20261007/c3/gate-changes.md).
     // The repair-round packages ship two Python drivers beside their Zig tests:
     // the parser-hint/classifier agreement (static, then end to end against this
     // compiler) and the friction harvest over its replay fixture. Registering
@@ -1282,35 +1229,28 @@ pub fn build(b: *std.Build) void {
     identity_run.expectExitCode(0);
     identity_step.dependOn(&identity_run.step);
     test_step.dependOn(identity_step);
-    // The boundary matrix runs every carried shape through both native backends
-    // and requires one answer, so a shape that satisfies its contract on QBE and
-    // not on LLVM fails here instead of on whichever backend nobody ran.
-    const boundary_step = b.step("test-native-boundary", "Verify every carried boundary shape agrees across the QBE and LLVM backends");
-    const boundary_self = driver(b, "python3 tests/native_boundary_matrix.py --self-test", rss.script, "boundary_self");
-    boundary_self.addArgs(&.{ "python3", "tests/native_boundary_matrix.py", "--self-test" });
-    boundary_step.dependOn(&boundary_self.step);
-    const boundary_run = driver(b, "python3 tests/native_boundary_matrix.py --compiler", rss.parity, "boundary");
-    boundary_run.addArgs(&.{ "python3", "tests/native_boundary_matrix.py", "--compiler" });
-    boundary_run.addArtifactArg(exe);
-    boundary_step.dependOn(&boundary_run.step);
-    test_step.dependOn(boundary_step);
+    // S5-C: `test-native-boundary` ran every carried shape through `mylang invoke`
+    // on the QBE and LLVM back ends. `invoke` is retired (S5-D5) and the new core
+    // has one back end, so the step is gone; S5-D deletes its driver.
     // The LLVM adapter's unit tests pin its IL parsing, overflow-intrinsic
     // rewrites, frame map and declaration attributes. Nothing else fails if the
     // adapter silently stops matching a shape, so they run in the gate.
-    const adapter_step = b.step("test-llvm-adapter", "Run the LLVM adapter's unit tests");
+    // S5-C: the adapter belongs to the old QBE-to-LLVM translator, so it no longer
+    // runs in `zig build test`; S5-D deletes it with the translator.
+    const adapter_step = b.step("test-llvm-adapter", "Run the LLVM adapter's unit tests (old back end; not part of test)");
     const adapter_run = driver(b, "python3 -m unittest test_adapter", rss.driver, "adapter");
     adapter_run.addArgs(&.{ "python3", "-m", "unittest", "test_adapter" });
     adapter_run.setCwd(b.path("experiments/llvm-backend"));
     adapter_step.dependOn(&adapter_run.step);
-    test_step.dependOn(adapter_step);
     // The C runtime's own suites (heap, collections, text, dictionary, regions,
     // print, text views) under UBSan. Two of them broke silently in merges when
     // only lanes ran them by hand, so they run in the gate.
-    const native_memory_step = b.step("test-native-memory", "Run the C runtime suites under UBSan");
+    // S5-C: these suites test the old C runtime only (GC, two-count RC, arenas),
+    // so they no longer run in `zig build test`; S5-D deletes them with it.
+    const native_memory_step = b.step("test-native-memory", "Run the old C runtime suites under UBSan (not part of test)");
     const native_memory_run = driver(b, "python3 scripts/test_native_memory.py", rss.driver, "native_memory");
     native_memory_run.addArgs(&.{ "python3", "scripts/test_native_memory.py" });
     native_memory_step.dependOn(&native_memory_run.step);
-    test_step.dependOn(native_memory_step);
     // The inner loop's own machinery: the change-to-test mapping behind
     // `scripts/affected_tests.py`, and the check that every repository file a
     // cached test root names is one of its declared inputs.
@@ -1345,56 +1285,41 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&guest_tests.step);
     guardian.addAllChecks(b, guardian_exe, guest_step, .{});
     boundedChecks(guest_step);
-    const lang_step = b.step("test-lang", "Run the unit root's migrated language-level guest tests under RC and under stressed GC");
-    // RC-DEFAULT-1: the suite runs once under the default reference-counting
-    // runtime and once under the `--gc-runtime` opt-out, where the collector
-    // stress the Zig root's `native_execute` tests ask for is a run-wide flag,
-    // so every migrated program keeps that coverage too.
-    const lang_tests = bounded(b.addRunArtifact(exe), rss.suite);
-    lang_tests.addArgs(&.{ "test", "tests/lang", "--cache-dir", ".mylang-cache/lang-tests" });
-    lang_tests.setCwd(b.path("."));
-    lang_tests.has_side_effects = true;
-    lang_step.dependOn(&lang_tests.step);
-    test_step.dependOn(&lang_tests.step);
-    const lang_gc_step = b.step("test-lang-gc", "Run the language-level guest tests under the tracing collector with --gc-stress");
-    const lang_gc_tests = bounded(b.addRunArtifact(exe), rss.suite);
-    lang_gc_tests.addArgs(&.{ "test", "tests/lang", "--gc-runtime", "--cache-dir", ".mylang-cache/lang-tests-gc", "--gc-stress" });
-    lang_gc_tests.setCwd(b.path("."));
-    lang_gc_tests.has_side_effects = true;
-    lang_gc_step.dependOn(&lang_gc_tests.step);
-    lang_step.dependOn(&lang_gc_tests.step);
-    test_step.dependOn(&lang_gc_tests.step);
+    const lang_step = b.step("test-lang", "Run tests/lang and tests/value_semantics through mylang test, at debug and at release with the leak and fact checks");
+    // S5-C: the language-level guest tests run on the new core in both of its
+    // modes: the debug build, and the release build with its facts asserted
+    // (`--verify-facts`) and the runtime's leak check on (`MYL_CORE_LEAKCHECK=1`:
+    // a test that ends with blocks live fails). The retired runtime switches went
+    // with their steps (S5-D4): `test-lang-gc` (`--gc-runtime --gc-stress`),
+    // `test-value-semantics` and `test-legacy-sharing`. Value semantics is the
+    // default, so `tests/value_semantics` runs here without its switch.
+    const LangSuite = struct { dir: []const u8, cache: []const u8 };
+    for ([_]LangSuite{
+        .{ .dir = "tests/lang", .cache = ".mylang-cache/lang-tests" },
+        .{ .dir = "tests/value_semantics", .cache = ".mylang-cache/value-semantics-tests" },
+    }) |suite| {
+        const debug = bounded(b.addRunArtifact(exe), rss.suite);
+        debug.setName(b.fmt("mylang test {s}", .{suite.dir}));
+        debug.addArgs(&.{ "test", suite.dir, "--cache-dir", suite.cache });
+        debug.setCwd(b.path("."));
+        debug.has_side_effects = true;
+        lang_step.dependOn(&debug.step);
+        test_step.dependOn(&debug.step);
+        // The variable reaches the test children through `env`, since a Run step
+        // may not carry an environment map of its own (`requireLiveEnvironment`).
+        const release = bounded(b.addSystemCommand(&.{ "env", "MYL_CORE_LEAKCHECK=1" }), rss.suite);
+        release.setName(b.fmt("mylang test {s} --release --verify-facts (leak check)", .{suite.dir}));
+        release.addArtifactArg(exe);
+        release.addArgs(&.{ "test", suite.dir, "--release", "--verify-facts", "--cache-dir", b.fmt("{s}-release", .{suite.cache}) });
+        release.setCwd(b.path("."));
+        release.has_side_effects = true;
+        lang_step.dependOn(&release.step);
+        test_step.dependOn(&release.step);
+    }
     guardian.addAllChecks(b, guardian_exe, lang_step, .{});
     boundedChecks(lang_step);
-    guardian.addAllChecks(b, guardian_exe, lang_gc_step, .{});
-    boundedChecks(lang_gc_step);
-    const legacy_step = b.step("test-legacy-sharing", "Run migration-window sharing tests under --legacy-sharing");
-    const legacy_tests = bounded(b.addRunArtifact(exe), rss.suite);
-    legacy_tests.addArgs(&.{ "test", "tests/legacy", "--legacy-sharing", "--cache-dir", ".mylang-cache/legacy-tests", "--gc-stress" });
-    legacy_tests.setCwd(b.path("."));
-    legacy_tests.has_side_effects = true;
-    legacy_step.dependOn(&legacy_tests.step);
-    test_step.dependOn(&legacy_tests.step);
-    guardian.addAllChecks(b, guardian_exe, legacy_step, .{});
-    boundedChecks(legacy_step);
-    // VALUE-SEMANTICS-1: the guest tests that assert value semantics run
-    // with the switch on, under the default RC runtime and, like `test-lang`,
-    // under the stressed collector (RC-DEFAULT-1).
-    const values_step = b.step("test-value-semantics", "Run the value-semantics guest tests under --value-semantics");
-    const value_tests = bounded(b.addRunArtifact(exe), rss.suite);
-    value_tests.addArgs(&.{ "test", "tests/value_semantics", "--value-semantics", "--cache-dir", ".mylang-cache/value-semantics-tests" });
-    value_tests.setCwd(b.path("."));
-    value_tests.has_side_effects = true;
-    values_step.dependOn(&value_tests.step);
-    test_step.dependOn(&value_tests.step);
-    const value_gc_tests = bounded(b.addRunArtifact(exe), rss.suite);
-    value_gc_tests.addArgs(&.{ "test", "tests/value_semantics", "--value-semantics", "--gc-runtime", "--cache-dir", ".mylang-cache/value-semantics-tests-gc", "--gc-stress" });
-    value_gc_tests.setCwd(b.path("."));
-    value_gc_tests.has_side_effects = true;
-    values_step.dependOn(&value_gc_tests.step);
-    test_step.dependOn(&value_gc_tests.step);
-    guardian.addAllChecks(b, guardian_exe, values_step, .{});
-    boundedChecks(values_step);
+    // S5-C: the new core's own unit tests and end-to-end slice join the gate.
+    test_step.dependOn(core_tests);
     const doctest_step = b.step("test-docs", "Execute every fenced documentation example");
     // The doctest fans its units out across a worker pool, so it is bounded like a suite.
     const doctest_run = driver(b, "mylang doctest .", rss.suite, "doctest");

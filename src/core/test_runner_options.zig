@@ -12,14 +12,16 @@ pub const Controls = struct {
     cases: ?[]const u8 = null,
     timeout_ms: u32 = 60000,
     max_steps: u64 = 1000000,
-    explicit_steps: bool = false,
     ceilings: Ceilings = .{},
+    /// `--affected --against REF`: run only the tests that reach a declaration changed
+    /// since the git revision REF (NEW-CORE-S5-AFFECTED-1); null runs every selected test.
+    against: ?[]const u8 = null,
 };
 
 /// A test child's call-depth and byte ceilings, with the old core's defaults and
-/// meaning (docs/tooling/runtime-budgets.md). A command-line value is explicit and
-/// outranks `MYLANG_MEMORY_LIMIT` and the project's `limits.test`; `resolve` fills
-/// in the rest.
+/// meaning (docs/tooling/runtime-budgets.md), and which ceilings the command line named
+/// (`Controls.max_steps` included). A command-line value is explicit and outranks
+/// `MYLANG_MEMORY_LIMIT` and the project's `limits.test`; `resolve` fills in the rest.
 pub const Ceilings = struct {
     /// Nested calls of original program functions one trial may make (`--max-frames`).
     frames: u32 = default_frames,
@@ -27,6 +29,8 @@ pub const Ceilings = struct {
     memory: u64 = budget.test_default,
     explicit_frames: bool = false,
     explicit_memory: bool = false,
+    /// `--max-steps` was given, so the project's `limits.test.max_steps` does not apply.
+    explicit_steps: bool = false,
 };
 
 /// The old core's per-test call-depth default.

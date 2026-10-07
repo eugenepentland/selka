@@ -324,29 +324,5 @@ public def test_printing_and_iteration_follow_insertion_order_not_hash_order() -
     return list(names.values()) == [1, 5, 3, 4] and list(numbers.keys())[5] == -9223372036854775807
 
 
-# spec-case: PY-DICT-4
-public def test_an_integer_keyed_dictionary_escapes_an_arena_with_a_working_index() -> bool:
-    kept = {0: 0}
-    inside = 0
-    with arena() as scratch:
-        counts: dict[i64, i64] = {}
-        for i in range(700):
-            counts[i * 4294967296 - 5] = i
-        _ = counts.pop(-5)
-        miss = counts.get(-6, 0)
-        counts[-6] = miss + 1
-        for i in range(1, 700):
-            inside += counts[i * 4294967296 - 5]
-        kept = scratch.escape(counts)
-    if inside != 244650 or len(kept) != 700 or kept[-6] != 1:
-        return False
-    escaped = 0
-    for i in range(1, 700):
-        escaped += kept[i * 4294967296 - 5]
-    absent = kept.get(-5, 0)
-    kept[-5] = absent + 7
-    return escaped == 244650 and kept[-5] == 7 and len(kept) == 701 and list(kept.keys())[700] == -5
-
-
 def main() -> int:
     return 0

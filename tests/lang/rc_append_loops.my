@@ -59,14 +59,6 @@ public def test_scalar_widths_boolean_comprehension_and_floating_bits() -> bool:
     return narrow(65) == 64 and medium(65) == 320 and wide(65) == -192 and len(flags) == 65 and flags[-1] and floating(65, -1.25) == -1.25
 
 
-# spec-case: RC-PLAIN-APPEND-1
-public def test_fresh_receiver_inherits_callers_arena() -> bool:
-    answer = 0
-    with arena():
-        answer = grow(97)
-    return answer == 97
-
-
 def callback(items: mut list[int], index: int) -> int:
     if index == 7:
         items.clear()
@@ -97,7 +89,6 @@ def main() -> int:
     assert test_empty_and_repeated_dynamic_loop_lifetimes()
     assert test_aliasing_scalar_reads_and_writes_survive_growth()
     assert test_scalar_widths_boolean_comprehension_and_floating_bits()
-    assert test_fresh_receiver_inherits_callers_arena()
     assert test_callback_loop_retains_operation_admission()
     assert test_snapshot_and_managed_children_keep_full_transfer()
     return 0

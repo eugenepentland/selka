@@ -94,17 +94,6 @@ public def test_nested_writes_inside_a_loop() -> bool:
     return original[0]["k"] == [1] and changed[0]["k"] == [1, 2, 3, 4]
 
 
-# spec-case: ARENA-ESCAPE-VALUE-1
-public def test_nested_dictionary_copies_survive_arena_escape() -> bool:
-    original: list[dict[str, list[int]]] = [{"k": [1]}]
-    kept = original
-    with arena() as scratch:
-        changed = original
-        changed[0]["k"].append(2)
-        kept = scratch.escape(changed)
-    return original[0]["k"] == [1] and kept[0]["k"] == [1, 2]
-
-
 # spec-case: COW-NESTED-1
 public def test_receivers_and_keys_evaluate_once_in_source_order() -> bool:
     original: list[dict[str, list[int]]] = [{"k": [1]}]

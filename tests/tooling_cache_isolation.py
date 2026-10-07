@@ -31,7 +31,7 @@ def main():
         run(compiler, ["test", str(source), "--no-cache", "--cache-dir", str(cache)], work)
         assert not (work / ".mylang-cache").exists(), "test --no-cache leaked a cwd cache"
         run(compiler, ["build", str(source), "-o", str(root / "built"), "--no-cache", "--cache-dir", str(cache)], work)
-        assert any(cache.rglob("*.o")), "build did not publish native objects in its explicit cache"
+        assert any(path.is_file() for path in cache.rglob("*")), "build did not publish into its explicit cache"
         assert not (work / ".mylang-cache").exists(), "build --no-cache leaked a cwd cache"
         docs = root / "documentation"
         docs.mkdir()

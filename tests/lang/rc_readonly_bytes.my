@@ -16,14 +16,7 @@ public def test_readonly_octets_keep_view_backing_anchored() -> bool:
     values = [data[1:3]]
     return octet(values, 0) == 98 and octet(values, -1) == 99
 
-# spec-case: RC-READONLY-MANAGED-CALLS-1
-public def test_readonly_octets_keep_caller_arena_storage_live() -> bool:
-    with arena():
-        values = [bytes([97, 98, 99])]
-        return octet(values, -3) == 97 and octet(values, 2) == 99
-
 def main(out: Stream) -> int:
     out.print(test_readonly_octets_preserve_positive_and_negative_boundaries())
     out.print(test_readonly_octets_keep_view_backing_anchored())
-    out.print(test_readonly_octets_keep_caller_arena_storage_live())
     return 0

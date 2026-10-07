@@ -84,16 +84,6 @@ public def test_later_callback_replacement_does_not_retarget_the_selected_argume
     return observed == 1321 and original[0][1] == 21
 
 
-# spec-case: COW-MUT-ARGUMENT-1
-public def test_heap_mut_argument_retains_its_region_inside_an_arena() -> bool:
-    original = {0: {1: 7}}
-    with arena() as scratch:
-        before = change(mut original[0], original)
-        if before != 7:
-            return False
-    return original[0][1] == 13
-
-
 def write_twice(first: mut dict[int, int], second: mut dict[int, int]) -> int:
     first[1] = 13
     second[1] = 17

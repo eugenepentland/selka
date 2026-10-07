@@ -11,11 +11,12 @@ const passes = @import("passes.zig");
 const facts = @import("facts.zig");
 const test_runner = @import("test_runner.zig");
 const check_command = @import("check_command.zig");
+const cli_run = @import("cli_run.zig");
 
 const usage =
     \\usage: mylang-core build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR] [--verify-cache] [--cache-report]
     \\       mylang-core check FILE.my [--typed] [--stats] [--timings=json] [--cache-dir DIR] [--no-cache]
-    \\       mylang-core test FILE.my|DIR [--release] [--json] [--filter S] [--jobs N] [--force] [--cases PATH] [--max-steps N] [--max-frames N] [--max-memory SIZE] [--timeout-ms N]
+    \\       mylang-core test FILE.my|DIR [--release] [--json] [--filter S] [--affected --against REF] [--no-cache] [--jobs N] [--force] [--cases PATH] [--max-steps N] [--max-frames N] [--max-memory SIZE] [--timeout-ms N]
     \\       mylang-core coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
     \\       mylang-core dump-typed FILE.my [FUNCTION]
     \\       mylang-core dump-ir FILE.my [--facts]   (--facts: after the release passes, with intervals)
@@ -33,6 +34,8 @@ pub fn main(init: std.process.Init) !u8 {
     if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return buildCommand(init, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "check")) return check_command.run(init, args[2..]);
     if (args.len >= 3 and std.mem.eql(u8, args[1], "test")) return testCommand(init, args[2..]);
+    // `mylang`'s run command (NEW-CORE-S5-RUN-1), which the core's own tests drive.
+    for ([_][]const u8{ "run", "run-project" }) |name| if (args.len >= 2 and std.mem.eql(u8, args[1], name)) return cli_run.runCommand(init, name, args[2..]);
     return developer(init, args);
 }
 
@@ -141,7 +144,7 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
         } else if (std.mem.eql(u8, arg, "--verify-cache")) {
             options.show.verify_cache = true;
         } else if (std.mem.eql(u8, arg, "--cache-report")) {
-            options.show.cache_report = true;
+            options.show.cache_report = .text;
         } else if (std.mem.eql(u8, arg, "--verify-facts")) {
             options.facts = .verify;
         } else if (std.mem.eql(u8, arg, "--sabotage-facts")) {
@@ -194,12 +197,20 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
 pub fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     var options: test_runner.Options = .{ .path = "", .build = .{ .zig = init.environ_map.get("ZIG") orelse "zig" } };
     var links: std.ArrayList([]const u8) = .empty;
+    var affected = false;
+    var no_cache = false;
     var index: usize = 0;
     while (index < args.len) : (index += 1) {
         if (testControls(&options, args, &index) catch return 2) continue;
         const arg = args[index];
         const has_value = index + 1 < args.len;
-        if (std.mem.eql(u8, arg, "--release")) {
+        if (std.mem.eql(u8, arg, "--affected")) {
+            affected = true;
+        } else if (std.mem.eql(u8, arg, "--no-cache")) {
+            no_cache = true;
+        } else if (flagValue(args, &index, "--against")) |reference| {
+            options.controls.against = reference;
+        } else if (std.mem.eql(u8, arg, "--release")) {
             options.build.release = true;
         } else if (std.mem.eql(u8, arg, "--json")) {
             options.json = true;
@@ -233,11 +244,15 @@ pub fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
             return 2;
         }
     }
-    if (options.path.len == 0) {
+    // NEW-CORE-S5-AFFECTED-1: the two switches only mean something together.
+    if (options.path.len == 0 or affected != (options.controls.against != null)) {
         try std.Io.File.stderr().writeStreamingAll(init.io, usage);
         return 2;
     }
     options.build.links = links.items;
+    // NEW-CORE-S5-NO-CACHE-1: run against a private cache, removed afterwards.
+    if (no_cache) options.build.cache = try cli_run.privateCache(init, options.build.cache);
+    defer if (no_cache) cli_run.discard(init.io, options.build.cache);
     return test_runner.run(init, options);
 }
 
@@ -266,10 +281,10 @@ fn testControls(options: *test_runner.Options, args: []const []const u8, index: 
     } else if (std.mem.eql(u8, arg, "--max-steps") and has_value) {
         index.* += 1;
         options.controls.max_steps = std.fmt.parseInt(u64, args[index.*], 10) catch return error.Usage;
-        options.controls.explicit_steps = true;
+        options.controls.ceilings.explicit_steps = true;
     } else if (std.mem.startsWith(u8, arg, "--max-steps=")) {
         options.controls.max_steps = std.fmt.parseInt(u64, arg[12..], 10) catch return error.Usage;
-        options.controls.explicit_steps = true;
+        options.controls.ceilings.explicit_steps = true;
     } else if (flagValue(args, index, "--max-frames")) |text| {
         options.controls.ceilings.frames = std.fmt.parseInt(u32, text, 10) catch return error.Usage;
         if (options.controls.ceilings.frames == 0) return error.Usage;

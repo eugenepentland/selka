@@ -1,0 +1,128 @@
+integration.test.a body edit no dependent reaches compiles its own module alone and links the whole-program executable
+integration.test.a built executable hands main every argument and reads runtime options from MYLANG_OPTIONS
+integration.test.a built program reports the frame reservation its address space cannot back
+integration.test.a Debug build
+integration.test.a directory benchmark run measures sequentially and stays green without tests
+integration.test.a directory run discovers project roots instead of every module
+integration.test.a directory run runs a main-less test library no root imports, and every test once
+integration.test.a frame-map trap names every logical frame an inlined callee, a callback, a runtime helper or recursion passes through
+integration.test.after a body edit in module k exactly the tests that depend on k are rebuilt and re-run, and an unchanged rerun only replays a verdict
+integration.test.a large project
+integration.test.all commands preserve stdout and deterministic advisory stderr
+integration.test.all commands reject invalid programs before execution and locate runtime traps
+integration.test.a missing, unreadable or directory entry is refused by name with the usage status
+integration.test.a module-built program links from its modules
+integration.test.a module compile builds its units and objects at a lower priority once its interface is published
+integration.test.a module compile run for the scheduler announces its interface on stderr
+integration.test.an edit that makes dependent tests trap reports the edited line, re-runs the failures, and a filter still selects one test
+integration.test.an edit to only an embedded file rebuilds the module that embeds it and nothing else
+integration.test.an executable built without a frame ceiling refuses a runtime frame budget
+integration.test.an executable built without a requested ceiling refuses a runtime step budget
+integration.test.an incremental build after body, signature and interface edits builds the program a clean build builds
+integration.test.an unchanged build keeps its executable without rebuilding and a replaced one is rebuilt
+integration.test.a project build compiles a module again only when its source or an interface it read changed
+integration.test.a project whose modules declare copied host functions builds module by module into the whole-program executable
+integration.test.a project with a mylang.json builds module by module, and what its configuration rejects is reported as the whole-program build reports it
+integration.test.a record whose layout changed behind a callee
+integration.test.a ReleaseFast project build drops debug lines and a Debug one keeps them
+integration.test.a relink of reused objects keeps an identical executable, and a link over compiled ones replaces it unread
+integration.test.a rename behind a dotted import path compiles and checks its caller again
+integration.test.a scalar-only mut record parameter writes the caller in both modes
+integration.test.a signature change no reader uses compiles its own module alone and links the whole-program executable
+integration.test.a single-entry test report lists the project sources its check loaded
+integration.test.a standard module is compiled once per cache and compiler for every program that imports it
+integration.test.a test run started while a seeder holds the project
+integration.test.a trap through a halting failure path reports the same code, trace, record and status
+integration.test.a typed expectation failure names both actual and expected values
+integration.test.a whole-program build sees an embedded file
+integration.test.a wrong benchmark result or trap fails the run and reports no measurement
+integration.test.boundary acceptance CLI runs through run build --run and installed paths
+integration.test.build --run detects module projects and installed binaries receive the same argv
+integration.test.C3s provider body changes stay visible through reused specializations
+integration.test.C4 expectation argument budget and force invalidate while irrelevant environment preserves receipts
+integration.test.C4 helper edit reruns only the dependent test and lower only on an uncached selection
+integration.test.C4 invalid selected project fails before any green result
+integration.test.C4 no-cache performs fresh runs without durable result or graph entries
+integration.test.C4 two providers with reversed map order prepare one graph and one library
+integration.test.C4 unchanged deterministic rerun executes zero tests without lowering emission or linking
+integration.test.checked arithmetic at every width reports the same result and trap from the LLVM overflow intrinsics as from QBE
+integration.test.checker distinguishes a nested alias store from a fresh buffer conversion
+integration.test.checker terminates on a cyclic alias chain and reports the observed write
+integration.test.checker traces a narrowed match payload back to its collection binding
+integration.test.checker warns at a local collection alias that is written and observed
+integration.test.check of a project re-checks only the modules whose source or read interfaces changed, and prints what the whole-program check prints
+integration.test.CLI a release build and a JSON diagnostic report the contract that failed
+integration.test.CLI budget traps name the flag that raises the budget
+integration.test.CLI build report states the default and explicit optimize modes
+integration.test.CLI builds reference counting by default and --gc-stress or --gc-runtime selects the collector
+integration.test.CLI build uses QBE when no backend is named and --release builds LLVM O3 with LTO
+integration.test.CLI check --explain-ownership writes one JSON line per function
+integration.test.CLI check-module checks bodies and never invents main
+integration.test.CLI checks and lowers the qualified whole-path helper methods
+integration.test.CLI checks and runs module programs with private boundaries and cross-file traps
+integration.test.CLI checks array schemas dumps indexing and reports bounds traps
+integration.test.CLI checks bounded environment access without granting ambient process access
+integration.test.CLI checks domain privacy unit mismatches and qualified factory execution
+integration.test.CLI checks external capabilities but cannot silently grant ambient providers
+integration.test.CLI checks resource data operations effects and required mutation without ambient providers
+integration.test.CLI checks resource ownership completion and implicit cleanup effects without ambient access
+integration.test.CLI checks runs and dumps records and declared complete conversions
+integration.test.CLI check type-checks a file without main as a library
+integration.test.CLI commands that need an entry point still report E_MAIN for a library
+integration.test.CLI computes and traces the same from QBE and from LLVM without LTO, with ThinLTO and with --release
+integration.test.CLI default build keeps the shared metadata object when a function is added and its trap still names every frame
+integration.test.CLI dumps actual instructions
+integration.test.CLI empty test selection names an unloaded sibling and preserves JSON
+integration.test.CLI executes complete enum tables and rejects missing mappings in every command
+integration.test.CLI executes variants dumps dispatch and rejects newly incomplete matches
+integration.test.CLI execution timings preserve results and runtime diagnostics
+integration.test.CLI explicit semantic mode wins over the inherited mode and project opt out
+integration.test.CLI exposes fs.read_only permission attenuation and rejects the removed spelling
+integration.test.CLI formatter and test agree on headerless sibling test imports
+integration.test.CLI forwards guest arguments after -- for run and build --run
+integration.test.CLI frame budgets count main and reject invalid overrides
+integration.test.CLI grant flags reject repeats empty values and commands that do not execute
+integration.test.CLI growth written back through a named field remains live
+integration.test.CLI handles recoverable results and rejects silent error loss
+integration.test.CLI invalidation reports actual query work and marks unexecuted stages skipped
+integration.test.CLI invariant boundary rejects invalid JSON collection elements before the body
+integration.test.CLI legacy opt out cannot reuse default value test results
+integration.test.CLI managed constants import run build installed and invalidate warm caches
+integration.test.CLI mylang.json value_semantics opts out and a default build carries values to the frontend
+integration.test.CLI narrows a Network to one literal endpoint and rejects a dynamic host
+integration.test.CLI passes every NaN to foreign code as the canonical quiet NaN
+integration.test.CLI project opt out uses the entry after valued options and for test directories
+integration.test.CLI project ownership explanation includes imported accessor borrow origin
+integration.test.CLI project run reuses emitted manifest while no-cache and grants stay authoritative
+integration.test.CLI property test names the parameter and type it cannot generate
+integration.test.CLI RC runtime contract flags reject conflicts and preserve guest arguments
+integration.test.CLI RC runtime contract inheritance respects project discovery and explicit GC
+integration.test.CLI runs the managed arena example under normal and stress collection
+integration.test.CLI step budgets count dispatch and reject invalid options
+integration.test.CLI test affected selects tests that reach a changed declaration
+integration.test.CLI test reports a Result test
+integration.test.CLI test snapshots retain exact embedded budgets and recapture tightened and widened policy
+integration.test.CLI value semantics defaults on and legacy sharing is an explicit opt out
+integration.test.fix command previews then stores back a local alias and preserves both modes
+integration.test.guest benchmarks write a candidate and enforce an approved baseline immutably
+integration.test.invoke reports an unreadable entry as a structured setup failure naming the reason
+integration.test.module by module, a body edit in module k compiles no module below k and re-runs exactly the tests that depend on it
+integration.test.modules compiled one by one from their imports
+integration.test.mylang test leaves no staging behind when the project is rejected before any test builds
+integration.test.mylang test reclaims a killed run
+integration.test.mylang test stages under TMPDIR, never under /tmp, and removes its staging after a passing run
+integration.test.mylang test with TMPDIR unset falls back to staging under /tmp
+integration.test.P1 ignores an unselected production body type error while its declarations stay valid
+integration.test.P1 rejects every incompatible replacement dimension
+integration.test.P1 rejects stronger or malformed replacements and a bad production interface
+integration.test.P1 selects a validated fake while the unfinished production body is never checked
+integration.test.PURE-SKIP-1 a changed dependency invalidates the recorded pure outcome
+integration.test.PURE-SKIP-1 no-cache and force disable pure outcome replay
+integration.test.PURE-SKIP-1 pure failure outcome replays without executing and is never masked
+integration.test.R3 canonical descriptors compare provider scalar and nominal contracts
+integration.test.recursive type branches terminate and preserve class-graph warnings
+integration.test.run builds a project module by module, and a program the modules cannot build goes to the whole-program path
+integration.test.standard trigonometry checks through module interfaces and unchanged generic callers reuse their state
+integration.test.test, build, run and check write no cache into the working directory under --cache-dir
+integration.test.the first link records how zig cc links and every later link runs the linker directly
+integration.test.the per-module commands are listed in help and answer a bad invocation with their usage
