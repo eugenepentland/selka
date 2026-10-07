@@ -159,7 +159,74 @@ static void core_start_refuse(const char *code, const char *description, const c
    step or frame accounting (`mylang run` compiles a budget in instead), so
    `--max-steps`/`--max-frames` are refused rather than ignored: `R_NO_STEP_ACCOUNTING`,
    `R_NO_FRAME_ACCOUNTING`, after a frame reservation the address space cannot back. */
+/* ---- The native stack's floor (QBE-FRAMEMAP-1) ------------------------------------
+ * A program without a frame budget recurses until the stack's guard page. The fault is
+ * reported as the old core's stack-floor guard reports it: `R_FRAME_LIMIT` located at the
+ * innermost call site, with at most 16 frames, exit status 1. Any other fault keeps
+ * its default action. The report runs on its own signal stack. */
+enum { CORE_FLOOR_FRAMES = 16 };
+static uintptr_t core_stack_top;
+static unsigned char core_floor_stack[256 << 10];
+static void core_floor_default(int signal_number) {
+    signal(signal_number, SIG_DFL);
+}
+static void core_floor_fault(int signal_number, siginfo_t *info, void *context) {
+    (void)context;
+    struct rlimit limit;
+    uintptr_t at = (uintptr_t)info->si_addr;
+    const uintptr_t slack = 1u << 20;
+    bool overflow = core_stack_top && !getrlimit(RLIMIT_STACK, &limit) && limit.rlim_cur != RLIM_INFINITY && at <= core_stack_top &&
+        core_stack_top - at + slack >= (uintptr_t)limit.rlim_cur && core_stack_top - at <= (uintptr_t)limit.rlim_cur + slack;
+    if (!overflow) {
+        core_floor_default(signal_number);
+        return;
+    }
+    void *pcs[160];
+    int count = os_stack(pcs, 160);
+    /* The interrupted instruction follows the signal frame: a `call` that could not push
+       its return address is the caller's own call site; anything else is the prologue of
+       the frame it would have entered, which is not reported. */
+    char caller[1024] = "";
+    trap_capture = caller;
+    trap_capture_size = sizeof caller;
+    int first = 0;
+    while (first < count && dwarf_frames((uintptr_t)pcs[first], 0) == 0) ++first;
+    bool calling = first < count && *(const unsigned char *)pcs[first] == 0xe8;
+    if (first < count && !calling) {
+        caller[0] = 0;
+        ++first;
+        if (first < count) dwarf_frames((uintptr_t)pcs[first] - 1, 0);
+    }
+    trap_capture = NULL;
+    const char *where = strstr(caller, " at ");
+    size_t named = strlen(caller);
+    char text[1400];
+    int length = where && named > 1 ? snprintf(text, sizeof text, "%.*s: error[R_FRAME_LIMIT]: %s\n", (int)(caller + named - 1 - (where + 4)), where + 4, core_budget_hint("R_FRAME_LIMIT"))
+                                    : snprintf(text, sizeof text, "error[R_FRAME_LIMIT]: %s\n", core_budget_hint("R_FRAME_LIMIT"));
+    stream_flush(&streams[0]);
+    stream_write(&streams[1], text, (size_t)(length < (int)sizeof text ? length : (int)sizeof text - 1));
+    trap_lines_left = CORE_FLOOR_FRAMES;
+    for (int i = first; i < count && trap_lines_left != 0; ++i) {
+        uintptr_t pc = (uintptr_t)pcs[i] - (i == first && calling ? 0 : 1);
+        if (dwarf_frames(pc, 0) == 0) break;
+    }
+    flush_all();
+    _exit(1);
+}
+static void core_floor_install(void) {
+    unsigned char here;
+    core_stack_top = (uintptr_t)&here;
+    stack_t alternate = { .ss_sp = core_floor_stack, .ss_size = sizeof core_floor_stack, .ss_flags = 0 };
+    if (sigaltstack(&alternate, NULL)) return;
+    struct sigaction action;
+    memset(&action, 0, sizeof action);
+    action.sa_sigaction = core_floor_fault;
+    action.sa_flags = SA_SIGINFO | SA_ONSTACK;
+    sigemptyset(&action.sa_mask);
+    (void)sigaction(SIGSEGV, &action, NULL);
+}
 void myl_core_start(void) {
+    core_floor_install();
     const char *options = getenv("MYLANG_OPTIONS");
     if (!options || !*options) return;
     char *copy = strdup(options);

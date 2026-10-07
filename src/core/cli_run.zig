@@ -136,7 +136,7 @@ pub fn discard(io: std.Io, directory: []const u8) void {
 
 /// The refusal of an entry that is missing, unreadable or a directory, worded as the
 /// old CLI words it, or null when the file can be read.
-fn unreadable(init: std.process.Init, command: []const u8, path: []const u8) error{OutOfMemory}!?[]const u8 {
+pub fn unreadable(init: std.process.Init, command: []const u8, path: []const u8) error{OutOfMemory}!?[]const u8 {
     const why: []const u8 = why: {
         var file = std.Io.Dir.cwd().openFile(init.io, path, .{}) catch |err| break :why switch (err) {
             error.FileNotFound => "no such file or directory",

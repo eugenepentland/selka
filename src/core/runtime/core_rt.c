@@ -12,6 +12,8 @@
  * Output: one buffer per standard stream, flushed when full, at exit and before a
  * trap report, so stdout keeps program order relative to a trap. */
 #define _POSIX_C_SOURCE 200809L
+/* XSI: the signal stack the stack-floor report runs on (`sigaltstack`, `SA_ONSTACK`). */
+#define _XOPEN_SOURCE 700
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -834,8 +836,12 @@ static const char *dw_file(const dw_unit *unit, uint64_t index, char *out, size_
    (`trap_caller`), so a report can name its caller before it lists its frames. */
 static char *trap_capture;
 static size_t trap_capture_size;
+/* Frame lines a report may still print; negative: no limit. */
+static int trap_lines_left = -1;
 static void trap_frame_line(const char *text, size_t length) {
     if (!trap_capture) {
+        if (trap_lines_left == 0) return;
+        if (trap_lines_left > 0) --trap_lines_left;
         stream_write(&streams[1], text, length);
         return;
     }
