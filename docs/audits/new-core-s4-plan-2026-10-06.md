@@ -531,6 +531,12 @@ files mean the full old gate.
 - `mylang-core test` on the Lox port (after S4-L) and the EDA slice runs every test;
 - an unchanged rerun executes nothing.
 
+**Ordering, resolved 2026-10-07.** Codex's Wave A handoff found that the port runs
+in this exit need S4-P's language work: capability record fields, assertion
+messages, and the EDA test budgets. M's exit for the ports is therefore met together
+with S4-P's, not before it. M's own runner work (projects, discovery, reuse,
+providers) qualified with Wave A.
+
 ### Wave B
 
 #### S4-C. Unit cache and parallel driver (one agent; about 3–4 h; after S4-E merges)
