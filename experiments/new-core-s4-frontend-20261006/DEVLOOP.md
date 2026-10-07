@@ -52,7 +52,13 @@ That invocation is replayed with a fresh `ZIG_LOCAL_CACHE_DIR` on CPU 10, giving
 the edited unit's `-O3` comparator without the process-tracing overhead. The
 runtime/link commands do not count as LLVM units. If multiple LLVM units compile,
 the machine report must map `source_path` to `llvm_path`; absent an unambiguous
-mapping, the script reports the comparator unresolved and fails qualification.
+mapping, the script reports the comparator unresolved; the required 48k
+measurement fails qualification.
+
+The release time comparator gates the required 48k edit. Comparisons at other
+sizes remain reported in `release_edit_comparison` without imposing additional
+time targets. Qualification requires the 48k edit measurements and the separate
+192k cold release build with 16 workers; smaller smoke runs stay unqualified.
 
 The S4-C stderr report can be one JSON object with a `units` array or one JSON
 object per unit. Each unit should expose `name`, `kind`, `source_path`,

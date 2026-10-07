@@ -215,6 +215,10 @@ def main():
                "rows": [], "parallel": [], "gates": []}
     summary["gates"].append({"target": "old and core execution oracles available",
                              "passed": set(args.roles) == {"old", "core"}})
+    summary["gates"].append({"target": "48k edit measurements included",
+                             "passed": 1200 in args.sizes})
+    summary["gates"].append({"target": "192k cold release with 16 workers included",
+                             "passed": args.parallel_size == 4800 and args.parallel_workers == 16})
 
     def publish():
         (args.evidence / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
@@ -290,12 +294,18 @@ def main():
                 unit_receipt = runner.run(f"{size}-edited-unit-O3", replay, isolated, True)
                 row["edited_unit_O3"] = unit_receipt
                 seconds = row["roles"]["core"]["release"]["edit_seconds"]
-                summary["gates"].append({"target": "release edit <=1.5*unitO3+1s", "size": size,
-                                         "limit": 1.5 * unit_receipt["seconds"] + 1,
-                                         "passed": seconds <= 1.5 * unit_receipt["seconds"] + 1})
+                comparison = {"target": "release edit <=1.5*unitO3+1s", "size": size,
+                              "limit": 1.5 * unit_receipt["seconds"] + 1,
+                              "passed": seconds <= 1.5 * unit_receipt["seconds"] + 1}
+                row["release_edit_comparison"] = comparison
+                if size == 1200:
+                    summary["gates"].append(comparison)
             else:
-                summary["gates"].append({"target": "release edit identifies edited unit", "size": size,
-                                         "passed": False, "reason": "no unique source-to-unit mapping in process trace/report"})
+                comparison = {"target": "release edit identifies edited unit", "size": size,
+                              "passed": False, "reason": "no unique source-to-unit mapping in process trace/report"}
+                row["release_edit_comparison"] = comparison
+                if size == 1200:
+                    summary["gates"].append(comparison)
         summary["rows"].append(row)
         publish()
         print(json.dumps({"size": size, "lines": row["lines"], "roles": {role: {mode: data["edit_seconds"] for mode, data in modes.items()} for role, modes in row["roles"].items()}}), flush=True)
