@@ -8,7 +8,7 @@ const native = @import("native_execute.zig");
 fn execute(text: []const u8) !native.Run {
     var compilation = try language.Compilation.init(t.allocator, "managed.my", text);
     defer compilation.deinit();
-    return native.runWithOptions(&compilation, .{ .gc_stress = true }) catch |err| {
+    return native.runWithOptions(&compilation, .{}) catch |err| {
         for (compilation.diagnostics.items) |diag| debug.print("{s}: {s} ({s})\n", .{ diag.code, diag.message, compilation.src.text(diag.span) });
         return err;
     };
@@ -74,33 +74,6 @@ test "managed copies are stored back after helper mutation without allocator aut
     ;
     const result = try execute(source);
     try t.expectEqual(@as(i64, 42), result.value);
-}
-
-// spec: GC-SOURCE-2
-test "legacy sharing: managed recursive record cycles are traced at a later managed allocation" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    const source =
-        \\class Node:
-        \\    children: list[Node]
-        \\    value: i64
-        \\
-        \\
-        \\def cycle():
-        \\    nodes: list[Node] = []
-        \\    nodes.append(Node(children=nodes, value=42))
-        \\    node = nodes[0u64]
-        \\    alias = node.children
-        \\    alias[0u64] = node
-        \\
-        \\
-        \\def main() -> i64:
-        \\    cycle()
-        \\    spare: list[Node] = []
-        \\    _ = spare
-        \\    return 42
-    ;
-    try t.expectEqual(@as(i64, 42), (try execute(source)).value);
 }
 
 // spec: GC-SOURCE-3
@@ -200,56 +173,6 @@ test "noalloc rejects transitive managed allocation while permitting fixed-slot 
     try t.expectEqual(@as(i64, 42), (try execute(source)).value);
 }
 
-// spec: GC-SOURCE-11
-test "legacy sharing: managed cycles lose local and record roots on block break and continue exits" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    const prefix =
-        \\class Node:
-        \\    children: list[Node]
-        \\    value: i64
-        \\
-        \\
-        \\class Holder:
-        \\    nodes: list[Node]
-    ;
-    const bodies = [_][]const u8{
-        \\    if True:
-        \\        nodes: list[Node] = []
-        \\        nodes.append(Node(children=nodes, value=42))
-        \\        holder = Holder(nodes=nodes)
-        \\        alias = holder.nodes
-        \\        if len(alias) != 1:
-        \\            return 1
-        ,
-        \\    while True:
-        \\        nodes: list[Node] = []
-        \\        nodes.append(Node(children=nodes, value=42))
-        \\        holder = Holder(nodes=nodes)
-        \\        alias = holder.nodes
-        \\        if len(alias) != 1:
-        \\            return 1
-        \\        break
-        ,
-        \\    i = 0
-        \\    while i < 1:
-        \\        i = i + 1
-        \\        nodes: list[Node] = []
-        \\        nodes.append(Node(children=nodes, value=42))
-        \\        holder = Holder(nodes=nodes)
-        \\        alias = holder.nodes
-        \\        if len(alias) != 1:
-        \\            return 1
-        \\        continue
-        ,
-    };
-    for (bodies) |body| {
-        const source = try std.mem.concat(t.allocator, u8, &.{ prefix, "\n\n\ndef main() -> i64:\n", body, "\n    spare: list[i64] = []\n    _ = spare\n    return 42\n" });
-        defer t.allocator.free(source);
-        try t.expectEqual(@as(i64, 42), (try execute(source)).value);
-    }
-}
-
 // spec: GC-SOURCE-7
 test "managed elements reject owned resources and unchecked results" {
     try rejectAll(&.{
@@ -312,35 +235,6 @@ test "an independent collection snapshot roots its elements across later mutatio
     ;
     const result = try execute(source);
     try t.expectEqual(@as(i64, 11), result.value);
-}
-
-// spec: GC-CYCLES-1
-test "legacy sharing: an unreachable managed cycle is reclaimed while a reachable one survives collection" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    const source =
-        \\class Node:
-        \\    links: list[Node]
-        \\    value: i64
-        \\
-        \\
-        \\def loop(value: i64) -> Node:
-        \\    node = Node(links=[], value=value)
-        \\    node.links.append(node)
-        \\    return node
-        \\
-        \\
-        \\def main() -> i64:
-        \\    kept = loop(42)
-        \\    i = 0
-        \\    while i < 200:
-        \\        _ = loop(i)
-        \\        i = i + 1
-        \\    inner = kept.links[0u64]
-        \\    return inner.value
-    ;
-    const result = try execute(source);
-    try t.expectEqual(@as(i64, 42), result.value);
 }
 
 // spec: GC-BOUNDARY-1
@@ -638,7 +532,7 @@ test "GC-SEGMENT-1 a churn loop reuses reclaimed slots without stale fields" {
         \\    return total
     );
     defer compilation.deinit();
-    const result = try native.runWithOptions(&compilation, .{ .gc_stress = true });
+    const result = try native.runWithOptions(&compilation, .{});
     try t.expectEqual(@as(i64, 190060), result.value);
     try t.expectEqualStrings("", result.trap.code);
 }

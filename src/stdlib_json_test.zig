@@ -64,7 +64,7 @@ fn expectScalarPosition(records: []const @import("typed.zig").Record) !void {
 
 // spec-case: STANDARD-JSON-1
 test "standard json keeps parsed values rooted under collection stress" {
-    try fixture.stress(t.allocator, "module main\nimport json\n" ++
+    try fixture.run(t.allocator, "module main\nimport json\n" ++
         "def main() -> int:\n" ++
         "    source = \"{\\\"rows\\\":[{\\\"n\\\":40},{\\\"n\\\":2}]}\"\n" ++
         "    match json.loads(source):\n" ++

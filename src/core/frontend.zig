@@ -156,6 +156,7 @@ pub const Session = struct {
         const name = if (self.graph.settings.given_path) path else std.fs.path.basename(path);
         self.single = try language.Compilation.init(self.project.arena.child_allocator, name, full);
         const unit = &self.single.?;
+        try self.attachEmbeds(unit, path);
         self.checkSingle(unit) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => {
@@ -164,6 +165,19 @@ pub const Session = struct {
             },
         };
         return .{ .program = unit.program.?, .src = unit.src };
+    }
+
+    /// Read the files a header-less unit's `embed_bytes`/`embed_str` calls name, against
+    /// the unit's own directory and confined to the configuration's root, as the old
+    /// CLI did (NEW-CORE-S5-EMBED-1).
+    fn attachEmbeds(self: *Session, unit: *language.Compilation, path: []const u8) error{OutOfMemory}!void {
+        const arena = unit.arena.allocator();
+        const found = try language.embed.scan(arena, unit.src);
+        if (found.len == 0) return;
+        const import_root = std.fs.path.dirname(path) orelse ".";
+        const roots: language.embed.Roots = .{ .io = self.files.io, .import_root = import_root, .root = self.files.embed_root orelse import_root };
+        try language.embed.resolve(arena, roots, std.fs.path.basename(path), found);
+        unit.src.embeds = found;
     }
 
     fn checkSingle(self: *Session, unit: *language.Compilation) language.diagnostic.Error!void {

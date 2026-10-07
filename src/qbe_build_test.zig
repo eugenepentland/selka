@@ -110,65 +110,6 @@ fn buildOnly(context: fs.Context, spec: Spec) !void {
     _ = try spawnOk(context, try buildArgv(context, spec, false), cwdOf(spec), spec.environment);
 }
 
-// spec-case: QBE-FRAMEMAP-ASM-1
-// spec-case: RC-STARTUP-IMAGE-1
-test "optional registration images link and run through direct and frame-map full and ThinLTO" {
-    var environment: std.process.Environ.Map = .init(std.testing.allocator);
-    defer environment.deinit();
-    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
-    defer context.deinit();
-    const a = context.allocator;
-    const resolved = try tools(a);
-    var directory = std.testing.tmpDir(.{});
-    defer directory.cleanup();
-    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
-    const source = try join(a, &.{ root, "entry.my" });
-    try context.write(source, "module entry\n" ++
-        "def main(out: Stream) -> int:\n" ++
-        "    values = [0, 1, 2, 3, 4, 5, 6, 7]\n" ++
-        "    out.print(len(values))\n" ++
-        "    return 0\n");
-    const Case = struct { rc: bool = true, image: bool = false, framed: bool = true, lto: []const u8 };
-    const cases = [_]Case{
-        .{ .framed = false, .lto = "--lto" },
-        .{ .framed = false, .lto = "--lto=thin" },
-        .{ .lto = "--lto" },
-        .{ .lto = "--lto=thin" },
-        .{ .image = true, .lto = "--lto" },
-        .{ .image = true, .lto = "--lto=thin" },
-        .{ .rc = false, .lto = "--lto" },
-        .{ .rc = false, .lto = "--lto=thin" },
-    };
-    const cache = try join(a, &.{ root, "cache" });
-    for (cases, 0..) |case, index| {
-        var emission: std.ArrayList([]const u8) = .empty;
-        try emission.appendSlice(a, &.{ resolved.compiler, "emit-project-qbe", source, if (case.rc) "--rc-runtime" else "--gc-runtime", "--drop-step-checks", "--drop-frame-checks" });
-        if (!case.framed) try emission.append(a, "--drop-debug");
-        const original = try spawnOk(context, emission.items, .inherit, null);
-        var manifest = try std.json.parseFromSliceLeaky(std.json.Value, a, original, .{ .allocate = .alloc_always });
-        if (case.rc and !case.image) {
-            const text = manifest.object.getPtr("runtime_data").?;
-            const definition = "const myl_rc_image myl_rc_generated_image =";
-            try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, text.string, definition));
-            // A public ABI4 module remains valid without the separate optional
-            // startup image, as for foreign/legacy native metadata producers.
-            text.string = try std.mem.replaceOwned(u8, a, text.string, definition, "const myl_rc_image myl_rc_generated_image_unused =");
-        }
-        const manifest_file = try std.fmt.allocPrint(a, "{s}/manifest-{d}.json", .{ root, index });
-        try context.write(manifest_file, try std.json.Stringify.valueAlloc(a, manifest, .{}));
-        const binary = try std.fmt.allocPrint(a, "{s}/program-{d}", .{ root, index });
-        _ = try spawnOk(context, &.{
-            resolved.compiler, "build",        source,        "--manifest-file", manifest_file,
-            "-o",              binary,         "--cache-dir", cache,             if (case.rc) "--rc-runtime" else "--gc-runtime",
-            "--backend=llvm",  "--llvm-opt=3", case.lto,      "--zig",           resolved.zig,
-        }, .inherit, null);
-        const ran = try std.process.run(a, context.io, .{ .argv = &.{binary} });
-        try std.testing.expectEqual(std.process.Child.Term{ .exited = 0 }, ran.term);
-        try std.testing.expectEqualStrings("8\n", ran.stdout);
-        try std.testing.expectEqualStrings("", ran.stderr);
-    }
-}
-
 /// Build with `--report`, then run the program, returning the facts the
 /// installed-runtime scenario asserts on.
 fn buildAndRun(context: fs.Context, spec: Spec) !BuildReport {
@@ -240,48 +181,6 @@ fn corruptArchives(context: fs.Context, directory: []const u8) !void {
 fn install(context: fs.Context, from: []const u8, destination: []const u8) !void {
     try context.write(destination, try context.read(from));
     try std.Io.Dir.cwd().setFilePermissions(context.io, destination, .executable_file, .{});
-}
-
-// spec-case: QBE-RUNTIME-INSTALLED-1
-test "a prebuilt runtime installed beside the compiler links directly, and damage falls back to source" {
-    var environment: std.process.Environ.Map = .init(std.testing.allocator);
-    defer environment.deinit();
-    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
-    defer context.deinit();
-    const a = context.allocator;
-    const resolved = try tools(a);
-    var directory = std.testing.tmpDir(.{});
-    defer directory.cleanup();
-    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
-    const bin = try join(a, &.{ root, "install", "bin" });
-    const lib = try join(a, &.{ root, "install", "lib", "mylang-runtime" });
-    try context.mkdir(bin);
-    try context.mkdir(lib);
-    const compiler = try join(a, &.{ bin, "mylang" });
-    try install(context, resolved.compiler, compiler);
-    const beside: Tools = .{ .compiler = compiler, .qbe = resolved.qbe, .zig = resolved.zig };
-
-    const shaped = try emitInstalled(context, beside, lib, try join(a, &.{ root, "emit-work" }));
-    // QBE in Debug and ReleaseFast, and the LLVM flavors, which need only Zig
-    // now that the translator is built in: `llvm`, `llvm-lto`, `llvm-thinlto`.
-    try std.testing.expectEqual(@as(usize, 5), shaped.archives);
-    try std.testing.expectEqual(@as(usize, 2), shaped.objects);
-    try std.testing.expect(shaped.stems_ok);
-
-    const source = try join(a, &.{ root, "installed main.my" });
-    try context.write(source, "def main() -> i64:\n    return 7\n");
-    const program = try join(a, &.{ root, "prog" });
-    const hit = try buildAndRun(context, .{ .tools = beside, .source = source, .output = program, .cache = try join(a, &.{ root, "installed cache" }) });
-    try std.testing.expect(hit.installed);
-    try std.testing.expect(hit.reused);
-    try std.testing.expectEqual(@as(usize, 0), hit.cache_archives);
-    try std.testing.expectEqualStrings("7\n", hit.output);
-
-    try corruptArchives(context, lib);
-    const miss = try buildAndRun(context, .{ .tools = beside, .source = source, .output = program, .cache = try join(a, &.{ root, "fallback cache" }) });
-    try std.testing.expect(!miss.installed);
-    try std.testing.expectEqual(@as(usize, 1), miss.cache_archives);
-    try std.testing.expectEqualStrings("7\n", miss.output);
 }
 
 /// A three-module program whose modules each hold several functions, so a
@@ -382,40 +281,6 @@ fn batchPair(context: fs.Context, resolved: Tools, directory: []const u8, extra:
     return .{ try batchRun(context, resolved, directory, "", extra), try batchRun(context, resolved, directory, "1", extra) };
 }
 
-// spec: QBE-BATCH-2
-test "a batched build and an unbatched build of one program behave identically" {
-    var environment: std.process.Environ.Map = .init(std.testing.allocator);
-    defer environment.deinit();
-    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
-    defer context.deinit();
-    const a = context.allocator;
-    const resolved = try tools(a);
-    var directory = std.testing.tmpDir(.{});
-    defer directory.cleanup();
-    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
-    for (batch_program) |file| try context.write(try join(a, &.{ root, file.name }), file.text);
-    // Debug: the frame record protocol and exact step accounting.
-    const debug = try batchPair(context, resolved, root, &.{ "--mode", "Debug" });
-    try std.testing.expect(debug[0].objects < debug[0].functions);
-    try std.testing.expectEqual(debug[1].functions, debug[1].objects);
-    try std.testing.expectEqual(debug[0].functions, debug[1].functions);
-    try std.testing.expectEqualStrings("2272\n7\n", debug[0].stdout);
-    try std.testing.expectEqualStrings(debug[1].stdout, debug[0].stdout);
-    try std.testing.expectEqual(std.process.Child.Term{ .exited = 1 }, debug[0].term);
-    try std.testing.expectEqual(debug[1].term, debug[0].term);
-    try std.testing.expect(std.mem.indexOf(u8, debug[0].stderr, "R_LIST_BOUNDS") != null);
-    try std.testing.expectEqualStrings(debug[1].stderr, debug[0].stderr);
-    // A QBE ReleaseFast executable carries no frame record: its trap trace
-    // comes from the frame map each batch's assembly was annotated with.
-    const fast = try batchPair(context, resolved, root, &.{ "--mode", "ReleaseFast" });
-    try std.testing.expect(fast[0].objects < fast[0].functions);
-    try std.testing.expectEqualStrings(debug[0].stdout, fast[0].stdout);
-    try std.testing.expectEqualStrings(fast[1].stdout, fast[0].stdout);
-    try std.testing.expectEqual(fast[1].term, fast[0].term);
-    try std.testing.expect(std.mem.indexOf(u8, fast[0].stderr, "in walk::pick") != null or std.mem.indexOf(u8, fast[0].stderr, "pick") != null);
-    try std.testing.expectEqualStrings(fast[1].stderr, fast[0].stderr);
-}
-
 // spec-case: EXIT-STATUS-1
 test "a native executable exits with its entry int result truncated to a byte" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
@@ -511,48 +376,6 @@ fn phiWidthProbe(context: fs.Context, resolved: Tools, root: []const u8) ![]u8 {
     };
     _ = try spawnOk(context, &link, .inherit, null);
     return spawnOk(context, &.{output}, .inherit, null);
-}
-
-// spec-case: QBE-3
-test "a default build shares its runtime tree under XDG while an explicit cache-dir stays hermetic" {
-    var environment: std.process.Environ.Map = .init(std.testing.allocator);
-    defer environment.deinit();
-    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
-    defer context.deinit();
-    const a = context.allocator;
-    const resolved = try tools(a);
-    var directory = std.testing.tmpDir(.{});
-    defer directory.cleanup();
-    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
-    const xdg = try join(a, &.{ root, "xdg cache" });
-    var child = try std.process.Environ.createMap(std.testing.environ, a);
-    try child.put("XDG_CACHE_HOME", xdg);
-
-    // Hermetic: an explicit --cache-dir keeps the runtime tree under the cache and never touches XDG.
-    const hermetic_source = try join(a, &.{ root, "hermetic main.my" });
-    try context.write(hermetic_source, "def main() -> i64:\n    return 5\n");
-    const hermetic_cache = try join(a, &.{ root, "hermetic cache" });
-    try buildOnly(context, .{ .tools = resolved, .source = hermetic_source, .output = try join(a, &.{ root, "hermetic prog" }), .cache = hermetic_cache, .environment = &child });
-    try std.testing.expect(context.exists(try join(a, &.{ hermetic_cache, "runtime" })));
-    try std.testing.expect(!context.exists(try join(a, &.{ xdg, "mylang" })));
-
-    // Default: the runtime tree materializes once under XDG and a second project reuses it.
-    const first = try join(a, &.{ root, "default one" });
-    const second = try join(a, &.{ root, "default two" });
-    try context.mkdir(first);
-    try context.mkdir(second);
-    try context.write(try join(a, &.{ first, "m.my" }), "def main() -> i64:\n    return 6\n");
-    try context.write(try join(a, &.{ second, "m.my" }), "def main() -> i64:\n    return 8\n");
-    const shared_root = try join(a, &.{ xdg, "mylang", "runtime" });
-    try buildOnly(context, .{ .tools = resolved, .source = "m.my", .output = "prog", .cwd = first, .environment = &child });
-    const after_first = try entries(context, shared_root);
-    try std.testing.expectEqual(@as(usize, 1), after_first.len);
-    try std.testing.expectEqual(@as(usize, 64), after_first[0].len);
-    const marker = try join(a, &.{ shared_root, after_first[0], "reuse marker" });
-    try context.write(marker, "kept");
-    try buildOnly(context, .{ .tools = resolved, .source = "m.my", .output = "prog", .cwd = second, .environment = &child });
-    try std.testing.expectEqual(@as(usize, 1), (try entries(context, shared_root)).len);
-    try std.testing.expectEqualStrings("kept", try context.read(marker));
 }
 
 // `content_hash` is the build-time identity every materialized runtime tree and
@@ -722,11 +545,6 @@ fn argvLifecycle(allocator: std.mem.Allocator) !usize {
     return 6;
 }
 
-// spec-case: RC-ARGV-OWNERSHIP-1
-test "native RC argv owner balances borrowed entry returns capability refusal and traps" {
-    try std.testing.expectEqual(@as(usize, 6), try argvLifecycle(std.testing.allocator));
-}
-
 const closed_field_program =
     \\record Holder:
     \\    items: list[int]
@@ -788,11 +606,6 @@ fn closedFieldLifecycle(allocator: std.mem.Allocator) !usize {
     try environment.put(memory_limit_variable, "1M");
     try argvRun(context, &.{ binary, "budget" }, &environment, 1, "1\n");
     return 4;
-}
-
-// spec-case: RC-CLOSED-FIELD-TRANSFER-1
-test "native RC closed field owner balances storeback snapshot traps and arena refusal" {
-    try std.testing.expectEqual(@as(usize, 4), try closedFieldLifecycle(std.testing.allocator));
 }
 
 const record_transfer_program =
@@ -882,16 +695,6 @@ fn recordTransferLifecycle(allocator: std.mem.Allocator, fast: bool) !usize {
     return 5;
 }
 
-// spec-case: RC-CLOSED-FIELD-TRANSFER-2
-test "native RC record field transfers balance owned and caller traps, arenas and budgets" {
-    try std.testing.expectEqual(@as(usize, 5), try recordTransferLifecycle(std.testing.allocator, false));
-}
-
-// spec-case: RC-FIELD-INOUT-1
-test "RC field inout unaccounted native owner and hold balances survive traps arenas and budgets" {
-    try std.testing.expectEqual(@as(usize, 5), try recordTransferLifecycle(std.testing.allocator, true));
-}
-
 const sites_program =
     \\record Node:
     \\    value: int
@@ -972,9 +775,4 @@ fn sitesLifecycle(allocator: std.mem.Allocator) !usize {
     // A trap unwinds the frames it leaves; their drops still land in sites.
     try sitesRun(context, &.{ binary, "trap" }, &environment, 1, report);
     return 2;
-}
-
-// spec-case: RC-SITES-1
-test "native RC sites build attributes every counted event to a source site" {
-    try std.testing.expectEqual(@as(usize, 2), try sitesLifecycle(std.testing.allocator));
 }

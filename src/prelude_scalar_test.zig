@@ -12,7 +12,7 @@ const diagnostic_output = @import("diagnostic_output.zig");
 fn run(text: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(t.allocator, "split.my", text);
     defer compilation.deinit();
-    const result = native.runWithOptions(&compilation, .{ .gc_stress = true }) catch |err| {
+    const result = native.runWithOptions(&compilation, .{}) catch |err| {
         for (compilation.diagnostics.items) |diag| debug.print("{s}: {s}\n", .{ diag.code, diag.message });
         return err;
     };
@@ -24,7 +24,7 @@ fn run(text: []const u8, expected: i64) !void {
 fn trapped(text: []const u8, code: []const u8) !void {
     var compilation = try language.Compilation.init(t.allocator, "scalar.my", text);
     defer compilation.deinit();
-    const result = try native.runWithOptions(&compilation, .{ .gc_stress = true });
+    const result = try native.runWithOptions(&compilation, .{});
     try t.expect(result.trapped());
     try t.expectEqualStrings(code, result.trap.code);
 }

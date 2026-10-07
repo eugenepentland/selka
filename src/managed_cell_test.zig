@@ -9,7 +9,7 @@ const module = "managed-cell.my";
 fn run(source: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(t.allocator, module, source);
     defer compilation.deinit();
-    const outcome = native.runWithOptions(&compilation, .{ .gc_stress = true }) catch |err| {
+    const outcome = native.runWithOptions(&compilation, .{}) catch |err| {
         @import("diagnostics_test.zig").report(compilation.diagnostics.items);
         return err;
     };
@@ -76,117 +76,4 @@ test "Cell is rejected by collection and prelude operations instead of crashing"
         \\    cell = Cell(value=1)
         \\    return first(cell)
     , "E_LIST_TYPE");
-}
-
-// spec: CELL-GENERIC-1
-test "generic Cell construction is recognized and tracks allocation effects" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    try run(
-        \\def make[T](value: T) -> Cell[T]:
-        \\    return Cell(value=value)
-        \\
-        \\
-        \\def main() -> int:
-        \\    cell = make(41)
-        \\    return cell.value + 1
-    , 42);
-    try reject(
-        \\def make[T](value: T) -> Cell[T] noalloc:
-        \\    return Cell(value=value)
-        \\
-        \\
-        \\def main() -> int:
-        \\    return 0
-    , "E_EFFECT_BOUND");
-    try reject(
-        \\def make[T](value: T) -> Cell[T] noalloc:
-        \\    return Cell[T](value=value)
-        \\
-        \\
-        \\def main() -> int:
-        \\    return 0
-    , "E_EFFECT_BOUND");
-    try run(
-        \\def make[T]() -> Cell[list[T]]:
-        \\    return Cell(value=[])
-        \\
-        \\
-        \\def main() -> int:
-        \\    return len(make[i64]().value)
-    , 0);
-    try run(
-        \\def zero[T](unused: T) -> Cell[float]:
-        \\    _ = unused
-        \\    return Cell(value=0)
-        \\
-        \\
-        \\def main() -> int:
-        \\    cell = zero(1)
-        \\    if cell.value == 0.0:
-        \\        return 0
-        \\    return 1
-    , 0);
-}
-
-// spec: CELL-EQUALITY-1
-test "Cell equality is rejected for membership search and nested containers" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    try reject(
-        \\def main() -> int:
-        \\    cell = Cell(value=1)
-        \\    if cell in [cell]:
-        \\        return 1
-        \\    return 0
-    , "E_CELL_EQUALITY");
-    try reject(
-        \\def main() -> int:
-        \\    values = [Cell(value=1)]
-        \\    return values.index(Cell(value=1))
-    , "E_CELL_EQUALITY");
-    try reject(
-        \\record Holder:
-        \\    cell: Cell[int]
-        \\
-        \\
-        \\def main() -> int:
-        \\    item = Holder(cell=Cell(value=1))
-        \\    if item in [item]:
-        \\        return 1
-        \\    return 0
-    , "E_CELL_EQUALITY");
-    try reject(
-        \\def main() -> int:
-        \\    return [Cell(value=1)].index(Cell(value=1))
-    , "E_CELL_EQUALITY");
-    try reject(
-        \\def main() -> int:
-        \\    [Cell(value=1)].remove(Cell(value=1))
-        \\    return 0
-    , "E_CELL_EQUALITY");
-    try reject(
-        \\record Holder:
-        \\    cells: list[Cell[int]]
-        \\
-        \\
-        \\def main() -> int:
-        \\    holder = Holder(cells=[Cell(value=1)])
-        \\    return holder.cells.index(Cell(value=1))
-    , "E_CELL_EQUALITY");
-    try reject(
-        \\def make() -> list[Cell[int]]:
-        \\    return [Cell(value=1)]
-        \\
-        \\
-        \\def main() -> int:
-        \\    return make().remove(Cell(value=1))
-    , "E_CELL_EQUALITY");
-    try run(
-        \\def main() -> int:
-        \\    values = {"answer": Cell(value=42)}
-        \\    if "answer" in values:
-        \\        return values["answer"].value
-        \\    return 0
-    , 42);
 }

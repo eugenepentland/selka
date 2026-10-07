@@ -5,7 +5,6 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const io_render = @import("io_render.zig");
-const native_wiring = @import("wiring/native_session.zig");
 
 const module = "io-print.my";
 
@@ -48,9 +47,7 @@ test "IO-1 print renders scalars, text, bytes and containers with Python spellin
 
 // spec: IO-2
 test "IO-2 print renders records, enums, unions and checked results by name" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    const record = "class Point:\n    x: int\n    y: int\n\ndef main(out: Stream) -> int:\n    out.print(Point(x=1, y=2))\n    return 0\n";
+    const record = "record Point:\n    x: int\n    y: int\n\ndef main(out: Stream) -> int:\n    out.print(Point(x=1, y=2))\n    return 0\n";
     try expectOutput(record, "Point(x=1, y=2)\n");
     const colours = "enum Colour:\n    red,\n    green\n\n\ndef main(out: Stream) -> int:\n    out.print(Colour.green)\n    return 0\n";
     try expectOutput(colours, "Colour.green\n");
@@ -260,11 +257,7 @@ test "STREAM-BYTES rejects non byte values and preserves the output effect" {
 test "STREAM-BYTES traps R_OUTPUT when the native byte sink refuses output" {
     var compilation = try language.Compilation.init(t.allocator, module, "def main(out: Stream) -> int:\n    _ = out.write(b\"raw\\0\\xff\")\n    return 0\n");
     defer compilation.deinit();
-    const session = try native_wiring.acquire();
-    var scratch = std.heap.ArenaAllocator.init(session.allocator());
-    defer scratch.deinit();
-    const manifest = try compilation.emitQbe(scratch.allocator());
-    const executable = try native.program(session, manifest);
+    const executable = try native.executable(&compilation);
     const full = std.Io.Dir.openFileAbsolute(t.io, "/dev/full", .{ .mode = .write_only }) catch
         return error.SkipZigTest;
     defer full.close(t.io);

@@ -164,6 +164,35 @@ test "an overflow or bounds failure flushes stdout, reports like the old core an
     try std.testing.expect(std.mem.indexOf(u8, bounds.stderr, "bounds.my:4:15: error[R_LIST_BOUNDS]: native execution failed (index 5, length 3)\n") != null);
 }
 
+// spec: NEW-CORE-S5-NEGATIVE-INDEX-1
+test "a negative index past the start traps with the index the program wrote, in debug and release" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try scratch(a, dir);
+    const lines = [_][]const u8{ "14:16", "16:9", "19:16", "20:5" };
+    const kinds = [_][]const u8{ "list-read", "list-write", "array-read", "array-write" };
+    const statuses = [_]u8{ 20, 10, 40, 30 };
+    for ([_]bool{ false, true }) |release| {
+        const program = try buildFixture(a, root, "negative_index", .{ .compiler = options.core_path, .release = release });
+        for (kinds, lines, statuses) |kind, line, status| {
+            const trapped = try run(a, program, &.{ kind, "-5" });
+            try std.testing.expectEqual(@as(u8, 1), trapped.status);
+            const expected = try std.fmt.allocPrint(a, "negative_index.my:{s}: error[R_LIST_BOUNDS]: native execution failed (index -5, length 2)\n", .{line});
+            try std.testing.expect(std.mem.indexOf(u8, trapped.stderr, expected) != null);
+            try std.testing.expect(std.mem.indexOf(u8, trapped.stderr, "\"index\":-5,\"length\":2}") != null);
+            // An index past the end is reported unchanged, and one in range counts from the end.
+            const past = try run(a, program, &.{ kind, "7" });
+            try std.testing.expect(std.mem.indexOf(u8, past.stderr, "(index 7, length 2)") != null);
+            const last = try run(a, program, &.{ kind, "-1" });
+            try std.testing.expectEqual(status, last.status);
+            try std.testing.expectEqualStrings("", last.stderr);
+        }
+    }
+}
+
 /// The old and new builds of one fixture, run the same way: equal stdout and status.
 fn sameAsOld(arena: std.mem.Allocator, root: []const u8, name: []const u8, args: []const []const u8) !bool {
     if (!options.differential) return true;

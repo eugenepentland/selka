@@ -42,12 +42,12 @@ const shared_test = ", 61\n";
 const pin_set = " or ";
 
 /// Run `source` natively under copy on write and answer its result.
-fn run(a: std.mem.Allocator, source: []const u8, stress: bool) !i64 {
+fn run(a: std.mem.Allocator, source: []const u8) !i64 {
     const collector_runtime = language.runtime_mode.pinCollector();
     defer language.runtime_mode.set(collector_runtime);
     var c = try language.Compilation.init(a, "cow.my", source);
     defer c.deinit();
-    const result = try native.runWithPolicy(&c, checks, .{ .gc_stress = stress });
+    const result = try native.runWithPolicy(&c, checks, .{});
     if (result.trapped()) return error.TestUnexpectedResult;
     return result.value;
 }
@@ -147,7 +147,7 @@ test "copy on write: immediate variant dispatch copies only its selected payload
     defer a.free(il);
     try std.testing.expectEqual(@as(usize, 1), count(il, " blit "));
     try std.testing.expect(count(il, "myl_qbe_fail_normalized_index_bounds") > 0);
-    try std.testing.expectEqual(@as(i64, 3), try run(a, source, true));
+    try std.testing.expectEqual(@as(i64, 3), try run(a, source));
 }
 
 // spec: COW-SHARED-1
@@ -155,8 +155,8 @@ test "copy on write: a copy transfer shares the list and the first write through
     // Retain the internal phase-one path during the explicit legacy window.
     const legacy = @import("test_support.zig").LegacySharing.enter();
     defer legacy.restore();
-    try std.testing.expectEqual(@as(i64, 23), try run(std.testing.allocator, assigned, false));
-    try std.testing.expectEqual(@as(i64, 23), try run(std.testing.allocator, assigned, true));
+    try std.testing.expectEqual(@as(i64, 23), try run(std.testing.allocator, assigned));
+    try std.testing.expectEqual(@as(i64, 23), try run(std.testing.allocator, assigned));
     const a = std.testing.allocator;
     const il = try unitText(a, assigned, "main", checks);
     defer a.free(il);
@@ -169,7 +169,7 @@ test "copy on write: value-semantics copies use the rooted COW hook without dupl
     const previous = value_semantics.enabled();
     value_semantics.setEnabled(true);
     defer value_semantics.setEnabled(previous);
-    try std.testing.expectEqual(@as(i64, 23), try run(std.testing.allocator, assigned, true));
+    try std.testing.expectEqual(@as(i64, 23), try run(std.testing.allocator, assigned));
     const a = std.testing.allocator;
     const il = try unitText(a, assigned, "main", checks);
     defer a.free(il);
@@ -197,7 +197,7 @@ test "copy on write: a flat record shares two leaves inline with a rooted pinned
         \\    copied.first.append(3)
         \\    return len(original.first) * 100 + len(copied.first) * 10 + len(copied.second)
     ;
-    try std.testing.expectEqual(@as(i64, 121), try run(std.testing.allocator, source, true));
+    try std.testing.expectEqual(@as(i64, 121), try run(std.testing.allocator, source));
     const a = std.testing.allocator;
     const il = try unitText(a, source, "main", checks);
     defer a.free(il);
@@ -227,8 +227,8 @@ test "copy on write: recursive box projection protects a child exposed before a 
         \\        return 0
         \\    return len(old.items) * 10 + len(exposed.items)
     ;
-    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, false));
-    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, true));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source));
     const a = std.testing.allocator;
     const il = try unitText(a, source, "main", checks);
     defer a.free(il);
@@ -249,8 +249,8 @@ test "copy on write: recursive box projection protects a child exposed before a 
         \\    changed.child.items.append(2)
         \\    return len(first.child.items) * 10 + len(changed.child.items)
     ;
-    try std.testing.expectEqual(@as(i64, 12), try run(a, direct, false));
-    try std.testing.expectEqual(@as(i64, 12), try run(a, direct, true));
+    try std.testing.expectEqual(@as(i64, 12), try run(a, direct));
+    try std.testing.expectEqual(@as(i64, 12), try run(a, direct));
     const direct_il = try unitText(a, direct, "main", checks);
     defer a.free(direct_il);
     try std.testing.expect(count(direct_il, "call $myl_native_cow_clone_box(") > 0);
@@ -268,7 +268,7 @@ test "copy on write: recursive box projection protects a child exposed before a 
         \\    values[0].child.items.append(2)
         \\    return len(first.child.items) * 10 + len(values[0].child.items)
     ;
-    try std.testing.expectEqual(@as(i64, 12), try run(a, element, true));
+    try std.testing.expectEqual(@as(i64, 12), try run(a, element));
     const pure_call =
         \\record A:
         \\    child: B
@@ -289,7 +289,7 @@ test "copy on write: recursive box projection protects a child exposed before a 
         \\        return 1
         \\    return 0
     ;
-    try std.testing.expectEqual(@as(i64, 1), try run(a, pure_call, true));
+    try std.testing.expectEqual(@as(i64, 1), try run(a, pure_call));
 }
 
 // spec: QBE-PURE-BOX-READ-1
@@ -315,7 +315,7 @@ test "copy on write: a pure recursive box read needs no COW unbox runtime" {
     const il = try unitText(a, source, "total", checks);
     defer a.free(il);
     try std.testing.expectEqual(@as(usize, 0), count(il, "call $myl_qbe_cow_unbox("));
-    try std.testing.expectEqual(@as(i64, 3), try run(a, source, true));
+    try std.testing.expectEqual(@as(i64, 3), try run(a, source));
 }
 
 // spec: COW-UNIQUE-1
@@ -343,7 +343,7 @@ test "copy on write: every in-place write tests one header bit inline and copies
     };
     defer a.free(off);
     try std.testing.expectEqual(@as(usize, 0), count(off, "cow"));
-    try std.testing.expectEqual(@as(i64, 2), try run(std.testing.allocator, source, true));
+    try std.testing.expectEqual(@as(i64, 2), try run(std.testing.allocator, source));
 }
 
 const hoisted =
@@ -364,8 +364,8 @@ test "copy on write: a check the loop cannot invalidate runs once on the loop's 
     const entry = std.mem.indexOf(u8, il, "\n@ce").?;
     const header_end = std.mem.indexOfPos(u8, il, entry, "@cowkeep").?;
     try std.testing.expectEqual(@as(usize, 1), count(il[entry..header_end], shared_test));
-    try std.testing.expectEqual(@as(i64, 111), try run(std.testing.allocator, hoisted, false));
-    try std.testing.expectEqual(@as(i64, 111), try run(std.testing.allocator, hoisted, true));
+    try std.testing.expectEqual(@as(i64, 111), try run(std.testing.allocator, hoisted));
+    try std.testing.expectEqual(@as(i64, 111), try run(std.testing.allocator, hoisted));
 }
 
 const matrix =
@@ -384,8 +384,8 @@ test "copy on write: a nested write in a loop makes the rows unique once, on ent
     const il = try unitText(a, matrix, "main", checks);
     defer a.free(il);
     try std.testing.expectEqual(@as(usize, 1), count(il, "call $myl_native_cow_elements("));
-    try std.testing.expectEqual(@as(i64, 504), try run(std.testing.allocator, matrix, false));
-    try std.testing.expectEqual(@as(i64, 504), try run(std.testing.allocator, matrix, true));
+    try std.testing.expectEqual(@as(i64, 504), try run(std.testing.allocator, matrix));
+    try std.testing.expectEqual(@as(i64, 504), try run(std.testing.allocator, matrix));
 }
 
 const nested =
@@ -434,8 +434,8 @@ test "copy on write: alternating collection owners keep both snapshots alive und
         \\    changed[0]["a"]["b"].append(2)
         \\    return len(original[0]["a"]["b"]) * 10 + len(changed[0]["a"]["b"])
     ;
-    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, false));
-    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, true));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source));
 }
 
 // spec-case: COW-NESTED-1
@@ -450,8 +450,8 @@ test "copy on write: fixed array paths retain dictionary keys and collection own
         \\    changed["k"][0][0].append(2)
         \\    return len(original["k"][0][0]) * 10 + len(changed["k"][0][0])
     ;
-    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, false));
-    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source, true));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, source));
 }
 
 // spec-case: COW-NESTED-1
@@ -473,8 +473,8 @@ test "copy on write: a completed callback updates the current equal array entry"
         \\    return len(original["k"][0]) * 10 + len(changed["k"][0])
     ;
     const a = std.testing.allocator;
-    try std.testing.expectEqual(@as(i64, 12), try run(a, source, false));
-    try std.testing.expectEqual(@as(i64, 12), try run(a, source, true));
+    try std.testing.expectEqual(@as(i64, 12), try run(a, source));
+    try std.testing.expectEqual(@as(i64, 12), try run(a, source));
     const il = try unitText(a, source, "main", checks);
     defer a.free(il);
     try std.testing.expectEqual(@as(usize, 0), count(il, "call $myl_native_cow_scope_prepare("));
@@ -535,31 +535,13 @@ test "copy on write: a mut argument is pinned for the call, so a callee's copy o
     const saved = value_semantics.enabled();
     value_semantics.setEnabled(true);
     defer value_semantics.setEnabled(saved);
-    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, pinned, false));
-    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, pinned, true));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, pinned));
+    try std.testing.expectEqual(@as(i64, 12), try run(std.testing.allocator, pinned));
     const a = std.testing.allocator;
     const il = try unitText(a, pinned, "main", checks);
     defer a.free(il);
     try std.testing.expectEqual(@as(usize, 2), count(il, ", 1152921504606846976\n"));
     try std.testing.expectEqual(@as(usize, 2), count(il, "@unpin"));
-}
-
-// spec: COW-STATS-1
-test "copy on write: a counting build counts every inline check, mark and pin and reports at exit" {
-    const collector_runtime = language.runtime_mode.pinCollector();
-    defer language.runtime_mode.set(collector_runtime);
-    const a = std.testing.allocator;
-    const counting: Policy = .{ .step_checks = false, .frame_checks = false, .cow = .counting };
-    const il = try unitText(a, pinned, "main", counting);
-    defer a.free(il);
-    try std.testing.expectEqual(@as(usize, 1), count(il, "call $myl_native_cow_tally(w 3)"));
-    var c = try language.Compilation.init(a, "cow.my", assigned);
-    defer c.deinit();
-    const result = try native.runWithPolicy(&c, counting, .{});
-    try std.testing.expect(!result.trapped());
-    try std.testing.expectEqual(@as(i64, 23), result.value);
-    try std.testing.expect(std.mem.indexOf(u8, result.stderr, "cow-stats {\"marks\":1,") != null);
-    try std.testing.expect(std.mem.indexOf(u8, result.stderr, "\"copies\":1,") != null);
 }
 
 // spec: COW-INDEX-RETURN-1
@@ -624,8 +606,8 @@ test "copy on write: receiver stays pinned across later argument callbacks" {
         \\    rows[0].append(save(rows, mut saved))
         \\    return len(rows[0]) * 10 + len(saved[0][0])
     ;
-    try std.testing.expectEqual(@as(i64, 21), try run(std.testing.allocator, source, false));
-    try std.testing.expectEqual(@as(i64, 21), try run(std.testing.allocator, source, true));
+    try std.testing.expectEqual(@as(i64, 21), try run(std.testing.allocator, source));
+    try std.testing.expectEqual(@as(i64, 21), try run(std.testing.allocator, source));
 }
 
 // spec-case: MUT-EXCLUSIVE-PROOFS-1

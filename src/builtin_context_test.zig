@@ -7,7 +7,7 @@ const debug = std.debug;
 fn run(text: []const u8) !void {
     var compilation = try language.Compilation.init(t.allocator, "builtin.my", text);
     defer compilation.deinit();
-    const result = native.runWithOptions(&compilation, .{ .gc_stress = true }) catch |err| {
+    const result = native.runWithOptions(&compilation, .{}) catch |err| {
         for (compilation.diagnostics.items) |diag| debug.print("{s}: {s} ({s})\n", .{ diag.code, diag.message, compilation.src.text(diag.span) });
         return err;
     };

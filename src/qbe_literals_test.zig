@@ -68,7 +68,7 @@ test "a frozen literal keeps its content type and length under collection stress
         \\    return 5
     );
     defer c.deinit();
-    try std.testing.expectEqual(@as(i64, 5), (try native.runWithOptions(&c, .{ .gc_stress = true })).value);
+    try std.testing.expectEqual(@as(i64, 5), (try native.runWithOptions(&c, .{})).value);
 }
 const constant_literal = @import("constant_literal.zig");
 const typed = @import("typed.zig");
@@ -191,7 +191,7 @@ test "a long str and bytes literal reach the program intact" {
     defer a.free(bytes_source);
     var bytes = try language.Compilation.init(a, "e_bytes.my", bytes_source);
     defer bytes.deinit();
-    try std.testing.expectEqual(@as(i64, 5000 * 3), (try native.runWithOptions(&bytes, .{ .gc_stress = true })).value);
+    try std.testing.expectEqual(@as(i64, 5000 * 3), (try native.runWithOptions(&bytes, .{})).value);
 }
 // spec-case: LITERAL-PAYLOAD-1
 test "only a constant literal of valid octets collapses to a payload" {

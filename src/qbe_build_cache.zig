@@ -524,7 +524,7 @@ test "value copies retain frame pointers when they report an allocation failure"
     try std.testing.expect(keepsFramePointers("native_value_copy.c"));
 }
 
-// spec-case: QBE-STRIP-1
+// spec: QBE-STRIP-1
 test "native compile commands emit no debug information" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
     defer environment.deinit();

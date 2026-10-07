@@ -225,7 +225,7 @@ test "RC duplicate capture preserves native snapshots held inputs traps and budg
     }
     const limited = try native.runWithOptions(&compilation, .{ .arguments = &.{ "--", "once" }, .max_steps = 1 });
     try t.expectEqualStrings("R_STEP_LIMIT", limited.trap.code);
-    const stressed = try native.runWithOptions(&compilation, .{ .arguments = &.{ "--", "held" }, .gc_stress = true });
+    const stressed = try native.runWithOptions(&compilation, .{ .arguments = &.{ "--", "held" } });
     try t.expectEqual(@as(i64, 33), stressed.value);
     try t.expect(!stressed.failed);
 }

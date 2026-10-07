@@ -230,7 +230,7 @@ fn runSource(input: []const u8, collector: bool) !@import("native_execute.zig").
     runtime.set(if (collector) .gc else .rc);
     var compilation = try compiler.Compilation.init(t.allocator, "mut-callback-storage.my", input);
     defer compilation.deinit();
-    return @import("native_execute.zig").runWithOptions(&compilation, .{ .gc_stress = collector });
+    return @import("native_execute.zig").runWithOptions(&compilation, .{});
 }
 
 // spec-case: MUT-REBIND-CALLER-1

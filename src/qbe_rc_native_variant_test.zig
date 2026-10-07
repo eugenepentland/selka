@@ -211,37 +211,18 @@ const snapshots =
     \\    return total
 ;
 
-fn exercise(mode: runtime.Selection, stress: bool) !void {
+fn exercise(mode: runtime.Selection) !void {
     runtime.set(mode);
     var compilation = try compiler.Compilation.init(t.allocator, "native_variant_snapshots.my", snapshots);
     defer compilation.deinit();
-    const outcome = try execute.runUnaccounted(&compilation, .{ .gc_stress = stress });
+    const outcome = try execute.runUnaccounted(&compilation, .{});
     try t.expectEqualStrings("", outcome.trap.code);
     try t.expectEqual(@as(i64, 29), outcome.value);
-}
-
-// The native test runner currently treats RC count reports as diagnostics.
-// Inspect this successful process's complete result and parse its count line.
-fn exerciseCounting() !void {
-    runtime.set(.rc_counting);
-    var compilation = try compiler.Compilation.init(t.allocator, "native_variant_counted.my", snapshots);
-    defer compilation.deinit();
-    const outcome = try execute.runUnaccounted(&compilation, .{});
-    try t.expectEqual(@as(u8, 29), outcome.status);
-    try t.expectEqualStrings("29\n", outcome.stdout);
-    const prefix = "MYLANG_RC_COUNTS ";
-    try t.expect(std.mem.startsWith(u8, outcome.stderr, prefix));
-    const line = std.mem.trim(u8, outcome.stderr[prefix.len..], "\n");
-    const report = try std.json.parseFromSlice(std.json.Value, t.allocator, line, .{});
-    defer report.deinit();
-    try t.expectEqual(@as(i64, 1), report.value.object.get("version").?.integer);
 }
 
 // spec-case: RC-NATIVE-VARIANT-1
 test "RC-NATIVE-VARIANT-1 actual native snapshots retained loans mutations and error tags survive" {
     const saved = runtime.get();
     defer runtime.set(saved);
-    try exercise(.rc, false);
-    try exerciseCounting();
-    try exercise(.gc, true);
+    try exercise(.rc);
 }

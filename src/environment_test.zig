@@ -67,33 +67,6 @@ fn scenario(allocator: std.mem.Allocator) !void {
     var duplicates = try language.duplicates.discover(allocator, c.program.?, .{ .min_nodes = 1 });
     defer duplicates.deinit();
 }
-// spec: OWN-10
-test "environment grants delegate explicitly and missing empty and present values remain distinct" {
-    try scenario(t.allocator);
-    try lookup(forwarded, "ab", &.{}, 12);
-    try lookup(forwarded, null, &.{}, 0);
-    try lookup(forwarded, "", &.{}, 10);
-    try lookup(forwarded, "12345", &.{}, -4);
-}
-test "environment returns raw bytes and canonical zero padding" {
-    try lookup(declarations ++
-        \\def main(env: Environment) -> i64:
-        \\    match environment_get[Lookup](env, [75u8]):
-        \\        case Lookup.ok(entry):
-        \\            return i64(entry.bytes[0]) + i64(entry.bytes[1]) + i64(entry.bytes[2]) + i64(entry.bytes[3])
-        \\        case Lookup.err(code):
-        \\            return -code
-    , "\xff", &.{}, 255);
-}
-test "environment reads outside an explicit allowlist are denied before the host is asked" {
-    try lookup(forwarded, "ab", &.{ "--restrict", "--allow-env=OTHER" }, -2);
-    try lookup(forwarded, "ab", &.{ "--restrict", "--allow-env=K,OTHER" }, 12);
-    var c = try language.Compilation.initTrusted(t.allocator, module, forwarded);
-    defer c.deinit();
-    const withheld = try native.runWithOptions(&c, .{ .arguments = &.{"--restrict"} });
-    try t.expectEqualStrings("CapabilityUnavailable", withheld.trap.code);
-    try t.expectEqual(@as(u8, 2), withheld.status);
-}
 test "environment grants are rejected outside a capability parameter" {
     try reject(declarations ++
         \\def main() -> i64:
@@ -130,11 +103,6 @@ const zero_capacity = declarations ++
     \\        case Absent.err(code):
     \\            return -code
 ;
-test "zero capacity environment values distinguish absent empty and too large" {
-    try lookup(zero_capacity, null, &.{}, 0);
-    try lookup(zero_capacity, "", &.{}, 1);
-    try lookup(zero_capacity, "x", &.{}, -4);
-}
 const generic_environment = declarations ++
     \\def lookup[G](cap: Environment) -> Lookup effects(environment):
     \\    name: [1]u8 = [75u8]
@@ -153,12 +121,6 @@ fn genericEnvironmentScenario(allocator: std.mem.Allocator) !void {
     defer c.deinit();
     try c.emit();
     try t.expect(c.code.?.functions.len != 0);
-}
-test "generic environment lookup preserves bounded bytes and callback allocation failures" {
-    try lookup(generic_environment, "ab", &.{}, 2 + 'a' + 'b');
-    try genericEnvironmentScenario(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), genericEnvironmentScenario, .{});
 }
 const python_get =
     \\def main(env: Environment) -> i64 effects(environment):

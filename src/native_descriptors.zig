@@ -401,7 +401,7 @@ test "a niche optional is described to the runtime exactly as its payload's poin
     try std.testing.expect(std.mem.indexOf(u8, maybe_body, ".kind=MYL_NATIVE_POINTER,") != null);
 }
 
-// spec-case: GC-SCAN-PLAN-2
+// spec: GC-SCAN-PLAN-2
 test "a traced aggregate descriptor carries the flat scan plan of its references" {
     const span = @import("source.zig").Span{ .start = 0, .end = 0 };
     const base = typed.Type.record_base;

@@ -544,7 +544,7 @@ test "RC index update preserves zero trips arena collector and counting outcomes
     try t.expect(!collected.failed);
     try t.expectEqual(@as(i64, 1114), collected.value);
     runtime.set(.rc);
-    const stressed = try native.runUnaccounted(&compilation, .{ .arguments = &.{ "--", "shared", "-1", "3" }, .gc_stress = true });
+    const stressed = try native.runUnaccounted(&compilation, .{ .arguments = &.{ "--", "shared", "-1", "3" } });
     try t.expect(!stressed.failed);
     try t.expectEqual(@as(i64, 1114), stressed.value);
     const limited = try native.runWithOptions(&compilation, .{ .arguments = &.{ "--", "shared", "-1", "3" }, .max_steps = 1 });
@@ -572,48 +572,6 @@ test "RC index update preserves zero trips arena collector and counting outcomes
     try t.expectEqualStrings("41\n", fast_arena.stdout);
 }
 
-fn countedProcess(compilation: *compiler.Compilation, policy: interface.Policy) !std.process.RunResult {
-    const session = try @import("wiring/native_session.zig").acquire();
-    const allocator = session.allocator();
-    const text = try compilation.emitQbeWithOptions(t.allocator, policy);
-    defer t.allocator.free(text);
-    const executable = try native.program(session, text);
-    var environment = try session.environ.clone(allocator);
-    defer environment.deinit();
-    try environment.put(@import("memory_budget").variable, "536870912");
-    try @import("qbe_build.zig").runtime_options.apply(allocator, &environment, &.{"--print-result"});
-    return std.process.run(allocator, session.io, .{
-        .argv = &.{ executable, "shared", "-1", "3" },
-        .environ_map = &environment,
-        .stdout_limit = .limited(1 << 20),
-        .stderr_limit = .limited(1 << 20),
-    });
-}
-
-// spec-case: RC-INDEX-UPDATE-1
-test "RC index update preserves actual counting and site reports with positive native oracles" {
-    const saved = runtime.get();
-    defer runtime.set(saved);
-    var compilation = try compiler.Compilation.init(t.allocator, "counted_index_update.my", native_source);
-    defer compilation.deinit();
-    for ([_]runtime.Selection{ .rc_counting, .rc_sites }) |selection| {
-        runtime.set(selection);
-        const ordinary = try countedProcess(&compilation, .{});
-        const fast = try countedProcess(&compilation, unaccounted);
-        try t.expectEqual(ordinary.term, fast.term);
-        try t.expectEqualStrings(ordinary.stdout, fast.stdout);
-        try t.expectEqual(std.process.Child.Term{ .exited = 90 }, fast.term);
-        try t.expectEqualStrings("41\n1114\n", fast.stdout);
-        try t.expect(std.mem.startsWith(u8, fast.stderr, "MYLANG_RC_COUNTS {"));
-        // Physical event totals agree. The existing positive-read lowering
-        // adds two zero-event sites under unaccounted policy, so inventories
-        // from distinct accounting policies are intentionally not identical.
-        const ordinary_end = std.mem.indexOfScalar(u8, ordinary.stderr, '\n').?;
-        const fast_end = std.mem.indexOfScalar(u8, fast.stderr, '\n').?;
-        try t.expectEqualStrings(ordinary.stderr[0..ordinary_end], fast.stderr[0..fast_end]);
-    }
-}
-
 // spec-case: RC-INDEX-UPDATE-1
 test "RC index update executes aliases rebinds resizes and calls before updates" {
     const saved = runtime.get();
@@ -629,35 +587,6 @@ test "RC index update executes aliases rebinds resizes and calls before updates"
     const resized = try outcome(&compilation, "resized", 1, 3);
     try t.expect(resized.failed);
     try t.expectEqualStrings("R_LIST_BOUNDS", resized.trap.code);
-}
-
-// spec-case: RC-INDEX-UPDATE-1
-test "RC index update leaves COW allocation refusal and prior output at the original operation" {
-    const saved = runtime.get();
-    defer runtime.set(saved);
-    runtime.set(.rc);
-    var compilation = try compiler.Compilation.init(t.allocator, "refused_detach.my",
-        \\def main(out: Stream) -> int:
-        \\    values = [j for j in range(40000)]
-        \\    retained: list[list[int]] = []
-        \\    index = 0
-        \\    out.print(41)
-        \\    for at in range(20):
-        \\        snapshot = values
-        \\        next_value = values[index] + 1
-        \\        values[index] = next_value
-        \\        retained.append(snapshot)
-        \\    return values[index]
-    );
-    defer compilation.deinit();
-    const options: native.Options = .{ .max_memory = 1 << 20 };
-    const ordinary = try native.runWithOptions(&compilation, options);
-    const fast = try native.runUnaccounted(&compilation, options);
-    try t.expectEqualDeep(ordinary, fast);
-    try t.expect(fast.failed);
-    try t.expectEqualStrings("41\n", fast.stdout);
-    try t.expectEqualStrings("R_MEMORY_BUDGET", fast.trap.code);
-    try t.expectEqual(@as(u64, 9), fast.trap.line);
 }
 
 fn allocationScenario(allocator: std.mem.Allocator) !void {

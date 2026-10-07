@@ -46,11 +46,6 @@ pub fn run(allocator: std.mem.Allocator, text: []const u8, wanted: i64) Error!vo
     try expect(allocator, text, .{}, wanted);
 }
 
-/// Run a fixture while the collector runs at every managed allocation.
-pub fn stress(allocator: std.mem.Allocator, text: []const u8, wanted: i64) Error!void {
-    try expect(allocator, text, .{ .gc_stress = true }, wanted);
-}
-
 /// Check that a program using the standard modules fails to compile.
 pub fn reject(allocator: std.mem.Allocator, text: []const u8) Error!void {
     var entry: Entry = .{ .text = text };

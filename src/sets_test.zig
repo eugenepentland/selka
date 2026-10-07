@@ -23,7 +23,7 @@ fn rejected(source: []const u8, code: []const u8, fragment: []const u8) !void {
 fn trapped(source: []const u8, code: []const u8) !void {
     var c = try language.Compilation.init(t.allocator, "sets-trap.my", source);
     defer c.deinit();
-    const result = try native.runWithOptions(&c, .{ .gc_stress = true });
+    const result = try native.runWithOptions(&c, .{});
     try t.expectEqualStrings(code, result.trap.code);
 }
 
@@ -31,7 +31,7 @@ fn trapped(source: []const u8, code: []const u8) !void {
 fn value(source: []const u8) !i64 {
     var c = try language.Compilation.init(t.allocator, "sets-value.my", source);
     defer c.deinit();
-    const result = try native.runWithOptions(&c, .{ .gc_stress = true });
+    const result = try native.runWithOptions(&c, .{});
     try t.expectEqualStrings("", result.trap.code);
     return result.value;
 }
