@@ -254,7 +254,7 @@ fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
                 for (block.insts.items) |ref| exact += @intFromBool(function.inst(ref).check == .exact);
             }
             // Lists the release build would put on the stack (`promote.zig`).
-            const stack = try @import("promote.zig").promote(allocator, &outcome.module.?, &function, &known, false);
+            const stack = try @import("promote.zig").promote(allocator, &outcome.module.?, &function, &known, false, null);
             try out.print(keep, "ok {s}\tproven={d} exact={d} stack={d}\n", .{ outcome.name, known.proven, exact, stack.lists });
         }
     }

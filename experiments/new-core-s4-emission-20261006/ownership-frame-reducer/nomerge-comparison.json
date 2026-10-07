@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "zig",
+    "cc",
+    "-O3",
+    "-march=native",
+    "-Wno-override-module",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/ownership-frame-reducer/program-nomerge.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/mut-frame-combined-before-01/overflow-release-new/cache/core_rt-a5b0556a3a4eebfb.o",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/ownership-frame-reducer/program-nomerge"
+  ],
+  "status": 1,
+  "stderr": "hand.my:1:62: error[R_CORE_FACT]: native execution failed (count == 1 before an in-place update: value 0, other 1)\n  in origin at hand.my:1:62\n  in main at hand.my:1:288\n"
+}

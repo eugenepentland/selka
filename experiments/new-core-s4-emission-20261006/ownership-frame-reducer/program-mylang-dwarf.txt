@@ -1,0 +1,51 @@
+  Compilation Unit @ offset 0x2a77f:
+   Length:        0x73 (32-bit)
+   Version:       4
+   Abbrev Offset: 0x675
+   Pointer Size:  8
+ <0><2a78a>: Abbrev Number: 1 (DW_TAG_compile_unit)
+    <2a78b>   DW_AT_producer    : (indirect string, offset: 0x2c17): mylang-core
+    <2a78f>   DW_AT_language    : 12	(ANSI C99)
+    <2a791>   DW_AT_name        : (indirect string, offset: 0x220): hand.my
+    <2a795>   DW_AT_stmt_list   : 0x16e3a
+    <2a799>   DW_AT_GNU_pubnames: 1
+    <2a799>   DW_AT_low_pc      : 0x1032720
+    <2a7a1>   DW_AT_high_pc     : 0x12b
+ <1><2a7a5>: Abbrev Number: 2 (DW_TAG_subprogram)
+    <2a7a6>   DW_AT_name        : (indirect string, offset: 0x1e21): main
+    <2a7aa>   DW_AT_decl_file   : 1
+    <2a7ab>   DW_AT_decl_line   : 1
+    <2a7ac>   DW_AT_external    : 1
+    <2a7ac>   DW_AT_inline      : 1	(inlined)
+ <1><2a7ad>: Abbrev Number: 2 (DW_TAG_subprogram)
+    <2a7ae>   DW_AT_name        : (indirect string, offset: 0x1df7): origin
+    <2a7b2>   DW_AT_decl_file   : 1
+    <2a7b3>   DW_AT_decl_line   : 1
+    <2a7b4>   DW_AT_external    : 1
+    <2a7b4>   DW_AT_inline      : 1	(inlined)
+ <1><2a7b5>: Abbrev Number: 3 (DW_TAG_subprogram)
+    <2a7b6>   DW_AT_low_pc      : 0x1032720
+    <2a7be>   DW_AT_high_pc     : 0x12b
+    <2a7c2>   DW_AT_frame_base  : 1 byte block: 57 	(DW_OP_reg7 (rsp))
+    <2a7c4>   DW_AT_name        : (indirect string, offset: 0xe5): myl.entry
+    <2a7c8>   DW_AT_decl_file   : 1
+    <2a7c9>   DW_AT_decl_line   : 1
+    <2a7ca>   DW_AT_external    : 1
+ <2><2a7ca>: Abbrev Number: 4 (DW_TAG_inlined_subroutine)
+    <2a7cb>   DW_AT_abstract_origin: <0x2a7a5>
+    <2a7cf>   DW_AT_low_pc      : 0x10327bb
+    <2a7d7>   DW_AT_high_pc     : 0x90
+    <2a7db>   DW_AT_call_file   : 1
+    <2a7dc>   DW_AT_call_line   : 1
+    <2a7dd>   DW_AT_call_column : 1
+ <3><2a7de>: Abbrev Number: 5 (DW_TAG_inlined_subroutine)
+    <2a7df>   DW_AT_abstract_origin: <0x2a7ad>
+    <2a7e3>   DW_AT_low_pc      : 0x10327e5
+    <2a7eb>   DW_AT_high_pc     : 0x7
+    <2a7ef>   DW_AT_call_file   : 1
+    <2a7f0>   DW_AT_call_line   : 1
+    <2a7f1>   DW_AT_call_column : 288
+ <3><2a7f3>: Abbrev Number: 0
+ <2><2a7f4>: Abbrev Number: 0
+ <1><2a7f5>: Abbrev Number: 0
+

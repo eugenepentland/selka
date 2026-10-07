@@ -1,0 +1,47 @@
+test-core
++- run test 0 pass, 1 fail (1 total)
+guardian/test: test wall 9.01s; slowest over 50ms:
+guardian/test:   9.01s  emit_units_test.test.S4 consuming CFG clones retain exact callee and original call frames
+guardian/test: FAIL — 1 failed of 1
+guardian/test: RESULT {"passed":0,"failed":1,"skipped":0}
+error: 'emit_units_test.test.S4 consuming CFG clones retain exact callee and original call frames' failed:
+       guardian/test: 1 test(s) selected
+       
+       ====== expected this output: =========
+       leaf.my:6:14: error[R_OVERFLOW]: native execution failed (add, i64)
+         in leaf::origin at leaf.my:6:14
+         in app::main at app.my:5:12
+       MYLANG-TRAP {"version":1,"operation":"add","type":"i64","left":9223372036854775807,"right":1}
+       ␃
+       
+       ======== instead found this: =========
+       leaf.my:6:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)
+         in leaf::origin at leaf.my:6:14
+         in app::main at app.my:5:12
+       MYLANG-TRAP {"version":1,"operation":"add","left":9223372036854775807,"right":1,"width":64}
+       ␃
+       
+       ======================================
+       First difference occurs on line 1:
+       expected:
+       leaf.my:6:14: error[R_OVERFLOW]: native execution failed (add, i64)
+                                                                    ^ ('\x2c')
+       found:
+       leaf.my:6:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)
+                                                                    ^ ('\x3a')
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x133fc85 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/core/emit_units_test.zig:427:9: 0x134068e in test.S4 consuming CFG clones retain exact callee and original call frames (root_test.zig)
+               try std.testing.expectEqualStrings(case.expected, ran.stderr);
+               ^
+       guardian/test: SLOW  9.01s  emit_units_test.test.S4 consuming CFG clones retain exact callee and original call frames
+failed command: ./.zig-cache/o/ab08ac2d4848d5e4525e679673fe2dfa/test --cache-dir=./.zig-cache --seed=0x7fc2f05c --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 0/1 tests passed (1 failed)
+test-core transitive failure
++- run test 0 pass, 1 fail (1 total)
+   +- compile test debug native success 1s MaxRSS:345M
+      +- options success
+         +- compile exe mylang-core debug native cached 6ms MaxRSS:41M
+

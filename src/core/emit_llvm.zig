@@ -25,6 +25,7 @@ const emit_number = @import("emit_number.zig");
 const emit_cap = @import("emit_cap.zig");
 const emit_values = @import("emit_values.zig");
 const emit_constants = @import("emit_constants.zig");
+const origins = @import("inline_origins.zig");
 
 /// A source line and column for a span start.
 pub const Location = struct { line: u32, column: u32, path: []const u8 = "" };
@@ -33,6 +34,13 @@ pub const Location = struct { line: u32, column: u32, path: []const u8 = "" };
 pub const Locator = struct {
     context: *const anyopaque,
     locate: *const fn (*const anyopaque, u32) Location,
+};
+
+/// Optimizer output retained together through every native emission path.
+pub const Analysis = struct {
+    facts: []const ?facts.Facts = &.{},
+    vectors: []const []const vector.Plan = &.{},
+    provenance: ?*const origins.Table = null,
 };
 
 /// What the emitted module needs from its caller.
@@ -45,13 +53,11 @@ pub const Options = struct {
     main: Main,
     /// Per function, the facts a release build computed (empty in debug builds):
     /// element ranges become `!range` metadata on list loads.
-    facts: []const ?facts.Facts = &.{},
+    analysis: Analysis = .{},
     /// Verify mode: every proven check is emitted anyway, every fact interval and
     /// unreachable block is asserted, and a failure traps `R_CORE_FACT`. No `nsw`,
     /// `!range` or other fact-derived promise reaches LLVM, so it cannot fold the asserts away.
     verify: bool = false,
-    /// Per function, the loops the vector lowering takes (empty in debug and verify builds).
-    vectors: []const []const vector.Plan = &.{},
     /// The target description (`target.zig`): vector width and available intrinsics.
     target: @import("target.zig").Target = @import("target.zig").current,
 };
@@ -100,7 +106,7 @@ pub const TrapKind = enum(u8) {
 const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
 
 /// `  %x = getelementptr inbounds i8, ptr p, i64 0`: a new name for the same block.
-const zero_trap_line = "  call void @myl_core_trap(ptr @myl.site.{d}, i64 0, i64 0){s}\n  unreachable\n";
+const zero_trap_line = "  call void @myl_core_trap(ptr @myl.site.{d}, i64 0, i64 0) #2{s}\n  unreachable\n";
 
 const same_pointer = "  {s} = getelementptr inbounds i8, ptr {s}, i64 0\n";
 
@@ -226,7 +232,7 @@ fn render(allocator: std.mem.Allocator, module: *const ir.Module, options: Optio
     try out.appendSlice(allocator, state.meta.ranges.items);
     try out.appendSlice(allocator, state.layouts.text.items);
     if (selection == null) try emit_values.descriptors(allocator, module, &out);
-    try out.appendSlice(allocator, trace_call_attributes);
+    try out.appendSlice(allocator, call_attributes);
     if (state.local.zeros != 0) try out.print(allocator, "@myl.zeros = private constant [{d} x i8] zeroinitializer, align 8\n", .{state.local.zeros});
     try state.debug.finish(allocator, &out);
     if (selection) |chosen| return chosen.constants.finish(allocator, out.items);
@@ -242,7 +248,7 @@ fn renderFunction(state: *ModuleState, body: *Out, index: u32) Error!void {
         return;
     }
     var emitter: FunctionEmitter = .{ .state = state, .function = function, .index = index };
-    if (index < state.options.vectors.len) emitter.vectors.plans = state.options.vectors[index];
+    if (index < state.options.analysis.vectors.len) emitter.vectors.plans = state.options.analysis.vectors[index];
     try emitter.emitFunction(body);
 }
 
@@ -725,10 +731,30 @@ const FunctionEmitter = struct {
     vectors: VectorState = .{},
     memory: MemoryState = .{},
     /// The function's `DISubprogram` node (`dwarf_lines`), or 0.
-    scope: u32 = 0,
+    scope: SourceScope = .{},
     /// Emitting a release of a value that may be `undef` (`own.empty_release`): every
     /// block pointer is tested for null first.
     may_be_empty: bool = false,
+
+    const SourceScope = struct {
+        definition: u32 = 0,
+        origin: ?u32 = null,
+        inline_locations: std.AutoHashMapUnmanaged(u32, u32) = .empty,
+    };
+
+    fn sourceFunction(self: *FunctionEmitter) *const ir.Function {
+        const table = self.state.options.analysis.provenance orelse return self.function;
+        const origin = self.scope.origin orelse return self.function;
+        return &self.state.module.functions.items[table.frames.items[origin].function];
+    }
+
+    fn selectBlock(self: *FunctionEmitter, b: u32) void {
+        self.scope.origin = if (self.state.options.analysis.provenance) |table| table.block(self.index, b) else null;
+    }
+
+    fn selectInstruction(self: *FunctionEmitter, b: u32, ref: ir.Ref) void {
+        self.scope.origin = if (self.state.options.analysis.provenance) |table| table.instruction(self.index, b, ref) else null;
+    }
 
     /// Whether operation sub-emitters must assert runtime invariants.
     pub fn verifyMode(self: *FunctionEmitter) bool {
@@ -851,11 +877,13 @@ const FunctionEmitter = struct {
             if (b != 0 and block.preds.items.len == 0) continue;
             self.label = self.exit_labels.items[b];
             self.vectors.block = @intCast(b);
+            self.selectBlock(@intCast(b));
             try self.assertReachable(&bodies[b], @intCast(b));
             if (b == 0) try self.assertEntryFacts(&bodies[b]);
             for (block.insts.items) |ref| {
                 const inst = f.inst(ref);
                 if (inst.op == .phi) {
+                    self.selectInstruction(@intCast(b), ref);
                     try self.captureBoundLength(&bodies[b], ref);
                     try self.assertFacts(&bodies[b], ref, inst);
                 }
@@ -863,6 +891,7 @@ const FunctionEmitter = struct {
             for (block.insts.items) |ref| {
                 const inst = f.inst(ref);
                 if (inst.op == .phi or inst.op == .copy) continue;
+                self.selectInstruction(@intCast(b), ref);
                 try self.instruction(&bodies[b], ref, inst);
                 if (inst.op != .param and inst.op != .str_const) try self.captureBoundLength(&bodies[b], ref);
                 // A construction stored straight into its consumer never exists as a value to assert about.
@@ -1086,7 +1115,7 @@ const FunctionEmitter = struct {
             const resumed = try vector.emit(self.a(), out, self.function, .{
                 .plan = plan,
                 .id = self.state.meta.vector_count,
-                .known = self.state.options.facts[self.index].?,
+                .known = self.state.options.analysis.facts[self.index].?,
                 .scalars = .{ .context = self, .name = scalarName },
                 .from = self.label,
                 .target = self.state.options.target,
@@ -1098,17 +1127,17 @@ const FunctionEmitter = struct {
     }
 
     fn knownFacts(self: *FunctionEmitter) ?facts.Facts {
-        if (!self.state.options.verify or self.index >= self.state.options.facts.len) return null;
-        return self.state.options.facts[self.index];
+        if (!self.state.options.verify or self.index >= self.state.options.analysis.facts.len) return null;
+        return self.state.options.analysis.facts[self.index];
     }
 
     /// Verify mode: a block the facts call unreachable traps if it ever runs.
     fn assertReachable(self: *FunctionEmitter, out: *Out, block: u32) !void {
         const known = self.knownFacts() orelse return;
         if (known.reachable[block]) return;
-        const at: ir.Inst = .{ .op = .@"unreachable", .ty = .void, .span = self.function.span };
+        const at: ir.Inst = .{ .op = .@"unreachable", .ty = .void, .span = self.sourceFunction().span };
         const location = self.state.options.locator.locate(self.state.options.locator.context, at.span);
-        const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 64, .operation = "unreachable block", .function = self.function.name });
+        const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 64, .operation = "unreachable block", .function = self.sourceFunction().name });
         try self.trapIf(out, "true", index, "0", "0");
     }
 
@@ -1168,7 +1197,7 @@ const FunctionEmitter = struct {
             try out.print(self.a(), header_load_line, .{ at, try self.value(ref), len_offset, length, at });
             try out.print(self.a(), "  {s} = icmp ult i64 {s}, {d}\n  {s} = icmp ugt i64 {s}, {d}\n  {s} = or i1 {s}, {s}\n", .{ below, length, len.lo, above, length, len.hi, outside, below, above });
             const operation = try std.fmt.allocPrint(self.a(), "list length [{d}, {d}]", .{ len.lo, len.hi });
-            const index = try self.state.site(.{ .kind = .fact, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = 64, .operation = operation, .function = self.function.name });
+            const index = try self.state.site(.{ .kind = .fact, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = 64, .operation = operation, .function = self.sourceFunction().name });
             return self.trapIf(out, outside, index, length, "0");
         }
         if (kind != .record) return;
@@ -1197,7 +1226,13 @@ const FunctionEmitter = struct {
                 break :blk wide;
             };
             const operation = try std.fmt.allocPrint(self.a(), "record field {d} range [{d}, {d}]", .{ k, range.lo, range.hi });
-            const index = try self.state.site(.{ .kind = .fact, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = info.bits, .operation = operation, .function = self.function.name });
+            const index = try self.state.site(.{
+                .kind = .fact,
+                .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span),
+                .width = info.bits,
+                .operation = operation,
+                .function = self.sourceFunction().name,
+            });
             try self.trapIf(out, outside, index, wide_value, "0");
         }
     }
@@ -1223,7 +1258,7 @@ const FunctionEmitter = struct {
         try out.print(self.a(), header_load_line, .{ at, try self.value(ref), len_offset, length, at });
         try out.print(self.a(), "  {s} = icmp ne i64 {s}, {s}\n", .{ outside, length, expected });
         const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
-        const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 64, .operation = "uniform child list length", .function = self.function.name });
+        const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 64, .operation = "uniform child list length", .function = self.sourceFunction().name });
         try self.trapIf(out, outside, index, length, expected);
     }
 
@@ -1242,7 +1277,7 @@ const FunctionEmitter = struct {
         const predicate = if (bound.strict) (if (info.signed) "sge" else "uge") else (if (info.signed) "sgt" else "ugt");
         try out.print(self.a(), "  {s} = icmp {s} i64 {s}, {s}\n", .{ failed, predicate, name, len });
         const operation: []const u8 = if (bound.strict) "below the list length" else "at most the list length";
-        const index = try self.state.site(.{ .kind = .fact, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = info.bits, .operation = operation, .function = self.function.name });
+        const index = try self.state.site(.{ .kind = .fact, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = info.bits, .operation = operation, .function = self.sourceFunction().name });
         try self.trapIf(out, failed, index, name, len);
     }
 
@@ -1272,7 +1307,7 @@ const FunctionEmitter = struct {
         }
         const condition = failed orelse return;
         const operation = try std.fmt.allocPrint(self.a(), "range [{d}, {d}]", .{ range.lo, range.hi });
-        const index = try self.state.site(.{ .kind = .fact, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = info.bits, .operation = operation, .function = self.function.name });
+        const index = try self.state.site(.{ .kind = .fact, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = info.bits, .operation = operation, .function = self.sourceFunction().name });
         try self.trapIf(out, condition, index, try self.widened(out, ref), "0");
     }
 
@@ -1281,7 +1316,7 @@ const FunctionEmitter = struct {
         const width: u16 = if (inst.ty.integer()) |info| info.bits else 64;
         // In verify mode a check the facts proved is still emitted, and its failure is the fact's.
         const effective: TrapKind = if (inst.check == .proven) .fact else kind;
-        return self.state.site(.{ .kind = effective, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = width, .operation = operation, .function = self.function.name });
+        return self.state.site(.{ .kind = effective, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = width, .operation = operation, .function = self.sourceFunction().name });
     }
 
     /// Branch to a cold trap when `failed` (an `i1` operand) holds, and continue in a new label.
@@ -1305,7 +1340,7 @@ const FunctionEmitter = struct {
 
     /// Emit the located trap and resume in the valid-path block.
     pub fn trapEnd(self: *FunctionEmitter, out: *Out, branch: TrapBranch, detail: struct { left: []const u8, right: []const u8 }) Error!void {
-        try out.print(self.a(), "  call void @myl_core_trap(ptr @myl.site.{d}, i64 {s}, i64 {s}){s}\n  unreachable\n{s}:\n", .{ branch.site, detail.left, detail.right, branch.location, branch.next });
+        try out.print(self.a(), "  call void @myl_core_trap(ptr @myl.site.{d}, i64 {s}, i64 {s}) #2{s}\n  unreachable\n{s}:\n", .{ branch.site, detail.left, detail.right, branch.location, branch.next });
         self.label = branch.next;
     }
 
@@ -1494,13 +1529,13 @@ const FunctionEmitter = struct {
             try out.print(self.a(), zero_trap_line, .{ index, try self.trapLocation(index) });
         } else if (inst.data == capacity_assert) {
             const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
-            const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 64, .operation = "a stack list's length below its capacity", .function = self.function.name });
+            const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 64, .operation = "a stack list's length below its capacity", .function = self.sourceFunction().name });
             try out.print(self.a(), zero_trap_line, .{ index, try self.trapLocation(index) });
         } else if (inst.data == unique_assert) {
             // `own.zig`'s assert of a statically unique update (verify builds only).
             const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
-            const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 32, .operation = "count == 1 before an in-place update", .function = self.function.name });
-            try out.print(self.a(), "  call void @myl_core_trap(ptr @myl.site.{d}, i64 0, i64 1){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
+            const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 32, .operation = "count == 1 before an in-place update", .function = self.sourceFunction().name });
+            try out.print(self.a(), "  call void @myl_core_trap(ptr @myl.site.{d}, i64 0, i64 1) #2{s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
         } else if (inst.data == flags.dict_missing_trap) {
             const index = try self.site(.missing_key, inst, "key");
             try out.print(self.a(), zero_trap_line, .{ index, try self.trapLocation(index) });
@@ -1512,8 +1547,8 @@ const FunctionEmitter = struct {
             const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
             const kind: u16 = @truncate(inst.data >> 32);
             const message = self.state.module.strings.items[@as(u32, @truncate(inst.data))];
-            const index = try self.state.site(.{ .kind = .assertion, .location = location, .width = kind, .operation = message, .function = self.function.name });
-            try out.print(self.a(), "  call void @myl_core_assert_fail(ptr @myl.site.{d}){s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
+            const index = try self.state.site(.{ .kind = .assertion, .location = location, .width = kind, .operation = message, .function = self.sourceFunction().name });
+            try out.print(self.a(), "  call void @myl_core_assert_fail(ptr @myl.site.{d}) #2{s}\n  unreachable\n", .{ index, try self.trapLocation(index) });
         } else try out.appendSlice(self.a(), "  unreachable\n");
     }
 
@@ -2236,7 +2271,7 @@ const FunctionEmitter = struct {
             else => "? propagated",
         };
         const action_symbol: []const u8 = if (inst.data == 0 or inst.data == 2) "origin" else "append";
-        const index = try self.state.site(.{ .kind = .trace, .location = location, .width = 0, .operation = action, .function = self.function.name });
+        const index = try self.state.site(.{ .kind = .trace, .location = location, .width = 0, .operation = action, .function = self.sourceFunction().name });
         // ERROR-TRACE-5/6: zero inline cost and the compiler-owned preserving ABI.
         try out.print(self.a(), "  call preserve_mostcc void @myl_core_err_trace_{s}_preserve_most(ptr @myl.site.{d}) #1\n", .{ action_symbol, index });
     }
@@ -2255,22 +2290,45 @@ const FunctionEmitter = struct {
     fn functionScope(self: *FunctionEmitter) ![]const u8 {
         if (self.state.options.target.traps != .dwarf_lines) return "";
         const location = self.state.options.locator.locate(self.state.options.locator.context, self.function.span);
-        self.scope = try self.state.debug.subprogram(self.a(), self.function.name, location);
-        return std.fmt.allocPrint(self.a(), function_scope, .{self.scope});
+        self.scope.definition = try self.state.debug.function(self.a(), self.index, self.function, location);
+        return std.fmt.allocPrint(self.a(), function_scope, .{self.scope.definition});
     }
 
     /// `, !dbg !N` for a call at `span` (`dwarf_lines` only): LLVM keeps it through
     /// inlining as an inline record, so a return address maps to every frame it stands for.
     fn callLocation(self: *FunctionEmitter, span: u32) ![]const u8 {
-        if (self.scope == 0) return "";
+        if (self.scope.definition == 0) return "";
         const location = self.state.options.locator.locate(self.state.options.locator.context, span);
-        return std.fmt.allocPrint(self.a(), instruction_location, .{try self.state.debug.location(self.a(), location, self.scope)});
+        const node = try self.sourceLocation(location, self.scope.origin);
+        return std.fmt.allocPrint(self.a(), instruction_location, .{node});
     }
 
     fn trapLocation(self: *FunctionEmitter, site_index: u32) ![]const u8 {
-        if (self.scope == 0) return "";
+        if (self.scope.definition == 0) return "";
         const location = self.state.sites.items[site_index].location;
-        return std.fmt.allocPrint(self.a(), instruction_location, .{try self.state.debug.location(self.a(), location, self.scope)});
+        const node = try self.sourceLocation(location, self.scope.origin);
+        return std.fmt.allocPrint(self.a(), instruction_location, .{node});
+    }
+
+    /// A source location in its exact callee scope and original inline call chain.
+    fn sourceLocation(self: *FunctionEmitter, location: Location, origin: ?u32) Error!u32 {
+        const id = origin orelse return self.state.debug.location(self.a(), location, self.scope.definition);
+        const table = self.state.options.analysis.provenance.?;
+        const frame = table.frames.items[id];
+        const callee = &self.state.module.functions.items[frame.function];
+        const declaration = self.state.options.locator.locate(self.state.options.locator.context, callee.span);
+        const scope = try self.state.debug.function(self.a(), frame.function, callee, declaration);
+        const at = try self.inlineLocation(id);
+        return self.state.debug.inlinedLocation(self.a(), location, scope, at);
+    }
+
+    fn inlineLocation(self: *FunctionEmitter, id: u32) Error!u32 {
+        if (self.scope.inline_locations.get(id)) |node| return node;
+        const frame = self.state.options.analysis.provenance.?.frames.items[id];
+        const at = self.state.options.locator.locate(self.state.options.locator.context, frame.call_span);
+        const node = try self.sourceLocation(at, frame.parent);
+        try self.scope.inline_locations.put(self.a(), id, node);
+        return node;
     }
 
     /// A list `promote.zig` put on the stack: an entry-block `alloca` with the block
@@ -2317,7 +2375,7 @@ const FunctionEmitter = struct {
             const shared = try self.fresh("%us");
             try out.print(self.a(), count_load_line ++ "  {s} = icmp ne i32 {s}, 1\n", .{ count, block, shared, count });
             const location = self.state.options.locator.locate(self.state.options.locator.context, inst.span);
-            const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 32, .operation = "count == 1 before freeing a unique block", .function = self.function.name });
+            const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 32, .operation = "count == 1 before freeing a unique block", .function = self.sourceFunction().name });
             try self.trapIf(out, shared, index, "0", "1");
         }
         try out.print(self.a(), "  call void @myl_core_free(ptr {s})\n", .{block});
@@ -2394,16 +2452,16 @@ const FunctionEmitter = struct {
         const info = inst.ty.integer() orelse return false;
         if (!info.signed) return true;
         if (inst.op == .iconst) return @as(i64, @bitCast(inst.data)) >= 0;
-        if (self.state.options.verify or self.index >= self.state.options.facts.len) return false;
-        const known = self.state.options.facts[self.index] orelse return false;
+        if (self.state.options.verify or self.index >= self.state.options.analysis.facts.len) return false;
+        const known = self.state.options.analysis.facts[self.index] orelse return false;
         const range = known.ranges[ref.index()] orelse return false;
         return range.lo >= 0;
     }
 
     /// Whether trusted facts put an integer value inside `i32` (never in verify builds).
     fn fitsI32(self: *FunctionEmitter, raw: ir.Ref) bool {
-        if (self.state.options.verify or self.index >= self.state.options.facts.len) return false;
-        const known = self.state.options.facts[self.index] orelse return false;
+        if (self.state.options.verify or self.index >= self.state.options.analysis.facts.len) return false;
+        const known = self.state.options.analysis.facts[self.index] orelse return false;
         const ref = self.function.resolve(raw);
         const inst = self.function.inst(ref);
         const range = if (inst.op == .iconst) facts.Interval.point(@as(i64, @bitCast(inst.data))) else known.ranges[ref.index()] orelse return false;
@@ -2413,8 +2471,8 @@ const FunctionEmitter = struct {
     /// `, !range !N` when the facts bound the loaded value more tightly than its type.
     fn loadRange(self: *FunctionEmitter, name: []const u8, loaded: ir.Type) ![]const u8 {
         const info = loaded.integer() orelse return "";
-        if (self.state.options.verify or self.index >= self.state.options.facts.len) return "";
-        const known = self.state.options.facts[self.index] orelse return "";
+        if (self.state.options.verify or self.index >= self.state.options.analysis.facts.len) return "";
+        const known = self.state.options.analysis.facts[self.index] orelse return "";
         const index = std.fmt.parseInt(usize, name[2..], 10) catch return "";
         const range = known.ranges[index] orelse return "";
         const full = facts.typeRange(loaded).?;
@@ -2451,8 +2509,8 @@ const FunctionEmitter = struct {
     }
 
     fn fillCounter(self: *FunctionEmitter, list: ir.Ref) ?ir.Ref {
-        if (self.index >= self.state.options.facts.len) return null;
-        const known = self.state.options.facts[self.index] orelse return null;
+        if (self.index >= self.state.options.analysis.facts.len) return null;
+        const known = self.state.options.analysis.facts[self.index] orelse return null;
         const ref = self.function.resolve(list);
         for (known.counted) |fill| for (self.function.blocks.items[fill.loop.header.index()].insts.items) |phi| {
             if (phi == ref and known.aggregates.lists[ref.index()].pattern) return fill.counter;
@@ -2617,6 +2675,7 @@ const Debug = struct {
     unit: u32 = 0,
     files: std.ArrayList(File) = .empty,
     fallback: []const u8 = "",
+    scopes: std.AutoHashMapUnmanaged(u32, u32) = .empty,
 
     const File = struct { path: []const u8, id: u32 };
 
@@ -2655,10 +2714,23 @@ const Debug = struct {
         return self.node(allocator, format, .{ name, source, source, at.line, first_node + 2, at.line, self.unit });
     }
 
+    fn function(self: *Debug, allocator: std.mem.Allocator, index: u32, f: *const ir.Function, at: Location) !u32 {
+        if (self.scopes.get(index)) |known| return known;
+        const created = try self.subprogram(allocator, f.name, at);
+        try self.scopes.put(allocator, index, created);
+        return created;
+    }
+
     fn location(self: *Debug, allocator: std.mem.Allocator, at: Location, scope: u32) !u32 {
         const source = try self.file(allocator, at.path);
         const local = try self.node(allocator, "!DILexicalBlockFile(scope: !{d}, file: !{d}, discriminator: 0)", .{ scope, source });
         return self.node(allocator, "!DILocation(line: {d}, column: {d}, scope: !{d})", .{ at.line, at.column, local });
+    }
+
+    fn inlinedLocation(self: *Debug, allocator: std.mem.Allocator, at: Location, scope: u32, inlined_at: u32) !u32 {
+        const source = try self.file(allocator, at.path);
+        const local = try self.node(allocator, "!DILexicalBlockFile(scope: !{d}, file: !{d}, discriminator: 0)", .{ scope, source });
+        return self.node(allocator, "!DILocation(line: {d}, column: {d}, scope: !{d}, inlinedAt: !{d})", .{ at.line, at.column, local, inlined_at });
     }
 
     /// The nodes and the module flags that make LLVM emit them (DWARF 4: the runtime's reader).
@@ -2799,8 +2871,9 @@ fn uses(text: []const u8, name: []const u8) bool {
     return false;
 }
 
-/// Attribute group `#1`: an error-trace recorder call costs nothing to inline around (ERROR-TRACE-5).
-const trace_call_attributes = "attributes #1 = { \"call-inline-cost\"=\"0\" }\n";
+/// Trace calls cost nothing to inline around (ERROR-TRACE-5). Trapping calls must
+/// not merge across source scopes: a merged PC loses an inline caller frame.
+const call_attributes = "attributes #1 = { \"call-inline-cost\"=\"0\" }\nattributes #2 = { nomerge }\n";
 
 /// The branch-weight metadata every trap branch names (`!0`: the trap is cold).
 pub const metadata = "!0 = !{!\"branch_weights\", i32 1, i32 1048575}\n";

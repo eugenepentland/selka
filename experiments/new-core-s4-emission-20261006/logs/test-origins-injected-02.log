@@ -1,0 +1,25 @@
+test-core
++- run test 0 pass, 1 fail (1 total)
+guardian/test: test wall 3.21s; slowest over 50ms:
+guardian/test:   3.21s  inline_origins_test.test.a failed ownership check added to a consuming clone retains its callee frame
+guardian/test: FAIL — 1 failed of 1
+guardian/test: RESULT {"passed":0,"failed":1,"skipped":0}
+error: 'inline_origins_test.test.a failed ownership check added to a consuming clone retains its callee frame' failed:
+       guardian/test: 1 test(s) selected
+       injected ownership diagnostic: hand.my:1:62: error[R_CORE_FACT]: native execution failed (count == 1 before an in-place update: value 0, other 1)
+         in origin at hand.my:1:62
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x13349e9 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/core/inline_origins_test.zig:149:5: 0x133543f in test.a failed ownership check added to a consuming clone retains its callee frame (root_test.zig)
+           try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "in main at hand.my:") != null);
+           ^
+failed command: ./.zig-cache/o/08a2d80956a27d3f7c0c68dd9c9dde3d/test --cache-dir=./.zig-cache --seed=0x449dcf5d --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 0/1 tests passed (1 failed)
+test-core transitive failure
++- run test 0 pass, 1 fail (1 total)
+   +- compile test debug native success 1s MaxRSS:339M
+      +- options cached
+         +- compile exe mylang-core debug native cached 5ms MaxRSS:41M
+

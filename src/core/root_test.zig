@@ -5,6 +5,7 @@ comptime {
     _ = @import("build_test.zig");
     _ = @import("emit_llvm_test.zig");
     _ = @import("emit_units_test.zig");
+    _ = @import("inline_origins_test.zig");
     _ = @import("driver_test.zig");
     _ = @import("facts_test.zig");
     _ = @import("vector_test.zig");

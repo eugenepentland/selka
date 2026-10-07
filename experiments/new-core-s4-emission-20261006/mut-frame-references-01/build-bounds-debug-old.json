@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-01/bounds/app.my",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/mut-frame-references-01/bounds-debug-old/cache",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/mut-frame-references-01/bounds-debug-old/program"
+  ],
+  "status": 1,
+  "stdout": "",
+  "stderr": "app.my:5:24: error[E_MUTATION_MARKER]: `leaf.origin` writes `xs`; write `(mut xs, 2)`\n      return leaf.origin(xs, 2)\n                         ^\n",
+  "seconds": 1.3301002408843488
+}

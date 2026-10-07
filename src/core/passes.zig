@@ -9,6 +9,7 @@ const inline_leaves = @import("inline.zig");
 const vector = @import("vector.zig");
 const version = @import("version.zig");
 const own = @import("own.zig");
+const origins = @import("inline_origins.zig");
 
 /// Passes only allocate.
 pub const Error = std.mem.Allocator.Error;
@@ -25,6 +26,8 @@ pub const Result = struct {
     counts: Counts = .{},
     /// What ownership did: copy-on-write forms, retains and releases.
     own: own.Stats = .{},
+    /// Sparse source frames of instructions and blocks cloned by these passes.
+    provenance: origins.Table = .{},
 };
 
 /// How often each release pass changed something (`--stats`).
@@ -51,9 +54,9 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
     };
     @memset(result.known, null);
     @memset(result.plans, &.{});
-    result.counts.inlined = try inline_leaves.inlineLeaves(arena, module);
+    result.counts.inlined = try inline_leaves.inlineLeaves(arena, module, &result.provenance);
     if (mode == .off) {
-        result.own = try own.run(arena, module, .{});
+        result.own = try own.run(arena, module, .{ .provenance = &result.provenance });
         return result;
     }
     const verify = mode != .trusted;
@@ -67,17 +70,17 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
     // intervals; `parameterRanges` turns them into the parameter intervals the real
     // pass starts from. It changes no function.
     const first = try arena.alloc(?facts.Facts, module.functions.items.len);
-    for (module.functions.items, first) |*function, *slot| {
+    for (module.functions.items, first, 0..) |*function, *slot, index| {
         slot.* = null;
         if (function.signature.linkage != .internal) continue;
-        result.counts.unswitched += try version.unswitch(arena, function);
+        result.counts.unswitched += try version.unswitch(arena, function, result.provenance.context(@intCast(index)));
         slot.* = try facts.analyze(arena, function, .{ .fold = !verify, .sabotage = sabotage, .mark = false });
     }
     const parameters = try parameterRanges(arena, module, first);
     // Closed caller bounds can prove an affine callback safe only after the
     // all-call parameter pass. Deliberately corrupted facts cannot prove safety.
-    if (sabotage == .none) result.counts.inlined += try inline_leaves.withParameters(arena, module, parameters);
-    for (module.functions.items, result.known, result.plans, parameters) |*function, *slot, *plan, params| {
+    if (sabotage == .none) result.counts.inlined += try inline_leaves.withParameters(arena, module, parameters, &result.provenance);
+    for (module.functions.items, result.known, result.plans, parameters, 0..) |*function, *slot, *plan, params, index| {
         if (function.signature.linkage != .internal) continue;
         const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage, .params = params };
         var known = try facts.analyze(arena, function, options);
@@ -87,14 +90,14 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         }
         result.counts.proven += known.proven;
         // A reduction proven only under a trip bound gets a guarded copy; the facts then run again.
-        const guarded = try version.versionReductions(arena, function, known);
+        const guarded = try version.versionReductions(arena, function, known, result.provenance.context(@intCast(index)));
         if (guarded != 0) {
             known = try facts.analyze(arena, function, options);
             result.counts.proven += known.proven;
         }
         result.counts.versioned += guarded;
         // Ownership after the facts: the instructions and blocks it adds have none.
-        result.own.add(try own.function(arena, module, function, .{ .verify = verify, .facts = &known }));
+        result.own.add(try own.function(arena, module, function, .{ .verify = verify, .facts = &known, .provenance = &result.provenance, .function_index = @intCast(index) }));
         try extend(arena, &known, function);
         slot.* = known;
         // Vector code comes only from trusted facts, never in a verify build.

@@ -44,6 +44,11 @@ pub fn runPasses(arena: std.mem.Allocator, module: *ir.Module, mode: passes.Mode
     return result;
 }
 
+/// Carry every optimizer product to an emission fixture without dropping ancestry.
+pub fn analysis(result: *const passes.Result) emit_llvm.Analysis {
+    return .{ .facts = result.known, .vectors = result.plans, .provenance = &result.provenance };
+}
+
 /// The textual Core IR of `source`.
 pub fn irText(arena: std.mem.Allocator, source: []const u8) Error![]u8 {
     var refusal: build.Refusal = .{};
@@ -94,7 +99,7 @@ pub fn verifyLlvmText(arena: std.mem.Allocator, source: []const u8) Error![]u8 {
     const result = try runPasses(arena, &module, .verify);
     const context: u8 = 0;
     const locator: emit_llvm.Locator = .{ .context = &context, .locate = firstLine };
-    return emit_llvm.emitModule(arena, &module, .{ .locator = locator, .source_path = "test.my", .main = .{ .parameters = &.{"out"} }, .facts = result.known, .verify = true });
+    return emit_llvm.emitModule(arena, &module, .{ .locator = locator, .source_path = "test.my", .main = .{ .parameters = &.{"out"} }, .analysis = analysis(&result), .verify = true });
 }
 
 /// The LLVM IR a release build of `source` emits for target description `target`.
@@ -104,7 +109,7 @@ pub fn releaseLlvmTextFor(arena: std.mem.Allocator, source: []const u8, target: 
     const result = try runPasses(arena, &module, .trusted);
     const context: u8 = 0;
     const locator: emit_llvm.Locator = .{ .context = &context, .locate = firstLine };
-    return emit_llvm.emitModule(arena, &module, .{ .locator = locator, .source_path = "test.my", .main = .{ .parameters = &.{ "args", "out" } }, .facts = result.known, .vectors = result.plans, .target = target });
+    return emit_llvm.emitModule(arena, &module, .{ .locator = locator, .source_path = "test.my", .main = .{ .parameters = &.{ "args", "out" } }, .analysis = analysis(&result), .target = target });
 }
 
 // ---- hand-built IR ------------------------------------------------------------------
@@ -193,7 +198,7 @@ pub const Hand = struct {
 pub const Run = struct { stdout: []const u8, stderr: []const u8, status: u8, llvm: []const u8 };
 
 /// Why a hand-built program could not be built or run.
-pub const RunError = Error || driver.Error;
+pub const RunError = Error || driver.Error || error{AnalyzedOwnership};
 
 /// Verify `module`, emit it (traps at line 1), compile it with `zig cc` at -O0
 /// (or -O3 when `release`) and run it with no arguments.
@@ -217,18 +222,20 @@ pub const RunOptions = struct {
     main: emit_llvm.Main = .{ .parameters = &.{"out"} },
     /// Verify the IR first; off only for operand forms the verifier does not admit yet.
     check_ir: bool = true,
-    /// Fact tables for tests that verify a deliberately injected bad premise.
-    known: []const ?facts.Facts = &.{},
+    /// Facts, vector plans and source ancestry, including injected test premises.
+    analysis: emit_llvm.Analysis = .{},
 };
 
 /// Run the ownership pass over `module` (as a build would, after construction),
 /// verify, emit, compile and run it, by default with the leak check on.
 pub fn runOwned(arena: std.mem.Allocator, module: *ir.Module, options: RunOptions) RunError!Run {
+    // Pass output is already owned; a second pass lacks its mutable origin table.
+    if (options.own and options.analysis.provenance != null) return error.AnalyzedOwnership;
     if (options.check_ir) try verified(arena, module, &.{});
     if (options.own) _ = try @import("own.zig").run(arena, module, .{ .verify = options.verify });
     if (options.check_ir) try verified(arena, module, &.{});
     const context: u8 = 0;
-    const llvm = try emit_llvm.emitModule(arena, module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "hand.my", .main = options.main, .verify = options.verify, .facts = options.known });
+    const llvm = try emit_llvm.emitModule(arena, module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "hand.my", .main = options.main, .verify = options.verify, .analysis = options.analysis });
     return runLlvm(arena, llvm, options);
 }
 

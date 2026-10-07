@@ -20,6 +20,10 @@ fn locate(context: *const anyopaque, offset: u32) emitter.Location {
 }
 
 fn snapshot(a: std.mem.Allocator, sources: [3][]const u8, release: bool) ![]units.Unit {
+    return snapshotFor(a, sources, if (release) .release else .debug);
+}
+
+fn snapshotFor(a: std.mem.Allocator, sources: [3][]const u8, mode: enum { debug, release, verify }) ![]units.Unit {
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const names = [_][]const u8{ "app.my", "leaf.my", "other.my" };
@@ -34,16 +38,16 @@ fn snapshot(a: std.mem.Allocator, sources: [3][]const u8, release: bool) ![]unit
     };
     var refusal: build.Refusal = .{};
     var module = try build.buildModuleSource(a, checked.program, checked.src, &refusal);
-    const result = if (release) try passes.run(a, &module, .trusted) else passes.Result{ .known = &.{}, .plans = &.{} };
-    if (!release) _ = try passes.ownership(a, &module);
+    const result = if (mode != .debug) try passes.run(a, &module, if (mode == .verify) .verify else .trusted) else passes.Result{ .known = &.{}, .plans = &.{} };
+    if (mode == .debug) _ = try passes.ownership(a, &module);
     const main = checked.program.functions[@backingInt(checked.program.main)];
     const shape = language.typed.resultShape(main.signature.return_type, checked.program.records);
     return units.emit(a, &module, .{
         .locator = .{ .context = &checked.src, .locate = locate },
         .source_path = "app.my",
         .main = .{ .parameters = &.{"out"}, .result = if (shape) |s| .{ .ok_tag = @intCast(s.ok_tag), .error_tag = @intCast(s.error_tag) } else null },
-        .facts = result.known,
-        .vectors = result.plans,
+        .analysis = .{ .facts = result.known, .vectors = result.plans, .provenance = &result.provenance },
+        .verify = mode == .verify,
     });
 }
 
@@ -405,4 +409,76 @@ test "S4 unsafe leaf arithmetic retains its source callee and caller" {
             try std.testing.expect(std.mem.indexOf(u8, result.stderr, "in app::main at app.my:4:12") != null);
         }
     }
+}
+
+// spec-case: NEW-CORE-S4-SITES-1
+test "S4 consuming CFG clones retain exact callee and original call frames" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const cases = [_]struct { argument: []const u8, body: []const u8, expected: []const u8 }{
+        .{
+            .argument = "2",
+            .body = "    return xs[x]\n",
+            .expected = "leaf.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 2)\n" ++
+                "  in leaf::origin at leaf.my:4:12\n  in app::main at app.my:5:12\n" ++
+                "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":2}\n",
+        },
+        .{
+            .argument = "1",
+            .body = "    assert x == 0, \"mut check\"\n    return x\n",
+            .expected = "leaf.my:4:12: error[R_ASSERT]: native execution failed: mut check\n" ++
+                "  in leaf::origin at leaf.my:4:12\n  in app::main at app.my:5:12\n" ++
+                "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"mut check\"}\n",
+        },
+        .{
+            .argument = "9223372036854775807",
+            .body = "    if x < 0:\n        return 0\n    return x + 1\n",
+            .expected = "leaf.my:6:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n" ++
+                "  in leaf::origin at leaf.my:6:14\n  in app::main at app.my:5:12\n" ++
+                "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n",
+        },
+    };
+    for (cases) |case| {
+        const caller = try std.fmt.allocPrint(a, "module app\nimport leaf\ndef main() -> int:\n    xs = [1]\n    return leaf.origin(mut xs, {s})\n", .{case.argument});
+        const callee = try std.fmt.allocPrint(a, "module leaf\npublic def origin(xs: mut list[int], x: int) -> int:\n    xs.append(2)\n{s}", .{case.body});
+        const emitted = try snapshot(a, .{ caller, callee, other }, true);
+        try std.testing.expect(std.mem.indexOf(u8, try textOf(emitted, "app.my"), "inlinedAt:") != null);
+        const ran = try native(a, emitted);
+        try std.testing.expect(ran.term == .exited and ran.term.exited == 1);
+        try std.testing.expectEqualStrings("", ran.stdout);
+        try std.testing.expectEqualStrings(case.expected, ran.stderr);
+    }
+}
+
+// spec-case: NEW-CORE-S4-SITES-1
+test "S4 consuming generic clones distinguish shared spans and two original call sites" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const caller = "module app\nimport leaf\ndef main(args: list[str]) -> int:\n    xs = [1]\n" ++
+        "    if len(args) == 0:\n        return leaf.origin[int](mut xs, 1, 2)\n    return leaf.origin[str](mut xs, \"x\", 2)\n";
+    const callee = "module leaf\npublic def origin[T](xs: mut list[int], tag: T, x: int) -> int:\n    xs.append(2)\n    return xs[x]\n";
+    for ([_][]const u8{ "leaf::origin[i64]", "leaf::origin[str]" }, [_][]const []const u8{ &.{}, &.{"text"} }, [_][]const u8{ "app.my:6:16", "app.my:7:12" }) |name, arguments, position| {
+        const ran = try nativeArgs(a, try snapshot(a, .{ caller, callee, other }, true), arguments);
+        try std.testing.expect(ran.term == .exited and ran.term.exited == 1);
+        try std.testing.expect(std.mem.indexOf(u8, ran.stderr, name) != null);
+        try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "at leaf.my:4:12") != null);
+        try std.testing.expect(std.mem.indexOf(u8, ran.stderr, position) != null);
+    }
+}
+
+// spec-case: NEW-CORE-S4-SITES-1
+test "S4 nested consuming helpers retain all frames under fact verification" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const caller = "module app\nimport leaf\ndef main() -> int:\n    xs = [1]\n    return leaf.middle(mut xs, 2)\n";
+    const callee = "module leaf\npublic def origin(xs: mut list[int], x: int) -> int:\n    xs.append(2)\n    return xs[x]\n" ++
+        "public def middle(xs: mut list[int], x: int) -> int:\n    if x < 0:\n        return 0\n    return origin(mut xs, x)\n";
+    const ran = try native(a, try snapshotFor(a, .{ caller, callee, other }, .verify));
+    try std.testing.expect(ran.term == .exited and ran.term.exited == 1);
+    try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "in leaf::origin at leaf.my:4:12") != null);
+    try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "in leaf::middle at leaf.my:8:12") != null);
+    try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "in app::main at app.my:5:12") != null);
 }

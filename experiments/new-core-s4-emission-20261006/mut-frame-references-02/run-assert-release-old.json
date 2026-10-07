@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/mut-frame-references-02/assert-release-old/program"
+  ],
+  "status": 1,
+  "stdout": "",
+  "stderr": "leaf.my:4:12: error[R_ASSERT]: native execution failed: mut check\n  in leaf::origin at leaf.my:4:12\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"mut check\"}\n",
+  "seconds": 0.00128460512496531
+}

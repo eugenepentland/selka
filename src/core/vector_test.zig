@@ -319,7 +319,8 @@ test "loop helper inlining verifies cloned edges and projects mut return values"
     ;
     var refusal: @import("build.zig").Refusal = .{};
     var module = try support.buildSource(arena.allocator(), source, &refusal);
-    try std.testing.expect(try @import("inline.zig").inlineLeaves(arena.allocator(), &module) > 0);
+    var origins: @import("inline_origins.zig").Table = .{};
+    try std.testing.expect(try @import("inline.zig").inlineLeaves(arena.allocator(), &module, &origins) > 0);
     var failure: @import("verify_ir.zig").Failure = .{};
     try @import("verify_ir.zig").verifyModule(arena.allocator(), &module, &failure);
     const main = module.functions.items[functionIndex(&module, "main").?];

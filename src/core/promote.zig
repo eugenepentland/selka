@@ -21,6 +21,7 @@
 //! (an `unreachable` with `data = capacity_assert`, an `R_CORE_FACT` trap).
 const std = @import("std");
 const ir = @import("ir.zig");
+const origins = @import("inline_origins.zig");
 const facts = @import("facts.zig");
 
 /// The pass only allocates.
@@ -37,7 +38,7 @@ pub const max_stack_bytes: u64 = 4096;
 
 /// Promote every qualifying list of `f`; returns the promoted values (every value of
 /// each web: the `list_new`, its pushes and the loop phi) and how many lists.
-pub fn promote(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, known: *const facts.Facts, verify: bool) Error!Promoted {
+pub fn promote(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, known: *const facts.Facts, verify: bool, provenance: ?origins.Context) Error!Promoted {
     var out: Promoted = .{};
     const users = try usersOf(arena, f);
     const count = f.insts.items.len;
@@ -53,7 +54,7 @@ pub fn promote(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Functi
         for (web.pushes) |push| f.insts.items[push.index()].data = stack_push;
         for (web.values) |value| try out.values.put(arena, @backingInt(value), {});
         out.lists += 1;
-        if (verify) for (web.pushes) |push| try assertRoom(arena, f, push, web.capacity);
+        if (verify) for (web.pushes) |push| try assertRoom(arena, f, push, web.capacity, provenance);
     }
     return out;
 }
@@ -195,13 +196,14 @@ fn fillLoop(f: *const ir.Function, users: Users, known: *const facts.Facts, phi:
 }
 
 /// Verify builds: before `push`, trap unless its list's length is below `capacity`.
-fn assertRoom(arena: std.mem.Allocator, f: *ir.Function, push: ir.Ref, capacity: u64) Error!void {
+fn assertRoom(arena: std.mem.Allocator, f: *ir.Function, push: ir.Ref, capacity: u64, provenance: ?origins.Context) Error!void {
     const inst = f.inst(push);
     const where = locate(f, push);
     const head: ir.BlockId = @fromBackingInt(@intCast(where.block));
     // Split before the push; the head ends in the room test.
     try f.blocks.append(arena, .{});
     const tail: ir.BlockId = @fromBackingInt(@intCast(f.blocks.items.len - 1));
+    if (provenance) |origin| try origin.copyBlock(arena, @intCast(head.index()), @intCast(tail.index()));
     try f.blocks.items[tail.index()].insts.appendSlice(arena, f.blocks.items[where.block].insts.items[where.pos..]);
     f.blocks.items[where.block].insts.shrinkRetainingCapacity(where.pos);
     const term = f.inst(f.blocks.items[tail.index()].insts.items[f.blocks.items[tail.index()].insts.items.len - 1]);
@@ -219,6 +221,7 @@ fn assertRoom(arena: std.mem.Allocator, f: *ir.Function, push: ir.Ref, capacity:
     const room = try add(arena, f, head, .{ .op = .cmp, .ty = .bool, .a = len, .b = limit, .data = @backingInt(ir.Predicate.lt), .span = inst.span });
     try f.blocks.append(arena, .{});
     const fail: ir.BlockId = @fromBackingInt(@intCast(f.blocks.items.len - 1));
+    if (provenance) |origin| try origin.setBlock(arena, @intCast(fail.index()), origin.at(@intCast(head.index()), push));
     _ = try add(arena, f, head, .{ .op = .branch, .ty = .void, .a = room, .data = ir.packTargets(tail, fail), .span = inst.span });
     try f.blocks.items[tail.index()].preds.append(arena, head);
     try f.blocks.items[fail.index()].preds.append(arena, head);

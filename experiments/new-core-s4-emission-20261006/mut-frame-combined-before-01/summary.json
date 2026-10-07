@@ -1,0 +1,207 @@
+{
+  "complete": true,
+  "source_commit": "3d61a8409a146ca063a0c02fbc3502e64f414f76",
+  "compilers": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "s3": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang-core-s3-c8313207",
+      "sha256": "c831320782bea20b63b7bf4d85362d8e813a89afa48f8feb0eb75df782522f59"
+    },
+    "values": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-d4/mylang-core",
+      "sha256": "3c86ebb5ac9db377a2a2b7ae0cffd48cce09bee554aabfec856c9c5a2a6fc2bc"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-v-before/bin/mylang-core",
+      "sha256": "a1d2bb60cb094afa10fa3beca117dacc87e9380a74064f3bf11a351f3139a0fe"
+    }
+  },
+  "comparisons": [
+    {
+      "case": "bounds",
+      "mode": "debug",
+      "differences": [
+        "s3",
+        "values"
+      ],
+      "outputs": {
+        "old": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "leaf.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 2)\n  in leaf::origin at leaf.my:4:12\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":2}\n"
+        },
+        "s3": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "app.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 2)\n  in leaf::origin at app.my:4:12\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":2}\n"
+        },
+        "values": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "app.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 2)\n  in leaf::origin at app.my:4:12\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":2}\n"
+        },
+        "new": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "leaf.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 2)\n  in leaf::origin at leaf.my:4:12\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":2}\n"
+        }
+      }
+    },
+    {
+      "case": "bounds",
+      "mode": "release",
+      "differences": [
+        "s3",
+        "values",
+        "new"
+      ],
+      "outputs": {
+        "old": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "leaf.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 2)\n  in leaf::origin at leaf.my:4:12\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":2}\n"
+        },
+        "s3": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "app.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 2)\n  in leaf::origin at app.my:4:12\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":2}\n"
+        },
+        "values": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "app.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 2)\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":2}\n"
+        },
+        "new": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "leaf.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 2)\n  in app::main at leaf.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":2}\n"
+        }
+      }
+    },
+    {
+      "case": "assert",
+      "mode": "debug",
+      "differences": [
+        "s3",
+        "values"
+      ],
+      "outputs": {
+        "old": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "leaf.my:4:12: error[R_ASSERT]: native execution failed: mut check\n  in leaf::origin at leaf.my:4:12\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"mut check\"}\n"
+        },
+        "s3": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "app.my:4:12: error[R_ASSERT]: native execution failed: mut check\n  in leaf::origin at app.my:4:12\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"mut check\"}\n"
+        },
+        "values": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "app.my:4:12: error[R_ASSERT]: native execution failed: mut check\n  in leaf::origin at app.my:4:12\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"mut check\"}\n"
+        },
+        "new": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "leaf.my:4:12: error[R_ASSERT]: native execution failed: mut check\n  in leaf::origin at leaf.my:4:12\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"mut check\"}\n"
+        }
+      }
+    },
+    {
+      "case": "assert",
+      "mode": "release",
+      "differences": [
+        "s3",
+        "values",
+        "new"
+      ],
+      "outputs": {
+        "old": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "leaf.my:4:12: error[R_ASSERT]: native execution failed: mut check\n  in leaf::origin at leaf.my:4:12\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"mut check\"}\n"
+        },
+        "s3": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "app.my:4:12: error[R_ASSERT]: native execution failed: mut check\n  in leaf::origin at app.my:4:12\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"mut check\"}\n"
+        },
+        "values": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "app.my:4:12: error[R_ASSERT]: native execution failed: mut check\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"mut check\"}\n"
+        },
+        "new": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "leaf.my:4:12: error[R_ASSERT]: native execution failed: mut check\n  in app::main at leaf.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"mut check\"}\n"
+        }
+      }
+    },
+    {
+      "case": "overflow",
+      "mode": "debug",
+      "differences": [
+        "s3",
+        "values"
+      ],
+      "outputs": {
+        "old": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "leaf.my:6:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in leaf::origin at leaf.my:6:14\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+        },
+        "s3": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "app.my:6:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in leaf::origin at app.my:6:14\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+        },
+        "values": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "app.my:6:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in leaf::origin at app.my:6:14\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+        },
+        "new": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "leaf.my:6:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in leaf::origin at leaf.my:6:14\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+        }
+      }
+    },
+    {
+      "case": "overflow",
+      "mode": "release",
+      "differences": [
+        "s3",
+        "values",
+        "new"
+      ],
+      "outputs": {
+        "old": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "leaf.my:6:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in leaf::origin at leaf.my:6:14\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+        },
+        "s3": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "app.my:6:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in leaf::origin at app.my:6:14\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+        },
+        "values": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "app.my:6:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in app::main at app.my:6:14\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+        },
+        "new": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "leaf.my:6:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in app::main at leaf.my:6:14\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+        }
+      }
+    }
+  ]
+}

@@ -123,9 +123,8 @@ pub fn finish(init: std.process.Init, module: *ir.Module, unit: Unit, options: O
         .locator = .{ .context = &unit.src, .locate = locate },
         .source_path = unit.source_path,
         .main = unit.main,
-        .facts = result.known,
+        .analysis = .{ .facts = result.known, .vectors = result.plans, .provenance = &result.provenance },
         .verify = verify and options.release,
-        .vectors = result.plans,
         .target = targetFor(options.show),
     };
     const units = emit_units.emit(allocator, module, emission) catch |err| switch (err) {

@@ -14,19 +14,20 @@ const ir = @import("ir.zig");
 const facts = @import("facts.zig");
 const proof = @import("inline_proof.zig");
 const cfg = @import("inline_cfg.zig");
+const origins = @import("inline_origins.zig");
 
 /// Inlining only allocates.
 pub const Error = std.mem.Allocator.Error;
 
 /// Inline every qualifying call in `module`'s internal functions; returns how many.
-pub fn inlineLeaves(arena: std.mem.Allocator, module: *ir.Module) Error!u32 {
-    const leaves = try withParameters(arena, module, &.{});
-    const helpers = try inlineCfg(arena, module);
+pub fn inlineLeaves(arena: std.mem.Allocator, module: *ir.Module, provenance: *origins.Table) Error!u32 {
+    const leaves = try withParameters(arena, module, &.{}, provenance);
+    const helpers = try inlineCfg(arena, module, provenance);
     return leaves + helpers;
 }
 
 /// Apply bounded consuming CFG cloning once, before the caller parameter pass.
-fn inlineCfg(arena: std.mem.Allocator, module: *ir.Module) Error!u32 {
+fn inlineCfg(arena: std.mem.Allocator, module: *ir.Module, provenance: *origins.Table) Error!u32 {
     var count: u32 = 0;
     for (module.functions.items, 0..) |*caller, index| {
         if (caller.signature.linkage != .internal) continue;
@@ -34,11 +35,13 @@ fn inlineCfg(arena: std.mem.Allocator, module: *ir.Module) Error!u32 {
         while (b < caller.blocks.items.len) : (b += 1) {
             var at: usize = 0;
             while (at < caller.blocks.items[b].insts.items.len) : (at += 1) {
-                const call = caller.inst(caller.blocks.items[b].insts.items[at]);
+                const ref = caller.blocks.items[b].insts.items[at];
+                const call = caller.inst(ref);
                 if (call.op != .call or call.a.index() == index) continue;
                 const callee = &module.functions.items[call.a.index()];
                 if (!cfg.qualifies(callee)) continue;
-                try cfg.splice(arena, caller, callee, b, at);
+                var clone = try provenance.prepare(arena, .{ .caller = @intCast(index), .callee = @intCast(call.a.index()), .block = @intCast(b), .ref = ref, .span = call.span }, callee) orelse continue;
+                try cfg.splice(arena, caller, callee, b, at, &clone);
                 count += 1;
                 break;
             }
@@ -49,12 +52,12 @@ fn inlineCfg(arena: std.mem.Allocator, module: *ir.Module) Error!u32 {
 
 /// Revisit checked leaves with sound caller parameter intervals, retaining every
 /// unproved callee frame. This only copies single-block leaves, never CFG helpers.
-pub fn withParameters(arena: std.mem.Allocator, module: *ir.Module, parameters: []const []const ?facts.Interval) Error!u32 {
+pub fn withParameters(arena: std.mem.Allocator, module: *ir.Module, parameters: []const []const ?facts.Interval, provenance: *origins.Table) Error!u32 {
     var count: u32 = 0;
     for (module.functions.items, 0..) |*caller, index| {
         if (caller.signature.linkage != .internal) continue;
         var known: ?facts.Facts = null;
-        for (caller.blocks.items) |*block| {
+        for (caller.blocks.items, 0..) |*block, b| {
             var at: usize = 0;
             while (at < block.insts.items.len) : (at += 1) {
                 const ref = block.insts.items[at];
@@ -68,7 +71,8 @@ pub fn withParameters(arena: std.mem.Allocator, module: *ir.Module, parameters: 
                     if (known == null) known = try facts.analyze(arena, caller, .{ .fold = false, .mark = false, .params = if (index < parameters.len) parameters[index] else &.{} });
                     if (!try proof.trapFree(arena, caller, call, callee, known.?)) continue;
                 }
-                const cloned = try splice(arena, caller, callee, .{ .block = block, .at = at, .call = ref, .result = result });
+                var clone = try provenance.prepare(arena, .{ .caller = @intCast(index), .callee = @intCast(call.a.index()), .block = @intCast(b), .ref = ref, .span = call.span }, callee) orelse continue;
+                const cloned = try splice(arena, caller, callee, .{ .block = block, .at = at, .call = ref, .result = result }, &clone);
                 at += cloned;
                 count += 1;
             }
@@ -95,7 +99,7 @@ fn leaf(callee: *const ir.Function) ?ir.Ref {
 const Site = struct { block: *ir.Block, at: usize, call: ir.Ref, result: ir.Ref };
 
 /// Clone the callee's body into the caller before `site.at`; returns the number of instructions inserted.
-fn splice(arena: std.mem.Allocator, caller: *ir.Function, callee: *const ir.Function, site: Site) Error!usize {
+fn splice(arena: std.mem.Allocator, caller: *ir.Function, callee: *const ir.Function, site: Site, clone: *origins.Clone) Error!usize {
     const arguments = caller.operands(caller.insts.items[site.call.index()].data);
     const map = try arena.alloc(ir.Ref, callee.insts.items.len);
     @memset(map, .none);
@@ -120,6 +124,7 @@ fn splice(arena: std.mem.Allocator, caller: *ir.Function, callee: *const ir.Func
             inst.data = (ir.ExtraSlice{ .start = start, .len = @intCast(caller.extra.items.len - start) }).pack();
         }
         const ref = try append(arena, caller, inst);
+        try clone.instruction(arena, 0, old, ref, true);
         map[old.index()] = ref;
         try inserted.append(arena, ref);
     }

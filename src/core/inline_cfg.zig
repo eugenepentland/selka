@@ -1,6 +1,7 @@
 //! Small CFG helper inlining, including scalar projections of mut return records.
 const std = @import("std");
 const ir = @import("ir.zig");
+const origins = @import("inline_origins.zig");
 
 /// A loop helper qualifies only within bounded expansion and without further calls.
 pub fn qualifies(f: *const ir.Function) bool {
@@ -20,7 +21,7 @@ pub fn qualifies(f: *const ir.Function) bool {
 }
 
 /// Split one call site and clone the callee's complete control flow into its caller.
-pub fn splice(arena: std.mem.Allocator, caller: *ir.Function, callee: *const ir.Function, block: usize, at: usize) std.mem.Allocator.Error!void {
+pub fn splice(arena: std.mem.Allocator, caller: *ir.Function, callee: *const ir.Function, block: usize, at: usize, clone: *origins.Clone) std.mem.Allocator.Error!void {
     const call = caller.blocks.items[block].insts.items[at];
     const original = caller.inst(call);
     const arguments = try arena.dupe(ir.Ref, caller.operands(original.data));
@@ -30,6 +31,8 @@ pub fn splice(arena: std.mem.Allocator, caller: *ir.Function, callee: *const ir.
     try continuation.insts.appendSlice(arena, caller.blocks.items[block].insts.items[at..]);
     caller.blocks.items[block].insts.shrinkRetainingCapacity(at);
     try caller.blocks.append(arena, continuation);
+    const context = clone.table.context(clone.caller);
+    try context.setBlock(arena, @intCast(tail.index()), clone.table.block(clone.caller, @intCast(block)));
     const head: ir.BlockId = @fromBackingInt(@intCast(block));
     for (caller.blocks.items) |*successor| for (successor.preds.items) |*pred| {
         if (pred.* == head) pred.* = tail;
@@ -45,6 +48,7 @@ pub fn splice(arena: std.mem.Allocator, caller: *ir.Function, callee: *const ir.
     }
     var returns: std.ArrayList(ir.Ref) = .empty;
     for (callee.blocks.items, 0..) |source, index| {
+        try clone.block(arena, @intCast(index), base + @as(u32, @intCast(index)));
         const destination = &caller.blocks.items[base + index];
         if (index == 0) try destination.preds.append(arena, head);
         for (source.preds.items) |pred| try destination.preds.append(arena, moved(base, pred));
@@ -66,6 +70,7 @@ pub fn splice(arena: std.mem.Allocator, caller: *ir.Function, callee: *const ir.
                 if (projections.len != 0 and inst.op == .record_make and returned(callee, ref)) inst = .{ .op = .copy, .ty = .void };
             }
             caller.insts.items[map[ref.index()].index()] = inst;
+            try clone.instruction(arena, @intCast(index), ref, map[ref.index()], false);
             try destination.insts.append(arena, map[ref.index()]);
         }
     }

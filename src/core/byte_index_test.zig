@@ -168,7 +168,7 @@ test "proven counted byte indices expose the original cursor to existing narrow 
         .locator = .{ .context = &context, .locate = location },
         .source_path = "verify-index.my",
         .main = .{ .parameters = &.{"out"} },
-        .facts = result.known,
+        .analysis = support.analysis(&result),
         .verify = true,
     });
     for (module.functions.items, result.known) |*function, maybe| {
@@ -251,7 +251,7 @@ test "the exact nonnegative byte index premise traps R_CORE_FACT when an injecte
         }
     }
     try std.testing.expect(injected);
-    const ran = try support.runOwned(a, &module, .{ .own = false, .verify = true, .release = true, .known = result.known });
+    const ran = try support.runOwned(a, &module, .{ .own = false, .verify = true, .release = true, .analysis = support.analysis(&result) });
     try std.testing.expectEqual(@as(u8, 1), ran.status);
     try std.testing.expectEqualStrings("", ran.stdout);
     try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "error[R_CORE_FACT]: native execution failed (range [0, 9223372036854775807]: value -1") != null);

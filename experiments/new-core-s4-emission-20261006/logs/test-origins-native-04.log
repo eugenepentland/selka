@@ -1,0 +1,23 @@
+test-core
++- run test w
+guardian/test: 9 test(s) selected
+guardian/test: SLOW  19.42s  emit_units_test.test.S4 consuming CFG clones retain exact callee and original call frames
+guardian/test: SLOW  8.87s  emit_units_test.test.S4 consuming generic clones distinguish shared spans and two original call sites
+guardian/test: test wall 45.03s; slowest over 50ms:
+guardian/test:   19.42s  emit_units_test.test.S4 consuming CFG clones retain exact callee and original call frames
+guardian/test:   8.87s  emit_units_test.test.S4 consuming generic clones distinguish shared spans and two original call sites
+guardian/test:   4.94s  emit_units_test.test.S4 nested consuming helpers retain all frames under fact verification
+guardian/test:   4.31s  inline_origins_test.test.unswitched consuming loops and ownership keep every copied read in its exact callee
+guardian/test:   3.77s  inline_origins_test.test.a corrupted cloned reachability premise reports its callee declaration and caller
+guardian/test:   3.68s  inline_origins_test.test.a failed ownership check added to a consuming clone retains its callee frame
+guardian/test: PASS — 9 passed
+guardian/test: RESULT {"passed":9,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/b886e229a500ab98d51eb529a553b82b/test --cache-dir=./.zig-cache --seed=0x4f7a7df8 --listen=-
+
+Build Summary: 5/5 steps succeeded; 9/9 tests passed
+test-core success
++- run test 9 pass (9 total) 45s MaxRSS:256M
+   +- compile test debug native success 5s MaxRSS:348M
+      +- options success
+         +- compile exe mylang-core debug native success 6s MaxRSS:353M
+

@@ -1,0 +1,41 @@
+core
++- install mylang-core
+   +- compile exe mylang-core debug native 4 errors
+src/core/emit_llvm.zig:2322:15: error: local constant shadows declaration of 'call'
+        const call = self.state.options.locator.locate(self.state.options.locator.context, frame.call_span);
+              ^~~~
+src/core/emit_llvm.zig:2542:9: note: declared here
+    pub fn call(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
+    ~~~~^~
+src/core/emit_llvm.zig:2712:38: error: capture shadows declaration of 'node'
+        if (self.scopes.get(index)) |node| return node;
+                                     ^~~~
+src/core/emit_llvm.zig:2678:5: note: declared here
+    fn node(self: *Debug, allocator: std.mem.Allocator, comptime format: []const u8, args: anytype) !u32 {
+    ^~
+src/core/inline_origins.zig:46:15: error: local constant shadows declaration of 'depth'
+        const depth = self.depth(parent) + 1;
+              ^~~~~
+src/core/inline_origins.zig:58:5: note: declared here
+    fn depth(self: *const Table, frame: ?u32) u32 {
+    ^~
+src/core/main.zig:257:53: error: expected 6 argument(s), found 5
+            const stack = try @import("promote.zig").promote(allocator, &outcome.module.?, &function, &known, false);
+                              ~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~
+src/core/promote.zig:41:5: note: function declared here
+pub fn promote(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, known: *const facts.Facts, verify: bool, provenance: ?origins.Context) Error!Promoted {
+~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+referenced by:
+    main: src/core/main.zig:29:87
+    callMain [inlined]: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:791:30
+    callMainWithArgs [inlined]: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:693:20
+    posixCallMainAndExit: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:645:38
+    2 reference(s) hidden; use '-freference-trace=6' to see all references
+error: 4 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang -Mroot=src/core/main.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 0/3 steps succeeded (1 failed)
+core transitive failure
++- install mylang-core transitive failure
+   +- compile exe mylang-core debug native 4 errors
+

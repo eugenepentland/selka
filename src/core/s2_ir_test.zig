@@ -539,7 +539,7 @@ fn exerciseArrayOwnership(count: u32, allocator: std.mem.Allocator) !void {
     var release_m = try arrayOwnedProgram(a, count);
     const result = try passes.run(a, &release_m, .verify);
     try support.verified(a, &release_m, result.plans);
-    const release = try support.runOwned(a, &release_m, .{ .release = true, .verify = true, .own = false });
+    const release = try support.runOwned(a, &release_m, .{ .release = true, .verify = true, .own = false, .analysis = support.analysis(&result) });
     try std.testing.expectEqual(@as(u8, 0), release.status);
     try std.testing.expectEqualStrings(debug.stdout, release.stdout);
     try std.testing.expectEqualStrings("", release.stderr);

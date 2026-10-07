@@ -1,0 +1,23 @@
+{
+  "complete": false,
+  "source_commit": "94a947c5b023c9357cb4b1e1550464e932141426",
+  "compilers": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "s3": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang-core-s3-c8313207",
+      "sha256": "c831320782bea20b63b7bf4d85362d8e813a89afa48f8feb0eb75df782522f59"
+    },
+    "values": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-d4/mylang-core",
+      "sha256": "3c86ebb5ac9db377a2a2b7ae0cffd48cce09bee554aabfec856c9c5a2a6fc2bc"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-proof-callback/bin/mylang-core",
+      "sha256": "f538e2bd325ef6d68d62f90e6508af8793a5a6dbae2ccccf191f8f0b73d387da"
+    }
+  },
+  "comparisons": []
+}

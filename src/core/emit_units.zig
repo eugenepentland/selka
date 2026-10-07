@@ -65,7 +65,7 @@ pub fn emit(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Option
         }
     }
     exported[module.entry] = true;
-    if (options.facts.len != 0) for (groups.items, 0..) |*group, index| {
+    if (options.analysis.facts.len != 0) for (groups.items, 0..) |*group, index| {
         group.imports = try imports.select(a, module, owner, group.functions.items, @intCast(index));
         for (group.imports) |imported| {
             exported[imported] = true;

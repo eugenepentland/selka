@@ -17,17 +17,18 @@
 const std = @import("std");
 const ir = @import("ir.zig");
 const facts = @import("facts.zig");
+const origins = @import("inline_origins.zig");
 
 /// Versioning only allocates.
 pub const Error = std.mem.Allocator.Error;
 
 /// Version every reduction loop of `f` whose sum the facts could prove only under
 /// a trip bound; returns how many loops were versioned. Run the fact pass again after.
-pub fn versionReductions(arena: std.mem.Allocator, f: *ir.Function, known: facts.Facts) Error!u32 {
+pub fn versionReductions(arena: std.mem.Allocator, f: *ir.Function, known: facts.Facts, provenance: origins.Context) Error!u32 {
     var count: u32 = 0;
     for (known.counted) |counted| {
         const limit = tripLimit(f, known, counted) orelse continue;
-        if (try version(arena, f, counted, limit)) count += 1;
+        if (try version(arena, f, counted, limit, provenance)) count += 1;
     }
     return count;
 }
@@ -118,17 +119,19 @@ fn preheaderOf(f: *const ir.Function, loop: ir.Loop) ?ir.BlockId {
     return block;
 }
 
-fn version(arena: std.mem.Allocator, f: *ir.Function, counted: facts.Counted, limit: i128) Error!bool {
+fn version(arena: std.mem.Allocator, f: *ir.Function, counted: facts.Counted, limit: i128, provenance: origins.Context) Error!bool {
     const span = f.inst(f.blocks.items[counted.loop.header.index()].insts.items[0]).span;
     const cap = try appendInst(arena, f, .{ .op = .iconst, .ty = .i64, .data = @bitCast(@as(i64, @intCast(limit + 1))) });
     const condition: ir.Inst = .{ .op = .cmp, .ty = .bool, .a = f.resolve(counted.bound), .b = cap, .data = @backingInt(ir.Predicate.lt), .span = span };
-    return (try duplicate(arena, f, counted.loop, condition)) != null;
+    const anchor = f.blocks.items[counted.loop.header.index()].insts.items[0];
+    const copies = try duplicate(arena, f, counted.loop, condition, provenance, provenance.at(@intCast(counted.loop.header.index()), anchor));
+    return copies != null;
 }
 
 /// Clone `loop` behind a guard block that evaluates `condition` and enters the clone
 /// when it holds, the original otherwise. Returns the maps from original to clone,
 /// or null (nothing changed) when the loop's shape does not allow it.
-fn duplicate(arena: std.mem.Allocator, f: *ir.Function, loop: ir.Loop, condition_inst: ir.Inst) Error!?Copies {
+fn duplicate(arena: std.mem.Allocator, f: *ir.Function, loop: ir.Loop, condition_inst: ir.Inst, provenance: origins.Context, frame: ?u32) Error!?Copies {
     const preheader = preheaderOf(f, loop) orelse return null;
     const inside = try members(arena, f, loop);
     // The exit may also be entered by earlier copies of this loop; it must be entered from it.
@@ -143,12 +146,16 @@ fn duplicate(arena: std.mem.Allocator, f: *ir.Function, loop: ir.Loop, condition
         if (!inside[b]) continue;
         block_map[b] = @fromBackingInt(@intCast(f.blocks.items.len));
         try f.blocks.append(arena, .{});
+        try provenance.copyBlock(arena, @intCast(b), @intCast(block_map[b].?.index()));
     }
     const inst_map = try arena.alloc(ir.Ref, f.insts.items.len);
     @memset(inst_map, .none);
     for (0..original_blocks) |b| {
         if (!inside[b]) continue;
-        for (f.blocks.items[b].insts.items) |ref| inst_map[ref.index()] = try appendInst(arena, f, f.inst(ref));
+        for (f.blocks.items[b].insts.items) |ref| {
+            inst_map[ref.index()] = try appendInst(arena, f, f.inst(ref));
+            try provenance.copyInstruction(arena, ref, inst_map[ref.index()]);
+        }
     }
     const mapRef = struct {
         fn of(function: *const ir.Function, map: []const ir.Ref, raw: ir.Ref) ir.Ref {
@@ -172,6 +179,7 @@ fn duplicate(arena: std.mem.Allocator, f: *ir.Function, loop: ir.Loop, condition
     // The original keeps a preheader of its own too, ending in a jump, so it can be duplicated again.
     const stay: ir.BlockId = @fromBackingInt(@intCast(f.blocks.items.len));
     try f.blocks.append(arena, .{});
+    for ([_]ir.BlockId{ guard, entry, stay }) |added| try provenance.setBlock(arena, @intCast(added.index()), frame);
     const header_span = f.inst(f.blocks.items[loop.header.index()].insts.items[0]).span;
     // Rewrite the clones' operands, targets and predecessors.
     for (0..original_blocks) |b| {
@@ -235,7 +243,7 @@ const unswitch_budget = 16;
 /// else-side, each as a constant the fact pass folds. The compute benchmark's
 /// per-element `if kind == …` dispatch becomes one straight loop per kind.
 /// Returns how many loops were added.
-pub fn unswitch(arena: std.mem.Allocator, f: *ir.Function) Error!u32 {
+pub fn unswitch(arena: std.mem.Allocator, f: *ir.Function, provenance: origins.Context) Error!u32 {
     var added: u32 = 0;
     var index: usize = 0;
     while (index < f.loops.items.len and added < unswitch_budget) : (index += 1) {
@@ -243,8 +251,10 @@ pub fn unswitch(arena: std.mem.Allocator, f: *ir.Function) Error!u32 {
             const loop = f.loops.items[index];
             if (try containsLoop(arena, f, loop)) break;
             const branch = (try invariantBranch(arena, f, loop)) orelse break;
-            const cmp = f.inst(f.resolve(f.inst(branch).a));
-            const copies = (try duplicate(arena, f, loop, cmp)) orelse break;
+            const condition = f.resolve(f.inst(branch).a);
+            const cmp = f.inst(condition);
+            const frame = provenance.at(blockOf(f, condition) orelse @intCast(loop.header.index()), condition);
+            const copies = (try duplicate(arena, f, loop, cmp, provenance, frame)) orelse break;
             const yes = try appendInst(arena, f, .{ .op = .iconst, .ty = .bool, .data = 1 });
             const no = try appendInst(arena, f, .{ .op = .iconst, .ty = .bool, .data = 0 });
             f.insts.items[copies.inst_map[branch.index()].index()].a = yes;
@@ -253,6 +263,13 @@ pub fn unswitch(arena: std.mem.Allocator, f: *ir.Function) Error!u32 {
         }
     }
     return added;
+}
+
+fn blockOf(f: *const ir.Function, ref: ir.Ref) ?u32 {
+    for (f.blocks.items, 0..) |block, b| {
+        if (std.mem.indexOfScalar(ir.Ref, block.insts.items, ref) != null) return @intCast(b);
+    }
+    return null;
 }
 
 /// Whether another recorded loop's header lies inside `loop` (it is not innermost).

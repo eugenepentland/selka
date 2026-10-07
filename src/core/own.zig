@@ -43,6 +43,7 @@ const ir = @import("ir.zig");
 const facts = @import("facts.zig");
 const flags = @import("flags.zig");
 const promotion = @import("promote.zig");
+const origins = @import("inline_origins.zig");
 
 /// The pass only allocates.
 pub const Error = std.mem.Allocator.Error;
@@ -53,6 +54,9 @@ pub const Options = struct {
     verify: bool = false,
     /// The function's facts (release builds): lists they bound may live on the stack.
     facts: ?*const facts.Facts = null,
+    /// Optional source ancestry of instructions cloned before ownership.
+    provenance: ?*origins.Table = null,
+    function_index: u32 = 0,
 };
 
 /// What the pass did, summed over functions.
@@ -95,9 +99,11 @@ pub const unique_assert: u64 = 1;
 /// Run the pass over every internal function of `module`.
 pub fn run(arena: std.mem.Allocator, module: *ir.Module, options: Options) Error!Stats {
     var total: Stats = .{};
-    for (module.functions.items) |*f| {
+    for (module.functions.items, 0..) |*f, index| {
         if (f.signature.linkage != .internal) continue;
-        total.add(try function(arena, module, f, options));
+        var local = options;
+        local.function_index = @intCast(index);
+        total.add(try function(arena, module, f, local));
     }
     return total;
 }
@@ -105,15 +111,15 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, options: Options) Error
 /// Run the pass over one function of `module`.
 pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, options: Options) Error!Stats {
     var stats: Stats = .{};
-    var marks: Marks = .{};
+    var marks: Marks = .{ .origin = if (options.provenance) |table| table.context(options.function_index) else null };
     if (options.facts) |known| {
-        const promoted = try promotion.promote(arena, module, f, known, options.verify);
+        const promoted = try promotion.promote(arena, module, f, known, options.verify, marks.origin);
         marks.stack = promoted.values;
         stats.promoted = promoted.lists;
         reserveFills(f, known);
     }
     // Popped elements are found (or read) before anything moves.
-    try markPops(.{ .arena = arena, .f = f }, module, &marks);
+    try markPops(.{ .arena = arena, .f = f, .origin = marks.origin }, module, &marks);
     for (f.insts.items, 0..) |inst, index| {
         if (flags.transferredRead(inst) and module.managed(inst.ty)) try marks.owned_get.put(arena, @intCast(index), {});
         if (flags.transferredSlot(f, inst)) try marks.taken.put(arena, @intCast(index), {});
@@ -212,6 +218,7 @@ const no_block = std.math.maxInt(u32);
 /// What phase A hands to phase B: the reads that own what they read (popped
 /// elements, the field a `record_set` drops).
 const Marks = struct {
+    origin: ?origins.Context = null,
     owned_get: std.AutoHashMapUnmanaged(u32, void) = .empty,
     /// Values of lists promoted to the stack: never counted.
     stack: std.AutoHashMapUnmanaged(u32, void) = .empty,
@@ -819,7 +826,7 @@ fn copyOnWrite(a: *Analysis, options: Options, stats: *Stats) Error!void {
             try sites.append(a.arena, .{ .update = ref, .form = form });
         }
     }
-    const e: Editor = .{ .arena = a.arena, .f = f };
+    const e: Editor = .{ .arena = a.arena, .f = f, .origin = a.marks.origin };
     for (sites.items) |site| {
         const before = f.inst(site.update);
         const detach = (before.op == .list_copy or before.op == .dict_copy) and before.data == flags.place_copy;
@@ -864,7 +871,9 @@ fn testUnique(e: Editor, module: *const ir.Module, update: ir.Ref) Error!void {
     const ty = f.inst(f.resolve(list)).ty;
     const at = try e.split(update);
     const unique = try e.append(at.head, .{ .op = .is_unique, .ty = .bool, .a = list, .span = instruction.span });
+    try e.inherit(unique, update);
     const copy_block = try e.newBlock();
+    if (e.origin) |origin| try origin.setBlock(e.arena, @intCast(copy_block.index()), e.frameAt(update));
     try e.terminate(at.head, .{ .op = .branch, .ty = .void, .a = unique, .data = ir.packTargets(at.tail, copy_block), .span = instruction.span }, &.{ at.tail, copy_block });
     const marker = try e.append(copy_block, .{ .op = .copy, .ty = ty, .a = list });
     const copy = try copyBefore(e, module, marker, list);
@@ -872,6 +881,7 @@ fn testUnique(e: Editor, module: *const ir.Module, update: ir.Ref) Error!void {
     try e.terminate(copy_block, .{ .op = .jump, .ty = .void, .data = @backingInt(at.tail), .span = instruction.span }, &.{at.tail});
     // The tail's predecessors are [head, copy_block], in that order.
     const phi = try e.newInst(.{ .op = .phi, .ty = ty, .data = try e.extraOf(&.{ list, copy }), .span = instruction.span });
+    try e.inherit(phi, update);
     try f.blocks.items[at.tail.index()].insts.insert(e.arena, 0, phi);
     try useUpdatedOperand(e, update, phi);
 }
@@ -903,7 +913,9 @@ fn assertUnique(e: Editor, update: ir.Ref) Error!void {
     const instruction = e.f.inst(update);
     const at = try e.split(update);
     const unique = try e.append(at.head, .{ .op = .is_unique, .ty = .bool, .a = instruction.a, .span = instruction.span });
+    try e.inherit(unique, update);
     const fail = try e.newBlock();
+    if (e.origin) |origin| try origin.setBlock(e.arena, @intCast(fail.index()), e.frameAt(update));
     try e.terminate(at.head, .{ .op = .branch, .ty = .void, .a = unique, .data = ir.packTargets(at.tail, fail), .span = instruction.span }, &.{ at.tail, fail });
     _ = try e.append(fail, .{ .op = .@"unreachable", .ty = .void, .data = unique_assert, .span = instruction.span });
 }
@@ -1113,7 +1125,7 @@ fn runsAfter(arena: std.mem.Allocator, f: *const ir.Function, block_of: []const 
 /// value: the record's reference to it goes with the consumed record) and release it after.
 fn extractDroppedFields(a: *Analysis) Error!void {
     const f = a.f;
-    const e: Editor = .{ .arena = a.arena, .f = f };
+    const e: Editor = .{ .arena = a.arena, .f = f, .origin = a.marks.origin };
     var b: usize = 0;
     while (b < f.blocks.items.len) : (b += 1) {
         var pos: usize = 0;
@@ -1259,7 +1271,7 @@ const Lists = std.AutoHashMapUnmanaged(u32, std.ArrayList(ir.Ref));
 fn apply(a: *Analysis, actions: []const Action, stats: *Stats) Error!void {
     const f = a.f;
     const arena = a.arena;
-    const e: Editor = .{ .arena = arena, .f = f };
+    const e: Editor = .{ .arena = arena, .f = f, .origin = a.marks.origin };
     var before: Lists = .empty;
     var after: Lists = .empty;
     var top: Lists = .empty;
@@ -1268,6 +1280,14 @@ fn apply(a: *Analysis, actions: []const Action, stats: *Stats) Error!void {
         for (actions) |action| {
             if (action.op != op) continue;
             const counted = try e.newInst(.{ .op = op, .ty = .void, .a = action.value, .data = action.data, .span = f.inst(action.value).span });
+            if (e.origin) |origin| {
+                const frame = switch (action.place) {
+                    .before, .after => |at| e.frameAt(at),
+                    .top => |b| origin.table.block(origin.function, b),
+                    .edge => |edge| origin.table.block(origin.function, edge.from),
+                };
+                try origin.setInstruction(arena, counted, frame);
+            }
             if (op == .retain) stats.retains += 1 else stats.releases += 1;
             const list = switch (action.place) {
                 .before => |at| try listFor(arena, &before, @backingInt(at)),
@@ -1367,6 +1387,17 @@ fn pure(op: ir.Op) bool {
 const Editor = struct {
     arena: std.mem.Allocator,
     f: *ir.Function,
+    origin: ?origins.Context = null,
+
+    fn frameAt(e: Editor, ref: ir.Ref) ?u32 {
+        const origin = e.origin orelse return null;
+        const where = e.locate(ref);
+        return origin.at(@intCast(where.block), ref);
+    }
+
+    fn inherit(e: Editor, ref: ir.Ref, anchor: ir.Ref) Error!void {
+        if (e.origin) |origin| try origin.setInstruction(e.arena, ref, e.frameAt(anchor));
+    }
 
     fn newInst(e: Editor, instruction: ir.Inst) Error!ir.Ref {
         const ref: ir.Ref = @fromBackingInt(@intCast(e.f.insts.items.len));
@@ -1408,6 +1439,7 @@ const Editor = struct {
     fn insertBefore(e: Editor, at: ir.Ref, instruction: ir.Inst) Error!ir.Ref {
         const where = e.locate(at);
         const ref = try e.newInst(instruction);
+        try e.inherit(ref, at);
         try e.f.blocks.items[where.block].insts.insert(e.arena, where.pos, ref);
         return ref;
     }
@@ -1415,6 +1447,7 @@ const Editor = struct {
     fn insertAfter(e: Editor, at: ir.Ref, instruction: ir.Inst) Error!ir.Ref {
         const where = e.locate(at);
         const ref = try e.newInst(instruction);
+        try e.inherit(ref, at);
         try e.f.blocks.items[where.block].insts.insert(e.arena, where.pos + 1, ref);
         return ref;
     }
@@ -1427,6 +1460,7 @@ const Editor = struct {
         const where = e.locate(at);
         const head: ir.BlockId = @fromBackingInt(@intCast(where.block));
         const tail = try e.newBlock();
+        if (e.origin) |origin| try origin.copyBlock(e.arena, @intCast(head.index()), @intCast(tail.index()));
         try f.blocks.items[tail.index()].insts.appendSlice(e.arena, f.blocks.items[where.block].insts.items[where.pos..]);
         f.blocks.items[where.block].insts.shrinkRetainingCapacity(where.pos);
         for (successors(f, @backingInt(tail)).slice()) |succ| {
@@ -1444,6 +1478,7 @@ const Editor = struct {
     fn splitEdge(e: Editor, from: u32, to: u32, insts: []const ir.Ref) Error!void {
         const f = e.f;
         const middle = try e.newBlock();
+        if (e.origin) |origin| try origin.copyBlock(e.arena, from, @intCast(middle.index()));
         const source: ir.BlockId = @fromBackingInt(from);
         const target: ir.BlockId = @fromBackingInt(to);
         try f.blocks.items[middle.index()].insts.appendSlice(e.arena, insts);
