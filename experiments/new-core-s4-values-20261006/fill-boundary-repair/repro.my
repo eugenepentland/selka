@@ -1,0 +1,13 @@
+module repro
+
+def finish(size: int) -> bool:
+    values = [j for j in range(size)]
+    values.append(7)
+    return len(values) == size + 1 and values[size] == 7
+
+# spec-case: NEW-CORE-FILL-S4-1
+public def test_append_after_counted_fill() -> bool:
+    return finish(64)
+
+def main() -> int:
+    return 0

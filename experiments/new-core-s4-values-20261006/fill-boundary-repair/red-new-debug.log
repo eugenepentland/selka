@@ -1,0 +1,4 @@
+$ /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-d4/mylang-core test /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/fill-boundary-repair/repro.my --json --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/fill-boundary-repair/red/new-debug
+stdout='{"version":"native-tests-v1","tests":[{"name":"repro::test_append_after_counted_fill","status":"passed","reason":"","at":""}],"passed":1,"failed":0,"skipped":0,"cached":0,"unsupported":0}\n'
+stderr=''
+exit=0

@@ -1,0 +1,5 @@
+{
+  "qualified": false,
+  "reason": "E_MODULE_NAME in reducer before native execution",
+  "source_sha256": "2f517e707e4ad8c76ddcdc74514cf83964ca77fef9dbf425ef98b109817d9149"
+}
