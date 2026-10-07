@@ -1,0 +1,11 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (61s so far)
+build-slot: all 3 build slot(s) busy; waiting (121s so far)
+build-slot: build slot 1 after 176s (all 3 build slot(s) busy)
+examples: 202/207 accepted
+bench/parity: 123/123 accepted
+tests/lang: 3168/3168 accepted
+benchmarks/runtime: 140/141 accepted
+lox port: 462/462 accepted
+EDA Stage 1: 1756/1756 accepted
+coverage wall 213.06 s

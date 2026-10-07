@@ -1,0 +1,40 @@
+{
+  "source_commit": "af0bf538b7821ce399b93a8c3462cf6e34a2cae0",
+  "qualified_head_requested": "af0bf538b7821ce399b93a8c3462cf6e34a2cae0",
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s3/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s4-finish/oracle/mylang-core",
+      "sha256": "aa4b96be05c106b57486d85d840b3e6cde3f45457413c8d537bfa78ae585f009"
+    }
+  },
+  "cases_per_kind": 200,
+  "maximum_parallel_jobs": 3,
+  "kinds": [
+    "s0",
+    "s1",
+    "rc",
+    "rebinding",
+    "iteration",
+    "dict",
+    "text",
+    "number",
+    "functions"
+  ],
+  "execution_order": [
+    "number",
+    "s0",
+    "s1",
+    "rc",
+    "rebinding",
+    "iteration",
+    "dict",
+    "text",
+    "functions"
+  ],
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/wave-x/s3-x/20261007T175601Z-15258469c1f3",
+  "run_id": "20261007T175601Z-15258469c1f3"
+}

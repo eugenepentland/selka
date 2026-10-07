@@ -1,0 +1,5 @@
+lox build {'cold': 22.0589, 'unchanged': 0.0026, 'one-function-edit': 0.1778} {'cold': 2.881, 'unchanged': 0.383, 'one-function-edit': 0.911}
+lox tests-directory {'cold': 7.815, 'unchanged': 0.0761, 'one-function-edit': 1.7174} {'cold': 0.458, 'unchanged': 0.686, 'one-function-edit': 2.824}
+lox tests-driver {'cold': 1.7815, 'unchanged': 0.0025, 'one-function-edit': 1.5074} {'cold': 0.362, 'unchanged': 0.073, 'one-function-edit': 37.747}
+eda build {'cold': 20.4371, 'unchanged': 0.0042, 'one-function-edit': 0.7411} {'cold': 0.252, 'unchanged': 0.252, 'one-function-edit': 0.644}
+eda test {'cold': 39.2518, 'unchanged': 0.3893, 'one-function-edit': 0.67} {'cold': 0.167, 'unchanged': 0.235, 'one-function-edit': 0.402}

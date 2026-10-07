@@ -1,0 +1,14 @@
+source_commit=af0bf538b7821ce399b93a8c3462cf6e34a2cae0
+$ /home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 /home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py --kind text --cases 200 --seed 3307 --old /home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s3/oracle/mylang --new /home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s4-finish/oracle/mylang-core --evidence /home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/experiments/new-core-s4-20261006/finish/x-matrix-01/text --cache-root /home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/wave-x/s3-x/20261007T175601Z-15258469c1f3/text --harness /home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/experiments/new-core-s3-20261006/wave-c/s3-char/fuzz_char.py
+qualification progress: text: seen=25 elapsed=113.89s
+qualification progress: text: seen=50 elapsed=227.06s
+qualification progress: text: seen=75 elapsed=412.87s
+qualification progress: text: seen=100 elapsed=532.93s
+qualification progress: text: seen=125 elapsed=646.17s
+qualification progress: text: seen=150 elapsed=760.12s
+qualification progress: text: seen=175 elapsed=881.98s
+qualification progress: text: seen=200 elapsed=1007.22s
+cases=200 compared=3000 mismatch=0 fact=0 old_rejected=0 new_refused=0
+qualification {"kind": "text", "qualified": true, "accepted": 200, "native_comparisons": 3000, "elapsed_seconds": 1012.4682193649933}
+
+exit=0
