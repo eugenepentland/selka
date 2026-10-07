@@ -1,0 +1,16 @@
+test-core
++- run test w
+guardian/test: 1 test(s) selected
+guardian/test: test wall 2.61s; slowest over 50ms:
+guardian/test:   2.61s  emit_units_test.test.S4 release imports counted and conditional loop callees without cold-call or entry ripple
+guardian/test: PASS — 1 passed
+guardian/test: RESULT {"passed":1,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/0ee49e5ad14726b0fb8f2b744e986e30/test --cache-dir=./.zig-cache --seed=0x9f441fd9 --listen=-
+
+Build Summary: 5/5 steps succeeded; 1/1 tests passed
+test-core success
++- run test 1 pass (1 total) 2s MaxRSS:247M
+   +- compile test debug native success 1s MaxRSS:345M
+      +- options cached
+         +- compile exe mylang-core debug native cached 7ms MaxRSS:41M
+

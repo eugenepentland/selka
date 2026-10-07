@@ -1,0 +1,45 @@
+{
+  "same": true,
+  "instruction_counts": [
+    1317,
+    1317
+  ],
+  "normalization": "Remove actual relocation address operands only within ELF readonly/data ranges; preserve opcode, registers, arithmetic constants and relative CFG offsets. Remove objdump symbol comments, which label anonymous constants by neighboring symbols.",
+  "source_ranges": [
+    [
+      16783392,
+      16796738
+    ],
+    [
+      16999856,
+      17001560
+    ],
+    [
+      17006688,
+      17006704
+    ],
+    [
+      17006704,
+      17157696
+    ]
+  ],
+  "destination_ranges": [
+    [
+      16783392,
+      16796738
+    ],
+    [
+      16999856,
+      17001560
+    ],
+    [
+      17006688,
+      17006704
+    ],
+    [
+      17006704,
+      17157696
+    ]
+  ],
+  "different_lines": 0
+}

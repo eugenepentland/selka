@@ -1,0 +1,499 @@
+[
+  {
+    "kind": "delete",
+    "split": [
+      " 10334aa:\tlea    -0x2eeb1(%rip),%rbp        # 1004600 <core_number_pairs+0xd0>"
+    ],
+    "whole": []
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 10334ca:\tmov    (%rsp),%r8",
+      " 10334ce:\txchg   %ax,%ax"
+    ],
+    "whole": [
+      " 103332d:\tmov    0x8(%rsp),%r8",
+      " 1033332:\tdata16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)"
+    ]
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 1033353:\tmov    0x8(%r9),%r13",
+      " 1033357:\ttest   %r13,%r13",
+      " 103335a:\tje     1033a7c <main+0xe7c>",
+      " 1033360:\tmov    0x0(%r13),%rax"
+    ]
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 103336c:\tvmovups %xmm1,0x8(%r13)",
+      " 1033372:\tmovq   $0x0,0x18(%r13)"
+    ]
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 1033381:\tlea    -0x2ed78(%rip),%r15        # 1004610 <core_number_pairs+0xe0>"
+    ]
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 103339d:\tmov    %rcx,0x18(%rsp)"
+    ]
+  },
+  {
+    "kind": "delete",
+    "split": [
+      " 1033512:\tmov    0x8(%r9),%rax",
+      " 1033516:\ttest   %rax,%rax",
+      " 1033519:\tje     1033c69 <my.app::main+0xec9>",
+      " 103351f:\tmov    (%rax),%rcx",
+      " 1033522:\tmov    %rcx,0x8(%r9)",
+      " 1033526:\tmov    %r13,(%rax)",
+      " 1033529:\tvmovups %xmm1,0x8(%rax)",
+      " 103352e:\tmovq   $0x0,0x18(%rax)",
+      " 1033536:\tmov    %rax,0x10(%rsp)"
+    ],
+    "whole": []
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 103358b:\tmov    0x8(%r10),%rdx"
+    ],
+    "whole": [
+      " 10333fa:\tcmpq   $0x0,0x8(%r10)",
+      " 10333ff:\tje     1033c2e <main+0x102e>",
+      " 1033405:\tmov    %rbp,0x38(%rsp)",
+      " 103340a:\tmov    %rdx,0x58(%rsp)"
+    ]
+  },
+  {
+    "kind": "delete",
+    "split": [
+      " 1033591:\ttest   %rdx,%rdx",
+      " 1033594:\tje     1033dc9 <my.app::main+0x1029>"
+    ],
+    "whole": []
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 1033418:\tdata16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)",
+      " 1033427:\tdata16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)",
+      " 1033436:\tcs nopw 0x0(%rax,%rax,1)"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033608:\tmovslq 0x0(%rbp,%rcx,4),%rax"
+    ],
+    "whole": [
+      " 10334a7:\tmovslq (%r15,%rcx,4),%rax"
+    ]
+  },
+  {
+    "kind": "delete",
+    "split": [
+      " 10336ac:\tmov    0x8(%r15),%rax",
+      " 10336b0:\tcmp    0x10(%r15),%rax",
+      " 10336b4:\tjae    10339df <my.app::main+0xc3f>",
+      " 10336ba:\tmov    %rax,%rcx",
+      " 10336bd:\tshl    $0x4,%rcx",
+      " 10336c1:\tmovq   $0x0,0x20(%r15,%rcx,1)",
+      " 10336ca:\tmov    %rbx,0x28(%r15,%rcx,1)"
+    ],
+    "whole": []
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 103373b:\tlea    -0x2f12e(%rip),%rdx        # 1004614 <core_number_pairs+0xe4>"
+    ],
+    "whole": [
+      " 10335b6:\tlea    -0x2ef99(%rip),%rdx        # 1004624 <core_number_pairs+0xf4>"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 103379a:\tcmpb   $0x0,(%r15,%rdx,1)"
+    ],
+    "whole": [
+      " 1033616:\tcmpb   $0x0,0x0(%r13,%rdx,1)"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 10337bc:\tlea    -0x2f19f(%rip),%rdx        # 1004624 <core_number_pairs+0xf4>"
+    ],
+    "whole": [
+      " 103363a:\tlea    -0x2f00d(%rip),%rdx        # 1004634 <core_number_pairs+0x104>"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 10338a0:\tjae    1033a18 <my.app::main+0xc78>",
+      " 10338a6:\tlea    -0x2f2ad(%rip),%rbp        # 1004600 <core_number_pairs+0xd0>"
+    ],
+    "whole": [
+      " 103371e:\tjb     10337b2 <main+0xbb2>",
+      " 1033724:\tmov    $0x10,%esi",
+      " 1033729:\tmov    %rdi,%r14",
+      " 103372c:\tmov    %r13,%rdi",
+      " 103372f:\tvzeroupper",
+      " 1033732:\tcall   1009130 <myl_core_list_grow>",
+      " 1033737:\tvxorps %xmm1,%xmm1,%xmm1",
+      " 103373b:\txor    %r11d,%r11d",
+      " 103373e:\tmov    0x10(%rsp),%r10",
+      " 1033743:\tmov    0x8(%rsp),%r8",
+      " 1033748:\tlea    0x26421(%rip),%r9        # 1059b70 <myl_core_free_lists>",
+      " 103374f:\tmov    %r14,%rdi",
+      " 1033752:\tmov    %rax,%r13",
+      " 1033755:\tmov    0x8(%rax),%rcx"
+    ]
+  },
+  {
+    "kind": "delete",
+    "split": [
+      " 10338d9:\tlea    -0x2f2e0(%rip),%rbp        # 1004600 <core_number_pairs+0xd0>"
+    ],
+    "whole": []
+  },
+  {
+    "kind": "delete",
+    "split": [
+      " 1033909:\tlea    -0x2f310(%rip),%rbp        # 1004600 <core_number_pairs+0xd0>"
+    ],
+    "whole": []
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 10337ce:\tlea    -0x2f1c5(%rip),%r15        # 1004610 <core_number_pairs+0xe0>"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033953:\tmov    (%rsp),%r8"
+    ],
+    "whole": [
+      " 10337f9:\tmov    0x8(%rsp),%r8"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 103398c:\tmov    (%rsp),%r8"
+    ],
+    "whole": [
+      " 1033833:\tmov    0x8(%rsp),%r8"
+    ]
+  },
+  {
+    "kind": "delete",
+    "split": [
+      " 10339c5:\tmov    (%rsp),%r8",
+      " 10339c9:\tlea    0x27210(%rip),%r9        # 105abe0 <myl_core_free_lists>",
+      " 10339d0:\tmov    %rbx,%rdi",
+      " 10339d3:\tmov    %rax,%r15"
+    ],
+    "whole": []
+  },
+  {
+    "kind": "delete",
+    "split": [
+      " 10339da:\tjmp    10336e2 <my.app::main+0x942>",
+      " 10339df:\tmov    $0x10,%esi",
+      " 10339e4:\tmov    %rdi,%r14",
+      " 10339e7:\tmov    %r15,%rdi",
+      " 10339ea:\tvzeroupper",
+      " 10339ed:\tcall   10094f0 <myl_core_list_grow>",
+      " 10339f2:\tvxorps %xmm1,%xmm1,%xmm1",
+      " 10339f6:\txor    %r11d,%r11d",
+      " 10339f9:\tmov    0x8(%rsp),%r10",
+      " 10339fe:\tmov    (%rsp),%r8",
+      " 1033a02:\tlea    0x271d7(%rip),%r9        # 105abe0 <myl_core_free_lists>",
+      " 1033a09:\tmov    %r14,%rdi",
+      " 1033a0c:\tmov    %rax,%r15",
+      " 1033a0f:\tmov    0x8(%rax),%rax",
+      " 1033a13:\tjmp    10336ba <my.app::main+0x91a>",
+      " 1033a18:\tmov    $0x10,%esi",
+      " 1033a1d:\tmov    %rdi,%rbx",
+      " 1033a20:\tmov    %r15,%rdi",
+      " 1033a23:\tvzeroupper",
+      " 1033a26:\tcall   10094f0 <myl_core_list_grow>",
+      " 1033a2b:\tvxorps %xmm1,%xmm1,%xmm1",
+      " 1033a2f:\txor    %r11d,%r11d",
+      " 1033a32:\tmov    0x8(%rsp),%r10",
+      " 1033a37:\tmov    (%rsp),%r8"
+    ],
+    "whole": []
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033a70:\tmov    (%rsp),%r8"
+    ],
+    "whole": [
+      " 10338a7:\tmov    0x8(%rsp),%r8"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033a8c:\tmov    %rdi,%r14"
+    ],
+    "whole": [
+      " 10338c4:\tmov    %rdi,0x20(%rsp)"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033aa6:\tmov    (%rsp),%r8"
+    ],
+    "whole": [
+      " 10338e0:\tmov    0x8(%rsp),%r8"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033ab1:\tmov    %r14,%rdi"
+    ],
+    "whole": [
+      " 10338ec:\tmov    0x20(%rsp),%rdi"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033ac5:\tmov    %rdi,%r14"
+    ],
+    "whole": [
+      " 1033902:\tmov    %rdi,0x20(%rsp)"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033adf:\tmov    (%rsp),%r8"
+    ],
+    "whole": [
+      " 103391e:\tmov    0x8(%rsp),%r8"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033aea:\tmov    %r14,%rdi"
+    ],
+    "whole": [
+      " 103392a:\tmov    0x20(%rsp),%rdi"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033b1b:\tmov    (%rsp),%r8"
+    ],
+    "whole": [
+      " 103395d:\tmov    0x8(%rsp),%r8"
+    ]
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 10339ad:\tmov    0x38(%rsp),%rbp"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033bd8:\tmov    %rcx,(%r15)"
+    ],
+    "whole": [
+      " 1033a1d:\tmov    %rcx,0x0(%r13)"
+    ]
+  },
+  {
+    "kind": "delete",
+    "split": [
+      " 1033be9:\tmov    0x48(%rsp),%rsi"
+    ],
+    "whole": []
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 1033a83:\tmov    %rdx,%r14"
+    ]
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 1033a92:\tmov    %r14,%rdx"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033c56:\tmov    (%rsp),%r8"
+    ],
+    "whole": [
+      " 1033a9d:\tmov    0x8(%rsp),%r8"
+    ]
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 1033ab8:\tmov    %rdx,%r14"
+    ]
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 1033ac7:\tmov    %r14,%rdx"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033c84:\tmov    (%rsp),%r8"
+    ],
+    "whole": [
+      " 1033ad2:\tmov    0x8(%rsp),%r8"
+    ]
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 1033ade:\tmov    %rax,0x18(%rsp)"
+    ]
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 1033ae8:\tmov    %rdx,%r14"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033cd6:\tmov    (%rsp),%r8"
+    ],
+    "whole": [
+      " 1033b2d:\tmov    0x8(%rsp),%r8"
+    ]
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 1033b3a:\tmov    %r14,%rdx"
+    ]
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 1033b4b:\tmov    %rdx,%r14"
+    ]
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 1033b5a:\tmov    %r14,%rdx"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033d04:\tmov    (%rsp),%r8"
+    ],
+    "whole": [
+      " 1033b65:\tmov    0x8(%rsp),%r8"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033d2f:\tmov    (%rsp),%r8"
+    ],
+    "whole": [
+      " 1033b91:\tmov    0x8(%rsp),%r8"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033d53:\tmov    (%rsp),%r8"
+    ],
+    "whole": [
+      " 1033bb6:\tmov    0x8(%rsp),%r8"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033d7a:\tmov    (%rsp),%r8"
+    ],
+    "whole": [
+      " 1033bde:\tmov    0x8(%rsp),%r8"
+    ]
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 1033c0e:\tmov    0x28(%rsp),%r14"
+    ]
+  },
+  {
+    "kind": "delete",
+    "split": [
+      " 1033db9:\tmov    0x18(%rsp),%r14"
+    ],
+    "whole": []
+  },
+  {
+    "kind": "insert",
+    "split": [],
+    "whole": [
+      " 1033c2e:\txor    %edx,%edx",
+      " 1033c30:\txor    %esi,%esi"
+    ]
+  },
+  {
+    "kind": "replace",
+    "split": [
+      " 1033e31:\tmov    %r14,%rdi"
+    ],
+    "whole": [
+      " 1033c9d:\tmov    0x48(%rsp),%rdi"
+    ]
+  }
+]

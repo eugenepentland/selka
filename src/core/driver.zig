@@ -61,18 +61,27 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
         cwd.writeFile(io, .{ .sub_path = program, .data = request.llvm }) catch return error.WriteFailed;
         try argv.append(allocator, program);
     }
-    for (request.units) |unit| {
-        const program = try std.fs.path.join(allocator, &.{ staging, try std.fmt.allocPrint(allocator, "{s}.ll", .{unit.name}) });
-        cwd.writeFile(io, .{ .sub_path = program, .data = unit.llvm }) catch return error.WriteFailed;
-        try argv.append(allocator, program);
+    const programs = try allocator.alloc([]const u8, request.units.len);
+    for (request.units, programs) |unit, *program| {
+        program.* = try std.fs.path.join(allocator, &.{ staging, try std.fmt.allocPrint(allocator, "{s}.ll", .{unit.name}) });
+        cwd.writeFile(io, .{ .sub_path = program.*, .data = unit.llvm }) catch return error.WriteFailed;
         number = number or unit.number;
         math = math or unit.math;
     }
+    try appendPrograms(allocator, &argv, request.units, programs);
     try argv.append(allocator, runtime_object);
     if (number) try argv.append(allocator, try number_runtime.object(allocator, io, &environment, request, log));
     try argv.appendSlice(allocator, request.links);
     if (math) try argv.append(allocator, "-lm");
     try run(allocator, io, &environment, argv.items, log);
+}
+
+fn appendPrograms(allocator: std.mem.Allocator, argv: *std.ArrayList([]const u8), units: []const emit_units.Unit, programs: []const []const u8) Error!void {
+    // Keep emission in IR order; native inputs place the entry first, followed by
+    // every other unit in its original order. Worker completion cannot affect layout.
+    for ([_]bool{ true, false }) |entry| {
+        for (units, programs) |unit, program| if ((unit.kind == .entry) == entry) try argv.append(allocator, program);
+    }
 }
 
 /// The runtime object for this runtime source, compiled on first use.

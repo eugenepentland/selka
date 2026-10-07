@@ -1,0 +1,16 @@
+{
+  "baseline": {
+    "symbols": [
+      "0000000001032da0 000000000000003b T main",
+      "00000000010339f0 00000000000016b4 t my.app::main"
+    ],
+    "instructions": 1317
+  },
+  "stdout_constant": {
+    "symbols": [
+      "0000000001032da0 000000000000003b T main",
+      "00000000010339f0 00000000000016d1 t my.app::main"
+    ],
+    "instructions": 1315
+  }
+}

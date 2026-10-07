@@ -377,6 +377,11 @@ test "S4 release imports counted and conditional loop callees without cold-call 
     const debug = try snapshot(a, .{ caller, source, other }, false);
     try std.testing.expect(std.mem.indexOf(u8, try textOf(debug, "app.my"), "available_externally") == null);
     try changed(debug, try snapshot(a, .{ caller, hot, other }, false), &.{"leaf.my"});
+    // Native linking needs the entry, caller, imported closure and cold owner once each.
+    const result = try native(a, first);
+    try std.testing.expect(result.term == .exited and result.term.exited == 0);
+    try std.testing.expectEqualStrings("5\n", result.stdout);
+    try std.testing.expectEqualStrings("", result.stderr);
 }
 
 // spec-case: NEW-CORE-S4-UNITS-1

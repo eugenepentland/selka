@@ -1,0 +1,11 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10486 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (change-classification)
+guardian: failures grouped by check (1):
+  change-classification (1 finding)
+    - src/core/driver.zig: 10 behavioral line(s) added
+      fix: commit these lines WITH a test — add or update a `// spec:`-tagged test, or add the behavior as a SPEC.md bullet, in this same change.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
