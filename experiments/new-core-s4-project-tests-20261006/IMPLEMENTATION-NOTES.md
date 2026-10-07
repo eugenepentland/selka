@@ -183,3 +183,27 @@ retired arenas only and forced leak/verify execution, inherited strict50 kinds p
 50 generated project/provider comparisons and traced zero-child warm runs,
 uncontended rebuild, all46 after qualified V, and both port inventories. Port
 capability-field and assert-message repairs belong to S4-P after C and M merge.
+
+## Qualification harness correction, 2026-10-07
+
+The compiler production checkpoint remains `8cd19b82d`; tool-only correction
+`07cca6157` now requires exact conformance selection/counts, distinct immutable
+oracles and forced native execution, snapshots each generated project/provider
+input phase, and compares both concurrent providers against old. Every command
+has its own subreaper supervisor: reduced exited-parent orphan hangs are fixed
+without killing concurrent commands, and raw partial bytes remain retained.
+Root independently verified the frozen five tool source bodies and reran 11/11
+local selftests in 1.778 seconds. This is tool validation, not a full compiler
+qualification; final M still waits for qualified combined E/V, all package
+gates, and a fresh full core command under 300 seconds.
+
+Final X will use 200 cases for each of all nine inherited fuzz kinds (1,800
+accepted programs and 25,800 native comparisons), and 200 generated project
+cases as the module/provider supplement. Package M keeps its required 50
+project cases. This coordinator choice extends the final every-kind bar to
+S4's added project generator; it changes no compiler acceptance rule.
+
+Large raw process receipts will be retained in verified lossless archives with
+readable member hashes before evidence commits; originals remain untouched.
+No full old gate or fuzz matrix overlaps the other, and no later compiler may
+claim qualification from these local tool checks or earlier-source receipts.
