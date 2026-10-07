@@ -63,6 +63,7 @@ pub fn instruction(context: anytype, out: anytype, name: []const u8, inst: ir.In
                 flags.buffer_append_float => "double",
                 else => "i8 zeroext",
             };
+            if (inst.data == flags.buffer_append_int or inst.data == flags.buffer_append_float) try formatter(context, symbol, scalar);
             try out.print(a, "  {s} = call ptr @{s}(ptr {s}, {s} {s})\n", .{ name, symbol, try context.value(inst.a), scalar, try context.value(inst.b) });
         },
         .buffer_set => {
@@ -81,4 +82,12 @@ pub fn instruction(context: anytype, out: anytype, name: []const u8, inst: ir.In
         },
         else => try context.unsupported(out, name, inst),
     }
+}
+
+fn formatter(context: anytype, symbol: []const u8, scalar: []const u8) !void {
+    // Numeric buffer operations name runtime helpers without a Core call. Declare
+    // that dependency in this unit, including imported bodies, only when reached.
+    for (context.state.declared.items) |known| if (std.mem.eql(u8, known, symbol)) return;
+    try context.state.declared.append(context.a(), symbol);
+    try context.state.externs.print(context.a(), "declare ptr @{s}(ptr, {s}) nounwind\n", .{ symbol, scalar });
 }

@@ -1,0 +1,7 @@
+{
+  "qualified": false,
+  "source_commit": "dfcc38c2993027eec25d47eac57628501be9b7b2",
+  "reason": "Known undefined numeric-buffer formatter declaration in immutable compiler; stopped before further row qualification",
+  "terminated_owned_pids": [],
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-final-01/bin/mylang-core"
+}

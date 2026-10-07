@@ -1,0 +1,18 @@
+test-core
++- run test w
+guardian/test: 2 test(s) selected
+guardian/test: SLOW  10.60s  emit_units_test.test.S4 numeric buffer operations declare reached helpers in owner and imported units
+guardian/test: test wall 13.31s; slowest over 50ms:
+guardian/test:   10.60s  emit_units_test.test.S4 numeric buffer operations declare reached helpers in owner and imported units
+guardian/test:   2.70s  emit_units_test.test.S4 integer-only numeric buffer operations avoid the float helper dependency
+guardian/test: PASS — 2 passed
+guardian/test: RESULT {"passed":2,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/2efeb8ec534f06872b71dbbff6e6ca34/test --cache-dir=./.zig-cache --seed=0x93894fc7 --listen=-
+
+Build Summary: 5/5 steps succeeded; 2/2 tests passed
+test-core success
++- run test 2 pass (2 total) 13s MaxRSS:247M
+   +- compile test debug native success 1s MaxRSS:344M
+      +- options cached
+         +- compile exe mylang-core debug native cached 8ms MaxRSS:41M
+

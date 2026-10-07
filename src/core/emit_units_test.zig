@@ -12,6 +12,7 @@ const report = std.debug.print;
 const app = "module app\nimport leaf\nimport other\n\ndef main(out: Stream) -> int:\n    out.print(leaf.compute(7), other.compute(3))\n    return 0\n";
 const leaf = "module leaf\n\npublic def compute(x: int) -> int:\n    total = 0\n    for i in range(x):\n        total += i\n    return total\n";
 const other = "module other\n\npublic def compute(x: int) -> int:\n    return x + 1\n";
+const Mode = enum { debug, release, verify };
 
 fn locate(context: *const anyopaque, offset: u32) emitter.Location {
     const src: *const language.source.Source = @ptrCast(@alignCast(context));
@@ -23,7 +24,7 @@ fn snapshot(a: std.mem.Allocator, sources: [3][]const u8, release: bool) ![]unit
     return snapshotFor(a, sources, if (release) .release else .debug);
 }
 
-fn snapshotFor(a: std.mem.Allocator, sources: [3][]const u8, mode: enum { debug, release, verify }) ![]units.Unit {
+fn snapshotFor(a: std.mem.Allocator, sources: [3][]const u8, mode: Mode) ![]units.Unit {
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const names = [_][]const u8{ "app.my", "leaf.my", "other.my" };
@@ -124,6 +125,44 @@ fn nativeArgs(a: std.mem.Allocator, emitted: []const units.Unit, arguments: []co
     argv[0] = output;
     @memcpy(argv[1..], arguments);
     return std.process.run(a, std.testing.io, .{ .argv = argv, .environ_map = &environment });
+}
+
+// spec-case: NEW-CORE-S4-UNITS-1
+// spec-case: NEW-CORE-BUFFER-S4-1
+test "S4 numeric buffer operations declare reached helpers in owner and imported units" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const caller = "module app\nimport leaf\ndef main(out: Stream) -> int:\n    for i in range(1):\n" ++
+        "        buffer = leaf.formatted()\n        out.print(len(buffer), buffer[0], buffer[1], buffer[2], buffer[3], buffer[4])\n    return 0\n";
+    const formatted = "module leaf\npublic def formatted() -> byte_buffer:\n    empty: list[int] = []\n" ++
+        "    buffer = byte_buffer(empty)\n    _ = buffer.append_int(-7)\n    _ = buffer.append_float(1.5)\n    return buffer\n";
+    for ([_]Mode{ .debug, .release, .verify }) |mode| {
+        const emitted = try snapshotFor(a, .{ caller, formatted, other }, mode);
+        const result = try native(a, emitted);
+        try std.testing.expect(result.term == .exited and result.term.exited == 0);
+        try std.testing.expectEqualStrings("5 45 55 49 46 53\n", result.stdout);
+        try std.testing.expectEqualStrings("", result.stderr);
+        for (emitted) |unit| if (std.mem.eql(u8, unit.source_path, "other.my")) try std.testing.expect(!unit.number);
+    }
+}
+
+// spec-case: NEW-CORE-S4-UNITS-1
+// spec-case: NEW-CORE-BUFFER-S4-1
+test "S4 integer-only numeric buffer operations avoid the float helper dependency" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const integer_caller = "module app\nimport leaf\ndef main(out: Stream) -> int:\n" ++
+        "    buffer = leaf.formatted()\n    out.print(len(buffer), buffer[0], buffer[1])\n    return 0\n";
+    const integer = "module leaf\npublic def formatted() -> byte_buffer:\n    empty: list[int] = []\n" ++
+        "    buffer = byte_buffer(empty)\n    _ = buffer.append_int(-7)\n    return buffer\n";
+    const emitted = try snapshot(a, .{ integer_caller, integer, other }, false);
+    for (emitted) |unit| try std.testing.expect(!unit.number);
+    const result = try native(a, emitted);
+    try std.testing.expectEqualStrings("2 45 55\n", result.stdout);
+    try std.testing.expectEqualStrings("", result.stderr);
+    try std.testing.expect(result.term == .exited and result.term.exited == 0);
 }
 
 // spec: NEW-CORE-S4-SITES-1
