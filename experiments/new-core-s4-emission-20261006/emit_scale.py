@@ -42,11 +42,15 @@ def emit(args, recorder, source, destination, compiler, mode, label):
     if mode == "release":
         command.append("--release")
     start = time.monotonic()
-    result = subprocess.run(["taskset", "-c", "10", *command], capture_output=True, text=True,
+    peak = destination / "peak-rss-kib.txt"
+    measured_command = ["/usr/bin/time", "-f", "%M", "-o", str(peak), "taskset", "-c", "10", *command]
+    result = subprocess.run(measured_command, capture_output=True, text=True,
                             env={**os.environ, "S4_EMIT_COMMANDS": str(commands)}, timeout=900)
     seconds = time.monotonic() - start
-    (destination / "command.json").write_text(json.dumps({"command": command, "status": result.returncode,
-         "stdout": result.stdout, "stderr": result.stderr, "seconds": seconds, "native_validation": False}, indent=2) + "\n")
+    rss = int(peak.read_text().strip()) if result.returncode == 0 else None
+    (destination / "command.json").write_text(json.dumps({"command": command, "measured_command": measured_command,
+         "status": result.returncode, "stdout": result.stdout, "stderr": result.stderr,
+         "seconds": seconds, "peak_rss_kib": rss, "native_validation": False}, indent=2) + "\n")
     if result.returncode:
         raise ValueError(f"emission failed: {destination}/command.json")
     units = {}
@@ -57,7 +61,7 @@ def emit(args, recorder, source, destination, compiler, mode, label):
              "imports": re.findall(r'^define available_externally[^@\n]*@"([^"]*)"', text, re.MULTILINE)}
     if not units:
         raise ValueError("no LLVM unit texts were retained")
-    return {"compiler": label, "mode": mode, "seconds": seconds, "units": units,
+    return {"compiler": label, "mode": mode, "seconds": seconds, "peak_rss_kib": rss, "units": units,
             "unit_count": len(units), "llvm_bytes": sum(unit["bytes"] for unit in units.values()),
             "import_count": sum(len(unit["imports"]) for unit in units.values())}
 

@@ -1,0 +1,5541 @@
+{
+  "source_commit": "6d1c3b77d566d4f0da6238fa0bc249625998b977",
+  "rounds": 7,
+  "startup_samples": 3,
+  "cpu": 10,
+  "cases": {
+    "packet_decode": {
+      "unit": "element",
+      "binaries": {
+        "whole": {
+          "path": ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+          "sha256": "6973b004cd5a14cb84c439a41c419a8ff89e5c42cb65280d2614167e3c4baba3"
+        },
+        "split": {
+          "path": "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+          "sha256": "075e24b806b405484a6865965941b860793759b5311ba0c3148bbd9b0e5d7802"
+        },
+        "original_row": {
+          "path": ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+          "sha256": "933004cc74b90f986f9c1d01fba9555a8294967083bd3c12364c3bda2f39c038"
+        }
+      },
+      "sizes": {
+        "4096": {
+          "iterations": 400,
+          "checksum": 635993509,
+          "startup": {
+            "whole": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "34089984 38178\n",
+                "stderr": "928384,,cpu_core/cycles/u,449686,100.00,,\n",
+                "checksum": 34089984,
+                "elapsed_ns": 38178,
+                "cycles": 928384
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "34089984 37907\n",
+                "stderr": "946506,,cpu_core/cycles/u,466682,100.00,,\n",
+                "checksum": 34089984,
+                "elapsed_ns": 37907,
+                "cycles": 946506
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "34089984 36784\n",
+                "stderr": "945683,,cpu_core/cycles/u,428296,100.00,,\n",
+                "checksum": 34089984,
+                "elapsed_ns": 36784,
+                "cycles": 945683
+              }
+            ],
+            "split": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "34089984 38217\n",
+                "stderr": "963530,,cpu_core/cycles/u,404560,100.00,,\n",
+                "checksum": 34089984,
+                "elapsed_ns": 38217,
+                "cycles": 963530
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "34089984 35850\n",
+                "stderr": "947167,,cpu_core/cycles/u,395154,100.00,,\n",
+                "checksum": 34089984,
+                "elapsed_ns": 35850,
+                "cycles": 947167
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "34089984 36555\n",
+                "stderr": "963367,,cpu_core/cycles/u,407508,100.00,,\n",
+                "checksum": 34089984,
+                "elapsed_ns": 36555,
+                "cycles": 963367
+              }
+            ],
+            "original_row": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "34089984 36879\n",
+                "stderr": "941678,,cpu_core/cycles/u,411904,100.00,,\n",
+                "checksum": 34089984,
+                "elapsed_ns": 36879,
+                "cycles": 941678
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "34089984 37503\n",
+                "stderr": "939648,,cpu_core/cycles/u,407260,100.00,,\n",
+                "checksum": 34089984,
+                "elapsed_ns": 37503,
+                "cycles": 939648
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "34089984 35891\n",
+                "stderr": "939467,,cpu_core/cycles/u,397750,100.00,,\n",
+                "checksum": 34089984,
+                "elapsed_ns": 35891,
+                "cycles": 939467
+              }
+            ]
+          },
+          "runs": {
+            "whole": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5751568\n",
+                "stderr": "26975714,,cpu_core/cycles/u,6105186,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5751568,
+                "cycles": 26975714
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5750239\n",
+                "stderr": "26896285,,cpu_core/cycles/u,6115404,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5750239,
+                "cycles": 26896285
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5969925\n",
+                "stderr": "28076574,,cpu_core/cycles/u,6346259,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5969925,
+                "cycles": 28076574
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5697692\n",
+                "stderr": "26749284,,cpu_core/cycles/u,6066744,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5697692,
+                "cycles": 26749284
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5626560\n",
+                "stderr": "26247238,,cpu_core/cycles/u,5988119,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5626560,
+                "cycles": 26247238
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5707292\n",
+                "stderr": "26677658,,cpu_core/cycles/u,6098782,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5707292,
+                "cycles": 26677658
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5776120\n",
+                "stderr": "27033865,,cpu_core/cycles/u,6166143,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5776120,
+                "cycles": 27033865
+              }
+            ],
+            "split": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5697243\n",
+                "stderr": "26844811,,cpu_core/cycles/u,6059461,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5697243,
+                "cycles": 26844811
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5766600\n",
+                "stderr": "27143133,,cpu_core/cycles/u,6138919,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5766600,
+                "cycles": 27143133
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 6158507\n",
+                "stderr": "28855009,,cpu_core/cycles/u,6526335,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 6158507,
+                "cycles": 28855009
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5763283\n",
+                "stderr": "27008551,,cpu_core/cycles/u,6175141,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5763283,
+                "cycles": 27008551
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5751731\n",
+                "stderr": "27033718,,cpu_core/cycles/u,6116081,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5751731,
+                "cycles": 27033718
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5849183\n",
+                "stderr": "27153592,,cpu_core/cycles/u,6241663,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5849183,
+                "cycles": 27153592
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 6137508\n",
+                "stderr": "28782237,,cpu_core/cycles/u,6510756,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 6137508,
+                "cycles": 28782237
+              }
+            ],
+            "original_row": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5939528\n",
+                "stderr": "27841268,,cpu_core/cycles/u,6310277,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5939528,
+                "cycles": 27841268
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5875044\n",
+                "stderr": "27560763,,cpu_core/cycles/u,6246441,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5875044,
+                "cycles": 27560763
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5627939\n",
+                "stderr": "26449794,,cpu_core/cycles/u,5992942,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5627939,
+                "cycles": 26449794
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5630295\n",
+                "stderr": "26442185,,cpu_core/cycles/u,5995792,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5630295,
+                "cycles": 26442185
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 6011844\n",
+                "stderr": "28235081,,cpu_core/cycles/u,6369060,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 6011844,
+                "cycles": 28235081
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5898517\n",
+                "stderr": "27715618,,cpu_core/cycles/u,6283804,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5898517,
+                "cycles": 27715618
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "4096",
+                  "400",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "635993509 5698484\n",
+                "stderr": "26800289,,cpu_core/cycles/u,6096213,100.00,,\n",
+                "checksum": 635993509,
+                "elapsed_ns": 5698484,
+                "cycles": 26800289
+              }
+            ]
+          },
+          "cycles_per_unit": {
+            "whole": [
+              15.887470092773437,
+              15.838990478515624,
+              16.559381713867186,
+              15.749268188476563,
+              15.442843627929687,
+              15.705551147460938,
+              15.922962646484375
+            ],
+            "split": [
+              15.79677978515625,
+              15.978861083984375,
+              17.023707275390624,
+              15.89671875,
+              15.912079467773438,
+              15.985244750976562,
+              16.979290771484376
+            ],
+            "original_row": [
+              16.41944580078125,
+              16.24823913574219,
+              15.570157470703125,
+              15.565513305664062,
+              16.659810180664063,
+              16.342755126953126,
+              15.784082641601563
+            ]
+          },
+          "comparisons": {
+            "split": {
+              "over_whole": 1.0088307777985266,
+              "paired_ratios": [
+                0.994291708680639,
+                1.0088307777985266,
+                1.0280400300896864,
+                1.009362375429693,
+                1.0303853261192841,
+                1.0178085825126133,
+                1.0663399235715236
+              ],
+              "paired_median_bootstrap95": [
+                1.0088307777985266,
+                1.0303853261192841
+              ],
+              "within_noise": false
+            },
+            "original_row": {
+              "over_whole": 1.0258380518494332,
+              "paired_ratios": [
+                1.0334839785630683,
+                1.0258380518494332,
+                0.9402620061390539,
+                0.9883324811912879,
+                1.0788045635930283,
+                1.0405718954724619,
+                0.9912780047302644
+              ],
+              "paired_median_bootstrap95": [
+                0.9883324811912879,
+                1.0405718954724619
+              ],
+              "within_noise": true
+            }
+          }
+        },
+        "64": {
+          "iterations": 25000,
+          "checksum": 105199993,
+          "startup": {
+            "whole": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "44208 1490\n",
+                "stderr": "329487,,cpu_core/cycles/u,238131,100.00,,\n",
+                "checksum": 44208,
+                "elapsed_ns": 1490,
+                "cycles": 329487
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "44208 1612\n",
+                "stderr": "336060,,cpu_core/cycles/u,234262,100.00,,\n",
+                "checksum": 44208,
+                "elapsed_ns": 1612,
+                "cycles": 336060
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "44208 1693\n",
+                "stderr": "414852,,cpu_core/cycles/u,328866,100.00,,\n",
+                "checksum": 44208,
+                "elapsed_ns": 1693,
+                "cycles": 414852
+              }
+            ],
+            "split": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "44208 1289\n",
+                "stderr": "329040,,cpu_core/cycles/u,246535,100.00,,\n",
+                "checksum": 44208,
+                "elapsed_ns": 1289,
+                "cycles": 329040
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "44208 1120\n",
+                "stderr": "327755,,cpu_core/cycles/u,235557,100.00,,\n",
+                "checksum": 44208,
+                "elapsed_ns": 1120,
+                "cycles": 327755
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "44208 1203\n",
+                "stderr": "325182,,cpu_core/cycles/u,235131,100.00,,\n",
+                "checksum": 44208,
+                "elapsed_ns": 1203,
+                "cycles": 325182
+              }
+            ],
+            "original_row": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "44208 1126\n",
+                "stderr": "331288,,cpu_core/cycles/u,241526,100.00,,\n",
+                "checksum": 44208,
+                "elapsed_ns": 1126,
+                "cycles": 331288
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "44208 1216\n",
+                "stderr": "328551,,cpu_core/cycles/u,246922,100.00,,\n",
+                "checksum": 44208,
+                "elapsed_ns": 1216,
+                "cycles": 328551
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "44208 1064\n",
+                "stderr": "423821,,cpu_core/cycles/u,238034,100.00,,\n",
+                "checksum": 44208,
+                "elapsed_ns": 1064,
+                "cycles": 423821
+              }
+            ]
+          },
+          "runs": {
+            "whole": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5555814\n",
+                "stderr": "25681667,,cpu_core/cycles/u,5770590,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5555814,
+                "cycles": 25681667
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5605094\n",
+                "stderr": "25659979,,cpu_core/cycles/u,5820257,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5605094,
+                "cycles": 25659979
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5607381\n",
+                "stderr": "25788130,,cpu_core/cycles/u,5839791,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5607381,
+                "cycles": 25788130
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5838554\n",
+                "stderr": "26899513,,cpu_core/cycles/u,6044158,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5838554,
+                "cycles": 26899513
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5819062\n",
+                "stderr": "26819536,,cpu_core/cycles/u,6043683,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5819062,
+                "cycles": 26819536
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5543965\n",
+                "stderr": "25294142,,cpu_core/cycles/u,5775320,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5543965,
+                "cycles": 25294142
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5530054\n",
+                "stderr": "25385015,,cpu_core/cycles/u,5770269,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5530054,
+                "cycles": 25385015
+              }
+            ],
+            "split": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5566985\n",
+                "stderr": "25515532,,cpu_core/cycles/u,5796566,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5566985,
+                "cycles": 25515532
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5759564\n",
+                "stderr": "26196257,,cpu_core/cycles/u,5964631,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5759564,
+                "cycles": 26196257
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5561975\n",
+                "stderr": "25674035,,cpu_core/cycles/u,5790926,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5561975,
+                "cycles": 25674035
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5661195\n",
+                "stderr": "25993387,,cpu_core/cycles/u,5888087,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5661195,
+                "cycles": 25993387
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5713244\n",
+                "stderr": "25932015,,cpu_core/cycles/u,5950433,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5713244,
+                "cycles": 25932015
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5650028\n",
+                "stderr": "25960136,,cpu_core/cycles/u,5854085,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5650028,
+                "cycles": 25960136
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5609279\n",
+                "stderr": "25717103,,cpu_core/cycles/u,5809985,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5609279,
+                "cycles": 25717103
+              }
+            ],
+            "original_row": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5463342\n",
+                "stderr": "25003851,,cpu_core/cycles/u,5688508,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5463342,
+                "cycles": 25003851
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5803705\n",
+                "stderr": "26547614,,cpu_core/cycles/u,6014660,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5803705,
+                "cycles": 26547614
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5625229\n",
+                "stderr": "25885858,,cpu_core/cycles/u,5855675,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5625229,
+                "cycles": 25885858
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5793844\n",
+                "stderr": "26687089,,cpu_core/cycles/u,6002615,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5793844,
+                "cycles": 26687089
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5441659\n",
+                "stderr": "25106289,,cpu_core/cycles/u,5670804,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5441659,
+                "cycles": 25106289
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5722363\n",
+                "stderr": "26429048,,cpu_core/cycles/u,6001237,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5722363,
+                "cycles": 26429048
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+                  "64",
+                  "25000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "105199993 5437214\n",
+                "stderr": "25053841,,cpu_core/cycles/u,5672588,100.00,,\n",
+                "checksum": 105199993,
+                "elapsed_ns": 5437214,
+                "cycles": 25053841
+              }
+            ]
+          },
+          "cycles_per_unit": {
+            "whole": [
+              15.841004375,
+              15.827449375,
+              15.90754375,
+              16.602158125,
+              16.5521725,
+              15.59880125,
+              15.655596875
+            ],
+            "split": [
+              15.742360625,
+              16.16781375,
+              15.841425,
+              16.04102,
+              16.0026625,
+              16.020238125,
+              15.8683425
+            ],
+            "original_row": [
+              15.420351875,
+              16.38520375,
+              15.97160625,
+              16.472375625,
+              15.484375625,
+              16.3111,
+              15.451595625
+            ]
+          },
+          "comparisons": {
+            "split": {
+              "over_whole": 1.0102050426332263,
+              "paired_ratios": [
+                0.9937728853761522,
+                1.021504688906958,
+                0.9958435600719312,
+                0.966200892632445,
+                0.9668013368033712,
+                1.0270172603808256,
+                1.0135891098051795
+              ],
+              "paired_median_bootstrap95": [
+                0.9668013368033712,
+                1.021504688906958
+              ],
+              "within_noise": true
+            },
+            "original_row": {
+              "over_whole": 1.0082445451000641,
+              "paired_ratios": [
+                0.9734453390680285,
+                1.03523968782241,
+                1.0040271773572838,
+                0.9921827934041558,
+                0.9354890196437959,
+                1.0456636852142724,
+                0.9869694364495445
+              ],
+              "paired_median_bootstrap95": [
+                0.9734453390680285,
+                1.03523968782241
+              ],
+              "within_noise": true
+            }
+          }
+        }
+      }
+    },
+    "lox_eval": {
+      "unit": "element",
+      "binaries": {
+        "whole": {
+          "path": ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+          "sha256": "7685a24b6a5589dba40eff4837429acda7895b66e2e2eae823e0f334c49b2738"
+        },
+        "split": {
+          "path": "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+          "sha256": "d0217c44a3ba006c5296ae77e1730e5ae2ac47dd07b70e47afc87b16ca48c551"
+        },
+        "original_row": {
+          "path": ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+          "sha256": "fec97032473f39e456bc96abd31fef205313f5499763fe8ed7fa58018db3b3cb"
+        }
+      },
+      "sizes": {
+        "4096": {
+          "iterations": 40,
+          "checksum": 19955744,
+          "startup": {
+            "whole": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "295073 203397\n",
+                "stderr": "1176365,,cpu_core/cycles/u,466167,100.00,,\n",
+                "checksum": 295073,
+                "elapsed_ns": 203397,
+                "cycles": 1176365
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "295073 196320\n",
+                "stderr": "1194343,,cpu_core/cycles/u,402983,100.00,,\n",
+                "checksum": 295073,
+                "elapsed_ns": 196320,
+                "cycles": 1194343
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "295073 195400\n",
+                "stderr": "1171472,,cpu_core/cycles/u,399822,100.00,,\n",
+                "checksum": 295073,
+                "elapsed_ns": 195400,
+                "cycles": 1171472
+              }
+            ],
+            "split": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "295073 197140\n",
+                "stderr": "1196265,,cpu_core/cycles/u,410130,100.00,,\n",
+                "checksum": 295073,
+                "elapsed_ns": 197140,
+                "cycles": 1196265
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "295073 200761\n",
+                "stderr": "1198062,,cpu_core/cycles/u,414279,100.00,,\n",
+                "checksum": 295073,
+                "elapsed_ns": 200761,
+                "cycles": 1198062
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "295073 196220\n",
+                "stderr": "1206276,,cpu_core/cycles/u,447675,100.00,,\n",
+                "checksum": 295073,
+                "elapsed_ns": 196220,
+                "cycles": 1206276
+              }
+            ],
+            "original_row": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "295073 205251\n",
+                "stderr": "1181244,,cpu_core/cycles/u,418582,100.00,,\n",
+                "checksum": 295073,
+                "elapsed_ns": 205251,
+                "cycles": 1181244
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "295073 191247\n",
+                "stderr": "1286113,,cpu_core/cycles/u,421852,100.00,,\n",
+                "checksum": 295073,
+                "elapsed_ns": 191247,
+                "cycles": 1286113
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "295073 196733\n",
+                "stderr": "1170334,,cpu_core/cycles/u,407537,100.00,,\n",
+                "checksum": 295073,
+                "elapsed_ns": 196733,
+                "cycles": 1170334
+              }
+            ]
+          },
+          "runs": {
+            "whole": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7643269\n",
+                "stderr": "34931479,,cpu_core/cycles/u,7883300,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7643269,
+                "cycles": 34931479
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7636893\n",
+                "stderr": "34930396,,cpu_core/cycles/u,7863124,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7636893,
+                "cycles": 34930396
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7608597\n",
+                "stderr": "34915644,,cpu_core/cycles/u,7814497,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7608597,
+                "cycles": 34915644
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7618860\n",
+                "stderr": "34968086,,cpu_core/cycles/u,7851198,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7618860,
+                "cycles": 34968086
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7629501\n",
+                "stderr": "34928318,,cpu_core/cycles/u,7872386,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7629501,
+                "cycles": 34928318
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7606570\n",
+                "stderr": "34949000,,cpu_core/cycles/u,7819962,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7606570,
+                "cycles": 34949000
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7636146\n",
+                "stderr": "34987075,,cpu_core/cycles/u,7866810,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7636146,
+                "cycles": 34987075
+              }
+            ],
+            "split": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7668202\n",
+                "stderr": "35230908,,cpu_core/cycles/u,7876085,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7668202,
+                "cycles": 35230908
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7684687\n",
+                "stderr": "35052852,,cpu_core/cycles/u,7918689,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7684687,
+                "cycles": 35052852
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7669091\n",
+                "stderr": "35103092,,cpu_core/cycles/u,7902087,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7669091,
+                "cycles": 35103092
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7720032\n",
+                "stderr": "35171785,,cpu_core/cycles/u,7951559,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7720032,
+                "cycles": 35171785
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7667793\n",
+                "stderr": "35127539,,cpu_core/cycles/u,7873443,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7667793,
+                "cycles": 35127539
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7644417\n",
+                "stderr": "35006964,,cpu_core/cycles/u,7878902,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7644417,
+                "cycles": 35006964
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7673592\n",
+                "stderr": "35164184,,cpu_core/cycles/u,7884368,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7673592,
+                "cycles": 35164184
+              }
+            ],
+            "original_row": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7567013\n",
+                "stderr": "34830860,,cpu_core/cycles/u,7802451,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7567013,
+                "cycles": 34830860
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7597418\n",
+                "stderr": "34829595,,cpu_core/cycles/u,7812679,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7597418,
+                "cycles": 34829595
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7584673\n",
+                "stderr": "34593544,,cpu_core/cycles/u,7754456,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7584673,
+                "cycles": 34593544
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7644987\n",
+                "stderr": "34757450,,cpu_core/cycles/u,7849324,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7644987,
+                "cycles": 34757450
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7603453\n",
+                "stderr": "34704268,,cpu_core/cycles/u,7836318,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7603453,
+                "cycles": 34704268
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7630848\n",
+                "stderr": "34637603,,cpu_core/cycles/u,7860274,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7630848,
+                "cycles": 34637603
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "4096",
+                  "40",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "19955744 7685827\n",
+                "stderr": "34813283,,cpu_core/cycles/u,7917741,100.00,,\n",
+                "checksum": 19955744,
+                "elapsed_ns": 7685827,
+                "cycles": 34813283
+              }
+            ]
+          },
+          "cycles_per_unit": {
+            "whole": [
+              206.02486572265624,
+              206.01825561523438,
+              205.92821655273437,
+              206.24829711914063,
+              206.0055725097656,
+              206.13180541992188,
+              206.36419677734375
+            ],
+            "split": [
+              207.72000732421876,
+              206.63323974609375,
+              206.93988037109375,
+              207.35914916992186,
+              207.08909301757814,
+              206.35316162109376,
+              207.31275634765626
+            ],
+            "original_row": [
+              205.38095703125,
+              205.37323608398438,
+              203.9324951171875,
+              204.93289794921876,
+              204.60830078125,
+              204.20140991210937,
+              205.27367553710937
+            ]
+          },
+          "comparisons": {
+            "split": {
+              "over_whole": 1.0051655283996375,
+              "paired_ratios": [
+                1.0082278495637729,
+                1.0029850953209114,
+                1.0049127013057986,
+                1.0053859938059975,
+                1.0052596660110307,
+                1.001073857577296,
+                1.004596531690698
+              ],
+              "paired_median_bootstrap95": [
+                1.0029850953209114,
+                1.0053859938059975
+              ],
+              "within_noise": false
+            },
+            "original_row": {
+              "over_whole": 0.9946998253360958,
+              "paired_ratios": [
+                0.996874606911415,
+                0.9968691146844061,
+                0.9903086547877921,
+                0.9936222543977562,
+                0.9932173110101215,
+                0.9906351399587269,
+                0.994715550191049
+              ],
+              "paired_median_bootstrap95": [
+                0.9906351399587269,
+                0.9968691146844061
+              ],
+              "within_noise": false
+            }
+          }
+        },
+        "64": {
+          "iterations": 2500,
+          "checksum": 250256292,
+          "startup": {
+            "whole": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "791409 4304\n",
+                "stderr": "329982,,cpu_core/cycles/u,229423,100.00,,\n",
+                "checksum": 791409,
+                "elapsed_ns": 4304,
+                "cycles": 329982
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "791409 4178\n",
+                "stderr": "337329,,cpu_core/cycles/u,235907,100.00,,\n",
+                "checksum": 791409,
+                "elapsed_ns": 4178,
+                "cycles": 337329
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "791409 4298\n",
+                "stderr": "338275,,cpu_core/cycles/u,220640,100.00,,\n",
+                "checksum": 791409,
+                "elapsed_ns": 4298,
+                "cycles": 338275
+              }
+            ],
+            "split": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "791409 4155\n",
+                "stderr": "335158,,cpu_core/cycles/u,236135,100.00,,\n",
+                "checksum": 791409,
+                "elapsed_ns": 4155,
+                "cycles": 335158
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "791409 4094\n",
+                "stderr": "332759,,cpu_core/cycles/u,232741,100.00,,\n",
+                "checksum": 791409,
+                "elapsed_ns": 4094,
+                "cycles": 332759
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "791409 4307\n",
+                "stderr": "329019,,cpu_core/cycles/u,242830,100.00,,\n",
+                "checksum": 791409,
+                "elapsed_ns": 4307,
+                "cycles": 329019
+              }
+            ],
+            "original_row": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "791409 4349\n",
+                "stderr": "329038,,cpu_core/cycles/u,233249,100.00,,\n",
+                "checksum": 791409,
+                "elapsed_ns": 4349,
+                "cycles": 329038
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "791409 4112\n",
+                "stderr": "331063,,cpu_core/cycles/u,219139,100.00,,\n",
+                "checksum": 791409,
+                "elapsed_ns": 4112,
+                "cycles": 331063
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "791409 3925\n",
+                "stderr": "333114,,cpu_core/cycles/u,233863,100.00,,\n",
+                "checksum": 791409,
+                "elapsed_ns": 3925,
+                "cycles": 333114
+              }
+            ]
+          },
+          "runs": {
+            "whole": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7526898\n",
+                "stderr": "34626066,,cpu_core/cycles/u,7797807,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7526898,
+                "cycles": 34626066
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7555156\n",
+                "stderr": "34564218,,cpu_core/cycles/u,7783270,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7555156,
+                "cycles": 34564218
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7699522\n",
+                "stderr": "34650170,,cpu_core/cycles/u,7926686,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7699522,
+                "cycles": 34650170
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 8064768\n",
+                "stderr": "34559699,,cpu_core/cycles/u,8279690,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 8064768,
+                "cycles": 34559699
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7600614\n",
+                "stderr": "34580507,,cpu_core/cycles/u,7831205,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7600614,
+                "cycles": 34580507
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7575192\n",
+                "stderr": "34616636,,cpu_core/cycles/u,7805579,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7575192,
+                "cycles": 34616636
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7571332\n",
+                "stderr": "34592137,,cpu_core/cycles/u,7798605,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7571332,
+                "cycles": 34592137
+              }
+            ],
+            "split": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7597574\n",
+                "stderr": "34803802,,cpu_core/cycles/u,7806880,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7597574,
+                "cycles": 34803802
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7594464\n",
+                "stderr": "34743626,,cpu_core/cycles/u,7832706,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7594464,
+                "cycles": 34743626
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7549172\n",
+                "stderr": "34804716,,cpu_core/cycles/u,7774923,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7549172,
+                "cycles": 34804716
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7969144\n",
+                "stderr": "34815907,,cpu_core/cycles/u,8190103,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7969144,
+                "cycles": 34815907
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7642047\n",
+                "stderr": "34748691,,cpu_core/cycles/u,7873015,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7642047,
+                "cycles": 34748691
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7663119\n",
+                "stderr": "34867201,,cpu_core/cycles/u,7883735,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7663119,
+                "cycles": 34867201
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7607127\n",
+                "stderr": "34711094,,cpu_core/cycles/u,7834200,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7607127,
+                "cycles": 34711094
+              }
+            ],
+            "original_row": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7524629\n",
+                "stderr": "34546979,,cpu_core/cycles/u,7764503,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7524629,
+                "cycles": 34546979
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7568850\n",
+                "stderr": "34402127,,cpu_core/cycles/u,7806487,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7568850,
+                "cycles": 34402127
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7550385\n",
+                "stderr": "34533221,,cpu_core/cycles/u,7806527,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7550385,
+                "cycles": 34533221
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7543416\n",
+                "stderr": "34537167,,cpu_core/cycles/u,7787825,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7543416,
+                "cycles": 34537167
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7534655\n",
+                "stderr": "34373467,,cpu_core/cycles/u,7766995,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7534655,
+                "cycles": 34373467
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7592316\n",
+                "stderr": "34345141,,cpu_core/cycles/u,7796573,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7592316,
+                "cycles": 34345141
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+                  "64",
+                  "2500",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "250256292 7689179\n",
+                "stderr": "34600869,,cpu_core/cycles/u,7950513,100.00,,\n",
+                "checksum": 250256292,
+                "elapsed_ns": 7689179,
+                "cycles": 34600869
+              }
+            ]
+          },
+          "cycles_per_unit": {
+            "whole": [
+              214.30460625,
+              213.91805625,
+              214.45525625,
+              213.8898125,
+              214.0198625,
+              214.24566875,
+              214.09255
+            ],
+            "split": [
+              215.44401875,
+              215.06791875,
+              215.44973125,
+              215.519675,
+              215.099575,
+              215.8402625,
+              214.86459375
+            ],
+            "original_row": [
+              213.849475,
+              212.94415,
+              213.7634875,
+              213.78815,
+              212.765025,
+              212.5879875,
+              214.1862875
+            ]
+          },
+          "comparisons": {
+            "split": {
+              "over_whole": 1.0063125445047014,
+              "paired_ratios": [
+                1.0053167895918709,
+                1.005375247513731,
+                1.0046372143886309,
+                1.007620103458644,
+                1.0050449172679008,
+                1.007442828409571,
+                1.003606121511468
+              ],
+              "paired_median_bootstrap95": [
+                1.0046372143886309,
+                1.007442828409571
+              ],
+              "within_noise": false
+            },
+            "original_row": {
+              "over_whole": 0.9984629894874903,
+              "paired_ratios": [
+                0.9978762414025341,
+                0.9954472929163968,
+                0.996774297995319,
+                0.9995246968576402,
+                0.9941368175582302,
+                0.9922627082280281,
+                1.0004378363469444
+              ],
+              "paired_median_bootstrap95": [
+                0.9941368175582302,
+                0.9995246968576402
+              ],
+              "within_noise": false
+            }
+          }
+        }
+      }
+    },
+    "json_transform": {
+      "unit": "element",
+      "binaries": {
+        "whole": {
+          "path": ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+          "sha256": "6bc02d0f3f089b6ca038f763a4ca51d3f5f9e8dbc99e0aec5e30d629994d2481"
+        },
+        "split": {
+          "path": "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+          "sha256": "bd8cba59dfb8609be66c2f969ad25262a41b49989bfa0a12a7c108a98823bb3d"
+        },
+        "original_row": {
+          "path": ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+          "sha256": "587700634cc224df0ca41545233a9e8baf546e73020c29bb879d18a8aa51277e"
+        }
+      },
+      "sizes": {
+        "4096": {
+          "iterations": 20,
+          "checksum": 225765931,
+          "startup": {
+            "whole": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "11288327 3330290\n",
+                "stderr": "20334822,,cpu_core/cycles/u,6059366,100.00,,\n",
+                "checksum": 11288327,
+                "elapsed_ns": 3330290,
+                "cycles": 20334822
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "11288327 3362172\n",
+                "stderr": "20316398,,cpu_core/cycles/u,5650621,100.00,,\n",
+                "checksum": 11288327,
+                "elapsed_ns": 3362172,
+                "cycles": 20316398
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "11288327 3483184\n",
+                "stderr": "20977615,,cpu_core/cycles/u,5886024,100.00,,\n",
+                "checksum": 11288327,
+                "elapsed_ns": 3483184,
+                "cycles": 20977615
+              }
+            ],
+            "split": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "11288327 3330841\n",
+                "stderr": "20332718,,cpu_core/cycles/u,5628940,100.00,,\n",
+                "checksum": 11288327,
+                "elapsed_ns": 3330841,
+                "cycles": 20332718
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "11288327 3392691\n",
+                "stderr": "20520955,,cpu_core/cycles/u,5767472,100.00,,\n",
+                "checksum": 11288327,
+                "elapsed_ns": 3392691,
+                "cycles": 20520955
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "11288327 3319394\n",
+                "stderr": "20348566,,cpu_core/cycles/u,5644394,100.00,,\n",
+                "checksum": 11288327,
+                "elapsed_ns": 3319394,
+                "cycles": 20348566
+              }
+            ],
+            "original_row": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "11288327 3359571\n",
+                "stderr": "20405098,,cpu_core/cycles/u,5665566,100.00,,\n",
+                "checksum": 11288327,
+                "elapsed_ns": 3359571,
+                "cycles": 20405098
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "11288327 3333598\n",
+                "stderr": "20409680,,cpu_core/cycles/u,5647013,100.00,,\n",
+                "checksum": 11288327,
+                "elapsed_ns": 3333598,
+                "cycles": 20409680
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "11288327 3373202\n",
+                "stderr": "20313517,,cpu_core/cycles/u,5657458,100.00,,\n",
+                "checksum": 11288327,
+                "elapsed_ns": 3373202,
+                "cycles": 20313517
+              }
+            ]
+          },
+          "runs": {
+            "whole": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 56747118\n",
+                "stderr": "249095514,,cpu_core/cycles/u,59053335,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 56747118,
+                "cycles": 249095514
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57444567\n",
+                "stderr": "249708993,,cpu_core/cycles/u,59506429,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57444567,
+                "cycles": 249708993
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57251701\n",
+                "stderr": "250972787,,cpu_core/cycles/u,59605782,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57251701,
+                "cycles": 250972787
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57334577\n",
+                "stderr": "249756724,,cpu_core/cycles/u,59657732,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57334577,
+                "cycles": 249756724
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57333726\n",
+                "stderr": "250766645,,cpu_core/cycles/u,59589404,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57333726,
+                "cycles": 250766645
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 67495538\n",
+                "stderr": "290622109,,cpu_core/cycles/u,69793102,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 67495538,
+                "cycles": 290622109
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57734292\n",
+                "stderr": "251949080,,cpu_core/cycles/u,60105644,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57734292,
+                "cycles": 251949080
+              }
+            ],
+            "split": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57416567\n",
+                "stderr": "251880231,,cpu_core/cycles/u,59757311,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57416567,
+                "cycles": 251880231
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57874380\n",
+                "stderr": "252704487,,cpu_core/cycles/u,60161875,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57874380,
+                "cycles": 252704487
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57902451\n",
+                "stderr": "250483998,,cpu_core/cycles/u,60254950,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57902451,
+                "cycles": 250483998
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57890600\n",
+                "stderr": "252329498,,cpu_core/cycles/u,60256496,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57890600,
+                "cycles": 252329498
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57579933\n",
+                "stderr": "250786133,,cpu_core/cycles/u,59858736,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57579933,
+                "cycles": 250786133
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57516538\n",
+                "stderr": "250544484,,cpu_core/cycles/u,59881189,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57516538,
+                "cycles": 250544484
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57417692\n",
+                "stderr": "251103772,,cpu_core/cycles/u,59744779,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57417692,
+                "cycles": 251103772
+              }
+            ],
+            "original_row": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57209918\n",
+                "stderr": "251104220,,cpu_core/cycles/u,59543185,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57209918,
+                "cycles": 251104220
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57469501\n",
+                "stderr": "251327206,,cpu_core/cycles/u,59846723,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57469501,
+                "cycles": 251327206
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57500820\n",
+                "stderr": "250915385,,cpu_core/cycles/u,59820490,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57500820,
+                "cycles": 250915385
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57376968\n",
+                "stderr": "249800986,,cpu_core/cycles/u,59716160,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57376968,
+                "cycles": 249800986
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57252533\n",
+                "stderr": "250072093,,cpu_core/cycles/u,59596436,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57252533,
+                "cycles": 250072093
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57428812\n",
+                "stderr": "250544539,,cpu_core/cycles/u,59728438,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57428812,
+                "cycles": 250544539
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "4096",
+                  "20",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "225765931 57165503\n",
+                "stderr": "250105513,,cpu_core/cycles/u,59515337,100.00,,\n",
+                "checksum": 225765931,
+                "elapsed_ns": 57165503,
+                "cycles": 250105513
+              }
+            ]
+          },
+          "cycles_per_unit": {
+            "whole": [
+              2792.488916015625,
+              2799.977673339844,
+              2815.4048461914062,
+              2800.5603271484374,
+              2812.888464355469,
+              3299.4053588867187,
+              2827.3224853515626
+            ],
+            "split": [
+              2826.3142700195312,
+              2836.3759887695314,
+              2809.27041015625,
+              2831.798486328125,
+              2812.9585815429687,
+              2810.0087646484376,
+              2816.8360107421877
+            ],
+            "original_row": [
+              2816.1513916015624,
+              2818.873388671875,
+              2813.8462768554687,
+              2800.2427734375,
+              2803.5521850585938,
+              2809.3193481445314,
+              2803.9601440429688
+            ]
+          },
+          "comparisons": {
+            "split": {
+              "over_whole": 1.0014033782130864,
+              "paired_ratios": [
+                1.0121129769969397,
+                1.0129995020232683,
+                0.9978211176117514,
+                1.0111542532674147,
+                1.0000249271126063,
+                0.8516712737584288,
+                0.9962910228091398
+              ],
+              "paired_median_bootstrap95": [
+                0.9962910228091398,
+                1.0121129769969397
+              ],
+              "within_noise": true
+            },
+            "original_row": {
+              "over_whole": 0.9987311561563266,
+              "paired_ratios": [
+                1.0084736148638682,
+                1.0067485235728655,
+                0.9994464137766738,
+                0.9998866106514975,
+                0.9966808924651002,
+                0.8514623220144276,
+                0.9917369378874766
+              ],
+              "paired_median_bootstrap95": [
+                0.9917369378874766,
+                1.0067485235728655
+              ],
+              "within_noise": true
+            }
+          }
+        },
+        "64": {
+          "iterations": 1250,
+          "checksum": 206667525,
+          "startup": {
+            "whole": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "165351 56220\n",
+                "stderr": "693762,,cpu_core/cycles/u,335625,100.00,,\n",
+                "checksum": 165351,
+                "elapsed_ns": 56220,
+                "cycles": 693762
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "165351 54159\n",
+                "stderr": "680757,,cpu_core/cycles/u,306173,100.00,,\n",
+                "checksum": 165351,
+                "elapsed_ns": 54159,
+                "cycles": 680757
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "165351 55061\n",
+                "stderr": "666645,,cpu_core/cycles/u,317645,100.00,,\n",
+                "checksum": 165351,
+                "elapsed_ns": 55061,
+                "cycles": 666645
+              }
+            ],
+            "split": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "165351 55211\n",
+                "stderr": "674981,,cpu_core/cycles/u,325129,100.00,,\n",
+                "checksum": 165351,
+                "elapsed_ns": 55211,
+                "cycles": 674981
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "165351 60283\n",
+                "stderr": "687056,,cpu_core/cycles/u,339954,100.00,,\n",
+                "checksum": 165351,
+                "elapsed_ns": 60283,
+                "cycles": 687056
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "165351 54686\n",
+                "stderr": "675342,,cpu_core/cycles/u,317203,100.00,,\n",
+                "checksum": 165351,
+                "elapsed_ns": 54686,
+                "cycles": 675342
+              }
+            ],
+            "original_row": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "165351 54685\n",
+                "stderr": "681235,,cpu_core/cycles/u,324977,100.00,,\n",
+                "checksum": 165351,
+                "elapsed_ns": 54685,
+                "cycles": 681235
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "165351 54301\n",
+                "stderr": "662626,,cpu_core/cycles/u,292659,100.00,,\n",
+                "checksum": 165351,
+                "elapsed_ns": 54301,
+                "cycles": 662626
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "165351 54676\n",
+                "stderr": "666933,,cpu_core/cycles/u,293374,100.00,,\n",
+                "checksum": 165351,
+                "elapsed_ns": 54676,
+                "cycles": 666933
+              }
+            ]
+          },
+          "runs": {
+            "whole": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 54964252\n",
+                "stderr": "236369641,,cpu_core/cycles/u,55217768,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 54964252,
+                "cycles": 236369641
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 55136990\n",
+                "stderr": "236916366,,cpu_core/cycles/u,55375072,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 55136990,
+                "cycles": 236916366
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 55006013\n",
+                "stderr": "236293446,,cpu_core/cycles/u,55269370,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 55006013,
+                "cycles": 236293446
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 54955661\n",
+                "stderr": "236613559,,cpu_core/cycles/u,55230552,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 54955661,
+                "cycles": 236613559
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 55215628\n",
+                "stderr": "236571014,,cpu_core/cycles/u,55488424,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 55215628,
+                "cycles": 236571014
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 55264787\n",
+                "stderr": "236180373,,cpu_core/cycles/u,55543219,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 55264787,
+                "cycles": 236180373
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 54851365\n",
+                "stderr": "236102475,,cpu_core/cycles/u,55090368,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 54851365,
+                "cycles": 236102475
+              }
+            ],
+            "split": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 54749037\n",
+                "stderr": "235318855,,cpu_core/cycles/u,55018426,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 54749037,
+                "cycles": 235318855
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 54699743\n",
+                "stderr": "235657547,,cpu_core/cycles/u,54961325,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 54699743,
+                "cycles": 235657547
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 54906061\n",
+                "stderr": "235622176,,cpu_core/cycles/u,55154667,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 54906061,
+                "cycles": 235622176
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 54780867\n",
+                "stderr": "235510579,,cpu_core/cycles/u,55044203,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 54780867,
+                "cycles": 235510579
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 54880503\n",
+                "stderr": "235630296,,cpu_core/cycles/u,55146884,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 54880503,
+                "cycles": 235630296
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 54806284\n",
+                "stderr": "235224465,,cpu_core/cycles/u,55074138,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 54806284,
+                "cycles": 235224465
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 54125817\n",
+                "stderr": "235610673,,cpu_core/cycles/u,54380102,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 54125817,
+                "cycles": 235610673
+              }
+            ],
+            "original_row": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 54811359\n",
+                "stderr": "236884875,,cpu_core/cycles/u,55085557,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 54811359,
+                "cycles": 236884875
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 54397123\n",
+                "stderr": "237327985,,cpu_core/cycles/u,54613085,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 54397123,
+                "cycles": 237327985
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 55426532\n",
+                "stderr": "236918150,,cpu_core/cycles/u,55419443,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 55426532,
+                "cycles": 236918150
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 55027439\n",
+                "stderr": "236579525,,cpu_core/cycles/u,55299337,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 55027439,
+                "cycles": 236579525
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 54978241\n",
+                "stderr": "236257736,,cpu_core/cycles/u,55233040,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 54978241,
+                "cycles": 236257736
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 55462924\n",
+                "stderr": "236721717,,cpu_core/cycles/u,55731908,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 55462924,
+                "cycles": 236721717
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+                  "64",
+                  "1250",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "206667525 55070409\n",
+                "stderr": "236772102,,cpu_core/cycles/u,55290322,100.00,,\n",
+                "checksum": 206667525,
+                "elapsed_ns": 55070409,
+                "cycles": 236772102
+              }
+            ]
+          },
+          "cycles_per_unit": {
+            "whole": [
+              2946.11105,
+              2952.9451125,
+              2945.1586125,
+              2949.160025,
+              2948.6282125,
+              2943.7452,
+              2942.771475
+            ],
+            "split": [
+              2933.0439125,
+              2937.2775625,
+              2936.835425,
+              2935.4404625,
+              2936.936925,
+              2931.8640375,
+              2936.6916375
+            ],
+            "original_row": [
+              2952.724275,
+              2958.26315,
+              2953.1402125,
+              2948.9074,
+              2944.8850375,
+              2950.6848,
+              2951.3146125
+            ]
+          },
+          "comparisons": {
+            "split": {
+              "over_whole": 0.9968027639351884,
+              "paired_ratios": [
+                0.9955646147486531,
+                0.9946942630482096,
+                0.9971739425290461,
+                0.9953479762428287,
+                0.9960350079231972,
+                0.9959639297246243,
+                0.9979339756580997
+              ],
+              "paired_median_bootstrap95": [
+                0.9953479762428287,
+                0.9971739425290461
+              ],
+              "within_noise": false
+            },
+            "original_row": {
+              "over_whole": 1.0017662479151965,
+              "paired_ratios": [
+                1.0022447303878785,
+                1.0018009266333765,
+                1.002710074753232,
+                0.9999143400161882,
+                0.99873053680212,
+                1.002357405117807,
+                1.0029030923986375
+              ],
+              "paired_median_bootstrap95": [
+                0.9999143400161882,
+                1.002710074753232
+              ],
+              "within_noise": true
+            }
+          }
+        }
+      }
+    },
+    "result_propagate": {
+      "unit": "element",
+      "binaries": {
+        "whole": {
+          "path": ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+          "sha256": "8611040d1f8f0118e48904a01d5e7db52d2a7e9a4a264d1ca73b35add4b8c961"
+        },
+        "split": {
+          "path": "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+          "sha256": "101a202c2fc93b55a006c20e9f2a7a89245906a1db11581242e802848f49f3c4"
+        }
+      },
+      "sizes": {
+        "4096": {
+          "iterations": 4000,
+          "checksum": 166728930,
+          "startup": {
+            "whole": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "4963108 5138\n",
+                "stderr": "362458,,cpu_core/cycles/u,305103,100.00,,\n",
+                "checksum": 4963108,
+                "elapsed_ns": 5138,
+                "cycles": 362458
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "4963108 4041\n",
+                "stderr": "343300,,cpu_core/cycles/u,223976,100.00,,\n",
+                "checksum": 4963108,
+                "elapsed_ns": 4041,
+                "cycles": 343300
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "4963108 4007\n",
+                "stderr": "403310,,cpu_core/cycles/u,262986,100.00,,\n",
+                "checksum": 4963108,
+                "elapsed_ns": 4007,
+                "cycles": 403310
+              }
+            ],
+            "split": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "4963108 3912\n",
+                "stderr": "359700,,cpu_core/cycles/u,246346,100.00,,\n",
+                "checksum": 4963108,
+                "elapsed_ns": 3912,
+                "cycles": 359700
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "4963108 3728\n",
+                "stderr": "349999,,cpu_core/cycles/u,244715,100.00,,\n",
+                "checksum": 4963108,
+                "elapsed_ns": 3728,
+                "cycles": 349999
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "4096",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "4963108 3760\n",
+                "stderr": "349366,,cpu_core/cycles/u,241122,100.00,,\n",
+                "checksum": 4963108,
+                "elapsed_ns": 3760,
+                "cycles": 349366
+              }
+            ]
+          },
+          "runs": {
+            "whole": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "4096",
+                  "4000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "166728930 13718373\n",
+                "stderr": "59641237,,cpu_core/cycles/u,13949978,100.00,,\n",
+                "checksum": 166728930,
+                "elapsed_ns": 13718373,
+                "cycles": 59641237
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "4096",
+                  "4000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "166728930 13796566\n",
+                "stderr": "59607151,,cpu_core/cycles/u,14061472,100.00,,\n",
+                "checksum": 166728930,
+                "elapsed_ns": 13796566,
+                "cycles": 59607151
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "4096",
+                  "4000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "166728930 14153150\n",
+                "stderr": "60642689,,cpu_core/cycles/u,14391508,100.00,,\n",
+                "checksum": 166728930,
+                "elapsed_ns": 14153150,
+                "cycles": 60642689
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "4096",
+                  "4000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "166728930 13932011\n",
+                "stderr": "60052117,,cpu_core/cycles/u,14174686,100.00,,\n",
+                "checksum": 166728930,
+                "elapsed_ns": 13932011,
+                "cycles": 60052117
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "4096",
+                  "4000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "166728930 13918800\n",
+                "stderr": "60195647,,cpu_core/cycles/u,14166965,100.00,,\n",
+                "checksum": 166728930,
+                "elapsed_ns": 13918800,
+                "cycles": 60195647
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "4096",
+                  "4000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "166728930 13728411\n",
+                "stderr": "59691733,,cpu_core/cycles/u,13995032,100.00,,\n",
+                "checksum": 166728930,
+                "elapsed_ns": 13728411,
+                "cycles": 59691733
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "4096",
+                  "4000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "166728930 13615674\n",
+                "stderr": "59409249,,cpu_core/cycles/u,13843096,100.00,,\n",
+                "checksum": 166728930,
+                "elapsed_ns": 13615674,
+                "cycles": 59409249
+              }
+            ],
+            "split": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "4096",
+                  "4000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "166728930 13789316\n",
+                "stderr": "59638904,,cpu_core/cycles/u,14025787,100.00,,\n",
+                "checksum": 166728930,
+                "elapsed_ns": 13789316,
+                "cycles": 59638904
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "4096",
+                  "4000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "166728930 14142226\n",
+                "stderr": "60460007,,cpu_core/cycles/u,14372871,100.00,,\n",
+                "checksum": 166728930,
+                "elapsed_ns": 14142226,
+                "cycles": 60460007
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "4096",
+                  "4000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "166728930 13795417\n",
+                "stderr": "59853940,,cpu_core/cycles/u,14034647,100.00,,\n",
+                "checksum": 166728930,
+                "elapsed_ns": 13795417,
+                "cycles": 59853940
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "4096",
+                  "4000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "166728930 13923381\n",
+                "stderr": "59940006,,cpu_core/cycles/u,14160359,100.00,,\n",
+                "checksum": 166728930,
+                "elapsed_ns": 13923381,
+                "cycles": 59940006
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "4096",
+                  "4000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "166728930 13803556\n",
+                "stderr": "59450076,,cpu_core/cycles/u,14021462,100.00,,\n",
+                "checksum": 166728930,
+                "elapsed_ns": 13803556,
+                "cycles": 59450076
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "4096",
+                  "4000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "166728930 13829616\n",
+                "stderr": "59441280,,cpu_core/cycles/u,14067413,100.00,,\n",
+                "checksum": 166728930,
+                "elapsed_ns": 13829616,
+                "cycles": 59441280
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "4096",
+                  "4000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "166728930 13974970\n",
+                "stderr": "59706630,,cpu_core/cycles/u,14196814,100.00,,\n",
+                "checksum": 166728930,
+                "elapsed_ns": 13974970,
+                "cycles": 59706630
+              }
+            ]
+          },
+          "cycles_per_unit": {
+            "whole": [
+              3.618089538574219,
+              3.616009094238281,
+              3.6792133178710937,
+              3.6431676635742187,
+              3.651928039550781,
+              3.621171569824219,
+              3.6039301147460936
+            ],
+            "split": [
+              3.618707580566406,
+              3.66882373046875,
+              3.631832336425781,
+              3.6370853881835936,
+              3.607182434082031,
+              3.6066455688476564,
+              3.622841247558594
+            ]
+          },
+          "comparisons": {
+            "split": {
+              "over_whole": 1.0004610877176572,
+              "paired_ratios": [
+                1.000170819982645,
+                1.0146057808080802,
+                0.9871219803387946,
+                0.9983304980851038,
+                0.9877474021984688,
+                0.9959885907926568,
+                1.005247363908396
+              ],
+              "paired_median_bootstrap95": [
+                0.9877474021984688,
+                1.005247363908396
+              ],
+              "within_noise": true
+            }
+          }
+        },
+        "64": {
+          "iterations": 250000,
+          "checksum": 330997534,
+          "startup": {
+            "whole": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "72076 290\n",
+                "stderr": "335309,,cpu_core/cycles/u,236516,100.00,,\n",
+                "checksum": 72076,
+                "elapsed_ns": 290,
+                "cycles": 335309
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "72076 298\n",
+                "stderr": "316576,,cpu_core/cycles/u,229933,100.00,,\n",
+                "checksum": 72076,
+                "elapsed_ns": 298,
+                "cycles": 316576
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "72076 425\n",
+                "stderr": "321087,,cpu_core/cycles/u,226812,100.00,,\n",
+                "checksum": 72076,
+                "elapsed_ns": 425,
+                "cycles": 321087
+              }
+            ],
+            "split": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "72076 309\n",
+                "stderr": "315507,,cpu_core/cycles/u,234056,100.00,,\n",
+                "checksum": 72076,
+                "elapsed_ns": 309,
+                "cycles": 315507
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "72076 278\n",
+                "stderr": "320590,,cpu_core/cycles/u,205836,100.00,,\n",
+                "checksum": 72076,
+                "elapsed_ns": 278,
+                "cycles": 320590
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "64",
+                  "1",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "72076 216\n",
+                "stderr": "312582,,cpu_core/cycles/u,261298,100.00,,\n",
+                "checksum": 72076,
+                "elapsed_ns": 216,
+                "cycles": 312582
+              }
+            ]
+          },
+          "runs": {
+            "whole": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "64",
+                  "250000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "330997534 13053680\n",
+                "stderr": "56349816,,cpu_core/cycles/u,13282418,100.00,,\n",
+                "checksum": 330997534,
+                "elapsed_ns": 13053680,
+                "cycles": 56349816
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "64",
+                  "250000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "330997534 13383640\n",
+                "stderr": "56355438,,cpu_core/cycles/u,13614425,100.00,,\n",
+                "checksum": 330997534,
+                "elapsed_ns": 13383640,
+                "cycles": 56355438
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "64",
+                  "250000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "330997534 13008607\n",
+                "stderr": "56341037,,cpu_core/cycles/u,13202398,100.00,,\n",
+                "checksum": 330997534,
+                "elapsed_ns": 13008607,
+                "cycles": 56341037
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "64",
+                  "250000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "330997534 13218410\n",
+                "stderr": "56520587,,cpu_core/cycles/u,13453540,100.00,,\n",
+                "checksum": 330997534,
+                "elapsed_ns": 13218410,
+                "cycles": 56520587
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "64",
+                  "250000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "330997534 13493344\n",
+                "stderr": "57778280,,cpu_core/cycles/u,13697380,100.00,,\n",
+                "checksum": 330997534,
+                "elapsed_ns": 13493344,
+                "cycles": 57778280
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "64",
+                  "250000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "330997534 13114596\n",
+                "stderr": "56346847,,cpu_core/cycles/u,13342884,100.00,,\n",
+                "checksum": 330997534,
+                "elapsed_ns": 13114596,
+                "cycles": 56346847
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+                  "64",
+                  "250000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "330997534 13225113\n",
+                "stderr": "56468947,,cpu_core/cycles/u,13460558,100.00,,\n",
+                "checksum": 330997534,
+                "elapsed_ns": 13225113,
+                "cycles": 56468947
+              }
+            ],
+            "split": [
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "64",
+                  "250000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "330997534 13066590\n",
+                "stderr": "56492339,,cpu_core/cycles/u,13298708,100.00,,\n",
+                "checksum": 330997534,
+                "elapsed_ns": 13066590,
+                "cycles": 56492339
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "64",
+                  "250000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "330997534 13126610\n",
+                "stderr": "56386833,,cpu_core/cycles/u,13351040,100.00,,\n",
+                "checksum": 330997534,
+                "elapsed_ns": 13126610,
+                "cycles": 56386833
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "64",
+                  "250000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "330997534 13012072\n",
+                "stderr": "56742597,,cpu_core/cycles/u,13238235,100.00,,\n",
+                "checksum": 330997534,
+                "elapsed_ns": 13012072,
+                "cycles": 56742597
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "64",
+                  "250000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "330997534 12949035\n",
+                "stderr": "56342364,,cpu_core/cycles/u,13172890,100.00,,\n",
+                "checksum": 330997534,
+                "elapsed_ns": 12949035,
+                "cycles": 56342364
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "64",
+                  "250000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "330997534 13165320\n",
+                "stderr": "56487260,,cpu_core/cycles/u,13400133,100.00,,\n",
+                "checksum": 330997534,
+                "elapsed_ns": 13165320,
+                "cycles": 56487260
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "64",
+                  "250000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "330997534 13079980\n",
+                "stderr": "56438142,,cpu_core/cycles/u,13318097,100.00,,\n",
+                "checksum": 330997534,
+                "elapsed_ns": 13079980,
+                "cycles": 56438142
+              },
+              {
+                "command": [
+                  "taskset",
+                  "-c",
+                  "10",
+                  "perf",
+                  "stat",
+                  "-x,",
+                  "-e",
+                  "cpu_core/cycles/u",
+                  "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+                  "64",
+                  "250000",
+                  "7"
+                ],
+                "status": 0,
+                "stdout": "330997534 13230595\n",
+                "stderr": "56723076,,cpu_core/cycles/u,13463011,100.00,,\n",
+                "checksum": 330997534,
+                "elapsed_ns": 13230595,
+                "cycles": 56723076
+              }
+            ]
+          },
+          "cycles_per_unit": {
+            "whole": [
+              3.5017955625,
+              3.5021469375,
+              3.501246875,
+              3.51246875,
+              3.5910745625,
+              3.50161,
+              3.50924125
+            ],
+            "split": [
+              3.511052,
+              3.504457875,
+              3.526693125,
+              3.5016785625,
+              3.5107345625,
+              3.5076646875,
+              3.5254730625
+            ]
+          },
+          "comparisons": {
+            "split": {
+              "over_whole": 1.0024521029966065,
+              "paired_ratios": [
+                1.0026433403477706,
+                1.0006598630900534,
+                1.0072677680005069,
+                0.9969280331675549,
+                0.9776278663665314,
+                1.001729115321238,
+                1.004625447879937
+              ],
+              "paired_median_bootstrap95": [
+                0.9969280331675549,
+                1.004625447879937
+              ],
+              "within_noise": true
+            }
+          }
+        }
+      }
+    }
+  },
+  "complete": true
+}

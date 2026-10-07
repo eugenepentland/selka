@@ -1,0 +1,26 @@
+{
+  "16": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-budget64-01/bin/mylang-core",
+      "dump-ir",
+      "experiments/new-core-s4-emission-20261006/budget64-shape-reducer/outside-16/app.my",
+      "--facts"
+    ],
+    "status": 0,
+    "printed_blocks": 37,
+    "active_blocks": 37,
+    "noncopy_printed": 22
+  },
+  "24": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-budget64-01/bin/mylang-core",
+      "dump-ir",
+      "experiments/new-core-s4-emission-20261006/budget64-shape-reducer/outside-24/app.my",
+      "--facts"
+    ],
+    "status": 0,
+    "printed_blocks": 53,
+    "active_blocks": 53,
+    "noncopy_printed": 30
+  }
+}

@@ -1,0 +1,533 @@
+fn app::main(list[str], cap, cap) -> i64
+b0:
+  %3 = list_len u64 param0
+  %4 = convert.proven i64 %3
+  %6 = cmp.ne bool %4, 3:i64
+  branch %6, b1, b2
+b1: ; preds b0
+  ret 2:i64
+b2: ; preds b0
+  %12 = iconst bool 0
+  branch 0:bool, b3, b4
+b3: ; preds b2
+  %14 = list_len u64 param0
+  %15 = convert.exact i64 %14
+  %16 = add.exact i64 %15, 0:i64
+  jump b4
+b4: ; preds b2 b3
+  %18 = phi i64 0:i64, %16
+  %20 = list_get.exact str param0, %18
+  %21 = call i64 workload::parse_number(%20)
+  %25 = iconst bool 0
+  branch 0:bool, b5, b6
+b5: ; preds b4
+  %27 = list_len u64 param0
+  %28 = convert.exact i64 %27
+  %29 = add.exact i64 %28, 1:i64
+  jump b6
+b6: ; preds b4 b5
+  %31 = phi i64 1:i64, %29
+  %33 = list_get.exact str param0, %31
+  %34 = call i64 workload::parse_number(%33)
+  %38 = iconst bool 0
+  branch 0:bool, b7, b8
+b7: ; preds b6
+  %40 = list_len u64 param0
+  %41 = convert.exact i64 %40
+  %42 = add.exact i64 %41, 2:i64
+  jump b8
+b8: ; preds b6 b7
+  %44 = phi i64 2:i64, %42
+  %46 = list_get.exact str param0, %44
+  %47 = call i64 workload::parse_number(%46)
+  %51 = cmp.lt bool %21, 2:i64
+  branch %51, b9, b13
+b9: ; preds b8 b13 b12 b11
+  ret 2:i64
+b10: ; preds b11
+  %67 = iconst bool 1
+  branch 1:bool, b14, b15
+b11: ; preds b12
+  %61 = cmp.gt bool %47, 1000000:i64
+  branch %61, b9, b10
+b12: ; preds b13
+  %58 = cmp.lt bool %47, 1:i64
+  branch %58, b9, b11
+b13: ; preds b8
+  %55 = cmp.lt bool %34, 1:i64
+  branch %55, b9, b12
+b14: ; preds b10
+  %70 = iconst bool 0
+  branch 0:bool, b16, b18
+b15: ; preds b10 b17
+  %92 = phi u64 0:u64, %93
+  %95 = list_new list[i64] %92
+  jump b22
+b16: ; preds b14
+  %73 = cmp.lt bool %21, 0:i64
+  branch %73, b19, b21
+b17: ; preds b20 b18
+  %93 = phi u64 %94, %89
+  jump b15
+b18: ; preds b14
+  %88 = sub.proven i64 %21, 0:i64
+  %89 = convert.proven u64 %88
+  jump b17
+b19: ; preds b16
+  %75 = sub.exact i64 %21, 0:i64
+  %76 = convert.exact u64 %75
+  jump b20
+b20: ; preds b19 b21
+  %94 = phi u64 %76, %85
+  jump b17
+b21: ; preds b16
+  %78 = convert.exact u64 %21
+  %80 = add.exact i64 0:i64, 1:i64
+  %81 = neg.exact i64 %80
+  %82 = convert.exact u64 %81
+  %83 = add.exact u64 %78, %82
+  %85 = add.exact u64 %83, 1:u64
+  jump b20
+b22: ; preds b15 b24
+  %97 = phi i64 0:i64, %111
+  %107 = phi list[i64] %95, %108
+  %99 = cmp.lt bool %97, %21
+  branch %99, b23, b25
+b23: ; preds b22
+  %103 = mul.exact i64 %97, 37:i64
+  %104 = add.exact i64 %47, %103
+  %106 = floor_rem.proven i64 %104, 1009:i64
+  %108 = list_push list[i64] %107, %106
+  jump b24
+b24: ; preds b23
+  %111 = add.proven i64 %97, 1:i64
+  jump b22
+b25: ; preds b22
+  %128 = iconst bool 1
+  branch 1:bool, b26, b27
+b26: ; preds b25
+  %131 = iconst bool 0
+  branch 0:bool, b28, b30
+b27: ; preds b25 b29
+  %153 = phi u64 0:u64, %154
+  %156 = list_new list[bytes] %153
+  jump b34
+b28: ; preds b26
+  %134 = cmp.lt bool %21, 0:i64
+  branch %134, b31, b33
+b29: ; preds b32 b30
+  %154 = phi u64 %155, %150
+  jump b27
+b30: ; preds b26
+  %149 = sub.proven i64 %21, 0:i64
+  %150 = convert.proven u64 %149
+  jump b29
+b31: ; preds b28
+  %136 = sub.exact i64 %21, 0:i64
+  %137 = convert.exact u64 %136
+  jump b32
+b32: ; preds b31 b33
+  %155 = phi u64 %137, %146
+  jump b29
+b33: ; preds b28
+  %139 = convert.exact u64 %21
+  %141 = add.exact i64 0:i64, 1:i64
+  %142 = neg.exact i64 %141
+  %143 = convert.exact u64 %142
+  %144 = add.exact u64 %139, %143
+  %146 = add.exact u64 %144, 1:u64
+  jump b32
+b34: ; preds b27 b36
+  %158 = phi i64 0:i64, %168
+  %164 = phi list[bytes] %156, %165
+  %160 = cmp.lt bool %158, %21
+  branch %160, b35, b37
+b35: ; preds b34
+  %163 = call bytes workload::make_frame(%158, %47)
+  %165 = list_push list[bytes] %164, %163
+  jump b36
+b36: ; preds b35
+  %168 = add.proven i64 %158, 1:i64
+  jump b34
+b37: ; preds b34
+  call myl_core_host_check(param1)
+  %192 = call i64 app::runtime_bench_now(param1)
+  jump b38
+b38: ; preds b37 b40
+  %203 = phi i64 0:i64, %297
+  %284 = phi i64 0:i64, %290
+  %205 = cmp.lt bool %203, %34
+  branch %205, b39, b41
+b39: ; preds b38
+  %208 = floor_rem.proven i64 %203, 17:i64
+  jump b42
+b40: ; preds b45
+  %297 = add.proven i64 %203, 1:i64
+  jump b38
+b41: ; preds b38
+  release %107
+  release %164
+  call myl_core_host_check(param1)
+  %321 = call i64 app::runtime_bench_now(param1)
+  %327 = sub.exact i64 %321, %192
+  print param2, %284, %327
+  ret 0:i64
+b42: ; preds b39 b44
+  %213 = phi i64 0:i64, %271
+  %264 = phi i64 0:i64, %266
+  %215 = cmp.lt bool %213, %21
+  branch %215, b43, b45
+b43: ; preds b42
+  %219 = iconst bool 0
+  branch 0:bool, b46, b47
+b44: ; preds b50
+  %271 = add.proven i64 %213, 1:i64
+  jump b42
+b45: ; preds b42
+  %288 = add.exact i64 %284, %264
+  %290 = floor_rem.exact i64 %288, 1000000007:i64
+  jump b40
+b46: ; preds b43
+  %221 = list_len u64 %107
+  %222 = convert.exact i64 %221
+  %223 = add.exact i64 %222, %213
+  jump b47
+b47: ; preds b43 b46
+  %225 = phi i64 %213, %223
+  %227 = list_get.proven i64 %107, %225
+  %233 = iconst bool 0
+  branch 0:bool, b48, b49
+b48: ; preds b47
+  %235 = list_len u64 %164
+  %236 = convert.exact i64 %235
+  %237 = add.exact i64 %236, %213
+  jump b49
+b49: ; preds b47 b48
+  %239 = phi i64 %213, %237
+  %241 = list_get.proven bytes %164, %239
+  %242 = call union{record{i64, i64, i64}, i64} workload::decode(%241)
+  %243 = union_tag u32 %242
+  %245 = cmp.eq bool %243, 0:u32
+  branch %245, b51, b52
+b50: ; preds b51 b53
+  %265 = phi i64 %254, %259
+  %266 = add.exact i64 %264, %265
+  jump b44
+b51: ; preds b49
+  %247 = union_payload record{i64, i64, i64} tag0 %242
+  %248 = record_get i64 %247, field0
+  %249 = record_get i64 %247, field1
+  %251 = mul.exact i64 %249, 3:i64
+  %252 = add.exact i64 %248, %251
+  %253 = record_get i64 %247, field2
+  %254 = add.exact i64 %252, %253
+  jump b50
+b52: ; preds b49
+  jump b53
+b53: ; preds b52
+  %257 = union_payload i64 tag1 %242
+  %259 = mul.exact i64 %257, 101:i64
+  jump b50
+fn workload::parse_number(str) -> i64
+b0:
+  %1 = str_parse_int option[i64] param0
+  %2 = union_tag u32 %1
+  %4 = cmp.eq bool %2, 1:u32
+  branch %4, b2, b3
+b1:
+b2: ; preds b0
+  %6 = union_payload i64 tag1 %1
+  ret %6
+b3: ; preds b0
+  jump b4
+b4: ; preds b3
+  ret 0:i64
+fn workload::make_frame(i64, i64) -> bytes
+b0:
+  %3 = mul.proven i64 param0, 17:i64
+  %4 = add.exact i64 param1, %3
+  %6 = floor_rem.exact i64 %4, 65536:i64
+  %8 = list_new list[i64] 5:i64
+  %10 = list_push list[i64] %8, 165:i64
+  %12 = list_push list[i64] %10, 1:i64
+  %14 = floor_div.proven i64 %6, 256:i64
+  %15 = list_push list[i64] %12, %14
+  %17 = floor_rem.proven i64 %6, 256:i64
+  %18 = list_push list[i64] %15, %17
+  %20 = list_push list[i64] %18, 4:i64
+  jump b1
+b1: ; preds b0 b3
+  %24 = phi i64 0:i64, %42
+  %38 = phi list[i64] %20, %39
+  %26 = cmp.lt bool %24, 4:i64
+  branch %26, b2, b4
+b2: ; preds b1
+  %31 = mul.proven i64 param0, 13:i64
+  %32 = add.exact i64 param1, %31
+  %34 = mul.proven i64 %24, 7:i64
+  %35 = add.exact i64 %32, %34
+  %37 = floor_rem.exact i64 %35, 256:i64
+  %39 = list_push list[i64] %38, %37
+  jump b3
+b3: ; preds b2
+  %42 = add.proven i64 %24, 1:i64
+  jump b1
+b4: ; preds b1
+  %46 = list_len u64 %38
+  %47 = convert.proven i64 %46
+  jump b30
+b5: ; preds b32 b7
+  %49 = phi i64 0:i64, %59
+  %55 = phi i64 0:i64, %56
+  %51 = cmp.lt bool %49, %47
+  branch %51, b6, b8
+b6: ; preds b5
+  %54 = list_get.exact i64 %38, %49
+  %56 = add.exact i64 %55, %54
+  jump b7
+b7: ; preds b6
+  %59 = add.proven i64 %49, 1:i64
+  jump b5
+b8: ; preds b5 b27
+  %169 = phi i64 %55, %157
+  %62 = floor_rem.proven i64 %169, 256:i64
+  %64 = list_push list[i64] %38, %62
+  %67 = floor_rem.proven i64 param0, 4:i64
+  %69 = cmp.eq bool %67, 1:i64
+  branch %69, b9, b11
+b9: ; preds b8
+  %74 = iconst bool 0
+  branch 0:bool, b12, b13
+b10: ; preds b13 b15
+  %143 = phi list[i64] %84, %144
+  %146 = call bool myl_core_bytes_valid_list(%143)
+  branch %146, b25, b26
+b11: ; preds b8
+  %87 = floor_rem.proven i64 param0, 4:i64
+  %89 = cmp.eq bool %87, 2:i64
+  branch %89, b14, b16
+b12: ; preds b9
+  %76 = list_len u64 %64
+  %77 = convert.exact i64 %76
+  %78 = add.exact i64 %77, 0:i64
+  jump b13
+b13: ; preds b9 b12
+  %80 = phi i64 0:i64, %78
+  %84 = list_set.proven list[i64] %64, %80, 164:i64
+  jump b10
+b14: ; preds b11
+  %93 = iconst bool 0
+  branch 0:bool, b17, b18
+b15: ; preds b20 b22
+  %144 = phi list[i64] %119, %145
+  jump b10
+b16: ; preds b11
+  %122 = floor_rem.proven i64 param0, 4:i64
+  %124 = cmp.eq bool %122, 3:i64
+  branch %124, b21, b22
+b17: ; preds b14
+  %95 = list_len u64 %64
+  %96 = convert.exact i64 %95
+  %97 = add.exact i64 %96, 9:i64
+  jump b18
+b18: ; preds b14 b17
+  %99 = phi i64 9:i64, %97
+  %101 = list_get.exact i64 %64, %99
+  %103 = add.proven i64 %101, 1:i64
+  %105 = floor_rem.proven i64 %103, 256:i64
+  %109 = iconst bool 0
+  branch 0:bool, b19, b20
+b19: ; preds b18
+  %111 = list_len u64 %64
+  %112 = convert.exact i64 %111
+  %113 = add.exact i64 %112, 9:i64
+  jump b20
+b20: ; preds b18 b19
+  %115 = phi i64 9:i64, %113
+  %119 = list_set.exact list[i64] %64, %115, %105
+  jump b15
+b21: ; preds b16
+  %129 = iconst bool 0
+  branch 0:bool, b23, b24
+b22: ; preds b16 b24
+  %145 = phi list[i64] %64, %139
+  jump b15
+b23: ; preds b21
+  %131 = list_len u64 %64
+  %132 = convert.exact i64 %131
+  %133 = add.exact i64 %132, 4:i64
+  jump b24
+b24: ; preds b21 b23
+  %135 = phi i64 4:i64, %133
+  %139 = list_set.exact list[i64] %64, %135, 5:i64
+  jump b22
+b25: ; preds b10
+  %149 = call bytes myl_core_bytes_from_list(%143)
+  release %143
+  ret %149
+b26: ; preds b10
+  unreachable
+b27: ; preds b31 b29
+  %152 = phi i64 0:i64, %163
+  %157 = phi i64 0:i64, %161
+  %158 = cmp.lt bool %152, %47
+  branch %158, b28, b8
+b28: ; preds b27
+  %160 = list_get.exact i64 %38, %152
+  %161 = add.exact i64 %157, %160
+  jump b29
+b29: ; preds b28
+  %163 = add.proven i64 %152, 1:i64
+  jump b27
+b30: ; preds b4
+  %165 = iconst bool 1
+  branch 1:bool, b31, b32
+b31: ; preds b30
+  jump b27
+b32: ; preds b30
+  jump b5
+fn app::runtime_bench_now(cap) -> i64 extern
+fn myl_core_host_check(cap) -> void runtime
+fn workload::decode(bytes) -> union{record{i64, i64, i64}, i64}
+b0:
+  %1 = list_len u64 param0
+  %2 = convert.proven i64 %1
+  %4 = cmp.lt bool %2, 6:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %7 = union_make union{record{i64, i64, i64}, i64} tag1 3:i64
+  err_trace origin
+  ret %7
+b2: ; preds b0
+  %12 = list_get.exact u8 param0, 0:i64
+  %13 = convert i64 %12
+  %15 = cmp.ne bool %13, 165:i64
+  branch %15, b3, b4
+b3: ; preds b2
+  %18 = union_make union{record{i64, i64, i64}, i64} tag1 1:i64
+  err_trace origin
+  ret %18
+b4: ; preds b2
+  %23 = list_get.exact u8 param0, 1:i64
+  %24 = convert i64 %23
+  %26 = cmp.ne bool %24, 1:i64
+  branch %26, b5, b6
+b5: ; preds b4
+  %29 = union_make union{record{i64, i64, i64}, i64} tag1 2:i64
+  err_trace origin
+  ret %29
+b6: ; preds b4
+  %34 = list_get.exact u8 param0, 4:i64
+  %35 = convert i64 %34
+  %36 = list_len u64 param0
+  %37 = convert.proven i64 %36
+  %39 = add.proven i64 %35, 6:i64
+  %40 = cmp.ne bool %37, %39
+  branch %40, b7, b8
+b7: ; preds b6
+  %43 = union_make union{record{i64, i64, i64}, i64} tag1 3:i64
+  err_trace origin
+  ret %43
+b8: ; preds b6
+  %48 = list_len u64 param0
+  %49 = convert.proven i64 %48
+  %51 = sub.proven i64 %49, 1:i64
+  jump b9
+b9: ; preds b8 b11
+  %53 = phi i64 0:i64, %65
+  %57 = phi i64 0:i64, %62
+  %55 = cmp.lt bool %53, %51
+  branch %55, b10, b12
+b10: ; preds b9
+  %60 = list_get.proven u8 param0, %53
+  %61 = convert i64 %60
+  %62 = add.proven i64 %57, %61
+  jump b11
+b11: ; preds b10
+  %65 = add.proven i64 %53, 1:i64
+  jump b9
+b12: ; preds b9
+  %68 = floor_rem.proven i64 %57, 256:i64
+  %69 = list_len u64 param0
+  %70 = convert.proven i64 %69
+  %72 = sub.proven i64 %70, 1:i64
+  %73 = call u64 myl_core_bytes_index_offset(param0, %72)
+  %74 = list_get.exact u8 param0, %73
+  %75 = convert i64 %74
+  %76 = cmp.ne bool %68, %75
+  branch %76, b13, b14
+b13: ; preds b12
+  %79 = union_make union{record{i64, i64, i64}, i64} tag1 4:i64
+  err_trace origin
+  ret %79
+b14: ; preds b12
+  %84 = list_len u64 param0
+  %85 = convert.proven i64 %84
+  %87 = sub.proven i64 %85, 1:i64
+  jump b15
+b15: ; preds b14 b17
+  %89 = phi i64 5:i64, %101
+  %93 = phi i64 0:i64, %98
+  %91 = cmp.lt bool %89, %87
+  branch %91, b16, b18
+b16: ; preds b15
+  %96 = list_get.proven u8 param0, %89
+  %97 = convert i64 %96
+  %98 = add.proven i64 %93, %97
+  jump b17
+b17: ; preds b16
+  %101 = add.proven i64 %89, 1:i64
+  jump b15
+b18: ; preds b15
+  %105 = list_get.exact u8 param0, 2:i64
+  %106 = convert i64 %105
+  %108 = mul.proven i64 %106, 256:i64
+  %111 = list_get.exact u8 param0, 3:i64
+  %112 = convert i64 %111
+  %113 = add.proven i64 %108, %112
+  %116 = record_make record{i64, i64, i64} %113, %93, %35
+  %117 = union_make union{record{i64, i64, i64}, i64} tag0 %116
+  ret %117
+fn myl_core_bytes_valid_list(list[i64]) -> bool extern
+fn myl_core_bytes_from_list(list[i64]) -> bytes extern
+fn myl_core_bytes_index_offset(bytes, i64) -> u64 runtime
+facts app::main: %3=[0,140737488355328] %4=[0,140737488355328] %6=[0,1] %12=[0,0] %18=[0,0] %21=[-9223372036854775808,9223372036854775807] %25=[0,0] %31=[1,1] %34=[-9223372036854775808,9223372036854775807] %38=[0,0] %44=[2,2] %47=[-9223372036854775808,9223372036854775807] %48=[-9223372036854775808,9223372036854775807] %49=[-9223372036854775808,9223372036854775807] %51=[0,1] %53=[-9223372036854775808,9223372036854775807] %55=[0,1] %58=[0,1] %61=[0,1] %67=[1,1] %70=[0,0] %88=[2,9223372036854775807] %89=[2,9223372036854775807] %92=[2,9223372036854775807] %93=[2,9223372036854775807] %97=[0,9223372036854775807] %98=[-9223372036854775808,9223372036854775807] %99=[0,1] %101=[-9223372036854775808,9223372036854775807] %103=[0,9223372036854775807] %104=[1,9223372036854775807] %106=[0,1008] %111=[1,9223372036854775807] %113=[-9223372036854775808,9223372036854775807] %114=[-9223372036854775808,9223372036854775807] %116=[-9223372036854775808,9223372036854775807] %117=[-9223372036854775808,9223372036854775807] %119=[-9223372036854775808,9223372036854775807] %120=[-9223372036854775808,9223372036854775807] %123=[-9223372036854775808,9223372036854775807] %124=[-9223372036854775808,9223372036854775807] %125=[-9223372036854775808,9223372036854775807] %128=[1,1] %131=[0,0] %149=[2,140737488355328] %150=[2,140737488355328] %153=[2,140737488355328] %154=[2,140737488355328] %158=[0,140737488355328] %159=[-9223372036854775808,9223372036854775807] %160=[0,1] %162=[-9223372036854775808,9223372036854775807] %168=[1,140737488355329] %170=[-9223372036854775808,9223372036854775807] %171=[-9223372036854775808,9223372036854775807] %173=[-9223372036854775808,9223372036854775807] %174=[-9223372036854775808,9223372036854775807] %176=[-9223372036854775808,9223372036854775807] %177=[-9223372036854775808,9223372036854775807] %192=[-9223372036854775808,9223372036854775807] %194=[-9223372036854775808,9223372036854775807] %195=[-9223372036854775808,9223372036854775807] %196=[-9223372036854775808,9223372036854775807] %197=[-9223372036854775808,9223372036854775807] %198=[-9223372036854775808,9223372036854775807] %200=[-9223372036854775808,9223372036854775807] %203=[0,9223372036854775807] %204=[-9223372036854775808,9223372036854775807] %205=[0,1] %208=[0,16] %211=[-9223372036854775808,9223372036854775807] %213=[0,140737488355328] %214=[-9223372036854775808,9223372036854775807] %215=[0,1] %219=[0,0] %225=[0,140737488355328] %227=[0,1008] %231=[-9223372036854775808,9223372036854775807] %233=[0,0] %239=[0,140737488355328] %243=[0,4294967295] %245=[0,1] %248=[-9223372036854775808,9223372036854775807] %249=[-9223372036854775808,9223372036854775807] %251=[-9223372036854775808,9223372036854775807] %252=[-9223372036854775808,9223372036854775807] %253=[-9223372036854775808,9223372036854775807] %254=[-9223372036854775808,9223372036854775807] %257=[-9223372036854775808,9223372036854775807] %259=[-9223372036854775808,9223372036854775807] %261=[-9223372036854775808,9223372036854775807] %262=[-9223372036854775808,9223372036854775807] %263=[-9223372036854775808,9223372036854775807] %264=[-9223372036854775808,9223372036854775807] %265=[-9223372036854775808,9223372036854775807] %266=[-9223372036854775808,9223372036854775807] %268=[-9223372036854775808,9223372036854775807] %269=[-9223372036854775808,9223372036854775807] %271=[1,140737488355329] %273=[-9223372036854775808,9223372036854775807] %274=[-9223372036854775808,9223372036854775807] %275=[-9223372036854775808,9223372036854775807] %283=[-9223372036854775808,9223372036854775807] %284=[0,1000000006] %285=[-9223372036854775808,9223372036854775807] %286=[-9223372036854775808,9223372036854775807] %287=[-9223372036854775808,9223372036854775807] %288=[-9223372036854775808,9223372036854775807] %290=[0,1000000006] %292=[-9223372036854775808,9223372036854775807] %293=[-9223372036854775808,9223372036854775807] %294=[-9223372036854775808,9223372036854775807] %295=[-9223372036854775808,9223372036854775807] %297=[1,9223372036854775807] %299=[-9223372036854775808,9223372036854775807] %300=[-9223372036854775808,9223372036854775807] %301=[-9223372036854775808,9223372036854775807] %302=[-9223372036854775808,9223372036854775807] %303=[-9223372036854775808,9223372036854775807] %304=[-9223372036854775808,9223372036854775807] %305=[-9223372036854775808,9223372036854775807] %307=[-9223372036854775808,9223372036854775807] %308=[-9223372036854775808,9223372036854775807] %309=[-9223372036854775808,9223372036854775807] %310=[-9223372036854775808,9223372036854775807] %321=[-9223372036854775808,9223372036854775807] %322=[-9223372036854775808,9223372036854775807] %323=[-9223372036854775808,9223372036854775807] %324=[-9223372036854775808,9223372036854775807] %325=[-9223372036854775808,9223372036854775807] %326=[-9223372036854775808,9223372036854775807] %327=[-9223372036854775808,9223372036854775807]
+list app::main %20: settled=true length=%-1
+list app::main %33: settled=true length=%-1
+list app::main %46: settled=true length=%-1
+list app::main %95: settled=true length=%-1 len=[0,0]
+list app::main %107: settled=true length=%21 elements=[0,1008] len=[0,140737488355328]
+list app::main %108: settled=true length=%-1 elements=[0,1008] len=[1,140737488355328]
+list app::main %156: settled=true length=%-1 len=[0,0]
+list app::main %164: settled=true length=%21 len=[0,140737488355328]
+list app::main %165: settled=true length=%-1 len=[1,140737488355328]
+list app::main %227: settled=true length=%-1
+list app::main %241: settled=true length=%-1
+facts workload::parse_number: %2=[0,4294967295] %4=[0,1] %6=[-9223372036854775808,9223372036854775807]
+facts workload::make_frame: %0=[0,140737488355328] %1=[-9223372036854775808,9223372036854775807] %3=[0,2392537302040576] %4=[-9223372036854775808,9223372036854775807] %6=[0,65535] %14=[0,255] %17=[0,255] %24=[0,4] %25=[-9223372036854775808,9223372036854775807] %26=[0,1] %28=[-9223372036854775808,9223372036854775807] %29=[-9223372036854775808,9223372036854775807] %31=[0,1829587348619264] %32=[-9223372036854775808,9223372036854775807] %34=[0,21] %35=[-9223372036854775808,9223372036854775807] %37=[0,255] %42=[1,4] %46=[0,140737488355328] %47=[0,140737488355328] %62=[0,255] %67=[0,3] %69=[0,1] %74=[0,0] %80=[0,0] %81=[-9223372036854775808,9223372036854775807] %87=[0,3] %89=[0,1] %93=[0,0] %99=[9,9] %101=[0,255] %103=[1,256] %105=[0,255] %109=[0,0] %115=[9,9] %116=[-9223372036854775808,9223372036854775807] %122=[0,3] %124=[0,1] %129=[0,0] %135=[4,4] %136=[-9223372036854775808,9223372036854775807] %146=[0,1] %152=[0,140737488355328] %153=[-9223372036854775808,9223372036854775807] %155=[-9223372036854775808,9223372036854775807] %157=[0,9223372036854775807] %158=[0,1] %160=[0,255] %161=[0,9223372036854775807] %163=[1,140737488355328] %165=[1,1] %169=[0,9223372036854775807]
+list workload::make_frame %8: settled=true length=%-1 len=[0,0]
+list workload::make_frame %10: settled=true length=%-1 elements=[165,165] len=[1,1]
+list workload::make_frame %12: settled=true length=%-1 elements=[1,165] len=[2,2]
+list workload::make_frame %15: settled=true length=%-1 elements=[0,255] len=[3,3]
+list workload::make_frame %18: settled=true length=%-1 elements=[0,255] len=[4,4]
+list workload::make_frame %20: settled=true length=%-1 elements=[0,255] len=[5,5]
+list workload::make_frame %38: settled=true length=%-1 elements=[0,255] len=[0,140737488355328]
+list workload::make_frame %39: settled=true length=%-1 elements=[0,255] len=[1,140737488355328]
+list workload::make_frame %64: settled=true length=%-1 elements=[0,255] len=[1,140737488355328]
+list workload::make_frame %84: settled=true length=%-1 elements=[0,255] len=[1,140737488355328]
+list workload::make_frame %101: settled=true length=%-1
+list workload::make_frame %119: settled=true length=%-1 elements=[0,255] len=[1,140737488355328]
+list workload::make_frame %139: settled=true length=%-1 elements=[0,255] len=[1,140737488355328]
+list workload::make_frame %143: settled=true length=%-1 elements=[0,255] len=[0,140737488355328]
+list workload::make_frame %144: settled=true length=%-1 elements=[0,255] len=[0,140737488355328]
+list workload::make_frame %145: settled=true length=%-1 elements=[0,255] len=[0,140737488355328]
+list workload::make_frame %160: settled=true length=%-1
+facts workload::decode: %1=[0,140737488355328] %2=[0,140737488355328] %4=[0,1] %11=[-9223372036854775808,9223372036854775807] %12=[0,255] %13=[0,255] %15=[0,1] %22=[-9223372036854775808,9223372036854775807] %23=[0,255] %24=[0,255] %26=[0,1] %33=[-9223372036854775808,9223372036854775807] %34=[0,255] %35=[0,255] %36=[0,140737488355328] %37=[0,140737488355328] %39=[6,261] %40=[0,1] %48=[0,140737488355328] %49=[0,140737488355328] %51=[-1,140737488355327] %53=[0,140737488355327] %54=[-9223372036854775808,9223372036854775807] %55=[0,1] %57=[0,35888059530608385] %59=[-9223372036854775808,9223372036854775807] %60=[0,255] %61=[0,255] %62=[0,35888059530608640] %65=[1,140737488355327] %68=[0,255] %69=[0,140737488355328] %70=[0,140737488355328] %72=[-1,140737488355327] %73=[0,18446744073709551615] %74=[0,255] %75=[0,255] %76=[0,1] %84=[0,140737488355328] %85=[0,140737488355328] %87=[-1,140737488355327] %89=[5,140737488355327] %90=[-9223372036854775808,9223372036854775807] %91=[0,1] %93=[0,35888059530607110] %95=[-9223372036854775808,9223372036854775807] %96=[0,255] %97=[0,255] %98=[0,35888059530607365] %101=[6,140737488355327] %104=[-9223372036854775808,9223372036854775807] %105=[0,255] %106=[0,255] %108=[0,65280] %110=[-9223372036854775808,9223372036854775807] %111=[0,255] %112=[0,255] %113=[0,65535] %114=[-9223372036854775808,9223372036854775807] %115=[-9223372036854775808,9223372036854775807]
+list workload::decode %12: settled=true length=%-1
+list workload::decode %23: settled=true length=%-1
+list workload::decode %34: settled=true length=%-1
+list workload::decode %60: settled=true length=%-1
+list workload::decode %74: settled=true length=%-1
+list workload::decode %96: settled=true length=%-1
+list workload::decode %105: settled=true length=%-1
+list workload::decode %111: settled=true length=%-1

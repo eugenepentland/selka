@@ -400,6 +400,35 @@ test "S4 a loop body called outside a caller loop imports with its source frame 
 }
 
 // spec-case: NEW-CORE-S4-UNITS-1
+test "S4 imports bounded branch-heavy loops and refuses larger bodies without caller ripple" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const caller = "module app\nimport leaf\ndef main(args: list[str], out: Stream) -> int:\n    out.print(leaf.compute(len(args)))\n    return 0\n";
+    const bounded = try branchLoop(a, 16);
+    const first = try snapshot(a, .{ caller, bounded, other }, true);
+    try std.testing.expect(std.mem.indexOf(u8, try textOf(first, "app.my"), "define available_externally hidden fastcc i64 @\"my.leaf::compute\"") != null);
+    try changed(first, try snapshot(a, .{ caller, bounded, other }, true), &.{});
+    const result = try native(a, first);
+    try std.testing.expect(result.term == .exited and result.term.exited == 0);
+    try std.testing.expectEqualStrings("2\n", result.stdout);
+    try std.testing.expectEqualStrings("", result.stderr);
+    const large = try branchLoop(a, 36);
+    const refused = try snapshot(a, .{ caller, large, other }, true);
+    try std.testing.expect(std.mem.indexOf(u8, try textOf(refused, "app.my"), "available_externally") == null);
+    const updated = try std.mem.replaceOwned(u8, a, large, "return 36", "return 37");
+    try changed(refused, try snapshot(a, .{ caller, updated, other }, true), &.{"leaf.my"});
+}
+
+fn branchLoop(a: std.mem.Allocator, branches: usize) ![]const u8 {
+    var source: std.ArrayList(u8) = .empty;
+    try source.appendSlice(a, "module leaf\npublic def compute(x: int) -> int:\n");
+    for (0..branches) |index| try source.print(a, "    if x == {d}:\n        return {d}\n", .{ index + 1, index + 1 });
+    try source.appendSlice(a, "    total = 0\n    for i in range(2):\n        total += x + 1\n    return total\n");
+    return source.toOwnedSlice(a);
+}
+
+// spec-case: NEW-CORE-S4-UNITS-1
 test "S4 imported aggregate bodies close rendering dependencies and export excluded private callees" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();

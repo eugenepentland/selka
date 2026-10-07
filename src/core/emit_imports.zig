@@ -3,7 +3,7 @@ const std = @import("std");
 const ir = @import("ir.zig");
 
 const instruction_limit = 512;
-const block_limit = 32;
+const block_limit = 64;
 const unit_limit = 2048;
 
 const Selection = struct {

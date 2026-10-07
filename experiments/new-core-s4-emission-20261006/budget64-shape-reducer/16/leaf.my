@@ -1,0 +1,37 @@
+module leaf
+public def compute(x: int) -> int:
+    total = 0
+    for i in range(2):
+        if x == 0:
+            total += 1
+        if x == 1:
+            total += 2
+        if x == 2:
+            total += 3
+        if x == 3:
+            total += 4
+        if x == 4:
+            total += 5
+        if x == 5:
+            total += 6
+        if x == 6:
+            total += 7
+        if x == 7:
+            total += 8
+        if x == 8:
+            total += 9
+        if x == 9:
+            total += 10
+        if x == 10:
+            total += 11
+        if x == 11:
+            total += 12
+        if x == 12:
+            total += 13
+        if x == 13:
+            total += 14
+        if x == 14:
+            total += 15
+        if x == 15:
+            total += 16
+    return total

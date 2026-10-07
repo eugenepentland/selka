@@ -1,0 +1,106 @@
+fn app::main(list[str], cap) -> i64
+b0:
+  %2 = list_len u64 param0
+  %3 = convert.proven i64 %2
+  %4 = call i64 leaf::compute(%3)
+  print param1, %4
+  ret 0:i64
+fn leaf::compute(i64) -> i64
+b0:
+  %2 = cmp.eq bool param0, 1:i64
+  branch %2, b1, b2
+b1: ; preds b0
+  ret 1:i64
+b2: ; preds b0
+  %7 = cmp.eq bool param0, 2:i64
+  branch %7, b3, b4
+b3: ; preds b2
+  ret 2:i64
+b4: ; preds b2
+  %12 = cmp.eq bool param0, 3:i64
+  branch %12, b5, b6
+b5: ; preds b4
+  ret 3:i64
+b6: ; preds b4
+  %17 = cmp.eq bool param0, 4:i64
+  branch %17, b7, b8
+b7: ; preds b6
+  ret 4:i64
+b8: ; preds b6
+  %22 = cmp.eq bool param0, 5:i64
+  branch %22, b9, b10
+b9: ; preds b8
+  ret 5:i64
+b10: ; preds b8
+  %27 = cmp.eq bool param0, 6:i64
+  branch %27, b11, b12
+b11: ; preds b10
+  ret 6:i64
+b12: ; preds b10
+  %32 = cmp.eq bool param0, 7:i64
+  branch %32, b13, b14
+b13: ; preds b12
+  ret 7:i64
+b14: ; preds b12
+  %37 = cmp.eq bool param0, 8:i64
+  branch %37, b15, b16
+b15: ; preds b14
+  ret 8:i64
+b16: ; preds b14
+  %42 = cmp.eq bool param0, 9:i64
+  branch %42, b17, b18
+b17: ; preds b16
+  ret 9:i64
+b18: ; preds b16
+  %47 = cmp.eq bool param0, 10:i64
+  branch %47, b19, b20
+b19: ; preds b18
+  ret 10:i64
+b20: ; preds b18
+  %52 = cmp.eq bool param0, 11:i64
+  branch %52, b21, b22
+b21: ; preds b20
+  ret 11:i64
+b22: ; preds b20
+  %57 = cmp.eq bool param0, 12:i64
+  branch %57, b23, b24
+b23: ; preds b22
+  ret 12:i64
+b24: ; preds b22
+  %62 = cmp.eq bool param0, 13:i64
+  branch %62, b25, b26
+b25: ; preds b24
+  ret 13:i64
+b26: ; preds b24
+  %67 = cmp.eq bool param0, 14:i64
+  branch %67, b27, b28
+b27: ; preds b26
+  ret 14:i64
+b28: ; preds b26
+  %72 = cmp.eq bool param0, 15:i64
+  branch %72, b29, b30
+b29: ; preds b28
+  ret 15:i64
+b30: ; preds b28
+  %77 = cmp.eq bool param0, 16:i64
+  branch %77, b31, b32
+b31: ; preds b30
+  ret 16:i64
+b32: ; preds b30
+  jump b33
+b33: ; preds b32 b35
+  %85 = phi i64 0:i64, %96
+  %89 = phi i64 0:i64, %93
+  %87 = cmp.lt bool %85, 2:i64
+  branch %87, b34, b36
+b34: ; preds b33
+  %92 = add.proven i64 param0, 1:i64
+  %93 = add.proven i64 %89, %92
+  jump b35
+b35: ; preds b34
+  %96 = add.proven i64 %85, 1:i64
+  jump b33
+b36: ; preds b33
+  ret %89
+facts app::main: %2=[0,140737488355328] %3=[0,140737488355328] %4=[-9223372036854775808,9223372036854775807]
+facts leaf::compute: %0=[0,140737488355328] %2=[0,1] %7=[0,1] %12=[0,1] %17=[0,1] %22=[0,1] %27=[0,1] %32=[0,1] %37=[0,1] %42=[0,1] %47=[0,1] %52=[0,1] %57=[0,1] %62=[0,1] %67=[0,1] %72=[0,1] %77=[0,1] %85=[0,2] %86=[-9223372036854775808,9223372036854775807] %87=[0,1] %89=[0,281474976710658] %90=[-9223372036854775808,9223372036854775807] %92=[1,140737488355329] %93=[1,422212465065987] %96=[1,2]

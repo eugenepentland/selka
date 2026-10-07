@@ -1,0 +1,24 @@
+test-core
++- run test 1 pass, 1 fail (2 total)
+guardian/test: test wall 6.66s; slowest over 50ms:
+guardian/test:   3.75s  emit_units_test.test.S4 imported aggregate bodies close rendering dependencies and export excluded private callees
+guardian/test:   2.91s  emit_units_test.test.S4 imports bounded branch-heavy loops and refuses larger bodies without caller ripple
+guardian/test: FAIL — 1 failed of 2
+guardian/test: RESULT {"passed":1,"failed":1,"skipped":0}
+error: 'emit_units_test.test.S4 imports bounded branch-heavy loops and refuses larger bodies without caller ripple' failed:
+       guardian/test: 2 test(s) selected
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x133fbf9 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/core/emit_units_test.zig:418:5: 0x2249033 in test.S4 imports bounded branch-heavy loops and refuses larger bodies without caller ripple (root_test.zig)
+           try std.testing.expect(std.mem.indexOf(u8, try textOf(refused, "app.my"), "available_externally") == null);
+           ^
+failed command: ./.zig-cache/o/fb533d41db6ea5a0e1162b4c9abfbe2f/test --cache-dir=./.zig-cache --seed=0x74f7e39c --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 1/2 tests passed (1 failed)
+test-core transitive failure
++- run test 1 pass, 1 fail (2 total)
+   +- compile test debug native success 1s MaxRSS:350M
+      +- options cached
+         +- compile exe mylang-core debug native cached 5ms MaxRSS:41M
+

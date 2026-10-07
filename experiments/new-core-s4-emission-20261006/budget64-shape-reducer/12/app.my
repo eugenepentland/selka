@@ -1,0 +1,5 @@
+module app
+import leaf
+def main(args: list[str], out: Stream) -> int:
+    out.print(leaf.compute(len(args)))
+    return 0
