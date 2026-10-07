@@ -75,8 +75,8 @@ const everyday_help =
     \\  mylang check FILE.my              type-check without building
     \\  mylang fix FILE.my [--check]     apply safe diagnostic repairs
     \\  mylang run FILE.my [-- ARGS...]   build natively and run; arguments after --
-    \\  mylang build FILE.my -o OUT       native executable, built by QBE in about a second
-    \\  mylang build FILE.my -o OUT --release   optimized (LLVM -O3 + LTO), for shipping or timing
+    \\  mylang build FILE.my -o OUT       native executable, a debug build one unit per module
+    \\  mylang build FILE.my -o OUT --release   optimized whole-program LLVM build, for shipping or timing
     \\  mylang test FILE.my|DIR           run the public test_* functions
     \\  mylang fmt FILE.my [--check]      canonical formatting
     \\  mylang docs [TOPIC]               the user guides built into this compiler
