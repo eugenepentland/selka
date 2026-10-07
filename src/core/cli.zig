@@ -47,6 +47,7 @@ const retired_flags = [_]Retirement{
     .{ .name = "--provider", .message = host_retired },
     .{ .name = "--link-library", .message = host_retired },
     .{ .name = "--library-path", .message = host_retired },
+    .{ .name = "--unchecked", .message = "--unchecked was removed: every build keeps overflow, cast and bounds checks so optimization never changes a program's result" },
     .{ .name = "--explain-ownership", .message = "--explain-ownership read the old back end's ownership lowering (retired, S5); `mylang build --stats` reports the new core's" },
 };
 
@@ -95,20 +96,20 @@ fn write(init: std.process.Init, text: []const u8) Error!void {
 }
 
 const build_usage =
-    \\usage: mylang build FILE.my (-o OUT | --run [RUN OPTIONS] [-- ARGS...]) [--release] [--link FILE.c]... [--emit-llvm PATH]
+    \\usage: mylang build <file.my> (-o <output> | --run [run options] [-- ARGS...]) [--release] [--link FILE.c]... [--emit-llvm PATH]
     \\       [--cache-dir DIR] [--zig PATH] [--cache-report] [--verify-cache] [--stats] [--diagnostics=text|json]
     \\
 ;
 
 const run_usage =
-    \\usage: mylang run FILE.my [options] [-- ARGS...]
-    \\       mylang run-project ENTRY.my [options] [-- ARGS...]
-    \\  builds the program with the new core and runs it; every value after -- is a program argument
+    \\usage: mylang run <file.my> [options] [-- ARGS...]
+    \\       mylang run-project <entry.my> [options] [-- ARGS...]
+    \\  builds the program natively and runs it; every value after -- is a guest argument
     \\  budgets (each takes --flag N or --flag=N; N is a positive integer):
     \\    --max-steps N      instruction ceiling (default: unbounded)
     \\    --max-frames N     call-depth ceiling (default: unbounded); each frame reserves 32 KiB of --max-memory
     \\    --timeout N        elapsed-time cap in seconds
-    \\    --max-memory SIZE  byte ceiling, K/M/G suffixes (default 4G; MYLANG_MEMORY_LIMIT names the same)
+    \\    --max-memory SIZE  guest byte ceiling, K/M/G suffixes (default 4G; MYLANG_MEMORY_LIMIT names the same)
     \\  output: --print-result --diagnostics=text|json
     \\  build: --release --zig=PATH --cache-dir=DIR
     \\  authority: --restrict --allow-read=DIR --allow-write=DIR --allow-endpoint=IP:PORT --allow-clock
@@ -144,6 +145,8 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     const status = pipeline.build(init, request.path, request.build, &report) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.SourceError, error.Unsupported => 1,
+        error.PolicyDenied => 3,
+        error.ConfigurationFailed => 2,
         error.ToolFailed, error.WriteFailed, error.InvalidIr => 2,
     };
     try write(init, report.items);
@@ -186,6 +189,9 @@ fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
         }
         try normalized.append(a, arg);
     }
+    // Test processes inherit the caller's address space, not the compiler's own
+    // ceiling; each lowers it to its byte ceiling (NEW-CORE-S4-MEMORY-1).
+    cli_run.restoreAddressSpace(init.environ_map);
     const status = try core_main.testCommand(init, normalized.items);
     return status;
 }

@@ -14260,3 +14260,20 @@ test "check of a project entry checks the merged program and writes no per-modul
     try testing.expectEqualStrings("", accepted.stderr);
     try testing.expectError(error.FileNotFound, temp.dir.statFile(testing.io, "cache/modules", .{}));
 }
+
+// spec: NEW-CORE-S5-CONTRACT-1
+test "a broken precondition traps with the old core's description of the clause" {
+    const program = "@requires(amount > 10)\ndef half(amount: int) -> int:\n    return amount // 2\n\ndef main() -> int:\n    return half(4)\n";
+    try invoke("run", program, 1, "", "error[R_REQUIRES]: precondition violated: half requires `amount > 10`");
+    try invoke("run", "def main() -> int:\n    assert 1 > 2, \"never\"\n    return 0\n", 1, "", "error[R_ASSERT]: native execution failed: never");
+}
+
+// spec: NEW-CORE-S5-TEST-1
+test "a test whose result is not bool fails its case and the run" {
+    const outcome = try runFixture("test", "public def test_bad() -> int:\n    return 1\n\npublic def test_ok() -> bool:\n    return True\n", &.{});
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, outcome.term);
+    try testing.expect(std.mem.indexOf(u8, outcome.stdout, "failed input::test_bad: test result type is not bool") != null);
+    try testing.expect(std.mem.indexOf(u8, outcome.stdout, "passed input::test_ok") != null);
+}

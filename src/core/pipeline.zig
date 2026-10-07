@@ -60,7 +60,7 @@ pub const Show = struct {
 pub const Diagnostics = enum { errors, text, json };
 
 /// Why a build stopped after its report was written.
-pub const Error = error{ SourceError, Unsupported, ToolFailed, WriteFailed, OutOfMemory, InvalidIr };
+pub const Error = error{ SourceError, Unsupported, ToolFailed, WriteFailed, OutOfMemory, InvalidIr, PolicyDenied, ConfigurationFailed };
 
 /// Build `path` into `options.output`. An unchanged build replays its last
 /// identical build's executable (`build_replay.zig`) before checking anything.
@@ -91,9 +91,9 @@ fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget:
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
     entry.configure(&session);
-    if (options.show.diagnostics == .json) session.setFormat(.json);
+    if (options.show.diagnostics != .errors) session.setFormat(if (options.show.diagnostics == .json) .json else .text);
     try session.enableCache(init.gpa, options.cache);
-    const checked = session.checkFile(allocator, entry.path, report) catch |err| switch (err) {
+    const checked = session.checkFile(allocator, if (options.show.diagnostics == .errors) entry.path else path, report) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.SourceError,
     };

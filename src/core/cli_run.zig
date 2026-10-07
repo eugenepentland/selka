@@ -13,6 +13,8 @@ const memory_budget = @import("memory_budget");
 const trap_marker = "\x1eMYLANG-TRAP ";
 /// Native stack a `--max-frames` budget reserves per frame, as the runtime's tests map it.
 const frame_stack: u64 = 32 << 10;
+/// The largest entry file a run reads, as the old CLI read it.
+const source_limit: u64 = 16 << 20;
 /// Native stack beyond the per-frame share.
 const stack_slack: u64 = 8 << 20;
 
@@ -44,6 +46,8 @@ pub fn run(init: std.process.Init, request: cli_args.Request, command: []const u
         return switch (err) {
             error.OutOfMemory => error.OutOfMemory,
             error.SourceError, error.Unsupported => 1,
+            error.PolicyDenied => 3,
+            error.ConfigurationFailed => 2,
             error.ToolFailed, error.WriteFailed, error.InvalidIr => 2,
         };
     };
@@ -76,8 +80,10 @@ fn unreadable(init: std.process.Init, command: []const u8, path: []const u8) err
         };
         defer file.close(init.io);
         const stat = file.stat(init.io) catch |err| break :why @errorName(err);
-        if (stat.kind != .directory) return null;
-        break :why "is a directory, not a file";
+        if (stat.kind == .directory) break :why "is a directory, not a file";
+        if (stat.size <= source_limit) return null;
+        const message = try std.fmt.allocPrint(init.arena.allocator(), "mylang {s}: host failure: '{s}' is larger than 16 MiB (FileTooBig)\n", .{ command, path });
+        return message;
     };
     const message = try std.fmt.allocPrint(init.arena.allocator(), "mylang {s}: cannot read '{s}': {s}\n", .{ command, path, why });
     return message;
@@ -103,14 +109,14 @@ fn budgetFor(init: std.process.Init, request: cli_args.Request, command: []const
     const steps = limits.steps orelse configured.max_steps orelse 0;
     const frames = limits.frames orelse configured.max_frames orelse 0;
     const timeout = limits.timeout orelse 0;
-    if (frames > std.math.maxInt(u32) or timeout > std.math.maxInt(u32)) {
-        try report.print(a, "mylang {s}: a budget is too large\n", .{command});
-        return null;
-    }
     if (frames != 0) if (try memory_budget.frameRefusal(a, init.environ_map, command, "a guest", frames, memory)) |refusal| {
         try report.appendSlice(a, refusal);
         return null;
     };
+    if (frames > std.math.maxInt(u32) or timeout > std.math.maxInt(u32)) {
+        try report.print(a, "mylang {s}: a budget is too large\n", .{command});
+        return null;
+    }
     return .{ .steps = steps, .frames = @intCast(frames), .memory = memory, .timeout_seconds = @intCast(timeout) };
 }
 
@@ -146,7 +152,8 @@ fn execute(init: std.process.Init, program: []const u8, settings: cli_args.Run, 
 
 /// Give the program the caller's address space back: the compiler bounds its own
 /// (`MYLANG_HOST_MEMORY_LIMIT`), and the runtime lowers it to the run's ceiling.
-fn restoreAddressSpace(environment: *const std.process.Environ.Map) void {
+/// `mylang test` restores it for its test processes the same way.
+pub fn restoreAddressSpace(environment: *const std.process.Environ.Map) void {
     if (environment.get(memory_budget.checkpoint_variable) == null) return;
     const current = std.posix.getrlimit(.AS) catch return;
     const restored = memory_budget.guestAddressSpaceLimit(environment) orelse std.math.maxInt(u64);
@@ -193,7 +200,7 @@ fn translate(a: std.mem.Allocator, text: []const u8) error{OutOfMemory}![]const 
     var lines = std.mem.splitScalar(u8, text, '\n');
     var consumed: usize = 0;
     while (lines.next()) |line| : (consumed = lines.index orelse text.len) {
-        const trap = located(line) orelse continue;
+        var trap = located(line) orelse continue;
         const Frame = struct { function: []const u8, location: Location };
         var frames: std.ArrayList(Frame) = .empty;
         var detail: ?std.json.Value = null;
@@ -204,6 +211,9 @@ fn translate(a: std.mem.Allocator, text: []const u8) error{OutOfMemory}![]const 
                 const split = std.mem.lastIndexOf(u8, rest, " at ") orelse continue;
                 const at = place(rest[split + 4 ..]) orelse continue;
                 try frames.append(a, .{ .function = rest[5..split], .location = at });
+            } else if (trap.location.path.len == 0 and rest.len != 0) {
+                // A budget trap's advice line, which the old core reported as the message.
+                trap.message = rest;
             }
         }
         const record = std.json.Stringify.valueAlloc(a, .{
@@ -227,8 +237,13 @@ fn translate(a: std.mem.Allocator, text: []const u8) error{OutOfMemory}![]const 
 const Location = struct { path: []const u8, start: struct { line: u64, column: u64 } };
 const Trap = struct { code: []const u8, message: []const u8, location: Location };
 
-/// `PATH:LINE:COLUMN: error[CODE]: MESSAGE`, the first line of a trap's text.
+/// `PATH:LINE:COLUMN: error[CODE]: MESSAGE`, the first line of a trap's text, or
+/// `error[CODE]: MESSAGE` for a budget trap, which has no location.
 fn located(line: []const u8) ?Trap {
+    if (std.mem.startsWith(u8, line, "error[")) {
+        const close = std.mem.indexOf(u8, line, "]: ") orelse return null;
+        return .{ .code = line["error[".len..close], .message = line[close + 3 ..], .location = .{ .path = "", .start = .{ .line = 0, .column = 0 } } };
+    }
     const marker = std.mem.indexOf(u8, line, ": error[") orelse return null;
     const rest = line[marker + ": error[".len ..];
     const close = std.mem.indexOf(u8, rest, "]: ") orelse return null;

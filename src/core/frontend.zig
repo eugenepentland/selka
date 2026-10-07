@@ -19,6 +19,9 @@ const Settings = struct {
     providers: []const Provider = &.{},
     /// How diagnostics are rendered into a report: terminal text or `diagnostic-v1` lines.
     format: language.diagnostic_output.Format = .text,
+    /// Name a header-less file by the path it was given, as the `mylang` CLI does,
+    /// rather than by its base name (`mylang-core`).
+    given_path: bool = false,
 };
 const Graph = struct {
     index: language.interfaces.Index = undefined,
@@ -76,9 +79,11 @@ pub const Session = struct {
         self.graph.settings.entry = entry;
     }
 
-    /// Render diagnostics as `format` (`mylang run --diagnostics=json`).
+    /// Render diagnostics as `format` (`mylang run --diagnostics=json`), and name a
+    /// header-less file by the path it was given, as the `mylang` CLI does.
     pub fn setFormat(self: *Session, format: language.diagnostic_output.Format) void {
         self.graph.settings.format = format;
+        self.graph.settings.given_path = true;
     }
 
     /// Call only after a successful check. The warnings of that check, rendered in the session's format,
@@ -148,7 +153,8 @@ pub const Session = struct {
         };
         if (language.opensAsModule(bytes)) return self.check(allocator, self.graph.settings.entry orelse entryOf(path).module, report);
         const full = if (self.entry_suffix.len == 0) bytes else try std.mem.concat(allocator, u8, &.{ bytes, self.entry_suffix });
-        self.single = try language.Compilation.init(self.project.arena.child_allocator, std.fs.path.basename(path), full);
+        const name = if (self.graph.settings.given_path) path else std.fs.path.basename(path);
+        self.single = try language.Compilation.init(self.project.arena.child_allocator, name, full);
         const unit = &self.single.?;
         self.checkSingle(unit) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,

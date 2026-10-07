@@ -40,6 +40,9 @@ pub const Failure = union(enum) { usage, retired: []const u8 };
 /// Which command is being parsed.
 pub const Command = enum { build, run };
 
+/// A network grant's prefix: `--allow-endpoint=IP:PORT`.
+const endpoint_grant = "--allow-endpoint=";
+
 /// The flags that take a value, spelled `--flag VALUE` or `--flag=VALUE`.
 const valued = [_][]const u8{ "-o", "--output", "--link", "--emit-llvm", "--cache-dir", "--zig", "--qbe", "--mode", "--max-steps", "--max-frames", "--max-memory", "--timeout" };
 
@@ -81,7 +84,7 @@ pub fn parse(allocator: std.mem.Allocator, command: Command, args: []const []con
         }
         try parser.flag(arg);
     }
-    if (request.path.len == 0) return parser.usage();
+    if (request.path.len == 0 or !validGrants(parser.options.items)) return parser.usage();
     if (runs) {
         if (request.build.output.len != 0 or request.build.show.llvm != null) return parser.usage();
         request.run = .{ .limits = parser.limits, .options = parser.options.items, .arguments = parser.arguments };
@@ -196,13 +199,43 @@ fn grant(arg: []const u8) bool {
     for ([_][]const u8{ "--restrict", "--allow-clock", "--allow-host", "--allow-all", "--allow-random", "--allow-env" }) |bare| {
         if (eql(arg, bare)) return true;
     }
-    for ([_][]const u8{ "--allow-read=", "--allow-write=", "--allow-endpoint=", "--allow-env=" }) |prefix| {
+    for ([_][]const u8{ "--allow-read=", "--allow-write=", endpoint_grant, "--allow-env=" }) |prefix| {
         if (std.mem.startsWith(u8, arg, prefix)) return arg.len > prefix.len;
     }
     const seed = "--allow-random=";
     if (!std.mem.startsWith(u8, arg, seed) or arg.len == seed.len) return false;
     _ = std.fmt.parseUnsigned(u64, arg[seed.len..], 10) catch return false;
     return true;
+}
+
+/// Whether the grants among `options` form a set the old CLI accepted (CAPABILITY-2):
+/// at most eight directories and eight endpoints, an endpoint an IPv4 literal with a
+/// port, one entropy and one environment grant, and `--allow-all` before none of the
+/// grants it already makes. Repeats were refused as they were collected.
+fn validGrants(options: []const []const u8) bool {
+    var directories: usize = 0;
+    var endpoints: usize = 0;
+    var singles: usize = 0;
+    var all = false;
+    for (options) |arg| {
+        if (std.mem.startsWith(u8, arg, "--allow-read=") or std.mem.startsWith(u8, arg, "--allow-write=")) {
+            directories += 1;
+        } else if (std.mem.startsWith(u8, arg, endpoint_grant)) {
+            const address = std.Io.net.IpAddress.parseLiteral(arg[endpoint_grant.len..]) catch return false;
+            if (address == .ip6 or address.getPort() == 0) return false;
+            endpoints += 1;
+        } else if (eql(arg, "--allow-all")) {
+            if (singles != 0 or directories != 0 or endpoints != 0) return false;
+            all = true;
+        } else if (std.mem.startsWith(u8, arg, "--allow-")) {
+            // Clock, host, entropy and environment: each once, and none after `--allow-all`.
+            const family = arg[0 .. std.mem.indexOfScalar(u8, arg, '=') orelse arg.len];
+            for (options) |other| if (other.ptr != arg.ptr and std.mem.startsWith(u8, other, family) and (other.len == family.len or other[family.len] == '=')) return false;
+            if (all) return false;
+            singles += 1;
+        }
+    }
+    return directories <= 8 and endpoints <= 8;
 }
 
 fn contains(items: []const []const u8, wanted: []const u8) bool {
@@ -262,6 +295,9 @@ test "build and run command lines parse in the old spellings into one new-core r
     try std.testing.expectError(error.Usage, parse(a, .build, &.{ "p.my", "--max-steps=5", "-o", "out" }, "zig", &failure));
     try std.testing.expectError(error.Usage, parse(a, .run, &.{ "p.my", "--max-frames", "0" }, "zig", &failure));
     try std.testing.expectError(error.Usage, parse(a, .run, &.{ "p.my", "--allow-read=" }, "zig", &failure));
+    try std.testing.expectError(error.Usage, parse(a, .run, &.{ "p.my", "--allow-endpoint=localhost:9" }, "zig", &failure));
+    try std.testing.expectError(error.Usage, parse(a, .run, &.{ "p.my", "--allow-env=PATH", "--allow-env" }, "zig", &failure));
+    try std.testing.expectError(error.Usage, parse(a, .run, &.{ "p.my", "--allow-all", "--allow-clock" }, "zig", &failure));
     try std.testing.expectError(error.Usage, parse(a, .run, &.{ "p.my", "--backend", "qbe" }, "zig", &failure));
     try std.testing.expect(failure == .retired);
     try std.testing.expectEqualStrings("--x \"a b\" \"q\\\"\"", try encodeOptions(a, &.{ "--x", "a b", "q\"" }));

@@ -1248,11 +1248,14 @@ myl_block *myl_core_list_sort(myl_block *list, int64_t kind) {
    carrying only the message. Exit status 1. */
 void myl_core_assert_fail(const myl_core_site *site) {
     static const char *const codes[] = {"R_ASSERT", "R_REQUIRES", "R_ENSURES", "R_INVARIANT"};
-    const char *code = site->width >= 0 && site->width < 4 ? codes[site->width] : codes[0];
+    /* The old core's description of each (NEW-CORE-S5-CONTRACT-1). */
+    static const char *const described[] = {"native execution failed", "precondition violated", "postcondition violated", "invariant violated"};
+    const int kind = site->width >= 0 && site->width < 4 ? site->width : 0;
+    const char *code = codes[kind];
     stream_flush(&streams[0]);
     char text[2048];
-    int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: native execution failed%s%s\n  in %s at %s:%d:%d\n",
-        site->path, site->line, site->column, code, site->operation[0] ? ": " : "", site->operation,
+    int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: %s%s%s\n  in %s at %s:%d:%d\n",
+        site->path, site->line, site->column, code, described[kind], site->operation[0] ? ": " : "", site->operation,
         site->function, site->path, site->line, site->column);
     stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
     trap_frames();
