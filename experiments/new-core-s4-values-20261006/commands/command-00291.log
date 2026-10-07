@@ -1,0 +1,13 @@
+$ python3 -c 'from pathlib import Path; import subprocess; p=Path("/home/epentland/ai/canopy/guardian-zig/FEEDBACK.md"); s=p.read_text(); print("entry already present", "## 2026-10-07 · codex · mylang — S4-V value paths" in s); print("feedback tail",s[-1300:]); print("repo status",subprocess.check_output(["git","-C",str(p.parent),"status","--short"],text=True))'
+entry already present False
+feedback tail kept the meaningful unknown-input, restored-mtime edit, preload-presence and alias-retarget assertions intact. No rule was disabled.
+- **friction:** `ban-hardcoded-paths` correctly rejected reviewed loader/cache platform paths inside the helper. Moving the bounded platform constants into `src/config_core_tool_platform.zig` resolved it, but `orphan-files` then could not follow the real `build.zig` named-module binding. Registering that actual module entry in the existing roots list restored all 88 checks; two failed whole-tree lint receipts and the config extraction are retained.
+- **wish:** `orphan-files` could resolve `createModule`/`addImport` bindings in `build.zig`, or identify named-module entry files that require root registration. The direct source import existed before the orphan finding, and no module was actually unused.
+
+## 2026-10-07 · codex · mylang — S4 backtrace tool-runtime closure correction
+- **good:** The whole `guardian-check all . --full` gate passed all 88 checks after the Core-only reviewed tool-runtime snapshot added libgcc/libpthread and rejected stale v2 inventory hints. The existing named platform config module kept hardcoded platform paths isolated, and the focused 20-test helper suite covered every configured runtime input without any gate exemption.
+
+repo status 
+
+exit=0
+elapsed_seconds=0.031924

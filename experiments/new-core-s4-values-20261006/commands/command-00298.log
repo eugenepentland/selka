@@ -1,0 +1,16 @@
+$ python3 -c 'from pathlib import Path; import subprocess,json,hashlib; repo=Path("/home/epentland/ai/canopy/guardian-zig"); p=repo/"FEEDBACK.md"; entry=Path("experiments/new-core-s4-values-20261006/guardian-feedback.txt").read_bytes(); previous=p.read_bytes(); assert b"## 2026-10-07 \xc2\xb7 codex \xc2\xb7 mylang \xe2\x80\x94 S4-V value paths" not in previous; assert not subprocess.check_output(["git","-C",str(repo),"status","--porcelain"],text=True).strip();
+with p.open("ab") as f: f.write(b"\n"+entry.rstrip()+b"\n")
+assert p.read_bytes().startswith(previous); subprocess.run(["git","-C",str(repo),"add","FEEDBACK.md"],check=True); subprocess.run(["git","-C",str(repo),"commit","-m","feedback: mylang — S4-V gate and runner feedback","--","FEEDBACK.md"],check=True); commit=subprocess.check_output(["git","-C",str(repo),"rev-parse","HEAD"],text=True).strip(); receipt={"commit":commit,"repo":str(repo),"previous_sha256":hashlib.sha256(previous).hexdigest(),"after_sha256":hashlib.sha256(p.read_bytes()).hexdigest(),"append_only":True}; Path("experiments/new-core-s4-values-20261006/guardian-feedback-commit.json").write_text(json.dumps(receipt,indent=2)+"\n"); print(json.dumps(receipt))'
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 4 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 2 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 128 finding(s) — report-only (--verbose for detail)
+guardian: repeated-string-literal: 2 finding(s) — report-only (--verbose for detail)
+guardian: try-in-return: 2 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 checks — 0 blocking, 4 report-only
+[main 2a926a0] feedback: mylang — S4-V gate and runner feedback
+ 1 file changed, 5 insertions(+)
+{"commit": "2a926a0b44f6fe7b394b91dfef9bc9f2e536f674", "repo": "/home/epentland/ai/canopy/guardian-zig", "previous_sha256": "10903aa9a11278fdd4d894da9652b8d9a59aea43e6e389d691043fa1367938b3", "after_sha256": "53a09822941c2c831bba1b76b0d5e3a24b9eba5467ad60bf0ef31d748248a37f", "append_only": true}
+
+exit=0
+elapsed_seconds=1.376764

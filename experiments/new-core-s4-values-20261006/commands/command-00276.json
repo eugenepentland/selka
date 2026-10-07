@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "from pathlib import Path; p=Path(\"experiments/new-core-s4-values-20261006/final-fuzz-v3/dict\"); print([(str(x),x.stat().st_size) for x in p.glob(\"*\")]); c=Path(\".mylang-cache/s4-v/final-fuzz-v3/dict\"); print(\"cache top\",[(x.name,x.stat().st_size) for x in c.iterdir()][:10])"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3268058,
+  "status": 0,
+  "elapsed_seconds": 0.02419446804560721
+}

@@ -1,0 +1,8 @@
+$ python3 -c 'from pathlib import Path; p=Path("experiments/new-core-s4-values-20261006/final-fuzz-v3"); print((p/"iteration.log").read_text()[-750:]); print("matrix complete",(p/"summary.json").exists())'
+$ python3 experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py --kind iteration --old /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s3/oracle/mylang --new /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang-core --cases 50 --seed 410606 --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/iteration --cache-root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-fuzz-v3/iteration
+qualification progress: iteration: seen=25 elapsed=111.52s
+
+matrix complete False
+
+exit=0
+elapsed_seconds=0.021403

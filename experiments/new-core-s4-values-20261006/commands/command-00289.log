@@ -1,0 +1,10 @@
+$ git commit --quiet -m 'S4-V qualify numeric differential cases'
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10371 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+
+exit=0
+elapsed_seconds=1.653236

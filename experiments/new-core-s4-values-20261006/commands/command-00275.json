@@ -1,0 +1,11 @@
+{
+  "command": [
+    "bash",
+    "-c",
+    "ps -eo pid,ppid,etime,stat,pcpu,rss,args | rg \"final-fuzz-v3/dict|fuzz_dict.py|fuzz_qualification.py --kind dict\" | head -n 16"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3268043,
+  "status": 0,
+  "elapsed_seconds": 0.020536158001050353
+}
