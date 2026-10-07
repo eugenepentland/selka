@@ -19,6 +19,7 @@ def main():
     p.add_argument("--cache", type=Path, required=True)
     p.add_argument("--fresh-old", type=Path, required=True)
     p.add_argument("--fresh-old-sha256", required=True)
+    p.add_argument("--core", type=Path, default=ROOT / "zig-out/bin/mylang-core")
     a = p.parse_args()
     area, cache = a.evidence.resolve(), a.cache.resolve()
     area.mkdir(parents=True, exist_ok=False)
@@ -31,7 +32,7 @@ def main():
     fresh = a.fresh_old.resolve()
     if hashlib.sha256(fresh.read_bytes()).hexdigest() != a.fresh_old_sha256:
         raise RuntimeError("unqualified fresh shared-checker oracle")
-    core = ROOT / "zig-out/bin/mylang-core"
+    core = a.core.resolve()
     core_hash = hashlib.sha256(core.read_bytes()).hexdigest()
     summary["compiler_modes"] = {"fresh_old": "Debug", "new": "Debug"}
     summary["fresh_old_sha256"] = hashlib.sha256(fresh.read_bytes()).hexdigest()
@@ -40,7 +41,7 @@ def main():
         for index, kind in enumerate(("rc", "rebinding", "functions", "s1", "dict", "number", "iteration", "values")):
             old = fresh if kind == "values" else pinned
             command = ["python3", "experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py", "--kind", "functions" if kind == "values" else kind,
-                       "--old", str(old), "--new", str(ROOT / "zig-out/bin/mylang-core"), "--cases", "50", "--seed", str(410600 + index),
+                       "--old", str(old), "--new", str(core), "--cases", "50", "--seed", str(410600 + index),
                        "--evidence", str(area / kind), "--cache-root", str(cache / kind)]
             if kind == "values":
                 command += ["--harness", str(ROOT / "experiments/new-core-s4-values-20261006/fuzz_values.py")]

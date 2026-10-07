@@ -20,6 +20,7 @@ def main():
     p.add_argument("--bin", type=Path, required=True)
     p.add_argument("--evidence", type=Path, required=True)
     p.add_argument("--cache", type=Path, required=True)
+    p.add_argument("--core", type=Path, default=ROOT / "zig-out/bin/mylang-core")
     a = p.parse_args()
     area, cache = a.evidence.resolve(), a.cache.resolve()
     area.mkdir(parents=True, exist_ok=False)
@@ -27,7 +28,7 @@ def main():
     binaries = a.bin.resolve()
     journal = []
     summary = {"qualified": False, "source_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(), "commands": journal}
-    core = ROOT / "zig-out/bin/mylang-core"
+    core = a.core.resolve()
     summary["core_sha256"] = hashlib.sha256(core.read_bytes()).hexdigest()
 
     def run(command, native=False):
