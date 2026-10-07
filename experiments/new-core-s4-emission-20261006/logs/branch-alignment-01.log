@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/branch_alignment.py", line 106, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/branch_alignment.py", line 82, in main
+    paired.run_build(command[:2] + ['-###'] + command[2:], private / 'resolved-flags.log')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/paired_units.py", line 75, in run_build
+    raise ValueError(f"native build failed: {log}")
+ValueError: native build failed: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/branch-alignment-01/whole_baseline/resolved-flags.log

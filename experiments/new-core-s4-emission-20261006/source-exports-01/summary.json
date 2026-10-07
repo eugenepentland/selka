@@ -1,0 +1,2160 @@
+{
+  "production_change": false,
+  "complete": true,
+  "traced_argv": [
+    "zig",
+    "cc",
+    "-O3",
+    "-march=native",
+    "-mllvm",
+    "-x86-experimental-pref-innermost-loop-alignment=6",
+    "-Wno-override-module",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-program",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/module-c45495eed5abeed33c6f2c3dbda49d4d42c754b56d577e837ca1040dac08f668.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/entry.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/core_rt-a5b0556a3a4eebfb.o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/benchmarks/runtime/ports/native_clock.c"
+  ],
+  "restored_functions": [
+    "my.row_result_propagate::parse_number",
+    "my.row_result_propagate::forwarded",
+    "my.row_result_propagate::checked"
+  ],
+  "reference_audit": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/module-c45495eed5abeed33c6f2c3dbda49d4d42c754b56d577e837ca1040dac08f668.ll",
+      "target": "my.row_result_propagate::parse_number",
+      "line": "  %v21 = notail call fastcc i64 @\"my.row_result_propagate::parse_number\"(ptr %v20), !dbg !1000011"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/module-c45495eed5abeed33c6f2c3dbda49d4d42c754b56d577e837ca1040dac08f668.ll",
+      "target": "my.row_result_propagate::parse_number",
+      "line": "  %v34 = notail call fastcc i64 @\"my.row_result_propagate::parse_number\"(ptr %v33), !dbg !1000019"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/module-c45495eed5abeed33c6f2c3dbda49d4d42c754b56d577e837ca1040dac08f668.ll",
+      "target": "my.row_result_propagate::parse_number",
+      "line": "  %v47 = notail call fastcc i64 @\"my.row_result_propagate::parse_number\"(ptr %v46), !dbg !1000027"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/module-c45495eed5abeed33c6f2c3dbda49d4d42c754b56d577e837ca1040dac08f668.ll",
+      "target": "my.row_result_propagate::forwarded",
+      "line": "  %v166 = notail call fastcc { i8, i64 } @\"my.row_result_propagate::forwarded\"(i64 %v162, i64 %v143), !dbg !1000065"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/module-c45495eed5abeed33c6f2c3dbda49d4d42c754b56d577e837ca1040dac08f668.ll",
+      "target": "my.row_result_propagate::checked",
+      "line": "  %v2 = notail call fastcc { i8, i64 } @\"my.row_result_propagate::checked\"(i64 %p0, i64 %p1), !dbg !1000073"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/entry.ll",
+      "target": "my.row_result_propagate::parse_number",
+      "line": "  %v21 = notail call fastcc i64 @\"my.row_result_propagate::parse_number\"(ptr %v20), !dbg !1000011"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/entry.ll",
+      "target": "my.row_result_propagate::parse_number",
+      "line": "  %v34 = notail call fastcc i64 @\"my.row_result_propagate::parse_number\"(ptr %v33), !dbg !1000019"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/entry.ll",
+      "target": "my.row_result_propagate::parse_number",
+      "line": "  %v47 = notail call fastcc i64 @\"my.row_result_propagate::parse_number\"(ptr %v46), !dbg !1000027"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/entry.ll",
+      "target": "my.row_result_propagate::forwarded",
+      "line": "  %v166 = notail call fastcc { i8, i64 } @\"my.row_result_propagate::forwarded\"(i64 %v162, i64 %v143), !dbg !1000065"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/entry.ll",
+      "target": "my.row_result_propagate::checked",
+      "line": "  %v2 = notail call fastcc { i8, i64 } @\"my.row_result_propagate::checked\"(i64 %p0, i64 %p1), !dbg !1000073"
+    }
+  ],
+  "acyclic_graph": {
+    "my.row_result_propagate::parse_number": [],
+    "my.row_result_propagate::forwarded": [
+      "my.row_result_propagate::checked"
+    ],
+    "my.row_result_propagate::checked": []
+  },
+  "arms": {
+    "baseline": {
+      "argv": [
+        "zig",
+        "cc",
+        "-O3",
+        "-march=native",
+        "-mllvm",
+        "-x86-experimental-pref-innermost-loop-alignment=6",
+        "-Wno-override-module",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/module-c45495eed5abeed33c6f2c3dbda49d4d42c754b56d577e837ca1040dac08f668.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/entry.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/core_rt-a5b0556a3a4eebfb.o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/benchmarks/runtime/ports/native_clock.c"
+      ],
+      "binary": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+        "sha256": "ca96dcb5d36059916a2911a389946825ebb729126e1dd7ba7025840cd16c8663"
+      },
+      "inputs": [
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/module-c45495eed5abeed33c6f2c3dbda49d4d42c754b56d577e837ca1040dac08f668.ll",
+          "sha256": "baca6b32216e47fc8d3b9bd742f37ff8aa594c46617b06486960e6e6afd456fa"
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/entry.ll",
+          "sha256": "6abb118af0147c06fbd212bf9c7726f5e88e75319c34f5a1ca8a1d019a3f545a"
+        }
+      ]
+    },
+    "restore_internal": {
+      "argv": [
+        "zig",
+        "cc",
+        "-O3",
+        "-march=native",
+        "-mllvm",
+        "-x86-experimental-pref-innermost-loop-alignment=6",
+        "-Wno-override-module",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/module-c45495eed5abeed33c6f2c3dbda49d4d42c754b56d577e837ca1040dac08f668.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/entry.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/core_rt-a5b0556a3a4eebfb.o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/benchmarks/runtime/ports/native_clock.c"
+      ],
+      "binary": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+        "sha256": "9c5e3779f0e37098710543f9d7668719e72cfa3306c3bcb8725df8b75115afc7"
+      },
+      "inputs": [
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/module-c45495eed5abeed33c6f2c3dbda49d4d42c754b56d577e837ca1040dac08f668.ll",
+          "sha256": "eb04569b091bed556204afe67519b286ab826d5557f8b30d3227a600eda14e0b"
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/entry.ll",
+          "sha256": "6abb118af0147c06fbd212bf9c7726f5e88e75319c34f5a1ca8a1d019a3f545a"
+        }
+      ]
+    }
+  },
+  "measurement": {
+    "unit": "element",
+    "binaries": {
+      "whole": {
+        "path": ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+        "sha256": "a281ad39f80a13262ea722bd02df7586bcb2c3885492a542c86f4b3110d24f9c"
+      },
+      "actual": {
+        "path": "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+        "sha256": "cac50ee841378b92a11cbed2611a4890ac714e5b775b44c532c051f7a0e6c26e"
+      },
+      "baseline": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+        "sha256": "ca96dcb5d36059916a2911a389946825ebb729126e1dd7ba7025840cd16c8663"
+      },
+      "restore_internal": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+        "sha256": "9c5e3779f0e37098710543f9d7668719e72cfa3306c3bcb8725df8b75115afc7"
+      }
+    },
+    "sizes": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 166728930,
+        "startup": {
+          "whole": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 4885\n",
+              "stderr": "356414,,cpu_core/cycles/u,309201,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 4885,
+              "cycles": 356414
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 3780\n",
+              "stderr": "351194,,cpu_core/cycles/u,242198,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 3780,
+              "cycles": 351194
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 3802\n",
+              "stderr": "356267,,cpu_core/cycles/u,221309,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 3802,
+              "cycles": 356267
+            }
+          ],
+          "actual": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 5129\n",
+              "stderr": "353502,,cpu_core/cycles/u,222609,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 5129,
+              "cycles": 353502
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 5225\n",
+              "stderr": "355046,,cpu_core/cycles/u,244579,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 5225,
+              "cycles": 355046
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 5166\n",
+              "stderr": "357106,,cpu_core/cycles/u,222372,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 5166,
+              "cycles": 357106
+            }
+          ],
+          "baseline": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 5267\n",
+              "stderr": "349318,,cpu_core/cycles/u,237878,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 5267,
+              "cycles": 349318
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 5146\n",
+              "stderr": "355155,,cpu_core/cycles/u,239476,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 5146,
+              "cycles": 355155
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 5333\n",
+              "stderr": "363170,,cpu_core/cycles/u,226671,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 5333,
+              "cycles": 363170
+            }
+          ],
+          "restore_internal": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 5403\n",
+              "stderr": "366329,,cpu_core/cycles/u,270364,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 5403,
+              "cycles": 366329
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 5434\n",
+              "stderr": "362744,,cpu_core/cycles/u,235839,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 5434,
+              "cycles": 362744
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 5353\n",
+              "stderr": "356375,,cpu_core/cycles/u,243652,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 5353,
+              "cycles": 356375
+            }
+          ]
+        },
+        "runs": {
+          "whole": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13124069\n",
+              "stderr": "59383497,,cpu_core/cycles/u,13393839,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13124069,
+              "cycles": 59383497
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13215878\n",
+              "stderr": "60117003,,cpu_core/cycles/u,13465949,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13215878,
+              "cycles": 60117003
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13101965\n",
+              "stderr": "59848829,,cpu_core/cycles/u,13340697,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13101965,
+              "cycles": 59848829
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13079400\n",
+              "stderr": "59582654,,cpu_core/cycles/u,13318519,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13079400,
+              "cycles": 59582654
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13270141\n",
+              "stderr": "60514273,,cpu_core/cycles/u,13512923,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13270141,
+              "cycles": 60514273
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13152822\n",
+              "stderr": "59593019,,cpu_core/cycles/u,13398863,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13152822,
+              "cycles": 59593019
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13059258\n",
+              "stderr": "59405508,,cpu_core/cycles/u,13282803,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13059258,
+              "cycles": 59405508
+            }
+          ],
+          "actual": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18384953\n",
+              "stderr": "82188121,,cpu_core/cycles/u,18352807,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18384953,
+              "cycles": 82188121
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 17966740\n",
+              "stderr": "81722431,,cpu_core/cycles/u,18173044,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 17966740,
+              "cycles": 81722431
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18052194\n",
+              "stderr": "82219468,,cpu_core/cycles/u,18281246,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18052194,
+              "cycles": 82219468
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18044303\n",
+              "stderr": "81687425,,cpu_core/cycles/u,18243075,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18044303,
+              "cycles": 81687425
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18436937\n",
+              "stderr": "83998790,,cpu_core/cycles/u,18649880,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18436937,
+              "cycles": 83998790
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18053572\n",
+              "stderr": "81692034,,cpu_core/cycles/u,18273386,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18053572,
+              "cycles": 81692034
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18607303\n",
+              "stderr": "82774730,,cpu_core/cycles/u,18839948,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18607303,
+              "cycles": 82774730
+            }
+          ],
+          "baseline": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18364519\n",
+              "stderr": "83170806,,cpu_core/cycles/u,18591681,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18364519,
+              "cycles": 83170806
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18234862\n",
+              "stderr": "81274372,,cpu_core/cycles/u,18460870,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18234862,
+              "cycles": 81274372
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18260111\n",
+              "stderr": "83316709,,cpu_core/cycles/u,18494736,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18260111,
+              "cycles": 83316709
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18191115\n",
+              "stderr": "82164593,,cpu_core/cycles/u,18428471,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18191115,
+              "cycles": 82164593
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18138157\n",
+              "stderr": "82614307,,cpu_core/cycles/u,18386750,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18138157,
+              "cycles": 82614307
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 17969541\n",
+              "stderr": "81867212,,cpu_core/cycles/u,18202993,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 17969541,
+              "cycles": 81867212
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18431070\n",
+              "stderr": "83676000,,cpu_core/cycles/u,18675584,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18431070,
+              "cycles": 83676000
+            }
+          ],
+          "restore_internal": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18116138\n",
+              "stderr": "82084153,,cpu_core/cycles/u,18348913,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18116138,
+              "cycles": 82084153
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18331159\n",
+              "stderr": "82876738,,cpu_core/cycles/u,18594936,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18331159,
+              "cycles": 82876738
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18194966\n",
+              "stderr": "82694019,,cpu_core/cycles/u,18428297,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18194966,
+              "cycles": 82694019
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18013386\n",
+              "stderr": "82210951,,cpu_core/cycles/u,18258446,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18013386,
+              "cycles": 82210951
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18140297\n",
+              "stderr": "82601477,,cpu_core/cycles/u,18359550,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18140297,
+              "cycles": 82601477
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 17906948\n",
+              "stderr": "81497143,,cpu_core/cycles/u,18171751,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 17906948,
+              "cycles": 81497143
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18160118\n",
+              "stderr": "82606792,,cpu_core/cycles/u,18371865,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18160118,
+              "cycles": 82606792
+            }
+          ]
+        },
+        "cycles_per_unit": {
+          "whole": [
+            3.6027362060546877,
+            3.647505859375,
+            3.6311378173828124,
+            3.614891784667969,
+            3.6717532958984376,
+            3.6155244140625,
+            3.6040796508789064
+          ],
+          "actual": [
+            4.994694519042969,
+            4.966271057128906,
+            4.996607788085938,
+            4.964134460449219,
+            5.105208984375,
+            4.964415771484375,
+            5.030498291015625
+          ],
+          "baseline": [
+            5.054666198730469,
+            4.9389170532226565,
+            5.063571411132813,
+            4.993251831054687,
+            5.0207001953125,
+            4.975101135253906,
+            5.085500793457031
+          ],
+          "restore_internal": [
+            4.987878967285156,
+            5.036254516601563,
+            5.025102233886718,
+            4.995618103027343,
+            5.019453918457031,
+            4.952050720214844,
+            5.0197783203125
+          ]
+        },
+        "comparisons": {
+          "actual": {
+            "over_whole": 1.381457832124219,
+            "paired_ratios": [
+              1.3863614301399538,
+              1.3615525919894962,
+              1.376044655800838,
+              1.3732456616001243,
+              1.3904008719969874,
+              1.3730831832238202,
+              1.3957788890123073
+            ],
+            "paired_median_bootstrap95": [
+              1.3730831832238202,
+              1.3904008719969874
+            ],
+            "within_noise": false
+          },
+          "baseline": {
+            "over_whole": 1.3886506133894714,
+            "paired_ratios": [
+              1.4030075780279712,
+              1.354053219826476,
+              1.3944861544204468,
+              1.381300500400269,
+              1.3673849495609944,
+              1.3760385950938026,
+              1.411040067390536
+            ],
+            "paired_median_bootstrap95": [
+              1.3673849495609944,
+              1.4030075780279712
+            ],
+            "within_noise": false
+          },
+          "restore_internal": {
+            "over_whole": 1.3883059118433771,
+            "paired_ratios": [
+              1.3844696591725547,
+              1.380739253278273,
+              1.383891905680579,
+              1.3819550903890185,
+              1.367045526741694,
+              1.3696631949030562,
+              1.3928044900695673
+            ],
+            "paired_median_bootstrap95": [
+              1.3696631949030562,
+              1.3844696591725547
+            ],
+            "within_noise": false
+          }
+        }
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 330997534,
+        "startup": {
+          "whole": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 306\n",
+              "stderr": "306506,,cpu_core/cycles/u,202318,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 306,
+              "cycles": 306506
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 303\n",
+              "stderr": "315205,,cpu_core/cycles/u,202294,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 303,
+              "cycles": 315205
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 282\n",
+              "stderr": "308065,,cpu_core/cycles/u,201382,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 282,
+              "cycles": 308065
+            }
+          ],
+          "actual": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 304\n",
+              "stderr": "326551,,cpu_core/cycles/u,254622,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 304,
+              "cycles": 326551
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 469\n",
+              "stderr": "312603,,cpu_core/cycles/u,204663,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 469,
+              "cycles": 312603
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 307\n",
+              "stderr": "315910,,cpu_core/cycles/u,202489,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 307,
+              "cycles": 315910
+            }
+          ],
+          "baseline": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 292\n",
+              "stderr": "311203,,cpu_core/cycles/u,206183,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 292,
+              "cycles": 311203
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 300\n",
+              "stderr": "322881,,cpu_core/cycles/u,214021,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 300,
+              "cycles": 322881
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 267\n",
+              "stderr": "303112,,cpu_core/cycles/u,230021,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 267,
+              "cycles": 303112
+            }
+          ],
+          "restore_internal": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 301\n",
+              "stderr": "311329,,cpu_core/cycles/u,204696,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 301,
+              "cycles": 311329
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 282\n",
+              "stderr": "329723,,cpu_core/cycles/u,210901,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 282,
+              "cycles": 329723
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 218\n",
+              "stderr": "309523,,cpu_core/cycles/u,230909,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 218,
+              "cycles": 309523
+            }
+          ]
+        },
+        "runs": {
+          "whole": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12406480\n",
+              "stderr": "56353701,,cpu_core/cycles/u,12584370,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12406480,
+              "cycles": 56353701
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12370938\n",
+              "stderr": "56394286,,cpu_core/cycles/u,12566993,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12370938,
+              "cycles": 56394286
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12398685\n",
+              "stderr": "56472290,,cpu_core/cycles/u,12645326,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12398685,
+              "cycles": 56472290
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12496750\n",
+              "stderr": "56339440,,cpu_core/cycles/u,12690971,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12496750,
+              "cycles": 56339440
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12430864\n",
+              "stderr": "56347532,,cpu_core/cycles/u,12662752,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12430864,
+              "cycles": 56347532
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12301198\n",
+              "stderr": "56341690,,cpu_core/cycles/u,12509076,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12301198,
+              "cycles": 56341690
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12413297\n",
+              "stderr": "56336853,,cpu_core/cycles/u,12607216,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12413297,
+              "cycles": 56336853
+            }
+          ],
+          "actual": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12490556\n",
+              "stderr": "56693502,,cpu_core/cycles/u,12692097,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12490556,
+              "cycles": 56693502
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12478039\n",
+              "stderr": "56677376,,cpu_core/cycles/u,12679652,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12478039,
+              "cycles": 56677376
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12776774\n",
+              "stderr": "56676944,,cpu_core/cycles/u,12987824,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12776774,
+              "cycles": 56676944
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12481549\n",
+              "stderr": "56674138,,cpu_core/cycles/u,12683271,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12481549,
+              "cycles": 56674138
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12590333\n",
+              "stderr": "57389812,,cpu_core/cycles/u,12790948,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12590333,
+              "cycles": 57389812
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12532024\n",
+              "stderr": "56671718,,cpu_core/cycles/u,12703898,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12532024,
+              "cycles": 56671718
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12451103\n",
+              "stderr": "56669907,,cpu_core/cycles/u,12650036,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12451103,
+              "cycles": 56669907
+            }
+          ],
+          "baseline": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12502864\n",
+              "stderr": "56894320,,cpu_core/cycles/u,12737179,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12502864,
+              "cycles": 56894320
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12500341\n",
+              "stderr": "56672577,,cpu_core/cycles/u,12729921,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12500341,
+              "cycles": 56672577
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12414079\n",
+              "stderr": "56664262,,cpu_core/cycles/u,12678054,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12414079,
+              "cycles": 56664262
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12544378\n",
+              "stderr": "57138915,,cpu_core/cycles/u,12744354,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12544378,
+              "cycles": 57138915
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12438406\n",
+              "stderr": "56675121,,cpu_core/cycles/u,12661564,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12438406,
+              "cycles": 56675121
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12415705\n",
+              "stderr": "56667969,,cpu_core/cycles/u,12608486,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12415705,
+              "cycles": 56667969
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/baseline/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12540912\n",
+              "stderr": "56725354,,cpu_core/cycles/u,12739318,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12540912,
+              "cycles": 56725354
+            }
+          ],
+          "restore_internal": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12444088\n",
+              "stderr": "56674262,,cpu_core/cycles/u,12654353,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12444088,
+              "cycles": 56674262
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12449357\n",
+              "stderr": "56673075,,cpu_core/cycles/u,12654008,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12449357,
+              "cycles": 56673075
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12449000\n",
+              "stderr": "56672084,,cpu_core/cycles/u,12653904,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12449000,
+              "cycles": 56672084
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12509366\n",
+              "stderr": "56681495,,cpu_core/cycles/u,12706844,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12509366,
+              "cycles": 56681495
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12464702\n",
+              "stderr": "56676723,,cpu_core/cycles/u,12678161,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12464702,
+              "cycles": 56676723
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12410216\n",
+              "stderr": "56670280,,cpu_core/cycles/u,12621987,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12410216,
+              "cycles": 56670280
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/source-exports-01/restore_internal/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12529873\n",
+              "stderr": "56704868,,cpu_core/cycles/u,12773172,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12529873,
+              "cycles": 56704868
+            }
+          ]
+        },
+        "cycles_per_unit": {
+          "whole": [
+            3.50285225,
+            3.5053888125,
+            3.5102640625,
+            3.5019609375,
+            3.5024666875,
+            3.5021015625,
+            3.50179925
+          ],
+          "actual": [
+            3.5235995,
+            3.522591625,
+            3.522564625,
+            3.52238925,
+            3.567118875,
+            3.522238,
+            3.5221248125
+          ],
+          "baseline": [
+            3.5364448125,
+            3.522585875,
+            3.5220661875,
+            3.551732,
+            3.522744875,
+            3.522297875,
+            3.5258844375
+          ],
+          "restore_internal": [
+            3.5226833125,
+            3.522609125,
+            3.5225471875,
+            3.523135375,
+            3.522837125,
+            3.5224344375,
+            3.5245961875
+          ]
+        },
+        "comparisons": {
+          "actual": {
+            "over_whole": 1.0057382237414927,
+            "paired_ratios": [
+              1.0059229589258296,
+              1.0049075333494122,
+              1.0035041701367728,
+              1.0058333924519967,
+              1.0184590442303814,
+              1.0057498154010205,
+              1.0058043197364899
+            ],
+            "paired_median_bootstrap95": [
+              1.0049075333494122,
+              1.0059229589258296
+            ],
+            "within_noise": false
+          },
+          "baseline": {
+            "over_whole": 1.00578968747151,
+            "paired_ratios": [
+              1.0095900597862784,
+              1.0049058930178234,
+              1.0033621758334599,
+              1.0142123408536736,
+              1.00578968747151,
+              1.0057669122781188,
+              1.0068779463871322
+            ],
+            "paired_median_bootstrap95": [
+              1.0049058930178234,
+              1.0095900597862784
+            ],
+            "within_noise": false
+          },
+          "restore_internal": {
+            "over_whole": 1.0057721105734285,
+            "paired_ratios": [
+              1.005661404217092,
+              1.004912525662943,
+              1.003499202561773,
+              1.0060464516532033,
+              1.0058160260517823,
+              1.0058059067211875,
+              1.0065100640763458
+            ],
+            "paired_median_bootstrap95": [
+              1.004912525662943,
+              1.0060464516532033
+            ],
+            "within_noise": false
+          }
+        }
+      }
+    }
+  }
+}

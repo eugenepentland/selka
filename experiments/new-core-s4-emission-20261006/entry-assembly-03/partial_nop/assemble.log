@@ -1,0 +1,3 @@
+$ zig cc -O3 -march=native -mllvm -x86-experimental-pref-innermost-loop-alignment=6 -Wno-override-module -c -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/entry.o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/entry.ll
+
+exit=0

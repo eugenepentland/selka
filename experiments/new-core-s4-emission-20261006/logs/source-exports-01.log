@@ -1,0 +1,2 @@
+result_propagate 4096 {'actual': 1.381457832124219, 'baseline': 1.3886506133894714, 'restore_internal': 1.3883059118433771}
+result_propagate 64 {'actual': 1.0057382237414927, 'baseline': 1.00578968747151, 'restore_internal': 1.0057721105734285}

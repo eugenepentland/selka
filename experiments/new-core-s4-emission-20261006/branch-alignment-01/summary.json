@@ -1,0 +1,76 @@
+{
+  "production_change": false,
+  "complete": false,
+  "tool": {
+    "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+  },
+  "original_split_argv": [
+    "zig",
+    "cc",
+    "-O3",
+    "-march=native",
+    "-mllvm",
+    "-x86-experimental-pref-innermost-loop-alignment=6",
+    "-Wno-override-module",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-program",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/module-c45495eed5abeed33c6f2c3dbda49d4d42c754b56d577e837ca1040dac08f668.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/entry.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/core_rt-a5b0556a3a4eebfb.o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/benchmarks/runtime/ports/native_clock.c"
+  ],
+  "original_whole_argv": [
+    "zig",
+    "cc",
+    "-O3",
+    "-march=native",
+    "-mllvm",
+    "-x86-experimental-pref-innermost-loop-alignment=6",
+    "-Wno-override-module",
+    "-o",
+    ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+    "experiments/new-core-s4-emission-20261006/paired-entry-import-01/whole-result_propagate.ll",
+    "experiments/new-core-s4-emission-20261006/paired-entry-import-01/cache/result_propagate/core_rt-a5b0556a3a4eebfb.o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/benchmarks/runtime/ports/native_clock.c"
+  ],
+  "inputs_before": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/benchmarks/runtime/ports/native_clock.c",
+      "sha256": "0af3514346f4088770f0032ce422e322d02900437626f5a1af98e2a69200dfa5"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/core_rt-a5b0556a3a4eebfb.o",
+      "sha256": "fda33acd7b650e36dd9deaf3350f5a88e6fbe4aea684a7e0428e20691deb1bbf"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/entry.ll",
+      "sha256": "6abb118af0147c06fbd212bf9c7726f5e88e75319c34f5a1ca8a1d019a3f545a"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/module-c45495eed5abeed33c6f2c3dbda49d4d42c754b56d577e837ca1040dac08f668.ll",
+      "sha256": "baca6b32216e47fc8d3b9bd742f37ff8aa594c46617b06486960e6e6afd456fa"
+    },
+    {
+      "path": "experiments/new-core-s4-emission-20261006/paired-entry-import-01/cache/result_propagate/core_rt-a5b0556a3a4eebfb.o",
+      "sha256": "8fd5901a4359095670c338773e5bb5796e536f7ce57818d57bc48c114d57f855"
+    },
+    {
+      "path": "experiments/new-core-s4-emission-20261006/paired-entry-import-01/whole-result_propagate.ll",
+      "sha256": "4f7eacae2d964a1446cb4250c8a6d83a10689b27c009e8ae6e896a2e58c55c39"
+    }
+  ],
+  "policies": {
+    "baseline": [],
+    "align16": [
+      "-mllvm",
+      "-x86-align-branch-boundary=16",
+      "-mllvm",
+      "-x86-align-branch=fused+jcc+jmp+call+ret"
+    ],
+    "align32": [
+      "-mbranches-within-32B-boundaries"
+    ]
+  },
+  "arms": {}
+}

@@ -1,0 +1,6 @@
+packet_decode 4096 {'actual': 1.002982468852214, 'baseline': 1.01935551893313, 'ordinary_dependencies': 0.9939901492833544, 'ordinary_all': 0.9789728677203142}
+packet_decode 64 {'actual': 0.9996937911220727, 'baseline': 0.9938423667261888, 'ordinary_dependencies': 1.004585650174609, 'ordinary_all': 1.0270947345890802}
+lox_eval 4096 {'actual': 1.001763810626845, 'baseline': 0.9999809021679652, 'ordinary_dependencies': 1.0002043023892098, 'ordinary_all': 1.001869426079354}
+lox_eval 64 {'actual': 1.0005233820943344, 'baseline': 1.0005930573538937, 'ordinary_dependencies': 1.0015288550772121, 'ordinary_all': 1.004477701288788}
+result_propagate 4096 {'actual': 1.3728978943732697, 'baseline': 1.3738378528701285, 'ordinary_dependencies': 1.1403729763295376, 'ordinary_all': 1.3304862488095077}
+result_propagate 64 {'actual': 1.0029778455620353, 'baseline': 1.0033951054578172, 'ordinary_dependencies': 1.0131783499318643, 'ordinary_all': 1.166398351339428}
