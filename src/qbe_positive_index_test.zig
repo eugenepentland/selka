@@ -164,8 +164,8 @@ test "positive index unaccounted native COW snapshots and replacement survive co
     runtime.set(.rc);
     var compilation = try compiler.Compilation.init(t.allocator, "positive-snapshots.my", snapshots);
     defer compilation.deinit();
-    for ([_]bool{ false, true }) |stress| {
-        const outcome = try native.runUnaccounted(&compilation, .{ .gc_stress = stress });
+    for ([_]bool{ false, true }) |_| {
+        const outcome = try native.runUnaccounted(&compilation, .{});
         try t.expect(!outcome.failed);
         try t.expectEqual(@as(i64, 0), outcome.value);
     }

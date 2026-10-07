@@ -598,7 +598,7 @@ test "the switch changes the fragment record key and nothing without it" {
     try t.expect(!values.environmentEnables(null));
 }
 
-// spec-case: COW-STATS-1
+// spec: COW-STATS-1
 test "counting emission has a distinct fragment key from ordinary value semantics" {
     const identity: fragments.Digest = @splat(9);
     const saved = Saved.set(true);

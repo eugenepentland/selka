@@ -687,6 +687,9 @@ pub fn build(b: *std.Build) void {
     native_test_options.addOptionPath("qbe_path", qbe_exe.getEmittedBin());
     native_test_options.addOption([]const u8, "zig_path", b.graph.zig_exe);
     native_test_options.addOption([]const u8, "cache_directory", ".mylang-cache/unit-tests");
+    // `native_execute.zig` builds and runs guest programs with the new core through
+    // this compiler, which the root cannot import (NEW-CORE-S5-UNITS-1).
+    native_test_options.addOptionPath("compiler_path", exe.getEmittedBin());
     unit.root_module.addOptions("native_test_options", native_test_options);
     const board_module = b.createModule(.{
         .root_source_file = b.path("src/board_trial/runner.zig"),

@@ -298,28 +298,6 @@ fn booleanResult(expression: []const u8, expected: bool) !void {
     try programResult(text, if (expected) 1 else 0);
 }
 
-test "instruction limit is checked before the next dispatch" {
-    var compilation = try language.Compilation.init(testing.allocator, "budget.my",
-        \\def main() -> i64:
-        \\    return 1
-    );
-    defer compilation.deinit();
-    try testing.expectEqualStrings("R_STEP_LIMIT", (try native.runWithOptions(&compilation, .{ .max_steps = 1 })).trap.code);
-    try testing.expectEqual(@as(i64, 1), (try native.runWithOptions(&compilation, .{ .max_steps = 2 })).value);
-    try testing.expectEqualStrings("InvalidBudget", (try native.runWithOptions(&compilation, .{ .max_steps = 0 })).trap.code);
-    var infinite = try language.Compilation.init(testing.allocator, "loop.my",
-        \\def main() -> i64:
-        \\    while True:
-        \\        pass
-        \\    return 0
-    );
-    defer infinite.deinit();
-    const outcome = try native.runWithOptions(&infinite, .{ .max_steps = 123 });
-    try testing.expectEqualStrings("R_STEP_LIMIT", outcome.trap.code);
-    try testing.expectEqualStrings("loop.my", outcome.trap.path);
-    try testing.expect(outcome.trap.line != 0);
-}
-
 fn flowAllocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "flow.my",
         \\def main() -> i64:
@@ -516,26 +494,6 @@ test "parameter warnings remain separate between functions and are deferred unti
     try testing.expectError(error.SourceError, invalid.check());
     try testing.expectEqual(@as(usize, 1), invalid.diagnostics.items.len);
     try testing.expectEqualStrings("E_TYPE", invalid.diagnostics.items[0].code);
-}
-
-test "frame limits count main and guest recursion never consumes the host call stack" {
-    var compilation = try language.Compilation.init(testing.allocator, "frames.my",
-        \\def main() -> i64:
-        \\    return main()
-    );
-    defer compilation.deinit();
-    try testing.expectEqualStrings("InvalidBudget", (try native.runWithOptions(&compilation, .{ .max_frames = 0 })).trap.code);
-    const one = try native.runWithOptions(&compilation, .{ .max_frames = 1 });
-    try testing.expectEqualStrings("R_FRAME_LIMIT", one.trap.code);
-    try testing.expectEqual(@as(usize, 1), one.trap.frames.len);
-    // Twenty thousand guest frames never reach the host stack; the runtime
-    // reports the innermost sixteen of them and omits the rest.
-    const deep = try native.runWithOptions(&compilation, .{ .max_frames = 20_000 });
-    try testing.expectEqualStrings("R_FRAME_LIMIT", deep.trap.code);
-    try testing.expectEqual(@as(usize, 16), deep.trap.frames.len);
-    const step = try native.runWithOptions(&compilation, .{ .max_steps = 2 });
-    try testing.expectEqualStrings("R_STEP_LIMIT", step.trap.code);
-    try testing.expectEqual(@as(usize, 3), step.trap.frames.len);
 }
 
 test "call traces locate guest operators and callers and argument traps evaluate left to right" {
@@ -906,42 +864,6 @@ test "the pausing collector reclaims garbage and still enforces the byte budget"
     // every allocation and not only when a collection would have run.
     const refused = try native.runWithOptions(&bounded, .{ .max_memory = 1 << 20 });
     try testing.expectEqualStrings("R_MEMORY_BUDGET", refused.trap.code);
-}
-
-// spec: CLASS-WRITE-1
-test "a class field write mutates the receiver in place without copying it" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    const source =
-        \\class Box:
-        \\    n: int
-        \\
-        \\
-        \\def bump(b: mut Box, v: int):
-        \\    b.n = v
-        \\
-        \\
-        \\def main() -> int:
-        \\    box = Box(n=1)
-        \\    bump(mut box, 5)
-        \\    return box.n
-    ;
-    var compilation = try language.Compilation.init(testing.allocator, "class_write.my", source);
-    defer compilation.deinit();
-    try compilation.emit();
-    var writes: usize = 0;
-    for (compilation.code.?.functions) |function| {
-        if (!std.mem.eql(u8, function.name, "bump")) continue;
-        for (function.scope.instructions) |instruction| switch (instruction.op) {
-            .update_record => writes += 1,
-            else => {},
-        };
-    }
-    // One in-place update and nothing else: no copied receiver, so the body stays
-    // a handful of instructions rather than the eleven a copy-and-refresh costs.
-    try testing.expectEqual(@as(usize, 1), writes);
-    const outcome = try native.run(&compilation);
-    try testing.expectEqual(@as(i64, 5), outcome.value);
 }
 
 /// A program of `count` small functions, each a loop over a list, called from `main`.

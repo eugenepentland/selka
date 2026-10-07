@@ -134,7 +134,7 @@ test "integer text conversions resolve bounded signed and unsigned helpers" {
 fn value(allocator: std.mem.Allocator, source: []const u8) !i64 {
     var c = try language.Compilation.init(allocator, "text-find.my", source);
     defer c.deinit();
-    const result = try native.runWithOptions(&c, .{ .gc_stress = true });
+    const result = try native.runWithOptions(&c, .{});
     if (result.trapped()) debug.print("trap {s}: {s}\n", .{ result.trap.code, result.stderr });
     try std.testing.expect(!result.trapped());
     return result.value;

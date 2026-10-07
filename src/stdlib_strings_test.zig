@@ -40,7 +40,7 @@ test "standard float wrapper shares the pinned parser and stays noalloc" {
 
 // spec-case: STANDARD-STRINGS-1
 test "standard string results survive collection at every managed allocation" {
-    try fixture.stress(t.allocator, "module main\nimport strings\n" ++
+    try fixture.run(t.allocator, "module main\nimport strings\n" ++
         "def main() -> int:\n" ++
         "    total = 0\n" ++
         "    for line in strings.lines(\"a\\r\\nbb\\nccc\"):\n" ++

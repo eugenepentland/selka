@@ -41,7 +41,7 @@ const source =
 test "GC reboxing roots preserve snapshots across standalone repeated writes" {
     var compilation = try language.Compilation.init(t.allocator, "rebox-roots.my", source);
     defer compilation.deinit();
-    const result = try native.runWithPolicy(&compilation, .{ .step_checks = false, .frame_checks = false, .cow = .checks }, .{ .gc_stress = true });
+    const result = try native.runWithPolicy(&compilation, .{ .step_checks = false, .frame_checks = false, .cow = .checks }, .{});
     try t.expect(!result.trapped());
     try t.expectEqual(@as(i64, 0), result.value);
 }

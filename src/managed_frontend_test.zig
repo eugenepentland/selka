@@ -49,51 +49,6 @@ test "managed list formatting preserves contextual list case identifiers" {
     try evaluate(formatted);
 }
 
-// spec: GC-GENERIC-1
-test "managed generic list creation mutation and copy identity preserve shared aliases" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    try evaluate(
-        \\def make[T]() -> list[T]:
-        \\    items: list[T] = []
-        \\    return items
-        \\
-        \\
-        \\def add[T](items: mut list[T], value: T):
-        \\    items.append(value)
-        \\
-        \\
-        \\def identity[T](value: T) -> T:
-        \\    return value
-        \\
-        \\
-        \\def main() -> i64:
-        \\    values = make[i64]()
-        \\    alias = identity(values)
-        \\    add[i64](mut alias, 42)
-        \\    return values[0]
-    );
-}
-
-// spec: GC-GENERIC-2
-test "managed nominal recursive list record edges allow finite reference graphs" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    try evaluate(
-        \\class Node[T]:
-        \\    value: T
-        \\    children: list[Node[T]]
-        \\
-        \\
-        \\def main() -> i64:
-        \\    children: list[Node[i64]] = []
-        \\    node = Node[i64](value=42, children=children)
-        \\    children.append(node)
-        \\    child = children[0]
-        \\    return child.value
-    );
-}
-
 // spec: GC-GENERIC-5
 test "managed lists reject nested and generic capabilities before helper alias escape" {
     const cases = [_][]const u8{

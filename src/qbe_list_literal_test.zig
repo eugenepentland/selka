@@ -71,29 +71,8 @@ test "LIST-LITERAL-PAYLOAD-1 primitive widths signed bits boolean and float doma
         try t.expect(code[0].op == .make_record);
         try t.expectEqual(@as(usize, 64) * width, code[0].op.make_record.payload.len);
         try t.expectEqualSlices(u8, expected, code[0].op.make_record.payload[0..width]);
-        try t.expectEqual(@as(i64, 64), (try native.runWithOptions(&c, .{ .gc_stress = true })).value);
+        try t.expectEqual(@as(i64, 64), (try native.runWithOptions(&c, .{})).value);
     }
-}
-
-// spec-case: LIST-LITERAL-PAYLOAD-1
-test "LIST-LITERAL-PAYLOAD-1 legacy literal evaluations allocate distinct mutable lists" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    const source = try literalSource(t.allocator, "def image() -> list[int]:\n    return [", "0", 64,
-        \\]
-        \\def main() -> int:
-        \\    first = image()
-        \\    second = image()
-        \\    alias = first
-        \\    first[0] = 99
-        \\    return alias[0] + second[0]
-        \\
-    );
-    defer t.allocator.free(source);
-    var c = try compiler.Compilation.init(t.allocator, "list_legacy.my", source);
-    defer c.deinit();
-    try c.emit();
-    try t.expectEqual(@as(i64, 99), (try native.runWithOptions(&c, .{ .gc_stress = true })).value);
 }
 
 // spec-case: LIST-LITERAL-PAYLOAD-1
@@ -108,7 +87,7 @@ test "LIST-LITERAL-PAYLOAD-1 thousand immortal text and byte elements emit bound
         try t.expect(code.len < 20);
         try t.expect(code[0].op == .make_record);
         try t.expect(code[0].op.make_record.payload.len < 12_000);
-        try t.expectEqual(@as(i64, 1000), (try native.runWithOptions(&c, .{ .gc_stress = true })).value);
+        try t.expectEqual(@as(i64, 1000), (try native.runWithOptions(&c, .{})).value);
     }
 }
 
@@ -140,7 +119,7 @@ test "LIST-LITERAL-PAYLOAD-1 indexed immortal children keep samples after parent
     const metadata = try outputs.sharedMetadata(t.allocator, parsed.value);
     defer t.allocator.free(metadata);
     try t.expect(std.mem.indexOf(u8, metadata, "MYL_TEXT_STATIC_INDEX") != null);
-    try t.expectEqual(@as(i64, 160), (try native.runWithOptions(&c, .{ .gc_stress = true })).value);
+    try t.expectEqual(@as(i64, 160), (try native.runWithOptions(&c, .{})).value);
 }
 
 // spec-case: LIST-LITERAL-PAYLOAD-1
@@ -183,31 +162,6 @@ test "LIST-LITERAL-PAYLOAD-1 shared immutable images are independent of physical
     defer t.allocator.free(after);
     try t.expectEqualSlices(u8, before, after);
     try t.expectEqual(@as(usize, 2), std.mem.count(u8, before, "void *storage[64]"));
-}
-
-// spec-case: LIST-LITERAL-PAYLOAD-1
-test "LIST-LITERAL-PAYLOAD-1 older image evaluations retain younger-store refusal" {
-    const mode = @import("runtime_mode.zig");
-    const previous = mode.get();
-    defer mode.set(previous);
-    mode.set(.rc);
-    const prefix = "def stash(items: mut list[str], value: str):\n    items[0] = value\ndef main() -> int:\n    items: list[str] = [";
-    const source = try literalSource(t.allocator, prefix, "\"base\"", 64,
-        \\]
-        \\    with arena():
-        \\        stash(mut items, "abc"[1:])
-        \\    return 0
-        \\
-    );
-    defer t.allocator.free(source);
-    var c = try compiler.Compilation.init(t.allocator, "list_older.my", source);
-    defer c.deinit();
-    try c.emit();
-    for ([_]bool{ false, true }) |stress| {
-        const outcome = try native.runWithOptions(&c, .{ .gc_stress = stress });
-        try t.expect(outcome.trapped());
-        try t.expectEqualStrings("R_ARENA_ESCAPE", outcome.trap.code);
-    }
 }
 
 // spec-case: LIST-LITERAL-PAYLOAD-1

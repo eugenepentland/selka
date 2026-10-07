@@ -13360,7 +13360,7 @@ const decoded_invariant_source =
     \\    return 0
 ;
 
-// spec-case: CONTRACT-DECODE-1
+// spec: CONTRACT-DECODE-1
 test "CLI invariant boundary rejects invalid JSON collection elements before the body" {
     var arena = std.heap.ArenaAllocator.init(testing.allocator);
     defer arena.deinit();

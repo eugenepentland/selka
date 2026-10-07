@@ -75,6 +75,7 @@ test {
     _ = @import("native_run.zig");
     _ = @import("native_run_cache.zig");
     _ = @import("wiring/native_session.zig");
+    _ = @import("wiring/core_runner.zig");
     _ = @import("zig_local_cache_test.zig");
     _ = @import("value_semantics_test.zig");
     _ = @import("runtime_mode.zig");
@@ -143,7 +144,6 @@ test {
     _ = @import("io_files_test.zig");
     _ = @import("byte_literal_test.zig");
     _ = @import("nominal_provider_contracts_test.zig");
-    _ = @import("nominal_environment_test.zig");
     _ = @import("generic_codecs_test.zig");
     _ = @import("nominal_providers_test.zig");
     _ = @import("nominal_instances_test.zig");

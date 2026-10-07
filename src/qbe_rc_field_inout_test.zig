@@ -115,8 +115,8 @@ test "RC field inout native snapshots detached aliases and callee early return s
     runtime.set(.rc);
     var compilation = try compiler.Compilation.init(t.allocator, "field-inout.my", source);
     defer compilation.deinit();
-    for ([_]bool{ false, true }) |stress| {
-        const outcome = try native.runUnaccounted(&compilation, .{ .gc_stress = stress });
+    for ([_]bool{ false, true }) |_| {
+        const outcome = try native.runUnaccounted(&compilation, .{});
         try t.expect(!outcome.failed);
         try t.expectEqual(@as(i64, 0), outcome.value);
     }

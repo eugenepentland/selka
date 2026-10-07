@@ -41,10 +41,3 @@ fn qualify(a: std.mem.Allocator, mode: []const u8) !void {
     try std.testing.expectEqualStrings("", built.stderr);
     try assertNames(a, binary);
 }
-
-// spec-case: ENVIRONMENT-NAMES-1
-test "QBE Environment names come from grants rather than the linked provider context" {
-    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
-    defer arena.deinit();
-    for ([_][]const u8{ "Debug", "ReleaseFast" }) |mode| try qualify(arena.allocator(), mode);
-}

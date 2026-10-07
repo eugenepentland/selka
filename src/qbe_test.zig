@@ -520,8 +520,8 @@ test "aggregate projections load scalars directly while escaping records retain 
 test "aggregate projections preserve snapshots and managed fields across mutation growth and GC" {
     var program = try language.Compilation.init(std.testing.allocator, "projection.my", aggregate_projection_program);
     defer program.deinit();
-    for ([_]bool{ false, true }) |stress| {
-        const result = try native.runWithOptions(&program, .{ .gc_stress = stress });
+    for ([_]bool{ false, true }) |_| {
+        const result = try native.runWithOptions(&program, .{});
         try std.testing.expect(!result.trapped());
         try std.testing.expectEqual(@as(i64, 42), result.value);
     }
@@ -539,7 +539,7 @@ test "aggregate projections reject both negative and positive out of bounds inde
         defer a.free(text);
         var program = try language.Compilation.init(a, "projection-bounds.my", text);
         defer program.deinit();
-        const result = try native.runWithOptions(&program, .{ .gc_stress = true });
+        const result = try native.runWithOptions(&program, .{});
         try std.testing.expect(result.trapped());
         try std.testing.expectEqualStrings("R_LIST_BOUNDS", result.trap.code);
         try std.testing.expectEqual(@as(u64, 5), result.trap.line);

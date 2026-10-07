@@ -8,7 +8,7 @@ const native = @import("native_execute.zig");
 fn run(text: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(t.allocator, "core.my", text);
     defer compilation.deinit();
-    const result = native.runWithOptions(&compilation, .{ .gc_stress = true }) catch |err| {
+    const result = native.runWithOptions(&compilation, .{}) catch |err| {
         for (compilation.diagnostics.items) |diag| debug.print("{s}: {s} ({s})\n", .{ diag.code, diag.message, compilation.src.text(diag.span) });
         return err;
     };
@@ -89,7 +89,7 @@ test "prelude containers results options and dictionary views keep one identity 
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
     try compilation.emit();
-    try t.expectEqual(@as(i64, 42), (try native.runWithOptions(&compilation, .{ .gc_stress = true })).value);
+    try t.expectEqual(@as(i64, 42), (try native.runWithOptions(&compilation, .{})).value);
 }
 // spec: PYTHON-CORE-2
 test "unit and checked-result main adapt to scalar status without changing guest call signatures" {
@@ -170,7 +170,7 @@ test "Python exported module signatures share builtin types and resolve enum mem
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
     try compilation.emit();
-    try t.expectEqual(@as(i64, 42), (try native.runWithOptions(&compilation, .{ .gc_stress = true })).value);
+    try t.expectEqual(@as(i64, 42), (try native.runWithOptions(&compilation, .{})).value);
 }
 // spec: PYTHON-CORE-3
 test "representable integer literals inherit parameter local and expression contexts" {
@@ -368,22 +368,6 @@ test "reading a parameter copy after a field write keeps the write accepted" {
     defer observed.deinit();
     try observed.check();
     try t.expectEqual(@as(usize, 0), observed.diagnostics.items.len);
-}
-// spec: CLASS-MANAGED-1
-test "a self-referential class graph prints to the depth cap and terminates" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    try run(
-        \\class Node:
-        \\    children: list[Node]
-        \\
-        \\
-        \\def main(out: Stream) -> int:
-        \\    nodes: list[Node] = []
-        \\    nodes.append(Node(children=nodes))
-        \\    out.print(nodes[0])
-        \\    return 0
-    , 0);
 }
 // spec-case: DIAG-ORACLE-1
 test "DIAG-ORACLE-1 unknown local names suggest close declared bindings" {

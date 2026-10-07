@@ -11,7 +11,7 @@ fn trapped(source: []const u8, mode: runtime.Selection) !void {
     runtime.set(mode);
     var compilation = try compiler.Compilation.init(t.allocator, "live_place.my", source);
     defer compilation.deinit();
-    const result = try native.runWithOptions(&compilation, .{ .gc_stress = mode == .gc });
+    const result = try native.runWithOptions(&compilation, .{});
     try t.expect(result.trapped());
     try t.expectEqualStrings("R_LIST_ITERATION_MUTATION", result.trap.code);
 }

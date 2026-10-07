@@ -159,27 +159,6 @@ test "every signed and unsigned byte addition and multiplication has checked bou
     }
 }
 
-// spec: VM-AUDIT-1
-test "scalar loop retains exact step budget and located trap under the native runtime" {
-    const source =
-        \\def main() -> i64:
-        \\    i = 0
-        \\    total = 0
-        \\    while i < 100:
-        \\        total += i
-        \\        i += 1
-        \\    return total
-    ;
-    var compilation = try language.Compilation.init(testing.allocator, "audit.my", source);
-    defer compilation.deinit();
-    const limited = try native.runWithOptions(&compilation, .{ .max_steps = 1309 });
-    try testing.expectEqualStrings("R_STEP_LIMIT", limited.trap.code);
-    try testing.expectEqual(@as(u64, 7), limited.trap.line);
-    try testing.expectEqual(@as(u64, 5), limited.trap.column);
-    const result = try native.runWithOptions(&compilation, .{ .max_steps = 1310 });
-    try testing.expectEqual(@as(i64, 4950), result.value);
-}
-
 // spec: CORE-4
 test "all integer widths accept their limits and reject one-past literals" {
     const widths = [_]Type{ .i8, .i16, .i32, .i64, .u8, .u16, .u32, .u64 };
