@@ -1,8 +1,9 @@
 //! Reviewed default native execution platform used exclusively by Core.
 //! An unfamiliar runtime or loader cache remains executable without reuse.
 // Bounded reviewed native execution platform. Retained readelf/ldd receipts
-// prove this loader/libc/libm closure has no RPATH/RUNPATH and these exact cache
-// bytes select the captured libc/libm paths. Unknown platform content bypasses
+// prove this loader/libc/libm/libgcc/libpthread closure has no RPATH/RUNPATH.
+// Backtrace load receipts prove these cache bytes select captured libgcc;
+// libpthread also covers the bundled-target C debug path. Unknown content bypasses
 // reuse; this is not a generic ELF or ld.so.cache dependency parser.
 pub const runtime_files = [_]struct { path: []const u8, resolved: []const u8, sha256: []const u8 }{
     .{
@@ -19,6 +20,16 @@ pub const runtime_files = [_]struct { path: []const u8, resolved: []const u8, sh
         .path = "/lib/x86_64-linux-gnu/libm.so.6",
         .resolved = "/usr/lib/x86_64-linux-gnu/libm.so.6",
         .sha256 = "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+    },
+    .{
+        .path = "/lib/x86_64-linux-gnu/libgcc_s.so.1",
+        .resolved = "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1",
+        .sha256 = "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+    },
+    .{
+        .path = "/lib/x86_64-linux-gnu/libpthread.so.0",
+        .resolved = "/usr/lib/x86_64-linux-gnu/libpthread.so.0",
+        .sha256 = "1327fc40710691dbd94e88b6cf4efce27fefe8fbb93f7d1164a75b4dccaea696",
     },
     .{
         .path = "/etc/ld.so.cache",

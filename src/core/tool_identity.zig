@@ -10,7 +10,8 @@ const target = target_policy.current;
 const Digest = [32]u8;
 const magic = "core-tool-content-v1\x00";
 const memo_length = magic.len + 96;
-const hint_magic = "core-tool-inventory-v2\x00";
+// Codec unchanged; v3 also keys every expected runtime descriptor.
+const hint_magic = "core-tool-inventory-v3\x00";
 const hint_limit = 32 << 20;
 const lib_directory = "ZIG_LIB_DIR";
 const approval_magic = "core-tool-approval-v2\x00";
@@ -352,6 +353,7 @@ fn hintKey(request: Request, path: []const u8, cpu: Digest) Error!Digest {
     field(&hash, hint_magic);
     field(&hash, path);
     field(&hash, &cpu);
+    runtimePolicy(&hash);
     if (request.environment.get(lib_directory)) |override| {
         field(&hash, try absolutePath(request, override));
     } else field(&hash, "");
@@ -525,16 +527,20 @@ fn approvalKey(identity: Digest) Digest {
     field(&hash, &identity);
     field(&hash, approved_zig);
     field(&hash, approved_library);
-    for (runtime_files) |input| {
-        field(&hash, input.path);
-        field(&hash, input.resolved);
-        field(&hash, input.sha256);
-    }
-    field(&hash, preload_path);
+    runtimePolicy(&hash);
     field(&hash, if (builtin.is_test) "owned-test-fixtures-v1" else "production");
     var digest: Digest = undefined;
     hash.final(&digest);
     return digest;
+}
+
+fn runtimePolicy(hash: *std.crypto.hash.Blake3) void {
+    for (runtime_files) |input| {
+        field(hash, input.path);
+        field(hash, input.resolved);
+        field(hash, input.sha256);
+    }
+    field(hash, preload_path);
 }
 
 fn approvalPath(request: Request, identity: Digest) Error![]const u8 {
@@ -873,6 +879,11 @@ test "inventoryHint corruption rediscovers libraries and invalid library roots r
     const original = try capture(request);
     try std.testing.expect((try inventoryHint(request, original.path, original.native_target)) != null);
     const damaged = try hintPath(request, original.path, original.native_target);
+    const old_hint = try std.Io.Dir.cwd().readFileAlloc(request.io, damaged, request.arena, .limited(hint_limit));
+    @memcpy(old_hint[0..hint_magic.len], "core-tool-inventory-v2\x00");
+    std.crypto.hash.Blake3.hash(old_hint[0 .. old_hint.len - 32], old_hint[old_hint.len - 32 ..][0..32], .{});
+    try std.Io.Dir.cwd().writeFile(request.io, .{ .sub_path = damaged, .data = old_hint });
+    try std.testing.expect((try inventoryHint(request, original.path, original.native_target)) == null);
     try std.Io.Dir.cwd().writeFile(request.io, .{ .sub_path = damaged, .data = "damaged" });
     try std.testing.expect((try inventoryHint(request, original.path, original.native_target)) == null);
     try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "lib/new.h", .data = "new" });
