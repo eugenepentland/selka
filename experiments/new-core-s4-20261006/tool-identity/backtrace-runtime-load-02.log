@@ -1,0 +1,37 @@
+{"argv": ["/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/backtrace-runtime-probe-02"], "status": 0, "LD_DEBUG": "libs"}
+frames=4
+   3262039:	find library=libc.so.6 [0]; searching
+   3262039:	 search cache=/etc/ld.so.cache
+   3262039:	  trying file=/usr/lib/x86_64-linux-gnu/libc.so.6
+   3262039:	
+   3262039:	
+   3262039:	calling init: /lib64/ld-linux-x86-64.so.2
+   3262039:	
+   3262039:	
+   3262039:	calling init: /usr/lib/x86_64-linux-gnu/libc.so.6
+   3262039:	
+   3262039:	
+   3262039:	initialize program: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/backtrace-runtime-probe-02
+   3262039:	
+   3262039:	
+   3262039:	transferring control: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/backtrace-runtime-probe-02
+   3262039:	
+   3262039:	find library=libgcc_s.so.1 [0]; searching
+   3262039:	 search cache=/etc/ld.so.cache
+   3262039:	  trying file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   3262039:	
+   3262039:	
+   3262039:	calling init: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   3262039:	
+   3262039:	
+   3262039:	calling fini:  [0]
+   3262039:	
+   3262039:	
+   3262039:	calling fini: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 [0]
+   3262039:	
+   3262039:	
+   3262039:	calling fini: /usr/lib/x86_64-linux-gnu/libc.so.6 [0]
+   3262039:	
+   3262039:	
+   3262039:	calling fini: /lib64/ld-linux-x86-64.so.2 [0]
+   3262039:	

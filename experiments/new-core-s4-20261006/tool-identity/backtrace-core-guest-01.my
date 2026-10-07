@@ -1,0 +1,5 @@
+module main
+
+def main(args: list[str], host: Host, out: Stream) -> int:
+    out.print(str(1.25))
+    return divtrunc(1, len(args))

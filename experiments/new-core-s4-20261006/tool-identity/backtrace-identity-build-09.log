@@ -1,0 +1,2 @@
+{"argv": ["scripts/build-slot.sh", "build", "--", "zig", "build-exe", "-O", "ReleaseFast", "--dep", "coretool", "-Mroot=/tmp/s4-tool-identity-probe-9fetav58/main-04.zig", "--dep", "core_tool_platform", "-Mcoretool=src/core/tool_identity.zig", "-Mcore_tool_platform=src/config_core_tool_platform.zig", "--cache-dir", ".mylang-cache/s4-m/tool-identity-rf", "-femit-bin=/tmp/s4-tool-identity-probe-9fetav58/probe-09"]}
+{"status": 0}

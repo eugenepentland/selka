@@ -1,0 +1,2 @@
+{"argv": ["scripts/build-slot.sh", "build", "--", "zig", "fmt", "src/core/tool_identity.zig", "src/config_core_tool_platform.zig"]}
+{"status": 0, "seconds": 0.03594658081419766}

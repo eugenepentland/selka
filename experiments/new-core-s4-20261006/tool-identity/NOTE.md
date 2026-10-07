@@ -195,3 +195,65 @@ hashes frozen for coordinator build: identity
 Required append-only Guardian feedback was committed in guardian-zig as
 `9fe3b5106632185148173b6c975561f655825e81`; its normal whole-tree commit gate
 also passed 88 checks. No mylang main merge or push occurred.
+
+
+## Backtrace runtime closure correction, 2026-10-07
+
+The pre-extension checkpoint above and M source checkpoint `7bc4a745f` are
+historical. `core_rt.c` calls glibc `backtrace`, which loads `libgcc_s.so.1`
+dynamically. The retained bundled-target C probe ran before source edits:
+`backtrace-runtime-{build,load,closure}-01.log` proves the load via the reviewed
+loader cache. Its O3 counterpart is probe02. The C O0/debug path also loads
+`libpthread.so.0`; `backtrace-pthread-closure-01.log` reviews that bounded input.
+Both libraries have no RPATH/RUNPATH. Libgcc needs only libc and the loader;
+libpthread needs only libc. Those dependencies were already captured.
+
+Actual installed M Core `67ad628f8743dd803c81bbd071f5c3e7816ff2977ad44bb10c52bb4e36672906`
+built Debug and Release guests through the current driver, including the Zig
+numeric object. Each prints `1.25`, then a division-by-zero trap exercises the
+runtime's actual stack unwinding. Both load libc and libgcc, with no additional
+shared dependency. `backtrace-core-summary-03.json` and the mode-specific
+exec/build/closure/load logs retain all flags, binary hashes and load traces.
+Earlier failed fixture probes remain: probe01 used an invalid module filename,
+and probe02 claimed an unused Host capability; neither is qualifying evidence.
+The numeric helper is present in both emitted LLVM files and executed before
+the trap. No system files were changed. `LD_DEBUG=libs` was used only on the
+probe child, with other loader overrides removed.
+
+The bounded reviewed platform now additionally captures:
+
+- `/lib/x86_64-linux-gnu/libgcc_s.so.1`, resolved to
+  `/usr/lib/x86_64-linux-gnu/libgcc_s.so.1`, SHA256
+  `9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee`.
+- `/lib/x86_64-linux-gnu/libpthread.so.0`, resolved to
+  `/usr/lib/x86_64-linux-gnu/libpthread.so.0`, SHA256
+  `1327fc40710691dbd94e88b6cf4efce27fefe8fbb93f7d1164a75b4dccaea696`.
+
+Inventory-hint domain/header moves from v2 to v3, and its key now hashes every
+runtime descriptor (logical path, resolved path, reviewed SHA256) and preload
+path. Old hints cannot omit a newly approved runtime input; the existing
+corruption test now also rejects a checksummed v2 hint. The binary inventory
+payload codec is unchanged. The content memo remains v1 with unchanged opaque
+digest interpretation; approval-v2 already included all runtime descriptors,
+so its format/domain requires no change. Full generation validation and final
+parent validation cover the added paths through the existing inventory logic.
+Unreviewed tool/library/runtime closures still bypass persistent reuse.
+
+Fresh `backtrace-runtime-focused-01.log` is green 20/20, formatter01 is green,
+and `backtrace-runtime-guardian-01.log` is green 88/88. The existing runtime
+inventory test asserts every configured descriptor is present, covering both
+additions. Production probe09 inventories 20,907 inputs, returns cacheable=true,
+and its strict capture and provisional candidate plus final validation agree:
+content digest `0857a59f7471a35d17e3bf28c19979a79e3ae9bc712cc6c4be87930a1e1c3cc2`,
+generation `788ee0a448dead0e7bec2bd00e061aa27055b27b49e65ae63efd3ac2a33df363`.
+This is a correctness probe without an uncontended performance claim. Exact
+source hashes in `backtrace-runtime-receipt-01.json`: identity
+`e3f8f09bae559a843391b24f8c79aa9676adccd0511b78c11d2629b4bf20f8a7`, ticket
+`5e529827b943e53e1c25db3a7adea6d570bd49c2e9504ce5e3ce03b27aa2094d`, config
+`b9468ccefd4037fca68a2bb4ff53354e0da2006b1110860d66afa4cbc9f0d8c5`.
+These helpers are frozen for the coordinator's fresh compiler build and full
+M package gates; those gates are not claimed by this helper receipt.
+
+Append-only Guardian feedback for this closure correction was committed in
+`guardian-zig` as `96ff1611b3446fcdeedc1a9210c2b9ac3da5babc`; its commit gate
+also passed all 88 checks. No mylang main merge or push occurred.

@@ -1,0 +1,30 @@
+{
+  "debug": {
+    "status": 1,
+    "stdout": "1.25\n",
+    "division_trap": true,
+    "needed": [
+      "0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]"
+    ],
+    "loaded": [
+      "/usr/lib/x86_64-linux-gnu/libc.so.6",
+      "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1"
+    ],
+    "binary_sha256": "c48c9c4dae817fbc11506d901649a7a8c7fac3d3d7f5569d52f2624fc99c4669",
+    "numeric_helper": true
+  },
+  "release": {
+    "status": 1,
+    "stdout": "1.25\n",
+    "division_trap": true,
+    "needed": [
+      "0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]"
+    ],
+    "loaded": [
+      "/usr/lib/x86_64-linux-gnu/libc.so.6",
+      "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1"
+    ],
+    "binary_sha256": "69eca024cc3d04e0e9e62e6af0dbfb88d64b15cca37cd8ba926b230b615b2447",
+    "numeric_helper": true
+  }
+}

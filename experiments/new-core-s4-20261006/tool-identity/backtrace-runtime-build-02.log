@@ -1,0 +1,2 @@
+{"argv": ["scripts/build-slot.sh", "build", "--", "/home/epentland/.local/bin/zig", "cc", "-target", "x86_64-linux-gnu.2.31", "-march=native", "-O3", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-20261006/tool-identity/backtrace-runtime-probe-01.c", "-o", "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/backtrace-runtime-probe-02"]}
+{"status": 0, "seconds": 0.05914400122128427}

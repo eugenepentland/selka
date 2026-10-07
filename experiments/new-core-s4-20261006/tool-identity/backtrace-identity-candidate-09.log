@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/tmp/s4-tool-identity-probe-9fetav58/probe-09",
+    "/home/epentland/.local/bin/zig",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/backtrace-identity-probe-09",
+    "candidate"
+  ],
+  "status": 0,
+  "stdout": "{\"inputs\":20907,\"memo_hit\":true,\"cacheable\":true,\"digest\":\"0857a59f7471a35d17e3bf28c19979a79e3ae9bc712cc6c4be87930a1e1c3cc2\",\"generation\":\"788ee0a448dead0e7bec2bd00e061aa27055b27b49e65ae63efd3ac2a33df363\"}\n",
+  "stderr": "",
+  "binary_sha256": "3ba4a395995a3887a5b5f74955379f0ae6be45c61d727f04783cfbb81289382b"
+}
