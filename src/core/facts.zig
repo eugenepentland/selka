@@ -727,7 +727,7 @@ fn listFacts(a: *Analysis) !bool {
             const push_block = a.shape.block_of[pushed_ref.index()] orelse continue;
             if (!onStraightChain(a, counted.loop, push_block)) continue;
             const elements = a.rangeAt(pushed.b, push_block);
-            var fact: ListFact = .{ .length = counted.bound, .elements = elements, .pattern = true, .child_length = childLength(a, pushed.b) };
+            var fact: ListFact = .{ .length = counted.bound, .elements = elements, .pattern = true, .child_length = childLength(a, pushed.b, push_block) };
             fact.len = a.facts.aggregates.lists[ref.index()].len;
             fact.settled = a.facts.aggregates.lists[ref.index()].settled;
             if (!std.meta.eql(a.facts.aggregates.lists[ref.index()], fact)) {
@@ -955,7 +955,7 @@ fn listFact(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ListFact {
                 if (len.lo == 0 and len.hi == 0) out.elements = value;
             }
             if (out.elements == null) out.elements = if (old.elements) |held| (if (value) |v| held.hull(v) else null) else null;
-            const child = childLength(a, i.b);
+            const child = childLength(a, i.b, block);
             out.child_length = if (emptyList(old) or old.child_length == child) child else .none;
             return out;
         },
@@ -969,7 +969,7 @@ fn listFact(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ListFact {
             const old = a.facts.aggregates.lists[a.f.resolve(i.a).index()];
             const value = scalarRange(a, a.f.operands(i.data)[0], block);
             var out: ListFact = .{ .length = old.length, .len = old.len, .settled = !pendingList(a, i.a) };
-            if (old.child_length == childLength(a, a.f.operands(i.data)[0])) out.child_length = old.child_length;
+            if (old.child_length == childLength(a, a.f.operands(i.data)[0], block)) out.child_length = old.child_length;
             if (old.elements) |held| out.elements = if (value) |v| held.hull(v) else null;
             return out;
         },
@@ -982,11 +982,30 @@ fn emptyList(fact: ListFact) bool {
     return len.lo == 0 and len.hi == 0;
 }
 
-fn childLength(a: *Analysis, raw: ir.Ref) ir.Ref {
-    const length = a.facts.aggregates.lists[a.f.resolve(raw).index()].length;
+fn childLength(a: *Analysis, raw: ir.Ref, block: ir.BlockId) ir.Ref {
+    var ref = a.f.resolve(raw);
+    const length = a.facts.aggregates.lists[ref.index()].length;
     if (length == .none) return .none;
+    // A fill phi has its final length only after its exit. Copies capture the
+    // length where they are made, even when inserted into a parent after exit.
+    var captured_at = block;
+    while (a.f.inst(ref).op == .list_copy or a.f.inst(ref).op == .list_set) {
+        captured_at = a.shape.block_of[ref.index()] orelse return .none;
+        ref = a.f.resolve(a.f.inst(ref).a);
+    }
+    if (a.facts.aggregates.lists[ref.index()].length != length) return .none;
+    if (a.f.inst(ref).op == .phi and !completedFill(a, ref, captured_at)) return .none;
     const producer = a.inst(length);
     return if (producer.op == .param or producer.op == .iconst) length else .none;
+}
+
+fn completedFill(a: *Analysis, ref: ir.Ref, block: ir.BlockId) bool {
+    if (!a.facts.aggregates.lists[ref.index()].pattern) return false;
+    const header = a.shape.block_of[ref.index()] orelse return false;
+    for (a.counted.items) |counted| {
+        if (counted.loop.header == header) return a.dominates(counted.loop.exit, block);
+    }
+    return false;
 }
 
 /// Record field intervals and list lengths, element hulls: recompute them for `ref`, widening

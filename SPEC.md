@@ -1926,7 +1926,7 @@ The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-i
 
 ## New core S4 values
 
-- [NEW-CORE-NESTED-LENGTH-S4-1] A list value whose child lists all have the same immutable parameter or constant length may prove nested bounds from that length. Push, replacement, pop, copy and phi facts preserve this only when every child agrees; changed child lengths invalidate it. Verify builds assert each loaded child's symbolic length while that child is live.
+- [NEW-CORE-NESTED-LENGTH-S4-1] A list value whose child lists all have the same immutable parameter or constant length may prove nested bounds from that length. Push, replacement, pop, copy and phi facts preserve this only when every child agrees; changed child lengths invalidate it. A counted fill's final length applies after its loop exits, and a copy captured during that loop retains its captured length. Verify builds assert each loaded child's symbolic length while that child is live.
 
 - [PY-REPEAT-2] A contextual list constructor in repetition keeps its list element type independently of a runtime integer count: `[0] * width` and `width * [0]` typecheck in both cores, including a declared `list[u8]` result.
 - [NEW-CORE-BUFFER-S4-1] Numeric byte-buffer append formats integers and binary64 values in bounded stack storage with the ordinary string spelling, then reserves once and copies the fragment once. COW and fact-verification uniqueness checks precede the consuming append; no temporary string block or per-octet append loop is constructed.

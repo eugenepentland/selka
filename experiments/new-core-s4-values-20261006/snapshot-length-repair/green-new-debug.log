@@ -1,0 +1,4 @@
+$ /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/zig-out/bin/mylang-core test /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/snapshot-length-repair/repro.my --json --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/snapshot-length-repair/green/new-debug
+stdout='{"version":"native-tests-v1","tests":[{"name":"repro::test_growing_children_keep_captured_lengths","status":"passed","reason":"","at":""}],"passed":1,"failed":0,"skipped":0,"cached":0,"unsupported":0}\n'
+stderr=''
+exit=0

@@ -49,6 +49,18 @@ def after_fill(w: int) -> int:
     return sum(xs) + len(xs)
 
 
+def growing(w: int) -> int:
+    xs: list[int] = []
+    children: list[list[int]] = []
+    saved: list[int] = []
+    for j in range(w):
+        saved = xs
+        children.append(xs)
+        xs.append(j)
+    held = [saved]
+    return len(children[0]) + len(children[w - 1]) + len(held[0])
+
+
 def main(args: list[str], out: Stream) -> int:
     width = {width} + (len(args[0]) % 3 if len(args) > 0 else 0)
     row = [0] * width
@@ -70,7 +82,7 @@ def main(args: list[str], out: Stream) -> int:
     _ = bytes_out.append_float({decimal})
     text = str({number}) + str({decimal})
     spelling = bytes(bytes_out) == text.encode()
-    out.print(sum(repeated[{rows - 1}]), sum(saved[{rows - 1}]), sum(saved_row), sum(unique[{rows - 1}]), cube[1][0][0], cube_saved[1][0][0], result, values_saved[0], spelling, len(bytes(bytes_saved)), changed(width, {rows}), after_fill(width))
+    out.print(sum(repeated[{rows - 1}]), sum(saved[{rows - 1}]), sum(saved_row), sum(unique[{rows - 1}]), cube[1][0][0], cube_saved[1][0][0], result, values_saved[0], spelling, len(bytes(bytes_saved)), changed(width, {rows}), after_fill(width), growing(width))
     return 0
 '''
 
