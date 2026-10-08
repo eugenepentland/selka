@@ -1,0 +1,44 @@
+corpus files/nonblank: {'eda': (187, 19786), 'lox': (26, 4220), 'stdlib': (25, 2756)}
+pattern                               eda    lox stdlib
+replace(r, f=v)                         6      7      1
+field write x.f = / x.f +=            282    183      6
+bit_*/shift_* named                    52      9      6
+& | ^ operators                         0      0      0
+strings.* module                        6      0     43
+sort.* module                           0      0     21
+sorted()/.sort()                       21      0      4
+with open(                              0      0      0
+effects(...) clause                     0      0     69
+noio/noalloc                            0      0      4
+assert                                630     16      2
+@requires/@ensures                      0      0      0
+@invariant                              0      0      0
+public decl                          1297    218    178
+export directive                       20      2      0
+module header                         182     26     25
+class decl                              0      0      0
+with arena                              0      0      0
+lambda                                  9      0      0
+list/dict/set comprehension            22      2      0
+conditional expression                 10      0      0
+semicolon separator                     0      0      0
+f-string                               25      6      0
++ str( concat                          43      1      0
+.copy()                                 4      2      0
+is None / is not None                 514      6      0
+== None / != None                       0      0      0
+.unwrap_or(                            77      0      0
+? propagation                         126     63     15
+match                                 304    113    102
+while loop                            159     64     36
+for loop                              763     24     30
+keyword arg in call                   490     80     18
+debug(                                  0      0      0
+type alias                              0      0      0
+constraint decl                         0      0      0
+generic def                             5      0     18
+[N]T fixed array type                   7      0      3
+slice [a:b]                           217      2     32
+mut param                             275    220     40
+record decl                           317     55     12
+union/enum decl                        61     11      3
