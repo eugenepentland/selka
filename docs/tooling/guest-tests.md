@@ -420,10 +420,13 @@ budgets, seed, property runs, `--release`, `--verify-facts`/`--no-facts`,
 `--force`, `--affected --against REF` and `--link` inputs. Children share one
 worker budget (NEW-CORE-S4-TEST-1): `--jobs N`, else `MYLANG_JOBS`, else the CPU
 count capped by how many per-test memory ceilings `MemAvailable` holds
-(NEW-CORE-S5-FANOUT-1). At most that many children run at once, in waves, and each child gets
-the budget divided by the children running beside it for its own builds. They
-share the run's cache directory, so an unchanged program replays its results
-instead of rebuilding.
+(NEW-CORE-S5-FANOUT-1). At most that many children run at once. They start largest
+root file first, and a worker starts the next root as soon as its last child exits
+(NEW-CORE-TEST-QUEUE-1). Each child gets the budget divided by the children that
+can still run beside it, for its own builds and test processes, so the last few
+roots of a run get the cores the finished ones gave back. They share the run's
+cache directory, so an unchanged program replays its results instead of
+rebuilding.
 
 The children's reports merge into one listing in root order and one summary
 line. A child that produces no usable report (a project that does not check, a
@@ -479,6 +482,13 @@ A receipt's identity (NEW-CORE-S4-TEST-3) is:
   toolchain inputs (`CPATH`, `C_INCLUDE_PATH`, `LIBRARY_PATH`, `ZIG`,
   `ZIG_LIB_DIR`, `SOURCE_DATE_EPOCH` and the like). A shell's `_` or `OLDPWD`,
   a terminal's variables or a wrapper such as `time` leave receipts valid.
+
+A program also keys all its ready tests at once (NEW-CORE-TEST-WHOLE-1): the
+program the runner builds for all of them, with the same settings and every
+test's case. When nothing any of them reaches has changed since they all
+passed, they are all reused without building each test's own program to find its
+key. Any change falls back to the per-test keys above, so only the tests that
+reach the change run again.
 
 Output and capabilities do not prevent reuse. A test that prints through a
 `Stream` parameter is reused like any other, because its output is discarded on

@@ -153,6 +153,7 @@ pub fn run(init: std.process.Init, requested: Options) Error!u8 {
         successful = successful and item.identity != null and (item.verdict.status == .passed or item.verdict.status == .cached);
         if (unchanged and item.verdict.status == .passed) if (item.identity) |identity| try receipt.save(context, identity);
     }
+    for (collected.wholes.items) |range| if (unchanged and wholePassed(range.whole, chosen.items[range.start..][0..range.len])) try receipt.save(context, range.whole.key);
     const json = try report.jsonSources(allocator, verdicts, sources.items);
     if (successful and unchanged and options.controls.against == null) try receipt.remember(context, base, before.items, json);
     const out = if (options.json) json else try report.text(allocator, verdicts);
@@ -180,7 +181,11 @@ const Collected = struct {
     before: std.ArrayList(receipt.Dependency),
     sources: std.ArrayList([]const u8) = .empty,
     chosen: std.ArrayList(Selected) = .empty,
+    /// Each provider group's whole-file key and the range of `chosen` it covers.
+    wholes: std.ArrayList(WholeRange) = .empty,
 };
+/// A whole-file key and the slice of a run's chosen tests it was computed for.
+const WholeRange = struct { whole: Whole, start: usize, len: usize };
 
 /// What every provider group of one run shares: the base session (fully checked, or
 /// only declared when providers replace an unfinished production body), the program
@@ -224,11 +229,13 @@ const GroupRun = struct {
             try addSources(a, &out.sources, context, &provider_session);
             identity = try providerIdentities(a, self.session, group.providers, self.selection.base);
         }
-        const items = try select(init, context.options, program, cases, self.cases, self.selection);
+        const selected = try select(init, context.options, program, cases, self.cases, self.selection);
+        const items = selected.items;
         try execute(init, context.options, program, items);
         if (identity) |known| for (items) |*item| {
             item.verdict.identity = known;
         };
+        if (selected.whole) |whole| try out.wholes.append(a, .{ .whole = whole, .start = out.chosen.items.len, .len = items.len });
         try out.chosen.appendSlice(a, items);
         return null;
     }
@@ -479,12 +486,16 @@ fn applyLimits(init: std.process.Init, options: *Options, located: project_entry
     return true;
 }
 
-fn programIdentity(resources: IdentityResources, options: Options, checked: frontend.Checked, case: discover.Case, base: [32]u8) Error!?[32]u8 {
-    // The shared checker propagates effects through calls. Host calls have
-    // mutable external inputs and cannot publish persistent result receipts.
+/// Whether `case` may publish a receipt. The shared checker propagates effects through
+/// calls; Host calls have mutable external inputs and cannot publish persistent results.
+fn publishes(checked: frontend.Checked, case: discover.Case) bool {
     const function = checked.program.functions[@backingInt(case.function)];
     const effects = @import("mylang").effect_set;
-    if (function.policy.host != null or function.policy.effects & effects.bit(.host) != 0) return null;
+    return function.policy.host == null and function.policy.effects & effects.bit(.host) == 0;
+}
+
+fn programIdentity(resources: IdentityResources, options: Options, checked: frontend.Checked, case: discover.Case, base: [32]u8) Error!?[32]u8 {
+    if (!publishes(checked, case)) return null;
     const a = resources.scratch;
     var why: build.Refusal = .{};
     const built = if (resources.prebuilt) |prebuilt| withEntry(a, options, checked, &.{case}, prebuilt) else programFor(a, options, checked, &.{case}, &why);
@@ -497,28 +508,105 @@ fn programIdentity(resources: IdentityResources, options: Options, checked: fron
     return identity;
 }
 
-fn select(init: std.process.Init, options: Options, checked: frontend.Checked, cases: []const discover.Case, settings: case_settings.File, selection: SelectionContext) Error![]Selected {
+/// What `select` chose: every case's verdict so far, and the whole-file key to save
+/// when every ready test passes (null when it hit or there is none).
+const Chosen = struct { items: []Selected, whole: ?Whole = null };
+/// A program's whole-file key and how many ready tests it covers (NEW-CORE-TEST-WHOLE-1).
+const Whole = struct { key: [32]u8, ready: usize };
+
+fn select(init: std.process.Init, options: Options, checked: frontend.Checked, cases: []const discover.Case, settings: case_settings.File, selection: SelectionContext) Error!Chosen {
     const a = init.arena.allocator();
     const chosen = try a.alloc(Selected, cases.len);
     const context = selection.receipt;
     for (cases, chosen) |case, *item| {
+        const configured = v.get(settings.document, case.name);
+        const skip = v.get(configured, "skip");
+        const refused = if (skip == .string and skip.string.len != 0) report.Verdict{ .name = case.name, .status = .skipped, .reason = skip.string } else try screen(a, checked, case, configured);
+        item.* = .{ .case = case, .verdict = refused orelse .{ .name = case.name, .status = .failed, .reason = "not run" }, .ready = refused == null, .settings = configured };
+    }
+    const whole = try wholeKey(init, options, checked, chosen, selection.base);
+    if (whole) |found| if (try receipt.hit(context, found.key)) {
+        for (chosen) |*item| if (item.ready) {
+            item.* = .{ .case = item.case, .verdict = .{ .name = item.case.name, .status = .cached }, .ready = false, .identity = found.key, .settings = item.settings };
+        };
+        return .{ .items = chosen };
+    };
+    for (chosen) |*item| {
+        if (!item.ready) continue;
         var scratch = std.heap.ArenaAllocator.init(init.gpa);
         defer scratch.deinit();
         var built: ?@import("ir.zig").Module = null;
-        const configured = v.get(settings.document, case.name);
-        const skip = v.get(configured, "skip");
-        const refused = if (skip == .string and skip.string.len != 0) report.Verdict{ .name = case.name, .status = .skipped, .reason = skip.string } else try classify(scratch.allocator(), a, checked, case, configured, &built);
-        item.* = .{ .case = case, .verdict = refused orelse .{ .name = case.name, .status = .failed, .reason = "not run" }, .ready = refused == null, .settings = configured };
-        if (!item.ready) continue;
-        if (try programIdentity(.{ .scratch = scratch.allocator(), .io = init.io, .prebuilt = built }, options, checked, case, selection.base)) |identity| {
-            item.identity = receipt.configuredKey(identity, try std.json.Stringify.valueAlloc(a, configured, .{}));
+        if (try classify(scratch.allocator(), a, checked, item.case, item.settings, &built)) |refused| {
+            item.verdict = refused;
+            item.ready = false;
+            continue;
+        }
+        if (try programIdentity(.{ .scratch = scratch.allocator(), .io = init.io, .prebuilt = built }, options, checked, item.case, selection.base)) |identity| {
+            item.identity = receipt.configuredKey(identity, try std.json.Stringify.valueAlloc(a, item.settings, .{}));
             if (try receipt.hit(context, item.identity.?)) {
-                item.verdict = .{ .name = case.name, .status = .cached };
+                item.verdict = .{ .name = item.case.name, .status = .cached };
                 item.ready = false;
             }
         }
     }
-    return chosen;
+    return .{ .items = chosen, .whole = whole };
+}
+
+/// NEW-CORE-TEST-WHOLE-1: one key for every ready test of the program at once: the
+/// program the runner builds for all of them (their reachable functions, entry and
+/// budget) and each one's configured case. Tests run from that combined program, so
+/// when it has not changed since a run where they all passed, none needs its own
+/// program built to be reused. Null when no test is ready, one may call `Host`, or the
+/// builder refuses a function or a result, so the per-test path reports it.
+fn wholeKey(init: std.process.Init, options: Options, checked: frontend.Checked, chosen: []const Selected, base: [32]u8) Error!?Whole {
+    var scratch = std.heap.ArenaAllocator.init(init.gpa);
+    defer scratch.deinit();
+    const s = scratch.allocator();
+    var cases: std.ArrayList(discover.Case) = .empty;
+    for (chosen) |item| if (item.ready) {
+        if (!publishes(checked, item.case)) return null;
+        try cases.append(s, item.case);
+    };
+    if (cases.items.len == 0) return null;
+    var why: build.Refusal = .{};
+    const roots = try rootsFor(s, checked.program, cases.items);
+    const reachable = build.buildRootsSource(s, checked.program, roots, checked.src, &why) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return null;
+    };
+    // `rootsFor` lists the cases first, so case `i` is function `i`.
+    for (cases.items, 0..) |case, root| {
+        const configured = for (chosen) |item| {
+            if (item.ready and std.mem.eql(u8, item.case.name, case.name)) break item.settings;
+        } else .null;
+        if (!expects(configured) and !entry.readable(&reachable, reachable.functions.items[root].signature.ret)) return null;
+    }
+    const module = withEntry(s, options, checked, cases.items, reachable) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return null;
+    };
+    const source_path = std.Io.Dir.cwd().realPathFileAlloc(init.io, options.path, s) catch options.path;
+    var key = receipt.programKey(base, "", .{ .module = &module, .source_path = source_path, .locator = pipeline.locator(&checked.src) });
+    for (chosen) |item| if (item.ready) {
+        key = receipt.configuredKey(receipt.configuredKey(key, item.case.name), try std.json.Stringify.valueAlloc(s, item.settings, .{}));
+    };
+    return .{ .key = key, .ready = cases.items.len };
+}
+
+/// Whether every test a whole-file key covers passed or was reused: each keeps its own
+/// identity, and refused or skipped tests (which have none) are outside the key.
+fn wholePassed(whole: Whole, items: []const Selected) bool {
+    var covered: usize = 0;
+    for (items) |item| if (item.identity != null) {
+        if (item.verdict.status != .passed and item.verdict.status != .cached) return false;
+        covered += 1;
+    };
+    return covered == whole.ready;
+}
+
+/// Whether a case's configured entry states the value it must return.
+fn expects(settings: std.json.Value) bool {
+    return settings == .object and settings.object.contains(case_expectation);
 }
 
 fn remap(a: std.mem.Allocator, before: typed.Program, after: typed.Program, original: []const discover.Case, discovered: []const discover.Case) Error![]const discover.Case {
@@ -548,12 +636,12 @@ fn writeAll(init: std.process.Init, file: std.Io.File, text: []const u8) Error!v
     file.writeStreamingAll(init.io, text) catch return error.WriteFailed;
 }
 
-/// The `unsupported` verdict of a test the builder cannot build, or null when it can be
-/// built and run; then `built` holds its reachable functions, allocated in `scratch`.
-fn classify(scratch: std.mem.Allocator, keep: std.mem.Allocator, checked: frontend.Checked, case: discover.Case, settings: std.json.Value, built: *?@import("ir.zig").Module) Error!?report.Verdict {
+/// The verdict of a test that fails before anything is built (a property test that
+/// cannot be generated, a result type no test may return), or null.
+fn screen(keep: std.mem.Allocator, checked: frontend.Checked, case: discover.Case, settings: std.json.Value) Error!?report.Verdict {
     const arguments = v.get(settings, "arguments");
     const fixed = arguments == .object and arguments.object.count() != 0;
-    const expected = settings == .object and settings.object.contains(case_expectation);
+    const expected = expects(settings);
     if (case.other_parameters != 0 and !fixed) {
         if (expected) return .{ .name = case.name, .status = .failed, .reason = "a property test's verdict is its bool result; remove `expected` or supply `arguments`" };
         const function = checked.program.functions[@backingInt(case.function)];
@@ -573,6 +661,13 @@ fn classify(scratch: std.mem.Allocator, keep: std.mem.Allocator, checked: fronte
         const result = typed.typeName(checked.program.functions[@backingInt(case.function)].signature.return_type, checked.program.records);
         return .{ .name = case.name, .status = .failed, .reason = try std.fmt.allocPrint(keep, property.non_bool_result, .{result}) };
     }
+    return null;
+}
+
+/// The `unsupported` verdict of a screened test the builder cannot build, or null when
+/// it can be built and run; then `built` holds its reachable functions, allocated in `scratch`.
+fn classify(scratch: std.mem.Allocator, keep: std.mem.Allocator, checked: frontend.Checked, case: discover.Case, settings: std.json.Value, built: *?@import("ir.zig").Module) Error!?report.Verdict {
+    const expected = expects(settings);
     var why: build.Refusal = .{};
     const selected_roots = try rootsFor(scratch, checked.program, &.{case});
     const module = build.buildRootsSource(scratch, checked.program, selected_roots, checked.src, &why) catch |err| switch (err) {
@@ -688,28 +783,32 @@ fn executeWorkers(init: std.process.Init, options: Options, program: typed.Progr
     const resources: ExecutionResources = .{ .arena = a, .backing = init.gpa, .io = init.io };
     const work = try a.alloc(Work, positions.len);
     for (positions, work, 0..) |position, *item, table_index| item.* = .{ .resources = resources, .options = options, .program = program, .executable = executable, .table_index = table_index, .selected = &chosen[position] };
-    if (width == 1) {
-        for (work) |*item| {
-            item.run();
-            if (item.failure) |err| return err;
-        }
-        return;
+    var queue: WorkQueue = .{ .work = work };
+    // NEW-CORE-TEST-QUEUE-1: each thread takes the next test as soon as its last one ends.
+    const threads = try a.alloc(std.Thread, @max(1, @min(width, work.len)) - 1);
+    var started: usize = 0;
+    for (threads) |*thread| {
+        thread.* = std.Thread.spawn(.{}, WorkQueue.drain, .{&queue}) catch break;
+        started += 1;
     }
-    const threads = try a.alloc(std.Thread, width);
-    var begin: usize = 0;
-    while (begin < work.len) : (begin += width) {
-        var started: usize = 0;
-        for (work[begin..@min(work.len, begin + width)]) |*item| {
-            threads[started] = std.Thread.spawn(.{}, Work.run, .{item}) catch {
-                item.run();
-                continue;
-            };
-            started += 1;
-        }
-        for (threads[0..started]) |thread| thread.join();
-        for (work[begin..@min(work.len, begin + width)]) |item| if (item.failure) |err| return err;
-    }
+    queue.drain();
+    for (threads[0..started]) |thread| thread.join();
+    for (work) |item| if (item.failure) |err| return err;
 }
+
+/// The pending tests of one executable, taken in order by every worker thread.
+const WorkQueue = struct {
+    work: []Work,
+    next: std.atomic.Value(usize) = .init(0),
+
+    fn drain(self: *WorkQueue) void {
+        while (true) {
+            const position = self.next.fetchAdd(1, .monotonic);
+            if (position >= self.work.len) return;
+            self.work[position].run();
+        }
+    }
+};
 
 const Built = union(enum) { built: []const u8, failed: report.Verdict };
 

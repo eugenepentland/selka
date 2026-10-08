@@ -125,13 +125,10 @@ pub fn run(init: std.process.Init, opts: options.Options) Error!u8 {
     const free = budget.available(init.io);
     const workers = options.width(opts.controls, init.environ_map, selection.entries.len, free);
     const overall = options.width(opts.controls, init.environ_map, std.math.maxInt(usize), free);
-    const fanout: Fanout = .{ .compiler = compiler, .directory = directory, .controls = controls, .jobs = @max(1, overall / workers), .ticket = ticket };
+    const fanout: Fanout = .{ .compiler = compiler, .directory = directory, .controls = controls, .jobs = overall, .ticket = ticket };
     const outcomes = try a.alloc(Outcome, selection.entries.len);
-    var begin: usize = 0;
-    while (begin < selection.entries.len) : (begin += workers) {
-        const end = @min(selection.entries.len, begin + workers);
-        try wave(init, fanout, selection.entries[begin..end], outcomes[begin..end]);
-    }
+    const roots: Roots = .{ .paths = selection.entries, .order = try largestFirst(a, init.io, selection.entries), .outcomes = outcomes };
+    try pool(init, fanout, .{ .roots = roots, .workers = workers });
     const unchanged = tool_identity.unchanged(request, guest) catch |err| unchanged: {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         break :unchanged false;
@@ -265,41 +262,114 @@ fn configurationInputs(snapshot: *Snapshot, entry: project_entry.Entry) !void {
     }
 }
 
-fn wave(init: std.process.Init, fanout: Fanout, paths: []const []const u8, outcomes: []Outcome) Error!void {
+/// The roots of one directory run, the order they start in, and where their reports go.
+const Roots = struct { paths: []const []const u8, order: []const usize, outcomes: []Outcome };
+/// The shared state of one directory run's workers.
+const Queue = struct {
+    roots: Roots,
+    workers: usize,
+    next: std.atomic.Value(usize) = .init(0),
+    running: std.atomic.Value(usize) = .init(0),
+    /// Set once, by the first worker whose child could not start; that worker alone
+    /// writes `failure`, which is read only after every worker has joined.
+    stopped: std.atomic.Value(bool) = .init(false),
+    failure: ?Error = null,
+
+    fn stop(self: *Queue, err: Error) void {
+        if (self.stopped.cmpxchgStrong(false, true, .acq_rel, .acquire) == null) self.failure = err;
+    }
+};
+
+/// NEW-CORE-TEST-QUEUE-1: `queue.workers` workers each start the next root as soon as
+/// their last child exits, in `queue.roots.order`, until every root has run. Reports stay
+/// in root order, whatever order the children finish in.
+fn pool(init: std.process.Init, fanout: Fanout, queue: Queue) Error!void {
     const a = init.arena.allocator();
     var environment = try init.environ_map.clone(a);
     defer environment.deinit();
     try environment.put(tool_ticket.hint, "1");
-    const children = try a.alloc(std.process.Child, paths.len);
-    const files = try a.alloc(std.Io.File, paths.len);
-    const names = try a.alloc([]const u8, paths.len);
+    var shared = queue;
+    const worker: Worker = .{ .init = init, .fanout = fanout, .environment = &environment, .queue = &shared };
+    const threads = try a.alloc(std.Thread, @max(1, shared.workers) - 1);
     var started: usize = 0;
-    defer for (children[0..started], files[0..started]) |*child, file| {
-        child.kill(init.io);
-        file.close(init.io);
-    };
-    for (paths, 0..) |path, slot| {
-        names[slot] = try std.fmt.allocPrint(a, "{s}/{d}.json", .{ fanout.directory, slot });
-        files[slot] = std.Io.Dir.cwd().createFile(init.io, names[slot], .{}) catch return error.WriteFailed;
-        // Each child gets its own open-file offset, never a shared stdin stream.
-        const input = std.Io.Dir.cwd().openFile(init.io, fanout.ticket, .{}) catch {
-            files[slot].close(init.io);
-            return error.ReadFailed;
-        };
-        defer input.close(init.io);
-        children[slot] = std.process.spawn(init.io, .{ .argv = try argv(a, fanout, path), .environ_map = &environment, .stdin = .{ .file = input }, .stdout = .{ .file = files[slot] } }) catch {
-            files[slot].close(init.io);
-            return error.WriteFailed;
-        };
+    // The pinned Zig arena is thread-safe with Init's thread-safe backing.
+    for (threads) |*thread| {
+        thread.* = std.Thread.spawn(.{}, Worker.run, .{worker}) catch break;
         started += 1;
     }
-    for (children, names, outcomes) |*child, name, *outcome| {
-        const term = child.wait(init.io) catch return error.ReadFailed;
-        outcome.* = .{ .code = switch (term) {
+    worker.run();
+    for (threads[0..started]) |thread| thread.join();
+    if (shared.failure) |err| return err;
+}
+
+/// One worker of `pool`: it runs roots until the queue is empty or a child could not start.
+const Worker = struct {
+    init: std.process.Init,
+    fanout: Fanout,
+    environment: *const std.process.Environ.Map,
+    queue: *Queue,
+
+    fn run(self: Worker) void {
+        const queue = self.queue;
+        while (!queue.stopped.load(.acquire)) {
+            const roots = queue.roots;
+            const position = queue.next.fetchAdd(1, .monotonic);
+            if (position >= roots.order.len) return;
+            const running = queue.running.fetchAdd(1, .monotonic) + 1;
+            defer _ = queue.running.fetchSub(1, .monotonic);
+            const index = roots.order[position];
+            const jobs = childJobs(self.fanout.jobs, queue.workers, roots.order.len - position - 1, running);
+            roots.outcomes[index] = self.child(roots.paths[index], index, jobs) catch |err| return queue.stop(err);
+        }
+    }
+
+    fn child(self: Worker, path: []const u8, slot: usize, jobs: usize) Error!Outcome {
+        const a = self.init.arena.allocator();
+        const name = try std.fmt.allocPrint(a, "{s}/{d}.json", .{ self.fanout.directory, slot });
+        const output = std.Io.Dir.cwd().createFile(self.init.io, name, .{}) catch return error.WriteFailed;
+        defer output.close(self.init.io);
+        // Each child gets its own open-file offset, never a shared stdin stream.
+        const input = std.Io.Dir.cwd().openFile(self.init.io, self.fanout.ticket, .{}) catch return error.ReadFailed;
+        defer input.close(self.init.io);
+        var fanout = self.fanout;
+        fanout.jobs = jobs;
+        var process = std.process.spawn(self.init.io, .{ .argv = try argv(a, fanout, path), .environ_map = self.environment, .stdin = .{ .file = input }, .stdout = .{ .file = output } }) catch return error.WriteFailed;
+        const term = process.wait(self.init.io) catch {
+            process.kill(self.init.io);
+            return error.ReadFailed;
+        };
+        return .{ .code = switch (term) {
             .exited => |code| code,
             else => 1,
-        }, .bytes = std.Io.Dir.cwd().readFileAlloc(init.io, name, a, .limited(64 << 20)) catch "" };
+        }, .bytes = std.Io.Dir.cwd().readFileAlloc(self.init.io, name, a, .limited(64 << 20)) catch "" };
     }
+};
+
+/// A child's share of the run's `overall` jobs: divided among the children that can
+/// still run beside it (those running, itself included, and those not yet started),
+/// at most `workers` of them, and never below one.
+fn childJobs(overall: usize, workers: usize, unstarted: usize, running: usize) usize {
+    const beside = @max(1, @min(workers, running + unstarted));
+    return @max(1, overall / beside);
+}
+
+/// Root indices, largest root file first (ties in path order): the biggest test
+/// programs start first, so a long one never begins after the short ones have drained.
+fn largestFirst(a: std.mem.Allocator, io: std.Io, paths: []const []const u8) Error![]const usize {
+    const Sized = struct { index: usize, size: u64 };
+    const sized = try a.alloc(Sized, paths.len);
+    for (paths, sized, 0..) |path, *item, index| {
+        const info = std.Io.Dir.cwd().statFile(io, path, .{}) catch null;
+        item.* = .{ .index = index, .size = if (info) |known| known.size else 0 };
+    }
+    std.mem.sort(Sized, sized, {}, struct {
+        fn larger(_: void, left: Sized, right: Sized) bool {
+            return left.size > right.size or (left.size == right.size and left.index < right.index);
+        }
+    }.larger);
+    const order = try a.alloc(usize, paths.len);
+    for (sized, order) |item, *slot| slot.* = item.index;
+    return order;
 }
 
 fn argv(a: std.mem.Allocator, fanout: Fanout, path: []const u8) Error![]const []const u8 {
@@ -587,4 +657,24 @@ test "loadedClosure snapshots provider imports embeds config policy cases and re
     try std.testing.expect(!try sourceChanged(a, std.testing.io, opts, selection));
     try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "data.txt", .data = "changed asset" });
     try std.testing.expect(try sourceChanged(a, std.testing.io, opts, selection));
+}
+
+// spec: NEW-CORE-TEST-QUEUE-1
+test "directory roots start largest file first and each child's jobs divide the budget among those beside it" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "small.my", .data = "def test_a() -> bool:\n    return True\n" });
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "large.my", .data = "def test_b() -> bool:\n    return True\n\ndef test_c() -> bool:\n    return True\n" });
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "same.my", .data = "def test_d() -> bool:\n    return True\n\ndef test_e() -> bool:\n    return True\n" });
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const paths = [_][]const u8{ try std.fs.path.join(a, &.{ root, "small.my" }), try std.fs.path.join(a, &.{ root, "large.my" }), try std.fs.path.join(a, &.{ root, "same.my" }), try std.fs.path.join(a, &.{ root, "missing.my" }) };
+    try std.testing.expectEqualSlices(usize, &.{ 1, 2, 0, 3 }, try largestFirst(a, std.testing.io, &paths));
+    try std.testing.expectEqual(@as(usize, 1), childJobs(16, 16, 57, 1));
+    try std.testing.expectEqual(@as(usize, 4), childJobs(16, 4, 50, 1));
+    try std.testing.expectEqual(@as(usize, 8), childJobs(16, 16, 0, 2));
+    try std.testing.expectEqual(@as(usize, 16), childJobs(16, 4, 0, 1));
+    try std.testing.expectEqual(@as(usize, 1), childJobs(1, 4, 9, 4));
 }

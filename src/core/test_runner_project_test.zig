@@ -128,6 +128,84 @@ test "directory receipts account for orphan libraries and rerun only the edited 
     try verdict(force.report, "app::test_constant", "passed");
 }
 
+const whole_source =
+    \\module app
+    \\import dep
+    \\
+    \\public def test_dependency() -> bool:
+    \\    return dep.value() == 3
+    \\
+    \\public def test_constant() -> bool:
+    \\    return True
+    \\
+    \\def main() -> int:
+    \\    return 0
+    \\
+;
+/// A file's bytes, kept so a trial can put a receipt directory back as it was.
+const Saved = struct { name: []const u8, bytes: []const u8 };
+
+fn receiptDirectory(context: Context) ![]const u8 {
+    return std.fs.path.join(context.arena, &.{ context.root, "cache", "tests", "receipts-v2" });
+}
+
+/// Every receipt the run's cache holds, with its bytes.
+fn receipts(context: Context) ![]const Saved {
+    var directory = try std.Io.Dir.cwd().openDir(std.testing.io, try receiptDirectory(context), .{ .iterate = true });
+    defer directory.close(std.testing.io);
+    var found: std.ArrayList(Saved) = .empty;
+    var entries = directory.iterate();
+    while (try entries.next(std.testing.io)) |entry| {
+        const bytes = try directory.readFileAlloc(std.testing.io, entry.name, context.arena, .limited(4096));
+        try found.append(context.arena, .{ .name = try context.arena.dupe(u8, entry.name), .bytes = bytes });
+    }
+    return found.items;
+}
+
+/// Replace the receipt directory with `kept` alone and drop the report manifests, so
+/// the next run cannot replay a whole report and must consult the receipts.
+fn keepOnly(context: Context, kept: []const Saved) !void {
+    const directory = try receiptDirectory(context);
+    try std.Io.Dir.cwd().deleteTree(std.testing.io, directory);
+    try std.Io.Dir.cwd().deleteTree(std.testing.io, try std.fs.path.join(context.arena, &.{ context.root, "cache", "tests", "manifests-v2" }));
+    try std.Io.Dir.cwd().createDirPath(std.testing.io, directory);
+    for (kept) |item| try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = try std.fs.path.join(context.arena, &.{ directory, item.name }), .data = item.bytes });
+}
+
+/// How many single receipts, each kept alone, still let every test of `source` replay.
+fn aloneSufficient(context: Context, source: []const u8, all: []const Saved) !usize {
+    var sufficient: usize = 0;
+    for (all) |item| {
+        try keepOnly(context, &.{item});
+        const run = try context.run(source, &.{});
+        if (run.status == 0 and v.number(v.get(run.report, "cached")) == 2) sufficient += 1;
+    }
+    try keepOnly(context, all);
+    return sufficient;
+}
+
+// spec: NEW-CORE-TEST-WHOLE-1
+test "wholeKey: a program's whole-file receipt alone replays every test, and an edit reruns only the tests that reach it" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const context: Context = .{ .arena = arena.allocator(), .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator()) };
+    try context.write("app.my", whole_source);
+    try context.write("dep.my", dependency_three);
+    const cold = try context.run("app.my", &.{});
+    try expectStatus(context, cold, 0);
+    try std.testing.expectEqual(@as(u64, 2), v.number(v.get(cold.report, "passed")));
+    const saved = try receipts(context);
+    try std.testing.expectEqual(@as(usize, 3), saved.len);
+    try std.testing.expectEqual(@as(usize, 1), try aloneSufficient(context, "app.my", saved));
+    try context.write("dep.my", dependency_four);
+    const changed = try context.run("app.my", &.{});
+    try expectStatus(context, changed, 1);
+    try verdict(changed.report, "app::test_dependency", "failed");
+    try verdict(changed.report, "app::test_constant", "cached");
+}
+
 // spec: NEW-CORE-S4-TEST-4
 test "localReplay invalidates provider edits and explicit expectations in successful test receipts" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
