@@ -1,7 +1,10 @@
 # A new compiler core, grown from the microbenchmarks — plan, 2026-10-05
 
-**Status:** the user accepted N1–N5 on 2026-10-05, as recommended in §4. N6 (arenas) is
-decided during S1. Nothing here is implemented yet.
+**Status, 2026-10-08: S0–S5 are complete and merged into `main`.** The old back end is
+deleted and `mylang` is one binary on the new core; the exit report is
+`experiments/new-core-s5-20261007/REPORT.md`. The dated notes below are the plan's history:
+the user accepted N1–N5 on 2026-10-05, as recommended in §4, and N6 (arenas) was decided
+during S1.
 
 **Runtime decision (R1, the user, 2026-10-05): the new core keeps its own runtime.**
 - It grows S0's `src/core/runtime/core_rt.c`: 32-byte blocks with one saturating 32-bit count.
