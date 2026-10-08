@@ -1,0 +1,8 @@
+# shift.sh a (2026-10-08 ~20:02 UTC, compiler bench-main-352d9396, taskset off CPUs 2,3,10,11,
+# under bench-compile.lock). One fresh cache; each edit is applied, timed, reverted and rewarmed.
+one-line A: 0.95 s user 1.33	31 passed, 279 cached, 0 failed, 0 skipped
+one-line B: 0.57 s user 0.72	31 passed, 279 cached, 0 failed, 0 skipped
+two-lines C: 0.96 s user 1.15	31 passed, 279 cached, 0 failed, 0 skipped
+two-lines D: 0.70 s user 0.87	31 passed, 279 cached, 0 failed, 0 skipped
+one-line E: 0.66 s user 0.87	31 passed, 279 cached, 0 failed, 0 skipped
+tree-clean

@@ -30,6 +30,9 @@ const Graph = struct {
     profile: ?*language.timings.Profile = null,
 };
 
+/// A module of a loaded project graph.
+pub const Module = language.project.Module;
+
 /// The checked program and the merged source its spans point into.
 pub const Checked = struct {
     program: language.typed.Program,

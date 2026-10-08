@@ -236,7 +236,7 @@ const Queue = struct {
 };
 
 fn runJob(resources: Resources, job: *Job) error{OutOfMemory}!void {
-    const result = std.process.run(resources.arena, resources.io, .{ .argv = job.argv, .environ_map = resources.environment }) catch |err| {
+    const result = @import("process_spawn.zig").run(resources.arena, resources.io, .{ .argv = job.argv, .environment = .{ .map = resources.environment } }) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         try job.log.print(resources.arena, "error: cannot run {s}: {s}\n", .{ job.argv[0], @errorName(err) });
         return;

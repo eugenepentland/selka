@@ -382,3 +382,50 @@ test "the CE-A shapes print what value semantics says, debug and release" {
     const release = try support.runOwned(arena.allocator(), &again, .{ .release = true });
     try std.testing.expectEqualStrings(debug.stdout, release.stdout);
 }
+
+const swapped_return =
+    \\record Big:
+    \\    a: int
+    \\    b: int
+    \\    c: int
+    \\    d: int
+    \\    e: int
+    \\
+    \\
+    \\record Pair:
+    \\    x: Big
+    \\    y: Big
+    \\
+    \\
+    \\def make_pair(k: int) -> Pair:
+    \\    return Pair(x=Big(a=k, b=k + 1, c=k + 2, d=k + 3, e=k + 4), y=Big(a=10 * k, b=0, c=0, d=0, e=10 * k + 4))
+    \\
+    \\
+    \\def pick(k: int, flag: bool) -> Pair:
+    \\    w = make_pair(k)
+    \\    if flag:
+    \\        return w
+    \\    return Pair(x=w.y, y=w.x)
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    p = pick(1, False)
+    \\    q = pick(2, True)
+    \\    out.print(p.x.a, p.x.e, p.y.a, p.y.e, q.x.a, q.y.e)
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-CE-RECORDS-6
+test "a ret next to a value living in %ret builds its value in a temporary: a field swap reads both halves first" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var refusal: @import("build.zig").Refusal = .{};
+    var module = try support.buildSource(arena.allocator(), swapped_return, &refusal);
+    const debug = try support.runOwned(arena.allocator(), &module, .{});
+    // pick(1, False) swaps the halves of make_pair(1): x is (10 .. 14), y is (1 .. 5).
+    try std.testing.expectEqualStrings("10 14 1 5 2 24\n", debug.stdout);
+    var again = try support.buildSource(arena.allocator(), swapped_return, &refusal);
+    const release = try support.runOwned(arena.allocator(), &again, .{ .release = true });
+    try std.testing.expectEqualStrings(debug.stdout, release.stdout);
+}

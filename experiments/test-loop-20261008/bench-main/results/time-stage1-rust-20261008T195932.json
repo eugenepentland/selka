@@ -1,0 +1,163 @@
+{
+ "lang": "rust",
+ "stage": 1,
+ "repeat": 3,
+ "host": "linuxserver",
+ "load_avg_at_end": [
+  3.62109375,
+  4.3623046875,
+  4.80126953125
+ ],
+ "commands": {
+  "build": [
+   "cargo",
+   "build",
+   "--offline"
+  ],
+  "check": [
+   "cargo",
+   "check",
+   "--offline",
+   "--all-targets"
+  ],
+  "test": [
+   "cargo",
+   "test",
+   "--offline"
+  ]
+ },
+ "results": {
+  "cold_build": {
+   "median_s": 2.675,
+   "min_s": 2.581,
+   "max_s": 3.286,
+   "peak_rss_mib": 480.6,
+   "samples_s": [
+    3.286,
+    2.675,
+    2.581
+   ]
+  },
+  "noop_build": {
+   "median_s": 0.015,
+   "min_s": 0.015,
+   "max_s": 0.019,
+   "peak_rss_mib": 23.9,
+   "samples_s": [
+    0.019,
+    0.015,
+    0.015
+   ]
+  },
+  "clean_build": {
+   "median_s": 2.642,
+   "min_s": 2.57,
+   "max_s": 2.717,
+   "peak_rss_mib": 477.7,
+   "samples_s": [
+    2.717,
+    2.642,
+    2.57
+   ]
+  },
+  "leaf_body.check": {
+   "median_s": 0.528,
+   "min_s": 0.509,
+   "max_s": 1.289,
+   "peak_rss_mib": 264.1,
+   "samples_s": [
+    0.528,
+    0.509,
+    1.289
+   ]
+  },
+  "leaf_body.build": {
+   "median_s": 0.656,
+   "min_s": 0.603,
+   "max_s": 0.692,
+   "peak_rss_mib": 291.8,
+   "samples_s": [
+    0.692,
+    0.603,
+    0.656
+   ]
+  },
+  "leaf_body.test": {
+   "median_s": 2.114,
+   "min_s": 1.603,
+   "max_s": 2.217,
+   "peak_rss_mib": 349.8,
+   "samples_s": [
+    2.217,
+    1.603,
+    2.114
+   ]
+  },
+  "hub_body.check": {
+   "median_s": 0.643,
+   "min_s": 0.489,
+   "max_s": 0.932,
+   "peak_rss_mib": 264.4,
+   "samples_s": [
+    0.932,
+    0.489,
+    0.643
+   ]
+  },
+  "hub_body.build": {
+   "median_s": 0.806,
+   "min_s": 0.678,
+   "max_s": 0.955,
+   "peak_rss_mib": 289.0,
+   "samples_s": [
+    0.678,
+    0.955,
+    0.806
+   ]
+  },
+  "hub_body.test": {
+   "median_s": 1.497,
+   "min_s": 1.464,
+   "max_s": 1.802,
+   "peak_rss_mib": 351.7,
+   "samples_s": [
+    1.802,
+    1.497,
+    1.464
+   ]
+  },
+  "interface.check": {
+   "median_s": 0.499,
+   "min_s": 0.49,
+   "max_s": 0.667,
+   "peak_rss_mib": 256.7,
+   "samples_s": [
+    0.667,
+    0.49,
+    0.499
+   ]
+  },
+  "interface.build": {
+   "median_s": 0.626,
+   "min_s": 0.623,
+   "max_s": 0.931,
+   "peak_rss_mib": 292.7,
+   "samples_s": [
+    0.931,
+    0.626,
+    0.623
+   ]
+  },
+  "interface.test": {
+   "median_s": 1.5,
+   "min_s": 0.968,
+   "max_s": 1.792,
+   "peak_rss_mib": 334.1,
+   "samples_s": [
+    1.5,
+    1.792,
+    0.968
+   ]
+  }
+ }
+}

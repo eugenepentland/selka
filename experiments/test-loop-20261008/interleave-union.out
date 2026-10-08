@@ -1,0 +1,26 @@
+warm nosync: 0 passed, 310 cached, 0 failed, 0 skipped	wall 0.28 s  user 0.23 s  sys 0.12 s  maxrss 96552 KB
+warm union: 0 passed, 310 cached, 0 failed, 0 skipped	wall 0.20 s  user 0.16 s  sys 0.06 s  maxrss 97100 KB
+nosync jobs=all hub r1 wall=0.84 ran=111 load=2.27
+union jobs=all hub r1 wall=0.64 ran=111 load=2.27
+nosync jobs=all leaf r1 wall=0.78 ran=31 load=2.27
+union jobs=all leaf r1 wall=0.54 ran=31 load=2.27
+nosync jobs=all iface r1 wall=0.58 ran=0 load=2.33
+union jobs=all iface r1 wall=0.44 ran=0 load=2.33
+nosync jobs=all comment r1 wall=0.52 ran=0 load=2.33
+union jobs=all comment r1 wall=0.41 ran=0 load=2.33
+nosync jobs=all hub r2 wall=0.93 ran=111 load=2.33
+union jobs=all hub r2 wall=0.65 ran=111 load=3.35
+nosync jobs=all leaf r2 wall=0.78 ran=31 load=3.35
+union jobs=all leaf r2 wall=0.55 ran=31 load=3.35
+nosync jobs=all iface r2 wall=0.55 ran=0 load=3.35
+union jobs=all iface r2 wall=0.45 ran=0 load=3.72
+nosync jobs=all comment r2 wall=0.63 ran=0 load=3.72
+union jobs=all comment r2 wall=0.57 ran=0 load=3.72
+nosync jobs=all hub r3 wall=0.94 ran=111 load=3.72
+union jobs=all hub r3 wall=0.71 ran=111 load=3.66
+nosync jobs=all leaf r3 wall=0.82 ran=31 load=3.66
+union jobs=all leaf r3 wall=0.54 ran=31 load=3.66
+nosync jobs=all iface r3 wall=0.53 ran=0 load=3.66
+union jobs=all iface r3 wall=0.43 ran=0 load=3.66
+nosync jobs=all comment r3 wall=0.57 ran=0 load=4.33
+union jobs=all comment r3 wall=0.42 ran=0 load=4.33

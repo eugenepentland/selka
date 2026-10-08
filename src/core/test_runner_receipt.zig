@@ -95,8 +95,9 @@ const toolchain_variables = [_][]const u8{
     "CCC_OVERRIDE_OPTIONS", "COMPILER_PATH",     "CPATH",             "C_INCLUDE_PATH", "CPLUS_INCLUDE_PATH", "GCC_EXEC_PREFIX",
     "LIBRARY_PATH",         "OBJC_INCLUDE_PATH", "SOURCE_DATE_EPOCH", "ZIG",            "ZIG_LIB_DIR",        "ZIG_LIBC",
 };
-/// `MYLANG_` variables that place caches or size the worker pool and so change no outcome.
-const placement_variables = [_][]const u8{ "MYLANG_JOBS", "MYLANG_CORE_RUNTIME_CACHE", tool_ticket.hint };
+/// `MYLANG_` variables that place caches, size the worker pool or choose which
+/// process runs a test, and so change no outcome.
+const placement_variables = [_][]const u8{ "MYLANG_JOBS", "MYLANG_CORE_RUNTIME_CACHE", tool_ticket.hint, "MYLANG_TEST_ISOLATE", "MYLANG_TEST_CHILDREN" };
 
 /// Whether a variable can change a test's outcome. A shell's `_` and `OLDPWD` or a
 /// terminal's variables cannot; a test that reads the environment is never reused.
@@ -310,21 +311,42 @@ pub fn dependencies(context: Context, paths: []const []const u8) Error![]const D
 /// Record the exact loaded sources and embedded assets, before execution. Standard
 /// library bytes are covered by compiler_identity rather than fictitious disk paths.
 pub fn captured(context: Context, session: *const frontend.Session, providers: []const frontend.Provider) Error![]const Dependency {
-    const a = context.arena;
     var files: std.ArrayList(Dependency) = .empty;
     if (session.single) |unit| {
         try loaded(context, &files, context.entry.path, unit.src, session.entry_suffix, false);
-    } else for (session.project.modules.items) |module| {
-        if (std.mem.startsWith(u8, module.src.path, "@stdlib/")) continue;
-        const path = try std.fs.path.join(a, &.{ context.entry.root, module.src.path });
-        var overridden = false;
-        for (providers) |provider| overridden = overridden or std.mem.eql(u8, module.src.path, provider.path);
-        try loaded(context, &files, path, module.src, if (std.mem.eql(u8, module.name, context.entry.name)) session.entry_suffix else "", overridden);
-        if (context.entry.configuration) |configured| if (configured.document.interface_files) {
-            const api = try std.fmt.allocPrint(a, "{s}.api", .{path[0 .. path.len - 3]});
-            try files.append(a, .{ .path = api, .digest = try fileDigest(context, api) });
-        };
-    }
+    } else for (session.project.modules.items) |*module| try moduleInputs(context, &files, module, .{ .suffix = session.entry_suffix, .providers = providers });
+    return settingsInputs(context, &files);
+}
+
+/// `captured` for a root's share of a directory run's shared check
+/// (NEW-CORE-TEST-UNION-1): the modules its own graph reaches, read without the
+/// stub `main` its own check would have appended, which `loaded` strips anyway.
+pub fn capturedModules(context: Context, modules: []const *const frontend.Module) Error![]const Dependency {
+    var files: std.ArrayList(Dependency) = .empty;
+    for (modules) |module| try moduleInputs(context, &files, module, .{});
+    return settingsInputs(context, &files);
+}
+
+/// How one module was read: the stub appended to the entry, and the providers
+/// that replace modules.
+const Reading = struct { suffix: []const u8 = "", providers: []const frontend.Provider = &.{} };
+
+fn moduleInputs(context: Context, files: *std.ArrayList(Dependency), module: *const frontend.Module, reading: Reading) Error!void {
+    const a = context.arena;
+    if (std.mem.startsWith(u8, module.src.path, "@stdlib/")) return;
+    const path = try std.fs.path.join(a, &.{ context.entry.root, module.src.path });
+    var overridden = false;
+    for (reading.providers) |provider| overridden = overridden or std.mem.eql(u8, module.src.path, provider.path);
+    try loaded(context, files, path, module.src, if (std.mem.eql(u8, module.name, context.entry.name)) reading.suffix else "", overridden);
+    if (context.entry.configuration) |configured| if (configured.document.interface_files) {
+        const api = try std.fmt.allocPrint(a, "{s}.api", .{path[0 .. path.len - 3]});
+        try files.append(a, .{ .path = api, .digest = try fileDigest(context, api) });
+    };
+}
+
+/// Append the cases file, configuration and policy a run read to `files`.
+fn settingsInputs(context: Context, files: *std.ArrayList(Dependency)) Error![]const Dependency {
+    const a = context.arena;
     if (context.options.controls.cases) |path| {
         var digest: Digest = undefined;
         std.crypto.hash.Blake3.hash(context.case_bytes, &digest, .{});
@@ -582,6 +604,8 @@ test "receipt settings ignore shell and terminal variables and key toolchain and
     try environment.put("_", "/usr/bin/time");
     try environment.put("OLDPWD", "/elsewhere");
     try environment.put("MYLANG_JOBS", "3");
+    try environment.put("MYLANG_TEST_ISOLATE", "1");
+    try environment.put("MYLANG_TEST_CHILDREN", "1");
     try std.testing.expectEqual(plain, try settings(context, &inputs));
     try environment.put("MYLANG_OPTIONS", "--allow-random=7");
     const optioned = try settings(context, &inputs);

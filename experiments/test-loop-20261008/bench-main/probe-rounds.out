@@ -1,0 +1,16 @@
+# probe.sh (JOBS=all, WRAP="taskset -c 0,1,4-9,12-19") with bench-main-352d9396 in a fresh cache
+# (.cache/probe-main), under bench-compile.lock, 2026-10-08 ~20:01 UTC. Round 1 is each edit's
+# first run in the cache (what bench.py time measures); rounds 2-3 repeat the same edits.
+warm: 0 passed, 310 cached, 0 failed, 0 skipped / wall 0.21 s  user 0.16 s  sys 0.06 s  maxrss 96880 KB
+leaf r1 31 passed, 279 cached, 0 failed, 0 skipped	wall 0.94 s  user 1.36 s  sys 0.43 s  maxrss 359604 KB load=17.97
+hub r1 111 passed, 199 cached, 0 failed, 0 skipped	wall 0.88 s  user 3.83 s  sys 1.89 s  maxrss 525088 KB load=16.77
+iface r1 0 passed, 310 cached, 0 failed, 0 skipped	wall 0.44 s  user 0.65 s  sys 0.19 s  maxrss 142748 KB load=16.77
+comment r1 0 passed, 310 cached, 0 failed, 0 skipped	wall 0.42 s  user 0.61 s  sys 0.17 s  maxrss 140164 KB load=16.77
+leaf r2 31 passed, 279 cached, 0 failed, 0 skipped	wall 0.58 s  user 0.74 s  sys 0.23 s  maxrss 353060 KB load=16.77
+hub r2 111 passed, 199 cached, 0 failed, 0 skipped	wall 0.66 s  user 1.64 s  sys 0.68 s  maxrss 408372 KB load=16.77
+iface r2 0 passed, 310 cached, 0 failed, 0 skipped	wall 0.41 s  user 0.57 s  sys 0.19 s  maxrss 140480 KB load=15.59
+comment r2 0 passed, 310 cached, 0 failed, 0 skipped	wall 0.44 s  user 0.62 s  sys 0.20 s  maxrss 137452 KB load=15.59
+leaf r3 31 passed, 279 cached, 0 failed, 0 skipped	wall 0.67 s  user 0.88 s  sys 0.23 s  maxrss 354180 KB load=15.59
+hub r3 111 passed, 199 cached, 0 failed, 0 skipped	wall 0.75 s  user 1.81 s  sys 0.79 s  maxrss 375956 KB load=15.59
+iface r3 0 passed, 310 cached, 0 failed, 0 skipped	wall 0.42 s  user 0.59 s  sys 0.17 s  maxrss 142364 KB load=15.59
+comment r3 0 passed, 310 cached, 0 failed, 0 skipped	wall 0.43 s  user 0.59 s  sys 0.19 s  maxrss 140944 KB load=14.50

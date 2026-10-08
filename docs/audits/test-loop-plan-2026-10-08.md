@@ -1,6 +1,8 @@
 # Test loop after an edit: plan for items 4 and 5, 2026-10-08
 
-Status: **items 1–3 are done** (§2). This plan covers what is left: item 4 (batch a program's tests into one process) and item 5 (one-process directory runs). Two smaller pieces from the investigation, T3b and the jobserver fallback, are included because they feed the same goal. Nothing in this plan is implemented.
+Status, 2026-10-08 (end of day): **everything in this plan is done and merged into `main`**: items 1–3 (§2, §6), T3b (§3, §6b), item 4 (§4, §6c), fast launches and the cache sync (§6d), and item 5 (§5, §6e). The benchmark rerun on the merged `main` is §6f. **What is left, deliberately deferred, is §8**: where the remaining time goes, three further levers with their estimated cost and payoff, and when to come back to them.
+
+The text below was first written as the plan for items 4 and 5, when only items 1–3 were done. Two smaller pieces from the investigation, T3b and the jobserver fallback, were included because they feed the same goal.
 
 **Goal.** A test step after an edit on the EDA port that is at or below Go's. The benchmark medians to beat are 1.19 s (Go), 1.64 s (Rust) and 2.20 s (Zig).
 
@@ -101,6 +103,16 @@ Even a comment-only edit, where every test replays, cost 1.3–2.1 s, because ev
 **Risk:** process-wide runtime state that a test can observe. Before turning batching on, list every runtime global in `core_test.c`, `core_rt.c` and `core_io.c`, and give each one a reset or a reason it can't leak.
 
 ## 5. Item 5: one-process directory runs
+
+**Status, 2026-10-08: done on `claude/test-union`** (NEW-CORE-TEST-UNION-1; results in §6d and §6e), after two smaller changes that the profiling for it turned up (§6d). Where it departs from the plan below:
+- **T5a is a shared check, not a multi-entry session.** The roots of one project that miss their recorded reports are checked once, as a synthetic entry that imports each of them. Each root then reads its share: the modules its own imports reach, with the synthetic entry's source segment named after the root, so an instruction without a span of its own is located, traced and keyed exactly as in the root's own check. Directory discovery loads the same roots through one such entry too, instead of one load per root.
+- **Eligibility, not every root.** A root shares the check when it opens with its `module` header and declares no `main`, its configuration names no import policy and no interface files, its cases file names no providers, and the run selects by no git revision. Every other root, and every root of a project whose shared check fails, keeps its child process, where its own check reports its own diagnostics. `MYLANG_TEST_CHILDREN=1` is the oracle.
+- **T5b is a permit pool, not a step scheduler.** Each root still selects, builds and runs on its worker. Each of its test processes holds one of the run's `overall` permits, and a child root holds its share for as long as it runs. The root that is still working therefore uses the cores the finished roots gave back, and the run never has more test processes than the budget.
+- **Found and fixed on the way:**
+  - the schema digest now covers only the types a test reaches, not every type of the program;
+  - a span-0 instruction was keyed by the entry file's name;
+  - `ETXTBSY` from a sibling thread's child is retried;
+  - the process-placement oracles no longer enter receipt keys.
 
 **Why.** 58 child processes each:
 - start a 50 MB compiler;
@@ -238,6 +250,127 @@ Its tests now run in about 0.11 s of processes at `--jobs 4`, against 0.33 s. Ba
 - **Process launches still fork the compiler** (about 13 ms of system time each, serialized on its address space). A `vfork`-style spawn (`clone` with `CLONE_VM | CLONE_VFORK`, then `execve`) would make each launch cost about what it costs from a shell. It matters more for item 5, where one large process would launch every test of the directory.
 - **The edited file's own check and build** (about 0.5 s on the hub edit's critical path) and the **58 child compilers** (no-rerun edits at 0.7 s) are item 5's.
 
+## 6d. Fast launches and the cache sync
+
+**Fast launches (NEW-CORE-SPAWN-1, `process_spawn.zig`).** The core now starts test processes, build tools, directory-run children and the program `mylang run` runs with `clone(CLONE_VM | CLONE_VFORK)` and `execve`, instead of Zig's `fork`.
+- **Effect on launches:** on the 28-test file run isolated (one process per test), system time fell from 0.55 s to 0.16 s, and wall time from 1.08–1.49 s to 0.69–0.95 s.
+- **Effect on the EDA edits:** none measurable (`interleave-spawn.out`). After item 4, launches were no longer on the critical path.
+- **Correctness:** against `main`, it gives the same verdicts on every runner fixture and on an EDA break edit.
+
+**The semantic cache's sync (SEMANTIC-CACHE-15 amended).**
+- **The cause:** phase timing showed that after an edit, 89% of the directory run's child time was the front-end check, 200–270 ms per root. One root's check ran 150 ms with the semantic cache and 110 ms without it.
+- **The stall:** the cache ended every publication batch with `syncfs`. That waits for every dirty page of the filesystem, so on a busy machine a single check stalled for up to a second. The entries were already checksummed and renamed atomically, so the sync bought only durability, which a cache does not need. It is gone.
+- **Results** (`interleave-nosync.out`, 5 rounds, load about 3.5; fast launch plus no sync, against `main`):
+  - all CPUs: hub 1.12 → 0.94 s, leaf 0.97 → 0.86 s, interface 0.78 → 0.56 s, comment 0.73 → 0.54 s;
+  - `--jobs 4`: hub 1.48 → 1.14 s.
+
+## 6e. Results of item 5
+
+**Where the time went, and what changed.** On a comment edit, 28 roots each rechecked much the same import graph, 3.6 s of check in all. Now:
+- **Discovery:** one shared load, about 90 ms → 25–29 ms.
+- **The shared check:** 170–200 ms once. It runs without the semantic cache, which measured 40–50 ms slower here.
+- **Each root:** selects, builds and runs from its share of that check.
+- **Test processes:** a root's processes take the permits the finished roots return, so the hub edit's last root (`export_kicad_sch_test`, 28 tests) no longer runs its tests on one core.
+
+**Correctness.**
+- **Against children (`batch_differential.py --oracle MYLANG_TEST_CHILDREN`):** EDA, Lox and `tests/lang` with 14 break edits gave identical verdicts and exit statuses (`union-{eda,lox,lang}.json`).
+- **The first run found 22 differences, all `FileBusy`.** A sibling thread's child held a test executable's write descriptor between its `clone` and its `execve`. The spawn now retries `ETXTBSY` with a short backoff.
+- **Receipts carry across modes on EDA:**
+  - after a leaf edit, a run in children reruns exactly the 31 tests an in-process run reruns;
+  - a revert replays all 310 in either mode.
+
+  Two fixes made this possible: span-0 locations, and the schema digest scoped to reachable types.
+- **Regression checks on the final compiler:**
+  - `keys_differential.py`, 28 edits: 0 missed and 0 wrong (`final-keys-*.json`);
+  - the item 4 differential on EDA, 4 break edits: 0 differences (`final-batch-eda.json`).
+- **Gate:** 88/88, in 72 s.
+
+**Speed** (`interleave-final.out`: 5 interleaved rounds against `main` `4b666d7e9` (item 4), each in its own warm cache; outside load 11–13, so absolute numbers are high; medians):
+
+| edit | all CPUs `main` | all CPUs now | `--jobs 4` `main` | `--jobs 4` now |
+|---|---:|---:|---:|---:|
+| hub body (111 rerun) | 1.01 s | **0.61 s** | 1.59 s | **0.65 s** |
+| leaf body (31 rerun) | 0.87 s | **0.52 s** | 0.82 s | **0.52 s** |
+| interface (0 rerun) | 0.76 s | **0.40 s** | 1.14 s | **0.42 s** |
+| comment only (0 rerun) | 0.75 s | **0.40 s** | 1.07 s | **0.42 s** |
+
+A run with nothing changed is also faster: 0.46 s → 0.34 s in the same session.
+
+**Against the benchmark** (all CPUs, the three timed edits): hub 0.61 s, leaf 0.52 s, interface 0.40 s. The median is **0.52 s**, against Go's 1.19 s, Rust's 1.64 s and Zig's 2.20 s.
+
+> **Correction (§6f).** The benchmark harness measured more for the body edits than this: leaf 0.95 s and hub 0.90 s. The interface edit matched, at 0.42 s.
+> - **Why the probe read low:** the probe repeated each edit in the same warm cache, and a repeat reuses the objects the first edit rebuilt.
+> - **Why the harness reads higher:** it empties its cache every repetition, so it always times the first edit.
+> - **What still holds:** the relative gains above, since both compilers were probed the same way.
+> - **The benchmark-level claim does not.** The benchmark's test step is 0.90 s, against Go's 0.75 s in the same run, not 0.52 s.
+
+**What is left.**
+- **The hub edit:** its critical path is now the shared check (about 200 ms), then the largest root's select, build and run. The build is lowering, LLVM emission and `zig cc` of the changed units.
+- **No-rerun edits:** discovery, the shared check, and each root's key derivation (about 50–70 ms for the largest root).
+
+## 6f. The benchmark on the merged `main`
+
+**What ran.** The EDA stage-1 benchmark, rerun on `main` `fc31e55bb`. That `main` is the morning's new core plus everything merged since: copy elimination, items 1–5, fast launches and the removed cache sync.
+- **Compiler:** a ReleaseFast build at `~/.cache/mylang/bench-main-352d9396` (sha256 prefix `ae4b4ba68304a33e`).
+- **Harness:** `eda-bench` `claude/eda-bench-newcore` `d45e0cd`, the same entries re-pinned to that compiler, with no `--jobs` (item 1).
+- **Protocol:** the morning run's (`experiments/bench-newcore-20261008/eda/`), in `experiments/test-loop-20261008/bench-main/run.sh`.
+  - Development loop: `bench.py time --repeat 3` for Zig, Go, Rust and mylang back to back, 19:52–20:00 UTC, under `bench-compile.lock` and the build-slot wrapper (16 CPUs).
+  - Runtime: on CPU 10 under `cpu10.lock`, 10 rounds after a warm-up, with every output checked against the goldens.
+- **Load:**
+  - Zig, Go and Rust ran at a one-minute load of about 3–6.
+  - mylang's edits ran while it rose to 12, as another session's gate started.
+  - The runtime run was at load about 4.
+  - The morning run had load 5–14 for the loop timings, so every language is faster now. **Compare within a run, not across runs.**
+
+**Correctness.**
+- `equiv`: 34/34 byte-identical in the debug build (3.1 s of run time, was 5.4 s) and in `--release` (1.3 s, was 2.8 s).
+- `test`: 310 passed, 3.7 s from an empty cache (was 11.1 s).
+- Runtime: every output of every round matched the goldens.
+
+**Development loop after a one-line edit.** Medians of 3 repetitions. The morning run's figure is in brackets.
+
+| step | mylang | Go | Rust | Zig |
+|---|---:|---:|---:|---:|
+| cold build | 6.95 s (12.54) | 3.35 s (5.35) | 2.67 s (3.30) | 65.09 s (132.59) |
+| clean build | 0.44 s (1.50) | 0.74 s (1.18) | 2.64 s (2.95) | 1.28 s (2.08) |
+| check, leaf / hub / interface | 0.16 / 0.16 / 0.16 s | 0.50 / 0.60 / 0.71 s | 0.53 / 0.64 / 0.50 s | 0.70 / 0.70 / 0.72 s |
+| build, leaf / hub / interface | 0.45 / 0.46 / 0.40 s | 0.37 / 0.21 / 0.64 s | 0.66 / 0.81 / 0.63 s | 0.61 / 0.56 / 0.54 s |
+| **test, leaf / hub / interface** | **0.95 / 0.90 / 0.42 s** | 0.70 / 0.75 / 1.18 s | 2.11 / 1.50 / 1.50 s | 1.23 / 1.22 / 1.15 s |
+| median of the three edits: check | **0.16 s** (0.28) | 0.60 s (0.99) | 0.53 s (0.71) | 0.70 s (1.19) |
+| build | 0.45 s (0.80) | **0.37 s** (0.55) | 0.66 s (0.85) | 0.56 s (1.02) |
+| test | 0.90 s (4.86) | **0.75 s** (1.19) | 1.50 s (1.64) | 1.22 s (2.20) |
+
+- **The test step** went from 4.1× Go's (4.86 s against 1.19 s) to 1.2× (0.90 s against 0.75 s) in the same-run comparison.
+  - It is now faster than Zig's and Rust's.
+  - It is the fastest of the four on the interface edit.
+  - It trails Go on the two body edits.
+- **Check plus build plus test** after an edit: mylang 1.51 s, Go 1.72 s, Zig 2.48 s, Rust 2.69 s (sums of the per-step medians).
+- **Peak memory** of mylang's test step: 352 MiB (leaf), 514 MiB (hub), 138 MiB (interface).
+
+**Why the body edits read higher than §6e's 0.52–0.61 s.** It is the cache, not the load (`probe-rounds.out`, `shift.out`).
+- **In the probe's fresh cache,** the first leaf and hub edits took 0.94 and 0.88 s, as in the harness. Repeating the same edits took 0.58–0.75 s.
+- **A one-line shift:**
+  - first time: 0.95 s;
+  - again with another constant: 0.57 s;
+  - a new two-line shift: 0.96 s;
+  - that two-line shift repeated: 0.70 s.
+
+  The same 31 tests reran each time.
+- **The harness** empties its cache every repetition and times each edit once. So it always pays for rebuilding the code that only moved. §6e's probe repeated edits in one warm cache, and mostly did not.
+- **Lever 0 in §8** is the fix.
+
+**Program runtime, optimised builds over the 34 designs.** The geometric mean of per-design ratios; the morning run's figure is in brackets.
+
+| binary | total (median of 10) | peak RSS | mylang's time as a multiple of this |
+|---|---:|---:|---:|
+| Zig ReleaseFast | 0.883 s | 80 MiB | **1.37×** (1.82×) |
+| Zig ReleaseSafe | 0.973 s | 80 MiB | 1.26× (1.67×) |
+| Rust `--release` | 1.004 s | 44 MiB | 1.20× (1.65×) |
+| Go | 2.455 s | 74 MiB | 0.49× (0.67×) |
+| mylang `--release` | 1.213 s (1.593 s) | 53 MiB | — |
+
+That gain is copy elimination's, which was merged into `main` before this branch. The test-loop work does not touch generated code.
+
 ## 7. Order and rules
 
 - **Order:**
@@ -256,3 +389,85 @@ Its tests now run in about 0.11 s of processes at `--jobs 4`, against 0.33 s. Ba
   - at most 7 struct fields and 6 parameters;
   - `///` on pub declarations;
   - no pushes; nothing merged into `main` without the user's go.
+
+## 8. Deferred: what is left, and when to come back
+
+**Decision, 2026-10-08.** The user chose to stop here: merge, rerun the benchmark (§6f), and keep this section so the work can be resumed.
+
+Where things stand, by the benchmark run of §6f:
+- **The test step:** median 0.90 s, against Go 0.75 s, Zig 1.22 s and Rust 1.50 s in the same run. It was 4.1× Go's in the morning run.
+  - mylang is fastest on the interface edit: 0.42 s, against Go's 1.18 s.
+  - It trails Go on the two body edits: 0.90–0.95 s, against 0.70–0.75 s.
+- **The whole loop after an edit** (check + build + test): mylang is the fastest of the four, because its check is 0.16 s.
+
+The levers left cost days each, except lever 1. Lever 0, found by the benchmark, is the largest for body edits.
+
+**Where the time goes now.** The phase probes below ran on the final branch, at load about 8, on all CPUs. They repeated each edit in a warm cache, so they leave out the cost of lever 0: about 0.3 s on a body edit's first run, which is what the benchmark times (§6f). The probes were temporary `elapsed` prints, built and then reverted (§6e).
+
+| phase | comment or interface edit (0 rerun, wall ≈ 0.42 s) | hub edit (111 rerun, wall ≈ 0.65 s) |
+|---|---:|---:|
+| start, header discovery (one shared load) | 25 ms | 25 ms |
+| replay of roots outside the edit's reach | to 32 ms | — |
+| the shared check (uncached, whole union) | to 215 ms (≈ 180 ms of it) | to 220 ms |
+| the in-process roots: selection, keys, input hashing, receipts; for the hub, also build and run | to 428 ms (≈ 210 ms) | to 649 ms (≈ 430 ms) |
+| of that, the hub's largest root (`export_kicad_sch_test`, 28 tests) build | — | ≈ 280 ms: lowering, LLVM emission, `zig cc` |
+
+**Further levers, cheapest first.** The gains are estimates from the probes above, not measurements.
+
+0. **Objects that do not depend on where their code sits (body edits; measure first, then probably 1–3 days).**
+   - **What the benchmark found** (§6f, `shift.out`): in one cache, the leaf edit's test step took:
+     - 0.95 s the first time;
+     - 0.57 s for a second edit with the same line shift and a different constant;
+     - 0.96 s for a new, two-line shift;
+     - 0.70 s for a repeat of that two-line shift.
+
+     The same 31 tests reran each time.
+   - **Probable cause:** a body edit moves every function below it in the file, and their objects carry source line numbers (debug locations). So the object cache misses for code that did not change. A repeat with the same shift finds them.
+   - **The lever:** keep positions out of an object's identity, so only the edited function's object is rebuilt. Options:
+     - emit line information relative to each function's start, and add the base when the unit is linked or in a small per-unit table;
+     - or key objects on position-free IR, and regenerate only the line table.
+   - **Verify first:** count the units compiled on a first edit against a repeat (the test runner has no build report; use the unit cache's new files, or a temporary counter). This confirms that line-shifted units are what rebuilds.
+   - **Expected:** the leaf and hub test steps 0.90–0.95 s → about 0.6 s. That would be under Go's 0.70–0.75 s. The `build` step after a body edit (0.45 s) gains for the same reason.
+   - **Correctness:** debug line numbers in backtraces and trap reports must still be right after a shift. Add a test that edits above a trapping function and checks the reported line.
+1. **One set of keys for the whole directory run (cheap: about half a day to a day).**
+   - **What repeats now:** each in-process root calls `sharedKeys` in `test_runner.zig`. That lowers the reachable program of its own ready tests (`build.buildRootsSource`) and digests every function of it (`test_runner_identity.Shared.build`). The roots share most of their import graph, so the same shared-module functions are lowered and digested once per root, 28 times on EDA.
+   - **The change:** build one `Shared` over the union program once, in the directory run, beside the shared check, and hand it to each root through `test_runner_shared.View`. A root then only maps its tests to function indices and hashes their reach (`test_keys.key`).
+   - **Also share:** the source digests that `checkedInputs` computes per root (every module of the root's closure is read and hashed again), and the settings key from `receipt.settings`.
+   - **Measure first:** add a phase probe inside the roots' ≈ 210 ms, split across `sharedKeys`, `checkedInputs`, discovery and receipt writes. That shows how much this lever can reach.
+   - **Correctness:**
+     - a T3b function digest must not depend on which other functions share the lowering (it is canonical: references by name, no positions or table indices), so the keys from the union lowering must equal the per-root ones;
+     - check it with a key-equality differential (union keys vs per-root keys on EDA, Lox and `tests/lang`), plus `keys_differential.py` and `batch_differential.py --oracle MYLANG_TEST_CHILDREN`;
+     - a root that fails the union `Shared` (for example `UnknownMetadata`) falls back to its own `sharedKeys`.
+   - **Expected:** comment and interface edits about 0.40 s → 0.25–0.30 s; hub and leaf edits save the same 100–150 ms where they wait on key derivation.
+2. **An incremental shared check (days of front-end work).**
+   - **The cost:** the shared check reruns the whole program's checking every time, ≈ 180 ms on EDA (about 26k lines). That includes the whole-program summary and mutation passes.
+   - **Why the cache doesn't help:** the per-module semantic cache made this check 40–50 ms *slower* here (§6e), so the check runs uncached.
+   - **The lever:** re-run the whole-program passes only for the modules whose interface or body digest changed, keeping the rest from the previous run.
+   - **Why it matters later:** the cost grows with the project, not with the edit. At the EDA port's ~100k-line stage it could pass a second, and at that point this lever matters more than everything else here. It would also speed up `mylang check`, `run` and `build`, not only tests.
+   - **Expected now:** maybe 100+ ms off every edit.
+3. **Faster debug code generation for the rebuilt test file (40–80 h).**
+   - **The cost:** the hub edit's critical path ends with one root's build, ≈ 280 ms of lowering, LLVM emission and `zig cc`.
+   - **The plan:** this is `docs/audits/debug-llvm-plan-2026-10-07.md` (the custom debug back end, deferred until its DL package reports).
+   - **Expected:** maybe 150 ms off edits that rerun tests.
+4. **A resident process, a daemon or watch mode (a different product).** It keeps the checked program and the lowering in memory between edits, so there is no start-up, discovery or reload at all. Consider it only if levers 1–3 fall short at the large stages.
+
+**The estimated ceiling with levers 0–3:**
+- body edits, by the benchmark's measure: about 0.4–0.5 s, from 0.90–0.95 s;
+- edits that rerun nothing: about 0.15–0.20 s, from 0.42 s.
+
+Levers 0 and 1 are the cheap ones, and they take most of it.
+
+**When to come back.**
+- **When the EDA port reaches its ~100k-line stage** (`eda-port-benchmark-plan`): rerun the probes above at that size. If the shared check has grown past about 0.5 s, do lever 2 first. Otherwise do lever 1.
+- **To get the test step under Go's on body edits** (it is 0.90 s against 0.75 s in §6f): do lever 0 first, then lever 1. Measure with the `bench.py time` protocol of §6f, which empties the cache every repetition. The warm-cache probe reads body edits about 0.3 s low.
+- **When the debug back end is taken up** for build speed: lever 3 comes with it.
+
+**How to resume.**
+- **Timing:**
+  - the interleaved scripts in `experiments/test-loop-20261008/` (`interleave-final.sh` is the template: two compilers, five rounds, each in its own warm cache);
+  - `probe.sh` for single runs;
+  - the benchmark protocol in `experiments/test-loop-20261008/bench-main/run.sh`.
+- **The differentials every change must pass:**
+  - `keys_differential.py` (0 missed, 0 wrong);
+  - `batch_differential.py --oracle MYLANG_TEST_ISOLATE` and `--oracle MYLANG_TEST_CHILDREN`, with `--breaks`.
+- **The oracle variables:** `MYLANG_TEST_KEYS=per-test`, `MYLANG_TEST_ISOLATE=1` and `MYLANG_TEST_CHILDREN=1`.

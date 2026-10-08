@@ -1,0 +1,166 @@
+{
+ "corpus": "eda",
+ "revision": "7e938b6",
+ "compiler": "/home/epentland/.cache/mylang/union-wip/bin/mylang",
+ "oracle": "MYLANG_TEST_CHILDREN",
+ "targets": [
+  {
+   "target": "src",
+   "exit": [
+    0,
+    0
+   ],
+   "wall": [
+    0.742,
+    0.964
+   ],
+   "tests": 310,
+   "counts": {
+    "passed": 310,
+    "failed": 0,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "src",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.7,
+    0.801
+   ],
+   "break": {
+    "file": "src/kicad_sch_compose.my",
+    "line": 263
+   },
+   "tests": 310,
+   "counts": {
+    "passed": 284,
+    "failed": 26,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "src",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.705,
+    0.834
+   ],
+   "break": {
+    "file": "src/kicad_sch_emit.my",
+    "line": 258
+   },
+   "tests": 310,
+   "counts": {
+    "passed": 281,
+    "failed": 29,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "src",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.702,
+    0.95
+   ],
+   "break": {
+    "file": "src/export_kicad_footprint.my",
+    "line": 355
+   },
+   "tests": 310,
+   "counts": {
+    "passed": 307,
+    "failed": 3,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "src",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.737,
+    0.931
+   ],
+   "break": {
+    "file": "src/infra_fs.my",
+    "line": 70
+   },
+   "tests": 310,
+   "counts": {
+    "passed": 303,
+    "failed": 7,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "src",
+   "exit": [
+    0,
+    0
+   ],
+   "wall": [
+    0.765,
+    0.956
+   ],
+   "break": {
+    "file": "src/eval_env.my",
+    "line": 1691
+   },
+   "tests": 310,
+   "counts": {
+    "passed": 310,
+    "failed": 0,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "src",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.701,
+    0.811
+   ],
+   "break": {
+    "file": "src/flat_netlist.my",
+    "line": 257
+   },
+   "tests": 310,
+   "counts": {
+    "passed": 284,
+    "failed": 26,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  }
+ ],
+ "differences": 0
+}

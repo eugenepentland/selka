@@ -728,3 +728,67 @@ test "runSelected and expectedResult malformed typed cases fail individually and
         try verdict(warm.report, "app::test_z_survivor", "cached");
     }
 }
+
+/// Where a directory run's roots run.
+const Placement = enum { shared_check, children };
+
+/// `mylang test` of the whole project with `--json`, in a cache of its own for
+/// `placement`; `MYLANG_TEST_CHILDREN=1` gives every root a child process.
+fn runDirectory(context: Context, placement: Placement) !Outcome {
+    var environment = try std.testing.environ.createMap(context.arena);
+    if (placement == .children) try environment.put("MYLANG_TEST_CHILDREN", "1");
+    const cache = try std.fs.path.join(context.arena, &.{ context.root, @tagName(placement) });
+    const argv = [_][]const u8{ tools.core_path, "test", context.root, "--json", command_cache, cache, "--jobs", "2" };
+    const result = try std.process.run(context.arena, std.testing.io, .{ .argv = &argv, .environ_map = &environment });
+    const parsed = std.json.parseFromSliceLeaky(std.json.Value, context.arena, result.stdout, .{}) catch .null;
+    return .{ .status = switch (result.term) {
+        .exited => |code| code,
+        else => 255,
+    }, .report = parsed, .stderr = result.stderr };
+}
+
+/// Both runs report the same tests, verdicts, reasons and sources, with the same status.
+fn sameDirectoryReports(together: Outcome, children: Outcome) !void {
+    try std.testing.expectEqual(children.status, together.status);
+    const left = v.array(v.get(together.report, "tests"));
+    const right = v.array(v.get(children.report, "tests"));
+    try std.testing.expectEqual(right.len, left.len);
+    for (left, right) |one, other| {
+        try std.testing.expectEqualStrings(v.text(v.get(other, "name")), v.text(v.get(one, "name")));
+        try std.testing.expectEqualStrings(v.text(v.get(other, "status")), v.text(v.get(one, "status")));
+        try std.testing.expectEqualStrings(v.text(v.get(other, "reason")), v.text(v.get(one, "reason")));
+    }
+    const sources = v.array(v.get(together.report, "sources"));
+    const expected_sources = v.array(v.get(children.report, "sources"));
+    try std.testing.expectEqual(expected_sources.len, sources.len);
+    for (sources, expected_sources) |one, other| try std.testing.expectEqualStrings(v.text(other), v.text(one));
+}
+
+const union_dep = "module dep\n\npublic def value() -> int:\n    return 3\n\npublic def test_dep_value() -> bool:\n    return value() == 3\n";
+
+// spec: NEW-CORE-TEST-UNION-1
+test "a directory run that checks its roots together in process reports what one child per root reports" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
+    try context.write("mylang.json", "{\"version\": 1}\n");
+    try context.write("dep.my", union_dep);
+    try context.write("a_test.my", "module a_test\nimport dep\n\npublic def test_a() -> bool:\n    return dep.value() == 3\n\npublic def test_a_fails() -> bool:\n    return dep.value() == 4\n");
+    try context.write("b_test.my", "module b_test\nimport dep\n\npublic def test_b(out: Stream) -> bool:\n    out.print(\"from b\")\n    return dep.value() > 0\n");
+    try context.write("c_test.my", "public def test_c() -> bool:\n    return 3 == 3\n");
+    try context.write("app.my", "module app\nimport dep\n\ndef main() -> int:\n    return dep.value()\n\npublic def test_app() -> bool:\n    return True\n");
+    try sameDirectoryReports(try runDirectory(context, .shared_check), try runDirectory(context, .children));
+    // After an edit both rerun the same tests and replay the rest.
+    try context.write("dep.my", "module dep\n\npublic def value() -> int:\n    total = 1\n    return total + 2\n\npublic def test_dep_value() -> bool:\n    return value() == 3\n");
+    const edited = try runDirectory(context, .shared_check);
+    try sameDirectoryReports(edited, try runDirectory(context, .children));
+    try expectStatus(context, edited, 1);
+    // A root that does not check fails alone in both, its diagnostics on stderr.
+    try context.write("b_test.my", "module b_test\nimport dep\n\npublic def test_b() -> bool:\n    return dep.value() == \"three\"\n");
+    const broken = try runDirectory(context, .shared_check);
+    try sameDirectoryReports(broken, try runDirectory(context, .children));
+    try std.testing.expect(std.mem.indexOf(u8, broken.stderr, "b_test.my") != null);
+}

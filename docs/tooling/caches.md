@@ -274,9 +274,11 @@ code and a changed declared ceiling invalidates by key. Concrete specialization
 reuse increments `checked_bodies.reused` beside ordinary body reuse; the
 `symbolic_templates` object only counts abstract template replay.
 
-Publication stages the complete image in a same-directory `.tmp` file, flushes
-and syncs it, and renames it over the stable key, so readers observe the previous
-complete file or the new one, never a partial image. Concurrent publishers may
+Publication stages the complete image in a same-directory `.tmp` file and renames
+it over the stable key, so readers observe the previous complete file or the new
+one, never a partial image. It never syncs the filesystem: a cache needs no
+durability, and after a crash an image the disk did not keep is torn or missing,
+which validation rejects as a miss. Concurrent publishers may
 race on the same key; a loser only costs a later miss. Each contract namespace
 retains at most 128 MiB and 65,536 entry files by default; a larger single body is
 bypassed. One request publishes all of its fresh bodies as a batch: the batch

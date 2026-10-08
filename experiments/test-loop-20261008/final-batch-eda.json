@@ -1,0 +1,120 @@
+{
+ "corpus": "eda",
+ "revision": "7e938b6",
+ "compiler": "/home/epentland/.cache/mylang/union-wip/bin/mylang",
+ "oracle": "MYLANG_TEST_ISOLATE",
+ "targets": [
+  {
+   "target": "src",
+   "exit": [
+    0,
+    0
+   ],
+   "wall": [
+    0.705,
+    0.734
+   ],
+   "tests": 310,
+   "counts": {
+    "passed": 310,
+    "failed": 0,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "src",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.67,
+    0.659
+   ],
+   "break": {
+    "file": "src/sexpr_ast.my",
+    "line": 91
+   },
+   "tests": 310,
+   "counts": {
+    "passed": 237,
+    "failed": 73,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "src",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.695,
+    0.687
+   ],
+   "break": {
+    "file": "src/kicad_sch_wire.my",
+    "line": 115
+   },
+   "tests": 310,
+   "counts": {
+    "passed": 305,
+    "failed": 5,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "src",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.681,
+    0.689
+   ],
+   "break": {
+    "file": "src/kicad_sch_emit.my",
+    "line": 551
+   },
+   "tests": 310,
+   "counts": {
+    "passed": 284,
+    "failed": 26,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "src",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.699,
+    0.682
+   ],
+   "break": {
+    "file": "src/kicad_sch_textbox.my",
+    "line": 93
+   },
+   "tests": 310,
+   "counts": {
+    "passed": 282,
+    "failed": 28,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  }
+ ],
+ "differences": 0
+}

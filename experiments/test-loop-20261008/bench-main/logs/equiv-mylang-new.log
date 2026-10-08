@@ -1,0 +1,36 @@
+mylang-new: built /home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/mylang-new/bin/eda-sch in 3.5s
+PASS blinky-breakout                        6 files    0.01s      25 MiB
+PASS adf5901                                6 files    0.05s      25 MiB
+PASS barracuda                             34 files    0.12s      25 MiB
+PASS barracuda-base                        32 files    0.13s      25 MiB
+PASS barracuda-via-fence                   27 files    0.10s      25 MiB
+PASS black-canyon                          21 files    0.08s      25 MiB
+PASS cyclops-analog                        23 files    0.10s      25 MiB
+PASS cyclops-breakout                       6 files    0.06s      25 MiB
+PASS cyclops-digital-pcb                    6 files    0.13s      29 MiB
+PASS cyclops-interposer                    12 files    0.08s      26 MiB
+PASS cyclops-kband-breakout                14 files    0.08s      26 MiB
+PASS cyclops-kband-pcb                      6 files    0.10s      26 MiB
+PASS cyclops-kband                         18 files    0.09s      26 MiB
+PASS cyclops-xband-sip                     10 files    0.07s      26 MiB
+PASS stm32n6                               27 files    0.12s      26 MiB
+PASS labstation                            29 files    0.16s      26 MiB
+PASS rds3                                  73 files    0.19s      26 MiB
+PASS remora-base                           16 files    0.09s      26 MiB
+PASS remora-rf                             17 files    0.09s      26 MiB
+PASS rf-switch-8way                         6 files    0.05s      26 MiB
+PASS rf-switch-eval                        11 files    0.06s      26 MiB
+PASS straps-base                           14 files    0.15s      26 MiB
+PASS straps                                16 files    0.09s      26 MiB
+PASS Cyclops-Flex                           6 files    0.05s      26 MiB
+PASS dual-flash                             6 files    0.05s      26 MiB
+PASS rds3-rf-selector                       6 files    0.05s      26 MiB
+PASS poe-pd-flyback-tps23757               11 files    0.06s      26 MiB
+PASS w55rp20                                6 files    0.06s      26 MiB
+PASS lmk05318b-clock                        6 files    0.06s      26 MiB
+PASS max860-inverter                        6 files    0.04s      26 MiB
+PASS rds3+flat                              6 files    0.28s      55 MiB
+PASS black-canyon+flat                      6 files    0.08s      28 MiB
+PASS labstation+no-vendor-symbols          29 files    0.12s      28 MiB
+PASS cyclops-analog+no-vendor-symbols      23 files    0.07s      28 MiB
+mylang-new stage 1: 34/34 cases byte-identical (3.1s total run time)

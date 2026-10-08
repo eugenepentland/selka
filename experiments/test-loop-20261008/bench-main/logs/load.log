@@ -1,0 +1,10 @@
+2026-10-08T19:52:04+00:00 before time zig loadavg 3.04 6.23 5.48
+2026-10-08T19:56:25+00:00 after time zig loadavg 3.60 4.49 4.90
+2026-10-08T19:56:25+00:00 before time go loadavg 3.60 4.49 4.90
+2026-10-08T19:57:21+00:00 after time go loadavg 6.13 5.02 5.06
+2026-10-08T19:57:21+00:00 before time rust loadavg 6.13 5.02 5.06
+2026-10-08T19:59:32+00:00 after time rust loadavg 3.62 4.36 4.80
+2026-10-08T19:59:32+00:00 before time mylang-new loadavg 3.62 4.36 4.80
+2026-10-08T20:00:30+00:00 after time mylang-new loadavg 12.05 6.77 5.61
+2026-10-08T20:04:35+00:00 before runtime loadavg 3.87 6.02 5.65
+2026-10-08T20:05:59+00:00 after runtime loadavg 4.41 5.75 5.59
