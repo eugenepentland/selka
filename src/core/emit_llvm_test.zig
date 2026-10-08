@@ -198,6 +198,35 @@ const narrow_extern =
     \\
 ;
 
+const from_end_index =
+    \\def pick(xs: list[int], i: int) -> int:
+    \\    return xs[i]
+    \\
+    \\
+    \\def main() -> int:
+    \\    return pick([1, 2, 3], -1)
+    \\
+;
+
+/// The label of the block that holds `needle`'s first line, or null.
+fn blockOf(text: []const u8, needle: []const u8) ?[]const u8 {
+    const at = std.mem.indexOf(u8, text, needle) orelse return null;
+    var lines = std.mem.splitBackwardsScalar(u8, text[0..at], '\n');
+    while (lines.next()) |line| {
+        if (line.len != 0 and line[line.len - 1] == ':' and line[0] != ' ') return line;
+    }
+    return null;
+}
+
+// spec: NEW-CORE-S5-COLD-INDEX-1
+test "a bounds trap recovers the index the program wrote on the trap's cold path only" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.llvmText(arena.allocator(), from_end_index);
+    const block = blockOf(text, "%fromend") orelse return error.TestExpectedRecovery;
+    try std.testing.expect(std.mem.startsWith(u8, block, "trap"));
+}
+
 const runtime_bool_helpers =
     \\def main(out: Stream) -> int:
     \\    word = "Mixed"

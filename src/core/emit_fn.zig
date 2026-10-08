@@ -28,9 +28,8 @@ fn arrayAccess(context: anytype, out: anytype, name: []const u8, inst: ir.Inst) 
         const bad = try context.fresh("%array");
         try out.print(a, "  {s} = icmp uge i64 {s}, {d}\n", .{ bad, index, array.n });
         const length = try @import("std").fmt.allocPrint(a, "{d}", .{array.n});
-        // A negative index the program wrote is reported as written, not normalized.
-        const reported = if (context.countsFromEnd(inst.b)) try context.originalIndex(out, index, length) else index;
-        try context.trapIf(out, bad, try context.site(.list_bounds, inst, "index"), reported, length);
+        // A negative index the program wrote is reported as written, recovered on the cold path.
+        try context.trapBounds(out, bad, try context.site(.list_bounds, inst, "index"), .{ .index = index, .len = length, .from_end = context.countsFromEnd(inst.b) });
     }
     const slot = try context.stackSlot(m.size(ty));
     try context.storeValue(out, ty, try context.value(inst.a), slot);
