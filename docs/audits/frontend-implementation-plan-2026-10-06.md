@@ -578,8 +578,10 @@ wave 1.
   and F3-C3.
 - **F3-C1 is the widest range.** It touches every construct, and the `dump-ir`
   differential is what keeps it safe.
-- **The four-agent limit is shared** with FB1 in wave 1 and with the values-and-keys
-  plan's T wave if it runs at the same time.
+- **The four-agent limit is shared:**
+  - in wave 1, with FB1 and the values-and-keys plan's VP2 (VP1 builds nothing);
+  - from F2 on, with that plan's T wave, which starts at F1's exit (its launch
+    instructions). Front-end packages take free slots first.
 
 ## 5. Gates
 

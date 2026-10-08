@@ -7,6 +7,12 @@ by trap search.** AM1–AM3 are applied to the front-end plan (`befaf67e` on
 implemented. Read-only packages can start now. Every language change waits for the
 front-end waves that own the same files.
 
+**Updated 2026-10-08, after S5 merged into `main` at `5a6b501d`:**
+- the launch order follows the front-end plan's waves: VP1 and VP2 now, VP3 after FB1,
+  and the T wave at the front-end plan's F1 exit;
+- §1's facts are rechecked against `main`;
+- the front-end plan's slow-step rule (its §6.1) applies here too.
+
 **The user's goal.** Maximize development speed:
 - fast runtime;
 - fast compile and test loops;
@@ -40,7 +46,8 @@ front-end waves that own the same files.
   front-end proposal") and `docs/audits/frontend-implementation-plan-2026-10-06.md` ("the
   front-end plan").
   - FE1–FE7 were accepted on 2026-10-06.
-  - Its waves F0–F5 start at the S5 exit.
+  - Since its 2026-10-08 update, it runs from `main` at `5a6b501d`. F0 was mostly done by
+    S5, so its waves are wave 1 (F1 with FP2 and FB1), then F2–F5.
   - **This plan amends it in three places (§4.2).** The user confirmed all three on
     2026-10-07, and they are applied there.
 - **Local-reasoning item 2** (effect ceilings derived from the signature) is merged into
@@ -49,59 +56,72 @@ front-end waves that own the same files.
 
 ## Launch instructions (for Codex)
 
-**Now, read-only.** These need no compiler change:
+**Now, beside the front-end plan's wave 1.** Neither package changes a compiler file:
 
-> Run packages VP1 and VP2 of `docs/audits/values-keys-trap-search-plan-2026-10-07.md`
-> (branch `claude/values-keys-plan`), each on its own new branch (`codex/vk-vp1`,
-> `codex/vk-vp2`) from `claude/values-keys-plan`. Change no compiler file. Hold S4's
-> machine rules: at most one build-heavy process, and never time anything. Finish each with
-> its report and stop.
+> Run packages VP1 and VP2 of `docs/audits/values-keys-trap-search-plan-2026-10-07.md`,
+> as committed on branch `claude/frontend-plan`. Use one new branch each, `codex/vk-vp1`
+> and `codex/vk-vp2`, created from that commit. Change no compiler file.
+> - VP2 uses the front-end plan's S5 pin: a ReleaseFast `mylang` built from `main` at
+>   `5a6b501d`. Reuse the front-end coordinator's pin if it exists.
+> - Both share the limit of four build-heavy agents with the front-end plan, and
+>   front-end packages take free slots first. VP1 builds nothing; VP2 takes one slot
+>   while it runs `mylang test`.
+> - Apply the front-end plan's §6.1 slow-step rule.
+> - Finish each with its report and stop. Never merge into `main` and never push.
 
-**After FB1's report (the S4 exit; alongside S5).** VP3 follows FB1 rather than running
-beside it, because both add to the core's stats code:
+**After FB1's report** (front-end wave 1). VP3 follows FB1 instead of running beside it,
+because both add to the core's stats code:
 
 > Implement package VP3 of the values-and-keys plan on `codex/vk-vp3`, created from
-> `codex/frontend-fb1` after FB1's report. Merge `claude/values-keys-plan` into it first.
-> Touch only `src/core/`. Never merge into `main` and never push. Finish with VP3's report
-> and stop.
+> `codex/frontend-fb1` after FB1's report. Touch only `src/core/`. Never merge into
+> `main` and never push. Finish with VP3's report and stop.
 
 **The front-end amendments** (§4.2, AM1–AM3) are already applied to the front-end plan.
 
-**At the S5 exit, after the user's go:**
+**At the front-end plan's F1 exit, with the user's go for F2:**
 
 > Implement the T wave of the values-and-keys plan on `codex/vk-trap-search`, created from
-> the S5 exit commit, merging `claude/values-keys-plan` first. It runs in parallel with the
-> front-end waves, owns only the files listed per package, and shares their limit of four
-> build-heavy agents: front-end packages take free slots first. Stop after T1-R with its
-> report.
+> `codex/frontend-integration` at the F1 exit. It runs in parallel with F2–F4 and owns only
+> the files listed per package. It shares the limit of four build-heavy agents, and
+> front-end packages take free slots first. Merge T2 and F3-C1 one at a time: both touch
+> where the core emits checks. Apply the front-end plan's §6.1 slow-step rule. Stop after
+> T1-R with its report.
+
+**Why the T wave waits for the F1 exit:**
+- Front-end wave 1 already fills the four build-heavy slots: F1-0, FB1 and FP2, then
+  four F1 lanes and F1-D.
+- T1-R runs trap search over `tests/lang`, `src/stdlib`, Lox and EDA, which are the
+  corpora F1 migrates. A run started mid-migration would report on code that is about to
+  change.
+- T1's fixtures would be written in spellings F1 removes.
 
 **After F4, after the user's go:** the V wave, on `codex/vk-tables`.
 
-**After S5, VP3's data and the user's go:** O1, on `codex/vk-static-ownership`.
+**After VP3's data and the user's go:** O1, on `codex/vk-static-ownership`.
 
 ## 1. Where it starts
 
-- **Repository facts** are from `main` at `df55c52d7` unless a branch is named.
-  **File ownership** for packages that run after S5 names the new core's files at the S3
-  exit (`82c125dd`), because S5 deletes the old back end and its test runner.
-- **The same freeze as the front-end plan (its §1).** Until S5 the front end is shared by
-  both cores, and the old core is S4's differential oracle, so no front-end code changes
-  before S5. Packages that run earlier touch nothing, or only `src/core/`.
+- **Repository facts.**
+  - They were first taken from `main` at `df55c52d7`.
+  - On 2026-10-08 they were rechecked against `main` at `5a6b501d`, which is S5 merged.
+  - **File ownership** names the new core's files on `main`. The old back end and its
+    test runner are deleted.
+- **S5 is done.** The front end is no longer shared with an old core, so the freeze
+  before S5 no longer applies. Front-end files are owned by the front-end plan's
+  packages, so T and V packages change them only through that plan's coordinator.
 - **Corpora**, the same as the front-end plan's:
-  - the EDA slice: `eda-bench` `codex/s4-eda-stage1` `510c2e2`;
+  - the EDA slice: `eda-bench` `claude/s4-eda-newcore` `7e938b6` (310 tests, 34 goldens);
   - the Lox port: `codex/s4-lox-value-semantics` `f44302d8`;
   - `src/stdlib`;
   - `tests/lang`;
   - for performance, the 46 rows used by FB1.
-- **The oracle after S5** is the pinned S5-exit compiler. It is built once, as the front-end
-  plan's §1 describes.
+- **The oracle** is the front-end plan's (its §1): S5-0's frozen references, plus the S5
+  pin built once from `main` at `5a6b501d`.
 - **Existing machinery this plan builds on:**
   - **Property tests** (`docs/tooling/guest-tests.md` "Property tests").
-    - **After S5 they run in the new core's runner,** which has had its own since S3:
-      `src/core/test_runner_property.zig` and `src/core/property_*.zig` (generation,
-      shrinking, types, execution, rendering).
-    - **On `main`** the runner is the old back end's: `src/native_test_property.zig` and
-      `src/property_*.zig`, which import `qbe_build_io.zig`. S5 deletes them.
+    - **They run in the new core's runner:** `src/core/test_runner_property.zig` and
+      `src/core/property_*.zig` (generation, shrinking, types, execution, rendering).
+      The old back end's `src/native_test_property.zig` was deleted by S5.
 
     They provide:
     - deterministic inputs from the parameter types, biased toward edge values;
@@ -115,8 +135,8 @@ beside it, because both add to the core's stats code:
     - they are checked in every build;
     - `R_REQUIRES` names the caller that broke the requirement;
     - contracts are part of the interface (`list-interfaces`, `context`, `api-diff`).
-  - **Structured trap records** (`structured-native-trap-detail`) and
-    `mylang invoke --describe` / `--input=FILE`.
+  - **Structured trap records** (`structured-native-trap-detail`). `mylang invoke` was
+    retired by S5 (S5-D5); trap search drives functions through generated tests instead.
   - **`mylang lint`** with profiles, waivers and `--gate`; **`mylang test --affected
     --against REF`**.
   - **The `pool` module** (`src/stdlib/pool.my`): generation-checked handles. It is used
@@ -497,10 +517,10 @@ Classify each edge into one of three:
 1. In scratch copies of the corpora, generate, for every searchable public function
    `f(a: A, b: B) -> R`, a property test `test_trap_f(a: A, b: B) -> bool` that carries
    `f`'s `@requires`, calls `f`, and returns `True`.
-2. Run `mylang test` over them with the existing generator, using the S4 Wave 0 pin: the
-   ReleaseFast build of `claude/new-core-s4-design` at `a16a324e` that ported both
-   corpora (the S5 pin does not exist yet). A Python script under `experiments/` is fine;
-   it is never needed to build or use mylang.
+2. Run `mylang test` over them with the existing generator, using the S5 pin: a
+   ReleaseFast `mylang` built from `main` at `5a6b501d`, shared with the front-end plan's
+   coordinator. (The earlier S4 Wave 0 pin, `a16a324e`, is superseded.) A Python script
+   under `experiments/` is fine; it is never needed to build or use mylang.
 
 **Exit, per corpus:**
 - functions searched, failed and not searched (with reasons);
@@ -509,7 +529,7 @@ Classify each edge into one of three:
 
 This sizes T1-R: how much the gate would ask of existing code.
 
-#### VP3. Ownership cost counters (after FB1's report, alongside S5; about 3–5 h)
+#### VP3. Ownership cost counters (after FB1's report, in front-end wave 1; about 3–5 h)
 
 VP3 starts from `codex/frontend-fb1` once FB1 has reported. Running the two side by side
 would have both packages editing the core's stats code at the same time. FB1 counts per
@@ -543,7 +563,7 @@ through the coordinator.
 | **AM2 (VK8)** | F1-E and F2-C2 | **F1-E:** the `noalloc` clause becomes `@noalloc`, with a fix. **F2-C2:** besides the call-graph passes, delete the per-body effect check, the inferred effect sets, callback-type ceilings and `E_DERIVED_EFFECTS`; keep `E_UNUSED_CAPABILITY`. Contract purity becomes a local rule: a contract condition passes no capability and no `mut` argument. P4 also runs with effect checking removed and lists every changed verdict. **F2-C2 adds the core's build-time `@noalloc` check** (§3.7). **B6** in FB1 keeps one definition of "allocates", shared with that check. |
 | **AM3 (VK9)** | F1, as its own package F1-D | Add row A16 (§3.7). F1-D (about 4–6 h) starts in the first free slot after F1's four parallel packages, to hold the four-agent limit. |
 
-### 4.3 T wave: trap search and coverage (after S5; in parallel with F1–F4)
+### 4.3 T wave: trap search and coverage (from the front-end F1 exit; in parallel with F2–F4)
 
 #### T1. Trap search (about 8–12 h)
 
@@ -719,15 +739,17 @@ The same mechanism serves tasks.
 | Wave | Packages | Starts after | Expected wall time |
 |---|---|---|---|
 | Early | VP1, VP2 | now | 3–5 h; 4–6 h |
-| Early, core | VP3 | FB1's report (after the S4 exit, alongside S5) | 3–5 h |
+| Early, core | VP3 | FB1's report (front-end wave 1) | 3–5 h |
 | Amendments | AM1–AM3, applied to the front-end plan's F1 and F2 on 2026-10-07 | — | counted in the front-end plan: F1 17–24 h, F2 13–18 h |
-| T | T1, then T1-R (stop), then T2 and T3; T4 after V1 | the S5 exit and the user's go | 26–40 h |
+| T | T1, then T1-R (stop), then T2 and T3; T4 after V1 | the front-end F1 exit and the user's go | 26–40 h |
 | V | V1, then V2 (inventory and stop), V3, and V4 if needed; T4 | F4's exit and the user's go | 28–42 h, plus 6–10 h for V4 if VP1 calls for it |
 | O | O1, then O2 (stop), then O3 if it passes | S5, VP3, and the user's go | 35–55 h |
 | C | C1 | concurrency planning | 2–3 h |
 
-The T wave runs beside F1–F4 because it owns different files (the runner, the generator, the
-core's check emission). The coordinator merges T2 and F3-C1 one at a time.
+The T wave runs beside F2–F4 because it owns different files (the runner, the generator,
+the core's check emission). The coordinator merges T2 and F3-C1 one at a time. It starts
+at the F1 exit, not with F1: wave 1 has no free build-heavy slot, and F1 migrates the
+corpora T1-R reports on (launch instructions).
 
 **The T wave is not free.** It shares the front-end waves' limit of four build-heavy
 agents, and front-end packages take free slots first. F1 alone fills all four, so T mostly
@@ -737,9 +759,8 @@ not alongside F1.
 ## 6. Gates
 
 **For every package:**
-- the front-end plan's §5 gates where they apply after S5: the full gate, the differential
-  against the pinned S5 compiler, the corpora, check timing and rebuild time;
-- before S5, the S4 rules.
+- the front-end plan's §5 gates where they apply: the full gate, the differential against
+  the S5 oracle, the corpora, check timing and rebuild time.
 
 **Trap search and coverage (T wave):**
 - **Deterministic:** two runs give identical results and reports.
@@ -775,6 +796,13 @@ not alongside F1.
   - timing only on CPU 10;
   - at most four build-heavy agents **across this plan and the front-end plan together**;
   - never the full gate while a fuzz matrix runs.
+- **The slow-step rule** (the front-end plan's §6.1, the user, 2026-10-08):
+  - every command is timed;
+  - anything over about 5 minutes uncontended gets a speed investigation, and the
+    speedup is implemented when it keeps the check identical;
+  - nothing is sped up by weakening it;
+  - entries go in the front-end plan's ledger. For the T wave's test-time work this
+    comes on top of §6's test-time budget, not instead of it.
 - **Out-of-scope bugs** get a regression fixture and a report.
 
 **Repository rules** (from `CLAUDE.md`, `guardian.toml` and the documentation gate):
