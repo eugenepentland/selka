@@ -62,7 +62,26 @@ const dropped_test_flags = [_][]const u8{
 const test_only_retired = [_]Retirement{
     .{ .name = "--report", .message = "`mylang test --report` printed the old runner's work report (retired, S5-B2); `--json` reports each test, `cached` for a replayed receipt" },
     .{ .name = "--timings", .message = "`mylang test --timings` was retired with the old runner (S5-B2); `mylang run FILE.my --timings` times one program" },
+    .{ .name = "--explain-invalidation", .message = "--explain-invalidation compared the old back end's nine stage fingerprints (retired, S5-B2); `--json` reports each test, `cached` for a replayed receipt" },
 };
+
+/// Why `mylang test` refuses the flag `name` (its `--flag` part): a flag `build` and
+/// `run` retire with a pointer `test` cannot follow says what `test` offers instead.
+fn testRefusal(arg: []const u8) ?[]const u8 {
+    const name = arg[0 .. std.mem.indexOfScalar(u8, arg, '=') orelse arg.len];
+    for (test_only_retired) |retired| if (std.mem.eql(u8, name, retired.name)) return retired.message;
+    return cli_args.unported(arg);
+}
+
+// spec-case: NEW-CORE-S5-RETIRED-1
+test "test refusals point at what test offers, not at flags test also refuses" {
+    try std.testing.expect(std.mem.indexOf(u8, testRefusal("--explain-invalidation").?, "`--json`") != null);
+    try std.testing.expect(std.mem.indexOf(u8, testRefusal("--explain-invalidation").?, "`--report`") == null);
+    try std.testing.expect(std.mem.indexOf(u8, testRefusal("--report").?, "`--json`") != null);
+    try std.testing.expect(std.mem.indexOf(u8, testRefusal("--friction-log=x").?, "mylang check") != null);
+    try std.testing.expect(testRefusal("--json") == null);
+    try std.testing.expect(std.mem.indexOf(u8, cli_args.unported("--explain-invalidation").?, "`--report`") != null);
+}
 
 /// Run `args` (argv, the program name first) when it names a command of the new
 /// core or a retired one, returning its exit status; null leaves it to the caller.
@@ -146,8 +165,7 @@ fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
         for (dropped_test_flags) |dropped| if (std.mem.eql(u8, name, dropped)) {
             return refuse(init, "test", try std.fmt.allocPrint(a, "{s} was dropped with the old test runner (S5-D6)", .{name}));
         };
-        if (cli_args.unported(arg)) |message| return refuse(init, "test", message);
-        for (test_only_retired) |retired| if (std.mem.eql(u8, name, retired.name)) return refuse(init, "test", retired.message);
+        if (testRefusal(arg)) |message| return refuse(init, "test", message);
         if (std.mem.eql(u8, arg, "--whole-program")) continue;
         if (std.mem.eql(u8, name, "--qbe")) {
             if (split == arg.len) index += 1;
