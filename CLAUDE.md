@@ -1,128 +1,118 @@
 # mylang — working rules
 
-A Python-syntax statically checked language. Zig compiler (`src/`) with a QBE native
-backend as its only runtime (amd64 Linux only) — `mylang run` builds the program and
-executes it. Bytecode survives only as the internal IR QBE consumes; there is no
-interpreter. QBE is vendored under `vendor/qbe` and built by
-`zig build` into `zig-out/bin/qbe`. Zig is pinned by `.zigversion`; the build panics on
-any other toolchain.
+A Python-syntax statically checked language. Zig compiler (`src/`) whose back end is
+the new core (`src/core/`): the checked program becomes Core IR, then LLVM text, which
+the pinned Zig toolchain's clang (`zig cc`) compiles and links with the core C runtime
+(`src/core/runtime/`), amd64 Linux only. `mylang run` builds the program and executes
+it. There is no interpreter, no QBE, no bytecode and no garbage collector: memory is
+one-count reference counting with copy-on-write. Zig is pinned by `.zigversion`; the
+build panics on any other toolchain.
 
 ## Build
 
-- `zig build` — compiles **and installs** `zig-out/bin/{mylang,mylang-io,qbe,board-trial,schematic-svg}`.
-  Run this after any `src/` change before using `zig-out/bin/mylang`.
-- `zig build test` — runs the full gate, including installation prerequisites for
-  drivers that build native guests. Focused `test-units` and `test-cli` use
-  unattached compiler copies and **do not install**. After a `src/` change, run
-  plain `zig build` before using `zig-out/bin/mylang` directly.
+- `zig build` — compiles **and installs** `zig-out/bin/mylang`, the one compiler
+  (front end and new core; `mylang-core` merged into it in S5). Run this after any
+  `src/` change before using `zig-out/bin/mylang`.
+- `zig build test` — runs the full gate. Focused `test-core`, `test-units` and
+  `test-cli` **do not install**. After a `src/` change, run plain `zig build` before
+  using `zig-out/bin/mylang` directly.
 - `zig build test-compile` — type-checks every Zig test root without running anything.
 - **Building and using mylang needs no Python.** `zig build` (the install graph) and
   every command of the installed compiler run none; `USE-WITHOUT-PYTHON-1` in
   `test/integration.zig` runs the user commands under an empty `PATH`. Python is
   fine in `zig build test` drivers, developer scripts, `bench/`, `velocity/` and
-  `experiments/`. `--release` is no exception: the LLVM backend is built into the
-  compiler (`src/qbe_build_llvm*.zig`), and the retired Python adapter under
-  `experiments/llvm-backend/` is only an equivalence oracle. Never wire a Python
-  step into the install graph or spawn one from `src/`.
+  `experiments/`. Never wire a Python step into the install graph or spawn one from
+  `src/`.
 - Use `zig build -Doptimize=ReleaseFast --prefix /path/to/install` for a compiler
   installation used by application agents, or to time the compiler itself. Default
-  `zig build` produces a Debug compiler; cached guest tests still pay its parsing,
-  JSON and dependency-planning costs. This setting optimizes the compiler itself,
-  independently of the guest program's backend and optimization flags, so guest
-  benchmarks do not need it (see "Measuring guest programs"). Add
-  `-Dcompiler-only=true` when you only need `mylang`: it skips installing
-  `board-trial`, `schematic-svg` and `mylang-io`, each of which re-optimizes the
-  whole compiler.
+  `zig build` produces a Debug compiler: it parses, checks and plans more slowly, but
+  the compiler's optimization mode does not choose the guest's build mode
+  (`--release` does). `-Dcompiler-only=true` is accepted for older scripts and
+  changes nothing.
 - Sharing the machine with other agents: run `zig build`, focused tests and gates
   through `scripts/build-slot.sh build|gate …`. It admits a job only when a slot
   and enough memory are free, and keeps the timing CPUs (`MYLANG_TIMING_CPUS`,
   default `2,3,10,11`) free of builds. Give every worktree its own
-  `ZIG_LOCAL_CACHE_DIR` and set `TMPDIR` on disk. See
-  `docs/tooling/many-agents.md`.
+  `ZIG_LOCAL_CACHE_DIR` and set `TMPDIR` on disk (`/tmp` has a per-user quota; a
+  full quota makes test processes exit 70). See `docs/tooling/many-agents.md`.
 - Never point two source trees (a base checkout and a worktree) at one
   `ZIG_LOCAL_CACHE_DIR`. Zig reuses the cached configure phase across them, and its
-  absolute paths name the first tree. The build now fails with "this build
-  configuration belongs to …" instead of quietly bundling the wrong runtime. See
-  `docs/tooling/native-build.md#where-the-content-hash-comes-from`.
+  absolute paths name the first tree.
 
 ## Measuring guest programs
 
-Time guest programs with the Debug `zig-out/bin/mylang` from a plain `zig build`
-(about 15 s after a change). A Debug and a ReleaseFast compiler emit
-byte-identical guest binaries. The compiler's optimization mode changes only how
-fast the compiler runs, never the program it emits. `zig build bench-parity`,
-`bench/parity/bench_parity.py` and `experiments/perf-parity-plan-20260922/bench.py`
-all default to `zig-out/bin/mylang`. Build a ReleaseFast compiler
-(`-Doptimize=ReleaseFast -Dcompiler-only=true --prefix …`, about 3 to 5 minutes)
-only to time the compiler itself or to hand a compiler to other agents.
-`bench_parity.py same-binaries --other PATH` re-checks the identity when in doubt.
+Time a guest with a `--release` build: `mylang build prog.my -o prog --release`
+emits the whole program as one optimized LLVM unit, while a plain build is the
+debug edit-loop build (one unit per module, no optimizing passes). Time the
+binary, not `mylang run`, or use `mylang run prog.my --release --timings`
+(`timings: native_ns=N`, the build excluded). Build a ReleaseFast compiler only
+to time the compiler itself or to hand a compiler to other agents. Timing runs
+go on the reserved timing CPUs, never beside a gate.
 
 ## Fast loops (use these while iterating)
 
-- `python3 scripts/affected_tests.py` — **the inner loop for a change.** It diffs
-  against the merge-base with `main` (plus staged, unstaged and untracked files; `--base
-  REF` to choose), maps each changed file to the tests that most directly cover it and
-  runs only those: `src/foo.zig` → the Zig tests in and beside it (`foo_test.zig`, test
-  files importing it), tests carrying a `spec:` tag, diagnostic code or function the
-  diff touches, plus a guest smoke; `src/*.c` → `test-native-memory`, `test-native-heap`
-  and the guest areas using that runtime part; `tests/lang/x.my` → `mylang test` on it;
-  a doc page → its doctest and `doc-coverage`; the retired LLVM adapter (the
-  translator's equivalence oracle) → `test-llvm-adapter` plus an LLVM guest smoke; a driver under `tests/` → its build step. It prints what it
-  selected and why (`--dry-run` stops there), runs Zig selections as sharded
-  processes, and says on every run that it is **not the gate**. Measured 2026-09-23
-  on a loaded machine: 1–2 s for a `.my` or doc edit, 14 s for `src/sema.zig`, 25 s
-  for a `src/native_*.c`, 57 s for `src/qbe.zig` (its 108 Zig tests). Run it through
-  the build slot like any build. The full gate below is still required before you
-  finish.
-- `zig build test-units -Dtest-filter=SUBSTRING` — runs only `src/root_test.zig` tests
-  whose name contains SUBSTRING. `-Dtest-filter=arena` is 34 tests in about 1.5 s; the whole
-  root is 1113 tests in about 73 s (measured warm 2026-09-18; `zig build test` shards it). `zig build test-cli -Dtest-filter=…` does the same for
-  `test/integration.zig`. Neither runs Python drivers, Guardian, or the install graph:
-  they depend only on their test binary plus unattached copies of `qbe` and the compiler. The filter also
-  applies to `zig build test` and `test-compile`. An explicitly empty
-  `-Dtest-filter=` is rejected at configure time, and a filter that names nothing fails
-  rather than reporting green, so filter one root at a time. These two steps are never
-  sharded, so their selected-test count and verdict are one process's.
-- `python3 scripts/focused_test.py units arena` — the supported wrapper over the same
-  targets (`units`, `cli`, `golden`). It rejects a missing/empty/whitespace filter before
-  invoking Zig, prints the runner's selected-test count and PASS/FAIL verdict, saves the
-  full output under `.mylang-cache/focused-tests/`, reports wall time, and exits with the
-  wrapped command's status. Use `python3 scripts/focused_test.py full` for the explicit
-  whole-suite request; it refuses a filter.
-- `zig-out/bin/mylang test <entry.my|dir> --filter SUBSTRING` — guest (`.my`) tests,
-  each built and run as its own native process.
-  A bare substring matches anywhere in the qualified name; a pattern containing
-  `*`, `?` or `[` is a glob. A directory runs every `.my` entry under it in parallel.
-  Results are reused per test, so an unchanged rerun is near-free. A first run pays
-  for the native build; the object cache makes later runs cheap.
+- `zig build test-core -Dtest-filter=SUBSTRING` — the new core's tests
+  (`src/core/root_test.zig`: unit tests plus the end-to-end slice under
+  `test/core`) whose name contains SUBSTRING, in one process; unfiltered it runs
+  in `-Dcore-shards=N` shards (default 8).
+- `zig build test-units -Dtest-filter=SUBSTRING` — `src/root_test.zig` (front end,
+  diagnostics, tooling, and programs run through `native_execute`, which builds
+  them with `mylang run`). `zig build test-cli -Dtest-filter=…` does the same for
+  `test/integration.zig`. Neither runs Python drivers, Guardian, or the install
+  graph. The filter also applies to `zig build test` and `test-compile`. An
+  explicitly empty `-Dtest-filter=` is rejected at configure time, and a filter
+  that names nothing fails rather than reporting green, so filter one root at a
+  time. These two steps are never sharded.
+- `python3 scripts/focused_test.py units fmt` — the supported wrapper over the
+  same targets (`units`, `cli`, `golden`). It rejects an empty filter, prints the
+  selected-test count and verdict, saves the full output under
+  `.mylang-cache/focused-tests/` and exits with the wrapped command's status.
+- `python3 scripts/affected_tests.py` — diffs against the merge-base with `main`
+  (`--base REF` to choose), maps each changed file to the tests that most directly
+  cover it and runs only those; `--dry-run` prints the selection. It says on every
+  run that it is **not the gate**. Run it through the build slot.
+- `zig-out/bin/mylang test <entry.my|dir> --filter SUBSTRING` — guest (`.my`)
+  tests, each built by the new core and run as its own native process. A bare
+  substring matches anywhere in the qualified name; `*`, `?` or `[` make it a glob.
+  A directory runs every entry under it in parallel (`--jobs N`, `MYLANG_JOBS`).
+  Results are reused per test (receipts keyed by the test's Core IR), so an
+  unchanged rerun is near-free; `--force` reruns. The gate's second run is
+  `--release --verify-facts` with `MYL_CORE_LEAKCHECK=1`.
+- `zig build test-lang` — `tests/lang` and `tests/value_semantics` through
+  `mylang test`, at debug and at release with the fact and leak checks.
 - `zig build test-docs` — executes every fenced documentation example.
 - `zig-out/bin/mylang doc-coverage .` — checks the feature/doc contract (below).
-- Targeted Python drivers: `zig build test-qbe-build`, `test-native-tests`, `test-byte-io`, …
-  (see `zig build -l`).
+- Developer commands: `mylang dump-ir FILE.my [--facts]`, `mylang dump-typed
+  FILE.my`, `mylang coverage FILE.my`, and `mylang build … --stats`,
+  `--emit-llvm PATH`, `--cache-report`, `--verify-cache`.
 
 ## Where tests live
 
 Language behaviour is tested in the language: a `public def test_*() -> bool` in
-`tests/lang/<area>.my`, run by `mylang test` (`zig build test-lang`, which runs the
-suite under the default RC runtime and again under `--gc-runtime --gc-stress`). Diagnostics,
-traps, host fixtures, caches, formatting and allocation-failure tests are Zig tests in
-`src/root_test.zig`; CLI behaviour is `test/integration.zig`. Write new guest-behaviour
-tests on the mylang side; the rule, the inner-loop costs and the backlog of Zig tests
-still to move are in `docs/tooling/test-layout.md`.
+`tests/lang/<area>.my`, run by `mylang test` (`zig build test-lang`). The new core's
+own tests (IR, passes, emission, driver, caches, test runner) are Zig tests under
+`src/core/` with fixtures in `test/core`. Diagnostics, traps, host fixtures, caches,
+formatting and allocation-failure tests are Zig tests in `src/root_test.zig`; CLI
+behaviour is `test/integration.zig`. Write new guest-behaviour tests on the mylang
+side; the rule and the backlog of Zig tests still to move are in
+`docs/tooling/test-layout.md`.
 
 ## Full gate (run before finishing)
 
 ```
 zig build test --summary all
-zig build test-qbe --summary all
-zig build test-qbe-build --summary all
 zig build fmt-check
 ```
 
-`zig build test` also runs `mylang doc-coverage .` and `mylang doctest .`.
+`zig build test` runs Guardian, `test-core`, the sharded `src/root_test.zig` and
+`test/integration.zig` roots, `test-lang`, `test-guest`, `mylang doc-coverage .`,
+`mylang doctest .` and the tooling drivers, all on the new core. The QBE-era steps
+(`test-qbe`, `test-qbe-build`, the native C-runtime harnesses, the host-application
+roots) are gone with the old back end.
 
-Test verdicts are cached like build outputs. A test shard, a Python driver or the
-doctest re-runs only when its test binary, the compiler or `qbe` it runs, its command,
+Test verdicts are cached like build outputs (`test-core` excepted: it always runs). A
+test shard, a Python driver or the
+doctest re-runs only when its test binary, the compiler it runs, its command,
 one of the environment variables it depends on (`PATH`, `HOME`, `TMPDIR`, `MYLANG_*`,
 …), or one of the repository files it reads changes; those files are declared per step in
 `build_test_inputs.zig`, and `zig build test` fails (`test-inputs-coverage`) when a
@@ -136,8 +126,9 @@ verdict you suspect). When a test starts reading a new fixture, declare it in
 `build.zig` (a cached configuration freezes the whole environment it copies, and
 the build refuses to configure); pass variables through `withTools`.
 
-`zig build test` splits its two slow Zig roots across processes: `src/root_test.zig`
-into `-Dtest-shards=N` shards (default 12) and `test/integration.zig` into `N/2`, each
+`zig build test` splits its slow Zig roots across processes: `src/core/root_test.zig`
+into `-Dcore-shards=N` shards (default 8), `src/root_test.zig` into
+`-Dtest-shards=N` shards (default 12) and `test/integration.zig` into `N/2`, each
 one run of the same test binary under Guardian's `--guardian-shard=K/N` with its own
 `max_rss`, so the shards run concurrently and print one `test wall` and one verdict
 each. They partition the root — every test runs exactly once, and the shards' selected
@@ -146,15 +137,20 @@ counts sum to the unsharded count. `-Dtest-shards=1` restores one process per ro
 
 ## Memory ceilings (why a runaway guest no longer kills the machine)
 
-Every process that runs guest code runs under a byte ceiling: the managed heap
-traps `R_MEMORY_BUDGET` at it and the runtime backs it with `RLIMIT_AS` at the
-budget plus 256 MiB. `MYLANG_MEMORY_LIMIT` carries it (bytes, `K`/`M`/`G`
-suffixes); `--max-memory=BYTES` on `run`, `build --run` and `test` outranks it;
-the defaults are 512 MiB per test child and 4 GiB for a single run. The compiler
-caps itself at 8 GiB (`MYLANG_HOST_MEMORY_LIMIT`), `mylang test <dir>` sizes its
-fan-out from `MemAvailable` as well as cores (`--jobs N`, `MYLANG_JOBS`), and
-every build step declares `max_rss`, so `zig build --maxrss N` bounds the whole
-gate's concurrency. See `docs/tooling/runtime-budgets.md`.
+Every `mylang run` and every `mylang test` child runs under a byte ceiling: the
+runtime counts its chunks and large blocks and traps `R_MEMORY_BUDGET` past it,
+and lowers its own `RLIMIT_AS` to the ceiling plus 256 MiB. Precedence:
+`--max-memory=SIZE` on `run`, `build --run` and `test`, then `MYLANG_MEMORY_LIMIT`
+(bytes, `K`/`M`/`G` suffixes), then `limits` in `mylang.json`, then the defaults of
+4 GiB for a run and 512 MiB per test child; `0` removes it. A binary from
+`mylang build -o` carries no ceiling. Steps and frames: a run is unbounded unless
+`--max-steps`/`--max-frames` is given (compiled into `main`; a frame reserves 32 KiB
+of stack under the ceiling); a test defaults to 1,000,000 steps, 1,024 frames and
+`--timeout-ms 60000`. The compiler caps itself at 8 GiB
+(`MYLANG_HOST_MEMORY_LIMIT`), `mylang test <dir>` fans out to `--jobs`,
+`MYLANG_JOBS` or the CPU count (not to free memory), and every build step declares
+`max_rss`, so `zig build --maxrss N` bounds the whole gate's concurrency. See
+`docs/tooling/runtime-budgets.md`.
 
 ## Caches and worktrees (the disk fills up)
 
@@ -169,11 +165,14 @@ gate's concurrency. See `docs/tooling/runtime-budgets.md`.
 - `scripts/prune-caches.sh` (hourly on the dev box; dry run unless `--apply`) deletes the
   caches, `zig-out` and scratch binaries of worktrees idle for 3 days, and any
   `.zig-cache` over 15 GiB. Keep evidence as text, not in caches.
-- Guest builds keep `zig cc`'s own cache in their scratch (NATIVE-ZIG-CACHE-1), so
-  `mylang build`/`test` no longer add objects to `.zig-cache`. The gate adds none either:
-  in-process test builds do the same (NATIVE-ZIG-CACHE-3), and every step `zig build`
-  runs gets a private `ZIG_LOCAL_CACHE_DIR` under `$TMPDIR`, removed when it exits
-  (NATIVE-ZIG-CACHE-4).
+- Builds keep content-keyed unit, runtime and number-text objects in one per-user
+  store (`MYLANG_CORE_RUNTIME_CACHE`, else `~/.cache/mylang/core-runtime`) shared
+  safely by every worktree, and linked programs, replay records, front-end caches
+  and test receipts in the work directory (`--cache-dir`, default
+  `.mylang-cache/core`). Every `zig` process a build starts gets a private
+  `ZIG_LOCAL_CACHE_DIR` in a staging directory removed when the build ends, so
+  guest builds add nothing to `.zig-cache`. `scripts/prune-caches.sh` evicts the
+  per-user store too. See `docs/tooling/native-build.md#the-caches`.
 
 ## Guardian rules that actually bite
 
@@ -234,9 +233,8 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
   Because every `while`, ordinary `for`, `range`, `reversed` and `zip` loop may execute
   zero times, an assignment made only in the loop body does not make the name definitely
   assigned after the loop; predeclare it before the loop. The `for` loop variable and
-  `match` payload binding stay scoped to their block. A managed value first assigned
-  inside `with arena()` is confined: reading it after the block is `E_ARENA_ESCAPE`, not a
-  dangling read.
+  `match` payload binding stay scoped to their block. `with arena():` is retired: it
+  runs as a plain block and warns `W_ARENA_RETIRED`; remove the line and dedent.
 - **`range()` is a comprehension source, just like in a `for` loop.** `[x for x in
   range(10)]` and `[x for x in range(a, b)]` build a list of the range's integer values;
   comprehending over a list, string or dictionary works too.
@@ -251,15 +249,12 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
   returns preserve independent lists, dictionaries, sets and byte buffers. A
   helper changes the caller's value through a `mut` parameter and a marked
   argument. Use records and recursive unions for finite trees, and pool handles
-  for graph identity. `class` and builtin `Cell` are rejected under the default
-  value model; `--legacy-sharing` temporarily enables the old rules during
-  migration. See `docs/value-semantics.md`.
-- **Memory is reference counted by default.** Values are released when their last
-  owner goes away (copy-on-write, no collector). `--gc-runtime` (or
-  `MYLANG_RUNTIME=gc-v1`) opts out to the tracing GC, and `--gc-stress` selects
-  it too; `--gc-stress` next to `--rc-runtime` is a usage error, and an RC-built
-  binary refuses `MYLANG_OPTIONS=--gc-stress`. `--legacy-sharing` always uses GC.
-  See `docs/managed-memory.md#runtime-selection`.
+  for graph identity. `class` and builtin `Cell` are rejected; there is no
+  legacy-sharing mode. See `docs/value-semantics.md`.
+- **Memory is reference counted.** One count per object, copy-on-write, released
+  when the last owner goes away; there is no collector and no runtime choice
+  (`--gc-runtime`, `--gc-stress`, `--rc-runtime` are refused). See
+  `docs/managed-memory.md`.
 - **File access needs a capability parameter on the entry point.** Write
   `def main(fs: Filesystem) -> int` and thread `fs` through; there is no ambient
   filesystem. `Network`, `Clock`, `Entropy` and `Environment` work the same way.
@@ -272,8 +267,10 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
 - **`mylang run` grants every capability** unless you pass `--restrict` — it builds the
   program natively and runs it in a child process. A binary from `mylang build` grants
   every capability too and hands `main` its argv unchanged; runtime options such as
-  `--restrict`, `--allow-*` and `--gc-stress` (for a `--gc-runtime` build) go in the
-  `MYLANG_OPTIONS` environment variable instead (`MYLANG_OPTIONS=--restrict ./prog`).
+  `--restrict`, `--allow-*` and `--print-result` go in the `MYLANG_OPTIONS`
+  environment variable instead (`MYLANG_OPTIONS=--restrict ./prog`).
+- **C interop is `extern def` plus `--link FILE.c`.** Scalar arguments only, `host:
+  Host` first. `host def`, `mylang invoke` and the host applications are retired.
 - Integers have fixed width, conditions must be `bool`, lists are homogeneous, ranges
   take one or two arguments, and slices have no step.
 
@@ -281,14 +278,18 @@ Details: `docs/python-syntax.md`, `docs/io.md`, `docs/effects.md`, `docs/stateme
 
 ## Native builds
 
-`mylang build prog.my -o prog` drives QBE, the assembler and the linker directly — no
-Python. QBE is the backend of every `build`, `run` and `test` unless `--release`
-asks for the optimized one (`--mode ReleaseFast --backend llvm --llvm-opt 3 --lto`,
-like `cargo build --release`): use it for a binary you ship or time, not in the edit
-loop, since each rebuild pays the LTO link. A harness that measures the optimized
-build must say so (`--backend llvm --llvm-opt 3 --lto` works on older compilers
-too). Objects are content-addressed under `.mylang-cache/qbe` (override with
-`--cache-dir`); the bundled runtime is published once per content hash and linked as one
-static archive with `--gc-sections`, so a program that never prints does not carry the
-printing runtime. `--report` prints a JSON timing/reuse breakdown. See
+`mylang build prog.my -o prog` checks the program, builds Core IR, emits LLVM and
+drives `zig cc` and the link itself — no Python. A build is a debug build (one LLVM
+unit per source module, every check kept, an edit recompiles only the units whose
+text changed) unless `--release` asks for the optimized one (the whole program as one
+LLVM unit; any edit recompiles it all), so iterate in debug and ship or time
+`--release`. Unit objects are content-keyed in the per-user store; an unchanged build
+replays its last identical build without checking or starting a process.
+`--report` prints one `cache-report-v1` JSON line (units linked, reused, compiled,
+verified; program `linked`, `reused` or `replayed`), `--cache-report` the same as
+text, `--stats` what the release passes and the ownership plan did, and
+`--verify-cache` recompiles every served unit and fails on a byte difference.
+`--no-cache` builds through an empty private cache. The old back end's commands and
+flags (`emit-qbe`, `dump-bytecode`, `invoke`, `compile-module`, `--backend`, `--lto`,
+`--gc-runtime`, `--library`, …) are refused with a one-line reason. See
 `docs/tooling/native-build.md` and `docs/tooling/guest-tests.md`.
