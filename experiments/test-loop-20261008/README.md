@@ -18,3 +18,8 @@ Evidence for `docs/audits/test-loop-plan-2026-10-08.md` §1 and §6.
 **Not committed:**
 - The `perf` profiles, the `strace` timelines and the timing probe of §1. They were taken during the investigation.
 - Those numbers come from the session's runs, and the method is in the plan.
+
+**T3b** (§6b of the plan):
+- **`keys_differential.py`** runs seeded edits and their reverts in both key modes; the results are in `keys-{eda,lox,lang}.json`.
+- **`matrix-t3b.sh`** times the items 1–3 compiler against T3b (`matrix-t3b.out`).
+- **`interleave.sh`** is the 5-round interleaved check (`interleave-t3b.out`, taken under outside load).

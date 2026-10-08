@@ -1,0 +1,576 @@
+{
+ "corpus": "eda",
+ "revision": "7e938b6",
+ "compiler": "/home/epentland/.cache/mylang/t3b-wip/bin/mylang",
+ "seed": 11,
+ "warm": {
+  "derived": {
+   "cold_wall": 18.723600866040215,
+   "cold_rerun": 310,
+   "warm_rerun": [],
+   "warm_wall": 0.3452086530160159
+  },
+  "oracle": {
+   "cold_wall": 12.840904378099367,
+   "cold_rerun": 310,
+   "warm_rerun": [],
+   "warm_wall": 0.3457000949420035
+  }
+ },
+ "edits": [
+  {
+   "kind": "interface",
+   "file": "src/stdlib_embed.my",
+   "line": 272,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 1.014,
+    "derived_wall": 0.44,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 1.046,
+    "derived_wall": 0.428,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "move",
+   "file": "src/stdlib.my",
+   "line": 2,
+   "edit": {
+    "oracle_rerun": 36,
+    "derived_rerun": 36,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 2.249,
+    "derived_wall": 1.652,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 1.65,
+    "derived_wall": 0.474,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "src/placement_pin_roles.my",
+   "line": 30,
+   "edit": {
+    "oracle_rerun": 49,
+    "derived_rerun": 49,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 6.15,
+    "derived_wall": 9.998,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 3.841,
+    "derived_wall": 2.069,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "interface",
+   "file": "src/eval_rails.my",
+   "line": 230,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 3.595,
+    "derived_wall": 1.267,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 3.067,
+    "derived_wall": 2.279,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "src/support_parse.my",
+   "line": 21,
+   "edit": {
+    "oracle_rerun": 60,
+    "derived_rerun": 60,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 3.765,
+    "derived_wall": 3.455,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 1.351,
+    "derived_wall": 0.827,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "body",
+   "file": "src/export_kicad_footprint.my",
+   "line": 338,
+   "edit": {
+    "oracle_rerun": 15,
+    "derived_rerun": 15,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 2.876,
+    "derived_wall": 1.803,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 2.247,
+    "derived_wall": 0.821,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "src/render_svg_context.my",
+   "line": 959,
+   "edit": {
+    "oracle_rerun": 4,
+    "derived_rerun": 4,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 1.972,
+    "derived_wall": 1.08,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 1.987,
+    "derived_wall": 1.043,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "interface",
+   "file": "src/kicad_sch_gang.my",
+   "line": 109,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 1.76,
+    "derived_wall": 0.809,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 1.927,
+    "derived_wall": 0.809,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "move",
+   "file": "src/placement_pin_roles.my",
+   "line": 2,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 2.489,
+    "derived_wall": 1.159,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 2.059,
+    "derived_wall": 1.054,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "body",
+   "file": "probes/strings/str_scaling.my",
+   "line": 17,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.532,
+    "derived_wall": 0.73,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.491,
+    "derived_wall": 0.566,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "interface",
+   "file": "probes/gaps/g19_run_flag_spelling.my",
+   "line": 26,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.587,
+    "derived_wall": 0.591,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.49,
+    "derived_wall": 0.592,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "body",
+   "file": "probes/sort_order/sort_workarounds.my",
+   "line": 21,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.516,
+    "derived_wall": 0.47,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.481,
+    "derived_wall": 0.514,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "move",
+   "file": "src/render_block_types.my",
+   "line": 2,
+   "edit": {
+    "oracle_rerun": 27,
+    "derived_rerun": 27,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 3.25,
+    "derived_wall": 2.389,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 2.466,
+    "derived_wall": 1.061,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "pilot/zigfmt.my",
+   "line": 20,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.837,
+    "derived_wall": 1.142,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.732,
+    "derived_wall": 0.566,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "move",
+   "file": "probes/gaps/s4_resolved_gaps.my",
+   "line": 2,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.501,
+    "derived_wall": 0.62,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.497,
+    "derived_wall": 0.555,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "interface",
+   "file": "src/kicad_sch_shape.my",
+   "line": 696,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 1.561,
+    "derived_wall": 0.895,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 1.608,
+    "derived_wall": 0.749,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "src/eval_env.my",
+   "line": 1807,
+   "edit": {
+    "oracle_rerun": 45,
+    "derived_rerun": 45,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 2.948,
+    "derived_wall": 2.185,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.97,
+    "derived_wall": 0.934,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "move",
+   "file": "pilot/escape.my",
+   "line": 2,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.427,
+    "derived_wall": 0.503,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.598,
+    "derived_wall": 0.508,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "src/sexpr_parser.my",
+   "line": 84,
+   "edit": {
+    "oracle_rerun": 111,
+    "derived_rerun": 111,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 3.257,
+    "derived_wall": 2.32,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.715,
+    "derived_wall": 0.766,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "body",
+   "file": "probes/gaps/g04_write_file_quadratic.my",
+   "line": 17,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.857,
+    "derived_wall": 0.508,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.46,
+    "derived_wall": 0.536,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "body",
+   "file": "src/export_kicad_model.my",
+   "line": 81,
+   "edit": {
+    "oracle_rerun": 1,
+    "derived_rerun": 1,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 2.821,
+    "derived_wall": 1.361,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 2.1,
+    "derived_wall": 0.927,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "body",
+   "file": "src/support_strs.my",
+   "line": 87,
+   "edit": {
+    "oracle_rerun": 92,
+    "derived_rerun": 92,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 3.668,
+    "derived_wall": 2.781,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 2.181,
+    "derived_wall": 2.184,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "body",
+   "file": "src/placement_geometry.my",
+   "line": 385,
+   "edit": {
+    "oracle_rerun": 8,
+    "derived_rerun": 8,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 2.772,
+    "derived_wall": 1.567,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 2.262,
+    "derived_wall": 1.325,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "string",
+   "file": "src/kicad_sym_reader.my",
+   "line": 299,
+   "edit": {
+    "oracle_rerun": 37,
+    "derived_rerun": 37,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 3.121,
+    "derived_wall": 3.759,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 1.321,
+    "derived_wall": 0.711,
+    "failed_same": true
+   }
+  }
+ ],
+ "missed_total": 0,
+ "wrong_total": 0
+}

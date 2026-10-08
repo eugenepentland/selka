@@ -35,6 +35,10 @@ Even a comment-only edit, where every test replays, cost 1.3–2.1 s, because ev
 
 ## 3. T3b: exact per-test keys from one lowering
 
+**Status, 2026-10-08: done on `claude/t3b-identity`** (NEW-CORE-TEST-KEYS-1 and -2; results in §6b). The text below is the plan as written. The implementation follows it, with two changes:
+- the whole-file key now joins the derived per-test keys;
+- loop ids are left out of both kinds of key: the instability §6 observed came from them.
+
 **Why.** On a whole-file miss (the file the edit touches), `select` still lowers and hashes each test's program separately: 0.6 s of the 28-test file's 1.4 s, all on the critical path.
 
 **What.** Lower the file's tests once, then derive each test's key from the functions it reaches.
@@ -166,6 +170,35 @@ Each compiler has its own warm cache. The raw rows are in `experiments/test-loop
   - The likely cause is a typed function id leaking into lowering, such as a specialization or lambda name. That is spurious invalidation, not a wrong answer.
   - Worth a small follow-up beside T3b, whose canonical digests would hide it.
 - **Edits that rerun nothing** (comment, interface) are now 0.7 s. The whole-file key turned 58 children's per-test lowering into one lowering per file. What remains is mostly the 58 process starts and cache reloads (item 5).
+
+## 6b. Results of T3b
+
+**Correctness: `keys_differential.py`.**
+- **Setup:**
+  - 56 seeded edits over EDA (24), Lox (16) and `tests/lang` (16): body statements, new string literals, new public functions, line-moving comments, and 18 *break* edits. A break edit is an assertion that fails at run time, inserted into a function.
+  - Every edit and every revert ran with the derived keys and with the `MYLANG_TEST_KEYS=per-test` oracle, each in its own cache.
+- **Result:**
+  - 0 tests missed and 0 extra;
+  - identical failing tests on every one of the 112 runs per mode, including break edits that failed up to 111 tests;
+  - no reruns after a revert. Before the loop-id fix (NEW-CORE-TEST-KEYS-2), *both* modes reran 26–102 untouched tests on some interface edits and reverts.
+- **Evidence:** `keys-{eda,lox,lang}.json`.
+
+**Speed: `matrix-t3b.sh`.** Medians of 3, the items 1–3 compiler against T3b, each in its own warm cache, load 1–6.
+
+| edit | `--jobs 4` items 1–3 | `--jobs 4` T3b | all CPUs items 1–3 | all CPUs T3b |
+|---|---:|---:|---:|---:|
+| hub body (111 rerun) | 1.90 s | 1.76 s | 2.08 s | **1.39 s** |
+| leaf body (31 rerun) | 1.77 s | **1.28 s** | 1.97 s | **1.22 s** |
+| interface (0 rerun) | 0.95 s | 1.13 s | 0.72 s | 0.74 s |
+| comment only (0 rerun) | 0.97 s | 1.14 s | 0.71 s | 0.80 s |
+
+**The `--jobs 4` no-rerun rows are a load artifact.** The two compilers ran one after the other while load rose. In a 5-round interleaved rerun (`interleave-t3b.out`, load 8–29), T3b's median was at or below items 1–3 in every cell:
+- interface at `--jobs 4`: 1.48 s against 2.59 s;
+- comment-only: 1.57 s against 1.58 s.
+
+**Phase timing.** On the 28-test file, the shared key path costs 27 ms of lowering and 26 ms of digests and keys. It replaces about 600 ms of per-test lowering and hashing.
+
+**Against the benchmark** (all CPUs, the three timed edits): hub 1.39 s, leaf 1.22 s, interface 0.74 s; the median is **1.22 s**. Go's is 1.19 s, Rust's 1.64 s and Zig's 2.20 s.
 
 ## 7. Order and rules
 

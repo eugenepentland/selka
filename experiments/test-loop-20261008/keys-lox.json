@@ -1,0 +1,392 @@
+{
+ "corpus": "lox",
+ "revision": "f44302d8",
+ "compiler": "/home/epentland/.cache/mylang/t3b-wip/bin/mylang",
+ "seed": 11,
+ "warm": {
+  "derived": {
+   "cold_wall": 9.818892691051587,
+   "cold_rerun": 65,
+   "warm_rerun": [],
+   "warm_wall": 1.3893996418919414
+  },
+  "oracle": {
+   "cold_wall": 9.361117551103234,
+   "cold_rerun": 65,
+   "warm_rerun": [],
+   "warm_wall": 0.8439038461074233
+  }
+ },
+ "edits": [
+  {
+   "kind": "interface",
+   "file": "vm.my",
+   "line": 553,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.215,
+    "derived_wall": 0.132,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.218,
+    "derived_wall": 0.125,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "resolver.my",
+   "line": 80,
+   "edit": {
+    "oracle_rerun": 18,
+    "derived_rerun": 18,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.547,
+    "derived_wall": 0.466,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.069,
+    "derived_wall": 0.107,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "interface",
+   "file": "value.my",
+   "line": 70,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.236,
+    "derived_wall": 0.139,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.224,
+    "derived_wall": 0.137,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "vm.my",
+   "line": 244,
+   "edit": {
+    "oracle_rerun": 13,
+    "derived_rerun": 13,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.565,
+    "derived_wall": 0.462,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.083,
+    "derived_wall": 0.111,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "body",
+   "file": "driver_tests.my",
+   "line": 70,
+   "edit": {
+    "oracle_rerun": 6,
+    "derived_rerun": 6,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.44,
+    "derived_wall": 0.342,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.213,
+    "derived_wall": 0.127,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "scanner.my",
+   "line": 132,
+   "edit": {
+    "oracle_rerun": 40,
+    "derived_rerun": 40,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.562,
+    "derived_wall": 0.407,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.077,
+    "derived_wall": 0.139,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "interface",
+   "file": "heap.my",
+   "line": 387,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.237,
+    "derived_wall": 0.138,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.228,
+    "derived_wall": 0.138,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "body",
+   "file": "parser.my",
+   "line": 412,
+   "edit": {
+    "oracle_rerun": 23,
+    "derived_rerun": 23,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.681,
+    "derived_wall": 0.544,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.237,
+    "derived_wall": 0.71,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "string",
+   "file": "compiler.my",
+   "line": 791,
+   "edit": {
+    "oracle_rerun": 19,
+    "derived_rerun": 19,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 1.867,
+    "derived_wall": 0.806,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.195,
+    "derived_wall": 0.196,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "body",
+   "file": "table.my",
+   "line": 69,
+   "edit": {
+    "oracle_rerun": 43,
+    "derived_rerun": 43,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.586,
+    "derived_wall": 0.392,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.208,
+    "derived_wall": 0.198,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "compiler.my",
+   "line": 154,
+   "edit": {
+    "oracle_rerun": 19,
+    "derived_rerun": 19,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.557,
+    "derived_wall": 0.457,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.072,
+    "derived_wall": 0.12,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "move",
+   "file": "parser.my",
+   "line": 2,
+   "edit": {
+    "oracle_rerun": 23,
+    "derived_rerun": 23,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.6,
+    "derived_wall": 0.483,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.205,
+    "derived_wall": 0.174,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "interface",
+   "file": "heap.my",
+   "line": 387,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.218,
+    "derived_wall": 0.135,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.213,
+    "derived_wall": 0.123,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "move",
+   "file": "ast.my",
+   "line": 2,
+   "edit": {
+    "oracle_rerun": 23,
+    "derived_rerun": 23,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.495,
+    "derived_wall": 0.382,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.2,
+    "derived_wall": 0.163,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "table.my",
+   "line": 24,
+   "edit": {
+    "oracle_rerun": 43,
+    "derived_rerun": 43,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.592,
+    "derived_wall": 0.382,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.208,
+    "derived_wall": 0.2,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "body",
+   "file": "compiler.my",
+   "line": 248,
+   "edit": {
+    "oracle_rerun": 19,
+    "derived_rerun": 19,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.592,
+    "derived_wall": 0.497,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.191,
+    "derived_wall": 0.139,
+    "failed_same": true
+   }
+  }
+ ],
+ "missed_total": 0,
+ "wrong_total": 0
+}
