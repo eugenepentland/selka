@@ -1,6 +1,12 @@
 # The front end after the new core — plan, 2026-10-06
 
 **Status: the user decided FE1–FE7 on 2026-10-06 (§7). Nothing here is implemented.**
+**Update, 2026-10-08:**
+- S5 is merged into `main` (`5a6b501d`). It carried FE7 and most of §5 C0.
+- Several line numbers in §5 moved. The implementation plan's §1 has the rechecked facts
+  and the post-S5 budgets; where they differ from this document, the implementation plan
+  wins.
+
 The implementation plan is `docs/audits/frontend-implementation-plan-2026-10-06.md`.
 This document stays the rationale and the record of facts. The work starts after
 new-core stage S5 ("switch and delete"), when `mylang-core` is the only back end, except

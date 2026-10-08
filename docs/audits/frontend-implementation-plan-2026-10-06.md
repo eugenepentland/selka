@@ -1,12 +1,18 @@
-# The front end after the new core: implementation plan, 2026-10-06
+# The front end after the new core: implementation plan, 2026-10-06 (updated 2026-10-08)
 
-Status: **decisions accepted 2026-10-06 (§2), amended 2026-10-07 by the values-and-keys
-plan's AM1–AM3 (§2, marked AM). Ready for Codex in three launches (below); the main waves
-start at the S5 exit.** Parts marked _finalize at the S5 exit_ are filled in then. The
-companion plan is `docs/audits/values-keys-trap-search-plan-2026-10-07.md` (branch
-`claude/values-keys-plan`). The rationale, the measurements and the file:line facts are in the proposal,
-`docs/audits/frontend-plan-after-new-core-2026-10-06.md` ("the proposal"), with evidence
-in `experiments/frontend-plan-20261006/`.
+Status: **ready for Codex; one launch (below).**
+- Decisions were accepted on 2026-10-06 (§2). The values-and-keys plan's AM1–AM3 amended
+  them on 2026-10-07 (marked AM in §2).
+- **Updated on 2026-10-08 for the S5 exit,** which is merged into `main` at `5a6b501d`:
+  - §1 holds the S5 facts that were marked _finalize at the S5 exit_;
+  - F0 is mostly done by S5 (§3), and its remainder moves into F1-0;
+  - FP2 and FB1 now run in the first wave;
+  - the budgets, migration volumes and citations are rechecked against `main`;
+  - **§6.1 adds the slow-step rule.**
+- The companion plan is `docs/audits/values-keys-trap-search-plan-2026-10-07.md`.
+- The rationale, the measurements and the original file:line facts are in the proposal,
+  `docs/audits/frontend-plan-after-new-core-2026-10-06.md` ("the proposal"). Its evidence
+  is in `experiments/frontend-plan-20261006/`.
 
 **The goal (the user, 2026-10-06):** the language works like Go. There is one way to
 express each thing, and performance is predictable. The spelling stays Python's, because
@@ -14,58 +20,87 @@ agents write Python first.
 
 ## Launch instructions (for Codex)
 
-**Now, optional, alongside S4.** Read-only; it needs no compiler change:
-
-> Run probe FP2 of `docs/audits/frontend-implementation-plan-2026-10-06.md` (branch
-> `claude/frontend-plan`) on a new branch `codex/frontend-fp2` from `claude/frontend-plan`.
-> Change no compiler file. Hold S4's machine rules: at most one build-heavy process, and
-> never time anything. Finish with FP2's report and stop.
-
-**After the S4 exit, alongside S5:**
-
-> Implement package FB1 of `docs/audits/frontend-implementation-plan-2026-10-06.md` on
-> `codex/frontend-fb1`, created from the S4 exit commit. Merge `claude/frontend-plan` into
-> it first. Touch only `src/core/` and FB1's docs. Never merge into `main` and never push.
-> Finish with FB1's report, P1's table included, and stop.
-
-**At the S5 exit, after the user's go:**
-
-> Implement the front-end plan `docs/audits/frontend-implementation-plan-2026-10-06.md`.
-> Create `codex/frontend-integration` from the S5 exit commit, merge
-> `claude/frontend-plan` and `codex/frontend-fb1` into it, and fill in §1's
-> _finalize at the S5 exit_ items. Run F0, then F1, F2, F3, F4 and F5, holding every gate
-> in §5 and the rules in §6. **Stop at the end of every wave** with its report (§7) for
-> the user's go. Never merge into `main` and never push.
+> Implement the front-end plan `docs/audits/frontend-implementation-plan-2026-10-06.md`,
+> as committed on branch `claude/frontend-plan`. Create `codex/frontend-integration` from
+> that commit; it is `main` at `5a6b501d` plus this plan update.
+>
+> **Wave 1:**
+> - F1-0 on the integration branch. It includes F0's remainder and the slow-step baseline
+>   (§6.1).
+> - FP2 on `codex/frontend-fp2`.
+> - FB1 on `codex/frontend-fb1`.
+> - Then F1-S, F1-M, F1-E and F1-L as slots free up, F1-D in the first free slot after
+>   them, then F1-F and F1-X.
+> - Merge FP2 and FB1 into the integration branch when they pass their exits.
+>
+> **Then** F2, F3, F4 and F5 in order.
+>
+> **Rules:**
+> - Hold every gate in §5 and every rule in §6.
+> - **§6.1:** every build, test or tool command is timed. Any command that takes more than
+>   5 minutes gets a speed investigation, and a speedup is implemented when it keeps the
+>   check identical.
+> - **Stop at the end of every wave** with its report (§7) for the user's go. Also stop at
+>   F2-C2's P4 list and at F5's decisions.
+> - Never merge into `main` and never push.
 
 ## 1. Where it starts
 
-- **The base is the S5 exit.** S5 makes the new core the only back end and deletes the
-  old one. Until then the front end is shared by both cores, and the old core is S4's
-  differential oracle. A front-end bug would pass that oracle, because both cores would
-  receive the same wrong program. So no front-end code changes before S5, except the
-  three early packages below, which touch only `src/core/` or nothing.
-- **S5 itself carries the front-end work it cannot avoid** (decision FE7, §2):
-  - module-mode `check` moves to the merged check plus the semantic cache (S4-2),
-    because `module_compile.zig`, `module_interface_oracle.zig` and `incremental.zig`
-    import `lower.zig` and `bytecode.zig`;
-  - `fix_command.zig` drops its imports of `qbe_build_io.zig` and
-    `native_test_snapshot.zig`;
-  - `mylang-core` merges into `mylang` (N2).
-- **The oracle after S5 is the pinned S5-exit compiler.** Build it once with
-  `zig build -Doptimize=ReleaseFast --prefix <cache>/mylang-s5-pin` through
-  `scripts/build-slot.sh build`, record its SHA-256, and never rebuild it. Every
-  differential check in §5 compares a candidate against it.
-- **The scale budget** comes from S4: on the synthetic projects
-  (`experiments/new-core-s4-20261006/gen_program.py`), the merged check at 96k lines takes
-  0.45 s after a one-function edit, 0.03 s unchanged and 1.09 s cold.
-- **_Finalize at the S5 exit:_**
-  - the S5 exit commit and the pin's hash;
-  - the post-S5 full gate: its steps and its time;
-  - the compiler rebuild time S5 measured, which becomes the rebuild budget;
-  - which of C0's dead code (proposal §5) S5 already deleted;
-  - S4's final check-budget numbers, if S4-F improved on 0.45 / 0.03 / 1.09 s;
-  - the proposal's §5 file:line citations, rechecked against the S5 exit. Files move in
-    S5.
+- **The base is `main` at `5a6b501d`.** It holds the S5 exit (`ad8932de`, report
+  `experiments/new-core-s5-20261007/REPORT.md`) plus two post-S5 fixes:
+  - `mylang` starts without a stack trace per allocation (MYLANG-START-1);
+  - a unit test's guest programs build as one parallel batch
+    (NEW-CORE-S5-UNITS-BATCH-1).
+
+  `mylang` is the only binary. It builds, runs and tests through the new core. The old back
+  end, QBE, bytecode and the GC are deleted.
+- **FE7 is done by S5:**
+  - project `check` uses the merged check (S5-A);
+  - `fix_command.zig` no longer imports old back-end files;
+  - `mylang-core` merged into `mylang`.
+
+  The developer commands are `mylang dump-typed`, `mylang dump-ir` and `mylang coverage`.
+- **The oracle is the S5 compiler, in two forms:**
+  - **Frozen answers.** S5-0's references (`experiments/new-core-s5-20261007/references/`):
+    `conformance-v1.json` for 1,636 tests and `fuzz-v1.json.gz` for 9×200 fuzz cases, with
+    the tools in `experiments/new-core-s5-20261007/tools/`. S5 matched them with 0
+    mismatches, so they are the expected answers for every program they cover.
+  - **The pin.** A program without a frozen answer runs on the pin. F1-0 builds the pin
+    once from `5a6b501d`: `zig build -Doptimize=ReleaseFast --prefix <cache>/mylang-s5-pin`
+    through `scripts/build-slot.sh build`. It records the SHA-256 and never rebuilds it.
+- **Measured at the S5 exit** (S5 report; ReleaseFast `mylang`; synthetic projects from
+  `experiments/new-core-s4-20261006/gen_program.py`):
+
+  | Measure | S5 exit | Budget for this plan |
+  |---|---:|---:|
+  | Merged check at 96k lines after a one-function edit | 0.226 s | **≤ 0.25 s** (was 0.45 s) |
+  | The same, unchanged / cold | 0.025 s / 0.544 s | ≤ 0.03 s / ≤ 0.60 s |
+  | Debug rebuild after a one-function edit, 48k / 192k lines | 0.97 s / 3.1 s | ≤ 1.1 s / ≤ 3.5 s |
+  | Compiler rebuild after a one-line edit (`zig build`, Debug, Guardian included) | 4.3–4.5 s | ≤ 5.0 s |
+  | Full gate (`zig build test`, 88 steps) | 155 s on `ad8932de`; `zig build test` 82 s on `main` | reported; §6.1 applies above 5 min |
+  | `test-units` unsharded | 54 s warm, 99 s with every program rebuilt | reported |
+  | Lox port: build after a one-function edit / tests after the edit | 0.143 s / 0.623 s | ≤ 110% |
+  | EDA Stage 1: build after a one-function edit / tests after the edit | 0.658 s / 0.552 s | ≤ 110% |
+
+- **The front end is 44.4k lines in 133 files.** That is the non-test `@import` closure
+  of `sema.zig`, `parser.zig`, `lexer.zig` and `typed.zig`, outside `src/core`. It was
+  46.6k lines in 136 files before S5.
+- **What S5 already deleted of C0** (proposal §5; S5-D1, `6079efb2`):
+  - legacy sharing mode, `class` and `Cell` (`alias_warning.zig` is gone);
+  - `bytecode_model.zig` and the bytecode validators;
+  - the VM values;
+  - `mut_abi`'s caller-storage ABI;
+  - the old typed fields;
+  - `module_compile.zig` and `module_build.zig`.
+
+  `typed.Type` moved to `type_identity.zig`. What is left is listed in F1-0 (§3).
+- **The external corpora** are the trees S5 measured:
+  - **Lox:** `codex/s4-lox-value-semantics` at `f44302d8`, path
+    `benchmarks/lox/ports/mylang`; 974/974 conformance and 65 tests.
+  - **EDA Stage 1:** `eda-bench` `claude/s4-eda-newcore` at `7e938b6`; 310 tests and
+    34/34 goldens.
+- **The citations below are rechecked against `5a6b501d`.** Proposal §5's line numbers
+  are from before S5. Where they differ, this plan's numbers win.
 
 ## 2. Decisions (accepted 2026-10-06)
 
@@ -82,8 +117,9 @@ agents write Python first.
   date and a note;
 - its docs rewritten, and a `# doc: expect-error` example of the removed spelling.
 
-**The rows, with the exact rule each package implements.** Counts are from the
-2026-10-06 corpus scan (`spellings.txt`) and a scan of the repository at the S3 exit.
+**The rows, with the exact rule each package implements.** The rationale counts come from
+the 2026-10-06 corpus scan (`spellings.txt`). The migration volumes in F1 were recounted on
+`main` at `5a6b501d`.
 
 | Row | Removed | The one way | Fix rule |
 |---|---|---|---|
@@ -94,7 +130,7 @@ agents write Python first.
 | **A5** (with AM2) | the `noalloc` clause becomes `@noalloc` (A4) | `@noalloc`, checked by the new core at build time (F2-C2) | — |
 | **A6** | **dropped (AM1):** `@requires`, `@ensures` and `@invariant` stay | | Trap search reads them (values-and-keys plan §3.4–§3.5). |
 | **A7** | the `module NAME` header, `E_MODULE_NAME`, and the headerless-entry restriction (`E_MODULE_HEADER`) | **the path is the name:** a file's module name is its path from the project root, without `.my`, with `/` read as `.`. The project root is the directory holding `mylang.json`, else the entry's directory. | Delete the header line. |
-| **A8** | `class` (legacy sharing mode), `with arena()`, `escape()` | value records; arenas already retired (N6) | None; 0 uses. Code deleted in F0. |
+| **A8** | `class` (legacy sharing mode), `with arena()`, `escape()` | value records; arenas already retired (N6) | **Mostly done by S5:** `class`, `Cell` and legacy sharing are gone. `with arena():` still parses and only warns `W_ARENA_RETIRED` (`src/arena_fix.zig`), and 12 `tests/lang` files use it. F1-0 makes it `E_ARENA_REMOVED`; `mylang fix` already removes the line. |
 | **A9** | `type X = Y` aliases | the type itself | Substitute `Y` at every use in the project, then delete the alias. |
 | **A10** | `;` separators | newlines | Split the line. |
 | **A11** | `x == None`, `x != None` on an `Option` | `is None`, `is not None` | Rewrite the operator. |
@@ -151,15 +187,14 @@ as Python dataclasses allow. The evidence, found while writing this plan:
 
 ### FE4–FE7
 
-- **FE4, cost:** the per-function cost report comes early (FB1, alongside S5). The
+- **FE4, cost:** the per-function cost report comes early (FB1, in wave 1). The
   hidden-copy warning comes in F5. Whether an explicit `.copy()` is required is decided
-  on FP1's data.
+  on P1's data (FB1's exit).
 - **FE5, O(n) operators and literals:** B3 (O(n) operators) and B4 (fixed-array
   literals) are decided on FP2's typed count.
 - **FE6, generics:** a template is checked once, symbolically, against its bounds. A
   specialization is instantiated by substitution, and errors stay at the definition.
-- **FE7, S5:** the S5 plan includes the three items in §1. The new-core plan's S5 row
-  says so.
+- **FE7, S5: done.** S5 carried all three items (§1).
 
 ## 3. Work packages
 
@@ -168,13 +203,15 @@ records evidence under `experiments/frontend-<package>-<date>/`, one log per com
 **Owns** lists the files a package may change. A change needed elsewhere goes through
 the coordinator.
 
-### Early packages (before S5)
+### Wave 1 data packages (with F1-0)
 
-#### FP2. Typed count of O(n) operators (now; about 2–3 h; no compiler change)
+These two run beside F1-0, each on its own branch. Neither touches the front end.
+
+#### FP2. Typed count of O(n) operators (about 2–3 h; no compiler change)
 
 **What:**
-- Write a walker over `mylang-core dump-typed` output.
-- **The corpora:** the EDA slice (`eda-bench` `codex/s4-eda-stage1` `510c2e2`), the
+- Write a walker over `mylang dump-typed` output.
+- **The corpora:** the EDA slice (`eda-bench` `claude/s4-eda-newcore` `7e938b6`), the
   Lox port (`codex/s4-lox-value-semantics` `f44302d8`), `src/stdlib` and `tests/lang`.
 - **What it counts,** each split by loop depth (0, 1, 2 or more):
   - `in` on a `list`;
@@ -189,11 +226,11 @@ the coordinator.
 **Exit:** a table per corpus, plus the script, under `experiments/frontend-fp2-*/`. It
 is the data for FE5's B3 and B4 decisions.
 
-#### FB1. Per-function cost report (after the S4 exit, alongside S5; about 4–6 h)
+#### FB1. Per-function cost report (about 4–6 h)
 
 **What:**
-- `mylang-core cost <entry> [function]`, with text and `--json` output. Per function,
-  it reports:
+- `mylang cost <entry> [function]`, with text and `--json` output. Per function, it
+  reports:
   - checks kept and checks proved;
   - updates made in place, tested for uniqueness at run time, or copied;
   - allocations;
@@ -204,40 +241,59 @@ is the data for FE5's B3 and B4 decisions.
 - **B6:** the report and `@noalloc`'s build-time check (F2-C2) share one definition of
   "allocates", so they cannot disagree.
 
-**Owns:** `src/core/` (a new `cost.zig` and the stats plumbing it reads) and the docs
-for the command.
+**Owns:**
+- `src/core/`: a new `cost.zig` and the stats plumbing it reads;
+- the `cost` entry in `src/core/cli.zig`;
+- the docs for the command;
+- its `features.json` slug.
 
 **Exit:**
 - On all 46 rows, the report's totals equal `--stats`'s.
 - Tests cover every count.
 - **P1:** the report over the Lox port and the EDA slice, with in-place, tested and
   copied counts per function and the 20 functions with the most copies.
-- S5's merge carries the command into `mylang`. F0 adds `list-interfaces --cost`.
+- `list-interfaces --cost` is added by the coordinator once FB1 merges.
+- FB1 keeps the branch name `codex/frontend-fb1`, because the values-and-keys plan's VP3
+  starts from it.
 
-### F0. Cut loose from the old back end (after S5; about 4–6 h)
+### F0. Cut loose from the old back end: done by S5, remainder in F1-0
 
-**What:** the rest of proposal §5 C0, which is whatever S5 left:
-- **dead code:** `bytecode_model.zig`, the bytecode validators in `effects.zig`,
-  `mutation.instruction`, the VM parts of `runtime_values.zig` and `io_render.zig`,
-  `mut_abi`'s caller-storage ABI, `value_semantics.zig`'s lowering facts, and the typed
-  fields only the old core read (`owned_cleanup`, `caller_storage`, `borrow_origin`,
-  `loop_exit.arenas`);
-- **A8:** the legacy sharing mode (`alias_warning.zig`, the overlap path in `origins`,
-  the `class`/`Cell` branches), arena syntax and `escape()`, each with its
-  removed-spelling error;
-- `typed.Type` moves out of `runtime_values.zig` into the type catalog;
-- `list-interfaces --cost` (FB1).
+S5-D1 (`6079efb2`) did proposal §5 C0:
+- legacy sharing, `class` and `Cell`, and `alias_warning.zig`;
+- `bytecode_model.zig` and the bytecode validators;
+- the VM values;
+- `mut_abi`'s caller-storage ABI;
+- the old typed fields;
+- `module_compile.zig` and `module_build.zig`;
+- `typed.Type`, moved to `type_identity.zig`.
 
-**Exit:**
-- the post-S5 full gate;
-- no file imports a deleted module;
-- `dump-ir` identical over the corpora (§5), except programs using A8 spellings, which
-  are now rejected;
-- line deltas per file group.
+What is left is small and goes into F1-0, so there is no separate F0 wave:
+- **`with arena():` becomes the error `E_ARENA_REMOVED`.**
+  - Today it is the warning `W_ARENA_RETIRED`.
+  - Migrate the 12 `tests/lang` files that use it with `mylang fix`, which removes the
+    line and dedents the body:
+    - `option_niche`, `discard_names`, `record_field_snapshots`;
+    - nine `rc_*` files.
+  - Retire the slug with the rest of Part A's.
+- **`value_semantics.zig`'s leftover "lowering facts".** Delete whatever has no reader
+  left; the module's own doc comment still names them.
+- **A sweep for files no one imports**, by `@import` closure over every root in
+  `guardian.toml`, with Guardian's orphan check as the judge.
 
 ### F1. Part A and the format gate (about 17–24 h)
 
-#### F1-0. Shared tools and baselines (coordinator; about 3–4 h)
+#### F1-0. Shared tools, baselines and F0's remainder (coordinator; about 4–6 h)
+
+- **F0's remainder** (above), committed first.
+- **The slow-step baseline (§6.1).**
+  - Time every command §5 runs, once, uncontended, on `5a6b501d`.
+  - Record each in the ledger `experiments/frontend-integration-<date>/slow-steps.md`.
+  - Open an investigation for each command over 5 minutes.
+- **Freeze the oracle's answers.** For every corpus program that S5-0's references do not
+  cover, record the pin's output once, in the same reference format: Lox, EDA,
+  `examples`, `src/stdlib` and `test/core`. Every later differential then reads answers
+  instead of running the pin. S5-0 did this for the old core and cut the 9×50 fuzz
+  matrix from 16 to 2 minutes.
 
 - **The removed-spellings table: one file.**
   - Move the parser's `declaration_hints`, its ad hoc `alternative` branches and
@@ -246,14 +302,14 @@ for the command.
   - `doc-coverage` fails when an entry lacks a `# doc: expect-error` example. That
     replaces prose lists such as `docs/python-syntax.md:528`, which still calls the
     accepted `is None` rejected.
-  - The untracked `src/syntax_table.zig` in the main checkout is another session's work
-    and on no branch. Reuse it only if the user lands it.
+  - `src/syntax_table.zig` exists only as an untracked file in the main checkout. It is
+    another session's work and on no branch; reuse it only if the user lands it.
 - **The embedded-source migration tool** `scripts/migrate_embedded.py`.
   - It runs `mylang fix` over three shapes, like `scripts/migrate-print-to-stream.py`:
     `.my` files, ```` ```mylang ```` blocks in `.md` files, and Zig multiline literals
     in tests.
-  - Tests and docs embed many sources, for example about 1,040 `module` headers inside
-    Zig test literals.
+  - Tests and docs embed many sources, for example about 630 `module` headers inside
+    Zig test literals on `main`.
   - Python is acceptable here: the script maintains the repository and is never needed
     to build or use mylang.
 - **Baselines:**
@@ -274,14 +330,26 @@ for the command.
 | **F1-L** library | A12, A13, A14 | `src/stdlib/strings.my` and `sort.my`, the capability free-function builtins, `docs/io.md`, `docs/standard-library.md` | 3–5 h |
 | **F1-D** domains (AM3) | A16 | domain declarations in the parser and sema, `src/domain_codecs.zig`, `examples/domains.my`, `examples/domain-codecs/`, `docs/domains.md` | 4–6 h; starts when the first of the other four finishes, to hold the four-agent limit |
 
-**Common to the four:**
+**Common to the four** (and to F1-D):
 - **Each migrates every live source with its fixes,** through `mylang fix` and the
   migration tool, in its own commit. That includes tests, docs, examples, `src/stdlib`,
   `velocity/suites`, `bench/` and `test/`.
-- **Migration volume** at the S3 exit:
-  - A7: 580 `.my` files and about 1,040 embedded headers;
-  - A4: about 450 clauses in `.my` files and 680 embedded;
-  - A3: about 90 calls in `.my` files.
+- **Migration volume on `main` at `5a6b501d`,** as lines in live `.my` files plus lines
+  in Zig tests and docs. `experiments/` and design docs are excluded. These are regex
+  counts; F1-0's extended `count_spellings.py` is authoritative.
+
+  | Row | `.my` | Zig and docs |
+  |---|---:|---:|
+  | A7 module headers | 566 | ~630 |
+  | A4 effect clauses | 366 | ~560 in Zig literals, plus docs |
+  | A1 `replace(` | 54 | 76 |
+  | A3 `bit_*`/`shift_*` | 59 | 44 |
+  | A12 `strings.` calls | 58 | 56 |
+  | A13 `sort.` calls | 31 | 24 |
+  | A16 `domain` declarations | 27 | 25 |
+  | A11 `== None` | 20 | 6 |
+  | A15 `constraint` declarations | 14 | 6 |
+  | A9 type aliases | 6 | 3 |
 
 **Rules specific to rows:**
 - **F1-M:**
@@ -341,10 +409,10 @@ for the command.
    - `return_origin`, `borrow_origin` and `caller_storage`;
    - the inferred fields in `module_interface.interfaceHash` and
      `semantic_key.contractDigest`;
-   - `core/build.zig:202`'s refusal when inferred and declared mutation sets differ.
+   - `core/build.zig:217`'s refusal when inferred and declared mutation sets differ.
      The core reads `declared_mutates` only.
    - **`E_UNUSED_CAPABILITY` stays,** moved into sema's binding-usage check.
-   - **Contract purity** (`CONTRACT-PURE-1`, `effects.zig:805`) becomes a local rule:
+   - **Contract purity** (`CONTRACT-PURE-1`, `effects.zig:804`) becomes a local rule:
      a contract condition passes no capability and no `mut` argument.
    - **`docs/effects.md`** is rewritten as the capability rules: authority through
      parameters, `E_UNUSED_CAPABILITY` and `@noalloc`.
@@ -436,16 +504,21 @@ parallel would make C3 build on a shape that is about to change.
 - **One on-disk store with one format version,** fixing today's mismatch: the header
   says `semantic-cache-v2` while the store writes v3.
 - `api-diff` and `explain-invalidation` derive from the same keys.
-- **Seven of the eight layers fold into it:**
+- **The remaining layers fold into it.** S5 deleted `module_compile` and
+  `module_build`; these are left:
   - `check_cache`;
   - `frontend_cache`;
   - `semantic_cache` with `semantic_store`;
   - `generic_cache`;
   - `semantic_summary`;
-  - `module_interface`, `compile` and `build`;
+  - `module_interface` with `module_interface_oracle`;
   - `incremental` with `invalidation`.
-- `syntax_cache` stays the parse cache, under F4-C6. Codegen keeps S4-1's
-  LLVM-text keys.
+- **S5 limit 4:** `check-project --explain-invalidation` still lists the old lower,
+  emit and link stages. This package removes them with the report-format bump.
+- **Unchanged:**
+  - `syntax_cache` stays the parse cache, under F4-C6;
+  - codegen keeps S4's unit cache: debug builds cache LLVM-text units per module, and
+    release builds are one unit (S4-1a).
 
 **Exit:**
 - no cache bypass left;
@@ -478,7 +551,7 @@ parallel would make C3 build on a shape that is about to change.
   misses reported by `mylang cost`.
 - **B7:** the lint for `acc = acc + s` in a loop, pointing at `byte_buffer`.
 
-**Then stop.** The user decides, on FP1's and FP2's data:
+**Then stop.** The user decides, on P1's (FB1) and FP2's data:
 - B2's error: is `.copy()` required, or does the code need restructuring?
 - B3: which O(n) operators change spelling, for example `xs.contains(x)`.
 - B4: an explicit fixed-array constructor.
@@ -489,32 +562,42 @@ A follow-up plan implements those decisions.
 
 | Wave | Packages | Starts after | Expected wall time |
 |---|---|---|---|
-| Early | FP2; FB1 with P1 | now; the S4 exit | 2–3 h; 4–6 h |
-| F0 | F0 | the S5 exit and the user's go | 4–6 h |
-| F1 | F1-0, then F1-S, F1-M, F1-E, F1-L in parallel and F1-D in the first free slot, then F1-F and F1-X | F0 | 17–24 h |
-| F2 | F2-C2 and F2-C5 in parallel | F1 | 13–18 h |
+| 1 | F1-0 (with F0's remainder, the slow-step baseline and the frozen answers), FP2 and FB1 in parallel; then F1-S, F1-M, F1-E, F1-L as slots free, F1-D in the first free slot, then F1-F and F1-X | the user's go | 19–28 h |
+| F2 | F2-C2 and F2-C5 in parallel | F1's exit and the user's go | 13–18 h |
 | F3 | F3-0, then F3-C1, then F3-C3 | F2 | 22–31 h |
 | F4 | F4-C4 and F4-C6 in parallel | F3 | 12–16 h |
-| F5 | B2, B5, B7; then the user's decisions | F4 and FP1 | 5–8 h |
+| F5 | B2, B5, B7; then the user's decisions | F4 and FB1's P1 | 5–8 h |
 
-**Total, F0 to F5:** about 75–105 hours of Codex work, three to four times S4's
-estimate, plus a stop at every wave. **F3-C1 is the widest range:** it touches every
-construct, and the `dump-ir` differential is what keeps it safe.
+**Total:** about 71–101 hours of Codex wall time, plus a stop at every wave. That is
+F0's 4–6 h less than before, because S5 did most of F0, and FP2 and FB1 now run inside
+wave 1.
+
+- **Calibration:** S4 took about 22 h against its 20–28 h estimate. S5 took about 7 h
+  against 32–51 h of package work, because most of it was parallel deletion.
+- **This plan's critical path is mostly sequential:** F1's tail, then F2-C2, then F3-C1
+  and F3-C3.
+- **F3-C1 is the widest range.** It touches every construct, and the `dump-ir`
+  differential is what keeps it safe.
+- **The four-agent limit is shared** with FB1 in wave 1 and with the values-and-keys
+  plan's T wave if it runs at the same time.
 
 ## 5. Gates
 
 **For every package:**
 - **The post-S5 full gate,** including Guardian and the `.my` format step after F1-F.
-- **Differential against the pinned S5 compiler:**
-  - 50 strict fuzz cases per kind for the package's kinds, and 200 per kind at each
-    wave exit, with S3's tools (`experiments/new-core-s3-20261006/wave-x/integration/fuzz_matrix.py` and
-    `fuzz_qualification.py`), using the pin as the `--old` oracle;
-  - the generators emit only spellings both compilers accept. After A3 they keep using
-    the operators the pin knows.
+- **Differential against the S5 oracle (§1).**
+  - **Fuzz:** 50 strict cases per kind for the package's kinds, and 200 per kind at each
+    wave exit, with S5-0's frozen tools in `experiments/new-core-s5-20261007/tools/`
+    (`fuzz_matrix.py --references`, `qualify_merge.py`, `conformance_ref.py`).
+  - **Generators:** they emit only spellings both the pin and the candidate accept. After
+    A3 they keep the operators the pin knows.
+  - **A changed generator** produces sources with no frozen answer, and the frozen tools
+    stop on them. The coordinator then records the pin's answers for the changed kind
+    once, in a new reference file (`fuzz-v2`), and says so in the wave report.
 - **Migrations:** every migrated corpus program's output equals its unmigrated output
-  under the pin.
-- **`dump-ir` identical** wherever a package claims no change in meaning: F0, F3 and
-  F4-C6.
+  under the oracle, read from F1-0's frozen answers.
+- **`dump-ir` identical** wherever a package claims no change in meaning: F1-0's F0
+  remainder, F3 and F4-C6.
 - **The corpora:**
   - `tests/lang`, with 0 failures;
   - Lox: conformance 974/974 and its 65 tests;
@@ -522,7 +605,8 @@ construct, and the `dump-ir` differential is what keeps it safe.
   - also `test/core` (the rows), `bench/parity`, `examples` and `src/stdlib`.
 - **Check timing** on the synthetic projects at 48k, 96k and 192k lines, measured on
   CPU 10: after a one-function edit, unchanged, and cold, all within §1's budget.
-- **Compiler rebuild** within 10% of S5's measured time, uncontended.
+- **Compiler rebuild** at or under 5.0 s after a one-line edit, uncontended (S5: 4.3–4.5 s).
+- **Lox and EDA dev loop** within §1's budget: build and tests after a one-function edit.
 - **The idiom suite** (F1 and later): C2 = 0, and C1 and C3 reported.
 - **Line deltas** per package, by the proposal's §2 file groups.
 
@@ -548,6 +632,59 @@ construct, and the `dump-ir` differential is what keeps it safe.
 - **Out-of-scope front-end bugs** get a regression fixture and a report. A package fixes
   one only if the fix is small and inside its owned files.
 
+### 6.1 The slow-step rule (the user, 2026-10-08)
+
+**Any build, test, gate step, tool or measurement that takes more than about 5 minutes
+of wall time gets a speed investigation.** The point is to keep the loop fast for every
+agent after this one, not just to finish this plan.
+
+1. **Time everything.** Every command a package runs goes in its evidence log with its
+   wall time, its CPU affinity and whether another build-heavy process was running.
+   F1-0 records the uncontended baseline of every §5 command in the ledger
+   `experiments/frontend-integration-<date>/slow-steps.md`.
+2. **Over 5 minutes, uncontended, investigate:**
+   - measure where the time goes, using `--timings`, `--report`, per-test durations,
+     `perf` or `strace` on a single run;
+   - write down the cause.
+
+   Look for these causes first:
+   - work repeated across runs that a cache could hold;
+   - work done serially that is independent;
+   - an oracle or reference run again when its answer could be frozen;
+   - a Debug compiler where a ReleaseFast one would give the same verdict;
+   - rebuilding programs a test or gate did not change;
+   - a quadratic step in the compiler itself.
+3. **Implement the speedup** when all three hold:
+   - it keeps the check identical: the same tests, cases, programs, modes and verdicts;
+   - it fits in about 2 hours;
+   - it lives in tooling, test drivers, the build script or the package's own files.
+
+   Commit it alone, with before and after times and proof that the check is the same: the
+   same counts and the same verdicts on a deliberately broken input.
+4. **Otherwise, write a follow-up item** in the ledger with the measurement, the cause and
+   the proposed fix, and carry on. Each wave report lists the open items, and the user
+   decides which become packages.
+5. **Never speed a step up by weakening it.** Do not drop tests, cases, programs, fuzz
+   counts, corpora, modes (debug, release, verify) or leak checks. Do not raise a
+   threshold or skip a step on a cache hit that is not proven equal. Any of these needs
+   the user's go.
+
+**Known candidates to check first** (from S5's evidence):
+- **The frozen fuzz matrix at 200 per kind.** S5's final run spent 1,600 s summed over
+  the nine kinds: from 109 s for `rc` to 310 s for `dict`.
+  - Check how its kinds and cases are scheduled across free CPUs.
+  - Check whether candidate builds of identical generated sources are cached.
+- **The new differentials this plan adds:**
+  - `dump-ir` over every corpus, twice per package;
+  - P4's verdict sweep;
+  - the migration-output check.
+
+  Each should run its programs in parallel and reuse the oracle's frozen answers.
+- **The pin's one-time ReleaseFast build** and any ReleaseFast install a package needs.
+  Reuse one install per checkpoint.
+- **A cold `test-units` run after a compiler change** took 99 s unsharded after S5's
+  batching. Watch it as the front end changes, because every unit test runs `mylang`.
+
 ## 7. Reports
 
 **Every wave's report has:**
@@ -555,6 +692,8 @@ construct, and the `dump-ir` differential is what keeps it safe.
 - the gate receipts in §5;
 - line deltas;
 - check timings against the budget;
+- the slow-step ledger (§6.1): every command over 5 minutes, what was found, what was
+  sped up, with before and after times, and the open items;
 - for F1, the idiom-suite table and the migration counts;
 - every remaining limit.
 
