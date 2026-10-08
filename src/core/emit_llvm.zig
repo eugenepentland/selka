@@ -1839,7 +1839,15 @@ const FunctionEmitter = struct {
             try self.moveAll(out, &.{try self.finalMove(out, @ctz(abi.params), inst.a)});
         } else if (sret and abi.params != 0) {
             try self.returnFinals(out, inst.a, abi);
-        } else if (sret and !self.builtInReturn(inst.a)) try self.storeOperand(out, signature.ret, inst.a, "%ret");
+        } else if (sret and !self.builtInReturn(inst.a)) {
+            if (self.retHoldsValue()) {
+                // Another value lives in `%ret` and this one may be built from its parts:
+                // built whole in a temporary first, so no store overwrites a part before it is read.
+                const temporary = try self.stackSlot(m.size(signature.ret));
+                try self.storeOperand(out, signature.ret, inst.a, temporary);
+                try self.copyBytes(out, "%ret", temporary, m.size(signature.ret), false);
+            } else try self.storeOperand(out, signature.ret, inst.a, "%ret");
+        }
         if (self.count_fn != null) try out.appendSlice(self.a(), emit_count.epilogue);
         if (inst.a == .none or sret or abi.whole) return out.appendSlice(self.a(), "  ret void\n");
         try out.print(self.a(), "  ret {s}\n", .{try self.typedValue(inst.a)});
@@ -1850,6 +1858,15 @@ const FunctionEmitter = struct {
         const plan = &self.memory.homes;
         const class = plan.class[self.function.resolve(raw).index()];
         return class != emit_homes.none and plan.homes[class] == .ret;
+    }
+
+    /// Whether some value of this function lives in the caller's destination `%ret` (a value
+    /// returned whole on one path), which a `ret` of another value would overwrite as it stores.
+    fn retHoldsValue(self: *FunctionEmitter) bool {
+        for (self.memory.homes.homes) |home| {
+            if (home == .ret) return true;
+        }
+        return false;
     }
 
     /// The copy of `raw`, in-out parameter `param`'s final value, into its caller's memory (empty
