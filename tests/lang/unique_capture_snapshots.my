@@ -1,0 +1,111 @@
+module unique_capture_snapshots
+
+# A list named twice in adjacent statements: the second statement's write must
+# leave the first name's snapshot alone, a held element copied out of a list of
+# lists stays a copy, and loops that rewrite one element keep their totals. These
+# are the programs of the retired QBE unique capture tests
+# (`qbe_rc_unique_capture_test.zig`, `RC-UNIQUE-CAPTURE-1`) that were executed:
+# `once`, `snapshot` and `held` natively, the others by their lowering only. The
+# traps that test also pinned (the bounds trap of `once(13, 2)` and a one-step
+# budget) cannot be expected from a guest test.
+
+
+def plain(times: int, index: int) -> int:
+    values = [7, 11]
+    for at in range(times):
+        next_value = values[index] + at + 1
+        values[index] = next_value
+    return values[0] + values[1]
+
+
+def once(delta: int, index: int) -> int:
+    values = [7, 11]
+    flags = [True, False]
+    values[index] = delta
+    return values[0] + values[1] + (1 if flags[0] else 0)
+
+
+def snapshot(index: int) -> int:
+    values = [7, 11]
+    saved = values
+    values[index] = 13
+    return saved[index] * 100 + values[index]
+
+
+def repeat(times: int, index: int, shared: bool) -> int:
+    values = [7, 11]
+    total = 0
+    for at in range(times):
+        if shared:
+            saved = values
+            values[index] = (values[index] + at + 1) % 1000003
+            total += saved[index] + values[index]
+            saved = []
+        else:
+            values[index] = (values[index] + at + 1) % 1000003
+            total += values[index]
+    return total + values[0] + values[1]
+
+
+def change(values: mut list[int]) -> int:
+    values.clear()
+    values.append(17)
+    return 0
+
+
+def callback() -> int:
+    values = [7, 11]
+    cleared = change(mut values)
+    values[cleared] = 13
+    return values[0]
+
+
+def rebound() -> int:
+    values = [7, 11]
+    values = [19, 23]
+    values[0] = 13
+    return values[0] + values[1]
+
+
+def held(groups: list[list[int]]) -> int:
+    total = 0
+    for element in groups:
+        values = element
+        values[0] = 13
+        total += values[0]
+    return total + groups[0][0]
+
+
+def managed() -> int:
+    values = [[7], [11]]
+    values[0] = [13]
+    return values[0][0]
+
+
+# spec-case: RC-UNIQUE-CAPTURE-1
+public def test_a_replaced_element_and_a_held_copy_keep_their_values() -> bool:
+    assert once(13, 0) == 25
+    assert once(13, -1) == 21
+    assert snapshot(-1) == 1113
+    assert snapshot(0) == 713
+    assert held([[7, 11], [19, 23]]) == 33
+    return True
+
+
+# spec-case: RC-UNIQUE-CAPTURE-1
+public def test_loops_that_rewrite_one_element_keep_their_totals_with_and_without_a_snapshot() -> bool:
+    assert plain(2, -1) == 21
+    assert plain(0, 0) == 18
+    assert repeat(3, -1, False) == 67
+    assert repeat(3, -1, True) == 104
+    assert repeat(0, 0, False) == 18
+    assert repeat(4, 0, True) == 114
+    return True
+
+
+# spec-case: RC-UNIQUE-CAPTURE-1
+public def test_a_mutating_call_a_rebinding_and_a_managed_element_replace_the_right_list() -> bool:
+    assert callback() == 13
+    assert rebound() == 36
+    assert managed() == 13
+    return True

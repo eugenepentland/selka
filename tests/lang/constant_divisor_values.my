@@ -1,0 +1,45 @@
+module constant_divisor_values
+
+# Absolute answers for a few constant divisors: floor division by 7 and 8, a
+# truncating remainder by -7, a division of the largest u64 by itself, and the
+# truncating remainder of the minimum integer by -1. The generated differential
+# tests in `constant_divisors.my` compare every constant divisor against the
+# variable-divisor operation; these pin the values themselves, as the retired
+# QBE constant-divisor test did (`qbe_constant_divisor_test.zig`). The traps that
+# test also pinned (a zero divisor, and the minimum integer divided by -1, each
+# after partial output) cannot be expected from a guest test.
+
+
+def seven(x: int) -> int:
+    return x // 7
+
+
+def power(x: int) -> int:
+    return x // 8
+
+
+def negative(x: int) -> int:
+    return remtrunc(x, -7)
+
+
+def wide(x: u64) -> u64:
+    return x // 18446744073709551615u64
+
+
+def remainder_by_minus_one(x: int) -> int:
+    return remtrunc(x, -1)
+
+
+# spec-case: QBE-CONSTANT-DIVISOR-1
+public def test_constant_divisors_give_their_exact_quotients_and_remainders() -> bool:
+    assert seven(-100) == -15
+    assert power(100) == 12
+    assert negative(-100) == -2
+    assert wide(18446744073709551615u64) == 1u64
+    assert wide(18446744073709551614u64) == 0u64
+    return seven(-100) + power(100) + negative(-100) + int(wide(18446744073709551615u64)) == -4
+
+
+# spec-case: QBE-CONSTANT-DIVISOR-1
+public def test_the_remainder_of_the_minimum_integer_by_minus_one_is_zero() -> bool:
+    return remainder_by_minus_one(-9223372036854775807 - 1) == 0 and remainder_by_minus_one(31) == 0
