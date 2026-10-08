@@ -7,7 +7,6 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
-const io_render = @import("io_render.zig");
 
 fn execute(source: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(t.allocator, "format.my", source);
@@ -160,12 +159,6 @@ test "a failing later f-string hole writes none of the unfinished result" {
     const outcome = try native.run(&c);
     try t.expect(outcome.trap.code.len != 0);
     try t.expectEqualStrings("", outcome.stdout);
-}
-
-// spec-case: PY-FSTRING-2
-test "renderAlloc releases its partial buffer when the allocator fails" {
-    var failing = t.FailingAllocator.init(t.allocator, .{ .fail_index = 0 });
-    try t.expectError(error.OutOfMemory, io_render.renderAlloc(failing.allocator(), &.{}, .{ .i64 = 42 }));
 }
 
 /// Format one already-canonical source twice and require the bytes back

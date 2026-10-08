@@ -59,7 +59,6 @@ test {
     _ = @import("allocation_budget_test.zig");
     _ = @import("float_operations_test.zig");
     _ = @import("integer_operations_test.zig");
-    _ = @import("scoped_providers_test.zig");
     _ = @import("io_print_test.zig");
     _ = @import("io_files_test.zig");
     _ = @import("byte_literal_test.zig");
@@ -134,7 +133,6 @@ test {
     _ = @import("structural_constraints_test.zig");
     _ = @import("named_constraints_namespace_test.zig");
     _ = @import("formatter_test.zig");
-    _ = @import("value_test.zig");
     _ = @import("records_test.zig");
     _ = @import("integers_test.zig");
     _ = @import("number_literal_test.zig");

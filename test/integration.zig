@@ -6666,7 +6666,7 @@ test "CLI clock entropy and environment providers honour their grants" {
     try invokeOptions("run", missing, &.{ "--restrict", "--allow-env=OTHER" }, 1, "", "R_CAPABILITY");
 }
 
-// spec-case: CAPABILITY-4
+// spec: CAPABILITY-4
 // spec-case: IO-9
 test "CLI directory grants scope the file surface and separate reading from writing" {
     var temporary = testing.tmpDir(.{});

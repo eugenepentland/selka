@@ -664,7 +664,7 @@ fn captureOld(comptime Checker: type, self: *Checker, call_id: ast.NodeId) Error
 /// (`VALUE-SEMANTICS-7`).
 fn shared(records: []const typed.Record, node: typed.Node) bool {
     if (!typed.carriesWritableStorage(records, node.ty)) return false;
-    if (value_semantics.enabled() and value_semantics.copiesAll(records, node.ty)) return false;
+    if (value_semantics.copiesAll(records, node.ty)) return false;
     if (!fresh(node)) return true;
     const record = records[node.ty.recordIndex()];
     if (!record.isCollection()) return true;

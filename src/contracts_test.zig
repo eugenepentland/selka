@@ -204,12 +204,6 @@ test "contracts: old captures an entry value once and rejects a shared one" {
     // In the default model, old(...) captures an independent value.
     try returns("@ensures(len(items) == len(old(items.copy())) + 1)\ndef add(items: mut list[int]):\n    items.append(0)\n\ndef main() -> int:\n    items = [1]\n    add(mut items)\n    return len(items)\n", 2);
     try returns("@ensures(len(old(items)) == 1)\ndef add(items: mut list[int]):\n    items.append(0)\n\ndef main() -> int:\n    items = [1]\n    add(mut items)\n    return len(items)\n", 2);
-    {
-        const legacy = @import("test_support.zig").LegacySharing.enter();
-        defer legacy.restore();
-        try rejects("@ensures(len(old(items)) == 0)\ndef add(items: mut list[int]):\n    items.append(0)\n\ndef main() -> int:\n    items = [1]\n    add(mut items)\n    return 0\n", sema_contracts.old_shared_code);
-        try rejects("@ensures(len(old(rows.copy())) == 0)\ndef add(rows: mut list[list[int]]):\n    rows.append([0])\n\ndef main() -> int:\n    rows = [[1]]\n    add(mut rows)\n    return 0\n", sema_contracts.old_shared_code);
-    }
     try rejects("@requires(old(x) > 0)\ndef f(x: int) -> int:\n    return x\n\ndef main() -> int:\n    return f(1)\n", sema_contracts.old_code);
     try rejects("def f(x: int) -> int:\n    return old(x)\n\ndef main() -> int:\n    return f(1)\n", sema_contracts.old_code);
     try rejects("@ensures(old(old(x)) > 0)\ndef f(x: int) -> int:\n    return x\n\ndef main() -> int:\n    return f(1)\n", sema_contracts.old_code);

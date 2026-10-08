@@ -122,8 +122,8 @@ const origins = @import("origins.zig");
 const timings = @import("timings.zig");
 const generic_cache = @import("generic_cache.zig");
 const Names = @import("module_names.zig").Names;
-const LoopScope = struct { id: usize, before: []const Pending, arenas: usize = 0, exited: bool = false };
-const ArenaScope = struct { name: []const u8, watermark: typed.LocalId };
+const LoopScope = struct { id: usize, before: []const Pending, exited: bool = false };
+const ArenaScope = struct { name: []const u8 };
 const eUnbound = "E_UNBOUND";
 const eWithResource = sema_shared.eWithResource;
 const eFileArgument = sema_shared.eFileArgument;
@@ -1201,24 +1201,6 @@ const Checker = struct {
     pub const repeatAssignment = idiom_checks.repeatAssignment;
     pub const formatField = idiom_checks.formatField;
     pub const checkValueIndex = operator_checks.checkValueIndex;
-    /// Whether a local of this type needs cleanup when it leaves scope: a file,
-    /// a move-only value, or a value holding managed storage.
-    pub fn needsLocalCleanup(self: *Checker, local_type: typed.Type) Error!bool {
-        if (local_type.isFile()) return true;
-        if (typed.moveOnly(local_type, self.catalog.records)) return true;
-        return self.managedBearing(local_type);
-    }
-    /// Whether values of this type may hold a garbage-collected reference, including
-    /// references nested inside records, variants, options, results and arrays.
-    pub fn managedBearing(self: *Checker, local_type: typed.Type) Error!bool {
-        if (!local_type.isAggregate()) return false;
-        if (self.managed_types.len != self.catalog.records.len) {
-            const flags = try @import("record_layouts.zig").managedTypes(self.allocator, self.catalog.records);
-            self.allocator.free(self.managed_types);
-            self.managed_types = flags;
-        }
-        return self.managed_types[local_type.recordIndex()];
-    }
     /// Whether a name spells the binding of an enclosing `with arena() as name:`
     /// block, whose one use is `name.escape(value)` (NEW-CORE-S5-ARENA-2).
     pub fn arenaBinding(self: *Checker, name: source.Span) bool {
@@ -1319,10 +1301,7 @@ const Checker = struct {
                 const message = try std.fmt.allocPrint(
                     allocator,
                     "`mut` on `{s}` has nothing to write; {s}",
-                    .{ typed.typeName(parameter_type, self.catalog.records), if (value_semantics.enabled())
-                        "a number, bool, `str` or `bytes` cannot change the caller's value, so return the new value instead"
-                    else
-                        "only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`" },
+                    .{ typed.typeName(parameter_type, self.catalog.records), "a number, bool, `str` or `bytes` cannot change the caller's value, so return the new value instead" },
                 );
                 const fix = diagnostic.removeMut(src.bytes, parameter.ty.start) orelse return sink.fail(mutation_marker_code, parameter.ty, message);
                 return sink.failFix(mutation_marker_code, parameter.ty, message, fix.edit);
@@ -1878,7 +1857,6 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink) catch |err| return retryOr(&plan, err);
     timingAdd(timing, "domain_codec_validation", codecs_start);
     const warnings_start = timingStart(timing);
-    try @import("alias_warning.zig").check(allocator, src, checked, sink);
     try warnBindings(allocator, checker.catalog.records, functions, stubs, sink);
     try warnImports(module_names, sink);
     try @import("arena_fix.zig").warn(allocator, src, program, sink);
@@ -1996,10 +1974,7 @@ fn warnBindings(allocator: std.mem.Allocator, catalog: []const typed.Record, fun
                     .severity = .err,
                     .code = "E_DEAD_RECORD_WRITE",
                     .span = span,
-                    .message = if (value_semantics.enabled())
-                        "field write to a record copy is never observed; the write cannot reach the original; declare the parameter `mut` to change the caller's record, or return the updated record"
-                    else
-                        "field write to a `record` copy is never observed; `record` values are copies, so the write cannot reach the original; use `class` for reference semantics, or return the updated record",
+                    .message = "field write to a record copy is never observed; the write cannot reach the original; declare the parameter `mut` to change the caller's record, or return the updated record",
                 });
             }
             if (local.usage.temporary or local.usage.reads != 0) continue;

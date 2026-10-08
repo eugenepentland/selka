@@ -74,7 +74,7 @@ fn statementLoop(comptime Checker: type, self: *Checker, stmt: ast.Statement, lo
     try self.samePending(before, stmt.span, eResultLoop);
     const loop_id = self.loops.next;
     self.loops.next += 1;
-    try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .arenas = self.arenas.items.len });
+    try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before });
     defer _ = self.loops.active.pop();
     const init_before = try self.initSnapshot();
     try self.assumeOption(loop.condition, true);
@@ -140,7 +140,7 @@ fn statementForEach(comptime Checker: type, self: *Checker, stmt: ast.Statement,
     const before = try self.pendingState(self.locals.items.len);
     const loop_id = self.loops.next;
     self.loops.next += 1;
-    try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .arenas = self.arenas.items.len });
+    try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before });
     defer _ = self.loops.active.pop();
     const init_before = try self.initSnapshot();
     const body = try self.statement(each.body);
@@ -306,7 +306,7 @@ fn preludeIteration(comptime Checker: type, self: *Checker, stmt: ast.Statement,
     };
     defer for (names, hidden) |maybe_name, earlier| if (maybe_name) |name| self.unbindScoped(self.src.text(name), earlier);
     const before = try self.pendingState(self.locals.items.len);
-    try self.loops.active.append(self.allocator, .{ .id = walk.loop, .before = before, .arenas = self.arenas.items.len });
+    try self.loops.active.append(self.allocator, .{ .id = walk.loop, .before = before });
     defer _ = self.loops.active.pop();
     const init_before = try self.initSnapshot();
     const body = try self.statement(each.body);
@@ -397,7 +397,7 @@ fn statementForRange(comptime Checker: type, self: *Checker, stmt: ast.Statement
     const before = try self.pendingState(self.locals.items.len);
     const loop_id = self.loops.next;
     self.loops.next += 1;
-    try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .arenas = self.arenas.items.len });
+    try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before });
     defer _ = self.loops.active.pop();
     const init_before = try self.initSnapshot();
     const body = try self.statement(range.body);
@@ -436,24 +436,9 @@ fn statementLoopExit(comptime Checker: type, self: *Checker, stmt: ast.Statement
     const loop = self.loops.active.items[self.loops.active.items.len - 1];
     try self.requireHandled(loop.before.len, stmt.span);
     try self.samePending(loop.before, stmt.span, eResultLoop);
-    var owned: std.ArrayList(typed.LocalId) = .empty;
-    for (self.locals.items[loop.before.len..], loop.before.len..) |local, index| {
-        if (typed.moveOnly(local.ty, self.catalog.records)) try owned.append(self.allocator, @fromBackingInt(index));
-    }
     if (!continuing) self.loops.active.items[self.loops.active.items.len - 1].exited = true;
     flow.terminates = true;
-    flow.owned_cleanup = try owned.toOwnedSlice(self.allocator);
-    var arenas: std.ArrayList(typed.LocalId) = .empty;
-    var open = self.arenas.items.len;
-    while (open > loop.arenas) {
-        open -= 1;
-        try arenas.append(self.allocator, self.arenas.items[open].watermark);
-    }
-    return .{ .loop_exit = .{
-        .target = loop.id,
-        .continuing = continuing,
-        .arenas = try arenas.toOwnedSlice(self.allocator),
-    } };
+    return .{ .loop_exit = .{ .target = loop.id, .continuing = continuing } };
 }
 
 /// The checker fields `reboundVariable` writes, so a test can rebind a loop variable alone.

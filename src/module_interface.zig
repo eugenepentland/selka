@@ -28,7 +28,7 @@ const source = @import("source.zig");
 const embed = @import("embed.zig");
 
 /// Payload version; bump for any layout or meaning change so old artifacts miss.
-pub const format_version = "module-interface-v6";
+pub const format_version = "module-interface-v7";
 /// File extension of one stored interface.
 pub const extension = ".myi";
 
@@ -234,13 +234,11 @@ pub fn hashFact(hash: *std.crypto.hash.Blake3, fact: summary.Fact) void {
     var mask: [8]u8 = undefined;
     std.mem.writeInt(origins.Mask, &mask, fact.mutates, .little);
     hash.update(&mask);
-    inline for (.{ fact.return_origin, fact.borrow_origin }) |origin| {
+    inline for (.{fact.return_origin}) |origin| {
         std.mem.writeInt(origins.Mask, &mask, origin.positions, .little);
         hash.update(&mask);
         hash.update(&.{@as(u8, @intFromBool(origin.unknown))});
     }
-    std.mem.writeInt(u16, &bits, fact.inferred.caller_storage, .little);
-    hash.update(&bits);
     const flags = [_]bool{ fact.mutates_unknown, fact.inferred.writes, fact.inferred.external };
     for (flags) |flag| hash.update(&.{@as(u8, @intFromBool(flag))});
 }

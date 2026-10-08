@@ -2,7 +2,6 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
-const values = @import("value_semantics.zig");
 const typed = @import("typed.zig");
 const diagnostic = @import("diagnostic.zig");
 const cycles = @import("view_cycles.zig");
@@ -31,9 +30,6 @@ fn accepted(text: []const u8) !void {
 }
 // spec-case: D2-VIEW-STORAGE-1
 test "D2 declarations reject direct mutual and generic view cycles" {
-    const previous = values.enabled();
-    values.setEnabled(true);
-    defer values.setEnabled(previous);
     try rejected(direct);
     try rejected(
         \\record First:
@@ -63,9 +59,6 @@ test "D2 declarations reject direct mutual and generic view cycles" {
 }
 // spec-case: LIVE-VIEW-ACYCLIC-1
 test "live view cycle admission keeps ordinary views snapshots and recursion" {
-    const previous = values.enabled();
-    values.setEnabled(true);
-    defer values.setEnabled(previous);
     try accepted(
         \\record Node:
         \\    children: list[Node]
@@ -93,9 +86,6 @@ test "live view cycle admission keeps ordinary views snapshots and recursion" {
 }
 // spec-case: D2-VIEW-STORAGE-1
 test "D2 rejects phantom and empty array view annotations but permits user names" {
-    const previous = values.enabled();
-    values.setEnabled(true);
-    defer values.setEnabled(previous);
     try rejected(
         \\record Phantom[T]:
         \\    pass
@@ -114,16 +104,6 @@ test "D2 rejects phantom and empty array view annotations but permits user names
         \\    return 0
     );
 }
-// spec-case: D2-VIEW-STORAGE-1
-test "D2 rejects stored views in legacy tracing mode too" {
-    const previous = values.enabled();
-    values.setEnabled(false);
-    defer values.setEnabled(previous);
-    var c = try language.Compilation.init(t.allocator, "legacy-stored-view.my", direct);
-    defer c.deinit();
-    try t.expectError(error.SourceError, c.check());
-    try t.expectEqualStrings("E_VIEW_STORED", c.diagnostics.items[0].code);
-}
 
 fn graphRejection(allocator: std.mem.Allocator, records: []typed.Record) !void {
     var sink: diagnostic.Sink = .{ .allocator = allocator };
@@ -137,9 +117,6 @@ fn graphRejection(allocator: std.mem.Allocator, records: []typed.Record) !void {
 }
 // spec: LIVE-VIEW-ACYCLIC-1
 test "live view cycle admission visits deep stored graphs and rolls back allocation refusal" {
-    const previous = values.enabled();
-    values.setEnabled(true);
-    defer values.setEnabled(previous);
     const count = 32768;
     const records = try t.allocator.alloc(typed.Record, count);
     defer t.allocator.free(records);

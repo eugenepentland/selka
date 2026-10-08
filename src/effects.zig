@@ -833,13 +833,6 @@ fn checkContractPurity(ctx: CeilingContext, index: usize) diagnostic.Error!bool 
 /// Run the M2 mutation pass over `program` and, when the request asks for them,
 /// hand back each function's final effect mask and mutation summary.
 fn mutationPass(allocator: std.mem.Allocator, program: typed.Program, request: Request, graph: *const Graph) diagnostic.Error!bool {
-    for (@constCast(program.functions), 0..) |*function, index| if (origin_pass.standIn(request.stubs, index)) |fact| {
-        if (!mut_abi.valid(program.records, function.*, fact.caller_storage)) return error.InternalError;
-        function.signature.inferred.caller_storage = fact.caller_storage;
-    };
-    const storage = try mut_abi.collect(allocator, program);
-    defer allocator.free(storage);
-    for (@constCast(program.functions), storage) |*function, mask| function.signature.inferred.caller_storage = mask;
     const summaries: ?[]origin_pass.Summary = if (request.facts) |facts| try allocator.alloc(origin_pass.Summary, facts.len) else null;
     defer if (summaries) |owned| allocator.free(owned);
     const violated = origin_pass.check(allocator, program, .{
@@ -853,7 +846,7 @@ fn mutationPass(allocator: std.mem.Allocator, program: typed.Program, request: R
         error.OutOfMemory => return error.OutOfMemory,
     };
     if (request.facts) |facts| for (facts, 0..) |*fact, index| {
-        fact.* = .{ .graph_mask = if (index < graph.states.len) graph.states[index].mask else 0, .caller_storage = storage[index], .summary = summaries.?[index] };
+        fact.* = .{ .graph_mask = if (index < graph.states.len) graph.states[index].mask else 0, .summary = summaries.?[index] };
     };
     return violated;
 }
@@ -1102,13 +1095,4 @@ fn seedHost(graph: *Graph, index: usize, bound: ?sets.Bound, span: Span) error{I
     const allowed = (bound orelse return error.InternalError).allowed;
     if (allowed & ~sets.all != 0 or allowed & sets.bit(.host) == 0) return error.InternalError;
     for (std.meta.tags(sets.Effect)) |effect| if (allowed & sets.bit(effect) != 0) graph.direct(index, effect, span);
-}
-
-fn positionsInRange(positions: []const u16, parameter_count: usize) bool {
-    for (positions) |position| if (position >= parameter_count) return false;
-    return true;
-}
-
-fn stateBit(mask: sets.Mask, effect: sets.Effect) sets.Mask {
-    return mask & sets.bit(effect);
 }

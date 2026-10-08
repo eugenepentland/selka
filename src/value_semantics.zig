@@ -1,58 +1,20 @@
-//! Default value semantics (`VALUE-SEMANTICS-1`, stage 3 of D9,
-//! `docs/value-semantics.md`). In this mode, `list`, `dict`, `set` and
-//! `byte_buffer` values, and every inline aggregate holding one, are
-//! independent values: assignment, a store into a field, element, dictionary
-//! value, tuple or payload, a match or loop binding and a return never make two
-//! names reach the same collection. A read-only argument is lent, not copied:
-//! the callee cannot write it. Where a later operand of the same expression
-//! may write it, lowering copies it when it is evaluated
-//! (`value_semantics_order.zig`, VALUE-SEMANTICS-14).
+//! Value semantics (`VALUE-SEMANTICS-1`, `docs/value-semantics.md`), the only
+//! model: `list`, `dict`, `set` and `byte_buffer` values, and every inline
+//! aggregate holding one, are independent values. Assignment, a store into a
+//! field, element, dictionary value, tuple or payload, a match or loop binding
+//! and a return never make two names reach the same collection. A read-only
+//! argument is lent, not copied: the callee cannot write it. Builtin `class` and
+//! `Cell` are rejected. `str` and `bytes` are immutable and shared.
 //!
-//! This module holds the switch, the type predicates and the lowering facts.
-//! Lowering (`lower.zig`) puts one `value_copy` instruction after every value
-//! that moves to a second home and is not fresh; the ownership analysis
-//! (`ownership_values.zig`) decides which of them are moves or borrows and so
-//! emit nothing; the native emitter lowers the rest through the one rooted
-//! copy-on-write transfer entry `myl_qbe_cow_transfer` (`qbe_value_copy.zig`,
-//! `qbe_cow_runtime.c`). Builtin `class` and `Cell` are rejected in the default
-//! mode; the one-release legacy-sharing mode retains their reference behavior.
-//! `str` and `bytes` are immutable and shared.
+//! This module holds the type predicates and the per-function facts the
+//! checker's value rules (`value_semantics_check.zig`) and the origin analysis read.
 const std = @import("std");
 const typed = @import("typed.zig");
 const typed_walk = @import("typed_walk.zig");
 const buffer_operations = @import("buffer_operations.zig");
-const flag = @import("wiring/value_semantics.zig");
 
 /// Allocation failure while collecting a function's lowering facts.
 pub const Error = std.mem.Allocator.Error;
-
-/// The environment variable that carries the switch into every child compiler
-/// a command spawns (the build driver's frontend, the test runner's builds).
-pub const variable = "MYLANG_VALUE_SEMANTICS";
-
-/// The command-line spelling of the switch.
-pub const option = "--value-semantics";
-
-/// Whether this process checks and lowers with value semantics.
-pub fn enabled() bool {
-    return flag.enabled;
-}
-
-/// Turn value semantics on or off for this process. `main` calls it once,
-/// before any checking or lowering; a test restores the previous value.
-pub fn setEnabled(value: bool) void {
-    flag.enabled = value;
-}
-
-/// Whether the compiler emits counter calls beside COW marks and checks.
-pub fn counting() bool {
-    return flag.counting;
-}
-
-/// Set counting before frontend caching or native emission begins.
-pub fn setCounting(value: bool) void {
-    flag.counting = value;
-}
 
 /// Whether a value of `ty` reaches a list, dict, set or byte_buffer that a
 /// transfer would have to duplicate: the type is one, or an inline aggregate
@@ -285,24 +247,6 @@ fn bufferSource(kind: buffer_operations.Kind) Source {
     };
 }
 
-/// The argument of a collection operation that the operation stores or hands
-/// back, and so transfers: an appended, written or inserted element, a
-/// dictionary value, a default `get`, `setdefault` or `pop` may return, and the
-/// source of an `extend`, `update` or gathering keyed sort whose elements hold
-/// collections. Null when the operation stores nothing that needs a copy.
-pub fn storedArgument(records: []const typed.Record, owner: typed.Type, kind: buffer_operations.Kind) ?usize {
-    if (!owner.isAggregate() or owner.recordIndex() >= records.len) return null;
-    const schema = records[owner.recordIndex()];
-    if (!schema.isCollection()) return null;
-    const element = schema.shape.buffer orelse return null;
-    return switch (kind) {
-        .append => 0,
-        .write, .insert, .setdefault, .get, .pop_default => 1,
-        .extend, .update, .sort_keyed => if (needsCopy(records, element)) 0 else null,
-        else => null,
-    };
-}
-
 /// The local a read path (fields, indexes, element reads, unwraps) starts from.
 pub fn pathRoot(program: typed.Program, id: typed.NodeId) ?typed.LocalId {
     var current = id;
@@ -330,12 +274,6 @@ fn sameRoot(program: typed.Program, previous: typed.NodeId, value: typed.NodeId)
     return if (a == b) previous else null;
 }
 
-/// The named local or parameter a value is read from, following synthetic
-/// temporaries to the one value they hold; null when untraceable.
-fn valueRoot(facts: *const Facts, id: typed.NodeId) ?typed.LocalId {
-    return namedRoot(facts, pathRoot(facts.program, id) orelse return null);
-}
-
 /// The named local or parameter local `slot` names: the slot itself, or the
 /// local a synthetic temporary was read from; null when untraceable.
 pub fn namedRoot(facts: *const Facts, slot: typed.LocalId) ?typed.LocalId {
@@ -348,74 +286,4 @@ pub fn namedRoot(facts: *const Facts, slot: typed.LocalId) ?typed.LocalId {
         current = pathRoot(facts.program, value) orelse return null;
     }
     return null;
-}
-
-/// Whether two types can reach a common writable type (a list, dict, set,
-/// byte_buffer, `class` or Cell), the only way a `class` link could make one
-/// value's storage reachable from the other.
-fn sharesWritableType(records: []const typed.Record, a: typed.Type, b: typed.Type) bool {
-    var left: [64]typed.Type = undefined;
-    var right: [64]typed.Type = undefined;
-    const found_left = writableTypes(records, a, &left) orelse return true;
-    const found_right = writableTypes(records, b, &right) orelse return true;
-    for (found_left) |x| for (found_right) |y| if (x == y) return true;
-    return false;
-}
-
-/// Every writable type reachable from `root`, or null past the buffer's size.
-fn writableTypes(records: []const typed.Record, root: typed.Type, buffer: *[64]typed.Type) ?[]const typed.Type {
-    var seen: [128]typed.Type = undefined;
-    var seen_len: usize = 0;
-    var stack: [128]typed.Type = undefined;
-    var depth: usize = 1;
-    stack[0] = root;
-    var len: usize = 0;
-    while (depth > 0) {
-        depth -= 1;
-        const ty = stack[depth];
-        if (!ty.isAggregate() or ty.recordIndex() >= records.len) continue;
-        if (std.mem.indexOfScalar(typed.Type, seen[0..seen_len], ty) != null) continue;
-        if (seen_len == seen.len) return null;
-        seen[seen_len] = ty;
-        seen_len += 1;
-        const record = records[ty.recordIndex()];
-        if (typed.carriesWritableStorage(records, ty) and record.managed) {
-            if (len == buffer.len) return null;
-            buffer[len] = ty;
-            len += 1;
-        }
-        var children: [64]typed.Type = undefined;
-        const count = childTypes(record, &children) orelse return null;
-        for (children[0..count]) |child| {
-            if (depth == stack.len) return null;
-            stack[depth] = child;
-            depth += 1;
-        }
-    }
-    return buffer[0..len];
-}
-
-/// The component types of one schema, written into `children`; null when there
-/// are more than it holds.
-fn childTypes(record: typed.Record, children: *[64]typed.Type) ?usize {
-    var count: usize = 0;
-    const singles = [_]?typed.Type{ record.shape.buffer, record.collection.key, record.shape.domain, if (record.shape.array) |array| array.element else null };
-    for (singles) |single| if (single) |child| {
-        children[count] = child;
-        count += 1;
-    };
-    if (record.shape.variants) |variants| {
-        for (variants.cases) |case| if (case.payload) |payload| {
-            if (count == children.len) return null;
-            children[count] = payload;
-            count += 1;
-        };
-        return count;
-    }
-    for (record.fields) |field| {
-        if (count == children.len) return null;
-        children[count] = field.ty;
-        count += 1;
-    }
-    return count;
 }

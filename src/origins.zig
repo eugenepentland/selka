@@ -86,7 +86,6 @@ pub const Origin = struct {
 /// Inferred transitive facts for one checked function.
 pub const Summary = struct {
     return_origin: Origin = .{},
-    borrow_origin: Origin = .{},
     /// Positions of this function's parameters it may write (transitively).
     mutates: Mask = 0,
     /// A write target's origin could not be attributed to a parameter position.
@@ -107,7 +106,7 @@ pub const Summary = struct {
 /// them: the propagated effect mask (before the mutation bit is added) and the
 /// mutation summary. A check that did not materialize a body stands these in
 /// for it; a pass that computes them can hand them back for the next check.
-pub const Fact = struct { graph_mask: effect_set.Mask = 0, caller_storage: u16 = 0, summary: Summary = .{} };
+pub const Fact = struct { graph_mask: effect_set.Mask = 0, summary: Summary = .{} };
 
 /// The stand-in facts for function `index`, or null when its body was checked.
 pub fn standIn(stubs: []const ?Fact, index: usize) ?Fact {
@@ -117,7 +116,6 @@ pub fn standIn(stubs: []const ?Fact, index: usize) ?Fact {
 fn mergeSummaries(a: Summary, b: Summary) Summary {
     return .{
         .return_origin = Origin.merge(a.return_origin, b.return_origin),
-        .borrow_origin = Origin.merge(a.borrow_origin, b.borrow_origin),
         .mutates = a.mutates | b.mutates,
         .mutates_unknown = a.mutates_unknown or b.mutates_unknown,
         .writes = a.writes or b.writes,
@@ -134,41 +132,13 @@ fn mergeSummaries(a: Summary, b: Summary) Summary {
 pub fn sameSummary(a: Summary, b: Summary) bool {
     return a.mutates == b.mutates and a.mutates_unknown == b.mutates_unknown and
         a.writes == b.writes and a.external == b.external and
-        a.return_origin.positions == b.return_origin.positions and a.return_origin.unknown == b.return_origin.unknown and
-        a.borrow_origin.positions == b.borrow_origin.positions and a.borrow_origin.unknown == b.borrow_origin.unknown;
+        a.return_origin.positions == b.return_origin.positions and a.return_origin.unknown == b.return_origin.unknown;
 }
 
 /// Whether a value of `ty` may reach managed storage another value could share.
 pub fn mayContainManaged(program: typed.Program, ty: typed.Type) bool {
     var path: [64]typed.Type = undefined;
     return mayContainManagedDepth(program, ty, &path, 0);
-}
-
-/// Whether the value physically holds managed backing, including immutable
-/// text and bytes that still cost a reference-count transfer. A recursive
-/// type repeats only through a box; that pointer itself is retained backing.
-fn mayContainRetained(program: typed.Program, ty: typed.Type) bool {
-    var path: [64]typed.Type = undefined;
-    return retainedDepth(program, ty, &path, 0);
-}
-
-fn retainedDepth(program: typed.Program, ty: typed.Type, path: *[64]typed.Type, depth: usize) bool {
-    if (!ty.isAggregate()) return false;
-    const index = ty.recordIndex();
-    if (index >= program.records.len or depth == path.len) return true;
-    for (path[0..depth]) |seen| if (seen == ty) return false;
-    path[depth] = ty;
-    const record = program.records[index];
-    if (record.managed) return true;
-    if (record.shape.array) |array| if (retainedDepth(program, array.element, path, depth + 1)) return true;
-    if (record.shape.variants) |variants| for (variants.cases) |case| {
-        if (case.boxed) return true;
-        if (case.payload) |payload| if (retainedDepth(program, payload, path, depth + 1)) return true;
-    };
-    for (record.fields) |field| {
-        if (field.boxed or retainedDepth(program, field.ty, path, depth + 1)) return true;
-    }
-    return false;
 }
 
 /// `path` holds the types on the current walk: a recursive value type reaches
@@ -303,7 +273,7 @@ fn bindStatement(context: *const Context, function: typed.Function, origins: []O
     switch (statement.data) {
         .initialize, .assign => |store| {
             // VALUE-SEMANTICS-4: a named local receives its own copy.
-            if (!context.physical and copiedHome(context.program, function, store.slot)) return false;
+            if (copiedHome(context.program, function, store.slot)) return false;
             const value = context.nodeOrigin(function, origins, store.value, depth);
             return widen(origins, @backingInt(store.slot), value);
         },
@@ -313,7 +283,7 @@ fn bindStatement(context: *const Context, function: typed.Function, origins: []O
                 const slot = arm.slot orelse continue;
                 const index = @backingInt(slot);
                 if (index >= function.scope.locals.len) continue;
-                if (!context.physical and copiedHome(context.program, function, slot)) continue;
+                if (copiedHome(context.program, function, slot)) continue;
                 const payload = function.scope.locals[index].ty;
                 if (widen(origins, index, context.childIfManaged(payload, function, origins, matched.value, depth))) grew = true;
             }
@@ -327,7 +297,6 @@ fn bindStatement(context: *const Context, function: typed.Function, origins: []O
 /// shares nothing writable with its source, so the local starts fresh: a named
 /// local (not a parameter) whose type reaches no `class` or Cell.
 fn copiedHome(program: typed.Program, function: typed.Function, slot: typed.LocalId) bool {
-    if (!value_semantics.enabled()) return false;
     const index = @backingInt(slot);
     if (index < function.signature.parameter_count or index >= function.scope.locals.len) return false;
     if (!value_semantics.namedHome(function, index)) return false;
@@ -347,10 +316,9 @@ const Context = struct {
     allocator: std.mem.Allocator,
     program: typed.Program,
     summaries: []const Summary,
-    physical: bool = false,
 
     fn tracks(self: *const Context, ty: typed.Type) bool {
-        return if (self.physical) mayContainRetained(self.program, ty) else mayContainManaged(self.program, ty);
+        return mayContainManaged(self.program, ty);
     }
 
     /// Resolve the origin of one checked expression under the current local origins.
@@ -407,7 +375,7 @@ const Context = struct {
         // like `bytes` but keeps writable storage, so a write through it belongs
         // to whoever owns the buffer. A read-only `str`, `bytes` or scalar-only
         // record carries no origin because nothing can be written through it.
-        if (if (self.physical) !self.tracks(ty) else !typed.carriesWritableStorage(self.program.records, ty)) return Origin{};
+        if (!typed.carriesWritableStorage(self.program.records, ty)) return Origin{};
         return self.nodeOrigin(function, origins, base, depth + 1);
     }
 
@@ -439,7 +407,6 @@ const Context = struct {
 
     fn invokeOrigin(self: *const Context, function: typed.Function, origins: []const Origin, invoke: @FieldType(@FieldType(typed.Node, "data"), "invoke"), depth: usize) Origin {
         const signature = callables.signature(self.program.nodes[@backingInt(invoke.callee)].ty, self.program.records) orelse return .{ .unknown = true };
-        if (self.physical) return .{ .unknown = true };
         return self.substituteOrigin(function, origins, originFromBound(signature.return_origin), invoke.arguments, depth + 1);
     }
 
@@ -453,12 +420,6 @@ const Context = struct {
     fn ownerElementManaged(self: *const Context, function: typed.Function, slot: typed.LocalId) bool {
         const index = @backingInt(slot);
         if (index >= function.scope.locals.len) return true;
-        if (self.physical) {
-            const ty = function.scope.locals[index].ty;
-            if (!ty.isAggregate() or ty.recordIndex() >= self.program.records.len) return true;
-            const element = self.program.records[ty.recordIndex()].shape.buffer orelse return true;
-            return self.tracks(element);
-        }
         return managedElement(self.program, function.scope.locals[index].ty);
     }
 
@@ -525,8 +486,7 @@ const Context = struct {
     fn callResultOrigin(self: *const Context, function: typed.Function, origins: []const Origin, callee: typed.FunctionId, arguments: []const typed.NodeId, depth: usize) Origin {
         const index = @backingInt(callee);
         if (index >= self.summaries.len) return .{ .unknown = true };
-        const bound = if (self.physical) self.summaries[index].borrow_origin else self.summaries[index].return_origin;
-        return self.substituteOrigin(function, origins, bound, arguments, depth + 1);
+        return self.substituteOrigin(function, origins, self.summaries[index].return_origin, arguments, depth + 1);
     }
 };
 
@@ -667,8 +627,7 @@ fn applyStatement(context: *const Context, function: typed.Function, origins: []
         .ret => |value| {
             // VALUE-SEMANTICS-4: a returned value is the caller's own copy.
             const returned = context.program.nodes[@backingInt(value)].ty;
-            if (context.physical and !context.tracks(returned)) return false;
-            if (!context.physical and value_semantics.enabled() and value_semantics.copiesAll(context.program.records, returned)) return false;
+            if (value_semantics.copiesAll(context.program.records, returned)) return false;
             summary.return_origin = Origin.merge(summary.return_origin, context.nodeOrigin(function, origins, value, 0));
         },
         else => return bindStatement(context, function, origins, statement, 0),
@@ -736,7 +695,6 @@ fn buildSummaries(allocator: std.mem.Allocator, program: typed.Program, stubs: [
     var scratch = std.heap.ArenaAllocator.init(allocator);
     defer scratch.deinit();
     const context = Context{ .allocator = scratch.allocator(), .program = program, .summaries = summaries };
-    const physical = Context{ .allocator = scratch.allocator(), .program = program, .summaries = summaries, .physical = true };
     const budget = program.functions.len * 4 + 32;
     var iteration: usize = 0;
     while (true) {
@@ -744,8 +702,7 @@ fn buildSummaries(allocator: std.mem.Allocator, program: typed.Program, stubs: [
         for (program.functions, 0..) |_, index| {
             if (standIn(stubs, index) != null) continue;
             _ = scratch.reset(.retain_capacity);
-            var computed = try analyzeFunction(&context, index);
-            computed.borrow_origin = (try analyzeFunction(&physical, index)).return_origin;
+            const computed = try analyzeFunction(&context, index);
             const merged = mergeSummaries(summaries[index], computed);
             if (!sameSummary(merged, summaries[index])) {
                 summaries[index] = merged;
@@ -760,7 +717,6 @@ fn buildSummaries(allocator: std.mem.Allocator, program: typed.Program, stubs: [
     if (widened) for (summaries) |*summary| {
         summary.mutates_unknown = true;
         summary.return_origin.unknown = true;
-        summary.borrow_origin.unknown = true;
         summary.writes = true;
         summary.external = true;
     };
@@ -780,7 +736,6 @@ fn publish(allocator: std.mem.Allocator, program: typed.Program, summaries: []co
         else
             try bitsetPositions(allocator, summary.mutates);
         mutable.signature.return_origin = try boundFromOrigin(allocator, summary.return_origin);
-        mutable.signature.inferred.borrow_origin = try boundFromOrigin(allocator, summary.borrow_origin);
     }
 }
 
@@ -809,8 +764,7 @@ fn permissionMessage(allocator: std.mem.Allocator, function: typed.Function, sum
             text.writer.print("{s}p{d}", .{ if (listed) ", " else "", position }) catch return error.OutOfMemory;
             listed = true;
         }
-        const repair = if (value_semantics.enabled()) "assign the value to a local and change that copy" else "pass a fresh local snapshot";
-        text.writer.print("; declare both effects(mutation) and mutates(...), or {s}", .{repair}) catch return error.OutOfMemory;
+        text.writer.writeAll("; declare both effects(mutation) and mutates(...), or assign the value to a local and change that copy") catch return error.OutOfMemory;
     }
     return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
 }
@@ -844,17 +798,12 @@ fn unmarkedWriteMessage(allocator: std.mem.Allocator, src: source.Source, declar
         text.writer.print("` (parameter {d})", .{@as(u32, position) + 1}) catch return error.OutOfMemory;
         listed = true;
     }
-    if (value_semantics.enabled()) {
-        // VALUE-SEMANTICS-4: a parameter is read-only unless declared `mut`.
-        text.writer.writeAll(", which is read-only here; declare ") catch return error.OutOfMemory;
-        writeMutatedParameters(&text.writer, src, declared, function, positions) catch return error.OutOfMemory;
-        text.writer.writeAll(" so the change reaches the caller, or assign it to a local (`copy = ") catch return error.OutOfMemory;
-        writeParameterName(&text.writer, function, @intCast(@ctz(positions))) catch return error.OutOfMemory;
-        text.writer.writeAll("`) and change the copy") catch return error.OutOfMemory;
-        return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
-    }
-    text.writer.writeAll(" reachable from the caller; declare ") catch return error.OutOfMemory;
+    // VALUE-SEMANTICS-4: a parameter is read-only unless declared `mut`.
+    text.writer.writeAll(", which is read-only here; declare ") catch return error.OutOfMemory;
     writeMutatedParameters(&text.writer, src, declared, function, positions) catch return error.OutOfMemory;
+    text.writer.writeAll(" so the change reaches the caller, or assign it to a local (`copy = ") catch return error.OutOfMemory;
+    writeParameterName(&text.writer, function, @intCast(@ctz(positions))) catch return error.OutOfMemory;
+    text.writer.writeAll("`) and change the copy") catch return error.OutOfMemory;
     return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
 }
 
@@ -1005,7 +954,7 @@ fn checkMutDeclarations(allocator: std.mem.Allocator, program: typed.Program, re
     while (position < mask_positions) : (position += 1) {
         if (declared & (bitOf(position)) == 0) continue;
         if (summary.mutates & (bitOf(position)) != 0) continue;
-        const lost = if (value_semantics.enabled()) try value_checks.lostCopy(allocator, program, function, position) else null;
+        const lost = try value_checks.lostCopy(allocator, program, function, position);
         const message = if (lost) |copy|
             try lostCopyMessage(allocator, .{ .src = src, .program = program, .function = function, .position = position, .copy = copy })
         else
@@ -1288,79 +1237,6 @@ const OverlapChecker = struct {
     }
 };
 
-fn overlapForCall(checker: *const OverlapChecker, function: typed.Function, origins: []const Origin, node: typed.Node, sink: *diagnostic.Sink) std.mem.Allocator.Error!bool {
-    switch (node.data) {
-        .call => |call| {
-            const callee_index = @backingInt(call.function);
-            const callee = checker.program.functions[callee_index];
-            // Overlap is a proof obligation created by a declared `mutates(...)`
-            // contract. An unannotated helper's inferred writes are not such a
-            // promise, so forwarding shared inputs through it is ordinary
-            // sequential aliasing; only a declared footprint is checked.
-            if (callee.signature.declared_mutates.len == 0) return false;
-            const mask = positionsBitset(callee.signature.declared_mutates);
-            if (mask == 0) return false;
-            const site = CallSite{
-                .function = function,
-                .origins = origins,
-                .arguments = call.arguments,
-                .parameter_locals = callee.scope.locals[0..callee.signature.parameter_count],
-                .sink = sink,
-                .roots = checker.roots,
-            };
-            return checker.checkArguments(site, mask);
-        },
-        .invoke => |invoke| {
-            const signature = callables.signature(checker.program.nodes[@backingInt(invoke.callee)].ty, checker.program.records) orelse return false;
-            const mask = positionsBitset(signature.mutates);
-            if (mask == 0) return false;
-            const site = CallSite{
-                .function = function,
-                .origins = origins,
-                .arguments = invoke.arguments,
-                .parameter_types = signature.parameters,
-                .sink = sink,
-                .roots = checker.roots,
-            };
-            return checker.checkArguments(site, mask);
-        },
-        else => return false,
-    }
-}
-
-fn collectOverlaps(allocator: std.mem.Allocator, program: typed.Program, summaries: []const Summary, index: usize, sink: *diagnostic.Sink) std.mem.Allocator.Error!bool {
-    const function = program.functions[index];
-    const locals = function.scope.locals.len;
-    var scratch = std.heap.ArenaAllocator.init(allocator);
-    defer scratch.deinit();
-    const origins = try scratch.allocator().alloc(Origin, if (locals == 0) 1 else locals);
-    @memset(origins, .{});
-    const roots = try Roots.init(scratch.allocator(), origins.len);
-    const checker = OverlapChecker{ .allocator = allocator, .program = program, .summaries = summaries, .roots = roots };
-    const context = Context{ .allocator = allocator, .program = program, .summaries = summaries };
-    var violated = false;
-    var walker = try Walker.init(scratch.allocator(), program, function.scope.body);
-    defer walker.deinit();
-    while (try walker.next()) |item| switch (item) {
-        .statement => |statement_id| {
-            const statement = program.statements[@backingInt(statement_id)];
-            _ = bindStatement(&context, function, origins, statement, 0);
-            switch (statement.data) {
-                .initialize, .assign => |store| if (mutation.nodeRoot(program, store.value)) |root| roots.join(@backingInt(store.slot), @backingInt(root)),
-                .match => |matched| if (mutation.nodeRoot(program, matched.value)) |root| {
-                    for (matched.arms) |arm| if (arm.slot) |slot| roots.join(@backingInt(slot), @backingInt(root));
-                },
-                else => {},
-            }
-        },
-        .expression => |expression_id| {
-            const node = program.nodes[@backingInt(expression_id)];
-            if (try overlapForCall(&checker, function, origins, node, sink)) violated = true;
-        },
-    };
-    return violated;
-}
-
 /// Enforce M2's mutation permissions over a checked program. Returns whether
 /// any diagnostic was emitted; callers turn that into `error.SourceError`.
 pub fn check(allocator: std.mem.Allocator, program: typed.Program, request: Request) std.mem.Allocator.Error!bool {
@@ -1397,16 +1273,9 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, request: Requ
     // or a real copy where a `mut` argument of the same call could reach
     // it), so no writable/read-only overlap is possible. Instead a write
     // through a value binding or into a returned value is rejected.
-    if (value_semantics.enabled()) {
-        for (program.functions, 0..) |_, index| {
-            if (standIn(request.stubs, index) != null) continue;
-            if (try value_checks.checkWrites(allocator, program, index, sink)) violated = true;
-        }
-        return violated;
-    }
     for (program.functions, 0..) |_, index| {
         if (standIn(request.stubs, index) != null) continue;
-        if (try collectOverlaps(allocator, program, built.summaries, index, sink)) violated = true;
+        if (try value_checks.checkWrites(allocator, program, index, sink)) violated = true;
     }
     return violated;
 }

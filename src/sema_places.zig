@@ -337,7 +337,6 @@ fn checkFieldAssignment(comptime Checker: type, self: *Checker, node: ast.Node, 
         const receiver = try b.local(expected);
         try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = receiver, .value = current } }));
         try statements.append(self.allocator, try b.stmt(.{ .discard = try b.operation(receiver, .extend, try self.allocator.dupe(typed.NodeId, &.{value})) }));
-        if (!@import("value_semantics.zig").enabled()) return b.block(statements.items, try b.node(.unit, .unit));
         const stored = try b.local(expected);
         try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = stored, .value = try b.read(receiver) } }));
         if (destination.refresh) |refresh| try statements.append(self.allocator, refresh);
@@ -443,7 +442,7 @@ fn noteDeadRecordWrite(comptime Checker: type, self: *Checker, slot: typed.Local
     // VALUE-SEMANTICS-4: a write through a `for` variable is its own error
     // (`E_VALUE_BINDING_WRITE`), and a `mut` record parameter is the caller's
     // record, so its field writes are observed.
-    if (value_semantics.enabled() and local.origin == .iteration) return;
+    if (local.origin == .iteration) return;
     if (local.origin == .parameter and referenceRecordParameter(Checker, self, slot)) return;
     // A managed record (`class` or Cell) is shared, so a field write reaches
     // the original; only copied value `record`s can have dead writes.

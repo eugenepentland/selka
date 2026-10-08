@@ -38,8 +38,6 @@ fn value(source: []const u8) !i64 {
 
 // spec: HASH-KEYS-1
 test "an unhashable key or element type is refused with the path to its offending part" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
     try rejected("def main() -> int:\n    d: dict[float, int] = {}\n    return len(d)\n", "E_DICT_KEY", "`float` cannot be a dictionary key: a float is not hashable because NaN is not equal to itself");
     try rejected(
         "record At:\n    x: float\n\nrecord Reading:\n    name: str\n    at: At\n\ndef main() -> int:\n    d: dict[Reading, int] = {}\n    return len(d)\n",
@@ -48,7 +46,6 @@ test "an unhashable key or element type is refused with the path to its offendin
     );
     try rejected("def main() -> int:\n    s = {(1, 2.5)}\n    return len(s)\n", "E_SET_ELEMENT", "`tuple[int, float][1]` is `float`");
     try rejected("def main() -> int:\n    s: set[list[int]] = set()\n    return len(s)\n", "E_SET_ELEMENT", "is a shared reference whose contents can change after it is stored");
-    try rejected("class Box:\n    n: int\n\ndef main() -> int:\n    s = {Box(n=1)}\n    return len(s)\n", "E_SET_ELEMENT", "`Box` cannot be a set element");
     try rejected("def main() -> int:\n    d = {{1}: 2}\n    return len(d)\n", "E_DICT_KEY", "`set[int]` cannot be a dictionary key");
     try rejected("union Maybe:\n    none,\n    some: float\n\ndef main() -> int:\n    s: set[Maybe] = set()\n    return len(s)\n", "E_SET_ELEMENT", "`Maybe.some` is `float`");
     try rejected("def keyed[T: copy + storable](value: T) -> set[T]:\n    return {value}\n\ndef main() -> int:\n    return 0\n", "E_GENERIC_OPERATION", "requires declared integer support");

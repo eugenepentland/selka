@@ -171,11 +171,6 @@ fn recordCarries(schema: typed.Record, flags: []const bool, kind: Dependency) bo
     return false;
 }
 
-/// Compute transitive managed references through value fields without recursive traversal.
-pub fn managedTypes(allocator: std.mem.Allocator, records: []const typed.Record) std.mem.Allocator.Error![]bool {
-    return dependencies(allocator, records, .managed);
-}
-
 /// The schema of a tuple type, or null for any other type. A tuple's element
 /// types are its fields in positional order, which is what keeps every consumer
 /// reading one marker instead of a spelling.

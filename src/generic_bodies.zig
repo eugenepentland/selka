@@ -1284,7 +1284,7 @@ const Checker = struct {
         try self.compatible(try self.expressionExpected(invocation.arguments[0], element), element, span);
         return expected;
     }
-    fn cellConstructor(self: *Checker, invocation: Call, span: source.Span) Error!?Symbolic {
+    fn cellConstructor(self: *Checker, invocation: Call) Error!?Symbolic {
         if (invocation.owner != null or invocation.type_arguments.len != 0) return null;
         const name = self.src.text(invocation.name);
         if (!std.mem.eql(u8, name, "Cell")) return null;
@@ -1294,36 +1294,11 @@ const Checker = struct {
         const declaration = store.index.names.get("Cell") orelse return null;
         const builtin = store.index.declarations.items[declaration].builtin_name orelse return null;
         if (!std.mem.eql(u8, builtin, "Cell")) return null;
-        if (@import("value_semantics.zig").enabled()) return self.sink.fail(
+        return self.sink.fail(
             "E_VALUE_CELL",
             invocation.name,
             "builtin Cell is shared mutable state under value semantics; use a value record with `mut` and store-back, or a pool handle for identity",
         );
-        if (invocation.arguments.len != 1) return self.sink.fail("E_ARITY", span, "Cell requires one value argument");
-        const keyword = if (invocation.argument_names.len == 0) null else invocation.argument_names[0];
-        if (keyword == null or !std.mem.eql(u8, self.src.text(keyword.?), "value"))
-            return self.sink.fail("E_UNKNOWN_FIELD", invocation.name, "construct Cell with value=initial");
-        var expected_element: ?Symbolic = null;
-        var result: ?Symbolic = null;
-        if (self.expected_types.get(span)) |expected| {
-            if (self.shapes().isCell(expected)) {
-                const schema = try self.shapes().schema(expected, span);
-                if (schema.kind != .record) return error.InternalError;
-                for (schema.fields) |field| {
-                    if (!std.mem.eql(u8, field.name, "value")) continue;
-                    expected_element = field.ty orelse return error.InternalError;
-                    result = expected;
-                    break;
-                }
-                if (result == null) return error.InternalError;
-            }
-        }
-        const value = if (expected_element) |element| try self.expressionExpected(invocation.arguments[0], element) else try self.expression(invocation.arguments[0]);
-        if (expected_element) |element| try self.compatible(value, element, span);
-        if (try self.requiresHandling(value)) return self.sink.fail("E_CELL_ELEMENT", span, "Cell contents must be copyable, storable values without Result, Option, resources, capabilities, or result obligations");
-        try self.supports(value, .storable, span);
-        self.seedEffect(.managed_allocation);
-        return result orelse try self.shapes().nominal(declaration, &.{value});
     }
     fn numericLiteral(self: *Checker, span: source.Span, minimum: bool) Error!Symbolic {
         const expected = self.expected_types.get(span);
@@ -1485,7 +1460,7 @@ const Checker = struct {
         if (try self.managedMethod(input_call, span)) |value| return value;
         if (try self.constantMethod(input_call, span)) |value| return value;
         if (try self.sortedCall(input_call, span)) |value| return value;
-        if (try self.cellConstructor(input_call, span)) |value| return value;
+        if (try self.cellConstructor(input_call)) |value| return value;
         if (try self.contextualResult(input_call, span)) |value| return value;
         if (try self.contextualOption(input_call, span)) |value| return value;
         if (try self.scalarConstructor(input_call, span)) |value| return value;
