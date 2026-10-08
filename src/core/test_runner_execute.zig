@@ -20,6 +20,7 @@ const property_schema = @import("property_schema.zig");
 const property_execute = @import("property_execute.zig");
 const v = @import("property_value.zig");
 const Options = @import("test_runner_options.zig").Options;
+const spawn = @import("process_spawn.zig");
 const Value = std.json.Value;
 
 /// What stops a run: memory, or an output stream that cannot be written.
@@ -32,9 +33,9 @@ pub const Selected = struct { case: discover.Case, verdict: report.Verdict, read
 /// The cases-file key holding a test's expected result.
 pub const expectation = "expected";
 
-/// The arena, child-output allocator and I/O the test processes use; the arena must be
-/// thread-safe.
-pub const Resources = struct { arena: std.mem.Allocator, backing: std.mem.Allocator, io: std.Io };
+/// The arena, child-output allocator, I/O and environment the test processes use; the
+/// arena must be thread-safe.
+pub const Resources = struct { arena: std.mem.Allocator, backing: std.mem.Allocator, io: std.Io, environment: spawn.Environment };
 
 /// A built test executable and the checked program its tests come from.
 pub const Executable = struct { path: []const u8, program: typed.Program };
@@ -57,7 +58,7 @@ pub fn run(resources: Resources, options: Options, executable: Executable, chose
         .options = options,
         .program = executable.program,
         .executor = .{
-            .context = .{ .arena = a, .backing = resources.backing, .io = resources.io },
+            .context = .{ .arena = a, .backing = resources.backing, .io = resources.io, .environment = resources.environment },
             .types = try property_schema.definitions(a, executable.program),
             .executable = executable.path,
             .table_index = 0,
@@ -323,8 +324,8 @@ test "Queue.drain stops its worker at the first error and reports it" {
     // A file where the cache directory should be: no private directory can be made.
     try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "cache", .data = "" });
     const cache = try temporary.dir.realPathFileAlloc(std.testing.io, "cache", a);
-    const resources: Resources = .{ .arena = a, .backing = std.testing.allocator, .io = std.testing.io };
-    const context: property_execute.Context = .{ .arena = a, .backing = std.testing.allocator, .io = std.testing.io };
+    const resources: Resources = .{ .arena = a, .backing = std.testing.allocator, .io = std.testing.io, .environment = .{ .block = .empty } };
+    const context: property_execute.Context = .{ .arena = a, .backing = std.testing.allocator, .io = std.testing.io, .environment = .{ .block = .empty } };
     const shared: Shared = .{
         .resources = resources,
         .options = .{ .path = "x.my", .build = .{ .zig = "zig", .cache = cache } },

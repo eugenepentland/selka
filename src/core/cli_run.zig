@@ -201,7 +201,8 @@ fn execute(init: std.process.Init, program: []const u8, settings: cli_args.Run, 
     restoreAddressSpace(init.environ_map);
     deepenStack(frames);
     const started = std.Io.Timestamp.now(init.io, .awake);
-    var child = std.process.spawn(init.io, .{ .argv = argv, .environ_map = &environment, .stderr = .pipe }) catch |err| return hostFailure(init, "run", "start", err);
+    const options: @import("process_spawn.zig").Options = .{ .argv = argv, .environment = .{ .map = &environment }, .stdin = .inherit, .stderr = .pipe };
+    var child = @import("process_spawn.zig").spawn(init.gpa, options) catch |err| return hostFailure(init, "run", "start", err);
     if (json) {
         var buffer: [4096]u8 = undefined;
         var reader = child.stderr.?.readerStreaming(init.io, &buffer);

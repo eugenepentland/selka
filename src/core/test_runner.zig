@@ -839,7 +839,7 @@ fn execute(init: std.process.Init, requested: Options, checked: frontend.Checked
         .built => |executable| {
             const width = options_module.width(options.controls, init.environ_map, live.items.len, @import("memory_budget").available(init.io));
             // The pinned Zig arena is thread-safe with Init's thread-safe backing.
-            const resources: run_tests.Resources = .{ .arena = allocator, .backing = init.gpa, .io = init.io };
+            const resources: run_tests.Resources = .{ .arena = allocator, .backing = init.gpa, .io = init.io, .environment = .{ .block = init.minimal.environ.block } };
             const workers: run_tests.Workers = .{ .width = width, .batch = if (run_tests.isolated(init.environ_map)) 1 else std.math.maxInt(usize) };
             try run_tests.run(resources, options, .{ .path = executable, .program = checked.program }, chosen, live.items, workers);
         },

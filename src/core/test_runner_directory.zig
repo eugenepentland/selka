@@ -333,7 +333,8 @@ const Worker = struct {
         defer input.close(self.init.io);
         var fanout = self.fanout;
         fanout.jobs = jobs;
-        var process = std.process.spawn(self.init.io, .{ .argv = try argv(a, fanout, path), .environ_map = self.environment, .stdin = .{ .file = input }, .stdout = .{ .file = output } }) catch return error.WriteFailed;
+        const launch: @import("process_spawn.zig").Options = .{ .argv = try argv(a, fanout, path), .environment = .{ .map = self.environment }, .stdin = .{ .file = input }, .stdout = .{ .file = output } };
+        var process = @import("process_spawn.zig").spawn(self.init.gpa, launch) catch return error.WriteFailed;
         const term = process.wait(self.init.io) catch {
             process.kill(self.init.io);
             return error.ReadFailed;

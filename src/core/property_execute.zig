@@ -3,6 +3,7 @@ const std = @import("std");
 const codec = @import("property_codec.zig");
 const types = @import("property_types.zig");
 const v = @import("property_value.zig");
+const spawn = @import("process_spawn.zig");
 const Value = std.json.Value;
 /// Input, output and child-launch failures remain test failures.
 pub const Error = codec.Error || error{ WriteFailed, ReadFailed };
@@ -10,8 +11,9 @@ pub const Error = codec.Error || error{ WriteFailed, ReadFailed };
 pub const batch_limit = 4096;
 /// The old runner's default whole-batch wall-clock limit.
 pub const Limits = struct { timeout_ms: u32 = 60000 };
-/// Filesystem, arena and child-output allocation resources of one command.
-pub const Context = struct { arena: std.mem.Allocator, io: std.Io, backing: std.mem.Allocator };
+/// Filesystem, arena and child-output allocation resources of one command, and the
+/// environment its test processes get.
+pub const Context = struct { arena: std.mem.Allocator, io: std.Io, backing: std.mem.Allocator, environment: spawn.Environment };
 /// The structured trap fields that distinguish a test's precondition from a helper's.
 pub const Trap = struct { code: []const u8 = "", message: []const u8 = "", frame: []const u8 = "" };
 /// One completed trial and its captured output, actual value or structured trap.
@@ -74,7 +76,7 @@ pub const Executor = struct {
         }
         std.Io.Dir.cwd().writeFile(c.io, .{ .sub_path = input, .data = request.items }) catch return error.WriteFailed;
         const timeout: std.Io.Timeout = .{ .duration = .{ .raw = .fromMilliseconds(limits.timeout_ms), .clock = .awake } };
-        const child = std.process.run(c.backing, c.io, .{ .argv = &.{ self.executable, input, output }, .timeout = timeout }) catch |err| {
+        const child = spawn.run(c.backing, c.io, .{ .argv = &.{ self.executable, input, output }, .environment = c.environment, .timeout = timeout }) catch |err| {
             return self.read(requested, output, .{ .ending = @errorName(err), .timed_out = err == error.Timeout });
         };
         defer c.backing.free(child.stdout);
@@ -210,7 +212,7 @@ test "trials reports an executable that cannot start as an ending with no answer
     var temporary = std.testing.tmpDir(.{});
     defer temporary.cleanup();
     const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
-    const context: Context = .{ .arena = a, .io = std.testing.io, .backing = std.testing.allocator };
+    const context: Context = .{ .arena = a, .io = std.testing.io, .backing = std.testing.allocator, .environment = .{ .block = .empty } };
     const executor: Executor = .{ .context = context, .types = &.{}, .executable = try std.fs.path.join(a, &.{ root, "missing" }), .table_index = 0, .directory = root };
     const requested: []const Trial = &.{ .{ .row = 0, .function = .null, .words = &.{} }, .{ .row = 1, .function = .null, .words = &.{} } };
     const result = try executor.trials(requested, .{});
