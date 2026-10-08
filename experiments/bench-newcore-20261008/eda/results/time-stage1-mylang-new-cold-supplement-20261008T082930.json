@@ -1,0 +1,56 @@
+{
+ "lang": "mylang-new",
+ "stage": 1,
+ "repeat": 5,
+ "host": "linuxserver",
+ "load_avg_at_end": [
+  6.95751953125,
+  9.98876953125,
+  9.42041015625
+ ],
+ "commands": {
+  "build": [
+   "sh",
+   "-c",
+   "mkdir -p \"/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/mylang-new/tmp\" \"/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/mylang-new/bin\" && exec mylang build src/main.my -o \"/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/mylang-new/bin/eda-sch\" --cache-dir=\"/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/mylang-new/mylang\""
+  ],
+  "check": [
+   "sh",
+   "-c",
+   "mkdir -p \"/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/mylang-new/tmp\" && exec mylang check src/main.my --cache-dir=\"/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/mylang-new/mylang\""
+  ],
+  "test": [
+   "sh",
+   "-c",
+   "mkdir -p \"/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/mylang-new/tmp\" && exec mylang test src --jobs 4 --cache-dir \"/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/mylang-new/mylang\" --max-frames 30000 --max-steps 4000000000 --max-memory 2G"
+  ]
+ },
+ "results": {
+  "cold_build": {
+   "median_s": 9.861,
+   "min_s": 9.05,
+   "max_s": 10.298,
+   "peak_rss_mib": 294.9,
+   "samples_s": [
+    10.298,
+    10.029,
+    9.861,
+    9.171,
+    9.05
+   ]
+  },
+  "clean_build": {
+   "median_s": 1.366,
+   "min_s": 0.621,
+   "max_s": 1.491,
+   "peak_rss_mib": 272.5,
+   "samples_s": [
+    0.821,
+    0.621,
+    1.491,
+    1.451,
+    1.366
+   ]
+  }
+ }
+}

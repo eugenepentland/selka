@@ -1,0 +1,78 @@
+{
+  "language": "mylang",
+  "version": [
+    "{mylang}",
+    "--features"
+  ],
+  "env": {
+    "XDG_CACHE_HOME": "{cache}/xdg",
+    "PYTHONPYCACHEPREFIX": "{cache}/pycache",
+    "ZIG_GLOBAL_CACHE_DIR": "{cache}/zig-global",
+    "ZIG_LOCAL_CACHE_DIR": "{cache}/zig-local"
+  },
+  "profiles": {
+    "release": {
+      "build": [
+        "{mylang}",
+        "build",
+        "main.my",
+        "--release",
+        "-o",
+        "{cache}/lox-release",
+        "--cache-dir",
+        "{cache}/mylang"
+      ],
+      "binary": "{cache}/lox-release"
+    },
+    "debug": {
+      "build": [
+        "{mylang}",
+        "build",
+        "main.my",
+        "-o",
+        "{cache}/lox-debug",
+        "--cache-dir",
+        "{cache}/mylang"
+      ],
+      "binary": "{cache}/lox-debug"
+    }
+  },
+  "test": {
+    "run": [
+      "sh",
+      "-c",
+      "\"$0\" test . --max-steps=100000000 --cache-dir \"$1/test\" && \"$0\" test driver_tests.my --cases driver_cases.json --max-steps=100000000 --cache-dir \"$1/test\"",
+      "{mylang}",
+      "{cache}"
+    ],
+    "force": [
+      "sh",
+      "-c",
+      "\"$0\" test . --max-steps=100000000 --cache-dir \"$1/test\" --force && \"$0\" test driver_tests.my --cases driver_cases.json --max-steps=100000000 --cache-dir \"$1/test\" --force",
+      "{mylang}",
+      "{cache}"
+    ]
+  },
+  "edits": {
+    "hub_comment": {
+      "file": "value.my",
+      "find": "# True exactly for nil and false.\n",
+      "replace": "# True exactly for nil and false.\n# (Lox has no other falsey values.)\n"
+    },
+    "leaf_body": {
+      "file": "natives.my",
+      "find": "                    return value.Value.number(float(instant.unix_nanoseconds) / 1000000000.0)\n",
+      "replace": "                    seconds = float(instant.unix_nanoseconds) / 1000000000.0\n                    return value.Value.number(seconds)\n"
+    },
+    "hub_body": {
+      "file": "value.my",
+      "find": "                case Value.number(right):\n                    return left == right\n",
+      "replace": "                case Value.number(right):\n                    same = left == right\n                    return same\n"
+    },
+    "hub_interface": {
+      "file": "value.my",
+      "find": "# The shortest round-trip digits",
+      "replace": "# Lox inequality, the negation of `values_equal`.\npublic def values_not_equal(a: Value, b: Value) -> bool:\n    return not values_equal(a, b)\n\n\n# The shortest round-trip digits"
+    }
+  }
+}

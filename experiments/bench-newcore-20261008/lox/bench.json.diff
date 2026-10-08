@@ -1,0 +1,52 @@
+19c19
+<                 "--project",
+---
+>                 "--release",
+21c21
+<                 "{cache}/out-release/lox",
+---
+>                 "{cache}/lox-release",
+25,53c25
+<             "binary": "{cache}/out-release/lox"
+<         },
+<         "release-safe": {
+<             "build": [
+<                 "{mylang}",
+<                 "build",
+<                 "main.my",
+<                 "--project",
+<                 "-o",
+<                 "{cache}/out-release-safe/lox",
+<                 "--cache-dir",
+<                 "{cache}/mylang"
+<             ],
+<             "binary": "{cache}/out-release-safe/lox"
+<         },
+<         "release-qbe": {
+<             "build": [
+<                 "{mylang}",
+<                 "build",
+<                 "main.my",
+<                 "--project",
+<                 "--backend",
+<                 "qbe",
+<                 "-o",
+<                 "{cache}/out-release-qbe/lox",
+<                 "--cache-dir",
+<                 "{cache}/mylang"
+<             ],
+<             "binary": "{cache}/out-release-qbe/lox"
+---
+>             "binary": "{cache}/lox-release"
+60,62d31
+<                 "--project",
+<                 "--mode",
+<                 "Debug",
+64c33
+<                 "{cache}/out-debug/lox",
+---
+>                 "{cache}/lox-debug",
+68c37
+<             "binary": "{cache}/out-debug/lox"
+---
+>             "binary": "{cache}/lox-debug"

@@ -1,0 +1,352 @@
+   Compiling eda-sch v0.1.0 (/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/rust)
+warning: variant `End` is never constructed
+   --> src/kicad_sch/textbox.rs:157:5
+    |
+153 | enum Just {
+    |      ---- variant in this enum
+...
+157 |     End,
+    |     ^^^
+    |
+    = note: `Just` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: variant `Below` is never constructed
+   --> src/kicad_sch/textbox.rs:166:5
+    |
+162 | enum Cross {
+    |      ----- variant in this enum
+...
+166 |     Below,
+    |     ^^^^^
+    |
+    = note: `Cross` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `eda-sch` (lib) generated 2 warnings
+warning: `eda-sch` (lib test) generated 1 warning (1 duplicate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.37s
+     Running unittests src/lib.rs (/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/rust/target/debug/deps/eda_sch-8de5829444d106b8)
+
+running 293 tests
+test board_layers::tests::a_front_side_layer_name_flips_to_its_back_twin_and_a_sideless_one_does_not ... ok
+test board_layers::tests::a_layer_set_with_no_bits_is_unrestricted ... ok
+test board_layers::tests::a_six_layer_declared_stackup_numbers_signals_around_its_planes ... ok
+test board_layers::tests::an_undeclared_board_builds_the_implicit_four_layer_table ... ok
+test board_layers::tests::layer_names_round_trip_through_the_shared_table ... ok
+test board_layers::tests::imported_copper_spellings_are_recognized_without_minting_rows ... ok
+test board_layers::tests::layer_rows_carry_position_colours_and_poured_outer_faces_stay_routable ... ok
+test board_layers::tests::the_layer_table_carries_each_rows_gerber_identity ... ok
+test board_layers::tests::the_layer_table_carries_the_technical_fabrication_rows ... ok
+test board_layers::tests::the_named_layer_constants_are_the_spellings_the_table_itself_carries ... ok
+test decouple_key::tests::pin_from_origin_reads_value_at_pad_hash_replica_and_rejects_every_other_key_shape ... ok
+test decouple_key::tests::cap_farads_parses_si_prefixes_including_the_micro_sign_and_the_bulk_threshold ... ok
+test design_model::tests::design_model_a_malformed_model_names_the_offending_line ... ok
+test diagram::membership::tests::attached_sub_blocks_reports_a_section_s_own_modules_in_declaration_order ... ok
+test escape::tests::decode_xml_alloc_copies_an_entity_it_does_not_know_through_verbatim ... ok
+test escape::tests::decode_xml_alloc_round_trips_every_byte_write_xml_can_escape ... ok
+test escape::tests::the_two_apostrophe_spellings_differ_in_nothing_but_the_apostrophe ... ok
+test design_model::tests::design_model_a_model_round_trips_every_modelled_field_into_the_block ... ok
+test escape::tests::write_xml_escapes_markup_and_both_quote_styles ... ok
+test eval::electrical::tests::parse_reads_pin_function_name ... ok
+test eval::electrical::tests::parse_rejects_an_unknown_electrical_type ... ok
+test eval::electrical::tests::parse_recognises_all_electrical_types ... ok
+test diagram::membership::tests::compute_sub_block_attachments_keeps_a_power_producer_out_of_a_consuming_section ... ok
+test eval::electrical::tests::parse_captures_voltage_levels ... ok
+test eval::electrical::tests::parse_sub_forms_fills_caller_supplied_decl_from_sub_form_list ... ok
+test eval::electrical::tests::parse_ignores_unknown_sub_forms ... ok
+test eval::electrical::tests::port_level_electrical_decl_carries_boundary_logic_levels ... ok
+test escape::tests::write_xml_neutralizes_a_script_attribute_breakout ... ok
+test eval::env::tests::env_get_and_put ... ok
+test eval::env::tests::ground_via_distance_protection_is_enabled_by_default ... ok
+test eval::electrical::tests::parse_returns_null_without_pin_name ... ok
+test eval::net_analysis::tests::is_ground_base_accepts_the_base_names_in_any_case_and_only_those ... ok
+test eval::net_analysis::tests::is_rating_zero_volts_adds_only_the_chassis_node_to_the_ground_tokens ... ok
+test eval::net_analysis::tests::the_ground_net_vocabulary_tables_keep_the_spellings_their_consumers_had ... ok
+test eval::net_analysis::tests::supply_capacitor_without_a_ground_leg_is_not_decoupling ... ok
+test eval::net_analysis::tests::top_level_input_power_ports_require_decoupling ... ok
+test eval::rails::tests::build_derives_one_rail_per_power_output_port ... ok
+test eval::rails::tests::build_collapses_ferrite_bridged_nets_into_single_rail ... ok
+[W] export-kicad: unsafe footprint name '../../etc/passwd' sanitized to '______etc_passwd' (path-traversal guard)
+[W] export-kicad: unsafe footprint name 'a\b' sanitized to 'a_b' (path-traversal guard)
+test eval::rails::tests::build_excludes_gnd ... ok
+test eval::rails::tests::build_falls_back_to_section_power_port_voltage ... ok
+test eval::rails::tests::build_preserves_top_level_rated_maximum ... ok
+test eval::rails::tests::build_falls_back_to_top_level_design_port_nominal ... ok
+test eval::rails::tests::build_records_source_ref_des_and_source_port ... ok
+test eval::rails::tests::build_recognizes_a_bare_vout_tied_to_a_rail_named_net ... ok
+test eval::rails::tests::build_returns_empty_slice_when_no_rails_declared ... ok
+test eval::rails::tests::the_supply_rail_vocabulary_tables_keep_the_spellings_their_consumers_had ... ok
+test eval::rails::tests::build_uses_sub_block_port_nominal_for_voltage ... ok
+test export_kicad::tests::collect_instances_prefixes_a_decoupling_binding_s_target_ic_like_the_ref_des ... ok
+test export_kicad::tests::netlist_generation ... ok
+test export_kicad::tests::sanitize_kicad_name_neutralizes_traversal_and_passes_safe_names_through ... ok
+test export_kicad::tests::the_export_layer_re_exports_the_flatten_currency_types_unchanged ... ok
+test export_kicad::tests::footprint_mod_export ... ok
+test export_kicad_footprint::tests::export_footprint_mod_emits_a_copper_pour_only_footprint_keepout ... ok
+test export_kicad_footprint::tests::export_footprint_mod_emits_a_custom_pads_polygon_as_kicad_primitives_gr_poly ... ok
+test export_kicad_footprint::tests::export_footprint_mod_emits_a_footprint_keepout_that_also_blocks_vias ... ok
+test export_kicad_footprint::tests::export_footprint_mod_emits_fab_geometry_on_f_fab_and_keeps_silkscreen_on_f_silks ... ok
+test export_kicad_footprint::tests::export_footprint_mod_emits_silkscreen_poly_rect_pin_1_markers_must_not_be_dropped ... ok
+test export_kicad_footprint::tests::export_footprint_mod_escapes_a_hostile_3d_model_filename ... ok
+test export_kicad_footprint::tests::export_footprint_mod_inflates_the_f_crtyd_courtyard_by_the_placement_margin ... ok
+test export_kicad_footprint::tests::export_footprint_mod_names_the_body_and_smd_pad_layers_with_kicads_own_spellings ... ok
+test export_kicad_footprint::tests::export_footprint_mod_strokes_f_silks_at_the_fabricated_width_and_f_fab_at_the_documentation_width ... ok
+test export_kicad_footprint::tests::export_footprint_mod_puts_a_concave_custom_pad_anchor_on_copper ... ok
+test export_kicad_footprint::tests::use_source_kicad_mod_replaces_a_model_block_whose_path_holds_a_parenthesis ... ok
+test export_kicad_netlist::tests::extract_pad_names_reads_bare_int_quoted_and_atom_pad_numbers ... ok
+test export_kicad_netlist::tests::write_netlist_escapes_the_raw_design_name_and_copies_tokenizer_slices_verbatim ... ok
+test export_kicad_netlist::tests::the_exported_netlist_reproduces_every_nets_membership_exactly ... ok
+test export_kicad_footprint::tests::export_footprint_mod_emits_the_pad_rotation_geometry_zig_reads_mapped_into_kicads_frame ... ok
+test export_kicad_footprint::tests::export_footprint_mod_leaves_a_rotated_custom_pads_at_unrotated ... ok
+[I] export-kicad-sch: fixture: 1/3 components drawn from vendor symbols (1 libraries indexed)
+[W] export-kicad-sch: net 'ORPHAN' references 'U9' which has no instance — pin not drawn
+test eval::env::tests::env_parent_chain ... ok
+test export_kicad_sch::tests::kicad_sch_a_net_on_a_missing_ref_des_draws_no_label_and_does_not_fail_the_export ... ok
+[I] export-kicad-sch: stubs: 2 per-pin bypass-stub nets labelled as their base rail
+[I] export-kicad-sch: stubs: 2 per-pin bypass-stub nets labelled as their base rail
+[I] export-kicad-sch: stubs: 2 per-pin bypass-stub nets labelled as their base rail
+test export_kicad_sch::tests::kicad_sch_a_multi_part_instance_emits_kicad_units_that_share_one_reference ... ok
+test export_kicad_sch::tests::kicad_sch_an_empty_design_still_exports_a_self_checking_sheet ... ok
+test export_kicad_sch::tests::kicad_sch_a_hubs_repeated_rail_pins_are_ganged_under_one_adornment ... ok
+test export_kicad_sch::tests::kicad_sch_a_two_pin_net_spanning_two_sections_is_still_label_connected ... ok
+test export_kicad_sch::tests::kicad_sch_a_vendor_body_reaches_the_emitted_sheet_and_can_be_switched_off ... ok
+test export_kicad_sch::tests::kicad_sch_a_displayed_part_number_clears_the_value_above_it_and_every_neighbour ... ok
+test export_kicad_sch::tests::kicad_sch_a_passive_is_emitted_as_a_real_device_glyph_rather_than_a_box ... ok
+test export_kicad_sch::tests::kicad_sch_a_decoupling_bank_replaces_its_members_labels_with_one_rail_label ... ok
+test export_kicad_sch::tests::kicad_sch_a_ganged_cap_is_turned_upright_and_drops_its_per_pin_drawing ... ok
+test export_kicad_sch::tests::kicad_sch_first_undrawn_finds_an_uncovered_pin_and_passes_full_coverage ... ok
+test export_kicad_sch::tests::kicad_sch_qualify_re_attaches_the_sub_block_path_to_a_module_local_ref ... ok
+test export_kicad_sch::tests::kicad_sch_a_resolved_part_number_is_shown_on_a_hub_and_hidden_on_a_passive ... ok
+[I] export-kicad-sch: fixture: 1/3 components drawn from vendor symbols (1 libraries indexed)
+test export_kicad_sch::tests::kicad_sch_bypass_stubs_of_a_rail_all_label_as_the_rail_and_its_own_dotted_net_survives ... ok
+test flat_netlist::tests::flatten_currency_types_default_their_optional_fields ... ok
+test flat_netlist::tests::uuid_from_id_pins_the_identity_kicad_sync_keys_on ... ok
+test export_kicad_sch::tests::kicad_sch_a_bound_bypass_cap_and_a_three_pin_cluster_net_become_drawn_wire ... ok
+test footprint_paste::tests::ic_package_paste_parsing_empty_and_malformed ... ok
+test export_kicad_sch::tests::kicad_sch_export_emits_the_pinned_header_and_each_instances_own_uuid ... ok
+test infra::fs::tests::cache_probe_rejects_an_end_call_away_from_its_owner_thread ... ok
+test export_kicad_sch::tests::kicad_sch_the_vendor_fixture_export_matches_its_committed_golden_file ... ok
+test export_kicad_sch::tests::kicad_sch_non_utf8_design_strings_reach_the_netlist_and_sheet_verbatim ... ok
+test infra::fs::tests::cache_probe_leaves_the_closure_alone_without_weakening_the_tamper_guard ... ok
+test infra::fs::tests::read_trace_digest_sorts_canonical_paths ... ok
+test infra::fs::tests::read_trace_binds_child_dir_bytes_and_detects_aba_consumption ... ok
+test export_kicad_sch::tests::kicad_sch_export_writes_hierarchical_net_names_into_labels_unchanged ... ok
+test infra::fs::tests::read_trace_reports_retained_evidence_memory ... ok
+test export_kicad_sch::tests::kicad_sch_the_export_kicad_bundle_carries_the_schematic_on_request ... ok
+test infra::fs::tests::nested_read_traces_invalidate_both_scopes_without_stealing_reads ... ok
+test json_writer::tests::escape_control_characters ... ok
+test json_writer::tests::escape_quotes_and_backslashes ... ok
+test json_writer::tests::one_script_context_escaper_answers_for_every_page_json_writer ... ok
+test json_writer::tests::script_strings_escape_closing_tags_and_javascript_line_separators ... ok
+test json_writer::tests::the_sidecar_escaper_leaves_lt_alone_and_still_escapes_quote_backslash_and_controls ... ok
+test json_writer::tests::write_field_surrounds_value_with_quotes ... ok
+test infra::fs::tests::read_trace_rejects_an_end_call_away_from_its_owner_thread ... ok
+test kicad_pcb::format::tests::sexpr_escape_escapes_quotes_and_backslashes_passes_clean_text_through ... ok
+test kicad_pcb::format::tests::sexpr_unescape_inverts_sexpr_escape_and_is_a_no_op_on_clean_text ... ok
+test kicad_sch::bank::tests::kicad_sch_angle_for_stands_a_cap_up_and_reach_of_refuses_an_odd_body ... ok
+test kicad_sch::bank::tests::kicad_sch_bank_grouping_keys_on_the_rail_and_ground_pair ... ok
+test kicad_sch::bank::tests::kicad_sch_cell_for_budgets_the_whole_bank_and_keeps_its_origin_inside ... ok
+test kicad_sch::bank::tests::kicad_sch_bank_members_sort_by_value_then_reference ... ok
+test kicad_sch::bank::tests::kicad_sch_is_supply_net_accepts_real_rails_and_refuses_signals ... ok
+test kicad_sch::bank::tests::kicad_sch_rail_pts_breaks_the_rail_at_each_member_column ... ok
+test kicad_sch::bank::tests::kicad_sch_the_bank_caption_names_its_ic_and_rail ... ok
+test kicad_sch::bank::tests::kicad_sch_the_bank_frame_places_rails_clear_of_every_member_pin ... ok
+test kicad_sch::compose::tests::kicad_sch_a_band_heading_never_repeats_the_sheet_title ... ok
+test kicad_sch::compose::tests::kicad_sch_is_rail_net_accepts_the_canonical_grounds_and_nothing_else ... ok
+test kicad_sch::emit::tests::kicad_sch_a_rail_symbol_s_text_hangs_with_its_body_and_a_flag_s_the_other_way ... ok
+test kicad_sch::emit::tests::kicad_sch_label_angle_and_justification_mirror_the_pin_side ... ok
+test kicad_sch::emit::tests::kicad_sch_label_span_budgets_what_kicad_actually_draws ... ok
+test kicad_sch::emit::tests::kicad_sch_mm4_prints_ten_thousandths_of_a_millimetre_exactly ... ok
+test kicad_sch::emit::tests::kicad_sch_mm_prints_exact_hundredths_and_str_escapes ... ok
+test kicad_sch::emit::tests::kicad_sch_pin_text_shrinks_on_a_fine_pitch_edge_and_stays_full_size_elsewhere ... ok
+test kicad_sch::emit::tests::kicad_sch_the_instance_path_gains_a_sheet_segment_on_a_child_file ... ok
+test kicad_sch::gang::tests::kicad_sch_a_gang_refuses_a_run_that_would_cross_a_foreign_tip ... ok
+test kicad_sch::gang::tests::kicad_sch_gang_planning_cuts_a_net_at_a_column_change_instead_of_losing_it ... ok
+test kicad_sch::gang::tests::kicad_sch_gang_planning_gangs_each_contiguous_stretch_of_one_net ... ok
+test kicad_sch::gang::tests::kicad_sch_gang_planning_keys_on_the_edge_and_the_net ... ok
+test kicad_sch::gang::tests::kicad_sch_run_pts_walks_the_gang_s_tips_in_order ... ok
+test kicad_sch::glyph::tests::kicad_sch_a_diode_glyph_orients_itself_by_pin_function_not_pad_order ... ok
+test kicad_sch::glyph::tests::kicad_sch_a_glyph_unit_keeps_the_stock_pin_endpoints_and_carries_real_body_art ... ok
+test infra::fs::tests::read_trace_rejects_symlink_removal_and_retargeting ... ok
+test kicad_sch::glyph::tests::kicad_sch_classify_picks_a_glyph_per_passive_class_and_boxes_everything_else ... ok
+test kicad_sch::plan::tests::kicad_sch_cluster_binds_a_declared_decap_to_its_ic_and_groups_the_rest_by_net_affinity ... ok
+test kicad_sch::plan::tests::kicad_sch_cluster_keeps_hubless_members_in_one_bucket_in_declaration_order ... ok
+test kicad_sch::plan::tests::kicad_sch_is_passive_ref_reads_the_leaf_of_a_hierarchical_ref ... ok
+test kicad_sch::plan::tests::kicad_sch_slugify_normalises_a_title_and_unique_name_disambiguates_collisions ... ok
+test kicad_pcb::format::tests::pad_number_text_reads_quoted_bare_atom_and_bare_int_pad_numbers ... ok
+test kicad_sch::project::tests::kicad_sch_the_project_file_escapes_a_hostile_design_name ... ok
+test kicad_sch::project::tests::kicad_sch_the_sidecar_set_names_the_four_project_files ... ok
+test kicad_sch::project::tests::kicad_sch_the_symbol_library_drops_the_lib_id_prefix ... ok
+test kicad_sch::shape::tests::kicad_sch_sanitize_lib_name_replaces_separator_characters ... ok
+test kicad_sch::shape::tests::kicad_sch_a_wide_pad_id_lengthens_its_pin_so_the_number_clears_the_body ... ok
+test kicad_sch::shape::tests::kicad_sch_synth_drops_empty_units_so_unit_numbers_stay_contiguous ... ok
+test kicad_sch::shape::tests::kicad_sch_synth_splits_pads_into_units_and_keeps_every_pad_drawn_once ... ok
+test kicad_sch::shape::tests::kicad_sch_synth_unions_pinout_footprint_and_net_referenced_pads_without_repeats ... ok
+test kicad_sch::sheet::tests::kicad_sch_isqrt_and_page_clamping_stay_integral ... ok
+test kicad_sch::sheet::tests::kicad_sch_pack_cells_reports_block_extents_and_preserves_member_order ... ok
+test kicad_sch::shape::tests::kicad_sch_a_pin_named_after_its_own_pad_does_not_draw_the_name_as_well ... ok
+test kicad_sch::sheet::tests::kicad_sch_pack_sheet_grid_snaps_every_spot_and_wraps_rather_than_running_out ... ok
+test kicad_sch::stagger::tests::kicad_sch_a_crowded_edge_spreads_into_two_stub_columns_and_a_roomy_one_does_not ... ok
+test kicad_sch::stagger::tests::kicad_sch_a_same_net_run_shares_one_column_and_holds_its_neighbours_apart ... ok
+test kicad_sch::stagger::tests::kicad_sch_spreading_needs_the_net_map_and_leaves_a_shape_without_one_alone ... ok
+test kicad_sch::stagger::tests::kicad_sch_a_spread_unit_keeps_every_pin_endpoint_side_and_body_it_was_given ... ok
+test kicad_sch::shape::tests::kicad_sch_synth_orders_an_edge_by_net_and_mutes_the_names_it_gangs ... ok
+test kicad_sch::stagger::tests::kicad_sch_spreading_repeats_exactly_and_skips_unconnected_pads ... ok
+test kicad_sch::stub::tests::kicad_sch_split_reads_the_last_two_dots_and_rejects_a_name_without_both ... ok
+test kicad_sch::stub::tests::kicad_sch_collapse_renames_a_real_bypass_stub_and_refuses_everything_else ... ok
+test kicad_sch::textbox::tests::kicad_sch_a_zero_size_pin_name_is_not_measured_while_its_number_still_is ... ok
+test kicad_sch::textbox::tests::kicad_sch_text_boxes_follow_justification_and_orientation ... ok
+test kicad_sch::shape::tests::kicad_sch_synth_places_supply_pins_up_ground_pins_down_signals_left_and_right ... ok
+test kicad_sch::textbox::tests::kicad_sch_the_scan_finds_an_overlapping_label_pair_and_clears_a_tidy_sheet ... ok
+test kicad_sch::vendor::tests::kicad_sch_side_of_inverts_the_library_pin_angle_onto_an_edge ... ok
+[W] export-kicad-sch: vendor symbol 'DUP' draws pad 1 twice — synthesising a box instead
+[W] export-kicad-sch: vendor symbol 'TIGHT' has pins that collide on the connection grid — synthesising a box instead
+test kicad_sch::vendor::tests::kicad_sch_a_vendor_symbol_supplies_the_body_pin_sides_and_pin_names ... ok
+[W] export-kicad-sch: vendor symbol 'ACME-3' does not draw 1 pad(s) the design uses — adding them as unit 2
+test kicad_sch::shape::tests::kicad_sch_synth_draws_the_glyph_for_two_pads_and_falls_back_to_a_box_beyond_that ... ok
+test kicad_sch::vendor::tests::kicad_sch_an_unsafe_vendor_symbol_is_rejected_in_favour_of_the_box ... ok
+test kicad_sch::vendor::tests::kicad_sch_pads_missing_from_a_vendor_symbol_land_in_a_catch_all_unit ... ok
+test kicad_sch::vendor::tests::kicad_sch_snap_nearest_keeps_spacing_across_a_half_grid_pin_row ... ok
+test kicad_sch::vendor::tests::kicad_sch_vendor_pin_endpoints_are_snapped_onto_the_1_27_mm_grid ... ok
+test kicad_sch::verify::tests::kicad_sch_verify_catches_a_label_caught_mid_wire ... ok
+test export_kicad_sch::tests::kicad_sch_caps_on_different_bypass_stubs_of_one_rail_join_one_bank ... ok
+test kicad_sch::verify::tests::kicad_sch_verify_catches_off_grid_coordinates_and_duplicate_pads ... ok
+test kicad_sch::verify::tests::kicad_sch_verify_catches_label_no_connect_and_lib_id_damage ... ok
+test export_kicad_sch::tests::kicad_sch_export_replaces_ground_labels_with_rail_symbols_and_drives_each_rail ... ok
+test infra::fs::tests::read_trace_rejects_directory_and_negative_dependency_aba ... ok
+test kicad_sch::verify::tests::kicad_sch_verify_matches_junction_dots_to_the_points_wire_ends_actually_meet_at ... ok
+test kicad_sch::wire::tests::kicad_sch_junctions_names_the_three_way_meeting_points_only ... ok
+test kicad_sch::wire::tests::kicad_sch_route_gives_up_beyond_the_maximum_span ... ok
+test export_kicad_sch::tests::kicad_sch_export_maps_dnp_to_kicads_dnp_and_in_bom_flags ... ok
+test kicad_sch::verify::tests::kicad_sch_verify_matches_child_sheet_files_and_rail_symbol_values ... ok
+test kicad_sch::wire::tests::kicad_sch_route_prefers_the_straight_run_then_one_bend ... ok
+test kicad_sch::wire::tests::kicad_sch_route_crosses_foreign_wire_but_avoids_tees_overlaps_and_bodies ... ok
+test export_kicad_sch::tests::kicad_sch_fixture_export_matches_the_committed_golden_file ... ok
+test kicad_sch::wire::tests::kicad_sch_the_junction_point_key_round_trips_both_signs ... ok
+test kicad_sch::verify::tests::kicad_sch_verify_passes_a_good_document_and_catches_a_dropped_symbol ... ok
+[W] export-kicad-sch: vendor symbol library junk.kicad_sym is unreadable (UnexpectedEof)
+test kicad_sym::reader::tests::fuzz_parse_library_tolerates_arbitrary_bytes ... ok
+test kicad_sym::reader::tests::kicad_sym_reader_parses_a_flat_vendor_symbols_pins_and_body_graphics ... ok
+test kicad_sym::reader::tests::kicad_sym_reader_models_each_body_primitive_and_skips_malformed_ones ... ok
+test kicad_sch::verify::tests::kicad_sch_verify_catches_a_wire_through_a_pin_a_diagonal_and_a_missing_segment ... ok
+test kicad_sch::verify::tests::kicad_sch_verify_passes_off_grid_body_art_but_not_an_off_grid_pin ... ok
+test kicad_sym::reader::tests::kicad_sym_reader_splits_sub_symbols_into_units_and_keeps_sub_hundredth_coordinates ... ok
+test kicad_sym::reader::tests::kicad_sym_unit_id_reads_the_trailing_unit_and_style_numbers ... ok
+test lib_limits::tests::lib_read_caps_clear_their_worst_case_part ... ok
+test net_name::tests::leaf_removes_a_hierarchy_prefix ... ok
+test kicad_sym::library::tests::kicad_sym_the_vendor_index_tolerates_a_missing_directory_and_a_junk_library ... ok
+test net_name::tests::strip_upper_drops_separators_and_raises_case ... ok
+test net_name::tests::parent_removes_a_hierarchy_leaf ... ok
+test numeric::tests::checked_int_rejects_nan_and_infinities ... ok
+test numeric::tests::checked_int_rejects_out_of_range_and_rounds_in_range ... ok
+test numeric::tests::to_count_collapses_non_finite_and_negative_to_zero_rounds_valid_counts ... ok
+test numeric::tests::checked_int_is_exact_at_each_types_maximum ... ok
+test kicad_sym::reader::tests::kicad_sym_reader_rejects_a_non_library_root_and_tolerates_an_empty_library ... ok
+test placement::geometry::tests::load_falls_back_to_a_synthesized_box_for_a_missing_footprint ... ok
+test placement::geometry::tests::load_parses_a_0402_footprints_pads_and_courtyard ... ok
+test placement::geometry::tests::parse_copper_pour_keepout_reads_a_through_via_prohibition ... ok
+test placement::geometry::tests::parse_copper_pour_keepout_reads_its_face_and_polygon ... ok
+test placement::geometry::tests::parse_pad_reads_an_rf_minimum_size_independently_of_nominal_size ... ok
+test placement::geometry::tests::parse_silkscreen_collects_lines_and_circles ... ok
+test placement::pin_roles::tests::classify_prefers_electrical_type_falls_back_to_ground_name ... ok
+test placement::geometry::tests::circular_courtyard_survives_footprint_loading_with_an_offset_and_placement_margin ... ok
+test placement::pin_roles::tests::connection_requirement_tiers_floating_pads_by_confidence ... ok
+test placement::geometry::tests::parse_pad_reads_oval_slots_pad_rotation_and_roundrect_ratio ... ok
+test placement::pin_roles::tests::is_supply_fn_separates_real_supplies_from_grounds_and_signals ... ok
+test placement::pin_roles::tests::optional_nc_names_stay_distinct_from_forbidden_or_reserved_pads ... ok
+test placement::pin_roles::tests::is_ground_fn_separates_real_grounds_from_config_straps ... ok
+test export_kicad_sch::tests::kicad_sch_a_hierarchical_export_links_a_sheet_per_section_module_and_leftover ... ok
+test placement::pin_roles::tests::strap_pads_collects_strap_pads_by_name_and_by_electrical_type ... ok
+test placement::pin_roles::tests::pad_requirements_maps_only_the_pads_worth_flagging ... ok
+test poly_scanline::tests::widest_interval_picks_the_larger_lobe_and_its_midpoint ... ok
+test placement::pin_roles::tests::is_strap_fn_recognises_config_straps_but_not_supplies_grounds_or_gpio ... ok
+test kicad_sch::wire::tests::kicad_sch_route_refuses_a_path_that_would_run_over_a_pin ... ok
+test placement::pin_roles::tests::strap_pads_ignores_connector_positional_pins ... ok
+test render_svg::context::tests::bias_tee_island_anchors_to_the_rf_pin_that_continues_to_an_output_port ... ok
+test render_svg::context::tests::is_std_ref_des_rejects_a_ref_shorter_than_two_characters ... ok
+test render_svg::draw::tests::draw_net_wire_escapes_a_quote_angle_bracket_in_the_net_name ... ok
+test render_svg::draw::tests::draw_wire_emits_a_straight_line_for_a_horizontal_y1_y2_wire ... ok
+test render_svg::draw::tests::functional_signal_classification_sees_through_a_sub_block_path ... ok
+test render_svg::context::tests::decouples_binding_docks_each_cap_on_its_served_hub_pad ... ok
+test placement::geometry::tests::parse_pad_reads_a_per_pad_mask_margin_and_the_no_paste_keyword ... ok
+test render_svg::draw::tests::rail_output_pin_labels ... ok
+test kicad_sym::library::tests::kicad_sym_the_vendor_index_matches_names_case_insensitively_across_underscore_and_hyphen ... ok
+test sexpr::ast::tests::node_constructors ... ok
+test sexpr::paren_span::tests::matching_close_skips_strings_and_respects_the_comment_dialect ... ok
+test sexpr::parser::tests::parse_diag_column_aligns_a_caret_under_the_offending_token ... ok
+test sexpr::parser::tests::fuzz_parser_never_crashes_on_arbitrary_bytes ... ok
+test sexpr::parser::tests::parse_diag_locates_a_mid_file_syntax_error ... ok
+test sexpr::parser::tests::parse_diag_points_an_unterminated_list_at_its_open_paren ... ok
+test sexpr::parser::tests::parse_is_form_helper ... ok
+test sexpr::parser::tests::parse_multiple_top_level_forms ... ok
+test sexpr::parser::tests::parse_nested_lists ... ok
+test sexpr::parser::tests::parse_numbers_and_units ... ok
+test sexpr::parser::tests::parse_simple_list ... ok
+test sexpr::parser::tests::parse_si_scaled_values ... ok
+test sexpr::parser::tests::parse_with_comments ... ok
+test sexpr::parser::tests::suffixed_literals_retain_their_spelling ... ok
+test sexpr::tokenizer::tests::records_unexpected_character_error_span ... ok
+test sexpr::tokenizer::tests::records_unterminated_string_error_span ... ok
+test sexpr::tokenizer::tests::tokenize_comments ... ok
+test sexpr::tokenizer::tests::tokenize_comparison_operators ... ok
+test sexpr::tokenizer::tests::tokenize_dollar_sign_pad_identifiers ... ok
+test sexpr::tokenizer::tests::tokenize_numbers ... ok
+test sexpr::tokenizer::tests::tokenize_operators ... ok
+test sexpr::tokenizer::tests::tokenize_parens_and_atoms ... ok
+test sexpr::tokenizer::tests::tokenize_percent_literals ... ok
+test sexpr::tokenizer::tests::tokenize_si_suffix_before_rparen ... ok
+test sexpr::tokenizer::tests::tokenize_si_suffix_boundary_cases ... ok
+test sexpr::tokenizer::tests::tokenize_si_suffixed_numbers ... ok
+test sexpr::tokenizer::tests::tokenize_standalone_plus_stays_as_operator_atom ... ok
+test sexpr::tokenizer::tests::tokenize_unquoted_filename_with_comma ... ok
+test sexpr::tokenizer::tests::tokenize_unquoted_filename_with_plus ... ok
+test placement::pin_roles::tests::is_translator_channel_rejects_names_shorter_than_2_or_longer_than_16_chars ... ok
+test sexpr::tokenizer::tests::tracks_line_and_column ... ok
+test stdlib::tests::a_bundled_path_reads_back_by_path ... ok
+test stdlib::tests::bundled_stems_list_one_sub_directory_at_a_time ... ok
+test support::crc32::tests::incremental_matches_one_shot ... ok
+test stdlib::tests::the_bundle_carries_the_whole_passives_prelude ... ok
+test stdlib::tests::every_bundled_components_footprint_and_pinout_is_bundled_too ... ok
+test support::bytes::tests::number_parsing ... ok
+test support::bytes::tests::paths ... ok
+test support::bytes::tests::rewriting ... ok
+test lib_limits::tests::the_synthetic_over_cap_pinout_straddles_the_retired_cap ... ok
+test stdlib::tests::a_stdlib_root_overrides_the_embedded_table ... ok
+test support::bytes::tests::searching ... ok
+test stdlib::tests::a_project_file_overrides_the_bundle_and_a_missing_one_falls_through_to_it ... ok
+test support::crc32::tests::known_vectors ... ok
+test support::fmt::tests::byte_strings_display_verbatim ... ok
+test support::math::tests::floored_float_modulus ... ok
+test support::math::tests::floored_integer_division ... ok
+test support::fmt::tests::porting_md_table ... ok
+test support::ordered_map::tests::iterates_in_first_insertion_order ... ok
+test uuid::tests::format_stamps_version_and_variant_and_renders_the_canonical_shape ... ok
+test zipfile::tests::encoded_size_predicts_the_complete_archive_before_allocation ... ok
+test zipfile::tests::write_produces_an_archive_std_zip_can_extract ... ok
+test support::fmt::tests::matches_the_zig_toolchain_table ... ok
+test zipfile::tests::fuzz_write_emits_a_well_formed_archive_for_arbitrary_entry_bytes ... ok
+test zipfile::tests::write_rejects_zip32_field_overflow_before_producing_bytes ... ok
+test support::sha256::tests::incremental_matches_one_shot ... ok
+test export_kicad_sch::tests::kicad_sch_child_sheets_nest_their_instance_path_under_the_roots_uuid ... ok
+test export_kicad_sch::tests::kicad_sch_the_flat_threshold_and_the_flat_option_both_collapse_the_hierarchy ... ok
+test export_kicad_sch::tests::kicad_sch_export_is_deterministic_across_runs ... ok
+test export_kicad_sch::tests::kicad_sch_a_hierarchical_export_is_deterministic_across_runs ... ok
+test sexpr::parser::tests::parse_rejects_excessively_deep_nesting ... ok
+test support::sha256::tests::known_vectors ... ok
+
+test result: ok. 293 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+     Running unittests src/main.rs (/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/rust/target/debug/deps/eda_sch-f37f81a4d67c052e)
+
+running 1 test
+test tests::eda_sch_the_command_line_needs_a_model_a_project_and_an_output_directory ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests eda_sch
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+rust: test ok in 7.8s

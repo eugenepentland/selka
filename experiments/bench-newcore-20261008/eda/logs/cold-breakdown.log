@@ -1,0 +1,10 @@
+# Recorded 2026-10-08 ~08:31 by hand with the commands now in `run.sh supplement` (labels then:
+# zig-warm-only = zig-caches-warm, xdg-warm-only = runtime-warm). Untimed protocol: one run each, no lock.
+all-empty 8.94 s 300808 KB
+zig-caches-warm 5.26 s 301212 KB
+runtime-warm 3.89 s 280848 KB
+project-only 1.17 s 277668 KB
+all-empty 8.38 s 300980 KB
+zig-caches-warm 5.40 s 301036 KB
+runtime-warm 4.10 s 284012 KB
+project-only 1.20 s 278080 KB
