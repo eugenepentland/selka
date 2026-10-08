@@ -108,6 +108,30 @@ def next_token(tok: mut Tokenizer, errors: mut Diag) -> Result[Token, str]:
             return Err("eof")
 
 
+# `?` propagates the callee's error; the payload it unwraps is returned again in %ret.
+def next_checked(tok: mut Tokenizer, count: mut Diag) -> Result[Token, LexError]:
+    first = next(mut tok)?
+    count.count += 1
+    if first.tag == 2:
+        second = next(mut tok)?
+        count.count += 1
+        return Ok(second)
+    return Ok(first)
+
+
+def checked(text: bytes) -> str:
+    tok = Tokenizer(source=text, cur=Cursor(pos=0, line=1, col=1, error_span=Span(line=0, col=0, offset=0)))
+    count = Diag(count=0, last="")
+    out = ""
+    for _ in range(len(text)):
+        match next_checked(mut tok, mut count):
+            case Ok(token):
+                out = out + token.text + "@" + str(token.span.offset) + " "
+            case Err(_):
+                out = out + "! "
+    return out + str(count.count)
+
+
 def tokens(text: bytes) -> str:
     tok = Tokenizer(source=text, cur=Cursor(pos=0, line=1, col=1, error_span=Span(line=0, col=0, offset=0)))
     errors = Diag(count=0, last="")
@@ -291,6 +315,11 @@ def swap_halves(p: Pair, k: int) -> Pair:
     return Pair(x=p.y, y=Big(a=p.x.a + k, b=p.x.b, c=p.x.c, d=p.x.d, e=p.x.e))
 
 
+# Reads `p.x` after storing over it: may not share.
+def flip(p: Pair) -> Pair:
+    return Pair(x=p.y, y=p.x)
+
+
 # Stores a half of `p` onto itself, then the other half from elsewhere: may share.
 def keep_x(p: Pair, k: int) -> Pair:
     return Pair(x=p.x, y=Big(a=k, b=p.x.a, c=p.y.a, d=0, e=0))
@@ -325,6 +354,8 @@ def sharing() -> str:
     q = Pair(x=Big(a=1, b=2, c=3, d=4, e=5), y=Big(a=6, b=7, c=8, d=9, e=10))
     for k in range(3):
         q = keep_x(q, k)
+    for k in range(3):
+        q = flip(q)
     u = State(f0=1, f1=1, f2=1, f3=1, f4=1, f5=1)
     for k in range(4):
         u = bumped(u, k)
@@ -445,6 +476,7 @@ def trapping(k: int, t: mut Cursor) -> Result[Token, LexError]:
 def main(args: list[str], out: Stream) -> int:
     out.print(tokens(b"ab\n#c!d"))
     out.print(tokens(b"!!x"))
+    out.print(checked(b"a#bc!d#"))
     out.print(pairs())
     out.print(lent())
     out.print(sharing())
