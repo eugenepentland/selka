@@ -1,0 +1,12 @@
+evidence=/home/epentland/ai/canopy/mylang-worktrees/claude-ce2-effects/experiments/ce2-effects-20261008/fuzz50
+source_commit=52277f2cfa4b4e14e95ac046cb066d0b48184437
+s0: PASS; 25.463856315938756s
+s1: PASS; 34.62353924009949s
+number: PASS; 32.131112955044955s
+rc: PASS; 19.451806233962998s
+rebinding: PASS; 28.747791674919426s
+iteration: PASS; 43.91373481089249s
+text: PASS; 32.73708794894628s
+dict: PASS; 62.091863218927756s
+functions: PASS; 25.19518219702877s
+fuzz exit=0

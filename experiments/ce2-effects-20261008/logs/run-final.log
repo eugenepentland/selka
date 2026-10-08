@@ -1,0 +1,18 @@
+compiler dccecbf149abb11b source 3a7771f19 start 20:08:09
+built lox
+built lox 20:10:25
+built eda
+built eda 20:10:35
+built parity
+built parity 20:13:40
+built rows
+built rows 20:29:17
+lox: 48 cells, 0 not identical or uncounted: []
+ran lox 20:29:21
+eda: 34 cells, 0 not identical or uncounted: []
+ran eda 20:29:22
+parity: 4 cells, 0 not identical or uncounted: []
+ran parity 20:29:23
+rows: 46 cells, 0 not identical or uncounted: []
+ran rows 20:29:24
+done
