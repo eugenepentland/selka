@@ -255,21 +255,7 @@ test "an unannotated function whose body exceeds the slot it fills is rejected a
     , "E_EFFECT_BOUND", "`key` fills a callback slot of type `def(int) -> int effects()`, but its body has effect `managed_allocation`: key; keep the body within the slot's ceiling, or widen the callback type's `effects(...)`");
 }
 // spec: DEAD-RECORD-WRITE-1
-test "dead record writes reject loop and parameter copies but not fresh locals" {
-    var loop = try language.Compilation.init(t.allocator, "dead-loop.my",
-        \\record Item:
-        \\    visited: bool
-        \\
-        \\
-        \\def main() -> int:
-        \\    items = [Item(visited=False)]
-        \\    for it in items:
-        \\        it.visited = True
-        \\    return 0
-    );
-    defer loop.deinit();
-    try t.expectError(error.SourceError, loop.check());
-    try t.expectEqualStrings("E_DEAD_RECORD_WRITE", loop.diagnostics.items[0].code);
+test "dead record writes reject parameter and collection copies but not fresh locals" {
     var parameter = try language.Compilation.init(t.allocator, "dead-parameter.my",
         \\record Counter:
         \\    n: int

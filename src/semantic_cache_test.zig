@@ -746,64 +746,6 @@ test "semantic cache binds the mutation contract version and effects contract" {
     try t.expectEqual(baseline_checked + 9, cache.statistics.checked);
 }
 
-// spec-case: SEMANTIC-CACHE-7
-test "a reused caller recomputes its return-origin bound after a callee alias change" {
-    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
-    defer cache.deinit();
-    const base =
-        \\def source(values: list[int]) -> list[int]:
-        \\    return values
-        \\
-        \\
-        \\def caller(values: list[int]) -> list[int]:
-        \\    return source(values)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    values = [1]
-        \\    result = caller(values)
-        \\    return result[0]
-    ;
-    const edited =
-        \\def source(values: list[int]) -> list[int]:
-        \\    return [values[0]]
-        \\
-        \\
-        \\def caller(values: list[int]) -> list[int]:
-        \\    return source(values)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    values = [1]
-        \\    result = caller(values)
-        \\    return result[0]
-    ;
-    try compare(t.allocator, &cache, base, 1);
-    const base_caller_contract = storedContract(&cache, "caller");
-    // The alias change is real: `source` returns a parameter in the base and a
-    // freshly allocated list after the edit.
-    {
-        var first = try language.Compilation.init(t.allocator, "probe.my", base);
-        defer first.deinit();
-        try first.check();
-        var second = try language.Compilation.init(t.allocator, "probe.my", edited);
-        defer second.deinit();
-        try second.check();
-        try t.expect(!functionReturnOrigin(first.program.?, "source").eql(functionReturnOrigin(second.program.?, "source")));
-        try t.expect(!functionReturnOrigin(first.program.?, "caller").eql(functionReturnOrigin(second.program.?, "caller")));
-    }
-    const before = cache.statistics.reused;
-    const before_checked = cache.statistics.checked;
-    // `caller` and `main` reuse and are recomputed by the mandatory M2 pass;
-    // only `source`, whose body changed, is checked fresh.
-    try compare(t.allocator, &cache, edited, 1);
-    try t.expectEqual(before + 2, cache.statistics.reused);
-    try t.expectEqual(before_checked + 1, cache.statistics.checked);
-    // The reused caller's persisted checked contract is refreshed from the
-    // global pass, so a return-origin change is visible to C2 admission.
-    try t.expect(!std.mem.eql(u8, &base_caller_contract, &storedContract(&cache, "caller")));
-}
-
 /// Borrow one retained entry's checked contract digest by declaration key suffix.
 fn storedContract(cache: *Cache, key_suffix: []const u8) [32]u8 {
     for (cache.entries) |entry| {

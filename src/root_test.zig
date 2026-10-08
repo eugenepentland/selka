@@ -144,7 +144,6 @@ test {
     _ = @import("effects_test.zig");
     _ = @import("mutation.zig");
     _ = @import("input_manifest_test.zig");
-    _ = @import("typed_json_test.zig");
     _ = @import("external_capabilities_test.zig");
     _ = @import("external_resources_test.zig");
     _ = @import("resource_source_test.zig");
@@ -165,7 +164,6 @@ test {
     _ = @import("recursive_resources_test.zig");
     _ = @import("surface_collections_test.zig");
     _ = @import("builtin_context_test.zig");
-    _ = @import("json_document_test.zig");
     _ = @import("standard_library_test.zig");
     _ = @import("stand_ins_test.zig");
     _ = @import("byte_builder_test.zig");

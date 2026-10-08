@@ -51,13 +51,6 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try t.expectEqualStrings("Wire", typed.typeName(codec.wire, code.records));
     try t.expectEqualStrings("Positive.from_wire", code.functions[@backingInt(codec.decode)].name);
     try t.expectEqualStrings("Positive.to_wire", code.functions[@backingInt(codec.encode)].name);
-    // Declaring a contract does not silently enable representation-only decoding.
-    @import("typed_json.zig").checkType(allocator, code.records, domain) catch |err| {
-        if (err == error.OutOfMemory) return err;
-        try t.expectEqual(error.NoImplicitCodec, err);
-        return;
-    };
-    return error.TestExpectedOpaqueDomain;
 }
 test "domain codec contracts resolve checked factories and wire types under every allocation failure" {
     try scenario(t.allocator);

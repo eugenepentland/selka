@@ -186,10 +186,6 @@ pub const Record = struct {
     pub fn count(self: Record) usize {
         return if (self.shape.array) |a| a.length else if (self.shape.domain != null) 1 else self.fields.len;
     }
-    /// Resolve a field or array element type by its checked index.
-    pub fn elementType(self: Record, index: usize) Type {
-        return if (self.shape.array) |a| a.element else self.shape.domain orelse self.fields[index].ty;
-    }
 };
 /// Optional specialized representations; bytecode validation rejects incompatible combinations.
 pub const RecordShape = struct {
