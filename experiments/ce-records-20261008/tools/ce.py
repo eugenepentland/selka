@@ -328,7 +328,74 @@ def main():
         return
     if args.command == "summary":
         return summary(args.tag, args.against)
+    if args.command == "tables":
+        tags = args.group.split(",")
+        print(json.dumps(tables(tags), indent=1))
+        return
     raise SystemExit("unknown command")
+
+
+
+# ---- report tables -------------------------------------------------------------------
+
+PATTERNS = ["P1", "P2", "P7", "P8", "P3", "P4", "P5", "P6", "P9", "P13", "P14", "P10", "P11", "P12"]
+
+
+def raw_dir(tag):
+    return VP3 / "raw" if tag == "vp3" else AREA / "raw" / tag
+
+
+def function_bytes(tag, label, predicate):
+    """Bytes moved (every pattern) by the sites of functions `predicate` accepts, in one cell."""
+    data = load_counts(raw_dir(tag), label)
+    total = 0
+    for site in data["sites"]:
+        name = pattern(site)
+        if name is None or not predicate(site["function"]):
+            continue
+        total += site["extra"] if site["kind"] == "list_push" else site["bytes"]
+    for row in data["functions"]:
+        if predicate(row["name"]):
+            total += row["dict_grow_bytes"] + row["buffer_grow_bytes"] + row["text_grow_bytes"]
+    return total
+
+
+def dispatches(tag, label):
+    """VM dispatches of one Lox VM cell: executions of the uniqueness test at vm.my:433, once per instruction."""
+    data = load_counts(raw_dir(tag), label)
+    return sum(s["count"] for s in data["sites"] if s["path"].endswith("vm.my") and s["line"] == 433 and s["kind"] == "unique_test")
+
+
+def tables(tags):
+    """The per-pattern tables and highlights of `tags` (the first is the reference), as JSON."""
+    out = {"tags": tags, "corpora": {}, "highlights": {}}
+    for tag in tags:
+        corpora, per_label = totals(raw_dir(tag))
+        out["corpora"][tag] = {corpus: dict(counter) for corpus, counter in corpora.items()}
+    highlights = out["highlights"]
+    for tag in tags:
+        h = highlights.setdefault(tag, {})
+        moved = sum(by_pattern(load_counts(raw_dir(tag), "lox-vm-fib-27")).values())
+        record = sum(by_pattern(load_counts(raw_dir(tag), "lox-vm-fib-27")).get(p, 0) for p in ("P1", "P2", "P7", "P8"))
+        n = dispatches(tag, "lox-vm-fib-27")
+        h["lox_vm_fib_dispatches"] = n
+        h["lox_vm_fib_bytes_per_dispatch"] = moved / n if n else None
+        h["lox_vm_fib_record_bytes_per_dispatch"] = record / n if n else None
+        h["lox_vm_run_fib_bytes"] = function_bytes(tag, "lox-vm-fib-27", lambda f: f == "vm::run")
+        flat = by_pattern(load_counts(raw_dir(tag), "eda-rds3+flat"))
+        h["eda_rds3_flat_bytes"] = sum(flat.values())
+        h["eda_rds3_flat_record_bytes"] = sum(flat.get(p, 0) for p in ("P1", "P2", "P7", "P8"))
+        sexpr = collections.Counter()
+        for label in primary_labels():
+            if label.startswith("eda-"):
+                data = load_counts(raw_dir(tag), label)
+                for site in data["sites"]:
+                    name = pattern(site)
+                    if name and site["function"].startswith("sexpr_"):
+                        sexpr[site["function"]] += site["extra"] if site["kind"] == "list_push" else site["bytes"]
+        h["eda_sexpr_functions_bytes"] = dict(sexpr.most_common())
+        h["rows_record_pass_bytes"] = sum(by_pattern(load_counts(raw_dir(tag), "row-record_pass")).values()) if load_counts(raw_dir(tag), "row-record_pass") else None
+    return out
 
 
 if __name__ == "__main__":
