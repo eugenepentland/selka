@@ -30,6 +30,7 @@ const emit_constants = @import("emit_constants.zig");
 const emit_count = @import("emit_count.zig");
 const origins = @import("inline_origins.zig");
 const emit_homes = @import("emit_homes.zig");
+const fuse = @import("fuse.zig");
 
 /// A source line and column for a span start.
 pub const Location = struct { line: u32, column: u32, path: []const u8 = "" };
@@ -750,6 +751,8 @@ const MemoryState = struct {
     in_out: InOutCalls = .{},
     /// Per instruction: the uses of its value (a read nothing uses emits only its check, CE-B).
     uses: []u32 = &.{},
+    /// Per instruction: a list element over four words lent to calls where it lies (CE2-B).
+    borrowed: []bool = &.{},
 };
 
 /// Per instruction, what an in-out call (CE-A P7) needs: its in-out arguments, and whether its
@@ -1139,6 +1142,7 @@ const FunctionEmitter = struct {
             }
         }
         try self.inOutCalls();
+        mem.borrowed = try self.lentElements();
         mem.homes = try emit_homes.plan(self.a(), .{
             .module = m,
             .function = f,
@@ -1146,7 +1150,7 @@ const FunctionEmitter = struct {
             .in_out = abi.params,
             .calls = mem.in_out.args,
             .ret_home = emit_homes.steps.in_out and abi.params == 0 and returnsThroughSret(m, f.signature, abi),
-            .results = .{ .sret = returnsThroughSret(m, f.signature, abi), .finals = finalFields(f.signature, abi) },
+            .results = .{ .sret = returnsThroughSret(m, f.signature, abi), .finals = finalFields(f.signature, abi), .borrowed = mem.borrowed },
         });
         const plan = &mem.homes;
         const names = try self.a().alloc([]const u8, plan.homes.len);
@@ -1166,6 +1170,95 @@ const FunctionEmitter = struct {
         for (plan.class, 0..) |class, index| {
             if (class == emit_homes.none or f.insts.items[index].op == .param) continue;
             try self.state.allocas.print(self.a(), "  %v{d} = getelementptr inbounds i8, ptr {s}, i64 0\n", .{ index, names[class] });
+        }
+    }
+
+    /// The list elements over four words read where they lie (CE2-B): a `list_get` or `list_get_field`
+    /// whose every use, in its own block, is a by-value argument of an internal call that takes no
+    /// `mut` argument able to reach a list, or a load of a part in registers, with nothing in between
+    /// that can write, free or move a list (`lendable`). The callee never writes such a parameter (it
+    /// is a read-only pointer), so passing the element's own address passes its value.
+    fn lentElements(self: *FunctionEmitter) ![]bool {
+        const f = self.function;
+        const m = self.state.module;
+        const marks = try self.a().alloc(bool, f.insts.items.len);
+        @memset(marks, false);
+        for (f.blocks.items, 0..) |block, b| {
+            if (b != 0 and block.preds.items.len == 0) continue;
+            for (block.insts.items, 0..) |ref, i| {
+                const inst = f.inst(ref);
+                if (inst.op != .list_get and inst.op != .list_get_field) continue;
+                if (!m.passedInMemory(inst.ty) or self.memory.uses[ref.index()] == 0) continue;
+                marks[ref.index()] = self.lendable(block.insts.items, i);
+            }
+        }
+        return marks;
+    }
+
+    /// Whether the element read at position `at` of `insts` may be lent: its uses all follow it in
+    /// the block, each one `lendsTo`, and every instruction up to the last is `keepsLists`.
+    fn lendable(self: *FunctionEmitter, insts: []const ir.Ref, at: usize) bool {
+        const f = self.function;
+        const ref = insts[at];
+        var remaining = self.memory.uses[ref.index()];
+        for (insts[at + 1 ..]) |next| {
+            if (remaining == 0) return true;
+            const user = f.inst(next);
+            if (user.op == .copy or user.op == .phi) continue;
+            const operands = f.valueOperands(user);
+            var reads: u32 = 0;
+            for (0..operands.len()) |k| {
+                if (f.resolve(operands.get(k)) == ref) reads += 1;
+            }
+            if (reads == 0) {
+                if (!self.keepsLists(user)) return false;
+                continue;
+            }
+            if (!self.lendsTo(user, ref)) return false;
+            remaining -= @min(remaining, reads);
+        }
+        return remaining == 0;
+    }
+
+    /// Whether `user` reads the lent element `ref` only where it lies: as by-value memory arguments of
+    /// a call that `keepsLists`, as a load of a part in registers, or to count its parts.
+    fn lendsTo(self: *FunctionEmitter, user: ir.Inst, ref: ir.Ref) bool {
+        const f = self.function;
+        const m = self.state.module;
+        switch (user.op) {
+            .record_get, .union_payload, .union_tag => return !m.passedInMemory(user.ty),
+            .retain => return true,
+            .call, .call_indirect => {
+                if (!self.keepsLists(user)) return false;
+                if (user.op == .call_indirect and f.resolve(user.a) == ref) return false;
+                const signature = self.signatureOf(user);
+                const abi = inOutAbi(m, signature);
+                for (f.operands(user.data), signature.params, 0..) |argument, param, k| {
+                    if (f.resolve(argument) != ref) continue;
+                    if (!m.passedInMemory(param) or abi.inOut(k)) return false;
+                }
+                return true;
+            },
+            else => return false,
+        }
+    }
+
+    /// Whether `inst` can neither write, free nor move a list block the caller holds: an inert
+    /// instruction, a count increment, or an internal call with no `mut` parameter that holds a block.
+    fn keepsLists(self: *FunctionEmitter, inst: ir.Inst) bool {
+        const m = self.state.module;
+        switch (inst.op) {
+            .retain, .is_unique, .err_trace => return true,
+            .call, .call_indirect => {
+                const signature = self.signatureOf(inst);
+                if (signature.linkage != .internal) return false;
+                for (signature.params, 0..) |param, k| {
+                    if (k >= 64 or signature.owned & (@as(u64, 1) << @intCast(k)) == 0) continue;
+                    if (m.managed(param)) return false;
+                }
+                return true;
+            },
+            else => return fuse.inert(inst, false),
         }
     }
 
@@ -2191,6 +2284,8 @@ const FunctionEmitter = struct {
         // build still loads it, for the fact assertions that name it).
         if (self.memory.uses[self.current.index()] == 0 and inst.data == 0 and self.knownFacts() == null) return;
         const slot = try self.elementSlot(out, list, index, inst.ty);
+        // A lent element (`lentElements`) is its slot: no copy.
+        if (self.lent(self.current)) return out.print(self.a(), identity_line, .{ name, slot });
         if (inst.ty == .bool or inst.ty.isCompound()) return self.loadValue(out, inst.ty, slot, name);
         const stored = storageType(inst.ty);
         try out.print(self.a(), "  {s} = load {s}, ptr {s}, align {d}{s}, " ++ tbaa_data ++ "\n", .{ name, stored, slot, elementSize(inst.ty), try self.loadRange(name, inst.ty) });
@@ -2748,6 +2843,11 @@ const FunctionEmitter = struct {
 
     /// Read one field (or a union's tag or payload) of an inline element, at its
     /// offset from the element's slot, without loading the rest of the element.
+    /// Whether the element read `ref` is lent where it lies (`lentElements`).
+    fn lent(self: *FunctionEmitter, ref: ir.Ref) bool {
+        return ref.index() < self.memory.borrowed.len and self.memory.borrowed[ref.index()];
+    }
+
     fn listGetField(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const m = self.state.module;
         const list = try self.value(inst.a);
@@ -2757,6 +2857,7 @@ const FunctionEmitter = struct {
         const slot = try self.elementSlot(out, list, index, element);
         const target = m.pathTarget(element, ir.FieldPath.unpack(inst.data)) orelse return error.UnsupportedInstruction;
         const at = try self.offsetPointer(out, slot, target.offset);
+        if (target.tag_of == .void and self.lent(self.current)) return out.print(self.a(), identity_line, .{ name, at });
         if (target.tag_of == .void) return self.loadValue(out, target.ty, at, name);
         const layout = m.unionLayout(target.tag_of);
         const loaded = try self.fresh("%gt");

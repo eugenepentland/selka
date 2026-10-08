@@ -156,10 +156,83 @@ test "a ret that would overwrite a value in %ret before reading it builds its va
     try std.testing.expectEqualStrings(debug.stdout, release.stdout);
 }
 
+const lending =
+    \\record Big:
+    \\    a: int
+    \\    b: int
+    \\    c: int
+    \\    d: int
+    \\    e: int
+    \\
+    \\
+    \\record Holder:
+    \\    items: list[Big]
+    \\    n: int
+    \\
+    \\
+    \\def weight(x: Big) -> int:
+    \\    return x.a + 2 * x.e
+    \\
+    \\
+    \\def grow(h: mut Holder, x: Big) -> int:
+    \\    h.items[0] = Big(a=-1, b=-1, c=-1, d=-1, e=-1)
+    \\    return x.a + h.items[0].a
+    \\
+    \\
+    \\def lend(xs: list[Big]) -> int:
+    \\    total = 0
+    \\    for i in range(len(xs)):
+    \\        total += weight(xs[i])
+    \\    return total
+    \\
+    \\
+    \\def reach(h: mut Holder) -> int:
+    \\    return grow(mut h, h.items[0])
+    \\
+    \\
+    \\def stale(source: list[Big]) -> int:
+    \\    xs = source
+    \\    y = xs[1]
+    \\    xs[1] = Big(a=50, b=0, c=0, d=0, e=0)
+    \\    return weight(y) + xs[1].a
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    xs = [Big(a=i, b=i, c=i, d=i, e=i * 3) for i in range(5)]
+    \\    h = Holder(items=xs, n=0)
+    \\    out.print(lend(xs), reach(mut h), stale(xs), h.items[0].a, xs[0].a)
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-CE2-RESULTS-4
+test "a list element passed by value to a call that cannot write it is passed where it lies" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const llvm = try support.llvmText(arena.allocator(), lending);
+    // `weight(xs[i])`: the element's own slot is the argument.
+    const lend = functionText(llvm, "@\"my.lend\"");
+    try std.testing.expectEqual(@as(usize, 0), copies(lend));
+    try std.testing.expect(contains(lend, "@\"my.weight\"(ptr %v"));
+    // A `mut` argument of the same call reaches the list: the element is copied first.
+    try std.testing.expectEqual(@as(usize, 1), copies(functionText(llvm, "@\"my.reach\"")));
+    // The slot is overwritten between the read and the call: the read is a copy.
+    try std.testing.expect(copies(functionText(llvm, "@\"my.stale\"")) >= 1);
+    var refusal: @import("build.zig").Refusal = .{};
+    var module = try support.buildSource(arena.allocator(), lending, &refusal);
+    const debug = try support.runOwned(arena.allocator(), &module, .{});
+    // weights 0+0, 1+6, 2+12, 3+18, 4+24 = 70; grow sees x.a 0 next to -1; stale sees 1+6 then 50.
+    try std.testing.expectEqualStrings("70 -1 57 -1 0\n", debug.stdout);
+    var again = try support.buildSource(arena.allocator(), lending, &refusal);
+    const release = try support.runOwned(arena.allocator(), &again, .{ .release = true });
+    try std.testing.expectEqualStrings(debug.stdout, release.stdout);
+}
+
 const fixture_expected =
     \\1:71@1.2 1:72@1.3 1:73@2.1 2:73@2.1 1:75@2.3 bad 1:77@2.5 0:@2.5 0:@2.5 1 5
     \\bad bad 1:33@1.4 0:@1.4 0:@1.4 2 1
     \\10 1 14 5 2 20 | 30 3 34 7 3 | 40 44 5 9 2 | 10 2 100 14 1 | 7 8 9 10 11 | 10 31 | early | 2 16
+    \\617 5 -1 6 0 50 7 8
     \\
 ;
 

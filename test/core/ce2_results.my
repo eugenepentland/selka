@@ -197,6 +197,79 @@ def pairs() -> str:
     return out + " | " + str(t.line) + " " + str(t.pos)
 
 
+# ---- step 2: list elements lent to calls where they lie ----
+
+record Holder:
+    items: list[Big]
+    n: int
+
+
+union Obj:
+    free,
+    big: Big,
+    name: str
+
+
+def weight(x: Big) -> int:
+    return x.a + 2 * x.e
+
+
+# A callee that writes its by-value parameter works on its own copy.
+def bump(x: Big) -> int:
+    x.a += 100
+    return x.a + x.e
+
+
+def is_free(o: Obj) -> bool:
+    match o:
+        case Obj.free:
+            return True
+        case _:
+            return False
+
+
+def cost(o: Obj) -> int:
+    match o:
+        case Obj.big(b):
+            return b.a + b.b
+        case Obj.name(s):
+            return len(s)
+        case _:
+            return 0
+
+
+# A `mut` argument of the same call that reaches the element's list: the element must be a copy.
+def grow(h: mut Holder, x: Big) -> int:
+    h.items.append(Big(a=x.a + 1, b=0, c=0, d=0, e=0))
+    h.items[0] = Big(a=-1, b=-1, c=-1, d=-1, e=-1)
+    return x.a + len(h.items) + h.items[0].a
+
+
+def sweep(objs: list[Obj]) -> int:
+    total = 0
+    for i in range(len(objs)):
+        if not is_free(objs[i]):
+            total += cost(objs[i])
+    return total
+
+
+def lent() -> str:
+    xs = [Big(a=i, b=i, c=i, d=i, e=i * 3) for i in range(5)]
+    total = 0
+    for i in range(len(xs)):
+        total += weight(xs[i]) + bump(xs[i])
+    h = Holder(items=xs, n=0)
+    r = grow(mut h, h.items[0])
+    # The element read, then its slot overwritten, then the read value passed: the old value.
+    y = xs[1]
+    xs[1] = Big(a=50, b=0, c=0, d=0, e=0)
+    total += weight(y)
+    objs = [Obj.free, Obj.big(Big(a=1, b=2, c=3, d=4, e=5)), Obj.name("hello"), Obj.free]
+    shared = objs
+    objs[1] = Obj.name("xy")
+    return str(total) + " " + str(r) + " " + str(h.items[0].a) + " " + str(len(h.items)) + " " + str(xs[0].a) + " " + str(xs[1].a) + " " + str(sweep(objs)) + " " + str(sweep(shared))
+
+
 # A trap between the build in %ret and the return.
 def trapping(k: int, t: mut Cursor) -> Result[Token, LexError]:
     tok = make_token(b"xyz", t, 3)
@@ -208,6 +281,7 @@ def main(args: list[str], out: Stream) -> int:
     out.print(tokens(b"ab\n#c!d"))
     out.print(tokens(b"!!x"))
     out.print(pairs())
+    out.print(lent())
     if len(args) > 0:
         t = Cursor(pos=0, line=0, col=9223372036854775807, error_span=Span(line=0, col=0, offset=0))
         match trapping(len(args), mut t):

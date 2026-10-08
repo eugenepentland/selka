@@ -146,6 +146,9 @@ pub const Results = struct {
     /// Bit `k`: field `k` of a returned record is an in-out final value, which a `ret` moves to its
     /// caller's memory and never stores in `%ret`.
     finals: u64 = 0,
+    /// Per instruction: an element read out of a list that is passed where it lies, with no home
+    /// (an element lent to calls, `emit_llvm.zig`); empty when there is none.
+    borrowed: []const bool = &.{},
 };
 
 /// One store a `ret` makes into `%ret`, in the order the emitter makes them: `size` bytes at
@@ -320,6 +323,7 @@ const Planner = struct {
                 continue;
             }
             if (self.places.block[index] == none) continue;
+            if (index < self.input.results.borrowed.len and self.input.results.borrowed[index]) continue;
             if (steps.views and self.places.final[index] == none and isView(m, f, inst)) {
                 self.plan.view[index] = f.resolve(inst.a);
                 self.plan.view_offset[index] = if (inst.op == .union_payload) 8 else m.fieldOffset(f.inst(f.resolve(inst.a)).ty, @intCast(inst.data));
