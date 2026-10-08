@@ -1115,9 +1115,7 @@ const FunctionEmitter = struct {
         switch (m.compound(value_type)) {
             .record => |fields| for (fields, 0..) |field, i| {
                 if (!m.managed(field)) continue;
-                const loaded = try self.fresh("%cm");
-                try self.loadValue(out, field, try self.offsetPointer(out, ptr, m.fieldOffset(value_type, i)), loaded);
-                try self.countedValue(out, mode, field, loaded);
+                try self.countedAt(out, mode, field, try self.offsetPointer(out, ptr, m.fieldOffset(value_type, i)));
             },
             .@"union" => |cases| {
                 const word = try self.fresh("%cw");
@@ -1128,19 +1126,25 @@ const FunctionEmitter = struct {
                     const here = try self.fresh("%cc");
                     try out.print(self.a(), "  {s} = icmp eq i8 {s}, {d}\n", .{ here, tag, k });
                     const join = try self.enterIf(out, here);
-                    const loaded = try self.fresh("%cp");
-                    try self.loadValue(out, case, try self.offsetPointer(out, ptr, 8), loaded);
-                    try self.countedValue(out, mode, case, loaded);
+                    try self.countedAt(out, mode, case, try self.offsetPointer(out, ptr, 8));
                     try self.leaveIf(out, join);
                 }
             },
             .array => |array| for (0..array.n) |i| {
-                const loaded = try self.fresh("%cm");
-                try self.loadValue(out, array.elem, try self.offsetPointer(out, ptr, @as(u32, @intCast(i)) * m.size(array.elem)), loaded);
-                try self.countedValue(out, mode, array.elem, loaded);
+                try self.countedAt(out, mode, array.elem, try self.offsetPointer(out, ptr, @as(u32, @intCast(i)) * m.size(array.elem)));
             },
             .list, .box, .dict, .@"fn" => unreachable,
         }
+    }
+
+    /// Count the part of type `part_type` stored at `ptr` where it is: a part over four words
+    /// field by field through `countedMemory` (never copied out first, NEW-CORE-CE-LISTS-4),
+    /// anything else loaded as a value.
+    fn countedAt(self: *FunctionEmitter, out: *Out, mode: Counting, part_type: ir.Type, ptr: []const u8) Error!void {
+        if (self.state.module.passedInMemory(part_type)) return self.countedMemory(out, mode, part_type, ptr);
+        const loaded = try self.fresh("%cm");
+        try self.loadValue(out, part_type, ptr, loaded);
+        try self.counted(out, mode, part_type, loaded);
     }
 
     /// Count a value held in a register or, over four words, a pointer to its slot.

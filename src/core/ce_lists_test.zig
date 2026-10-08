@@ -43,6 +43,26 @@ fn countOp(text: []const u8, op: []const u8) usize {
     return total;
 }
 
+/// The value the first `retain` in `text` retains (`%N`).
+fn retainedValue(text: []const u8) ?[]const u8 {
+    const at = std.mem.indexOf(u8, text, "retain %") orelse return null;
+    const start = at + "retain ".len;
+    const end = std.mem.indexOfScalarPos(u8, text, start, '\n') orelse text.len;
+    return text[start..end];
+}
+
+/// The LLVM definition whose `define` line names `symbol`, up to its closing brace.
+fn definition(llvm: []const u8, symbol: []const u8) ![]const u8 {
+    var lines = std.mem.splitScalar(u8, llvm, '\n');
+    while (lines.next()) |line| {
+        if (!std.mem.startsWith(u8, line, "define ") or std.mem.indexOf(u8, line, symbol) == null) continue;
+        const start = @intFromPtr(line.ptr) - @intFromPtr(llvm.ptr);
+        const end = std.mem.indexOfPos(u8, llvm, start, "\n}\n") orelse llvm.len;
+        return llvm[start..end];
+    }
+    return error.TestUnexpectedResult;
+}
+
 const Ran = struct { stdout: []const u8, stderr: []const u8, status: u8 };
 
 /// Build `test/core/NAME.my` with `flags` and run it with `args` under the leak check.
@@ -217,4 +237,94 @@ test "a whole-element store releases the old element's managed parts without cop
     // and released after the store.
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, put, "@llvm.memcpy"));
     try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, put, "\n  %old."));
+}
+
+// spec: NEW-CORE-CE-LISTS-3
+test "a read of a record field merges with an earlier identical read in another block, so a write-back takes the field" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const source = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, try std.fmt.allocPrint(a, "{s}/ce_cow.my", .{options.fixtures}), a, .limited(1 << 20));
+    const text = try support.ownedText(a, source["module ce_cow\n".len..]);
+    // `it.rt.stack[i] = v` after a `mut` call through a write-back temporary, and the
+    // collector's `rt.marker.marks[i] = False`: the index's negative branch splits each
+    // into a read that reaches the list and one that writes it back. Every copy is a
+    // uniqueness test's copy arm now, never an unconditional copy of the whole list.
+    for ([_][]const u8{ "instantiate", "sweep", "mark_some" }) |name| {
+        const body = functionIr(text, name);
+        try std.testing.expect(countOp(body, "is_unique") > 0);
+        try std.testing.expectEqual(countOp(body, "is_unique"), countOp(body, "list_copy"));
+    }
+    // A copy of the list taken before the store still keeps the old list.
+    const kept = functionIr(text, "snapshot_then_store");
+    try std.testing.expectEqual(@as(usize, 1), countOp(kept, "list_copy"));
+    // A record passed to a call between the read of its dictionary and the write-back keeps
+    // its later read separate, so the write-back still takes the dictionary: every copy in
+    // the builder is a count test's copy arm.
+    const build = functionIr(text, "build");
+    try std.testing.expectEqual(countOp(build, "is_unique"), countOp(build, "dict_copy") + countOp(build, "list_copy"));
+}
+
+const big_part =
+    \\record Big:
+    \\    a: str
+    \\    b: list[int]
+    \\    c: int
+    \\    d: int
+    \\    e: int
+    \\
+    \\
+    \\record Holder:
+    \\    items: list[Big]
+    \\    n: int
+    \\
+    \\
+    \\def touch(h: mut Holder) -> int:
+    \\    h.n = h.n + 1
+    \\    return h.n
+    \\
+    \\
+    \\def keep(h: mut Holder, i: int) -> int:
+    \\    x = h.items[i]
+    \\    k = touch(mut h)
+    \\    return k + len(x.b) + len(x.a)
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    h = Holder(items=[Big(a="s", b=[1], c=0, d=0, e=0)], n=0)
+    \\    out.print(keep(mut h, 0))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-CE-LISTS-4
+test "an element's part read before a mut call and used after it holds its own count, not the whole list" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const source = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, try std.fmt.allocPrint(a, "{s}/ce_cow.my", .{options.fixtures}), a, .limited(1 << 20));
+    const text = try support.ownedText(a, source["module ce_cow\n".len..]);
+    // `match rt.objects[ref]: case klass(k): allocate(mut rt, …); … k.methods`: the payload
+    // read is retained, not `rt.objects`, so `allocate` finds the list unique.
+    const call_value = functionIr(text, "call_value");
+    try std.testing.expectEqual(@as(usize, 1), countOp(call_value, "retain"));
+    const retained = retainedValue(call_value) orelse return error.TestUnexpectedResult;
+    try std.testing.expect(contains(call_value, try std.fmt.allocPrint(a, "{s} = list_get_field record{{str, list[i64]}}", .{retained})));
+    // A part over four words holds its own count too, counted field by field where it is:
+    // the only copy is the element read itself.
+    const keep = functionIr(try support.ownedText(a, big_part), "keep");
+    try std.testing.expectEqual(@as(usize, 1), countOp(keep, "retain"));
+    const part = retainedValue(keep) orelse return error.TestUnexpectedResult;
+    try std.testing.expect(contains(keep, try std.fmt.allocPrint(a, "{s} = list_get.exact record{{", .{part})));
+    const keep_llvm = try definition(try support.releaseLlvmText(a, big_part), "@\"my.keep\"(");
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, keep_llvm, "@llvm.memcpy"));
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for (modes) |flags| {
+        const ran = try leakChecked(a, root, "ce_cow", flags, &.{});
+        try std.testing.expectEqualStrings("30115815 20000 1500 1000 1 4 0\n5 1009 5 9\n2 2 1 0\n", ran.stdout);
+        try std.testing.expectEqualStrings("", ran.stderr);
+        try std.testing.expectEqual(@as(u8, 0), ran.status);
+    }
 }
