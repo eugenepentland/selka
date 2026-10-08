@@ -1,0 +1,32 @@
+{
+ "label": "run-eda-w55rp20-plain",
+ "command": [
+  "taskset",
+  "-c",
+  "12-19",
+  "perf",
+  "stat",
+  "-x,",
+  "-e",
+  "instructions:u",
+  "-o",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/perf/eda-w55rp20.csv",
+  "--",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/eda-plain",
+  "--model",
+  "golden/cases/w55rp20/model.sexp",
+  "--project-dir",
+  "golden/projects/designs",
+  "--out-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/eda-out/plain/w55rp20"
+ ],
+ "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+ "env": {},
+ "seconds": 0.055,
+ "status": 0,
+ "stdout_sha256": "4de7e62af9d514cdf7c755f7f0682c76952ec1edcfd7b8a49f72758e8fbd18f2",
+ "stdout_bytes": 76,
+ "stderr_sha256": "311fbadc76df48798343796ef2119838ac38c5fa6e711cb053f2290f47d1124e",
+ "stderr_bytes": 184,
+ "stdout": "eda-sch: w55rp20: 1 sheets, 4 sidecars, 10 symbols (4 vendor), 59 instances\n"
+}

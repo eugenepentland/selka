@@ -1,0 +1,26 @@
+{
+ "label": "run-eda-barracuda-via-fence-count",
+ "command": [
+  "taskset",
+  "-c",
+  "0,1,4-9,12-19",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/eda-count",
+  "--model",
+  "golden/cases/barracuda-via-fence/model.sexp",
+  "--project-dir",
+  "golden/projects/designs",
+  "--out-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/eda-out/count/barracuda-via-fence"
+ ],
+ "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+ "env": {
+  "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/counts/eda-barracuda-via-fence.json"
+ },
+ "seconds": 0.118,
+ "status": 0,
+ "stdout_sha256": "91e59619704d90c53a5bb4a8f351059e5c5c8529a43d8cd1815ca70c5e9b288b",
+ "stdout_bytes": 91,
+ "stderr_sha256": "4c1d3b8efa0aa3446424b5fb1ddff6d613d45d8c30671857ddbf7a2037dfbee7",
+ "stderr_bytes": 208,
+ "stdout": "eda-sch: barracuda-via-fence: 22 sheets, 4 sidecars, 41 symbols (21 vendor), 171 instances\n"
+}

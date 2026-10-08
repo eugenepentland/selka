@@ -1,0 +1,23 @@
+{
+ "label": "run-row-union_find-count",
+ "command": [
+  "taskset",
+  "-c",
+  "0,1,4-9,12-19",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/row-union_find-count",
+  "4096",
+  "698",
+  "7"
+ ],
+ "cwd": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3",
+ "env": {
+  "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/counts/row-union_find.json"
+ },
+ "seconds": 0.058,
+ "status": 0,
+ "stdout_sha256": "f0a4ae2d74cd19d9ce35d477c57dcb453697991b2f294d647808bf59429de683",
+ "stdout_bytes": 19,
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_bytes": 0,
+ "stdout": "777875623 56704773\n"
+}

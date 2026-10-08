@@ -1,0 +1,26 @@
+{
+ "label": "run-eda-dual-flash-count",
+ "command": [
+  "taskset",
+  "-c",
+  "0,1,4-9,12-19",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/eda-count",
+  "--model",
+  "golden/cases/dual-flash/model.sexp",
+  "--project-dir",
+  "golden/projects/designs",
+  "--out-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/eda-out/count/dual-flash"
+ ],
+ "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+ "env": {
+  "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/counts/eda-dual-flash.json"
+ },
+ "seconds": 0.056,
+ "status": 0,
+ "stdout_sha256": "477288830b906a5db3e70b2b965aeebd43035615a37e15a8a68cd0efabfb9553",
+ "stdout_bytes": 78,
+ "stderr_sha256": "267df0e203a145c6815d2d8c0323b4c27c8a7e555e8779dbc198fb5659dad79d",
+ "stderr_bytes": 188,
+ "stdout": "eda-sch: dual-flash: 1 sheets, 4 sidecars, 4 symbols (1 vendor), 14 instances\n"
+}

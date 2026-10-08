@@ -1,0 +1,3 @@
+[I] export-kicad-sch: poe-pd-flyback-tps23757: 9/18 components drawn from vendor symbols (138 libraries indexed)
+[I] export-kicad-sch: poe-pd-flyback-tps23757: Flyback Primary: 1 overlapping text pairs of 78 drawn texts (e.g. pin_name "PRI1_DOT" over label "CS" at 46,28)
+[I] export-kicad-sch: poe-pd-flyback-tps23757: 1 overlapping text pairs across 6 sheets

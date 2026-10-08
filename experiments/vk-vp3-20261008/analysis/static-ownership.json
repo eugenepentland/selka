@@ -1,0 +1,67 @@
+{
+ "cost_model": {
+  "retain": 5,
+  "release": 7,
+  "unique_test": 3,
+  "runtime_count": 6,
+  "copy_fixed": 60,
+  "bytes_per_instr": 16
+ },
+ "by_corpus": {
+  "lox": {
+   "programs": 24,
+   "geomean_ratio": 4.890092907204614,
+   "geomean_saving_pct": -389.00929072046137,
+   "geomean_removal_only_pct": 16.393197164284402,
+   "programs_net_saving_ge_10pct": [],
+   "programs_removal_only_ge_10pct": [
+    "lox-vm-closures-100000",
+    "lox-vm-equality-200000",
+    "lox-vm-fib-27",
+    "lox-vm-invocation-100000",
+    "lox-vm-method_call-20000",
+    "lox-vm-properties-50000",
+    "lox-vm-string_equality-2000",
+    "lox-vm-strings-200000",
+    "lox-vm-zoo-1000000",
+    "lox-vm-zoo_batch-20",
+    "lox-tree-closures-100000",
+    "lox-tree-equality-200000",
+    "lox-tree-fib-27",
+    "lox-tree-invocation-100000",
+    "lox-tree-properties-50000",
+    "lox-tree-strings-200000",
+    "lox-tree-zoo-1000000",
+    "lox-tree-zoo_batch-30"
+   ]
+  },
+  "eda": {
+   "programs": 34,
+   "geomean_ratio": 1.1477125758520388,
+   "geomean_saving_pct": -14.771257585203879,
+   "geomean_removal_only_pct": 4.728431023254009,
+   "programs_net_saving_ge_10pct": [],
+   "programs_removal_only_ge_10pct": []
+  },
+  "parity": {
+   "programs": 4,
+   "geomean_ratio": 0.9889376385457497,
+   "geomean_saving_pct": 1.1062361454250325,
+   "geomean_removal_only_pct": 1.1062718498242141,
+   "programs_net_saving_ge_10pct": [],
+   "programs_removal_only_ge_10pct": []
+  },
+  "rows": {
+   "programs": 46,
+   "geomean_ratio": 0.9952998346344409,
+   "geomean_saving_pct": 0.47001653655590614,
+   "geomean_removal_only_pct": 0.8342849851235234,
+   "programs_net_saving_ge_10pct": [
+    "row-mutate_nested"
+   ],
+   "programs_removal_only_ge_10pct": [
+    "row-mutate_nested"
+   ]
+  }
+ }
+}

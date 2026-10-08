@@ -1,0 +1,23 @@
+{
+ "label": "run-row-string_join-count",
+ "command": [
+  "taskset",
+  "-c",
+  "0,1,4-9,12-19",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/row-string_join-count",
+  "4096",
+  "1000",
+  "7"
+ ],
+ "cwd": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3",
+ "env": {
+  "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/counts/row-string_join.json"
+ },
+ "seconds": 0.011,
+ "status": 0,
+ "stdout_sha256": "744763b41c69a6dbcd55b8536b4b87f90aae4248b2bf9ab0427b4554c261bba9",
+ "stdout_bytes": 18,
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_bytes": 0,
+ "stdout": "228756486 9278817\n"
+}

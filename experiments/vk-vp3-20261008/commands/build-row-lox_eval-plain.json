@@ -1,0 +1,26 @@
+{
+ "label": "build-row-lox_eval-plain",
+ "command": [
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/scripts/build-slot.sh",
+  "build",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3-rf/bin/mylang",
+  "build",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/test/core/row_lox_eval.my",
+  "-o",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/row-lox_eval-plain",
+  "--cache-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/cache",
+  "--release",
+  "--link",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/benchmarks/runtime/ports/native_clock.c"
+ ],
+ "cwd": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3",
+ "env": {},
+ "seconds": 10.021,
+ "status": 0,
+ "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stdout_bytes": 0,
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_bytes": 0,
+ "stdout": ""
+}

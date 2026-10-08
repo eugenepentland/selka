@@ -1,0 +1,32 @@
+{
+ "label": "run-eda-blinky-breakout-plain",
+ "command": [
+  "taskset",
+  "-c",
+  "12-19",
+  "perf",
+  "stat",
+  "-x,",
+  "-e",
+  "instructions:u",
+  "-o",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/perf/eda-blinky-breakout.csv",
+  "--",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/eda-plain",
+  "--model",
+  "golden/cases/blinky-breakout/model.sexp",
+  "--project-dir",
+  "golden/projects/blinky-breakout",
+  "--out-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/eda-out/plain/blinky-breakout"
+ ],
+ "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+ "env": {},
+ "seconds": 0.017,
+ "status": 0,
+ "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+ "stdout_bytes": 84,
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_bytes": 0,
+ "stdout": "eda-sch: blinky-breakout: 1 sheets, 4 sidecars, 10 symbols (0 vendor), 20 instances\n"
+}

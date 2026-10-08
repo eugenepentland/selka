@@ -1,0 +1,26 @@
+{
+ "label": "build-row-dict_update_str-plain",
+ "command": [
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/scripts/build-slot.sh",
+  "build",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3-rf/bin/mylang",
+  "build",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/test/core/row_dict_update_str.my",
+  "-o",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/row-dict_update_str-plain",
+  "--cache-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/cache",
+  "--release",
+  "--link",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/benchmarks/runtime/ports/native_clock.c"
+ ],
+ "cwd": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3",
+ "env": {},
+ "seconds": 10.008,
+ "status": 0,
+ "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stdout_bytes": 0,
+ "stderr_sha256": "94c5d3600b6e229ed423413a94c06f4df2f1c8aa9777d006202b253dcb7d539f",
+ "stderr_bytes": 813,
+ "stdout": ""
+}

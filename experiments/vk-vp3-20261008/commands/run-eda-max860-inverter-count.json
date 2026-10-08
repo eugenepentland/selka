@@ -1,0 +1,26 @@
+{
+ "label": "run-eda-max860-inverter-count",
+ "command": [
+  "taskset",
+  "-c",
+  "0,1,4-9,12-19",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/eda-count",
+  "--model",
+  "golden/cases/max860-inverter/model.sexp",
+  "--project-dir",
+  "golden/projects/designs",
+  "--out-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/eda-out/count/max860-inverter"
+ ],
+ "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+ "env": {
+  "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/counts/eda-max860-inverter.json"
+ },
+ "seconds": 0.049,
+ "status": 0,
+ "stdout_sha256": "00d383b72740197b9c64f9c8bb59296619f56039f0f7c9a90b89f4bd85b6dc00",
+ "stdout_bytes": 82,
+ "stderr_sha256": "c77428716cff08fa61b5e861d4a9a9ec64cd67d70283863afe6bacb0d0cd656c",
+ "stderr_bytes": 104,
+ "stdout": "eda-sch: max860-inverter: 1 sheets, 4 sidecars, 4 symbols (0 vendor), 7 instances\n"
+}

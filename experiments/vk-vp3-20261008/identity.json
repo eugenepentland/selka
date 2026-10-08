@@ -1,0 +1,1306 @@
+{
+ "base": {
+  "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3-base/bin/mylang",
+  "sha256": "74423b67d5e49d072c989637740435c6553d51979b9a3536eb5a2392985f5c08",
+  "commit": "deefad751a9c8d92e925aac20c0db80f8f336a4d"
+ },
+ "new": {
+  "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/zig-out/bin/mylang",
+  "sha256": "552451bfe5414281c8ec0717eb9ab74338d9c998816bae57e4a6bd3d9331e6d3",
+  "commit": "694ae2a11beffcfcccb6e255256ba74df23474ff",
+  "dirty": ""
+ },
+ "comparisons": 92,
+ "all_llvm_equal": true,
+ "all_exe_equal": true,
+ "results": {
+  "record_reads-debug": {
+   "row": "record_reads",
+   "mode": "debug",
+   "base": {
+    "llvm": "d76dcfd5c292f6c89a2dd32a6cddcd041c64f7a0e7dba870cd3dbd6c2907f7f4",
+    "exe": "63b8df9a5c3fad79ae0921737cb4d7facdc02deeffc38561405219ad2ec18acc"
+   },
+   "new": {
+    "llvm": "d76dcfd5c292f6c89a2dd32a6cddcd041c64f7a0e7dba870cd3dbd6c2907f7f4",
+    "exe": "63b8df9a5c3fad79ae0921737cb4d7facdc02deeffc38561405219ad2ec18acc"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "record_reads-release": {
+   "row": "record_reads",
+   "mode": "release",
+   "base": {
+    "llvm": "5599d7ee8d6df9eae12d034e4bbeef44caffad84d99b18f737e874b0bfc6d528",
+    "exe": "6502b22cb68bdad6a77e59428f0815526f5c848ff307ad06fdec21278512b152"
+   },
+   "new": {
+    "llvm": "5599d7ee8d6df9eae12d034e4bbeef44caffad84d99b18f737e874b0bfc6d528",
+    "exe": "6502b22cb68bdad6a77e59428f0815526f5c848ff307ad06fdec21278512b152"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "tagged_stack-debug": {
+   "row": "tagged_stack",
+   "mode": "debug",
+   "base": {
+    "llvm": "9b07633dd14d24c37a80ec5c537bd9baee5fe93cb4f423798e242287e4fe737f",
+    "exe": "46b860516a0a87af20ecf497166990d1c377c8a8ad2bc506b03b9a13054f24b5"
+   },
+   "new": {
+    "llvm": "9b07633dd14d24c37a80ec5c537bd9baee5fe93cb4f423798e242287e4fe737f",
+    "exe": "46b860516a0a87af20ecf497166990d1c377c8a8ad2bc506b03b9a13054f24b5"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "tagged_stack-release": {
+   "row": "tagged_stack",
+   "mode": "release",
+   "base": {
+    "llvm": "3c73b79528030df5ff55ce3fdbba83a2869f201d2742968bf3752e31a54d63e8",
+    "exe": "fed2b4a1cb8b2a37f5091878f4de1628feb7579e67a4df20dcd220ab381b0cdb"
+   },
+   "new": {
+    "llvm": "3c73b79528030df5ff55ce3fdbba83a2869f201d2742968bf3752e31a54d63e8",
+    "exe": "fed2b4a1cb8b2a37f5091878f4de1628feb7579e67a4df20dcd220ab381b0cdb"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "mutate_unique-debug": {
+   "row": "mutate_unique",
+   "mode": "debug",
+   "base": {
+    "llvm": "b2984529801550028c3ac5814a2692ce70c91647a47d0e814d1b8b19ba74abed",
+    "exe": "605e1453961a742c958dab19725698e0c627de9b279bde224fef88e10e957570"
+   },
+   "new": {
+    "llvm": "b2984529801550028c3ac5814a2692ce70c91647a47d0e814d1b8b19ba74abed",
+    "exe": "605e1453961a742c958dab19725698e0c627de9b279bde224fef88e10e957570"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "mutate_unique-release": {
+   "row": "mutate_unique",
+   "mode": "release",
+   "base": {
+    "llvm": "0ee71a39d3c6b3c6c7edda5628ca1483b1bca616ebb7a9cf58f09ba7a3edc5a8",
+    "exe": "dc1f80cdbaa51689636c35bd53a6a3a1f432d3ee51912879548094b86a7edcb1"
+   },
+   "new": {
+    "llvm": "0ee71a39d3c6b3c6c7edda5628ca1483b1bca616ebb7a9cf58f09ba7a3edc5a8",
+    "exe": "dc1f80cdbaa51689636c35bd53a6a3a1f432d3ee51912879548094b86a7edcb1"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "mutate_shared-debug": {
+   "row": "mutate_shared",
+   "mode": "debug",
+   "base": {
+    "llvm": "7f317940f3726fa11e189ccfba25e57c54ddb38f041f95f3d40b7d7918d84a15",
+    "exe": "1f3dc71488f31fd30d32ff66b0e91e4489f86db7b110164db38f04dabf535012"
+   },
+   "new": {
+    "llvm": "7f317940f3726fa11e189ccfba25e57c54ddb38f041f95f3d40b7d7918d84a15",
+    "exe": "1f3dc71488f31fd30d32ff66b0e91e4489f86db7b110164db38f04dabf535012"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "mutate_shared-release": {
+   "row": "mutate_shared",
+   "mode": "release",
+   "base": {
+    "llvm": "18d8c1ab43e04849bf5157d57bdd2d3844a525141b0ebdad526426ed2dc6c55a",
+    "exe": "15e1ce3f8c043a8af178cda1f7afb7ecae4feeef8e472df61707f0613ba7d296"
+   },
+   "new": {
+    "llvm": "18d8c1ab43e04849bf5157d57bdd2d3844a525141b0ebdad526426ed2dc6c55a",
+    "exe": "15e1ce3f8c043a8af178cda1f7afb7ecae4feeef8e472df61707f0613ba7d296"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "record_construct-debug": {
+   "row": "record_construct",
+   "mode": "debug",
+   "base": {
+    "llvm": "707cf95bda955c2edc7f8e91fdb0362e8eaceeae65340bd6ccb0de8ec058397f",
+    "exe": "54fa0c77d2d2e7089acd3f3653b9a43ebb191de02008f64259abeac62684faf1"
+   },
+   "new": {
+    "llvm": "707cf95bda955c2edc7f8e91fdb0362e8eaceeae65340bd6ccb0de8ec058397f",
+    "exe": "54fa0c77d2d2e7089acd3f3653b9a43ebb191de02008f64259abeac62684faf1"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "record_construct-release": {
+   "row": "record_construct",
+   "mode": "release",
+   "base": {
+    "llvm": "351f6aca51942649e3ff71cc877088ff4446e4085bd54bb1aa3fbdbf2d2981c2",
+    "exe": "064dfb2e4d5da2f5986c84d6c8289bb2ee61d66bf9a72fa2717c4bb92e4b6762"
+   },
+   "new": {
+    "llvm": "351f6aca51942649e3ff71cc877088ff4446e4085bd54bb1aa3fbdbf2d2981c2",
+    "exe": "064dfb2e4d5da2f5986c84d6c8289bb2ee61d66bf9a72fa2717c4bb92e4b6762"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "record_update-debug": {
+   "row": "record_update",
+   "mode": "debug",
+   "base": {
+    "llvm": "1ca927d0e4d5177bf18595680ca6412d4391eab365efbd27a2b06da74e679011",
+    "exe": "f3d08a19ef39f01c2d28bd2b5bb52a6d50a380941f364ca104a4c09cc924b889"
+   },
+   "new": {
+    "llvm": "1ca927d0e4d5177bf18595680ca6412d4391eab365efbd27a2b06da74e679011",
+    "exe": "f3d08a19ef39f01c2d28bd2b5bb52a6d50a380941f364ca104a4c09cc924b889"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "record_update-release": {
+   "row": "record_update",
+   "mode": "release",
+   "base": {
+    "llvm": "f785cf2854cf7993ee3fe7551f45d77b43e55ef44416feee2414ea8ecaa2e48f",
+    "exe": "f81035dba02c55eb05082703bd1c1774f11298f4ac6f2a2fde0da77c45672782"
+   },
+   "new": {
+    "llvm": "f785cf2854cf7993ee3fe7551f45d77b43e55ef44416feee2414ea8ecaa2e48f",
+    "exe": "f81035dba02c55eb05082703bd1c1774f11298f4ac6f2a2fde0da77c45672782"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "option_handle-debug": {
+   "row": "option_handle",
+   "mode": "debug",
+   "base": {
+    "llvm": "055be64bbc833d45b8679be4e47908bcf0e62ff439f9a4970b152b58ced594f4",
+    "exe": "926c8456ad60a2e93edabc9b28bd7cdf8c7d0c52dc2ea9187c9c971518f57da6"
+   },
+   "new": {
+    "llvm": "055be64bbc833d45b8679be4e47908bcf0e62ff439f9a4970b152b58ced594f4",
+    "exe": "926c8456ad60a2e93edabc9b28bd7cdf8c7d0c52dc2ea9187c9c971518f57da6"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "option_handle-release": {
+   "row": "option_handle",
+   "mode": "release",
+   "base": {
+    "llvm": "0ab4da77b7754620a44303ca2b44162853ddcbd08f5187434bc3ad482a16150a",
+    "exe": "4351928c7356e24e00bd58c34407217c61a8b7a9537c0de74b728b26baf52fd8"
+   },
+   "new": {
+    "llvm": "0ab4da77b7754620a44303ca2b44162853ddcbd08f5187434bc3ad482a16150a",
+    "exe": "4351928c7356e24e00bd58c34407217c61a8b7a9537c0de74b728b26baf52fd8"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "result_propagate-debug": {
+   "row": "result_propagate",
+   "mode": "debug",
+   "base": {
+    "llvm": "a20a25d5a0fa42391b02e199b64326ce1bd0b6b07bf170a242c673eee3f5bf82",
+    "exe": "50c8ef118a7f0141770e962f6b43cf2606145934099c99224862134adc7a00ef"
+   },
+   "new": {
+    "llvm": "a20a25d5a0fa42391b02e199b64326ce1bd0b6b07bf170a242c673eee3f5bf82",
+    "exe": "50c8ef118a7f0141770e962f6b43cf2606145934099c99224862134adc7a00ef"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "result_propagate-release": {
+   "row": "result_propagate",
+   "mode": "release",
+   "base": {
+    "llvm": "03977628f5a7185e08e235e0a098b60ccca0fa497b60ae5fb01fdda0b90bcac5",
+    "exe": "64152e3fc48173c9f1c940f1ddaed34700f9072f243d6bf21933d35b4901d1a7"
+   },
+   "new": {
+    "llvm": "03977628f5a7185e08e235e0a098b60ccca0fa497b60ae5fb01fdda0b90bcac5",
+    "exe": "64152e3fc48173c9f1c940f1ddaed34700f9072f243d6bf21933d35b4901d1a7"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "list_scan-debug": {
+   "row": "list_scan",
+   "mode": "debug",
+   "base": {
+    "llvm": "f1ad81baa61d507d9c6daba0df3257639623294828c668f099ccc3e351e8e84f",
+    "exe": "8115e351e20c2a22451c472100371e908bb6443c3c5717ffe9fd17f5c4515afa"
+   },
+   "new": {
+    "llvm": "f1ad81baa61d507d9c6daba0df3257639623294828c668f099ccc3e351e8e84f",
+    "exe": "8115e351e20c2a22451c472100371e908bb6443c3c5717ffe9fd17f5c4515afa"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "list_scan-release": {
+   "row": "list_scan",
+   "mode": "release",
+   "base": {
+    "llvm": "3de8614b72a2b7846c910bca31907ab82bae42a6e9805557c3a99a22346b671d",
+    "exe": "ac7a8d9b85bdff7b7297323dbd00643ddef266c61e91f830d5c672655feb43a1"
+   },
+   "new": {
+    "llvm": "3de8614b72a2b7846c910bca31907ab82bae42a6e9805557c3a99a22346b671d",
+    "exe": "ac7a8d9b85bdff7b7297323dbd00643ddef266c61e91f830d5c672655feb43a1"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "list_append-debug": {
+   "row": "list_append",
+   "mode": "debug",
+   "base": {
+    "llvm": "f7e0404d7aad445e8c9e29a8cb9cef6b5940f7185e9b39037c42072ad7e5bd47",
+    "exe": "b416b0de68442f321ae73edc7c240c1b9416bb0cbc7de463f81927dc8f4ef9ff"
+   },
+   "new": {
+    "llvm": "f7e0404d7aad445e8c9e29a8cb9cef6b5940f7185e9b39037c42072ad7e5bd47",
+    "exe": "b416b0de68442f321ae73edc7c240c1b9416bb0cbc7de463f81927dc8f4ef9ff"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "list_append-release": {
+   "row": "list_append",
+   "mode": "release",
+   "base": {
+    "llvm": "aac2d6001f344a5ee0262ba04d617a3c1d21d1b1367f830cf400c56e6667a08d",
+    "exe": "010a5dd2f818147077bc09d0f291ddeb5e76fa2a71e6c175bfad1bdda0813155"
+   },
+   "new": {
+    "llvm": "aac2d6001f344a5ee0262ba04d617a3c1d21d1b1367f830cf400c56e6667a08d",
+    "exe": "010a5dd2f818147077bc09d0f291ddeb5e76fa2a71e6c175bfad1bdda0813155"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "list_filter-debug": {
+   "row": "list_filter",
+   "mode": "debug",
+   "base": {
+    "llvm": "aefd22ef1373cf621613f964dd40a736f1ec005247315a280ce82f9a2c81705f",
+    "exe": "1423fc6f8b0617f337a1757f398e526493ffafbca98137004e2c842c20c5505a"
+   },
+   "new": {
+    "llvm": "aefd22ef1373cf621613f964dd40a736f1ec005247315a280ce82f9a2c81705f",
+    "exe": "1423fc6f8b0617f337a1757f398e526493ffafbca98137004e2c842c20c5505a"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "list_filter-release": {
+   "row": "list_filter",
+   "mode": "release",
+   "base": {
+    "llvm": "579867d07cfdb8493f64439dbc628d826671e3c53875594daae01c5425ed086c",
+    "exe": "3cd52e9dfce01f932af1f4bd30a92d3ba5d5d0473f7acd77abc566b5748a7180"
+   },
+   "new": {
+    "llvm": "579867d07cfdb8493f64439dbc628d826671e3c53875594daae01c5425ed086c",
+    "exe": "3cd52e9dfce01f932af1f4bd30a92d3ba5d5d0473f7acd77abc566b5748a7180"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "alloc_short-debug": {
+   "row": "alloc_short",
+   "mode": "debug",
+   "base": {
+    "llvm": "28ccf4a9f41c797dcf3587c68ef257ca8308fa07a6cc6c11593238d60b69453e",
+    "exe": "9ebaa976cf16c265b94bf0f7590217370362e31ec45278e0c3d084e0bb1a0dd3"
+   },
+   "new": {
+    "llvm": "28ccf4a9f41c797dcf3587c68ef257ca8308fa07a6cc6c11593238d60b69453e",
+    "exe": "9ebaa976cf16c265b94bf0f7590217370362e31ec45278e0c3d084e0bb1a0dd3"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "alloc_short-release": {
+   "row": "alloc_short",
+   "mode": "release",
+   "base": {
+    "llvm": "8456dcd5311ed34b3bbc87eccb74fd11f07c383e17aaa8a25c630c2f0e0017bb",
+    "exe": "8f6015e66f502e449778a9ed8e8fee2ff4b28335dffb0e8e6cde63677d25e016"
+   },
+   "new": {
+    "llvm": "8456dcd5311ed34b3bbc87eccb74fd11f07c383e17aaa8a25c630c2f0e0017bb",
+    "exe": "8f6015e66f502e449778a9ed8e8fee2ff4b28335dffb0e8e6cde63677d25e016"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "alloc_retained-debug": {
+   "row": "alloc_retained",
+   "mode": "debug",
+   "base": {
+    "llvm": "198608d3b2f75356fa7352aec74128d698744599b93e3d38190e8245f061e370",
+    "exe": "a337298c77140f3ecdfdad5ba9c2929fbda1136621f2107eb394257352a2b79b"
+   },
+   "new": {
+    "llvm": "198608d3b2f75356fa7352aec74128d698744599b93e3d38190e8245f061e370",
+    "exe": "a337298c77140f3ecdfdad5ba9c2929fbda1136621f2107eb394257352a2b79b"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "alloc_retained-release": {
+   "row": "alloc_retained",
+   "mode": "release",
+   "base": {
+    "llvm": "e4de621013bc557e1b4ec1954b6147d161aed34e073988e2dba7f6f4394f73ea",
+    "exe": "f5bc7a13e4d83a7ca73e0a242b00c3fde572a821adfafa93769bcc7a1573431e"
+   },
+   "new": {
+    "llvm": "e4de621013bc557e1b4ec1954b6147d161aed34e073988e2dba7f6f4394f73ea",
+    "exe": "f5bc7a13e4d83a7ca73e0a242b00c3fde572a821adfafa93769bcc7a1573431e"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "mutate_nested-debug": {
+   "row": "mutate_nested",
+   "mode": "debug",
+   "base": {
+    "llvm": "ad772f7c06ddabbc3b29906d828d531461b457cc7eb86ac77db2c6b3803a0cd7",
+    "exe": "2267eed37fd0dc840a15af3dde473d603179f0289d4a317fffc588eee781e0df"
+   },
+   "new": {
+    "llvm": "ad772f7c06ddabbc3b29906d828d531461b457cc7eb86ac77db2c6b3803a0cd7",
+    "exe": "2267eed37fd0dc840a15af3dde473d603179f0289d4a317fffc588eee781e0df"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "mutate_nested-release": {
+   "row": "mutate_nested",
+   "mode": "release",
+   "base": {
+    "llvm": "3a6d46b5d6021d589a17cc9d2651002e3b9d892b203cf2c7cc4c30e354e86002",
+    "exe": "711bda106606571c1eb1b07074320c2a1a1e4218c0dbe237b358c5b70b32b4fc"
+   },
+   "new": {
+    "llvm": "3a6d46b5d6021d589a17cc9d2651002e3b9d892b203cf2c7cc4c30e354e86002",
+    "exe": "711bda106606571c1eb1b07074320c2a1a1e4218c0dbe237b358c5b70b32b4fc"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "bytes_scan-debug": {
+   "row": "bytes_scan",
+   "mode": "debug",
+   "base": {
+    "llvm": "8c0e0f37b40e1725beebaeabc3b0bf14c1e6b74c4f35052b744d344bc50dfb4e",
+    "exe": "b6d3bdbe4878063210e51ea8aff2ecff87f249477a981d552a1ff8174919146b"
+   },
+   "new": {
+    "llvm": "8c0e0f37b40e1725beebaeabc3b0bf14c1e6b74c4f35052b744d344bc50dfb4e",
+    "exe": "b6d3bdbe4878063210e51ea8aff2ecff87f249477a981d552a1ff8174919146b"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "bytes_scan-release": {
+   "row": "bytes_scan",
+   "mode": "release",
+   "base": {
+    "llvm": "b6bee950bc2c469522f2b44ef6df83663bbf730ee50210dd5bc373f801737772",
+    "exe": "10d3ac87fcb79e5a6ac25f6f8ff160d0371747295147027bd575d70dbfa6c65e"
+   },
+   "new": {
+    "llvm": "b6bee950bc2c469522f2b44ef6df83663bbf730ee50210dd5bc373f801737772",
+    "exe": "10d3ac87fcb79e5a6ac25f6f8ff160d0371747295147027bd575d70dbfa6c65e"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "string_equal-debug": {
+   "row": "string_equal",
+   "mode": "debug",
+   "base": {
+    "llvm": "dac8574589d8da7a10fca6fe857b45989853cc593c2222dcb2c3b943ebf91ffa",
+    "exe": "9e902035dfe75783f3a79b26be7e6f77f8fa8732579b498e17ff17f46cbd97a7"
+   },
+   "new": {
+    "llvm": "dac8574589d8da7a10fca6fe857b45989853cc593c2222dcb2c3b943ebf91ffa",
+    "exe": "9e902035dfe75783f3a79b26be7e6f77f8fa8732579b498e17ff17f46cbd97a7"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "string_equal-release": {
+   "row": "string_equal",
+   "mode": "release",
+   "base": {
+    "llvm": "df2e68b4171ce55b026cba8502e3709f616036d457bb8e3460c9d9246edd1274",
+    "exe": "55cd9fa330515190df3f0b4d5ad90db7d0b6c6699a9b335cc218ac91ed2fe7f0"
+   },
+   "new": {
+    "llvm": "df2e68b4171ce55b026cba8502e3709f616036d457bb8e3460c9d9246edd1274",
+    "exe": "55cd9fa330515190df3f0b4d5ad90db7d0b6c6699a9b335cc218ac91ed2fe7f0"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "string_search-debug": {
+   "row": "string_search",
+   "mode": "debug",
+   "base": {
+    "llvm": "f5139274edb5975cc869b2e2b14e04434810c0919a94bf36bdf2420259f06689",
+    "exe": "a7ebc718878ac2777bf7d4e171789a58f4ed19ce7d8df44c343a3dad761b2a4a"
+   },
+   "new": {
+    "llvm": "f5139274edb5975cc869b2e2b14e04434810c0919a94bf36bdf2420259f06689",
+    "exe": "a7ebc718878ac2777bf7d4e171789a58f4ed19ce7d8df44c343a3dad761b2a4a"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "string_search-release": {
+   "row": "string_search",
+   "mode": "release",
+   "base": {
+    "llvm": "b1cbad5b9b7b621c328efe1c31e38fe4654c761072c932555f62a0c4c5577594",
+    "exe": "390252ff43a6928580e9b7903e70da91c6dbcf18db5bc8c9ae2726e87c53fdb1"
+   },
+   "new": {
+    "llvm": "b1cbad5b9b7b621c328efe1c31e38fe4654c761072c932555f62a0c4c5577594",
+    "exe": "390252ff43a6928580e9b7903e70da91c6dbcf18db5bc8c9ae2726e87c53fdb1"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "string_split-debug": {
+   "row": "string_split",
+   "mode": "debug",
+   "base": {
+    "llvm": "dc3e3fed2879e49d2367df99b40215ccac9bf39220b85f51380500554d90cc5a",
+    "exe": "c12111b69a11bd714004fd64bd844beb36fd1acb96f2e09c332801529ddab59e"
+   },
+   "new": {
+    "llvm": "dc3e3fed2879e49d2367df99b40215ccac9bf39220b85f51380500554d90cc5a",
+    "exe": "c12111b69a11bd714004fd64bd844beb36fd1acb96f2e09c332801529ddab59e"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "string_split-release": {
+   "row": "string_split",
+   "mode": "release",
+   "base": {
+    "llvm": "3333ddae3aafa14cde274bb21005027896d7f637433ae9e3660bcff2d39991e7",
+    "exe": "4e9bf80659cabcedc5b2bb60e2a269a6161f4aedd5fee605856cadbbed46dfd0"
+   },
+   "new": {
+    "llvm": "3333ddae3aafa14cde274bb21005027896d7f637433ae9e3660bcff2d39991e7",
+    "exe": "4e9bf80659cabcedc5b2bb60e2a269a6161f4aedd5fee605856cadbbed46dfd0"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "string_join-debug": {
+   "row": "string_join",
+   "mode": "debug",
+   "base": {
+    "llvm": "10f57cee43e8562c974890febd95f20eae7b4f03f98df61707c1afbb61a9c7ef",
+    "exe": "49672e7881e3cb2df6736b4500bac83fcb232255c519ae2e1aa4e67771de9ae3"
+   },
+   "new": {
+    "llvm": "10f57cee43e8562c974890febd95f20eae7b4f03f98df61707c1afbb61a9c7ef",
+    "exe": "49672e7881e3cb2df6736b4500bac83fcb232255c519ae2e1aa4e67771de9ae3"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "string_join-release": {
+   "row": "string_join",
+   "mode": "release",
+   "base": {
+    "llvm": "aa245fda3eaea2bf2c498a151ec9b35c3b9857ee4da4d994c0bd73fd10ff9490",
+    "exe": "f3d2ec59a1176cae3ad7f78b63eb031ebb7a37d808d3d487410ca5d988e4a6b0"
+   },
+   "new": {
+    "llvm": "aa245fda3eaea2bf2c498a151ec9b35c3b9857ee4da4d994c0bd73fd10ff9490",
+    "exe": "f3d2ec59a1176cae3ad7f78b63eb031ebb7a37d808d3d487410ca5d988e4a6b0"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "dict_lookup-debug": {
+   "row": "dict_lookup",
+   "mode": "debug",
+   "base": {
+    "llvm": "025258bd934733c5e64240c793c5dcbb70a1437c8e6799ca07146efcaaa0d897",
+    "exe": "54e91598dcd0d77a2ee5dae8c7bf28e22ebba9766ae5fd6e7de46f8b9354ede5"
+   },
+   "new": {
+    "llvm": "025258bd934733c5e64240c793c5dcbb70a1437c8e6799ca07146efcaaa0d897",
+    "exe": "54e91598dcd0d77a2ee5dae8c7bf28e22ebba9766ae5fd6e7de46f8b9354ede5"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "dict_lookup-release": {
+   "row": "dict_lookup",
+   "mode": "release",
+   "base": {
+    "llvm": "98fd2b0e30d31f484e831089de257a55b75e8550d0836074fd13b5b92f5f5939",
+    "exe": "1bb08f97d6cfd9074624a56d9661e5a4d7b6c768f1f72af607ef21ff7003e9d6"
+   },
+   "new": {
+    "llvm": "98fd2b0e30d31f484e831089de257a55b75e8550d0836074fd13b5b92f5f5939",
+    "exe": "1bb08f97d6cfd9074624a56d9661e5a4d7b6c768f1f72af607ef21ff7003e9d6"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "dict_lookup_str-debug": {
+   "row": "dict_lookup_str",
+   "mode": "debug",
+   "base": {
+    "llvm": "677a6f5261e2f84e112e10e81c2ecc8f470f7d5067327f6cb62bda280bdaabf4",
+    "exe": "ca330fe3bab85ec1074a27b1a6a5c0d02c13502bec78273c8f19b7d6559a1c23"
+   },
+   "new": {
+    "llvm": "677a6f5261e2f84e112e10e81c2ecc8f470f7d5067327f6cb62bda280bdaabf4",
+    "exe": "ca330fe3bab85ec1074a27b1a6a5c0d02c13502bec78273c8f19b7d6559a1c23"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "dict_lookup_str-release": {
+   "row": "dict_lookup_str",
+   "mode": "release",
+   "base": {
+    "llvm": "1440582d141fe3fb3242f2a6415f1b0d02323094ae837cea399a35b71aef6866",
+    "exe": "4e15fb7e3b7d255a8b79ef97763f44d95b2e0bff6f65128990d0685490c7054c"
+   },
+   "new": {
+    "llvm": "1440582d141fe3fb3242f2a6415f1b0d02323094ae837cea399a35b71aef6866",
+    "exe": "4e15fb7e3b7d255a8b79ef97763f44d95b2e0bff6f65128990d0685490c7054c"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "dict_update-debug": {
+   "row": "dict_update",
+   "mode": "debug",
+   "base": {
+    "llvm": "723970061b62a86372648a418f1f26e10b90a5096a47f2bbdd99ab0034985b6d",
+    "exe": "5ea9c939109d34a3db210f5d40841db071e55558594af41ea2526fd8d9780383"
+   },
+   "new": {
+    "llvm": "723970061b62a86372648a418f1f26e10b90a5096a47f2bbdd99ab0034985b6d",
+    "exe": "5ea9c939109d34a3db210f5d40841db071e55558594af41ea2526fd8d9780383"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "dict_update-release": {
+   "row": "dict_update",
+   "mode": "release",
+   "base": {
+    "llvm": "ecb8352dd3800f98d8c08775dac036355c62a334276f9a8dd47ee632d598d260",
+    "exe": "e8125194f3837fef1016ad58fb18b1da49877bb04e39472e3dd6db1b0cec53fc"
+   },
+   "new": {
+    "llvm": "ecb8352dd3800f98d8c08775dac036355c62a334276f9a8dd47ee632d598d260",
+    "exe": "e8125194f3837fef1016ad58fb18b1da49877bb04e39472e3dd6db1b0cec53fc"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "dict_update_str-debug": {
+   "row": "dict_update_str",
+   "mode": "debug",
+   "base": {
+    "llvm": "f4666fdee95200161f78ded7cb714f387955554461ea2cebe9bfec3115fe2c71",
+    "exe": "2c044b455d03b72fbef7fd81ac32a6bf1874727fc7d7e739144de0fb1c84b458"
+   },
+   "new": {
+    "llvm": "f4666fdee95200161f78ded7cb714f387955554461ea2cebe9bfec3115fe2c71",
+    "exe": "2c044b455d03b72fbef7fd81ac32a6bf1874727fc7d7e739144de0fb1c84b458"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "dict_update_str-release": {
+   "row": "dict_update_str",
+   "mode": "release",
+   "base": {
+    "llvm": "4be91203453b57b180bb81aedeb59cf8842acb8cf08027ede09a0059d6705f1e",
+    "exe": "c4bc7a7c23953ca11ea21e511112e75311aa6a82550671d92806b54e69ed8719"
+   },
+   "new": {
+    "llvm": "4be91203453b57b180bb81aedeb59cf8842acb8cf08027ede09a0059d6705f1e",
+    "exe": "c4bc7a7c23953ca11ea21e511112e75311aa6a82550671d92806b54e69ed8719"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "set_dedup-debug": {
+   "row": "set_dedup",
+   "mode": "debug",
+   "base": {
+    "llvm": "fa072e965df77d839828e4582150c889fceb471ec4475264c681fbb60f3e02c7",
+    "exe": "18349590cbb73bd90fc3865ace0748b00bf692f0c19624d1298b7e8851090e9b"
+   },
+   "new": {
+    "llvm": "fa072e965df77d839828e4582150c889fceb471ec4475264c681fbb60f3e02c7",
+    "exe": "18349590cbb73bd90fc3865ace0748b00bf692f0c19624d1298b7e8851090e9b"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "set_dedup-release": {
+   "row": "set_dedup",
+   "mode": "release",
+   "base": {
+    "llvm": "b7cc886b878978e40b3d0384a98b21be08ab147c246468eac232e11ab99f6863",
+    "exe": "90d1a91c19bdcecb73c37f277c15a7d4d3c9f234a93b9a594bd953a0dc0fe3d2"
+   },
+   "new": {
+    "llvm": "b7cc886b878978e40b3d0384a98b21be08ab147c246468eac232e11ab99f6863",
+    "exe": "90d1a91c19bdcecb73c37f277c15a7d4d3c9f234a93b9a594bd953a0dc0fe3d2"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "int_parse-debug": {
+   "row": "int_parse",
+   "mode": "debug",
+   "base": {
+    "llvm": "d44b322e336b348c6b3e34d1e0c78d3a7e9d0fee120cab853a5343d5613b30f3",
+    "exe": "63b26869677ef8b4470e4906408686e5532b6f49dba5ea8c801ba1d950c99868"
+   },
+   "new": {
+    "llvm": "d44b322e336b348c6b3e34d1e0c78d3a7e9d0fee120cab853a5343d5613b30f3",
+    "exe": "63b26869677ef8b4470e4906408686e5532b6f49dba5ea8c801ba1d950c99868"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "int_parse-release": {
+   "row": "int_parse",
+   "mode": "release",
+   "base": {
+    "llvm": "64c1244c13c591967f4fdf0eaa6900784d37ea7141bc2a2e04435206cc61b957",
+    "exe": "c8b078c61aee66028959cdaa202f2e0466f446ce516f521dd8bc68973a255e7d"
+   },
+   "new": {
+    "llvm": "64c1244c13c591967f4fdf0eaa6900784d37ea7141bc2a2e04435206cc61b957",
+    "exe": "c8b078c61aee66028959cdaa202f2e0466f446ce516f521dd8bc68973a255e7d"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "int_format-debug": {
+   "row": "int_format",
+   "mode": "debug",
+   "base": {
+    "llvm": "dbf92087951ea5f0bdd8381b8b9646ffc40d0a7abb5c1b6e1490088a363f0720",
+    "exe": "30f4eac4449cd8e4155da4e6297ae3326ed4cf202821d06213774d0e3a89c1aa"
+   },
+   "new": {
+    "llvm": "dbf92087951ea5f0bdd8381b8b9646ffc40d0a7abb5c1b6e1490088a363f0720",
+    "exe": "30f4eac4449cd8e4155da4e6297ae3326ed4cf202821d06213774d0e3a89c1aa"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "int_format-release": {
+   "row": "int_format",
+   "mode": "release",
+   "base": {
+    "llvm": "284e93e555d4883ce76c4567e17acfd915e4f8d2a9775f3403fc9505075a9a66",
+    "exe": "3f7e659081830235f900e115ba31e36746b7d504f48fa9d61e20333a4e93f407"
+   },
+   "new": {
+    "llvm": "284e93e555d4883ce76c4567e17acfd915e4f8d2a9775f3403fc9505075a9a66",
+    "exe": "3f7e659081830235f900e115ba31e36746b7d504f48fa9d61e20333a4e93f407"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "call_indirect-debug": {
+   "row": "call_indirect",
+   "mode": "debug",
+   "base": {
+    "llvm": "880e49337ae6d0102f1a6eb34e9c6b749da321072063a44ff3e7273f653283f1",
+    "exe": "4f11f80b8e5d6dab61b36130e5eec4fd56a8ad2f1ec8aab16200f0e0e8b495b6"
+   },
+   "new": {
+    "llvm": "880e49337ae6d0102f1a6eb34e9c6b749da321072063a44ff3e7273f653283f1",
+    "exe": "4f11f80b8e5d6dab61b36130e5eec4fd56a8ad2f1ec8aab16200f0e0e8b495b6"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "call_indirect-release": {
+   "row": "call_indirect",
+   "mode": "release",
+   "base": {
+    "llvm": "d0060caceeb21cfbd1a89154a2a6a4f475512e9b549a9561d58b51242104002c",
+    "exe": "71a8d59539f0a19964921fdae75e8bb8ab689dcfde9371ee52ceda9c8e2643b5"
+   },
+   "new": {
+    "llvm": "d0060caceeb21cfbd1a89154a2a6a4f475512e9b549a9561d58b51242104002c",
+    "exe": "71a8d59539f0a19964921fdae75e8bb8ab689dcfde9371ee52ceda9c8e2643b5"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "sort_int-debug": {
+   "row": "sort_int",
+   "mode": "debug",
+   "base": {
+    "llvm": "1e3cbeaa7b80c879de747c23d58d31560ef7744111890ff70578bdb318d971d2",
+    "exe": "9ea726a19e86573f2630df7d84eff59fcc53d76c7bfc81dea2d2f1ea48a25749"
+   },
+   "new": {
+    "llvm": "1e3cbeaa7b80c879de747c23d58d31560ef7744111890ff70578bdb318d971d2",
+    "exe": "9ea726a19e86573f2630df7d84eff59fcc53d76c7bfc81dea2d2f1ea48a25749"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "sort_int-release": {
+   "row": "sort_int",
+   "mode": "release",
+   "base": {
+    "llvm": "cf3c67a8e9e74f0b5fad3fb4d56007fa6f21a704be599a049242b7326954aa88",
+    "exe": "10a8f85e49da4afddea1fcae4f99cf21bee06cbf946f60221cdcc66ff840c191"
+   },
+   "new": {
+    "llvm": "cf3c67a8e9e74f0b5fad3fb4d56007fa6f21a704be599a049242b7326954aa88",
+    "exe": "10a8f85e49da4afddea1fcae4f99cf21bee06cbf946f60221cdcc66ff840c191"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "sort_records-debug": {
+   "row": "sort_records",
+   "mode": "debug",
+   "base": {
+    "llvm": "e14c9373ac5b152e2a1810725a224992c1293ab50d5ea870476e7676da3a6339",
+    "exe": "9f6b336209450f2879d2c8228c3eaaa6540474b014f43fd948959e19d07ee5c3"
+   },
+   "new": {
+    "llvm": "e14c9373ac5b152e2a1810725a224992c1293ab50d5ea870476e7676da3a6339",
+    "exe": "9f6b336209450f2879d2c8228c3eaaa6540474b014f43fd948959e19d07ee5c3"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "sort_records-release": {
+   "row": "sort_records",
+   "mode": "release",
+   "base": {
+    "llvm": "ef3548528077e4c03e863ab10fd73181c2ca67ca5f387c293a0db43a54a952b0",
+    "exe": "cddaa55efbe2f65b881c3c0253fe3615edc29926866d60bc2c1f5c452264d97c"
+   },
+   "new": {
+    "llvm": "ef3548528077e4c03e863ab10fd73181c2ca67ca5f387c293a0db43a54a952b0",
+    "exe": "cddaa55efbe2f65b881c3c0253fe3615edc29926866d60bc2c1f5c452264d97c"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "int_math-debug": {
+   "row": "int_math",
+   "mode": "debug",
+   "base": {
+    "llvm": "0be40241d7b439a5787b8db28c8541a8945d470da11b2958e0413105687951ae",
+    "exe": "069105d4d7e83056b07ec7bcd76a508e0352b5a627bf09e2277a2ada756343e4"
+   },
+   "new": {
+    "llvm": "0be40241d7b439a5787b8db28c8541a8945d470da11b2958e0413105687951ae",
+    "exe": "069105d4d7e83056b07ec7bcd76a508e0352b5a627bf09e2277a2ada756343e4"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "int_math-release": {
+   "row": "int_math",
+   "mode": "release",
+   "base": {
+    "llvm": "14a56ec02ae1f3a829b3b25d9de1ee953d910c88561e787a422a1868d2fefe52",
+    "exe": "1138e3cd9a0c65fadfead680254806461c764745db6ee514f53b5c8e5e34aad5"
+   },
+   "new": {
+    "llvm": "14a56ec02ae1f3a829b3b25d9de1ee953d910c88561e787a422a1868d2fefe52",
+    "exe": "1138e3cd9a0c65fadfead680254806461c764745db6ee514f53b5c8e5e34aad5"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "float_math-debug": {
+   "row": "float_math",
+   "mode": "debug",
+   "base": {
+    "llvm": "72a48f79deec82675d6e365af0a0b93a9221acfa729c5f1f6b23bcaffd41db62",
+    "exe": "4d923e4ef5a7c127a480be83b5f31b1fb93ad9efdb83867aa2259053a7bf600c"
+   },
+   "new": {
+    "llvm": "72a48f79deec82675d6e365af0a0b93a9221acfa729c5f1f6b23bcaffd41db62",
+    "exe": "4d923e4ef5a7c127a480be83b5f31b1fb93ad9efdb83867aa2259053a7bf600c"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "float_math-release": {
+   "row": "float_math",
+   "mode": "release",
+   "base": {
+    "llvm": "b742fadbe42ae9be66a86046255db8acdda542845e2c3deed2fdd065af540545",
+    "exe": "ee519eebbaf4aea32645498bb4f5fe80382535c89599e542e3d2b0e76a1d2a97"
+   },
+   "new": {
+    "llvm": "b742fadbe42ae9be66a86046255db8acdda542845e2c3deed2fdd065af540545",
+    "exe": "ee519eebbaf4aea32645498bb4f5fe80382535c89599e542e3d2b0e76a1d2a97"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "call_direct-debug": {
+   "row": "call_direct",
+   "mode": "debug",
+   "base": {
+    "llvm": "bb8aaa4cb1951e326d0f5ba75d7a69ace723630ca56339e369800e0661eb23e9",
+    "exe": "3ef0bda50769d5d1a3f3aa71d970228eac4cbfc621733f748369cf56f5f69940"
+   },
+   "new": {
+    "llvm": "bb8aaa4cb1951e326d0f5ba75d7a69ace723630ca56339e369800e0661eb23e9",
+    "exe": "3ef0bda50769d5d1a3f3aa71d970228eac4cbfc621733f748369cf56f5f69940"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "call_direct-release": {
+   "row": "call_direct",
+   "mode": "release",
+   "base": {
+    "llvm": "db0f9e5ed1701defe0055e9e94662535754a0643e3f443a3763de95ea4045569",
+    "exe": "1c62ecb07a09ad133d377d7b03524e95d75a281e3218a52b40fc428eef4bc70c"
+   },
+   "new": {
+    "llvm": "db0f9e5ed1701defe0055e9e94662535754a0643e3f443a3763de95ea4045569",
+    "exe": "1c62ecb07a09ad133d377d7b03524e95d75a281e3218a52b40fc428eef4bc70c"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "branch_predictable-debug": {
+   "row": "branch_predictable",
+   "mode": "debug",
+   "base": {
+    "llvm": "80a4b8668346d9583fa434d5b806b08d91bc9265ed7b026e0df56d5f70d71a5e",
+    "exe": "86d3da5ff709b852325d36ccc4e7d8e6d2aa1775786a34c087cb3b38ff545c74"
+   },
+   "new": {
+    "llvm": "80a4b8668346d9583fa434d5b806b08d91bc9265ed7b026e0df56d5f70d71a5e",
+    "exe": "86d3da5ff709b852325d36ccc4e7d8e6d2aa1775786a34c087cb3b38ff545c74"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "branch_predictable-release": {
+   "row": "branch_predictable",
+   "mode": "release",
+   "base": {
+    "llvm": "5a3c02c5909c09ca322974d9839225b0946af850032ce4dd666dfe5ff8481cd7",
+    "exe": "7f18c4b1ee085526969f19b88cd442459cf03b7467f91e9e4da0a575b33d93b9"
+   },
+   "new": {
+    "llvm": "5a3c02c5909c09ca322974d9839225b0946af850032ce4dd666dfe5ff8481cd7",
+    "exe": "7f18c4b1ee085526969f19b88cd442459cf03b7467f91e9e4da0a575b33d93b9"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "branch_mixed-debug": {
+   "row": "branch_mixed",
+   "mode": "debug",
+   "base": {
+    "llvm": "f4b38e8dd2d4fbafaa86faf2c2190db0248c66e6dce5f5c255b0903bbc7757be",
+    "exe": "6c550edac76c07acf25375f98c815f3d81bfed417d67bed9385b795431c7b5ea"
+   },
+   "new": {
+    "llvm": "f4b38e8dd2d4fbafaa86faf2c2190db0248c66e6dce5f5c255b0903bbc7757be",
+    "exe": "6c550edac76c07acf25375f98c815f3d81bfed417d67bed9385b795431c7b5ea"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "branch_mixed-release": {
+   "row": "branch_mixed",
+   "mode": "release",
+   "base": {
+    "llvm": "8bc52140ba1f92b39bf7b1f363f0300344ccb8e6cd1a8037a78aa26a42e5e36a",
+    "exe": "0026685cd52e7c521a78ea6fc6ec2d383e50f6f31a1a3366f8a04ec4eedc4c62"
+   },
+   "new": {
+    "llvm": "8bc52140ba1f92b39bf7b1f363f0300344ccb8e6cd1a8037a78aa26a42e5e36a",
+    "exe": "0026685cd52e7c521a78ea6fc6ec2d383e50f6f31a1a3366f8a04ec4eedc4c62"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "binary_search-debug": {
+   "row": "binary_search",
+   "mode": "debug",
+   "base": {
+    "llvm": "5459e2d0d9e43095193db7e360ee49e32f1f30188996463405788cf4332c3413",
+    "exe": "35a28dc4f96dd37e3a4e3292db1dd9205651592e17ef144ef2f5f32606b82b03"
+   },
+   "new": {
+    "llvm": "5459e2d0d9e43095193db7e360ee49e32f1f30188996463405788cf4332c3413",
+    "exe": "35a28dc4f96dd37e3a4e3292db1dd9205651592e17ef144ef2f5f32606b82b03"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "binary_search-release": {
+   "row": "binary_search",
+   "mode": "release",
+   "base": {
+    "llvm": "d60d5411d3f50165920baf05b8c49262e3a35b69d4120de440504c4bbabe84f9",
+    "exe": "0bac841ac902dd5e9bd4d2b6a85085660af0944759dd44f7b12a6b5b66b00bbe"
+   },
+   "new": {
+    "llvm": "d60d5411d3f50165920baf05b8c49262e3a35b69d4120de440504c4bbabe84f9",
+    "exe": "0bac841ac902dd5e9bd4d2b6a85085660af0944759dd44f7b12a6b5b66b00bbe"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "word_count-debug": {
+   "row": "word_count",
+   "mode": "debug",
+   "base": {
+    "llvm": "2268b2cc1a9b03de79b707b4b0b1fdafaca64b30d78985a72aba58c694753e51",
+    "exe": "bee80c957897879e01e6e6ffa119589cfe6fd2614b92da13cef0dc7f5bb2abd0"
+   },
+   "new": {
+    "llvm": "2268b2cc1a9b03de79b707b4b0b1fdafaca64b30d78985a72aba58c694753e51",
+    "exe": "bee80c957897879e01e6e6ffa119589cfe6fd2614b92da13cef0dc7f5bb2abd0"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "word_count-release": {
+   "row": "word_count",
+   "mode": "release",
+   "base": {
+    "llvm": "09d1ee18c791011213cf2ad17cb81934b9230255b0ebc02758afe44fb2a5ee48",
+    "exe": "b3cebdfab13d0deed100a5ca84e1ebc240c258bc6490906e8ac28327c08e2752"
+   },
+   "new": {
+    "llvm": "09d1ee18c791011213cf2ad17cb81934b9230255b0ebc02758afe44fb2a5ee48",
+    "exe": "b3cebdfab13d0deed100a5ca84e1ebc240c258bc6490906e8ac28327c08e2752"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "csv_aggregate-debug": {
+   "row": "csv_aggregate",
+   "mode": "debug",
+   "base": {
+    "llvm": "3da9c086f6725ef43a54dbdadc635332304827405c21536cbba8a226d55b41db",
+    "exe": "70f0b60dc2b89a5ea85fa785e1630bf1c22750ce3fee32d6093fe43b903c6b13"
+   },
+   "new": {
+    "llvm": "3da9c086f6725ef43a54dbdadc635332304827405c21536cbba8a226d55b41db",
+    "exe": "70f0b60dc2b89a5ea85fa785e1630bf1c22750ce3fee32d6093fe43b903c6b13"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "csv_aggregate-release": {
+   "row": "csv_aggregate",
+   "mode": "release",
+   "base": {
+    "llvm": "8521b25a511b23af5fddb2550d8e79abeb92bb427ba6ed65e38b437669941505",
+    "exe": "d519d1ba0e4d8074c5799fd9c0235d7b6cca0fec342e8121c5c58e3fe9b0ebf5"
+   },
+   "new": {
+    "llvm": "8521b25a511b23af5fddb2550d8e79abeb92bb427ba6ed65e38b437669941505",
+    "exe": "d519d1ba0e4d8074c5799fd9c0235d7b6cca0fec342e8121c5c58e3fe9b0ebf5"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "json_transform-debug": {
+   "row": "json_transform",
+   "mode": "debug",
+   "base": {
+    "llvm": "273bc41299c10bb87eb18f927e3aab40eb1ce6aaff7fcbc69e6634b881a0ac02",
+    "exe": "1123ae8481f9b82a808755e89250fe62109b277e28a54cb1790e7d0a32d043d7"
+   },
+   "new": {
+    "llvm": "273bc41299c10bb87eb18f927e3aab40eb1ce6aaff7fcbc69e6634b881a0ac02",
+    "exe": "1123ae8481f9b82a808755e89250fe62109b277e28a54cb1790e7d0a32d043d7"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "json_transform-release": {
+   "row": "json_transform",
+   "mode": "release",
+   "base": {
+    "llvm": "768088a9f535e221397d3f4184900a19e22a90280baf23977218b7f8a61a0ff8",
+    "exe": "fbb96e3f648fc74319249e14bba0df132d39c2466356ebcb18af960cbf07d605"
+   },
+   "new": {
+    "llvm": "768088a9f535e221397d3f4184900a19e22a90280baf23977218b7f8a61a0ff8",
+    "exe": "fbb96e3f648fc74319249e14bba0df132d39c2466356ebcb18af960cbf07d605"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "packet_decode-debug": {
+   "row": "packet_decode",
+   "mode": "debug",
+   "base": {
+    "llvm": "b8b6f6880654c3ce62049eb4e1f6dfb871704df45ca495d6ea1bdb7d6b6a644a",
+    "exe": "f12236a3870d95198828aa692353474253cc4a1ff4c8ba4ded6cb128afe5452c"
+   },
+   "new": {
+    "llvm": "b8b6f6880654c3ce62049eb4e1f6dfb871704df45ca495d6ea1bdb7d6b6a644a",
+    "exe": "f12236a3870d95198828aa692353474253cc4a1ff4c8ba4ded6cb128afe5452c"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "packet_decode-release": {
+   "row": "packet_decode",
+   "mode": "release",
+   "base": {
+    "llvm": "c862bcb06b37ca67d20fe325a813767a2ee77059f8f696c862062b45fb44abb2",
+    "exe": "10094d8b4bc1e6b084aec749610feedf5161a22d359fef6701aa680a46c1eefd"
+   },
+   "new": {
+    "llvm": "c862bcb06b37ca67d20fe325a813767a2ee77059f8f696c862062b45fb44abb2",
+    "exe": "10094d8b4bc1e6b084aec749610feedf5161a22d359fef6701aa680a46c1eefd"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "lox_eval-debug": {
+   "row": "lox_eval",
+   "mode": "debug",
+   "base": {
+    "llvm": "4d6cc7373da922dc58ea3867585a3e75abe8b8567bfc515d8afdeb6e30108542",
+    "exe": "b850d22bc8d03d7375362f5827907c2400a2cbd8cd9749453ed80506a5614b2f"
+   },
+   "new": {
+    "llvm": "4d6cc7373da922dc58ea3867585a3e75abe8b8567bfc515d8afdeb6e30108542",
+    "exe": "b850d22bc8d03d7375362f5827907c2400a2cbd8cd9749453ed80506a5614b2f"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "lox_eval-release": {
+   "row": "lox_eval",
+   "mode": "release",
+   "base": {
+    "llvm": "60383d50af20f0ca02a2ad08ebe1c30114cc8967750ef57c21f99c83e40814f6",
+    "exe": "83f8a3a16f5a04b02294865a98bb558c3952a08979fa0c810faefc0d73d515a3"
+   },
+   "new": {
+    "llvm": "60383d50af20f0ca02a2ad08ebe1c30114cc8967750ef57c21f99c83e40814f6",
+    "exe": "83f8a3a16f5a04b02294865a98bb558c3952a08979fa0c810faefc0d73d515a3"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "tree_build_walk-debug": {
+   "row": "tree_build_walk",
+   "mode": "debug",
+   "base": {
+    "llvm": "03287a976f558dea3389438178859560eeb51df821f9ed6d26461660c12c8ac4",
+    "exe": "4967ce49e4c75bc9b05cbeaafe9d1c121bafaaeffcfc9fa832f3f60155c82716"
+   },
+   "new": {
+    "llvm": "03287a976f558dea3389438178859560eeb51df821f9ed6d26461660c12c8ac4",
+    "exe": "4967ce49e4c75bc9b05cbeaafe9d1c121bafaaeffcfc9fa832f3f60155c82716"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "tree_build_walk-release": {
+   "row": "tree_build_walk",
+   "mode": "release",
+   "base": {
+    "llvm": "ec7f195b7fcb153e0e57ac18c649f96e39222a200e85e6785e3086d46acdc0ce",
+    "exe": "cdc30c69a07393a08ba779431c2f874cb9b98bc015bcb7233d41a5281db9ceb8"
+   },
+   "new": {
+    "llvm": "ec7f195b7fcb153e0e57ac18c649f96e39222a200e85e6785e3086d46acdc0ce",
+    "exe": "cdc30c69a07393a08ba779431c2f874cb9b98bc015bcb7233d41a5281db9ceb8"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "record_pass-debug": {
+   "row": "record_pass",
+   "mode": "debug",
+   "base": {
+    "llvm": "a8eedfc3a1023dcfbbe59780fccb60937cf7c4902f0dba0f56d4b2a92851b603",
+    "exe": "eb9055eb26ff6a5d5c954dbc7d9088c8fe62f81e0bb5a8b1a494285457db213d"
+   },
+   "new": {
+    "llvm": "a8eedfc3a1023dcfbbe59780fccb60937cf7c4902f0dba0f56d4b2a92851b603",
+    "exe": "eb9055eb26ff6a5d5c954dbc7d9088c8fe62f81e0bb5a8b1a494285457db213d"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "record_pass-release": {
+   "row": "record_pass",
+   "mode": "release",
+   "base": {
+    "llvm": "c3396674b22c9e4715dae62959b5a3348c5c48edd56b75f2a407e16163818eb7",
+    "exe": "1bc19bd4ed54d257a328ce899b2ad7504257479648e6db174c29a870c8ee954a"
+   },
+   "new": {
+    "llvm": "c3396674b22c9e4715dae62959b5a3348c5c48edd56b75f2a407e16163818eb7",
+    "exe": "1bc19bd4ed54d257a328ce899b2ad7504257479648e6db174c29a870c8ee954a"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "grid_dp-debug": {
+   "row": "grid_dp",
+   "mode": "debug",
+   "base": {
+    "llvm": "dba6a25f2c1664adf7f59b47c7c5eacee3c7e18a0a50f37e895e2d078dd2a287",
+    "exe": "6e3f3719c1e387cc2327b33f2df463c79799813c3d85368e320bbcfb4992b8c9"
+   },
+   "new": {
+    "llvm": "dba6a25f2c1664adf7f59b47c7c5eacee3c7e18a0a50f37e895e2d078dd2a287",
+    "exe": "6e3f3719c1e387cc2327b33f2df463c79799813c3d85368e320bbcfb4992b8c9"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "grid_dp-release": {
+   "row": "grid_dp",
+   "mode": "release",
+   "base": {
+    "llvm": "98b49c20f5bd4dcbe83c04864a830486393daa5fe987029409b5bac51928b5db",
+    "exe": "d5fac794ba273a87841cf86d9ac7f3e1e0d5988b7d1ffe05fe47ec28539d5e90"
+   },
+   "new": {
+    "llvm": "98b49c20f5bd4dcbe83c04864a830486393daa5fe987029409b5bac51928b5db",
+    "exe": "d5fac794ba273a87841cf86d9ac7f3e1e0d5988b7d1ffe05fe47ec28539d5e90"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "union_find-debug": {
+   "row": "union_find",
+   "mode": "debug",
+   "base": {
+    "llvm": "1d512ab2ae90d81f8e26d75d385a433327c9ef55f885c667772691a1c01a61bf",
+    "exe": "3e9ae00455803737b769c81057b98cae56114d37c36644cb9802df379b9857fc"
+   },
+   "new": {
+    "llvm": "1d512ab2ae90d81f8e26d75d385a433327c9ef55f885c667772691a1c01a61bf",
+    "exe": "3e9ae00455803737b769c81057b98cae56114d37c36644cb9802df379b9857fc"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "union_find-release": {
+   "row": "union_find",
+   "mode": "release",
+   "base": {
+    "llvm": "e8522d157ed3882323b190c994018de1e34df97396f73e0d74610157e60c64a8",
+    "exe": "5a0026112756dd8737c81495d8cb98ee1191c75545924ed2153ae6ce09a5cad3"
+   },
+   "new": {
+    "llvm": "e8522d157ed3882323b190c994018de1e34df97396f73e0d74610157e60c64a8",
+    "exe": "5a0026112756dd8737c81495d8cb98ee1191c75545924ed2153ae6ce09a5cad3"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "float_format-debug": {
+   "row": "float_format",
+   "mode": "debug",
+   "base": {
+    "llvm": "15dbb7dd9256c83b41ca9ddcb748fd1999ecf6476584284d7f81c39ee4abaef2",
+    "exe": "9e175ad332637a2735ee675b3075ba262d251a7af624705b2ef088d6b0fb15de"
+   },
+   "new": {
+    "llvm": "15dbb7dd9256c83b41ca9ddcb748fd1999ecf6476584284d7f81c39ee4abaef2",
+    "exe": "9e175ad332637a2735ee675b3075ba262d251a7af624705b2ef088d6b0fb15de"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "float_format-release": {
+   "row": "float_format",
+   "mode": "release",
+   "base": {
+    "llvm": "44c75182c0cb6c0d668f2fe7824960c39f28963e4ef6ab60caef2cae88861087",
+    "exe": "fd20f8f00ab97c805acbbf274d7eabacc7fa9216997089e38d65555c943274f9"
+   },
+   "new": {
+    "llvm": "44c75182c0cb6c0d668f2fe7824960c39f28963e4ef6ab60caef2cae88861087",
+    "exe": "fd20f8f00ab97c805acbbf274d7eabacc7fa9216997089e38d65555c943274f9"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "buffer_write-debug": {
+   "row": "buffer_write",
+   "mode": "debug",
+   "base": {
+    "llvm": "2172b690ce4cf2c6f93b6bc1ef73ecd74da02c977805ac1ba07827db9b7c1e71",
+    "exe": "c63ea96eb7a0d99eeea541cbf1be39ae3d8ff06030df4bcffe0161ee10875395"
+   },
+   "new": {
+    "llvm": "2172b690ce4cf2c6f93b6bc1ef73ecd74da02c977805ac1ba07827db9b7c1e71",
+    "exe": "c63ea96eb7a0d99eeea541cbf1be39ae3d8ff06030df4bcffe0161ee10875395"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  },
+  "buffer_write-release": {
+   "row": "buffer_write",
+   "mode": "release",
+   "base": {
+    "llvm": "48aef5f8ad00e58ba9fdbc43e5812c1ea213ea1b4b3b588b0df46db0f845a67f",
+    "exe": "7f3c15aaa0bb750450575830380b6363fbf44c1e132e9ecf9e9338615d3d026f"
+   },
+   "new": {
+    "llvm": "48aef5f8ad00e58ba9fdbc43e5812c1ea213ea1b4b3b588b0df46db0f845a67f",
+    "exe": "7f3c15aaa0bb750450575830380b6363fbf44c1e132e9ecf9e9338615d3d026f"
+   },
+   "llvm_equal": true,
+   "exe_equal": true
+  }
+ }
+}

@@ -1,0 +1,33 @@
+{
+ "label": "run-eda-labstation+no-vendor-symbols-plain",
+ "command": [
+  "taskset",
+  "-c",
+  "12-19",
+  "perf",
+  "stat",
+  "-x,",
+  "-e",
+  "instructions:u",
+  "-o",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/perf/eda-labstation+no-vendor-symbols.csv",
+  "--",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/eda-plain",
+  "--model",
+  "golden/cases/labstation+no-vendor-symbols/model.sexp",
+  "--project-dir",
+  "golden/projects/designs",
+  "--out-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/eda-out/plain/labstation+no-vendor-symbols",
+  "--no-vendor-symbols"
+ ],
+ "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+ "env": {},
+ "seconds": 0.098,
+ "status": 0,
+ "stdout_sha256": "76e14168b6a1014841de9306154c35d4db384532f80e46314d1e87fa7b3852bf",
+ "stdout_bytes": 81,
+ "stderr_sha256": "30e3f231032b16130a8d17dee9f2da46405d81602c819235e6a63d4e423550a1",
+ "stderr_bytes": 381,
+ "stdout": "eda-sch: labstation: 24 sheets, 4 sidecars, 58 symbols (0 vendor), 390 instances\n"
+}

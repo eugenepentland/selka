@@ -1,0 +1,4 @@
+[I] export-kicad-sch: barracuda-base: 17 per-pin bypass-stub nets labelled as their base rail
+[W] export-kicad-sch: vendor symbol 'ARJM11D7-009-AB-EW2' does not draw 2 pad(s) the design uses — adding them as unit 2
+[W] export-kicad-sch: vendor symbol 'GSB1C41110SSHR' does not draw 2 pad(s) the design uses — adding them as unit 2
+[I] export-kicad-sch: barracuda-base: 23/45 components drawn from vendor symbols (138 libraries indexed)

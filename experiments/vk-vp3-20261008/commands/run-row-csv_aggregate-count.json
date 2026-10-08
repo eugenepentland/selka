@@ -1,0 +1,23 @@
+{
+ "label": "run-row-csv_aggregate-count",
+ "command": [
+  "taskset",
+  "-c",
+  "0,1,4-9,12-19",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/row-csv_aggregate-count",
+  "4096",
+  "40",
+  "7"
+ ],
+ "cwd": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3",
+ "env": {
+  "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/counts/row-csv_aggregate.json"
+ },
+ "seconds": 0.059,
+ "status": 0,
+ "stdout_sha256": "d5b55a8e2ab6de355cb1f6154b161c314483ebfd73006b57a022a61028138bdc",
+ "stdout_bytes": 19,
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_bytes": 0,
+ "stdout": "801808057 56113659\n"
+}

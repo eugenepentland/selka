@@ -1,0 +1,32 @@
+{
+ "label": "run-eda-poe-pd-flyback-tps23757-plain",
+ "command": [
+  "taskset",
+  "-c",
+  "12-19",
+  "perf",
+  "stat",
+  "-x,",
+  "-e",
+  "instructions:u",
+  "-o",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/perf/eda-poe-pd-flyback-tps23757.csv",
+  "--",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/eda-plain",
+  "--model",
+  "golden/cases/poe-pd-flyback-tps23757/model.sexp",
+  "--project-dir",
+  "golden/projects/designs",
+  "--out-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/eda-out/plain/poe-pd-flyback-tps23757"
+ ],
+ "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+ "env": {},
+ "seconds": 0.046,
+ "status": 0,
+ "stdout_sha256": "ba52824c447321d1028d05974e3878c6d598c388407a596c6eec9587f3370a39",
+ "stdout_bytes": 92,
+ "stderr_sha256": "46f25d3ea9c5a43c8f5ae7bd2feed96c1191a00ad3d2080df3cd502229670978",
+ "stderr_bytes": 360,
+ "stdout": "eda-sch: poe-pd-flyback-tps23757: 6 sheets, 4 sidecars, 18 symbols (9 vendor), 40 instances\n"
+}

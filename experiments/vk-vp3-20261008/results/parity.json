@@ -1,0 +1,62 @@
+{
+ "parity-nbody": {
+  "label": "parity-nbody",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 8365185522,
+  "seconds_count": 1.694,
+  "seconds_plain": 1.54,
+  "outputs": {},
+  "counts": true,
+  "program": "nbody",
+  "units": 5000000,
+  "unit": "steps",
+  "matches_expected": true
+ },
+ "parity-str_build": {
+  "label": "parity-str_build",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 1679182746,
+  "seconds_count": 0.175,
+  "seconds_plain": 0.244,
+  "outputs": {},
+  "counts": true,
+  "program": "str_build",
+  "units": 16000000,
+  "unit": "appends",
+  "matches_expected": true
+ },
+ "parity-matmul": {
+  "label": "parity-matmul",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 1312935378,
+  "seconds_count": 0.137,
+  "seconds_plain": 0.113,
+  "outputs": {},
+  "counts": true,
+  "program": "matmul",
+  "units": 125000000,
+  "unit": "multiply-adds",
+  "matches_expected": true
+ },
+ "parity-knucleotide": {
+  "label": "parity-knucleotide",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 2852740292,
+  "seconds_count": 0.221,
+  "seconds_plain": 0.373,
+  "outputs": {},
+  "counts": true,
+  "program": "knucleotide",
+  "units": 1000000,
+  "unit": "sequence bytes",
+  "matches_expected": true
+ }
+}

@@ -1,0 +1,33 @@
+{
+ "label": "run-eda-cyclops-analog+no-vendor-symbols-plain",
+ "command": [
+  "taskset",
+  "-c",
+  "12-19",
+  "perf",
+  "stat",
+  "-x,",
+  "-e",
+  "instructions:u",
+  "-o",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/perf/eda-cyclops-analog+no-vendor-symbols.csv",
+  "--",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/eda-plain",
+  "--model",
+  "golden/cases/cyclops-analog+no-vendor-symbols/model.sexp",
+  "--project-dir",
+  "golden/projects/designs",
+  "--out-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/eda-out/plain/cyclops-analog+no-vendor-symbols",
+  "--no-vendor-symbols"
+ ],
+ "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+ "env": {},
+ "seconds": 0.055,
+ "status": 0,
+ "stdout_sha256": "a2493daa619f6af5673733d08bc0dc7b6212ddd55917dc498eace74cc4c4009b",
+ "stdout_bytes": 85,
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_bytes": 0,
+ "stdout": "eda-sch: cyclops-analog: 18 sheets, 4 sidecars, 25 symbols (0 vendor), 168 instances\n"
+}

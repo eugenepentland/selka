@@ -1,0 +1,23 @@
+{
+ "label": "run-row-alloc_short-count",
+ "command": [
+  "taskset",
+  "-c",
+  "0,1,4-9,12-19",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/row-alloc_short-count",
+  "4096",
+  "1000",
+  "7"
+ ],
+ "cwd": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3",
+ "env": {
+  "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/counts/row-alloc_short.json"
+ },
+ "seconds": 0.012,
+ "status": 0,
+ "stdout_sha256": "990e068b5fe659a3c8a79ff331313ed7a52aad667ef17080c1ce2f8d3cf76201",
+ "stdout_bytes": 19,
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_bytes": 0,
+ "stdout": "869311713 11148445\n"
+}

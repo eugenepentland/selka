@@ -1,0 +1,23 @@
+{
+ "label": "run-row-lox_eval-count",
+ "command": [
+  "taskset",
+  "-c",
+  "0,1,4-9,12-19",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/row-lox_eval-count",
+  "4096",
+  "40",
+  "7"
+ ],
+ "cwd": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3",
+ "env": {
+  "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/counts/row-lox_eval.json"
+ },
+ "seconds": 0.018,
+ "status": 0,
+ "stdout_sha256": "3d5f1cafa23420cb52f801a4b2fd27a7ddad1a85707059ebedcc10acd20318ca",
+ "stdout_bytes": 18,
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_bytes": 0,
+ "stdout": "19955744 16994904\n"
+}
