@@ -147,13 +147,18 @@ hot path.
 
 ## Remaining limits
 
-1. **The unit-test suite builds every test program through the `mylang` binary.**
-   - About 1,200 programs, each run as `mylang run`, because the test root cannot import the
-     core module: `compiler.zig` would be in two modules.
-   - A warm unsharded run takes 475 s.
-   - A cold run after a compiler change takes tens of minutes unsharded, about 2 min across
-     the gate's shards.
-   - Batching the programs of one test file into one build is the obvious follow-up.
+1. **The unit-test suite builds every test program through the `mylang` binary** (addressed
+   after S5 by `1417c500` and `d3cbcdfe`).
+   - The test root cannot import the core module, because `compiler.zig` would be in two
+     modules, so each of the about 2,300 runs is a `mylang run`.
+   - The 475 s warm figure was measured at C1's merge, with 2,584 tests. On the exit source
+     the 1,338-test root took 129 s warm unsharded.
+   - Most of that was the Debug compiler's start: Zig's checking allocator recorded a stack
+     trace per allocation, and the first one parsed the unwind tables of the whole executable.
+     `mylang` now starts without the traces (MYLANG-START-1).
+   - Tests with many programs now run them as one parallel batch (NEW-CORE-S5-UNITS-BATCH-1).
+   - Unsharded `test-units` now takes 54 s warm and 99 s with every program compiled and
+     linked. `zig build test` takes 82 s.
 2. **Driver-case tests after an edit take 0.23 s against the old core's 0.040 s** (S4's limit,
    unchanged). The Lox tests column passes through the directory run. Keying receipts on
    checker fingerprints is the follow-up.
