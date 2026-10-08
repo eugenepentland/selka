@@ -3,6 +3,12 @@
 **Status:** the user accepted N1–N5 on 2026-10-05, as recommended in §4. N6 (arenas) is
 decided during S1. Nothing here is implemented yet.
 
+**Runtime decision (R1, the user, 2026-10-05): the new core keeps its own runtime.**
+- It grows S0's `src/core/runtime/core_rt.c`: 32-byte blocks with one saturating 32-bit count.
+- It never links the shared runtime, which has two counts, the GC and a QBE-shaped ABI.
+- The shared runtime's algorithms (text and UTF-8, dictionaries and sets, number
+  formatting and parsing, I/O and capabilities) are ported into it as S1–S3 need them.
+
 **Cache cleanup done the same day (DL-5):** the finished spike's 29 GB `.tmp` was removed.
 
 **Base:** `claude/runtime-levers-plan` (the campaign's `ac72a905` plus the runtime-levers plan
@@ -137,7 +143,7 @@ gate of its own, and test results keyed by code.
 
 ## 4. Decisions for the user
 
-All of N1–N5 were accepted on 2026-10-05. N6 is open until S1.
+All of N1–N5 were accepted on 2026-10-05. **N6 was decided on 2026-10-05: retire arenas** (Option B in `docs/design/new-core-s1.md` §11 on `claude/new-core-s1-20261005`). The new core treats `with arena()` as a plain block now. Removing arenas from the old core and the `mylang fix` migration are a later lane.
 
 | ID | Decision | Recommended | Why |
 |---|---|---|---|
@@ -146,7 +152,7 @@ All of N1–N5 were accepted on 2026-10-05. N6 is open until S1.
 | **N3** | Which front-end output the new core starts from | **`typed.Program`** (the typed tree) | Bytecode drops types on loads, stores and calls, and makes the ownership decision inside QBE emission. The typed tree has types, spans, mutability and ownership summaries per local. S0 confirms this choice by lowering three kernels. |
 | **N4** | What happens to the running Codex campaign | **Continue the language and runtime items** (WP-0 gate reporting, WP-4 memory budget, WP-5 one-count RC). **Finish in-flight WP-10 items, then stop new old-back-end performance work** (WP-1 policy work, WP-3 Stages A–C, WP-10c–e, and the proposed WP-11). | Both cores need L3 and one-count RC. Tuning the old back end is lost when it is replaced. |
 | **N5** | Debug builds and tests in the new core | **LLVM -O0 with per-function object caching.** No QBE in the new core. Revisit an in-process interpreter only if S1 measurements demand it. | One code generator means one set of semantics. Incremental caching hides most of LLVM -O0's cost; an interpreter would be a second semantics to keep in sync. |
-| **N6** | `with arena()` in the new core | **Decide in S1.** Either support it as a region allocator under RC, or retire it with a `mylang fix` migration. | It depends on the RC design. The Lox and EDA code use it. |
+| **N6** | `with arena()` in the new core | **Decide in S1.** Either support it as a region allocator under RC, or retire it with a `mylang fix` migration. | It depends on the RC design. *Correction, 2026-10-05:* the Lox port has 0 arena blocks and the EDA tree has no `.my` files. All 156 `tests/lang` blocks test the feature itself. **Decided: retire.** |
 
 ## 5. Architecture of the new core
 
@@ -169,8 +175,8 @@ source ─ lexer ─ parser ─ sema/effects ─► typed.Program      (reused f
 **Reused from today:**
 - lexer, parser, sema, effects and capabilities, `typed.Program`, the module front end with
   its `.myi` facts, diagnostics and the CLI (front end: 140 files, 48.6k lines);
-- the runtime library's collections, text, bytes and I/O C code (about 10k lines), once one-count RC
-  (WP-5) lands in it;
+- the runtime library's *algorithms* for collections, text, bytes and I/O (about 10k lines of C),
+  **ported** into the new core's own runtime (R1), not linked;
 - the stdlib `.my` sources;
 - `tests/lang` (1,579 tests) as the conformance suite.
 
@@ -217,6 +223,27 @@ Each stage has an exit check. The user decides go or stop at S0 and S2.
 | **S4 Projects** | Modules and `.myi`, incremental per-module builds, `mylang test` on projects, the Lox port, an EDA slice. | The Lox port and the EDA slice pass their tests under the new core, with build and test times at or below the old core's. |
 | **S5 Switch and delete** | Make the new core the default for release builds, then for debug builds. Delete QBE IL emission, the translator, the GC, two-count RC and the old ownership lowering. **Before the deletion (front-end decision FE7, 2026-10-06):** <ul><li>move module-mode `check` to the merged check plus the semantic cache (S4-2), because `module_compile.zig`, `module_interface_oracle.zig` and `incremental.zig` import `lower.zig` and `bytecode.zig`;</li><li>drop `fix_command.zig`'s imports of `qbe_build_io.zig` and `native_test_snapshot.zig`;</li><li>merge `mylang-core` into `mylang` (N2).</li></ul> The rest of the front-end cleanup waits for `docs/audits/frontend-implementation-plan-2026-10-06.md`. | The full gate on the new core alone, and module projects check without the old back end. A deletion count, and a compiler rebuild time below S0's baseline. |
 
+**Status, 2026-10-05 10:30 UTC.**
+
+- **S0** is complete.
+- **S1** is complete except two refusals parked as language questions for the user. Branch `claude/new-core-s1-20261005`:
+  - full `tests/lang`: 745 of 1,470 tests supported, all matching the old core at debug and release;
+  - leak and verify sweeps clean;
+  - all 14 S1 rows at or below Zig ReleaseSafe;
+  - coverage 2,269 of 3,509 functions.
+- **The S2 design** is `docs/design/new-core-s2.md`.
+- **S2 accepted by the user (2026-10-05).** It goes ahead with function values and fixed arrays. Hashing stays unseeded, short strings are deferred, the view ABI is evaluated only on a `string_split` gate miss, and O(n/32) non-ASCII indexing is accepted. A language change, `MUT-OVERLAP-RECEIVER-1`, is accepted too.
+- **Codex implements S2** from `docs/audits/new-core-s2-implementation-plan-2026-10-05.md` on branch `claude/new-core-s2-20261005`.
+- **Also accepted, 2026-10-05:**
+  - `MUT-REBIND-CALLER-1`: rebinding a `mut` list, dict or set parameter reaches the caller, as for records.
+  - D1 holds regardless of sharing.
+  - Both go into S2 packages S2-La/S2-Lb (old core first) and S2-I (new core).
+
+**Status, 2026-10-06.** S2 is complete (Codex, `codex/new-core-s2-integration` `26cd1b1d`).
+- **Review fixes** (`6121ed2d`, `c18d869c`, `9d6fa976`): three old-core text regressions closed, `test-core` sharded, small-dictionary probes inlined.
+- **S3 plan for Codex:** `docs/audits/new-core-s3-implementation-plan-2026-10-06.md` on that branch (`92590700`).
+- **New S3 rule:** no row may be slower than 1.10× the old core. **D2** (views cannot be stored) is applied by S3-L.
+
 **Overfitting guard.** Benchmark-first growth admitted 0 of 143 real loops in the spike. From
 S1 on, every stage reports the coverage sweep over `examples/`, `bench/`, the Lox port and
 EDA sources (functions accepted, refusal reasons), next to the benchmark rows. Grow the
@@ -255,8 +282,8 @@ S0 measures these first; the targets below are then the budget each stage must h
 - **`typed.Program` may lack facts that `lower.zig` (909 lines) and `prelude_builtins.zig`
   (908) add while desugaring:** the `for` forms, `sum`, `zip`, `enumerate`. The new core may
   need to reuse or port that desugaring. S0 checks this.
-- **The shared runtime library sits on both cores' paths.** One-count RC (WP-5) has to land
-  there, or the new core needs its own RC runtime. Decide in S1.
+- **Runtime: decided, R1.** The new core has its own runtime, so porting text, Unicode,
+  dictionary and I/O algorithms is S1–S3 work. It is no longer coupled to WP-5.
 - **LLVM -O0 debug builds** cost 1–4.5 s of code generation per program cold, against QBE's
   0.3–1 s. Per-function caching must keep the edit-and-test loop fast; S1 measures it.
 
