@@ -152,12 +152,12 @@ test "localReplay invalidates provider edits and explicit expectations in succes
     try verdict(changed.report, "app::test_dependency", "failed");
     try context.write("app.cases.json", "{\"missing::test_unknown\":{}}");
     const unknown = try context.run("app.my", &.{});
-    try expectStatus(context, unknown, 1);
+    try expectStatus(context, unknown, 2);
     try std.testing.expect(std.mem.indexOf(u8, unknown.stderr, "UnknownTestCase") != null);
     const replacement = try std.json.Stringify.valueAlloc(a, .{ .@"app::test_dependency" = .{ .providers = .{ .@"app.my" = project_source } } }, .{});
     try context.write("app.cases.json", replacement);
     const entry_override = try context.run("app.my", &.{});
-    try expectStatus(context, entry_override, 1);
+    try expectStatus(context, entry_override, 2);
     try std.testing.expect(std.mem.indexOf(u8, entry_override.stderr, "invalid test provider dependencies") != null);
 }
 
@@ -199,12 +199,35 @@ test "configuredCases require canonical discovered names and never ignore an exp
     try context.write("plain.my", "def test_value() -> bool:\n    return True\n");
     try context.write("plain.cases.json", "{\"test_value\":{\"expected\":false}}");
     const alias = try context.run("plain.my", &.{});
-    try expectStatus(context, alias, 1);
+    try expectStatus(context, alias, 2);
     try std.testing.expect(std.mem.indexOf(u8, alias.stderr, "UnknownTestCase") != null);
     try context.write("plain.cases.json", "{\"plain::test_value\":{\"expected\":false}}");
     const canonical = try context.run("plain.my", &.{});
     try expectStatus(context, canonical, 1);
     try verdict(canonical.report, "plain::test_value", "failed");
+}
+
+// spec: NEW-CORE-S5-TEST-STATUS-1
+test "a run whose selected tests were all skipped exits 3 and an invalid cases file exits 2, in a file or a directory" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const a = arena.allocator();
+    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
+    try context.write("skipped_test.my", "public def test_later() -> bool:\n    return True\n");
+    try context.write("skipped_test.cases.json", "{\"skipped_test::test_later\":{\"skip\":\"not yet\"}}");
+    const skipped = try context.run("skipped_test.my", &.{});
+    try expectStatus(context, skipped, 3);
+    try verdict(skipped.report, "skipped_test::test_later", "skipped");
+    try expectStatus(context, try context.run(".", &.{}), 3);
+    try context.write("passing_test.my", "public def test_now() -> bool:\n    return True\n");
+    try expectStatus(context, try context.run(".", &.{}), 0);
+    try context.write("skipped_test.cases.json", "{\"skipped_test::test_later\":{\"bogus\":1}}");
+    const invalid = try context.run("skipped_test.my", &.{});
+    try expectStatus(context, invalid, 2);
+    try std.testing.expect(std.mem.indexOf(u8, invalid.stderr, "InvalidTestCases") != null);
+    try expectStatus(context, try context.run(".", &.{}), 2);
 }
 
 // spec-case: NEW-CORE-S4-PROJECT-1

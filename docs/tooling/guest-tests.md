@@ -63,10 +63,10 @@ Exit status:
 
 | Status | When |
 | --- | --- |
-| 0 | every selected test passed, was replayed or was skipped by its cases file |
-| 1 | a test failed or trapped, the project does not check, or the cases file or a provider fixture is invalid |
-| 2 | a usage error, an unreadable entry, a `mylang.json` that does not load, or a frame budget the byte ceiling cannot back |
-| 3 | nothing was selected (a filter or `--affected` that matches nothing), or the project's import policy denies an import |
+| 0 | every selected test passed or was replayed, with at least one not skipped |
+| 1 | a test failed or trapped, or the project does not check |
+| 2 | a usage error, an unreadable entry, a `mylang.json` that does not load, an invalid cases file or provider fixture, or a frame budget the byte ceiling cannot back |
+| 3 | nothing was selected (a filter or `--affected` that matches nothing), every selected test was skipped by its cases file, or the project's import policy denies an import |
 
 ```console
 $ mylang test examples/testing/main.my
@@ -431,8 +431,9 @@ child's loaded `sources`; one that no child loaded fails the run as
 `test-declaring source was not loaded by any test program`, so a test file can
 fail a run but never silently drop out of one. A source, configuration or
 toolchain change during the run fails it with `SourceChanged`. The exit status
-is that of the merged listing: 1 if any line failed, 3 if nothing was selected,
-0 otherwise. `--cases` is refused for a directory run (status 2), because its
+is 2 if any child failed to set up (status 2), else that of the merged listing:
+1 if any line failed, 3 if nothing was selected or every selected test was
+skipped, 0 otherwise. `--cases` is refused for a directory run (status 2), because its
 keys name the tests of one project; each entry's own
 [cases file](#per-entry-cases-files) applies to that entry instead.
 
@@ -669,9 +670,9 @@ single-file run of the same entry sees the same cases. An explicit `--cases FILE
 still takes precedence for a single entry. A cases file is a JSON object keyed
 by qualified test name; each entry may carry `arguments` (typed JSON values by
 parameter name), `expected`, `skip` (a reason string) and `providers`. An
-unknown test name or field fails the run with `error: test cases: ...` and
-status 1; a `skip`ped test is reported as `skipped NAME: REASON` and does not
-fail the run.
+unknown test name or field stops the run with `error: test cases: ...` and
+status 2; a `skip`ped test is reported as `skipped NAME: REASON` and does not
+fail the run, though a run whose every selected test was skipped exits 3.
 
 ```console
 $ cat scaled_test.cases.json

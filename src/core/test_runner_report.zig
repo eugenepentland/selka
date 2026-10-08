@@ -32,11 +32,15 @@ pub const Verdict = struct {
 /// declarations its providers replace, the providers' sources, and the run's inputs.
 pub const Identity = struct { contract: []const u8, provider: []const u8, source: []const u8 };
 
-/// The process exit status for a run: 1 when any test failed, 3 when none was selected, else 0.
+/// The process exit status for a run: 1 when any test failed, 3 when none was selected
+/// or every selected test was skipped (not a green run, as the old core), else 0.
 pub fn exitStatus(verdicts: []const Verdict) u8 {
-    if (verdicts.len == 0) return 3;
-    for (verdicts) |verdict| if (verdict.status == .failed) return 1;
-    return 0;
+    var ran = false;
+    for (verdicts) |verdict| {
+        if (verdict.status == .failed) return 1;
+        ran = ran or verdict.status != .skipped;
+    }
+    return if (ran) 0 else 3;
 }
 
 fn count(verdicts: []const Verdict, status: Status) usize {

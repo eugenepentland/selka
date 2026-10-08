@@ -57,7 +57,8 @@ const ExecutionResources = struct { arena: std.mem.Allocator, backing: std.mem.A
 const SelectionContext = struct { receipt: receipt.Context, base: [32]u8 };
 
 /// Check, discover, build and run the tests of `options.path`, print the report, and return
-/// the process exit status: 0 ok, 1 a test failed or the file does not check, 2 unreadable, 3 nothing selected.
+/// the process exit status: 0 ok, 1 a test failed or the file does not check, 2 unreadable
+/// or an invalid cases file or provider fixture, 3 nothing selected or every selected test skipped.
 pub fn run(init: std.process.Init, requested: Options) Error!u8 {
     if (directory_runner.selected(init.io, requested.path)) return directory_runner.run(init, requested);
     var options = requested;
@@ -71,7 +72,8 @@ pub fn run(init: std.process.Init, requested: Options) Error!u8 {
     };
     // A malformed byte ceiling or a frame budget it cannot back is refused like a usage error.
     if (!try applyLimits(init, &options, located)) return 2;
-    const configured_cases = try configuredCases(init, &options, located) orelse return 1;
+    // An invalid cases file or provider fixture is a setup failure, status 2 (the old core's).
+    const configured_cases = try configuredCases(init, &options, located) orelse return 2;
     options.controls.cases = configured_cases.path;
     if (try cachedReplay(init, options, located, configured_cases.bytes)) |cached| {
         try writeAll(init, std.Io.File.stdout(), cached);
@@ -118,7 +120,7 @@ pub fn run(init: std.process.Init, requested: Options) Error!u8 {
     case_settings.validate(configured_cases, all_cases) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(allocator, "error: test cases: {s}\n", .{@errorName(err)}));
-        return 1;
+        return 2;
     };
     const selection = switch (try chooseCases(init, options, located, checked, all_cases)) {
         .kept => |kept| kept,
@@ -127,7 +129,7 @@ pub fn run(init: std.process.Init, requested: Options) Error!u8 {
     const groups = case_settings.groups(allocator, configured_cases, selection) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(allocator, "error: test providers: {s}\n", .{@errorName(err)}));
-        return 1;
+        return 2;
     };
     var collected: Collected = .{ .before = before };
     try addSources(allocator, &collected.sources, context, &session);
@@ -271,13 +273,13 @@ fn validateProviders(init: std.process.Init, options: Options, located: project_
     production.declare(a, located.name, &problems) catch |err| return checkFailure(init, err, problems.items, 1);
     for (sets) |set| {
         case_settings.available(set, &production, located.name) catch |err|
-            return checkFailure(init, err, "error: InvalidTestProviders: invalid test provider dependencies: a provider may replace only a module the entry imports, never the entry\n", 1);
+            return checkFailure(init, err, "error: InvalidTestProviders: invalid test provider dependencies: a provider may replace only a module the entry imports, never the entry\n", 2);
         var replacement = frontend.Session.init(init.gpa, init.io, located.root);
         defer replacement.deinit();
         located.configure(&replacement);
         try replacement.enableCache(init.gpa, options.build.cache);
         entry_text.apply(&replacement, try std.mem.concat(a, frontend.Provider, &.{ set, entry_text.overlay }));
-        replacement.declare(a, located.name, &problems) catch |err| return checkFailure(init, err, problems.items, 1);
+        replacement.declare(a, located.name, &problems) catch |err| return checkFailure(init, err, problems.items, 2);
         for (set) |provider| if (try keeps(a, &production, &replacement, provider.path)) |refused| return checkFailure(init, error.IncompatibleProvider, refused, 2);
     }
     return null;
@@ -325,7 +327,7 @@ fn failWith(init: std.process.Init, text: []const u8, status: u8) Error!u8 {
 
 fn casesFailure(init: std.process.Init, err: case_settings.Error) Error!u8 {
     if (err == error.OutOfMemory) return error.OutOfMemory;
-    return failWith(init, try std.fmt.allocPrint(init.arena.allocator(), "error: test providers: {s}\n", .{@errorName(err)}), 1);
+    return failWith(init, try std.fmt.allocPrint(init.arena.allocator(), "error: test providers: {s}\n", .{@errorName(err)}), 2);
 }
 
 /// The sources a check read, as receipts record them. A header-less test entry is
