@@ -64,9 +64,9 @@ test "a record over four words is a pointer to a stack slot: never an LLVM aggre
     try std.testing.expect(!contains(llvm, "extractvalue { i64, i64, i64, i64, i64, i64 }"));
     const widen = functionText(llvm, "@\"my.widen\"");
     try std.testing.expect(contains(widen, "ptr noalias sret([48 x i8]) align 8 %ret, ptr noalias readonly align 8 %p0, i64 %p1"));
-    // The first write copies the parameter (its caller's memory is read-only); the second writes
-    // that copy where it is, and the return copies it into the caller's destination.
-    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, widen, "@llvm.memcpy"));
+    // The first write copies the parameter (its caller's memory is read-only) into the caller's
+    // destination; the second writes that copy where it is, and the return copies nothing.
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, widen, "@llvm.memcpy"));
     // Built in place in the return slot: the stores go to `%ret`, with no copy.
     const make = functionText(llvm, "@\"my.mk\"");
     try std.testing.expect(!contains(make, "memcpy"));

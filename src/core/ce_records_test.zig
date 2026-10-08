@@ -2,8 +2,10 @@
 //! §4.5): records and unions over four words share homes across phis and in-place updates,
 //! are read where they lie, and cross calls in-out; none of it may be observable.
 const std = @import("std");
+const ir = @import("ir.zig");
 const support = @import("test_support.zig");
 const options = @import("core_test_options");
+const Hand = support.Hand;
 
 fn contains(text: []const u8, needle: []const u8) bool {
     return std.mem.indexOf(u8, text, needle) != null;
@@ -173,6 +175,12 @@ test "a record carried around a loop with break and continue lives in one home: 
     const llvm = try support.llvmText(arena.allocator(), cursor);
     // Every join of the updated record shares the home it was built in.
     try std.testing.expectEqual(@as(usize, 0), copies(functionText(llvm, "@\"my.wander\"")));
+    const walk = functionText(llvm, "@\"my.walk\"");
+    // Built once in its home, then every join, the call's in-out update and the field store reuse it.
+    try std.testing.expectEqual(@as(usize, 0), copies(walk));
+    try std.testing.expect(!contains(walk, "phi ptr"));
+    const release = try support.releaseLlvmText(arena.allocator(), cursor);
+    try std.testing.expectEqual(@as(usize, 0), copies(functionText(release, "@\"my.walk\"")));
 }
 
 // spec: NEW-CORE-CE-RECORDS-2
@@ -194,15 +202,95 @@ test "a record whose old value has no later reader is updated in place; a snapsh
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const llvm = try support.llvmText(arena.allocator(), cursor);
-    // The read-only parameter is copied once and both stores write that copy where it is; the
-    // return copies it into the caller's destination.
+    // The read-only parameter is copied once, into the caller's destination, and both stores go there.
     const bumped = functionText(llvm, "@\"my.bumped\"");
-    try std.testing.expectEqual(@as(usize, 2), copies(bumped));
+    try std.testing.expectEqual(@as(usize, 1), copies(bumped));
+    try std.testing.expect(contains(bumped, "@llvm.memcpy.p0.p0.i64(ptr %v"));
+    try std.testing.expect(contains(bumped, "getelementptr inbounds i8, ptr %ret, i64 0\n"));
     // `old` is read after the store, so the store writes a copy.
     const kept = functionText(llvm, "@\"my.kept\"");
     try std.testing.expectEqual(@as(usize, 1), copies(kept));
     // `wb = it.rt; ...; it.rt = wb`: the write-back's value is built in the field itself.
     try std.testing.expectEqual(@as(usize, 0), copies(functionText(llvm, "@\"my.write_backs\"")));
+}
+
+// spec: NEW-CORE-CE-RECORDS-4
+test "a mut record crosses a call in-out: one writable pointer, no sret, no copy in or out" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const llvm = try support.llvmText(arena.allocator(), cursor);
+    const advance = functionText(llvm, "@\"my.advance\"");
+    try std.testing.expect(contains(advance, "define internal fastcc void @\"my.advance\"(ptr %p0, ptr noalias align 8 %p1)"));
+    try std.testing.expectEqual(@as(usize, 0), copies(advance));
+    // A read-only argument that reads the `mut` record sees it from before the call: the
+    // in-out argument goes in a copy, and the caller reads the result from there.
+    const overlapping = functionText(llvm, "@\"my.overlapping\"");
+    try std.testing.expectEqual(@as(usize, 1), copies(overlapping));
+    const overlap = functionText(llvm, "@\"my.overlap\"");
+    try std.testing.expect(contains(overlap, "ptr noalias sret([56 x i8]) align 8 %ret, ptr noalias align 8 %p0, ptr noalias readonly align 8 %p1, { i64, i64, i64 } %p2)"));
+    try std.testing.expectEqual(@as(usize, 0), copies(overlap));
+    // A write-back through an in-out call passes the field itself.
+    const pushes = functionText(llvm, "@\"my.pushes\"");
+    try std.testing.expectEqual(@as(usize, 0), copies(pushes));
+    try std.testing.expect(contains(pushes, "call fastcc void @\"my.push\"(ptr %v"));
+}
+
+// spec-case: NEW-CORE-CE-RECORDS-4
+test "a call's result record read whole gets its in-out final values copied in after the call" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var m = try completedProgram(a);
+    const debug = try support.runOwned(a, &m, .{});
+    try std.testing.expectEqual(@as(u8, 0), debug.status);
+    try std.testing.expectEqualStrings("8 80 16 16\n", debug.stdout);
+    try std.testing.expectEqualStrings("", debug.stderr);
+    const main_text = functionText(debug.llvm, "@\"my.main\"");
+    try std.testing.expect(contains(main_text, "call fastcc void @\"my.bump\"(ptr sret([56 x i8]) align 8"));
+    try std.testing.expect(contains(functionText(debug.llvm, "@\"my.bump\""), "ptr noalias align 8 %p0, i64 %p1"));
+    var again = try completedProgram(a);
+    const release = try support.runOwned(a, &again, .{ .release = true });
+    try std.testing.expectEqualStrings(debug.stdout, release.stdout);
+}
+
+/// `bump(w: mut Wide, k) -> {i64, Wide}` called twice: once with its result pushed whole onto
+/// a list, once with the final value read out of the result twice. Both need the result record
+/// completed with the final value the callee wrote in place.
+fn completedProgram(a: std.mem.Allocator) !ir.Module {
+    var m: ir.Module = .{};
+    const wide = try m.intern(a, .{ .record = &.{ .i64, .i64, .i64, .i64, .i64, .i64 } });
+    const both = try m.intern(a, .{ .record = &.{ .i64, wide } });
+    const list = try m.intern(a, .{ .list = both });
+    var target = try Hand.init(a, &m, "bump", .{ .params = try a.dupe(ir.Type, &.{ wide, .i64 }), .ret = both, .owned = 1 });
+    const first = try target.emit(.{ .op = .record_get, .ty = .i64, .a = try target.param(0), .data = 0 });
+    const sum = try target.emit(.{ .op = .add, .ty = .i64, .a = first, .b = try target.param(1), .check = .exact });
+    const updated = try target.emit(.{ .op = .record_set, .ty = wide, .a = try target.param(0), .b = sum, .data = 0 });
+    const tens = try target.emit(.{ .op = .mul, .ty = .i64, .a = sum, .b = try target.int(.i64, 10), .check = .exact });
+    const result = try target.emit(.{ .op = .record_make, .ty = both, .data = try target.extra(&.{ tens, updated }) });
+    _ = try target.emit(.{ .op = .ret, .ty = .void, .a = result });
+    _ = try target.finish();
+    m.entry = 1;
+    var h = try Hand.init(a, &m, "main", .{ .params = &.{.cap}, .ret = .i64 });
+    const one = try h.int(.i64, 1);
+    const initial = try h.emit(.{ .op = .record_make, .ty = wide, .data = try h.extra(&.{ one, one, one, one, one, one }) });
+    const called = try h.emit(.{ .op = .call, .ty = both, .a = @fromBackingInt(0), .data = try h.extra(&.{ initial, try h.int(.i64, 7) }) });
+    const container = try h.emit(.{ .op = .list_new, .ty = list, .a = try h.int(.u64, 1) });
+    const pushed = try h.emit(.{ .op = .list_push, .ty = list, .a = container, .b = called });
+    const element = try h.emit(.{ .op = .list_get, .ty = both, .a = pushed, .b = try h.int(.i64, 0), .check = .exact });
+    const inner = try h.emit(.{ .op = .record_get, .ty = wide, .a = element, .data = 1 });
+    const field = try h.emit(.{ .op = .record_get, .ty = .i64, .a = inner, .data = 0 });
+    const declared = try h.emit(.{ .op = .record_get, .ty = .i64, .a = called, .data = 0 });
+    const second = try h.emit(.{ .op = .record_make, .ty = wide, .data = try h.extra(&.{ try h.int(.i64, 1), one, one, one, one, one }) });
+    const again = try h.emit(.{ .op = .call, .ty = both, .a = @fromBackingInt(0), .data = try h.extra(&.{ second, try h.int(.i64, 7) }) });
+    const read_once = try h.emit(.{ .op = .record_get, .ty = wide, .a = again, .data = 1 });
+    const read_twice = try h.emit(.{ .op = .record_get, .ty = wide, .a = again, .data = 1 });
+    const left = try h.emit(.{ .op = .record_get, .ty = .i64, .a = read_once, .data = 0 });
+    const right = try h.emit(.{ .op = .record_get, .ty = .i64, .a = read_twice, .data = 0 });
+    const doubled = try h.emit(.{ .op = .add, .ty = .i64, .a = left, .b = right, .check = .exact });
+    try h.printValues(try h.param(0), &.{ field, declared, doubled, doubled });
+    _ = try h.emit(.{ .op = .ret, .ty = .void, .a = try h.int(.i64, 0) });
+    _ = try h.finish();
+    return m;
 }
 
 const fixture_expected =
