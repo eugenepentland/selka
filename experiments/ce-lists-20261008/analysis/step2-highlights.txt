@@ -1,0 +1,9 @@
+nbody P3+P4 bytes per step: 12600.0002128 -> 0.000112
+lox tree instantiation bytes N/2 -> N (ratio): (43926465296, 87850608988, 2.0) -> (4530876024, 9057691000, 1.999)
+lox tree instantiation P9 bytes N/2 -> N (ratio): (39330156232, 78659995372, 2.0) -> (3942080, 7622080, 1.934)
+lox vm instantiation bytes N/2 -> N (ratio): (1257482976, 4528180800, 3.601) -> (231145448, 459393672, 1.987)
+lox vm instantiation P9 bytes N/2 -> N (ratio): (1012006264, 4039585464, 3.992) -> (371304, 422504, 1.138)
+eda rds3+flat bytes moved: 3673563754 -> 3424678664
+eda rds3+flat overlaps_of bytes: 1340596408 -> 1340596408
+eda overlaps_of bytes, 34 designs: 2768343616 -> 2798941440
+str_build out-of-line buffer appends: 16000000 -> 16000000

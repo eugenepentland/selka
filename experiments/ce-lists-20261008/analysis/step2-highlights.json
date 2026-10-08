@@ -1,0 +1,70 @@
+{
+ "nbody P3+P4 bytes per step": {
+  "vp3": 12600.0002128,
+  "step2": 0.000112
+ },
+ "lox tree instantiation bytes N/2 -> N (ratio)": {
+  "vp3": [
+   43926465296,
+   87850608988,
+   2.0
+  ],
+  "step2": [
+   4530876024,
+   9057691000,
+   1.999
+  ]
+ },
+ "lox tree instantiation P9 bytes N/2 -> N (ratio)": {
+  "vp3": [
+   39330156232,
+   78659995372,
+   2.0
+  ],
+  "step2": [
+   3942080,
+   7622080,
+   1.934
+  ]
+ },
+ "lox vm instantiation bytes N/2 -> N (ratio)": {
+  "vp3": [
+   1257482976,
+   4528180800,
+   3.601
+  ],
+  "step2": [
+   231145448,
+   459393672,
+   1.987
+  ]
+ },
+ "lox vm instantiation P9 bytes N/2 -> N (ratio)": {
+  "vp3": [
+   1012006264,
+   4039585464,
+   3.992
+  ],
+  "step2": [
+   371304,
+   422504,
+   1.138
+  ]
+ },
+ "eda rds3+flat bytes moved": {
+  "vp3": 3673563754,
+  "step2": 3424678664
+ },
+ "eda rds3+flat overlaps_of bytes": {
+  "vp3": 1340596408,
+  "step2": 1340596408
+ },
+ "eda overlaps_of bytes, 34 designs": {
+  "vp3": 2768343616,
+  "step2": 2798941440
+ },
+ "str_build out-of-line buffer appends": {
+  "vp3": 16000000,
+  "step2": 16000000
+ }
+}

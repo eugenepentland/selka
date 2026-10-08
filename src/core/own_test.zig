@@ -653,11 +653,15 @@ test "a mut record's field updated on one arm of a branch, or by a byte_buffer a
     try std.testing.expect(contains(put, "is_unique"));
     try std.testing.expectEqual(std.mem.count(u8, put, "is_unique"), std.mem.count(u8, put, "list_copy"));
     try std.testing.expect(!contains(put, "retain"));
-    // A buffer append is one call that takes the buffer over; the runtime tests its count.
-    for ([_][]const u8{ "put_byte", "put_range" }) |name| {
-        const text = functionIr(debug, name);
-        try std.testing.expect(!contains(text, "retain") and !contains(text, "buffer_copy"));
-    }
+    // A byte append is one call that takes the buffer over; the runtime tests its count.
+    const byte = functionIr(debug, "put_byte");
+    try std.testing.expect(!contains(byte, "retain") and !contains(byte, "buffer_copy"));
+    // A range append is an update that takes the buffer over: its only copy is a count
+    // test's copy arm (NEW-CORE-CE-LISTS-6).
+    const range = functionIr(debug, "put_range");
+    try std.testing.expect(!contains(range, "retain"));
+    try std.testing.expect(contains(range, "buffer_append"));
+    try std.testing.expectEqual(std.mem.count(u8, range, "is_unique"), std.mem.count(u8, range, "buffer_copy"));
 }
 
 const field_take =

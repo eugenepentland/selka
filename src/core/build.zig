@@ -14,6 +14,7 @@ const Field = @FieldType(@FieldType(typed.Node, "data"), "field");
 const BufferOperation = @FieldType(@FieldType(typed.Node, "data"), "buffer_operation");
 const ir = @import("ir.zig");
 const fuse = @import("fuse.zig");
+const slices = @import("slices.zig");
 const flags = @import("flags.zig");
 const fuse_dict = @import("fuse_dict.zig");
 const build_dict = @import("build_dict.zig");
@@ -96,6 +97,7 @@ fn buildRootsInput(allocator: std.mem.Allocator, roots: []const typed.FunctionId
     for (mb.module.functions.items) |*function| {
         if (function.signature.linkage == .internal) {
             _ = try fuse.projections(allocator, function, &mb.module);
+            _ = try slices.loops(allocator, &mb.module, function);
             _ = try fuse_text.cursors(allocator, &mb.module, function);
             _ = try build_fn.specialize(allocator, function);
             _ = try fuse_dict.probes(allocator, function);

@@ -2,6 +2,7 @@
 const std = @import("std");
 const ir = @import("ir.zig");
 const flags = @import("flags.zig");
+const buffers = @import("buffers.zig");
 const byte_index = @import("byte_index.zig");
 
 /// Byte emission has the LLVM emitter's allocation/unsupported failures.
@@ -80,14 +81,88 @@ pub fn instruction(context: anytype, out: anytype, name: []const u8, inst: ir.In
             try context.trapIf(out, empty, try context.site(.list_empty, inst, "pop"), "0", len);
             try out.print(a, "  {s} = call ptr @myl_core_buffer_pop(ptr {s})\n", .{ name, try context.value(inst.a) });
         },
+        .buffer_append => try append(@TypeOf(context), context, out, .{ .name = name, .inst = inst }),
         else => try context.unsupported(out, name, inst),
     }
+}
+
+/// `buffer_append` (NEW-CORE-CE-LISTS-6): the buffer is unique here (ownership tested or
+/// copied it), so a non-empty range inside the source that fits the buffer's room is
+/// copied in place and the length raised; anything else (growth, an empty or invalid
+/// range) goes to the runtime's checked append, which grows the buffer or appends nothing.
+fn append(comptime Context: type, context: Context, out: *std.ArrayList(u8), site: Append) Error!void {
+    const a = context.a();
+    const name = site.name;
+    const inst = site.inst;
+    const range = context.function.operands(inst.data);
+    const buffer = try context.value(inst.a);
+    const source = try context.value(inst.b);
+    const start = try context.value(range[0]);
+    const end = try context.value(range[1]);
+    try declare(Context, context, buffers.append_symbol, "ptr, ptr, i64, i64");
+    const len = try header(Context, context, out, .{ .block = buffer, .offset = 8 });
+    const cap = try header(Context, context, out, .{ .block = buffer, .offset = 16 });
+    const source_len = try header(Context, context, out, .{ .block = source, .offset = 8 });
+    const count = try context.fresh("%apn");
+    const room = try context.fresh("%apr");
+    try out.print(a, "  {s} = sub i64 {s}, {s}\n  {s} = sub i64 {s}, {s}\n", .{ count, end, start, room, cap.value, len.value });
+    // Non-empty, starting inside the source, ending inside it, and fitting the room.
+    const tests = [_][4][]const u8{
+        .{ "sgt", count, "0", "" },
+        .{ "sge", start, "0", "" },
+        .{ "sle", end, source_len.value, "" },
+        .{ "sle", count, room, "" },
+    };
+    var fast_test: []const u8 = "true";
+    for (tests) |t| {
+        const holds = try context.fresh("%apk");
+        const both = try context.fresh("%apk");
+        try out.print(a, "  {s} = icmp {s} i64 {s}, {s}\n  {s} = and i1 {s}, {s}\n", .{ holds, t[0], t[1], t[2], both, fast_test, holds });
+        fast_test = both;
+    }
+    const fast = try context.fresh("append.fast");
+    const slow = try context.fresh("append.slow");
+    const join = try context.fresh(context.label);
+    try out.print(a, "  br i1 {s}, label %{s}, label %{s}, !prof !10\n{s}:\n", .{ fast_test, fast, slow, fast });
+    const to = try context.fresh("%apd");
+    const from = try context.fresh("%apf");
+    const grown = try context.fresh("%apg");
+    try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n  {s}.at = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ to, buffer, to, to, len.value });
+    try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n  {s}.at = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ from, source, from, from, start });
+    try out.print(a, "  call void @llvm.memmove.p0.p0.i64(ptr {s}.at, ptr {s}.at, i64 {s}, i1 false)\n", .{ to, from, count });
+    try out.print(a, "  {s} = add i64 {s}, {s}\n  store i64 {s}, ptr {s}, align 8, !tbaa !5\n  br label %{s}\n", .{ grown, len.value, count, grown, len.at, join });
+    const called = try context.fresh("%apcall");
+    // The call keeps the append's source position, so a trap while growing names it.
+    try out.print(a, "{s}:\n  {s} = call ptr @{s}(ptr {s}, ptr {s}, i64 {s}, i64 {s}){s}\n  br label %{s}\n", .{ slow, called, buffers.append_symbol, buffer, source, start, end, try context.callLocation(inst.span), join });
+    try out.print(a, "{s}:\n  {s} = phi ptr [ {s}, %{s} ], [ {s}, %{s} ]\n", .{ join, name, buffer, fast, called, slow });
+    context.label = join;
+}
+
+/// The `buffer_append` being emitted: the name it defines and the instruction.
+const Append = struct { name: []const u8, inst: ir.Inst };
+
+/// One `i64` header field of a block (length at 8, capacity at 16) and its address.
+const Field = struct { at: []const u8, value: []const u8 };
+
+/// A header field to load: the block and the field's offset.
+const HeaderField = struct { block: []const u8, offset: u32 };
+
+fn header(comptime Context: type, context: Context, out: *std.ArrayList(u8), field: HeaderField) Error!Field {
+    const at = try context.fresh("%aph");
+    const value = try context.fresh("%aph");
+    try out.print(context.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = load i64, ptr {s}, align 8, !tbaa !5\n", .{ at, field.block, field.offset, value, at });
+    return .{ .at = at, .value = value };
+}
+
+/// Declare runtime helper `symbol` once per unit (a Core call to it declares it the same way).
+fn declare(comptime Context: type, context: Context, symbol: []const u8, params: []const u8) Error!void {
+    for (context.state.declared.items) |known| if (std.mem.eql(u8, known, symbol)) return;
+    try context.state.declared.append(context.a(), symbol);
+    try context.state.externs.print(context.a(), "declare ptr @{s}({s}) nounwind\n", .{ symbol, params });
 }
 
 fn formatter(context: anytype, symbol: []const u8, scalar: []const u8) !void {
     // Numeric buffer operations name runtime helpers without a Core call. Declare
     // that dependency in this unit, including imported bodies, only when reached.
-    for (context.state.declared.items) |known| if (std.mem.eql(u8, known, symbol)) return;
-    try context.state.declared.append(context.a(), symbol);
-    try context.state.externs.print(context.a(), "declare ptr @{s}(ptr, {s}) nounwind\n", .{ symbol, scalar });
+    try declare(@TypeOf(context), context, symbol, try std.fmt.allocPrint(context.a(), "ptr, {s}", .{scalar}));
 }

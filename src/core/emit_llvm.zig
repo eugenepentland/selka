@@ -15,6 +15,7 @@ const facts = @import("facts.zig");
 const vector = @import("vector.zig");
 const c_abi = @import("c_abi.zig");
 const flags = @import("flags.zig");
+const elements = @import("elements.zig");
 const emit_dict = @import("emit_dict.zig");
 const emit_bytes = @import("emit_bytes.zig");
 const emit_text_split = @import("emit_text_split.zig");
@@ -203,6 +204,10 @@ const tbaa_metadata =
 ;
 /// `  %x = load i64, ptr %at` of one data word (a union's tag word or payload word).
 const word_load_line = "  {s} = load i64, ptr {s}, align 8, " ++ tbaa_data ++ "\n";
+/// A union's tag word loaded from memory, then its tag byte.
+const tag_load_line = word_load_line ++ "  {s} = trunc i64 {s} to i8\n";
+/// Whether a union's tag byte names case `k`.
+const case_test_line = "  {s} = icmp eq i8 {s}, {d}\n";
 /// The count load every `retain`, `release` and `is_unique` starts with.
 const count_load_line = "  {s} = load i32, ptr {s}, align 8, " ++ tbaa_count ++ ", " ++ count_range ++ "\n";
 /// The header field loads of a list or string, tagged as header data.
@@ -741,10 +746,19 @@ const MemoryState = struct {
     edges: std.AutoHashMapUnmanaged(u64, []const u8) = .empty,
     /// The home of every value in memory, and the views read where they lie.
     homes: emit_homes.Plan = .{ .class = &.{}, .view = &.{}, .homes = &.{}, .view_offset = &.{} },
-    /// Per instruction: a call's in-out arguments (CE-A P7), empty for every other instruction.
-    calls: []const []const emit_homes.InOut = &.{},
-    /// Per instruction: an in-out call whose result record must also hold the final values
-    /// (something reads it other than one `record_get` per final value).
+    /// Per instruction: the in-out calls (CE-A P7).
+    in_out: InOutCalls = .{},
+    /// Per instruction: the uses of its value (a read nothing uses emits only its check, CE-B).
+    uses: []u32 = &.{},
+};
+
+/// Per instruction, what an in-out call (CE-A P7) needs: its in-out arguments, and whether its
+/// result record must also hold the final values.
+const InOutCalls = struct {
+    /// A call's in-out arguments, empty for every other instruction.
+    args: []const []const emit_homes.InOut = &.{},
+    /// An in-out call whose result record must also hold the final values (something reads it
+    /// other than one `record_get` per final value).
     complete: []bool = &.{},
 };
 
@@ -808,6 +822,10 @@ fn returnsThroughSret(m: *const ir.Module, signature: ir.Signature, abi: InOutAb
 
 /// Which count update `counted` emits.
 const Counting = enum { retain, release };
+
+/// One managed part of a value a store replaces, read before the store and released after
+/// it; `guard` is the union-case condition under which it is live, or null.
+const Held = struct { ty: ir.Type, text: []const u8, guard: ?[]const u8 = null };
 
 /// One `union_payload` read: the name it defines, the union's type and value, and the case.
 const PayloadRead = struct { result: []const u8, union_type: ir.Type, value: []const u8, case: u32 };
@@ -1057,6 +1075,7 @@ const FunctionEmitter = struct {
         const count = f.insts.items.len;
         const mem = &self.memory;
         const use_count = try self.a().alloc(u32, count);
+        mem.uses = use_count;
         const users = try self.a().alloc(ir.Ref, count);
         mem.fused = try self.a().alloc(bool, count);
         @memset(use_count, 0);
@@ -1114,7 +1133,7 @@ const FunctionEmitter = struct {
             .function = f,
             .fused = mem.fused,
             .in_out = abi.params,
-            .calls = mem.calls,
+            .calls = mem.in_out.args,
             .ret_home = emit_homes.steps.in_out and abi.params == 0 and returnsThroughSret(m, f.signature, abi),
         });
         const plan = &mem.homes;
@@ -1146,9 +1165,9 @@ const FunctionEmitter = struct {
         const count = f.insts.items.len;
         const calls = try self.a().alloc([]const emit_homes.InOut, count);
         @memset(calls, &.{});
-        self.memory.complete = try self.a().alloc(bool, count);
-        @memset(self.memory.complete, false);
-        self.memory.calls = calls;
+        self.memory.in_out.complete = try self.a().alloc(bool, count);
+        @memset(self.memory.in_out.complete, false);
+        self.memory.in_out.args = calls;
         var any = false;
         for (f.blocks.items, 0..) |block, b| {
             if (b != 0 and block.preds.items.len == 0) continue;
@@ -1186,8 +1205,8 @@ const FunctionEmitter = struct {
                 const operands = f.valueOperands(inst);
                 for (0..operands.len()) |i| {
                     const used = f.resolve(operands.get(i));
-                    const in_outs = self.memory.calls[used.index()];
-                    if (in_outs.len != 0 and in_outs[0].final != used) self.memory.complete[used.index()] = true;
+                    const in_outs = self.memory.in_out.args[used.index()];
+                    if (in_outs.len != 0 and in_outs[0].final != used) self.memory.in_out.complete[used.index()] = true;
                 }
             }
         }
@@ -1213,7 +1232,7 @@ const FunctionEmitter = struct {
                     found = ref;
                 }
             }
-            if (readers == 1) in_out.final = found else self.memory.complete[at] = true;
+            if (readers == 1) in_out.final = found else self.memory.in_out.complete[at] = true;
         }
         return finals;
     }
@@ -1326,14 +1345,7 @@ const FunctionEmitter = struct {
         switch (m.compound(value_type)) {
             .record => |fields| for (fields, 0..) |field, i| {
                 if (!m.managed(field)) continue;
-                const at = try self.offsetPointer(out, ptr, m.fieldOffset(value_type, i));
-                if (emit_homes.steps.views and m.passedInMemory(field)) {
-                    try self.countedMemory(out, mode, field, at);
-                    continue;
-                }
-                const loaded = try self.fresh("%cm");
-                try self.loadValue(out, field, at, loaded);
-                try self.countedValue(out, mode, field, loaded);
+                try self.countedAt(out, mode, field, try self.offsetPointer(out, ptr, m.fieldOffset(value_type, i)));
             },
             .@"union" => |cases| {
                 const word = try self.fresh("%cw");
@@ -1344,29 +1356,25 @@ const FunctionEmitter = struct {
                     const here = try self.fresh("%cc");
                     try out.print(self.a(), "  {s} = icmp eq i8 {s}, {d}\n", .{ here, tag, k });
                     const join = try self.enterIf(out, here);
-                    const at = try self.offsetPointer(out, ptr, 8);
-                    if (emit_homes.steps.views and m.passedInMemory(case)) {
-                        try self.countedMemory(out, mode, case, at);
-                    } else {
-                        const loaded = try self.fresh("%cp");
-                        try self.loadValue(out, case, at, loaded);
-                        try self.countedValue(out, mode, case, loaded);
-                    }
+                    try self.countedAt(out, mode, case, try self.offsetPointer(out, ptr, 8));
                     try self.leaveIf(out, join);
                 }
             },
             .array => |array| for (0..array.n) |i| {
-                const at = try self.offsetPointer(out, ptr, @as(u32, @intCast(i)) * m.size(array.elem));
-                if (emit_homes.steps.views and m.passedInMemory(array.elem)) {
-                    try self.countedMemory(out, mode, array.elem, at);
-                    continue;
-                }
-                const loaded = try self.fresh("%cm");
-                try self.loadValue(out, array.elem, at, loaded);
-                try self.countedValue(out, mode, array.elem, loaded);
+                try self.countedAt(out, mode, array.elem, try self.offsetPointer(out, ptr, @as(u32, @intCast(i)) * m.size(array.elem)));
             },
             .list, .box, .dict, .@"fn" => unreachable,
         }
+    }
+
+    /// Count the part of type `part_type` stored at `ptr` where it is: a part over four words
+    /// field by field through `countedMemory` (never copied out first, NEW-CORE-CE-LISTS-4,
+    /// while `emit_homes.steps.views` is on, the default), anything else loaded as a value.
+    fn countedAt(self: *FunctionEmitter, out: *Out, mode: Counting, part_type: ir.Type, ptr: []const u8) Error!void {
+        if (emit_homes.steps.views and self.state.module.passedInMemory(part_type)) return self.countedMemory(out, mode, part_type, ptr);
+        const loaded = try self.fresh("%cm");
+        try self.loadValue(out, part_type, ptr, loaded);
+        try self.countedValue(out, mode, part_type, loaded);
     }
 
     /// Count a value held in a register or, over four words, a pointer to its slot.
@@ -1665,7 +1673,7 @@ const FunctionEmitter = struct {
             .dict_insert, .dict_remove, .dict_entries, .dict_entry_live, .dict_copy, .dict_clear => try emit_dict.instruction(@TypeOf(self), self, out, name, inst),
             .str_char, .str_width, .str_code, .str_append, .str_append_char, .str_slice, .str_view_of, .str_from_view => try emit_text.instruction(self, out, name, inst),
             .list_sort, .array_get, .array_set, .call_indirect => try emit_fn.instruction(self, out, name, inst),
-            .buffer_new, .buffer_copy, .buffer_set, .buffer_push, .buffer_pop => try emit_bytes.instruction(self, out, name, inst),
+            .buffer_new, .buffer_copy, .buffer_set, .buffer_push, .buffer_pop, .buffer_append => try emit_bytes.instruction(self, out, name, inst),
             .shift_left, .shift_right, .saturating_add, .float_unary => try emit_number.instruction(self, out, name, inst),
             .add, .sub, .mul => try self.arithmetic(out, name, inst),
             .div, .rem, .floor_div, .floor_rem => try self.division(out, name, inst),
@@ -1775,6 +1783,7 @@ const FunctionEmitter = struct {
             .list_set => try self.listSet(out, name, inst),
             .list_pop => try self.listPop(out, name, inst),
             .list_get_field => try self.listGetField(out, name, inst),
+            .list_set_field => try self.listSetField(out, name, inst),
             .box_make => {
                 const inner = self.state.module.compound(inst.ty).box;
                 try out.print(self.a(), "  {s} = call ptr @myl_core_box_new(i64 {d})\n", .{ name, self.state.module.size(inner) });
@@ -2128,6 +2137,9 @@ const FunctionEmitter = struct {
         const list = try self.value(inst.a);
         const index = try self.value(inst.b);
         try self.boundsCheck(out, inst, list, index);
+        // A read nothing uses is only its bounds check: the element is never loaded (a verify
+        // build still loads it, for the fact assertions that name it).
+        if (self.memory.uses[self.current.index()] == 0 and inst.data == 0 and self.knownFacts() == null) return;
         const slot = try self.elementSlot(out, list, index, inst.ty);
         if (inst.ty == .bool or inst.ty.isCompound()) return self.loadValue(out, inst.ty, slot, name);
         const stored = storageType(inst.ty);
@@ -2276,7 +2288,7 @@ const FunctionEmitter = struct {
                 }
                 const word = try self.fresh("%lt");
                 const tag = try self.fresh("%lt");
-                try out.print(self.a(), word_load_line ++ "  {s} = trunc i64 {s} to i8\n", .{ word, ptr, tag, word });
+                try out.print(self.a(), tag_load_line, .{ word, ptr, tag, word });
                 const last_words = layout.form == .words and layout.payload_words == 0;
                 const tagged = if (last_words) result else try self.fresh("%lu");
                 try out.print(self.a(), "  {s} = insertvalue {s} poison, i8 {s}, 0\n", .{ tagged, tyname, tag });
@@ -2428,8 +2440,8 @@ const FunctionEmitter = struct {
     fn writtenByCall(self: *FunctionEmitter, ref: ir.Ref, inst: ir.Inst) bool {
         if (inst.op != .record_get) return false;
         const maker = self.function.resolve(inst.a).index();
-        if (maker >= self.memory.calls.len) return false;
-        const in_outs = self.memory.calls[maker];
+        if (maker >= self.memory.in_out.args.len) return false;
+        const in_outs = self.memory.in_out.args[maker];
         for (in_outs) |in_out| if (in_out.final == ref) return true;
         return false;
     }
@@ -2583,14 +2595,88 @@ const FunctionEmitter = struct {
         try self.boundsCheck(out, inst, list, index);
         const slot = try self.elementSlot(out, list, index, element);
         const managed = m.managed(element) and !flags.transferredSlot(self.function, inst);
-        const old = if (managed) try self.fresh("%old") else "";
-        // A counting build names the copy of the old element made to release it.
+        var held: std.ArrayList(Held) = .empty;
+        // A counting build names a copy of the old element made to release it.
         self.count_detail = if (self.count_fn != null) "list_set.old" else null;
-        if (managed) try self.loadValue(out, element, slot, old);
+        if (managed) try self.holdManaged(out, element, slot, &held, null);
         self.count_detail = null;
         try self.storeOperand(out, element, self.function.operands(inst.data)[0], slot);
-        if (managed) try self.countedValue(out, .release, element, old);
+        try self.releaseHeld(out, held.items);
         try out.print(self.a(), identity_line, .{ name, list });
+    }
+
+    /// `list_set_field`: store the value at the path's offset inside the element, in place
+    /// (the list is unique by now), releasing the part it replaces; the rest of the element
+    /// is never read.
+    fn listSetField(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+        const m = self.state.module;
+        const list = try self.value(inst.a);
+        const index = try self.value(inst.b);
+        const element = m.compound(inst.ty).list;
+        try self.boundsCheck(out, inst, list, index);
+        const slot = try self.elementSlot(out, list, index, element);
+        const path = elements.setPath(self.function, inst) orelse return error.UnsupportedInstruction;
+        const target = m.pathTarget(element, path) orelse return error.UnsupportedInstruction;
+        const at = try self.offsetPointer(out, slot, target.offset);
+        var held: std.ArrayList(Held) = .empty;
+        self.count_detail = if (self.count_fn != null) "list_set_field.old" else null;
+        try self.holdManaged(out, target.ty, at, &held, null);
+        self.count_detail = null;
+        try self.storeOperand(out, target.ty, self.function.operands(inst.data)[0], at);
+        try self.releaseHeld(out, held.items);
+        try out.print(self.a(), identity_line, .{ name, list });
+    }
+
+    /// Read the managed parts of the `value_type` value at `ptr` that a store is about to
+    /// replace, for `releaseHeld` after it: a value of at most four words into registers,
+    /// and a record, array or union over four words part by part — only its managed parts
+    /// are read, never the whole value; a union's are read for every managed case and
+    /// released only under the case its tag names. `guard` is the condition (`i1`) under
+    /// which the value is live, or null.
+    fn holdManaged(self: *FunctionEmitter, out: *Out, value_type: ir.Type, ptr: []const u8, held: *std.ArrayList(Held), guard: ?[]const u8) Error!void {
+        const m = self.state.module;
+        if (!m.managed(value_type)) return;
+        if (m.passedInMemory(value_type)) switch (m.compound(value_type)) {
+            .record => |fields| {
+                for (fields, 0..) |field, i| try self.holdManaged(out, field, try self.offsetPointer(out, ptr, m.fieldOffset(value_type, i)), held, guard);
+                return;
+            },
+            .array => |array| {
+                for (0..array.n) |i| try self.holdManaged(out, array.elem, try self.offsetPointer(out, ptr, @as(u32, @intCast(i)) * m.size(array.elem)), held, guard);
+                return;
+            },
+            .@"union" => |cases| {
+                const word = try self.fresh("%oldw");
+                const tag = try self.fresh("%oldt");
+                try out.print(self.a(), tag_load_line, .{ word, ptr, tag, word });
+                for (cases, 0..) |case, k| {
+                    if (!m.managed(case)) continue;
+                    const here = try self.fresh("%oldc");
+                    try out.print(self.a(), case_test_line, .{ here, tag, k });
+                    const live = if (guard) |outer| blk: {
+                        const both = try self.fresh("%oldc");
+                        try out.print(self.a(), "  {s} = and i1 {s}, {s}\n", .{ both, outer, here });
+                        break :blk both;
+                    } else here;
+                    try self.holdManaged(out, case, try self.offsetPointer(out, ptr, 8), held, live);
+                }
+                return;
+            },
+            else => {},
+        };
+        const loaded = try self.fresh("%old");
+        try self.loadValue(out, value_type, ptr, loaded);
+        try held.append(self.a(), .{ .ty = value_type, .text = loaded, .guard = guard });
+    }
+
+    /// Release the parts `holdManaged` read, once the store that replaced them is done, each
+    /// under the case condition it was read for.
+    fn releaseHeld(self: *FunctionEmitter, out: *Out, held: []const Held) Error!void {
+        for (held) |part| {
+            const join = if (part.guard) |live| try self.enterIf(out, live) else null;
+            try self.countedValue(out, .release, part.ty, part.text);
+            if (join) |label| try self.leaveIf(out, label);
+        }
     }
 
     /// Drop the last element of list `a` in place (its value was read before, and is
@@ -2663,7 +2749,7 @@ const FunctionEmitter = struct {
                 for (cases, 0..) |case, k| {
                     if (!m.managed(case)) continue;
                     const here = try self.fresh("%cc");
-                    try out.print(self.a(), "  {s} = icmp eq i8 {s}, {d}\n", .{ here, tag, k });
+                    try out.print(self.a(), case_test_line, .{ here, tag, k });
                     const join = try self.enterIf(out, here);
                     const payload = try self.fresh("%cp");
                     try self.unionPayload(out, .{ .result = payload, .union_type = value_type, .value = text, .case = @intCast(k) });
@@ -2722,7 +2808,7 @@ const FunctionEmitter = struct {
 
     /// `, !dbg !N` for a call at `span` (`dwarf_lines` only): LLVM keeps it through
     /// inlining as an inline record, so a return address maps to every frame it stands for.
-    fn callLocation(self: *FunctionEmitter, span: u32) ![]const u8 {
+    pub fn callLocation(self: *FunctionEmitter, span: u32) Error![]const u8 {
         if (self.scope.definition == 0) return "";
         const location = self.state.options.locator.locate(self.state.options.locator.context, span);
         const node = try self.sourceLocation(location, self.scope.origin);
@@ -3154,11 +3240,11 @@ const FunctionEmitter = struct {
     /// A result record something reads whole gets its in-out final values too, after the call.
     fn completeResult(self: *FunctionEmitter, out: *Out, name: []const u8, signature: ir.Signature, at: CallPlaces) !void {
         const ref = refOfName(name) orelse return;
-        if (ref.index() >= self.memory.complete.len) return;
-        if (!self.memory.complete[ref.index()]) return;
+        if (ref.index() >= self.memory.in_out.complete.len) return;
+        if (!self.memory.in_out.complete[ref.index()]) return;
         const m = self.state.module;
         const abi = inOutAbi(m, signature);
-        for (self.memory.calls[ref.index()]) |in_out| {
+        for (self.memory.in_out.args[ref.index()]) |in_out| {
             const field = abi.field(signature, in_out.argument);
             const into = try self.offsetPointer(out, at.result, m.fieldOffset(signature.ret, field));
             try self.copyBytes(out, into, at.places[in_out.argument], m.size(signature.params[in_out.argument]), false);
@@ -3170,12 +3256,12 @@ const FunctionEmitter = struct {
     /// there), or a fresh slot holding a copy when nothing names the final value.
     fn inOutPlaces(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) ![]const []const u8 {
         const ref = refOfName(name) orelse return &.{};
-        if (ref.index() >= self.memory.calls.len or self.memory.calls[ref.index()].len == 0) return &.{};
+        if (ref.index() >= self.memory.in_out.args.len or self.memory.in_out.args[ref.index()].len == 0) return &.{};
         const m = self.state.module;
         const f = self.function;
         const operands = f.operands(inst.data);
         const places = try self.a().alloc([]const u8, operands.len);
-        for (self.memory.calls[ref.index()]) |in_out| {
+        for (self.memory.in_out.args[ref.index()]) |in_out| {
             const argument = f.resolve(operands[in_out.argument]);
             const final = in_out.final;
             const size = m.size(self.typeOf(argument));
