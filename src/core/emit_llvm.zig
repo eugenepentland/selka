@@ -134,6 +134,17 @@ fn freshBase(prefix: []const u8) []const u8 {
 
 const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
 
+/// The counter kind of a conditional trap of `kind` in a counting build (NEW-CORE-COUNTERS-6).
+fn checkKind(kind: TrapKind) emit_count.Kind {
+    return switch (kind) {
+        .list_bounds, .list_empty, .list_pop_index, .text_bounds, .text_substring => .bounds_check,
+        .overflow => .overflow_check,
+        .division_by_zero => .division_check,
+        .invalid_shift => .shift_check,
+        else => .other_check,
+    };
+}
+
 /// The bit of a site's `width` that marks an unsigned overflow, division or cast, whose
 /// operands the runtime prints unsigned (`MYL_CORE_SITE_UNSIGNED` in `runtime/core_rt.c`).
 const unsigned_site: u16 = 0x100;
@@ -1852,6 +1863,8 @@ const FunctionEmitter = struct {
 
     /// Start the cold trap block; complete it with trapEnd before emitting valid-path work.
     pub fn trapBegin(self: *FunctionEmitter, out: *Out, failed: []const u8, site_index: u32) Error!TrapBranch {
+        // A counting build counts each execution of the check (an unconditional trap is no check).
+        if (self.count_fn != null and !std.mem.eql(u8, failed, "true")) _ = try self.countSite(out, checkKind(self.state.sites.items[site_index].kind), "");
         const trap = try self.fresh("trap");
         const next = try self.fresh(self.label);
         const at = try self.trapLocation(site_index);

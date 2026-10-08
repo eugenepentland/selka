@@ -1,0 +1,30 @@
+# NEW-CORE-COUNTERS-6: a counting build counts every check the emitted code
+# executes, by kind: `pick` makes one bounds check per call, `grow` one overflow
+# check, `share` one division check and `lift` one shift check. Each is called
+# `len(args) + 4` times with operands the compiler cannot bound.
+def pick(xs: list[int], i: int) -> int:
+    return xs[i]
+
+
+def grow(a: int, b: int) -> int:
+    return a + b
+
+
+def share(a: int, b: int) -> int:
+    return a % b
+
+
+def lift(a: int, b: int) -> int:
+    return shift_left(a, b)
+
+
+def main(args: list[str], out: Stream) -> int:
+    xs: list[int] = [3, 1, 4, 1, 5, 9]
+    n = len(args) + 4
+    total = 0
+    for i in range(n):
+        total = grow(total, pick(xs, i))
+        total = grow(total, share(100, i + 1))
+        total = grow(total, lift(1, i))
+    out.print(total)
+    return 0

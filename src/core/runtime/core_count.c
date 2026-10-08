@@ -1,4 +1,4 @@
-/* ---- counting builds (NEW-CORE-COUNTERS-1..5) -------------------------------
+/* ---- counting builds (NEW-CORE-COUNTERS-1..7) -------------------------------
  * Appended to the runtime only in a counting build (`mylang build --counters`);
  * core_count.h declares the hooks the patched runtime calls. The emitter puts
  * one record per emitted function in section `myl_count_fns` and one record per
@@ -51,6 +51,7 @@ static bool myl_count_written;
 static const char *const myl_count_kinds[] = {
     "retain", "release", "release_unique", "unique_test", "list_copy", "dict_copy",
     "buffer_copy", "text_copy", "record_copy", "list_push", "element_load", "element_store",
+    "bounds_check", "overflow_check", "division_check", "shift_check", "other_check",
 };
 enum { MYL_COUNT_KINDS = sizeof myl_count_kinds / sizeof myl_count_kinds[0] };
 
