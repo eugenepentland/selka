@@ -975,9 +975,16 @@ pub const Parser = struct {
             .docstrings = try self.syntax.docstrings.toOwnedSlice(self.storage),
         };
     }
+    /// The code a retired `host def` declaration is refused with (NEW-CORE-S5-HOST-1).
+    pub const host_retired_code = "E_HOST_RETIRED";
+    /// Why `host def` is refused and what replaces it.
+    const host_retired = "`host def` is retired (S5-D5): host functions and their registered adapters were removed with the old back end; declare the function `extern def` and link its C implementation with `--link FILE.c`";
     fn function(self: *Parser, owner: ?Span) diagnostic.Error!ast.Function {
         const c_abi = self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "extern");
         const host: ?Span = if (c_abi or (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "host"))) self.current().span else null;
+        // NEW-CORE-S5-HOST-1: host functions were retired with their registered
+        // adapters (S5-D5); C interop is `extern def` with `--link FILE.c`.
+        if (host != null and !c_abi) return self.sink.fail(host_retired_code, host.?, host_retired);
         if (host != null) self.cursor.pos += 1;
         const restricted = self.take(.kw_private);
         if (restricted and owner == null) return self.sink.fail("E_PRIVATE_SCOPE", self.tokens[self.cursor.pos - 1].span, "private functions must be declared inside a domain");

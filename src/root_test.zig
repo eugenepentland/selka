@@ -68,7 +68,6 @@ test {
     _ = @import("context_test.zig");
     _ = @import("invoke_test.zig");
 
-    _ = @import("host_declarations_test.zig");
     _ = @import("native_execute.zig");
     _ = @import("exit_status_test.zig");
     _ = @import("error_trace_test.zig");

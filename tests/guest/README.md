@@ -64,8 +64,8 @@ directory run.
 
 - **Environment, clock, entropy and callback providers**
   (`tests/native_environment.py`, `tests/native_providers.py`): the native test
-  runner registers no host callbacks and grants no ambient authority, so a
-  `host def` dependency fails with `HostMissingRegistration`. Those files
+  runner registers no host callbacks and grants no ambient authority (and
+  `host def` is now refused at check time, `E_HOST_RETIRED`). Those files
   exercise the real VM and native provider implementations; that host
   machinery is not available to a guest test process.
 - **Filesystem/network resource lifecycles** (`tests/native_resources.py`):

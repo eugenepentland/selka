@@ -1,6 +1,7 @@
 //! Features retired in new-core stage S5 that the checker still recognises:
 //! `with arena():` blocks, which check as ordinary blocks with no arena rules
-//! of their own (S5-D3), and the `mylang fix` repair their warning carries.
+//! of their own (S5-D3), and the `mylang fix` repair their warning carries;
+//! and `host def`, refused at check time (S5-D5).
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
@@ -175,4 +176,33 @@ test "the arena warning carries the fix that unwraps its escapes" {
         "def main() -> int:\n    kept = \"z\"\n    kept = (\"a\" + str(1))\n    n = len(kept)\n    return n\n",
         try applied(arena.allocator(), c.src.bytes, c.diagnostics.items[0].provenance.fix.?),
     );
+}
+
+// spec: NEW-CORE-S5-HOST-1
+test "a host declaration is refused at check time with the extern replacement named" {
+    var c = try language.Compilation.init(t.allocator, "retired.my",
+        \\host def measure(host: Host, x: i64) -> i64 effects(host)
+        \\
+        \\
+        \\def main(host: Host) -> i64:
+        \\    return measure(host, 6)
+    );
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.check());
+    try t.expectEqual(@as(usize, 1), c.diagnostics.items.len);
+    const refusal = c.diagnostics.items[0];
+    try t.expectEqualStrings("E_HOST_RETIRED", refusal.code);
+    try t.expectEqualStrings("host", c.src.text(refusal.span));
+    try t.expect(std.mem.indexOf(u8, refusal.message, "declare the function `extern def`") != null);
+    try t.expect(std.mem.indexOf(u8, refusal.message, "--link FILE.c") != null);
+    // The same declaration spelled `extern def` checks.
+    var extern_unit = try language.Compilation.init(t.allocator, "extern.my",
+        \\extern def measure(host: Host, x: i64) -> i64 effects(host)
+        \\
+        \\
+        \\def main(host: Host) -> i64:
+        \\    return measure(host, 6)
+    );
+    defer extern_unit.deinit();
+    try extern_unit.check();
 }

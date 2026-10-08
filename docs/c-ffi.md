@@ -105,4 +105,5 @@ functions, C callbacks and automatic binding generation remain future work.
 
 `host def` declarations, registered host adapters, `--library`, `--provider` and
 the host applications built on them were retired in S5 (2026-10); `extern def` with
-`--link` is the C interop that remains.
+`--link` is the C interop that remains. A `host def` is refused at check time with
+`E_HOST_RETIRED`: declare the function `extern def` and link its C implementation.

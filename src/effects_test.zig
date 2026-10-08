@@ -1652,15 +1652,15 @@ fn warningOf(source: []const u8) !struct { code: []const u8, span_text: []u8 } {
 
 // spec: DERIVED-EFFECTS-1
 test "a body that exceeds the ceiling its own signature implies names the parameter to add" {
-    // A `host def` clause grants the authority the host side declares. A relay
+    // An `extern def` clause grants the authority the C side declares. A relay
     // whose own signature supplies no such parameter exceeds its ceiling, and the
     // rejection names the parameter that would supply it.
-    const relay = "host def put(host: Host, value: u8) -> int effects(host, filesystem)\n\n" ++
+    const relay = "extern def put(host: Host, value: u8) -> int effects(host, filesystem)\n\n" ++
         "def relay(host: Host) -> int:\n    return put(host, 1u8)\n\n" ++
         "def main(host: Host) -> int:\n    return relay(host)\n";
     try reject(relay, "E_EFFECT_BOUND", "add `fs: Filesystem` to the parameters");
     // The same bodies are accepted once every signature on the path supplies it.
-    try accept("host def put(host: Host, value: u8) -> int effects(host, filesystem)\n\n" ++
+    try accept("extern def put(host: Host, value: u8) -> int effects(host, filesystem)\n\n" ++
         "def relay(host: Host, fs: Filesystem) -> int:\n    _ = fs\n    return put(host, 1u8)\n\n" ++
         "def main(host: Host, fs: Filesystem) -> int:\n    return relay(host, fs)\n");
     // A capability parameter is what permits its effect, and a `mut` parameter
@@ -1695,14 +1695,14 @@ test "a record that holds a capability permits that capability's effect" {
 
 // spec: DERIVED-EFFECTS-2
 test "an effect clause that restates the derived ceiling warns and a narrowing stays" {
-    const restating = try warningOf("host def probe(host: Host) -> int effects(host)\n\n" ++
+    const restating = try warningOf("extern def probe(host: Host) -> int effects(host)\n\n" ++
         "def helper(host: Host) -> int effects(host, managed_allocation):\n    return probe(host)\n\n" ++
         "def main(host: Host) -> int:\n    return helper(host)\n");
     defer t.allocator.free(restating.span_text);
     try t.expectEqualStrings("W_DERIVED_EFFECTS", restating.code);
     try t.expectEqualStrings("effects(host, managed_allocation)", restating.span_text);
     // A clause that withholds what the parameters imply is a real narrowing.
-    try accept("host def probe(host: Host) -> int effects(host)\n\n" ++
+    try accept("extern def probe(host: Host) -> int effects(host)\n\n" ++
         "def helper(host: Host, fs: Filesystem) -> int effects(host, filesystem):\n    _ = fs\n    return probe(host)\n\n" ++
         "def main(host: Host, fs: Filesystem) -> int:\n    return helper(host, fs)\n");
     try accept("def helper(count: int) -> int noalloc:\n    return count + 1\n\n" ++
@@ -1721,11 +1721,11 @@ test "a clause naming an effect no parameter supplies is rejected with the paste
         "def main() -> int:\n    return helper(1)\n", "E_DERIVED_EFFECTS", "add `fs: Filesystem` to the parameters or drop the clause");
     try reject("def helper(count: int) -> int effects(clock):\n    return count + 1\n\n" ++
         "def main() -> int:\n    return helper(1)\n", "E_DERIVED_EFFECTS", "`effects(clock)` names `clock`");
-    // A clause may still narrow a derived set, and a `host def` clause is the
+    // A clause may still narrow a derived set, and an `extern def` clause is the
     // declaration's own authority rather than a summary of its parameters.
     try accept("def helper(out: Stream) -> None effects(output):\n    out.print(\"x\")\n\n" ++
         "def main(out: Stream) -> int:\n    helper(out)\n    return 0\n");
-    try accept("host def put(host: Host) -> int effects(host, managed_allocation)\n\n" ++
+    try accept("extern def put(host: Host) -> int effects(host, managed_allocation)\n\n" ++
         "def main(host: Host) -> int:\n    return put(host)\n");
 }
 
@@ -1736,7 +1736,7 @@ test "a capability parameter the body never reads is rejected and a passed-on on
     try reject("def main(out: Stream) -> int:\n    return 0\n", "E_UNUSED_CAPABILITY", "`out` is never used");
     // Handing the capability to another function is a read, so a frame that
     // never calls a host operation itself still uses its authority.
-    try accept("host def inner(host: Host) -> int effects(host)\n\n" ++
+    try accept("extern def inner(host: Host) -> int effects(host)\n\n" ++
         "def outer(host: Host) -> int:\n    return inner(host)\n\n" ++
         "def main(host: Host) -> int:\n    return outer(host)\n");
 }

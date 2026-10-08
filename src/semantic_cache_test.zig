@@ -337,9 +337,9 @@ test "semantic cache rechecks transitive effects when only a callee body changes
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     // Only the callee body changes; the unchanged caller is reused but rechecked.
-    // The host declaration is never executed, so this stays a checking-only test.
+    // The extern declaration is never executed, so this stays a checking-only test.
     const shared =
-        \\host def tick(host: Host) -> i64 effects(host)
+        \\extern def tick(host: Host) -> i64 effects(host)
         \\
         \\
         \\def main(host: Host) -> i64 effects():

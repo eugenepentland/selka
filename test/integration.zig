@@ -131,11 +131,10 @@ test "CLI managed constants import run build installed and invalidate warm cache
     try managedConstantModes(&temporary, "module constants\npublic const TEXT: str = \"hà🙃\"\npublic const DATA: bytes = b\"\\x00\\xfe\"\n", "hà🙃\n2\n254\n");
 }
 
-test "CLI checks host declarations and refuses to run one with no registration" {
-    try invoke("check", host_program, 0, "", "");
-    // Nothing registers a host implementation for a plain `mylang run`, so the
-    // program cannot start; that is a host-boundary refusal, not a guest trap.
-    try invoke("run", host_program, 2, "", "HostMissingRegistration");
+// spec-case: NEW-CORE-S5-HOST-1
+test "CLI refuses a retired host declaration at check time and names extern def" {
+    try invoke("check", host_program, 1, "", "error[E_HOST_RETIRED]");
+    try invoke("run", host_program, 1, "", "declare the function `extern def`");
 }
 // spec: HOST-CAPABILITY-1
 test "CLI threads a Host capability through an extern call and runs it natively" {
@@ -6001,7 +6000,7 @@ const listing_module =
     \\    id: Count
     \\
     \\
-    \\host def measure(host: Host, x: i64) -> i64 effects(host)
+    \\extern def measure(host: Host, x: i64) -> i64 effects(host)
     \\
     \\
     \\

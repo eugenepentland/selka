@@ -119,7 +119,4 @@ test "foreign declarations require a leading Host capability parameter" {
     try reject(
         \\extern def f(x: i64) -> i64 effects(host)
     ++ entry, "E_HOST_CAPABILITY");
-    try reject(
-        \\host def f(x: i64) -> i64 effects(host)
-    ++ entry, "E_HOST_CAPABILITY");
 }
