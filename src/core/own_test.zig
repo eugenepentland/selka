@@ -677,11 +677,35 @@ const field_take =
     \\    rt.objects[at] = v
     \\
     \\
+    \\record Marker:
+    \\    marks: list[bool]
+    \\
+    \\
+    \\record Heap:
+    \\    objects: list[int]
+    \\    marker: Marker
+    \\    free_slots: list[int]
+    \\
+    \\
+    \\def heap_allocate(h: mut Heap, obj: int) -> int:
+    \\    slot = len(h.objects)
+    \\    if len(h.free_slots) > 0:
+    \\        slot = h.free_slots.pop()
+    \\        h.objects[slot] = obj
+    \\    else:
+    \\        h.objects.append(obj)
+    \\        h.marker.marks.append(False)
+    \\    return slot
+    \\
+    \\
     \\def main(out: Stream) -> int:
     \\    rt = Runtime(objects=[], count=0)
     \\    for i in range(4):
     \\        _ = allocate(mut rt, i)
     \\        put(mut rt, -1, i)
+    \\    h = Heap(objects=[], marker=Marker(marks=[]), free_slots=[])
+    \\    for j in range(4):
+    \\        _ = heap_allocate(mut h, j)
     \\    out.print(len(rt.objects))
     \\    return 0
     \\
@@ -706,6 +730,9 @@ test "a field read finished before the read that takes the field does not stop t
     const debug = try support.ownedText(arena.allocator(), field_take);
     try expectTakenInPlace(functionIr(debug, "allocate"));
     try expectTakenInPlace(functionIr(debug, "put"));
+    // Each arm's update takes its own field, and the nested `h.marker.marks` append takes
+    // `h.marker` (read twice in the source) and then its list.
+    try expectTakenInPlace(functionIr(debug, "heap_allocate"));
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
@@ -713,7 +740,7 @@ test "a field read finished before the read that takes the field does not stop t
     // read after the append (it keeps the old list), leak-free in debug and release.
     for ([_][]const []const u8{ &.{}, &.{"--release"} }) |flags_| {
         const ran = try leakChecked(arena.allocator(), root, "rc_field_take", flags_, &.{ "a", "b" });
-        try std.testing.expectEqualStrings("100000 100002 99999 199998 200005 100001 -1\n", ran.stdout);
+        try std.testing.expectEqualStrings("100000 100002 99999 199998 200005 100001 -1\n66667 66667 100000 3333266667 1 99999\n", ran.stdout);
         try std.testing.expectEqualStrings("", ran.stderr);
     }
 }

@@ -35,6 +35,36 @@ def keep(rt: mut Runtime, obj: int) -> int:
     return len(before)
 
 
+record Marker:
+    marks: list[bool]
+    gray: list[int]
+
+
+record Heap:
+    objects: list[int]
+    marker: Marker
+    free_slots: list[int]
+    allocations: int
+
+
+# The Lox heap: one arm reuses a free slot, the other grows the list and, through a
+# nested field, the marks with it.
+def heap_allocate(h: mut Heap, obj: int) -> int:
+    slot = len(h.objects)
+    if len(h.free_slots) > 0:
+        slot = h.free_slots.pop()
+        h.objects[slot] = obj
+    else:
+        h.objects.append(obj)
+        h.marker.marks.append(False)
+    h.allocations = h.allocations + 1
+    return slot
+
+
+def heap_free(h: mut Heap, slot: int):
+    h.free_slots.append(slot)
+
+
 def main(args: list[str], out: Stream) -> int:
     rt = Runtime(objects=[], count=0)
     n = len(args) * 50000
@@ -47,4 +77,14 @@ def main(args: list[str], out: Stream) -> int:
     previous = bump_last(mut rt, 7)
     kept = keep(mut rt, -1)
     out.print(rt.count, len(rt.objects), last, previous, rt.objects[n], kept, rt.objects[n + 1])
+    h = Heap(objects=[], marker=Marker(marks=[], gray=[]), free_slots=[], allocations=0)
+    total = 0
+    j = 0
+    while j < n:
+        s = heap_allocate(mut h, j)
+        if j % 3 == 0:
+            heap_free(mut h, s)
+        total = total + s
+        j = j + 1
+    out.print(len(h.objects), len(h.marker.marks), h.allocations, total, h.objects[0], h.objects[len(h.objects) - 1])
     return 0

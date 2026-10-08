@@ -124,6 +124,7 @@ pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Funct
         if (flags.transferredRead(inst) and module.managed(inst.ty)) try marks.owned_get.put(arena, @intCast(index), {});
         if (flags.transferredSlot(f, inst)) try marks.taken.put(arena, @intCast(index), {});
     }
+    try mergeFieldReads(arena, f);
     try takeFields(arena, module, f, &marks);
     var phase_a = try Analysis.of(arena, module, f, &marks);
     try phase_a.analyze();
@@ -958,8 +959,33 @@ fn poppedRead(f: *const ir.Function, earlier: []const ir.Ref, list: ir.Ref) ?ir.
     return null;
 }
 
+/// One read of a record's field per block: a record value never changes, so a later
+/// identical `record_get` in the block becomes a `copy` of the first. A nested update
+/// `r.marker.marks.append(x)` reads `r.marker` twice, once to reach the list and once to
+/// write it back; merged, the read that takes `r.marker` over also holds the list it
+/// updates (NEW-CORE-TAKE-READS-1).
+fn mergeFieldReads(arena: std.mem.Allocator, f: *ir.Function) Error!void {
+    const Key = struct { record: u32, field: u64 };
+    var first: std.AutoHashMapUnmanaged(Key, ir.Ref) = .empty;
+    for (f.blocks.items) |block| {
+        first.clearRetainingCapacity();
+        for (block.insts.items) |ref| {
+            const inst = f.inst(ref);
+            if (inst.op != .record_get) continue;
+            const key: Key = .{ .record = @backingInt(f.resolve(inst.a)), .field = inst.data };
+            const entry = try first.getOrPut(arena, key);
+            if (!entry.found_existing) {
+                entry.value_ptr.* = ref;
+                continue;
+            }
+            f.insts.items[ref.index()] = .{ .op = .copy, .ty = inst.ty, .a = entry.value_ptr.*, .span = inst.span };
+        }
+    }
+}
+
 /// Reads that take a record's fields over instead of borrowing them, so an update of
-/// the field does not copy it (§6.4):
+/// the field does not copy it (§6.4). Every `record_set` that replaces a field of the
+/// record is considered:
 /// - `g = record_get(r, f)` and `record_set(r, f, v)` in one block, `g` first, where `r`
 ///   is owned and has no other use but reads of other fields: `g` owns the field (the
 ///   record's reference goes to it) and the set drops nothing. This is a `mut` record's
@@ -974,19 +1000,19 @@ fn takeFields(arena: std.mem.Allocator, module: *const ir.Module, f: *const ir.F
         if (!ownedRecord(f, record) and !marks.owned_get.contains(@intCast(i))) continue;
         const ref: ir.Ref = @fromBackingInt(@intCast(i));
         var reads_only = true;
-        var set: ?ir.Ref = null;
+        var sets: std.ArrayList(ir.Ref) = .empty;
         for (graph.uses[i].items) |user| {
             const inst = f.inst(user);
             if (inst.op == .record_get and f.resolve(inst.a) == ref) continue;
             const replaces = inst.op == .record_set and f.resolve(inst.a) == ref and f.resolve(inst.b) != ref;
             if (replaces) {
-                set = set orelse user;
+                try sets.append(arena, user);
             } else reads_only = false;
         }
         const ctx: Taking = .{ .arena = arena, .module = module, .f = f, .graph = graph, .marks = marks };
-        if (set) |update| {
-            try ctx.takeReplaced(ref, update);
-        } else if (reads_only) try ctx.empty(ref);
+        // Each set replaces its own field: arms of a branch may each update another one.
+        for (sets.items) |update| try ctx.takeReplaced(ref, update);
+        if (sets.items.len == 0 and reads_only) try ctx.empty(ref);
     }
 }
 
