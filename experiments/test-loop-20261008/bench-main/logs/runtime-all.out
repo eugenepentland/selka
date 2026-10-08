@@ -1,0 +1,52 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 10s (all 3 build slot(s) busy)
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 5s (all 3 build slot(s) busy)
+   Compiling eda-sch v0.1.0 (/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/rust)
+warning: variant `End` is never constructed
+   --> src/kicad_sch/textbox.rs:157:5
+    |
+153 | enum Just {
+    |      ---- variant in this enum
+...
+157 |     End,
+    |     ^^^
+    |
+    = note: `Just` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: variant `Below` is never constructed
+   --> src/kicad_sch/textbox.rs:166:5
+    |
+162 | enum Cross {
+    |      ----- variant in this enum
+...
+166 |     Below,
+    |     ^^^^^
+    |
+    = note: `Cross` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `eda-sch` (lib) generated 2 warnings
+    Finished `release` profile [optimized] target(s) in 4.58s
+2026-10-08T20:04:35+00:00 before runtime loadavg 3.87 6.02 5.65
+warm-up done, 34 cases x 5 binaries verified; loadavg (3.98046875, 5.96875, 5.63525390625)
+round 1/10 done, 34 cases x 5 binaries verified; loadavg (4.142578125, 5.9697265625, 5.6376953125)
+round 2/10 done, 34 cases x 5 binaries verified; loadavg (5.53369140625, 6.2158203125, 5.72216796875)
+round 3/10 done, 34 cases x 5 binaries verified; loadavg (5.5712890625, 6.2119140625, 5.72412109375)
+round 4/10 done, 34 cases x 5 binaries verified; loadavg (5.17578125, 6.10546875, 5.69482421875)
+round 5/10 done, 34 cases x 5 binaries verified; loadavg (5.00146484375, 6.0537109375, 5.68017578125)
+round 6/10 done, 34 cases x 5 binaries verified; loadavg (4.8408203125, 6.0029296875, 5.66552734375)
+round 7/10 done, 34 cases x 5 binaries verified; loadavg (4.5576171875, 5.9033203125, 5.63623046875)
+round 8/10 done, 34 cases x 5 binaries verified; loadavg (4.4326171875, 5.85498046875, 5.6220703125)
+round 9/10 done, 34 cases x 5 binaries verified; loadavg (4.39794921875, 5.82373046875, 5.61328125)
+round 10/10 done, 34 cases x 5 binaries verified; loadavg (4.1826171875, 5.72998046875, 5.5849609375)
+exact-RSS round done (/usr/bin/time -f %M)
+
+binary        total(med)  total(min)  peak RSS  geomean ratio vs ...
+zig-fast          0.883s      0.858s     80 MiB  zig-safe 0.915  rust 0.875  go 0.356  mylang 0.729
+zig-safe          0.973s      0.950s     80 MiB  zig-fast 1.092  rust 0.956  go 0.389  mylang 0.796
+rust              1.004s      0.982s     44 MiB  zig-fast 1.143  zig-safe 1.046  go 0.407  mylang 0.833
+go                2.455s      2.358s     74 MiB  zig-fast 2.809  zig-safe 2.572  rust 2.458  mylang 2.047
+mylang            1.213s      1.186s     53 MiB  zig-fast 1.372  zig-safe 1.256  rust 1.201  go 0.488
+wrote /home/epentland/ai/canopy/mylang-worktrees/claude-test-loop/experiments/test-loop-20261008/bench-main/results/runtime.json
+2026-10-08T20:05:59+00:00 after runtime loadavg 4.41 5.75 5.59

@@ -298,9 +298,78 @@ A run with nothing changed is also faster: 0.46 s → 0.34 s in the same session
 
 **Against the benchmark** (all CPUs, the three timed edits): hub 0.61 s, leaf 0.52 s, interface 0.40 s. The median is **0.52 s**, against Go's 1.19 s, Rust's 1.64 s and Zig's 2.20 s.
 
+> **Correction (§6f).** The benchmark harness measured more for the body edits than this: leaf 0.95 s and hub 0.90 s. The interface edit matched, at 0.42 s.
+> - **Why the probe read low:** the probe repeated each edit in the same warm cache, and a repeat reuses the objects the first edit rebuilt.
+> - **Why the harness reads higher:** it empties its cache every repetition, so it always times the first edit.
+> - **What still holds:** the relative gains above, since both compilers were probed the same way.
+> - **The benchmark-level claim does not.** The benchmark's test step is 0.90 s, against Go's 0.75 s in the same run, not 0.52 s.
+
 **What is left.**
 - **The hub edit:** its critical path is now the shared check (about 200 ms), then the largest root's select, build and run. The build is lowering, LLVM emission and `zig cc` of the changed units.
 - **No-rerun edits:** discovery, the shared check, and each root's key derivation (about 50–70 ms for the largest root).
+
+## 6f. The benchmark on the merged `main`
+
+**What ran.** The EDA stage-1 benchmark, rerun on `main` `fc31e55bb`. That `main` is the morning's new core plus everything merged since: copy elimination, items 1–5, fast launches and the removed cache sync.
+- **Compiler:** a ReleaseFast build at `~/.cache/mylang/bench-main-352d9396` (sha256 prefix `ae4b4ba68304a33e`).
+- **Harness:** `eda-bench` `claude/eda-bench-newcore` `d45e0cd`, the same entries re-pinned to that compiler, with no `--jobs` (item 1).
+- **Protocol:** the morning run's (`experiments/bench-newcore-20261008/eda/`), in `experiments/test-loop-20261008/bench-main/run.sh`.
+  - Development loop: `bench.py time --repeat 3` for Zig, Go, Rust and mylang back to back, 19:52–20:00 UTC, under `bench-compile.lock` and the build-slot wrapper (16 CPUs).
+  - Runtime: on CPU 10 under `cpu10.lock`, 10 rounds after a warm-up, with every output checked against the goldens.
+- **Load:**
+  - Zig, Go and Rust ran at a one-minute load of about 3–6.
+  - mylang's edits ran while it rose to 12, as another session's gate started.
+  - The runtime run was at load about 4.
+  - The morning run had load 5–14 for the loop timings, so every language is faster now. **Compare within a run, not across runs.**
+
+**Correctness.**
+- `equiv`: 34/34 byte-identical in the debug build (3.1 s of run time, was 5.4 s) and in `--release` (1.3 s, was 2.8 s).
+- `test`: 310 passed, 3.7 s from an empty cache (was 11.1 s).
+- Runtime: every output of every round matched the goldens.
+
+**Development loop after a one-line edit.** Medians of 3 repetitions. The morning run's figure is in brackets.
+
+| step | mylang | Go | Rust | Zig |
+|---|---:|---:|---:|---:|
+| cold build | 6.95 s (12.54) | 3.35 s (5.35) | 2.67 s (3.30) | 65.09 s (132.59) |
+| clean build | 0.44 s (1.50) | 0.74 s (1.18) | 2.64 s (2.95) | 1.28 s (2.08) |
+| check, leaf / hub / interface | 0.16 / 0.16 / 0.16 s | 0.50 / 0.60 / 0.71 s | 0.53 / 0.64 / 0.50 s | 0.70 / 0.70 / 0.72 s |
+| build, leaf / hub / interface | 0.45 / 0.46 / 0.40 s | 0.37 / 0.21 / 0.64 s | 0.66 / 0.81 / 0.63 s | 0.61 / 0.56 / 0.54 s |
+| **test, leaf / hub / interface** | **0.95 / 0.90 / 0.42 s** | 0.70 / 0.75 / 1.18 s | 2.11 / 1.50 / 1.50 s | 1.23 / 1.22 / 1.15 s |
+| median of the three edits: check | **0.16 s** (0.28) | 0.60 s (0.99) | 0.53 s (0.71) | 0.70 s (1.19) |
+| build | 0.45 s (0.80) | **0.37 s** (0.55) | 0.66 s (0.85) | 0.56 s (1.02) |
+| test | 0.90 s (4.86) | **0.75 s** (1.19) | 1.50 s (1.64) | 1.22 s (2.20) |
+
+- **The test step** went from 4.1× Go's (4.86 s against 1.19 s) to 1.2× (0.90 s against 0.75 s) in the same-run comparison.
+  - It is now faster than Zig's and Rust's.
+  - It is the fastest of the four on the interface edit.
+  - It trails Go on the two body edits.
+- **Check plus build plus test** after an edit: mylang 1.51 s, Go 1.72 s, Zig 2.48 s, Rust 2.69 s (sums of the per-step medians).
+- **Peak memory** of mylang's test step: 352 MiB (leaf), 514 MiB (hub), 138 MiB (interface).
+
+**Why the body edits read higher than §6e's 0.52–0.61 s.** It is the cache, not the load (`probe-rounds.out`, `shift.out`).
+- **In the probe's fresh cache,** the first leaf and hub edits took 0.94 and 0.88 s, as in the harness. Repeating the same edits took 0.58–0.75 s.
+- **A one-line shift:**
+  - first time: 0.95 s;
+  - again with another constant: 0.57 s;
+  - a new two-line shift: 0.96 s;
+  - that two-line shift repeated: 0.70 s.
+
+  The same 31 tests reran each time.
+- **The harness** empties its cache every repetition and times each edit once. So it always pays for rebuilding the code that only moved. §6e's probe repeated edits in one warm cache, and mostly did not.
+- **Lever 0 in §8** is the fix.
+
+**Program runtime, optimised builds over the 34 designs.** The geometric mean of per-design ratios; the morning run's figure is in brackets.
+
+| binary | total (median of 10) | peak RSS | mylang's time as a multiple of this |
+|---|---:|---:|---:|
+| Zig ReleaseFast | 0.883 s | 80 MiB | **1.37×** (1.82×) |
+| Zig ReleaseSafe | 0.973 s | 80 MiB | 1.26× (1.67×) |
+| Rust `--release` | 1.004 s | 44 MiB | 1.20× (1.65×) |
+| Go | 2.455 s | 74 MiB | 0.49× (0.67×) |
+| mylang `--release` | 1.213 s (1.593 s) | 53 MiB | — |
+
+That gain is copy elimination's, which was merged into `main` before this branch. The test-loop work does not touch generated code.
 
 ## 7. Order and rules
 
@@ -323,9 +392,17 @@ A run with nothing changed is also faster: 0.46 s → 0.34 s in the same session
 
 ## 8. Deferred: what is left, and when to come back
 
-**Decision, 2026-10-08.** After item 5 the test step is about 2× faster than Go's on EDA. The user chose to stop here: merge, rerun the benchmark (§6f), and keep this section so the work can be resumed. The rest is diminishing returns at today's project size. Each further 0.1–0.2 s costs days of front-end or back-end work. The test step is also now small next to the rest of an agent's edit loop.
+**Decision, 2026-10-08.** The user chose to stop here: merge, rerun the benchmark (§6f), and keep this section so the work can be resumed.
 
-**Where the time goes now.** Phase probes on the final branch, load about 8, all CPUs. The probes were temporary `elapsed` prints, built and then reverted (§6e).
+Where things stand, by the benchmark run of §6f:
+- **The test step:** median 0.90 s, against Go 0.75 s, Zig 1.22 s and Rust 1.50 s in the same run. It was 4.1× Go's in the morning run.
+  - mylang is fastest on the interface edit: 0.42 s, against Go's 1.18 s.
+  - It trails Go on the two body edits: 0.90–0.95 s, against 0.70–0.75 s.
+- **The whole loop after an edit** (check + build + test): mylang is the fastest of the four, because its check is 0.16 s.
+
+The levers left cost days each, except lever 1. Lever 0, found by the benchmark, is the largest for body edits.
+
+**Where the time goes now.** The phase probes below ran on the final branch, at load about 8, on all CPUs. They repeated each edit in a warm cache, so they leave out the cost of lever 0: about 0.3 s on a body edit's first run, which is what the benchmark times (§6f). The probes were temporary `elapsed` prints, built and then reverted (§6e).
 
 | phase | comment or interface edit (0 rerun, wall ≈ 0.42 s) | hub edit (111 rerun, wall ≈ 0.65 s) |
 |---|---:|---:|
@@ -337,6 +414,21 @@ A run with nothing changed is also faster: 0.46 s → 0.34 s in the same session
 
 **Further levers, cheapest first.** The gains are estimates from the probes above, not measurements.
 
+0. **Objects that do not depend on where their code sits (body edits; measure first, then probably 1–3 days).**
+   - **What the benchmark found** (§6f, `shift.out`): in one cache, the leaf edit's test step took:
+     - 0.95 s the first time;
+     - 0.57 s for a second edit with the same line shift and a different constant;
+     - 0.96 s for a new, two-line shift;
+     - 0.70 s for a repeat of that two-line shift.
+
+     The same 31 tests reran each time.
+   - **Probable cause:** a body edit moves every function below it in the file, and their objects carry source line numbers (debug locations). So the object cache misses for code that did not change. A repeat with the same shift finds them.
+   - **The lever:** keep positions out of an object's identity, so only the edited function's object is rebuilt. Options:
+     - emit line information relative to each function's start, and add the base when the unit is linked or in a small per-unit table;
+     - or key objects on position-free IR, and regenerate only the line table.
+   - **Verify first:** count the units compiled on a first edit against a repeat (the test runner has no build report; use the unit cache's new files, or a temporary counter). This confirms that line-shifted units are what rebuilds.
+   - **Expected:** the leaf and hub test steps 0.90–0.95 s → about 0.6 s. That would be under Go's 0.70–0.75 s. The `build` step after a body edit (0.45 s) gains for the same reason.
+   - **Correctness:** debug line numbers in backtraces and trap reports must still be right after a shift. Add a test that edits above a trapping function and checks the reported line.
 1. **One set of keys for the whole directory run (cheap: about half a day to a day).**
    - **What repeats now:** each in-process root calls `sharedKeys` in `test_runner.zig`. That lowers the reachable program of its own ready tests (`build.buildRootsSource`) and digests every function of it (`test_runner_identity.Shared.build`). The roots share most of their import graph, so the same shared-module functions are lowered and digested once per root, 28 times on EDA.
    - **The change:** build one `Shared` over the union program once, in the directory run, beside the shared check, and hand it to each root through `test_runner_shared.View`. A root then only maps its tests to function indices and hashes their reach (`test_keys.key`).
@@ -359,14 +451,15 @@ A run with nothing changed is also faster: 0.46 s → 0.34 s in the same session
    - **Expected:** maybe 150 ms off edits that rerun tests.
 4. **A resident process, a daemon or watch mode (a different product).** It keeps the checked program and the lowering in memory between edits, so there is no start-up, discovery or reload at all. Consider it only if levers 1–3 fall short at the large stages.
 
-**The estimated ceiling with levers 1–3:**
-- edits that rerun nothing: about 0.15–0.20 s, from 0.40 s;
-- hub and leaf edits: about 0.3 s, from 0.5–0.6 s;
-- so at most another 2×, of which only lever 1 is cheap.
+**The estimated ceiling with levers 0–3:**
+- body edits, by the benchmark's measure: about 0.4–0.5 s, from 0.90–0.95 s;
+- edits that rerun nothing: about 0.15–0.20 s, from 0.42 s.
+
+Levers 0 and 1 are the cheap ones, and they take most of it.
 
 **When to come back.**
 - **When the EDA port reaches its ~100k-line stage** (`eda-port-benchmark-plan`): rerun the probes above at that size. If the shared check has grown past about 0.5 s, do lever 2 first. Otherwise do lever 1.
-- **If the benchmark's test step is again slower than Go's**, by the `bench.py time` protocol of §6f.
+- **To get the test step under Go's on body edits** (it is 0.90 s against 0.75 s in §6f): do lever 0 first, then lever 1. Measure with the `bench.py time` protocol of §6f, which empties the cache every repetition. The warm-cache probe reads body edits about 0.3 s low.
 - **When the debug back end is taken up** for build speed: lever 3 comes with it.
 
 **How to resume.**
