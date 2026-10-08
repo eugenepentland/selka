@@ -7,6 +7,7 @@ import tempfile
 import unittest
 
 import frontend_compare_frozen_tests as gate
+import frontend_compare_settings as settings
 
 
 class SourceNormalization(unittest.TestCase):
@@ -115,6 +116,47 @@ class ImmutableLoader(unittest.TestCase):
             self.assertEqual(loaded.value, 42)
             self.assertEqual(loaded.__file__, str(helper))
             self.assertEqual(before, {path.name: path.read_bytes() for path in root.iterdir()})
+
+
+class SettingsFingerprint(unittest.TestCase):
+    def test_only_a_recomputed_fingerprint_can_be_rekeyed(self):
+        report = {"tests": [{"name": "test_value", "status": "passed", "source": "a" * 64,
+            "contract": "contract", "provider": "provider", "reason": "", "at": ""}],
+            "literal": "a" * 64, "passed": 1}
+        raw = json.dumps(report).encode()
+        normalized, stdout, changes = settings.normalize(report, raw, "a" * 64, "c" * 64)
+        self.assertEqual(normalized["literal"], "a" * 64)
+        self.assertEqual(normalized["tests"][0]["contract"], "contract")
+        self.assertEqual(normalized["tests"][0]["provider"], "provider")
+        self.assertEqual(json.loads(stdout), normalized)
+        self.assertEqual(len(changes), 1)
+        self.assertEqual(report["tests"][0]["source"], "a" * 64)
+        for corrupted in ("b" * 64, "incorrect-source"):
+            damaged = copy.deepcopy(report)
+            damaged["tests"][0]["source"] = corrupted
+            with self.assertRaisesRegex(AssertionError, "incorrect derived"):
+                settings.normalize(damaged, json.dumps(damaged).encode(), "a" * 64, "c" * 64)
+
+    def test_cases_budgets_and_compiler_identity_change_independent_inputs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            entry, cases = root / "input.my", root / "cases.json"
+            entry.write_text("module input\n")
+            cases.write_text('{"test_value":{"arguments":{}}}\n')
+            argv = ["compiler", "test", str(entry), "--cases", str(cases), "--max-steps=99"]
+            context = {"zig_path": "/tool/zig", "tool_digest": "1" * 64,
+                "environment": {"MYL_CORE_LEAKCHECK": "1"}}
+            original = settings.fields(argv, context, "a" * 64)
+            changed_identity = settings.fields(argv, context, "b" * 64)
+            self.assertEqual(original[:1] + original[2:], changed_identity[:1] + changed_identity[2:])
+            self.assertNotEqual(settings.preimage(original), settings.preimage(changed_identity))
+            cases.write_text('{"test_value":{"arguments":{"value":3}}}\n')
+            self.assertNotEqual(settings.preimage(original), settings.preimage(settings.fields(argv, context, "a" * 64)))
+            changed_budget = argv[:-1] + ["--max-steps=100"]
+            self.assertNotEqual(settings.fields(argv, context, "a" * 64), settings.fields(changed_budget, context, "a" * 64))
+            (root / "mylang.json").write_text("{}\n")
+            with self.assertRaisesRegex(AssertionError, "project configuration"):
+                settings.fields(argv, context, "a" * 64)
 
 
 if __name__ == "__main__":

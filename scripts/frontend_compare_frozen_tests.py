@@ -140,6 +140,8 @@ def main():
     parser.add_argument("--source-commit", help="optional independently recorded candidate source HEAD")
     parser.add_argument("--against-identity-sha256", help="optional independently recorded frozen identity hash")
     parser.add_argument("--normalize-source-paths", action="store_true", help="audit exact source-path relocation; preserve every other field/byte")
+    parser.add_argument("--settings-context", type=Path, help="audited original keyed environment and immutable compiler/tool identities for configured provider fingerprints")
+    parser.add_argument("--settings-hasher", type=Path, help="independently built frontend_settings_hash.zig witness; required with --settings-context")
     parser.add_argument("--compiler", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--cache", type=Path, required=True)
@@ -212,6 +214,21 @@ def main():
     jobs = args.jobs or identity["file_workers"]
     comparisons = {}
     env = dict(os.environ, MYL_CORE_LEAKCHECK="1", PYTHONDONTWRITEBYTECODE="1")
+    settings_context, settings_helper = None, None
+    settings_context_sha = digest(args.settings_context) if args.settings_context else None
+    assert bool(args.settings_context) == bool(args.settings_hasher), "settings context and witness must be paired"
+    if args.settings_context:
+        settings_helper = load("settings_helper", Path(__file__).with_name("frontend_compare_settings.py"))
+        settings_context = json.loads(args.settings_context.read_text())
+        settings_helper.validate_context(settings_context, Path(identity["oracle"]["path"]), compiler,
+            frozen_compiler_source, compiler_source)
+        assert digest(args.settings_hasher) == settings_context["hasher_sha256"], "settings witness hash mismatch"
+        inherited = settings_helper.keyed_environment(env)
+        assert all(name in settings_context["environment"] and settings_context["environment"][name] == value
+            for name, value in inherited.items()), "unrecorded or differing inherited keyed environment"
+        env.update(settings_context["environment"])
+        write(output / "settings-context.json", {"path": str(args.settings_context.resolve()),
+            "sha256": digest(args.settings_context), "context": settings_context})
     started = time.monotonic()
 
     def command(label, argv, cwd):
@@ -239,6 +256,7 @@ def main():
             "elapsed_seconds": elapsed, "returncode": done.returncode,
             "timeout": timeout, "timeout_seconds": 600, "cpu_affinity": sorted(os.sched_getaffinity(0)),
             "leak_environment": {"MYL_CORE_LEAKCHECK": "1"},
+            "keyed_environment": settings_helper.keyed_environment(env) if settings_helper else None,
             "other_build_heavy_processes": heavy,
             "process_sample": {"command": ["ps", "-eo", "pid,ppid,psr,etimes,args"],
                 "elapsed_seconds": sample_elapsed, "returncode": sample.returncode},
@@ -283,6 +301,32 @@ def main():
             reference_source, originals, args.normalize_source_paths)
         new_report, new_stdout, new_stderr, new_changes = normalize_sources(
             report, done.stdout, done.stderr, corpus_source, candidate_originals, args.normalize_source_paths)
+        if settings_context and "/configured/" in label:
+            old_fields = settings_helper.fields(receipt["command"], settings_context,
+                settings_context["reference"]["compiler_identity"])
+            new_fields = settings_helper.fields(argv, settings_context,
+                settings_context["candidate"]["compiler_identity"])
+            assert old_fields[:1] + old_fields[2:] == new_fields[:1] + new_fields[2:], "settings inputs differ beyond compiler identity"
+            canonical = old_fields.copy()
+            canonical[1] = b"<compiler-identity>"
+            proof_path = output / "settings" / (label + ".preimages.json")
+            write(proof_path, [settings_helper.preimage(fields).hex() for fields in (old_fields, new_fields, canonical)])
+            hashed, hash_timeout, _, hash_folder = command("settings/" + label,
+                [str(args.settings_hasher.resolve()), str(proof_path)], str(compiler_source))
+            assert hashed.returncode == 0 and not hash_timeout, "settings witness failed"
+            hashes = hashed.stdout.decode().splitlines()
+            assert len(hashes) == 3 and all(re.fullmatch("[0-9a-f]{64}", value) for value in hashes)
+            replacement = hashes[2]
+            old_report, old_stdout, changes = settings_helper.normalize(old_report, old_stdout, hashes[0], replacement)
+            old_changes += changes
+            new_report, new_stdout, changes = settings_helper.normalize(new_report, new_stdout, hashes[1], replacement)
+            new_changes += changes
+            write(output / "settings" / (label + ".proof.json"), {
+                "reference_fields": [field.hex() for field in old_fields],
+                "candidate_fields": [field.hex() for field in new_fields],
+                "all_other_inputs_byte_equal": True, "reference_fingerprint": hashes[0],
+                "candidate_fingerprint": hashes[1], "canonical_fingerprint": replacement,
+                "witness_receipt": str(hash_folder.with_suffix(".json").relative_to(output))})
         problems = []
         if done.returncode != receipt["returncode"] or timeout != receipt["timeout"]:
             problems.append("process status or timeout differs")
@@ -384,10 +428,12 @@ def main():
         "reference_sources_unchanged": all(digest(reference_source / path) == sha for path, sha in originals.items()),
         "reference_files_unchanged": reference_files == {str(path.relative_to(reference)): digest(path) for path in reference.rglob("*") if path.is_file()},
         "compiler_sources_unchanged": compiler_sources == production_manifest(compiler_source),
-        "compiler_unchanged": digest(compiler) == compiler_sha}
+        "compiler_unchanged": digest(compiler) == compiler_sha,
+        "settings_context_unchanged": not settings_context or digest(args.settings_context) == settings_context_sha,
+        "settings_witness_unchanged": not settings_context or digest(args.settings_hasher) == settings_context["hasher_sha256"]}
     write(output / "summary.json", summary)
     print(json.dumps(summary, sort_keys=True), flush=True)
-    return int(bool(summary["mismatches"]) or not summary["source_manifest_unchanged"] or not summary["compiler_unchanged"] or not summary["reference_sources_unchanged"] or not summary["reference_files_unchanged"] or not summary["compiler_sources_unchanged"])
+    return int(bool(summary["mismatches"]) or not summary["source_manifest_unchanged"] or not summary["compiler_unchanged"] or not summary["reference_sources_unchanged"] or not summary["reference_files_unchanged"] or not summary["compiler_sources_unchanged"] or not summary["settings_context_unchanged"] or not summary["settings_witness_unchanged"])
 
 
 if __name__ == "__main__":
