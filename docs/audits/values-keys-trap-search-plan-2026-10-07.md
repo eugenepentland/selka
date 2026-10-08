@@ -98,9 +98,13 @@ retargeted exit.
 
 **After F4, after the user's go:** the V wave, on `codex/vk-tables`.
 
-**The CE wave (§4.5) runs now (2026-10-08).** Claude agents run it at the user's request:
-CE-A on `claude/ce-records` and CE-B on `claude/ce-lists`, integrated on
-`claude/copy-elim`. It replaces the O wave, which VP3's data ruled out.
+**The CE wave (§4.5) is done and merged into `main` (`3e210ffba`, 2026-10-08).** CE-A ran on
+`claude/ce-records` and CE-B on `claude/ce-lists`, integrated on `claude/copy-elim`. It
+replaced the O wave, which VP3's data ruled out.
+
+**The CE2 wave (§4.5, "CE2") runs now (2026-10-08).** Claude agents run it at the user's
+request: CE2-A on `claude/ce2-effects` and CE2-B on `claude/ce2-results`, integrated on
+`claude/copy-elim-2`.
 
 ## 1. Where it starts
 
@@ -846,6 +850,119 @@ A wrong answer is never acceptable. Every lane and every merge passes:
   equal to `.expected`;
 - the same output with counting on and off.
 
+#### CE2. Second wave: field effects, and results and arguments in place (2026-10-08)
+
+**The CE wave is done.** It was merged into `main` at `3e210ffba` (report:
+`experiments/ce-x-20261008/REPORT.md`). Measured against the pre-wave compiler:
+- copies: Lox −96%, EDA −91.5%, parity −99.8%;
+- wall time: Lox VM ×0.229, tree-walker ×0.279, EDA ×0.784, parity ×0.910; the rows are
+  unchanged.
+
+**What is left.** Lox still copies 51.3 GB, and its VM is 6.6× Zig. EDA copies 3.47 GB.
+Two shapes account for most of it:
+- **Element round trips through a local.**
+  - `frame = rt.frames[k]` … `rt.frames[k] = frame` stores the 88-byte frame back at
+    `vm.my:433` and again at `vm.my:534`: two stores per instruction, 22.2 GB, which is 43% of
+    Lox.
+  - `heap::sweep` copies elements out to read them: 3.0 GB.
+- **Calls that pass a record `mut` and also return a value.**
+  - `read_byte(mut frame)` writes only `frame.ip`, but the whole frame is copied first while a
+    view of `frame.function` is live, because interference is tracked per value.
+  - The declared result is then copied into `%ret`.
+  - Together these are P2 and P7: about 11 GB of Lox and 1.7 GB of EDA.
+
+**Who and where.** As in CE:
+- two Claude lanes, branched from `claude/copy-elim-2` (`main` after the CE merge, plus this
+  section);
+- `src/core/` only;
+- the coordinator integrates the lanes, gates them and times the result (CE2-X).
+
+The counts are compared with CE-X's final numbers (`experiments/ce-x-20261008/raw/final`,
+`tools/ce.py`, `tools/tables.py`).
+
+**CE2-A. Field effects (about 10–16 h).** Branch `claude/ce2-effects`.
+1. **Field-level effect summaries.** For each function and each `mut` parameter, record the
+   field paths it may write and may read.
+   - They are transitive over the call graph.
+   - They are conservative for indirect, `extern` and runtime calls.
+   - They live in a new module in `src/core/`.
+2. **Per-field interference** in `emit_homes.zig`. An in-place update of one field may go
+   ahead while a view of a disjoint field is live, including across a call whose summary
+   writes only other fields (`read_byte` writes only `frame.ip`).
+3. **Dead and sunk element stores.** An element store whose value a later store to the same
+   element overwrites, with no read of that element in between, is removed or moved to the
+   exits that need it. A read counts whether it is direct or through a callee's summary.
+   Target: `vm.my:534`, which the next iteration's `vm.my:433` overwrites.
+4. **Narrowed element stores.** In `xs[k] = v`, `v` was loaded from `xs[k]` or last stored
+   to it, and the summaries show only some of its fields changed since. The store writes only
+   those fields: no whole-record copy, and no count traffic for the unchanged parts.
+
+- **Targets:**
+  - P4 at `vm.my:433` and `:534`: 22.2 GB;
+  - P4 in `vm::call`, `heap::allocate` and `heap::set_env_slot`: 2.9 GB;
+  - P2 at `vm.my:254`, `interpreter.my:667` and `heap.my:106`: 7.7 GB.
+- **Owns:**
+  - the summary module;
+  - interference in `emit_homes.zig`;
+  - element-store emission: `list_set`, `list_set_field`, and `own.zig`'s store rules.
+- **Exit:**
+  - the two `vm.my` store sites at 2 GB or less together;
+  - the named P2 sites down at least 90%;
+  - Lox P2+P4 down at least 70%;
+  - no other pattern up;
+  - the CE gates.
+
+**CE2-B. Results and arguments in place (about 10–16 h).** Branch `claude/ce2-results`.
+1. **Declared results next to `mut` values are built in `%ret`**, by giving them homes inside
+   the result record. Examples: `return Ok(token)`, and
+   `return frame.function.code.constants[i]`.
+2. **Read-only by-value arguments are read where they lie.** A list element or record field
+   passed by value to a callee that never writes that parameter is passed by address,
+   provided no `mut` argument of the same call can reach it. Examples:
+   `object.cost(rt.objects[i])`, `is_free(rt.objects[i])`.
+3. **`sret` sharing for a by-value argument that dies at the call:** `s = advance(s, x)` (the
+   rows' `record_pass`).
+4. **A record pushed onto a list is built in its new slot** (P6, EDA `parse_list`).
+5. **`table::set`'s list copy** (P9, `table.my:84`): find what shares the list, and remove the
+   copy when it is not needed.
+6. **Container operations on an element's field happen in place**, for example
+   `xs[i].items.append(v)`, by extending `list_set_field`.
+
+- **Targets:**
+  - P7 at `vm.my:264`, `vm.my:268` and `interpreter.my:668`: 5.3 GB;
+  - EDA's `sexpr_*` P7: 1.7 GB;
+  - `heap::sweep` P3: 3.0 GB;
+  - the rows' P1: 363 MB;
+  - EDA P6: 0.44 GB;
+  - Lox P9 at `table.my:84`: 1.85 GB.
+- **Owns:**
+  - call, return and parameter lowering in `emit_llvm.zig`, including the in-out ABI and
+    `sret`;
+  - `list_push` emission;
+  - `own.zig`'s copy-on-write decision for the `table::set` case. Element stores belong to
+    CE2-A.
+- **Exit:**
+  - the named P7 sites, `heap::sweep` P3, the rows' P1 and EDA P6 each down at least 90%;
+  - EDA total copies at 1.5 GB or less;
+  - no other pattern up;
+  - the CE gates.
+
+**Shared files.** Both lanes edit `emit_llvm.zig` and `own.zig`, in different functions. A
+lane that has to change the other's function makes the smallest change it can and lists it
+in its report.
+
+**CE2-X. Integration and measurement (coordinator).**
+- **Work:** as CE-X. Merge both lanes into `claude/copy-elim-2`, run the CE gates with fuzz
+  9×200, and count against CE-X's final.
+- **Wall time** on CPU 10 against the CE-X compiler (`3e210ffba`'s generated code):
+  - Lox, both engines, including the six formerly infeasible cells;
+  - EDA;
+  - parity;
+  - the rows.
+- **Exit:**
+  - every CE gate;
+  - no row slower than 1.03× beyond noise.
+
 ### 4.6 C1. Trap containment design note (about 2–3 h; with D9 stage 5 planning)
 
 **Semantics.** `isolate(f, args...)` returns `Result[T, Trap]`. `f` takes values, not `mut`
@@ -867,7 +984,8 @@ The same mechanism serves tasks.
 | Amendments | AM1–AM3, applied to the front-end plan's F1 and F2 on 2026-10-07 | — | counted in the front-end plan: F1 17–24 h, F2 13–18 h |
 | T | T1, then T1-R (stop), then T2 and T3; T4 after V1 | the front-end F1 exit and the user's go | 26–40 h |
 | V | V1, then V2 (inventory and stop), V3, and V4 if needed; T4 | F4's exit and the user's go | 28–42 h, plus 6–10 h for V4 if VP1 calls for it |
-| CE | CE-A and CE-B in parallel, then CE-X | VP3 (done 2026-10-08) and the user's go (given) | 25–41 h |
+| CE | CE-A and CE-B in parallel, then CE-X | VP3 (done 2026-10-08) and the user's go (given) | 25–41 h (done 2026-10-08) |
+| CE2 | CE2-A and CE2-B in parallel, then CE2-X | CE merged into `main` (done) and the user's go (given) | 22–36 h |
 | C | C1 | concurrency planning | 2–3 h |
 
 The T wave runs beside F2–F4 because it owns different files (the runner, the generator,
