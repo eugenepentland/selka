@@ -346,6 +346,10 @@ const loop_source =
     \\    return True
     \\
     \\
+    \\def report(m: Machine) -> int:
+    \\    return 0 - m.frames[len(m.frames) - 1].ip
+    \\
+    \\
     \\def run(m: mut Machine) -> int:
     \\    frame = m.frames[m.count - 1]
     \\    while True:
@@ -360,7 +364,7 @@ const loop_source =
     \\            ok = checked(mut m, next_op(mut frame))
     \\        m.frames[m.count - 1] = frame
     \\        if not ok:
-    \\            return -1
+    \\            return report(m)
     \\
     \\
     \\def main(out: Stream) -> int:
@@ -372,8 +376,8 @@ const loop_source =
 ;
 
 /// What the base compiler prints for `loop_source`: the error path stores the frame into the
-/// last element (the count is 0, so `count - 1` is -1).
-const loop_expected = "-1 5 6 4\n";
+/// last element (the count is 0, so `count - 1` is -1), which `report` then reads.
+const loop_expected = "-6 5 6 4\n";
 
 /// The text of one function in a module's textual IR, from its header to the next function.
 fn functionIr(text: []const u8, name: []const u8) []const u8 {
@@ -414,7 +418,9 @@ test "an element store a later store of the same element overwrites before anyth
     const a = arena.allocator();
     // The store at the end of each step is overwritten by the next step's first store, with
     // only `if not ok: return` and `next_op(mut frame)` between: it stays only on the return
-    // path, where the caller sees the machine; its bounds check stays where it was.
+    // path, where the caller sees the machine and `report` reads it (a call that takes the
+    // moved store's value as an argument); its bounds check stays where it was. The owned IR
+    // verifies: every call still names its callee.
     const run = functionIr(try support.ownedText(a, loop_source), "run");
     try std.testing.expectEqual(@as(usize, 1), countOp(run, "list_set"));
     var dir = std.testing.tmpDir(.{});

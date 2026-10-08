@@ -878,8 +878,15 @@ const Context = struct {
             }
             return;
         }
-        if (inst.a != .none and f.resolve(inst.a) == old) inst.a = new;
-        if (inst.b != .none and f.resolve(inst.b) == old) inst.b = new;
+        // `a` and `b` are values only where `valueOperands` reads them (a call's `a` is its callee).
+        switch (inst.op) {
+            .call, .print, .record_make => {},
+            .jump, .@"unreachable" => return,
+            else => {
+                if (inst.a != .none and f.resolve(inst.a) == old) inst.a = new;
+                if (inst.b != .none and f.resolve(inst.b) == old) inst.b = new;
+            },
+        }
         if (inst.op.hasExtra()) {
             const operands = ir.ExtraSlice.unpack(inst.data);
             for (f.extra.items[operands.start..][0..operands.len]) |*operand| {
