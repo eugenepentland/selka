@@ -44,7 +44,8 @@ pub fn fieldStores(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Fu
         while (pos < f.blocks.items[b].insts.items.len) : (pos += 1) {
             const ref = f.blocks.items[b].insts.items[pos];
             if (f.inst(ref).op != .list_set) continue;
-            if (try rewriteStore(arena, module, f, .{ .uses = uses, .block = @intCast(b), .store = ref })) {
+            const site: Site = .{ .uses = uses, .block = @intCast(b), .store = ref };
+            if (try rewriteStore(arena, module, f, site) or try rewriteFieldUpdate(arena, module, f, site)) {
                 rewritten += 1;
                 uses = try countUses(arena, f);
                 pos = 0;
@@ -175,6 +176,51 @@ fn rewriteStore(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Funct
         if (member == read_ref or member == list and f.inst(list).op == .copy) continue;
         if (std.mem.indexOfScalar(ir.Ref, removed[0..removed_len], member) != null) continue;
         try kept.append(arena, member);
+    }
+    f.blocks.items[site.block].insts = kept;
+    return true;
+}
+
+/// `xs[i].items.append(v)` (CE2-B): the builder's transferred element read `g = list_get(xs, i)`,
+/// `items = record_get(g, f)`, an update of `items` into `v`, `r = record_set(g, f, v)` and
+/// `xs' = list_set(xs, i, r)`, where `g` has no other use and the field holds a block. The field
+/// read becomes a transferred `list_get_field` at the read's place (it takes the slot's owner, so
+/// the update finds the block unique when the list was) and the store a `list_set_field` that
+/// releases nothing: neither the element nor any field but `f` is copied out or back.
+fn rewriteFieldUpdate(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, site: Site) Error!bool {
+    const store = f.inst(site.store);
+    const top = f.resolve(f.operands(store.data)[0]);
+    const outer = f.inst(top);
+    if (outer.op != .record_set or site.uses[top.index()] != 1) return false;
+    const read_ref = f.resolve(outer.a);
+    const read = f.inst(read_ref);
+    if (read.op != .list_get or read.data != flags.place_read or site.uses[read_ref.index()] != 2) return false;
+    if (f.resolve(read.a) != f.resolve(store.a) or f.resolve(read.b) != f.resolve(store.b)) return false;
+    if (!module.isBlock(module.compound(read.ty).record[@intCast(outer.data)])) return false;
+    const insts = f.blocks.items[site.block].insts.items;
+    const field_ref = for (insts) |member| {
+        const inst = f.inst(member);
+        if (inst.op == .record_get and f.resolve(inst.a) == read_ref and inst.data == outer.data) break member;
+    } else return false;
+    const read_at = std.mem.indexOfScalar(ir.Ref, insts, read_ref) orelse return false;
+    const field_at = std.mem.indexOfScalar(ir.Ref, insts, field_ref).?;
+    const top_at = std.mem.indexOfScalar(ir.Ref, insts, top) orelse return false;
+    const store_at = std.mem.indexOfScalar(ir.Ref, insts, site.store) orelse return false;
+    if (!(read_at < field_at and field_at < top_at and top_at < store_at)) return false;
+    // The read's check moves to the field read: nothing between may trap, write or have an effect.
+    for (insts[read_at + 1 .. field_at]) |between| {
+        if (!inert(f.inst(between), read.check == .exact)) return false;
+    }
+    const path = ir.FieldPath.init(&.{@intCast(outer.data)}) orelse return false;
+    f.insts.items[field_ref.index()] = .{ .op = .list_get_field, .ty = f.inst(field_ref).ty, .a = read.a, .b = read.b, .data = path.pack() | flags.place_read, .check = read.check, .span = read.span };
+    const constant: ir.Ref = @fromBackingInt(@intCast(f.insts.items.len));
+    try f.insts.append(arena, .{ .op = .iconst, .ty = .u64, .data = path.pack() });
+    const extra_start: u32 = @intCast(f.extra.items.len);
+    try f.extra.appendSlice(arena, &.{ f.resolve(outer.b), constant });
+    f.insts.items[site.store.index()] = .{ .op = .list_set_field, .ty = store.ty, .a = store.a, .b = store.b, .data = (ir.ExtraSlice{ .start = extra_start, .len = 2 }).pack(), .check = store.check, .span = store.span };
+    var kept: std.ArrayList(ir.Ref) = .empty;
+    for (insts) |member| {
+        if (member != read_ref and member != top) try kept.append(arena, member);
     }
     f.blocks.items[site.block].insts = kept;
     return true;

@@ -2853,7 +2853,8 @@ const FunctionEmitter = struct {
         const at = try self.offsetPointer(out, slot, target.offset);
         var held: std.ArrayList(Held) = .empty;
         self.count_detail = if (self.count_fn != null) "list_set_field.old" else null;
-        try self.holdManaged(out, target.ty, at, &held, null);
+        // A field a transferred read took over (`xs[i].items.append(v)`, CE2-B) is not released.
+        if (!flags.transferredSlot(self.function, inst)) try self.holdManaged(out, target.ty, at, &held, null);
         self.count_detail = null;
         try self.storeOperand(out, target.ty, self.function.operands(inst.data)[0], at);
         try self.releaseHeld(out, held.items);

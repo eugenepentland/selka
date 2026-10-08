@@ -408,6 +408,33 @@ def globals() -> str:
     return str(n) + " " + str(g.table.count) + " " + str(g.table.entries[3].value) + " " + str(snapshot.count) + " " + str(len(snapshot.entries)) + " " + str(kept) + " " + str(peek_after(mut g, 5)) + " " + str(g.table.entries[5].value)
 
 
+# ---- step 6: container updates of an element's field in place ----
+
+record Bucket:
+    name: str
+    items: list[int]
+    seen: dict[int, int]
+    a: int
+    b: int
+
+
+def buckets(n: int) -> str:
+    xs = [Bucket(name="b" + str(k), items=[], seen={}, a=k, b=0) for k in range(4)]
+    before = xs
+    keep = xs[1].items
+    for i in range(n):
+        xs[i % 4].items.append(i)
+        xs[i % 3].seen[i % 5] = i
+        if i % 7 == 0:
+            _ = xs[i % 4].items.pop()
+        if i == 10:
+            keep = xs[1].items
+    total = 0
+    for x in xs:
+        total += len(x.items) * 100 + x.items[len(x.items) - 1] + len(x.seen) * 7 + x.a
+    return str(total) + " " + str(len(before[0].items)) + " " + str(len(keep)) + " " + str(keep[len(keep) - 1]) + " " + xs[3].name + " " + str(xs[2].seen[4])
+
+
 # A trap between the build in %ret and the return.
 def trapping(k: int, t: mut Cursor) -> Result[Token, LexError]:
     tok = make_token(b"xyz", t, 3)
@@ -422,6 +449,7 @@ def main(args: list[str], out: Stream) -> int:
     out.print(lent())
     out.print(sharing())
     out.print(globals())
+    out.print(buckets(300))
     if len(args) > 0:
         t = Cursor(pos=0, line=0, col=9223372036854775807, error_span=Span(line=0, col=0, offset=0))
         match trapping(len(args), mut t):

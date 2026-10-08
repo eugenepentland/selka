@@ -383,6 +383,55 @@ test "a field taken for a mut call survives a call that borrows its record first
     try std.testing.expectEqualStrings(debug.stdout, release.stdout);
 }
 
+const element_fields =
+    \\record Bucket:
+    \\    name: str
+    \\    items: list[int]
+    \\    a: int
+    \\    b: int
+    \\    c: int
+    \\
+    \\
+    \\def fill(n: int) -> int:
+    \\    xs = [Bucket(name="b", items=[], a=k, b=0, c=0) for k in range(4)]
+    \\    before = xs
+    \\    keep = xs[1].items
+    \\    for i in range(n):
+    \\        xs[i % 4].items.append(i)
+    \\        if i % 7 == 0:
+    \\            _ = xs[i % 4].items.pop()
+    \\    total = 0
+    \\    for x in xs:
+    \\        total += len(x.items) * 100 + x.items[len(x.items) - 1]
+    \\    return total * 10 + len(before[0].items) + len(keep)
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(fill(100))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-CE2-RESULTS-7
+test "xs[i].items.append(v) updates the element's field in place: the element is never copied out or back" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.ownedText(arena.allocator(), element_fields);
+    const fill = functionIr(text, "fill");
+    // Both updates read the field (taking the slot's owner) and store it back in place.
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, fill, "= list_set_field"));
+    try std.testing.expect(!contains(fill, "list_set.exact list[record"));
+    // The only whole-element read left is the summing loop's `for x in xs`.
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, fill, "list_get.exact record{"));
+    var refusal: @import("build.zig").Refusal = .{};
+    var module = try support.buildSource(arena.allocator(), element_fields, &refusal);
+    const debug = try support.runOwned(arena.allocator(), &module, .{});
+    try std.testing.expectEqualStrings("88860\n", debug.stdout);
+    var again = try support.buildSource(arena.allocator(), element_fields, &refusal);
+    const release = try support.runOwned(arena.allocator(), &again, .{ .release = true });
+    try std.testing.expectEqualStrings(debug.stdout, release.stdout);
+}
+
 const fixture_expected =
     \\1:71@1.2 1:72@1.3 1:73@2.1 2:73@2.1 1:75@2.3 bad 1:77@2.5 0:@2.5 0:@2.5 1 5
     \\bad bad 1:33@1.4 0:@1.4 0:@1.4 2 1
@@ -390,6 +439,7 @@ const fixture_expected =
     \\617 5 -1 6 0 50 7 8
     \\747 179 179 966 | 7 3 5 | 1 1 1 | 7 8 | 1673 926 | 388
     \\16 16 99 0 16 64099 91 7
+    \\27001 0 3 9 b3 299
     \\
 ;
 
