@@ -76,19 +76,19 @@ pub fn spawn(gpa: std.mem.Allocator, options: Options) Error!std.process.Child {
     // is a safe home for the child's stack.
     var stack: [stack_size]u8 align(16) = undefined;
     var request: Request = .{ .argv = argv.ptr, .envp = envp.slice.ptr, .path = searchPath(envp), .streams = streams, .mask = undefined };
-    const blocked = linux.sigfillset();
-    _ = linux.sigprocmask(linux.SIG.SETMASK, &blocked, &request.mask);
-    const flags: u32 = linux.CLONE.VM | linux.CLONE.VFORK | @backingInt(linux.SIG.CHLD);
-    const started = linux.clone(start, @intFromPtr(&stack) + stack.len, flags, @intFromPtr(&request), null, 0, null);
-    _ = linux.sigprocmask(linux.SIG.SETMASK, &request.mask, null);
+    var attempt: u5 = 0;
+    const pid = while (true) : (attempt += 1) {
+        const child = try launch(&request, &stack);
+        if (request.failure == 0) break child;
+        reap(child);
+        // ETXTBSY: another thread's child, between its clone and its execve, still
+        // holds a descriptor this program was just written through. That window
+        // closes at its execve, so wait it out, briefly and a bounded number of times.
+        if (request.failure != @backingInt(linux.E.TXTBSY) or attempt == busy_retries) return failed(request.failure);
+        request.failure = 0;
+        pause(attempt);
+    };
     pipes.close(.child);
-    if (linux.errno(started) != .SUCCESS) return error.SystemResources;
-    const pid: linux.pid_t = @intCast(started);
-    if (request.failure != 0) {
-        var status: i32 = undefined;
-        while (linux.errno(linux.wait4(pid, &status, 0, null)) == .INTR) {}
-        return failed(request.failure);
-    }
     return .{
         .id = pid,
         .thread_handle = {},
@@ -97,6 +97,35 @@ pub fn spawn(gpa: std.mem.Allocator, options: Options) Error!std.process.Child {
         .stderr = pipes.parentEnd(2),
         .request_resource_usage_statistics = false,
     };
+}
+
+/// How many times a start refused with ETXTBSY is tried again, after pauses of
+/// 0.25 ms doubling each time (about a quarter second in all).
+const busy_retries = 10;
+
+/// Start the request's child; its pid. The child has called `execve`, or exited
+/// with the errno it left in `request.failure`.
+fn launch(request: *Request, stack: *[stack_size]u8) Error!linux.pid_t {
+    const blocked = linux.sigfillset();
+    _ = linux.sigprocmask(linux.SIG.SETMASK, &blocked, &request.mask);
+    const flags: u32 = linux.CLONE.VM | linux.CLONE.VFORK | @backingInt(linux.SIG.CHLD);
+    const started = linux.clone(start, @intFromPtr(stack) + stack.len, flags, @intFromPtr(request), null, 0, null);
+    _ = linux.sigprocmask(linux.SIG.SETMASK, &request.mask, null);
+    if (linux.errno(started) != .SUCCESS) return error.SystemResources;
+    return @intCast(started);
+}
+
+/// Wait for a child that exited before `execve`.
+fn reap(pid: linux.pid_t) void {
+    var status: i32 = undefined;
+    while (linux.errno(linux.wait4(pid, &status, 0, null)) == .INTR) {}
+}
+
+/// Pause before start attempt `attempt + 1`: 0.25 ms doubled `attempt` times.
+fn pause(attempt: u5) void {
+    const nanoseconds: u64 = @as(u64, 250_000) << attempt;
+    const delay: linux.timespec = .{ .sec = @intCast(nanoseconds / std.time.ns_per_s), .nsec = @intCast(nanoseconds % std.time.ns_per_s) };
+    _ = linux.nanosleep(&delay, null);
 }
 
 /// `std.process.run` with `spawn`: start the child with an empty stdin, collect its
@@ -316,4 +345,43 @@ test "failed maps a child's errno to the std.process error, SystemResources and 
     try std.testing.expectEqual(error.SystemFdQuotaExceeded, failed(@backingInt(linux.E.NFILE)));
     try std.testing.expectEqual(error.InvalidExe, failed(@backingInt(linux.E.NOEXEC)));
     try std.testing.expectEqual(error.Unexpected, failed(@backingInt(linux.E.SPIPE)));
+}
+
+/// A copy of `sh`, found on PATH, at `path` and executable.
+fn copyShell(a: std.mem.Allocator, map: *const std.process.Environ.Map, path: []const u8) !void {
+    var directories = std.mem.tokenizeScalar(u8, map.get("PATH") orelse "", ':');
+    const shell = while (directories.next()) |directory| {
+        const candidate = try std.fs.path.join(a, &.{ directory, "sh" });
+        std.Io.Dir.cwd().access(std.testing.io, candidate, .{}) catch continue;
+        break candidate;
+    } else return error.FileNotFound;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, shell, a, .limited(16 << 20));
+    try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = path, .data = bytes, .flags = .{ .permissions = .executable_file } });
+}
+
+/// Close `file` after a short pause, from another thread.
+fn closeLater(file: std.Io.File) void {
+    pause(3);
+    file.close(std.testing.io);
+}
+
+// spec-case: NEW-CORE-SPAWN-1
+test "spawn retries a FileBusy start until the writer's descriptor is gone, and reports FileBusy while it stays" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var map = try environmentWith(a, "SPAWN_PROBE", "unused");
+    const program = try std.fs.path.join(a, &.{ root, "busy" });
+    try copyShell(a, &map, program);
+    // A descriptor open for writing makes every start ETXTBSY.
+    const writer = try std.Io.Dir.cwd().openFile(std.testing.io, program, .{ .mode = .write_only });
+    try std.testing.expectError(error.FileBusy, spawn(a, .{ .argv = &.{ program, "-c", "exit 0" }, .environment = .{ .map = &map } }));
+    // Once the writer closes it, a retry starts the program.
+    const closer = try std.Thread.spawn(.{}, closeLater, .{writer});
+    defer closer.join();
+    const result = try run(a, std.testing.io, .{ .argv = &.{ program, "-c", "exit 4" }, .environment = .{ .map = &map } });
+    try std.testing.expectEqual(std.process.Child.Term{ .exited = 4 }, result.term);
 }
