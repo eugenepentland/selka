@@ -27,6 +27,12 @@ def keyed_environment(environment):
 
 
 def validate_context(context, reference_binary, candidate_binary, reference_source, candidate_source):
+    launch = context["original_launch_receipt"]
+    launch_bytes = Path(launch["path"]).read_bytes()
+    assert hashlib.sha256(launch_bytes).hexdigest() == launch["sha256"], "original launch receipt changed"
+    launch_argv = json.loads(launch_bytes)["command"]
+    for name in ("MYLANG_SLOT_DIR", "MYLANG_TIMING_CPUS"):
+        assert name + "=" + context["environment"][name] in launch_argv, "launch environment differs"
     for name, binary, source in (("reference", reference_binary, reference_source),
                                 ("candidate", candidate_binary, candidate_source)):
         saved = context[name]
