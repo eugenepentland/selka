@@ -1,0 +1,13 @@
+commit 2141c4f6bcdc6c8b297d6decac618366918248ba start 22:09:17 load 1.05 1.26 1.34
+gate=0 22:10:47
+   +- compile exe mylang debug native (+2 more reused dependencies)
+
+gate wall 90.54 s
+Build Summary: 88/88 steps succeeded; 2093/21568 tests passed (19475 skipped)
+fmt=0
+qualify=1 22:10:48
+grep: experiments/ce2-x-20261008/qualify/summary.json: No such file or directory
+grep: experiments/ce2-x-20261008/qualify/full-conformance.log: No such file or directory
+fuzz200=0 22:17:36
+s0: PASS; 94.87113498197868s number: PASS; 120.45127608813345s s1: PASS; 118.78987725498155s rc: PASS; 67.78681282210164s rebinding: PASS; 107.61753847403452s text: PASS; 53.577466235961765s iteration: PASS; 168.03235519095324s functions: PASS; 86.51222279504873s dict: PASS; 234.8563032071106s 
+part1a done 22:17:36

@@ -273,11 +273,13 @@ pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, opt
     if (verify_ir.enabled) try verify_ir.check(allocator, module, result.plans, report);
     const measured = if (options.show.stats) try cost.measure(allocator, module, &result, null) else null;
     if (measured) |snapshot| try cost.stats(allocator, report, snapshot.totals);
+    // One summary of the final IR serves every unit a debug build emits.
+    const summaries = try @import("effects.zig").analyze(allocator, module);
     const emission: emit_llvm.Options = .{
         .locator = locator(&unit.src),
         .source_path = unit.source_path,
         .main = unit.main,
-        .analysis = .{ .facts = result.known, .vectors = result.plans, .provenance = &result.provenance },
+        .analysis = .{ .facts = result.known, .vectors = result.plans, .provenance = &result.provenance, .effects = &summaries },
         .verify = verify and options.release,
         .target = targetFor(options.show),
         .counters = options.show.codegen.counters,

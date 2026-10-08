@@ -1,0 +1,4 @@
+lox: 48 cells, 0 not identical (counting on vs off) or uncounted: []
+eda: 34 cells, 0 not identical (counting on vs off) or uncounted: [] golden mismatches: []
+parity: 4 cells, 0 not identical (counting on vs off) or uncounted: [] matches .expected: {'parity-nbody': True, 'parity-str_build': True, 'parity-matmul': True, 'parity-knucleotide': True}
+rows: 46 cells, 0 not identical (counting on vs off) or uncounted: []

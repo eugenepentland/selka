@@ -45,6 +45,8 @@ const flags = @import("flags.zig");
 const promotion = @import("promote.zig");
 const elements = @import("elements.zig");
 const buffers = @import("buffers.zig");
+const stores = @import("stores.zig");
+const effects = @import("effects.zig");
 const origins = @import("inline_origins.zig");
 
 /// The pass only allocates.
@@ -59,6 +61,9 @@ pub const Options = struct {
     /// Optional source ancestry of instructions cloned before ownership.
     provenance: ?*origins.Table = null,
     function_index: u32 = 0,
+    /// The module's effect summaries (`effects.zig`): with them, element stores nothing reads
+    /// are removed or sunk and the rest narrowed to the fields that changed (`stores.zig`).
+    effects: ?*const effects.Summaries = null,
 };
 
 /// What the pass did, summed over functions.
@@ -101,10 +106,12 @@ pub const unique_assert: u64 = 1;
 /// Run the pass over every internal function of `module`.
 pub fn run(arena: std.mem.Allocator, module: *ir.Module, options: Options) Error!Stats {
     var total: Stats = .{};
+    const summaries = options.effects orelse &try effects.analyze(arena, module);
     for (module.functions.items, 0..) |*f, index| {
         if (f.signature.linkage != .internal) continue;
         var local = options;
         local.function_index = @intCast(index);
+        local.effects = summaries;
         total.add(try function(arena, module, f, local));
     }
     return total;
@@ -124,6 +131,8 @@ pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Funct
     _ = try elements.fieldStores(arena, module, f);
     // Byte-buffer appends become updates the emitter does inline.
     _ = try buffers.appends(arena, module, f);
+    // Element stores nothing reads go, and the rest store only the fields that changed.
+    if (options.effects) |summaries| _ = try stores.run(arena, module, f, summaries);
     // Popped elements are found (or read) before anything moves.
     try markPops(.{ .arena = arena, .f = f, .origin = marks.origin }, module, &marks);
     for (f.insts.items, 0..) |inst, index| {
@@ -1209,7 +1218,7 @@ const Taking = struct {
         }
         const get = for (reads.items) |candidate| {
             if (try self.takes(candidate, update, reads.items, def_block)) break candidate;
-        } else return;
+        } else return self.takeThrough(record, update);
         for (self.graph.uses[record.index()].items) |user| {
             const inst = f.inst(user);
             if (user == get or user == update) continue;
@@ -1218,10 +1227,102 @@ const Taking = struct {
                 if (try phiAfter(self, record, get, user, def_block)) return;
                 continue;
             }
-            if (try runsAfter(self.arena, f, self.graph.block_of, get, user, def_block)) return;
+            if (!try runsAfter(self.arena, f, self.graph.block_of, get, user, def_block)) continue;
+            if (self.borrowsFirst(record, get, user)) continue;
+            return;
         }
         try self.marks.owned_get.put(self.arena, @backingInt(get), {});
         try self.marks.taken.put(self.arena, @backingInt(update), {});
+    }
+
+    /// `update` replaces a field of `record`, which updates of other fields made from an earlier
+    /// record: a read of the field from that earlier record takes it over the same way, when
+    /// nothing but reads of other fields and those updates uses the records in between while
+    /// it holds the field (`wb = it.rt; it.returned = pop(mut wb); it.rt = wb`,
+    /// NEW-CORE-CE2-EFFECTS-5).
+    fn takeThrough(self: Taking, record: ir.Ref, update: ir.Ref) Error!void {
+        const f = self.f;
+        const field = f.inst(update).data;
+        var chain: [4]ir.Ref = undefined;
+        var len: usize = 0;
+        var current = record;
+        while (len < chain.len) {
+            const inst = f.inst(current);
+            if (inst.op != .record_set or inst.data == field) return;
+            chain[len] = current;
+            len += 1;
+            const earlier = f.resolve(inst.a);
+            if (!ownedRecord(f, f.inst(earlier)) and !self.marks.owned_get.contains(@backingInt(earlier))) return;
+            const def_block = if (f.inst(earlier).op == .param) 0 else self.graph.block_of[earlier.index()];
+            var reads: std.ArrayList(ir.Ref) = .empty;
+            for (self.graph.uses[earlier.index()].items) |user| {
+                const got = f.inst(user);
+                if (got.op == .record_get and got.data == field and f.resolve(got.a) == earlier) try addUnique(self.arena, &reads, user);
+            }
+            for (reads.items) |get| {
+                if (!try self.takes(get, update, reads.items, def_block)) continue;
+                if (!try self.clearThrough(.{ .earlier = earlier, .get = get, .update = update, .chain = chain[0..len] })) continue;
+                try self.marks.owned_get.put(self.arena, @backingInt(get), {});
+                try self.marks.taken.put(self.arena, @backingInt(update), {});
+                return;
+            }
+            current = earlier;
+        }
+    }
+
+    /// A field taken from `earlier` by `get` and put back by `update`, through `chain`: the
+    /// updates of other fields from the record `update` replaces it in back to `earlier`'s.
+    const Through = struct { earlier: ir.Ref, get: ir.Ref, update: ir.Ref, chain: []const ir.Ref };
+
+    /// Whether, while `get` holds the field, only reads of other fields and the chain's own
+    /// updates use `earlier` and the records of the chain.
+    fn clearThrough(self: Taking, through: Through) Error!bool {
+        const f = self.f;
+        const field = f.inst(through.update).data;
+        const holders = through.chain.len + 1;
+        for (0..holders) |k| {
+            const holder = if (k == through.chain.len) through.earlier else through.chain[k];
+            // The one use that carries the hole on: the next update of the chain, or `update`.
+            const next = if (k == 0) through.update else through.chain[k - 1];
+            const def = if (f.inst(holder).op == .param) 0 else self.graph.block_of[holder.index()];
+            for (self.graph.uses[holder.index()].items) |user| {
+                const inst = f.inst(user);
+                if (user == through.get or user == next) continue;
+                if (inst.op == .record_get and inst.data != field) continue;
+                if (inst.op == .phi) {
+                    if (try phiAfter(self, holder, through.get, user, def)) return false;
+                    continue;
+                }
+                if (try runsAfter(self.arena, f, self.graph.block_of, through.get, user, def)) return false;
+            }
+        }
+        return true;
+    }
+
+    /// Whether `user`, a use of `record` after `get` took its field, only lends the record to
+    /// a call in `get`'s block that runs before anything uses the taken field (CE2-B): `__wb = rt.globals;
+    /// table.set(mut __wb, name, string_hash(rt, name), item); rt.globals = __wb`. The call sees
+    /// the field as it was, since nothing can have updated it in place yet.
+    fn borrowsFirst(self: Taking, record: ir.Ref, get: ir.Ref, user: ir.Ref) bool {
+        const f = self.f;
+        const inst = f.inst(user);
+        if (inst.op != .call and inst.op != .call_indirect) return false;
+        const block = self.graph.block_of[get.index()];
+        if (self.graph.block_of[user.index()] != block) return false;
+        const signature = if (inst.op == .call_indirect) self.module.compound(f.inst(f.resolve(inst.a)).ty).@"fn" else self.module.functions.items[inst.a.index()].signature;
+        if (inst.op == .call_indirect and f.resolve(inst.a) == record) return false;
+        for (f.operands(inst.data), 0..) |argument, k| {
+            if (f.resolve(argument) == record and ownedParameter(signature, k)) return false;
+        }
+        const insts = f.blocks.items[block].insts.items;
+        const at = std.mem.indexOfScalar(ir.Ref, insts, user).?;
+        if (std.mem.indexOfScalar(ir.Ref, insts, get).? > at) return false;
+        // A use in another block, or a join on an edge, runs once this block (and `user`) has.
+        for (self.graph.uses[get.index()].items) |taker| {
+            if (self.graph.block_of[taker.index()] != block or f.inst(taker).op == .phi) continue;
+            if (std.mem.indexOfScalar(ir.Ref, insts, taker).? <= at) return false;
+        }
+        return true;
     }
 
     /// Whether read `get` of the field `update` replaces can take it over: it runs ahead of

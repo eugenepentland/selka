@@ -1,0 +1,208 @@
+{
+ "tag": "step5",
+ "against": "cex",
+ "patterns": {
+  "lox": {
+   "P1": [
+    304920,
+    304920
+   ],
+   "P2": [
+    7725263800,
+    9219368
+   ],
+   "P3": [
+    4673411824,
+    4673411824
+   ],
+   "P4": [
+    27473170792,
+    4482976400
+   ],
+   "P6": [
+    19525416,
+    19525416
+   ],
+   "P7": [
+    5336379592,
+    6401584
+   ],
+   "P8": [
+    3299513040,
+    3299513040
+   ],
+   "P9": [
+    2764878584,
+    2764878584
+   ],
+   "P13": [
+    22996288,
+    23586176
+   ],
+   "P14": [
+    0,
+    0
+   ],
+   "P2+P4": [
+    35198434592,
+    4492195768
+   ],
+   "all": [
+    51315444256,
+    15279817312
+   ]
+  }
+ },
+ "targets": [
+  {
+   "pattern": "P4",
+   "file": "vm.my",
+   "line": 433,
+   "before": 11087212048,
+   "after": 0
+  },
+  {
+   "pattern": "P4",
+   "file": "vm.my",
+   "line": 534,
+   "before": 11087210992,
+   "after": 0
+  },
+  {
+   "pattern": "P2",
+   "file": "vm.my",
+   "line": 254,
+   "before": 3564292424,
+   "after": 0
+  },
+  {
+   "pattern": "P2",
+   "file": "interpreter.my",
+   "line": 667,
+   "before": 2958716384,
+   "after": 0
+  },
+  {
+   "pattern": "P2",
+   "file": "heap.my",
+   "line": 106,
+   "before": 1193037800,
+   "after": 7000
+  },
+  {
+   "pattern": "P4",
+   "file": "vm.my",
+   "line": 135,
+   "before": 814703208,
+   "after": 814703208
+  },
+  {
+   "pattern": "P4",
+   "file": "heap.my",
+   "line": 124,
+   "before": 1498719264,
+   "after": 1498719264
+  },
+  {
+   "pattern": "P4",
+   "file": "heap.my",
+   "line": 210,
+   "before": 586642952,
+   "after": 586642952
+  }
+ ],
+ "top": {
+  "lox": [
+   {
+    "pattern": "P9",
+    "file": "table.my",
+    "line": 84,
+    "detail": "list_copy",
+    "function": "table::set",
+    "bytes": 1853896192,
+    "before": 1853896192
+   },
+   {
+    "pattern": "P8",
+    "file": "interpreter.my",
+    "line": 346,
+    "detail": "list_get_field",
+    "function": "interpreter::evaluate",
+    "bytes": 1842244048,
+    "before": 1842244048
+   },
+   {
+    "pattern": "P3",
+    "file": "heap.my",
+    "line": 361,
+    "detail": "list_get",
+    "function": "heap::sweep",
+    "bytes": 1508544408,
+    "before": 1508544408
+   },
+   {
+    "pattern": "P3",
+    "file": "heap.my",
+    "line": 362,
+    "detail": "list_get",
+    "function": "heap::sweep",
+    "bytes": 1507918048,
+    "before": 1507918048
+   },
+   {
+    "pattern": "P4",
+    "file": "heap.my",
+    "line": 363,
+    "detail": "list_set",
+    "function": "heap::sweep",
+    "bytes": 1507918048,
+    "before": 1507918048
+   },
+   {
+    "pattern": "P4",
+    "file": "heap.my",
+    "line": 124,
+    "detail": "list_set",
+    "function": "heap::allocate",
+    "bytes": 1498719264,
+    "before": 1498719264
+   },
+   {
+    "pattern": "P4",
+    "file": "vm.my",
+    "line": 135,
+    "detail": "list_set",
+    "function": "vm::call",
+    "bytes": 814703208,
+    "before": 814703208
+   },
+   {
+    "pattern": "P3",
+    "file": "vm.my",
+    "line": 525,
+    "detail": "list_get",
+    "function": "vm::run",
+    "bytes": 814702152,
+    "before": 814702152
+   },
+   {
+    "pattern": "P3",
+    "file": "vm.my",
+    "line": 503,
+    "detail": "list_get",
+    "function": "vm::run",
+    "bytes": 661481392,
+    "before": 661481392
+   },
+   {
+    "pattern": "P4",
+    "file": "heap.my",
+    "line": 210,
+    "detail": "list_set",
+    "function": "heap::set_env_slot",
+    "bytes": 586642952,
+    "before": 586642952
+   }
+  ]
+ }
+}

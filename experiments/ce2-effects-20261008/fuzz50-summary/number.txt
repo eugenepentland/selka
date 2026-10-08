@@ -1,0 +1,10 @@
+source_commit=52277f2cfa4b4e14e95ac046cb066d0b48184437
+$ /home/epentland/ai/canopy/mylang-worktrees/claude-ce2-effects/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 /home/epentland/ai/canopy/mylang-worktrees/claude-ce2-effects/experiments/new-core-s5-20261007/tools/fuzz_frozen.py --kind number --references /home/epentland/ai/canopy/mylang-worktrees/claude-ce2-effects/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz --cases 50 --seed 3308 --old /home/epentland/ai/canopy/mylang-worktrees/claude-ce2-effects/experiments/new-core-s5-20261007/tools/frozen-old-core --new /home/epentland/ai/canopy/mylang-worktrees/claude-ce2-effects/.mylang-cache/ce2/fuzz-bin/mylang --evidence /home/epentland/ai/canopy/mylang-worktrees/claude-ce2-effects/experiments/ce2-effects-20261008/fuzz50/number --cache-root /home/epentland/ai/canopy/mylang-worktrees/claude-ce2-effects/.mylang-cache/s5/fuzz/20261008T201134Z-d71acdb1e6e8/number --harness /home/epentland/ai/canopy/mylang-worktrees/claude-ce2-effects/experiments/new-core-s2-20261005/wave-b/s2-t2/fuzz_number.py
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 5s (all 3 build slot(s) busy)
+qualification progress: number: seen=25 elapsed=15.46s
+qualification progress: number: seen=50 elapsed=31.46s
+records,unions,propagate,mut,alias cases=50 old_rejected=0 refused=0 compared=750 mismatch=0 fact=0 traps=0 caught=0
+qualification {"kind": "number", "qualified": true, "accepted": 50, "native_comparisons": 750, "elapsed_seconds": 32.131112955044955}
+
+exit=0

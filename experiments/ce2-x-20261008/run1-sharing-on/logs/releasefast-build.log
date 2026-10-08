@@ -1,0 +1,18 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 1edeef830913cf3557aed75417cc9adcd9fd3155: 14/525 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 14 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 1 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 472 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1edeef830913cf3557aed75417cc9adcd9fd3155, 14 file(s) in scope
+Build Summary: 9/9 steps succeeded
+install success
++- install mylang success
+|  +- compile exe mylang fast native success 3m MaxRSS:3G
+|  |  +- run exe build-identity (build_identity) success 28ms
+|  |  |  +- compile exe build-identity debug native cached 7ms MaxRSS:37M
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:38M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 828ms
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+

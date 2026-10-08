@@ -77,22 +77,40 @@ pub const place_copy: u64 = 1 << 60;
 /// Managed indexed reads in a nested assignment take the parent's slot owner.
 pub const place_read: u64 = 1 << 60;
 
-/// Whether an indexed read transfers its managed slot into a nested update.
+/// Whether an indexed read transfers its managed slot into a nested update. A `list_get_field`
+/// of a path of at most four steps carries the mark next to its path (CE2-B, `xs[i].items.append(v)`).
 pub fn transferredRead(inst: ir.Inst) bool {
     return switch (inst.op) {
         .list_get, .dict_entry_value => inst.data == place_read,
+        .list_get_field => inst.data & 0xf <= 4 and inst.data & place_read != 0,
         else => false,
     };
 }
 
-/// A replacement paired with a transferred read must not release its old slot.
+/// A replacement paired with a transferred read must not release its old slot: a whole-element
+/// store after a transferred element read, or a `list_set_field` after a transferred read of
+/// the same field.
 pub fn transferredSlot(function: *const ir.Function, inst: ir.Inst) bool {
-    if (inst.op != .list_set and inst.op != .dict_set_value) return false;
+    const field: ?u64 = switch (inst.op) {
+        .list_set, .dict_set_value => null,
+        .list_set_field => storedPath(function, inst) orelse return false,
+        else => return false,
+    };
     for (function.blocks.items) |block| for (block.insts.items) |ref| {
         const read = function.inst(ref);
-        if (transferredRead(read) and function.resolve(read.a) == function.resolve(inst.a) and function.resolve(read.b) == function.resolve(inst.b)) return true;
+        if (!transferredRead(read) or function.resolve(read.a) != function.resolve(inst.a) or function.resolve(read.b) != function.resolve(inst.b)) continue;
+        const read_field: ?u64 = if (read.op == .list_get_field) read.data & ~place_read else null;
+        if (read_field == field) return true;
     };
     return false;
+}
+
+/// The packed field path of a `list_set_field` (the `u64` constant in `extra[1]`).
+fn storedPath(function: *const ir.Function, inst: ir.Inst) ?u64 {
+    const operands = function.operands(inst.data);
+    if (operands.len != 2) return null;
+    const constant = function.inst(function.resolve(operands[1]));
+    return if (constant.op == .iconst and constant.ty == .u64) constant.data else null;
 }
 
 /// Heap fill loops reserve a bounded prefix without changing their empty length.

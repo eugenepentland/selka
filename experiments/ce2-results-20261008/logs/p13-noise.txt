@@ -1,0 +1,7 @@
+P13 at heap.my:66 (list_push growth bytes moved), lox tree properties-25000, three runs each
+CE-X-final run 1: 70592
+CE2-B-final run 1: 70592
+CE-X-final run 2: 201696
+CE2-B-final run 2: 70592
+CE-X-final run 3: 70592
+CE2-B-final run 3: 70592

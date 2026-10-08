@@ -1,0 +1,1143 @@
+{
+ "patterns": {
+  "cex": {
+   "lox": {
+    "P13": 22996288,
+    "P6": 19525416,
+    "P8": 3299513040,
+    "P7": 5336379592,
+    "P4": 27473170792,
+    "P3": 4673411824,
+    "P1": 304920,
+    "P2": 7725263800,
+    "P9": 2764878584,
+    "P14": 0
+   },
+   "eda": {
+    "P8": 9453872,
+    "P3": 673583928,
+    "P7": 2113542896,
+    "P11": 594268,
+    "P13": 90101352,
+    "P6": 477598680,
+    "P1": 3100744,
+    "P10": 4903960,
+    "P9": 6065800,
+    "P4": 38065328,
+    "P2": 1367312,
+    "P14": 48998177
+   },
+   "parity": {
+    "P3": 560,
+    "P14": 146905848,
+    "P13": 8003744
+   },
+   "rows": {
+    "P13": 17508992,
+    "P14": 468245711,
+    "P9": 26227200,
+    "P11": 148476,
+    "P1": 362938368
+   }
+  },
+  "ce2a": {
+   "lox": {
+    "P13": 23356800,
+    "P6": 19525416,
+    "P8": 2854343648,
+    "P7": 6401584,
+    "P4": 1943904672,
+    "P3": 4673411824,
+    "P1": 304920,
+    "P2": 9219368,
+    "P9": 2764878584,
+    "P14": 0
+   },
+   "eda": {
+    "P8": 7832264,
+    "P3": 673583928,
+    "P7": 2112234032,
+    "P11": 595350,
+    "P13": 90083128,
+    "P6": 477598680,
+    "P10": 4903960,
+    "P9": 6065800,
+    "P2": 58448,
+    "P1": 4096864,
+    "P4": 37603376,
+    "P14": 48999331
+   },
+   "parity": {
+    "P3": 560,
+    "P14": 146905848,
+    "P13": 8003744
+   },
+   "rows": {
+    "P13": 17508992,
+    "P14": 468245711,
+    "P9": 26227200,
+    "P11": 148476,
+    "P1": 362938368
+   }
+  },
+  "ce2b": {
+   "lox": {
+    "P13": 23258496,
+    "P6": 19525416,
+    "P8": 3055323136,
+    "P7": 5334943928,
+    "P4": 27473170792,
+    "P3": 1656942728,
+    "P1": 304920,
+    "P2": 7725263800,
+    "P9": 1065010936,
+    "P14": 0
+   },
+   "eda": {
+    "P8": 9453872,
+    "P3": 397980432,
+    "P11": 595350,
+    "P13": 90101352,
+    "P6": 477598680,
+    "P1": 3100744,
+    "P10": 4903960,
+    "P9": 6065800,
+    "P4": 38065328,
+    "P7": 2625288,
+    "P2": 1367312,
+    "P14": 48999331
+   },
+   "parity": {
+    "P3": 560,
+    "P14": 146905848,
+    "P13": 8003744
+   },
+   "rows": {
+    "P13": 17508992,
+    "P14": 468245711,
+    "P9": 26227200,
+    "P11": 148476
+   }
+  },
+  "final": {
+   "lox": {
+    "P13": 22892864,
+    "P6": 19525416,
+    "P8": 2610153744,
+    "P7": 4965920,
+    "P4": 1943904672,
+    "P3": 1656942728,
+    "P1": 304920,
+    "P2": 9219368,
+    "P9": 1065010936,
+    "P14": 0
+   },
+   "eda": {
+    "P8": 7832264,
+    "P3": 397980432,
+    "P11": 593186,
+    "P13": 90083128,
+    "P6": 477598680,
+    "P10": 4903960,
+    "P9": 6065800,
+    "P7": 1316424,
+    "P2": 58448,
+    "P1": 4096864,
+    "P4": 37603376,
+    "P14": 48996924
+   },
+   "parity": {
+    "P3": 560,
+    "P14": 146905848,
+    "P13": 8003744
+   },
+   "rows": {
+    "P13": 17508992,
+    "P14": 468245711,
+    "P9": 26227200,
+    "P11": 148476,
+    "P1": 362938368
+   }
+  }
+ },
+ "highlights": {
+  "cex": {
+   "lox_vm_fib27_dispatches": 7627457,
+   "lox_vm_fib27_bytes_per_dispatch": 257.36624723023675,
+   "lox_vm_fib27_record_bytes_per_dispatch": 52.009846007653664,
+   "lox_vm_fib27_element_bytes_per_dispatch": 205.33653090407458,
+   "nbody_bytes_per_step": 0.000112,
+   "nbody_P3P4_bytes_per_step": 0.000112,
+   "eda_rds3_flat_bytes": 238964445,
+   "eda_rds3_flat_by_pattern": {
+    "P8": 843256,
+    "P3": 80071312,
+    "P7": 113583624,
+    "P11": 32352,
+    "P13": 8078360,
+    "P6": 25928736,
+    "P1": 236688,
+    "P10": 131480,
+    "P9": 516248,
+    "P4": 5428992,
+    "P2": 117264,
+    "P14": 3996133
+   },
+   "eda_rds3_flat_overlaps_of_bytes": 7331384,
+   "lox_tree_instantiation": {
+    "n": [
+     5000,
+     10000
+    ],
+    "bytes": [
+     123358704,
+     244731080
+    ],
+    "ratio": 1.983897950160047,
+    "p9": [
+     3942080,
+     7622080
+    ],
+    "p9_ratio": 1.9335173309521876
+   },
+   "lox_vm_instantiation": {
+    "n": [
+     200,
+     400
+    ],
+    "bytes": [
+     11131664,
+     21573072
+    ],
+    "ratio": 1.9379916605459884,
+    "p9": [
+     371304,
+     422504
+    ],
+    "p9_ratio": 1.1378924008359728
+   },
+   "str_build_out_of_line_buffer_appends": 25
+  },
+  "ce2a": {
+   "lox_vm_fib27_dispatches": 6356215,
+   "lox_vm_fib27_bytes_per_dispatch": 27.237838871089163,
+   "lox_vm_fib27_record_bytes_per_dispatch": 4.811197859103256,
+   "lox_vm_fib27_element_bytes_per_dispatch": 22.402796632901815,
+   "nbody_bytes_per_step": 0.000112,
+   "nbody_P3P4_bytes_per_step": 0.000112,
+   "eda_rds3_flat_bytes": 238666863,
+   "eda_rds3_flat_by_pattern": {
+    "P8": 714928,
+    "P3": 80071312,
+    "P7": 113469112,
+    "P11": 32364,
+    "P13": 8077824,
+    "P6": 25928736,
+    "P10": 131480,
+    "P9": 516248,
+    "P2": 2752,
+    "P1": 337384,
+    "P4": 5388576,
+    "P14": 3996147
+   },
+   "eda_rds3_flat_overlaps_of_bytes": 7331384,
+   "lox_tree_instantiation": {
+    "n": [
+     5000,
+     10000
+    ],
+    "bytes": [
+     90582280,
+     178723864
+    ],
+    "ratio": 1.9730554806083485,
+    "p9": [
+     3942080,
+     7622080
+    ],
+    "p9_ratio": 1.9335173309521876
+   },
+   "lox_vm_instantiation": {
+    "n": [
+     200,
+     400
+    ],
+    "bytes": [
+     3135792,
+     5622000
+    ],
+    "ratio": 1.7928485052580019,
+    "p9": [
+     371304,
+     422504
+    ],
+    "p9_ratio": 1.1378924008359728
+   },
+   "str_build_out_of_line_buffer_appends": 25
+  },
+  "ce2b": {
+   "lox_vm_fib27_dispatches": 7627457,
+   "lox_vm_fib27_bytes_per_dispatch": 257.3658161560268,
+   "lox_vm_fib27_record_bytes_per_dispatch": 52.009482059354774,
+   "lox_vm_fib27_element_bytes_per_dispatch": 205.33653090407458,
+   "nbody_bytes_per_step": 0.000112,
+   "nbody_P3P4_bytes_per_step": 0.000112,
+   "eda_rds3_flat_bytes": 103344159,
+   "eda_rds3_flat_by_pattern": {
+    "P8": 843256,
+    "P3": 57832056,
+    "P11": 32364,
+    "P13": 8078360,
+    "P6": 25928736,
+    "P1": 236688,
+    "P10": 131480,
+    "P9": 516248,
+    "P4": 5428992,
+    "P7": 202568,
+    "P2": 117264,
+    "P14": 3996147
+   },
+   "eda_rds3_flat_overlaps_of_bytes": 7331384,
+   "lox_tree_instantiation": {
+    "n": [
+     5000,
+     10000
+    ],
+    "bytes": [
+     72398648,
+     142829440
+    ],
+    "ratio": 1.9728191609323975,
+    "p9": [
+     2661056,
+     5061056
+    ],
+    "p9_ratio": 1.901897592534693
+   },
+   "lox_vm_instantiation": {
+    "n": [
+     200,
+     400
+    ],
+    "bytes": [
+     11071320,
+     21461528
+    ],
+    "ratio": 1.938479603154818,
+    "p9": [
+     319336,
+     319336
+    ],
+    "p9_ratio": 1.0
+   },
+   "str_build_out_of_line_buffer_appends": 25
+  },
+  "final": {
+   "lox_vm_fib27_dispatches": 6356215,
+   "lox_vm_fib27_bytes_per_dispatch": 27.237321582105075,
+   "lox_vm_fib27_record_bytes_per_dispatch": 4.810761121201847,
+   "lox_vm_fib27_element_bytes_per_dispatch": 22.402796632901815,
+   "nbody_bytes_per_step": 0.000112,
+   "nbody_P3P4_bytes_per_step": 0.000112,
+   "eda_rds3_flat_bytes": 103046499,
+   "eda_rds3_flat_by_pattern": {
+    "P8": 714928,
+    "P3": 57832056,
+    "P11": 32340,
+    "P13": 8077824,
+    "P6": 25928736,
+    "P10": 131480,
+    "P9": 516248,
+    "P7": 88056,
+    "P2": 2752,
+    "P1": 337384,
+    "P4": 5388576,
+    "P14": 3996119
+   },
+   "eda_rds3_flat_overlaps_of_bytes": 7331384,
+   "lox_tree_instantiation": {
+    "n": [
+     5000,
+     10000
+    ],
+    "bytes": [
+     39163440,
+     76822224
+    ],
+    "ratio": 1.9615800859168653,
+    "p9": [
+     2661056,
+     5061056
+    ],
+    "p9_ratio": 1.901897592534693
+   },
+   "lox_vm_instantiation": {
+    "n": [
+     200,
+     400
+    ],
+    "bytes": [
+     3075448,
+     5051672
+    ],
+    "ratio": 1.6425808532610533,
+    "p9": [
+     319336,
+     319336
+    ],
+    "p9_ratio": 1.0
+   },
+   "str_build_out_of_line_buffer_appends": 25
+  }
+ },
+ "top_functions": [
+  {
+   "corpus": "lox",
+   "function": "vm::run",
+   "bytes": 1629419448,
+   "share_of_corpus": 0.22220606822206615,
+   "patterns": {
+    "P3": 1629405448,
+    "P1": 7000,
+    "P2": 7000
+   },
+   "top_sites": [
+    {
+     "pattern": "P3",
+     "file": "vm.my",
+     "line": 525,
+     "detail": "list_get",
+     "bytes": 814702152
+    },
+    {
+     "pattern": "P3",
+     "file": "vm.my",
+     "line": 503,
+     "detail": "list_get",
+     "bytes": 661481392
+    },
+    {
+     "pattern": "P3",
+     "file": "vm.my",
+     "line": 496,
+     "detail": "list_get",
+     "bytes": 147354152
+    },
+    {
+     "pattern": "P3",
+     "file": "vm.my",
+     "line": 510,
+     "detail": "list_get",
+     "bytes": 5866696
+    }
+   ]
+  },
+  {
+   "corpus": "lox",
+   "function": "interpreter::evaluate",
+   "bytes": 1598054144,
+   "share_of_corpus": 0.21792874055853267,
+   "patterns": {
+    "P8": 1598054144
+   },
+   "top_sites": [
+    {
+     "pattern": "P8",
+     "file": "interpreter.my",
+     "line": 346,
+     "detail": "list_get_field",
+     "bytes": 1598054144
+    }
+   ]
+  },
+  {
+   "corpus": "lox",
+   "function": "heap::allocate",
+   "bytes": 1536159672,
+   "share_of_corpus": 0.2094881101949501,
+   "patterns": {
+    "P4": 1498719264,
+    "P13": 19050176,
+    "P6": 18390232
+   },
+   "top_sites": [
+    {
+     "pattern": "P4",
+     "file": "heap.my",
+     "line": 124,
+     "detail": "list_set",
+     "bytes": 1498719264
+    },
+    {
+     "pattern": "P13",
+     "file": "heap.my",
+     "line": 126,
+     "detail": "list_push",
+     "bytes": 18850656
+    },
+    {
+     "pattern": "P6",
+     "file": "heap.my",
+     "line": 126,
+     "detail": "list_push",
+     "bytes": 18390232
+    },
+    {
+     "pattern": "P13",
+     "file": "heap.my",
+     "line": 127,
+     "detail": "list_push",
+     "bytes": 199520
+    }
+   ]
+  },
+  {
+   "corpus": "lox",
+   "function": "interpreter::call_node",
+   "bytes": 518970760,
+   "share_of_corpus": 0.07077272352638417,
+   "patterns": {
+    "P8": 518970760
+   },
+   "top_sites": [
+    {
+     "pattern": "P8",
+     "file": "interpreter.my",
+     "line": 265,
+     "detail": "list_get_field",
+     "bytes": 518970760
+    }
+   ]
+  },
+  {
+   "corpus": "lox",
+   "function": "compiler::emit_byte",
+   "bytes": 489608560,
+   "share_of_corpus": 0.06676856178377194,
+   "patterns": {
+    "P9": 486040240,
+    "P2": 2051784,
+    "P3": 981288,
+    "P4": 535248
+   },
+   "top_sites": [
+    {
+     "pattern": "P9",
+     "file": "compiler.my",
+     "line": 153,
+     "detail": "list_copy",
+     "bytes": 486040240
+    },
+    {
+     "pattern": "P2",
+     "file": "compiler.my",
+     "line": 158,
+     "detail": "record_set",
+     "bytes": 2051784
+    },
+    {
+     "pattern": "P3",
+     "file": "compiler.my",
+     "line": 157,
+     "detail": "list_get",
+     "bytes": 981288
+    },
+    {
+     "pattern": "P4",
+     "file": "compiler.my",
+     "line": 160,
+     "detail": "list_set",
+     "bytes": 535248
+    }
+   ]
+  },
+  {
+   "corpus": "eda",
+   "function": "sexpr_parser::parse_list",
+   "bytes": 476361760,
+   "share_of_corpus": 0.4422511556795317,
+   "patterns": {
+    "P6": 444833472,
+    "P13": 31528288
+   },
+   "top_sites": [
+    {
+     "pattern": "P6",
+     "file": "sexpr_parser.my",
+     "line": 225,
+     "detail": "list_push",
+     "bytes": 444833472
+    },
+    {
+     "pattern": "P13",
+     "file": "sexpr_parser.my",
+     "line": 225,
+     "detail": "list_push",
+     "bytes": 31528288
+    }
+   ]
+  },
+  {
+   "corpus": "lox",
+   "function": "heap::function_obj",
+   "bytes": 453988800,
+   "share_of_corpus": 0.06191104837288891,
+   "patterns": {
+    "P8": 453988800
+   },
+   "top_sites": [
+    {
+     "pattern": "P8",
+     "file": "heap.my",
+     "line": 144,
+     "detail": "list_get_field",
+     "bytes": 453988800
+    }
+   ]
+  },
+  {
+   "corpus": "lox",
+   "function": "vm::call",
+   "bytes": 444383568,
+   "share_of_corpus": 0.060601170281216116,
+   "patterns": {
+    "P4": 444383568
+   },
+   "top_sites": [
+    {
+     "pattern": "P4",
+     "file": "vm.my",
+     "line": 135,
+     "detail": "list_set",
+     "bytes": 444383568
+    }
+   ]
+  },
+  {
+   "corpus": "rows",
+   "function": "row_record_pass::batch_result",
+   "bytes": 362938368,
+   "share_of_corpus": 0.4147541198840232,
+   "patterns": {
+    "P1": 362938368
+   },
+   "top_sites": [
+    {
+     "pattern": "P1",
+     "file": "row_record_pass.my",
+     "line": 48,
+     "detail": "jump",
+     "bytes": 362938368
+    }
+   ]
+  },
+  {
+   "corpus": "lox",
+   "function": "resolver::resolve_expr",
+   "bytes": 238817096,
+   "share_of_corpus": 0.03256780075351827,
+   "patterns": {
+    "P9": 238376768,
+    "P8": 247680,
+    "P4": 192648
+   },
+   "top_sites": [
+    {
+     "pattern": "P9",
+     "file": "resolver.my",
+     "line": 143,
+     "detail": "list_copy",
+     "bytes": 238376768
+    },
+    {
+     "pattern": "P8",
+     "file": "resolver.my",
+     "line": 144,
+     "detail": "list_get_field",
+     "bytes": 247680
+    },
+    {
+     "pattern": "P4",
+     "file": "resolver.my",
+     "line": 186,
+     "detail": "list_set",
+     "bytes": 182144
+    },
+    {
+     "pattern": "P4",
+     "file": "resolver.my",
+     "line": 180,
+     "detail": "list_set",
+     "bytes": 6048
+    }
+   ]
+  }
+ ],
+ "top_per_corpus": {
+  "lox": [
+   {
+    "corpus": "lox",
+    "function": "vm::run",
+    "bytes": 1629419448,
+    "share_of_corpus": 0.22220606822206615,
+    "patterns": {
+     "P3": 1629405448,
+     "P1": 7000,
+     "P2": 7000
+    },
+    "top_sites": [
+     {
+      "pattern": "P3",
+      "file": "vm.my",
+      "line": 525,
+      "detail": "list_get",
+      "bytes": 814702152
+     },
+     {
+      "pattern": "P3",
+      "file": "vm.my",
+      "line": 503,
+      "detail": "list_get",
+      "bytes": 661481392
+     },
+     {
+      "pattern": "P3",
+      "file": "vm.my",
+      "line": 496,
+      "detail": "list_get",
+      "bytes": 147354152
+     },
+     {
+      "pattern": "P3",
+      "file": "vm.my",
+      "line": 510,
+      "detail": "list_get",
+      "bytes": 5866696
+     }
+    ]
+   },
+   {
+    "corpus": "lox",
+    "function": "interpreter::evaluate",
+    "bytes": 1598054144,
+    "share_of_corpus": 0.21792874055853267,
+    "patterns": {
+     "P8": 1598054144
+    },
+    "top_sites": [
+     {
+      "pattern": "P8",
+      "file": "interpreter.my",
+      "line": 346,
+      "detail": "list_get_field",
+      "bytes": 1598054144
+     }
+    ]
+   },
+   {
+    "corpus": "lox",
+    "function": "heap::allocate",
+    "bytes": 1536159672,
+    "share_of_corpus": 0.2094881101949501,
+    "patterns": {
+     "P4": 1498719264,
+     "P13": 19050176,
+     "P6": 18390232
+    },
+    "top_sites": [
+     {
+      "pattern": "P4",
+      "file": "heap.my",
+      "line": 124,
+      "detail": "list_set",
+      "bytes": 1498719264
+     },
+     {
+      "pattern": "P13",
+      "file": "heap.my",
+      "line": 126,
+      "detail": "list_push",
+      "bytes": 18850656
+     },
+     {
+      "pattern": "P6",
+      "file": "heap.my",
+      "line": 126,
+      "detail": "list_push",
+      "bytes": 18390232
+     },
+     {
+      "pattern": "P13",
+      "file": "heap.my",
+      "line": 127,
+      "detail": "list_push",
+      "bytes": 199520
+     }
+    ]
+   },
+   {
+    "corpus": "lox",
+    "function": "interpreter::call_node",
+    "bytes": 518970760,
+    "share_of_corpus": 0.07077272352638417,
+    "patterns": {
+     "P8": 518970760
+    },
+    "top_sites": [
+     {
+      "pattern": "P8",
+      "file": "interpreter.my",
+      "line": 265,
+      "detail": "list_get_field",
+      "bytes": 518970760
+     }
+    ]
+   },
+   {
+    "corpus": "lox",
+    "function": "compiler::emit_byte",
+    "bytes": 489608560,
+    "share_of_corpus": 0.06676856178377194,
+    "patterns": {
+     "P9": 486040240,
+     "P2": 2051784,
+     "P3": 981288,
+     "P4": 535248
+    },
+    "top_sites": [
+     {
+      "pattern": "P9",
+      "file": "compiler.my",
+      "line": 153,
+      "detail": "list_copy",
+      "bytes": 486040240
+     },
+     {
+      "pattern": "P2",
+      "file": "compiler.my",
+      "line": 158,
+      "detail": "record_set",
+      "bytes": 2051784
+     },
+     {
+      "pattern": "P3",
+      "file": "compiler.my",
+      "line": 157,
+      "detail": "list_get",
+      "bytes": 981288
+     },
+     {
+      "pattern": "P4",
+      "file": "compiler.my",
+      "line": 160,
+      "detail": "list_set",
+      "bytes": 535248
+     }
+    ]
+   }
+  ],
+  "eda": [
+   {
+    "corpus": "eda",
+    "function": "sexpr_parser::parse_list",
+    "bytes": 476361760,
+    "share_of_corpus": 0.4422511556795317,
+    "patterns": {
+     "P6": 444833472,
+     "P13": 31528288
+    },
+    "top_sites": [
+     {
+      "pattern": "P6",
+      "file": "sexpr_parser.my",
+      "line": 225,
+      "detail": "list_push",
+      "bytes": 444833472
+     },
+     {
+      "pattern": "P13",
+      "file": "sexpr_parser.my",
+      "line": 225,
+      "detail": "list_push",
+      "bytes": 31528288
+     }
+    ]
+   },
+   {
+    "corpus": "eda",
+    "function": "support_sort::merge_run[kicad_sch_textbox::Item]",
+    "bytes": 91034304,
+    "share_of_corpus": 0.08451565497298066,
+    "patterns": {
+     "P3": 50412480,
+     "P4": 36386016,
+     "P9": 4235808
+    },
+    "top_sites": [
+     {
+      "pattern": "P3",
+      "file": "support_sort.my",
+      "line": 50,
+      "detail": "list_get",
+      "bytes": 18193008
+     },
+     {
+      "pattern": "P4",
+      "file": "support_sort.my",
+      "line": 50,
+      "detail": "list_set",
+      "bytes": 18193008
+     },
+     {
+      "pattern": "P3",
+      "file": "support_sort.my",
+      "line": 33,
+      "detail": "list_get",
+      "bytes": 14026464
+     },
+     {
+      "pattern": "P3",
+      "file": "support_sort.my",
+      "line": 37,
+      "detail": "list_get",
+      "bytes": 8493216
+     }
+    ]
+   },
+   {
+    "corpus": "eda",
+    "function": "kicad_sch_emit::is_rail_pin",
+    "bytes": 48669552,
+    "share_of_corpus": 0.045184495116495214,
+    "patterns": {
+     "P3": 48669552
+    },
+    "top_sites": [
+     {
+      "pattern": "P3",
+      "file": "kicad_sch_emit.my",
+      "line": 719,
+      "detail": "list_get",
+      "bytes": 48669552
+     }
+    ]
+   },
+   {
+    "corpus": "eda",
+    "function": "kicad_sch_emit::edge_spacing",
+    "bytes": 35970704,
+    "share_of_corpus": 0.03339496733450299,
+    "patterns": {
+     "P3": 35970704
+    },
+    "top_sites": [
+     {
+      "pattern": "P3",
+      "file": "kicad_sch_emit.my",
+      "line": 354,
+      "detail": "list_get",
+      "bytes": 35970704
+     }
+    ]
+   },
+   {
+    "corpus": "eda",
+    "function": "kicad_sch_textbox::overlaps_of",
+    "bytes": 32737408,
+    "share_of_corpus": 0.030393196384933055,
+    "patterns": {
+     "P3": 32735808,
+     "P2": 1024,
+     "P1": 576
+    },
+    "top_sites": [
+     {
+      "pattern": "P3",
+      "file": "kicad_sch_textbox.my",
+      "line": 137,
+      "detail": "list_get",
+      "bytes": 30617904
+     },
+     {
+      "pattern": "P3",
+      "file": "kicad_sch_textbox.my",
+      "line": 136,
+      "detail": "list_get",
+      "bytes": 2117904
+     },
+     {
+      "pattern": "P2",
+      "file": "kicad_sch_textbox.my",
+      "line": 144,
+      "detail": "record_set",
+      "bytes": 1024
+     },
+     {
+      "pattern": "P1",
+      "file": "kicad_sch_textbox.my",
+      "line": 131,
+      "detail": "jump",
+      "bytes": 576
+     }
+    ]
+   }
+  ],
+  "parity": [
+   {
+    "corpus": "parity",
+    "function": "main",
+    "bytes": 134217720,
+    "share_of_corpus": 0.8664230088677468,
+    "patterns": {
+     "P14": 134217720
+    },
+    "top_sites": []
+   },
+   {
+    "corpus": "parity",
+    "function": "frequencies",
+    "bytes": 12688128,
+    "share_of_corpus": 0.08190636853806715,
+    "patterns": {
+     "P14": 12688128
+    },
+    "top_sites": []
+   },
+   {
+    "corpus": "parity",
+    "function": "generate",
+    "bytes": 7995552,
+    "share_of_corpus": 0.051614125328596924,
+    "patterns": {
+     "P13": 7995552
+    },
+    "top_sites": [
+     {
+      "pattern": "P13",
+      "file": "knucleotide.my",
+      "line": 16,
+      "detail": "list_push",
+      "bytes": 7995552
+     }
+    ]
+   },
+   {
+    "corpus": "parity",
+    "function": "random_matrix",
+    "bytes": 8192,
+    "share_of_corpus": 5.288226687686679e-05,
+    "patterns": {
+     "P13": 8192
+    },
+    "top_sites": [
+     {
+      "pattern": "P13",
+      "file": "matmul.my",
+      "line": 16,
+      "detail": "list_push",
+      "bytes": 8192
+     }
+    ]
+   },
+   {
+    "corpus": "parity",
+    "function": "energy",
+    "bytes": 560,
+    "share_of_corpus": 3.6149987122858157e-06,
+    "patterns": {
+     "P3": 560
+    },
+    "top_sites": [
+     {
+      "pattern": "P3",
+      "file": "nbody.my",
+      "line": 93,
+      "detail": "list_get",
+      "bytes": 560
+     }
+    ]
+   }
+  ],
+  "rows": [
+   {
+    "corpus": "rows",
+    "function": "row_record_pass::batch_result",
+    "bytes": 362938368,
+    "share_of_corpus": 0.4147541198840232,
+    "patterns": {
+     "P1": 362938368
+    },
+    "top_sites": [
+     {
+      "pattern": "P1",
+      "file": "row_record_pass.my",
+      "line": 48,
+      "detail": "jump",
+      "bytes": 362938368
+     }
+    ]
+   },
+   {
+    "corpus": "rows",
+    "function": "row_dict_update::batch_result",
+    "bytes": 196416000,
+    "share_of_corpus": 0.22445779337151897,
+    "patterns": {
+     "P14": 196416000
+    },
+    "top_sites": []
+   },
+   {
+    "corpus": "rows",
+    "function": "row_dict_update_str::batch_result",
+    "bytes": 196416000,
+    "share_of_corpus": 0.22445779337151897,
+    "patterns": {
+     "P14": 196416000
+    },
+    "top_sites": []
+   },
+   {
+    "corpus": "rows",
+    "function": "row_set_dedup::batch_result",
+    "bytes": 65024000,
+    "share_of_corpus": 0.07430730468082869,
+    "patterns": {
+     "P14": 65024000
+    },
+    "top_sites": []
+   },
+   {
+    "corpus": "rows",
+    "function": "row_mutate_nested::batch_result",
+    "bytes": 13120000,
+    "share_of_corpus": 0.014993107735797128,
+    "patterns": {
+     "P9": 13120000
+    },
+    "top_sites": [
+     {
+      "pattern": "P9",
+      "file": "row_mutate_nested.my",
+      "line": 14,
+      "detail": "list_copy",
+      "bytes": 13107200
+     },
+     {
+      "pattern": "P9",
+      "file": "row_mutate_nested.my",
+      "line": 11,
+      "detail": "list_copy",
+      "bytes": 12800
+     }
+    ]
+   }
+  ]
+ },
+ "final_corpus_totals": {
+  "lox": 7332920568,
+  "eda": 1077129486,
+  "parity": 154910152,
+  "rows": 875068747
+ }
+}

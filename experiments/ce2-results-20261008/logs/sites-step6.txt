@@ -1,0 +1,113 @@
+== lox: total after 46.35 G before 51.32 G
+  P4   vm.my:433 list_set           vm::run                                     11.09 G ->    11.09 G  +0.0%
+  P4   vm.my:534 list_set           vm::run                                     11.09 G ->    11.09 G  +0.0%
+  P2   interpreter.my:667 record_set         interpreter::execute                         2.96 G ->     2.96 G  +0.0%
+  P7   vm.my:268 ret                vm::read_string                              2.45 G ->     2.45 G  +0.0%
+  P2   vm.my:254 record_set         vm::read_string                              2.45 G ->     2.45 G  +0.0%
+  P9   table.my:84 list_copy          table::set                                   1.85 G ->   154.03 M  -91.7%
+  P8   interpreter.my:346 list_get_field     interpreter::evaluate                        1.84 G ->     1.60 G  -13.3%
+  P7   interpreter.my:668 ret                interpreter::execute                         1.77 G ->     1.77 G  +0.0%
+  P3   heap.my:361 list_get           heap::sweep                                  1.51 G ->          0  -100.0%
+  P4   heap.my:363 list_set           heap::sweep                                  1.51 G ->     1.51 G  +0.0%
+  P3   heap.my:362 list_get           heap::sweep                                  1.51 G ->          0  -100.0%
+  P4   heap.my:124 list_set           heap::allocate                               1.50 G ->     1.50 G  +0.0%
+  P2   heap.my:106 record_set         interpreter::execute                         1.19 G ->     1.19 G  +0.0%
+  P7   vm.my:264 ret                vm::read_constant                            1.11 G ->     1.11 G  +0.0%
+  P2   vm.my:254 record_set         vm::read_constant                            1.11 G ->     1.11 G  +0.0%
+  P4   vm.my:135 list_set           vm::call                                   814.70 M ->   814.70 M  +0.0%
+  P3   vm.my:525 list_get           vm::run                                    814.70 M ->   814.70 M  +0.0%
+  P4   vm.my:500 list_set           vm::run                                    661.48 M ->   661.48 M  +0.0%
+  P3   vm.my:503 list_get           vm::run                                    661.48 M ->   661.48 M  +0.0%
+  P4   heap.my:210 list_set           heap::set_env_slot                         586.64 M ->   586.64 M  +0.0%
+  P8   interpreter.my:265 list_get_field     interpreter::call_node                     518.97 M ->   518.97 M  +0.0%
+  P9   compiler.my:153 list_copy          compiler::emit_byte                        486.04 M ->   486.04 M  +0.0%
+  P8   heap.my:144 list_get_field     heap::function_obj                         453.99 M ->   453.99 M  +0.0%
+  P8   vm.my:135 record_make        vm::call                                   444.38 M ->   444.38 M  +0.0%
+  P9   resolver.my:143 list_copy          resolver::resolve_expr                     238.38 M ->   238.38 M  +0.0%
+  P9   heap.my:207 list_copy          heap::set_env_slot                         182.25 M ->   182.25 M  +0.0%
+  P4   vm.my:493 list_set           vm::run                                    147.35 M ->   147.35 M  +0.0%
+  P3   vm.my:496 list_get           vm::run                                    147.35 M ->   147.35 M  +0.0%
+  P8   interpreter.my:615 list_get_field     interpreter::execute                        36.08 M ->    36.08 M  +0.0%
+  P4   vm.my:335 list_set           vm::set_property                            33.64 M ->    33.64 M  +0.0%
+  P13  heap.my:126 list_push          heap::allocate                              19.08 M ->    19.08 M  +0.0%
+  P6   heap.my:126 list_push          heap::allocate                              18.39 M ->    18.39 M  +0.0%
+  P4   vm.my:308 list_set           vm::set_upvalue                             16.80 M ->    16.80 M  +0.0%
+  P3   interpreter.my:626 list_get           interpreter::execute                        16.00 M ->    16.00 M  +0.0%
+  P4   vm.my:401 list_set           vm::make_closure                            11.21 M ->    11.21 M  +0.0%
+  P4   vm.my:239 list_set           vm::close_upvalues                          11.20 M ->    11.20 M  +0.0%
+  P3   parser.my:69 list_get           parser::peek                                 8.83 M ->     8.83 M  +0.0%
+  P4   vm.my:507 list_set           vm::run                                      5.87 M ->     5.87 M  +0.0%
+  P3   vm.my:510 list_get           vm::run                                      5.87 M ->     5.87 M  +0.0%
+  P2   compiler.my:128 record_set         compiler::advance                            3.48 M ->     3.48 M  +0.0%
+== eda: total after 1.03 G before 3.42 G
+  P7   sexpr_tokenizer.my:270 ret                sexpr_tokenizer::next                      583.07 M ->          0  -100.0%
+  P7   sexpr_parser.my:118 ret                sexpr_parser::next_token                   485.90 M ->          0  -100.0%
+  P6   sexpr_parser.my:225 list_push          sexpr_parser::parse_list                   444.83 M ->   444.83 M  +0.0%
+  P7   sexpr_parser.my:137 ret                sexpr_parser::parse_node                   160.31 M ->          0  -100.0%
+  P3   kicad_sch_verify.my:512 list_get           kicad_sch_verify::grid_scan                150.55 M ->          0  -100.0%
+  P7   sexpr_tokenizer.my:290 ret                sexpr_tokenizer::next_in                   136.95 M ->          0  -100.0%
+  P7   sexpr_tokenizer.my:252 ret                sexpr_tokenizer::read_atom                 136.95 M ->          0  -100.0%
+  P7   sexpr_parser.my:147 ret                sexpr_parser::parse_node                   123.41 M ->          0  -100.0%
+  P7   sexpr_tokenizer.my:284 ret                sexpr_tokenizer::next_in                   114.51 M ->          0  -100.0%
+  P7   sexpr_tokenizer.my:281 ret                sexpr_tokenizer::next_in                   114.51 M ->          0  -100.0%
+  P7   sexpr_tokenizer.my:288 ret                sexpr_tokenizer::next_in                    88.15 M ->          0  -100.0%
+  P7   sexpr_tokenizer.my:244 ret                sexpr_tokenizer::read_number                66.66 M ->          0  -100.0%
+  P3   kicad_sch_emit.my:719 list_get           kicad_sch_emit::is_rail_pin                 48.67 M ->    48.67 M  +0.0%
+  P7   sexpr_tokenizer.my:286 ret                sexpr_tokenizer::next_in                    37.72 M ->          0  -100.0%
+  P3   kicad_sch_emit.my:354 list_get           kicad_sch_emit::edge_spacing                35.97 M ->    35.97 M  +0.0%
+  P13  sexpr_parser.my:225 list_push          sexpr_parser::parse_list                    31.53 M ->    31.53 M  +0.0%
+  P7   sexpr_tokenizer.my:199 ret                sexpr_tokenizer::read_string                31.43 M ->          0  -100.0%
+  P3   kicad_sch_textbox.my:137 list_get           kicad_sch_textbox::overlaps_of              30.62 M ->    30.62 M  +0.0%
+  P3   support_sort.my:33 list_get           support_sort::merge_run[kicad_sch_textbox::Item]    28.05 M ->    14.03 M  -50.0%
+  P3   kicad_sch_verify.my:456 list_get           kicad_sch_verify::unique_pads               26.68 M ->    26.68 M  +0.0%
+  P7   sexpr_tokenizer.my:245 ret                sexpr_tokenizer::read_number                21.49 M ->          0  -100.0%
+  P3   kicad_sym_reader.my:196 list_get           kicad_sym_reader::read_pin                  18.98 M ->    18.98 M  +0.0%
+  P4   support_sort.my:50 list_set           support_sort::merge_run[kicad_sch_textbox::Item]    18.19 M ->    18.19 M  +0.0%
+  P3   support_sort.my:50 list_get           support_sort::merge_run[kicad_sch_textbox::Item]    18.19 M ->    18.19 M  +0.0%
+  P3   kicad_sym_reader.my:324 list_get           kicad_sym_reader::scalar_at                 15.42 M ->          0  -100.0%
+  P3   kicad_sch_textbox.my:501 list_get           kicad_sch_textbox::hidden                   14.60 M ->    14.60 M  +0.0%
+  P3   kicad_sch_emit.my:357 list_get           kicad_sch_emit::edge_spacing                14.59 M ->          0  -100.0%
+  P13  support_sha256.my:82 list_push          support_sha256::padded_tail                 11.19 M ->    11.19 M  +0.0%
+  P3   kicad_sym_reader.my:130 list_get           kicad_sym_reader::collect                    9.38 M ->     9.38 M  +0.0%
+  P13  support_sha256.my:39 list_push          support_sha256::compress                     9.15 M ->     9.15 M  +0.0%
+  P13  support_sha256.my:109 list_push          support_sha256::sha256                       8.83 M ->     8.83 M  +0.0%
+  P4   support_sort.my:37 list_set           support_sort::merge_run[kicad_sch_textbox::Item]     8.49 M ->     8.49 M  +0.0%
+  P3   support_sort.my:37 list_get           support_sort::merge_run[kicad_sch_textbox::Item]     8.49 M ->     8.49 M  +0.0%
+  P6   kicad_sym_reader.my:112 list_push          kicad_sym_reader::read_symbol                8.30 M ->     8.30 M  +0.0%
+  P3   kicad_sym_reader.my:112 list_get           kicad_sym_reader::read_symbol                8.30 M ->     8.30 M  +0.0%
+  P3   kicad_sch_verify.my:511 list_get           kicad_sch_verify::grid_scan                  7.54 M ->          0  -100.0%
+  P3   kicad_sch_verify.my:510 list_get           kicad_sch_verify::grid_scan                  7.54 M ->          0  -100.0%
+  P3   kicad_sch_textbox.my:276 list_get           kicad_sch_textbox::font_size                 7.22 M ->     7.22 M  +0.0%
+  P3   kicad_sch_verify.my:480 list_get           kicad_sch_verify::scan_placed                6.49 M ->     6.49 M  +0.0%
+  P3   kicad_sch_textbox.my:369 list_get           kicad_sch_textbox::append_fields             6.49 M ->     6.49 M  +0.0%
+== parity: total after 8.00 M before 8.00 M
+  P13  knucleotide.my:16 list_push          generate                                     8.00 M ->     8.00 M  +0.0%
+  P13  matmul.my:16 list_push          random_matrix                                8.19 k ->     8.19 k  +0.0%
+  P3   nbody.my:93 list_get           energy                                          560 ->        560  +0.0%
+== rows: total after 43.88 M before 406.82 M
+  P1   row_record_pass.my:48 jump               row_record_pass::batch_result              362.94 M ->          0  -100.0%
+  P9   row_mutate_shared.my:32 list_copy          row_mutate_shared::main                     13.11 M ->    13.11 M  +0.0%
+  P9   row_mutate_nested.my:14 list_copy          row_mutate_nested::batch_result             13.11 M ->    13.11 M  +0.0%
+  P13  row_alloc_retained.my:15 list_push          row_alloc_retained::batch_result             9.20 M ->     9.20 M  +0.0%
+  P13  row_list_filter.my:20 list_push          row_list_filter::batch_result                3.84 M ->     3.84 M  +0.0%
+  P13  row_json_transform.my:57 list_push          row_json_transform::json_job                 1.31 M ->     1.31 M  +0.0%
+  P13  json.my:519 list_push          json::read_array                             1.31 M ->     1.31 M  +0.0%
+  P13  row_csv_aggregate.my:65 list_push          row_csv_aggregate::csv_rows                860.16 k ->   860.16 k  +0.0%
+  P13  row_sort_records.my:37 list_push          row_sort_records::main                     537.60 k ->   537.60 k  +0.0%
+  P13  row_packet_decode.my:23 list_push          row_packet_decode::make_frame              262.14 k ->   262.14 k  +0.0%
+  P13  row_record_reads.my:39 list_push          row_record_reads::main                      75.14 k ->    75.14 k  +0.0%
+  P13  row_json_transform.my:75 list_push          row_json_transform::inputs                  65.60 k ->    65.60 k  +0.0%
+  P11  row_json_transform.my:22 str_from_view      row_json_transform::row_name                47.10 k ->    47.10 k  +0.0%
+  P11  row_csv_aggregate.my:21 str_from_view      row_csv_aggregate::row_name                 47.10 k ->    47.10 k  +0.0%
+  P13  row_csv_aggregate.my:99 list_push          row_csv_aggregate::inputs                   25.60 k ->    25.60 k  +0.0%
+  P11  row_word_count.my:50 str_from_view      row_word_count::inputs                      22.02 k ->    22.02 k  +0.0%
+  P13  row_int_parse.my:56 list_push          row_int_parse::inputs                       17.38 k ->    17.38 k  +0.0%
+  P11  row_word_count.my:48 str_from_view      row_word_count::inputs                      16.90 k ->    16.90 k  +0.0%
+  P9   row_mutate_nested.my:11 list_copy          row_mutate_nested::batch_result             12.80 k ->    12.80 k  +0.0%
+  P11  row_word_count.my:31 str_from_view      row_word_count::word_job                     9.20 k ->     9.20 k  +0.0%
+  P11  row_csv_aggregate.my:98 str_from_view      row_csv_aggregate::inputs                    4.10 k ->     4.10 k  +0.0%
+  P11  row_int_parse.my:49 str_from_view      row_int_parse::inputs                        1.37 k ->     1.37 k  +0.0%
+  P13  row_int_format.my:44 list_push          row_int_format::inputs                          960 ->        960  +0.0%
+  P11  row_int_parse.my:47 str_from_view      row_int_parse::inputs                           683 ->        683  +0.0%
+  P11  row_string_equal.my:37 str_from_view      row_string_equal::inputs                          6 ->          6  +0.0%
+  P11  row_string_equal.my:36 str_from_view      row_string_equal::inputs                          5 ->          5  +0.0%

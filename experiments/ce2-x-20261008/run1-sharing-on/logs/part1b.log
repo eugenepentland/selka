@@ -1,0 +1,23 @@
+final e10ccf061679756c base ed975fde7234dec3 start 21:05:47
+build final=0 21:21:04
+build base=0 21:30:31
+lox conformance=0
+conformance engine=vm gc=normal: 246/246 passed
+conformance engine=vm gc=gc-stress: 246/246 passed
+conformance engine=tree gc=normal: 241/241 passed
+conformance engine=tree gc=gc-stress: 241/241 passed
+lox port tests=0
+65 passed, 0 cached, 0 failed, 0 skipped
+eda tests=0
+310 passed, 0 cached, 0 failed, 0 skipped
+run final=0 21:30:52
+lox: 48 cells, 0 not identical or uncounted: []
+eda: 34 cells, 0 not identical or uncounted: []
+parity: 4 cells, 0 not identical or uncounted: []
+rows: 46 cells, 0 not identical or uncounted: []
+identity=0 21:30:58
+parity: 4 cells, 4 identical, differing: []
+rows: 46 cells, 46 identical, differing: []
+eda: 34 cells, 34 identical, differing: []
+lox: 48 cells, 48 identical, differing: []
+part1b done 21:30:58
