@@ -433,6 +433,7 @@ myl_block *myl_core_box_new(int64_t size) {
  * recognized by the caller, never by its count. */
 static void core_dict_free_pending(myl_block *dict, myl_block **pending);
 static void core_io_finalize(myl_block *block);
+static void core_text_walk_report(void);
 static int64_t core_io_live_handles(void);
 
 __attribute__((cold)) void myl_core_free_block(myl_block *block) {
@@ -1129,6 +1130,7 @@ int32_t myl_core_exit(int64_t status) {
     }
     flush_all();
     leak_report();
+    core_text_walk_report();
     core_io_cleanup();
     return (int32_t)(status & 0xFF);
 }
