@@ -1,0 +1,37 @@
+{
+ "lines": 192389,
+ "mode": "debug",
+ "core": "/home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/.mylang-cache/s5/rf/bin/mylang",
+ "cold_s": 6.29,
+ "cold_report": "mylang-core: cache: 50 units, 0 reused, 50 compiled, 0 verified; program linked; 51 processes",
+ "output": "2419359",
+ "unchanged_s": {
+  "median": 0.0137,
+  "min": 0.0129,
+  "max": 0.0146
+ },
+ "unchanged_processes": 0,
+ "unchanged_no_replay_s": 2.639,
+ "unchanged_no_replay_report": "mylang-core: cache: 50 units, 50 reused, 0 compiled, 0 verified; program reused; 0 processes",
+ "edits": [
+  {
+   "module": 2400,
+   "pinned": true,
+   "s": 3.113,
+   "report": "mylang-core: cache: 50 units, 49 reused, 1 compiled, 0 verified; program linked; 2 processes"
+  },
+  {
+   "module": 2401,
+   "pinned": false,
+   "s": 3.121,
+   "report": "mylang-core: cache: 50 units, 49 reused, 1 compiled, 0 verified; program linked; 2 processes"
+  },
+  {
+   "module": 2402,
+   "pinned": true,
+   "s": 3.124,
+   "report": "mylang-core: cache: 50 units, 49 reused, 1 compiled, 0 verified; program linked; 2 processes"
+  }
+ ],
+ "unchanged_after_edit_s": 0.0132
+}

@@ -27,7 +27,7 @@ the same 1,800 sources. Script: `s5-0/freeze_fuzz.py`.
 
 **`rows-old-v1.json`.** The old core's and Zig's cycles per unit for the 46 rows at
 the S4 exit. The row tool keeps measuring the archived old core interleaved with the
-new one; this column is the fallback. Script: `s5-0/freeze_rows.py`.
+new one; this column is kept for comparison; the tool does not read it yet. Script: `s5-0/freeze_rows.py`.
 
 ## `tools/`
 

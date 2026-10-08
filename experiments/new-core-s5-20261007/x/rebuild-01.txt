@@ -1,0 +1,4 @@
+src/sema.zig zig build install: 4.50 s
+src/sema.zig zig build affected-compiler: 3.21 s
+src/core/cli.zig zig build install: 4.32 s
+src/core/cli.zig zig build affected-compiler: 4.11 s
