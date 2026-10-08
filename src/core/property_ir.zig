@@ -103,14 +103,19 @@ pub const Context = struct {
             }
             return self.runtime(b, at.*, "myl_core_test_read_float", .f64, &.{});
         }
-        if (ty == .str or ty == .bytes) {
-            const kind = try b.constant(.u32, @intFromBool(ty == .bytes));
+        if (ty == .str or ty == .bytes or ty == .byte_buffer) {
+            // A `byte_buffer` crosses the boundary as `bytes`: the blocks share one layout.
+            const kind = try b.constant(.u32, @intFromBool(ty != .str));
             if (request.encode) {
                 _ = try self.runtime(b, at.*, "myl_core_test_write_text", .void, &.{ source, kind });
                 return .none;
             }
-            return self.runtime(b, at.*, if (ty == .bytes) "myl_core_test_read_bytes" else "myl_core_test_read_text", ty, &.{});
+            if (ty == .str) return self.runtime(b, at.*, "myl_core_test_read_text", ty, &.{});
+            const octets = try self.runtime(b, at.*, "myl_core_test_read_bytes", .bytes, &.{});
+            if (ty == .bytes) return octets;
+            return self.runtime(b, at.*, "myl_core_buffer_from_bytes", .byte_buffer, &.{octets});
         }
+        if (!ty.isCompound()) return error.UnsupportedTestType;
         const header = if (request.encode) .none else try self.read(b, at.*);
         const count = if (request.encode) .none else try self.read(b, at.*);
         const state: State = .{ .request = request, .shape = shape, .source = source, .header = header, .count = count };
@@ -258,3 +263,15 @@ pub const Context = struct {
         };
     }
 };
+
+// spec-case: PROPERTY-TEST-6
+test "an adapter for a builtin type the boundary cannot carry is refused instead of indexing compounds" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const parsed = try std.json.parseFromSliceLeaky(std.json.Value, a, "[{\"name\":\"handle\",\"kind\":\"resource\",\"opaque\":true}]", .{});
+    var module: ir.Module = .{};
+    var context: Context = .{ .arena = a, .module = &module, .schema = try types.Schema.init(a, parsed.array.items) };
+    _ = try context.adapter("handle", .resource, false);
+    try std.testing.expectError(error.UnsupportedTestType, context.finish());
+}

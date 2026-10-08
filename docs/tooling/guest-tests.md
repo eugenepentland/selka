@@ -303,7 +303,7 @@ it is nested, and an input stops growing collections once it holds 4096 nodes.
 | `bool` | `True` or `False` |
 | `float` | small binary fractions, bit patterns from the whole range, and on purpose both zeros, both infinities, NaN, the largest finite and the smallest subnormal magnitudes; the language observes each consistently (a NaN is `nan` and unequal to itself) |
 | `str` | seven scalars in ten printable ASCII, plus tab, newline, NUL and other controls, well-known non-ASCII scalars (`é`, `Ω`, `中`, `😀`, a combining accent, U+FEFF, U+10FFFF) and scalars from the whole range |
-| `bytes` | octets, a quarter of them 0, 1, 0x7F, 0x80 or 0xFF |
+| `bytes`, `byte_buffer` | octets, a quarter of them 0, 1, 0x7F, 0x80 or 0xFF; a `byte_buffer` is a fresh buffer per input, shrunk like `bytes` and shown as `byte_buffer(b"...")` |
 | `list[T]`, `set[T]`, `dict[K, V]` | elements or entries of the element types; a set element or a dictionary key drawn twice is dropped, so keys of every hashable type work |
 | records | fieldwise |
 | fixed arrays, enum-indexed tables | every element or entry |

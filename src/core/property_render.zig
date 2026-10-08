@@ -29,7 +29,7 @@ pub const Renderer = struct {
                 .boolean => try w.writeAll(if (value == .bool and value.bool) "True" else "False"),
                 .float => try float(w, v.text(value)),
                 .text => try text(w, v.text(value)),
-                .bytes => try bytes(w, value),
+                .bytes => try bytes(w, name, value),
             },
             .sequence => |shape| try self.sequence(w, shape, value),
             .keyed => |pair| if (pair.table) try self.table(w, pair, value) else try self.dict(w, pair, value),
@@ -150,8 +150,11 @@ fn text(w: *std.Io.Writer, value: []const u8) Error!void {
     };
     try w.writeByte('"');
 }
-/// A bytes literal: printable ASCII as itself, every other byte escaped.
-fn bytes(w: *std.Io.Writer, value: Value) Error!void {
+/// A bytes literal: printable ASCII as itself, every other byte escaped. A
+/// `byte_buffer` is the same literal passed to its constructor.
+fn bytes(w: *std.Io.Writer, name: []const u8, value: Value) Error!void {
+    const buffer = std.mem.eql(u8, name, "byte_buffer");
+    if (buffer) try w.writeAll("byte_buffer(");
     try w.writeAll("b\"");
     for (v.array(value)) |item| {
         const byte = std.fmt.parseInt(u8, v.text(item), 10) catch return error.UnsupportedTestType;
@@ -165,6 +168,7 @@ fn bytes(w: *std.Io.Writer, value: Value) Error!void {
         }
     }
     try w.writeByte('"');
+    if (buffer) try w.writeByte(')');
 }
 
 fn spell(arena: std.mem.Allocator, name: []const u8, json: []const u8) ![]const u8 {
@@ -189,6 +193,7 @@ test "property counterexamples render as mylang literals" {
     try std.testing.expectEqualStrings("Err(\"no\")", try spell(a, "Result<bool,str>", "{\"case\":\"err\",\"value\":\"no\"}"));
     try std.testing.expectEqualStrings("\"\u{e9}\\n\\\"\\x00\\u2028\"", try spell(a, "str", "\"\\u00e9\\n\\\"\\u0000\\u2028\""));
     try std.testing.expectEqualStrings("b\"a\\x00\\xff\"", try spell(a, "bytes", "[\"97\",\"0\",\"255\"]"));
+    try std.testing.expectEqualStrings("byte_buffer(b\"a\\x00\")", try spell(a, "byte_buffer", "[\"97\",\"0\"]"));
     try std.testing.expectEqualStrings("{1, 2}", try spell(a, "set<i64>", "[\"1\",\"2\"]"));
     try std.testing.expectEqualStrings("set()", try spell(a, "set<i64>", "[]"));
     try std.testing.expectEqualStrings("{\"a\": 1}", try spell(a, "dict<str,i64>", "[[\"a\",\"1\"]]"));

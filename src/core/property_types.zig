@@ -17,7 +17,8 @@ pub const Shape = union(enum) {
     cases: Cases,
     refused: []const u8,
 };
-/// A scalar-like type with no parameters: a Boolean, a float, text or bytes.
+/// A scalar-like type with no parameters: a Boolean, a float, text or bytes
+/// (`bytes`, or a `byte_buffer`, which generates, shrinks and renders as bytes).
 pub const Atom = enum { boolean, float, text, bytes };
 /// An integer type's width and signedness; `minimum`/`maximum` bound every value.
 pub const Integer = struct { bits: u7, signed: bool, minimum: i128, maximum: i128 };
@@ -84,7 +85,7 @@ fn integer(item: Value) Shape {
 /// The builtin types the generator knows by name.
 fn atom(name: []const u8) ?Atom {
     if (std.mem.eql(u8, name, "str")) return .text;
-    if (std.mem.eql(u8, name, "bytes")) return .bytes;
+    if (std.mem.eql(u8, name, "bytes") or std.mem.eql(u8, name, "byte_buffer")) return .bytes;
     if (std.mem.eql(u8, name, "float")) return .float;
     return null;
 }

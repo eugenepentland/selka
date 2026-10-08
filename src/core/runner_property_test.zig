@@ -38,6 +38,27 @@ test "S3 runner generated records and recursive inputs pass with fresh capabilit
         }
     }
 }
+// spec: PROPERTY-TEST-6
+test "byte_buffer parameters generate, copy and shrink like bytes and render as byte_buffer literals" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const debug = try run(a, "c_runner_byte_buffer.my", &.{});
+    const verify = try run(a, "c_runner_byte_buffer.my", &.{ "--release", "--verify-facts" });
+    try std.testing.expectEqual(@as(u8, 1), debug.status);
+    try std.testing.expectEqual(@as(u8, 1), verify.status);
+    for ([_]Run{ debug, verify }) |result| {
+        const copied = v.get(v.get(try named(result.report, "::test_buffer_copy_appends_alone"), "property"), "counts");
+        try std.testing.expectEqual(@as(u64, 12), v.number(v.get(copied, "passed")));
+        const nested = v.get(v.get(try named(result.report, "::test_buffers_inside_records_lists_and_options"), "property"), "counts");
+        try std.testing.expectEqual(@as(u64, 12), v.number(v.get(nested, "passed")));
+        const short = try named(result.report, "::test_short_buffer");
+        const minimal = v.get(v.get(v.get(short, "property"), "failure"), "minimal");
+        try std.testing.expectEqualStrings("byte_buffer(b\"\\x00\\x00\\x00\")", v.text(v.get(v.get(minimal, "literals"), "buffer")));
+        const returned = v.text(v.get(try named(result.report, "::test_buffer_error_result"), "reason"));
+        try std.testing.expect(std.mem.indexOf(u8, returned, "returned Err(byte_buffer(b\"\\x00\\x00\\x00\"))") != null);
+    }
+}
 // spec-case: NEW-CORE-S3-RUNNER-1
 test "S3 runner shrinks actual failures and enforces the old discard limit" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);

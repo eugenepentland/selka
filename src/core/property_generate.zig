@@ -326,6 +326,7 @@ pub const test_schema =
     \\{"name":"float","kind":"domain","opaque":true},
     \\{"name":"str","kind":"list","opaque":true,"element":"u32"},
     \\{"name":"bytes","kind":"list","opaque":true,"element":"u8"},
+    \\{"name":"byte_buffer","kind":"list","opaque":true,"element":"u8"},
     \\{"name":"List<i64>","kind":"list","opaque":true,"element":"i64"},
     \\{"name":"List<str>","kind":"list","opaque":true,"element":"str"},
     \\{"name":"dict<str,i64>","kind":"list","opaque":true,"element":"i64","key":"str"},

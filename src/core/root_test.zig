@@ -45,6 +45,7 @@ comptime {
     _ = @import("property_generate.zig");
     _ = @import("property_shrink.zig");
     _ = @import("property_render.zig");
+    _ = @import("property_ir.zig");
     _ = @import("conformance_test.zig");
     _ = @import("rows_test.zig");
     _ = @import("own_test.zig");

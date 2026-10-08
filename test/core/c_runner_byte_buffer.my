@@ -1,0 +1,30 @@
+module c_runner_byte_buffer
+
+public record Packet:
+    tag: int
+    body: byte_buffer
+
+public def test_buffer_copy_appends_alone(buffer: byte_buffer) -> bool:
+    before = len(buffer)
+    copy = buffer
+    _ = copy.append_byte(7)
+    return len(buffer) == before and len(copy) == before + 1 and copy[before] == 7
+
+public def test_buffers_inside_records_lists_and_options(packet: Packet, items: list[byte_buffer], frame: Option[byte_buffer]) -> bool:
+    total = len(packet.body)
+    for item in items:
+        total = total + len(item)
+    match frame:
+        case Some(body):
+            total = total + len(body)
+        case None:
+            total = total + 0
+    return total >= 0
+
+public def test_short_buffer(buffer: byte_buffer) -> bool:
+    return len(buffer) < 3
+
+public def test_buffer_error_result(buffer: byte_buffer) -> Result[bool, byte_buffer]:
+    if len(buffer) > 2:
+        return Err(buffer)
+    return Ok(True)
