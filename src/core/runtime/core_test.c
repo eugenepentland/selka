@@ -166,7 +166,10 @@ static void core_start_refuse(const char *code, const char *description, const c
  * its default action. The report runs on its own signal stack. */
 enum { CORE_FLOOR_FRAMES = 16 };
 static uintptr_t core_stack_top;
-static unsigned char core_floor_stack[256 << 10];
+/* The report's signal stack is mapped at start, not a 256 KiB .bss array: a static array
+   that large moves where the program's heap begins, which made allocation-heavy rows run
+   slower or faster from one run to the next. */
+enum { CORE_FLOOR_STACK = 256 << 10 };
 static void core_floor_default(int signal_number) {
     signal(signal_number, SIG_DFL);
 }
@@ -216,7 +219,9 @@ static void core_floor_fault(int signal_number, siginfo_t *info, void *context) 
 static void core_floor_install(void) {
     unsigned char here;
     core_stack_top = (uintptr_t)&here;
-    stack_t alternate = { .ss_sp = core_floor_stack, .ss_size = sizeof core_floor_stack, .ss_flags = 0 };
+    void *floor_stack = mmap(NULL, CORE_FLOOR_STACK, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (floor_stack == MAP_FAILED) return;
+    stack_t alternate = { .ss_sp = floor_stack, .ss_size = CORE_FLOOR_STACK, .ss_flags = 0 };
     if (sigaltstack(&alternate, NULL)) return;
     struct sigaction action;
     memset(&action, 0, sizeof action);
