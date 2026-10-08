@@ -1,0 +1,31 @@
+# NEW-CORE-COUNTERS-1: a counting build (`--counters`) of this program records one
+# list copy (`ys` is appended to while `xs` is still live), ten record copies into
+# list elements in `bump`, the pushes and the allocations, and prints the same output
+# as an ordinary build. Any argument makes it trap after printing.
+record P:
+    a: int
+    b: int
+    c: list[int]
+    d: int
+    e: int
+
+
+def bump(ps: mut list[P], i: int) -> None:
+    p = ps[i]
+    p.a += 1
+    ps[i] = p
+
+
+def main(args: list[str], out: Stream) -> int:
+    xs: list[int] = []
+    for i in range(100):
+        xs.append(i)
+    ys = xs
+    ys.append(5)
+    ps: list[P] = []
+    for i in range(10):
+        ps.append(P(a=i, b=i, c=[i], d=0, e=0))
+    for i in range(10):
+        bump(mut ps, i)
+    out.print(len(xs), len(ys), ps[3].a)
+    return xs[len(args) * 200]

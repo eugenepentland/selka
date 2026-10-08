@@ -1,0 +1,22 @@
+{
+ "label": "run-lox-vm-binary_trees-7-count",
+ "command": [
+  "taskset",
+  "-c",
+  "0,1,4-9,12-19",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/lox-count",
+  "--engine=vm",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/lox-scripts/binary_trees-7.lox"
+ ],
+ "cwd": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3",
+ "env": {
+  "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/counts/lox-vm-binary_trees-7.json"
+ },
+ "seconds": 5.336,
+ "status": 0,
+ "stdout_sha256": "6be1003104a6b2b25cef45c5c6226b901208b7d27bd57169eb0135e278ebd51d",
+ "stdout_bytes": 143,
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_bytes": 0,
+ "stdout": "stretch tree of depth:\n8\ncheck:\n-1\nnum trees:\n256\ndepth:\n4\ncheck:\n-256\nnum trees:\n64\ndepth:\n6\ncheck:\n-64\nlong lived tree of depth:\n7\ncheck:\n-1\n"
+}

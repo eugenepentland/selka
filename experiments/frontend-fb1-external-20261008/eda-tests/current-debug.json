@@ -1,0 +1,2468 @@
+{
+  "compiler_commit": "889943fa81a7c0c69a6452b0ab6c076b42b728cc",
+  "files": {
+    "board_layers": {
+      "elapsed_seconds": 0.08224223204888403,
+      "receipt": "commands/debug/board_layers.json",
+      "reference_source_sha256": "e92a754e6a4698f5b38e1786148ca8a24eb86f26313768abe64b07869365758d",
+      "source_sha256": "e92a754e6a4698f5b38e1786148ca8a24eb86f26313768abe64b07869365758d",
+      "tests": []
+    },
+    "board_layers_test": {
+      "elapsed_seconds": 0.3924196748994291,
+      "receipt": "commands/debug/board_layers_test.json",
+      "reference_source_sha256": "ef8cda09eebd120898560b4a67957cf60ad757f41b8f7488ba5aa329cffdc584",
+      "source_sha256": "ef8cda09eebd120898560b4a67957cf60ad757f41b8f7488ba5aa329cffdc584",
+      "tests": [
+        [
+          "board_layers_test::test_a_front_side_layer_name_flips_to_its_back_twin_and_a_sideless_one_does_not",
+          "passed",
+          ""
+        ],
+        [
+          "board_layers_test::test_a_layer_set_with_no_bits_is_unrestricted",
+          "passed",
+          ""
+        ],
+        [
+          "board_layers_test::test_a_six_layer_declared_stackup_numbers_signals_around_its_planes",
+          "passed",
+          ""
+        ],
+        [
+          "board_layers_test::test_an_undeclared_board_builds_the_implicit_four_layer_table",
+          "passed",
+          ""
+        ],
+        [
+          "board_layers_test::test_imported_copper_spellings_are_recognized_without_minting_rows",
+          "passed",
+          ""
+        ],
+        [
+          "board_layers_test::test_layer_names_round_trip_through_the_shared_table",
+          "passed",
+          ""
+        ],
+        [
+          "board_layers_test::test_layer_rows_carry_position_colours_and_poured_outer_faces_stay_routable",
+          "passed",
+          ""
+        ],
+        [
+          "board_layers_test::test_the_layer_table_carries_each_row_s_gerber_identity",
+          "passed",
+          ""
+        ],
+        [
+          "board_layers_test::test_the_layer_table_carries_the_technical_fabrication_rows",
+          "passed",
+          ""
+        ],
+        [
+          "board_layers_test::test_the_named_layer_constants_are_the_spellings_the_table_itself_carries",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "decouple_key": {
+      "elapsed_seconds": 0.05684667197056115,
+      "receipt": "commands/debug/decouple_key.json",
+      "reference_source_sha256": "a6f46836e2a48260c1c1ccdd2c69ba745bff7a950416bb609e8c0b92c7951809",
+      "source_sha256": "a6f46836e2a48260c1c1ccdd2c69ba745bff7a950416bb609e8c0b92c7951809",
+      "tests": []
+    },
+    "decouple_key_test": {
+      "elapsed_seconds": 0.13632604107260704,
+      "receipt": "commands/debug/decouple_key_test.json",
+      "reference_source_sha256": "71d6b95f0d60f120dba55513ba735041a71b1fe86e77337e047096fdac0bf5e8",
+      "source_sha256": "71d6b95f0d60f120dba55513ba735041a71b1fe86e77337e047096fdac0bf5e8",
+      "tests": [
+        [
+          "decouple_key_test::test_capfarads_parses_si_prefixes_including_the_micro_sign_and_the_bulk_threshold",
+          "passed",
+          ""
+        ],
+        [
+          "decouple_key_test::test_pinfromorigin_reads_value_pad_replica_and_rejects_every_other_key_shape",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "design_model": {
+      "elapsed_seconds": 0.36728264088742435,
+      "receipt": "commands/debug/design_model.json",
+      "reference_source_sha256": "87304ad1df75fbe6eb08e42ab25be214d8940631b8be22981a24f31dbf0101c3",
+      "source_sha256": "87304ad1df75fbe6eb08e42ab25be214d8940631b8be22981a24f31dbf0101c3",
+      "tests": []
+    },
+    "design_model_test": {
+      "elapsed_seconds": 1.042657604906708,
+      "receipt": "commands/debug/design_model_test.json",
+      "reference_source_sha256": "31bcfebe217ab9e541add0010bd13d3fc6d92a296f87f3192cb3586d1e6583e6",
+      "source_sha256": "31bcfebe217ab9e541add0010bd13d3fc6d92a296f87f3192cb3586d1e6583e6",
+      "tests": [
+        [
+          "design_model_test::test_design_model_a_malformed_model_names_the_offending_line",
+          "passed",
+          ""
+        ],
+        [
+          "design_model_test::test_design_model_a_model_round_trips_every_modelled_field_into_the_block",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "diagram_membership": {
+      "elapsed_seconds": 0.2439060709439218,
+      "receipt": "commands/debug/diagram_membership.json",
+      "reference_source_sha256": "53aaf1af14787a491c9de133ba01abfb31d6b11678a63bb8f17c438eff7238d0",
+      "source_sha256": "53aaf1af14787a491c9de133ba01abfb31d6b11678a63bb8f17c438eff7238d0",
+      "tests": []
+    },
+    "diagram_membership_test": {
+      "elapsed_seconds": 0.3764844259712845,
+      "receipt": "commands/debug/diagram_membership_test.json",
+      "reference_source_sha256": "48ac0b09265b65f074ad78a05871b7e40140d21034ad17a37af8c58a9139d553",
+      "source_sha256": "48ac0b09265b65f074ad78a05871b7e40140d21034ad17a37af8c58a9139d553",
+      "tests": [
+        [
+          "diagram_membership_test::test_attachedsubblocks_reports_a_section_s_own_modules_in_declaration_order",
+          "passed",
+          ""
+        ],
+        [
+          "diagram_membership_test::test_computesubblockattachments_keeps_a_power_producer_out_of_a_consuming_section",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "escape": {
+      "elapsed_seconds": 0.035600987961515784,
+      "receipt": "commands/debug/escape.json",
+      "reference_source_sha256": "bf7812ff6f78980594b3a6186434bf35d2a3bc8afa50ccbf211877a0b4d846d5",
+      "source_sha256": "bf7812ff6f78980594b3a6186434bf35d2a3bc8afa50ccbf211877a0b4d846d5",
+      "tests": []
+    },
+    "escape_test": {
+      "elapsed_seconds": 0.12073813402093947,
+      "receipt": "commands/debug/escape_test.json",
+      "reference_source_sha256": "c01ffebaba64d0cb9dda64ab6a3051ecb4d31192368689a658b8d52ddb87cd64",
+      "source_sha256": "c01ffebaba64d0cb9dda64ab6a3051ecb4d31192368689a658b8d52ddb87cd64",
+      "tests": [
+        [
+          "escape_test::test_decodexmlalloc_copies_an_entity_it_does_not_know_through_verbatim",
+          "passed",
+          ""
+        ],
+        [
+          "escape_test::test_decodexmlalloc_round_trips_every_byte_writexml_can_escape",
+          "passed",
+          ""
+        ],
+        [
+          "escape_test::test_the_two_apostrophe_spellings_differ_in_nothing_but_the_apostrophe",
+          "passed",
+          ""
+        ],
+        [
+          "escape_test::test_writexml_escapes_markup_and_both_quote_styles",
+          "passed",
+          ""
+        ],
+        [
+          "escape_test::test_writexml_neutralizes_a_script_attribute_breakout",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "eval_electrical": {
+      "elapsed_seconds": 0.2248730300925672,
+      "receipt": "commands/debug/eval_electrical.json",
+      "reference_source_sha256": "f1b62a64ba1598c9934bb4492ca317ccf700cade68a2813710baef591f7f2577",
+      "source_sha256": "f1b62a64ba1598c9934bb4492ca317ccf700cade68a2813710baef591f7f2577",
+      "tests": []
+    },
+    "eval_electrical_test": {
+      "elapsed_seconds": 0.6458901020232588,
+      "receipt": "commands/debug/eval_electrical_test.json",
+      "reference_source_sha256": "9274cde632509a5abe4e253a8fabe5d1c8c92cd8d1c744cb73f2bf844fab3e60",
+      "source_sha256": "9274cde632509a5abe4e253a8fabe5d1c8c92cd8d1c744cb73f2bf844fab3e60",
+      "tests": [
+        [
+          "eval_electrical_test::test_parse_captures_voltage_levels",
+          "passed",
+          ""
+        ],
+        [
+          "eval_electrical_test::test_parse_ignores_unknown_sub_forms",
+          "passed",
+          ""
+        ],
+        [
+          "eval_electrical_test::test_parse_reads_pin_function_name",
+          "passed",
+          ""
+        ],
+        [
+          "eval_electrical_test::test_parse_recognises_all_electrical_types",
+          "passed",
+          ""
+        ],
+        [
+          "eval_electrical_test::test_parse_rejects_an_unknown_electrical_type",
+          "passed",
+          ""
+        ],
+        [
+          "eval_electrical_test::test_parse_returns_null_without_pin_name",
+          "passed",
+          ""
+        ],
+        [
+          "eval_electrical_test::test_parsesubforms_fills_caller_supplied_decl_from_sub_form_list",
+          "passed",
+          ""
+        ],
+        [
+          "eval_electrical_test::test_port_level_electrical_decl_carries_boundary_logic_levels",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "eval_env": {
+      "elapsed_seconds": 0.2143498540390283,
+      "receipt": "commands/debug/eval_env.json",
+      "reference_source_sha256": "0b32202d3aeb495a5f4d763063be3c8f41f997f3e63afffd37c5b18cf063055a",
+      "source_sha256": "0b32202d3aeb495a5f4d763063be3c8f41f997f3e63afffd37c5b18cf063055a",
+      "tests": []
+    },
+    "eval_env_test": {
+      "elapsed_seconds": 0.4426038879901171,
+      "receipt": "commands/debug/eval_env_test.json",
+      "reference_source_sha256": "1fff291254a4ea61414d674694320ddbeb4fd70ab6ab608e6f4519bcc2b60f2e",
+      "source_sha256": "1fff291254a4ea61414d674694320ddbeb4fd70ab6ab608e6f4519bcc2b60f2e",
+      "tests": [
+        [
+          "eval_env_test::test_env_get_and_put",
+          "passed",
+          ""
+        ],
+        [
+          "eval_env_test::test_env_parent_chain",
+          "passed",
+          ""
+        ],
+        [
+          "eval_env_test::test_ground_via_distance_protection_is_enabled_by_default",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "eval_net_analysis": {
+      "elapsed_seconds": 0.2660999889485538,
+      "receipt": "commands/debug/eval_net_analysis.json",
+      "reference_source_sha256": "12b4cffc3e5c4a86bbe4243e9912d96f557fb079258d95313311002716919812",
+      "source_sha256": "12b4cffc3e5c4a86bbe4243e9912d96f557fb079258d95313311002716919812",
+      "tests": []
+    },
+    "eval_net_analysis_test": {
+      "elapsed_seconds": 0.44461329700425267,
+      "receipt": "commands/debug/eval_net_analysis_test.json",
+      "reference_source_sha256": "f53bec8c833c2051c2d41e0e64b0353970e5abc134ff801a04c31e49f1520347",
+      "source_sha256": "f53bec8c833c2051c2d41e0e64b0353970e5abc134ff801a04c31e49f1520347",
+      "tests": [
+        [
+          "eval_net_analysis_test::test_isgroundbase_accepts_the_base_names_in_any_case_and_only_those",
+          "passed",
+          ""
+        ],
+        [
+          "eval_net_analysis_test::test_isratingzerovolts_adds_only_the_chassis_node_to_the_ground_tokens",
+          "passed",
+          ""
+        ],
+        [
+          "eval_net_analysis_test::test_supply_capacitor_without_a_ground_leg_is_not_decoupling",
+          "passed",
+          ""
+        ],
+        [
+          "eval_net_analysis_test::test_the_ground_net_vocabulary_tables_keep_the_spellings_their_consumers_had",
+          "passed",
+          ""
+        ],
+        [
+          "eval_net_analysis_test::test_top_level_input_power_ports_require_decoupling",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "eval_rails": {
+      "elapsed_seconds": 0.2929443509783596,
+      "receipt": "commands/debug/eval_rails.json",
+      "reference_source_sha256": "1a80e2cb96a8a120696424ff2b53dda919116b30ad4a35df0789322bc0f00631",
+      "source_sha256": "1a80e2cb96a8a120696424ff2b53dda919116b30ad4a35df0789322bc0f00631",
+      "tests": []
+    },
+    "eval_rails_test": {
+      "elapsed_seconds": 0.7854637838900089,
+      "receipt": "commands/debug/eval_rails_test.json",
+      "reference_source_sha256": "39b74ee3291603410c5224d683b6c8a59e1fdfd4a663598a6e3a2b8b31c77ab5",
+      "source_sha256": "39b74ee3291603410c5224d683b6c8a59e1fdfd4a663598a6e3a2b8b31c77ab5",
+      "tests": [
+        [
+          "eval_rails_test::test_build_collapses_ferrite_bridged_nets_into_single_rail",
+          "passed",
+          ""
+        ],
+        [
+          "eval_rails_test::test_build_derives_one_rail_per_power_output_port",
+          "passed",
+          ""
+        ],
+        [
+          "eval_rails_test::test_build_excludes_gnd",
+          "passed",
+          ""
+        ],
+        [
+          "eval_rails_test::test_build_falls_back_to_section_power_port_voltage",
+          "passed",
+          ""
+        ],
+        [
+          "eval_rails_test::test_build_falls_back_to_top_level_design_port_nominal",
+          "passed",
+          ""
+        ],
+        [
+          "eval_rails_test::test_build_preserves_top_level_rated_maximum",
+          "passed",
+          ""
+        ],
+        [
+          "eval_rails_test::test_build_recognizes_a_bare_vout_tied_to_a_rail_named_net",
+          "passed",
+          ""
+        ],
+        [
+          "eval_rails_test::test_build_records_source_ref_des_and_source_port",
+          "passed",
+          ""
+        ],
+        [
+          "eval_rails_test::test_build_returns_empty_slice_when_no_rails_declared",
+          "passed",
+          ""
+        ],
+        [
+          "eval_rails_test::test_build_uses_sub_block_port_nominal_for_voltage",
+          "passed",
+          ""
+        ],
+        [
+          "eval_rails_test::test_the_supply_rail_vocabulary_tables_keep_the_spellings_their_consumers_had",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "export_kicad": {
+      "elapsed_seconds": 1.736827147193253,
+      "receipt": "commands/debug/export_kicad.json",
+      "reference_source_sha256": "e0016311e9615a2eccf36c380b7b50f882ff47a1fb15b459312d72336ee73339",
+      "source_sha256": "e0016311e9615a2eccf36c380b7b50f882ff47a1fb15b459312d72336ee73339",
+      "tests": []
+    },
+    "export_kicad_footprint": {
+      "elapsed_seconds": 0.4446961891371757,
+      "receipt": "commands/debug/export_kicad_footprint.json",
+      "reference_source_sha256": "83569e7770e75b7c516c202a8df8b61bc1d1a829d38bfcd3f867ca66715f5575",
+      "source_sha256": "83569e7770e75b7c516c202a8df8b61bc1d1a829d38bfcd3f867ca66715f5575",
+      "tests": []
+    },
+    "export_kicad_footprint_test": {
+      "elapsed_seconds": 2.1036211100872606,
+      "receipt": "commands/debug/export_kicad_footprint_test.json",
+      "reference_source_sha256": "82644a4d36653944d879462db285fbec8bf03ef06a4fc00d1b316636302ae8be",
+      "source_sha256": "82644a4d36653944d879462db285fbec8bf03ef06a4fc00d1b316636302ae8be",
+      "tests": [
+        [
+          "export_kicad_footprint_test::test_exportfootprintmod_emits_a_copper_pour_only_footprint_keepout",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_footprint_test::test_exportfootprintmod_emits_a_custom_pad_s_polygon_as_kicad_primitives_gr_poly",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_footprint_test::test_exportfootprintmod_emits_a_footprint_keepout_that_also_blocks_vias",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_footprint_test::test_exportfootprintmod_emits_fab_geometry_on_f_fab_and_keeps_silkscreen_on_f_silks",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_footprint_test::test_exportfootprintmod_emits_silkscreen_poly_rect_pin_1_markers_must_not_be_dropped",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_footprint_test::test_exportfootprintmod_emits_the_pad_rotation_geometry_zig_reads_mapped_into_kicad_s_frame",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_footprint_test::test_exportfootprintmod_escapes_a_hostile_3d_model_filename",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_footprint_test::test_exportfootprintmod_inflates_the_f_crtyd_courtyard_by_the_placement_margin",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_footprint_test::test_exportfootprintmod_leaves_a_rotated_custom_pad_s_at_unrotated",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_footprint_test::test_exportfootprintmod_names_the_body_and_smd_pad_layers_with_kicad_s_own_spellings",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_footprint_test::test_exportfootprintmod_puts_a_concave_custom_pad_anchor_on_copper",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_footprint_test::test_exportfootprintmod_strokes_f_silks_at_the_fabricated_width_and_f_fab_at_the_documentation_width",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_footprint_test::test_rotated_paste_window_keeps_its_local_size_and_transforms_its_center",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_footprint_test::test_usesourcekicadmod_replaces_a_model_block_whose_path_holds_a_parenthesis",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "export_kicad_model": {
+      "elapsed_seconds": 0.7097239419817924,
+      "receipt": "commands/debug/export_kicad_model.json",
+      "reference_source_sha256": "af9798ef74abc64090da079c3f9d03b0119491082da7674fb8bafc5e07fa082e",
+      "source_sha256": "af9798ef74abc64090da079c3f9d03b0119491082da7674fb8bafc5e07fa082e",
+      "tests": []
+    },
+    "export_kicad_netlist": {
+      "elapsed_seconds": 0.34490925585851073,
+      "receipt": "commands/debug/export_kicad_netlist.json",
+      "reference_source_sha256": "a46e70ad7b8a97d0e2dd6abb4ce9149d49648f413842dca98bc7d415a85e0dcd",
+      "source_sha256": "a46e70ad7b8a97d0e2dd6abb4ce9149d49648f413842dca98bc7d415a85e0dcd",
+      "tests": []
+    },
+    "export_kicad_netlist_test": {
+      "elapsed_seconds": 0.6482533100061119,
+      "receipt": "commands/debug/export_kicad_netlist_test.json",
+      "reference_source_sha256": "332c8cd41d863e057a76eab0c8812657fac85b5e673c5ad052f120d8a227e781",
+      "source_sha256": "332c8cd41d863e057a76eab0c8812657fac85b5e673c5ad052f120d8a227e781",
+      "tests": [
+        [
+          "export_kicad_netlist_test::test_extractpadnames_reads_bare_int_quoted_and_atom_pad_numbers",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_netlist_test::test_the_exported_netlist_reproduces_every_net_s_membership_exactly",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_netlist_test::test_writenetlist_escapes_the_raw_design_name_and_copies_tokenizer_slices_verbatim",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "export_kicad_sch": {
+      "elapsed_seconds": 1.5194253630470484,
+      "receipt": "commands/debug/export_kicad_sch.json",
+      "reference_source_sha256": "65afe1b6697b14792cbc278221c718bd816f7cfa12c5f2145972440492b27a86",
+      "source_sha256": "65afe1b6697b14792cbc278221c718bd816f7cfa12c5f2145972440492b27a86",
+      "tests": []
+    },
+    "export_kicad_sch_test": {
+      "elapsed_seconds": 11.236635450972244,
+      "receipt": "commands/debug/export_kicad_sch_test.json",
+      "reference_source_sha256": "4c33b32cd295126c51be291e6309d658739ca85f952ae1364eb2f400acd9846e",
+      "source_sha256": "4c33b32cd295126c51be291e6309d658739ca85f952ae1364eb2f400acd9846e",
+      "tests": [
+        [
+          "export_kicad_sch_test::test_kicad_sch_a_bound_bypass_cap_and_a_three_pin_cluster_net_become_drawn_wire",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_a_decoupling_bank_replaces_its_members_labels_with_one_rail_label",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_a_displayed_part_number_clears_the_value_above_it_and_every_neighbour",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_a_ganged_cap_is_turned_upright_and_drops_its_per_pin_drawing",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_a_hierarchical_export_is_deterministic_across_runs",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_a_hierarchical_export_links_a_sheet_per_section_module_and_leftover",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_a_hub_s_repeated_rail_pins_are_ganged_under_one_adornment",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_a_multi_part_instance_emits_kicad_units_that_share_one_reference",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_a_net_on_a_missing_ref_des_draws_no_label_and_does_not_fail_the_export",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_a_passive_is_emitted_as_a_real_device_glyph_rather_than_a_box",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_a_resolved_part_number_is_shown_on_a_hub_and_hidden_on_a_passive",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_a_two_pin_net_spanning_two_sections_is_still_label_connected",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_a_vendor_body_reaches_the_emitted_sheet_and_can_be_switched_off",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_an_empty_design_still_exports_a_self_checking_sheet",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_bypass_stubs_of_a_rail_all_label_as_the_rail_and_its_own_dotted_net_survives",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_caps_on_different_bypass_stubs_of_one_rail_join_one_bank",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_child_sheets_nest_their_instance_path_under_the_root_s_uuid",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_export_emits_the_pinned_header_and_each_instance_s_own_uuid",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_export_is_deterministic_across_runs",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_export_maps_dnp_to_kicad_s_dnp_and_in_bom_flags",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_export_replaces_ground_labels_with_rail_symbols_and_drives_each_rail",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_export_writes_hierarchical_net_names_into_labels_unchanged",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_firstundrawn_finds_an_uncovered_pin_and_passes_full_coverage",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_fixture_export_matches_the_committed_golden_file",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_qualify_re_attaches_the_sub_block_path_to_a_module_local_ref",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_the_export_kicad_bundle_carries_the_schematic_on_request",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_the_flat_threshold_and_the_flat_option_both_collapse_the_hierarchy",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_sch_test::test_kicad_sch_the_vendor_fixture_export_matches_its_committed_golden_file",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "export_kicad_test": {
+      "elapsed_seconds": 2.2011513400357217,
+      "receipt": "commands/debug/export_kicad_test.json",
+      "reference_source_sha256": "3a4e00fe7436b080068a42362100358d26d211a8378baadabf7a7b27f3d3ac83",
+      "source_sha256": "3a4e00fe7436b080068a42362100358d26d211a8378baadabf7a7b27f3d3ac83",
+      "tests": [
+        [
+          "export_kicad_test::test_collectinstances_prefixes_a_decoupling_binding_s_target_ic_like_the_ref_des",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_test::test_footprint_mod_export",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_test::test_netlist_generation",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_test::test_sanitizekicadname_neutralizes_traversal_and_passes_safe_names_through",
+          "passed",
+          ""
+        ],
+        [
+          "export_kicad_test::test_the_export_layer_re_exports_the_flatten_currency_types_unchanged",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "flat_netlist": {
+      "elapsed_seconds": 0.2823625709861517,
+      "receipt": "commands/debug/flat_netlist.json",
+      "reference_source_sha256": "b1b04f8c6ca5f7d33c49e48c90d8fd232ef995514a2751be168c68f3506256ad",
+      "source_sha256": "b1b04f8c6ca5f7d33c49e48c90d8fd232ef995514a2751be168c68f3506256ad",
+      "tests": []
+    },
+    "flat_netlist_test": {
+      "elapsed_seconds": 0.4216390859801322,
+      "receipt": "commands/debug/flat_netlist_test.json",
+      "reference_source_sha256": "7e275d8ad1f2a10f842c2dd451daaa0df8491526fa992c3fb69f79d952be2eaf",
+      "source_sha256": "7e275d8ad1f2a10f842c2dd451daaa0df8491526fa992c3fb69f79d952be2eaf",
+      "tests": [
+        [
+          "flat_netlist_test::test_flatten_currency_types_default_their_optional_fields",
+          "passed",
+          ""
+        ],
+        [
+          "flat_netlist_test::test_uuidfromid_pins_the_identity_kicad_sync_keys_on",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "footprint_paste": {
+      "elapsed_seconds": 0.08149181818589568,
+      "receipt": "commands/debug/footprint_paste.json",
+      "reference_source_sha256": "949667179378d17e76e56dceff63231fcfa26ae246dd77661fb1cc371e0b837b",
+      "source_sha256": "949667179378d17e76e56dceff63231fcfa26ae246dd77661fb1cc371e0b837b",
+      "tests": []
+    },
+    "footprint_paste_test": {
+      "elapsed_seconds": 0.270896770991385,
+      "receipt": "commands/debug/footprint_paste_test.json",
+      "reference_source_sha256": "0bfe2b9fa6a4e6c9239502af67655eefc885c335fdcc7bda6fc4f458025268d5",
+      "source_sha256": "0bfe2b9fa6a4e6c9239502af67655eefc885c335fdcc7bda6fc4f458025268d5",
+      "tests": [
+        [
+          "footprint_paste_test::test_ic_package_paste_parsing_empty_and_malformed",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "infra_fs": {
+      "elapsed_seconds": 0.07779748388566077,
+      "receipt": "commands/debug/infra_fs.json",
+      "reference_source_sha256": "36fae33c7de90979aea17d0677851f90756ed6b857e6a97d6173edf00a5beca1",
+      "source_sha256": "36fae33c7de90979aea17d0677851f90756ed6b857e6a97d6173edf00a5beca1",
+      "tests": []
+    },
+    "infra_fs_test": {
+      "elapsed_seconds": 0.316474761813879,
+      "receipt": "commands/debug/infra_fs_test.json",
+      "reference_source_sha256": "ecc2b4572652116cfb120a77cf98ae4a31cafbb81d027bb4a3ae62de53065c08",
+      "source_sha256": "ecc2b4572652116cfb120a77cf98ae4a31cafbb81d027bb4a3ae62de53065c08",
+      "tests": [
+        [
+          "infra_fs_test::test_cache_probe_leaves_the_closure_alone_without_weakening_the_tamper_guard",
+          "passed",
+          ""
+        ],
+        [
+          "infra_fs_test::test_cache_probe_rejects_an_end_call_away_from_its_owner_thread",
+          "passed",
+          ""
+        ],
+        [
+          "infra_fs_test::test_nested_read_traces_invalidate_both_scopes_without_stealing_reads",
+          "passed",
+          ""
+        ],
+        [
+          "infra_fs_test::test_read_trace_binds_child_dir_bytes_and_detects_aba_consumption",
+          "passed",
+          ""
+        ],
+        [
+          "infra_fs_test::test_read_trace_digest_sorts_canonical_paths",
+          "passed",
+          ""
+        ],
+        [
+          "infra_fs_test::test_read_trace_rejects_an_end_call_away_from_its_owner_thread",
+          "passed",
+          ""
+        ],
+        [
+          "infra_fs_test::test_read_trace_rejects_directory_and_negative_dependency_aba",
+          "passed",
+          ""
+        ],
+        [
+          "infra_fs_test::test_read_trace_rejects_symlink_removal_and_retargeting",
+          "passed",
+          ""
+        ],
+        [
+          "infra_fs_test::test_read_trace_reports_retained_evidence_memory",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "infra_log": {
+      "elapsed_seconds": 0.0398343310225755,
+      "receipt": "commands/debug/infra_log.json",
+      "reference_source_sha256": "58e055fdb182550f2dac5c10ed75f6c2f6cb510b3a865ffda2398c9daeff4aa9",
+      "source_sha256": "58e055fdb182550f2dac5c10ed75f6c2f6cb510b3a865ffda2398c9daeff4aa9",
+      "tests": []
+    },
+    "json_writer": {
+      "elapsed_seconds": 0.058140947949141264,
+      "receipt": "commands/debug/json_writer.json",
+      "reference_source_sha256": "27c309bb603c267d3aabddf4fa59604e88add00675c4f7591de2d83dbffb99e4",
+      "source_sha256": "27c309bb603c267d3aabddf4fa59604e88add00675c4f7591de2d83dbffb99e4",
+      "tests": []
+    },
+    "json_writer_test": {
+      "elapsed_seconds": 0.15155438985675573,
+      "receipt": "commands/debug/json_writer_test.json",
+      "reference_source_sha256": "c7ba3b5c786ae6cd3111c9c5476d116d6c3c51b9812e2ad4c78af802d9a04d14",
+      "source_sha256": "c7ba3b5c786ae6cd3111c9c5476d116d6c3c51b9812e2ad4c78af802d9a04d14",
+      "tests": [
+        [
+          "json_writer_test::test_escape_control_characters",
+          "passed",
+          ""
+        ],
+        [
+          "json_writer_test::test_escape_quotes_and_backslashes",
+          "passed",
+          ""
+        ],
+        [
+          "json_writer_test::test_one_script_context_escaper_answers_for_every_page_json_writer",
+          "passed",
+          ""
+        ],
+        [
+          "json_writer_test::test_script_strings_escape_closing_tags_and_javascript_line_separators",
+          "passed",
+          ""
+        ],
+        [
+          "json_writer_test::test_the_sidecar_escaper_leaves_alone_and_still_escapes_quote_backslash_and_controls",
+          "passed",
+          ""
+        ],
+        [
+          "json_writer_test::test_writefield_surrounds_value_with_quotes",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_pcb_format": {
+      "elapsed_seconds": 0.04789861408062279,
+      "receipt": "commands/debug/kicad_pcb_format.json",
+      "reference_source_sha256": "98eb3b168fb8b9ed67f2ca1604c0380b755b053dd838fc6c40c7f6052259e01e",
+      "source_sha256": "98eb3b168fb8b9ed67f2ca1604c0380b755b053dd838fc6c40c7f6052259e01e",
+      "tests": []
+    },
+    "kicad_pcb_format_test": {
+      "elapsed_seconds": 0.2559029769618064,
+      "receipt": "commands/debug/kicad_pcb_format_test.json",
+      "reference_source_sha256": "b47db471342f41805fefaf0988357c91edfb897ba86c51f570b022ed63c5ac3f",
+      "source_sha256": "b47db471342f41805fefaf0988357c91edfb897ba86c51f570b022ed63c5ac3f",
+      "tests": [
+        [
+          "kicad_pcb_format_test::test_padnumbertext_reads_quoted_bare_atom_and_bare_int_pad_numbers",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_pcb_format_test::test_sexprescape_escapes_quotes_and_backslashes_passes_clean_text_through",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_pcb_format_test::test_sexprunescape_inverts_sexprescape_and_is_a_no_op_on_clean_text",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sch_bank": {
+      "elapsed_seconds": 0.8818997950293124,
+      "receipt": "commands/debug/kicad_sch_bank.json",
+      "reference_source_sha256": "87f4700bdcc0ad51fd62f073500d721026fe749c64b5d0f01234153029a536f0",
+      "source_sha256": "87f4700bdcc0ad51fd62f073500d721026fe749c64b5d0f01234153029a536f0",
+      "tests": []
+    },
+    "kicad_sch_bank_test": {
+      "elapsed_seconds": 1.1491464539431036,
+      "receipt": "commands/debug/kicad_sch_bank_test.json",
+      "reference_source_sha256": "b8cc82e2eecc2b6219e5d189d2e3d18ba0f26ab061d47dc6e1ddd26986860f85",
+      "source_sha256": "b8cc82e2eecc2b6219e5d189d2e3d18ba0f26ab061d47dc6e1ddd26986860f85",
+      "tests": [
+        [
+          "kicad_sch_bank_test::test_kicad_sch_anglefor_stands_a_cap_up_and_reachof_refuses_an_odd_body",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_bank_test::test_kicad_sch_bank_grouping_keys_on_the_rail_and_ground_pair",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_bank_test::test_kicad_sch_bank_members_sort_by_value_then_reference",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_bank_test::test_kicad_sch_cellfor_budgets_the_whole_bank_and_keeps_its_origin_inside",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_bank_test::test_kicad_sch_issupplynet_accepts_real_rails_and_refuses_signals",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_bank_test::test_kicad_sch_railpts_breaks_the_rail_at_each_member_column",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_bank_test::test_kicad_sch_the_bank_caption_names_its_ic_and_rail",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_bank_test::test_kicad_sch_the_bank_frame_places_rails_clear_of_every_member_pin",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sch_compose": {
+      "elapsed_seconds": 1.0551725439727306,
+      "receipt": "commands/debug/kicad_sch_compose.json",
+      "reference_source_sha256": "26cf234664818cdb7a3e17e21eb79584bb25402fa3128cb3d0070343aa905548",
+      "source_sha256": "26cf234664818cdb7a3e17e21eb79584bb25402fa3128cb3d0070343aa905548",
+      "tests": []
+    },
+    "kicad_sch_compose_test": {
+      "elapsed_seconds": 1.1653661199379712,
+      "receipt": "commands/debug/kicad_sch_compose_test.json",
+      "reference_source_sha256": "9d98d252e80298a26ab4c50a9be929f8618d9eec6bdfadfdea89162037e5eebc",
+      "source_sha256": "9d98d252e80298a26ab4c50a9be929f8618d9eec6bdfadfdea89162037e5eebc",
+      "tests": [
+        [
+          "kicad_sch_compose_test::test_kicad_sch_a_band_heading_never_repeats_the_sheet_title",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_compose_test::test_kicad_sch_israilnet_accepts_the_canonical_grounds_and_nothing_else",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sch_emit": {
+      "elapsed_seconds": 0.8587485940661281,
+      "receipt": "commands/debug/kicad_sch_emit.json",
+      "reference_source_sha256": "056d22644d6278617ad072de75073e1ce0293908e6506bc61691933fb35f81a3",
+      "source_sha256": "056d22644d6278617ad072de75073e1ce0293908e6506bc61691933fb35f81a3",
+      "tests": []
+    },
+    "kicad_sch_emit_test": {
+      "elapsed_seconds": 1.0647430720273405,
+      "receipt": "commands/debug/kicad_sch_emit_test.json",
+      "reference_source_sha256": "98fe2f36ff08da9eb13b28e54d8d01dfe91cebb6b82f8c575b2eedb06ab692c4",
+      "source_sha256": "98fe2f36ff08da9eb13b28e54d8d01dfe91cebb6b82f8c575b2eedb06ab692c4",
+      "tests": [
+        [
+          "kicad_sch_emit_test::test_kicad_sch_a_rail_symbol_s_text_hangs_with_its_body_and_a_flag_s_the_other_way",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_emit_test::test_kicad_sch_label_angle_and_justification_mirror_the_pin_side",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_emit_test::test_kicad_sch_labelspan_budgets_what_kicad_actually_draws",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_emit_test::test_kicad_sch_mm4_prints_ten_thousandths_of_a_millimetre_exactly",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_emit_test::test_kicad_sch_mm_prints_exact_hundredths_and_str_escapes",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_emit_test::test_kicad_sch_pin_text_shrinks_on_a_fine_pitch_edge_and_stays_full_size_elsewhere",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_emit_test::test_kicad_sch_the_instance_path_gains_a_sheet_segment_on_a_child_file",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sch_gang": {
+      "elapsed_seconds": 0.6011540149338543,
+      "receipt": "commands/debug/kicad_sch_gang.json",
+      "reference_source_sha256": "6a9bc5d3f7217fc74ea486463565f4fb13f6785bbbde41fe4a736c40ae108e00",
+      "source_sha256": "6a9bc5d3f7217fc74ea486463565f4fb13f6785bbbde41fe4a736c40ae108e00",
+      "tests": []
+    },
+    "kicad_sch_gang_test": {
+      "elapsed_seconds": 0.7373738470487297,
+      "receipt": "commands/debug/kicad_sch_gang_test.json",
+      "reference_source_sha256": "bde0c0181df31b406f251fcaab786fa90b4a7e3297e344da2b143e95b2554e61",
+      "source_sha256": "bde0c0181df31b406f251fcaab786fa90b4a7e3297e344da2b143e95b2554e61",
+      "tests": [
+        [
+          "kicad_sch_gang_test::test_kicad_sch_a_gang_refuses_a_run_that_would_cross_a_foreign_tip",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_gang_test::test_kicad_sch_gang_planning_cuts_a_net_at_a_column_change_instead_of_losing_it",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_gang_test::test_kicad_sch_gang_planning_gangs_each_contiguous_stretch_of_one_net",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_gang_test::test_kicad_sch_gang_planning_keys_on_the_edge_and_the_net",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_gang_test::test_kicad_sch_runpts_walks_the_gang_s_tips_in_order",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sch_glyph_test": {
+      "elapsed_seconds": 0.7015450180042535,
+      "receipt": "commands/debug/kicad_sch_glyph_test.json",
+      "reference_source_sha256": "217eb3b630e4cf75d87a7592e63e8e183ae0b2cca1b2beccf10807b5ffbded46",
+      "source_sha256": "217eb3b630e4cf75d87a7592e63e8e183ae0b2cca1b2beccf10807b5ffbded46",
+      "tests": [
+        [
+          "kicad_sch_glyph_test::test_kicad_sch_a_diode_glyph_orients_itself_by_pin_function_not_pad_order",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_glyph_test::test_kicad_sch_a_glyph_unit_keeps_the_stock_pin_endpoints_and_carries_real_body_art",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_glyph_test::test_kicad_sch_classify_picks_a_glyph_per_passive_class_and_boxes_everything_else",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sch_plan": {
+      "elapsed_seconds": 0.06170977302826941,
+      "receipt": "commands/debug/kicad_sch_plan.json",
+      "reference_source_sha256": "be805ad201c263f11b171eebcfccdc6aaa9d839197bd9fba770e4d0d57189ce6",
+      "source_sha256": "be805ad201c263f11b171eebcfccdc6aaa9d839197bd9fba770e4d0d57189ce6",
+      "tests": []
+    },
+    "kicad_sch_plan_test": {
+      "elapsed_seconds": 0.26056487392634153,
+      "receipt": "commands/debug/kicad_sch_plan_test.json",
+      "reference_source_sha256": "9cbb1c8b7ce4172ef7f99e74e0ea2190d95a7f4c21cbb214c34a1f4f52be902b",
+      "source_sha256": "9cbb1c8b7ce4172ef7f99e74e0ea2190d95a7f4c21cbb214c34a1f4f52be902b",
+      "tests": [
+        [
+          "kicad_sch_plan_test::test_kicad_sch_cluster_binds_a_declared_decap_to_its_ic_and_groups_the_rest_by_net_affinity",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_plan_test::test_kicad_sch_cluster_keeps_hubless_members_in_one_bucket_in_declaration_order",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_plan_test::test_kicad_sch_ispassiveref_reads_the_leaf_of_a_hierarchical_ref",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_plan_test::test_kicad_sch_slugify_normalises_a_title_and_uniquename_disambiguates_collisions",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sch_project": {
+      "elapsed_seconds": 0.8394150428939611,
+      "receipt": "commands/debug/kicad_sch_project.json",
+      "reference_source_sha256": "a6a4249dd25bb5ec251c83f85ab54271b184b402a945a812bf9b43ed6cc56270",
+      "source_sha256": "a6a4249dd25bb5ec251c83f85ab54271b184b402a945a812bf9b43ed6cc56270",
+      "tests": []
+    },
+    "kicad_sch_project_test": {
+      "elapsed_seconds": 1.1927013448439538,
+      "receipt": "commands/debug/kicad_sch_project_test.json",
+      "reference_source_sha256": "c5a5e5791fafa8798624adbf25e99c975775878a22d637d1541881fea09b216f",
+      "source_sha256": "c5a5e5791fafa8798624adbf25e99c975775878a22d637d1541881fea09b216f",
+      "tests": [
+        [
+          "kicad_sch_project_test::test_kicad_sch_the_project_file_escapes_a_hostile_design_name",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_project_test::test_kicad_sch_the_sidecar_set_names_the_four_project_files",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_project_test::test_kicad_sch_the_symbol_library_drops_the_lib_id_prefix",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sch_shape": {
+      "elapsed_seconds": 0.550479942932725,
+      "receipt": "commands/debug/kicad_sch_shape.json",
+      "reference_source_sha256": "625d2cd0b917a4d8741c7b75ffc4fa402797f514f18f0f39b864405f97e0547d",
+      "source_sha256": "625d2cd0b917a4d8741c7b75ffc4fa402797f514f18f0f39b864405f97e0547d",
+      "tests": []
+    },
+    "kicad_sch_shape_test": {
+      "elapsed_seconds": 1.3164940779097378,
+      "receipt": "commands/debug/kicad_sch_shape_test.json",
+      "reference_source_sha256": "aa8cd0ac65c60cb06f9651017f39bb2cabed4c6aedc1c08b655d0e5c8750acd5",
+      "source_sha256": "aa8cd0ac65c60cb06f9651017f39bb2cabed4c6aedc1c08b655d0e5c8750acd5",
+      "tests": [
+        [
+          "kicad_sch_shape_test::test_kicad_sch_a_pin_named_after_its_own_pad_does_not_draw_the_name_as_well",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_shape_test::test_kicad_sch_a_wide_pad_id_lengthens_its_pin_so_the_number_clears_the_body",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_shape_test::test_kicad_sch_sanitizelibname_replaces_separator_characters",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_shape_test::test_kicad_sch_synth_draws_the_glyph_for_two_pads_and_falls_back_to_a_box_beyond_that",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_shape_test::test_kicad_sch_synth_drops_empty_units_so_unit_numbers_stay_contiguous",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_shape_test::test_kicad_sch_synth_orders_an_edge_by_net_and_mutes_the_names_it_gangs",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_shape_test::test_kicad_sch_synth_places_supply_pins_up_ground_pins_down_signals_left_and_right",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_shape_test::test_kicad_sch_synth_splits_pads_into_units_and_keeps_every_pad_drawn_once",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_shape_test::test_kicad_sch_synth_unions_pinout_footprint_and_net_referenced_pads_without_repeats",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sch_sheet": {
+      "elapsed_seconds": 0.579714875202626,
+      "receipt": "commands/debug/kicad_sch_sheet.json",
+      "reference_source_sha256": "bb37db7fe60c104103a19b31f7ac954fba86263df4c942702c00bc06b7cf4d15",
+      "source_sha256": "bb37db7fe60c104103a19b31f7ac954fba86263df4c942702c00bc06b7cf4d15",
+      "tests": []
+    },
+    "kicad_sch_sheet_test": {
+      "elapsed_seconds": 0.6915903601329774,
+      "receipt": "commands/debug/kicad_sch_sheet_test.json",
+      "reference_source_sha256": "0735fee173059f0ad60b3b76a49bc6890081be352dbc6c03dbf5b33d66f8243a",
+      "source_sha256": "0735fee173059f0ad60b3b76a49bc6890081be352dbc6c03dbf5b33d66f8243a",
+      "tests": [
+        [
+          "kicad_sch_sheet_test::test_kicad_sch_isqrt_and_page_clamping_stay_integral",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_sheet_test::test_kicad_sch_packcells_reports_block_extents_and_preserves_member_order",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_sheet_test::test_kicad_sch_packsheet_grid_snaps_every_spot_and_wraps_rather_than_running_out",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sch_stagger": {
+      "elapsed_seconds": 0.863864015089348,
+      "receipt": "commands/debug/kicad_sch_stagger.json",
+      "reference_source_sha256": "1e019b21f26728b621319df37c8272284199452c3b1f3e8ee1f5abc76ee4b1b9",
+      "source_sha256": "1e019b21f26728b621319df37c8272284199452c3b1f3e8ee1f5abc76ee4b1b9",
+      "tests": []
+    },
+    "kicad_sch_stagger_test": {
+      "elapsed_seconds": 1.1341730349231511,
+      "receipt": "commands/debug/kicad_sch_stagger_test.json",
+      "reference_source_sha256": "9562ff62b27b65dd812fe828117de90ecda3160752140c5057c130e02b699c44",
+      "source_sha256": "9562ff62b27b65dd812fe828117de90ecda3160752140c5057c130e02b699c44",
+      "tests": [
+        [
+          "kicad_sch_stagger_test::test_kicad_sch_a_crowded_edge_spreads_into_two_stub_columns_and_a_roomy_one_does_not",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_stagger_test::test_kicad_sch_a_same_net_run_shares_one_column_and_holds_its_neighbours_apart",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_stagger_test::test_kicad_sch_a_spread_unit_keeps_every_pin_endpoint_side_and_body_it_was_given",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_stagger_test::test_kicad_sch_spreading_needs_the_net_map_and_leaves_a_shape_without_one_alone",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_stagger_test::test_kicad_sch_spreading_repeats_exactly_and_skips_unconnected_pads",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sch_stub": {
+      "elapsed_seconds": 0.29092351882718503,
+      "receipt": "commands/debug/kicad_sch_stub.json",
+      "reference_source_sha256": "fc85d33c8961b218d3e656f8b27440c05531a5e6a6ae754bf9c211af8642c3ff",
+      "source_sha256": "fc85d33c8961b218d3e656f8b27440c05531a5e6a6ae754bf9c211af8642c3ff",
+      "tests": []
+    },
+    "kicad_sch_stub_test": {
+      "elapsed_seconds": 0.41045217285864055,
+      "receipt": "commands/debug/kicad_sch_stub_test.json",
+      "reference_source_sha256": "7b333a415e659d7a1569f6d66920d1a0aab8e9698696a429ea0b3dfcbbcd06f8",
+      "source_sha256": "7b333a415e659d7a1569f6d66920d1a0aab8e9698696a429ea0b3dfcbbcd06f8",
+      "tests": [
+        [
+          "kicad_sch_stub_test::test_kicad_sch_collapse_renames_a_real_bypass_stub_and_refuses_everything_else",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_stub_test::test_kicad_sch_split_reads_the_last_two_dots_and_rejects_a_name_without_both",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sch_testdata": {
+      "elapsed_seconds": 0.09064126596786082,
+      "receipt": "commands/debug/kicad_sch_testdata.json",
+      "reference_source_sha256": "be24d112465b6c63df22d6f1755a877fa239222ff768b230f41f8d5a84f50ce7",
+      "source_sha256": "be24d112465b6c63df22d6f1755a877fa239222ff768b230f41f8d5a84f50ce7",
+      "tests": []
+    },
+    "kicad_sch_textbox": {
+      "elapsed_seconds": 0.14594106911681592,
+      "receipt": "commands/debug/kicad_sch_textbox.json",
+      "reference_source_sha256": "bc01063657f87fe3e96d8284060595757269dca6959c59b869824f6fa18a567b",
+      "source_sha256": "bc01063657f87fe3e96d8284060595757269dca6959c59b869824f6fa18a567b",
+      "tests": []
+    },
+    "kicad_sch_textbox_test": {
+      "elapsed_seconds": 0.598953845910728,
+      "receipt": "commands/debug/kicad_sch_textbox_test.json",
+      "reference_source_sha256": "3be317688dd10dc2c8ef786177dff8aa04359af52731a7c888cd3725318a70b9",
+      "source_sha256": "3be317688dd10dc2c8ef786177dff8aa04359af52731a7c888cd3725318a70b9",
+      "tests": [
+        [
+          "kicad_sch_textbox_test::test_kicad_sch_a_zero_size_pin_name_is_not_measured_while_its_number_still_is",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_textbox_test::test_kicad_sch_text_boxes_follow_justification_and_orientation",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_textbox_test::test_kicad_sch_the_scan_finds_an_overlapping_label_pair_and_clears_a_tidy_sheet",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sch_vendor": {
+      "elapsed_seconds": 0.5749641610309482,
+      "receipt": "commands/debug/kicad_sch_vendor.json",
+      "reference_source_sha256": "cf8b6f35e399cf8f94f00fa3e2ae7bb03cfd4b577151777255d601ba5faa6452",
+      "source_sha256": "cf8b6f35e399cf8f94f00fa3e2ae7bb03cfd4b577151777255d601ba5faa6452",
+      "tests": []
+    },
+    "kicad_sch_vendor_test": {
+      "elapsed_seconds": 1.3676368508022279,
+      "receipt": "commands/debug/kicad_sch_vendor_test.json",
+      "reference_source_sha256": "c7ed5685452b1ab5998caf32669c6b814536aa6e2142158073984b38addcab8f",
+      "source_sha256": "c7ed5685452b1ab5998caf32669c6b814536aa6e2142158073984b38addcab8f",
+      "tests": [
+        [
+          "kicad_sch_vendor_test::test_kicad_sch_a_vendor_symbol_supplies_the_body_pin_sides_and_pin_names",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_vendor_test::test_kicad_sch_an_unsafe_vendor_symbol_is_rejected_in_favour_of_the_box",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_vendor_test::test_kicad_sch_pads_missing_from_a_vendor_symbol_land_in_a_catch_all_unit",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_vendor_test::test_kicad_sch_sideof_inverts_the_library_pin_angle_onto_an_edge",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_vendor_test::test_kicad_sch_snapnearest_keeps_spacing_across_a_half_grid_pin_row",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_vendor_test::test_kicad_sch_vendor_pin_endpoints_are_snapped_onto_the_1_27_mm_grid",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sch_verify": {
+      "elapsed_seconds": 0.24086907180026174,
+      "receipt": "commands/debug/kicad_sch_verify.json",
+      "reference_source_sha256": "54e73cd2f0c628fd7320fc1e706eb31cda67406f3a3c6a4debba3fc3aa801680",
+      "source_sha256": "54e73cd2f0c628fd7320fc1e706eb31cda67406f3a3c6a4debba3fc3aa801680",
+      "tests": []
+    },
+    "kicad_sch_verify_test": {
+      "elapsed_seconds": 1.2554961789865047,
+      "receipt": "commands/debug/kicad_sch_verify_test.json",
+      "reference_source_sha256": "cb6e4d233d38669cdafb5fcf36daa866ad23abbefa4d43fcf616a91a460f544b",
+      "source_sha256": "cb6e4d233d38669cdafb5fcf36daa866ad23abbefa4d43fcf616a91a460f544b",
+      "tests": [
+        [
+          "kicad_sch_verify_test::test_kicad_sch_verify_catches_a_label_caught_mid_wire",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_verify_test::test_kicad_sch_verify_catches_a_wire_through_a_pin_a_diagonal_and_a_missing_segment",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_verify_test::test_kicad_sch_verify_catches_label_no_connect_and_lib_id_damage",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_verify_test::test_kicad_sch_verify_catches_off_grid_coordinates_and_duplicate_pads",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_verify_test::test_kicad_sch_verify_matches_child_sheet_files_and_rail_symbol_values",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_verify_test::test_kicad_sch_verify_matches_junction_dots_to_the_points_wire_ends_actually_meet_at",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_verify_test::test_kicad_sch_verify_passes_a_good_document_and_catches_a_dropped_symbol",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_verify_test::test_kicad_sch_verify_passes_off_grid_body_art_but_not_an_off_grid_pin",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sch_wire": {
+      "elapsed_seconds": 0.5846565368119627,
+      "receipt": "commands/debug/kicad_sch_wire.json",
+      "reference_source_sha256": "6a2aa11ee30382e544e7b39f88c81df448e0733e75d1976b52a878e7163b02be",
+      "source_sha256": "6a2aa11ee30382e544e7b39f88c81df448e0733e75d1976b52a878e7163b02be",
+      "tests": []
+    },
+    "kicad_sch_wire_test": {
+      "elapsed_seconds": 0.8076668051071465,
+      "receipt": "commands/debug/kicad_sch_wire_test.json",
+      "reference_source_sha256": "5ec4a90e96c01ac54ee34f342738e56b8eac79a5c5526bf7845a9511d7d0d5e8",
+      "source_sha256": "5ec4a90e96c01ac54ee34f342738e56b8eac79a5c5526bf7845a9511d7d0d5e8",
+      "tests": [
+        [
+          "kicad_sch_wire_test::test_kicad_sch_junctions_names_the_three_way_meeting_points_only",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_wire_test::test_kicad_sch_route_crosses_foreign_wire_but_avoids_tees_overlaps_and_bodies",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_wire_test::test_kicad_sch_route_gives_up_beyond_the_maximum_span",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_wire_test::test_kicad_sch_route_prefers_the_straight_run_then_one_bend",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_wire_test::test_kicad_sch_route_refuses_a_path_that_would_run_over_a_pin",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sch_wire_test::test_kicad_sch_the_junction_point_key_round_trips_both_signs",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sym_library": {
+      "elapsed_seconds": 0.21554315509274602,
+      "receipt": "commands/debug/kicad_sym_library.json",
+      "reference_source_sha256": "7020468395c6edef35b104ef9ada7bdd9453fd62f4ae367ac16591ecb4264274",
+      "source_sha256": "7020468395c6edef35b104ef9ada7bdd9453fd62f4ae367ac16591ecb4264274",
+      "tests": []
+    },
+    "kicad_sym_library_test": {
+      "elapsed_seconds": 0.5725937641691417,
+      "receipt": "commands/debug/kicad_sym_library_test.json",
+      "reference_source_sha256": "cb6d9b8c05efdb56cb1a0859112394f64a2ead0437024f5f81ab02a0035464ac",
+      "source_sha256": "cb6d9b8c05efdb56cb1a0859112394f64a2ead0437024f5f81ab02a0035464ac",
+      "tests": [
+        [
+          "kicad_sym_library_test::test_kicad_sym_the_vendor_index_matches_names_case_insensitively_across_and",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sym_library_test::test_kicad_sym_the_vendor_index_tolerates_a_missing_directory_and_a_junk_library",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sym_reader": {
+      "elapsed_seconds": 0.17223626491613686,
+      "receipt": "commands/debug/kicad_sym_reader.json",
+      "reference_source_sha256": "5ff293c6b8460fc4eb28dcb5d71a05c8ef200b86059753d4064e5d983dae64c4",
+      "source_sha256": "5ff293c6b8460fc4eb28dcb5d71a05c8ef200b86059753d4064e5d983dae64c4",
+      "tests": []
+    },
+    "kicad_sym_reader_test": {
+      "elapsed_seconds": 0.6348762437701225,
+      "receipt": "commands/debug/kicad_sym_reader_test.json",
+      "reference_source_sha256": "300e0bfafadac1ad563036fc323801426412bd469f628a39e9b348f3d30e4966",
+      "source_sha256": "300e0bfafadac1ad563036fc323801426412bd469f628a39e9b348f3d30e4966",
+      "tests": [
+        [
+          "kicad_sym_reader_test::test_fuzz_parselibrary_tolerates_arbitrary_bytes",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sym_reader_test::test_kicad_sym_reader_models_each_body_primitive_and_skips_malformed_ones",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sym_reader_test::test_kicad_sym_reader_parses_a_flat_vendor_symbol_s_pins_and_body_graphics",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sym_reader_test::test_kicad_sym_reader_rejects_a_non_library_root_and_tolerates_an_empty_library",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sym_reader_test::test_kicad_sym_reader_splits_sub_symbols_into_units_and_keeps_sub_hundredth_coordinates",
+          "passed",
+          ""
+        ],
+        [
+          "kicad_sym_reader_test::test_kicad_sym_unitid_reads_the_trailing_unit_and_style_numbers",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "kicad_sym_testdata": {
+      "elapsed_seconds": 0.035437260987237096,
+      "receipt": "commands/debug/kicad_sym_testdata.json",
+      "reference_source_sha256": "c8e0bcea96c3dc5a2d9d5b62b799187e01b871bd20daab949ab54d1d0a6aa6e1",
+      "source_sha256": "c8e0bcea96c3dc5a2d9d5b62b799187e01b871bd20daab949ab54d1d0a6aa6e1",
+      "tests": []
+    },
+    "lib_limits": {
+      "elapsed_seconds": 0.05237814807333052,
+      "receipt": "commands/debug/lib_limits.json",
+      "reference_source_sha256": "e196ad7884d3e3185a42aac06b3948f569e57b373b0db00b3660d144b11779a5",
+      "source_sha256": "e196ad7884d3e3185a42aac06b3948f569e57b373b0db00b3660d144b11779a5",
+      "tests": []
+    },
+    "lib_limits_test": {
+      "elapsed_seconds": 0.1101012749131769,
+      "receipt": "commands/debug/lib_limits_test.json",
+      "reference_source_sha256": "3371c54c40c9ffaef8bae3c10f4755108e38b68344c4790150df3f858c119596",
+      "source_sha256": "3371c54c40c9ffaef8bae3c10f4755108e38b68344c4790150df3f858c119596",
+      "tests": [
+        [
+          "lib_limits_test::test_lib_read_caps_clear_their_worst_case_part",
+          "passed",
+          ""
+        ],
+        [
+          "lib_limits_test::test_the_synthetic_over_cap_pinout_straddles_the_retired_cap",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "main": {
+      "elapsed_seconds": 1.6586148319765925,
+      "receipt": "commands/debug/main.json",
+      "reference_source_sha256": "0c091863d6c0b54134bec116d2e03931f6ed6a6fa5e78c7b7189588be19aa6b3",
+      "source_sha256": "0c091863d6c0b54134bec116d2e03931f6ed6a6fa5e78c7b7189588be19aa6b3",
+      "tests": []
+    },
+    "main_test": {
+      "elapsed_seconds": 1.8031807779334486,
+      "receipt": "commands/debug/main_test.json",
+      "reference_source_sha256": "27f3329ae9f20044c98c15ce15e43439587b0dc5652fc724b5811a237358b401",
+      "source_sha256": "27f3329ae9f20044c98c15ce15e43439587b0dc5652fc724b5811a237358b401",
+      "tests": [
+        [
+          "main_test::test_eda_sch_the_command_line_needs_a_model_a_project_and_an_output_directory",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "net_name": {
+      "elapsed_seconds": 0.042982198065146804,
+      "receipt": "commands/debug/net_name.json",
+      "reference_source_sha256": "0ede10d4fb88594678d1cd837dfb82ef84902f21646b1cccbcd28e5edcc147db",
+      "source_sha256": "0ede10d4fb88594678d1cd837dfb82ef84902f21646b1cccbcd28e5edcc147db",
+      "tests": []
+    },
+    "net_name_test": {
+      "elapsed_seconds": 0.09687301400117576,
+      "receipt": "commands/debug/net_name_test.json",
+      "reference_source_sha256": "f3e54784c5c01d73c0d3e71a516d414bde64831d930313b280ad8e7df103ac2a",
+      "source_sha256": "f3e54784c5c01d73c0d3e71a516d414bde64831d930313b280ad8e7df103ac2a",
+      "tests": [
+        [
+          "net_name_test::test_leaf_removes_a_hierarchy_prefix",
+          "passed",
+          ""
+        ],
+        [
+          "net_name_test::test_parent_removes_a_hierarchy_leaf",
+          "passed",
+          ""
+        ],
+        [
+          "net_name_test::test_stripupper_drops_separators_and_raises_case",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "numeric": {
+      "elapsed_seconds": 0.05281017906963825,
+      "receipt": "commands/debug/numeric.json",
+      "reference_source_sha256": "7bc89a1143178d09819f9c336396d00dc375bfa91df4efe2a3ff0958fe305bd9",
+      "source_sha256": "7bc89a1143178d09819f9c336396d00dc375bfa91df4efe2a3ff0958fe305bd9",
+      "tests": []
+    },
+    "numeric_test": {
+      "elapsed_seconds": 0.14656695793382823,
+      "receipt": "commands/debug/numeric_test.json",
+      "reference_source_sha256": "3629dfe6086374a6947ab6fbd841d6fe8dc3abf778ecd85d78d6bacbf6df0557",
+      "source_sha256": "3629dfe6086374a6947ab6fbd841d6fe8dc3abf778ecd85d78d6bacbf6df0557",
+      "tests": [
+        [
+          "numeric_test::test_checkedint_is_exact_at_each_type_s_maximum",
+          "passed",
+          ""
+        ],
+        [
+          "numeric_test::test_checkedint_rejects_nan_and_infinities",
+          "passed",
+          ""
+        ],
+        [
+          "numeric_test::test_checkedint_rejects_out_of_range_and_rounds_in_range",
+          "passed",
+          ""
+        ],
+        [
+          "numeric_test::test_tocount_collapses_non_finite_and_negative_to_zero_rounds_valid_counts",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "pad_neck_profile": {
+      "elapsed_seconds": 0.03119136788882315,
+      "receipt": "commands/debug/pad_neck_profile.json",
+      "reference_source_sha256": "65c55ff3672a435476da2e50f6549dbc8cb5e8a59045c723f159c91cc06d916d",
+      "source_sha256": "65c55ff3672a435476da2e50f6549dbc8cb5e8a59045c723f159c91cc06d916d",
+      "tests": []
+    },
+    "placement_geometry": {
+      "elapsed_seconds": 0.38321622903458774,
+      "receipt": "commands/debug/placement_geometry.json",
+      "reference_source_sha256": "594fb6230b5fb9dd5612e7f0209e53053de041c0946caecfd479902c038577f7",
+      "source_sha256": "594fb6230b5fb9dd5612e7f0209e53053de041c0946caecfd479902c038577f7",
+      "tests": []
+    },
+    "placement_geometry_test": {
+      "elapsed_seconds": 1.126782344887033,
+      "receipt": "commands/debug/placement_geometry_test.json",
+      "reference_source_sha256": "ab8886e994bf89a98b8d96fe1c51ca856445a93dd8a31a5e36e09dd518706ff7",
+      "source_sha256": "ab8886e994bf89a98b8d96fe1c51ca856445a93dd8a31a5e36e09dd518706ff7",
+      "tests": [
+        [
+          "placement_geometry_test::test_circular_courtyard_survives_footprint_loading_with_an_offset_and_placement_margin",
+          "passed",
+          ""
+        ],
+        [
+          "placement_geometry_test::test_load_falls_back_to_a_synthesized_box_for_a_missing_footprint",
+          "passed",
+          ""
+        ],
+        [
+          "placement_geometry_test::test_load_parses_a_0402_footprint_s_pads_and_courtyard",
+          "passed",
+          ""
+        ],
+        [
+          "placement_geometry_test::test_parsecopperpourkeepout_reads_a_through_via_prohibition",
+          "passed",
+          ""
+        ],
+        [
+          "placement_geometry_test::test_parsecopperpourkeepout_reads_its_face_and_polygon",
+          "passed",
+          ""
+        ],
+        [
+          "placement_geometry_test::test_parsepad_reads_a_per_pad_mask_margin_and_the_no_paste_keyword",
+          "passed",
+          ""
+        ],
+        [
+          "placement_geometry_test::test_parsepad_reads_an_rf_minimum_size_independently_of_nominal_size",
+          "passed",
+          ""
+        ],
+        [
+          "placement_geometry_test::test_parsepad_reads_oval_slots_pad_rotation_and_roundrect_ratio",
+          "passed",
+          ""
+        ],
+        [
+          "placement_geometry_test::test_parsesilkscreen_collects_lines_and_circles",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "placement_pin_roles": {
+      "elapsed_seconds": 0.4665887909941375,
+      "receipt": "commands/debug/placement_pin_roles.json",
+      "reference_source_sha256": "0130a62136212a261bdd5cced05eef34df5bd38d3a79466871a6c6384304509c",
+      "source_sha256": "0130a62136212a261bdd5cced05eef34df5bd38d3a79466871a6c6384304509c",
+      "tests": []
+    },
+    "placement_pin_roles_test": {
+      "elapsed_seconds": 0.9891162209678441,
+      "receipt": "commands/debug/placement_pin_roles_test.json",
+      "reference_source_sha256": "5375b2d178dbdcd64d4d159ed9ec9f6428d8a886037eb9dff7c44f1f411213e7",
+      "source_sha256": "5375b2d178dbdcd64d4d159ed9ec9f6428d8a886037eb9dff7c44f1f411213e7",
+      "tests": [
+        [
+          "placement_pin_roles_test::test_classify_prefers_electrical_type_falls_back_to_ground_name",
+          "passed",
+          ""
+        ],
+        [
+          "placement_pin_roles_test::test_connectionrequirement_tiers_floating_pads_by_confidence",
+          "passed",
+          ""
+        ],
+        [
+          "placement_pin_roles_test::test_isgroundfn_separates_real_grounds_from_config_straps",
+          "passed",
+          ""
+        ],
+        [
+          "placement_pin_roles_test::test_isstrapfn_recognises_config_straps_but_not_supplies_grounds_or_gpio",
+          "passed",
+          ""
+        ],
+        [
+          "placement_pin_roles_test::test_issupplyfn_separates_real_supplies_from_grounds_and_signals",
+          "passed",
+          ""
+        ],
+        [
+          "placement_pin_roles_test::test_istranslatorchannel_rejects_names_shorter_than_2_or_longer_than_16_chars",
+          "passed",
+          ""
+        ],
+        [
+          "placement_pin_roles_test::test_optional_nc_names_stay_distinct_from_forbidden_or_reserved_pads",
+          "passed",
+          ""
+        ],
+        [
+          "placement_pin_roles_test::test_padrequirements_maps_only_the_pads_worth_flagging",
+          "passed",
+          ""
+        ],
+        [
+          "placement_pin_roles_test::test_strappads_collects_strap_pads_by_name_and_by_electrical_type",
+          "passed",
+          ""
+        ],
+        [
+          "placement_pin_roles_test::test_strappads_ignores_connector_positional_pins",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "poly_scanline": {
+      "elapsed_seconds": 0.03338598692789674,
+      "receipt": "commands/debug/poly_scanline.json",
+      "reference_source_sha256": "8978d1e3226d4694515c5e7d094102196ec5f696e3b917a66c6383c50f8f042b",
+      "source_sha256": "8978d1e3226d4694515c5e7d094102196ec5f696e3b917a66c6383c50f8f042b",
+      "tests": []
+    },
+    "poly_scanline_test": {
+      "elapsed_seconds": 0.14303366909734905,
+      "receipt": "commands/debug/poly_scanline_test.json",
+      "reference_source_sha256": "4e937f326d0f62c5983528f7c2aecf772e0d691ab0cc521606e4772dcb78ebb9",
+      "source_sha256": "4e937f326d0f62c5983528f7c2aecf772e0d691ab0cc521606e4772dcb78ebb9",
+      "tests": [
+        [
+          "poly_scanline_test::test_widestinterval_picks_the_larger_lobe_and_its_midpoint",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "render_block_types": {
+      "elapsed_seconds": 0.24388574808835983,
+      "receipt": "commands/debug/render_block_types.json",
+      "reference_source_sha256": "8147a50b5208e418ade8df75ca28523802a6ead059bac9eea9b48fb5725525be",
+      "source_sha256": "8147a50b5208e418ade8df75ca28523802a6ead059bac9eea9b48fb5725525be",
+      "tests": []
+    },
+    "render_svg_context": {
+      "elapsed_seconds": 0.450346487108618,
+      "receipt": "commands/debug/render_svg_context.json",
+      "reference_source_sha256": "99a2582cc4f051d4380f55a62a5a4eb6823b895d6eee228e480eeb2cab674a1c",
+      "source_sha256": "99a2582cc4f051d4380f55a62a5a4eb6823b895d6eee228e480eeb2cab674a1c",
+      "tests": []
+    },
+    "render_svg_context_test": {
+      "elapsed_seconds": 0.8683037532027811,
+      "receipt": "commands/debug/render_svg_context_test.json",
+      "reference_source_sha256": "e1abde7e3a2f0da9a39186b892472d2bdbdfe9252adf86c07345f27ad444c150",
+      "source_sha256": "e1abde7e3a2f0da9a39186b892472d2bdbdfe9252adf86c07345f27ad444c150",
+      "tests": [
+        [
+          "render_svg_context_test::test_bias_tee_island_anchors_to_the_rf_pin_that_continues_to_an_output_port",
+          "passed",
+          ""
+        ],
+        [
+          "render_svg_context_test::test_decouples_binding_docks_each_cap_on_its_served_hub_pad",
+          "passed",
+          ""
+        ],
+        [
+          "render_svg_context_test::test_isstdrefdes_rejects_a_ref_shorter_than_two_characters",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "render_svg_draw_test": {
+      "elapsed_seconds": 0.6153436419554055,
+      "receipt": "commands/debug/render_svg_draw_test.json",
+      "reference_source_sha256": "1943205f9232be5dc32b11dd72fca3a7780870c73325079a080662203f2c001a",
+      "source_sha256": "1943205f9232be5dc32b11dd72fca3a7780870c73325079a080662203f2c001a",
+      "tests": [
+        [
+          "render_svg_draw_test::test_drawnetwire_escapes_a_quote_angle_bracket_in_the_net_name",
+          "passed",
+          ""
+        ],
+        [
+          "render_svg_draw_test::test_drawwire_emits_a_straight_line_for_a_horizontal_y1_y2_wire",
+          "passed",
+          ""
+        ],
+        [
+          "render_svg_draw_test::test_functional_signal_classification_sees_through_a_sub_block_path",
+          "passed",
+          ""
+        ],
+        [
+          "render_svg_draw_test::test_rail_output_pin_labels",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "sexpr_ast": {
+      "elapsed_seconds": 0.05720801022835076,
+      "receipt": "commands/debug/sexpr_ast.json",
+      "reference_source_sha256": "f0ac78d1d8d02760f42e291f8febe45749594f599854b8464e93e3a70d97e48c",
+      "source_sha256": "f0ac78d1d8d02760f42e291f8febe45749594f599854b8464e93e3a70d97e48c",
+      "tests": []
+    },
+    "sexpr_ast_test": {
+      "elapsed_seconds": 0.09343957086093724,
+      "receipt": "commands/debug/sexpr_ast_test.json",
+      "reference_source_sha256": "914c1dd51c78083f5c79745b63d2e8bfa0d8d65c50067f5cfd3fc0bbc74a8dde",
+      "source_sha256": "914c1dd51c78083f5c79745b63d2e8bfa0d8d65c50067f5cfd3fc0bbc74a8dde",
+      "tests": [
+        [
+          "sexpr_ast_test::test_node_constructors",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "sexpr_paren_span": {
+      "elapsed_seconds": 0.027290482074022293,
+      "receipt": "commands/debug/sexpr_paren_span.json",
+      "reference_source_sha256": "5175ae21d624ce60af9634a9cf02f94918c54c8cd8d06e0ce276e568e903c06d",
+      "source_sha256": "5175ae21d624ce60af9634a9cf02f94918c54c8cd8d06e0ce276e568e903c06d",
+      "tests": []
+    },
+    "sexpr_paren_span_test": {
+      "elapsed_seconds": 0.12180124106816947,
+      "receipt": "commands/debug/sexpr_paren_span_test.json",
+      "reference_source_sha256": "4f5be9cc0a77e2fbe42ce454e10845df4e6637f1bfc454aabe05b25ee22caac0",
+      "source_sha256": "4f5be9cc0a77e2fbe42ce454e10845df4e6637f1bfc454aabe05b25ee22caac0",
+      "tests": [
+        [
+          "sexpr_paren_span_test::test_matchingclose_skips_strings_and_respects_the_comment_dialect",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "sexpr_parser": {
+      "elapsed_seconds": 0.07464085915125906,
+      "receipt": "commands/debug/sexpr_parser.json",
+      "reference_source_sha256": "f8cec91f24e8ce8cba57312d04c205f9dcf93b7bddd69bb1d363a4aae871ab5e",
+      "source_sha256": "f8cec91f24e8ce8cba57312d04c205f9dcf93b7bddd69bb1d363a4aae871ab5e",
+      "tests": []
+    },
+    "sexpr_parser_test": {
+      "elapsed_seconds": 0.5307999271899462,
+      "receipt": "commands/debug/sexpr_parser_test.json",
+      "reference_source_sha256": "d966cbb4027c24bf6224f3bad23e422632ddb5dbbd5923c299348a6a43b28804",
+      "source_sha256": "d966cbb4027c24bf6224f3bad23e422632ddb5dbbd5923c299348a6a43b28804",
+      "tests": [
+        [
+          "sexpr_parser_test::test_fuzz_parser_never_crashes_on_arbitrary_bytes",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_parser_test::test_fuzz_parser_property",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_parser_test::test_parse_isform_helper",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_parser_test::test_parse_multiple_top_level_forms",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_parser_test::test_parse_nested_lists",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_parser_test::test_parse_numbers_and_units",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_parser_test::test_parse_rejects_excessively_deep_nesting",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_parser_test::test_parse_si_scaled_values",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_parser_test::test_parse_simple_list",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_parser_test::test_parse_with_comments",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_parser_test::test_parsediag_column_aligns_a_caret_under_the_offending_token",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_parser_test::test_parsediag_locates_a_mid_file_syntax_error",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_parser_test::test_parsediag_points_an_unterminated_list_at_its_open_paren",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_parser_test::test_suffixed_literals_retain_their_spelling",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "sexpr_tokenizer": {
+      "elapsed_seconds": 0.05321310111321509,
+      "receipt": "commands/debug/sexpr_tokenizer.json",
+      "reference_source_sha256": "f260410a2d3a1730dad3c002869b07221be9244d8387e7a2541708a82edea1a4",
+      "source_sha256": "f260410a2d3a1730dad3c002869b07221be9244d8387e7a2541708a82edea1a4",
+      "tests": []
+    },
+    "sexpr_tokenizer_test": {
+      "elapsed_seconds": 0.29396343999542296,
+      "receipt": "commands/debug/sexpr_tokenizer_test.json",
+      "reference_source_sha256": "499b068df7709eb139a473b6a69abec3b2729bf2fcad8b059f8ab2ded6f10634",
+      "source_sha256": "499b068df7709eb139a473b6a69abec3b2729bf2fcad8b059f8ab2ded6f10634",
+      "tests": [
+        [
+          "sexpr_tokenizer_test::test_records_unexpected_character_error_span",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_tokenizer_test::test_records_unterminated_string_error_span",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_tokenizer_test::test_tokenize_comments",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_tokenizer_test::test_tokenize_comparison_operators",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_tokenizer_test::test_tokenize_dollar_sign_pad_identifiers",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_tokenizer_test::test_tokenize_numbers",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_tokenizer_test::test_tokenize_operators",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_tokenizer_test::test_tokenize_parens_and_atoms",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_tokenizer_test::test_tokenize_percent_literals",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_tokenizer_test::test_tokenize_si_suffix_before_rparen",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_tokenizer_test::test_tokenize_si_suffix_boundary_cases",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_tokenizer_test::test_tokenize_si_suffixed_numbers",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_tokenizer_test::test_tokenize_standalone_plus_stays_as_operator_atom",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_tokenizer_test::test_tokenize_unquoted_filename_with_comma",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_tokenizer_test::test_tokenize_unquoted_filename_with_plus",
+          "passed",
+          ""
+        ],
+        [
+          "sexpr_tokenizer_test::test_tracks_line_and_column",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "stdlib": {
+      "elapsed_seconds": 0.18442086805589497,
+      "receipt": "commands/debug/stdlib.json",
+      "reference_source_sha256": "cfb3ec20f0ebfda0270c556af011b21c3fc65e3300c7af1f43e284683cdf7191",
+      "source_sha256": "cfb3ec20f0ebfda0270c556af011b21c3fc65e3300c7af1f43e284683cdf7191",
+      "tests": []
+    },
+    "stdlib_embed": {
+      "elapsed_seconds": 0.13559228787198663,
+      "receipt": "commands/debug/stdlib_embed.json",
+      "reference_source_sha256": "e0624768128afa656b00b1f076f2afc8e7e384f78fba0f2d7d7f5d74b694960c",
+      "source_sha256": "e0624768128afa656b00b1f076f2afc8e7e384f78fba0f2d7d7f5d74b694960c",
+      "tests": []
+    },
+    "stdlib_test": {
+      "elapsed_seconds": 0.43317552795633674,
+      "receipt": "commands/debug/stdlib_test.json",
+      "reference_source_sha256": "31185870283543c69392a8defec8ab7a3e05b398da08d6afa129cb4b1e3258c3",
+      "source_sha256": "31185870283543c69392a8defec8ab7a3e05b398da08d6afa129cb4b1e3258c3",
+      "tests": [
+        [
+          "stdlib_test::test_a_bundled_path_reads_back_by_path",
+          "passed",
+          ""
+        ],
+        [
+          "stdlib_test::test_a_project_file_overrides_the_bundle_and_a_missing_one_falls_through_to_it",
+          "passed",
+          ""
+        ],
+        [
+          "stdlib_test::test_a_stdlib_root_overrides_the_embedded_table",
+          "passed",
+          ""
+        ],
+        [
+          "stdlib_test::test_bundled_stems_list_one_sub_directory_at_a_time",
+          "passed",
+          ""
+        ],
+        [
+          "stdlib_test::test_every_bundled_component_s_footprint_and_pinout_is_bundled_too",
+          "passed",
+          ""
+        ],
+        [
+          "stdlib_test::test_the_bundle_carries_the_whole_passives_prelude",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "support_crc32": {
+      "elapsed_seconds": 0.03136411705054343,
+      "receipt": "commands/debug/support_crc32.json",
+      "reference_source_sha256": "f042703bc48cba1d82b00fb83b8e9883eaff90b41c597cac9ab1dbd978c7eb00",
+      "source_sha256": "f042703bc48cba1d82b00fb83b8e9883eaff90b41c597cac9ab1dbd978c7eb00",
+      "tests": []
+    },
+    "support_crc32_test": {
+      "elapsed_seconds": 0.10168028809130192,
+      "receipt": "commands/debug/support_crc32_test.json",
+      "reference_source_sha256": "201d961d6dbec7fbf6993309688c285b8f2621bedfb35f534a429839c18e15f4",
+      "source_sha256": "201d961d6dbec7fbf6993309688c285b8f2621bedfb35f534a429839c18e15f4",
+      "tests": [
+        [
+          "support_crc32_test::test_empty_and_check_value",
+          "passed",
+          ""
+        ],
+        [
+          "support_crc32_test::test_running_value_continues",
+          "passed",
+          ""
+        ],
+        [
+          "support_crc32_test::test_text_and_binary",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "support_expect": {
+      "elapsed_seconds": 0.03881449485197663,
+      "receipt": "commands/debug/support_expect.json",
+      "reference_source_sha256": "6eab33733d0cef266d10abde846bb270c370a424502b17650096a78d19a9c5df",
+      "source_sha256": "6eab33733d0cef266d10abde846bb270c370a424502b17650096a78d19a9c5df",
+      "tests": []
+    },
+    "support_expect_test": {
+      "elapsed_seconds": 0.10418914305046201,
+      "receipt": "commands/debug/support_expect_test.json",
+      "reference_source_sha256": "4cec4c9445a23424763f15b198156239b8f25921bb3531ef436bf4dc45083429",
+      "source_sha256": "4cec4c9445a23424763f15b198156239b8f25921bb3531ef436bf4dc45083429",
+      "tests": [
+        [
+          "support_expect_test::test_support_expect_failing_checks_return_false",
+          "passed",
+          ""
+        ],
+        [
+          "support_expect_test::test_support_expect_passing_checks_return_true_and_stay_silent",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "support_float_fmt": {
+      "elapsed_seconds": 0.028032599948346615,
+      "receipt": "commands/debug/support_float_fmt.json",
+      "reference_source_sha256": "1312c6207b9b750429a971ff907bd6a1d8487ae4bf10be8ae33e65bc26138e3c",
+      "source_sha256": "1312c6207b9b750429a971ff907bd6a1d8487ae4bf10be8ae33e65bc26138e3c",
+      "tests": []
+    },
+    "support_float_fmt_test": {
+      "elapsed_seconds": 0.12216757098212838,
+      "receipt": "commands/debug/support_float_fmt_test.json",
+      "reference_source_sha256": "310b5c5358184002bd2dd791a404132a306e86f1a3a405bb6a865ffbd0893d5b",
+      "source_sha256": "310b5c5358184002bd2dd791a404132a306e86f1a3a405bb6a865ffbd0893d5b",
+      "tests": [
+        [
+          "support_float_fmt_test::test_plain_d_is_shortest_digits_without_an_exponent",
+          "passed",
+          ""
+        ],
+        [
+          "support_float_fmt_test::test_prec_pads_carries_and_keeps_the_sign_of_zero",
+          "passed",
+          ""
+        ],
+        [
+          "support_float_fmt_test::test_prec_rounds_the_shortest_digits_half_up",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "support_parse": {
+      "elapsed_seconds": 0.044629832031205297,
+      "receipt": "commands/debug/support_parse.json",
+      "reference_source_sha256": "246c47930c4e61256d7d885b5dd4b95d5c878c2d417c653697580f8d96f4efe0",
+      "source_sha256": "246c47930c4e61256d7d885b5dd4b95d5c878c2d417c653697580f8d96f4efe0",
+      "tests": []
+    },
+    "support_parse_test": {
+      "elapsed_seconds": 0.12599843717180192,
+      "receipt": "commands/debug/support_parse_test.json",
+      "reference_source_sha256": "e4babacfec13a28902c37a1d4e5b22be34a8f955e9614762d0080a872e25d6cf",
+      "source_sha256": "e4babacfec13a28902c37a1d4e5b22be34a8f955e9614762d0080a872e25d6cf",
+      "tests": [
+        [
+          "support_parse_test::test_parse_float_accepts_what_zig_accepts",
+          "passed",
+          ""
+        ],
+        [
+          "support_parse_test::test_parse_float_rejects_what_zig_rejects",
+          "passed",
+          ""
+        ],
+        [
+          "support_parse_test::test_parse_int_accepts_what_zig_accepts",
+          "passed",
+          ""
+        ],
+        [
+          "support_parse_test::test_parse_int_rejects_what_zig_rejects",
+          "passed",
+          ""
+        ],
+        [
+          "support_parse_test::test_parse_u32_range",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "support_sha256": {
+      "elapsed_seconds": 0.04157496686093509,
+      "receipt": "commands/debug/support_sha256.json",
+      "reference_source_sha256": "46cf3b0a09993af1f66b12cbd4ff7e408dcb334a5728558d2a6caf7200b872b0",
+      "source_sha256": "46cf3b0a09993af1f66b12cbd4ff7e408dcb334a5728558d2a6caf7200b872b0",
+      "tests": []
+    },
+    "support_sha256_test": {
+      "elapsed_seconds": 0.15419941791333258,
+      "receipt": "commands/debug/support_sha256_test.json",
+      "reference_source_sha256": "698a0e49ccc0d9b5a38e5eafef318393ed7977eebfd5641dd866e53de52bbcbf",
+      "source_sha256": "698a0e49ccc0d9b5a38e5eafef318393ed7977eebfd5641dd866e53de52bbcbf",
+      "tests": [
+        [
+          "support_sha256_test::test_canopy_id_digest",
+          "passed",
+          ""
+        ],
+        [
+          "support_sha256_test::test_digest_is_thirty_two_bytes",
+          "passed",
+          ""
+        ],
+        [
+          "support_sha256_test::test_fips_vectors",
+          "passed",
+          ""
+        ],
+        [
+          "support_sha256_test::test_high_bytes_and_two_blocks",
+          "passed",
+          ""
+        ],
+        [
+          "support_sha256_test::test_padding_boundaries",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "support_sort": {
+      "elapsed_seconds": 0.035838997922837734,
+      "receipt": "commands/debug/support_sort.json",
+      "reference_source_sha256": "4f0db7fe5aa8238790c52735ca885f1931d84ac7d2ccd9d817fb06ac0f3c3733",
+      "source_sha256": "4f0db7fe5aa8238790c52735ca885f1931d84ac7d2ccd9d817fb06ac0f3c3733",
+      "tests": []
+    },
+    "support_sort_test": {
+      "elapsed_seconds": 0.15800803201273084,
+      "receipt": "commands/debug/support_sort_test.json",
+      "reference_source_sha256": "595fdb9c08f628283ca7b287f299df810a69939bdd23477f25d7f933d5e47c61",
+      "source_sha256": "595fdb9c08f628283ca7b287f299df810a69939bdd23477f25d7f933d5e47c61",
+      "tests": [
+        [
+          "support_sort_test::test_sort_by_ctx_reads_the_context_and_is_stable",
+          "passed",
+          ""
+        ],
+        [
+          "support_sort_test::test_sort_by_descending_keeps_input_order_of_equal_keys",
+          "passed",
+          ""
+        ],
+        [
+          "support_sort_test::test_sort_by_handles_empty_and_single_lists",
+          "passed",
+          ""
+        ],
+        [
+          "support_sort_test::test_sort_by_is_stable_and_matches_the_keyed_sort",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "support_strs": {
+      "elapsed_seconds": 0.06082335510291159,
+      "receipt": "commands/debug/support_strs.json",
+      "reference_source_sha256": "1e7613254c49db8bc83d872eb69b8acb398a2c50cb528df171abfadb726f5053",
+      "source_sha256": "1e7613254c49db8bc83d872eb69b8acb398a2c50cb528df171abfadb726f5053",
+      "tests": []
+    },
+    "support_strs_test": {
+      "elapsed_seconds": 0.18798172497190535,
+      "receipt": "commands/debug/support_strs_test.json",
+      "reference_source_sha256": "8b0050772825e7e3fc6dc656dc74d3a5e778e18f3280d457d5ce0327c2dc15ad",
+      "source_sha256": "8b0050772825e7e3fc6dc656dc74d3a5e778e18f3280d457d5ce0327c2dc15ad",
+      "tests": [
+        [
+          "support_strs_test::test_ascii_classes_and_case_are_byte_wise",
+          "passed",
+          ""
+        ],
+        [
+          "support_strs_test::test_integer_padding_matches_zig_format",
+          "passed",
+          ""
+        ],
+        [
+          "support_strs_test::test_order_is_bytewise_then_length",
+          "passed",
+          ""
+        ],
+        [
+          "support_strs_test::test_path_helpers_match_zig",
+          "passed",
+          ""
+        ],
+        [
+          "support_strs_test::test_search_from_an_offset",
+          "passed",
+          ""
+        ],
+        [
+          "support_strs_test::test_text_and_byte_len_count_bytes_not_scalars",
+          "passed",
+          ""
+        ],
+        [
+          "support_strs_test::test_trim_and_tokenize_take_a_byte_set",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "uuid": {
+      "elapsed_seconds": 0.03817527508363128,
+      "receipt": "commands/debug/uuid.json",
+      "reference_source_sha256": "23a7f08da43708164e82f6d9515fd895a9c129b7b4a348c3d7167d5099612716",
+      "source_sha256": "23a7f08da43708164e82f6d9515fd895a9c129b7b4a348c3d7167d5099612716",
+      "tests": []
+    },
+    "uuid_test": {
+      "elapsed_seconds": 0.07917172997258604,
+      "receipt": "commands/debug/uuid_test.json",
+      "reference_source_sha256": "09a186520c3f6c0904e625c7e246d00a4159c033eeafad6d52e8ecf103a9c768",
+      "source_sha256": "09a186520c3f6c0904e625c7e246d00a4159c033eeafad6d52e8ecf103a9c768",
+      "tests": [
+        [
+          "uuid_test::test_format_stamps_version_and_variant_and_renders_the_canonical_shape",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "zipfile": {
+      "elapsed_seconds": 0.03750422806479037,
+      "receipt": "commands/debug/zipfile.json",
+      "reference_source_sha256": "0a6ab3f6e7786c28349963c40bd516be495f9264974405c3efdcca9301029aaa",
+      "source_sha256": "0a6ab3f6e7786c28349963c40bd516be495f9264974405c3efdcca9301029aaa",
+      "tests": []
+    },
+    "zipfile_test": {
+      "elapsed_seconds": 0.2082834979519248,
+      "receipt": "commands/debug/zipfile_test.json",
+      "reference_source_sha256": "9e9b6d25c9942e98033195b1d1f3769572a8b682cfcea7af8acc039d7f5a1821",
+      "source_sha256": "9e9b6d25c9942e98033195b1d1f3769572a8b682cfcea7af8acc039d7f5a1821",
+      "tests": [
+        [
+          "zipfile_test::test_encoded_size_predicts_the_complete_archive_before_allocation",
+          "passed",
+          ""
+        ],
+        [
+          "zipfile_test::test_fuzz_write_emits_a_well_formed_archive_for_arbitrary_entry_bytes",
+          "passed",
+          ""
+        ],
+        [
+          "zipfile_test::test_write_produces_an_archive_std_zip_can_extract",
+          "passed",
+          ""
+        ],
+        [
+          "zipfile_test::test_write_rejects_zip32_field_overflow_before_producing_bytes",
+          "passed",
+          ""
+        ]
+      ]
+    }
+  },
+  "leakcheck": true,
+  "mode": "debug",
+  "oracle": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/zig-out/bin/mylang",
+    "sha256": "5ddab7ce39d576615f55676886252e4dbfff863d0d253cc003886a769c7b1a55"
+  },
+  "source_commit": "7e938b65a880339f0aa0d58f5805cd2cd2bbfe1b",
+  "version": "frontend-current-conformance-references-v1"
+}

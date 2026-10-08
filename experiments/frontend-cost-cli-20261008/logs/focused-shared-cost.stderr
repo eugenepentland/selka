@@ -1,0 +1,20 @@
+test-core
++- run test w
+guardian/test: 7 test(s) selected
+guardian/test: test wall 0.03s
+guardian/test: PASS — 7 passed
+guardian/test: RESULT {"passed":7,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/14e67f615a92e0874c7523a995dc1be3/test --cache-dir=./.zig-cache --seed=0xb541c26f --listen=-
+
+Build Summary: 8/8 steps succeeded; 7/7 tests passed
+test-core success
++- run test 7 pass (7 total) 52ms MaxRSS:46M
+   +- compile test debug native success 1s MaxRSS:325M
+      +- run exe build-identity (build_identity) cached
+      |  +- compile exe build-identity debug native cached 5ms MaxRSS:40M
+      +- options success
+      |  +- compile exe mylang debug native cached 6ms MaxRSS:41M
+      |     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+      |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:40M
+      +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+

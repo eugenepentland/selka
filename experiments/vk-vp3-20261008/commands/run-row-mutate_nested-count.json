@@ -1,0 +1,23 @@
+{
+ "label": "run-row-mutate_nested-count",
+ "command": [
+  "taskset",
+  "-c",
+  "0,1,4-9,12-19",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/row-mutate_nested-count",
+  "4096",
+  "400",
+  "7"
+ ],
+ "cwd": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3",
+ "env": {
+  "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/counts/row-mutate_nested.json"
+ },
+ "seconds": 0.013,
+ "status": 0,
+ "stdout_sha256": "ebb1bce644c8027b25639b71dae13bda3de3259aac84a2c62416c975257e89e2",
+ "stdout_bytes": 17,
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_bytes": 0,
+ "stdout": "8794306 11146832\n"
+}

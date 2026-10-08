@@ -1,0 +1,23 @@
+{
+ "label": "run-row-word_count-count",
+ "command": [
+  "taskset",
+  "-c",
+  "0,1,4-9,12-19",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/row-word_count-count",
+  "4096",
+  "400",
+  "7"
+ ],
+ "cwd": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3",
+ "env": {
+  "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/counts/row-word_count.json"
+ },
+ "seconds": 0.027,
+ "status": 0,
+ "stdout_sha256": "0dd87ee285c54de2396cc18608f8638676c102ae781915cdc39bd3ee1e19a916",
+ "stdout_bytes": 18,
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_bytes": 0,
+ "stdout": "19267570 25718705\n"
+}

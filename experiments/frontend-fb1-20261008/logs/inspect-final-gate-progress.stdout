@@ -1,0 +1,6 @@
+package-full-gate-final.stdout 139076
+package-full-gate-final.stderr 56659
+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig sh -c "exec \"\$@\" 1>&2" driver python3 tests/parser_hints.py --compiler ./zig-out/bin/mylang
+
+
+package-full-gate-final.json waiting admission

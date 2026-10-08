@@ -1,0 +1,4 @@
+mylang-core: inlined 0 calls, unswitched 0 loops, versioned 0 loops, proved 5 checks, vectorized 0 loops
+mylang-core: ownership: 0 updates in place, 0 tested, 0 copied; 0 retains, 0 releases (0 pairs elided); 0 lists on the stack
+mylang-core: cost: 58 checks kept; 4 allocation sites (2 unresolved calls); 2 unknown loops
+mylang-core: LLVM vectorized unknown; 2 unknown loops; remarks available; 1 compiles in 56655902 ns

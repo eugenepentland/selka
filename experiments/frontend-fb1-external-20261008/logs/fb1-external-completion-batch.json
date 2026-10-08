@@ -1,0 +1,73 @@
+{
+  "admission_wait_seconds": 879.727427,
+  "command": [
+    "env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "python3",
+    "experiments/frontend-fb1-external-20261008/tools/complete_external.py"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "other_heavy_processes": [
+    " 279294 bash            /bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until ! pgrep -f '\"'\"'probe/probe.py'\"'\"' >/dev/null; do sleep 5; done; wc -l /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/probe/smoke.log' < /dev/null && pwd -P >| /tmp/claude-7f36-cwd",
+    "2418411 bash            /bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'L=/home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/stageB.log; until grep -q \"^done \" $L 2>/dev/null; do sleep 20; done; grep -E \"compile=|tests=|done|start\" $L' < /dev/null && pwd -P >| /tmp/claude-b207-cwd",
+    "2449726 bash            /bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'L=/home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/stageB.log; until grep -q \"^done \" $L 2>/dev/null; do sleep 20; done; grep -vE \"^\\s*(Compiling|Finished|Blocking|Running|Downloaded|Updating)\" $L | tail -14 | cut -c1-220' < /dev/null && pwd -P >| /tmp/claude-931b-cwd"
+  ],
+  "process_affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "observed_process_affinities": [
+    [
+      0,
+      1,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ]
+  ],
+  "elapsed_seconds": 33.008514,
+  "exit_code": 1
+}

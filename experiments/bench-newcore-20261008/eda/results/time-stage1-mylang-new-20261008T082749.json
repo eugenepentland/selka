@@ -1,0 +1,162 @@
+{
+ "lang": "mylang-new",
+ "stage": 1,
+ "repeat": 3,
+ "host": "linuxserver",
+ "load_avg_at_end": [
+  9.1513671875,
+  11.486328125,
+  9.79296875
+ ],
+ "commands": {
+  "build": [
+   "sh",
+   "-c",
+   "mkdir -p \"/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/mylang-new/tmp\" \"/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/mylang-new/bin\" && exec mylang build src/main.my -o \"/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/mylang-new/bin/eda-sch\" --cache-dir=\"/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/mylang-new/mylang\""
+  ],
+  "check": [
+   "sh",
+   "-c",
+   "mkdir -p \"/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/mylang-new/tmp\" && exec mylang check src/main.my --cache-dir=\"/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/mylang-new/mylang\""
+  ],
+  "test": [
+   "sh",
+   "-c",
+   "mkdir -p \"/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/mylang-new/tmp\" && exec mylang test src --jobs 4 --cache-dir \"/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/mylang-new/mylang\" --max-frames 30000 --max-steps 4000000000 --max-memory 2G"
+  ]
+ },
+ "results": {
+  "cold_build": {
+   "median_s": 12.538,
+   "min_s": 11.224,
+   "max_s": 14.22,
+   "peak_rss_mib": 295.1,
+   "samples_s": [
+    14.22,
+    12.538,
+    11.224
+   ]
+  },
+  "noop_build": {
+   "median_s": 0.01,
+   "min_s": 0.009,
+   "max_s": 0.01,
+   "peak_rss_mib": 24.4,
+   "samples_s": [
+    0.01,
+    0.01,
+    0.009
+   ]
+  },
+  "clean_build": {
+   "median_s": 1.505,
+   "min_s": 0.759,
+   "max_s": 1.635,
+   "peak_rss_mib": 272.4,
+   "samples_s": [
+    1.505,
+    1.635,
+    0.759
+   ]
+  },
+  "leaf_body.check": {
+   "median_s": 0.222,
+   "min_s": 0.22,
+   "max_s": 0.286,
+   "peak_rss_mib": 74.1,
+   "samples_s": [
+    0.286,
+    0.222,
+    0.22
+   ]
+  },
+  "leaf_body.build": {
+   "median_s": 0.795,
+   "min_s": 0.793,
+   "max_s": 0.837,
+   "peak_rss_mib": 275.5,
+   "samples_s": [
+    0.795,
+    0.837,
+    0.793
+   ]
+  },
+  "leaf_body.test": {
+   "median_s": 3.806,
+   "min_s": 3.691,
+   "max_s": 3.928,
+   "peak_rss_mib": 361.5,
+   "samples_s": [
+    3.928,
+    3.691,
+    3.806
+   ]
+  },
+  "hub_body.check": {
+   "median_s": 0.277,
+   "min_s": 0.221,
+   "max_s": 0.293,
+   "peak_rss_mib": 74.0,
+   "samples_s": [
+    0.293,
+    0.221,
+    0.277
+   ]
+  },
+  "hub_body.build": {
+   "median_s": 0.818,
+   "min_s": 0.684,
+   "max_s": 0.856,
+   "peak_rss_mib": 274.9,
+   "samples_s": [
+    0.818,
+    0.856,
+    0.684
+   ]
+  },
+  "hub_body.test": {
+   "median_s": 7.091,
+   "min_s": 6.483,
+   "max_s": 7.263,
+   "peak_rss_mib": 359.4,
+   "samples_s": [
+    7.091,
+    7.263,
+    6.483
+   ]
+  },
+  "interface.check": {
+   "median_s": 0.283,
+   "min_s": 0.25,
+   "max_s": 0.287,
+   "peak_rss_mib": 74.1,
+   "samples_s": [
+    0.283,
+    0.287,
+    0.25
+   ]
+  },
+  "interface.build": {
+   "median_s": 0.715,
+   "min_s": 0.67,
+   "max_s": 0.739,
+   "peak_rss_mib": 274.5,
+   "samples_s": [
+    0.739,
+    0.715,
+    0.67
+   ]
+  },
+  "interface.test": {
+   "median_s": 4.86,
+   "min_s": 3.029,
+   "max_s": 5.04,
+   "peak_rss_mib": 354.4,
+   "samples_s": [
+    4.86,
+    5.04,
+    3.029
+   ]
+  }
+ }
+}

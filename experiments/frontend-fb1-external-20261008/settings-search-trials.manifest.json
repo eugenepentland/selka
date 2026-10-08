@@ -1,0 +1,40 @@
+{
+  "members": {
+    "settings-search-checkpoint-inputs.json": {
+      "sha256": "a6aba48433166a1c992dfd388eff51be4dc503469325cb6f49d95805d195cde9",
+      "bytes": 17279259
+    },
+    "settings-search-checkpoint-preimages.json": {
+      "sha256": "83a935597d4fe91c94a845dbc3991be9b201a840953bec436a5265b8a260aaa9",
+      "bytes": 16582817
+    },
+    "settings-search-final-inputs.json": {
+      "sha256": "6d6ba17d6a399ec82b43b8258fd50fa1473a0ac5cfec13c92991efc85d7315ec",
+      "bytes": 17279259
+    },
+    "settings-search-final-preimages.json": {
+      "sha256": "1de01593a216a6cad5fa9c40d2f15b6971f6bc8bdbcbef420b737c9cda3bf30c",
+      "bytes": 16582817
+    },
+    "settings-search-inputs.json": {
+      "sha256": "979c5a5b7ca240a9548f05422827a65a9fc9c219f0f1621b051b57d5ae5a1acc",
+      "bytes": 17207499
+    },
+    "settings-search-preimages.json": {
+      "sha256": "6c20e179fa773b61db6e95b6b433f39f26897ac8cdafce6f4eb6e9719a43c5d4",
+      "bytes": 16507745
+    },
+    "settings-search-with-host-inputs.json": {
+      "sha256": "7fed15e94288310760e5cb5b96307bd8b9ac5b32587d9b61cba1227c66eee19c",
+      "bytes": 17280363
+    },
+    "settings-search-with-host-preimages.json": {
+      "sha256": "60f7ea2701ad25923f550cfa175f994511ad7b8d36304e7c2a8bc3585af31985",
+      "bytes": 16583921
+    }
+  },
+  "archive": "settings-search-trials.tar.gz",
+  "originals_retained": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli/.mylang-cache/frontend-fb1-external/settings-search-trials",
+  "archive_sha256": "2201a4907c51cacd10c0bbd48d2506430b97bd1ffea06b0b028ca7c58cb3f814",
+  "verified_lossless": true
+}

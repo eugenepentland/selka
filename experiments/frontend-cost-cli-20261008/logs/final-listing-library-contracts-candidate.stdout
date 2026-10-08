@@ -1,0 +1,1 @@
+{"version":"interface-contracts-v2","analysis":"declaration-only","modules":[{"name":"input","declarations":[{"name":"answer","kind":"function","signature":"def()->i64","generics":"","permissions":"effects=managed_allocation;mutates=;origin=unknown","shape":""}]}]}

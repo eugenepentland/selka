@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+"""Complete one admitted external gate batch; every phase has its own receipt."""
+from pathlib import Path
+import json
+import os
+import subprocess
+import sys
+
+root = Path(__file__).resolve().parents[1]
+worktree = root.parents[1]
+timer = root / "tools/time-command.py"
+refs = Path("/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008")
+integration = refs.parents[1]
+compiler_source = Path("/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1")
+compiler = compiler_source / "zig-out/bin/mylang"
+scratch = worktree / ".mylang-cache/frontend-fb1-external"
+identities = json.loads((root / "input-identities.json").read_text())
+env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+
+
+def phase(label, *argv):
+    print("starting " + label, flush=True)
+    done = subprocess.run([sys.executable, str(timer), label, "--", *map(str, argv)], cwd=worktree, env=env)
+    if done.returncode:
+        raise SystemExit(done.returncode)
+    print("passed " + label, flush=True)
+
+
+for corpus, count in (("lox", 65),):
+    identity_path = refs / corpus / "identity.json"
+    phase("fb1-" + corpus + "-fixed-mode-suite", sys.executable, worktree / "scripts/frontend_compare_frozen_tests.py",
+        "--source", compiler_source, "--compiler", compiler, "--compiler-sha256", identities["compiler"]["sha256"],
+        "--source-commit", "889943fa81a7c0c69a6452b0ab6c076b42b728cc",
+        "--against", refs / corpus, "--against-identity-sha256", identities["references"][str(identity_path)]["sha256"],
+        "--output", root / (corpus + "-tests-fixed"), "--cache", scratch / "test-cache" / corpus,
+        "--expected-tests", str(count), "--settings-context", root / "settings-context.json", "--settings-hasher", scratch / "bin/settings-hash")
+    phase("audit-fb1-" + corpus + "-mode-results", sys.executable, root / "tools/audit_frozen.py",
+        root / (corpus + "-tests-fixed"), "--output", root / ("fb1-" + corpus + "-fixed-mode-audit.json"))
+print("Lox final test modes passed", flush=True)

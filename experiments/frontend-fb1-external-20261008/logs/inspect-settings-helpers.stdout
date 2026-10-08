@@ -1,0 +1,21 @@
+    const cwd = std.Io.Dir.cwd();
+    cwd.createDirPath(context.io, std.fs.path.dirname(path).?) catch return error.WriteFailed;
+    var nonce: [16]u8 = undefined;
+    std.Io.random(context.io, &nonce);
+    const temporary = try std.fmt.allocPrint(context.arena, "{s}.{s}.partial", .{ path, std.fmt.bytesToHex(nonce, .lower) });
+    defer deletePartial(context.io, temporary);
+    cwd.writeFile(context.io, .{ .sub_path = temporary, .data = bytes }) catch return error.WriteFailed;
+    cwd.rename(temporary, cwd, path, context.io) catch return error.WriteFailed;
+}
+fn field(hash: *std.crypto.hash.Blake3, bytes: []const u8) void {
+    var length: [8]u8 = undefined;
+    std.mem.writeInt(u64, &length, bytes.len, .little);
+    hash.update(&length);
+    hash.update(bytes);
+}
+fn before(_: void, lhs: []const u8, rhs: []const u8) bool {
+    return std.mem.lessThan(u8, lhs, rhs);
+}
+
+/// Test positions: files of 1000 bytes and 100-byte lines, `a.my` first; `shift` is
+/// how far an edit to `a.my` moved `b.my`.

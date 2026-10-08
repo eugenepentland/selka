@@ -1,0 +1,124 @@
+STEP part1 and prep finished 17:22:10
+ok   fuzz200 exit 0
+ok   fuzz200 nine kinds PASS
+ok   fuzz200 no FAIL or STOP
+ok   build final
+ok   build base
+ok   lox conformance exit 0
+ok   lox vm normal 246/246
+ok   lox vm gc-stress 246/246
+ok   lox tree normal 241/241
+ok   lox tree gc-stress 241/241
+ok   lox port tests exit 0
+ok   lox port tests 65 passed
+ok   eda tests exit 0
+ok   eda tests 310 passed
+ok   run final exit 0
+ok   run final lox: 48, 0 not identical
+ok   run final eda: 34, 0 not identical
+ok   run final parity: 4, 0 not identical
+ok   run final rows: 46, 0 not identical
+ok   identity exit 0
+ok   identity lox: 48 cells, 48 identical
+ok   identity eda: 34 cells, 34 identical
+ok   identity parity: 4 cells, 4 identical
+ok   identity rows: 46 cells, 46 identical
+ok   part1b done
+ok   timing-prep lox builds
+ok   timing-prep rows build
+STEP part1 green 17:22:10
+STEP tables=0 17:22:13
+17:22:13 feasible start load 3.25 2.40 3.56
+{"cell": "binary_trees/tree", "binary": "zig", "seconds": 0.136, "status": 0, "output_ok": true}
+{"cell": "binary_trees/tree", "binary": "final", "seconds": 0.268, "status": 0, "output_ok": true}
+{"cell": "binary_trees/vm", "binary": "zig", "seconds": 0.584, "status": 0, "output_ok": true}
+{"cell": "binary_trees/vm", "binary": "final", "seconds": 2.691, "status": 0, "output_ok": true}
+{"cell": "trees/tree", "binary": "zig", "seconds": 0.143, "status": 0, "output_ok": true}
+{"cell": "trees/tree", "binary": "final", "seconds": 0.254, "status": 0, "output_ok": true}
+{"cell": "trees/vm", "binary": "zig", "seconds": 0.987, "status": 0, "output_ok": true}
+{"cell": "trees/vm", "binary": "final", "seconds": 5.635, "status": 0, "output_ok": true}
+{"cell": "instantiation/vm", "binary": "zig", "seconds": 0.407, "status": 0, "output_ok": true}
+{"cell": "instantiation/vm", "binary": "final", "seconds": 1.957, "status": 0, "output_ok": true}
+{"cell": "method_call/tree", "binary": "zig", "seconds": 0.281, "status": 0, "output_ok": true}
+{"cell": "method_call/tree", "binary": "final", "seconds": 0.543, "status": 0, "output_ok": true}
+17:22:27 feasible end load 2.82 2.34 3.52
+STEP feasible done 17:22:27
+17:22:27 lox runtime start (LOX_SKIP=binary_trees/tree,binary_trees/vm,trees/tree,trees/vm,instantiation/vm,method_call/tree) load 2.82 2.34 3.52
+waiting for quiet CPUs before round 1 closures/tree: 45% busy
+waiting for quiet CPUs before round 1 string_equality/tree: 34% busy
+round 1/3 done, load (1.4501953125, 1.966796875, 2.919921875)
+round 2/3 done, load (0.92333984375, 1.51416015625, 2.40283203125)
+round 3/3 done, load (1.0166015625, 1.13916015625, 1.9072265625)
+| script/engine | mylang:release | mylang-base:release | zig:release | zig:release-safe | rust:release | go:release |
+|---|---|---|---|---|---|---|
+| closures/vm | 3943 ms (5.13x) | 18574 ms (24.16x) | 769 ms (1.00x) | 1129 ms (1.47x) | 962 ms (1.25x) | 971 ms (1.26x) |
+| closures/tree | 362 ms (1.92x) | 907 ms (4.82x) | 188 ms (1.00x) | 312 ms (1.66x) | 265 ms (1.41x) | 244 ms (1.30x) |
+| equality/vm | 7646 ms (8.29x) | 23653 ms (25.66x) | 922 ms (1.00x) | 1003 ms (1.09x) | 1086 ms (1.18x) | 1132 ms (1.23x) |
+| equality/tree | 315 ms (1.91x) | 964 ms (5.86x) | 193 ms (1.17x) | 209 ms (1.27x) | 200 ms (1.22x) | 165 ms (1.00x) |
+| fib/vm | 4123 ms (6.50x) | 19421 ms (30.60x) | 635 ms (1.00x) | 814 ms (1.28x) | 868 ms (1.37x) | 756 ms (1.19x) |
+| fib/tree | 155 ms (1.53x) | 449 ms (4.43x) | 101 ms (1.00x) | 164 ms (1.62x) | 143 ms (1.42x) | 120 ms (1.18x) |
+| instantiation/tree | 160 ms (1.21x) | 7353 ms (55.52x) | 132 ms (1.00x) | 229 ms (1.73x) | 140 ms (1.06x) | 194 ms (1.46x) |
+| invocation/vm | 5931 ms (7.49x) | 25503 ms (32.22x) | 792 ms (1.00x) | 1369 ms (1.73x) | 1500 ms (1.89x) | 1348 ms (1.70x) |
+| invocation/tree | 546 ms (1.28x) | 1549 ms (3.64x) | 425 ms (1.00x) | 763 ms (1.79x) | 464 ms (1.09x) | 621 ms (1.46x) |
+| method_call/vm | 5625 ms (6.26x) | 23346 ms (25.97x) | 899 ms (1.00x) | 1289 ms (1.43x) | 1345 ms (1.50x) | 1256 ms (1.40x) |
+| properties/vm | 4528 ms (5.76x) | 21876 ms (27.81x) | 787 ms (1.00x) | 1228 ms (1.56x) | 1351 ms (1.72x) | 1190 ms (1.51x) |
+| properties/tree | 529 ms (1.62x) | 1263 ms (3.87x) | 326 ms (1.00x) | 561 ms (1.72x) | 383 ms (1.17x) | 464 ms (1.42x) |
+| string_equality/vm | 6300 ms (13.21x) | 25580 ms (53.62x) | 477 ms (1.00x) | 609 ms (1.28x) | 815 ms (1.71x) | 1001 ms (2.10x) |
+| string_equality/tree | 467 ms (3.28x) | 1285 ms (9.02x) | 142 ms (1.00x) | 180 ms (1.27x) | 365 ms (2.57x) | 165 ms (1.16x) |
+| strings/vm | 2379 ms (4.60x) | 10820 ms (20.91x) | 517 ms (1.00x) | 1003 ms (1.94x) | 554 ms (1.07x) | 646 ms (1.25x) |
+| strings/tree | 156 ms (1.80x) | 377 ms (4.33x) | 87 ms (1.00x) | 149 ms (1.71x) | 121 ms (1.39x) | 111 ms (1.27x) |
+| zoo/vm | 5124 ms (5.89x) | 25322 ms (29.10x) | 870 ms (1.00x) | 1361 ms (1.56x) | 1492 ms (1.71x) | 1266 ms (1.45x) |
+| zoo/tree | 546 ms (1.56x) | 1523 ms (4.34x) | 351 ms (1.00x) | 586 ms (1.67x) | 443 ms (1.26x) | 511 ms (1.46x) |
+| zoo_batch/vm | 4521 ms (6.10x) | 21283 ms (28.71x) | 741 ms (1.00x) | 1104 ms (1.49x) | 1210 ms (1.63x) | 1046 ms (1.41x) |
+| zoo_batch/tree | 473 ms (1.60x) | 1317 ms (4.45x) | 296 ms (1.00x) | 493 ms (1.67x) | 370 ms (1.25x) | 437 ms (1.48x) |
+
+0 failed runs; results in /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/.mylang-cache/lox/results/20261008T172227Z-runtime
+runtime=0
+17:43:32 lox runtime end load 1.02 1.14 1.91
+results/20261008T172227Z-runtime
+STEP lox done 17:43:32
+17:43:32 eda runtime start load 1.02 1.14 1.91
+warm-up done, 34 cases x 6 binaries verified; loadavg (2.87109375, 1.5283203125, 2.02197265625)
+round 1/10 done, 34 cases x 6 binaries verified; loadavg (2.73681640625, 1.54443359375, 2.02099609375)
+round 2/10 done, 34 cases x 6 binaries verified; loadavg (2.75830078125, 1.56884765625, 2.0263671875)
+round 3/10 done, 34 cases x 6 binaries verified; loadavg (2.8818359375, 1.63330078125, 2.0419921875)
+round 4/10 done, 34 cases x 6 binaries verified; loadavg (3.6884765625, 1.84423828125, 2.1064453125)
+round 5/10 done, 34 cases x 6 binaries verified; loadavg (3.58935546875, 1.88330078125, 2.11572265625)
+round 6/10 done, 34 cases x 6 binaries verified; loadavg (3.4619140625, 1.88525390625, 2.11474609375)
+round 7/10 done, 34 cases x 6 binaries verified; loadavg (3.4580078125, 1.9384765625, 2.12939453125)
+round 8/10 done, 34 cases x 6 binaries verified; loadavg (3.2333984375, 1.94140625, 2.12744140625)
+round 9/10 done, 34 cases x 6 binaries verified; loadavg (3.455078125, 2.0087890625, 2.1484375)
+round 10/10 done, 34 cases x 6 binaries verified; loadavg (3.45263671875, 2.0576171875, 2.1630859375)
+exact-RSS round done (/usr/bin/time -f %M)
+
+binary        total(med)  total(min)  peak RSS  geomean ratio vs ...
+zig-fast          0.894s      0.811s     80 MiB  zig-safe 0.931  rust 0.912  go 0.370  mylang-base 0.588  mylang-final 0.750
+zig-safe          0.964s      0.877s     80 MiB  zig-fast 1.074  rust 0.980  go 0.397  mylang-base 0.632  mylang-final 0.806
+rust              0.973s      0.879s     44 MiB  zig-fast 1.096  zig-safe 1.020  go 0.405  mylang-base 0.644  mylang-final 0.822
+go                2.381s      2.127s     66 MiB  zig-fast 2.704  zig-safe 2.516  rust 2.467  mylang-base 1.589  mylang-final 2.027
+mylang-base       1.598s      1.428s     53 MiB  zig-fast 1.701  zig-safe 1.583  rust 1.552  go 0.629  mylang-final 1.275
+mylang-final      1.192s      1.062s     52 MiB  zig-fast 1.334  zig-safe 1.241  rust 1.217  go 0.493  mylang-base 0.784
+wrote /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/experiments/ce-x-20261008/results/eda-runtime.json
+eda=0
+17:45:22 eda runtime end load 4.81 2.39 2.27
+STEP eda done 17:45:22
+17:45:22 parity final start load 4.81 2.39 2.27
+parity final=1
+17:52:45 parity final end load 1.38 2.20 2.39
+17:52:45 parity base start load 1.38 2.20 2.39
+parity base=1
+17:57:04 parity base end load 1.97 2.14 2.33
+STEP parity done 17:57:04
+17:57:04 rows 1 start load 1.97 2.14 2.33
+rows 1=0
+17:59:46 rows 1 end load 2.08 2.09 2.28
+STEP rows 1 done 17:59:46
+17:59:46 rows 2 start load 2.08 2.09 2.28
+rows 2=0
+18:02:10 rows 2 end load 1.31 1.79 2.14
+STEP rows 2 done 18:02:10
+18:02:10 rows 3 start load 1.31 1.79 2.14
+rows 3=0
+18:04:37 rows 3 end load 1.90 1.80 2.08
+STEP rows 3 done 18:04:37
+STEP part3 done 18:04:37

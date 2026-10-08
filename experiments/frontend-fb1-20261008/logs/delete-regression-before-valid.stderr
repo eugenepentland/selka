@@ -1,0 +1,35 @@
+test-core
++- run test 0 pass, 1 fail (1 total)
+guardian/test: test wall 0.25s; slowest over 50ms:
+guardian/test:   0.25s  cost_test.test.cost allocation classification includes growth scratch and unresolved calls but excludes stack and borrow identity
+guardian/test: FAIL — 1 failed of 1
+guardian/test: RESULT {"passed":0,"failed":1,"skipped":0}
+error: 'cost_test.test.cost allocation classification includes growth scratch and unresolved calls but excludes stack and borrow identity' failed:
+       guardian/test: 1 test(s) selected
+       expected 2, found 1
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x139c374 in expectEqualInner__anon_42883 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x139ddf4 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/src/core/cost_test.zig:273:5: 0x139de4d in deletionCount (root_test.zig)
+           try std.testing.expectEqual(@as(u32, 2), named(report, "remove").allocation.sites);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/src/core/cost_test.zig:109:5: 0x139eaa5 in test.cost allocation classification includes growth scratch and unresolved calls but excludes stack and borrow identity (root_test.zig)
+           try deletionCount(a);
+           ^
+failed command: ./.zig-cache/o/a486355543e55fa2f9c79fd10f790b77/test --cache-dir=./.zig-cache --seed=0xb437e25 --listen=-
+
+Build Summary: 6/8 steps succeeded (1 failed); 0/1 tests passed (1 failed)
+test-core transitive failure
++- run test 0 pass, 1 fail (1 total)
+   +- compile test debug native success 1s MaxRSS:296M
+      +- run exe build-identity (build_identity) cached
+      |  +- compile exe build-identity debug native cached 6ms MaxRSS:39M
+      +- options cached
+      |  +- compile exe mylang debug native cached 6ms MaxRSS:41M
+      |     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+      |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:40M
+      +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+

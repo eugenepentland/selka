@@ -21,13 +21,18 @@ pub const Error = std.mem.Allocator.Error;
 
 /// Inline every qualifying call in `module`'s internal functions; returns how many.
 pub fn inlineLeaves(arena: std.mem.Allocator, module: *ir.Module, provenance: *origins.Table) Error!u32 {
-    const leaves = try withParameters(arena, module, &.{}, provenance);
-    const helpers = try inlineCfg(arena, module, provenance);
+    return inlineLeavesCounted(arena, module, provenance, null);
+}
+
+/// The same inlining, also recording each physical caller's successful expansions.
+pub fn inlineLeavesCounted(arena: std.mem.Allocator, module: *ir.Module, provenance: *origins.Table, counts: ?[]u32) Error!u32 {
+    const leaves = try withParametersCounted(arena, module, &.{}, provenance, counts);
+    const helpers = try inlineCfg(arena, module, provenance, counts);
     return leaves + helpers;
 }
 
 /// Apply bounded consuming CFG cloning once, before the caller parameter pass.
-fn inlineCfg(arena: std.mem.Allocator, module: *ir.Module, provenance: *origins.Table) Error!u32 {
+fn inlineCfg(arena: std.mem.Allocator, module: *ir.Module, provenance: *origins.Table, counts: ?[]u32) Error!u32 {
     var count: u32 = 0;
     for (module.functions.items, 0..) |*caller, index| {
         if (caller.signature.linkage != .internal) continue;
@@ -43,6 +48,7 @@ fn inlineCfg(arena: std.mem.Allocator, module: *ir.Module, provenance: *origins.
                 var clone = try provenance.prepare(arena, .{ .caller = @intCast(index), .callee = @intCast(call.a.index()), .block = @intCast(b), .ref = ref, .span = call.span }, callee) orelse continue;
                 try cfg.splice(arena, caller, callee, b, at, &clone);
                 count += 1;
+                if (counts) |local| local[index] += 1;
                 break;
             }
         }
@@ -50,9 +56,8 @@ fn inlineCfg(arena: std.mem.Allocator, module: *ir.Module, provenance: *origins.
     return count;
 }
 
-/// Revisit checked leaves with sound caller parameter intervals, retaining every
-/// unproved callee frame. This only copies single-block leaves, never CFG helpers.
-pub fn withParameters(arena: std.mem.Allocator, module: *ir.Module, parameters: []const []const ?facts.Interval, provenance: *origins.Table) Error!u32 {
+/// Revisit leaves and attribute successful expansions to their physical caller.
+pub fn withParametersCounted(arena: std.mem.Allocator, module: *ir.Module, parameters: []const []const ?facts.Interval, provenance: *origins.Table, counts: ?[]u32) Error!u32 {
     var count: u32 = 0;
     for (module.functions.items, 0..) |*caller, index| {
         if (caller.signature.linkage != .internal) continue;
@@ -75,6 +80,7 @@ pub fn withParameters(arena: std.mem.Allocator, module: *ir.Module, parameters: 
                 const cloned = try splice(arena, caller, callee, .{ .block = block, .at = at, .call = ref, .result = result }, &clone);
                 at += cloned;
                 count += 1;
+                if (counts) |local| local[index] += 1;
             }
         }
     }

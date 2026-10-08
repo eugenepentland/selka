@@ -1,0 +1,32 @@
+{
+ "label": "run-eda-cyclops-digital-pcb-plain",
+ "command": [
+  "taskset",
+  "-c",
+  "12-19",
+  "perf",
+  "stat",
+  "-x,",
+  "-e",
+  "instructions:u",
+  "-o",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/perf/eda-cyclops-digital-pcb.csv",
+  "--",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/eda-plain",
+  "--model",
+  "golden/cases/cyclops-digital-pcb/model.sexp",
+  "--project-dir",
+  "golden/projects/designs",
+  "--out-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/eda-out/plain/cyclops-digital-pcb"
+ ],
+ "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+ "env": {},
+ "seconds": 0.131,
+ "status": 0,
+ "stdout_sha256": "8a7313b85f5520c219137308facf0a1553dacd720a601b52cf1cba76b4aee59b",
+ "stdout_bytes": 89,
+ "stderr_sha256": "6ce1c8cc4f4fc540bbde71c99d99e1c85477c006d09bbe1c4eb06a03371b7477",
+ "stderr_bytes": 109,
+ "stdout": "eda-sch: cyclops-digital-pcb: 1 sheets, 4 sidecars, 86 symbols (0 vendor), 232 instances\n"
+}

@@ -1,0 +1,12 @@
+evidence=/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/ce-records-20261008/fuzz50
+source_commit=48a7cb45126138df7816eba31e005f89c562e53d
+s0: PASS; 28.291999151930213s
+number: PASS; 38.399917335947976s
+rc: PASS; 18.888426557183266s
+s1: PASS; 35.706673722947016s
+rebinding: PASS; 27.988338850205764s
+iteration: PASS; 44.57238686992787s
+text: PASS; 32.997485782019794s
+dict: PASS; 64.01518177590333s
+functions: PASS; 26.280646526953205s
+fuzz exit 0

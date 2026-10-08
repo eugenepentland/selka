@@ -1,0 +1,15 @@
+ SPEC.md                   |   2 +
+ docs/performance.md       |   5 +
+ docs/tooling/cost.md      |  80 +++++++++++++
+ src/core/cli.zig          |   4 +-
+ src/core/cost.zig         | 182 ++++++++++++++++++++++++++++++
+ src/core/cost_command.zig | 107 ++++++++++++++++++
+ src/core/cost_remarks.zig |  33 ++++++
+ src/core/cost_test.zig    | 278 ++++++++++++++++++++++++++++++++++++++++++++++
+ src/core/driver.zig       |  89 ++++++++++++++-
+ src/core/inline.zig       |  18 ++-
+ src/core/passes.zig       |  47 +++++++-
+ src/core/pipeline.zig     |  59 +++++-----
+ src/core/root_test.zig    |   1 +
+ src/features.json         |   5 +
+ 14 files changed, 870 insertions(+), 40 deletions(-)

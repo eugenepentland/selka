@@ -1,0 +1,155 @@
+//! Content identity of guest Zig, native CPU, bundled inputs and default loader.
+//! A compact, checksummed memo avoids rereading unchanged tool bytes. Every call
+//! validates all known generations; strict capture checks twice. Provisional
+//! directory replay requires a final parent validation. Callers must spawn the
+//! returned absolute path and verify before publishing. No subprocess runs.
+const std = @import("std");
+const builtin = @import("builtin");
+const target_policy = @import("target.zig");
+const discovery = @import("tool_discovery.zig");
+const target = target_policy.current;
+const Digest = [32]u8;
+const magic = "core-tool-content-v1\x00";
+const memo_length = magic.len + 96;
+// v4 adds a validated directory-role byte (Input codec v2), retains all old
+// full-stat/content inputs, and keys the additive reviewed discovery policy.
+// v5 records each library root as one input instead of its whole tree.
+const hint_magic = "core-tool-inventory-v5\x00";
+const hint_limit = 32 << 20;
+const lib_directory = "ZIG_LIB_DIR";
+const approval_magic = "core-tool-approval-v3\x00";
+const approval_length = approval_magic.len + 65;
+// Reviewed pinned distribution; names, version strings and static ELF metadata
+// cannot establish that an arbitrary executable has no delegated dependencies.
+const approved_zig = "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f";
+const approved_library = "e6b4a1cd237963366bfba71c9e3b33d3b052274e4963d9a85d26fda3c9adf3f6";
+const platform = @import("core_tool_platform");
+const runtime_files = platform.runtime_files;
+const preload_path = platform.preload_path;
+
+/// Borrowed command resources. Returned paths have allocator lifetime.
+pub const Request = struct {
+    arena: std.mem.Allocator,
+    io: std.Io,
+    environment: *const std.process.Environ.Map,
+    executable: []const u8,
+    cache: []const u8,
+};
+
+/// Content and generation identities must both survive a command unchanged.
+pub const Identity = struct {
+    path: []const u8,
+    digest: Digest,
+    generation: Digest,
+    native_target: Digest,
+    inputs: usize,
+    memo_hit: bool,
+    cacheable: bool = false,
+};
+
+/// Missing tools and racing inputs cannot establish a reusable identity.
+pub const Error = error{ OutOfMemory, ToolNotFound, ReadFailed, WriteFailed, SourceChanged };
+const Input = struct {
+    path: []const u8,
+    resolved: []const u8,
+    info: ?std.Io.File.Stat,
+    role: discovery.Role = .content,
+};
+const Inventory = struct { inputs: []const Input, generation: Digest, hinted: bool = false };
+
+/// Resolve explicit paths or PATH like a direct guest-tool spawn. The caller
+/// must spawn Identity.path: Zig's POSIX spawn searches the parent PATH rather
+/// than a separately supplied child environment map. No sibling-tool override.
+pub fn resolve(request: Request) Error![]const u8 {
+    if (std.mem.indexOfScalar(u8, request.executable, '/') != null)
+        return (try executablePath(request, request.executable)) orelse error.ToolNotFound;
+    var paths = std.mem.splitScalar(u8, request.environment.get("PATH") orelse std.Io.Threaded.default_PATH, ':');
+    while (paths.next()) |directory| {
+        const candidate = try std.fs.path.join(request.arena, &.{ directory, request.executable });
+        if (try executablePath(request, candidate)) |path| return path;
+    }
+    return error.ToolNotFound;
+}
+
+fn executablePath(request: Request, path: []const u8) Error!?[]const u8 {
+    const info = std.Io.Dir.cwd().statFile(request.io, path, .{}) catch return null;
+    if (info.kind != .file) return null;
+    std.Io.Dir.cwd().access(request.io, path, .{ .execute = true }) catch return null;
+    return std.Io.Dir.cwd().realPathFileAlloc(request.io, path, request.arena) catch |err| return readError(err);
+}
+
+/// Hash complete content on a miss; stable generations reuse a fixed-size memo.
+/// Adjacent lib and ZIG_LIB_DIR are both conservative inputs, including absent
+/// roots, directory entries and followed symlinks. Other explicit native/sysroot
+/// dependencies remain the driver's responsibility.
+pub fn capture(request: Request) Error!Identity {
+    return captureMode(request, false);
+}
+
+/// Lend only a provisional read-only replay identity. A directory parent must
+/// validate unchanged() after every child, before accepting aggregate success.
+/// A miss or unproved executable retains strict content/second-scan guards.
+pub fn captureReplayParent(request: Request) Error!Identity {
+    return captureMode(request, true);
+}
+
+/// Read an untrusted warm identity without scanning library generations. Use
+/// only for buffered read-only manifest replay, then require unchanged() and a
+/// second dependency validation before accepting success. A miss or refusal
+/// must discard the candidate and capture strictly before checking or building.
+pub fn lookupReplayCandidate(request: Request) Error!?Identity {
+    const path = resolve(request) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return null;
+    };
+    const cpu = nativeTarget(request.io) catch return null;
+    const inputs = (try inventoryHint(request, path, cpu)) orelse return null;
+    const old = candidateExecutable(inputs, path) orelse return null;
+    const info = std.Io.Dir.cwd().statFile(request.io, path, .{}) catch return null;
+    if (!sameStat(old, info)) return null;
+    const identity = inventoryDigest(inputs, cpu);
+    if (!safeEnvironment(request.environment)) return null;
+    if ((try approvalMemo(request, identity)) != true) return null;
+    const content = (try memo(request, identity)) orelse return null;
+    return .{ .path = path, .digest = content, .generation = identity, .native_target = cpu, .inputs = inputs.len, .memo_hit = true, .cacheable = true };
+}
+
+fn candidateExecutable(inputs: []const Input, path: []const u8) ?std.Io.File.Stat {
+    for (inputs) |input| {
+        if (!std.mem.eql(u8, input.path, path)) continue;
+        if (!std.mem.eql(u8, input.resolved, path)) return null;
+        const info = input.info orelse return null;
+        return if (info.kind == .file) info else null;
+    }
+    return null;
+}
+
+fn captureMode(request: Request, provisional: bool) Error!Identity {
+    const path = try resolve(request);
+    const cpu = try nativeTarget(request.io);
+    const known = try inventoryHint(request, path, cpu);
+    const first = if (known) |inputs| (try refresh(request, inputs, cpu)) orelse try inventory(request, path, cpu) else try inventory(request, path, cpu);
+    const found = try memo(request, first.generation);
+    const content = found orelse try contents(request, first.inputs, cpu);
+    const cacheable = try approvedClosure(request, path, first, cpu);
+    const may_lend = provisional and found != null and cacheable;
+    if (!may_lend) {
+        const second_path = try resolve(request);
+        if (!std.mem.eql(u8, path, second_path)) return error.SourceChanged;
+        const second_cpu = try nativeTarget(request.io);
+        const second = (try refresh(request, first.inputs, second_cpu)) orelse try inventory(request, second_path, second_cpu);
+        if (!std.mem.eql(u8, &first.generation, &second.generation)) return error.SourceChanged;
+    }
+    if (found == null) try publish(request, first.generation, content);
+    if (!first.hinted or found == null) try publishHint(request, path, cpu, first.inputs);
+    return .{ .path = path, .digest = content, .generation = first.generation, .native_target = cpu, .inputs = first.inputs.len, .memo_hit = found != null, .cacheable = cacheable };
+}
+
+/// Revalidate tool selection, CPU and every library generation before replay or
+/// publication. An unchanged-content rewrite is still a changed command input.
+pub fn unchanged(request: Request, original: Identity) Error!bool {
+    const path = try resolve(request);
+    if (!std.mem.eql(u8, path, original.path)) return false;
+    const cpu = try nativeTarget(request.io);
+    const known = try inventoryHint(request, path, cpu);
+    const current = if (known) |inputs| (try refresh(request, inputs, cpu)) orelse try inventory(request, path, cpu) else try inventory(request, path, cpu);

@@ -1,0 +1,17 @@
+{'rows': 184, 'commit': '061f46aba144c00bf2094fcdada9a2c682696105', 'binary': '5ddab7ce39d576615f55676886252e4dbfff863d0d253cc003886a769c7b1a55'}
+2	0	SPEC.md
+5	0	docs/performance.md
+80	0	docs/tooling/cost.md
+3	1	src/core/cli.zig
+182	0	src/core/cost.zig
+107	0	src/core/cost_command.zig
+33	0	src/core/cost_remarks.zig
+278	0	src/core/cost_test.zig
+88	1	src/core/driver.zig
+12	6	src/core/inline.zig
+42	5	src/core/passes.zig
+32	27	src/core/pipeline.zig
+1	0	src/core/root_test.zig
+5	0	src/features.json
+
+frozen_ir_identical= True

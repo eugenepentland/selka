@@ -1,0 +1,2 @@
+rg: AGENTS.md: No such file or directory (os error 2)
+rg: .git/hooks/pre-commit: Not a directory (os error 20)

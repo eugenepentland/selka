@@ -1,0 +1,22 @@
+src/main.zig:2://! new core (`mylang_core`, `src/core/cli.zig`); this file owns the front-end
+src/main.zig:78:    \\  mylang list-interfaces ENTRY.my                 every module's public declarations
+src/main.zig:101:    "t-module|fmt-project|list-modules|list-interfaces|list-" ++
+src/main.zig:140:pub fn main(minimal: std.process.Init.Minimal) void {
+src/main.zig:150:fn dispatchCommandLine(init: std.process.Init) void {
+src/main.zig:205:const Context = struct {
+src/main.zig:227:fn dispatch(process: std.process.Init) !u8 {
+src/main.zig:231:    if (try @import("mylang_core").dispatch(process, args)) |status| return status;
+src/main.zig:399:        .@"list-interfaces",
+src/main.zig:533:        .@"list-interfaces",
+src/main.zig:664:    @"list-interfaces",
+src/main.zig:676:const ContextSelectorField = enum { symbol, at };
+src/main.zig:680:const ContextOptions = struct {
+src/main.zig:724:    /// `list-interfaces --contracts` emits declaration-level provider contracts.
+src/main.zig:868:        if (std.mem.eql(u8, arg, "--contracts")) {
+src/main.zig:869:            if (self.command != .@"list-interfaces" or self.contracts) return error.Usage;
+src/main.zig:1739:const ContextRequest = struct {
+src/main.zig:1873:    // `list-interfaces` is the declaration/interface gate: it parses every module
+src/main.zig:1874:    // and checks exported signatures without checking bodies. `--contracts`
+src/main.zig:2185:/// bodies: `list-interfaces` and `api`. Null for every other command.
+src/main.zig:2188:        .@"list-interfaces" => try listInterfaces(init, project, parsed, sources.syntax, sources.frontend),
+src/main.zig:3040:fn featureReport(init: std.process.Init) !void {

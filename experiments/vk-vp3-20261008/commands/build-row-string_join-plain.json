@@ -1,0 +1,26 @@
+{
+ "label": "build-row-string_join-plain",
+ "command": [
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/scripts/build-slot.sh",
+  "build",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3-rf/bin/mylang",
+  "build",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/test/core/row_string_join.my",
+  "-o",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/row-string_join-plain",
+  "--cache-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/cache",
+  "--release",
+  "--link",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/benchmarks/runtime/ports/native_clock.c"
+ ],
+ "cwd": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3",
+ "env": {},
+ "seconds": 5.032,
+ "status": 0,
+ "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stdout_bytes": 0,
+ "stderr_sha256": "63b91f9e872bfb1ff4406bdd22d22b4d2c8a4c68fb1fe2d783ddf598a1d48359",
+ "stderr_bytes": 463,
+ "stdout": ""
+}

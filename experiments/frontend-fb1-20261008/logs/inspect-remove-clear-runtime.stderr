@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from pathlib import Path; p=Path("src/core/runtime/core_dict.c").read_text(); print(p[p.index("myl_block *myl_core_dict_remove"):p.index("myl_block *myl_core_dict_remove")+4000]); p=Path("src/core/runtime/core_rt.c").read_text(); print(p[p.index("static void release_block"):p.index("static void release_block")+2200])
+                                                                                                                                                                                                                                                  ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: substring not found

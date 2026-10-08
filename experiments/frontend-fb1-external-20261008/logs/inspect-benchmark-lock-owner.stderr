@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import json,subprocess,time;start=time.monotonic();p=subprocess.run(["lslocks","--json","--output","COMMAND,PID,PATH"],capture_output=True,text=True);ls=json.loads(p.stdout).get("locks",[]) if p.returncode==0 else [];print(json.dumps({"lslocks_seconds":time.monotonic()-start,"returncode":p.returncode,"benchmark_compile_locks":[r for r in ls if "bench-compile.lock" in r.get("path","")]}))
+                                                                                                                                                                                                                                                                                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: argument of type 'NoneType' is not a container or iterable

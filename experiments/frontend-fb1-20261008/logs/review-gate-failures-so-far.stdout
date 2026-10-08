@@ -1,0 +1,3 @@
+blocking markers []
+RESULT totals ['RESULT {"passed":56,"failed":0,"skipped":0}', 'RESULT {"passed":55,"failed":0,"skipped":0}', 'RESULT {"passed":55,"failed":0,"skipped":0}', 'RESULT {"passed":55,"failed":0,"skipped":0}', 'RESULT {"passed":40,"failed":0,"skipped":0}', 'RESULT {"passed":119,"failed":0,"skipped":0}', 'RESULT {"passed":56,"failed":0,"skipped":0}', 'RESULT {"passed":55,"failed":0,"skipped":0}', 'RESULT {"passed":55,"failed":0,"skipped":0}', 'RESULT {"passed":7,"failed":0,"skipped":0}']
+age seconds 79.05333876609802

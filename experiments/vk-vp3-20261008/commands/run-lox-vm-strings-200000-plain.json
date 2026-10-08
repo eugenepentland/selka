@@ -1,0 +1,28 @@
+{
+ "label": "run-lox-vm-strings-200000-plain",
+ "command": [
+  "taskset",
+  "-c",
+  "12-19",
+  "perf",
+  "stat",
+  "-x,",
+  "-e",
+  "instructions:u",
+  "-o",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/perf/lox-vm-strings-200000.csv",
+  "--",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/lox-plain",
+  "--engine=vm",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/lox-scripts/strings-200000.lox"
+ ],
+ "cwd": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3",
+ "env": {},
+ "seconds": 0.761,
+ "status": 0,
+ "stdout_sha256": "198f0638a1edab5c8cc087bbfeb96165807a6eddaab96bd3dc184fdaddc67b9c",
+ "stdout_bytes": 12,
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_bytes": 0,
+ "stdout": "6250\n206250\n"
+}

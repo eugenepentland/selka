@@ -1,0 +1,23 @@
+{
+ "label": "run-row-record_pass-count",
+ "command": [
+  "taskset",
+  "-c",
+  "0,1,4-9,12-19",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/row-record_pass-count",
+  "4096",
+  "923",
+  "7"
+ ],
+ "cwd": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3",
+ "env": {
+  "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/counts/row-record_pass.json"
+ },
+ "seconds": 0.024,
+ "status": 0,
+ "stdout_sha256": "40cfa173f521ef95be16ed0736ee78f278f0787b69b7232c2ad03835a297334a",
+ "stdout_bytes": 18,
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_bytes": 0,
+ "stdout": "36686933 22821165\n"
+}

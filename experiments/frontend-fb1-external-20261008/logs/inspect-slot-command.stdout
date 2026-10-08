@@ -1,0 +1,10 @@
+{
+  "command": [
+    "env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "python3",
+    "experiments/frontend-fb1-external-20261008/tools/complete_external.py"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli",
+  "elapsed_seconds": 33.008514
+}

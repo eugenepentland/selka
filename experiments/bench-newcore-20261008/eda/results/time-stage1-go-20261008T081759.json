@@ -1,0 +1,164 @@
+{
+ "lang": "go",
+ "stage": 1,
+ "repeat": 3,
+ "host": "linuxserver",
+ "load_avg_at_end": [
+  14.2412109375,
+  10.08935546875,
+  7.83642578125
+ ],
+ "commands": {
+  "build": [
+   "go",
+   "build",
+   "-o",
+   "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/go/bin/eda-sch",
+   "./cmd/eda-sch"
+  ],
+  "check": [
+   "go",
+   "vet",
+   "./..."
+  ],
+  "test": [
+   "go",
+   "test",
+   "./..."
+  ]
+ },
+ "results": {
+  "cold_build": {
+   "median_s": 5.354,
+   "min_s": 5.208,
+   "max_s": 5.464,
+   "peak_rss_mib": 278.6,
+   "samples_s": [
+    5.354,
+    5.208,
+    5.464
+   ]
+  },
+  "noop_build": {
+   "median_s": 0.068,
+   "min_s": 0.066,
+   "max_s": 0.069,
+   "peak_rss_mib": 24.8,
+   "samples_s": [
+    0.069,
+    0.066,
+    0.068
+   ]
+  },
+  "clean_build": {
+   "median_s": 1.183,
+   "min_s": 1.176,
+   "max_s": 1.213,
+   "peak_rss_mib": 105.5,
+   "samples_s": [
+    1.213,
+    1.176,
+    1.183
+   ]
+  },
+  "leaf_body.check": {
+   "median_s": 0.76,
+   "min_s": 0.745,
+   "max_s": 0.771,
+   "peak_rss_mib": 108.7,
+   "samples_s": [
+    0.771,
+    0.745,
+    0.76
+   ]
+  },
+  "leaf_body.build": {
+   "median_s": 0.548,
+   "min_s": 0.546,
+   "max_s": 0.617,
+   "peak_rss_mib": 105.6,
+   "samples_s": [
+    0.546,
+    0.548,
+    0.617
+   ]
+  },
+  "leaf_body.test": {
+   "median_s": 1.152,
+   "min_s": 1.136,
+   "max_s": 1.178,
+   "peak_rss_mib": 120.4,
+   "samples_s": [
+    1.178,
+    1.136,
+    1.152
+   ]
+  },
+  "hub_body.check": {
+   "median_s": 0.989,
+   "min_s": 0.971,
+   "max_s": 1.011,
+   "peak_rss_mib": 100.2,
+   "samples_s": [
+    1.011,
+    0.971,
+    0.989
+   ]
+  },
+  "hub_body.build": {
+   "median_s": 0.318,
+   "min_s": 0.283,
+   "max_s": 0.319,
+   "peak_rss_mib": 83.8,
+   "samples_s": [
+    0.319,
+    0.318,
+    0.283
+   ]
+  },
+  "hub_body.test": {
+   "median_s": 1.192,
+   "min_s": 1.136,
+   "max_s": 1.207,
+   "peak_rss_mib": 119.0,
+   "samples_s": [
+    1.192,
+    1.207,
+    1.136
+   ]
+  },
+  "interface.check": {
+   "median_s": 1.1,
+   "min_s": 1.036,
+   "max_s": 1.154,
+   "peak_rss_mib": 102.0,
+   "samples_s": [
+    1.036,
+    1.154,
+    1.1
+   ]
+  },
+  "interface.build": {
+   "median_s": 0.954,
+   "min_s": 0.928,
+   "max_s": 1.065,
+   "peak_rss_mib": 103.6,
+   "samples_s": [
+    0.928,
+    0.954,
+    1.065
+   ]
+  },
+  "interface.test": {
+   "median_s": 1.867,
+   "min_s": 1.841,
+   "max_s": 1.873,
+   "peak_rss_mib": 120.4,
+   "samples_s": [
+    1.841,
+    1.873,
+    1.867
+   ]
+  }
+ }
+}

@@ -1,0 +1,14 @@
+source_commit=41931120d5a364c67eca80ea6cf776e7eb941674
+$ /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/experiments/new-core-s5-20261007/tools/fuzz_frozen.py --kind rebinding --references /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz --cases 200 --seed 3304 --old /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/experiments/new-core-s5-20261007/tools/frozen-old-core --new /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/.mylang-cache/cex/mylang-debug --evidence /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/experiments/ce-x-20261008/fuzz200/rebinding --cache-root /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/.mylang-cache/s5/fuzz/20261008T165521Z-fcf3a42eff5c/rebinding
+qualification progress: rebinding: seen=25 elapsed=12.73s
+qualification progress: rebinding: seen=50 elapsed=26.73s
+qualification progress: rebinding: seen=75 elapsed=42.70s
+qualification progress: rebinding: seen=100 elapsed=58.55s
+qualification progress: rebinding: seen=125 elapsed=73.78s
+qualification progress: rebinding: seen=150 elapsed=88.79s
+qualification progress: rebinding: seen=175 elapsed=105.25s
+qualification progress: rebinding: seen=200 elapsed=123.43s
+mut,records,alias                  cases=200 old_rejected=0 refused=0 compared=3000 mismatch=0 fact=0 traps=151 caught=0
+qualification {"kind": "rebinding", "qualified": true, "accepted": 200, "native_comparisons": 3000, "elapsed_seconds": 124.15480573079549}
+
+exit=0

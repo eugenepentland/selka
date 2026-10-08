@@ -1,0 +1,21 @@
+module main
+
+
+def add(xs: mut list[int], obj: int):
+    xs.append(obj)
+
+
+def main(args: list[str], out: Stream) -> int:
+    n = 0
+    match int(args[0]):
+        case Some(v):
+            n = v
+        case None:
+            n = 0
+    xs: list[int] = []
+    i = 0
+    while i < n:
+        add(mut xs, i)
+        i = i + 1
+    out.print(len(xs))
+    return 0

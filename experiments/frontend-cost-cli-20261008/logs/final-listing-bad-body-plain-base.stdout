@@ -1,0 +1,3 @@
+module interfaces v1; declarations/signature visibility checked; bodies not type checked
+module input
+  export function main def()->i64 effects(unavailable) analysis(declaration-only) ceiling(managed_allocation) tests(unavailable)

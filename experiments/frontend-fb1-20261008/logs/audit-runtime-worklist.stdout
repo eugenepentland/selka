@@ -1,0 +1,29 @@
+src/core/runtime/core_dict.c:130:    core_dict_index *index = malloc(sizeof *index + controls + (size_t)slots * 4);
+src/core/runtime/core_dict.c:156:    core_dict_meta *meta = calloc(1, sizeof *meta);
+src/core/runtime/core_dict.c:159:    meta->hashes = malloc((size_t)cap * sizeof(uint64_t));
+src/core/runtime/core_dict.c:174:    uint64_t *hashes = realloc(meta->hashes, (size_t)cap * 8);
+src/core/runtime/core_dict.c:178:        unsigned char *dead = realloc(meta->dead, (size_t)(cap + 7) / 8);
+src/core/runtime/core_dict.c:193:        myl_core_release(reference_at(layout, entry, r));
+src/core/runtime/core_dict.c:245:        meta->dead = calloc(((size_t)dict->cap + 7) / 8, 1);
+src/core/runtime/core_dict.c:298:        other->dead = malloc(bytes);
+src/core/runtime/core_dict.c:304:        other->index = malloc(bytes);
+src/core/runtime/core_dict.c:333:/* Join the existing iterative RC worklist; a dictionary of deeply nested
+src/core/runtime/core_values.c:43:    core_value_memo_entry *entries = calloc(capacity, sizeof *entries);
+src/core/runtime/core_values.c:90:        core_equal_work *items = realloc(stack->items, capacity * sizeof *items);
+src/core/runtime/core_values.c:171:        core_hash_work *items = realloc(stack->items, capacity * sizeof *items);
+src/core/runtime/core_values.c:278:        char *data = realloc(output->data, capacity);
+src/core/runtime/core_values.c:336:        myl_core_release(text);
+src/core/runtime/core_rt.c:29:#include <malloc.h>
+src/core/runtime/core_rt.c:128: * `malloc`ed, and a large list grows with `realloc`. The class sits in the high
+src/core/runtime/core_rt.c:158:        chunk_next = aligned_alloc(MYL_ALIGN, MYL_CHUNK);
+src/core/runtime/core_rt.c:180:           16-byte `malloc` alignment cost integer_math 4% and binary_search 10%). */
+src/core/runtime/core_rt.c:181:        block = aligned_alloc(MYL_ALIGN, (bytes + MYL_ALIGN - 1) & ~(size_t)(MYL_ALIGN - 1));
+src/core/runtime/core_rt.c:183:        if (heap_ceiling) heap_charge(malloc_usable_size(block));
+src/core/runtime/core_rt.c:217:        if (heap_ceiling) heap_refund(malloc_usable_size(block));
+src/core/runtime/core_rt.c:360:           way), and moves to a fresh aligned block when `realloc` loses the alignment. */
+src/core/runtime/core_rt.c:362:        if (heap_ceiling) heap_refund(malloc_usable_size(list));
+src/core/runtime/core_rt.c:363:        myl_block *moved = realloc(list, bytes);
+src/core/runtime/core_rt.c:366:            myl_block *aligned = aligned_alloc(MYL_ALIGN, (bytes + MYL_ALIGN - 1) & ~(size_t)(MYL_ALIGN - 1));
+src/core/runtime/core_rt.c:372:        if (heap_ceiling) heap_charge(malloc_usable_size(moved));
+src/core/runtime/core_rt.c:473:void myl_core_release(myl_block *block) {
+src/core/runtime/core_rt.c:1322:    void *scratch = malloc(n * (size_t)size);

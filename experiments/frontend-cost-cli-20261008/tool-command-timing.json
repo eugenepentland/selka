@@ -1,0 +1,6 @@
+{
+  "tool": "apply_patch",
+  "label": "add-default-listing-comparator",
+  "elapsed_seconds": 0.008,
+  "note": "Tool wall measurement reported directly by functions.exec; no build/test."
+}

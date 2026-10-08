@@ -1,0 +1,4 @@
+231eb65822882105dafa06836b4876a37feddbfa test: reject frozen comparisons if collector sources change during the run
+39264f9345b8a0379ce6bced6078bbe1118be105 test: require the real CLI host checkpoint in settings proofs
+b043782d8e611e46f499849728b55d57815ea167 test: bind settings proof to the original frozen launch receipt
+7ac816bcdb19f752523fdd713f7e23ddc71bb549 test: independently verify configured provider settings fingerprints

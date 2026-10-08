@@ -1,0 +1,162 @@
+5:   them on 2026-10-07 (marked AM in §2).
+6: - **Updated on 2026-10-08 for the S5 exit,** which is merged into `main` at `5a6b501d`:
+7:   - §1 holds the S5 facts that were marked _finalize at the S5 exit_;
+8:   - F0 is mostly done by S5 (§3), and its remainder moves into F1-0;
+9:   - FP2 and FB1 now run in the first wave;
+10:   - the budgets, migration volumes and citations are rechecked against `main`;
+11:   - **§6.1 adds the slow-step rule.**
+12: - The companion plan is `docs/audits/values-keys-trap-search-plan-2026-10-07.md`.
+13: - The rationale, the measurements and the original file:line facts are in the proposal,
+14:   `docs/audits/frontend-plan-after-new-core-2026-10-06.md` ("the proposal"). Its evidence
+15:   is in `experiments/frontend-plan-20261006/`.
+16: 
+17: **The goal (the user, 2026-10-06):** the language works like Go. There is one way to
+18: express each thing, and performance is predictable. The spelling stays Python's, because
+19: agents write Python first.
+20: 
+27: > **Wave 1:**
+28: > - F1-0 on the integration branch. It includes F0's remainder and the slow-step baseline
+29: >   (§6.1).
+30: > - FP2 on `codex/frontend-fp2`.
+31: > - FB1 on `codex/frontend-fb1`.
+32: > - Then F1-S, F1-M, F1-E and F1-L as slots free up, F1-D in the first free slot after
+33: >   them, then F1-F and F1-X.
+34: > - Merge FP2 and FB1 into the integration branch when they pass their exits.
+35: >
+36: > **Then** F2, F3, F4 and F5 in order.
+37: >
+38: > **Rules:**
+39: > - Hold every gate in §5 and every rule in §6.
+40: > - **§6.1:** every build, test or tool command is timed. Any command that takes more than
+41: >   5 minutes gets a speed investigation, and a speedup is implemented when it keeps the
+42: >   check identical.
+43: > - **Stop at the end of every wave** with its report (§7) for the user's go. Also stop at
+44: >   F2-C2's P4 list and at F5's decisions.
+45: > - Never merge into `main` and never push.
+186: - There is one reformat commit, after F1's migrations.
+187: 
+188: ### FE4–FE7
+189: 
+190: - **FE4, cost:** the per-function cost report comes early (FB1, in wave 1). The
+191:   hidden-copy warning comes in F5. Whether an explicit `.copy()` is required is decided
+192:   on P1's data (FB1's exit).
+193: - **FE5, O(n) operators and literals:** B3 (O(n) operators) and B4 (fixed-array
+194:   literals) are decided on FP2's typed count.
+195: - **FE6, generics:** a template is checked once, symbolically, against its bounds. A
+196:   specialization is instantiated by substitution, and errors stay at the definition.
+197: - **FE7, S5: done.** S5 carried all three items (§1).
+198: 
+199: ## 3. Work packages
+200: 
+201: Each package runs in its own locked worktree. It commits with Guardian's checks and
+202: records evidence under `experiments/frontend-<package>-<date>/`, one log per command run.
+203: **Owns** lists the files a package may change. A change needed elsewhere goes through
+225: 
+226: **Exit:** a table per corpus, plus the script, under `experiments/frontend-fp2-*/`. It
+227: is the data for FE5's B3 and B4 decisions.
+228: 
+229: #### FB1. Per-function cost report (about 4–6 h)
+230: 
+231: **What:**
+232: - `mylang cost <entry> [function]`, with text and `--json` output. Per function, it
+233:   reports:
+234:   - checks kept and checks proved;
+235:   - updates made in place, tested for uniqueness at run time, or copied;
+236:   - allocations;
+237:   - retains and releases;
+238:   - inlined calls;
+239:   - vectorized loops, read from LLVM's optimization remarks. Where `zig cc` cannot
+240:     produce remarks, the loops are reported as unknown.
+251: - On all 46 rows, the report's totals equal `--stats`'s.
+252: - Tests cover every count.
+253: - **P1:** the report over the Lox port and the EDA slice, with in-place, tested and
+254:   copied counts per function and the 20 functions with the most copies.
+255: - `list-interfaces --cost` is added by the coordinator once FB1 merges.
+256: - FB1 keeps the branch name `codex/frontend-fb1`, because the values-and-keys plan's VP3
+257:   starts from it.
+258: 
+259: ### F0. Cut loose from the old back end: done by S5, remainder in F1-0
+260: 
+261: S5-D1 (`6079efb2`) did proposal §5 C0:
+262: - legacy sharing, `class` and `Cell`, and `alias_warning.zig`;
+263: - `bytecode_model.zig` and the bytecode validators;
+264: - the VM values;
+265: - `mut_abi`'s caller-storage ABI;
+266: - the old typed fields;
+267: - `module_compile.zig` and `module_build.zig`;
+362: - **F1-D:**
+363:   - first inventory every domain declaration in the live sources, Lox and EDA, with
+364:     their members and codecs;
+365:   - a domain's one-field record must have the same layout and cost as its field in the
+366:     core: check it with FB1's report and `dump-ir` on the migrated examples;
+367:   - the removed spelling is `E_DOMAIN_REMOVED`, naming the record form.
+368: - **F1-L:** a function is removed only when a property test over random inputs shows the
+369:   replacement gives the same result on every input. For text, that includes non-ASCII
+370:   input; for floats, NaN and signed zero. Otherwise the function stays.
+371: 
+372: #### F1-F. The canonical format gate (after the four merge; about 2–3 h)
+373: 
+374: - `mylang fmt` is idempotent over every live `.my`: formatting twice gives the same
+375:   bytes.
+376: - The gate gains a `.my` step beside `fmt-check`.
+377: - One reformat commit.
+417:    - **`docs/effects.md`** is rewritten as the capability rules: authority through
+418:      parameters, `E_UNUSED_CAPABILITY` and `@noalloc`.
+419: 3. **The build-time `@noalloc` check in the new core** (AM2, §2): whole-program, before
+420:    optimization, through every callee. It reports `W_NOALLOC_ALLOCATES` with the site and
+421:    the call chain, the lint gate blocks on it, and FB1's definition of "allocates" is
+422:    used.
+423: 
+424: **Owns:** `effects.zig`, `origins.zig`, sema's binding-usage check,
+425: `module_interface.zig`'s hash, `semantic_key.zig`'s digest, `core/build.zig`'s mutation
+426: read, the core's `@noalloc` check (a new `src/core/noalloc.zig`) and `docs/effects.md`.
+427: 
+428: **Exit:**
+429: - P4's list reviewed;
+430: - an effect change in a body no longer changes its callers' keys (a test);
+431: - `@noalloc` tests: an allocation directly, in a callee two calls down, on a cold error
+432:   path, and through an unresolved function value, each warned; an allocation-free
+550: - **B5:** the check-elimination guarantees written as rules, one test per rule, with
+551:   misses reported by `mylang cost`.
+552: - **B7:** the lint for `acc = acc + s` in a loop, pointing at `byte_buffer`.
+553: 
+554: **Then stop.** The user decides, on P1's (FB1) and FP2's data:
+555: - B2's error: is `.copy()` required, or does the code need restructuring?
+556: - B3: which O(n) operators change spelling, for example `xs.contains(x)`.
+557: - B4: an explicit fixed-array constructor.
+558: 
+559: A follow-up plan implements those decisions.
+560: 
+561: ## 4. Order and expected time
+562: 
+563: | Wave | Packages | Starts after | Expected wall time |
+564: |---|---|---|---|
+565: | 1 | F1-0 (with F0's remainder, the slow-step baseline and the frozen answers), FP2 and FB1 in parallel; then F1-S, F1-M, F1-E, F1-L as slots free, F1-D in the first free slot, then F1-F and F1-X | the user's go | 19–28 h |
+566: | F2 | F2-C2 and F2-C5 in parallel | F1's exit and the user's go | 13–18 h |
+567: | F3 | F3-0, then F3-C1, then F3-C3 | F2 | 22–31 h |
+568: | F4 | F4-C4 and F4-C6 in parallel | F3 | 12–16 h |
+569: | F5 | B2, B5, B7; then the user's decisions | F4 and FB1's P1 | 5–8 h |
+570: 
+571: **Total:** about 71–101 hours of Codex wall time, plus a stop at every wave. That is
+572: F0's 4–6 h less than before, because S5 did most of F0, and FP2 and FB1 now run inside
+573: wave 1.
+574: 
+575: - **Calibration:** S4 took about 22 h against its 20–28 h estimate. S5 took about 7 h
+576:   against 32–51 h of package work, because most of it was parallel deletion.
+577: - **This plan's critical path is mostly sequential:** F1's tail, then F2-C2, then F3-C1
+578:   and F3-C3.
+579: - **F3-C1 is the widest range.** It touches every construct, and the `dump-ir`
+580:   differential is what keeps it safe.
+581: - **The four-agent limit is shared:**
+582:   - in wave 1, with FB1 and the values-and-keys plan's VP2 (VP1 builds nothing);
+583:   - from F2 on, with that plan's T wave, which starts at F1's exit (its launch
+584:     instructions). Front-end packages take free slots first.
+585: 
+586: ## 5. Gates
+587: 
+588: **For every package:**
+589: - **The post-S5 full gate,** including Guardian and the `.my` format step after F1-F.
+590: - **Differential against the S5 oracle (§1).**
+591:   - **Fuzz:** 50 strict cases per kind for the package's kinds, and 200 per kind at each
+592:     wave exit, with S5-0's frozen tools in `experiments/new-core-s5-20261007/tools/`
+593:     (`fuzz_matrix.py --references`, `qualify_merge.py`, `conformance_ref.py`).

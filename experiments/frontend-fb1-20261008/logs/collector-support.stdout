@@ -1,0 +1,315 @@
+/// Why a native build failed; the tool's output was written to `log`.
+pub const Error = error{ ToolFailed, OutOfMemory, WriteFailed };
+
+/// What one build did, for `--cache-report` and the tests.
+pub const Counts = struct {
+    /// Distinct units linked.
+    units: u32 = 0,
+    /// Units whose verified object the store served.
+    reused: u32 = 0,
+    /// Units compiled by this build.
+    compiled: u32 = 0,
+    /// Served units recompiled by `--verify-cache` and found byte-identical.
+    verified: u32 = 0,
+    /// Every `zig` process this build started.
+    processes: u32 = 0,
+};
+
+/// The result of a successful `link`.
+pub const Outcome = struct {
+    counts: Counts = .{},
+    /// The program came from the program store: no tool linked it.
+    program_reused: bool = false,
+    /// The program store entry the output was copied from (proved toolchains only).
+    program: ?unit_cache.Found = null,
+    /// The `--link` sources and the headers their depfiles listed, with the bytes
+    /// the compiles read; null when a file changed while it was compiled, so no
+    /// later build may trust these digests.
+    foreign: ?[]const unit_cache.Dependency = &.{},
+    /// The toolchain identity the build ran under.
+    tool: tool_identity.Identity,
+};
+
+/// A whole-program LLVM text as the one unit of a build.
+pub fn wholeUnit(llvm: []const u8) emit_units.Unit {
+    return emit_units.unit("whole", "", .program, llvm);
+pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8)) Error!Outcome {
+    const cwd = std.Io.Dir.cwd();
+    cwd.createDirPath(io, request.work) catch return error.WriteFailed;
+    var environment = environ.clone(allocator) catch return error.OutOfMemory;
+    defer environment.deinit();
+    const staging = try privateDirectory(allocator, io, request.work, "native-link");
+    defer removeDirectory(io, staging);
+    environment.put("ZIG_LOCAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ staging, "local" })) catch return error.OutOfMemory;
+    const resources: tool_identity.Request = .{ .arena = allocator, .io = io, .environment = &environment, .executable = request.zig, .cache = request.work };
+    const guest = tool_identity.capture(resources) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try log.print(allocator, "error: cannot run {s}: cannot identify guest toolchain: {s}\n", .{ request.zig, @errorName(err) });
+        return error.ToolFailed;
+    };
+    // Zig's global cache holds only its own libc and compiler-rt builds, which no
+    // program input reaches; a fresh one rebuilds them (about 6 s), so only an
+    // unproved tool gets one, and it never writes the shared builds.
+    if (!guest.cacheable) environment.put("ZIG_GLOBAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ staging, "global" })) catch return error.OutOfMemory;
+    var outcome: Outcome = .{ .tool = guest };
+    const native: Native = .{ .arena = allocator, .io = io, .environment = &environment, .zig = guest.path, .log = log, .guard = .{ .resources = resources, .identity = guest }, .counts = &outcome.counts };
+/// Digest every listed input by absolute path. A file whose status changed at or
+/// after `since` (this build's marker, created before the compile started) may
+/// differ from the bytes the compiler read, so the set is not pinned (null).
+fn pinned(native: Native, inputs: []const []const u8, since: i96) Error!?[]const unit_cache.Dependency {
+    const a = native.arena;
+    const cwd = std.Io.Dir.cwd();
+    const working = cwd.realPathFileAlloc(native.io, ".", a) catch return null;
+    const dependencies = try a.alloc(unit_cache.Dependency, inputs.len);
+    for (inputs, dependencies) |input, *dependency| {
+        const absolute = try std.fs.path.resolve(a, &.{ working, input });
+        const digest = unit_cache.fileDigest(a, native.io, absolute) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.ReadFailed => return null,
+        } orelse return null;
+        const after = cwd.statFile(native.io, absolute, .{}) catch return null;
+        if (after.ctime.nanoseconds >= since or after.mtime.nanoseconds >= since) return null;
+        dependency.* = .{ .path = absolute, .digest = digest };
+    }
+    return dependencies;
+}
+
+fn atomicWrite(native: Native, path: []const u8, bytes: []const u8) Error!void {
+    const cwd = std.Io.Dir.cwd();
+    var nonce: [16]u8 = undefined;
+    std.Io.random(native.io, &nonce);
+    const partial = try std.fmt.allocPrint(native.arena, "{s}.{s}.partial", .{ path, std.fmt.bytesToHex(nonce, .lower) });
+    defer removeFile(native.io, partial);
+    cwd.writeFile(native.io, .{ .sub_path = partial, .data = bytes }) catch return error.WriteFailed;
+514:fn privateDirectory(allocator: std.mem.Allocator, io: std.Io, work: []const u8, prefix: []const u8) Error![]const u8 {
+565:fn removeDirectory(io: std.Io, path: []const u8) void {
+571:fn run(native: Native, argv: []const []const u8) Error!void {
+    const partial = try std.fmt.allocPrint(allocator, "{s}.{x}.partial", .{ object, nonce });
+    defer removeFile(io, partial);
+    var argv: std.ArrayList([]const u8) = .empty;
+    // No debug info: the trap walker reads only `mylang-core` compile units, LLVM's
+    // machine code does not depend on it, and it cost a cold build 0.46 s.
+    try argv.appendSlice(allocator, &.{ native.zig, "cc", "-c", "-O2", "-g0", "-falign-functions=64" });
+    try argv.appendSlice(allocator, &.{ "-target", target_policy.native_link_target });
+    try argv.appendSlice(allocator, target.cpu_flags);
+    try argv.appendSlice(allocator, &.{ "-std=c11", "-o", partial, source });
+    try run(native, argv.items);
+    try native.guard.check(native.log);
+    cwd.rename(partial, cwd, object, io) catch return error.WriteFailed;
+    return .{ .path = object, .digest = digest };
+}
+
+fn removeFile(io: std.Io, path: []const u8) void {
+    // A successfully published file already moved away; cleanup is best effort.
+    std.Io.Dir.cwd().deleteFile(io, path) catch return;
+}
+
+fn removeDirectory(io: std.Io, path: []const u8) void {
+    // Best-effort cleanup of this build's owned random staging directory.
+    std.Io.Dir.cwd().deleteTree(io, path) catch return;
+}
+
+/// Run one tool process (counted), appending its stderr to the log.
+fn run(native: Native, argv: []const []const u8) Error!void {
+    native.counts.processes += 1;
+    const result = std.process.run(native.arena, native.io, .{ .argv = argv, .environ_map = native.environment }) catch |err| {
+        try native.log.print(native.arena, "error: cannot run {s}: {s}\n", .{ argv[0], @errorName(err) });
+        return error.ToolFailed;
+    };
+    try native.log.appendSlice(native.arena, result.stderr);
+//! Independent LLVM modules with deterministic source ownership and dependencies.
+const std = @import("std");
+const ir = @import("ir.zig");
+const llvm = @import("emit_llvm.zig");
+const values = @import("emit_values.zig");
+const constants = @import("emit_constants.zig");
+const number_runtime = @import("number_runtime.zig");
+
+/// Native input suffix shared by the driver and ordered test-program identity.
+pub const native_extension = ".ll";
+
+/// One object input and its link dependencies, independent of other units' contents.
+pub const Unit = struct {
+    name: []const u8,
+    source_path: []const u8,
+    kind: Kind,
+    llvm: []const u8,
+    number: bool,
+    math: bool,
+};
+
+/// Source modules, instantiated functions, compiler adapters, the C entry, and the
+/// one whole-program unit of a release build (S4-1a).
+pub const Kind = enum { module, generic, helper, entry, program };
+
+const Group = struct {
+    path: []const u8,
+    kind: Kind,
+    functions: std.ArrayList(u32) = .empty,
+};
+
+/// A release build's single unit: the whole program, so LLVM optimizes across every
+/// module boundary. Like any unit it is keyed by its exact text.
+pub fn whole(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Options) llvm.Error![]Unit {
+    const text = try llvm.emitModule(a, module, options);
+    const units = try a.alloc(Unit, 1);
+    units[0] = unit("program", options.source_path, .program, text);
+    return units;
+}
+
+/// Partition the frozen IR, then emit each unit with only its reached constants.
+/// Debug builds use this: an edit recompiles only the units whose text changed.
+pub fn emit(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Options) llvm.Error![]Unit {
+    var groups: std.ArrayList(Group) = .empty;
+    const owner = try a.alloc(?u32, module.functions.items.len);
+    const exported = try a.alloc(bool, owner.len);
+12:/// One object input and its link dependencies, independent of other units' contents.
+23:/// one whole-program unit of a release build (S4-1a).
+32:/// A release build's single unit: the whole program, so LLVM optimizes across every
+33:/// module boundary. Like any unit it is keyed by its exact text.
+36:    const units = try a.alloc(Unit, 1);
+37:    units[0] = unit("program", options.source_path, .program, text);
+38:    return units;
+41:/// Partition the frozen IR, then emit each unit with only its reached constants.
+42:/// Debug builds use this: an edit recompiles only the units whose text changed.
+47:    const symbols = try a.alloc(?[]const u8, owner.len);
+50:    @memset(symbols, null);
+87:        symbols[index] = "myl.helper.self";
+91:            .symbols = symbols,
+95:        symbols[index] = try std.fmt.allocPrint(a, "myl.helper.{s}", .{try digest(a, seed)});
+97:    var units: std.ArrayList(Unit) = .empty;
+98:    var names: std.StringHashMapUnmanaged(usize) = .empty;
+99:    defer names.deinit(a);
+104:            .symbols = symbols,
+109:        try append(a, &units, &names, unit(name, group.path, group.kind, text));
+114:        .symbols = symbols,
+119:    try units.append(a, unit("entry", options.source_path, .entry, entry));
+120:    return units.toOwnedSlice(a);
+123:fn append(a: std.mem.Allocator, units: *std.ArrayList(Unit), names: *std.StringHashMapUnmanaged(usize), next: Unit) llvm.Error!void {
+124:    const entry = try names.getOrPut(a, next.name);
+126:        const previous = units.items[entry.value_ptr.*];
+128:        // Their callers already share the canonical symbol; emit its body once.
+132:    entry.value_ptr.* = units.items.len;
+133:    try units.append(a, next);
+147:/// A unit of `text` with its link dependencies (number-text helpers, `-lm`) read from it.
+148:pub fn unit(name: []const u8, path: []const u8, kind: Kind, text: []const u8) Unit {
+//! Content identity of guest Zig, native CPU, bundled inputs and default loader.
+//! A compact, checksummed memo avoids rereading unchanged tool bytes. Every call
+//! validates all known generations; strict capture checks twice. Provisional
+//! directory replay requires a final parent validation. Callers must spawn the
+//! returned absolute path and verify before publishing. No subprocess runs.
+const std = @import("std");
+const builtin = @import("builtin");
+const target_policy = @import("target.zig");
+const discovery = @import("tool_discovery.zig");
+const target = target_policy.current;
+const Digest = [32]u8;
+const magic = "core-tool-content-v1\x00";
+const memo_length = magic.len + 96;
+// v4 adds a validated directory-role byte (Input codec v2), retains all old
+// full-stat/content inputs, and keys the additive reviewed discovery policy.
+// v5 records each library root as one input instead of its whole tree.
+const hint_magic = "core-tool-inventory-v5\x00";
+const hint_limit = 32 << 20;
+const lib_directory = "ZIG_LIB_DIR";
+const approval_magic = "core-tool-approval-v3\x00";
+const approval_length = approval_magic.len + 65;
+// Reviewed pinned distribution; names, version strings and static ELF metadata
+// cannot establish that an arbitrary executable has no delegated dependencies.
+const approved_zig = "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f";
+const approved_library = "e6b4a1cd237963366bfba71c9e3b33d3b052274e4963d9a85d26fda3c9adf3f6";
+const platform = @import("core_tool_platform");
+const runtime_files = platform.runtime_files;
+const preload_path = platform.preload_path;
+
+/// Borrowed command resources. Returned paths have allocator lifetime.
+pub const Request = struct {
+    arena: std.mem.Allocator,
+    io: std.Io,
+    environment: *const std.process.Environ.Map,
+    executable: []const u8,
+    cache: []const u8,
+};
+
+/// Content and generation identities must both survive a command unchanged.
+pub const Identity = struct {
+    path: []const u8,
+    digest: Digest,
+    generation: Digest,
+    native_target: Digest,
+    inputs: usize,
+    memo_hit: bool,
+    cacheable: bool = false,
+};
+
+/// Missing tools and racing inputs cannot establish a reusable identity.
+pub const Error = error{ OutOfMemory, ToolNotFound, ReadFailed, WriteFailed, SourceChanged };
+const Input = struct {
+    path: []const u8,
+    resolved: []const u8,
+    info: ?std.Io.File.Stat,
+    role: discovery.Role = .content,
+};
+const Inventory = struct { inputs: []const Input, generation: Digest, hinted: bool = false };
+
+/// Resolve explicit paths or PATH like a direct guest-tool spawn. The caller
+/// must spawn Identity.path: Zig's POSIX spawn searches the parent PATH rather
+/// than a separately supplied child environment map. No sibling-tool override.
+pub fn resolve(request: Request) Error![]const u8 {
+    if (std.mem.indexOfScalar(u8, request.executable, '/') != null)
+        return (try executablePath(request, request.executable)) orelse error.ToolNotFound;
+    var paths = std.mem.splitScalar(u8, request.environment.get("PATH") orelse std.Io.Threaded.default_PATH, ':');
+    while (paths.next()) |directory| {
+        const candidate = try std.fs.path.join(request.arena, &.{ directory, request.executable });
+        if (try executablePath(request, candidate)) |path| return path;
+    }
+    return error.ToolNotFound;
+}
+
+fn executablePath(request: Request, path: []const u8) Error!?[]const u8 {
+    const info = std.Io.Dir.cwd().statFile(request.io, path, .{}) catch return null;
+//! The new core's own native object store and its parallel compiler
+//! (docs/design/new-core-s4.md §6). A unit's object is a pure function of the
+//! unit's LLVM text, the optimization level, the resolved target and the
+//! toolchain, so the store is keyed by exactly those and needs no dependency
+//! tracking. A hit spawns no process: Zig's own cache would also reuse an
+//! identical `.ll`, but only after starting `zig cc` for it.
+//!
+//! Every entry is `<key>.o` beside `<key>.sum`, which records the object's size
+//! and BLAKE3 digest. A hit reads and hashes the object, so a truncated,
+//! overwritten or foreign file is a miss that is rebuilt, never linked.
+const std = @import("std");
+const target_policy = @import("target.zig");
+
+/// A BLAKE3 digest: store keys and content identities.
+pub const Digest = [32]u8;
+
+/// The version of how an object is produced from a unit's text: the compile
+/// command below and the meaning of the text the emitter writes. Bump it when
+/// either changes in a way the text itself does not show.
+pub const format = "core-unit-object-v1";
+
+/// Why a store or compile operation failed; tool output goes to the caller's log.
+pub const Error = error{ ToolFailed, OutOfMemory, WriteFailed };
+
+/// A file the build read, by absolute path, and its content digest; null records
+/// that the file was absent.
+pub const Dependency = struct { path: []const u8, digest: ?Digest };
+
+/// Everything besides a unit's text that decides its object.
+pub const Settings = struct {
+    /// The toolchain's content identity (`tool_identity.Identity.digest`).
+    tool: Digest,
+    /// The resolved host CPU and code-generation flags (`tool_identity.nativeTarget`),
+    /// so a store copied to another machine cannot serve an object for the wrong CPU.
+    cpu: Digest,
+    release: bool,
+    /// The core runtime's ABI, identified by its complete source.
+    runtime: Digest,
+};
+
+/// The optimization flag of a build's program code.
+pub fn level(release: bool) []const u8 {
+    return if (release) "-O3" else "-O0";
+}
+

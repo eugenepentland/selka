@@ -1,0 +1,588 @@
+{
+ "eda-blinky-breakout": {
+  "label": "eda-blinky-breakout",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 31524796,
+  "seconds_count": 0.018,
+  "seconds_plain": 0.017,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "blinky-breakout",
+  "flags": [],
+  "model_bytes": 7843
+ },
+ "eda-adf5901": {
+  "label": "eda-adf5901",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 236402620,
+  "seconds_count": 0.059,
+  "seconds_plain": 0.043,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "adf5901",
+  "flags": [],
+  "model_bytes": 20913
+ },
+ "eda-barracuda": {
+  "label": "eda-barracuda",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 633384362,
+  "seconds_count": 0.145,
+  "seconds_plain": 0.09,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "barracuda",
+  "flags": [],
+  "model_bytes": 221408
+ },
+ "eda-barracuda-base": {
+  "label": "eda-barracuda-base",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 690583663,
+  "seconds_count": 0.147,
+  "seconds_plain": 0.096,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "barracuda-base",
+  "flags": [],
+  "model_bytes": 271215
+ },
+ "eda-barracuda-via-fence": {
+  "label": "eda-barracuda-via-fence",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 545864448,
+  "seconds_count": 0.118,
+  "seconds_plain": 0.089,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "barracuda-via-fence",
+  "flags": [],
+  "model_bytes": 170387
+ },
+ "eda-black-canyon": {
+  "label": "eda-black-canyon",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 392936906,
+  "seconds_count": 0.059,
+  "seconds_plain": 0.062,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "black-canyon",
+  "flags": [],
+  "model_bytes": 74142
+ },
+ "eda-cyclops-analog": {
+  "label": "eda-cyclops-analog",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 538330621,
+  "seconds_count": 0.115,
+  "seconds_plain": 0.078,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "cyclops-analog",
+  "flags": [],
+  "model_bytes": 157046
+ },
+ "eda-cyclops-breakout": {
+  "label": "eda-cyclops-breakout",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 269658608,
+  "seconds_count": 0.057,
+  "seconds_plain": 0.046,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "cyclops-breakout",
+  "flags": [],
+  "model_bytes": 6378
+ },
+ "eda-cyclops-digital-pcb": {
+  "label": "eda-cyclops-digital-pcb",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 849673557,
+  "seconds_count": 0.177,
+  "seconds_plain": 0.131,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "cyclops-digital-pcb",
+  "flags": [],
+  "model_bytes": 130648
+ },
+ "eda-cyclops-interposer": {
+  "label": "eda-cyclops-interposer",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 385557154,
+  "seconds_count": 0.087,
+  "seconds_plain": 0.061,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "cyclops-interposer",
+  "flags": [],
+  "model_bytes": 70412
+ },
+ "eda-cyclops-kband-breakout": {
+  "label": "eda-cyclops-kband-breakout",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 421900322,
+  "seconds_count": 0.073,
+  "seconds_plain": 0.063,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "cyclops-kband-breakout",
+  "flags": [],
+  "model_bytes": 76125
+ },
+ "eda-cyclops-kband-pcb": {
+  "label": "eda-cyclops-kband-pcb",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 563485030,
+  "seconds_count": 0.079,
+  "seconds_plain": 0.086,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "cyclops-kband-pcb",
+  "flags": [],
+  "model_bytes": 76823
+ },
+ "eda-cyclops-kband": {
+  "label": "eda-cyclops-kband",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 502132550,
+  "seconds_count": 0.109,
+  "seconds_plain": 0.075,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "cyclops-kband",
+  "flags": [],
+  "model_bytes": 140697
+ },
+ "eda-cyclops-xband-sip": {
+  "label": "eda-cyclops-xband-sip",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 357192473,
+  "seconds_count": 0.074,
+  "seconds_plain": 0.055,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "cyclops-xband-sip",
+  "flags": [],
+  "model_bytes": 71139
+ },
+ "eda-stm32n6": {
+  "label": "eda-stm32n6",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 700589345,
+  "seconds_count": 0.114,
+  "seconds_plain": 0.098,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "stm32n6",
+  "flags": [],
+  "model_bytes": 210377
+ },
+ "eda-labstation": {
+  "label": "eda-labstation",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 896973947,
+  "seconds_count": 0.177,
+  "seconds_plain": 0.123,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "labstation",
+  "flags": [],
+  "model_bytes": 336926
+ },
+ "eda-rds3": {
+  "label": "eda-rds3",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 1090221643,
+  "seconds_count": 0.148,
+  "seconds_plain": 0.148,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "rds3",
+  "flags": [],
+  "model_bytes": 425948
+ },
+ "eda-remora-base": {
+  "label": "eda-remora-base",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 496916044,
+  "seconds_count": 0.094,
+  "seconds_plain": 0.075,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "remora-base",
+  "flags": [],
+  "model_bytes": 147077
+ },
+ "eda-remora-rf": {
+  "label": "eda-remora-rf",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 475104751,
+  "seconds_count": 0.073,
+  "seconds_plain": 0.071,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "remora-rf",
+  "flags": [],
+  "model_bytes": 152144
+ },
+ "eda-rf-switch-8way": {
+  "label": "eda-rf-switch-8way",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 258763145,
+  "seconds_count": 0.051,
+  "seconds_plain": 0.045,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "rf-switch-8way",
+  "flags": [],
+  "model_bytes": 19206
+ },
+ "eda-rf-switch-eval": {
+  "label": "eda-rf-switch-eval",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 271260329,
+  "seconds_count": 0.065,
+  "seconds_plain": 0.044,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "rf-switch-eval",
+  "flags": [],
+  "model_bytes": 16713
+ },
+ "eda-straps-base": {
+  "label": "eda-straps-base",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 833579507,
+  "seconds_count": 0.122,
+  "seconds_plain": 0.124,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "straps-base",
+  "flags": [],
+  "model_bytes": 161134
+ },
+ "eda-straps": {
+  "label": "eda-straps",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 504232373,
+  "seconds_count": 0.09,
+  "seconds_plain": 0.075,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "straps",
+  "flags": [],
+  "model_bytes": 120902
+ },
+ "eda-Cyclops-Flex": {
+  "label": "eda-Cyclops-Flex",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 203606458,
+  "seconds_count": 0.049,
+  "seconds_plain": 0.038,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "Cyclops-Flex",
+  "flags": [],
+  "model_bytes": 2216
+ },
+ "eda-dual-flash": {
+  "label": "eda-dual-flash",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 226742030,
+  "seconds_count": 0.056,
+  "seconds_plain": 0.042,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "dual-flash",
+  "flags": [],
+  "model_bytes": 14387
+ },
+ "eda-rds3-rf-selector": {
+  "label": "eda-rds3-rf-selector",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 214959087,
+  "seconds_count": 0.04,
+  "seconds_plain": 0.039,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "rds3-rf-selector",
+  "flags": [],
+  "model_bytes": 9774
+ },
+ "eda-poe-pd-flyback-tps23757": {
+  "label": "eda-poe-pd-flyback-tps23757",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 267393176,
+  "seconds_count": 0.066,
+  "seconds_plain": 0.046,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "poe-pd-flyback-tps23757",
+  "flags": [],
+  "model_bytes": 31538
+ },
+ "eda-w55rp20": {
+  "label": "eda-w55rp20",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 303150928,
+  "seconds_count": 0.07,
+  "seconds_plain": 0.055,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "w55rp20",
+  "flags": [],
+  "model_bytes": 62360
+ },
+ "eda-lmk05318b-clock": {
+  "label": "eda-lmk05318b-clock",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 299365100,
+  "seconds_count": 0.07,
+  "seconds_plain": 0.056,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "lmk05318b-clock",
+  "flags": [],
+  "model_bytes": 68373
+ },
+ "eda-max860-inverter": {
+  "label": "eda-max860-inverter",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 211013011,
+  "seconds_count": 0.049,
+  "seconds_plain": 0.04,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "max860-inverter",
+  "flags": [],
+  "model_bytes": 7229
+ },
+ "eda-rds3+flat": {
+  "label": "eda-rds3+flat",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 1787907791,
+  "seconds_count": 0.269,
+  "seconds_plain": 0.271,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "rds3+flat",
+  "flags": [
+   "--flat"
+  ],
+  "model_bytes": 425948
+ },
+ "eda-black-canyon+flat": {
+  "label": "eda-black-canyon+flat",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 416333004,
+  "seconds_count": 0.079,
+  "seconds_plain": 0.065,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "black-canyon+flat",
+  "flags": [
+   "--flat"
+  ],
+  "model_bytes": 74142
+ },
+ "eda-labstation+no-vendor-symbols": {
+  "label": "eda-labstation+no-vendor-symbols",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 693255922,
+  "seconds_count": 0.139,
+  "seconds_plain": 0.098,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "labstation+no-vendor-symbols",
+  "flags": [
+   "--no-vendor-symbols"
+  ],
+  "model_bytes": 336926
+ },
+ "eda-cyclops-analog+no-vendor-symbols": {
+  "label": "eda-cyclops-analog+no-vendor-symbols",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "instructions": 355583657,
+  "seconds_count": 0.061,
+  "seconds_plain": 0.055,
+  "outputs": {
+   "same": true,
+   "golden_mismatch": []
+  },
+  "counts": true,
+  "case": "cyclops-analog+no-vendor-symbols",
+  "flags": [
+   "--no-vendor-symbols"
+  ],
+  "model_bytes": 157046
+ }
+}

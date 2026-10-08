@@ -1,0 +1,283 @@
+/// Stages a front-end command actually runs: everything up to checking. The
+/// lowering, emission and link stages belong to `mylang build` and `run`, which
+/// the new core answers, so these commands always report them skipped.
+fn executedStages() [std.meta.tags(invalidation.Stage).len]bool {
+    var out: [std.meta.tags(invalidation.Stage).len]bool = @splat(true);
+    out[@backingInt(invalidation.Stage.lower_function)] = false;
+    out[@backingInt(invalidation.Stage.emit_fragment)] = false;
+    out[@backingInt(invalidation.Stage.link)] = false;
+    return out;
+}
+const Context = struct {
+    gpa: std.mem.Allocator,
+    arena: *std.heap.ArenaAllocator,
+    io: std.Io,
+    environ: *const std.process.Environ.Map,
+    diagnostics: diagnostic_output.Format,
+    timings: *language.timings.Profile,
+    /// Populated by a command that produced an invalidation explanation so the
+    /// frontend-cache receipt can report the same per-stage counts.
+    observation: ?*RunObservation = null,
+    /// Opt-in friction record for this command, or null when neither
+    /// `--friction-log` nor `MYLANG_FRICTION_LOG` asked for one. Every write is
+    /// best effort: a failure drops information rather than failing the command.
+    friction: ?*language.friction_log.Recorder = null,
+    fn text(self: Context, bytes: []const u8) !void {
+        if (self.diagnostics == .text) return std.Io.File.stderr().writeStreamingAll(self.io, bytes);
+        const rendered = try diagnostic_output.message(self.gpa, bytes, self.diagnostics);
+        defer self.gpa.free(rendered);
+        try std.Io.File.stderr().writeStreamingAll(self.io, rendered);
+    }
+};
+
+fn dispatch(process: std.process.Init) !u8 {
+    const args = try process.minimal.args.toSlice(process.arena.allocator());
+    // Building, running and testing go to the new core, which also refuses the
+    // retired commands and flags by name.
+    if (try @import("mylang_core").dispatch(process, args)) |status| return status;
+    if (args.len == 2 and std.mem.eql(u8, args[1], "--features")) {
+        try featureReport(process);
+        return 0;
+    }
+    // An explicit request for help is not a usage error: answer on stdout with
+    // the everyday commands first, then the full reference, and exit 0.
+    if (args.len == 2 and (std.mem.eql(u8, args[1], "--help") or std.mem.eql(u8, args[1], "-h") or std.mem.eql(u8, args[1], "help"))) {
+        try std.Io.File.stdout().writeStreamingAll(process.io, everyday_help ++ "\nEvery command and option:\n" ++ usage);
+        return 0;
+    }
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "fix")) return @import("fix_command.zig").run(process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "doc-coverage")) return @import("doc_coverage_command.zig").run(process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "doctest")) return @import("doctest_command.zig").run(process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "reference")) return @import("reference_command.zig").run(@import("mylang"), process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "docs")) return @import("docs_command.zig").run(process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "interfaces")) return @import("module_interface_command.zig").run(process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "packages")) {
+        const identity = std.fmt.bytesToHex(build_identity, .lower);
+        return @import("packages_command.zig").run(process, args[2..], &identity);
+    }
+    // The `&` marker experiment is gone: `mut` is the spelling on both sides of a
+    // call and the rule is always on, so the flag names no mode left to select.
+    if (mutationMarkersFlag(args[1..])) {
+        try std.Io.File.stderr().writeStreamingAll(process.io, "mylang: --mutation-markers was removed; mark each written parameter `name: mut T` and each argument bound to one `mut value`\n");
+        if (std.mem.startsWith(u8, arg, "--diagnostics=")) {
+            if (parser.reporting.diagnostics != null) return error.Usage;
+            parser.reporting.diagnostics = std.meta.stringToEnum(diagnostic_output.Format, arg["--diagnostics=".len..]) orelse return error.Usage;
+            continue;
+        }
+        if (try parseSwitchFlag(arg, &parser)) continue;
+        if (try parseFrictionFlag(arg, &parser)) continue;
+        if (std.mem.eql(u8, arg, "--report")) {
+            if (parser.reporting.report) return error.Usage;
+            parser.reporting.report = true;
+            continue;
+        }
+        if (std.mem.eql(u8, arg, "--explain-invalidation")) {
+            if (parser.reporting.explain_invalidation) return error.Usage;
+            switch (command) {
+                .@"project-dependencies", .@"check-project" => {},
+                else => return error.Usage,
+            }
+            parser.reporting.explain_invalidation = true;
+            continue;
+        }
+        if (try parser.cacheDirectoryOption(arg)) continue;
+        if (try parser.surfaceOption(arg)) continue;
+        if (try parser.qualityOption(arg)) continue;
+        if (try parser.checkOption(arg)) continue;
+        // `context` and `index-project` also accept their `--flag value`
+        // spelling, which consumes the next argument; every other flag keeps
+        // the `--flag=value` form.
+        if (try parser.separateValue(args, &index)) continue;
+        if (try parser.discoveryOption(arg)) continue;
+        if (std.mem.startsWith(u8, arg, policy_prefix)) {
+            if (command != .@"check-policy" or parser.policy != null or arg.len == policy_prefix.len) return error.Usage;
+            parser.policy = arg[policy_prefix.len..];
+            continue;
+        }
+        if (std.mem.startsWith(u8, arg, "--") or parser.path != null) return error.Usage;
+        parser.path = arg;
+    }
+    return parser.finish();
+}
+const ArgumentParser = struct {
+    command: Command,
+    schema_report: bool = false,
+    contracts: bool = false,
+    inputs: [16][]const u8 = @splat(""),
+    input_count: usize = 0,
+    quality: language.quality.Options = .{},
+    quality_seen: u8 = 0,
+    format_check: bool = false,
+    write: bool = false,
+    path: ?[]const u8 = null,
+    policy: ?[]const u8 = null,
+    allocator: std.mem.Allocator,
+    discovery: language.duplicates.Options = .{},
+    reporting: Reporting = .{},
+    lint: language.lint.Options = .{},
+    subject: ?[]const u8 = null,
+    context_symbol: ?[]const u8 = null,
+    context_at: ?[]const u8 = null,
+    /// The `context` selector whose value is the next argument, for the
+    /// `--symbol NAME` spelling the documented usage writes with a space.
+    context_pending: ?ContextSelectorField = null,
+    context_bytes: usize = language.context.default_context_bytes,
+    context_against: ?[]const u8 = null,
+    index: IndexOptions = .{},
+    api_against: ?[]const u8 = null,
+    api_write: ?[]const u8 = null,
+    api_json: bool = false,
+    no_cache: bool = false,
+    friction_path: ?[]const u8 = null,
+    cache_dir: ?[]const u8 = null,
+    saw_min: bool = false,
+    saw_population: bool = false,
+    saw_work: bool = false,
+    /// `--cache-dir` is shared by every frontend-caching command.
+    fn cacheDirectoryOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        const which: enum { symbol, at, bytes, against } = if (std.mem.eql(u8, flag, context_symbol_flag))
+            .symbol
+        else if (std.mem.eql(u8, flag, context_at_flag))
+            .at
+        else if (std.mem.eql(u8, flag, context_bytes_flag))
+            .bytes
+        else if (std.mem.eql(u8, flag, context_against_flag))
+            .against
+        else
+            return false;
+        if (self.command != .context or index.* + 1 >= args.len) return error.Usage;
+        index.* += 1;
+        const text = args[index.*];
+        return switch (which) {
+            .symbol => contextValue(&self.context_symbol, text),
+            .at => contextValue(&self.context_at, text),
+            .bytes => self.setContextBytes(text),
+            .against => contextValue(&self.context_against, text),
+        };
+    }
+
+    /// `index-project` switches in the `--flag=value` spelling: `--full`,
+    /// `--module=NAME`, `--symbol=NAME` and `--kind=KIND`. A repeat or an empty
+    /// value is a usage error.
+    fn indexOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (self.command != .@"index-project") return false;
+        if (std.mem.eql(u8, arg, "--full")) {
+            if (self.index.full) return error.Usage;
+            self.index.full = true;
+            return true;
+        }
+        inline for (.{ .{ index_module_flag, "module" }, .{ context_symbol_flag, "symbol" }, .{ index_kind_flag, "kind" } }) |spelled| {
+            if (std.mem.startsWith(u8, arg, spelled[0] ++ "=")) return contextValue(&@field(self.index.selection, spelled[1]), arg[spelled[0].len + 1 ..]);
+        }
+        return false;
+    }
+
+    /// A `context` or `index-project` switch written with a space instead of
+    /// `=`, which takes the next argument.
+    fn separateValue(self: *ArgumentParser, args: []const []const u8, index: *usize) ArgError!bool {
+        if (try self.indexSeparateValue(args, index)) return true;
+        return self.contextSeparateValue(args, index);
+    }
+
+    /// The `index-project` filters written with a space instead of `=`, which
+    /// take the next argument, as `context --symbol NAME` does.
+    fn indexSeparateValue(self: *ArgumentParser, args: []const []const u8, index: *usize) error{Usage}!bool {
+        if (self.command != .@"index-project") return false;
+        inline for (.{ .{ index_module_flag, "module" }, .{ context_symbol_flag, "symbol" }, .{ index_kind_flag, "kind" } }) |spelled| {
+            if (std.mem.eql(u8, args[index.*], spelled[0])) {
+                if (index.* + 1 >= args.len) return error.Usage;
+                index.* += 1;
+                return contextValue(&@field(self.index.selection, spelled[1]), args[index.*]);
+            }
+        }
+        return false;
+    }
+
+    fn finish(self: *ArgumentParser) ArgError!Parsed {
+        if (self.saw_work and !self.discovery.approximate) return error.Usage;
+        if (self.command == .@"fmt-project" and !self.format_check) return error.Usage;
+        if (self.command == .@"check-policy" and self.policy == null) return error.Usage;
+        if (self.command == .@"tests-for" and self.subject == null) return error.Usage;
+        if (self.command == .@"api-diff" and (self.api_against == null) == (self.api_write == null)) return error.Usage;
+        if (self.command == .api and self.write == self.format_check) return error.Usage;
+        if (self.command == .context and (self.context_symbol == null) == (self.context_at == null)) return error.Usage;
+        if (self.context_pending != null) return error.Usage;
+        try self.index.validate();
+        return .{
+            .schema_report = self.schema_report,
+            .inputs = self.inputs,
+            .input_count = self.input_count,
+            .policy = self.policy,
+            .format_check = self.format_check,
+            .write = self.write,
+            .contracts = self.contracts,
+            .quality = self.quality,
+            .command = self.command,
+            .path = self.path orelse return error.Usage,
+            .discovery = self.discovery,
+            .reporting = self.reporting,
+            .lint = self.lint,
+            .subject = self.subject,
+            .context = .{
+                .symbol = self.context_symbol,
+                .at = self.context_at,
+                .bytes = self.context_bytes,
+                .against = self.context_against,
+            },
+            .index = self.index,
+            .api_against = self.api_against,
+            .api_write = self.api_write,
+            .api_json = self.api_json,
+            .no_cache = self.no_cache,
+            .cache_dir = self.cache_dir,
+            .friction_path = self.friction_path,
+        };
+    }
+};
+
+/// Consume `--no-cache`, the one value-less switch that may appear at most
+/// once. A repeat is a usage error; an argument that is not this flag is left
+/// for the caller's other branches.
+fn parseSwitchFlag(arg: []const u8, parser: *ArgumentParser) ArgError!bool {
+    if (!std.mem.eql(u8, arg, "--no-cache")) return false;
+    if (parser.no_cache) return error.Usage;
+    parser.no_cache = true;
+    return true;
+}
+
+/// Consume `--friction-log=PATH`, the opt-in friction destination for this
+# Module interfaces
+
+A module interface is everything another module's check may read about one
+module, written down per module with two hashes. It was the first stage of
+compiling each module on its own (the plan is in
+[the compilation-model audit](../audits/compilation-model-2026-09-24.md), §11
+item 1). No build or check reads interfaces: `mylang interfaces` emits them
+from the whole-program check, checks a module against them, and proves that
+such a check reports what the whole program reports.
+
+```console
+$ mylang interfaces emit main.my --out=.mylang-cache/interfaces
+{"version":"module-interface-index-v1","entry":"main","modules":[{"module":"lib","interface_hash":"ab02…","implementation_hash":"7c73…",…}]}
+$ mylang interfaces show .mylang-cache/interfaces/lib.myi
+module-interface-v5 lib
+interface-hash ab02…
+…
+$ mylang interfaces check main.my --module=main --from=.mylang-cache/interfaces
+{"version":"module-interface-check-v1","module":"main","status":0,"stood_in":9,"declared_only":true,…}
+$ mylang interfaces oracle main.my
+{"version":"module-interface-oracle-v1","entry":"main","equal":true,"modules":6,…}
+```
+
+## What an interface holds
+
+`emit` writes one `module-interface-v5` artifact per module, `<module>.myi`, and
+an `index.json` with each module's hashes and counts. The default directory is
+`<cache-dir>/interfaces`, with `.mylang-cache` as the cache directory. An
+artifact is a versioned binary serialization with no pointers, paths or times;
+`show` prints it as canonical text.
+
+- **Declaration text.** The module's `module` line, the import lines that text
+  uses, and every exported declaration plus, transitively, every declaration of
+  the same module those name, copied verbatim from the source. A domain keeps
+  all its members. Private declarations nothing export

@@ -1,0 +1,55 @@
+{
+  "implementation": "061f46aba144c00bf2094fcdada9a2c682696105",
+  "full_gate": {
+    "exit": 0,
+    "steps_succeeded": 88,
+    "failures": 0,
+    "receipt": "logs/package-full-gate-final.json"
+  },
+  "guardian": {
+    "checks": 88,
+    "failed": 0,
+    "receipt": "logs/guardian-full-5.json"
+  },
+  "focused_cost": {
+    "tests": 7,
+    "failed": 0,
+    "receipt": "logs/focused-cost-10.json"
+  },
+  "conformance": {
+    "debug": 1518,
+    "release_verify": 1518,
+    "mismatch": 0,
+    "unsupported": 0,
+    "leakcheck": true,
+    "receipt": "logs/package-frozen-conformance-final.json"
+  },
+  "fuzz": {
+    "kinds": 9,
+    "accepted": 450,
+    "native_comparisons": 6450,
+    "qualified": true,
+    "receipt": "fuzz50-final/matrix.json"
+  },
+  "all46": {
+    "comparisons": 184,
+    "equal": true,
+    "stats_llvm_executable_byte_identity": true,
+    "receipt": "all46-final/summary.json"
+  },
+  "p1": {
+    "lox_functions": 294,
+    "eda_functions": 749,
+    "receipt": "p1-final-2/summary.json"
+  },
+  "pending_shared_gates": [
+    "Lox974conformance65tests",
+    "EDA310tests34goldens",
+    "48k96k192kCPU10checktimings",
+    "compiler5sCPU10rebuild",
+    "LoxEDAdevloopbudgets",
+    "idiomC1C2_policyC3",
+    "wave9x200cases"
+  ],
+  "cost_help_and_list_interfaces": "coordinator-owned"
+}

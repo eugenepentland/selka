@@ -1,0 +1,28 @@
+src/core/runtime/core_number.c:118:    stream_write(stream_for(fd), buffer, length);
+src/core/runtime/core_number.c:125:    stream_write(stream_for(fd), buffer, length);
+src/core/emit_llvm.zig:1411:            .dict_insert, .dict_remove, .dict_entries, .dict_entry_live, .dict_copy, .dict_clear => try emit_dict.instruction(@TypeOf(self), self, out, name, inst),
+src/core/emit_llvm.zig:1547:            .print => try self.print(out, inst),
+src/core/emit_llvm.zig:2708:    fn print(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
+src/core/runtime/core_io.c:271:    unsigned char *bytes = malloc(capacity);
+src/core/runtime/core_io.c:281:            unsigned char *grown = realloc(bytes, capacity * 2);
+src/core/runtime/core_io.c:309:        unsigned char *bytes = malloc(10);
+src/core/runtime/core_io.c:325:    unsigned char *bytes = malloc(1);
+src/core/runtime/core_io.c:522:    char *copy = malloc(length + 1);
+src/core/runtime/core_io.c:648:        MemoryEntry **entries = realloc(memory->entries, grown * sizeof *entries);
+src/core/runtime/core_io.c:653:    MemoryEntry *entry = calloc(1, sizeof *entry);
+src/core/runtime/core_io.c:654:    char *copy = malloc(length + 1);
+src/core/runtime/core_io.c:720:    MemoryEntry **children = malloc((memory->count ? memory->count : 1) * sizeof *children);
+src/core/runtime/core_io.c:732:    unsigned char *snapshot = malloc(bytes);
+src/core/runtime/core_io.c:756:        unsigned char *bytes = malloc(10);
+src/core/runtime/core_io.c:776:    unsigned char *bytes = malloc(1);
+src/core/runtime/core_io.c:884:        unsigned char *bytes = realloc(entry->bytes, grown);
+src/core/runtime/core_io.c:1003:        else if(test){state->memory=calloc(1,sizeof(MemoryFs));if(!state->memory)out_of_memory();state->adapter=(CoreIoResourceProvider){state->memory,7,core_io_memory_acquire,core_io_memory_complete,core_io_memory_release,core_io_memory_read,core_io_memory_write};}
+src/core/runtime/core_io.c:1015:static unsigned char *core_io_copy(const unsigned char *source,size_t length){CoreIoScratch *copy=malloc(sizeof(*copy)+(length?length:1));if(!copy)out_of_memory();copy->next=core_io_scratch_head;core_io_scratch_head=copy;if(source&&length)memcpy(copy->data,source,length);return copy->data;}
+src/core/runtime/core_io.c:1111:static myl_block *core_io_scope(myl_block *cap,myl_block *scope,unsigned family,int append){CoreIoAuthority *a=core_io_authority(cap);if(a->family!=family)core_io_fail("InvalidCapability");myl_block *joined=scope;if(append&&a->scope&&a->scope->len){size_t length=(size_t)(a->scope->len+scope->len+(scope->len!=0));unsigned char *bytes=malloc(length);if(!bytes)out_of_memory();memcpy(bytes,block_data(a->scope),(size_t)a->scope->len);if(scope->len){bytes[a->scope->len]='/';memcpy(bytes+a->scope->len+1,block_data(scope),(size_t)scope->len);}joined=core_io_string(bytes,length,1);free(bytes);}else core_io_retain(joined);myl_block *out=core_io_cap(family,a->rights,a->provider,cap,joined);myl_core_release(joined);return out;}
+src/core/runtime/core_io.c:1153:static myl_block *core_io_file_error(unsigned kind,myl_block *path,int status){static const char *verbs[]={"open","read","read","write","write","stat","listdir","mkdir","remove"};const char *verb=verbs[kind],*reason=core_io_reason(status);size_t length=strlen(verb)+strlen(reason)+(size_t)path->len+5;char *message=malloc(length+1);if(!message)out_of_memory();size_t at=(size_t)sprintf(message,"%s '",verb);memcpy(message+at,block_data(path),(size_t)path->len);at+=(size_t)path->len;at+=(size_t)sprintf(message+at,"': %s",reason);myl_block *text=core_io_string(message,at,1);free(message);return text;}
+src/core/runtime/core_io.c:1155:static void core_io_append(CoreIoBytes *bytes,const unsigned char *data,size_t length){if(bytes->length+length>64u*1024u*1024u)core_io_fail("R_FILE");if(bytes->length+length>bytes->capacity){size_t cap=bytes->capacity?bytes->capacity:128;while(cap<bytes->length+length)cap*=2;unsigned char *grown=realloc(bytes->bytes,cap);if(!grown)out_of_memory();bytes->bytes=grown;bytes->capacity=cap;}if(length)memcpy(bytes->bytes+bytes->length,data,length);bytes->length+=length;}
+src/core/runtime/core_io.c:1217:void myl_core_stream_write(int64_t fd,myl_block *text){myl_core_print_str(fd,text);}
+src/core/runtime/core_io.c:1219:void myl_core_stream_write_bytes(int64_t fd,myl_block *data){myl_core_print_str(fd,data);}
+src/core/runtime/core_io.c:1221:void myl_core_stream_write_buffer(int64_t fd,myl_block *buffer){myl_core_print_str(fd,buffer);}
+src/core/emit_render.zig:27:        "  %text = call ptr @myl_core_values_render(ptr @myl.render.{s}, ptr %at)\n  ret ptr %text\n}}\n", .{ naming.linkage, naming.symbol, number });
+src/core/emit_dict.zig:77:        .dict_remove => try out.print(arena, "  {s} = call ptr @myl_core_dict_remove(ptr {s}, i64 {s})\n", .{ name, try c.value(inst.a), try c.value(inst.b) }),

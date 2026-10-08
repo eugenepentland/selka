@@ -1,0 +1,133 @@
+{
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/zig-out/bin/mylang",
+    "sha256": "5ddab7ce39d576615f55676886252e4dbfff863d0d253cc003886a769c7b1a55",
+    "source_commit": "061f46aba144c00bf2094fcdada9a2c682696105"
+  },
+  "tools": {
+    "frontend_oracle.py": {
+      "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/scripts/frontend_oracle.py",
+      "sha256": "076f67991cfa9dc3c2578f703865ccd01301d881571483b88b4acfe9f03d4f5c",
+      "copied_sha256": "076f67991cfa9dc3c2578f703865ccd01301d881571483b88b4acfe9f03d4f5c"
+    },
+    "frontend_external_oracle.py": {
+      "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/scripts/frontend_external_oracle.py",
+      "sha256": "b9efd864a0a7cb1a1ccc986581057cc72a9a35ce448e371f31cd24d11f2117e5",
+      "copied_sha256": "b9efd864a0a7cb1a1ccc986581057cc72a9a35ce448e371f31cd24d11f2117e5"
+    },
+    "audit_frozen.py": {
+      "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/tools/audit_frozen.py",
+      "sha256": "ff931da84b2b1a818d2825d29cb7f7b41d5a5cee7a377f1dda857ed92d8aaa17",
+      "copied_sha256": "ff931da84b2b1a818d2825d29cb7f7b41d5a5cee7a377f1dda857ed92d8aaa17"
+    },
+    "freeze_current.py": {
+      "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/tools/freeze_current.py",
+      "sha256": "8fd4e7dfd7d874fa9210dee32c23bf3deb85b3689eac2d0eabf35f5c0a46f5f3",
+      "copied_sha256": "8fd4e7dfd7d874fa9210dee32c23bf3deb85b3689eac2d0eabf35f5c0a46f5f3"
+    }
+  },
+  "references": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/lox/source-manifest.json": {
+      "sha256": "d05b8f2ad64d530003d04fa06ae79391355d07bb8269e7b1b311b04064382da9",
+      "bytes": 4444
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/lox/configured-debug.json": {
+      "sha256": "f0ca4fd83ad25255652f65acdfca6ca74c0c89d1696dcdd47e0acc38871dfa5f",
+      "bytes": 2286
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/lox/current-debug.json": {
+      "sha256": "9b5faadc3b5692349a57c4d24aed1003e9f0e94e70609e1c049453dd06c6bf74",
+      "bytes": 13381
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/lox/current-release.json": {
+      "sha256": "9d4c3203dc791589cb198d63b009f916bc7118d1bed4a1b1b87af38f95e5c617",
+      "bytes": 13428
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/lox/configured-verify.json": {
+      "sha256": "e4bce069b133ff104423ef1785c0b2613d106458b34291157a805cc607425b63",
+      "bytes": 2288
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/lox/directory.json": {
+      "sha256": "d93936cb1fb764f83e220be695848114b2a9dd5d1d2be17c345a3669e390aac7",
+      "bytes": 19827
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/lox/configured-release.json": {
+      "sha256": "586e7835ec568485964dd8fed0d7dcad3ba46e539db81c2bf460cf66aa77ea05",
+      "bytes": 2291
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/lox/audit.json": {
+      "sha256": "7e1f66bc33533e528efa537a233b5ee507a5254d8443880e217ad52ce51533cd",
+      "bytes": 2117
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/lox/identity.json": {
+      "sha256": "ce5651343794816bfa608b3e4cf577d00b8a92dd83e9268f5b8ffd5619b5b7bb",
+      "bytes": 1769
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/lox/current-verify.json": {
+      "sha256": "eb7384235eb9b8ad8c27b57f6e87355b099fb2e1c8778279fa330e8145dd9c7b",
+      "bytes": 13403
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/lox/coverage.json": {
+      "sha256": "2ee11aa3b643009ecd9fd801177ee7c6699d2cb34a669734ec4f02866ab2d2e6",
+      "bytes": 5443
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-integration-20261008/external/lox-s5-release/answers.json": {
+      "sha256": "b6b50dae8cc4924f612ce563b159ad835966150ba927ab1a78eeabebf58400c5",
+      "bytes": 490502
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/eda/source-manifest.json": {
+      "sha256": "d3a0e60b144d06da27f10a01d16e9bf46fd2aa0b02b8f616f523a38edb75c351",
+      "bytes": 12984
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/eda/current-debug.json": {
+      "sha256": "68a9eee26978473c5180261dca0a8b221f679e138ded612af14bb9b1ab032542",
+      "bytes": 76447
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/eda/current-release.json": {
+      "sha256": "7061bcd95971b6cdb92637927c7fcd15e5df26ac89c0418a4f69c9f3128a6bfa",
+      "bytes": 76667
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/eda/directory.json": {
+      "sha256": "0b1834e43a635e24fb7fa940a7e0a6f8c5ca37e3fb6f4b4761f847a7a21d022f",
+      "bytes": 129789
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/eda/audit.json": {
+      "sha256": "baa90a1f5e65e99ba41dfdfcf5d2ae52589eaaacdeb6335c74e87bb89e5a1cf9",
+      "bytes": 1618
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/eda/identity.json": {
+      "sha256": "be81f85430fa19a6c68b8cb82ca751d2cf5d5680207ae3d03ff9251d89406e6f",
+      "bytes": 1735
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/eda/current-verify.json": {
+      "sha256": "42722570ecbac23ca8aca3becfd807666ce05cfc380d16004301748cdfed34bb",
+      "bytes": 76550
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/eda/coverage.json": {
+      "sha256": "331d70aede5b4be5824345e216db9d9ad7c426410742fabe3054274745d967ee",
+      "bytes": 29862
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-integration-20261008/external/eda-s5-release/answers.json": {
+      "sha256": "fac3761057a12da0ae1e4239c09bc0fe9549b2976d68708fca60fbfa16bbc6c7",
+      "bytes": 2994641
+    }
+  },
+  "corpora": {
+    "lox": {
+      "root": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox",
+      "commit": "f44302d877dfc8a01b64673e70c44b9e0c49f063",
+      "tracked_clean": true,
+      "commit_command_seconds": 0.0016540500801056623,
+      "tracked_diff_command_seconds": 0.004906403832137585,
+      "test_identity_sha256": "ce5651343794816bfa608b3e4cf577d00b8a92dd83e9268f5b8ffd5619b5b7bb"
+    },
+    "eda": {
+      "root": "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda",
+      "commit": "7e938b65a880339f0aa0d58f5805cd2cd2bbfe1b",
+      "tracked_clean": true,
+      "commit_command_seconds": 0.001498557161539793,
+      "tracked_diff_command_seconds": 0.004490909865126014,
+      "test_identity_sha256": "be81f85430fa19a6c68b8cb82ca751d2cf5d5680207ae3d03ff9251d89406e6f"
+    }
+  }
+}

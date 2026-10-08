@@ -1,0 +1,16 @@
+row_set_dedup.my:5:52: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                     ^
+row_set_dedup.my:5:71: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                        ^
+row_set_dedup.my:5:88: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                                         ^
+row_set_dedup.my:5:112: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                                                                 ^
+mylang-core: inlined 0 calls, unswitched 0 loops, versioned 0 loops, proved 0 checks, vectorized 0 loops
+mylang-core: ownership: 2 updates in place, 0 tested, 0 copied; 0 retains, 9 releases (0 pairs elided); 0 lists on the stack
+mylang-core: cost: 37 checks kept; 12 allocation sites (3 unresolved calls); 4 unknown loops
+mylang-core: LLVM vectorized unknown; 4 unknown loops; remarks available; 2 compiles in 45963295 ns

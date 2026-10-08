@@ -1,0 +1,7 @@
+listing-reachable-cost.stderr: 'mylang-core: LLVM vectorized unknown; 0 unknown loops; remarks available; 1 compiles in 25007675 ns\n'
+listing-reachable-contracts-candidate.stderr: ''
+listing-reachable-plain-candidate.stderr: ''
+listing-reachable-prefix.stderr: ''
+listing-reachable-plain-base.stderr: ''
+listing-reachable-contracts-base.stderr: ''
+listing-reachable-appended.stderr: 'mylang-core: LLVM vectorized unknown; 0 unknown loops; remarks available; 1 compiles in 28341346 ns\n'

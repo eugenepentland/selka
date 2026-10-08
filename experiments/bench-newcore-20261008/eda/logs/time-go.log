@@ -1,0 +1,55 @@
+go: repetition 1/3
+  cold_build                   5.35s      279 MiB
+  noop_build                   0.07s       24 MiB
+  clean_build                  1.21s      106 MiB
+  leaf_body.check              0.77s      103 MiB
+  leaf_body.build              0.55s      103 MiB
+  leaf_body.test               1.18s      120 MiB
+  hub_body.check               1.01s       99 MiB
+  hub_body.build               0.32s       84 MiB
+  hub_body.test                1.19s      114 MiB
+  interface.check              1.04s      102 MiB
+  interface.build              0.93s       99 MiB
+  interface.test               1.84s      118 MiB
+go: repetition 2/3
+  cold_build                   5.21s      275 MiB
+  noop_build                   0.07s       25 MiB
+  clean_build                  1.18s      101 MiB
+  leaf_body.check              0.75s      109 MiB
+  leaf_body.build              0.55s      106 MiB
+  leaf_body.test               1.14s      118 MiB
+  hub_body.check               0.97s       99 MiB
+  hub_body.build               0.32s       84 MiB
+  hub_body.test                1.21s      119 MiB
+  interface.check              1.15s      101 MiB
+  interface.build              0.95s      104 MiB
+  interface.test               1.87s      120 MiB
+go: repetition 3/3
+  cold_build                   5.46s      268 MiB
+  noop_build                   0.07s       25 MiB
+  clean_build                  1.18s      104 MiB
+  leaf_body.check              0.76s      106 MiB
+  leaf_body.build              0.62s      105 MiB
+  leaf_body.test               1.15s      119 MiB
+  hub_body.check               0.99s      100 MiB
+  hub_body.build               0.28s       84 MiB
+  hub_body.test                1.14s      113 MiB
+  interface.check              1.10s       99 MiB
+  interface.build              1.06s      101 MiB
+  interface.test               1.87s      119 MiB
+
+go stage 1: median of 3
+  step                          wall   peak RSS
+  cold_build                   5.35s     279 MiB
+  noop_build                   0.07s      25 MiB
+  clean_build                  1.18s     106 MiB
+  leaf_body.check              0.76s     109 MiB
+  leaf_body.build              0.55s     106 MiB
+  leaf_body.test               1.15s     120 MiB
+  hub_body.check               0.99s     100 MiB
+  hub_body.build               0.32s      84 MiB
+  hub_body.test                1.19s     119 MiB
+  interface.check              1.10s     102 MiB
+  interface.build              0.95s     104 MiB
+  interface.test               1.87s     120 MiB
+wrote harness/results/time-stage1-go-20261008T081759.json

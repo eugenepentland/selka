@@ -21,6 +21,7 @@ const number_runtime = @import("number_runtime.zig");
 const tool_identity = @import("tool_identity.zig");
 const emit_units = @import("emit_units.zig");
 const unit_cache = @import("unit_cache.zig");
+const count_runtime = @import("count_runtime.zig");
 const Digest = unit_cache.Digest;
 
 /// The runtime C source, compiled into every program.
@@ -156,13 +157,12 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
         .staging = staging,
         .cacheable = guest.cacheable,
     };
-    var abi: Digest = undefined;
-    std.crypto.hash.Blake3.hash(runtime_source, &abi, .{});
-    const settings: unit_cache.Settings = .{ .tool = guest.digest, .cpu = guest.native_target, .release = request.release, .runtime = abi };
-    var objects: std.ArrayList(Object) = .empty;
-    try objects.append(allocator, try runtimeObject(native, places.shared, abi));
     var needs: Dependencies = .{};
-    for (request.units) |unit| needs = .{ .number = needs.number or unit.number, .math = needs.math or unit.math };
+    for (request.units) |unit| needs = .{ .number = needs.number or unit.number, .math = needs.math or unit.math, .counting = needs.counting or unit.counting };
+    const runtime = try runtimeFor(allocator, needs.counting, log);
+    const settings: unit_cache.Settings = .{ .tool = guest.digest, .cpu = guest.native_target, .release = request.release, .runtime = runtime.abi };
+    var objects: std.ArrayList(Object) = .empty;
+    try objects.append(allocator, try runtimeObject(native, places.shared, runtime));
     try unitObjects(native, places, settings, request, &objects);
     if (needs.number) try objects.append(allocator, .{ .path = try number_runtime.object(allocator, io, places.shared), .digest = number_runtime.digest() });
     outcome.foreign = try foreignObjects(native, places, settings, request.links, &objects);
@@ -195,7 +195,80 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     return outcome;
 }
 
-const Dependencies = struct { number: bool = false, math: bool = false };
+const Dependencies = struct { number: bool = false, math: bool = false, counting: bool = false };
+
+/// The runtime source a build compiles and its digest: the ordinary runtime, or for a
+/// unit emitted with `--counters` the counting runtime (`count_runtime.zig`).
+const Runtime = struct { source: []const u8, abi: Digest };
+
+fn runtimeFor(allocator: std.mem.Allocator, counting: bool, log: *std.ArrayList(u8)) Error!Runtime {
+    const source = if (!counting) runtime_source else count_runtime.source(allocator, runtime_source) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.AnchorMissing => {
+            try log.appendSlice(allocator, "error: the counting runtime no longer matches the runtime source\n");
+            return error.ToolFailed;
+        },
+    };
+    var abi: Digest = undefined;
+    std.crypto.hash.Blake3.hash(source, &abi, .{});
+    return .{ .source = source, .abi = abi };
+}
+
+/// Optional LLVM optimization records from a separate compile of the exact units.
+/// Failure or a tool that accepts the flags but writes no YAML leaves it unknown.
+/// This never replaces a cached object, changes emitted text, or enters the link.
+pub const OptimizationRemarks = struct { yaml: ?[]const u8 = null, processes: u32 = 0, compile_ns: u64 = 0 };
+
+/// Compile only when requested by cost/--stats; identical-input remark caching is
+/// deferred until timings justify it. Every spawn is timed and tool-validated.
+pub fn optimizationRemarks(a: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request) std.mem.Allocator.Error!OptimizationRemarks {
+    const staging = privateDirectory(a, io, request.work, "llvm-remarks") catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return .{};
+    };
+    defer removeDirectory(io, staging);
+    var environment = environ.clone(a) catch return error.OutOfMemory;
+    defer environment.deinit();
+    environment.put("ZIG_LOCAL_CACHE_DIR", try std.fs.path.join(a, &.{ staging, "local" })) catch return error.OutOfMemory;
+    const resources: tool_identity.Request = .{ .arena = a, .io = io, .environment = &environment, .executable = request.zig, .cache = request.work };
+    const guest = tool_identity.capture(resources) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return .{};
+    };
+    if (!guest.cacheable) environment.put("ZIG_GLOBAL_CACHE_DIR", try std.fs.path.join(a, &.{ staging, "global" })) catch return error.OutOfMemory;
+    var counts: Counts = .{};
+    var log: std.ArrayList(u8) = .empty;
+    const native: Native = .{ .arena = a, .io = io, .environment = &environment, .zig = guest.path, .log = &log, .guard = .{ .resources = resources, .identity = guest }, .counts = &counts };
+    var yaml: std.ArrayList(u8) = .empty;
+    var result: OptimizationRemarks = .{};
+    for (request.units, 0..) |unit, index| {
+        const source = try std.fmt.allocPrint(a, "{s}/{d}.ll", .{ staging, index });
+        const object = try std.fmt.allocPrint(a, "{s}/{d}.o", .{ staging, index });
+        const records = try std.fmt.allocPrint(a, "{s}/{d}.opt.yaml", .{ staging, index });
+        std.Io.Dir.cwd().writeFile(io, .{ .sub_path = source, .data = unit.llvm }) catch return result;
+        var args: std.ArrayList([]const u8) = .empty;
+        try args.appendSlice(a, try compileArguments(native, request.release, object, source));
+        try args.appendSlice(a, &.{ "-fsave-optimization-record", try std.fmt.allocPrint(a, "-foptimization-record-file={s}", .{records}) });
+        const started = std.Io.Timestamp.now(io, .awake);
+        run(native, args.items) catch |err| {
+            if (err == error.OutOfMemory) return error.OutOfMemory;
+            result.processes = counts.processes;
+            result.compile_ns += @intCast(@max(0, started.durationTo(std.Io.Timestamp.now(io, .awake)).nanoseconds));
+            return result;
+        };
+        result.compile_ns += @intCast(@max(0, started.durationTo(std.Io.Timestamp.now(io, .awake)).nanoseconds));
+        result.processes = counts.processes;
+        const bytes = std.Io.Dir.cwd().readFileAlloc(io, records, a, .limited(64 << 20)) catch return result;
+        try yaml.appendSlice(a, bytes);
+        try yaml.append(a, '\n');
+    }
+    native.guard.check(&log) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return result;
+    };
+    result.yaml = try yaml.toOwnedSlice(a);
+    return result;
+}
 
 /// Copy `program` to `output` under a temporary name and rename it into place.
 /// An existing output is removed first: ext4 flushes a file renamed over another
@@ -302,7 +375,7 @@ fn verifyServed(native: Native, item: Pending, served: unit_cache.Found) Error!v
     native.counts.verified += 1;
 }
 
-fn compileArguments(native: Native, release: bool, object: []const u8, source: []const u8) Error![]const []const u8 {
+fn compileArguments(native: Native, release: bool, object: []const u8, source: []const u8) std.mem.Allocator.Error![]const []const u8 {
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(native.arena, &.{ native.zig, "cc", "-c", unit_cache.level(release), "-target", target_policy.native_link_target });
     try argv.appendSlice(native.arena, target.cpu_flags);
@@ -520,7 +593,7 @@ fn privateDirectory(allocator: std.mem.Allocator, io: std.Io, work: []const u8, 
 }
 
 /// The runtime object for this runtime source, compiled on first use.
-fn runtimeObject(native: Native, directory: []const u8, abi: Digest) Error!Object {
+fn runtimeObject(native: Native, directory: []const u8, runtime: Runtime) Error!Object {
     const allocator = native.arena;
     const io = native.io;
     var digest: Digest = undefined;
@@ -528,7 +601,7 @@ fn runtimeObject(native: Native, directory: []const u8, abi: Digest) Error!Objec
     hash.update("core-runtime-object-v4\x00-O2\x00-g0\x00-falign-functions=64\x00-std=c11\x00");
     hash.update(target_policy.native_link_target);
     hash.update("\x00");
-    hash.update(&abi);
+    hash.update(&runtime.abi);
     hash.update(&native.guard.identity.digest);
     hash.final(&digest);
     const stem = try std.fmt.allocPrint(allocator, "core_rt-{x}", .{digest});
@@ -540,7 +613,7 @@ fn runtimeObject(native: Native, directory: []const u8, abi: Digest) Error!Objec
     std.Io.random(io, &nonce);
     const staging = try std.fmt.allocPrint(allocator, "{s}.{x}.partial", .{ source, nonce });
     defer removeFile(io, staging);
-    cwd.writeFile(io, .{ .sub_path = staging, .data = runtime_source }) catch return error.WriteFailed;
+    cwd.writeFile(io, .{ .sub_path = staging, .data = runtime.source }) catch return error.WriteFailed;
     cwd.rename(staging, cwd, source, io) catch return error.WriteFailed;
     const partial = try std.fmt.allocPrint(allocator, "{s}.{x}.partial", .{ object, nonce });
     defer removeFile(io, partial);
@@ -681,4 +754,35 @@ test "publishOutput reports an unwritable output and servedForeign misses on dam
     const stale = try manifestText(a, &.{.{ .path = program, .digest = @splat(7) }});
     try dir.dir.writeFile(std.testing.io, .{ .sub_path = "stale.deps", .data = stale });
     try std.testing.expectEqual(@as(?ServedForeign, null), try servedForeign(native, store, @splat(1), try std.fs.path.join(a, &.{ root, "stale.deps" })));
+}
+
+// spec-case: FRONTEND-COST-1
+test "cost optimizationRemarks returns unknown for unwritable staging missing tools and failed native compile" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var environment = try std.testing.environ.createMap(a);
+    defer environment.deinit();
+    const units = [_]emit_units.Unit{wholeUnit("invalid LLVM module")};
+    var request: Request = .{ .zig = environment.get("MYLANG_ZIG") orelse "zig", .work = root, .output = "", .release = true, .links = &.{}, .units = &units };
+    try std.testing.expectError(error.OutOfMemory, optimizationRemarks(std.testing.failing_allocator, std.testing.io, &environment, request));
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "blocked", .data = "file" });
+    request.work = try std.fs.path.join(a, &.{ root, "blocked" });
+    const blocked = try optimizationRemarks(a, std.testing.io, &environment, request);
+    try std.testing.expect(blocked.yaml == null);
+    try std.testing.expectEqual(@as(u32, 0), blocked.processes);
+    request.work = root;
+    const original = request.zig;
+    request.zig = try std.fs.path.join(a, &.{ root, "missing-zig" });
+    const missing = try optimizationRemarks(a, std.testing.io, &environment, request);
+    try std.testing.expect(missing.yaml == null);
+    try std.testing.expectEqual(@as(u32, 0), missing.processes);
+    request.zig = original;
+    const failed = try optimizationRemarks(a, std.testing.io, &environment, request);
+    try std.testing.expect(failed.yaml == null);
+    try std.testing.expectEqual(@as(u32, 1), failed.processes);
+    try std.testing.expect(failed.compile_ns > 0);
 }

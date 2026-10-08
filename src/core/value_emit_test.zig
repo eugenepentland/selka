@@ -64,8 +64,9 @@ test "a record over four words is a pointer to a stack slot: never an LLVM aggre
     try std.testing.expect(!contains(llvm, "extractvalue { i64, i64, i64, i64, i64, i64 }"));
     const widen = functionText(llvm, "@\"my.widen\"");
     try std.testing.expect(contains(widen, "ptr noalias sret([48 x i8]) align 8 %ret, ptr noalias readonly align 8 %p0, i64 %p1"));
-    // The first write copies the parameter (its caller's memory is read-only); the second writes that copy where it is.
-    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, widen, "@llvm.memcpy"));
+    // The first write copies the parameter (its caller's memory is read-only) into the caller's
+    // destination; the second writes that copy where it is, and the return copies nothing.
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, widen, "@llvm.memcpy"));
     // Built in place in the return slot: the stores go to `%ret`, with no copy.
     const make = functionText(llvm, "@\"my.mk\"");
     try std.testing.expect(!contains(make, "memcpy"));
@@ -79,9 +80,10 @@ test "a loop-carried record in memory owns a stack slot filled on each edge, wit
     const llvm = try support.llvmText(arena.allocator(), wide);
     const loop = functionText(llvm, "@\"my.swap_loop\"");
     try std.testing.expect(!contains(loop, "phi ptr"));
-    // Two such phis swap values, so the back edge copies both out to temporaries before filling either.
-    try std.testing.expect(contains(loop, "@llvm.memmove"));
-    try std.testing.expect(std.mem.count(u8, loop, "@llvm.memcpy") >= 4);
+    // Two such phis swap values: the back edge first copies `a` into `b`'s home, then the call's
+    // result into `a`'s (a parallel copy in order, NEW-CORE-CE-RECORDS-1), with no temporary; the
+    // entry copies the read-only parameters in.
+    try std.testing.expectEqual(@as(usize, 4), std.mem.count(u8, loop, "@llvm.memcpy"));
     try std.testing.expect(contains(loop, "= alloca [48 x i8]"));
 }
 

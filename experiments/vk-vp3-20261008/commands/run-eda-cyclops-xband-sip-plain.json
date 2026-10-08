@@ -1,0 +1,32 @@
+{
+ "label": "run-eda-cyclops-xband-sip-plain",
+ "command": [
+  "taskset",
+  "-c",
+  "12-19",
+  "perf",
+  "stat",
+  "-x,",
+  "-e",
+  "instructions:u",
+  "-o",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/perf/eda-cyclops-xband-sip.csv",
+  "--",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/eda-plain",
+  "--model",
+  "golden/cases/cyclops-xband-sip/model.sexp",
+  "--project-dir",
+  "golden/projects/designs",
+  "--out-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/eda-out/plain/cyclops-xband-sip"
+ ],
+ "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+ "env": {},
+ "seconds": 0.055,
+ "status": 0,
+ "stdout_sha256": "1bef67d00bf6ac7b67be17649c499fa7c204c9ef8bb7483acf1ba2ef23adea72",
+ "stdout_bytes": 85,
+ "stderr_sha256": "c9b14d12149b16df23d44d4283a5882e3030d0ff6b77c9841b3c60e79618578b",
+ "stderr_bytes": 106,
+ "stdout": "eda-sch: cyclops-xband-sip: 5 sheets, 4 sidecars, 9 symbols (4 vendor), 60 instances\n"
+}

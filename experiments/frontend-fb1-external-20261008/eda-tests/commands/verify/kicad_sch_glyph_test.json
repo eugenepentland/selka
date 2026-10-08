@@ -1,0 +1,59 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/zig-out/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_glyph_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli/.mylang-cache/frontend-fb1-external/test-cache/eda",
+    "--release",
+    "--verify-facts",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "cpu_affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "cwd": "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda",
+  "elapsed_seconds": 0.7709504661615938,
+  "leak_environment": {
+    "MYL_CORE_LEAKCHECK": "1"
+  },
+  "other_build_heavy_processes": [
+    " 279294  107551  17    9243 /bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until ! pgrep -f '\"'\"'probe/probe.py'\"'\"' >/dev/null; do sleep 5; done; wc -l /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/probe/smoke.log' < /dev/null && pwd -P >| /tmp/claude-7f36-cwd"
+  ],
+  "process_sample": {
+    "command": [
+      "ps",
+      "-eo",
+      "pid,ppid,psr,etimes,args"
+    ],
+    "elapsed_seconds": 0.01817737496457994,
+    "returncode": 0
+  },
+  "returncode": 0,
+  "started_at": "2026-10-08T10:57:58.712494+00:00",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "921500f056746c420f5f345fc4a973e58c51987763712fbef972aadd3f7eb321",
+  "timeout": false,
+  "timeout_seconds": 600
+}

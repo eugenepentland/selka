@@ -3,6 +3,8 @@
 comptime {
     _ = @import("frontend_test.zig");
     _ = @import("cli.zig");
+    _ = @import("cost_test.zig");
+    _ = @import("count_test.zig");
     _ = @import("cli_args.zig");
     _ = @import("trap_contract.zig");
     _ = @import("cli_flags_test.zig");
@@ -27,6 +29,7 @@ comptime {
     _ = @import("value_e2e_test.zig");
     _ = @import("value_facts_test.zig");
     _ = @import("value_emit_test.zig");
+    _ = @import("ce_records_test.zig");
     _ = @import("test_runner_test.zig");
     _ = @import("project_entry.zig");
     _ = @import("test_runner_options.zig");
@@ -52,6 +55,7 @@ comptime {
     _ = @import("conformance_test.zig");
     _ = @import("rows_test.zig");
     _ = @import("own_test.zig");
+    _ = @import("ce_lists_test.zig");
     _ = @import("trace_test.zig");
     _ = @import("s2_ir_test.zig");
     _ = @import("iteration_test.zig");

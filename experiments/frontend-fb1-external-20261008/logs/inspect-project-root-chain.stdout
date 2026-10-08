@@ -1,0 +1,2 @@
+firstmodulelines ['module driver_tests', '# SPEC §11.2 tests 53-63, each running its program on both engines.', '#', '# These tests reach the `clock` native, and mylang lets a function reach a', '# clock read only with a Clock parameter, which the test runner cannot', '# supply. So they run through driver_cases.json, which substitutes a']
+tooldirs ['/home/epentland/.cache/mylang/core-tools-v1']

@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/experiments/frontend-fb1-20261008/tools/reports.py", line 121, in <module>
+    if __name__ == "__main__": main()
+                               ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/experiments/frontend-fb1-20261008/tools/reports.py", line 108, in main
+    for name, path in entries.items(): results[name] = p1(core, name, path, output)
+                                                       ~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/experiments/frontend-fb1-20261008/tools/reports.py", line 85, in p1
+    report = json.loads(run("p1-"+corpus+"-cost", [core, "cost", path, "--json"]).stdout)
+                        ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/experiments/frontend-fb1-20261008/tools/reports.py", line 19, in run
+    if path.with_suffix(".json").exists(): raise RuntimeError(f"retained command exists: {label}")
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: retained command exists: p1-lox-cost

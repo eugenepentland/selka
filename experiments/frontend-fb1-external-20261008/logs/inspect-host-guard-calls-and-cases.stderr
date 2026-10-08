@@ -1,0 +1,2 @@
+rg: src/cli_init.zig: No such file or directory (os error 2)
+rg: src/wiring/main.zig: No such file or directory (os error 2)

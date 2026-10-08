@@ -1,0 +1,5 @@
+tests/navigation_client.py
+src/core/cli_args.zig
+src/core/cli_run.zig
+src/core/cli_flags_test.zig
+src/core/cli.zig

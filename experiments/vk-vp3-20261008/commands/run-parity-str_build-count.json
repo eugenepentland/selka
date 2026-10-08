@@ -1,0 +1,20 @@
+{
+ "label": "run-parity-str_build-count",
+ "command": [
+  "taskset",
+  "-c",
+  "0,1,4-9,12-19",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/parity-str_build-count"
+ ],
+ "cwd": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3",
+ "env": {
+  "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/counts/parity-str_build.json"
+ },
+ "seconds": 0.175,
+ "status": 0,
+ "stdout_sha256": "e8e4291ddf65fcad3e471a7587aada2668080c48b025d42dbd6c7ec2b9453b34",
+ "stdout_bytes": 17,
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_bytes": 0,
+ "stdout": "128000000 828534\n"
+}

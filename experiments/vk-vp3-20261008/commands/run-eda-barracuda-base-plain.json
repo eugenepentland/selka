@@ -1,0 +1,32 @@
+{
+ "label": "run-eda-barracuda-base-plain",
+ "command": [
+  "taskset",
+  "-c",
+  "12-19",
+  "perf",
+  "stat",
+  "-x,",
+  "-e",
+  "instructions:u",
+  "-o",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/perf/eda-barracuda-base.csv",
+  "--",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/eda-plain",
+  "--model",
+  "golden/cases/barracuda-base/model.sexp",
+  "--project-dir",
+  "golden/projects/designs",
+  "--out-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/eda-out/plain/barracuda-base"
+ ],
+ "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+ "env": {},
+ "seconds": 0.096,
+ "status": 0,
+ "stdout_sha256": "14dd698fa9de72b3c66a8a45fa99438d46dae2cc3886373a2350d737448967db",
+ "stdout_bytes": 86,
+ "stderr_sha256": "f03969d9d6bbdca93af6690703c0ab21e8c2fba270c4015ac691f576b4b9dc63",
+ "stderr_bytes": 440,
+ "stdout": "eda-sch: barracuda-base: 27 sheets, 4 sidecars, 45 symbols (23 vendor), 268 instances\n"
+}

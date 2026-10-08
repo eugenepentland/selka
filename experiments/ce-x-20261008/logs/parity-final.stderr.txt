@@ -1,0 +1,36 @@
+bench-parity: building 153 arms of 28 benchmark(s) with 4 job(s)
+parity_locked: took /run/user/1000/mylang-slots/cpu10.lock after 0.0 s
+binary_trees: zig-fast 207.8 ms | my=1.00x  my-arena=0.99x  zig-fast=1.00x  zig-safe=1.15x  zig-gpa=1.05x  rust=1.74x  rust-checked=1.78x
+fannkuch_redux: zig-fast 181.4 ms | my=0.87x  my-array=3.29x  my-tuned=2.72x  zig-fast=1.00x  zig-safe=1.19x  rust=1.04x  rust-checked=1.00x
+knucleotide: zig-fast 92.5 ms | my=2.34x  my-arena=2.35x  my-tuned=0.68x  zig-fast=1.00x  zig-safe=1.14x  rust=1.36x  rust-checked=1.37x
+mandelbrot: zig-fast 115.1 ms | my=1.00x  zig-fast=1.00x  zig-safe=1.00x  rust=1.02x  rust-checked=1.03x
+matmul: zig-fast 37.2 ms | my=4.08x  my-flat=1.83x  my-tuned=2.56x  zig-fast=1.00x  zig-safe=1.55x  rust=2.06x  rust-checked=2.78x
+nbody: zig-fast 130.2 ms | my=1.70x  my-class=1.69x  zig-fast=1.00x  zig-safe=1.00x  rust=1.14x  rust-checked=1.14x
+raytrace: zig-fast 63.1 ms | my=1.07x  my-tuned=1.07x  zig-fast=1.00x  zig-safe=1.05x  rust=0.98x  rust-checked=1.00x
+sieve: zig-fast 48.6 ms | my=1.58x  my-tuned=1.58x  zig-fast=1.00x  zig-safe=1.35x  rust=1.02x  rust-checked=1.19x
+sort_builtin: zig-fast 185.4 ms | my=0.50x  zig-fast=1.00x  zig-safe=1.18x  rust=0.30x  rust-checked=0.30x
+sort_quick: zig-fast 156.1 ms | my=1.29x  zig-fast=1.00x  zig-safe=1.16x  rust=0.93x  rust-checked=0.93x
+sort_records: zig-fast 105.2 ms | my=0.27x  my-keyed=0.27x  my-sorted=0.27x  zig-fast=1.00x  zig-safe=1.16x  rust=0.38x  rust-checked=0.38x
+spectral_norm: zig-fast 146.6 ms | my=1.02x  my-tuned=0.97x  zig-fast=1.00x  zig-safe=1.34x  rust=1.00x  rust-checked=1.15x
+text_ops: zig-fast 23.5 ms | my=2.09x  my-tuned=0.83x  zig-fast=1.00x  zig-safe=0.84x  rust=1.52x  rust-checked=1.57x
+scan_count: zig-fast 119.2 ms | my=0.92x  zig-fast=1.00x  zig-safe=1.99x
+scan_replace: zig-fast 141.5 ms | my=0.48x  zig-fast=1.00x  zig-safe=1.79x
+scan_split: zig-fast 30.6 ms | my=2.26x  zig-fast=1.00x  zig-safe=1.60x
+alloc_churn: zig-fast 63.5 ms | my=0.82x  my-arena=0.82x  zig-fast=1.00x  zig-safe=1.08x  zig-gpa=0.88x  rust=1.28x  rust-checked=1.27x  rust-reuse=0.72x
+bytes_scan: zig-fast 33.2 ms | my=1.50x  my-wrapping=0.50x  zig-fast=1.00x  zig-safe=1.29x  rust=0.37x  rust-checked=1.51x
+calls: zig-fast 102.7 ms | my=1.10x  zig-fast=1.00x  zig-safe=1.03x  zig-inline=1.09x  rust=0.80x  rust-checked=0.82x
+dict_count: zig-fast 23.6 ms | my=0.38x  zig-fast=1.00x  zig-safe=1.35x  zig-getorput=0.57x  rust=2.15x  rust-checked=2.17x  rust-entry=1.22x
+fib: zig-fast 28.4 ms | my=2.09x  zig-fast=1.00x  zig-safe=2.02x  rust=1.12x  rust-checked=2.30x
+float_loop: zig-fast 31.0 ms | my=1.01x  zig-fast=1.00x  zig-safe=1.00x  rust=1.01x  rust-checked=1.01x
+intloop: zig-fast 98.9 ms | my=1.04x  zig-fast=1.00x  zig-safe=1.01x  rust=0.96x  rust-checked=0.86x
+list_append_sum: zig-fast 40.9 ms | my=1.08x  zig-fast=1.00x  zig-safe=1.06x  rust=1.07x  rust-checked=1.12x
+list_records: zig-fast 42.5 ms | my=1.16x  my-wrapping=0.93x  zig-fast=1.00x  zig-safe=1.08x  rust=0.94x  rust-checked=1.16x
+records: zig-fast 75.1 ms | my=0.82x  zig-fast=1.00x  zig-safe=0.91x  rust=0.84x  rust-checked=0.75x
+str_build: zig-fast 36.9 ms | my=2.22x  zig-fast=1.00x  zig-safe=1.25x  rust=1.08x  rust-checked=1.08x
+bench-parity: re-measuring 6 program(s) that exceeded a threshold: binary_trees, fannkuch_redux, knucleotide, scan_replace, str_build, text_ops
+binary_trees (confirmation): my=0.96x  my-arena=0.95x  zig-fast=1.00x  zig-safe=1.11x  zig-gpa=1.04x  rust=1.65x  rust-checked=1.69x
+fannkuch_redux (confirmation): my=0.87x  my-array=3.29x  my-tuned=2.71x  zig-fast=1.00x  zig-safe=1.20x  rust=1.04x  rust-checked=1.00x
+knucleotide (confirmation): my=2.35x  my-arena=2.36x  my-tuned=0.68x  zig-fast=1.00x  zig-safe=1.14x  rust=1.36x  rust-checked=1.37x
+scan_replace (confirmation): my=0.48x  zig-fast=1.00x  zig-safe=1.78x
+str_build (confirmation): my=2.22x  zig-fast=1.00x  zig-safe=1.25x  rust=1.08x  rust-checked=1.07x
+text_ops (confirmation): my=2.09x  my-tuned=0.83x  zig-fast=1.00x  zig-safe=0.83x  rust=1.51x  rust-checked=1.56x

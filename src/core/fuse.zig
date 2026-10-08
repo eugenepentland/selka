@@ -39,10 +39,11 @@ const Site = struct { block: u32, at: usize, source: ir.Ref, strict: bool = fals
 /// One projection of a source: the instruction and the step it adds to the path.
 const Projection = struct { user: ir.Ref, step: u12 };
 
-/// Whether `inst` may run between a read and a projection of it without changing what the
-/// program observes: it does not write, call, print or allocate, and when the read itself
-/// can trap (`strict`) it cannot trap either, so the two failures keep their order.
-fn inert(inst: ir.Inst, strict: bool) bool {
+/// Whether `inst` may run between a read and a projection of it (or the store that
+/// replaces a field of it, `elements.zig`) without changing what the program observes: it
+/// does not write, call, print or allocate, and when the read itself can trap (`strict`) it
+/// cannot trap either, so the two failures keep their order.
+pub fn inert(inst: ir.Inst, strict: bool) bool {
     if (strict and inst.check == .exact) return false;
     return switch (inst.op) {
         .iconst, .fconst, .undef, .str_const, .copy, .cmp, .fcmp, .not, .bit_and, .bit_or, .bit_xor => true,

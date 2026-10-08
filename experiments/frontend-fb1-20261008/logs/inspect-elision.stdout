@@ -1,0 +1,24 @@
+src/core/cost.zig:67:    rc: struct { retains: u32 = 0, releases: u32 = 0, elided_pairs: u32 = 0, stack_lists: u32 = 0 } = .{},
+src/core/cost.zig:100:            .rc = .{ .retains = events.own.retains, .releases = events.own.releases, .elided_pairs = events.own.elided, .stack_lists = events.own.promoted },
+src/core/cost.zig:164:    try out.print(a, "; unknown loops {d}; unswitched {d}; versioned {d}; RC pairs elided {d}; stack lists {d}\n", .{ c.loops.unknown, c.loops.unswitched, c.loops.versioned, c.rc.elided_pairs, c.rc.stack_lists });
+src/core/cost.zig:172:        "{d} retains, {d} releases ({d} pairs elided); {d} lists on the stack\n";
+src/core/cost.zig:173:    try out.print(a, ownership, .{ c.updates.in_place, c.updates.tested, c.updates.copied, c.rc.retains, c.rc.releases, c.rc.elided_pairs, c.rc.stack_lists });
+src/core/own_test.zig:287:    const dropped = try own.elidePairs(arena.allocator(), &m.functions.items[0]);
+src/core/own_test.zig:664:test "mut appends, mut records and aliases match the old core, linear and leak-free, debug and release" {
+src/core/own_test.zig:677:        if (release) try argv.append(arena.allocator(), "--release");
+src/core/own_test.zig:706:        if (release) try argv.append(arena.allocator(), "--release");
+src/core/own_test.zig:715:test "a block shared on one of several paths into a loop is tested before the loop appends to it, release and verify" {
+src/core/own.zig:70:    elided: u32 = 0,
+src/core/own.zig:81:        self.elided += other.elided;
+src/core/own.zig:135:    stats.elided = try elidePairs(arena, f);
+src/core/own.zig:136:    stats.retains -= stats.elided;
+src/core/own.zig:137:    stats.releases -= stats.elided;
+src/core/own.zig:880:    _ = try e.append(copy_block, .{ .op = .release, .ty = .void, .a = list, .span = instruction.span });
+src/core/own.zig:1229:    if (a.promoted[ref.index()]) try actions.append(a.arena, .{ .place = placeAfterDef(a, ref), .op = .retain, .value = ref });
+src/core/own.zig:1235:            for (0..extra) |_| try actions.append(a.arena, .{ .place = .{ .edge = .{ .from = use.block, .to = use.succ } }, .op = .retain, .value = ref });
+src/core/own.zig:1241:            for (0..extra) |_| try actions.append(a.arena, .{ .place = .{ .before = at }, .op = .retain, .value = ref });
+src/core/own.zig:1261:            try actions.append(a.arena, .{ .place = place, .op = .release, .value = ref, .data = release_data });
+src/core/own.zig:1264:            try actions.append(a.arena, .{ .place = placeAfterDef(a, ref), .op = .release, .value = ref, .data = release_data });
+src/core/own.zig:1276:            if (!taken) try actions.append(a.arena, .{ .place = .{ .edge = .{ .from = @intCast(b), .to = succ } }, .op = .release, .value = ref, .data = release_data });
+src/core/own.zig:1298:            try actions.append(a.arena, .{ .place = place, .op = .retain, .value = ref });
+src/core/own.zig:1389:pub fn elidePairs(arena: std.mem.Allocator, f: *ir.Function) Error!u32 {

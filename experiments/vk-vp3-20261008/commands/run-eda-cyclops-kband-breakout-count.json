@@ -1,0 +1,26 @@
+{
+ "label": "run-eda-cyclops-kband-breakout-count",
+ "command": [
+  "taskset",
+  "-c",
+  "0,1,4-9,12-19",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/eda-count",
+  "--model",
+  "golden/cases/cyclops-kband-breakout/model.sexp",
+  "--project-dir",
+  "golden/projects/designs",
+  "--out-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/eda-out/count/cyclops-kband-breakout"
+ ],
+ "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+ "env": {
+  "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/counts/eda-cyclops-kband-breakout.json"
+ },
+ "seconds": 0.073,
+ "status": 0,
+ "stdout_sha256": "68340e4f4fa5c61676fa37cb1b6d40b23c195fba243a34da9e8c2ff850781b02",
+ "stdout_bytes": 91,
+ "stderr_sha256": "d5b0efc3c30dded70ec77035b93f5412f684c04efceb08ce673f525bb521b5f7",
+ "stderr_bytes": 112,
+ "stdout": "eda-sch: cyclops-kband-breakout: 9 sheets, 4 sidecars, 18 symbols (7 vendor), 84 instances\n"
+}

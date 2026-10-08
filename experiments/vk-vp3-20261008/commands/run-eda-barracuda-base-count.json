@@ -1,0 +1,26 @@
+{
+ "label": "run-eda-barracuda-base-count",
+ "command": [
+  "taskset",
+  "-c",
+  "0,1,4-9,12-19",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/eda-count",
+  "--model",
+  "golden/cases/barracuda-base/model.sexp",
+  "--project-dir",
+  "golden/projects/designs",
+  "--out-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/eda-out/count/barracuda-base"
+ ],
+ "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+ "env": {
+  "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/counts/eda-barracuda-base.json"
+ },
+ "seconds": 0.147,
+ "status": 0,
+ "stdout_sha256": "14dd698fa9de72b3c66a8a45fa99438d46dae2cc3886373a2350d737448967db",
+ "stdout_bytes": 86,
+ "stderr_sha256": "f03969d9d6bbdca93af6690703c0ab21e8c2fba270c4015ac691f576b4b9dc63",
+ "stderr_bytes": 440,
+ "stdout": "eda-sch: barracuda-base: 27 sheets, 4 sidecars, 45 symbols (23 vendor), 268 instances\n"
+}

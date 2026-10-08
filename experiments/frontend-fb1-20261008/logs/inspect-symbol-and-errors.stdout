@@ -1,0 +1,140 @@
+697:fn symbol(allocator: std.mem.Allocator, name: []const u8) ![]const u8 {
+//! The new core's view of the existing front end (decision N3): load one entry
+//! file and its imports, check them, and hand back the checked `typed.Program`
+//! with the merged source its spans index. Nothing below the checker (bytecode,
+//! QBE, the native build driver) is reached from here.
+const std = @import("std");
+const language = @import("mylang");
+const reuse = @import("frontend_reuse.zig");
+
+/// Identity of all production compiler/runtime/property sources and toolchain.
+pub const compiler_identity = reuse.compiler_identity;
+/// Actual front-end cache work observed during this session.
+pub const Statistics = reuse.Statistics;
+/// One module source supplied by the project test runner, borrowed until deinit.
+pub const Provider = struct { path: []const u8, text: []const u8 };
+
+const Settings = struct {
+    options: language.project.Options = .{},
+    entry: ?[]const u8 = null,
+    providers: []const Provider = &.{},
+    /// How diagnostics are rendered into a report: terminal text or `diagnostic-v1` lines.
+    format: language.diagnostic_output.Format = .text,
+    /// Name a header-less file by the path it was given, as the `mylang` CLI does,
+    /// rather than by its base name (`mylang-core`).
+    given_path: bool = false,
+};
+const Graph = struct {
+    index: language.interfaces.Index = undefined,
+    compilation: language.project_compile.Compilation = undefined,
+    settings: Settings = .{},
+    profile: ?*language.timings.Profile = null,
+};
+
+/// The checked program and the merged source its spans point into.
+pub const Checked = struct {
+    program: language.typed.Program,
+    src: language.source.Source,
+};
+
+/// Why a load stopped: diagnostics were already rendered into `report`.
+pub const Error = error{ SourceError, OutOfMemory, InternalError };
+
+/// Owns the project arena every checked node lives in; keep it alive while the
+/// IR builder reads the program, and release it with `deinit`.
+pub const Session = struct {
+    project: language.project.Project,
+    graph: Graph = .{},
+    files: language.project_files.Files,
+    /// A file with no `module` header is checked alone, as `mylang build` does.
+    single: ?language.Compilation = null,
+    /// Text appended to the entry file as it is read: `mylang-core test` appends the
+    /// old runner's stub `main` to a library file so the file can be checked as a program.
+    entry_suffix: []const u8 = "",
+src/core/frontend.zig:147:        const bytes = std.Io.Dir.cwd().readFileAlloc(self.files.io, path, allocator, .limited(64 << 20)) catch |err| switch (err) {
+src/core/project_entry.zig:16:pub fn status(err: Error) u8 {
+src/core/project_entry.zig:100:        const bytes = std.Io.Dir.cwd().readFileAlloc(io, absolute, allocator, .limited(64 << 20)) catch |err| {
+src/core/project_entry.zig:182:    try std.testing.expectEqual(@as(u8, 3), status(error.PolicyDenied));
+src/core/project_entry.zig:183:    try std.testing.expectEqual(@as(u8, 1), status(error.SourceError));
+src/core/project_entry.zig:186:    try std.testing.expectEqual(@as(u8, 2), status(error.ConfigurationFailed));
+//! Entry-anchored project configuration for the new compiler core. Import roots
+//! follow module paths; configuration roots separately confine embedded assets.
+//! The shared front end owns configuration, policy and .api parsing.
+const std = @import("std");
+const language = @import("mylang");
+const frontend = @import("frontend.zig");
+const config = language.project_config;
+
+/// Configuration and source failures have already been rendered to the caller;
+/// `PolicyDenied` is an import the configured policy denies and `ConfigurationFailed`
+/// a `mylang.json` that does not load (NEW-CORE-S5-POLICY-1).
+pub const Error = error{ SourceError, OutOfMemory, PolicyDenied, ConfigurationFailed };
+
+/// The exit status of a rendered failure, as the old CLI's policy gate returns it: 3
+/// for a denied import policy, 2 for a configuration that does not load, else 1.
+pub fn status(err: Error) u8 {
+    return switch (err) {
+        error.PolicyDenied => 3,
+        error.ConfigurationFailed => 2,
+        else => 1,
+    };
+}
+
+/// Borrowed entry settings, owned by the command's allocator.
+pub const Entry = struct {
+    path: []const u8,
+    root: []const u8,
+    name: []const u8,
+    configuration: ?config.Config = null,
+
+    /// Apply source budgets, nested module identity and embedded-file boundaries.
+    pub fn configure(self: Entry, session: *frontend.Session) void {
+        if (self.configuration) |configured| session.files.embed_root = std.fs.path.dirname(configured.path);
+        session.configureProject(self.limits(), self.name);
+    }
+
+    /// The same source limits apply to discovery and full checking.
+    pub fn limits(self: Entry) language.project.Options {
+        var options: language.project.Options = .{};
+        if (self.configuration) |configured| {
+            const budgets = configured.document.budgets;
+            if (budgets.max_modules) |maximum| options.max_modules = maximum;
+            if (budgets.max_imports) |maximum| options.max_imports = maximum;
+            if (budgets.max_file_bytes) |maximum| options.max_file_bytes = maximum;
+            if (budgets.max_total_bytes) |maximum| options.max_total_bytes = maximum;
+        }
+        return options;
+    }
+
+    /// Enforce the configured import policy and generated interfaces after checking.
+    pub fn validate(self: Entry, allocator: std.mem.Allocator, session: *frontend.Session, report: *std.ArrayList(u8)) Error!void {
+        const configured = self.configuration orelse return;
+        if (session.single != null) return;
+        if (configured.policy) |file| {
+            var policy = language.import_policy.Policy.parse(allocator, file.bytes) catch |err| {
+                if (err == error.OutOfMemory) return error.OutOfMemory;
+src/core/runtime/core_number.c:7:/* The independent Zig formatter allocates only through this Core-block adapter. */
+src/core/runtime/core_number_parse.zig:9://! non-ASCII scalar the scalar form rejects. Nothing here allocates.
+    }
+    return found == SIZE_MAX ? -1 : (int64_t)found;
+}
+
+int64_t myl_core_text_search(myl_block *input, myl_block *needle, int64_t start, int64_t end, int32_t mode) {
+    core_search_window bounds = core_window((size_t)myl_core_str_chars(input), start, end);
+    if (!needle->len) return core_empty_answer(bounds, mode);
+    if (!bounds.valid) return mode >= CORE_COUNT ? 0 : -1;
+    const bool ascii = (input->kind & MYL_TEXT_ASCII) != 0;
+    size_t first = (size_t)myl_core_str_offset(input, bounds.first), last = (size_t)bounds.last;
+    if (!ascii) last = (size_t)core_text_locate(input, bounds.last, (core_anchor){bounds.first, first});
+    int64_t found = core_search_octets((core_octets){block_data(input) + first, last - first, false}, (core_octets){block_data(needle), (size_t)needle->len, false}, mode);
+    if (found < 0 || mode >= CORE_COUNT) return found;
+    if (ascii) return (int64_t)(first + (size_t)found);
+    /* Count from the nearer window end, and leave the cursor on the match: the next
+       call of a scan starts or ends there (NEW-CORE-TEXT-CURSOR-1). */
+    const uint64_t hit = first + (uint64_t)found;
+    const uint64_t index = hit - first <= last - hit ? bounds.first + core_text_starts(block_data(input), first, hit) : bounds.last - core_text_starts(block_data(input), hit, last);
+    core_cursor_set(input, (core_anchor){index, hit});
+    return (int64_t)index;
+}
+
+int64_t myl_core_bytes_search(myl_block *input, myl_block *needle, int64_t start, int64_t end, int32_t mode) {

@@ -1,0 +1,242 @@
+        \\import units
+        \\
+        \\
+        \\public record Sample:
+        \\    distance: units.Distance
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return unknown()
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "units.my", .data =
+        \\module units
+        \\
+        \\
+        \\public domain Distance: i64:
+        \\    def make(x: i64) -> Distance effects():
+        \\        return wrap[Distance](x)
+    });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "list-interfaces", path } });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expectEqualStrings("", result.stderr);
+    for ([_][]const u8{ "bodies not type checked", "export type Sample", "export type Distance", "export function Distance.make" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "units.my", .data =
+        \\module units
+        \\
+        \\
+        \\domain Distance: i64:
+        \\    def make(x: i64) -> Distance:
+        \\        return wrap[Distance](x)
+    });
+    const hidden = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "list-interfaces", path } });
+    defer testing.allocator.free(hidden.stdout);
+    defer testing.allocator.free(hidden.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, hidden.term);
+    try testing.expectEqualStrings("", hidden.stdout);
+    for ([_][]const u8{ "E_PRIVATE_SYMBOL", "input.my:6:", "units.my:4:" }) |part| try testing.expect(std.mem.indexOf(u8, hidden.stderr, part) != null);
+    try invoke("list-interfaces",
+        \\module input
+        \\def broken(
+    , 1, "", "E_SYNTAX");
+    try invoke("list-interfaces",
+        \\module input
+        \\
+        \\
+        \\record Secret:
+        \\    pass
+        \\
+        \\
+        \\public def f() -> Secret:
+        \\    return Secret()
+    , 1, "", "E_PRIVATE_INTERFACE");
+    try invokeOptions("list-interfaces", "module input", &.{"--check"}, 2, "", "usage:");
+}
+// spec: INTERFACE-SIGNATURE-CLI-1
+test "CLI list-interfaces renders capability parameters with their Python spelling" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
+        \\module input
+        \\
+        \\
+        \\public def main(fs: Filesystem, clock: Clock) -> int:
+        \\    return 0
+    });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "list-interfaces", path } });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "Filesystem") != null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "Clock") != null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "filesystem_cap") == null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "clock_cap") == null);
+}
+        \\module input
+        \\export absent
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , 1, "", "error[E_EXPORT_REMOVED]");
+}
+// spec: CLI-HELP-1
+test "CLI help answers on stdout with the everyday commands first and exits 0" {
+    for ([_][]const u8{ "--help", "-h", "help" }) |flag| {
+        const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, flag } });
+        defer testing.allocator.free(result.stdout);
+        defer testing.allocator.free(result.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+        try testing.expectEqualStrings("", result.stderr);
+        try testing.expect(std.mem.startsWith(u8, result.stdout, "mylang: a Python-shaped"));
+        const everyday = std.mem.indexOf(u8, result.stdout, "mylang check FILE.my").?;
+        const reference = std.mem.indexOf(u8, result.stdout, "usage: mylang build").?;
+        try testing.expect(everyday < reference);
+        // The guides and the large-project commands are on the first screen too.
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "mylang docs primer").? < everyday);
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "mylang docs [TOPIC]").? < reference);
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "--release").? < reference);
+        const large = std.mem.indexOf(u8, result.stdout, "Working in a large project:").?;
+        try testing.expect(everyday < large and large < reference);
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "mylang context ENTRY.my --symbol=module::name").? < reference);
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "mylang tests-for ENTRY.my module::name").? < reference);
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "--affected --against REF").? < reference);
+    }
+}
+// spec-case: CLI-DOCS-1
+test "CLI docs lists the embedded guides and prints one from a directory with no docs" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
+    defer root.deinit(a);
+    try root.put(a, qualified, .{ .object = settings });
+    const bytes = try std.json.Stringify.valueAlloc(a, std.json.Value{ .object = root }, .{});
+    defer a.free(bytes);
+    try dir.dir.writeFile(testing.io, .{ .sub_path = name, .data = bytes });
+}
+
+const r3_alias_main =
+    \\module main
+    \\
+    \\
+    \\public type Truth = bool
+    \\public type Count = int
+    \\public type Counts = [2]Count
+    \\public record Pair[T]:
+    \\    left: T
+    \\    right: T
+    \\public type Chosen = Pair[Count]
+    \\
+    \\
+    \\public def size(values: Counts) -> Count effects():
+    \\    return values[0] + values[1]
+    \\
+    \\
+    \\public def pick(value: Chosen) -> Count effects():
+    \\    return value.left
+    \\
+    \\
+    \\public def test_alias() -> Truth effects():
+    \\    return True
+    \\
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
+test "R3 canonical descriptors expand transparent aliases for discovery and nested contracts" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try writeProjectFile(&temp, "main.my", r3_alias_main);
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const root = std.fs.path.dirname(entry).?;
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+
+    // A boolean alias is discovered with the same default expectation as bool.
+    const tested = try r3TestInvoke(entry, null, cache);
+    defer testing.allocator.free(tested.stdout);
+    defer testing.allocator.free(tested.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, tested.term);
+    try testing.expect(std.mem.indexOf(u8, tested.stdout, "\"passed\":1") != null);
+
+    // The producer descriptor is canonical through nested transparent aliases.
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "list-interfaces", "--contracts", entry });
+    const contracts = try runCompiler(testing.allocator, args.items);
+    defer testing.allocator.free(contracts.stdout);
+    defer testing.allocator.free(contracts.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, contracts.term);
+    try testing.expect(std.mem.indexOf(u8, contracts.stdout, "\"version\":\"interface-contracts-v2\"") != null);
+    for ([_][]const u8{
+        "{\"name\":\"Count\",\"kind\":\"alias\",\"signature\":\"\",\"generics\":\"\",\"permissions\":\"\",\"shape\":\"target:i64\"}",
+        "{\"name\":\"Counts\",\"kind\":\"alias\",\"signature\":\"\",\"generics\":\"\",\"permissions\":\"\",\"shape\":\"target:[2]i64\"}",
+        "{\"name\":\"Chosen\",\"kind\":\"alias\",\"signature\":\"\",\"generics\":\"\",\"permissions\":\"\",\"shape\":\"target:main::Pair[i64]\"}",
+        "{\"name\":\"size\",\"kind\":\"function\",\"signature\":\"def(values:[2]i64)->i64\"",
+        "{\"name\":\"pick\",\"kind\":\"function\",\"signature\":\"def(value:main::Pair[i64])->i64\"",
+        "{\"name\":\"test_alias\",\"kind\":\"function\",\"signature\":\"def()->bool\"",
+    }) |needle| {
+        testing.expect(std.mem.indexOf(u8, contracts.stdout, needle) != null) catch |err| {
+            std.debug.print("missing canonical contract fragment: {s}\n", .{needle});
+            return err;
+        };
+    }
+}
+
+const r3_scalar_main =
+    \\module main
+    \\import reading
+    \\
+    try writeContractFixture(temporary.dir, "amount > 10", "self.low > self.high");
+    const rechecked = try contractCommand(&.{ compiler_path, "test", entry, cache_argument, tools[0] });
+    defer freeResult(rechecked);
+    try testing.expect(std.mem.indexOf(u8, rechecked.stdout, "failed main::test_make: R_INVARIANT: Range invariant `self.low > self.high`") != null);
+    try testing.expect(std.mem.indexOf(u8, rechecked.stdout, "2 failed") != null);
+}
+
+// spec: CONTRACT-INTERFACE-1
+test "CLI interfaces, the contracts manifest, context and api-diff carry contract clauses" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try writeContractFixture(temporary.dir, "amount > 0", "self.low <= self.high");
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const entry = try std.fs.path.join(testing.allocator, &.{ root, "main.my" });
+    defer testing.allocator.free(entry);
+    const baseline = try std.fs.path.join(testing.allocator, &.{ root, "baseline.txt" });
+    defer testing.allocator.free(baseline);
+    const write_argument = try std.fmt.allocPrint(testing.allocator, "--write={s}", .{baseline});
+    defer testing.allocator.free(write_argument);
+    const against_argument = try std.fmt.allocPrint(testing.allocator, "--against={s}", .{baseline});
+    defer testing.allocator.free(against_argument);
+    const listed = try contractCommand(&.{ compiler_path, "list-interfaces", entry });
+    defer freeResult(listed);
+    try testing.expect(std.mem.indexOf(u8, listed.stdout, "export type Range @invariant(self.low <= self.high)") != null);
+    try testing.expect(std.mem.indexOf(u8, listed.stdout, "tests(1) @requires(amount > 0)") != null);
+    const manifest = try contractCommand(&.{ compiler_path, "list-interfaces", "--contracts", entry });
+    defer freeResult(manifest);
+    try testing.expect(std.mem.indexOf(u8, manifest.stdout, "\"contracts\":\"@invariant(self.low <= self.high)\"") != null);
+    const context = try contractCommand(&.{ compiler_path, "context", entry, "--symbol=main::half" });
+    defer freeResult(context);
+    try testing.expect(std.mem.indexOf(u8, context.stdout, "\"signature\":\"@requires(amount > 0)\\nhalf(amount: int) -> int") != null);
+    const written = try contractCommand(&.{ compiler_path, "api-diff", entry, write_argument });
+    defer freeResult(written);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, written.term);
+    try writeContractFixture(temporary.dir, "amount > 1", "self.low < self.high");
+    const diffed = try contractCommand(&.{ compiler_path, "api-diff", entry, against_argument });
+    defer freeResult(diffed);
+    try testing.expect(std.mem.indexOf(u8, diffed.stdout, "breaking: main::Range (interface changed)") != null);
+    try testing.expect(std.mem.indexOf(u8, diffed.stdout, "breaking: main::half (interface changed)") != null);
+}
+
+// spec-case: CONTRACT-TRAP-1
+test "CLI a release build and a JSON diagnostic report the contract that failed" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();

@@ -1,0 +1,29 @@
+{
+ "label": "run-row-dict_lookup_str-plain",
+ "command": [
+  "taskset",
+  "-c",
+  "12-19",
+  "perf",
+  "stat",
+  "-x,",
+  "-e",
+  "instructions:u",
+  "-o",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/perf/row-dict_lookup_str.csv",
+  "--",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/row-dict_lookup_str-plain",
+  "4096",
+  "4000",
+  "7"
+ ],
+ "cwd": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3",
+ "env": {},
+ "seconds": 0.192,
+ "status": 0,
+ "stdout_sha256": "39a200c878cc722443cd1f33d461fa9485b15c2482d43ddc8a493b1d05bb6e37",
+ "stdout_bytes": 20,
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_bytes": 0,
+ "stdout": "260753752 179526398\n"
+}

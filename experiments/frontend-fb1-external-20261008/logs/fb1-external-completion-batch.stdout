@@ -1,0 +1,12 @@
+starting fb1-eda-native-goldens
+{
+  "cases": 34,
+  "failed": [],
+  "mismatches": [],
+  "elapsed_seconds": 2.319577001966536,
+  "binary_unchanged": true
+}
+passed fb1-eda-native-goldens
+starting fb1-lox-mode-suite
+{"completed_files": 25, "total_files": 26, "elapsed_seconds": 9.503098360961303}
+{"commands": 84, "compiler_sources_unchanged": true, "compiler_unchanged": true, "directory_counts": {"debug": 65, "release": 65, "verify": 65}, "elapsed_seconds": 30.018450991949067, "mismatches": {"debug/configured/driver_tests": ["complete parsed JSON report differs", "stdout bytes differ"], "release/configured/driver_tests": ["complete parsed JSON report differs", "stdout bytes differ"], "verify/configured/driver_tests": ["complete parsed JSON report differs", "stdout bytes differ"]}, "reference_files_unchanged": true, "reference_sources_unchanged": true, "source_manifest_unchanged": true, "totals": {"configured-debug": {"failed": 0, "files": 1, "tests": 13, "unique_tests": 13}, "configured-release": {"failed": 0, "files": 1, "tests": 13, "unique_tests": 13}, "configured-verify": {"failed": 0, "files": 1, "tests": 13, "unique_tests": 13}, "current-debug": {"failed": 0, "files": 26, "tests": 65, "unique_tests": 65}, "current-release": {"failed": 0, "files": 26, "tests": 65, "unique_tests": 65}, "current-verify": {"failed": 0, "files": 26, "tests": 65, "unique_tests": 65}}}

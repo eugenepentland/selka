@@ -1,0 +1,25 @@
+#!/bin/sh
+# guardian-check managed pre-commit hook
+baked="/home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check"
+local_bin=./zig-out/bin/guardian-check
+if [ -n "$GUARDIAN_CHECK" ]; then
+  bin="$GUARDIAN_CHECK"
+elif [ -x "$local_bin" ] && [ -n "$baked" ] && [ -x "$baked" ]; then
+  if [ "$baked" -nt "$local_bin" ]; then
+    echo "guardian: $local_bin is older than $baked — gating with the newer binary" >&2
+    echo "guardian: rebuild ($local_bin) to gate with this repo's own build" >&2
+    bin="$baked"
+  else
+    bin="$local_bin"
+  fi
+elif [ -x "$local_bin" ]; then
+  bin="$local_bin"
+elif command -v guardian-check >/dev/null 2>&1; then
+  bin=guardian-check
+elif [ -n "$baked" ] && [ -x "$baked" ]; then
+  bin="$baked"
+else
+  echo "guardian: guardian-check not found — build it (zig build) or set GUARDIAN_CHECK" >&2
+  exit 1
+fi
+exec "$bin" all . --gate

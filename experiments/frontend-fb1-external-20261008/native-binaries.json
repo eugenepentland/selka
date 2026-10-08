@@ -1,0 +1,16 @@
+{
+  "lox": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli/.mylang-cache/frontend-fb1-external/bin/lox-release",
+    "sha256": "9e6a5da3eb32379cf4ec5571fe6890b5c4f21dbd465451ac5b094644d4fd4335",
+    "bytes": 1138808,
+    "mode": "0o555",
+    "compiler_sha256": "5ddab7ce39d576615f55676886252e4dbfff863d0d253cc003886a769c7b1a55"
+  },
+  "eda": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli/.mylang-cache/frontend-fb1-external/bin/eda-release",
+    "sha256": "1c49de6b0ab4b9e0d4eec8973d92de35c410dde097555592d989ed9dff53fda9",
+    "bytes": 1824600,
+    "mode": "0o555",
+    "compiler_sha256": "5ddab7ce39d576615f55676886252e4dbfff863d0d253cc003886a769c7b1a55"
+  }
+}

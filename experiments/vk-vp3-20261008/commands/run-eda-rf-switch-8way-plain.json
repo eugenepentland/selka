@@ -1,0 +1,32 @@
+{
+ "label": "run-eda-rf-switch-8way-plain",
+ "command": [
+  "taskset",
+  "-c",
+  "12-19",
+  "perf",
+  "stat",
+  "-x,",
+  "-e",
+  "instructions:u",
+  "-o",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/perf/eda-rf-switch-8way.csv",
+  "--",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/eda-plain",
+  "--model",
+  "golden/cases/rf-switch-8way/model.sexp",
+  "--project-dir",
+  "golden/projects/designs",
+  "--out-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/eda-out/plain/rf-switch-8way"
+ ],
+ "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+ "env": {},
+ "seconds": 0.045,
+ "status": 0,
+ "stdout_sha256": "731f9e9d0690b1aa40b7fb3baa696ffe945ce885351513d28b141874affa70bd",
+ "stdout_bytes": 82,
+ "stderr_sha256": "5d52c433e2c80755eecd8bfc4efc7f4a497f6e520606763bfd3e23f2b74d280f",
+ "stderr_bytes": 221,
+ "stdout": "eda-sch: rf-switch-8way: 1 sheets, 4 sidecars, 7 symbols (3 vendor), 30 instances\n"
+}

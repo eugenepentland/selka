@@ -1,0 +1,43 @@
+{
+  "command": [
+    "git",
+    "-C",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox",
+    "rev-parse",
+    "HEAD"
+  ],
+  "cpu_affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "elapsed_seconds": 0.0015596901066601276,
+  "other_build_heavy_processes": [
+    " 279294  107551  10   10629 /bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until ! pgrep -f '\"'\"'probe/probe.py'\"'\"' >/dev/null; do sleep 5; done; wc -l /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/probe/smoke.log' < /dev/null && pwd -P >| /tmp/claude-7f36-cwd"
+  ],
+  "process_sample": {
+    "command": [
+      "ps",
+      "-eo",
+      "pid,ppid,psr,etimes,args"
+    ],
+    "elapsed_seconds": 0.010224184952676296,
+    "returncode": 0
+  },
+  "returncode": 0,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "00320457cde52f7b8229448a35be6689c4a22d3977fe97117e9d6917d7a07fab"
+}

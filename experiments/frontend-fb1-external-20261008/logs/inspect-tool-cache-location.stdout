@@ -1,0 +1,22 @@
+src/core/test_runner.zig:32:const tool_identity = @import("tool_identity.zig");
+src/core/test_runner.zig:411:    const resources: tool_identity.Request = .{ .arena = a, .io = init.io, .environment = init.environ_map, .executable = requested.build.zig, .cache = requested.build.cache };
+src/core/test_runner.zig:422:    const resources: tool_identity.Request = .{ .arena = a, .io = init.io, .environment = init.environ_map, .executable = requested.build.zig, .cache = requested.build.cache };
+src/core/test_runner.zig:423:    const guest = tool_identity.lookupReplayCandidate(resources) catch |err| {
+src/core/test_runner.zig:447:fn guestTool(init: std.process.Init, options: Options) Error!?tool_identity.Identity {
+src/core/test_runner.zig:449:    return tool_identity.capture(.{ .arena = a, .io = init.io, .environment = init.environ_map, .executable = options.build.zig, .cache = options.build.cache }) catch |err| {
+src/core/tool_identity.zig:12:const magic = "core-tool-content-v1\x00";
+src/core/tool_identity.zig:113:    const content = (try memo(request, identity)) orelse return null;
+src/core/tool_identity.zig:132:    const found = try memo(request, first.generation);
+src/core/tool_identity.zig:143:    if (found == null) try publish(request, first.generation, content);
+src/core/tool_identity.zig:294:    field(&hash, "core-tool-content-v3");
+src/core/tool_identity.zig:339:fn memo(request: Request, identity: Digest) Error!?Digest {
+src/core/tool_identity.zig:340:    const path = try memoPath(request, identity);
+src/core/tool_identity.zig:353:fn publish(request: Request, identity: Digest, content: Digest) Error!void {
+src/core/tool_identity.zig:354:    const path = try memoPath(request, identity);
+src/core/tool_identity.zig:374:fn memoPath(request: Request, identity: Digest) Error![]const u8 {
+src/core/tool_identity.zig:401:fn hintPath(request: Request, path: []const u8, cpu: Digest) Error![]const u8 {
+src/core/tool_identity.zig:406:    const bytes = std.Io.Dir.cwd().readFileAlloc(request.io, try hintPath(request, path, cpu), request.arena, .limited(hint_limit)) catch |err| {
+src/core/tool_identity.zig:466:    try publishBytes(request, try hintPath(request, path, cpu), text.written());
+src/core/tool_identity.zig:849:    const path = try memoPath(request, cold.generation);
+src/core/tool_identity.zig:941:    const damaged = try hintPath(request, original.path, original.native_target);
+src/core/tool_identity.zig:1018:    const path = try memoPath(request, original.generation);

@@ -1,0 +1,40 @@
+//! Byte ceilings for guest execution: the budget text every command line and
+//! environment variable agrees on, the kernel backstop this process installs on
+//! itself, and the fan-out width a machine's free memory can actually afford.
+const std = @import("std");
+
+/// Malformed budget or job-count text on a command line or in the environment.
+pub const Error = error{InvalidMemoryLimit};
+
+/// Environment variable carrying a guest process's byte ceiling. Every spawner
+/// sets it, so a budget needs no new argument ABI and a program started by hand
+/// from a shell that exported it is bounded the same way.
+pub const variable = "MYLANG_MEMORY_LIMIT";
+/// Environment variable overriding the ceiling the compiler puts on itself.
+pub const host_variable = "MYLANG_HOST_MEMORY_LIMIT";
+/// Environment variable overriding the directory-run fan-out width.
+pub const jobs_variable = "MYLANG_JOBS";
+/// Ceiling for one native guest test child; many run at once, so it is small.
+pub const test_default: u64 = 512 << 20;
+/// Ceiling for `mylang run` and `mylang build --run`; one guest, so it is large.
+pub const run_default: u64 = 4 << 30;
+/// Ceiling the compiler installs on itself, so a compiler defect fails loudly
+/// instead of swapping. A cold native build of one program peaks near 75 MiB
+/// resident and the `zig cc` children it spawns inherit this and finish.
+pub const host_default: u64 = 8 << 30;
+/// Address space a guest needs beyond its managed byte budget: program text,
+/// the C library's arenas and the harness that loads it. Mirrors
+/// `MYL_NATIVE_BUDGET_HEADROOM` in `native_heap.h`, which the runtime applies.
+pub const headroom: u64 = 256 << 20;
+
+/// Parse a byte budget written as digits with an optional `K`, `M` or `G`
+/// suffix. Zero is accepted and means no ceiling at all.
+pub fn parse(text: []const u8) Error!u64 {
+    if (text.len == 0) return error.InvalidMemoryLimit;
+    const suffix: u64 = switch (text[text.len - 1]) {
+        'K', 'k' => 1 << 10,
+        'M', 'm' => 1 << 20,
+        'G', 'g' => 1 << 30,
+        else => 1,
+    };
+    const digits = if (suffix == 1) text else text[0 .. text.len - 1];

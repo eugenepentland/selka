@@ -1,0 +1,14 @@
+experiments/new-core-s1-20261005/conformance.py:25:import argparse, collections, concurrent.futures, fnmatch, json, os, re, subprocess, sys
+experiments/new-core-s1-20261005/conformance.py:79:    def run(self, argv, timeout=600, env=None):
+experiments/new-core-s1-20261005/conformance.py:83:            done = subprocess.run(argv, capture_output=True, text=True, cwd=ROOT, timeout=timeout, env=env)
+experiments/new-core-s1-20261005/conformance.py:84:        except subprocess.TimeoutExpired:
+experiments/new-core-s1-20261005/conformance.py:92:    def new(self, path, release):
+docs/audits/frontend-implementation-plan-2026-10-06.md:70:    through `scripts/build-slot.sh build`. It records the SHA-256 and never rebuilds it.
+docs/audits/frontend-implementation-plan-2026-10-06.md:99:    `benchmarks/lox/ports/mylang`; 974/974 conformance and 65 tests.
+docs/audits/frontend-implementation-plan-2026-10-06.md:100:  - **EDA Stage 1:** `eda-bench` `claude/s4-eda-newcore` at `7e938b6`; 310 tests and
+docs/audits/frontend-implementation-plan-2026-10-06.md:383:  - Lox conformance stays 974/974 with its 65 tests.
+docs/audits/frontend-implementation-plan-2026-10-06.md:384:  - EDA stays at 310 tests and 34 byte-identical goldens.
+docs/audits/frontend-implementation-plan-2026-10-06.md:605:  - Lox: conformance 974/974 and its 65 tests;
+docs/audits/frontend-implementation-plan-2026-10-06.md:606:  - EDA: 310 tests and 34 byte-identical goldens;
+docs/audits/frontend-implementation-plan-2026-10-06.md:628:  - builds go through `scripts/build-slot.sh`;
+docs/audits/frontend-implementation-plan-2026-10-06.md:676:  the nine kinds: from 109 s for `rc` to 310 s for `dict`.

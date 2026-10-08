@@ -1,0 +1,191 @@
+## 5. Gates
+
+**For every package:**
+- **The post-S5 full gate,** including Guardian and the `.my` format step after F1-F.
+- **Differential against the S5 oracle (§1).**
+  - **Fuzz:** 50 strict cases per kind for the package's kinds, and 200 per kind at each
+    wave exit, with S5-0's frozen tools in `experiments/new-core-s5-20261007/tools/`
+    (`fuzz_matrix.py --references`, `qualify_merge.py`, `conformance_ref.py`).
+  - **Generators:** they emit only spellings both the pin and the candidate accept. After
+    A3 they keep the operators the pin knows.
+  - **A changed generator** produces sources with no frozen answer, and the frozen tools
+    stop on them. The coordinator then records the pin's answers for the changed kind
+    once, in a new reference file (`fuzz-v2`), and says so in the wave report.
+- **Migrations:** every migrated corpus program's output equals its unmigrated output
+  under the oracle, read from F1-0's frozen answers.
+- **`dump-ir` identical** wherever a package claims no change in meaning: F1-0's F0
+  remainder, F3 and F4-C6.
+- **The corpora:**
+  - `tests/lang`, with 0 failures;
+  - Lox: conformance 974/974 and its 65 tests;
+  - EDA: 310 tests and 34 byte-identical goldens;
+  - also `test/core` (the rows), `bench/parity`, `examples` and `src/stdlib`.
+- **Check timing** on the synthetic projects at 48k, 96k and 192k lines, measured on
+  CPU 10: after a one-function edit, unchanged, and cold, all within §1's budget.
+- **Compiler rebuild** at or under 5.0 s after a one-line edit, uncontended (S5: 4.3–4.5 s).
+- **Lox and EDA dev loop** within §1's budget: build and tests after a one-function edit.
+- **The idiom suite** (F1 and later): C2 = 0, and C1 and C3 reported.
+- **Line deltas** per package, by the proposal's §2 file groups.
+
+## 6. Rules
+
+- **A wrong answer is never acceptable.** A fuzz or migration mismatch is reduced to a
+  regression fixture before it is fixed.
+- **Stop at the end of every wave** for the user's go. Also stop at F2-C2's P4 list and
+  at F5's decisions.
+- **No pushes,** and nothing merged into `main` unless the user says so.
+- **Persisted formats** bump their version once per wave when they change.
+- **`ir.zig` stays frozen through F0–F4.** C1's desugaring produces today's
+  `typed.Program` shape. A package that needs an IR change stops and reports.
+- **External corpora:** Lox and EDA are migrated on new branches. Never edit an existing
+  branch in place.
+- **Machine:**
+  - builds go through `scripts/build-slot.sh`;
+  - timing only on CPU 10, and never on CPUs 2, 3 or 11;
+  - never prune `runtime-baseline-20261003`;
+  - at most four build-heavy agents;
+  - never run the full gate while a fuzz matrix runs;
+  - commit large evidence in batches of one directory each.
+- **Out-of-scope front-end bugs** get a regression fixture and a report. A package fixes
+  one only if the fix is small and inside its owned files.
+
+### 6.1 The slow-step rule (the user, 2026-10-08)
+
+**Any build, test, gate step, tool or measurement that takes more than about 5 minutes
+of wall time gets a speed investigation.** The point is to keep the loop fast for every
+agent after this one, not just to finish this plan.
+
+1. **Time everything.** Every command a package runs goes in its evidence log with its
+   wall time, its CPU affinity and whether another build-heavy process was running.
+   F1-0 records the uncontended baseline of every §5 command in the ledger
+   `experiments/frontend-integration-<date>/slow-steps.md`.
+2. **Over 5 minutes, uncontended, investigate:**
+   - measure where the time goes, using `--timings`, `--report`, per-test durations,
+     `perf` or `strace` on a single run;
+   - write down the cause.
+
+   Look for these causes first:
+   - work repeated across runs that a cache could hold;
+   - work done serially that is independent;
+   - an oracle or reference run again when its answer could be frozen;
+   - a Debug compiler where a ReleaseFast one would give the same verdict;
+   - rebuilding programs a test or gate did not change;
+   - a quadratic step in the compiler itself.
+3. **Implement the speedup** when all three hold:
+   - it keeps the check identical: the same tests, cases, programs, modes and verdicts;
+   - it fits in about 2 hours;
+   - it lives in tooling, test drivers, the build script or the package's own files.
+
+   Commit it alone, with before and after times and proof that the check is the same: the
+   same counts and the same verdicts on a deliberately broken input.
+4. **Otherwise, write a follow-up item** in the ledger with the measurement, the cause and
+   the proposed fix, and carry on. Each wave report lists the open items, and the user
+   decides which become packages.
+5. **Never speed a step up by weakening it.** Do not drop tests, cases, programs, fuzz
+   counts, corpora, modes (debug, release, verify) or leak checks. Do not raise a
+   threshold or skip a step on a cache hit that is not proven equal. Any of these needs
+   the user's go.
+
+**Known candidates to check first** (from S5's evidence):
+- **The frozen fuzz matrix at 200 per kind.** S5's final run spent 1,600 s summed over
+  the nine kinds: from 109 s for `rc` to 310 s for `dict`.
+  - Check how its kinds and cases are scheduled across free CPUs.
+  - Check whether candidate builds of identical generated sources are cached.
+- **The new differentials this plan adds:**
+  - `dump-ir` over every corpus, twice per package;
+  - P4's verdict sweep;
+  - the migration-output check.
+
+  Each should run its programs in parallel and reuse the oracle's frozen answers.
+- **The pin's one-time ReleaseFast build** and any ReleaseFast install a package needs.
+  Reuse one install per checkpoint.
+- **A cold `test-units` run after a compiler change** took 99 s unsharded after S5's
+  batching. Watch it as the front end changes, because every unit test runs `mylang`.
+
+## 7. Reports
+
+**Every wave's report has:**
+- package commits;
+- the gate receipts in §5;
+- line deltas;
+- check timings against the budget;
+- the slow-step ledger (§6.1): every command over 5 minutes, what was found, what was
+  sped up, with before and after times, and the open items;
+- for F1, the idiom-suite table and the migration counts;
+- every remaining limit.
+
+**The F5 report** carries the decision tables for B2, B3 and B4.
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("files", nargs="*")
+    ap.add_argument("--set", choices=["clean13", "s1", "excluded", "all"], default=None)
+    ap.add_argument("--modes", default="debug,release")
+    ap.add_argument("--why", action="store_true", help="list each blocking feature, and why excluded files are excluded")
+    ap.add_argument("--jobs", type=int, default=3)
+    ap.add_argument("--leakcheck", action="store_true", help="run the new core's tests with MYL_CORE_LEAKCHECK=1: a leak fails the test")
+    ap.add_argument("--verify", action="store_true", help="build the release mode with --verify-facts (facts, uniqueness and stack capacity asserted)")
+    ap.add_argument("--pin", default=None, help="write the pins file test-core checks (tests passing everywhere)")
+    ap.add_argument("--include-arena", action="store_true")
+    ap.add_argument("--verbose", action="store_true")
+    ap.add_argument("--mylang", default=os.path.join(ROOT, "zig-out/bin/mylang"))
+    ap.add_argument("--core", default=os.path.join(ROOT, "zig-out/bin/mylang-core"))
+    ap.add_argument("--cache-dir", default=os.path.join(ROOT, ".mylang-cache", "core-conformance"))
+    args = ap.parse_args()
+    modes = args.modes.split(",")
+    if args.set == "clean13":
+        names = CLEAN13
+    elif args.set == "excluded":
+        names = [n for n in EXCLUDED if n not in ARENA_FILES or args.include_arena]
+    elif args.set == "all":
+        names = sorted(short(os.path.join(dp, f)) for dp, _, fs in os.walk(LANG) for f in fs if f.endswith(".my"))
+    elif args.files:
+        names = args.files
+    else:
+        names = S1
+    if not args.include_arena and args.set != "excluded":
+        names = [n for n in names if n not in ARENA_FILES]
+    paths = [resolve(n) for n in names]
+    tool = Tool(args)
+    os.makedirs(args.cache_dir, exist_ok=True)
+
+    def one(path):
+        old = tool.old(path)
+        news = {mode: tool.new(path, mode == "release") for mode in modes}
+        return compare(path, old, news, args.include_arena)
+
+    # The first build compiles the runtime object; do it alone so parallel builds do not race on it.
+    results = [one(paths[0])] if paths else []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
+        results += list(pool.map(one, paths[1:]))
+    text, totals = table(results, modes, args.why)
+    print(text)
+    bad = False
+    for r in results:
+        for problem in r["problems"]:
+            bad = True
+            print("PROBLEM %s: %s" % (r["file"], problem))
+    if args.why:
+        print(explain(results, args.verbose))
+        for name in names:
+            if name in EXCLUDED:
+                print("  excluded %-28s %s" % (name, EXCLUDED[name]))
+    if args.pin:
+        with open(args.pin, "w") as out:
+            out.write("# Generated by experiments/new-core-s1-20261005/conformance.py --pin; regenerate it when a lane lands.\n")
+            out.write("# `file NAME` lists a tests/lang file the gate runs at debug and release. `pass TEST` pins a test\n")
+            out.write("# that passes in the old core and at both levels in the new one: it must keep passing. `known-fail\n")
+            out.write("# TEST` names a test the new core fails today (a new-core bug; it may fail or pass). Any other test\n")
+            out.write("# of a listed file may be unsupported but must not fail; a crash or a missing test fails the gate.\n")
+            for r in results:
+                out.write("file %s\n" % r["file"])
+                for name in r["pass"]:
+                    out.write("pass %s\n" % name)
+                for name in r["known_fail"]:
+                    out.write("known-fail %s\n" % name)
+    return 1 if bad or any(totals[m]["mismatch"] for m in modes) else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+

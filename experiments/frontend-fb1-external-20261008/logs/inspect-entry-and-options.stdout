@@ -1,0 +1,26 @@
+src/core/frontend.zig:265:pub fn entryOf(path: []const u8) struct { root: []const u8, module: []const u8 } {
+src/core/frontend.zig-266-    const root = std.fs.path.dirname(path) orelse ".";
+src/core/frontend.zig-267-    const base = std.fs.path.basename(path);
+src/core/frontend.zig-268-    const module = if (std.mem.endsWith(u8, base, ".my")) base[0 .. base.len - 3] else base;
+src/core/frontend.zig-269-    return .{ .root = root, .module = module };
+src/core/frontend.zig-270-}
+src/core/frontend.zig-271-
+src/core/frontend.zig-272-/// The 1-based line and column of byte `offset` in the merged source, mapped
+src/core/frontend.zig-273-/// back to the file it came from.
+src/core/frontend.zig-274-pub const Position = struct { path: []const u8, line: u32, column: u32 };
+src/core/frontend.zig-275-
+src/core/frontend.zig-276-/// Resolve a merged-source span start to the original file, line and column.
+src/core/frontend.zig-277-pub fn position(src: language.source.Source, span: language.source.Span) Position {
+src/core/frontend.zig-278-    var file = src;
+src/core/frontend.zig-279-    var local = span;
+src/core/frontend.zig-280-    if (src.origins.len != 0) {
+src/core/frontend.zig-281-        if (src.originalSpan(span)) |found| {
+src/core/frontend.zig-282-            file = src.origins[found.input].original;
+src/core/frontend.zig-283-            local = found.span;
+src/core/frontend.zig-284-        } else |_| {}
+src/core/frontend.zig-285-    }
+src/core/frontend.zig-286-    const starts = file.line_starts;
+src/core/frontend.zig-287-    var low: usize = 0;
+src/core/frontend.zig-288-    var high: usize = starts.len;
+src/core/frontend.zig-289-    while (high - low > 1) {
+src/core/frontend.zig-290-        const middle = (low + high) / 2;

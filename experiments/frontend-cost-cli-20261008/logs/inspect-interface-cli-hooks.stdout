@@ -1,0 +1,39 @@
+docs/audits/frontend-plan-after-new-core-2026-10-06.md:23:The front end is fast enough. After `CATALOG-INTERN-1` (S4 §3.4), a merged check costs
+docs/audits/frontend-plan-after-new-core-2026-10-06.md:25:rework it are structure, surface and cost visibility:
+docs/audits/frontend-plan-after-new-core-2026-10-06.md:46:| **B. Visible cost** (§3.2) | Per-function cost report first. Then rules that make copies and O(n) operations visible in source, decided on Lox/EDA data | Report: small. Rules: decided after measuring |
+docs/audits/frontend-plan-after-new-core-2026-10-06.md:50:the structural work (F2–F4). The visible-cost rules come last (F5), once Lox and EDA
+docs/audits/frontend-plan-after-new-core-2026-10-06.md:122:scored by failed checks and repair rounds. Two narrowings cost nothing:
+docs/audits/frontend-plan-after-new-core-2026-10-06.md:134:### 3.2 Part B: visible cost
+docs/audits/frontend-plan-after-new-core-2026-10-06.md:136:Go's performance is predictable because cost is visible in the code and the optimizer is
+docs/audits/frontend-plan-after-new-core-2026-10-06.md:138:function, make the guarantees documented rules, and turn hidden costs into source-visible
+docs/audits/frontend-plan-after-new-core-2026-10-06.md:143:| B1 | **Per-function cost report** (`mylang cost <entry> [function]`, and the same data in `list-interfaces --cost`): checks kept and proved, updates in place, runtime uniqueness tests, copies, allocations, retains/releases, inlined calls, vectorized loops | The new core already counts all of these for `--stats`, whole-program only | **Do first.** It needs no language change, and it is the measurement tool for B2–B5 |
+docs/audits/frontend-plan-after-new-core-2026-10-06.md:149:| B7 | **String costs.** One rule for `str[i]` (S2 accepted O(n/32) non-ASCII indexing), and building text in a loop through `byte_buffer`. `acc = acc + s` in a loop gets a lint | Readiness audit 2026-09-18: 200k appends took 3.76 s | Lint now; revisit after B1 |
+docs/audits/frontend-plan-after-new-core-2026-10-06.md:225:- The B1 cost report and diagnostics can point at source constructs.
+docs/audits/frontend-plan-after-new-core-2026-10-06.md:375:| **F1** | Part A deletions with `mylang fix` migrations applied to Lox, EDA and stdlib; the canonical `.my` format gate; B1 cost report | F0 and the user's A decisions | Corpora pass; every removed spelling has a targeted error and a fix |
+docs/audits/frontend-plan-after-new-core-2026-10-06.md:379:| **F5** | B2–B7 visible-cost rules | B1 data from Lox and EDA under the new core | User decides each rule on the counts |
+docs/audits/frontend-plan-after-new-core-2026-10-06.md:397:| **FE4** | B1 cost report in F1; B2 as a warning in F5; the `.copy()` error decided on Lox/EDA data | Yes | **Yes;** B1 moves earlier, alongside S5 |
+docs/audits/frontend-implementation-plan-2026-10-06.md:169:  writes first, named-only construction would cost a repair round on most first
+docs/audits/frontend-implementation-plan-2026-10-06.md:190:- **FE4, cost:** the per-function cost report comes early (FB1, in wave 1). The
+docs/audits/frontend-implementation-plan-2026-10-06.md:229:#### FB1. Per-function cost report (about 4–6 h)
+docs/audits/frontend-implementation-plan-2026-10-06.md:232:- `mylang cost <entry> [function]`, with text and `--json` output. Per function, it
+docs/audits/frontend-implementation-plan-2026-10-06.md:245:- `src/core/`: a new `cost.zig` and the stats plumbing it reads;
+docs/audits/frontend-implementation-plan-2026-10-06.md:246:- the `cost` entry in `src/core/cli.zig`;
+docs/audits/frontend-implementation-plan-2026-10-06.md:255:- `list-interfaces --cost` is added by the coordinator once FB1 merges.
+docs/audits/frontend-implementation-plan-2026-10-06.md:365:  - a domain's one-field record must have the same layout and cost as its field in the
+docs/audits/frontend-implementation-plan-2026-10-06.md:545:### F5. Visible cost (about 5–8 h, then a stop for decisions)
+docs/audits/frontend-implementation-plan-2026-10-06.md:551:  misses reported by `mylang cost`.
+src/core/cli.zig:12:const cost_command = @import("cost_command.zig");
+src/core/cli.zig:16:pub const Error = core_main.Error || cost_command.Error;
+src/core/cli.zig:98:        if (std.mem.eql(u8, command, "cost")) break :status try cost_command.run(init, rest);
+src/main.zig:78:    \\  mylang list-interfaces ENTRY.my                 every module's public declarations
+src/main.zig:101:    "t-module|fmt-project|list-modules|list-interfaces|list-" ++
+src/main.zig:399:        .@"list-interfaces",
+src/main.zig:533:        .@"list-interfaces",
+src/main.zig:664:    @"list-interfaces",
+src/main.zig:724:    /// `list-interfaces --contracts` emits declaration-level provider contracts.
+src/main.zig:869:            if (self.command != .@"list-interfaces" or self.contracts) return error.Usage;
+src/main.zig:1873:    // `list-interfaces` is the declaration/interface gate: it parses every module
+src/main.zig:2143:fn listInterfaces(init: Context, project: *language.project.Project, parsed: Parsed, cache: ?*language.syntax_cache.Cache, frontend: ?*language.frontend_cache.Cache) !u8 {
+src/main.zig:2185:/// bodies: `list-interfaces` and `api`. Null for every other command.
+src/main.zig:2188:        .@"list-interfaces" => try listInterfaces(init, project, parsed, sources.syntax, sources.frontend),
+src/main.zig:2394:/// executable to hash it cost seconds per report on a Debug build and told receipts

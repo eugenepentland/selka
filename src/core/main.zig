@@ -155,9 +155,9 @@ pub fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
         } else if (std.mem.eql(u8, arg, "--no-facts")) {
             options.facts = .off;
         } else if (std.mem.eql(u8, arg, "--generic-vectors")) {
-            options.show.generic_vectors = true;
+            options.show.codegen.generic_vectors = true;
         } else if (trapFrames(arg)) |frames| {
-            options.show.trap_frames = frames;
+            options.show.codegen.trap_frames = frames;
         } else if (std.mem.eql(u8, arg, "--stats")) {
             options.show.stats = true;
         } else if (std.mem.eql(u8, arg, "--verify-cache")) {

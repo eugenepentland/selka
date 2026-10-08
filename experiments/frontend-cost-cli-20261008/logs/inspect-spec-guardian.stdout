@@ -1,0 +1,41 @@
+scripts/build-slot.sh:2:# build-slot.sh — run one build or gate command without overloading a shared machine.
+scripts/build-slot.sh:4:# usage: scripts/build-slot.sh KIND [--] CMD...
+scripts/build-slot.sh:5:#        scripts/build-slot.sh status
+scripts/build-slot.sh:32:# want one, e.g. `scripts/build-slot.sh gate systemd-run --user --scope -p MemoryMax=16G zig build test`.
+scripts/build-slot.sh:35:die() { echo "build-slot: $*" >&2; exit 2; }
+scripts/build-slot.sh:103:[ $# -ge 1 ] || die "usage: build-slot.sh build|gate [--] CMD...  |  build-slot.sh status"
+scripts/build-slot.sh:138:          echo "build-slot: $kind slot $i after ${waited}s ($reason)" >&2
+scripts/build-slot.sh:155:    echo "build-slot: $reason; waiting (${waited}s so far)" >&2
+build.zig:3:const guardian = @import("guardian");
+build.zig:247:    for (filters) |filter| step.addArg(b.fmt("--guardian-filter={s}", .{filter}));
+build.zig:263:/// each executing the slice of the root's named tests that `--guardian-shard=`
+build.zig:277:        guardian.announceShard(run, index, shards.count);
+build.zig:295:        if (std.mem.indexOf(u8, dependency.name, "guardian-check") != null) dependency.max_rss = rss.gate;
+build.zig:354:    /// Guardian's test runner, which can run one shard of the root (`--guardian-shard`).
+build.zig:364:/// - `zig build test-core` runs the core's unit tests and its end-to-end slice,
+build.zig:416:    const step = b.step("test-core", "Run the new core's unit tests and its end-to-end slice");
+build.zig:419:    const requested = b.option(usize, "core-shards", "test-core: concurrent shards of the core test root (default 8)") orelse 8;
+build.zig:425:        if (shards > 1) guardian.announceShard(run, index, shards);
+build.zig:516:    const guardian_dep = b.dependency("guardian", .{ .target = target, .optimize = optimize });
+build.zig:517:    const guardian_exe = guardian_dep.artifact("guardian-check");
+build.zig:525:        .test_runner = guardian.testRunner(guardian_dep),
+build.zig:544:    const core_tests = addCore(b, .{ .target = target, .optimize = optimize, .front_end = core, .compiler = exe, .filters = test_filters, .test_runner = guardian.testRunner(guardian_dep), .identity = identity });
+build.zig:546:    guardian.addAllChecks(b, guardian_exe, b.getInstallStep(), .{});
+build.zig:551:    const integration = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .filters = test_filters, .root_module = b.createModule(.{
+build.zig:557:    guardian.enableTestDiagnostics(unit.root_module);
+build.zig:558:    guardian.enableTestDiagnostics(integration.root_module);
+build.zig:566:    guardian.addAllChecks(b, guardian_exe, test_step, .{});
+build.zig:572:        .test_runner = guardian.testRunner(guardian_dep),
+build.zig:575:    guardian.enableTestDiagnostics(budget_unit.root_module);
+build.zig:604:    guardian.addAllChecks(b, guardian_exe, audit_runtime, .{});
+build.zig:609:    guardian.addAllChecks(b, guardian_exe, intent_step, .{});
+build.zig:612:    guardian.addAllChecks(b, guardian_exe, verification_step, .{});
+build.zig:615:    guardian.addAllChecks(b, guardian_exe, repair_step, .{});
+build.zig:621:    const golden_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .filters = test_filters, .root_module = b.createModule(.{
+build.zig:627:    guardian.enableTestDiagnostics(golden_unit.root_module);
+build.zig:636:    guardian.addAllChecks(b, guardian_exe, agent_tools, .{});
+build.zig:759:    guardian.addAllChecks(b, guardian_exe, guest_step, .{});
+build.zig:796:    guardian.addAllChecks(b, guardian_exe, lang_step, .{});
+build.zig:807:    guardian.addAllChecks(b, guardian_exe, doctest_step, .{});
+SPEC.md:1285:- [NEW-CORE-CONF-1] The pinned conformance list (`test/core/conformance.pins`: the 31 S1 files of docs/design/new-core-s1.md §9 and four S2 Wave A language files, 35 files total) runs under `mylang-core test` at debug and release as part of `zig build test-core`: a test the pins record as passing must still pass, no other test of a listed file may fail unless it is pinned `known-fail`, a crash or a vanished pinned test fails the gate, and tests the new core cannot build yet are `unsupported` and never fail it.
+SPEC.md:1413:- [FRONTEND-COST-1] `mylang cost ENTRY.my [FUNCTION] [--json]` reports static Core costs per reachable emitted function and their totals: kept/proved checks, in-place/tested/copied updates, potential dynamic allocation sites, retains/releases, inlining and vector plans. Totals share the `build --stats` counters. Cost and `build --stats` collect LLVM optimization remarks from identical emitted units; LLVM vectorization is unknown without positive optimization remarks; `--llvm-remarks FILE.opt.yaml` reads successful LLVM loop-vectorization remarks separately from Core vector plans. Allocation classification includes runtime scratch, counts unresolved function values and foreign calls conservatively, and is shared with the build-time allocation promise. `--debug`, `--no-facts` and `--verify-facts` select the corresponding build pipeline.

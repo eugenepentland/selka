@@ -1,0 +1,6 @@
+row_packet_decode.my:69:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          phase = batch % 17
+          ^
+row_packet_decode.my:72:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              x = values[j]
+              ^

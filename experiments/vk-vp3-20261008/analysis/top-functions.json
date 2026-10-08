@@ -1,0 +1,5422 @@
+{
+ "lox": [
+  {
+   "group": "lox",
+   "function": "vm::run",
+   "bytes": 669306798376,
+   "corpus_share": 0.5242635720395269,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 493071014144,
+    "P2 whole-record copy before a field store": 88652503288,
+    "P4 record written back into a list element": 35528648160,
+    "P5 old element copied out to release it": 22989125280,
+    "P8 other record copy (retain)": 13428289488,
+    "P8 other record copy (record_get)": 13119043080,
+    "P3 element copied out of a list": 1629405448,
+    "P8 other record copy (release)": 888766608,
+    "P7 record returned through sret": 2880
+   },
+   "sites": [
+    {
+     "path": "vm.my",
+     "line": 429,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 4510251911,
+     "bytes": 492905126840,
+     "source": "def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:"
+    },
+    {
+     "path": "vm.my",
+     "line": 433,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 125991046,
+     "bytes": 25198209200,
+     "source": "rt.frames[rt.frame_count - 1] = frame"
+    },
+    {
+     "path": "vm.my",
+     "line": 534,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 125991034,
+     "bytes": 25198206800,
+     "source": "rt.frames[rt.frame_count - 1] = frame"
+    },
+    {
+     "path": "vm.my",
+     "line": 433,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_set",
+     "pattern": "P4 record written back into a list element",
+     "count": 251982092,
+     "bytes": 17134782256,
+     "source": "rt.frames[rt.frame_count - 1] = frame"
+    },
+    {
+     "path": "vm.my",
+     "line": 534,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_set",
+     "pattern": "P4 record written back into a list element",
+     "count": 251982068,
+     "bytes": 17134780624,
+     "source": "rt.frames[rt.frame_count - 1] = frame"
+    },
+    {
+     "path": "vm.my",
+     "line": 254,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 151301545,
+     "bytes": 13314535960,
+     "source": "frame.ip = frame.ip + 1"
+    },
+    {
+     "path": "vm.my",
+     "line": 433,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_set.old",
+     "pattern": "P5 old element copied out to release it",
+     "count": 125991046,
+     "bytes": 11087212048,
+     "source": "rt.frames[rt.frame_count - 1] = frame"
+    },
+    {
+     "path": "vm.my",
+     "line": 534,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_set.old",
+     "pattern": "P5 old element copied out to release it",
+     "count": 125991034,
+     "bytes": 11087210992,
+     "source": "rt.frames[rt.frame_count - 1] = frame"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::instantiate",
+   "bytes": 81438715040,
+   "corpus_share": 0.06379040486780527,
+   "patterns": {
+    "P9 copy-on-write of a whole list": 79214673920,
+    "P2 whole-record copy before a field store": 1201465592,
+    "P8 other record copy (record_get)": 843684968,
+    "P1 record moved into a phi slot at a join": 89445280,
+    "P7 record returned through sret": 89445280
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 472,
+     "column": 5,
+     "kind": "list_copy",
+     "detail": "list_copy",
+     "pattern": "P9 copy-on-write of a whole list",
+     "count": 302180,
+     "bytes": 79214673920,
+     "source": "it.rt.stack[callee_slot] = value.Value.obj(instance)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 471,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 604360,
+     "bytes": 149881280,
+     "source": "it.rt = __wb_413"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 472,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 604360,
+     "bytes": 149881280,
+     "source": "it.rt.stack[callee_slot] = value.Value.obj(instance)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 496,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 604360,
+     "bytes": 149881280,
+     "source": "it.rt = __wb_428"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 479,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 604358,
+     "bytes": 149880784,
+     "source": "it.rt = __wb_419"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 485,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 604358,
+     "bytes": 149880784,
+     "source": "it.rt = __wb_421"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 489,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 604358,
+     "bytes": 149880784,
+     "source": "it.rt = __wb_423"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 472,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 604360,
+     "bytes": 120872000,
+     "source": "it.rt.stack[callee_slot] = value.Value.obj(instance)"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::evaluate",
+   "bytes": 64087421608,
+   "corpus_share": 0.05019925190740155,
+   "patterns": {
+    "P7 record returned through sret": 23906722680,
+    "P8 other record copy (record_get)": 21597645528,
+    "P2 whole-record copy before a field store": 16740809352,
+    "P8 other record copy (list_get_field)": 1842244048
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 360,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 39384706,
+     "bytes": 9767407088,
+     "source": "it.rt = __wb_318"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 376,
+     "column": 20,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 19707250,
+     "bytes": 5833346000,
+     "source": "return get_variable(mut it, node.name_ref, node.hops, node.slot, node.name.line)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 376,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 19707250,
+     "bytes": 5833346000,
+     "source": "return get_variable(mut it, node.name_ref, node.hops, node.slot, node.name.line)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 361,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 19692353,
+     "bytes": 5828936488,
+     "source": "return Ok(None)"
+    },
+    {
+     "path": "heap.my",
+     "line": 101,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 24052887,
+     "bytes": 4810577400,
+     "source": "rt.stack[rt.stack_top] = item"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 358,
+     "column": 24,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 19692353,
+     "bytes": 3938470600,
+     "source": "__wb_318 = it.rt"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 350,
+     "column": 20,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 13279735,
+     "bytes": 3930801560,
+     "source": "return binary(mut it, node)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 350,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 13279735,
+     "bytes": 3930801560,
+     "source": "return binary(mut it, node)"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::execute",
+   "bytes": 55318897840,
+   "corpus_share": 0.04333092544892341,
+   "patterns": {
+    "P2 whole-record copy before a field store": 20709427984,
+    "P8 other record copy (record_get)": 16974206560,
+    "P7 record returned through sret": 8887127088,
+    "P1 record moved into a phi slot at a join": 8696051688,
+    "P8 other record copy (list_get_field)": 36082440,
+    "P3 element copied out of a list": 16002080
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 624,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 40326824,
+     "bytes": 10001052352,
+     "source": "it.rt = __wb_521"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 614,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 29378553,
+     "bytes": 8696051688,
+     "source": "def execute(it: mut Interpreter, id: int) -> Result[Flow, RuntimeError]:"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 692,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 21573651,
+     "bytes": 6385800696,
+     "source": "return Ok(Flow.NORMAL)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 621,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 20163412,
+     "bytes": 5968369952,
+     "source": "evaluate(mut it, expr)?"
+    },
+    {
+     "path": "heap.my",
+     "line": 106,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 29412338,
+     "bytes": 5882467600,
+     "source": "rt.stack_top = rt.stack_top - 1"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 622,
+     "column": 24,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 20163412,
+     "bytes": 4032682400,
+     "source": "__wb_521 = it.rt"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 660,
+     "column": 21,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 5965154,
+     "bytes": 1765685584,
+     "source": "evaluate(mut it, result)?"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 666,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 5965154,
+     "bytes": 1765685584,
+     "source": "it.returned = heap.pop(mut __wb_547)"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "heap::allocate",
+   "bytes": 53687690073,
+   "corpus_share": 0.04205321123364718,
+   "patterns": {
+    "P2 whole-record copy before a field store": 21672992800,
+    "P9 copy-on-write of a whole list": 11995963896,
+    "P1 record moved into a phi slot at a join": 10836496400,
+    "P7 record returned through sret": 5418248200,
+    "P5 old element copied out to release it": 1498719264,
+    "P4 record written back into a list element": 1498719264,
+    "P13 list growth (class move or realloc)": 748155073,
+    "P6 record pushed into a list": 18390232,
+    "P8 other record copy (retain)": 4944
+   },
+   "sites": [
+    {
+     "path": "heap.my",
+     "line": 117,
+     "column": 12,
+     "kind": "list_copy",
+     "detail": "list_copy",
+     "pattern": "P9 copy-on-write of a whole list",
+     "count": 28836,
+     "bytes": 11995963896,
+     "source": "public def allocate(rt: mut Runtime, obj: object.Obj) -> value.ObjRef:"
+    },
+    {
+     "path": "heap.my",
+     "line": 117,
+     "column": 12,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 27092331,
+     "bytes": 5418466200,
+     "source": "public def allocate(rt: mut Runtime, obj: object.Obj) -> value.ObjRef:"
+    },
+    {
+     "path": "heap.my",
+     "line": 118,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 27091241,
+     "bytes": 5418248200,
+     "source": "rt.bytes_allocated = rt.bytes_allocated + object.cost(obj)"
+    },
+    {
+     "path": "heap.my",
+     "line": 128,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 27091241,
+     "bytes": 5418248200,
+     "source": "rt.allocations = rt.allocations + 1"
+    },
+    {
+     "path": "heap.my",
+     "line": 129,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 27091241,
+     "bytes": 5418248200,
+     "source": "return slot"
+    },
+    {
+     "path": "heap.my",
+     "line": 119,
+     "column": 24,
+     "kind": "record_copy",
+     "detail": "branch",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 27090151,
+     "bytes": 5418030200,
+     "source": "if rt.gc_stress or rt.bytes_allocated > rt.next_gc:"
+    },
+    {
+     "path": "heap.my",
+     "line": 123,
+     "column": 16,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 26762844,
+     "bytes": 5352568800,
+     "source": "slot = rt.free_slots.pop()"
+    },
+    {
+     "path": "heap.my",
+     "line": 124,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 26762844,
+     "bytes": 5352568800,
+     "source": "rt.objects[slot] = obj"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::binary",
+   "bytes": 50046902280,
+   "corpus_share": 0.03920140632440762,
+   "patterns": {
+    "P2 whole-record copy before a field store": 18683791120,
+    "P8 other record copy (record_get)": 16680633520,
+    "P1 record moved into a phi slot at a join": 10751676080,
+    "P7 record returned through sret": 3930801560
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 170,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 36323230,
+     "bytes": 10751676080,
+     "source": "def binary(it: mut Interpreter, node: ast.BinaryExpr) -> Result[None, RuntimeError]:"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 199,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 26559470,
+     "bytes": 6586748560,
+     "source": "it.rt = __wb_187"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 202,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 26559470,
+     "bytes": 6586748560,
+     "source": "it.rt = __wb_188"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 171,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 13279735,
+     "bytes": 3930801560,
+     "source": "evaluate(mut it, node.left)?"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 172,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 13279735,
+     "bytes": 3930801560,
+     "source": "evaluate(mut it, node.right)?"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 203,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 13279735,
+     "bytes": 3930801560,
+     "source": "return Ok(None)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 173,
+     "column": 22,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 13279735,
+     "bytes": 2655947000,
+     "source": "left = heap.peek(it.rt, 1)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 197,
+     "column": 16,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 13279735,
+     "bytes": 2655947000,
+     "source": "__wb_187 = it.rt"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "heap::sweep",
+   "bytes": 39913503555,
+   "corpus_share": 0.03126398237270167,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 16187930200,
+    "P2 whole-record copy before a field store": 16168633000,
+    "P3 element copied out of a list": 3016462456,
+    "P9 copy-on-write of a whole list": 1524073371,
+    "P5 old element copied out to release it": 1507918048,
+    "P4 record written back into a list element": 1507918048,
+    "P13 list growth (class move or realloc)": 350432,
+    "P7 record returned through sret": 218000
+   },
+   "sites": [
+    {
+     "path": "heap.my",
+     "line": 356,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 80928466,
+     "bytes": 16185693200,
+     "source": "def sweep(rt: mut Runtime):"
+    },
+    {
+     "path": "heap.my",
+     "line": 362,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 26927108,
+     "bytes": 5385421600,
+     "source": "rt.bytes_allocated = rt.bytes_allocated - object.cost(rt.objects[i])"
+    },
+    {
+     "path": "heap.my",
+     "line": 363,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 26927108,
+     "bytes": 5385421600,
+     "source": "rt.objects[i] = object.Obj.free"
+    },
+    {
+     "path": "heap.my",
+     "line": 364,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 26927108,
+     "bytes": 5385421600,
+     "source": "rt.free_slots.append(i)"
+    },
+    {
+     "path": "heap.my",
+     "line": 360,
+     "column": 13,
+     "kind": "list_copy",
+     "detail": "list_copy",
+     "pattern": "P9 copy-on-write of a whole list",
+     "count": 61841,
+     "bytes": 1524073371,
+     "source": "rt.marker.marks[i] = False"
+    },
+    {
+     "path": "heap.my",
+     "line": 361,
+     "column": 26,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 26938293,
+     "bytes": 1508544408,
+     "source": "elif not is_free(rt.objects[i]):"
+    },
+    {
+     "path": "heap.my",
+     "line": 362,
+     "column": 67,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 26927108,
+     "bytes": 1507918048,
+     "source": "rt.bytes_allocated = rt.bytes_allocated - object.cost(rt.objects[i])"
+    },
+    {
+     "path": "heap.my",
+     "line": 363,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_set.old",
+     "pattern": "P5 old element copied out to release it",
+     "count": 26927108,
+     "bytes": 1507918048,
+     "source": "rt.objects[i] = object.Obj.free"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::get",
+   "bytes": 30015868336,
+   "corpus_share": 0.02351123041015231,
+   "patterns": {
+    "P8 other record copy (record_get)": 14829280816,
+    "P2 whole-record copy before a field store": 11738196104,
+    "P7 record returned through sret": 3448391416
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 292,
+     "column": 21,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 14636356,
+     "bytes": 3629816288,
+     "source": "it.rt = __wb_268"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 295,
+     "column": 21,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 14636356,
+     "bytes": 3629816288,
+     "source": "it.rt = __wb_269"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 276,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 11649971,
+     "bytes": 3448391416,
+     "source": "evaluate(mut it, node.target)?"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 277,
+     "column": 23,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 11649971,
+     "bytes": 2329994200,
+     "source": "match instance_of(it.rt, heap.peek(it.rt, 0)):"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 279,
+     "column": 37,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 11649971,
+     "bytes": 2329994200,
+     "source": "hash = heap.string_hash(it.rt, node.name_ref)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 103,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 11649971,
+     "bytes": 2329994200,
+     "source": "rt.stack[rt.stack_top - 1] = item"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 296,
+     "column": 21,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 7318178,
+     "bytes": 2166180688,
+     "source": "return Ok(None)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 284,
+     "column": 21,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 8663586,
+     "bytes": 2148569328,
+     "source": "it.rt = __wb_262"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::get_variable",
+   "bytes": 26070928200,
+   "corpus_share": 0.02042118498972674,
+   "patterns": {
+    "P2 whole-record copy before a field store": 13716246000,
+    "P8 other record copy (record_get)": 6521336200,
+    "P7 record returned through sret": 5833346000
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 139,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 25798862,
+     "bytes": 6398117776,
+     "source": "it.rt = __wb_137"
+    },
+    {
+     "path": "heap.my",
+     "line": 101,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 19707250,
+     "bytes": 3941450000,
+     "source": "rt.stack[rt.stack_top] = item"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 140,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 12899431,
+     "bytes": 3818231576,
+     "source": "return Ok(None)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 145,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 13615638,
+     "bytes": 3376678224,
+     "source": "it.rt = __wb_141"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 135,
+     "column": 25,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 12899431,
+     "bytes": 2579886200,
+     "source": "match table.get(it.rt.globals, name, heap.string_hash(it.rt, name)):"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 137,
+     "column": 28,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 12899431,
+     "bytes": 2579886200,
+     "source": "__wb_137 = it.rt"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 146,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 6807819,
+     "bytes": 2015114424,
+     "source": "return Ok(None)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 143,
+     "column": 16,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 6807819,
+     "bytes": 1361563800,
+     "source": "__wb_141 = it.rt"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::run_function",
+   "bytes": 20300293904,
+   "corpus_share": 0.015901085453467134,
+   "patterns": {
+    "P2 whole-record copy before a field store": 11046662128,
+    "P8 other record copy (record_get)": 6510500464,
+    "P7 record returned through sret": 2743130864,
+    "P13 list growth (class move or realloc)": 448
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 415,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 18534668,
+     "bytes": 4596597664,
+     "source": "it.rt = __wb_365"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 412,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 9267334,
+     "bytes": 2743130864,
+     "source": "it.depth = it.depth + 1"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 416,
+     "column": 15,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 9267334,
+     "bytes": 2743130864,
+     "source": "outcome = run_body(mut it, function.decl)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 413,
+     "column": 16,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 9267334,
+     "bytes": 1853466800,
+     "source": "__wb_365 = it.rt"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 401,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 9267334,
+     "bytes": 1853466800,
+     "source": "rt.saved_envs.append(rt.current_env)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 417,
+     "column": 16,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 9267334,
+     "bytes": 1853466800,
+     "source": "__wb_367 = it.rt"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 419,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 9267334,
+     "bytes": 1853466800,
+     "source": "it.rt = __wb_367"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 425,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 5965154,
+     "bytes": 1765685584,
+     "source": "return Ok(it.returned)"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::call_value",
+   "bytes": 18086630080,
+   "corpus_share": 0.014167137275320952,
+   "patterns": {
+    "P8 other record copy (record_get)": 10896782040,
+    "P2 whole-record copy before a field store": 4446716880,
+    "P7 record returned through sret": 2743131160
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 446,
+     "column": 21,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 17930310,
+     "bytes": 4446716880,
+     "source": "it.rt = __wb_392"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 442,
+     "column": 27,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 8965155,
+     "bytes": 2653685880,
+     "source": "env = enter_function(mut it, function, function.closure, count, callee_slot + 1, line)?"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 443,
+     "column": 30,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 8965155,
+     "bytes": 2653685880,
+     "source": "result = run_function(mut it, function, env)?"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 447,
+     "column": 21,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 8965155,
+     "bytes": 2653685880,
+     "source": "return Ok(None)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 437,
+     "column": 19,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 9267335,
+     "bytes": 1853467000,
+     "source": "callee_slot = it.rt.stack_top - count - 1"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 440,
+     "column": 19,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 9267335,
+     "bytes": 1853467000,
+     "source": "match it.rt.objects[ref]:"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 444,
+     "column": 32,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 8965155,
+     "bytes": 1793031000,
+     "source": "__wb_392 = it.rt"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 449,
+     "column": 28,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 302180,
+     "bytes": 89445280,
+     "source": "return instantiate(mut it, ref, count, line)"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::set",
+   "bytes": 16006045328,
+   "corpus_share": 0.012537429050839833,
+   "patterns": {
+    "P9 copy-on-write of a whole list": 15926705424,
+    "P2 whole-record copy before a field store": 36642304,
+    "P8 other record copy (record_get)": 34779136,
+    "P7 record returned through sret": 5744768,
+    "P5 old element copied out to release it": 1086848,
+    "P4 record written back into a list element": 1086848
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 318,
+     "column": 13,
+     "kind": "list_copy",
+     "detail": "list_copy",
+     "pattern": "P9 copy-on-write of a whole list",
+     "count": 19408,
+     "bytes": 15926705424,
+     "source": "it.rt.objects[instance_ref] = object.Obj.instance(updated_instance)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 318,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 38816,
+     "bytes": 9626368,
+     "source": "it.rt.objects[instance_ref] = object.Obj.instance(updated_instance)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 321,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 38816,
+     "bytes": 9626368,
+     "source": "it.rt = __wb_285"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 324,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 38816,
+     "bytes": 9626368,
+     "source": "it.rt = __wb_286"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 305,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 19408,
+     "bytes": 5744768,
+     "source": "evaluate(mut it, node.target)?"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 309,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 19408,
+     "bytes": 5744768,
+     "source": "evaluate(mut it, node.assigned)?"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 325,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 19408,
+     "bytes": 5744768,
+     "source": "return Ok(None)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 306,
+     "column": 28,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 19408,
+     "bytes": 3881600,
+     "source": "receiver = instance_of(it.rt, heap.peek(it.rt, 0))"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::enter_function",
+   "bytes": 15029807872,
+   "corpus_share": 0.011772748732212887,
+   "patterns": {
+    "P2 whole-record copy before a field store": 5216605104,
+    "P8 other record copy (record_get)": 3956936600,
+    "P1 record moved into a phi slot at a join": 3113135304,
+    "P7 record returned through sret": 2743130864
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 390,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 18534668,
+     "bytes": 4596597664,
+     "source": "it.rt = __wb_344"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 382,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 10517349,
+     "bytes": 3113135304,
+     "source": "def enter_function(it: mut Interpreter, function: object.TreeFunctionObj, enclosing: value.ObjRef, count: int, args: int, line: int) -> Result[value.ObjRef, RuntimeError]:"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 397,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 9267334,
+     "bytes": 2743130864,
+     "source": "return Ok(env)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 388,
+     "column": 16,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 9267334,
+     "bytes": 1853466800,
+     "source": "__wb_344 = it.rt"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 389,
+     "column": 11,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 9267334,
+     "bytes": 1853466800,
+     "source": "env = new_env(mut __wb_344, enclosing, it.program.functions[function.decl].slot_count)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 395,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 2500030,
+     "bytes": 620007440,
+     "source": "it.rt = __wb_347"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 393,
+     "column": 20,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 1250015,
+     "bytes": 250003000,
+     "source": "__wb_347 = it.rt"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::run_block",
+   "bytes": 14309139944,
+   "corpus_share": 0.011208254328294769,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 7442880928,
+    "P8 other record copy (record_get)": 6288974064,
+    "P7 record returned through sret": 577284952
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 696,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 25144868,
+     "bytes": 7442880928,
+     "source": "def run_block(it: mut Interpreter, id: int) -> Result[Flow, RuntimeError]:"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 700,
+     "column": 24,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 21246534,
+     "bytes": 6288974064,
+     "source": "flow = execute(mut it, statement)?"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 705,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 1949167,
+     "bytes": 576953432,
+     "source": "return Ok(Flow.NORMAL)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 702,
+     "column": 21,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 1120,
+     "bytes": 331520,
+     "source": "return Ok(flow)"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::call_expr",
+   "bytes": 12453920320,
+   "corpus_share": 0.009755073112511463,
+   "patterns": {
+    "P8 other record copy (record_get)": 6226960160,
+    "P1 record moved into a phi slot at a join": 3113135600,
+    "P7 record returned through sret": 2743131160,
+    "P8 other record copy (release)": 370693400
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 256,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 10517350,
+     "bytes": 3113135600,
+     "source": "def call_expr(it: mut Interpreter, id: int) -> Result[None, RuntimeError]:"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 258,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 9267335,
+     "bytes": 2743131160,
+     "source": "evaluate(mut it, node.callee)?"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 261,
+     "column": 12,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 9267335,
+     "bytes": 2743131160,
+     "source": "return call_value(mut it, len(node.arguments), node.paren.line)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 261,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 9267335,
+     "bytes": 2743131160,
+     "source": "return call_value(mut it, len(node.arguments), node.paren.line)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 261,
+     "column": 52,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 9267335,
+     "bytes": 370693400,
+     "source": "return call_value(mut it, len(node.arguments), node.paren.line)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 257,
+     "column": 12,
+     "kind": "record_copy",
+     "detail": "release",
+     "pattern": "P8 other record copy (release)",
+     "count": 9267335,
+     "bytes": 370693400,
+     "source": "node = call_node(it, id)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 260,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 1250015,
+     "bytes": 370004440,
+     "source": "evaluate(mut it, argument)?"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "vm::call",
+   "bytes": 8443287792,
+   "corpus_share": 0.006613571277524881,
+   "patterns": {
+    "P2 whole-record copy before a field store": 3703196400,
+    "P7 record returned through sret": 2221917840,
+    "P4 record written back into a list element": 1259086776,
+    "P5 old element copied out to release it": 814703208,
+    "P8 other record copy (record_make)": 444383568
+   },
+   "sites": [
+    {
+     "path": "vm.my",
+     "line": 143,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 18515982,
+     "bytes": 2221917840,
+     "source": "return True"
+    },
+    {
+     "path": "vm.my",
+     "line": 134,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 9257991,
+     "bytes": 1851598200,
+     "source": "rt.frame_count = rt.frame_count + 1"
+    },
+    {
+     "path": "vm.my",
+     "line": 135,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 9257991,
+     "bytes": 1851598200,
+     "source": "rt.frames[frame_index] = heap.CallFrame("
+    },
+    {
+     "path": "vm.my",
+     "line": 135,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "list_set",
+     "pattern": "P4 record written back into a list element",
+     "count": 18515982,
+     "bytes": 1259086776,
+     "source": "rt.frames[frame_index] = heap.CallFrame("
+    },
+    {
+     "path": "vm.my",
+     "line": 135,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "list_set.old",
+     "pattern": "P5 old element copied out to release it",
+     "count": 9257991,
+     "bytes": 814703208,
+     "source": "rt.frames[frame_index] = heap.CallFrame("
+    },
+    {
+     "path": "vm.my",
+     "line": 135,
+     "column": 30,
+     "kind": "record_copy",
+     "detail": "record_make",
+     "pattern": "P8 other record copy (record_make)",
+     "count": 9257991,
+     "bytes": 444383568,
+     "source": "rt.frames[frame_index] = heap.CallFrame("
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::run_body",
+   "bytes": 7807716320,
+   "corpus_share": 0.006115732362686976,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 3021015368,
+    "P7 record returned through sret": 2743130864,
+    "P8 other record copy (record_get)": 2043570088
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 709,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 10206133,
+     "bytes": 3021015368,
+     "source": "def run_body(it: mut Interpreter, index: int) -> Result[Flow, RuntimeError]:"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 711,
+     "column": 16,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 6903953,
+     "bytes": 2043570088,
+     "source": "flow = execute(mut it, statement)?"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 713,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 5965154,
+     "bytes": 1765685584,
+     "source": "return Ok(flow)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 714,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 3302180,
+     "bytes": 977445280,
+     "source": "return Ok(Flow.NORMAL)"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "vm::get_global",
+   "bytes": 7594580840,
+   "corpus_share": 0.005948784756082229,
+   "patterns": {
+    "P7 record returned through sret": 4043867720,
+    "P2 whole-record copy before a field store": 2465773000,
+    "P8 other record copy (record_get)": 1084940120
+   },
+   "sites": [
+    {
+     "path": "vm.my",
+     "line": 276,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 36986595,
+     "bytes": 4043867720,
+     "source": "return True"
+    },
+    {
+     "path": "heap.my",
+     "line": 101,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 12328865,
+     "bytes": 2465773000,
+     "source": "rt.stack[rt.stack_top] = item"
+    },
+    {
+     "path": "vm.my",
+     "line": 272,
+     "column": 12,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 12328865,
+     "bytes": 1084940120,
+     "source": "name = read_string(mut frame)"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::new_env",
+   "bytes": 7535725200,
+   "corpus_share": 0.005902683523977698,
+   "patterns": {
+    "P8 other record copy (record_get)": 3767862600,
+    "P7 record returned through sret": 3767862600
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 117,
+     "column": 12,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 18839313,
+     "bytes": 3767862600,
+     "source": "return heap.allocate(mut rt, object.Obj.env(object.new_env(enclosing, slot_count)))"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 117,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 18839313,
+     "bytes": 3767862600,
+     "source": "return heap.allocate(mut rt, object.Obj.env(object.new_env(enclosing, slot_count)))"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::bind",
+   "bytes": 7319512000,
+   "corpus_share": 0.005733325159728097,
+   "patterns": {
+    "P8 other record copy (record_get)": 2927804800,
+    "P2 whole-record copy before a field store": 2927804800,
+    "P7 record returned through sret": 1463902400
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 125,
+     "column": 11,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 7319512,
+     "bytes": 1463902400,
+     "source": "env = new_env(mut rt, method.closure, 1)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 128,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 7319512,
+     "bytes": 1463902400,
+     "source": "bound = heap.allocate(mut rt, object.Obj.tree_function(object.TreeFunctionObj(decl=method.decl, name=method.name, closure=env, is_initializer=method.is_initializer)))"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 130,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 7319512,
+     "bytes": 1463902400,
+     "source": "return bound"
+    },
+    {
+     "path": "heap.my",
+     "line": 106,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 7319512,
+     "bytes": 1463902400,
+     "source": "rt.stack_top = rt.stack_top - 1"
+    },
+    {
+     "path": "heap.my",
+     "line": 101,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 7319512,
+     "bytes": 1463902400,
+     "source": "rt.stack[rt.stack_top] = item"
+    }
+   ]
+  }
+ ],
+ "eda": [
+  {
+   "group": "eda",
+   "function": "sexpr_tokenizer::advance",
+   "bytes": 13569568080,
+   "corpus_share": 0.33315853195981776,
+   "patterns": {
+    "P2 whole-record copy before a field store": 5427827232,
+    "P1 record moved into a phi slot at a join": 5427827232,
+    "P7 record returned through sret": 2713913616
+   },
+   "sites": [
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 90,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 113079734,
+     "bytes": 5427827232,
+     "source": "def advance(src: bytes, t: mut Cursor):"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 90,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 56539867,
+     "bytes": 2713913616,
+     "source": "def advance(src: bytes, t: mut Cursor):"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 97,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 56539867,
+     "bytes": 2713913616,
+     "source": "t.pos += 1"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 96,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 55241166,
+     "bytes": 2651575968,
+     "source": "t.col += 1"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 93,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 1298701,
+     "bytes": 62337648,
+     "source": "t.line += 1"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "sexpr_parser::parse_list",
+   "bytes": 5475449192,
+   "corpus_share": 0.13443262186922095,
+   "patterns": {
+    "P8 other record copy (record_get)": 2299467784,
+    "P8 other record copy (union_payload)": 930034632,
+    "P8 other record copy (release)": 930034632,
+    "P1 record moved into a phi slot at a join": 679281624,
+    "P6 record pushed into a list": 444833472,
+    "P7 record returned through sret": 160309240,
+    "P13 list growth (class move or realloc)": 31487808
+   },
+   "sites": [
+    {
+     "path": "sexpr_parser.my",
+     "line": 218,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 24260058,
+     "bytes": 1261523016,
+     "source": "token = next_token(mut tok, mut diag)?"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 224,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 18534728,
+     "bytes": 1037944768,
+     "source": "child = parse_node(mut tok, token, depth + 1, mut diag)?"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 213,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 12130029,
+     "bytes": 679281624,
+     "source": "def parse_list(tok: mut tokenizer_mod.Tokenizer, open_span: ast.Span, depth: int, diag: mut ParseDiagnostic) -> Result[ast.Node, ParseError]:"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 218,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "union_payload",
+     "pattern": "P8 other record copy (union_payload)",
+     "count": 12130029,
+     "bytes": 485201160,
+     "source": "token = next_token(mut tok, mut diag)?"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 218,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "release",
+     "pattern": "P8 other record copy (release)",
+     "count": 12130029,
+     "bytes": 485201160,
+     "source": "token = next_token(mut tok, mut diag)?"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 224,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "union_payload",
+     "pattern": "P8 other record copy (union_payload)",
+     "count": 9267364,
+     "bytes": 444833472,
+     "source": "child = parse_node(mut tok, token, depth + 1, mut diag)?"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "pattern": "P6 record pushed into a list",
+     "count": 9267364,
+     "bytes": 444833472,
+     "source": "children.append(child)"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 224,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "release",
+     "pattern": "P8 other record copy (release)",
+     "count": 9267364,
+     "bytes": 444833472,
+     "source": "child = parse_node(mut tok, token, depth + 1, mut diag)?"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "sexpr_tokenizer::next",
+   "bytes": 4275883040,
+   "corpus_share": 0.104981006620093,
+   "patterns": {
+    "P8 other record copy (record_get)": 1749224880,
+    "P2 whole-record copy before a field store": 1263329080,
+    "P7 record returned through sret": 1263329080
+   },
+   "sites": [
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 269,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 24294790,
+     "bytes": 1263329080,
+     "source": "t.cur = cur"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 270,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 24294790,
+     "bytes": 1263329080,
+     "source": "return r"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 268,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 24294790,
+     "bytes": 1166149920,
+     "source": "r = next_in(src, mut cur)"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 267,
+     "column": 11,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 12147395,
+     "bytes": 583074960,
+     "source": "cur = t.cur"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "sexpr_parser::next_token",
+   "bytes": 3401270600,
+   "corpus_share": 0.08350761890234672,
+   "patterns": {
+    "P8 other record copy (record_get)": 1263329080,
+    "P7 record returned through sret": 1166149920,
+    "P8 other record copy (union_payload)": 485895800,
+    "P8 other record copy (release)": 485895800
+   },
+   "sites": [
+    {
+     "path": "sexpr_parser.my",
+     "line": 116,
+     "column": 11,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 24294790,
+     "bytes": 1263329080,
+     "source": "match tokenizer_mod.next(mut tok):"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 118,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 24294790,
+     "bytes": 1166149920,
+     "source": "return Ok(token)"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 116,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "union_payload",
+     "pattern": "P8 other record copy (union_payload)",
+     "count": 12147395,
+     "bytes": 485895800,
+     "source": "match tokenizer_mod.next(mut tok):"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 116,
+     "column": 11,
+     "kind": "record_copy",
+     "detail": "release",
+     "pattern": "P8 other record copy (release)",
+     "count": 12147395,
+     "bytes": 485895800,
+     "source": "match tokenizer_mod.next(mut tok):"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "kicad_sch_textbox::overlaps_of",
+   "bytes": 2768343616,
+   "corpus_share": 0.0679680657209904,
+   "patterns": {
+    "P3 element copied out of a list": 934032960,
+    "P6 record pushed into a list": 901297152,
+    "P13 list growth (class move or realloc)": 840890592,
+    "P1 record moved into a phi slot at a join": 92069856,
+    "P7 record returned through sret": 26712,
+    "P8 other record copy (record_make)": 20776,
+    "P2 whole-record copy before a field store": 3112,
+    "P8 other record copy (record_get)": 2072,
+    "P8 other record copy (union_make)": 384
+   },
+   "sites": [
+    {
+     "path": "kicad_sch_textbox.my",
+     "line": 137,
+     "column": 18,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 18777024,
+     "bytes": 901297152,
+     "source": "for b in ordered[i + 1:len(ordered)]:"
+    },
+    {
+     "path": "kicad_sch_textbox.my",
+     "line": 137,
+     "column": 18,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "pattern": "P6 record pushed into a list",
+     "count": 18777024,
+     "bytes": 901297152,
+     "source": "for b in ordered[i + 1:len(ordered)]:"
+    },
+    {
+     "path": "kicad_sch_textbox.my",
+     "line": 137,
+     "column": 18,
+     "kind": "list_push",
+     "detail": "list_push",
+     "pattern": "P13 list growth (class move or realloc)",
+     "count": 0,
+     "bytes": 840890592,
+     "source": "for b in ordered[i + 1:len(ordered)]:"
+    },
+    {
+     "path": "kicad_sch_textbox.my",
+     "line": 131,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 1278727,
+     "bytes": 92068344,
+     "source": "def overlaps_of(items: list[Item]) -> Report:"
+    },
+    {
+     "path": "kicad_sch_textbox.my",
+     "line": 137,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 637873,
+     "bytes": 30617904,
+     "source": "for b in ordered[i + 1:len(ordered)]:"
+    },
+    {
+     "path": "kicad_sch_textbox.my",
+     "line": 136,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 44123,
+     "bytes": 2117904,
+     "source": "for a in ordered:"
+    },
+    {
+     "path": "kicad_sch_textbox.my",
+     "line": 146,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 371,
+     "bytes": 26712,
+     "source": "return out"
+    },
+    {
+     "path": "kicad_sch_textbox.my",
+     "line": 134,
+     "column": 11,
+     "kind": "record_copy",
+     "detail": "record_make",
+     "pattern": "P8 other record copy (record_make)",
+     "count": 371,
+     "bytes": 20776,
+     "source": "out = Report(texts=len(ordered))"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "sexpr_tokenizer::skip_whitespace_and_comments",
+   "bytes": 2376595920,
+   "corpus_share": 0.05834991969537268,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 1793520960,
+    "P7 record returned through sret": 583074960
+   },
+   "sites": [
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 104,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 37365020,
+     "bytes": 1793520960,
+     "source": "def skip_whitespace_and_comments(src: bytes, t: mut Cursor):"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 104,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 12147395,
+     "bytes": 583074960,
+     "source": "def skip_whitespace_and_comments(src: bytes, t: mut Cursor):"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "sexpr_tokenizer::next_in",
+   "bytes": 1645574352,
+   "corpus_share": 0.04040195915676105,
+   "patterns": {
+    "P7 record returned through sret": 1074910088,
+    "P8 other record copy (record_get)": 570664264
+   },
+   "sites": [
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 290,
+     "column": 19,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 6847670,
+     "bytes": 301297480,
+     "source": "return Ok(read_atom(src, mut t, s))"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 290,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 6847670,
+     "bytes": 301297480,
+     "source": "return Ok(read_atom(src, mut t, s))"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 281,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 5725330,
+     "bytes": 251914520,
+     "source": "return Ok(make_token(src, TokenTag.lparen, s.offset, t.pos, s))"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 284,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 5725330,
+     "bytes": 251914520,
+     "source": "return Ok(make_token(src, TokenTag.rparen, s.offset, t.pos, s))"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 288,
+     "column": 19,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 4407432,
+     "bytes": 193927008,
+     "source": "return Ok(read_number(src, mut t, s))"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 288,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 4407432,
+     "bytes": 193927008,
+     "source": "return Ok(read_number(src, mut t, s))"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 286,
+     "column": 16,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 1571662,
+     "bytes": 75439776,
+     "source": "return read_string(src, mut t, s)"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 286,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 1571662,
+     "bytes": 75439776,
+     "source": "return read_string(src, mut t, s)"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "sexpr_tokenizer::read_atom",
+   "bytes": 1267576744,
+   "corpus_share": 0.03112140376817696,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 966279264,
+    "P7 record returned through sret": 301297480
+   },
+   "sites": [
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 248,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 20130818,
+     "bytes": 966279264,
+     "source": "def read_atom(src: bytes, t: mut Cursor, s: ast.Span) -> Token:"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 252,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 6847670,
+     "bytes": 301297480,
+     "source": "return make_token(src, TokenTag.atom, start, t.pos, s)"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "sexpr_parser::parse_node",
+   "bytes": 1247202544,
+   "corpus_share": 0.030621178667286662,
+   "patterns": {
+    "P7 record returned through sret": 803175968,
+    "P8 other record copy (record_get)": 444026576
+   },
+   "sites": [
+    {
+     "path": "sexpr_parser.my",
+     "line": 137,
+     "column": 20,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 5725330,
+     "bytes": 320618480,
+     "source": "return parse_list(mut tok, token.span, depth, mut diag)"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 137,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 5725330,
+     "bytes": 320618480,
+     "source": "return parse_list(mut tok, token.span, depth, mut diag)"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 147,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 4407432,
+     "bytes": 246816192,
+     "source": "return parse_number_node(tok, token, mut diag)"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 141,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 3423835,
+     "bytes": 191734760,
+     "source": "return Ok(ast.node_atom(token.span, token.text))"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 147,
+     "column": 20,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 2203716,
+     "bytes": 123408096,
+     "source": "return parse_number_node(tok, token, mut diag)"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 143,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 785831,
+     "bytes": 44006536,
+     "source": "return Ok(ast.node_string(token.span, token.text))"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "sexpr_tokenizer::read_string",
+   "bytes": 1161748376,
+   "corpus_share": 0.02852311740307525,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 1092595248,
+    "P7 record returned through sret": 69153128
+   },
+   "sites": [
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 187,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 22762401,
+     "bytes": 1092595248,
+     "source": "def read_string(src: bytes, t: mut Cursor, s: ast.Span) -> Result[Token, LexError]:"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 199,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 1571662,
+     "bytes": 69153128,
+     "source": "return Ok(make_token(src, TokenTag.string, start, end, s))"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "sexpr_tokenizer::read_number",
+   "bytes": 906152160,
+   "corpus_share": 0.022247747428510482,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 712225152,
+    "P7 record returned through sret": 193927008
+   },
+   "sites": [
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 205,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 12358767,
+     "bytes": 593220816,
+     "source": "def read_number(src: bytes, t: mut Cursor, s: ast.Span) -> Token:"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 244,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 3332972,
+     "bytes": 146650768,
+     "source": "return make_token(src, TokenTag.float, start, t.pos, s)"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 207,
+     "column": 8,
+     "kind": "record_copy",
+     "detail": "branch",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 1942027,
+     "bytes": 93217296,
+     "source": "if peek(src, t) == ord(\"-\"):"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 245,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 1074460,
+     "bytes": 47276240,
+     "source": "return make_token(src, TokenTag.int, start, t.pos, s)"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 212,
+     "column": 8,
+     "kind": "record_copy",
+     "detail": "branch",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 537230,
+     "bytes": 25787040,
+     "source": "if peek(src, t) == ord(\".\") and is_digit(peek_at(src, t, 1)):"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "design_model::read_instance",
+   "bytes": 350636240,
+   "corpus_share": 0.00860878211315259,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 311799240,
+    "P2 whole-record copy before a field store": 20007200,
+    "P3 element copied out of a list": 10136976,
+    "P6 record pushed into a list": 3242592,
+    "P13 list growth (class move or realloc)": 2871072,
+    "P7 record returned through sret": 2535816,
+    "P8 other record copy (record_get)": 43344
+   },
+   "sites": [
+    {
+     "path": "design_model.my",
+     "line": 164,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 581715,
+     "bytes": 311799240,
+     "source": "def read_instance(diag: mut Diag, node: ast.Node) -> Result[env_mod.Instance, str]:"
+    },
+    {
+     "path": "design_model.my",
+     "line": 170,
+     "column": 18,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 67554,
+     "bytes": 3242592,
+     "source": "for child in items[2:]:"
+    },
+    {
+     "path": "design_model.my",
+     "line": 170,
+     "column": 18,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "pattern": "P6 record pushed into a list",
+     "count": 67554,
+     "bytes": 3242592,
+     "source": "for child in items[2:]:"
+    },
+    {
+     "path": "design_model.my",
+     "line": 170,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 67554,
+     "bytes": 3242592,
+     "source": "for child in items[2:]:"
+    },
+    {
+     "path": "design_model.my",
+     "line": 170,
+     "column": 18,
+     "kind": "list_push",
+     "detail": "list_push",
+     "pattern": "P13 list growth (class move or realloc)",
+     "count": 0,
+     "bytes": 2636704,
+     "source": "for child in items[2:]:"
+    },
+    {
+     "path": "design_model.my",
+     "line": 215,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 4731,
+     "bytes": 2535816,
+     "source": "inst.properties = props"
+    },
+    {
+     "path": "design_model.my",
+     "line": 217,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 4731,
+     "bytes": 2535816,
+     "source": "return Ok(inst)"
+    },
+    {
+     "path": "design_model.my",
+     "line": 175,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 4731,
+     "bytes": 2535816,
+     "source": "inst.component = string_arg(mut diag, child, head)?"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "kicad_sch_verify::scan_wire",
+   "bytes": 282428640,
+   "corpus_share": 0.006934156675516519,
+   "patterns": {
+    "P9 copy-on-write of a whole list": 232661280,
+    "P1 record moved into a phi slot at a join": 26683776,
+    "P3 element copied out of a list": 10165248,
+    "P2 whole-record copy before a field store": 4023744,
+    "P6 record pushed into a list": 3811968,
+    "P7 record returned through sret": 2964864,
+    "P8 other record copy (record_get)": 2117760
+   },
+   "sites": [
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 304,
+     "column": 13,
+     "kind": "list_copy",
+     "detail": "list_copy",
+     "pattern": "P9 copy-on-write of a whole list",
+     "count": 26472,
+     "bytes": 232661280,
+     "source": "found.geom.segs.append(Seg(a=a, b=b))"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 291,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 238248,
+     "bytes": 26683776,
+     "source": "def scan_wire(node: ast.Node, found: mut Found):"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 304,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 52944,
+     "bytes": 4023744,
+     "source": "found.geom.segs.append(Seg(a=a, b=b))"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 295,
+     "column": 18,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 79416,
+     "bytes": 3811968,
+     "source": "for child in cl[1:]:"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 295,
+     "column": 18,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "pattern": "P6 record pushed into a list",
+     "count": 79416,
+     "bytes": 3811968,
+     "source": "for child in cl[1:]:"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 295,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 79416,
+     "bytes": 3811968,
+     "source": "for child in cl[1:]:"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 291,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 26472,
+     "bytes": 2964864,
+     "source": "def scan_wire(node: ast.Node, found: mut Found):"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 304,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 52944,
+     "bytes": 2117760,
+     "source": "found.geom.segs.append(Seg(a=a, b=b))"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "kicad_sym_reader::read_pin",
+   "bytes": 178737072,
+   "corpus_share": 0.004388332787252301,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 99649872,
+    "P3 element copied out of a list": 37961856,
+    "P6 record pushed into a list": 18980928,
+    "P2 whole-record copy before a field store": 18453680,
+    "P7 record returned through sret": 3690736
+   },
+   "sites": [
+    {
+     "path": "kicad_sym_reader.my",
+     "line": 193,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 1647650,
+     "bytes": 92268400,
+     "source": "def read_pin(node: ast.Node) -> Option[Pin]:"
+    },
+    {
+     "path": "kicad_sym_reader.my",
+     "line": 196,
+     "column": 18,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 395436,
+     "bytes": 18980928,
+     "source": "for child in cl[1:len(cl)]:"
+    },
+    {
+     "path": "kicad_sym_reader.my",
+     "line": 196,
+     "column": 18,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "pattern": "P6 record pushed into a list",
+     "count": 395436,
+     "bytes": 18980928,
+     "source": "for child in cl[1:len(cl)]:"
+    },
+    {
+     "path": "kicad_sym_reader.my",
+     "line": 196,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 395436,
+     "bytes": 18980928,
+     "source": "for child in cl[1:len(cl)]:"
+    },
+    {
+     "path": "kicad_sym_reader.my",
+     "line": 199,
+     "column": 16,
+     "kind": "record_copy",
+     "detail": "branch",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 131812,
+     "bytes": 7381472,
+     "source": "if atom == b\"hide\":"
+    },
+    {
+     "path": "kicad_sym_reader.my",
+     "line": 202,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 65906,
+     "bytes": 3690736,
+     "source": "p.at = point_at(child, 1).unwrap_or(p.at)"
+    },
+    {
+     "path": "kicad_sym_reader.my",
+     "line": 203,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 65906,
+     "bytes": 3690736,
+     "source": "p.angle = degrees(scalar_at(child, 3).unwrap_or(0.0))"
+    },
+    {
+     "path": "kicad_sym_reader.my",
+     "line": 205,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 65906,
+     "bytes": 3690736,
+     "source": "p.length = unit_at(child, 1)"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "kicad_sch_verify::grid_scan",
+   "bytes": 165625536,
+   "corpus_share": 0.0040664198081696015,
+   "patterns": {
+    "P3 element copied out of a list": 165625536
+   },
+   "sites": [
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 512,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 3136472,
+     "bytes": 150550656,
+     "source": "for child in cl:"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 510,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 157030,
+     "bytes": 7537440,
+     "source": "on_grid(cl[1])?"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 511,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 157030,
+     "bytes": 7537440,
+     "source": "on_grid(cl[2])?"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "support_sort::merge_run[kicad_sch_textbox::Item]",
+   "bytes": 141446784,
+   "corpus_share": 0.0034727857681286964,
+   "patterns": {
+    "P3 element copied out of a list": 64438944,
+    "P5 old element copied out to release it": 36386016,
+    "P4 record written back into a list element": 36386016,
+    "P9 copy-on-write of a whole list": 4235808
+   },
+   "sites": [
+    {
+     "path": "support_sort.my",
+     "line": 50,
+     "column": 20,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 379021,
+     "bytes": 18193008,
+     "source": "items[k] = tmp[k]"
+    },
+    {
+     "path": "support_sort.my",
+     "line": 50,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_set.old",
+     "pattern": "P5 old element copied out to release it",
+     "count": 379021,
+     "bytes": 18193008,
+     "source": "items[k] = tmp[k]"
+    },
+    {
+     "path": "support_sort.my",
+     "line": 50,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_set",
+     "pattern": "P4 record written back into a list element",
+     "count": 379021,
+     "bytes": 18193008,
+     "source": "items[k] = tmp[k]"
+    },
+    {
+     "path": "support_sort.my",
+     "line": 33,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 292218,
+     "bytes": 14026464,
+     "source": "if less(items[j], items[i]):"
+    },
+    {
+     "path": "support_sort.my",
+     "line": 33,
+     "column": 27,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 292218,
+     "bytes": 14026464,
+     "source": "if less(items[j], items[i]):"
+    },
+    {
+     "path": "support_sort.my",
+     "line": 37,
+     "column": 22,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 176942,
+     "bytes": 8493216,
+     "source": "tmp[k] = items[i]"
+    },
+    {
+     "path": "support_sort.my",
+     "line": 37,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_set.old",
+     "pattern": "P5 old element copied out to release it",
+     "count": 176942,
+     "bytes": 8493216,
+     "source": "tmp[k] = items[i]"
+    },
+    {
+     "path": "support_sort.my",
+     "line": 37,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_set",
+     "pattern": "P4 record written back into a list element",
+     "count": 176942,
+     "bytes": 8493216,
+     "source": "tmp[k] = items[i]"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "export_kicad_sch::build_components",
+   "bytes": 112117136,
+   "corpus_share": 0.0027526875002272908,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 70354392,
+    "P2 whole-record copy before a field store": 31891312,
+    "P3 element copied out of a list": 3254928,
+    "P10 dictionary copy": 1965328,
+    "P8 other record copy (dict_entry_value)": 1648680,
+    "P8 other record copy (dict_set_value)": 1648680,
+    "P9 copy-on-write of a whole list": 982664,
+    "P14 dictionary, buffer or text growth": 205056,
+    "P8 other record copy (dict_insert)": 75328,
+    "P13 list growth (class move or realloc)": 48064,
+    "P7 record returned through sret": 42704
+   },
+   "sites": [
+    {
+     "path": "export_kicad_sch.my",
+     "line": 229,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 73437,
+     "bytes": 70354392,
+     "source": "def build_components(fs: Filesystem, err: Stream, self: mut Builder):"
+    },
+    {
+     "path": "export_kicad_sch.my",
+     "line": 251,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 18735,
+     "bytes": 23531160,
+     "source": "self.comps[comp_key] = comp"
+    },
+    {
+     "path": "export_kicad_sch.my",
+     "line": 234,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 4731,
+     "bytes": 5942136,
+     "source": "self.keys.append(key)"
+    },
+    {
+     "path": "export_kicad_sch.my",
+     "line": 232,
+     "column": 15,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 4731,
+     "bytes": 2535816,
+     "source": "src = self.src[i]"
+    },
+    {
+     "path": "export_kicad_sch.my",
+     "line": 229,
+     "column": 5,
+     "kind": "dict_copy",
+     "detail": "dict_copy",
+     "pattern": "P10 dictionary copy",
+     "count": 7630,
+     "bytes": 1965328,
+     "source": "def build_components(fs: Filesystem, err: Stream, self: mut Builder):"
+    },
+    {
+     "path": "export_kicad_sch.my",
+     "line": 245,
+     "column": 20,
+     "kind": "record_copy",
+     "detail": "dict_entry_value",
+     "pattern": "P8 other record copy (dict_entry_value)",
+     "count": 18735,
+     "bytes": 1648680,
+     "source": "comp = self.comps[comp_key]"
+    },
+    {
+     "path": "export_kicad_sch.my",
+     "line": 251,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "dict_set_value",
+     "pattern": "P8 other record copy (dict_set_value)",
+     "count": 18735,
+     "bytes": 1648680,
+     "source": "self.comps[comp_key] = comp"
+    },
+    {
+     "path": "export_kicad_sch.my",
+     "line": 237,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 856,
+     "bytes": 1075136,
+     "source": "self.comps[lookup] = Comp(names=shape_mod.Names(component=base_name(inst), symbol=inst.symbol, pinout=inst.pinout), footprint=inst.footprint, glyph=shape_mod.classify(base_name(inst), inst.symbol, inst.ref_des), parts=part_specs(src), pins=PadNets(ref=inst.ref_des, net={}), used=[], seen=set())"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "export_kicad_sch::index_nets",
+   "bytes": 99037496,
+   "corpus_share": 0.0024315576282024393,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 68705712,
+    "P2 whole-record copy before a field store": 29514744,
+    "P14 dictionary, buffer or text growth": 774336,
+    "P7 record returned through sret": 42704
+   },
+   "sites": [
+    {
+     "path": "export_kicad_sch.my",
+     "line": 154,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 54702,
+     "bytes": 68705712,
+     "source": "def index_nets(err: Stream, self: mut Builder):"
+    },
+    {
+     "path": "export_kicad_sch.my",
+     "line": 164,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 18734,
+     "bytes": 23529904,
+     "source": "self.pin_net[pk] = net.name"
+    },
+    {
+     "path": "export_kicad_sch.my",
+     "line": 159,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 4731,
+     "bytes": 5942136,
+     "source": "self.ref_inst[key] = i"
+    },
+    {
+     "path": "export_kicad_sch.my",
+     "line": 167,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 34,
+     "bytes": 42704,
+     "source": "self.labels = labels"
+    },
+    {
+     "path": "export_kicad_sch.my",
+     "line": 154,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 34,
+     "bytes": 42704,
+     "source": "def index_nets(err: Stream, self: mut Builder):"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "kicad_sch_verify::scan_placed",
+   "bytes": 56774056,
+   "corpus_share": 0.001393910332211877,
+   "patterns": {
+    "P9 copy-on-write of a whole list": 23487680,
+    "P3 element copied out of a list": 13784928,
+    "P6 record pushed into a list": 6491904,
+    "P13 list growth (class move or realloc)": 6008416,
+    "P2 whole-record copy before a field store": 3529608,
+    "P1 record moved into a phi slot at a join": 1869280,
+    "P7 record returned through sret": 934640,
+    "P8 other record copy (record_get)": 667600
+   },
+   "sites": [
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 494,
+     "column": 9,
+     "kind": "list_copy",
+     "detail": "list_copy",
+     "pattern": "P9 copy-on-write of a whole list",
+     "count": 8345,
+     "bytes": 23487680,
+     "source": "found.geom.placed.append(Placed(lib=lib_id, unit=unit_of(node), at=at, angle=angle_of(node)))"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 480,
+     "column": 18,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 135248,
+     "bytes": 6491904,
+     "source": "for child in cl[1:]:"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 480,
+     "column": 18,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "pattern": "P6 record pushed into a list",
+     "count": 135248,
+     "bytes": 6491904,
+     "source": "for child in cl[1:]:"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 480,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 135248,
+     "bytes": 6491904,
+     "source": "for child in cl[1:]:"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 480,
+     "column": 18,
+     "kind": "list_push",
+     "detail": "list_push",
+     "pattern": "P13 list growth (class move or realloc)",
+     "count": 0,
+     "bytes": 5864640,
+     "source": "for child in cl[1:]:"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 474,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 11844,
+     "bytes": 1326528,
+     "source": "def scan_placed(node: ast.Node, found: mut Found):"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 494,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 16690,
+     "bytes": 1268440,
+     "source": "found.geom.placed.append(Placed(lib=lib_id, unit=unit_of(node), at=at, angle=angle_of(node)))"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 474,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 8345,
+     "bytes": 934640,
+     "source": "def scan_placed(node: ast.Node, found: mut Found):"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "kicad_sch_verify::at_form",
+   "bytes": 56478624,
+   "corpus_share": 0.0013866569184824437,
+   "patterns": {
+    "P3 element copied out of a list": 24820992,
+    "P6 record pushed into a list": 19928352,
+    "P13 list growth (class move or realloc)": 11729280
+   },
+   "sites": [
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 331,
+     "column": 18,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 415174,
+     "bytes": 19928352,
+     "source": "for child in cl[1:]:"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 331,
+     "column": 18,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "pattern": "P6 record pushed into a list",
+     "count": 415174,
+     "bytes": 19928352,
+     "source": "for child in cl[1:]:"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 331,
+     "column": 18,
+     "kind": "list_push",
+     "detail": "list_push",
+     "pattern": "P13 list growth (class move or realloc)",
+     "count": 0,
+     "bytes": 11729280,
+     "source": "for child in cl[1:]:"
+    },
+    {
+     "path": "kicad_sch_verify.my",
+     "line": 331,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 101930,
+     "bytes": 4892640,
+     "source": "for child in cl[1:]:"
+    }
+   ]
+  }
+ ],
+ "parity": [
+  {
+   "group": "parity",
+   "function": "advance",
+   "bytes": 63000000000,
+   "corpus_share": 0.9975429899264858,
+   "patterns": {
+    "P3 element copied out of a list": 42000000000,
+    "P4 record written back into a list element": 21000000000
+   },
+   "sites": [
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 113,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 100000000,
+     "bytes": 5600000000,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 114,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 100000000,
+     "bytes": 5600000000,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 115,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 100000000,
+     "bytes": 5600000000,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 116,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 100000000,
+     "bytes": 5600000000,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 117,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 100000000,
+     "bytes": 5600000000,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 118,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 100000000,
+     "bytes": 5600000000,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 114,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_set",
+     "pattern": "P4 record written back into a list element",
+     "count": 50000000,
+     "bytes": 2800000000,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 115,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_set",
+     "pattern": "P4 record written back into a list element",
+     "count": 50000000,
+     "bytes": 2800000000,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "parity",
+   "function": "main",
+   "bytes": 134217784,
+   "corpus_share": 0.0021252065008359883,
+   "patterns": {
+    "P14 dictionary, buffer or text growth": 134217720,
+    "P13 list growth (class move or realloc)": 64
+   },
+   "sites": [
+    {
+     "path": "bench/parity/suite/knucleotide.my",
+     "line": 33,
+     "column": 64,
+     "kind": "list_push",
+     "detail": "list_push",
+     "pattern": "P13 list growth (class move or realloc)",
+     "count": 0,
+     "bytes": 64,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "parity",
+   "function": "frequencies",
+   "bytes": 12688128,
+   "corpus_share": 0.00020090401812206292,
+   "patterns": {
+    "P14 dictionary, buffer or text growth": 12688128
+   },
+   "sites": []
+  },
+  {
+   "group": "parity",
+   "function": "generate",
+   "bytes": 8257728,
+   "corpus_share": 0.00013075299490666127,
+   "patterns": {
+    "P13 list growth (class move or realloc)": 8257728
+   },
+   "sites": [
+    {
+     "path": "bench/parity/suite/knucleotide.my",
+     "line": 16,
+     "column": 9,
+     "kind": "list_push",
+     "detail": "list_push",
+     "pattern": "P13 list growth (class move or realloc)",
+     "count": 0,
+     "bytes": 8257728,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "parity",
+   "function": "random_matrix",
+   "bytes": 8192,
+   "corpus_share": 1.297122567218694e-07,
+   "patterns": {
+    "P13 list growth (class move or realloc)": 8192
+   },
+   "sites": [
+    {
+     "path": "bench/parity/suite/matmul.my",
+     "line": 16,
+     "column": 9,
+     "kind": "list_push",
+     "detail": "list_push",
+     "pattern": "P13 list growth (class move or realloc)",
+     "count": 0,
+     "bytes": 8192,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "parity",
+   "function": "energy",
+   "bytes": 560,
+   "corpus_share": 8.86704879934654e-09,
+   "patterns": {
+    "P3 element copied out of a list": 560
+   },
+   "sites": [
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 93,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 10,
+     "bytes": 560,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "parity",
+   "function": "offset_momentum",
+   "bytes": 504,
+   "corpus_share": 7.980343919411887e-09,
+   "patterns": {
+    "P3 element copied out of a list": 336,
+    "P4 record written back into a list element": 168
+   },
+   "sites": [
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 84,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 2,
+     "bytes": 112,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 85,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 2,
+     "bytes": 112,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 86,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 2,
+     "bytes": 112,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 85,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "list_set",
+     "pattern": "P4 record written back into a list element",
+     "count": 1,
+     "bytes": 56,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 86,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "list_set",
+     "pattern": "P4 record written back into a list element",
+     "count": 1,
+     "bytes": 56,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 84,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "list_set",
+     "pattern": "P4 record written back into a list element",
+     "count": 1,
+     "bytes": 56,
+     "source": ""
+    }
+   ]
+  }
+ ],
+ "rows": [
+  {
+   "group": "rows",
+   "function": "row_record_pass::batch_result",
+   "bytes": 363026976,
+   "corpus_share": 0.4148133749044479,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 363026976
+   },
+   "sites": [
+    {
+     "path": "row_record_pass.my",
+     "line": 48,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 3781531,
+     "bytes": 363026976,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "rows",
+   "function": "row_dict_update::batch_result",
+   "bytes": 196416000,
+   "corpus_share": 0.22443506745138422,
+   "patterns": {
+    "P14 dictionary, buffer or text growth": 196416000
+   },
+   "sites": []
+  },
+  {
+   "group": "rows",
+   "function": "row_dict_update_str::batch_result",
+   "bytes": 196416000,
+   "corpus_share": 0.22443506745138422,
+   "patterns": {
+    "P14 dictionary, buffer or text growth": 196416000
+   },
+   "sites": []
+  },
+  {
+   "group": "rows",
+   "function": "row_set_dedup::batch_result",
+   "bytes": 65024000,
+   "corpus_share": 0.0742997812090604,
+   "patterns": {
+    "P14 dictionary, buffer or text growth": 65024000
+   },
+   "sites": []
+  },
+  {
+   "group": "rows",
+   "function": "row_mutate_nested::batch_result",
+   "bytes": 13120000,
+   "corpus_share": 0.014991589712458052,
+   "patterns": {
+    "P9 copy-on-write of a whole list": 13120000
+   },
+   "sites": [
+    {
+     "path": "row_mutate_nested.my",
+     "line": 14,
+     "column": 5,
+     "kind": "list_copy",
+     "detail": "list_copy",
+     "pattern": "P9 copy-on-write of a whole list",
+     "count": 400,
+     "bytes": 13107200,
+     "source": ""
+    },
+    {
+     "path": "row_mutate_nested.my",
+     "line": 11,
+     "column": 5,
+     "kind": "list_copy",
+     "detail": "list_copy",
+     "pattern": "P9 copy-on-write of a whole list",
+     "count": 400,
+     "bytes": 12800,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "rows",
+   "function": "row_mutate_shared::main",
+   "bytes": 13107200,
+   "corpus_share": 0.014976963771275166,
+   "patterns": {
+    "P9 copy-on-write of a whole list": 13107200
+   },
+   "sites": [
+    {
+     "path": "row_mutate_shared.my",
+     "line": 32,
+     "column": 9,
+     "kind": "list_copy",
+     "detail": "list_copy",
+     "pattern": "P9 copy-on-write of a whole list",
+     "count": 400,
+     "bytes": 13107200,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "rows",
+   "function": "row_alloc_retained::batch_result",
+   "bytes": 9200416,
+   "corpus_share": 0.010512870568287688,
+   "patterns": {
+    "P13 list growth (class move or realloc)": 9200416
+   },
+   "sites": [
+    {
+     "path": "row_alloc_retained.my",
+     "line": 15,
+     "column": 9,
+     "kind": "list_push",
+     "detail": "list_push",
+     "pattern": "P13 list growth (class move or realloc)",
+     "count": 0,
+     "bytes": 9200416,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "rows",
+   "function": "json::write_quoted",
+   "bytes": 5241573,
+   "corpus_share": 0.005989292062797096,
+   "patterns": {
+    "P14 dictionary, buffer or text growth": 5241573
+   },
+   "sites": []
+  },
+  {
+   "group": "rows",
+   "function": "row_list_filter::batch_result",
+   "bytes": 3840000,
+   "corpus_share": 0.004387782354865771,
+   "patterns": {
+    "P13 list growth (class move or realloc)": 3840000
+   },
+   "sites": [
+    {
+     "path": "row_list_filter.my",
+     "line": 20,
+     "column": 17,
+     "kind": "list_push",
+     "detail": "list_push",
+     "pattern": "P13 list growth (class move or realloc)",
+     "count": 0,
+     "bytes": 3840000,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "rows",
+   "function": "row_buffer_write::batch_result",
+   "bytes": 3765978,
+   "corpus_share": 0.004303200994065805,
+   "patterns": {
+    "P14 dictionary, buffer or text growth": 3765978
+   },
+   "sites": []
+  },
+  {
+   "group": "rows",
+   "function": "row_json_transform::json_job",
+   "bytes": 1312000,
+   "corpus_share": 0.0014991589712458054,
+   "patterns": {
+    "P13 list growth (class move or realloc)": 1312000
+   },
+   "sites": [
+    {
+     "path": "row_json_transform.my",
+     "line": 57,
+     "column": 37,
+     "kind": "list_push",
+     "detail": "list_push",
+     "pattern": "P13 list growth (class move or realloc)",
+     "count": 0,
+     "bytes": 1312000,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "rows",
+   "function": "json::read_array",
+   "bytes": 1312000,
+   "corpus_share": 0.0014991589712458054,
+   "patterns": {
+    "P13 list growth (class move or realloc)": 1312000
+   },
+   "sites": [
+    {
+     "path": "@stdlib/json.my",
+     "line": 519,
+     "column": 9,
+     "kind": "list_push",
+     "detail": "list_push",
+     "pattern": "P13 list growth (class move or realloc)",
+     "count": 0,
+     "bytes": 1312000,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "rows",
+   "function": "row_csv_aggregate::csv_rows",
+   "bytes": 860160,
+   "corpus_share": 0.000982863247489933,
+   "patterns": {
+    "P13 list growth (class move or realloc)": 860160
+   },
+   "sites": [
+    {
+     "path": "row_csv_aggregate.my",
+     "line": 65,
+     "column": 13,
+     "kind": "list_push",
+     "detail": "list_push",
+     "pattern": "P13 list growth (class move or realloc)",
+     "count": 0,
+     "bytes": 860160,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "rows",
+   "function": "row_sort_records::main",
+   "bytes": 537600,
+   "corpus_share": 0.000614289529681208,
+   "patterns": {
+    "P13 list growth (class move or realloc)": 537600
+   },
+   "sites": [
+    {
+     "path": "row_sort_records.my",
+     "line": 37,
+     "column": 13,
+     "kind": "list_push",
+     "detail": "list_push",
+     "pattern": "P13 list growth (class move or realloc)",
+     "count": 0,
+     "bytes": 537600,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "rows",
+   "function": "json::read_string",
+   "bytes": 286720,
+   "corpus_share": 0.0003276210824966443,
+   "patterns": {
+    "P14 dictionary, buffer or text growth": 286720
+   },
+   "sites": []
+  },
+  {
+   "group": "rows",
+   "function": "json::write_value",
+   "bytes": 278492,
+   "corpus_share": 0.00031821934468002043,
+   "patterns": {
+    "P14 dictionary, buffer or text growth": 278492
+   },
+   "sites": []
+  },
+  {
+   "group": "rows",
+   "function": "row_packet_decode::make_frame",
+   "bytes": 262144,
+   "corpus_share": 0.00029953927542550335,
+   "patterns": {
+    "P13 list growth (class move or realloc)": 262144
+   },
+   "sites": [
+    {
+     "path": "row_packet_decode.my",
+     "line": 23,
+     "column": 9,
+     "kind": "list_push",
+     "detail": "list_push",
+     "pattern": "P13 list growth (class move or realloc)",
+     "count": 0,
+     "bytes": 262144,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "rows",
+   "function": "json::write_object",
+   "bytes": 246312,
+   "corpus_share": 0.00028144881442492133,
+   "patterns": {
+    "P14 dictionary, buffer or text growth": 246312
+   },
+   "sites": []
+  },
+  {
+   "group": "rows",
+   "function": "row_csv_aggregate::inputs",
+   "bytes": 169620,
+   "corpus_share": 0.0001938165737063365,
+   "patterns": {
+    "P14 dictionary, buffer or text growth": 139924,
+    "P13 list growth (class move or realloc)": 25600,
+    "P11 text copy / view materialized": 4096
+   },
+   "sites": [
+    {
+     "path": "row_csv_aggregate.my",
+     "line": 99,
+     "column": 9,
+     "kind": "list_push",
+     "detail": "list_push",
+     "pattern": "P13 list growth (class move or realloc)",
+     "count": 0,
+     "bytes": 25600,
+     "source": ""
+    },
+    {
+     "path": "row_csv_aggregate.my",
+     "line": 98,
+     "column": 23,
+     "kind": "text_copy",
+     "detail": "str_from_view",
+     "pattern": "P11 text copy / view materialized",
+     "count": 4096,
+     "bytes": 4096,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "rows",
+   "function": "row_word_count::inputs",
+   "bytes": 99840,
+   "corpus_share": 0.00011408234122651006,
+   "patterns": {
+    "P14 dictionary, buffer or text growth": 60928,
+    "P11 text copy / view materialized": 38912
+   },
+   "sites": [
+    {
+     "path": "row_word_count.my",
+     "line": 50,
+     "column": 23,
+     "kind": "text_copy",
+     "detail": "str_from_view",
+     "pattern": "P11 text copy / view materialized",
+     "count": 1,
+     "bytes": 22016,
+     "source": ""
+    },
+    {
+     "path": "row_word_count.my",
+     "line": 48,
+     "column": 42,
+     "kind": "text_copy",
+     "detail": "str_from_view",
+     "pattern": "P11 text copy / view materialized",
+     "count": 4096,
+     "bytes": 16896,
+     "source": ""
+    }
+   ]
+  }
+ ],
+ "all": [
+  {
+   "group": "parity",
+   "function": "advance",
+   "bytes": 63000000000,
+   "corpus_share": 0.9975429899264858,
+   "patterns": {
+    "P3 element copied out of a list": 42000000000,
+    "P4 record written back into a list element": 21000000000
+   },
+   "sites": [
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 113,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 100000000,
+     "bytes": 5600000000,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 114,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 100000000,
+     "bytes": 5600000000,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 115,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 100000000,
+     "bytes": 5600000000,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 116,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 100000000,
+     "bytes": 5600000000,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 117,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 100000000,
+     "bytes": 5600000000,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 118,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 100000000,
+     "bytes": 5600000000,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 114,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_set",
+     "pattern": "P4 record written back into a list element",
+     "count": 50000000,
+     "bytes": 2800000000,
+     "source": ""
+    },
+    {
+     "path": "bench/parity/suite/nbody.my",
+     "line": 115,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_set",
+     "pattern": "P4 record written back into a list element",
+     "count": 50000000,
+     "bytes": 2800000000,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "vm::run",
+   "bytes": 669306798376,
+   "corpus_share": 0.5242635720395269,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 493071014144,
+    "P2 whole-record copy before a field store": 88652503288,
+    "P4 record written back into a list element": 35528648160,
+    "P5 old element copied out to release it": 22989125280,
+    "P8 other record copy (retain)": 13428289488,
+    "P8 other record copy (record_get)": 13119043080,
+    "P3 element copied out of a list": 1629405448,
+    "P8 other record copy (release)": 888766608,
+    "P7 record returned through sret": 2880
+   },
+   "sites": [
+    {
+     "path": "vm.my",
+     "line": 429,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 4510251911,
+     "bytes": 492905126840,
+     "source": "def run(rt: mut heap.Runtime, o: mut output.Output) -> InterpretResult:"
+    },
+    {
+     "path": "vm.my",
+     "line": 433,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 125991046,
+     "bytes": 25198209200,
+     "source": "rt.frames[rt.frame_count - 1] = frame"
+    },
+    {
+     "path": "vm.my",
+     "line": 534,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 125991034,
+     "bytes": 25198206800,
+     "source": "rt.frames[rt.frame_count - 1] = frame"
+    },
+    {
+     "path": "vm.my",
+     "line": 433,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_set",
+     "pattern": "P4 record written back into a list element",
+     "count": 251982092,
+     "bytes": 17134782256,
+     "source": "rt.frames[rt.frame_count - 1] = frame"
+    },
+    {
+     "path": "vm.my",
+     "line": 534,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_set",
+     "pattern": "P4 record written back into a list element",
+     "count": 251982068,
+     "bytes": 17134780624,
+     "source": "rt.frames[rt.frame_count - 1] = frame"
+    },
+    {
+     "path": "vm.my",
+     "line": 254,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 151301545,
+     "bytes": 13314535960,
+     "source": "frame.ip = frame.ip + 1"
+    },
+    {
+     "path": "vm.my",
+     "line": 433,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_set.old",
+     "pattern": "P5 old element copied out to release it",
+     "count": 125991046,
+     "bytes": 11087212048,
+     "source": "rt.frames[rt.frame_count - 1] = frame"
+    },
+    {
+     "path": "vm.my",
+     "line": 534,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_set.old",
+     "pattern": "P5 old element copied out to release it",
+     "count": 125991034,
+     "bytes": 11087210992,
+     "source": "rt.frames[rt.frame_count - 1] = frame"
+    }
+   ]
+  },
+  {
+   "group": "rows",
+   "function": "row_record_pass::batch_result",
+   "bytes": 363026976,
+   "corpus_share": 0.4148133749044479,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 363026976
+   },
+   "sites": [
+    {
+     "path": "row_record_pass.my",
+     "line": 48,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 3781531,
+     "bytes": 363026976,
+     "source": ""
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "sexpr_tokenizer::advance",
+   "bytes": 13569568080,
+   "corpus_share": 0.33315853195981776,
+   "patterns": {
+    "P2 whole-record copy before a field store": 5427827232,
+    "P1 record moved into a phi slot at a join": 5427827232,
+    "P7 record returned through sret": 2713913616
+   },
+   "sites": [
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 90,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 113079734,
+     "bytes": 5427827232,
+     "source": "def advance(src: bytes, t: mut Cursor):"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 90,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 56539867,
+     "bytes": 2713913616,
+     "source": "def advance(src: bytes, t: mut Cursor):"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 97,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 56539867,
+     "bytes": 2713913616,
+     "source": "t.pos += 1"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 96,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 55241166,
+     "bytes": 2651575968,
+     "source": "t.col += 1"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 93,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 1298701,
+     "bytes": 62337648,
+     "source": "t.line += 1"
+    }
+   ]
+  },
+  {
+   "group": "rows",
+   "function": "row_dict_update::batch_result",
+   "bytes": 196416000,
+   "corpus_share": 0.22443506745138422,
+   "patterns": {
+    "P14 dictionary, buffer or text growth": 196416000
+   },
+   "sites": []
+  },
+  {
+   "group": "rows",
+   "function": "row_dict_update_str::batch_result",
+   "bytes": 196416000,
+   "corpus_share": 0.22443506745138422,
+   "patterns": {
+    "P14 dictionary, buffer or text growth": 196416000
+   },
+   "sites": []
+  },
+  {
+   "group": "eda",
+   "function": "sexpr_parser::parse_list",
+   "bytes": 5475449192,
+   "corpus_share": 0.13443262186922095,
+   "patterns": {
+    "P8 other record copy (record_get)": 2299467784,
+    "P8 other record copy (union_payload)": 930034632,
+    "P8 other record copy (release)": 930034632,
+    "P1 record moved into a phi slot at a join": 679281624,
+    "P6 record pushed into a list": 444833472,
+    "P7 record returned through sret": 160309240,
+    "P13 list growth (class move or realloc)": 31487808
+   },
+   "sites": [
+    {
+     "path": "sexpr_parser.my",
+     "line": 218,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 24260058,
+     "bytes": 1261523016,
+     "source": "token = next_token(mut tok, mut diag)?"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 224,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 18534728,
+     "bytes": 1037944768,
+     "source": "child = parse_node(mut tok, token, depth + 1, mut diag)?"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 213,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 12130029,
+     "bytes": 679281624,
+     "source": "def parse_list(tok: mut tokenizer_mod.Tokenizer, open_span: ast.Span, depth: int, diag: mut ParseDiagnostic) -> Result[ast.Node, ParseError]:"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 218,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "union_payload",
+     "pattern": "P8 other record copy (union_payload)",
+     "count": 12130029,
+     "bytes": 485201160,
+     "source": "token = next_token(mut tok, mut diag)?"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 218,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "release",
+     "pattern": "P8 other record copy (release)",
+     "count": 12130029,
+     "bytes": 485201160,
+     "source": "token = next_token(mut tok, mut diag)?"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 224,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "union_payload",
+     "pattern": "P8 other record copy (union_payload)",
+     "count": 9267364,
+     "bytes": 444833472,
+     "source": "child = parse_node(mut tok, token, depth + 1, mut diag)?"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "pattern": "P6 record pushed into a list",
+     "count": 9267364,
+     "bytes": 444833472,
+     "source": "children.append(child)"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 224,
+     "column": 17,
+     "kind": "record_copy",
+     "detail": "release",
+     "pattern": "P8 other record copy (release)",
+     "count": 9267364,
+     "bytes": 444833472,
+     "source": "child = parse_node(mut tok, token, depth + 1, mut diag)?"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "sexpr_tokenizer::next",
+   "bytes": 4275883040,
+   "corpus_share": 0.104981006620093,
+   "patterns": {
+    "P8 other record copy (record_get)": 1749224880,
+    "P2 whole-record copy before a field store": 1263329080,
+    "P7 record returned through sret": 1263329080
+   },
+   "sites": [
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 269,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 24294790,
+     "bytes": 1263329080,
+     "source": "t.cur = cur"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 270,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 24294790,
+     "bytes": 1263329080,
+     "source": "return r"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 268,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 24294790,
+     "bytes": 1166149920,
+     "source": "r = next_in(src, mut cur)"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 267,
+     "column": 11,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 12147395,
+     "bytes": 583074960,
+     "source": "cur = t.cur"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "sexpr_parser::next_token",
+   "bytes": 3401270600,
+   "corpus_share": 0.08350761890234672,
+   "patterns": {
+    "P8 other record copy (record_get)": 1263329080,
+    "P7 record returned through sret": 1166149920,
+    "P8 other record copy (union_payload)": 485895800,
+    "P8 other record copy (release)": 485895800
+   },
+   "sites": [
+    {
+     "path": "sexpr_parser.my",
+     "line": 116,
+     "column": 11,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 24294790,
+     "bytes": 1263329080,
+     "source": "match tokenizer_mod.next(mut tok):"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 118,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 24294790,
+     "bytes": 1166149920,
+     "source": "return Ok(token)"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 116,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "union_payload",
+     "pattern": "P8 other record copy (union_payload)",
+     "count": 12147395,
+     "bytes": 485895800,
+     "source": "match tokenizer_mod.next(mut tok):"
+    },
+    {
+     "path": "sexpr_parser.my",
+     "line": 116,
+     "column": 11,
+     "kind": "record_copy",
+     "detail": "release",
+     "pattern": "P8 other record copy (release)",
+     "count": 12147395,
+     "bytes": 485895800,
+     "source": "match tokenizer_mod.next(mut tok):"
+    }
+   ]
+  },
+  {
+   "group": "rows",
+   "function": "row_set_dedup::batch_result",
+   "bytes": 65024000,
+   "corpus_share": 0.0742997812090604,
+   "patterns": {
+    "P14 dictionary, buffer or text growth": 65024000
+   },
+   "sites": []
+  },
+  {
+   "group": "eda",
+   "function": "kicad_sch_textbox::overlaps_of",
+   "bytes": 2768343616,
+   "corpus_share": 0.0679680657209904,
+   "patterns": {
+    "P3 element copied out of a list": 934032960,
+    "P6 record pushed into a list": 901297152,
+    "P13 list growth (class move or realloc)": 840890592,
+    "P1 record moved into a phi slot at a join": 92069856,
+    "P7 record returned through sret": 26712,
+    "P8 other record copy (record_make)": 20776,
+    "P2 whole-record copy before a field store": 3112,
+    "P8 other record copy (record_get)": 2072,
+    "P8 other record copy (union_make)": 384
+   },
+   "sites": [
+    {
+     "path": "kicad_sch_textbox.my",
+     "line": 137,
+     "column": 18,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 18777024,
+     "bytes": 901297152,
+     "source": "for b in ordered[i + 1:len(ordered)]:"
+    },
+    {
+     "path": "kicad_sch_textbox.my",
+     "line": 137,
+     "column": 18,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "pattern": "P6 record pushed into a list",
+     "count": 18777024,
+     "bytes": 901297152,
+     "source": "for b in ordered[i + 1:len(ordered)]:"
+    },
+    {
+     "path": "kicad_sch_textbox.my",
+     "line": 137,
+     "column": 18,
+     "kind": "list_push",
+     "detail": "list_push",
+     "pattern": "P13 list growth (class move or realloc)",
+     "count": 0,
+     "bytes": 840890592,
+     "source": "for b in ordered[i + 1:len(ordered)]:"
+    },
+    {
+     "path": "kicad_sch_textbox.my",
+     "line": 131,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 1278727,
+     "bytes": 92068344,
+     "source": "def overlaps_of(items: list[Item]) -> Report:"
+    },
+    {
+     "path": "kicad_sch_textbox.my",
+     "line": 137,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 637873,
+     "bytes": 30617904,
+     "source": "for b in ordered[i + 1:len(ordered)]:"
+    },
+    {
+     "path": "kicad_sch_textbox.my",
+     "line": 136,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 44123,
+     "bytes": 2117904,
+     "source": "for a in ordered:"
+    },
+    {
+     "path": "kicad_sch_textbox.my",
+     "line": 146,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 371,
+     "bytes": 26712,
+     "source": "return out"
+    },
+    {
+     "path": "kicad_sch_textbox.my",
+     "line": 134,
+     "column": 11,
+     "kind": "record_copy",
+     "detail": "record_make",
+     "pattern": "P8 other record copy (record_make)",
+     "count": 371,
+     "bytes": 20776,
+     "source": "out = Report(texts=len(ordered))"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::instantiate",
+   "bytes": 81438715040,
+   "corpus_share": 0.06379040486780527,
+   "patterns": {
+    "P9 copy-on-write of a whole list": 79214673920,
+    "P2 whole-record copy before a field store": 1201465592,
+    "P8 other record copy (record_get)": 843684968,
+    "P1 record moved into a phi slot at a join": 89445280,
+    "P7 record returned through sret": 89445280
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 472,
+     "column": 5,
+     "kind": "list_copy",
+     "detail": "list_copy",
+     "pattern": "P9 copy-on-write of a whole list",
+     "count": 302180,
+     "bytes": 79214673920,
+     "source": "it.rt.stack[callee_slot] = value.Value.obj(instance)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 471,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 604360,
+     "bytes": 149881280,
+     "source": "it.rt = __wb_413"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 472,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 604360,
+     "bytes": 149881280,
+     "source": "it.rt.stack[callee_slot] = value.Value.obj(instance)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 496,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 604360,
+     "bytes": 149881280,
+     "source": "it.rt = __wb_428"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 479,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 604358,
+     "bytes": 149880784,
+     "source": "it.rt = __wb_419"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 485,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 604358,
+     "bytes": 149880784,
+     "source": "it.rt = __wb_421"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 489,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 604358,
+     "bytes": 149880784,
+     "source": "it.rt = __wb_423"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 472,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 604360,
+     "bytes": 120872000,
+     "source": "it.rt.stack[callee_slot] = value.Value.obj(instance)"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "sexpr_tokenizer::skip_whitespace_and_comments",
+   "bytes": 2376595920,
+   "corpus_share": 0.05834991969537268,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 1793520960,
+    "P7 record returned through sret": 583074960
+   },
+   "sites": [
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 104,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 37365020,
+     "bytes": 1793520960,
+     "source": "def skip_whitespace_and_comments(src: bytes, t: mut Cursor):"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 104,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 12147395,
+     "bytes": 583074960,
+     "source": "def skip_whitespace_and_comments(src: bytes, t: mut Cursor):"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::evaluate",
+   "bytes": 64087421608,
+   "corpus_share": 0.05019925190740155,
+   "patterns": {
+    "P7 record returned through sret": 23906722680,
+    "P8 other record copy (record_get)": 21597645528,
+    "P2 whole-record copy before a field store": 16740809352,
+    "P8 other record copy (list_get_field)": 1842244048
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 360,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 39384706,
+     "bytes": 9767407088,
+     "source": "it.rt = __wb_318"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 376,
+     "column": 20,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 19707250,
+     "bytes": 5833346000,
+     "source": "return get_variable(mut it, node.name_ref, node.hops, node.slot, node.name.line)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 376,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 19707250,
+     "bytes": 5833346000,
+     "source": "return get_variable(mut it, node.name_ref, node.hops, node.slot, node.name.line)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 361,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 19692353,
+     "bytes": 5828936488,
+     "source": "return Ok(None)"
+    },
+    {
+     "path": "heap.my",
+     "line": 101,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 24052887,
+     "bytes": 4810577400,
+     "source": "rt.stack[rt.stack_top] = item"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 358,
+     "column": 24,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 19692353,
+     "bytes": 3938470600,
+     "source": "__wb_318 = it.rt"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 350,
+     "column": 20,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 13279735,
+     "bytes": 3930801560,
+     "source": "return binary(mut it, node)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 350,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 13279735,
+     "bytes": 3930801560,
+     "source": "return binary(mut it, node)"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::execute",
+   "bytes": 55318897840,
+   "corpus_share": 0.04333092544892341,
+   "patterns": {
+    "P2 whole-record copy before a field store": 20709427984,
+    "P8 other record copy (record_get)": 16974206560,
+    "P7 record returned through sret": 8887127088,
+    "P1 record moved into a phi slot at a join": 8696051688,
+    "P8 other record copy (list_get_field)": 36082440,
+    "P3 element copied out of a list": 16002080
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 624,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 40326824,
+     "bytes": 10001052352,
+     "source": "it.rt = __wb_521"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 614,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 29378553,
+     "bytes": 8696051688,
+     "source": "def execute(it: mut Interpreter, id: int) -> Result[Flow, RuntimeError]:"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 692,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 21573651,
+     "bytes": 6385800696,
+     "source": "return Ok(Flow.NORMAL)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 621,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 20163412,
+     "bytes": 5968369952,
+     "source": "evaluate(mut it, expr)?"
+    },
+    {
+     "path": "heap.my",
+     "line": 106,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 29412338,
+     "bytes": 5882467600,
+     "source": "rt.stack_top = rt.stack_top - 1"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 622,
+     "column": 24,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 20163412,
+     "bytes": 4032682400,
+     "source": "__wb_521 = it.rt"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 660,
+     "column": 21,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 5965154,
+     "bytes": 1765685584,
+     "source": "evaluate(mut it, result)?"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 666,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 5965154,
+     "bytes": 1765685584,
+     "source": "it.returned = heap.pop(mut __wb_547)"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "heap::allocate",
+   "bytes": 53687690073,
+   "corpus_share": 0.04205321123364718,
+   "patterns": {
+    "P2 whole-record copy before a field store": 21672992800,
+    "P9 copy-on-write of a whole list": 11995963896,
+    "P1 record moved into a phi slot at a join": 10836496400,
+    "P7 record returned through sret": 5418248200,
+    "P5 old element copied out to release it": 1498719264,
+    "P4 record written back into a list element": 1498719264,
+    "P13 list growth (class move or realloc)": 748155073,
+    "P6 record pushed into a list": 18390232,
+    "P8 other record copy (retain)": 4944
+   },
+   "sites": [
+    {
+     "path": "heap.my",
+     "line": 117,
+     "column": 12,
+     "kind": "list_copy",
+     "detail": "list_copy",
+     "pattern": "P9 copy-on-write of a whole list",
+     "count": 28836,
+     "bytes": 11995963896,
+     "source": "public def allocate(rt: mut Runtime, obj: object.Obj) -> value.ObjRef:"
+    },
+    {
+     "path": "heap.my",
+     "line": 117,
+     "column": 12,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 27092331,
+     "bytes": 5418466200,
+     "source": "public def allocate(rt: mut Runtime, obj: object.Obj) -> value.ObjRef:"
+    },
+    {
+     "path": "heap.my",
+     "line": 118,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 27091241,
+     "bytes": 5418248200,
+     "source": "rt.bytes_allocated = rt.bytes_allocated + object.cost(obj)"
+    },
+    {
+     "path": "heap.my",
+     "line": 128,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 27091241,
+     "bytes": 5418248200,
+     "source": "rt.allocations = rt.allocations + 1"
+    },
+    {
+     "path": "heap.my",
+     "line": 129,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 27091241,
+     "bytes": 5418248200,
+     "source": "return slot"
+    },
+    {
+     "path": "heap.my",
+     "line": 119,
+     "column": 24,
+     "kind": "record_copy",
+     "detail": "branch",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 27090151,
+     "bytes": 5418030200,
+     "source": "if rt.gc_stress or rt.bytes_allocated > rt.next_gc:"
+    },
+    {
+     "path": "heap.my",
+     "line": 123,
+     "column": 16,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 26762844,
+     "bytes": 5352568800,
+     "source": "slot = rt.free_slots.pop()"
+    },
+    {
+     "path": "heap.my",
+     "line": 124,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 26762844,
+     "bytes": 5352568800,
+     "source": "rt.objects[slot] = obj"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "sexpr_tokenizer::next_in",
+   "bytes": 1645574352,
+   "corpus_share": 0.04040195915676105,
+   "patterns": {
+    "P7 record returned through sret": 1074910088,
+    "P8 other record copy (record_get)": 570664264
+   },
+   "sites": [
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 290,
+     "column": 19,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 6847670,
+     "bytes": 301297480,
+     "source": "return Ok(read_atom(src, mut t, s))"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 290,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 6847670,
+     "bytes": 301297480,
+     "source": "return Ok(read_atom(src, mut t, s))"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 281,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 5725330,
+     "bytes": 251914520,
+     "source": "return Ok(make_token(src, TokenTag.lparen, s.offset, t.pos, s))"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 284,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 5725330,
+     "bytes": 251914520,
+     "source": "return Ok(make_token(src, TokenTag.rparen, s.offset, t.pos, s))"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 288,
+     "column": 19,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 4407432,
+     "bytes": 193927008,
+     "source": "return Ok(read_number(src, mut t, s))"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 288,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 4407432,
+     "bytes": 193927008,
+     "source": "return Ok(read_number(src, mut t, s))"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 286,
+     "column": 16,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 1571662,
+     "bytes": 75439776,
+     "source": "return read_string(src, mut t, s)"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 286,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 1571662,
+     "bytes": 75439776,
+     "source": "return read_string(src, mut t, s)"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "interpreter::binary",
+   "bytes": 50046902280,
+   "corpus_share": 0.03920140632440762,
+   "patterns": {
+    "P2 whole-record copy before a field store": 18683791120,
+    "P8 other record copy (record_get)": 16680633520,
+    "P1 record moved into a phi slot at a join": 10751676080,
+    "P7 record returned through sret": 3930801560
+   },
+   "sites": [
+    {
+     "path": "interpreter.my",
+     "line": 170,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 36323230,
+     "bytes": 10751676080,
+     "source": "def binary(it: mut Interpreter, node: ast.BinaryExpr) -> Result[None, RuntimeError]:"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 199,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 26559470,
+     "bytes": 6586748560,
+     "source": "it.rt = __wb_187"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 202,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 26559470,
+     "bytes": 6586748560,
+     "source": "it.rt = __wb_188"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 171,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 13279735,
+     "bytes": 3930801560,
+     "source": "evaluate(mut it, node.left)?"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 172,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 13279735,
+     "bytes": 3930801560,
+     "source": "evaluate(mut it, node.right)?"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 203,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 13279735,
+     "bytes": 3930801560,
+     "source": "return Ok(None)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 173,
+     "column": 22,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 13279735,
+     "bytes": 2655947000,
+     "source": "left = heap.peek(it.rt, 1)"
+    },
+    {
+     "path": "interpreter.my",
+     "line": 197,
+     "column": 16,
+     "kind": "record_copy",
+     "detail": "record_get",
+     "pattern": "P8 other record copy (record_get)",
+     "count": 13279735,
+     "bytes": 2655947000,
+     "source": "__wb_187 = it.rt"
+    }
+   ]
+  },
+  {
+   "group": "lox",
+   "function": "heap::sweep",
+   "bytes": 39913503555,
+   "corpus_share": 0.03126398237270167,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 16187930200,
+    "P2 whole-record copy before a field store": 16168633000,
+    "P3 element copied out of a list": 3016462456,
+    "P9 copy-on-write of a whole list": 1524073371,
+    "P5 old element copied out to release it": 1507918048,
+    "P4 record written back into a list element": 1507918048,
+    "P13 list growth (class move or realloc)": 350432,
+    "P7 record returned through sret": 218000
+   },
+   "sites": [
+    {
+     "path": "heap.my",
+     "line": 356,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 80928466,
+     "bytes": 16185693200,
+     "source": "def sweep(rt: mut Runtime):"
+    },
+    {
+     "path": "heap.my",
+     "line": 362,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 26927108,
+     "bytes": 5385421600,
+     "source": "rt.bytes_allocated = rt.bytes_allocated - object.cost(rt.objects[i])"
+    },
+    {
+     "path": "heap.my",
+     "line": 363,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 26927108,
+     "bytes": 5385421600,
+     "source": "rt.objects[i] = object.Obj.free"
+    },
+    {
+     "path": "heap.my",
+     "line": 364,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "record_set",
+     "pattern": "P2 whole-record copy before a field store",
+     "count": 26927108,
+     "bytes": 5385421600,
+     "source": "rt.free_slots.append(i)"
+    },
+    {
+     "path": "heap.my",
+     "line": 360,
+     "column": 13,
+     "kind": "list_copy",
+     "detail": "list_copy",
+     "pattern": "P9 copy-on-write of a whole list",
+     "count": 61841,
+     "bytes": 1524073371,
+     "source": "rt.marker.marks[i] = False"
+    },
+    {
+     "path": "heap.my",
+     "line": 361,
+     "column": 26,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 26938293,
+     "bytes": 1508544408,
+     "source": "elif not is_free(rt.objects[i]):"
+    },
+    {
+     "path": "heap.my",
+     "line": 362,
+     "column": 67,
+     "kind": "record_copy",
+     "detail": "list_get",
+     "pattern": "P3 element copied out of a list",
+     "count": 26927108,
+     "bytes": 1507918048,
+     "source": "rt.bytes_allocated = rt.bytes_allocated - object.cost(rt.objects[i])"
+    },
+    {
+     "path": "heap.my",
+     "line": 363,
+     "column": 13,
+     "kind": "record_copy",
+     "detail": "list_set.old",
+     "pattern": "P5 old element copied out to release it",
+     "count": 26927108,
+     "bytes": 1507918048,
+     "source": "rt.objects[i] = object.Obj.free"
+    }
+   ]
+  },
+  {
+   "group": "eda",
+   "function": "sexpr_tokenizer::read_atom",
+   "bytes": 1267576744,
+   "corpus_share": 0.03112140376817696,
+   "patterns": {
+    "P1 record moved into a phi slot at a join": 966279264,
+    "P7 record returned through sret": 301297480
+   },
+   "sites": [
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 248,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "jump",
+     "pattern": "P1 record moved into a phi slot at a join",
+     "count": 20130818,
+     "bytes": 966279264,
+     "source": "def read_atom(src: bytes, t: mut Cursor, s: ast.Span) -> Token:"
+    },
+    {
+     "path": "sexpr_tokenizer.my",
+     "line": 252,
+     "column": 5,
+     "kind": "record_copy",
+     "detail": "ret",
+     "pattern": "P7 record returned through sret",
+     "count": 6847670,
+     "bytes": 301297480,
+     "source": "return make_token(src, TokenTag.atom, start, t.pos, s)"
+    }
+   ]
+  }
+ ]
+}

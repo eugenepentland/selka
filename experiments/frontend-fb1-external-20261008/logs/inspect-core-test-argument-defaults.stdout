@@ -1,0 +1,86 @@
+216:pub fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
+217-    var options: test_runner.Options = .{ .path = "", .build = .{ .zig = init.environ_map.get("ZIG") orelse "zig" } };
+218-    var links: std.ArrayList([]const u8) = .empty;
+219-    var affected = false;
+220-    var no_cache = false;
+221-    var index: usize = 0;
+222-    while (index < args.len) : (index += 1) {
+223-        const start = index;
+224-        if (testControls(&options, args, &index) catch return invalidValue(init, args, start, index)) continue;
+225-        const arg = args[index];
+226-        const has_value = index + 1 < args.len;
+227-        if (std.mem.eql(u8, arg, "--affected")) {
+228-            affected = true;
+229-        } else if (std.mem.eql(u8, arg, "--no-cache")) {
+230-            no_cache = true;
+231-        } else if (flagValue(args, &index, "--against")) |reference| {
+232-            options.controls.against = reference;
+233-        } else if (std.mem.eql(u8, arg, "--release")) {
+234-            options.build.release = true;
+235-        } else if (std.mem.eql(u8, arg, "--json")) {
+236-            options.json = true;
+237-        } else if (std.mem.eql(u8, arg, "--no-facts")) {
+238-            options.build.facts = .off;
+239-        } else if (std.mem.eql(u8, arg, "--verify-facts")) {
+240-            options.build.facts = .verify;
+241-        } else if (std.mem.eql(u8, arg, "--link") and has_value) {
+242-            index += 1;
+243-            try links.append(init.arena.allocator(), args[index]);
+244-        } else if (std.mem.eql(u8, arg, "--seed") and has_value) {
+245-            index += 1;
+246-            options.seed = std.fmt.parseInt(u64, args[index], 10) catch return invalidValue(init, args, index - 1, index);
+247-        } else if (std.mem.eql(u8, arg, "--property-runs") and has_value) {
+248-            index += 1;
+249-            options.property_runs = std.fmt.parseInt(u32, args[index], 10) catch return invalidValue(init, args, index - 1, index);
+250-            if (options.property_runs == 0 or options.property_runs > 1000000) return invalidValue(init, args, index - 1, index);
+251-        } else if (std.mem.eql(u8, arg, "--filter") and has_value) {
+252-            index += 1;
+253-            options.filter = args[index];
+254-        } else if (std.mem.eql(u8, arg, "--zig") and has_value) {
+255-            index += 1;
+256-            options.build.zig = args[index];
+257-        } else if (std.mem.eql(u8, arg, cache_dir_flag) and has_value) {
+258-            index += 1;
+259-            options.build.cache = args[index];
+260-        } else if (options.path.len == 0 and !std.mem.startsWith(u8, arg, "-")) {
+261-            options.path = arg;
+262-        } else {
+263-            const problem = if (std.mem.startsWith(u8, arg, "-")) (if (has_value or !takesValue(arg)) "unknown option" else "missing value for") else "unexpected argument";
+264-            return testUsage(init, try std.fmt.allocPrint(init.arena.allocator(), "{s} '{s}'", .{ problem, arg }));
+265-        }
+266-    }
+267-    if (options.path.len == 0) return testUsage(init, null);
+268-    // NEW-CORE-S5-AFFECTED-1: the two switches only mean something together.
+269-    if (affected != (options.controls.against != null)) return testUsage(init, "--affected and --against REF go together");
+270-    options.build.links = links.items;
+271-    // NEW-CORE-S5-NO-CACHE-1: run against a private cache, removed afterwards.
+272-    if (no_cache) options.build.cache = try cli_run.privateCache(init, options.build.cache);
+273-    defer if (no_cache) cli_run.discard(init.io, options.build.cache);
+274-    return test_runner.run(init, options);
+275-}
+276-
+277-/// Print `mylang test: PROBLEM` (when there is one) and the test usage; status 2.
+278-fn testUsage(init: std.process.Init, problem: ?[]const u8) Error!u8 {
+279-    const text = if (problem) |line| try std.fmt.allocPrint(init.arena.allocator(), "mylang test: {s}\n" ++ test_usage, .{line}) else test_usage;
+280-    try std.Io.File.stderr().writeStreamingAll(init.io, text);
+281-    return 2;
+282-}
+283-
+284-/// The usage error for the flag at `args[start]` whose value (after `=`, or the
+285-/// argument at `index`) is not one the flag accepts (NEW-CORE-S5-TEST-USAGE-1).
+286-fn invalidValue(init: std.process.Init, args: []const []const u8, start: usize, index: usize) Error!u8 {
+287-    const arg = args[start];
+288-    const split = std.mem.indexOfScalar(u8, arg, '=');
+289-    const value = if (split) |at| arg[at + 1 ..] else if (index > start) args[index] else "";
+290-    return testUsage(init, try std.fmt.allocPrint(init.arena.allocator(), "invalid value '{s}' for {s}", .{ value, arg[0 .. split orelse arg.len] }));
+291-}
+292-
+293-/// Whether `arg` is a `mylang test` flag that reads the next argument as its value.
+294-fn takesValue(arg: []const u8) bool {
+295-    const valued = [_][]const u8{ "--filter", "--cases", "--jobs", "--mode", "--max-steps", "--max-frames", "--max-memory", "--timeout-ms", "--seed", "--property-runs", "--link", "--zig", cache_dir_flag, "--against" };
+296-    for (valued) |name| if (std.mem.eql(u8, arg, name)) return true;
+297-    return false;
+298-}
+299-
+300-fn testControls(options: *test_runner.Options, args: []const []const u8, index: *usize) error{Usage}!bool {
+301-    const arg = args[index.*];

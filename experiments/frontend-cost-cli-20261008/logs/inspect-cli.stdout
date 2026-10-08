@@ -1,0 +1,10 @@
+src/main.zig:733:    cost: bool,
+src/main.zig:827:    cost: bool = false,
+src/main.zig:2171:        return interfaceListing(init, contracts, parsed);
+src/main.zig:2194:    return interfaceListing(init, text, parsed);
+src/main.zig:2198:fn interfaceListing(init: Context, text: []const u8, parsed: Parsed) !u8 {
+src/core/cost_command.zig:70:pub fn output(init: std.process.Init, request: Request) Error!Output {
+src/core/cost_command.zig:98:        const message = try std.fmt.allocPrint(a, "mylang cost: no reachable function named {s}\n", .{request.function orelse "<entry>"});
+src/core/cost_command.zig:104:            try std.Io.File.stderr().writeStreamingAll(init.io, "mylang cost: cannot read LLVM optimization remarks\n");
+test/integration.zig:10189:// spec: FRONTEND-COST-1
+src/core/cli.zig:107:pub fn interfaceCost(init: std.process.Init, path: []const u8) Error!cost_command.Output {

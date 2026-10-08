@@ -1,0 +1,20 @@
+test-core
++- run test 3 pass, 1 fail (4 total)
+guardian/test: test wall 0.68s; slowest over 50ms:
+guardian/test:   0.68s  cost_test.test.cost attributes inlining checks and all ownership forms to emitted bodies in debug release and verify
+guardian/test: FAIL — 1 failed of 4
+guardian/test: RESULT {"passed":3,"failed":1,"skipped":0}
+error: 'cost_test.test.cost attributes inlining checks and all ownership forms to emitted bodies in debug release and verify' failed:
+       guardian/test: 4 test(s) selected
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1320079 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/src/core/cost_test.zig:70:5: 0x1f0fe00 in test.cost attributes inlining checks and all ownership forms to emitted bodies in debug release and verify (root_test.zig)
+           try std.testing.expect(debug.totals.retains > 0);
+           ^
+failed command: ./.zig-cache/o/faff371ca38f38c0d8c5837748ccb479/test --cache-dir=./.zig-cache --seed=0x7e199bc7 --listen=-
+
+Build Summary: 6/8 steps succeeded (1 failed); 3/4 tests passed (1 failed)
+test-core transitive failure
++- run test 3 pass, 1 fail (4 total)
+

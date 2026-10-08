@@ -1,0 +1,8 @@
+ SPEC.md                    |  2 ++
+ docs/tooling/cost.md       | 13 ++++++++++++
+ docs/tooling/navigation.md |  5 +++++
+ src/core/cli.zig           |  5 +++++
+ src/core/cost_command.zig  | 23 ++++++++++++++-------
+ src/main.zig               | 34 +++++++++++++++++++++++++++----
+ test/integration.zig       | 50 ++++++++++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 121 insertions(+), 11 deletions(-)

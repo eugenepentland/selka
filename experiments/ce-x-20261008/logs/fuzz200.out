@@ -1,0 +1,11 @@
+evidence=/home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/experiments/ce-x-20261008/fuzz200
+source_commit=41931120d5a364c67eca80ea6cf776e7eb941674
+number: PASS; 177.12758324388415s
+s1: PASS; 222.22093308903277s
+rc: PASS; 87.06962101720273s
+rebinding: PASS; 124.15480573079549s
+s0: PASS; 111.07188181905076s
+iteration: PASS; 189.68437603698112s
+text: PASS; 65.75956724211574s
+functions: PASS; 96.81773557490669s
+dict: PASS; 253.02918983693235s

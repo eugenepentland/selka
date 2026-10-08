@@ -1,0 +1,68 @@
+        assert argv[1] == "test" and "--force" in argv and "--json" in argv
+        mode = label.split("/", 1)[0].removeprefix("directory-")
+        assert ("--release" in argv) == (mode != "debug")
+        assert ("--verify-facts" in argv) == (mode == "verify")
+        assert "--no-facts" not in argv
+        argv[0] = str(compiler)
+        cache_index = argv.index("--cache-dir") + 1
+        argv[cache_index] = str(cache)
+        for index, value in enumerate(argv[2:], 2):
+            if value.startswith(str(reference_source) + "/"):
+                argv[index] = str(corpus_source) + value[len(str(reference_source)):]
+        expected_out = receipt_path.with_suffix(".stdout")
+        expected_err = receipt_path.with_suffix(".stderr")
+        assert digest(expected_out) == receipt["stdout_sha256"]
+        assert digest(expected_err) == receipt["stderr_sha256"]
+        old = subprocess.CompletedProcess(receipt["command"], receipt["returncode"],
+            expected_out.read_text(), expected_err.read_text())
+        expected_report = checked.checked_report(sweep.parse, None if receipt["timeout"] else old, label)
+        if not isinstance(expected_report, str):
+            assert triples(expected_report) == saved["tests"], "frozen table/raw verdict mismatch"
+        else:
+            assert expected_report == saved.get("problem"), "frozen table/raw problem mismatch"
+        cwd = str(corpus_source) if receipt["cwd"] == str(reference_source) else receipt["cwd"]
+        done, timeout, elapsed, folder = command(label, argv, cwd)
+        actual = subprocess.CompletedProcess(argv, done.returncode,
+            done.stdout.decode(errors="replace"), done.stderr.decode(errors="replace"))
+        report = checked.checked_report(sweep.parse, None if timeout else actual, label)
+        old_report, old_stdout, old_stderr, old_changes = normalize_sources(
+            expected_report, expected_out.read_bytes(), expected_err.read_bytes(),
+            reference_source, originals, args.normalize_source_paths)
+        new_report, new_stdout, new_stderr, new_changes = normalize_sources(
+            report, done.stdout, done.stderr, corpus_source, candidate_originals, args.normalize_source_paths)
+        problems = []
+        if done.returncode != receipt["returncode"] or timeout != receipt["timeout"]:
+            problems.append("process status or timeout differs")
+        if new_report != old_report:
+            problems.append("complete parsed JSON report differs")
+        if new_stdout != old_stdout:
+            problems.append("stdout bytes differ")
+        if new_stderr != old_stderr:
+            problems.append("stderr bytes differ")
+        if isinstance(report, str):
+            problems.append("invalid report: " + report)
+            entry = {"problem": report}
+        else:
+            entry = {"tests": triples(report)}
+            if any(test[1] != "passed" for test in entry["tests"]):
+                problems.append("nonpassing test")
+            if triples(report) != saved["tests"]:
+                problems.append("frozen triples differ")
+            if any(report[key] != 0 for key in ("failed", "skipped", "cached", "unsupported")):
+                problems.append("nonzero failed/skipped/cached/unsupported count")
+        entry.update({"receipt": str(folder.with_suffix(".json").relative_to(output)),
+            "elapsed_seconds": elapsed})
+        comparisons[label] = {"reference_receipt": str(receipt_path),
+            "reference_receipt_sha256": digest(receipt_path), "problems": problems,
+            "argv_changes": [{"index": index, "reference": old_arg, "candidate": new_arg}
+                for index, (old_arg, new_arg) in enumerate(zip(receipt["command"], argv)) if old_arg != new_arg],
+            "cwd_change": {"reference": receipt["cwd"], "candidate": cwd},
+            "complete_report_identical": new_report == old_report,
+            "normalizations": {"reference": old_changes, "candidate": new_changes},
+            "stdout_normalized_identical": new_stdout == old_stdout,
+            "stderr_normalized_identical": new_stderr == old_stderr,
+            "stdout_identical": done.stdout == expected_out.read_bytes(),
+            "stderr_identical": done.stderr == expected_err.read_bytes()}
+        return entry
+
+    def one(name, category="current"):

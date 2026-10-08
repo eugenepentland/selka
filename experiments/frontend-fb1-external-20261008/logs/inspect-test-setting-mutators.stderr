@@ -1,0 +1,2 @@
+rg: src/core/cli_options.zig: No such file or directory (os error 2)
+rg: src/core/test_runner_case_settings.zig: No such file or directory (os error 2)

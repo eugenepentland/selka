@@ -1,0 +1,93 @@
+myl_block *myl_core_dict_remove(myl_block *dict, int64_t entry) {
+    core_dict_meta *meta = dict_meta(dict);
+    if (!meta->dead) {
+        meta->dead = calloc(((size_t)dict->cap + 7) / 8, 1);
+        if (!meta->dead) out_of_memory();
+    }
+    if (meta->index) {
+        /* The entry number already identifies the exact key; no equality or hash recomputation. */
+        uint64_t hash = meta->hashes[entry];
+        uint32_t slots = meta->index->slots, slot = dict_home(hash, slots), step = 0;
+        for (;;) {
+            __m128i group = _mm_loadu_si128((const __m128i *)(meta->index->data + slot));
+            unsigned hits = (unsigned)_mm_movemask_epi8(_mm_cmpeq_epi8(group, _mm_set1_epi8((char)(hash & 0x7f))));
+            bool removed = false;
+            while (hits) {
+                uint32_t at = (slot + (unsigned)__builtin_ctz(hits)) & (slots - 1);
+                if (dict_numbers(meta->index)[at] == (uint32_t)entry) {
+                    dict_control(meta->index, at, DICT_DELETED);
+                    removed = true;
+                    break;
+                }
+                hits &= hits - 1;
+            }
+            if (removed) break;
+            step += 16;
+            slot = (slot + step) & (slots - 1);
+        }
+        meta->index->dead++;
+    }
+    dict_release_part(meta->desc, dict_entry(dict, (uint64_t)entry), true, true);
+    memset(dict_entry(dict, (uint64_t)entry), 0, meta->desc->stride);
+    meta->dead[(uint64_t)entry >> 3] |= (unsigned char)(1u << (entry & 7));
+    dict->len--;
+    return dict;
+}
+
+uint64_t myl_core_dict_entries(const myl_block *dict) { return dict_meta(dict)->elen; }
+bool myl_core_dict_live(const myl_block *dict, uint64_t entry) { return dict_live(dict_meta(dict), entry); }
+int64_t myl_core_dict_ordinal(const myl_block *dict, uint64_t ordinal) {
+    core_dict_meta *meta = dict_meta(dict);
+    if (!meta->dead) return (int64_t)ordinal;
+    for (uint64_t i = 0; i < meta->elen; ++i)
+        if (dict_live(meta, i) && ordinal-- == 0) return (int64_t)i;
+    abort();
+}
+
+myl_block *myl_core_dict_copy(const myl_block *dict) {
+    core_dict_meta *meta = dict_meta(dict);
+    myl_block *copy = myl_core_dict_new((uint64_t)dict->cap, meta->desc);
+    core_dict_meta *other = dict_meta(copy);
+    copy->len = dict->len;
+    other->elen = meta->elen;
+    memcpy(block_data(copy), (const unsigned char *)dict + MYL_HEADER, (size_t)meta->elen * meta->desc->stride);
+    memcpy(other->hashes, meta->hashes, (size_t)meta->elen * 8);
+    if (meta->dead) {
+        size_t bytes = ((size_t)dict->cap + 7) / 8;
+        other->dead = malloc(bytes);
+        if (!other->dead) out_of_memory();
+        memcpy(other->dead, meta->dead, bytes);
+    }
+    if (meta->index) {
+        size_t bytes = sizeof(core_dict_index) + ((meta->index->slots + 30u) & ~15u) + (size_t)meta->index->slots * 4;
+        other->index = malloc(bytes);
+        if (!other->index) out_of_memory();
+        memcpy(other->index, meta->index, bytes);
+    }
+    if (meta->desc->layout) for (uint64_t i = 0; i < meta->elen; ++i) {
+        if (!dict_live(meta, i)) continue;
+        for (int32_t r = 0; r < meta->desc->layout[1]; ++r) {
+            myl_block *child = reference_at(meta->desc->layout, dict_entry(copy, i), r);
+            if (child && child->count != MYL_SATURATED) ++child->count;
+        }
+    }
+    return copy;
+}
+
+myl_block *myl_core_dict_clear(myl_block *dict) {
+    core_dict_meta *meta = dict_meta(dict);
+    for (uint64_t i = 0; i < meta->elen; ++i)
+        if (dict_live(meta, i)) dict_release_part(meta->desc, dict_entry(dict, i), true, true);
+    free(meta->dead);
+    meta->dead = NULL;
+    meta->elen = 0;
+    dict->len = 0;
+    if (meta->index) {
+        memset(meta->index->data, DICT_EMPTY, (meta->index->slots + 30u) & ~15u);
+        meta->index->used = meta->index->elen = meta->index->dead = 0;
+    }
+    return dict;
+}
+
+/* Join the existing iterative RC worklist; a dictionary of deeply nested
+ * managed values uses no recursive teardown and fre

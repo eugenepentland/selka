@@ -1,0 +1,306 @@
+#!/usr/bin/env python3
+"""S4's 46-row registry, using S3's strict interleaved CPU-10 measurement.
+
+The frozen runtime references remain read-only. S4 reference binaries are built
+in this worktree. Every compiler invocation has its own retained command log.
+Run through build-slot.sh build and the shared CPU-10 flock, as in S3.
+"""
+import importlib.util
+import json
+import os
+from pathlib import Path
+import shlex
+import subprocess
+import sys
+
+ROOT = Path(__file__).resolve().parents[3]
+HERE = ROOT / "experiments/new-core-s4-rows-20261006"
+spec = importlib.util.spec_from_file_location(
+    "s3_rows", ROOT / "experiments/new-core-s3-20261006/wave-c/s3-a/measure_all40.py")
+rows = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(rows)
+CASES = ("tree_build_walk", "record_pass", "grid_dp", "union_find", "float_format", "buffer_write")
+for case in CASES:
+    data = json.loads((HERE / case / "case.json").read_text())
+    rows.UNITS[case] = ("s4", data["unit"], data["iterations"]["4096"], data["iterations"]["64"])
+rows.DEFAULT_BIN = ROOT / ".mylang-cache/s4/all46"
+original_build = rows.build
+original_configurations = rows.configurations
+
+
+def command_log(directory, command, extra_env=None):
+    logs = directory / "build-logs"
+    logs.mkdir(parents=True, exist_ok=True)
+    index = 1
+    while (logs / f"command-{index:04d}.log").exists():
+        index += 1
+    log = logs / f"command-{index:04d}.log"
+    with log.open("x") as output:
+        output.write("$ " + shlex.join(map(str, command)) + "\n")
+        output.flush()
+        result = subprocess.run(command, stdout=output, stderr=subprocess.STDOUT,
+                                env={**os.environ, "PATH": os.environ["PATH"] + os.pathsep + str(Path.home() / ".cargo/bin"), **(extra_env or {})})
+        output.write(f"\nexit={result.returncode}\n")
+    if result.returncode:
+        raise rows.InvalidMeasurement(f"reference build failed; retained {log}")
+
+
+def build(args, selected):
+    # Capture each inherited old/new compiler invocation separately too.
+    original_run = subprocess.run
+
+    def logged_run(command, **options):
+        result = original_run(command, **options)
+        if len(command) > 1 and command[1] == "build":
+            directory = args.bin / "build-logs"
+            directory.mkdir(parents=True, exist_ok=True)
+            name = Path(command[command.index("-o") + 1]).name
+            index = 1
+            while (directory / f"{name}-{index:02d}.log").exists():
+                index += 1
+            (directory / f"{name}-{index:02d}.log").write_text(
+                "$ " + shlex.join(map(str, command)) + "\n" + result.stdout + result.stderr + f"\nexit={result.returncode}\n")
+        return result
+
+    subprocess.run = logged_run
+    try:
+        original_build(args, [case for case in selected if case not in CASES])
+    finally:
+        subprocess.run = original_run
+    for case in selected:
+        if case not in CASES:
+            continue
+        source = HERE / case
+        registered = ROOT / f"test/core/row_{case}.my"
+        program = registered if registered.exists() else source / "row.my"
+        for kind, compiler in (("old", args.mylang), ("new", args.core)):
+            output = args.bin / f"row_{case}_{kind}"
+            output.unlink(missing_ok=True)
+            command = [str(compiler), "build", str(program), "-o", str(output), "--release",
+                       "--cache-dir", str(args.bin / "cache" / kind), "--link", str(ROOT / "benchmarks/runtime/ports/native_clock.c")]
+            if kind == "new":
+                emitted = args.bin / "llvm" / f"row_{case}.ll"
+                emitted.parent.mkdir(parents=True, exist_ok=True)
+                emitted.unlink(missing_ok=True)
+                command += ["--emit-llvm", str(emitted)]
+            command_log(args.bin, command)
+            if not output.is_file() or (kind == "new" and not emitted.is_file()):
+                raise rows.InvalidMeasurement(f"row build did not produce its outputs: {case}/{kind}")
+            print(f"build {case} {kind}: status=0", flush=True)
+        command_log(args.bin, ["rustc", "-O", "--edition", "2021", str(source / "main.rs"), "-o", str(args.bin / f"{case}-rust")])
+        command_log(args.bin, ["zig", "build-exe", str(source / "main.zig"), "-lc", "-O", "ReleaseSafe", f"-femit-bin={args.bin / (case + '-zig-safe')}", "--cache-dir", str(args.bin / "cache/zig")])
+        command_log(args.bin, ["go", "build", "-o", str(args.bin / (case + "-go")), str(source / "main.go")],
+                    {"GOMAXPROCS": "1", "GOTOOLCHAIN": "local", "GOFLAGS": "", "GOAMD64": "v1"})
+
+
+def configurations(args, row):
+    if row not in CASES:
+        return original_configurations(args, row)
+    result = {}
+    for label, suffix in (("old core --release", "old"), ("new core release", "new")):
+        binary = args.bin / f"row_{row}_{suffix}"
+        if not binary.is_file():
+            raise rows.InvalidMeasurement(f"missing binary: {binary}; run --build")
+        result[label] = lambda size, iterations, binary=binary: [str(binary), str(size), str(iterations), str(rows.SEED)]
+    for label, suffix in (("Rust", "rust"), ("Zig ReleaseSafe", "zig-safe"), ("Go", "go")):
+        binary = args.bin / f"{row}-{suffix}"
+        if not binary.is_file():
+            raise rows.InvalidMeasurement(f"missing reference: {binary}; run --build")
+        result[label] = lambda size, iterations, binary=binary: [str(binary), row, str(size), str(iterations), str(rows.SEED)]
+    return result
+
+
+rows.build = build
+rows.configurations = configurations
+
+
+def main():
+    if "--smoke-test" in sys.argv:
+        assert len(rows.UNITS) == 46
+        assert all(rows.stem(case) == f"row_{case}" for case in CASES)
+        assert all(rows.UNITS[case][2] > 0 and rows.UNITS[case][3] > 0 for case in CASES)
+        assert rows.parse_stdout("17 103\n") == (17, 103)
+        print("measure_all46: registry and strict output parser pass")
+        return 0
+    return rows.main()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+#!/usr/bin/env python3
+"""S5-X (copied from S4-P): the Lox port and the EDA slice under `mylang`, measured with the
+old-core baselines' protocols (Wave 0):
+
+- Lox (codex/s4-lox-value-semantics experiments/new-core-s4-lox-20261006/baselines.json):
+  CPU 10, fresh caches including Zig's global cache and the runtime; build, directory
+  tests (--jobs 1) and driver-case tests, each cold, unchanged and after the natives.my
+  one-function edit.
+- EDA (eda-bench codex/s4-eda-stage1 experiments/new-core-s4-eda-20261006/old_core_baselines.py):
+  CPU 10, --jobs 1; build and tests, cold, unchanged and after the main.parse_args edit;
+  Zig's global cache stays warm ("toolchain-level"); the new core's per-user store is
+  private and warmed with the runtime objects only, so unit objects start cold.
+
+Each port is copied to a private directory first; the originals are never edited.
+Run under `flock /run/user/1000/mylang-slots/cpu10.lock`.
+"""
+import argparse
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import time
+
+LOX = Path("/home/epentland/ai/canopy/mylang-worktrees/codex-s4-lox-value-semantics/benchmarks/lox/ports/mylang")
+EDA = Path("/home/epentland/ai/canopy/mylang-worktrees/../eda-bench-wt/claude-s4-eda-newcore/mylang").resolve()
+LOX_EDIT = ("natives.my",
+            "                    return value.Value.number(float(instant.unix_nanoseconds) / 1000000000.0)\n",
+            "                    seconds = float(instant.unix_nanoseconds) / 1000000000.0\n                    return value.Value.number(seconds)\n")
+EDA_EDIT = ("src/main.my", "    a = Args()\n", "    initial_args = Args()\n    a = initial_args\n")
+BASELINES = {
+    "lox": {"build": (7.65688649402, 0.006813724059611559, 0.19524815189652145),
+            "tests-directory": (17.077737142099068, 0.11094480706378818, 0.6081309821456671),
+            "tests-driver": (4.9182498920708895, 0.034172628074884415, 0.03993511409498751)},
+    "eda": {"build": (81.1429, 0.0165, 1.1516), "test": (234.5436, 1.6549, 1.6658)},
+}
+
+
+def run(command, cwd, env, log):
+    started = time.perf_counter()
+    done = subprocess.run(command, cwd=cwd, env=env, capture_output=True, text=True)
+    seconds = time.perf_counter() - started
+    log.append({"argv": command, "seconds": seconds, "status": done.returncode, "tail": (done.stdout + done.stderr)[-600:]})
+    if done.returncode != 0:
+        raise SystemExit(f"command failed ({done.returncode}): {command}\n{done.stdout[-2000:]}{done.stderr[-2000:]}")
+    return seconds
+
+
+def edit(path, find, replace):
+    text = path.read_text()
+    if text.count(find) != 1:
+        raise SystemExit(f"edit anchor not unique in {path}")
+    path.write_text(text.replace(find, replace))
+
+
+def lox(core, area, log):
+    port = area / "lox-port"
+    shutil.copytree(LOX, port)
+    cache = area / "lox-cache"
+    env = {**os.environ, "XDG_CACHE_HOME": str(cache / "xdg"), "ZIG_GLOBAL_CACHE_DIR": str(cache / "zig-global"),
+           "ZIG_LOCAL_CACHE_DIR": str(cache / "zig-local"), "TMPDIR": str(cache / "tmp")}
+    for key in ("MYLANG_CORE_RUNTIME_CACHE",):
+        env.pop(key, None)
+    (cache / "tmp").mkdir(parents=True)
+    (cache / "out").mkdir()
+    commands = {
+        "build": [str(core), "build", "main.my", "-o", str(cache / "out/lox"), "--cache-dir", str(cache / "build")],
+        "tests-directory": [str(core), "test", ".", "--max-steps=100000000", "--jobs", "1", "--cache-dir", str(cache / "tests")],
+        "tests-driver": [str(core), "test", "driver_tests.my", "--cases", "driver_cases.json", "--max-steps=100000000",
+                         "--jobs", "1", "--cache-dir", str(cache / "tests")],
+    }
+    result = {}
+    for state in ("cold", "unchanged", "one-function-edit"):
+        if state == "one-function-edit":
+            edit(port / LOX_EDIT[0], LOX_EDIT[1], LOX_EDIT[2])
+        for kind, command in commands.items():
+            result.setdefault(kind, {})[state] = run(command, port, env, log)
+    return result
+
+
+def eda(core, area, log, warm_runtime):
+    port = area / "eda-port"
+    shutil.copytree(EDA, port)
+    cache = area / "eda-cache"
+    store = cache / "xdg"
+    if warm_runtime:
+        objects = store / "mylang/core-runtime"
+        objects.mkdir(parents=True)
+        for item in warm_runtime.iterdir():
+            if item.is_file() and (item.name.startswith("core_rt-") or item.name.startswith("core_number_text-")):
+src/core/vector_test.zig:126:test "float intervals prove int(float) in range, and proven-i32 conversions go through i32" {
+src/core/inline_origins_test.zig:68:test "unswitched consuming loops and ownership keep every copied read in its exact callee" {
+src/core/inline_origins_test.zig:75:    try std.testing.expect(result.counts.unswitched > 0);
+src/core/function_build_test.zig:50:test "two constant callback targets become direct branches and unswitch the inner loop" {
+src/core/cost_test.zig:41:    try std.testing.expectEqual(result.counts.unswitched, report.totals.unswitched_loops);
+src/core/cost_test.zig:42:    try std.testing.expectEqual(result.counts.versioned, report.totals.versioned_loops);
+src/core/cost_test.zig:49:    try std.testing.expectEqual(result.own.elided, report.totals.elided_pairs);
+src/core/trace_test.zig:43:    "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":3,\"length\":3}\n";
+src/core/trace_test.zig:172:test "trace modes: a returned site on its origin's line folds, a conversion names its case, and the ring drops the oldest appends" {
+src/core/conformance_test.zig:121:    \\{"version":"native-tests-v1","tests":[
+src/core/s5_units_test.zig:79:        .{ .body = "return i64(x + y)", .text = "(add: left 18446744073709551614, right 5, width 64)", .record = "{\"version\":1,\"operation\":\"add\",\"unsigned\":true,\"left\":18446744073709551614,\"right\":5,\"width\":64}" },
+src/core/s5_units_test.zig:83:        .{ .body = "return z + 1", .text = "(add: left 9223372036854775807, right 1, width 64)", .record = "{\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}" },
+src/core/emit_units_test.zig:426:                "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":2}\n",
+src/core/emit_units_test.zig:433:                "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"mut check\"}\n",
+src/core/emit_units_test.zig:440:                "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n",
+src/core/cli_flags_test.zig:172:    try std.testing.expectEqualStrings("cache-report-v1", record.object.get("version").?.string);
+src/core/cli_flags_test.zig:178:    try std.testing.expect(contains(second.stderr, "{\"version\":\"cache-report-v1\",\"program\":\"replayed\",\"units\":0,"));
+src/core/values_test.zig:325:    try std.testing.expect(contains(run.stderr, "MYLANG-TRAP {\"version\":1,\"operation\":\"pop\",\"length\":0}"));
+src/core/e2e_test.zig:161:    try std.testing.expect(std.mem.indexOf(u8, overflow.stderr, "MYLANG-TRAP {\"version\":1,\"operation\":\"mul\",\"left\":9300000,\"right\":1000000000000,\"width\":64}\n") != null);
+src/core/value_e2e_test.zig:2://! parameters, wide records, equality, numeric conversions, traps) are built at debug, release
+src/core/value_e2e_test.zig:223:test "unit arguments, i16 and u8 ranges and float-to-int truncation print what the old core prints, and the last conversion traps" {
+src/core/value_e2e_test.zig:243:        try std.testing.expect(std.mem.indexOf(u8, popped, "MYLANG-TRAP {\"version\":1,\"operation\":\"pop\",\"length\":0}") != null);
+src/core/value_e2e_test.zig:416:        try std.testing.expect(std.mem.indexOf(u8, failed, "MYLANG-TRAP {\"version\":1,\"operation\":\"limit exceeded\"}") != null);
+src/core/value_e2e_test.zig:429:        try std.testing.expect(std.mem.indexOf(u8, computed, "MYLANG-TRAP {\"version\":1,\"operation\":\"\"}") != null);
+src/core/own_test.zig:883:test "a record phi read only through its fields still takes its operands, so unswitched loop exits release nothing twice" {
+src/core/test_runner_project_test.zig:253:    try context.write("mylang.json", "{\"version\":1,\"budgets\":{\"max_file_bytes\":16}}");
+src/core/test_runner_project_test.zig:268:    try context.write("mylang.json", "{\"version\":1,\"limits\":{\"test\":{\"max_steps\":2}}}");
+src/core/test_runner_project_test.zig:349:    try context.write("mylang.json", "{\"version\":1,\"limits\":{\"test\":{\"max_steps\":4000000000,\"max_frames\":40002,\"max_memory\":\"2G\"}}}");
+src/core/test_runner_project_test.zig:400:    try context.write("mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
+src/core/test_runner_project_test.zig:401:    try context.write("policy.json", "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}");
+src/core/test_runner_project_test.zig:406:    try context.write("policy.json", "{\"version\":1,\"default_action\":\"allow\",\"rules\":[]}");
+src/core/test_runner_project_test.zig:408:    try context.write("mylang.json", "{\"version\":1,\"interface_files\":true}");
+src/core/test_runner_project_test.zig:486:    try context.write("mylang.json", "{\"version\":1}");
+    if ((a->kind & (MYL_TEXT_CURSOR | MYL_TEXT_TAIL)) == MYL_TEXT_CURSOR) a->cap = a->len;
+    a->kind &= ~(MYL_TEXT_CURSOR | MYL_TEXT_TAIL);
+    if (len > a->cap) {
+        int64_t cap = a->cap > 0 ? a->cap * 2 : 16;
+        if (cap < len) cap = len;
+        size_t room;
+        myl_block *grown = block_alloc(MYL_KIND_STR, (size_t)cap + 1, &room);
+        grown->cap = (int64_t)room - 1;
+        grown->len = a->len;
+        memcpy(block_data(grown), block_data(a), (size_t)a->len);
+        if (count <= 16) core_text_copy_short(block_data(grown) + a->len, bytes, (size_t)count);
+        else memcpy(block_data(grown) + a->len, bytes, (size_t)count);
+        block_free(a);
+        a = grown;
+    } else if (count <= 16) core_text_copy_short(block_data(a) + a->len, bytes, (size_t)count);
+    else memmove(block_data(a) + a->len, bytes, (size_t)count);
+    a->len = len;
+    block_data(a)[len] = 0;
+    a->kind &= ~(MYL_TEXT_ASCII | MYL_TEXT_HASHED | MYL_TEXT_SCALARS);
+    if (ascii) a->kind |= MYL_TEXT_ASCII;
+    a->reserved = 0;
+    return a;
+}
+
+myl_block *myl_core_ir_str_append(myl_block *a, const myl_block *b) {
+    bool ascii = (a->kind & b->kind & MYL_TEXT_ASCII) != 0;
+    return core_text_append_bytes(a, (const unsigned char *)b + MYL_HEADER, b->len, ascii);
+}
+
+static void value_equal_push(core_equal_stack *stack, const core_value_shape *shape, const void *left, const void *right) {
+    if (stack->count == stack->capacity) {
+        size_t capacity = stack->capacity ? stack->capacity * 2 : 64;
+        if (capacity < stack->capacity || capacity > SIZE_MAX / sizeof *stack->items) out_of_memory();
+        core_equal_work *items = realloc(stack->items, capacity * sizeof *items);
+        if (!items) out_of_memory();
+        stack->items = items;
+        stack->capacity = capacity;
+    }
+    stack->items[stack->count++] = (core_equal_work){shape, left, right};
+}
+
+bool myl_core_values_equal(const core_value_shape *root, const void *left, const void *right) {
+    core_equal_stack stack = {0};
+    core_value_memo memo = {0};
+    bool same = true;
+    value_equal_push(&stack, root, left, right);
+    while (same && stack.count) {
+        core_equal_work work = stack.items[--stack.count];
+        const core_value_shape *shape = work.shape;
+        switch (shape->kind) {
+        case 0: break;
+        case 1: case 10: same = memcmp(work.left, work.right, shape->size) == 0; break;
+        case 2: {
+            double a, b;

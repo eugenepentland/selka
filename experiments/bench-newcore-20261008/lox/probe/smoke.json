@@ -1,0 +1,1144 @@
+[
+ {
+  "script": "binary_trees",
+  "engine": "vm",
+  "binary": "newcore",
+  "wall": 30.71165271801874,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=8442 collections=0 freed=0 live=8442"
+  ]
+ },
+ {
+  "script": "binary_trees",
+  "engine": "vm",
+  "binary": "oldcore",
+  "wall": 0.06886599492281675,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=8442 collections=0 freed=0 live=8442"
+  ]
+ },
+ {
+  "script": "binary_trees",
+  "engine": "vm",
+  "binary": "zig",
+  "wall": 0.005031714914366603,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=8442 collections=0 freed=0 live=8442"
+  ]
+ },
+ {
+  "script": "binary_trees",
+  "engine": "vm",
+  "binary": "rust",
+  "wall": 0.00636619608849287,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=8442 collections=0 freed=0 live=8442"
+  ]
+ },
+ {
+  "script": "binary_trees",
+  "engine": "tree",
+  "binary": "newcore",
+  "wall": 255.8004150330089,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=63300 collections=2 freed=45239 live=18061"
+  ]
+ },
+ {
+  "script": "binary_trees",
+  "engine": "tree",
+  "binary": "oldcore",
+  "wall": 9.872263548895717,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=63300 collections=2 freed=45239 live=18061"
+  ]
+ },
+ {
+  "script": "binary_trees",
+  "engine": "tree",
+  "binary": "zig",
+  "wall": 0.0050354572013020515,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=63300 collections=2 freed=45239 live=18061"
+  ]
+ },
+ {
+  "script": "binary_trees",
+  "engine": "tree",
+  "binary": "rust",
+  "wall": 0.009101901901885867,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=63300 collections=2 freed=45239 live=18061"
+  ]
+ },
+ {
+  "script": "closures",
+  "engine": "vm",
+  "binary": "newcore",
+  "wall": 1.5250590301584452,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=4087 collections=0 freed=0 live=4087"
+  ]
+ },
+ {
+  "script": "closures",
+  "engine": "vm",
+  "binary": "oldcore",
+  "wall": 0.021193324122577906,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=4087 collections=0 freed=0 live=4087"
+  ]
+ },
+ {
+  "script": "closures",
+  "engine": "vm",
+  "binary": "zig",
+  "wall": 0.0014825870748609304,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=4087 collections=0 freed=0 live=4087"
+  ]
+ },
+ {
+  "script": "closures",
+  "engine": "vm",
+  "binary": "rust",
+  "wall": 0.0017549220938235521,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=4087 collections=0 freed=0 live=4087"
+  ]
+ },
+ {
+  "script": "closures",
+  "engine": "tree",
+  "binary": "newcore",
+  "wall": 9.51895354501903,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=14309 collections=0 freed=0 live=14309"
+  ]
+ },
+ {
+  "script": "closures",
+  "engine": "tree",
+  "binary": "oldcore",
+  "wall": 8.347172647016123,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=14309 collections=0 freed=0 live=14309"
+  ]
+ },
+ {
+  "script": "closures",
+  "engine": "tree",
+  "binary": "zig",
+  "wall": 0.0030964508187025785,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=14309 collections=0 freed=0 live=14309"
+  ]
+ },
+ {
+  "script": "closures",
+  "engine": "tree",
+  "binary": "rust",
+  "wall": 0.003739846870303154,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=14309 collections=0 freed=0 live=14309"
+  ]
+ },
+ {
+  "script": "equality",
+  "engine": "vm",
+  "binary": "newcore",
+  "wall": 1.8219557560514659,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=9 collections=0 freed=0 live=9"
+  ]
+ },
+ {
+  "script": "equality",
+  "engine": "vm",
+  "binary": "oldcore",
+  "wall": 0.036855647806078196,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=9 collections=0 freed=0 live=9"
+  ]
+ },
+ {
+  "script": "equality",
+  "engine": "vm",
+  "binary": "zig",
+  "wall": 0.001629573991522193,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=9 collections=0 freed=0 live=9"
+  ]
+ },
+ {
+  "script": "equality",
+  "engine": "vm",
+  "binary": "rust",
+  "wall": 0.0020823439117521048,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=9 collections=0 freed=0 live=9"
+  ]
+ },
+ {
+  "script": "equality",
+  "engine": "tree",
+  "binary": "newcore",
+  "wall": 1.4793355299625546,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=2007 collections=0 freed=0 live=2007"
+  ]
+ },
+ {
+  "script": "equality",
+  "engine": "tree",
+  "binary": "oldcore",
+  "wall": 0.015956112882122397,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=2007 collections=0 freed=0 live=2007"
+  ]
+ },
+ {
+  "script": "equality",
+  "engine": "tree",
+  "binary": "zig",
+  "wall": 0.0026244649197906256,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=2007 collections=0 freed=0 live=2007"
+  ]
+ },
+ {
+  "script": "equality",
+  "engine": "tree",
+  "binary": "rust",
+  "wall": 0.002843132009729743,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=2007 collections=0 freed=0 live=2007"
+  ]
+ },
+ {
+  "script": "fib",
+  "engine": "vm",
+  "binary": "newcore",
+  "wall": 0.3657458338420838,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=9 collections=0 freed=0 live=9"
+  ]
+ },
+ {
+  "script": "fib",
+  "engine": "vm",
+  "binary": "oldcore",
+  "wall": 0.009249286958947778,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=9 collections=0 freed=0 live=9"
+  ]
+ },
+ {
+  "script": "fib",
+  "engine": "vm",
+  "binary": "zig",
+  "wall": 0.0013164079282432795,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=9 collections=0 freed=0 live=9"
+  ]
+ },
+ {
+  "script": "fib",
+  "engine": "vm",
+  "binary": "rust",
+  "wall": 0.0015510779339820147,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=9 collections=0 freed=0 live=9"
+  ]
+ },
+ {
+  "script": "fib",
+  "engine": "tree",
+  "binary": "newcore",
+  "wall": 0.9129846028517932,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=1980 collections=0 freed=0 live=1980"
+  ]
+ },
+ {
+  "script": "fib",
+  "engine": "tree",
+  "binary": "oldcore",
+  "wall": 0.408192478120327,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=1980 collections=0 freed=0 live=1980"
+  ]
+ },
+ {
+  "script": "fib",
+  "engine": "tree",
+  "binary": "zig",
+  "wall": 0.0016921591013669968,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=1980 collections=0 freed=0 live=1980"
+  ]
+ },
+ {
+  "script": "fib",
+  "engine": "tree",
+  "binary": "rust",
+  "wall": 0.001885297941043973,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=1980 collections=0 freed=0 live=1980"
+  ]
+ },
+ {
+  "script": "instantiation",
+  "engine": "vm",
+  "binary": "newcore",
+  "wall": 126.919134441996,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=30011 collections=1 freed=21836 live=8175"
+  ]
+ },
+ {
+  "script": "instantiation",
+  "engine": "vm",
+  "binary": "oldcore",
+  "wall": 0.06518469983711839,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=30011 collections=1 freed=21836 live=8175"
+  ]
+ },
+ {
+  "script": "instantiation",
+  "engine": "vm",
+  "binary": "zig",
+  "wall": 0.003440795000642538,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=30011 collections=1 freed=21836 live=8175"
+  ]
+ },
+ {
+  "script": "instantiation",
+  "engine": "vm",
+  "binary": "rust",
+  "wall": 0.004614252829924226,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=30011 collections=1 freed=21836 live=8175"
+  ]
+ },
+ {
+  "script": "instantiation",
+  "engine": "tree",
+  "binary": "newcore",
+  "wall": 372.2515067891218,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=91008 collections=3 freed=73901 live=17107"
+  ]
+ },
+ {
+  "script": "instantiation",
+  "engine": "tree",
+  "binary": "oldcore",
+  "wall": 0.06191639299504459,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=91008 collections=3 freed=73901 live=17107"
+  ]
+ },
+ {
+  "script": "instantiation",
+  "engine": "tree",
+  "binary": "zig",
+  "wall": 0.005321157863363624,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=91008 collections=3 freed=73901 live=17107"
+  ]
+ },
+ {
+  "script": "instantiation",
+  "engine": "tree",
+  "binary": "rust",
+  "wall": 0.005490598967298865,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=91008 collections=3 freed=73901 live=17107"
+  ]
+ },
+ {
+  "script": "invocation",
+  "engine": "vm",
+  "binary": "newcore",
+  "wall": 1.1275416701100767,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=101 collections=0 freed=0 live=101"
+  ]
+ },
+ {
+  "script": "invocation",
+  "engine": "vm",
+  "binary": "oldcore",
+  "wall": 0.05009186593815684,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=101 collections=0 freed=0 live=101"
+  ]
+ },
+ {
+  "script": "invocation",
+  "engine": "vm",
+  "binary": "zig",
+  "wall": 0.001809112960472703,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=101 collections=0 freed=0 live=101"
+  ]
+ },
+ {
+  "script": "invocation",
+  "engine": "vm",
+  "binary": "rust",
+  "wall": 0.0021307109855115414,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=101 collections=0 freed=0 live=101"
+  ]
+ },
+ {
+  "script": "invocation",
+  "engine": "tree",
+  "binary": "newcore",
+  "wall": 340.9176835080143,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=91069 collections=3 freed=73719 live=17350"
+  ]
+ },
+ {
+  "script": "invocation",
+  "engine": "tree",
+  "binary": "oldcore",
+  "wall": 0.10989897511899471,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=91069 collections=3 freed=73719 live=17350"
+  ]
+ },
+ {
+  "script": "invocation",
+  "engine": "tree",
+  "binary": "zig",
+  "wall": 0.007656025001779199,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=91069 collections=3 freed=73719 live=17350"
+  ]
+ },
+ {
+  "script": "invocation",
+  "engine": "tree",
+  "binary": "rust",
+  "wall": 0.00914418906904757,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=91069 collections=3 freed=73719 live=17350"
+  ]
+ },
+ {
+  "script": "method_call",
+  "engine": "vm",
+  "binary": "newcore",
+  "wall": 6.792834033025429,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=32 collections=0 freed=0 live=32"
+  ]
+ },
+ {
+  "script": "method_call",
+  "engine": "vm",
+  "binary": "oldcore",
+  "wall": 0.1398507389239967,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=32 collections=0 freed=0 live=32"
+  ]
+ },
+ {
+  "script": "method_call",
+  "engine": "vm",
+  "binary": "zig",
+  "wall": 0.00755066704005003,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=32 collections=0 freed=0 live=32"
+  ]
+ },
+ {
+  "script": "method_call",
+  "engine": "vm",
+  "binary": "rust",
+  "wall": 0.008363623172044754,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=32 collections=0 freed=0 live=32"
+  ]
+ },
+ {
+  "script": "method_call",
+  "engine": "tree",
+  "binary": "newcore",
+  "wall": 471.6442105961032,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=137375 collections=5 freed=124328 live=13047"
+  ]
+ },
+ {
+  "script": "method_call",
+  "engine": "tree",
+  "binary": "oldcore",
+  "wall": 142.0895260318648,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=137375 collections=5 freed=124328 live=13047"
+  ]
+ },
+ {
+  "script": "method_call",
+  "engine": "tree",
+  "binary": "zig",
+  "wall": 0.013776247156783938,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=137375 collections=5 freed=124328 live=13047"
+  ]
+ },
+ {
+  "script": "method_call",
+  "engine": "tree",
+  "binary": "rust",
+  "wall": 0.01675729500129819,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=137375 collections=5 freed=124328 live=13047"
+  ]
+ },
+ {
+  "script": "properties",
+  "engine": "vm",
+  "binary": "newcore",
+  "wall": 2.8733679209835827,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=133 collections=0 freed=0 live=133"
+  ]
+ },
+ {
+  "script": "properties",
+  "engine": "vm",
+  "binary": "oldcore",
+  "wall": 0.13124765804968774,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=133 collections=0 freed=0 live=133"
+  ]
+ },
+ {
+  "script": "properties",
+  "engine": "vm",
+  "binary": "zig",
+  "wall": 0.008068260969594121,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=133 collections=0 freed=0 live=133"
+  ]
+ },
+ {
+  "script": "properties",
+  "engine": "vm",
+  "binary": "rust",
+  "wall": 0.006853779079392552,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=133 collections=0 freed=0 live=133"
+  ]
+ },
+ {
+  "script": "properties",
+  "engine": "tree",
+  "binary": "newcore",
+  "wall": 310.08842861885205,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=91102 collections=3 freed=73630 live=17472"
+  ]
+ },
+ {
+  "script": "properties",
+  "engine": "tree",
+  "binary": "oldcore",
+  "wall": 75.96601819992065,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=91102 collections=3 freed=73630 live=17472"
+  ]
+ },
+ {
+  "script": "properties",
+  "engine": "tree",
+  "binary": "zig",
+  "wall": 0.00952405808493495,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=91102 collections=3 freed=73630 live=17472"
+  ]
+ },
+ {
+  "script": "properties",
+  "engine": "tree",
+  "binary": "rust",
+  "wall": 0.010381868109107018,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=91102 collections=3 freed=73630 live=17472"
+  ]
+ },
+ {
+  "script": "string_equality",
+  "engine": "vm",
+  "binary": "newcore",
+  "wall": 3.9472913320641965,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=17 collections=0 freed=0 live=17"
+  ]
+ },
+ {
+  "script": "string_equality",
+  "engine": "vm",
+  "binary": "oldcore",
+  "wall": 0.19424166018143296,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=17 collections=0 freed=0 live=17"
+  ]
+ },
+ {
+  "script": "string_equality",
+  "engine": "vm",
+  "binary": "zig",
+  "wall": 0.0030925008468329906,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=17 collections=0 freed=0 live=17"
+  ]
+ },
+ {
+  "script": "string_equality",
+  "engine": "vm",
+  "binary": "rust",
+  "wall": 0.0038515818305313587,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=17 collections=0 freed=0 live=17"
+  ]
+ },
+ {
+  "script": "string_equality",
+  "engine": "tree",
+  "binary": "newcore",
+  "wall": 6.128505941014737,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=225 collections=0 freed=0 live=225"
+  ]
+ },
+ {
+  "script": "string_equality",
+  "engine": "tree",
+  "binary": "oldcore",
+  "wall": 0.05175190791487694,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=225 collections=0 freed=0 live=225"
+  ]
+ },
+ {
+  "script": "string_equality",
+  "engine": "tree",
+  "binary": "zig",
+  "wall": 0.0036402810364961624,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=225 collections=0 freed=0 live=225"
+  ]
+ },
+ {
+  "script": "string_equality",
+  "engine": "tree",
+  "binary": "rust",
+  "wall": 0.0075441289227455854,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=225 collections=0 freed=0 live=225"
+  ]
+ },
+ {
+  "script": "strings",
+  "engine": "vm",
+  "binary": "newcore",
+  "wall": 0.32824250496923923,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=48 collections=0 freed=0 live=48"
+  ]
+ },
+ {
+  "script": "strings",
+  "engine": "vm",
+  "binary": "oldcore",
+  "wall": 0.012117589125409722,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=48 collections=0 freed=0 live=48"
+  ]
+ },
+ {
+  "script": "strings",
+  "engine": "vm",
+  "binary": "zig",
+  "wall": 0.001015702961012721,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=48 collections=0 freed=0 live=48"
+  ]
+ },
+ {
+  "script": "strings",
+  "engine": "vm",
+  "binary": "rust",
+  "wall": 0.001093599945306778,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=48 collections=0 freed=0 live=48"
+  ]
+ },
+ {
+  "script": "strings",
+  "engine": "tree",
+  "binary": "newcore",
+  "wall": 0.45895316009409726,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=2080 collections=0 freed=0 live=2080"
+  ]
+ },
+ {
+  "script": "strings",
+  "engine": "tree",
+  "binary": "oldcore",
+  "wall": 0.008765909122303128,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=2080 collections=0 freed=0 live=2080"
+  ]
+ },
+ {
+  "script": "strings",
+  "engine": "tree",
+  "binary": "zig",
+  "wall": 0.0012831909116357565,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=2080 collections=0 freed=0 live=2080"
+  ]
+ },
+ {
+  "script": "strings",
+  "engine": "tree",
+  "binary": "rust",
+  "wall": 0.0016014648135751486,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=2080 collections=0 freed=0 live=2080"
+  ]
+ },
+ {
+  "script": "trees",
+  "engine": "vm",
+  "binary": "newcore",
+  "wall": 0.26472730305977166,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=806 collections=0 freed=0 live=806"
+  ]
+ },
+ {
+  "script": "trees",
+  "engine": "vm",
+  "binary": "oldcore",
+  "wall": 0.00869148294441402,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=806 collections=0 freed=0 live=806"
+  ]
+ },
+ {
+  "script": "trees",
+  "engine": "vm",
+  "binary": "zig",
+  "wall": 0.0010322809685021639,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=806 collections=0 freed=0 live=806"
+  ]
+ },
+ {
+  "script": "trees",
+  "engine": "vm",
+  "binary": "rust",
+  "wall": 0.0012121850159019232,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=806 collections=0 freed=0 live=806"
+  ]
+ },
+ {
+  "script": "trees",
+  "engine": "tree",
+  "binary": "newcore",
+  "wall": 1.148570541990921,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=4871 collections=0 freed=0 live=4871"
+  ]
+ },
+ {
+  "script": "trees",
+  "engine": "tree",
+  "binary": "oldcore",
+  "wall": 0.3568804571405053,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=4871 collections=0 freed=0 live=4871"
+  ]
+ },
+ {
+  "script": "trees",
+  "engine": "tree",
+  "binary": "zig",
+  "wall": 0.0015253841411322355,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=4871 collections=0 freed=0 live=4871"
+  ]
+ },
+ {
+  "script": "trees",
+  "engine": "tree",
+  "binary": "rust",
+  "wall": 0.0016140309162437916,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=4871 collections=0 freed=0 live=4871"
+  ]
+ },
+ {
+  "script": "zoo",
+  "engine": "vm",
+  "binary": "newcore",
+  "wall": 0.5856413540896028,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=37 collections=0 freed=0 live=37"
+  ]
+ },
+ {
+  "script": "zoo",
+  "engine": "vm",
+  "binary": "oldcore",
+  "wall": 0.02004037401638925,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=37 collections=0 freed=0 live=37"
+  ]
+ },
+ {
+  "script": "zoo",
+  "engine": "vm",
+  "binary": "zig",
+  "wall": 0.0012280168011784554,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=37 collections=0 freed=0 live=37"
+  ]
+ },
+ {
+  "script": "zoo",
+  "engine": "vm",
+  "binary": "rust",
+  "wall": 0.0014495481736958027,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=37 collections=0 freed=0 live=37"
+  ]
+ },
+ {
+  "script": "zoo",
+  "engine": "tree",
+  "binary": "newcore",
+  "wall": 12.966487705009058,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=19030 collections=0 freed=0 live=19030"
+  ]
+ },
+ {
+  "script": "zoo",
+  "engine": "tree",
+  "binary": "oldcore",
+  "wall": 7.61570190009661,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=19030 collections=0 freed=0 live=19030"
+  ]
+ },
+ {
+  "script": "zoo",
+  "engine": "tree",
+  "binary": "zig",
+  "wall": 0.0024733871687203646,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=19030 collections=0 freed=0 live=19030"
+  ]
+ },
+ {
+  "script": "zoo",
+  "engine": "tree",
+  "binary": "rust",
+  "wall": 0.002885544905439019,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=19030 collections=0 freed=0 live=19030"
+  ]
+ },
+ {
+  "script": "zoo_batch",
+  "engine": "vm",
+  "binary": "newcore",
+  "wall": 8.393019157927483,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=38 collections=0 freed=0 live=38"
+  ]
+ },
+ {
+  "script": "zoo_batch",
+  "engine": "vm",
+  "binary": "oldcore",
+  "wall": 0.3651103749871254,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=38 collections=0 freed=0 live=38"
+  ]
+ },
+ {
+  "script": "zoo_batch",
+  "engine": "vm",
+  "binary": "zig",
+  "wall": 0.008386607049033046,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=38 collections=0 freed=0 live=38"
+  ]
+ },
+ {
+  "script": "zoo_batch",
+  "engine": "vm",
+  "binary": "rust",
+  "wall": 0.013655163114890456,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=vm allocations=38 collections=0 freed=0 live=38"
+  ]
+ },
+ {
+  "script": "zoo_batch",
+  "engine": "tree",
+  "binary": "newcore",
+  "wall": null,
+  "status": "timeout",
+  "stdout_ok": null,
+  "stats": null
+ },
+ {
+  "script": "zoo_batch",
+  "engine": "tree",
+  "binary": "oldcore",
+  "wall": 302.02751837298274,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=400036 collections=15 freed=377596 live=22440"
+  ]
+ },
+ {
+  "script": "zoo_batch",
+  "engine": "tree",
+  "binary": "zig",
+  "wall": 0.02918394817970693,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=400036 collections=15 freed=377596 live=22440"
+  ]
+ },
+ {
+  "script": "zoo_batch",
+  "engine": "tree",
+  "binary": "rust",
+  "wall": 0.03728095185942948,
+  "status": 0,
+  "stdout_ok": true,
+  "stats": [
+   "[stats] engine=tree allocations=400036 collections=15 freed=377596 live=22440"
+  ]
+ }
+]

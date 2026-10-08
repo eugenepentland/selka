@@ -1,0 +1,32 @@
+{
+ "label": "run-eda-lmk05318b-clock-plain",
+ "command": [
+  "taskset",
+  "-c",
+  "12-19",
+  "perf",
+  "stat",
+  "-x,",
+  "-e",
+  "instructions:u",
+  "-o",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/perf/eda-lmk05318b-clock.csv",
+  "--",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/eda-plain",
+  "--model",
+  "golden/cases/lmk05318b-clock/model.sexp",
+  "--project-dir",
+  "golden/projects/designs",
+  "--out-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/eda-out/plain/lmk05318b-clock"
+ ],
+ "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+ "env": {},
+ "seconds": 0.056,
+ "status": 0,
+ "stdout_sha256": "6b6543e756b99efc39063550921c62b6470dafcc5f098ab672446715c0bb193b",
+ "stdout_bytes": 84,
+ "stderr_sha256": "18dbf3d1911878be3b2e226d8ee293733a5b931f5fa4153cba109d3afe65395d",
+ "stderr_bytes": 105,
+ "stdout": "eda-sch: lmk05318b-clock: 1 sheets, 4 sidecars, 10 symbols (2 vendor), 60 instances\n"
+}

@@ -1,0 +1,3 @@
+['write-external-completion-controller.json', 'fb1-external-completion-batch.json']
+write-external-completion-controller.json ['python3', '-']
+fb1-external-completion-batch.json ['env', 'PYTHONDONTWRITEBYTECODE=1', 'python3', 'experiments/frontend-fb1-external-20261008/tools/complete_external.py']

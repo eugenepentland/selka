@@ -1,0 +1,22 @@
+{
+ "label": "run-lox-tree-method_call-400-count",
+ "command": [
+  "taskset",
+  "-c",
+  "0,1,4-9,12-19",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/lox-count",
+  "--engine=tree",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/lox-scripts/method_call-400.lox"
+ ],
+ "cwd": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3",
+ "env": {
+  "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/counts/lox-tree-method_call-400.json"
+ },
+ "seconds": 6.074,
+ "status": 0,
+ "stdout_sha256": "acb2b288b9f028830645d94e3a4417e5ffc574a024576d6f69b53d989e9d93ea",
+ "stdout_bytes": 11,
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_bytes": 0,
+ "stdout": "true\nfalse\n"
+}

@@ -1,0 +1,10 @@
+row_json_transform.my:66:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_json_transform.my:79:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+mylang-core: inlined 36 calls, unswitched 0 loops, versioned 0 loops, proved 0 checks, vectorized 0 loops
+mylang-core: ownership: 19 updates in place, 6 tested, 2 copied; 32 retains, 75 releases (0 pairs elided); 0 lists on the stack
+mylang-core: cost: 125 checks kept; 137 allocation sites (94 unresolved calls); 14 unknown loops
+mylang-core: LLVM vectorized unknown; 14 unknown loops; remarks available; 1 compiles in 415053936 ns

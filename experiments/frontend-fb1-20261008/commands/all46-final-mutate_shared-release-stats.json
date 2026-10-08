@@ -1,0 +1,48 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/zig-out/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/test/core/row_mutate_shared.my",
+    "--release",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/.mylang-cache/frontend-fb1/all46-final/all46-final-mutate_shared-release/cache",
+    "--link",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/benchmarks/runtime/ports/native_clock.c",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/.mylang-cache/frontend-fb1/all46-final/all46-final-mutate_shared-release/with",
+    "--stats",
+    "--emit-llvm",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/.mylang-cache/frontend-fb1/all46-final/all46-final-mutate_shared-release/with.ll"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "other_heavy_processes": [
+    {
+      "pid": 279294,
+      "command": "/bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until ! pgrep -f '\"'\"'probe/probe.py'\"'\"' >/dev/null; do sleep 5; done; wc -l /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/probe/smoke.log' < /dev/null && pwd -P >| /tmp/claude-7f36-cwd "
+    },
+    {
+      "pid": 1453059,
+      "command": "/bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'cd /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore && S=/tmp/claude-1000/-home-epentland-ai-canopy-mylang/03fe2647-29f7-4cb8-b6b6-59b6334d6da0/scratchpad/fix; export TMPDIR=$S; R=experiments/bench-newcore-20261008/lox/repro; for f in field_append lox_shape; do mkdir -p $S/$f && cp $R/$f.my $S/$f/main.my && zig-out/bin/mylang build $S/$f/main.my -o $S/$f/new --release --cache-dir=$S/c2 && $HOME/.cache/mylang/bench-newcore-5a6b501d/bin/mylang build $S/$f/main.my -o $S/$f/old --release --cache-dir=$S/c3; for n in 40000 400000; do /usr/bin/time -f \"$f n=$n fixed: %e s\" $S/$f/new $n; done; /usr/bin/time -f \"$f n=40000 unfixed: %e s\" $S/$f/old 40000; done 2>&1' < /dev/null && pwd -P >| /tmp/claude-c663-cwd "
+    }
+  ],
+  "seconds": 0.2795458431355655,
+  "status": 0
+}

@@ -1,0 +1,8 @@
+module interfaces v1; declarations/signature visibility checked; bodies not type checked
+module input
+  export function changed def(xs:list[i64])->list[i64] effects() ceiling(managed_allocation) tests(0)
+  export function unused def()->i64 effects() ceiling(managed_allocation) tests(0)
+cost-v1 (static sites after Core passes; LLVM loops unknown without remarks)
+input::main: checks 0 kept / 0 proved; updates 1 in place / 0 tested / 0 copied; allocations 4 (0 unresolved); retains 0; releases 3; inlined 0; vector plans 0; LLVM vectorized unknown; unknown loops 0; unswitched 0; versioned 0; RC pairs elided 0; stack lists 0
+input::changed: checks 1 kept / 0 proved; updates 0 in place / 0 tested / 1 copied; allocations 1 (0 unresolved); retains 0; releases 0; inlined 0; vector plans 0; LLVM vectorized unknown; unknown loops 0; unswitched 0; versioned 0; RC pairs elided 0; stack lists 0
+TOTAL: checks 1 kept / 0 proved; updates 1 in place / 0 tested / 1 copied; allocations 5 (0 unresolved); retains 0; releases 3; inlined 0; vector plans 0; LLVM vectorized unknown; unknown loops 0; unswitched 0; versioned 0; RC pairs elided 0; stack lists 0

@@ -1,0 +1,38 @@
+bench-parity: building 72 arms of 28 benchmark(s) with 4 job(s)
+parity_locked: took /run/user/1000/mylang-slots/cpu10.lock after 0.0 s
+binary_trees: zig-fast 217.1 ms | my=0.97x  my-arena=0.98x  zig-fast=1.00x
+fannkuch_redux: zig-fast 181.7 ms | my=0.88x  my-array=3.38x  my-tuned=2.73x  zig-fast=1.00x
+knucleotide: zig-fast 92.8 ms | my=2.35x  my-arena=2.36x  my-tuned=0.68x  zig-fast=1.00x
+mandelbrot: zig-fast 115.1 ms | my=1.01x  zig-fast=1.00x
+matmul: zig-fast 37.5 ms | my=4.06x  my-flat=1.81x  my-tuned=2.55x  zig-fast=1.00x
+nbody: zig-fast 131.0 ms | my=9.01x  my-class=8.98x  zig-fast=1.00x
+raytrace: zig-fast 63.0 ms | my=1.07x  my-tuned=1.07x  zig-fast=1.00x
+sieve: zig-fast 48.5 ms | my=1.58x  my-tuned=1.58x  zig-fast=1.00x
+sort_builtin: zig-fast 186.2 ms | my=0.50x  zig-fast=1.00x
+sort_quick: zig-fast 156.1 ms | my=1.29x  zig-fast=1.00x
+sort_records: zig-fast 105.7 ms | my=0.27x  my-keyed=0.27x  my-sorted=0.28x  zig-fast=1.00x
+spectral_norm: zig-fast 146.8 ms | my=1.02x  my-tuned=0.96x  zig-fast=1.00x
+text_ops: zig-fast 23.7 ms | my=2.10x  my-tuned=0.94x  zig-fast=1.00x
+scan_count: zig-fast 78.9 ms | my=1.36x  zig-fast=1.00x
+scan_replace: zig-fast 141.0 ms | my=0.48x  zig-fast=1.00x
+scan_split: zig-fast 30.4 ms | my=2.27x  zig-fast=1.00x
+alloc_churn: zig-fast 63.4 ms | my=0.82x  my-arena=0.82x  zig-fast=1.00x
+bytes_scan: zig-fast 33.2 ms | my=1.50x  my-wrapping=0.52x  zig-fast=1.00x
+calls: zig-fast 102.7 ms | my=1.10x  zig-fast=1.00x
+dict_count: zig-fast 23.3 ms | my=0.37x  zig-fast=1.00x
+fib: zig-fast 28.6 ms | my=2.06x  zig-fast=1.00x
+float_loop: zig-fast 30.9 ms | my=1.00x  zig-fast=1.00x
+intloop: zig-fast 98.7 ms | my=1.04x  zig-fast=1.00x
+list_append_sum: zig-fast 41.1 ms | my=1.06x  zig-fast=1.00x
+list_records: zig-fast 42.2 ms | my=1.16x  my-wrapping=0.94x  zig-fast=1.00x
+records: zig-fast 75.0 ms | my=0.82x  zig-fast=1.00x
+str_build: zig-fast 37.0 ms | my=3.86x  zig-fast=1.00x
+bench-parity: re-measuring 8 program(s) that exceeded a threshold: binary_trees, fannkuch_redux, knucleotide, nbody, scan_count, scan_replace, str_build, text_ops
+binary_trees (confirmation): my=0.97x  my-arena=0.98x  zig-fast=1.00x
+fannkuch_redux (confirmation): my=0.87x  my-array=3.39x  my-tuned=2.72x  zig-fast=1.00x
+knucleotide (confirmation): my=2.36x  my-arena=2.35x  my-tuned=0.68x  zig-fast=1.00x
+nbody (confirmation): my=8.76x  my-class=8.84x  zig-fast=1.00x
+scan_count (confirmation): my=0.89x  zig-fast=1.00x
+scan_replace (confirmation): my=0.46x  zig-fast=1.00x
+str_build (confirmation): my=4.07x  zig-fast=1.00x
+text_ops (confirmation): my=2.16x  my-tuned=0.98x  zig-fast=1.00x

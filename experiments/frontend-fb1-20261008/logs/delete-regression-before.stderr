@@ -1,0 +1,49 @@
+test-core
++- run test 0 pass, 1 fail (1 total)
+guardian/test: test wall 0.21s; slowest over 50ms:
+guardian/test:   0.21s  cost_test.test.cost allocation classification includes growth scratch and unresolved calls but excludes stack and borrow identity
+guardian/test: FAIL — 1 failed of 1
+guardian/test: RESULT {"passed":0,"failed":1,"skipped":0}
+error: 'cost_test.test.cost allocation classification includes growth scratch and unresolved calls but excludes stack and borrow identity' failed:
+       guardian/test: 1 test(s) selected
+       /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/src/sema.zig:1606:21: 0x1720f45 in checkBodies (compiler.zig)
+               if (failed) return error.SourceError;
+                           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/src/sema.zig:1826:23: 0x151b523 in checkCore (compiler.zig)
+           const functions = try checkBodies(.{
+                             ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/src/sema.zig:1704:5: 0x1516aeb in checkCached (compiler.zig)
+           return checkCore(allocator, src, program, sink, .{ .names = module_names, .cache = cache });
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/src/compiler.zig:188:24: 0x151617c in checkWithCache (compiler.zig)
+               self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, cache);
+                              ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/src/compiler.zig:168:9: 0x1514e46 in check (compiler.zig)
+               return self.checkWithCache(null);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/src/core/test_support.zig:25:5: 0x140a07e in buildSource (root_test.zig)
+           try unit.check();
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/src/core/cost_test.zig:37:18: 0x139c472 in measured (root_test.zig)
+           var module = try support.buildSource(a, source, &refusal);
+                        ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/src/core/cost_test.zig:263:20: 0x139dcc5 in deletionCount (root_test.zig)
+           const report = try measured(a,
+                          ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/src/core/cost_test.zig:109:5: 0x139eaa5 in test.cost allocation classification includes growth scratch and unresolved calls but excludes stack and borrow identity (root_test.zig)
+           try deletionCount(a);
+           ^
+failed command: ./.zig-cache/o/fe69afd2525d5ee5cbe77e0cb755c77c/test --cache-dir=./.zig-cache --seed=0x47dcecd7 --listen=-
+
+Build Summary: 6/8 steps succeeded (1 failed); 0/1 tests passed (1 failed)
+test-core transitive failure
++- run test 0 pass, 1 fail (1 total)
+   +- compile test debug native success 1s MaxRSS:292M
+      +- run exe build-identity (build_identity) cached
+      |  +- compile exe build-identity debug native cached 6ms MaxRSS:37M
+      +- options cached
+      |  +- compile exe mylang debug native cached 6ms MaxRSS:41M
+      |     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+      |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:38M
+      +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+

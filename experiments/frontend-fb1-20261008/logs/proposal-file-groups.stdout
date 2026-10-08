@@ -1,0 +1,383 @@
+## 2. Where the front end will be after S5
+
+- **The front end is 46.6k lines of Zig in 136 files.** That is everything reachable by
+  `@import` from `sema.zig`, `parser.zig`, `lexer.zig` and `typed.zig`, without tests,
+  on `codex/new-core-s3-integration`.
+  - The front-end files did not change between `2e4f0f51` and `5ee5b8d2`.
+  - Counting the embedded standard-library `.my` files, it is 48.8k lines in 150 files.
+  - With the old back end deleted, it is about 72% of the compiler.
+
+  | Group | Lines | Files | Largest |
+  |---|---:|---:|---|
+  | Sema core | 13.7k | 27 | `sema.zig` 2.1k, `sema_collections` 1.3k, `sema_expressions` 1.0k |
+  | Generics and nominal types | 8.8k | 22 | `generic_bodies` 3.0k, `interfaces` 1.6k |
+  | Whole-program analyses | 6.1k | 17 | `origins` 1.5k, `effects` 1.3k, `alias_warning` 0.8k |
+  | Caching and incremental | 5.0k | 10 | `semantic_key` 1.3k, `semantic_store` 0.8k, `semantic_cache` 0.8k |
+  | Parsing and syntax | 4.5k | 11 | `parser` 2.6k, `lexer` 0.6k, `ast` 0.4k |
+  | Constants and formatting | 2.6k | 10 | `format_spec` 0.7k, `buffer_operations` 0.7k |
+  | Other (stdlib `.my`, diagnostics, embed, lowering helpers) | 8.2k | 53 | `json.my` 0.7k, `project` 0.6k |
+
+- **Speed.** Check is not the bottleneck; LLVM is (S4 §3.1: over 90% of every build).
+  The front-end work here must not regress the S4 check budget: a merged check at
+  96k lines after an edit ≤ 0.45 s.
+- **S4 decisions this plan keeps.**
+  - S4-1: codegen units are keyed by their emitted LLVM text.
+  - S4-2: the new core reuses the old `semantic_cache` (formats `module-interface-v5`,
+    `check-summaries-v6`, `mutation-v2`).
+
+  §5 replaces S4-2's reuse with one cache model only after S5, and keeps S4-1.
+
+## 3. Language changes (decisions for the user)
+
+Rule for every change: **the one way is the spelling a Python-trained agent writes
+first, and every removed spelling gets a targeted error naming the replacement and a
+`mylang fix` rewrite.** The parser already does this for `try`, `**` and `del`.
+
+Counts are lines in three application corpora: the EDA stage-1 port (`eda-bench`
+`codex/s4-eda-stage1` `510c2e2`, 187 files, 19.8k non-blank lines), the Lox port
+(`codex/s4-lox-value-semantics` `f44302d8`, 26 files, 4.2k) and the standard library
+(`src/stdlib`, 25 files, 2.8k). Regex counts; §9 has the script.
+
+### 3.1 Part A: one way
+
+| # | Today | One way | EDA | Lox | stdlib | Deletes in the compiler |
+|---|---|---|---:|---:|---:|---|
+| A1 | `replace(r, f=v)` and `r.f = v` | field assignment | 6 vs 282 | 7 vs 183 | 1 vs 6 | `replace` builtin and its checks |
+| A2 | Named and positional record construction | **dropped 2026-10-06; both stay** (§7) | 391 vs 7 | 48 vs 0 | 16 vs 0 | nothing |
+| A3 | `& \| ^` operators and `bit_and`/`bit_or`/`bit_xor`/`shift_left`/`shift_right`; `<<`/`>>` rejected | operators, adding `<<` and `>>` | 0 vs 52 | 0 vs 9 | 0 vs 6 | five prelude functions |
+| A4 | `effects(...)`, `noio` clauses and the derived ceiling | derived ceiling only | 0 | 0 | 69 + 4 | clause parsing, `W_DERIVED_EFFECTS`/`E_DERIVED_EFFECTS` |
+| A5 | `noalloc` | **amended 2026-10-07 (AM2):** the attribute `@noalloc`, checked by the new core at build time | 0 | 0 | 4 | the checker's `noalloc` rule |
+| A6 | `@requires`, `@ensures`, `@invariant` and `assert` | **reversed 2026-10-07 (AM1):** contracts stay, because trap search reads them | 0 | 0 | 0 | nothing |
+| A7 | `module name` header that must equal the file name | the path is the name (lever L3) | 182 | 26 | 25 | header parsing, `E_MODULE_NAME` |
+| A8 | `class` (legacy sharing mode), `with arena()`, `escape()` | value records; arenas already retired (N6) | 0 | 0 | 0 | the legacy mode, arena syntax |
+| A9 | `type X = Y` aliases | none | 0 | 0 | 0 | alias resolution |
+| A10 | Optional `;` separators | newline only | 0 | 0 | 0 | lexer case |
+| A11 | `x is None` and `x == None` | `is None` | 514 vs 0 | 6 vs 0 | 0 | `None` equality special case |
+| A12 | `str` methods and the `strings` module | methods; the module keeps what has no method | 6 module calls | 0 | 43 | duplicate implementations |
+| A13 | `sorted()`/`.sort()` and the `sort` module | `sorted`, `.sort`; the module keeps binary search and dedup | 21 vs 0 | 0 | 4 vs 21 | duplicate implementations |
+| A14 | Whole-path file helpers, the `fs.method(...)` spelling and `with open` | one of them (decide with the I/O owner) | — | — | — | two of three |
+| A15 | Two spellings of a structural bound: inline `field(...)`/`op(...)` requirements and named `constraint` declarations | inline requirements; builtin requirements (copy, equality, integer, …) and const lengths stay | 0 `constraint` | 0 | 0 | `constraint_lookup`, named-constraint expansion |
+
+**Kept on purpose, although Go has none of them:**
+- comprehensions (EDA 22, Lox 2);
+- conditional expressions (EDA 10);
+- `lambda` (EDA 9);
+- keyword arguments and defaults (about 490 call lines in EDA, including constructors);
+- `while` beside `for`.
+
+They are what an agent writes first, and the counts show they are used. Deleting them is
+a separate experiment: the dialect A/B design in `cascading-levers-2026-09-21.md` §5,
+scored by failed checks and repair rounds. Two narrowings cost nothing:
+- a comprehension takes one `for` and an optional `if`;
+- `lambda` appears only as a call argument.
+
+**Formatting is part of "one way".** Make `mylang fmt` canonical and gate every `.my`
+file on it, as gofmt does. Today `zig build fmt-check` checks only Zig formatting
+(`build.zig:1388`).
+
+**The docs must state one way too.** `docs/python-syntax.md:528` still lists
+`if r is None:` as rejected. The checker accepts it, and the corpora use it 520 times.
+`doc-coverage` should fail when a "rejected spelling" example is accepted.
+
+### 3.2 Part B: visible cost
+
+Go's performance is predictable because cost is visible in the code and the optimizer is
+simple. mylang's new core is a strong optimizer, so the plan is: **report what it did per
+function, make the guarantees documented rules, and turn hidden costs into source-visible
+ones where the data says it is cheap to do.**
+
+| # | Change | Evidence | Recommendation |
+|---|---|---|---|
+| B1 | **Per-function cost report** (`mylang cost <entry> [function]`, and the same data in `list-interfaces --cost`): checks kept and proved, updates in place, runtime uniqueness tests, copies, allocations, retains/releases, inlined calls, vectorized loops | The new core already counts all of these for `--stats`, whole-program only | **Do first.** It needs no language change, and it is the measurement tool for B2–B5 |
+| B2 | **Explicit copies.** Where the core cannot prove a write is in place, it either tests uniqueness at run time or copies. Make those sites visible: first a warning `W_HIDDEN_COPY` naming the binding; later, if the data supports it, require `.copy()` or a restructure | 33 benchmark rows: 242 updates proven in place, 11 tested at run time, 11 copied (8% of updates). 100 `tests/lang` programs: 1,291 / 193 / 161 (many are RC tests that aim at these paths) | Warning in F5. Decide the error after measuring Lox and EDA under the new core |
+| B3 | **O(n) operations look like calls.** `x in some_list`, `==` on lists and records, `list + list`, `seq * n` and slices (which copy, while `bytes.view` does not) | Not countable by regex; needs a typed count (§8 P2) | Decide on the typed count. Candidates: `in` on `list` becomes `xs.contains(x)`; slices keep copying but are reported by B1 |
+| B4 | **One meaning per literal.** `[1, 2, 3]` is a fixed `[N]T` array or a growable list depending on context, and they copy differently | `[N]T` annotations: EDA 7, stdlib 3 | Give fixed arrays an explicit constructor; the literal is always a list |
+| B5 | **Documented optimizer guarantees.** Write the check-elimination cases as rules ("indexing `xs` inside `for i in range(len(xs))` has no bounds check"), test each rule, and report misses in B1 | `binary_search`: 138 cycles with checks against 80 without, because a fact was not proved | With B1 |
+| B6 | **`noalloc` as the allocation assertion** (A5) | 4 stdlib uses | Keep; make the B1 report and `noalloc` share one definition of "allocates" |
+| B7 | **String costs.** One rule for `str[i]` (S2 accepted O(n/32) non-ASCII indexing), and building text in a loop through `byte_buffer`. `acc = acc + s` in a loop gets a lint | Readiness audit 2026-09-18: 200k appends took 3.76 s | Lint now; revisit after B1 |
+
+## 4. What stays
+
+- Python syntax, indentation, `def`, `record`, `union`, `match`, `Result` with `?`,
+  `Option` with `is None` narrowing and `unwrap_or`, tuples, keyword-only parameters.
+- `mut` at the parameter and at the call site; capability parameters, which are the only
+  way authority reaches a body (effect checking is deleted, AM2).
+- Value semantics with one-count RC; no classes, closures, exceptions or methods.
+- `@noalloc`, `assert`, `debug(...)`, and the contracts `@requires`, `@ensures` and
+  `@invariant` (AM1).
+
+_Amended 2026-10-07 by the values-and-keys plan (AM1–AM3,
+`docs/audits/values-keys-trap-search-plan-2026-10-07.md`); the implementation plan's §2
+has the details._
+
+## 5. Part C: front-end structure
+
+Facts are from a read of `codex/new-core-s3-integration` at `5ee5b8d2`, with file:line
+citations; the front-end files are the same as at `2e4f0f51`.
+
+### C0. Cut the front end loose from the old back end (must happen in S5)
+
+**Deleting the old back end breaks module-mode `check`, not just `build`.**
+- `module_compile.zig:24-25` and `module_interface_oracle.zig:22-23` import `lower.zig`
+  and `bytecode.zig`, and `incremental.zig:12` imports `bytecode.zig`.
+- Per-module `check` reads `compile-module` records, which are lowered through the old
+  back end.
+
+**The S5 plan must replace per-module checking with S4-2's path:** the merged check plus
+the semantic cache. It must also drop `fix_command.zig`'s imports of
+`qbe_build_io.zig` and `native_test_snapshot.zig` (`fix_command.zig:12-13`).
+
+**Dead once the old back end is gone (about 1.0k lines):**
+- `bytecode_model.zig` (167);
+- the bytecode validators: `effects.zig:1028-1197` and `mutation.instruction`;
+- the VM parts of `runtime_values.zig` (about 180 of 373) and `io_render.zig` (about 200
+  of 217);
+- `mut_abi`'s caller-storage ABI (about 120);
+- `value_semantics.zig`'s lowering facts (about 100);
+- typed fields only the old core reads: `owned_cleanup`, `caller_storage`,
+  `borrow_origin`, and `loop_exit.arenas`.
+
+**Legacy sharing mode (A8), about 1k more:**
+- `alias_warning.zig` (764), which returns at once under value semantics
+  (`alias_warning.zig:128`);
+- the overlap path in `origins`;
+- the `class`/`Cell` branches.
+
+**Also in C0:**
+- **Move `typed.Type` out of the VM file** `runtime_values.zig:7`, into the type
+  catalog.
+- **Merge `mylang-core` into `mylang`**, as N2 planned once the old back end is deleted.
+
+### C1. A source-shaped typed tree; desugaring moves to the core
+
+**Today the front end lowers as it checks.**
+- `typed.Program` has 11 statement kinds (`typed.zig:585-597`).
+- For-each and `range` loops become index locals, a guard and a `loop`
+  (`sema_loops.zig:95-184`, `353-417`).
+- List literals become a buffer acquisition plus appends (`collection_lower.zig:304-316`).
+- Set operators become dictionary writes and walk loops (`set_lower.zig:62-160`).
+- `is_none`/`unwrap_or` become `match` (`option_flow.zig:136-172`).
+- **Comprehensions are lowered in two places.**
+  - The parser turns filtered, multi-clause and generator forms into loops
+    (`parser.zig:2052-2075`).
+  - Sema lowers the single-clause form (`sema_collections.zig:315-490`).
+  - The filter branch at `sema_collections.zig:401-405` is unreachable.
+
+**Change.**
+- Sema produces a typed tree with `for`, comprehensions, collection literals, set
+  operations and Option operations as nodes, each with its span.
+- One desugaring pass, owned by the core (`src/core/desugar.zig`), produces today's
+  `typed.Program` shape, so the Core IR builder changes little.
+
+**Why.**
+- The B1 cost report and diagnostics can point at source constructs.
+- Navigation and `mylang fix` read the same tree.
+- There is one comprehension path.
+- The core can lower sets and dictionary iteration directly instead of through index
+  loops.
+
+**Check.** `dump-ir` output is identical before and after, over `tests/lang`, the rows,
+Lox and EDA.
+
+### C2. Local analyses instead of call-graph inference
+
+**Today:**
+- `effects.zig` propagates inferred effects over the call graph on every check
+  (`effects.zig:640`, `sema.zig:1950`).
+- `origins.zig` runs a budgeted fixed point over `mutates`, `return_origin` and
+  `borrow_origin`, widening when the budget runs out (`origins.zig:724-760`).
+- **Two hashes contradict `docs/effects.md`:** `module_interface.interfaceHash` and
+  `semantic_key.contractDigest` include these inferred facts
+  (`module_interface.zig:349-365`, `semantic_key.zig:162-190`).
+  - Only `incremental.zig`'s `interface_sha256` excludes them.
+  - So an inferred-effec
+class Monitor(s2.Monitor):
+    def __init__(self, args, original_run):
+        super().__init__(args, original_run)
+        self.outcomes = {}
+        self.comparisons = 0
+        self.retained = {}
+        self.journal = (args.evidence / "commands.jsonl").open("x")
+        self.command_count = 0
+
+    def save(self, source):
+        if source not in self.retained:
+            destination = self.args.evidence / "sources" / f"{source.stem}-{digest(source)[:12]}.my"
+            shutil.copyfile(source, destination)
+            self.retained[source] = str(destination)
+
+    def native(self, source, role, argv, result):
+        self.native_runs += 1
+        stderr = result.stderr or b""
+        if b"leakcheck" in stderr or re.search(rb"leak: \d+ blocks live", stderr):
+            self.fail(source, "leak", argv, returncode=result.returncode, stderr_b64=encoded(stderr))
+        if b"R_CORE_FACT" in stderr:
+            self.fail(source, "fact_failure", argv, returncode=result.returncode, stderr_b64=encoded(stderr))
+        if result.returncode > 6:
+            self.fail(source, "unexpected_native_exit", argv, returncode=result.returncode, stderr_b64=encoded(stderr))
+        trap = re.search(rb"\bR_[A-Z_0-9]+\b", stderr)
+        outcome = {"status": result.returncode, "stdout_b64": encoded(result.stdout),
+                   "trap": trap.group().decode("ascii") if trap else ""}
+        key = (source, tuple(argv[1:]))
+        outcomes = self.outcomes.setdefault(key, {})
+        if role == "old":
+            if "old" in outcomes and outcomes["old"] != outcome:
+                self.fail(source, "old_nondeterminism", argv, expected=outcomes["old"], actual=outcome)
+        else:
+            if "old" not in outcomes:
+                self.fail(source, "missing_native_oracle", argv)
+            if outcomes["old"] != outcome:
+                self.fail(source, "native_outcome_mismatch", argv, expected=outcomes["old"], actual=outcome)
+            self.comparisons += 1
+        outcomes[role] = outcome
+
+    def run(self, argv, *arguments, **options):
+        argv = list(map(str, argv))
+        building = len(argv) > 2 and argv[1] == "build"
+        if building:
+            compiler = Path(argv[0]).resolve()
+            source = Path(argv[2]).resolve()
+            if compiler == self.args.old:
+                role = "old"
+            elif compiler == self.args.new:
+                role = "verify" if "--verify-facts" in argv else "release" if "--release" in argv else "debug"
+            else:
+                self.fail(source, "unexpected_compiler", argv)
+            if source not in self.cases:
+                self.cases[source] = {"old": False, "core": set()}
+                self.save(source)
+                if len(self.cases) % 25 == 0:
+                    print(f"qualification progress: {self.args.kind}: seen={len(self.cases)} elapsed={time.monotonic() - self.started:.2f}s", flush=True)
+            if "-o" not in argv:
+                self.fail(source, "missing_build_output", argv)
+            output = str(Path(argv[argv.index("-o") + 1]).resolve())
+            if "--cache-dir" not in argv:
+                argv += ["--cache-dir", str(self.args.cache_root / f"frontend-{'old' if role == 'old' else 'core'}")]
+        else:
+            executable = self.executables.get(str(Path(argv[0]).resolve()))
+            if executable is None:
+                self.fail(None, "unknown_native_executable", argv)
+            source, role = executable
+        timeout = 60 if building else 30
+        options["timeout"] = min(options.get("timeout") or timeout, timeout)
+        # Harnesses request text mode. Capture bytes first so newline decoding
+        # cannot hide a stdout mismatch, then return their expected text result.
+        text_flag = options.pop("text", False)
+        text_mode = options.pop("universal_newlines", False) or text_flag
+        encoding = options.pop("encoding", None)
+        errors = options.pop("errors", None)
+        text_mode = text_mode or encoding is not None or errors is not None
+        began = time.monotonic()
+        try:
+            result = self.original_run(argv, *arguments, **options)
+        except subprocess.TimeoutExpired as error:
+            self.fail(source, "compile_timeout" if building else "native_timeout", argv,
+                      timeout=options["timeout"], stdout_b64=encoded(error.stdout), stderr_b64=encoded(error.stderr))
+        except OSError as error:
+            self.fail(source, "child_launch_failed", argv, reason=str(error))
+        self.command_count += 1
+        self.journal.write(json.dumps({"command_id": self.command_count, "command": argv,
+                                      "source": self.retained.get(source), "role": role,
+                                      "building": building, "status": result.returncode,
+                                      "stdout_b64": encoded(result.stdout), "stderr_b64": encoded(result.stderr),
+                                      "elapsed_seconds": time.monotonic() - began}) + "\n")
+        self.journal.flush()
+        if result.returncode < 0:
+            self.fail(source, "compiler_crash" if building else "native_crash", argv, returncode=result.returncode)
+        if building:
+            if result.returncode:
+                kind = "old_rejected" if role == "old" else "core_refused" if b"E_CORE_UNSUPPORTED" in (result.stderr or b"") else "core_build_failed"
+                self.fail(source, kind, argv, returncode=result.returncode, stderr_b64=encoded(result.stderr))
+            self.executables[output] = (source, role)
+            if role == "old":
+                self.cases[source]["old"] = True
+            else:
+                self.cases[source]["core"].add(role)
+        else:
+            self.native(source, role, argv, result)
+        if text_mode:
+            def decode(value):
+                return value.decode(encoding or locale.getpreferredencoding(False), errors or "strict").replace("\r\n", "\n").replace("\r", "\n") if value is not None else None
+            return subprocess.CompletedProcess(argv, result.returncode, decode(result.stdout), decode(result.stderr))
+        return result
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--kind", choices=HARNESSES, required=True)
+    parser.add_argument("--harness", type=Path, help="Override this kind's generator")
+    parser.add_argument("--old", type=Path, required=True, help="Explicit qualified old oracle")
+    parser.add_argument("--new", type=Path, required=True, help="Explicit qualified integrated new oracle")
+    parser.add_argument("--cases", type=int, default=200)
+    parser.add_argument("--seed", type=int, required=True)
+    parser.add_argument("--evidence", type=Path, required=True)
+    parser.add_argument("--cache-root", type=Path, required=True)
+    args = parser.parse_args()
+    if args.cases <= 0:
+        parser.error("--cases must be positive")
+    args.old, args.new = args.old.resolve(), args.new.resolve()
+    try:
+        identities = {"old": oracle(args.old), "new": oracle(args.new)}
+        if os.path.samefile(args.old, args.new):
+            raise ValueError("--old and --new must name distinct oracle files")
+    except (OSError, ValueError) as error:
+        parser.error(str(error))
+    args.evidence, args.cache_root = args.evidence.resolve(), args.cache_root.resolve()
+    if args.evidence.exists() or args.cache_root.exists():
+        parser.error("evidence and cache roots must both be fresh; previous runs cannot be reused")
+    if set(os.sched_getaffinity(0)) & {2, 3, 10, 11}:
+        parser.error("launch through scripts/build-slot.sh build; reserved CPUs must be excluded")
+    args.evidence.mkdir(parents=True)
+    args.cache_root.mkdir(parents=True)
+    (args.evidence / "sources").mkdir()
+    for directory in ("tmp", "zig", "sources"):
+        (args.cache_root / directory).mkdir()
+    os.environ.update(TMPDIR=str(args.cache_root / "tmp"),
+                      ZIG_LOCAL_CACHE_DIR=str(args.cache_root / "zig"),
+                      ZIG_GLOBAL_CACHE_DIR="/home/epentland/ai/canopy/.zig-global-cache",
+                      MYL_CORE_LEAKCHECK="1")
+    harness_path = args.harness.resolve() if args.harness else ROOT / HARNESSES[args.kind]
+    spec = importlib.util.spec_from_file_location("s3_fuzz_harness", harness_path)
+    harness = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(harness)
+    original_run, original_argv = subprocess.run, sys.argv
+    monitor = Monitor(args, original_run)
+    sys.argv = [str(harness_path), "--cases", str(args.cases), "--seed", str(args.seed),
+                "--keep", str(args.cache_root / "sources"), "--mylang", str(args.old), "--core", str(args.new)]
+    if args.kind in ("s1", "rebinding", "iteration"):
+        sys.argv += ["--features", "all" if args.kind == "s1" else "mut,records,alias"]
+    output = s2.Tee(sys.stdout)
+    status, error = 1, None
+    subprocess.run = monitor.run
+    try:
+        with redirect_stdout(output):
+            status = harness.main()
+    except (Exception, SystemExit) as failure:
+        error = f"{type(failure).__name__}: {failure}"
+        print(f"qualification failed: {error}", file=sys.stderr)
+    finally:
+        subprocess.run, sys.argv = original_run, original_argv
+        monitor.journal.close()
+    report = s2.qualify(args, monitor, status, output.getvalue(), error)
+    arguments_per_case = 3 if args.kind == "rc" else 5
+    native_complete = all(sum(source == case for source, _ in monitor.outcomes) == arguments_per_case
+                          for case in monitor.cases) and all(
+        set(outcomes) == {"old", *MODES} for outcomes in monitor.outcomes.values())
+    try:
+        oracle_unchanged = all(digest(Path(identity["path"])) == identity["sha256"] for identity in identities.values())
+    except OSError:
+        oracle_unchanged = False
+    report.update(oracles=identities, oracle_unchanged=oracle_unchanged,
+                  harness_path=str(harness_path), harness_sha256=digest(harness_path),
+                  native_comparisons=monitor.comparisons, native_complete=native_complete,
+                  command_count=monitor.command_count, saved_sources=str(args.evidence / "sources"))
+    report["qualified"] = report["qualified"] and native_complete and oracle_unchanged and monitor.comparisons == report["comparisons_expected"]
+    (args.evidence / "summary.json").write_text(json.dumps(report, indent=2) + "\n")
+    (args.evidence / "harness.txt").write_text(output.getvalue())
+    print("qualification " + json.dumps({key: report[key] for key in ("kind", "qualified", "accepted", "native_comparisons", "elapsed_seconds")}))
+    return 0 if report["qualified"] else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+

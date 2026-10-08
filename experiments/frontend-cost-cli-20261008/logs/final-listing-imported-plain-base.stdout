@@ -1,0 +1,4 @@
+module interfaces v1; declarations/signature visibility checked; bodies not type checked
+module helper
+  export function answer def()->i64 effects() ceiling(managed_allocation) tests(0)
+module input

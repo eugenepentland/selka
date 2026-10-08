@@ -1,0 +1,27 @@
+{
+  "context": {
+    "candidate": {
+      "binary_sha256": "5ddab7ce39d576615f55676886252e4dbfff863d0d253cc003886a769c7b1a55",
+      "compiler_identity": "2ca83cdad34673efa34062dab2ea87daf2cbe6acf8af24673e0a1d699fac4d7e"
+    },
+    "environment": {
+      "MYLANG_HOST_LIMIT_CHECKPOINT": "8858370048:18446744073709551615",
+      "MYLANG_SLOT_DIR": "/run/user/1000/mylang-slots",
+      "MYLANG_TIMING_CPUS": "2,3,10,11",
+      "MYL_CORE_LEAKCHECK": "1"
+    },
+    "hasher_sha256": "e10fda0f180d57593999494460ab690fe67a7389de034722d52b4d2759d5e6e0",
+    "original_launch_receipt": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/execution/115-freeze-lox.json",
+      "sha256": "10fabcc57a9a783dc2c9d38015710384ee450e3ce133f2216525d9714317a252"
+    },
+    "reference": {
+      "binary_sha256": "ec4d76d2b57a0de47eda656571952dab90cc1aa3ddea822a327b945d3c464d03",
+      "compiler_identity": "684daf21ff6d228f070309b170a511d48bcf30dc691d20e1fb08639135bf87f6"
+    },
+    "tool_digest": "51984741b695a32abdbf6396c86ec291fd980d5100d1536f0a341c8c05e7733b",
+    "zig_path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+  },
+  "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli/experiments/frontend-fb1-external-20261008/settings-context.json",
+  "sha256": "92a2e4109b52d55d33ce7a24b0027a2f47760483594816bb2154605b3e8f0049"
+}

@@ -5871,6 +5871,8 @@ test "CLI help answers on stdout with the everyday commands first and exits 0" {
         try testing.expect(std.mem.indexOf(u8, result.stdout, "mylang docs primer").? < everyday);
         try testing.expect(std.mem.indexOf(u8, result.stdout, "mylang docs [TOPIC]").? < reference);
         try testing.expect(std.mem.indexOf(u8, result.stdout, "--release").? < reference);
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "mylang cost ENTRY.my").? < reference);
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "[--cost]").? < reference);
         const large = std.mem.indexOf(u8, result.stdout, "Working in a large project:").?;
         try testing.expect(everyday < large and large < reference);
         try testing.expect(std.mem.indexOf(u8, result.stdout, "mylang context ENTRY.my --symbol=module::name").? < reference);
@@ -10182,4 +10184,52 @@ test "a test whose result is not bool fails its case and the run" {
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, outcome.term);
     try testing.expect(std.mem.indexOf(u8, outcome.stdout, "failed input::test_bad: test result type is not bool") != null);
     try testing.expect(std.mem.indexOf(u8, outcome.stdout, "passed input::test_ok") != null);
+}
+
+// spec: FRONTEND-INTERFACE-COST-1
+test "CLI list-interfaces --cost output appends exact release costs without changing the default listing" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
+        \\module input
+        \\public def changed(xs: list[int]) -> list[int]:
+        \\    ys = xs
+        \\    ys[0] = 4
+        \\    return ys
+        \\public def unused() -> int:
+        \\    return 9
+        \\def main(out: Stream) -> int:
+        \\    xs = [1]
+        \\    out.print(changed(xs))
+        \\    return 0
+    });
+    const path = try temporary.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const plain = try contractCommand(&.{ compiler_path, "list-interfaces", path });
+    defer freeResult(plain);
+    try testing.expectEqualStrings("", plain.stderr);
+    try testing.expect(std.mem.indexOf(u8, plain.stdout, "export function unused") != null);
+    const cost = try contractCommand(&.{ compiler_path, "cost", path });
+    defer freeResult(cost);
+    try testing.expect(std.mem.indexOf(u8, cost.stdout, "input::changed: checks") != null);
+    try testing.expect(std.mem.indexOf(u8, cost.stdout, "input::unused:") == null);
+    try testing.expect(std.mem.indexOf(u8, cost.stdout, "TOTAL:") != null);
+    const listed = try contractCommand(&.{ compiler_path, "list-interfaces", path, "--cost" });
+    defer freeResult(listed);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, listed.term);
+    try testing.expectEqualStrings(plain.stdout, listed.stdout[0..plain.stdout.len]);
+    try testing.expectEqualStrings(cost.stdout, listed.stdout[plain.stdout.len..]);
+    const again = try contractCommand(&.{ compiler_path, "list-interfaces", path });
+    defer freeResult(again);
+    try testing.expectEqualStrings(plain.stdout, again.stdout);
+    try testing.expectEqualStrings("", again.stderr);
+    try invokeOptions("check", "module input", &.{"--cost"}, 2, "", "usage:");
+    try invokeOptions("list-interfaces", "module input", &.{ "--cost", "--cost" }, 2, "", "usage:");
+    try invokeOptions("list-interfaces", "module input", &.{ "--cost", "--contracts" }, 2, "", "usage:");
+    try invokeOptions("list-interfaces", "module input", &.{ "--contracts", "--cost" }, 2, "", "usage:");
+    try invokeOptions("list-interfaces",
+        \\module input
+        \\public def main() -> int:
+        \\    return unknown()
+    , &.{"--cost"}, 1, "", "unknown");
 }

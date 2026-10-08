@@ -1,0 +1,54 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/zig-out/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/test/core/row_json_transform.my",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/.mylang-cache/frontend-fb1/all46-final/all46-final-json_transform-debug/cache",
+    "--link",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/benchmarks/runtime/ports/native_clock.c",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/.mylang-cache/frontend-fb1/all46-final/all46-final-json_transform-debug/plain",
+    "--emit-llvm",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/.mylang-cache/frontend-fb1/all46-final/all46-final-json_transform-debug/plain.ll"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "other_heavy_processes": [
+    {
+      "pid": 279294,
+      "command": "/bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until ! pgrep -f '\"'\"'probe/probe.py'\"'\"' >/dev/null; do sleep 5; done; wc -l /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/probe/smoke.log' < /dev/null && pwd -P >| /tmp/claude-7f36-cwd "
+    },
+    {
+      "pid": 1476564,
+      "command": "/bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'cd /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore && python3 - <<'\"'\"'EOF'\"'\"'\np='\"'\"'src/core/own.zig'\"'\"'\ns=open(p).read()\ns=s.replace('\"'\"''\"'\"''\"'\"'            if (!self.finishedBefore(user, update_block, taken_at)) return;'\"'\"''\"'\"''\"'\"','\"'\"''\"'\"''\"'\"'            if (!try self.finishedBefore(user, update_block, taken_at)) return;'\"'\"''\"'\"''\"'\"',1)\nanchor='\"'\"'/// Whether join `phi` can receive `record` on an edge taken after `get`'\"'\"'\ns=s.replace(anchor,'\"'\"''\"'\"''\"'\"'/// Whether `op` reads a part of its first operand that borrows from it (\u00a75).\nfn readsPart(op: ir.Op) bool {\n    return switch (op) {\n        .list_get, .list_get_field, .record_get, .union_payload, .box_get => true,\n        else => false,\n    };\n}\n\n'\"'\"''\"'\"''\"'\"'+anchor,1)\nopen(p,'\"'\"'w'\"'\"').write(s)\nEOF\ngrep -n \"box_get\\|union_payload\" src/core/ir.zig | head -3; zig fmt src/core/own.zig && export TMPDIR=$PWD/.mylang-cache/tmp && scripts/build-slot.sh build -- zig build --summary none 2>&1 | grep -E \"error|failed|guardian: run-all\" | head; S=/tmp/claude-1000/-home-epentland-ai-canopy-mylang/03fe2647-29f7-4cb8-b6b6-59b6334d6da0/scratchpad/fix; export TMPDIR=$S; rm -rf $S/c2; for f in field_append lox_shape; do zig-out/bin/mylang build $S/$f/main.my -o $S/$f/new --release --cache-dir=$S/c2; done; timeout 60 /usr/bin/time -f \"lox_shape n=40000 fixed: %e s\" $S/lox_shape/new 40000; zig-out/bin/mylang build test/core/rc_field_take.my -o $S/take-new --cache-dir=$S/c2 && MYL_CORE_LEAKCHECK=1 $S/take-new a b; echo \"status $?\"' && pwd -P >| /tmp/claude-631a-cwd "
+    },
+    {
+      "pid": 1476597,
+      "command": "/bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'cd /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore && python3 - <<'\"'\"'EOF'\"'\"'\np='\"'\"'src/core/own.zig'\"'\"'\ns=open(p).read()\ns=s.replace('\"'\"''\"'\"''\"'\"'            if (!self.finishedBefore(user, update_block, taken_at)) return;'\"'\"''\"'\"''\"'\"','\"'\"''\"'\"''\"'\"'            if (!try self.finishedBefore(user, update_block, taken_at)) return;'\"'\"''\"'\"''\"'\"',1)\nanchor='\"'\"'/// Whether join `phi` can receive `record` on an edge taken after `get`'\"'\"'\ns=s.replace(anchor,'\"'\"''\"'\"''\"'\"'/// Whether `op` reads a part of its first operand that borrows from it (\u00a75).\nfn readsPart(op: ir.Op) bool {\n    return switch (op) {\n        .list_get, .list_get_field, .record_get, .union_payload, .box_get => true,\n        else => false,\n    };\n}\n\n'\"'\"''\"'\"''\"'\"'+anchor,1)\nopen(p,'\"'\"'w'\"'\"').write(s)\nEOF\ngrep -n \"box_get\\|union_payload\" src/core/ir.zig | head -3; zig fmt src/core/own.zig && export TMPDIR=$PWD/.mylang-cache/tmp && scripts/build-slot.sh build -- zig build --summary none 2>&1 | grep -E \"error|failed|guardian: run-all\" | head; S=/tmp/claude-1000/-home-epentland-ai-canopy-mylang/03fe2647-29f7-4cb8-b6b6-59b6334d6da0/scratchpad/fix; export TMPDIR=$S; rm -rf $S/c2; for f in field_append lox_shape; do zig-out/bin/mylang build $S/$f/main.my -o $S/$f/new --release --cache-dir=$S/c2; done; timeout 60 /usr/bin/time -f \"lox_shape n=40000 fixed: %e s\" $S/lox_shape/new 40000; zig-out/bin/mylang build test/core/rc_field_take.my -o $S/take-new --cache-dir=$S/c2 && MYL_CORE_LEAKCHECK=1 $S/take-new a b; echo \"status $?\"' && pwd -P >| /tmp/claude-631a-cwd "
+    },
+    {
+      "pid": 1476877,
+      "command": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang --dep memory_budget --dep compiler_root=root --dep user-doc/primer --dep user-doc/syntax --dep user-doc/statements --dep user-doc/records --dep user-doc/functions --dep user-doc/errors --dep user-doc/text --dep user-doc/bytes --dep user-doc/io --dep user-doc/effects --dep user-doc/contracts --dep user-doc/modules --dep user-doc/memory --dep user-doc/sets --dep user-doc/stdlib --dep user-doc/tests --dep user-doc/build --dep user-doc/navigation --dep user-doc/context --dep user-doc/api --dep user-doc/fix --dep build_identity --dep mylang_core -Mroot=src/main.zig -ODebug --dep memory_budget -Mmylang=src/compiler.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig -Muser-doc/primer=docs/primer.md -Muser-doc/syntax=docs/python-syntax.md -Muser-doc/statements=docs/statements.md -Muser-doc/records=docs/records-and-unions.md -Muser-doc/functions=docs/functions.md -Muser-doc/errors=docs/results-and-options.md -Muser-doc/text=docs/text.md -Muser-doc/bytes=docs/bytes.md -Muser-doc/io=docs/io.md -Muser-doc/effects=docs/effects.md -Muser-doc/contracts=docs/contracts.md -Muser-doc/modules=docs/modules.md -Muser-doc/memory=docs/managed-memory.md -Muser-doc/sets=docs/sets.md -Muser-doc/stdlib=docs/standard-library.md -Muser-doc/tests=docs/tooling/guest-tests.md -Muser-doc/build=docs/tooling/native-build.md -Muser-doc/navigation=docs/tooling/navigation.md -Muser-doc/context=docs/tooling/agent-context.md -Muser-doc/api=docs/tooling/interface-files.md -Muser-doc/fix=docs/tooling/fix.md -ODebug -Mbuild_identity=.zig-cache/o/c3e193b9bc94ab4a5d766513710ca12a/build_identity/identity.zig -ODebug --dep mylang --dep core_tool_platform --dep build_identity --dep memory_budget --dep core_number_text_object -Mmylang_core=src/core/cli.zig -Mcore_tool_platform=src/config_core_tool_platform.zig -Mcore_number_text_object=.zig-cache/o/613a15d57de9e110f222ab5a539d578c/core_number_text.o --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=- "
+    }
+  ],
+  "seconds": 1.4134309340734035,
+  "status": 0
+}

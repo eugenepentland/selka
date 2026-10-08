@@ -1,0 +1,35 @@
+fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
+    const request = try cli_run.parseRequest(init, .build, args, build_usage) orelse return 2;
+    if (request.run != null) return cli_run.run(init, request, "build");
+    // CLI-INPUT-REFUSED-1: an entry that cannot be read is refused by name, as `run` refuses it.
+    if (try cli_run.unreadable(init, "build", request.path)) |message| {
+        try write(init, message);
+        return 2;
+    }
+    var options = request.build;
+    if (request.no_cache) options.cache = try cli_run.privateCache(init, options.cache);
+    defer if (request.no_cache) cli_run.discard(init.io, options.cache);
+    var report: std.ArrayList(u8) = .empty;
+    const status = pipeline.build(init, request.path, options, &report) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.SourceError, error.Unsupported => 1,
+        error.PolicyDenied => 3,
+        error.ConfigurationFailed => 2,
+        error.ToolFailed, error.WriteFailed, error.InvalidIr => 2,
+    };
+    try write(init, report.items);
+    return status;
+}
+
+/// `mylang test`: the new core's runner (`test_runner.zig`), with the old CLI's
+/// `--flag=VALUE` spellings, `--qbe` ignored and `--whole-program` accepted (S5-D6).
+fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
+    const a = init.arena.allocator();
+    var normalized: std.ArrayList([]const u8) = .empty;
+    // A later `--zig` wins over the environment's.
+    try normalized.appendSlice(a, &.{ "--zig", cli_run.zigPath(init) });
+    var index: usize = 0;
+    while (index < args.len) : (index += 1) {
+        const arg = args[index];
+        const split = std.mem.indexOfScalar(u8, arg, '=') orelse arg.len;
+        const name = arg[0..split];

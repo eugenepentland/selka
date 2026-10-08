@@ -1,0 +1,33 @@
+{
+ "label": "run-eda-rds3+flat-plain",
+ "command": [
+  "taskset",
+  "-c",
+  "12-19",
+  "perf",
+  "stat",
+  "-x,",
+  "-e",
+  "instructions:u",
+  "-o",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/perf/eda-rds3+flat.csv",
+  "--",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/bin/eda-plain",
+  "--model",
+  "golden/cases/rds3+flat/model.sexp",
+  "--project-dir",
+  "golden/projects/designs",
+  "--out-dir",
+  "/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/.mylang-cache/vp3/eda-out/plain/rds3+flat",
+  "--flat"
+ ],
+ "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+ "env": {},
+ "seconds": 0.271,
+ "status": 0,
+ "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+ "stdout_bytes": 75,
+ "stderr_sha256": "57a1b67ae8ea6141c8ca3f134146fe8f0fa6078880f9c9809db3cd5c532c5532",
+ "stderr_bytes": 445,
+ "stdout": "eda-sch: rds3: 1 sheets, 4 sidecars, 35 symbols (15 vendor), 420 instances\n"
+}

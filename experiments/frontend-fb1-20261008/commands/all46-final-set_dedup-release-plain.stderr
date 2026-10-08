@@ -1,0 +1,12 @@
+row_set_dedup.my:5:52: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                     ^
+row_set_dedup.my:5:71: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                        ^
+row_set_dedup.my:5:88: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                                         ^
+row_set_dedup.my:5:112: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                                                                 ^

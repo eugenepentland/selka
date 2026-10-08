@@ -1,0 +1,28 @@
+lox answers summary {
+  "cases": 974,
+  "failed": [],
+  "mismatches": [],
+  "elapsed_seconds": 3.433998617110774,
+  "binary_unchanged": true
+} manifest keys ['archive_bytes', 'archive_sha256', 'members', 'source_area', 'verified_lossless', 'verified_members']
+manifest summary {
+  "archive_bytes": 266548,
+  "archive_sha256": "b09fcb0ae564dc96d7cf00c7000e273f7e91926c8b81042bcc07f0c8d63c687a",
+  "source_area": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli/.mylang-cache/frontend-fb1-external/native-results/lox",
+  "verified_lossless": true,
+  "verified_members": 2923
+}
+eda answers summary {
+  "cases": 34,
+  "failed": [],
+  "mismatches": [],
+  "elapsed_seconds": 2.319577001966536,
+  "binary_unchanged": true
+} manifest keys ['archive_bytes', 'archive_sha256', 'members', 'source_area', 'verified_lossless', 'verified_members']
+manifest summary {
+  "archive_bytes": 4542003,
+  "archive_sha256": "da3c5ea629adb64998e427ba5be679820e7640329029a93e0ffe15e6fa32e558",
+  "source_area": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli/.mylang-cache/frontend-fb1-external/native-results/eda",
+  "verified_lossless": true,
+  "verified_members": 644
+}

@@ -1,0 +1,90 @@
+{
+  "compiler_commit": "889943fa81a7c0c69a6452b0ab6c076b42b728cc",
+  "files": {
+    "driver_tests": {
+      "cases": {
+        "path": "benchmarks/lox/ports/mylang/driver_cases.json",
+        "sha256": "9266ec90a9b89f3186592bb414a095a681a00181969d10c2b6e19a1a45d58d8b"
+      },
+      "elapsed_seconds": 2.8716095809359103,
+      "receipt": "commands/debug/configured/driver_tests.json",
+      "reference_source_sha256": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+      "source_sha256": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+      "tests": [
+        [
+          "driver_tests::test_run_arithmetic",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_class_init_method",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_closure_counter",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_compile_error_status",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_gc_stress_same_output",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_inheritance_super",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_print_value_kinds",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_runtime_error_trace",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_set_rhs_keeps_original_receiver",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_set_rhs_keeps_receiver_mutations",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_shared_upvalue",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_stack_overflow",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_string_concat",
+          "passed",
+          ""
+        ]
+      ]
+    }
+  },
+  "leakcheck": true,
+  "mode": "debug",
+  "oracle": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/zig-out/bin/mylang",
+    "sha256": "5ddab7ce39d576615f55676886252e4dbfff863d0d253cc003886a769c7b1a55"
+  },
+  "source_commit": "f44302d877dfc8a01b64673e70c44b9e0c49f063",
+  "version": "frontend-current-conformance-references-v1"
+}

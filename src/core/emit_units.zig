@@ -17,6 +17,8 @@ pub const Unit = struct {
     llvm: []const u8,
     number: bool,
     math: bool,
+    /// Emitted with `--counters`: the build links the counting runtime (`count_runtime.zig`).
+    counting: bool,
 };
 
 /// Source modules, instantiated functions, compiler adapters, the C entry, and the
@@ -146,5 +148,7 @@ fn digest(a: std.mem.Allocator, text: []const u8) ![]const u8 {
 
 /// A unit of `text` with its link dependencies (number-text helpers, `-lm`) read from it.
 pub fn unit(name: []const u8, path: []const u8, kind: Kind, text: []const u8) Unit {
-    return .{ .name = name, .source_path = path, .kind = kind, .llvm = text, .number = number_runtime.needed(text), .math = std.mem.indexOf(u8, text, "llvm.sin.f64") != null or std.mem.indexOf(u8, text, "llvm.cos.f64") != null };
+    const math = std.mem.indexOf(u8, text, "llvm.sin.f64") != null or std.mem.indexOf(u8, text, "llvm.cos.f64") != null;
+    const counting = std.mem.indexOf(u8, text, "@myl_count_current") != null;
+    return .{ .name = name, .source_path = path, .kind = kind, .llvm = text, .number = number_runtime.needed(text), .math = math, .counting = counting };
 }

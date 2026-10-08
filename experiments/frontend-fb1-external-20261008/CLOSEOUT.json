@@ -1,0 +1,27 @@
+{
+  "closeout_timing_receipts_retained": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli/.mylang-cache/frontend-fb1-external/closeout/logs",
+  "cpu10_performance_status": "pending-user-release",
+  "external_evidence_commit": "57c18be8c33e7ee8e95cecbbda272fe853880e03",
+  "final_verification": "logs/verify-fixed-external-package.json",
+  "guardian": {
+    "checks_passed": 88,
+    "elapsed_seconds": 1.131275,
+    "receipt": "logs/commit-final-external-evidence.json"
+  },
+  "guardian_feedback": "coordinator consolidates shared FEEDBACK.md entry",
+  "integration_gate_status": "coordinator-held",
+  "quiet_original_baseline_pause": {
+    "admitted_utc": "2026-10-08T11:28:40.324+00:00",
+    "compiler_test_guardian_activity_during_baseline": false,
+    "completed_utc": "2026-10-08T11:29:08+00:00",
+    "other_agent": "FP2"
+  },
+  "tools_only_commits": [
+    "73adb3ede5e061a251c219bcd58ef7b8422fe77e",
+    "57befe4e25c9f345fe2ba33f8bda1670c13d2fac",
+    "7ac816bcdb19f752523fdd713f7e23ddc71bb549",
+    "b043782d8e611e46f499849728b55d57815ea167",
+    "39264f9345b8a0379ce6bced6078bbe1118be105",
+    "231eb65822882105dafa06836b4876a37feddbfa"
+  ]
+}

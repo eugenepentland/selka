@@ -1,0 +1,78 @@
+slot dir: /run/user/1000/mylang-slots
+MemAvailable: 26.1 GiB
+timing CPUs kept free: 2,3,10,11; builds run on: 0,1,4,5,6,7,8,9,12,13,14,15,16,17,18,19
+build1: free
+build2: busy
+build3: free
+gate1: free
+  38396       01:49 flock           flock /run/user/1000/mylang-slots/bench-compile.lock /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/scripts/build-slot.sh build -- python3 harness/bench.py time rust --stage 1 --repeat 3
+  38596       01:44 flock           flock /run/user/1000/mylang-slots/bench-compile.lock scripts/build-slot.sh build python3 experiments/frontend-fb1-20261008/tools/time-command.py focused-cost-1 -- zig build test-core -Dtest-filter=cost 
+  53025       00:37 python3         python3 /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/scripts/frontend_command.py --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-integration-20261008/commands --label s5-baseline-full-gate -- env MYLANG_SLOT_DIR=/run/user/1000/mylang-slots MYLANG_TIMING_CPUS=2,3,10,11 flock /run/user/1000/mylang-slots/bench-compile.lock scripts/build-slot.sh gate zig build test --summary all
+  53047       00:37 flock           flock /run/user/1000/mylang-slots/bench-compile.lock scripts/build-slot.sh gate zig build test --summary all
+  65383       00:00 python3         python3 experiments/frontend-fb1-20261008/tools/time-command.py compile-queue-status -- bash -c scripts/build-slot.sh status; ps -eo pid,etime,comm,args | rg "bench-compile|zig build|time-command.py" | head -20; ls -l experiments/frontend-fb1-20261008/logs/focused-cost-1.* 2>/dev/null; rg --files experiments/new-core-s5-20261007/tools experiments/new-core-s5-20261007/x | head -50; git -C /home/epentland/ai/canopy/eda-bench worktree list --porcelain | rg -B2 -A3 "7e938b6|frontend-fp2"
+  65439       00:00 bash            bash -c scripts/build-slot.sh status; ps -eo pid,etime,comm,args | rg "bench-compile|zig build|time-command.py" | head -20; ls -l experiments/frontend-fb1-20261008/logs/focused-cost-1.* 2>/dev/null; rg --files experiments/new-core-s5-20261007/tools experiments/new-core-s5-20261007/x | head -50; git -C /home/epentland/ai/canopy/eda-bench worktree list --porcelain | rg -B2 -A3 "7e938b6|frontend-fp2"
+  65463       00:00 rg              rg bench-compile|zig build|time-command.py
+experiments/new-core-s5-20261007/tools/fuzz_matrix.py
+experiments/new-core-s5-20261007/tools/conformance_ref.py
+experiments/new-core-s5-20261007/tools/qualify_merge.py
+experiments/new-core-s5-20261007/tools/fuzz_frozen.py
+experiments/new-core-s5-20261007/tools/frozen-old-core
+experiments/new-core-s5-20261007/x/ports-03.log
+experiments/new-core-s5-20261007/x/all46-01.log
+experiments/new-core-s5-20261007/x/all46-01-build.log
+experiments/new-core-s5-20261007/x/ports-median.json
+experiments/new-core-s5-20261007/x/phase2.sh
+experiments/new-core-s5-20261007/x/check-96k-final.json
+experiments/new-core-s5-20261007/x/all46-02.json.gz
+experiments/new-core-s5-20261007/x/ports-01.log
+experiments/new-core-s5-20261007/x/qualify-final-01/test-core.seconds
+experiments/new-core-s5-20261007/x/qualify-final-01/full-conformance.log
+experiments/new-core-s5-20261007/x/qualify-final-01/install-core.log
+experiments/new-core-s5-20261007/x/qualify-final-01/full-conformance.seconds
+experiments/new-core-s5-20261007/x/qualify-final-01/test-core.log
+experiments/new-core-s5-20261007/x/qualify-final-01/summary.json
+experiments/new-core-s5-20261007/x/qualify-final-01/install-core.seconds
+experiments/new-core-s5-20261007/x/ports-final-2.log
+experiments/new-core-s5-20261007/x/phase3.sh
+experiments/new-core-s5-20261007/x/qualify-final-03/test-core.seconds
+experiments/new-core-s5-20261007/x/qualify-final-03/full-conformance.log
+experiments/new-core-s5-20261007/x/qualify-final-03/install-core.log
+experiments/new-core-s5-20261007/x/qualify-final-03/full-conformance.seconds
+experiments/new-core-s5-20261007/x/qualify-final-03/test-core.log
+experiments/new-core-s5-20261007/x/qualify-final-03/summary.json
+experiments/new-core-s5-20261007/x/qualify-final-03/install-core.seconds
+experiments/new-core-s5-20261007/x/devloop-debug-1200.json
+experiments/new-core-s5-20261007/x/qualify-final-02/test-core.seconds
+experiments/new-core-s5-20261007/x/qualify-final-02/full-conformance.log
+experiments/new-core-s5-20261007/x/qualify-final-02/install-core.log
+experiments/new-core-s5-20261007/x/qualify-final-02/full-conformance.seconds
+experiments/new-core-s5-20261007/x/qualify-final-02/test-core.log
+experiments/new-core-s5-20261007/x/qualify-final-02/summary.json
+experiments/new-core-s5-20261007/x/qualify-final-02/install-core.seconds
+experiments/new-core-s5-20261007/x/all46-01.json.gz
+experiments/new-core-s5-20261007/x/gate-01-summary.txt
+experiments/new-core-s5-20261007/x/fuzz200-01/s0/summary.json
+experiments/new-core-s5-20261007/x/fuzz200-01/functions.txt
+experiments/new-core-s5-20261007/x/fuzz200-01/number/summary.json
+experiments/new-core-s5-20261007/x/fuzz200-01/s1.txt
+experiments/new-core-s5-20261007/x/fuzz200-01/s0.txt
+experiments/new-core-s5-20261007/x/fuzz200-01/iteration.txt
+experiments/new-core-s5-20261007/x/fuzz200-01/functions/summary.json
+experiments/new-core-s5-20261007/x/fuzz200-01/matrix.json
+experiments/new-core-s5-20261007/x/fuzz200-01/manifest.json
+experiments/new-core-s5-20261007/x/fuzz200-01/rc.txt
+experiments/new-core-s5-20261007/x/fuzz200-01/iteration/summary.json
+
+worktree /home/epentland/ai/canopy/eda-bench-wt/claude-s4-eda-newcore
+HEAD 7e938b65a880339f0aa0d58f5805cd2cd2bbfe1b
+branch refs/heads/claude/s4-eda-newcore
+locked claude agent: S4 EDA lane
+
+--
+locked Codex root revised temporary-lifetime controls, 2026-10-01
+
+worktree /home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda
+HEAD 7e938b65a880339f0aa0d58f5805cd2cd2bbfe1b
+detached
+locked added with --lock
+

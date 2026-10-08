@@ -1,0 +1,12 @@
+[
+  {
+    "tool": "apply_patch",
+    "label": "add-external-mode-comparator",
+    "elapsed_seconds": 0.014
+  },
+  {
+    "tool": "apply_patch",
+    "label": "add-native-lossless-archiver",
+    "elapsed_seconds": 0.008
+  }
+]

@@ -7,6 +7,12 @@ by trap search.** AM1–AM3 are applied to the front-end plan (`befaf67e` on
 implemented. Read-only packages can start now. Every language change waits for the
 front-end waves that own the same files.
 
+**Updated 2026-10-08, after S5 merged into `main` at `5a6b501d`:**
+- the launch order follows the front-end plan's waves: VP1 and VP2 now, VP3 after FB1,
+  and the T wave at the front-end plan's F1 exit;
+- §1's facts are rechecked against `main`;
+- the front-end plan's slow-step rule (its §6.1) applies here too.
+
 **The user's goal.** Maximize development speed:
 - fast runtime;
 - fast compile and test loops;
@@ -40,7 +46,8 @@ front-end waves that own the same files.
   front-end proposal") and `docs/audits/frontend-implementation-plan-2026-10-06.md` ("the
   front-end plan").
   - FE1–FE7 were accepted on 2026-10-06.
-  - Its waves F0–F5 start at the S5 exit.
+  - Since its 2026-10-08 update, it runs from `main` at `5a6b501d`. F0 was mostly done by
+    S5, so its waves are wave 1 (F1 with FP2 and FB1), then F2–F5.
   - **This plan amends it in three places (§4.2).** The user confirmed all three on
     2026-10-07, and they are applied there.
 - **Local-reasoning item 2** (effect ceilings derived from the signature) is merged into
@@ -49,59 +56,75 @@ front-end waves that own the same files.
 
 ## Launch instructions (for Codex)
 
-**Now, read-only.** These need no compiler change:
+**Now, beside the front-end plan's wave 1.** Neither package changes a compiler file:
 
-> Run packages VP1 and VP2 of `docs/audits/values-keys-trap-search-plan-2026-10-07.md`
-> (branch `claude/values-keys-plan`), each on its own new branch (`codex/vk-vp1`,
-> `codex/vk-vp2`) from `claude/values-keys-plan`. Change no compiler file. Hold S4's
-> machine rules: at most one build-heavy process, and never time anything. Finish each with
-> its report and stop.
+> Run packages VP1 and VP2 of `docs/audits/values-keys-trap-search-plan-2026-10-07.md`,
+> as committed on branch `claude/frontend-plan`. Use one new branch each, `codex/vk-vp1`
+> and `codex/vk-vp2`, created from that commit. Change no compiler file.
+> - VP2 uses the front-end plan's S5 pin: a ReleaseFast `mylang` built from `main` at
+>   `5a6b501d`. Reuse the front-end coordinator's pin if it exists.
+> - Both share the limit of four build-heavy agents with the front-end plan, and
+>   front-end packages take free slots first. VP1 builds nothing; VP2 takes one slot
+>   while it runs `mylang test`.
+> - Apply the front-end plan's §6.1 slow-step rule.
+> - Finish each with its report and stop. Never merge into `main` and never push.
 
-**After FB1's report (the S4 exit; alongside S5).** VP3 follows FB1 rather than running
-beside it, because both add to the core's stats code:
-
-> Implement package VP3 of the values-and-keys plan on `codex/vk-vp3`, created from
-> `codex/frontend-fb1` after FB1's report. Merge `claude/values-keys-plan` into it first.
-> Touch only `src/core/`. Never merge into `main` and never push. Finish with VP3's report
-> and stop.
+**VP3 runs now (2026-10-08), by a Claude agent at the user's request.** It follows FB1
+rather than running beside it, because both add to the core's stats code. Its branch is
+`claude/vk-vp3`, created from `codex/frontend-cost-cli`, FB1's final state. It merges
+`claude/bench-newcore` for the three NEW-CORE-TAKE-READS-1 fixes; without them the Lox
+interpreter copies its whole heap on every append, which would swamp the counts. VP3
+touches only `src/core/`, never merges into `main` and never pushes. §4.1 has the
+retargeted exit.
 
 **The front-end amendments** (§4.2, AM1–AM3) are already applied to the front-end plan.
 
-**At the S5 exit, after the user's go:**
+**At the front-end plan's F1 exit, with the user's go for F2:**
 
 > Implement the T wave of the values-and-keys plan on `codex/vk-trap-search`, created from
-> the S5 exit commit, merging `claude/values-keys-plan` first. It runs in parallel with the
-> front-end waves, owns only the files listed per package, and shares their limit of four
-> build-heavy agents: front-end packages take free slots first. Stop after T1-R with its
-> report.
+> `codex/frontend-integration` at the F1 exit. It runs in parallel with F2–F4 and owns only
+> the files listed per package. It shares the limit of four build-heavy agents, and
+> front-end packages take free slots first. Merge T2 and F3-C1 one at a time: both touch
+> where the core emits checks. Apply the front-end plan's §6.1 slow-step rule. Stop after
+> T1-R with its report.
+
+**Why the T wave waits for the F1 exit:**
+- Front-end wave 1 already fills the four build-heavy slots: F1-0, FB1 and FP2, then
+  four F1 lanes and F1-D.
+- T1-R runs trap search over `tests/lang`, `src/stdlib`, Lox and EDA, which are the
+  corpora F1 migrates. A run started mid-migration would report on code that is about to
+  change.
+- T1's fixtures would be written in spellings F1 removes.
 
 **After F4, after the user's go:** the V wave, on `codex/vk-tables`.
 
-**After S5, VP3's data and the user's go:** O1, on `codex/vk-static-ownership`.
+**The CE wave (§4.5) runs now (2026-10-08).** Claude agents run it at the user's request:
+CE-A on `claude/ce-records` and CE-B on `claude/ce-lists`, integrated on
+`claude/copy-elim`. It replaces the O wave, which VP3's data ruled out.
 
 ## 1. Where it starts
 
-- **Repository facts** are from `main` at `df55c52d7` unless a branch is named.
-  **File ownership** for packages that run after S5 names the new core's files at the S3
-  exit (`82c125dd`), because S5 deletes the old back end and its test runner.
-- **The same freeze as the front-end plan (its §1).** Until S5 the front end is shared by
-  both cores, and the old core is S4's differential oracle, so no front-end code changes
-  before S5. Packages that run earlier touch nothing, or only `src/core/`.
+- **Repository facts.**
+  - They were first taken from `main` at `df55c52d7`.
+  - On 2026-10-08 they were rechecked against `main` at `5a6b501d`, which is S5 merged.
+  - **File ownership** names the new core's files on `main`. The old back end and its
+    test runner are deleted.
+- **S5 is done.** The front end is no longer shared with an old core, so the freeze
+  before S5 no longer applies. Front-end files are owned by the front-end plan's
+  packages, so T and V packages change them only through that plan's coordinator.
 - **Corpora**, the same as the front-end plan's:
-  - the EDA slice: `eda-bench` `codex/s4-eda-stage1` `510c2e2`;
+  - the EDA slice: `eda-bench` `claude/s4-eda-newcore` `7e938b6` (310 tests, 34 goldens);
   - the Lox port: `codex/s4-lox-value-semantics` `f44302d8`;
   - `src/stdlib`;
   - `tests/lang`;
   - for performance, the 46 rows used by FB1.
-- **The oracle after S5** is the pinned S5-exit compiler. It is built once, as the front-end
-  plan's §1 describes.
+- **The oracle** is the front-end plan's (its §1): S5-0's frozen references, plus the S5
+  pin built once from `main` at `5a6b501d`.
 - **Existing machinery this plan builds on:**
   - **Property tests** (`docs/tooling/guest-tests.md` "Property tests").
-    - **After S5 they run in the new core's runner,** which has had its own since S3:
-      `src/core/test_runner_property.zig` and `src/core/property_*.zig` (generation,
-      shrinking, types, execution, rendering).
-    - **On `main`** the runner is the old back end's: `src/native_test_property.zig` and
-      `src/property_*.zig`, which import `qbe_build_io.zig`. S5 deletes them.
+    - **They run in the new core's runner:** `src/core/test_runner_property.zig` and
+      `src/core/property_*.zig` (generation, shrinking, types, execution, rendering).
+      The old back end's `src/native_test_property.zig` was deleted by S5.
 
     They provide:
     - deterministic inputs from the parameter types, biased toward edge values;
@@ -115,8 +138,8 @@ beside it, because both add to the core's stats code:
     - they are checked in every build;
     - `R_REQUIRES` names the caller that broke the requirement;
     - contracts are part of the interface (`list-interfaces`, `context`, `api-diff`).
-  - **Structured trap records** (`structured-native-trap-detail`) and
-    `mylang invoke --describe` / `--input=FILE`.
+  - **Structured trap records** (`structured-native-trap-detail`). `mylang invoke` was
+    retired by S5 (S5-D5); trap search drives functions through generated tests instead.
   - **`mylang lint`** with profiles, waivers and `--gate`; **`mylang test --affected
     --against REF`**.
   - **The `pool` module** (`src/stdlib/pool.my`): generation-checked handles. It is used
@@ -157,7 +180,7 @@ The semantics are unchanged.
 | # | Decision | Decided by |
 |---|---|---|
 | **VK11** | Open files, sockets and directory handles become keys handed out by their capability (§3.9) | V2's inventory, after V1 |
-| **VK12** | Static ownership replaces one-count RC in the core | O1's numbers against the rule in §4.5, written before O1 runs |
+| **VK12** | Static ownership replaces one-count RC in the core | **Decided by VP3 (2026-10-08): no.** The rows net 0.47% (threshold 3%); EDA −15%; Lox ×4.9 instructions. The CE wave (§4.5) replaces the O wave. |
 | **VK13** | Shrink the path-sensitive `Result` rules (`E_RESULT_PATH`, `E_RESULT_OVERWRITE`, `E_RESULT_LOOP`, `E_RESULT_CONSUMED`) to one local rule, "a `Result` must be used" | Only if T3's failure injection is in place and the idiom suite shows friction from those rules |
 | **VK14** | Remove inline structural requirements too, beyond A15 | A typed count of their uses. Not in this plan's packages |
 | **VK15** | Merge `byte_buffer` into `bytes`, and drop B7's `byte_buffer` lint | Only if VK12 adopts static ownership, which makes `s += x` append in place |
@@ -414,6 +437,9 @@ run reports nothing. The setting is `"trap_coverage": "gate" | "report" | "off"`
 
 ### 3.8 Static ownership (O wave, VK12)
 
+**Not adopted (VP3, 2026-10-08).** This section is kept as the design that was
+measured; §4.5 has the data and the CE wave that replaced it.
+
 The meaning is unchanged: value semantics. Only the implementation in the core changes:
 - **One owner per buffer.** It is freed at its last use, on each control-flow edge where it
   dies, so no runtime drop flags are needed.
@@ -497,10 +523,10 @@ Classify each edge into one of three:
 1. In scratch copies of the corpora, generate, for every searchable public function
    `f(a: A, b: B) -> R`, a property test `test_trap_f(a: A, b: B) -> bool` that carries
    `f`'s `@requires`, calls `f`, and returns `True`.
-2. Run `mylang test` over them with the existing generator, using the S4 Wave 0 pin: the
-   ReleaseFast build of `claude/new-core-s4-design` at `a16a324e` that ported both
-   corpora (the S5 pin does not exist yet). A Python script under `experiments/` is fine;
-   it is never needed to build or use mylang.
+2. Run `mylang test` over them with the existing generator, using the S5 pin: a
+   ReleaseFast `mylang` built from `main` at `5a6b501d`, shared with the front-end plan's
+   coordinator. (The earlier S4 Wave 0 pin, `a16a324e`, is superseded.) A Python script
+   under `experiments/` is fine; it is never needed to build or use mylang.
 
 **Exit, per corpus:**
 - functions searched, failed and not searched (with reasons);
@@ -509,31 +535,71 @@ Classify each edge into one of three:
 
 This sizes T1-R: how much the gate would ask of existing code.
 
-#### VP3. Ownership cost counters (after FB1's report, alongside S5; about 3–5 h)
+#### VP3. Run-time cost counters (after FB1's report; about 4–6 h)
 
-VP3 starts from `codex/frontend-fb1` once FB1 has reported. Running the two side by side
-would have both packages editing the core's stats code at the same time. FB1 counts per
-function from the program text; VP3 adds what happens at run time.
+VP3 starts from FB1's final state (`codex/frontend-cost-cli`). Running the two side by
+side would have both packages editing the core's stats code at the same time. FB1 counts
+sites per function from the program text; VP3 counts what actually happens at run time.
 
-**What.** Runtime counters in stats builds, reported per function and per row:
-- retains and releases executed;
-- uniqueness tests executed, with the unique and shared outcomes;
-- copies executed and bytes copied;
-- allocations, and peak live bytes.
+**Retargeted 2026-10-08.** The question VP3 was written for, whether static ownership is
+worth prototyping, is mostly answered by profiles of the 2026-10-08 benchmark binaries
+(`experiments/bench-newcore-20261008/`, with perf on non-timing CPUs):
 
-From these, estimate what static ownership would add: copies, and bytes copied, at every
-point where RC shares instead of copying.
+| Program | Copying records and buffers | Count updates |
+|---|---|---|
+| Lox VM, fib (28× Zig) | ~58% of samples: 32-byte vector moves of records in `vm::run` (16.9 KB frame, 1,454 vector moves) | ~5% |
+| Lox tree, properties (6× Zig) | ~35% in the hottest functions | ~4% |
+| EDA, rds3+flat (3.3× Zig) | ~44% in the runtime: freeing blocks 17%, glibc `memmove` 15% (6 points from `realloc` in list growth in `kicad_sch_textbox::scan`), dict copy plus its child walk ~14%, allocation 3% | ~2–3% |
 
-**Owns:** the runtime counters in `src/core/runtime/` and their stats plumbing, and the
-dynamic columns VP3 adds to FB1's `cost` report. It changes FB1's static counts only
-through the coordinator.
+So VP3's main job is now the **copy-elimination target list.** Static ownership becomes a
+side verdict.
+
+**What.** Runtime counters in a counting build, off by default:
+- **Count operations:** retains and releases executed.
+- **Uniqueness tests:** executed, with their unique and shared outcomes.
+- **Copies:** executed, by kind (list, dict, text and bytes, record or aggregate), with
+  bytes copied.
+- **Memory:** allocations and frees, with bytes; list and buffer growth (realloc) events
+  and bytes moved; peak live bytes.
+- **Attribution:** each count goes to its emitting function, and to its source span where
+  the core knows it.
+
+With the counters off, the emitted LLVM text and the executables are byte-identical to
+FB1's, as FB1 guaranteed for its own stats.
+
+**Owns:** the counters in `src/core/runtime/` and the core's emission of them, their stats
+plumbing, the dynamic columns added to FB1's `cost` report, and
+`experiments/vk-vp3-<date>/`. It changes FB1's static counts only through the coordinator.
+
+**Programs:**
+- Lox, tree and VM engines, on the ten timed scripts at reduced sizes, plus
+  `instantiation` and `binary_trees` at small sizes;
+- the EDA slice, on all 34 designs, with the six slowest reported separately;
+- the parity programs `nbody` and `str_build`, plus `matmul` and `knucleotide`;
+- totals over the 46 rows.
 
 **Exit:**
-- the table over the 46 rows, Lox and EDA;
-- the estimate;
-- a recommendation on whether O1 is worth running: run it if the estimated net saving is
-  at least 3% of instructions on the rows' geomean, or at least 10% on five rows, Lox or
-  EDA.
+- **Per program:** totals, and bytes copied per unit of work.
+- **The top 20 functions by bytes copied,** each with its sites (source span, copy kind)
+  and the pattern behind it. The known candidates to confirm or reject:
+  - a whole record written back into a list element while the local stays live (the Lox
+    VM frame);
+  - an element-field store lowered as a whole-record copy (nbody);
+  - copy-on-write of a whole list when only one element is held across a `mut` call (Lox
+    `instantiation`);
+  - a materialized slice in a `for` loop, or an accessor returning a payload copy (EDA
+    `as_list`, `cl[1:len(cl)]`);
+  - dict copies;
+  - list growth through `realloc`;
+  - out-of-line checked appends (str_build).
+- **The ranked copy-elimination target list,** with each pattern's share of bytes copied
+  across the programs. This is the input to a copy-elimination package that replaces the
+  O wave.
+- **The static-ownership verdict.**
+  - Count operations removed, against the extra copies static ownership would make at
+    each point where RC shares (shares are retains on still-live values).
+  - Run O1 only if the estimated net saving is at least 3% of instructions on the rows'
+    geomean, or at least 10% on five rows, Lox or EDA.
 
 ### 4.2 Amendments to the front-end plan (applied 2026-10-07, `befaf67e` on `claude/frontend-plan`)
 
@@ -543,7 +609,7 @@ through the coordinator.
 | **AM2 (VK8)** | F1-E and F2-C2 | **F1-E:** the `noalloc` clause becomes `@noalloc`, with a fix. **F2-C2:** besides the call-graph passes, delete the per-body effect check, the inferred effect sets, callback-type ceilings and `E_DERIVED_EFFECTS`; keep `E_UNUSED_CAPABILITY`. Contract purity becomes a local rule: a contract condition passes no capability and no `mut` argument. P4 also runs with effect checking removed and lists every changed verdict. **F2-C2 adds the core's build-time `@noalloc` check** (§3.7). **B6** in FB1 keeps one definition of "allocates", shared with that check. |
 | **AM3 (VK9)** | F1, as its own package F1-D | Add row A16 (§3.7). F1-D (about 4–6 h) starts in the first free slot after F1's four parallel packages, to hold the four-agent limit. |
 
-### 4.3 T wave: trap search and coverage (after S5; in parallel with F1–F4)
+### 4.3 T wave: trap search and coverage (from the front-end F1 exit; in parallel with F2–F4)
 
 #### T1. Trap search (about 8–12 h)
 
@@ -664,43 +730,121 @@ implement §3.9.
 §3.10, with tests for the generated walk, the root check's error, and Lox's environments as
 the acceptance case.
 
-### 4.5 O wave: static ownership, decided by data (after S5 and VP3)
+### 4.5 CE wave: copy elimination (replaces the O wave, 2026-10-08)
 
-#### O1. Prototype behind `--ownership=static` (about 20–30 h)
+**VP3 decided VK12: static ownership is not prototyped.** By the rule the O wave carried:
+- the rows' geomean net saving is 0.47% (the threshold is 3%);
+- EDA loses 15% and Lox about 5× in instructions, because RC's shares of large records
+  would become copies.
+
+The O wave is dropped, and one-count RC stays the memory model. VP3 also found what the
+cost actually is: copying, at 2.4–7.5 bytes per instruction retired, not counting. The CE
+wave removes it.
+
+**Who and where.** Claude agents run the wave at the user's request (2026-10-08):
+- two lanes, each branched from `claude/copy-elim` (VP3's tip plus this plan change);
+- the coordinator integrates and gates them.
+
+Both lanes change `src/core/` only, never a front-end file, so they never touch the
+front-end waves' files.
+
+**Measurement.** VP3's counters (`--counters`, `mylang cost --counters`) and its tools in
+`experiments/vk-vp3-20261008/tools/`, run on VP3's programs at VP3's sizes. Each lane
+reports bytes moved per pattern, before (VP3's numbers) and after.
+
+#### CE-A. Records in the emitter (about 12–20 h)
+
+**Targets.** P1, P8, P2 and P7: 54% of bytes moved, 85% of Lox's and 88% of EDA's (VP3
+report).
+
+**What**, in this order, running the counters after each step:
+1. **P1, phi fills.** Coalesce memory-phi slots with incoming slots that die on the edge,
+   and give loop-carried memory records one home slot (`analyzeMemory`,
+   `fillMemoryPhis`).
+2. **P8, copies out of a containing record.** Read fields of memory records through a
+   pointer projection when the source outlives the use (`record_get`, `union_payload`, the
+   field loads in `countedMemory`).
+3. **P2, whole-record copies before a field store.** Update a memory record in place when
+   its old version has no later reader. This extends `writableInPlace` from "made in this
+   block" to liveness, including `mut` parameters and phis.
+4. **P7, `sret` returns and `mut` copy-in/copy-out.** Pass `mut` records larger than four
+   words by reference, and build returned records in the caller's destination.
+
+**Owns:** the memory-record paths of `src/core/emit_llvm.zig` (`analyzeMemory`,
+`fillMemoryPhis`, `countedMemory`, `writableInPlace`, record and union operations, calls,
+returns and parameter passing), and any liveness helper they need.
+
+**Exit:**
+- P1+P2+P7+P8 bytes moved down by at least 50% on Lox and on EDA, with actuals per pattern;
+- no other pattern up;
+- the CE gates below.
+
+#### CE-B. Lists, copy-on-write, slices and appends (about 10–16 h)
+
+**Targets:**
+- P3/P4/P5, whole-element list access: all of nbody, and the Lox VM frame;
+- P9, whole-list copy-on-write: Lox `instantiation`, which is quadratic;
+- the `for` loop over a slice: EDA `overlaps_of`, 38% of rds3+flat's bytes;
+- `str_build`'s out-of-line appends.
 
 **What:**
-- §3.8 in the core, behind a flag;
-- the header layout is unchanged in the prototype; header bytes saved are computed from
-  the allocation counts and reported separately;
-- the differential fuzz against one-count RC.
+1. **Field-level element access.**
+   - `xs[i].f` reads lower to `list_get_field`.
+   - `xs[i].f = v` stores the field in place after the uniqueness test.
+   - `xs[i] = v` releases the old element's fields in place and stores from `v`'s slot.
+2. **Copy-on-write narrowing in `own.zig`.**
+   - Promote only the element read, not the list read.
+   - End a write-back temporary (`__wb_N = it.rt … it.rt = __wb_N`) before the element
+     store, so the store finds the list unique.
+3. **Slices used only as a loop source.** Iterate the source list by index instead of
+   materializing the slice, and give a materialized slice its exact capacity. This is a
+   Core IR rewrite, not a front-end change.
+4. **Buffer appends.** An inline fast path for `append_range`, with the checked call as the
+   slow path.
 
-**Owns:** `src/core/` ownership and emission, and the runtime's count operations under the
-flag.
+**Owns:**
+- `src/core/own.zig`;
+- the Core IR rewrites for element access and slice loops;
+- the list operations' emitters in `emit_llvm.zig`: `list_get`, `list_set`,
+  `list_get_field`, `list_push`, and any new element-field store;
+- the runtime's buffer append.
 
-**Exit:** the comparison over the 46 rows, Lox and EDA:
-- instructions, cycles and peak RSS;
-- copies and bytes copied;
-- check and build time.
+**Exit:**
+- nbody P3+P4 bytes down at least 90%;
+- Lox `instantiation` linear in N on both engines, with P9 bytes down at least 90%;
+- EDA `overlaps_of` bytes down at least 90%;
+- no out-of-line append calls left in `str_build`'s hot loop;
+- the CE gates below.
 
-#### O2. Decision (VK12). Written now; the user may edit it before O1 starts.
+**A shared file.** Both lanes edit `emit_llvm.zig`, in different functions. A lane that has
+to change a function the other lane owns makes the smallest change it can and says so in
+its report. The coordinator resolves it at the merge.
 
-Adopt static ownership only if all of these hold:
-1. no wrong answer in the differential fuzz or the corpora;
-2. retired instructions, geomean over the 46 rows, at most 0.97× one-count RC;
-3. no row above 1.10×;
-4. median peak RSS at most RC's, with header savings counted;
-5. Lox and EDA benchmark wall time at most 1.00× RC, and both test suites green;
-6. check and build time within 5%.
+#### CE-X. Integration and measurement (coordinator; about 3–5 h)
 
-If it fails, keep one-count RC, and keep any O1 analysis that elides RC operations.
+- **Merges:** CE-B, then CE-A, into `claude/copy-elim`, qualifying after each.
+- **Counters** on all of VP3's programs: bytes moved per pattern, before and after.
+- **Wall time**, interleaved, on CPU 10 under its lock, medians of three runs, against the
+  VP3 base (`65a14aeb`) built the same way:
+  - Lox, both engines;
+  - EDA, all 34 designs;
+  - the 27 parity programs;
+  - the 46 rows.
+- **Exit:**
+  - every CE gate;
+  - no row slower than 1.03× the base beyond noise;
+  - a report with the before/after tables.
 
-#### O3. Adoption (only if O2 passes; about 15–25 h)
+#### CE gates
 
-- static ownership becomes the default;
-- the RC paths and the count word are deleted;
-- `W_HIDDEN_COPY` reports copies only;
-- VK15 is decided on its data;
-- tables are supported in the static mode.
+A wrong answer is never acceptable. Every lane and every merge passes:
+- `zig build` (Guardian), `zig build test --summary all` and `zig build fmt-check`;
+- conformance against the frozen S5 references in debug and release, with leak and fact
+  verification: 1518/0/0 (`experiments/new-core-s5-20261007/tools/`);
+- the frozen fuzz matrix, 9×50 per lane and per merge, and 9×200 at CE-X;
+- Lox conformance 974/974 and its tests; EDA 34/34 goldens and 310 tests; parity output
+  equal to `.expected`;
+- the same output with counting on and off.
 
 ### 4.6 C1. Trap containment design note (about 2–3 h; with D9 stage 5 planning)
 
@@ -719,15 +863,17 @@ The same mechanism serves tasks.
 | Wave | Packages | Starts after | Expected wall time |
 |---|---|---|---|
 | Early | VP1, VP2 | now | 3–5 h; 4–6 h |
-| Early, core | VP3 | FB1's report (after the S4 exit, alongside S5) | 3–5 h |
+| Early, core | VP3 | FB1's report (front-end wave 1) | 3–5 h |
 | Amendments | AM1–AM3, applied to the front-end plan's F1 and F2 on 2026-10-07 | — | counted in the front-end plan: F1 17–24 h, F2 13–18 h |
-| T | T1, then T1-R (stop), then T2 and T3; T4 after V1 | the S5 exit and the user's go | 26–40 h |
+| T | T1, then T1-R (stop), then T2 and T3; T4 after V1 | the front-end F1 exit and the user's go | 26–40 h |
 | V | V1, then V2 (inventory and stop), V3, and V4 if needed; T4 | F4's exit and the user's go | 28–42 h, plus 6–10 h for V4 if VP1 calls for it |
-| O | O1, then O2 (stop), then O3 if it passes | S5, VP3, and the user's go | 35–55 h |
+| CE | CE-A and CE-B in parallel, then CE-X | VP3 (done 2026-10-08) and the user's go (given) | 25–41 h |
 | C | C1 | concurrency planning | 2–3 h |
 
-The T wave runs beside F1–F4 because it owns different files (the runner, the generator, the
-core's check emission). The coordinator merges T2 and F3-C1 one at a time.
+The T wave runs beside F2–F4 because it owns different files (the runner, the generator,
+the core's check emission). The coordinator merges T2 and F3-C1 one at a time. It starts
+at the F1 exit, not with F1: wave 1 has no free build-heavy slot, and F1 migrates the
+corpora T1-R reports on (launch instructions).
 
 **The T wave is not free.** It shares the front-end waves' limit of four build-heavy
 agents, and front-end packages take free slots first. F1 alone fills all four, so T mostly
@@ -737,9 +883,8 @@ not alongside F1.
 ## 6. Gates
 
 **For every package:**
-- the front-end plan's §5 gates where they apply after S5: the full gate, the differential
-  against the pinned S5 compiler, the corpora, check timing and rebuild time;
-- before S5, the S4 rules.
+- the front-end plan's §5 gates where they apply: the full gate, the differential against
+  the S5 oracle, the corpora, check timing and rebuild time.
 
 **Trap search and coverage (T wave):**
 - **Deterministic:** two runs give identical results and reports.
@@ -775,6 +920,13 @@ not alongside F1.
   - timing only on CPU 10;
   - at most four build-heavy agents **across this plan and the front-end plan together**;
   - never the full gate while a fuzz matrix runs.
+- **The slow-step rule** (the front-end plan's §6.1, the user, 2026-10-08):
+  - every command is timed;
+  - anything over about 5 minutes uncontended gets a speed investigation, and the
+    speedup is implemented when it keeps the check identical;
+  - nothing is sped up by weakening it;
+  - entries go in the front-end plan's ledger. For the T wave's test-time work this
+    comes on top of §6's test-time budget, not instead of it.
 - **Out-of-scope bugs** get a regression fixture and a report.
 
 **Repository rules** (from `CLAUDE.md`, `guardian.toml` and the documentation gate):

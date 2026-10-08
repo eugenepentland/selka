@@ -1,0 +1,392 @@
+ SPEC.md                |  2 ++
+ docs/performance.md    |  5 +++++
+ src/core/cli.zig       |  4 +++-
+ src/core/inline.zig    | 18 +++++++++++++++---
+ src/core/passes.zig    | 47 ++++++++++++++++++++++++++++++++++++++++++-----
+ src/core/pipeline.zig  | 11 ++++-------
+ src/core/root_test.zig |  1 +
+ src/features.json      |  5 +++++
+ 8 files changed, 77 insertions(+), 16 deletions(-)
+//! The release passes, in order, shared by `mylang-core build`, `dump-ir --facts`
+//! and the tests: leaf inlining, loop unswitching, facts, trip-count guards (then
+//! facts again), ownership (`own.zig`, after the facts it may not disturb), and the
+//! vector plans. Debug builds run only ownership (`ownership`).
+const std = @import("std");
+const ir = @import("ir.zig");
+const facts = @import("facts.zig");
+const inline_leaves = @import("inline.zig");
+const vector = @import("vector.zig");
+const version = @import("version.zig");
+const own = @import("own.zig");
+const origins = @import("inline_origins.zig");
+
+/// Passes only allocate.
+pub const Error = std.mem.Allocator.Error;
+
+/// How the fact pass runs: `trusted` facts drive the vector lowering; `verify` keeps
+/// comparisons unfolded and plans no vectors; `sabotage`, `sabotage_widening` and
+/// `sabotage_length` are verify with one wrong rule (`facts.Sabotage`).
+pub const Mode = enum { off, trusted, verify, sabotage, sabotage_widening, sabotage_length };
+
+/// What the passes produced, per function, and what they did.
+pub const Result = struct {
+    known: []?facts.Facts,
+    plans: [][]const vector.Plan,
+    counts: Counts = .{},
+    /// Exactly the same pass events, indexed by physical Core function.
+    per_function: []FunctionStats = &.{},
+    /// Verify builds re-emit checks the fact pass has proved.
+    verifying: bool = false,
+    /// What ownership did: copy-on-write forms, retains and releases.
+    own: own.Stats = .{},
+    /// Sparse source frames of instructions and blocks cloned by these passes.
+    provenance: origins.Table = .{},
+};
+
+/// Pass events for one emitted body; cloned work belongs to its physical caller.
+pub const FunctionStats = struct { counts: Counts = .{}, own: own.Stats = .{} };
+
+/// How often each release pass changed something (`--stats`).
+pub const Counts = struct {
+    inlined: u32 = 0,
+    /// Loop copies added by unswitching and by trip-count guards.
+    unswitched: u32 = 0,
+    versioned: u32 = 0,
+    proven: u32 = 0,
+    vectorized: u32 = 0,
+};
+
+/// The debug pipeline's only pass: ownership and counting, no facts.
+pub fn ownership(arena: std.mem.Allocator, module: *ir.Module) Error!own.Stats {
+    return own.run(arena, module, .{});
+}
+
+/// Run debug ownership with the same per-function accounting as release.
+pub fn debug(arena: std.mem.Allocator, module: *ir.Module) Error!Result {
+    var result: Result = .{ .known = &.{}, .plans = &.{}, .per_function = try arena.alloc(FunctionStats, module.functions.items.len) };
+    @memset(result.per_function, .{});
+    for (module.functions.items, result.per_function, 0..) |*function, *local, index| {
+        if (function.signature.linkage != .internal) continue;
+        local.own = try own.function(arena, module, function, .{ .function_index = @intCast(index) });
+        result.own.add(local.own);
+    }
+    return result;
+}
+
+/// Run the release passes over `module`.
+pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Result {
+    try @import("fuse_text.zig").whitespace(arena, module);
+    var result: Result = .{
+        .known = try arena.alloc(?facts.Facts, module.functions.items.len),
+        .plans = try arena.alloc([]const vector.Plan, module.functions.items.len),
+        .per_function = try arena.alloc(FunctionStats, module.functions.items.len),
+    };
+    @memset(result.known, null);
+    @memset(result.plans, &.{});
+    @memset(result.per_function, .{});
+    const inlined = try arena.alloc(u32, module.functions.items.len);
+    @memset(inlined, 0);
+    result.counts.inlined = try inline_leaves.inlineLeavesCounted(arena, module, &result.provenance, inlined);
+    if (mode == .off) {
+        for (module.functions.items, result.per_function, inlined, 0..) |*function, *local, expanded, index| {
+            if (function.signature.linkage != .internal) continue;
+            local.counts.inlined = expanded;
+            local.own = try own.function(arena, module, function, .{ .provenance = &result.provenance, .function_index = @intCast(index) });
+            result.own.add(local.own);
+        }
+        return result;
+    }
+    const verify = mode != .trusted;
+    result.verifying = verify;
+    const sabotage: facts.Sabotage = switch (mode) {
+        .sabotage => .remainder,
+        .sabotage_widening => .widening,
+        .sabotage_length => .length,
+        else => .none,
+    };
+    // A first fact pass with every parameter unknown gives each call site's argument
+    // intervals; `parameterRanges` turns them into the parameter intervals the real
+    // pass starts from. It changes no function.
+    const first = try arena.alloc(?facts.Facts, module.functions.items.len);
+    for (module.functions.items, first, 0..) |*function, *slot, index| {
+        slot.* = null;
+        if (function.signature.linkage != .internal) continue;
+        const changed = try version.unswitch(arena, function, result.provenance.context(@intCast(index)));
+        result.per_function[index].counts.unswitched = changed;
+        result.counts.unswitched += changed;
+        slot.* = try facts.analyze(arena, function, .{ .fold = !verify, .sabotage = sabotage, .mark = false });
+    }
+    const parameters = try parameterRanges(arena, module, first);
+    // Closed caller bounds can prove an affine callback safe only after the
+    // all-call parameter pass. Deliberately corrupted facts cannot prove safety.
+    if (sabotage == .none) result.counts.inlined += try inline_leaves.withParametersCounted(arena, module, parameters, &result.provenance, inlined);
+    for (module.functions.items, result.known, result.plans, parameters, 0..) |*function, *slot, *plan, params, index| {
+        if (function.signature.linkage != .internal) continue;
+        const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage, .params = params };
+        var known = try facts.analyze(arena, function, options);
+        if (!verify and @import("byte_index.zig").forward(module, function, &known) != 0) {
+            // The existing fact and vector rules now see the original counted index.
+            known = try facts.analyze(arena, function, options);
+        }
+        result.counts.proven += known.proven;
+        result.per_function[index].counts.proven += known.proven;
+        // A reduction proven only under a trip bound gets a guarded copy; the facts then run again.
+        const guarded = try version.versionReductions(arena, function, known, result.provenance.context(@intCast(index)));
+        if (guarded != 0) {
+            known = try facts.analyze(arena, function, options);
+            result.counts.proven += known.proven;
+            result.per_function[index].counts.proven += known.proven;
+        }
+        result.counts.versioned += guarded;
+        result.per_function[index].counts.versioned = guarded;
+        result.per_function[index].counts.inlined = inlined[index];
+        // Ownership after the facts: the instructions and blocks it adds have none.
+        result.per_function[index].own = try own.function(arena, module, function, .{ .verify = verify, .facts = &known, .provenance = &result.provenance, .function_index = @intCast(index) });
+        result.own.add(result.per_function[index].own);
+        try extend(arena, &known, function);
+        slot.* = known;
+        // Vector code comes only from trusted facts, never in a verify build.
+        if (!verify) plan.* = try vector.plan(arena, function, known);
+        result.per_function[index].counts.vectorized = @intCast(plan.len);
+        result.counts.vectorized += @intCast(plan.len);
+    }
+    return result;
+}
+
+/// Per function, the interval of each parameter over every call that reaches it
+/// (NEW-CORE-FACTS-10), or no intervals (the parameter types' ranges).
+///
+/// A function qualifies when it is internal, no `func_ref` names it (a function value
+/// could be called from anywhere), and every reachable call is in a function the
+/// first pass analysed. Each argument's interval comes from facts computed with that
+/// caller's own parameters unknown, so it holds whatever the caller is passed, and a
+/// recursive call needs no fixed point. An argument with no interval makes its
+/// parameter unknown.
+pub fn parameterRanges(arena: std.mem.Allocator, module: *const ir.Module, first: []const ?facts.Facts) Error![]const []const ?facts.Interval {
+    const count = module.functions.items.len;
+    const out = try arena.alloc([]const ?facts.Interval, count);
+    @memset(out, &.{});
+    const usable = try arena.alloc(bool, count);
+fn escaped(allocator: std.mem.Allocator, out: *Out, text: []const u8) !void {
+    for (text) |byte| {
+        if (byte < 0x20 or byte >= 0x7f or byte == '"' or byte == '\\') try out.print(allocator, "\\{X:0>2}", .{byte}) else try out.append(allocator, byte);
+    }
+}
+
+/// The LLVM symbol of a mylang function.
+fn symbol(allocator: std.mem.Allocator, name: []const u8) ![]const u8 {
+    return std.fmt.allocPrint(allocator, "@\"my.{s}\"", .{name});
+}
+
+/// The vectorized loops of one function, and the header phi values their vector parts resume with.
+const VectorState = struct {
+    plans: []const vector.Plan = &.{},
+src/features.json:5:    "cost-command": {
+SPEC.md:1413:- [FRONTEND-COST-1] `mylang cost ENTRY.my [FUNCTION] [--json]` reports static Core costs per reachable emitted function and their totals: kept/proved checks, in-place/tested/copied updates, potential dynamic allocation sites, retains/releases, inlining and vector plans. Totals share the `build --stats` counters. LLVM vectorization is unknown without positive optimization remarks; `--llvm-remarks FILE.opt.yaml` reads successful LLVM loop-vectorization remarks separately from Core vector plans. Allocation classification includes runtime scratch, counts unresolved function values and foreign calls conservatively, and is shared with the build-time allocation promise. `--debug`, `--no-facts` and `--verify-facts` select the corresponding build pipeline.
+experiments/new-core-s5-20261007/tools/fuzz_matrix.py:60:    if subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=no"], cwd=ROOT, text=True):
+experiments/new-core-s5-20261007/tools/fuzz_matrix.py:91:                status = result.returncode
+experiments/new-core-s5-20261007/tools/fuzz_matrix.py:92:                log.write(f"\nexit={status}\n")
+experiments/new-core-s5-20261007/tools/fuzz_matrix.py:99:            return kind, False, {"error": str(error), "worker_status": status}
+experiments/new-core-s5-20261007/tools/fuzz_matrix.py:100:        passed = (status == 0 and summary.get("qualified") is True and summary.get("accepted") == args.cases
+experiments/new-core-s5-20261007/tools/fuzz_matrix.py:113:        ["git", "status", "--porcelain", "--untracked-files=no"], cwd=ROOT, text=True)
+experiments/new-core-s5-20261007/tools/qualify_merge.py:35:   status=subprocess.run(wrapped,cwd=ROOT,env=env,stdout=f,stderr=subprocess.STDOUT).returncode
+experiments/new-core-s5-20261007/tools/qualify_merge.py:37:  item={'command':wrapped,'log':str(log.relative_to(ROOT)),'status':status,'seconds':seconds,'wall_including_admission':time.monotonic()-started}
+experiments/new-core-s5-20261007/tools/qualify_merge.py:39:  if status or seconds is None: raise RuntimeError(name+' failed; retained '+str(log))
+18:- all 46 rows are within 1.10× Zig and 1.10× the old core (the old core is the archived oracle, measured interleaved);
+74:| | tests unchanged | 0.145 s | 0.067 s | 0.46 |
+98:**The 46 rows** (`all46-03.json`, [`rows.md`](x/rows.md)):
+104:**How the rows got there.** The first S5-X row run (`all46-01.json.gz`, on `6079efb2`) missed
+131:| S5-0 | Froze the old core's answers into `references/` and copied S3's qualification tools to read them. The old core and QBE are archived in `~/.cache/mylang/oracles/old-core-d36658db`. The frozen fuzz matrix runs in 2 min instead of 16. | `d0465586` |
+197:   that directory except the 46-row tool, which builds the old core's rows. Its column at the
+HEAD 43facfa77a8008669626e1cbd802692d5f7d9455
+branch refs/heads/rust/helper
+
+worktree /home/epentland/ai/canopy/eda-bench-wt/rust-lead
+HEAD 4873818d259ea233f8c7d6120a6d07bbd7181814
+branch refs/heads/rust/lead
+
+worktree /home/epentland/ai/canopy/eda-bench-wt/s2-go-a
+HEAD 622d886da282b0dff0920813d0e1f4014a0ec748
+branch refs/heads/s2/go/a
+
+worktree /home/epentland/ai/canopy/eda-bench-wt/s2-go-b
+HEAD 310d65bf6f4ad0e840f2c2d164409bd2f314615c
+branch refs/heads/s2/go/b
+
+worktree /home/epentland/ai/canopy/eda-bench-wt/s2-go-c
+HEAD 7c7bce12ef720364739356d3b76f87ed399db3f4
+branch refs/heads/s2/go/c
+
+worktree /home/epentland/ai/canopy/eda-bench-wt/s2-go-d
+HEAD 420819fbbf5e72705f5e78e892e1748d9f0d5d55
+branch refs/heads/s2/go/d
+
+worktree /home/epentland/ai/canopy/eda-bench-wt/s2-rust-a
+HEAD 6923675d3b72008b6f6cdeffa31f74a4c09e5335
+branch refs/heads/s2/rust/a
+
+worktree /home/epentland/ai/canopy/eda-bench-wt/s2-rust-c
+HEAD 0e96a7b13148734fd7e96245bc63125a21b652f8
+branch refs/heads/s2/rust/c
+
+worktree /home/epentland/ai/canopy/eda-bench-wt/s2-rust-d
+HEAD 5cb6943a1112b24026b007dc77b09fa08d9ea282
+branch refs/heads/s2/rust/d
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox
+HEAD f44302d877dfc8a01b64673e70c44b9e0c49f063
+detached
+locked added with --lock
+--
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-ast-bytecode-20261003
+HEAD 33712b76b376f5a3352e555af32e205010dc248d
+branch refs/heads/codex/lox-ast-bytecode-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-borrow-assert-20261003
+HEAD e9a582aa556510548523422424a26a5792761b9a
+branch refs/heads/codex/lox-borrow-assert-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-byte-positive-20261003
+HEAD 71d6e9f6757533acf9c811a624af3e4b32c7651c
+branch refs/heads/codex/lox-byte-positive-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003
+HEAD 9ab993c1b9e2088c471ea1b57c98361b8554d0ae
+branch refs/heads/codex/lox-native-case-glue-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003
+HEAD a07fee5e878a4ad4c5610c07928b0fe9f45f0269
+branch refs/heads/codex/lox-native-policy-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003
+HEAD fe486f6d1053b295aa74ec89f5d844e76e83175c
+branch refs/heads/codex/lox-ownership-inline-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003
+HEAD 1fd1d566793dcae92449d937aca595c55ee318c8
+branch refs/heads/codex/lox-parity-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003
+HEAD 3b33df52044a10cb84b908f8b1641af439e8c729
+branch refs/heads/codex/lox-parity-lowering-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003
+HEAD ac408968358af2be798f9fc4ea8a3054cd4bac82
+branch refs/heads/codex/lox-parity-positive-write-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-tree-20261003
+HEAD e68e03b93710421eda6615ed934a4f1f49351c7f
+branch refs/heads/codex/lox-parity-tree-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003
+HEAD 57425c7739ba1bd6a14fa127821329530c8ca28f
+branch refs/heads/codex/lox-parity-vm-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-audit-20261002
+HEAD bbefb77f711076b036bb581b0986ac91eec05ca9
+branch refs/heads/codex/lox-perf-audit-20261002
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-frames-20261002
+HEAD 36a8523c06b76ed97a788c31d79067ed42392392
+branch refs/heads/codex/lox-perf-frames-20261002
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-improvements-20261002
+HEAD fd86729e2820b9712fef3b5fcbcad7d346988018
+branch refs/heads/codex/lox-perf-improvements-20261002
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-lookup-20261002
+HEAD 654c1c579664a6c225f2a4ed49049880b2fbba5d
+branch refs/heads/codex/lox-perf-lookup-20261002
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-return-glue-20261002
+HEAD 7b283ab23a27c92e93761cc272f257c8b5e961ac
+branch refs/heads/codex/lox-perf-return-glue-20261002
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002
+HEAD 15006c7b38813c10f6ad4ae8fb4716aaa59e59d6
+branch refs/heads/codex/lox-perf-stack-20261002
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003
+HEAD 2d19b55a3385ddef8a313a6aab0ae19028b19787
+branch refs/heads/codex/lox-qbe-dispatch-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003
+HEAD 9c5f283cd21ff6954929fe2e7aed37926d0dca39
+branch refs/heads/codex/lox-qbe-scratch-alias-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003
+HEAD 29883d8ae831505ac750c5e5e4b39565064791c0
+branch refs/heads/codex/lox-variant-number-tag-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-wide-20261003
+HEAD 9481fbaa9df0b7703cc43c097f5199e6dc8894a6
+branch refs/heads/codex/lox-variant-wide-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-bytecode-20261003
+HEAD beaaf97c7397beafb0988f5ed73dde0bf4813ebb
+branch refs/heads/codex/lox-vm-bytecode-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-dispatch-20261003
+HEAD d6414cf693c51eb5c953a40fd74fdf45b88f1a79
+branch refs/heads/codex/lox-vm-dispatch-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-numeric-20261003
+HEAD f31cd6a9ec599a5c38f36f2e6a059fb1eb3bc2e7
+branch refs/heads/codex/lox-vm-numeric-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003
+HEAD fea55032b38cda58d7eb0dfdb520b1f2fa71c6e2
+branch refs/heads/codex/lox-vm-stack-read-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries
+HEAD 41deb66365c6a2f3f6e53088a2a0d7dfa6e7486f
+--
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-s4-lox-value-semantics
+HEAD f44302d877dfc8a01b64673e70c44b9e0c49f063
+branch refs/heads/codex/s4-lox-value-semantics
+locked S4-L value semantics port; no compiler edits
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-vk-vp1
+--
+branch refs/heads/codex/d9-lox-class-method
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-closures-profile
+HEAD ff9096bb0891f765d70f970cfec5799b53e777cb
+branch refs/heads/codex/d9-lox-closures-profile
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return
+HEAD 56c9d0b49640c5aa2bc6c1106a80eedcb6dcac6a
+branch refs/heads/codex/d9-lox-frame-return
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-indexed-setter
+HEAD ff9096bb0891f765d70f970cfec5799b53e777cb
+branch refs/heads/codex/d9-lox-indexed-setter
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads
+HEAD d8b741a6285093c800e24faeaa5a48305a67b82d
+branch refs/heads/codex/d9-lox-instance-reads
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-set-rhs
+HEAD 4a926ec7dc5dd1693f91a81d146b84b830460f22
+branch refs/heads/codex/d9-lox-set-rhs
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-source-perf
+HEAD 180f8629223776bd7d3ae4ff5b1946dd257363a4
+branch refs/heads/codex/d9-lox-source-perf
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-history
+HEAD 9bfd32e0053c2c96d6c3d6c9454eb871b636d716
+branch refs/heads/codex/d9-lox-stress-history
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-root-fix
+HEAD 851ca3360a3da915dbda50dde3c4a4dcd9f3f82a
+--
+branch refs/heads/codex/d9-lox-upvalue-reads
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-module-keyword-call
+HEAD 19d68834d224f55054d4e44a1b764c1153669f15
+--
+branch refs/heads/codex/d9-rc-lox-probe-astra
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra
+HEAD f54b88812213f645b4b8393363a87f8b43ca6e76

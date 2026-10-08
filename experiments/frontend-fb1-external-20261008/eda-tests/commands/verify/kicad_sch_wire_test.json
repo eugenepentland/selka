@@ -1,0 +1,60 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/zig-out/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_wire_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli/.mylang-cache/frontend-fb1-external/test-cache/eda",
+    "--release",
+    "--verify-facts",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "cpu_affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "cwd": "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda",
+  "elapsed_seconds": 0.812343664932996,
+  "leak_environment": {
+    "MYL_CORE_LEAKCHECK": "1"
+  },
+  "other_build_heavy_processes": [
+    " 279294  107551  17    9262 /bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until ! pgrep -f '\"'\"'probe/probe.py'\"'\"' >/dev/null; do sleep 5; done; wc -l /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/probe/smoke.log' < /dev/null && pwd -P >| /tmp/claude-7f36-cwd",
+    "3232692 3232653  14       0 /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig cc -O0 -target x86_64-linux-gnu.2.31 -march=native -mllvm -x86-experimental-pref-innermost-loop-alignment=6 -fno-sanitize=undefined -Wno-override-module -o /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli/.mylang-cache/frontend-fb1-external/test-cache/eda/native-link-24b59f8e8b5472ceab8b14124ca4b48a/program /home/epentland/.cache/mylang/core-runtime/core_rt-5c4040adac083b24fc449a6c819793afdbedff864c662acd49708963fc7d5955.o /home/epentland/.cache/mylang/core-runtime/units-v1/ac887d4616a9aa3d5dc71a1e864ac6ac2ca8b88ddb49e7f9be3a45d1ba2bce54.o /home/epentland/.cache/mylang/core-runtime/units-v1/75b4f396687cb7f9c4eaa8e92951a43069527b35e7056cdcff552c18981e53c4.o /home/epentland/.cache/mylang/core-runtime/units-v1/cfa6e4068a1fda32c73fcd64dd93684b66423faeb73d08e896832ddc5fcaa31c.o /home/epentland/.cache/mylang/core-runtime/units-v1/1c299b9ee387b9c6dbc1ebab8fc6b270392bedab367346d32b3d74a1ad5ad97d.o /home/epentland/.cache/mylang/core-runtime/units-v1/97cb5cdd06ba3718195918f60084100e97c80c70a061e254e016c312b9661ba1.o /home/epentland/.cache/mylang/core-runtime/units-v1/f663e1ef40d1496e8a5b2b59703ba833b3fe339b73e87216e1f3059b12b8bd39.o /home/epentland/.cache/mylang/core-runtime/units-v1/a22c417d48a2e8a5f9f2c9f50210183457b7f65c2e3a04450d942351b97eb372.o /home/epentland/.cache/mylang/core-runtime/units-v1/e180c3625347c15a2161866b0c98c3b50dc8a29df43c9673111198edd859e50d.o /home/epentland/.cache/mylang/core-runtime/units-v1/3e141dfcfff678f505cd05b0a47ad0359675e632d990012a60b381cccbc01ea1.o /home/epentland/.cache/mylang/core-runtime/units-v1/8c66534ee062cf685ea9f04d0451bad917949fa449db3f939f75ab322d035f3e.o /home/epentland/.cache/mylang/core-runtime/units-v1/8c094a95046641cc1a60d30b619321423d26f2d63db2a4c057a62ea6266dc22d.o /home/epentland/.cache/mylang/core-runtime/units-v1/c2cbea656358bb81157519b1094f21bf36c311f6dcec547f9960a254c889f316.o /home/epentland/.cache/mylang/core-runtime/units-v1/62ebfdda91f7bc6ce572c78daf9f6271badb5f7def19ff958b7101094dc86544.o /home/epentland/.cache/mylang/core-runtime/units-v1/8a4e9d968497e4097636b83e3ccbfc00462cb03970b96ce35e8b4ccb1262868f.o /home/epentland/.cache/mylang/core-runtime/units-v1/686e4b6a3778520f7a2cc70ac81b7eaaaaa0d4d4175ef55c82780742557d1598.o /home/epentland/.cache/mylang/core-runtime/units-v1/6ea6c7be6ee5d1bee7a428d10a5c053950ffd16d2e551cbdb1a25edf18e05e3a.o /home/epentland/.cache/mylang/core-runtime/units-v1/2eaeb550d726536e6c0c53d0fd5be63374a7aaffa3e3ff1cc6530e1fc2fcf5ff.o /home/epentland/.cache/mylang/core-runtime/units-v1/a4812497f7f8062b7781a570e0a5e2cbd1ca038116460427b9de48c3a8d8fb30.o /home/epentland/.cache/mylang/core-runtime/units-v1/955aa21225358ccd2b93f48a4c7b0f5a1f82d52c5d50de1b527cabe3300558ae.o /home/epentland/.cache/mylang/core-runtime/units-v1/cc81686fc013bccc63a854c63454c3749924c6a90e38a170b11d70d63b289286.o /home/epentland/.cache/mylang/core-runtime/units-v1/735b52c138afe194e793d8fd2cd8eff21cfd77cdc369f1c465e52c1af63d674d.o /home/epentland/.cache/mylang/core-runtime/units-v1/51aa26d3d62410d79442208106db93e645d5c5419d1dc9fcb9190bb75ee329f0.o /home/epentland/.cache/mylang/core-runtime/core_number_text-58631556747a62f8640a9c120a327f09151c6da43d8bc0024436ec8a21f1bd5d.o"
+  ],
+  "process_sample": {
+    "command": [
+      "ps",
+      "-eo",
+      "pid,ppid,psr,etimes,args"
+    ],
+    "elapsed_seconds": 0.018016615882515907,
+    "returncode": 0
+  },
+  "returncode": 0,
+  "started_at": "2026-10-08T10:58:17.530985+00:00",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "c8d5d2bdd12a28f510eef060ed43a78c06096013b183da3d3cd56badef952e45",
+  "timeout": false,
+  "timeout_seconds": 600
+}

@@ -1,0 +1,65 @@
+    categories = {}
+    for category in ("current", "configured"):
+        for mode in MODES:
+            path = reference / (category + "-" + mode + ".json")
+            if path.exists():
+                categories[category, mode] = json.loads(path.read_text())
+                assert categories[category, mode]["mode"] == mode
+                assert categories[category, mode]["oracle"]["sha256"] == ORACLE_SHA
+                assert categories[category, mode]["leakcheck"] is True
+    for category in ("current", "configured"):
+        if (category, "debug") in categories:
+            names = set(categories[category, "debug"]["files"])
+            assert all(set(categories[category, mode]["files"]) == names for mode in MODES), "mode membership differs"
+    paths = sorted(categories["current", "debug"]["files"])
+    actual_paths = sorted(str(path.relative_to(corpus))[:-3] for path in corpus.rglob("*.my"))
+    assert paths == actual_paths, "source membership changed"
+    frozen_tests = {test[0] for entry in categories["current", "debug"]["files"].values() for test in entry.get("tests", [])}
+    expected_tests = len(frozen_tests)
+    if args.expected_tests is not None:
+        assert args.expected_tests == expected_tests, "provided count differs from frozen references"
+    jobs = args.jobs or identity["file_workers"]
+    comparisons = {}
+    env = dict(os.environ, MYL_CORE_LEAKCHECK="1", PYTHONDONTWRITEBYTECODE="1")
+    started = time.monotonic()
+
+    def command(label, argv, cwd):
+        folder = output / "commands" / label
+        folder.parent.mkdir(parents=True, exist_ok=True)
+        assert not folder.with_suffix(".json").exists(), "receipt exists"
+        sample_started = time.monotonic()
+        sample = subprocess.run(["ps", "-eo", "pid,ppid,psr,etimes,args"], capture_output=True, text=True)
+        sample_elapsed = time.monotonic() - sample_started
+        heavy = [line for line in sample.stdout.splitlines() if any(part in line for part in
+            ("zig build", "zig cc", "fuzz_matrix.py", "run_units.py", "bench-newcore"))]
+        before = time.monotonic()
+        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        timeout = False
+        try:
+            done = subprocess.run(argv, cwd=cwd, capture_output=True, env=env, timeout=600)
+        except subprocess.TimeoutExpired as error:
+            timeout = True
+            done = subprocess.CompletedProcess(argv, 124, error.stdout or b"", error.stderr or b"")
+        elapsed = time.monotonic() - before
+        folder.with_suffix(".stdout").write_bytes(done.stdout)
+        folder.with_suffix(".stderr").write_bytes(done.stderr)
+        write(folder.with_suffix(".json"), {
+            "command": argv, "cwd": cwd, "started_at": timestamp,
+            "elapsed_seconds": elapsed, "returncode": done.returncode,
+            "timeout": timeout, "timeout_seconds": 600, "cpu_affinity": sorted(os.sched_getaffinity(0)),
+            "leak_environment": {"MYL_CORE_LEAKCHECK": "1"},
+            "other_build_heavy_processes": heavy,
+            "process_sample": {"command": ["ps", "-eo", "pid,ppid,psr,etimes,args"],
+                "elapsed_seconds": sample_elapsed, "returncode": sample.returncode},
+            "stdout_sha256": digest(folder.with_suffix(".stdout")),
+            "stderr_sha256": digest(folder.with_suffix(".stderr"))})
+        return done, timeout, elapsed, folder
+
+    def compare(label, saved):
+        receipt_path = reference / saved["receipt"]
+        receipt = json.loads(receipt_path.read_text())
+        argv = receipt["command"].copy()
+        assert argv[0] == identity["oracle"]["path"]
+        assert argv[1] == "test" and "--force" in argv and "--json" in argv
+        mode = label.split("/", 1)[0].removeprefix("directory-")
+        assert ("--release" in argv) == (mode != "debug")

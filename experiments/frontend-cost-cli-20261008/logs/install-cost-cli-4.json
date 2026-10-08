@@ -1,0 +1,75 @@
+{
+  "admission_wait_seconds": 0.084242,
+  "command": [
+    "zig",
+    "build",
+    "--summary",
+    "all"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "other_heavy_processes": [
+    " 279294 bash            /bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until ! pgrep -f '\"'\"'probe/probe.py'\"'\"' >/dev/null; do sleep 5; done; wc -l /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/probe/smoke.log' < /dev/null && pwd -P >| /tmp/claude-7f36-cwd",
+    "2314265 bash            /bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'cd /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox && .tmp/stageB.sh > .tmp/stageB.log 2>&1; tail -12 .tmp/stageB.log' < /dev/null && pwd -P >| /tmp/claude-3646-cwd",
+    "2314870 bash            /bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'L=/home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/stageB.log; until grep -q \"^runtime=\" $L 2>/dev/null; do sleep 15; done; grep -E \"runtime|start|round|fail|FAIL\" $L | tail -8; ls -t /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/results | head -3' < /dev/null && pwd -P >| /tmp/claude-0fce-cwd",
+    "2339938 time            /usr/bin/time -o /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/lox-bench/tmp/tmpiakn11_c.time -f %M %U %S /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/lox-bench/cache/mylang-release/lox-release --engine=tree /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/lox-bench/tmp/lox-runtime-rmk367k_/properties.100000.lox",
+    "2339940 lox-release     /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/lox-bench/cache/mylang-release/lox-release --engine=tree /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/lox-bench/tmp/lox-runtime-rmk367k_/properties.100000.lox"
+  ],
+  "process_affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "observed_process_affinities": [
+    [
+      0,
+      1,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ]
+  ],
+  "elapsed_seconds": 1.024305,
+  "exit_code": 0
+}

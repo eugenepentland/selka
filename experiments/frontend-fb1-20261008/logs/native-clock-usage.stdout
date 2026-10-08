@@ -1,0 +1,56 @@
+src/timings.zig:23:        return .{ .io = io, .enabled = enabled, .tool = tool, .started = if (enabled) std.Io.Timestamp.now(io, .awake) else .zero };
+src/timings.zig:28:        const instant = std.Io.Timestamp.now(self.io, .awake);
+src/timings.zig:34:        if (self.enabled) self.close(std.Io.Timestamp.now(self.io, .awake));
+src/timings.zig:38:        return std.Io.Timestamp.now(self.io, .awake);
+src/timings.zig:59:        self.add(name, start.durationTo(self.now()).nanoseconds, inclusive);
+src/timings.zig:67:            self.records.phases[self.records.len] = .{ .name = active.name, .duration_ns = @max(0, active.start.durationTo(instant).nanoseconds), .inclusive = active.inclusive };
+src/timings.zig:75:        const instant = std.Io.Timestamp.now(self.io, .awake);
+src/timings.zig:78:        try self.write("total", @max(0, self.started.durationTo(instant).nanoseconds), true, exit_code);
+//! Opt-in command timing records; disjoint measured phases plus an inclusive total.
+const std = @import("std");
+/// Counts describe available work, not estimates of unobserved compiler phases.
+pub const Counts = struct {
+    modules: ?usize = null,
+    source_bytes: ?usize = null,
+    ast_nodes: ?usize = null,
+    typed_nodes: ?usize = null,
+    input_bytes: ?usize = null,
+    output_bytes: ?usize = null,
+};
+/// One command owns the recorder; disabled recorders do not read the clock.
+pub const Profile = struct {
+    io: std.Io,
+    enabled: bool,
+    tool: enum { compiler, byte_io },
+    counts: Counts = .{},
+    started: std.Io.Timestamp = .zero,
+    active: ?struct { name: []const u8, start: std.Io.Timestamp, inclusive: bool } = null,
+    records: struct { phases: [64]struct { name: []const u8, duration_ns: i96, inclusive: bool } = undefined, len: usize = 0 } = .{},
+    /// Start after argument parsing; total includes command work and cleanup.
+    pub fn init(io: std.Io, enabled: bool, tool: @FieldType(Profile, "tool")) Profile {
+        return .{ .io = io, .enabled = enabled, .tool = tool, .started = if (enabled) std.Io.Timestamp.now(io, .awake) else .zero };
+    }
+    /// Start a disjoint phase; close any prior phase at the same timestamp.
+    pub fn begin(self: *Profile, name: []const u8, inclusive: bool) void {
+        if (!self.enabled) return;
+        const instant = std.Io.Timestamp.now(self.io, .awake);
+        self.close(instant);
+        self.active = .{ .name = name, .start = instant, .inclusive = inclusive };
+    }
+    /// Finish measured work before unrelated command overhead.
+    pub fn end(self: *Profile) void {
+        if (self.enabled) self.close(std.Io.Timestamp.now(self.io, .awake));
+    }
+    /// Read the recorder clock. Callers must check `enabled` before using it.
+    pub fn now(self: *Profile) std.Io.Timestamp {
+        return std.Io.Timestamp.now(self.io, .awake);
+    }
+    /// Accumulate one already-measured interval. Instrumentation that runs inside
+    /// an active phase must use this instead of `begin`/`end` so it never closes
+    /// or re-parents the caller's phase.
+    pub fn add(self: *Profile, name: []const u8, duration_ns: i96, inclusive: bool) void {
+        if (!self.enabled) return;
+        const duration = @max(0, duration_ns);
+        for (self.records.phases[0..self.records.len]) |*phase| {
+            if (phase.inclusive == inclusive and std.mem.eql(u8, phase.name, name)) {
+                phase.duration_ns += duration;

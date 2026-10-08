@@ -1,0 +1,99 @@
+{
+  "base": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/zig-out/bin/mylang",
+  "candidate": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli/zig-out/bin/mylang",
+  "base_sha256": "5ddab7ce39d576615f55676886252e4dbfff863d0d253cc003886a769c7b1a55",
+  "candidate_sha256": "7c37507410b4e4d339c0039b7cec47d36b84566190e7d96bf3df79133e2d35a8",
+  "inputs": {
+    "reachable": {
+      "input.my": "module input\npublic def changed(xs: list[int]) -> list[int]:\n    ys = xs\n    ys[0] = 4\n    return ys\npublic def unused() -> int:\n    return 9\ndef main(out: Stream) -> int:\n    xs = [1]\n    out.print(changed(xs))\n    return 0\n"
+    },
+    "library": {
+      "input.my": "module input\npublic def answer() -> int:\n    return 42\n"
+    },
+    "bad-body": {
+      "input.my": "module input\npublic def main() -> int:\n    return unknown()\n"
+    },
+    "bad-signature": {
+      "input.my": "module input\npublic def answer(value: Unknown) -> int:\n    return 42\n"
+    },
+    "imported": {
+      "input.my": "module input\nimport helper\ndef main(out: Stream) -> int:\n    out.print(helper.answer())\n    return 0\n",
+      "helper.my": "module helper\npublic def answer() -> int:\n    return 42\n"
+    }
+  },
+  "comparisons": [
+    {
+      "case": "reachable",
+      "mode": "plain",
+      "exit_code": 0,
+      "identical": true
+    },
+    {
+      "case": "reachable",
+      "mode": "contracts",
+      "exit_code": 0,
+      "identical": true
+    },
+    {
+      "case": "reachable",
+      "mode": "cost-appended",
+      "exit_code": 0,
+      "identical": true
+    },
+    {
+      "case": "library",
+      "mode": "plain",
+      "exit_code": 0,
+      "identical": true
+    },
+    {
+      "case": "library",
+      "mode": "contracts",
+      "exit_code": 0,
+      "identical": true
+    },
+    {
+      "case": "bad-body",
+      "mode": "plain",
+      "exit_code": 0,
+      "identical": true
+    },
+    {
+      "case": "bad-body",
+      "mode": "contracts",
+      "exit_code": 0,
+      "identical": true
+    },
+    {
+      "case": "bad-signature",
+      "mode": "plain",
+      "exit_code": 1,
+      "identical": true
+    },
+    {
+      "case": "bad-signature",
+      "mode": "contracts",
+      "exit_code": 1,
+      "identical": true
+    },
+    {
+      "case": "imported",
+      "mode": "plain",
+      "exit_code": 0,
+      "identical": true
+    },
+    {
+      "case": "imported",
+      "mode": "contracts",
+      "exit_code": 0,
+      "identical": true
+    },
+    {
+      "case": "imported",
+      "mode": "cost-appended",
+      "exit_code": 0,
+      "identical": true
+    }
+  ],
+  "passed": 12
+}

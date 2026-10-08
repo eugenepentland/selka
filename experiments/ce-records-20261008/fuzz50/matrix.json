@@ -1,0 +1,729 @@
+{
+  "source_commit": "48a7cb45126138df7816eba31e005f89c562e53d",
+  "qualified_head_requested": null,
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/tools/frozen-old-core",
+      "sha256": "ca55bbb15d1ef6accc6aa834f23651d5b3182ddf2e59136b93115ac3e41a7091"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/ce/compilers/final",
+      "sha256": "b8370f0dbac8acdfab5b874a1fed77c13424300b5be3d150c2f8b31249989a89"
+    }
+  },
+  "references": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+    "sha256": "f8db2bd9ccebf42d5f4fbbf3974a15980d97204d46a4f8ac3ca5d93f41d8c1b0"
+  },
+  "cases_per_kind": 50,
+  "maximum_parallel_jobs": 2,
+  "kinds": {
+    "s0": {
+      "passed": true,
+      "summary": {
+        "kind": "s0",
+        "cases_requested": 50,
+        "seed": 3301,
+        "cases_seen": 50,
+        "accepted": 50,
+        "old_rejected": 0,
+        "core_refused": 0,
+        "core_build_failed": 0,
+        "comparisons_expected": 750,
+        "native_runs": 1000,
+        "harness": {
+          "cases": 50,
+          "old_rejected": 0,
+          "new_refused": 0,
+          "compared": 750,
+          "mismatch": 0,
+          "fact": 0,
+          "traps": 103,
+          "caught": 0,
+          "vectorized": 15,
+          "versioned": 1
+        },
+        "harness_status": 0,
+        "complete": true,
+        "qualified": true,
+        "error": null,
+        "failures": [],
+        "elapsed_seconds": 28.291999151930213,
+        "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/s0",
+        "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/s0/tmp",
+        "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/ce-records-20261008/fuzz50/s0/sources",
+        "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/s0/zig",
+        "affinity": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "oracles": {
+          "old": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/tools/frozen-old-core",
+            "sha256": "ca55bbb15d1ef6accc6aa834f23651d5b3182ddf2e59136b93115ac3e41a7091"
+          },
+          "new": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/ce/compilers/final",
+            "sha256": "b8370f0dbac8acdfab5b874a1fed77c13424300b5be3d150c2f8b31249989a89"
+          }
+        },
+        "oracle_unchanged": true,
+        "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s0-20261005/fuzz.py",
+        "harness_sha256": "6b570d3ac66f829c3e7f45e4f9591ecee1cceb8158f7b4eb9803be548fcc24e2",
+        "native_comparisons": 750,
+        "native_complete": true,
+        "command_count": 1200,
+        "references": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+          "sha256": "f8db2bd9ccebf42d5f4fbbf3974a15980d97204d46a4f8ac3ca5d93f41d8c1b0",
+          "oracle": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s3/oracle/mylang",
+            "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+          }
+        }
+      }
+    },
+    "s1": {
+      "passed": true,
+      "summary": {
+        "kind": "s1",
+        "cases_requested": 50,
+        "seed": 3302,
+        "cases_seen": 50,
+        "accepted": 50,
+        "old_rejected": 0,
+        "core_refused": 0,
+        "core_build_failed": 0,
+        "comparisons_expected": 750,
+        "native_runs": 1000,
+        "harness": {
+          "cases": 50,
+          "old_rejected": 0,
+          "refused": 0,
+          "compared": 750,
+          "mismatch": 0,
+          "fact": 0,
+          "traps": 57,
+          "caught": 0
+        },
+        "harness_status": 0,
+        "complete": true,
+        "qualified": true,
+        "error": null,
+        "failures": [],
+        "elapsed_seconds": 35.706673722947016,
+        "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/s1",
+        "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/s1/tmp",
+        "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/ce-records-20261008/fuzz50/s1/sources",
+        "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/s1/zig",
+        "affinity": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "oracles": {
+          "old": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/tools/frozen-old-core",
+            "sha256": "ca55bbb15d1ef6accc6aa834f23651d5b3182ddf2e59136b93115ac3e41a7091"
+          },
+          "new": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/ce/compilers/final",
+            "sha256": "b8370f0dbac8acdfab5b874a1fed77c13424300b5be3d150c2f8b31249989a89"
+          }
+        },
+        "oracle_unchanged": true,
+        "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s1-20261005/fuzz.py",
+        "harness_sha256": "7ac171d986a15e3be23547ef6d3c10442e4b4538c25ff69bb690cdc97caf6dc1",
+        "native_comparisons": 750,
+        "native_complete": true,
+        "command_count": 1200,
+        "references": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+          "sha256": "f8db2bd9ccebf42d5f4fbbf3974a15980d97204d46a4f8ac3ca5d93f41d8c1b0",
+          "oracle": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s3/oracle/mylang",
+            "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+          }
+        }
+      }
+    },
+    "rc": {
+      "passed": true,
+      "summary": {
+        "kind": "rc",
+        "cases_requested": 50,
+        "seed": 3303,
+        "cases_seen": 50,
+        "accepted": 50,
+        "old_rejected": 0,
+        "core_refused": 0,
+        "core_build_failed": 0,
+        "comparisons_expected": 450,
+        "native_runs": 900,
+        "harness": {
+          "cases": 50,
+          "refused": 0,
+          "rejected": 0,
+          "compared": 450,
+          "mismatch": 0
+        },
+        "harness_status": 0,
+        "complete": true,
+        "qualified": true,
+        "error": null,
+        "failures": [],
+        "elapsed_seconds": 18.888426557183266,
+        "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/rc",
+        "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/rc/tmp",
+        "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/ce-records-20261008/fuzz50/rc/sources",
+        "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/rc/zig",
+        "affinity": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "oracles": {
+          "old": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/tools/frozen-old-core",
+            "sha256": "ca55bbb15d1ef6accc6aa834f23651d5b3182ddf2e59136b93115ac3e41a7091"
+          },
+          "new": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/ce/compilers/final",
+            "sha256": "b8370f0dbac8acdfab5b874a1fed77c13424300b5be3d150c2f8b31249989a89"
+          }
+        },
+        "oracle_unchanged": true,
+        "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s1-20261005/lane-o/rc_fuzz.py",
+        "harness_sha256": "04b406c2208c812335b5ab2076968625a6064434c5bd61712e2819cf7aae7cf7",
+        "native_comparisons": 450,
+        "native_complete": true,
+        "command_count": 1100,
+        "references": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+          "sha256": "f8db2bd9ccebf42d5f4fbbf3974a15980d97204d46a4f8ac3ca5d93f41d8c1b0",
+          "oracle": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s3/oracle/mylang",
+            "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+          }
+        }
+      }
+    },
+    "rebinding": {
+      "passed": true,
+      "summary": {
+        "kind": "rebinding",
+        "cases_requested": 50,
+        "seed": 3304,
+        "cases_seen": 50,
+        "accepted": 50,
+        "old_rejected": 0,
+        "core_refused": 0,
+        "core_build_failed": 0,
+        "comparisons_expected": 750,
+        "native_runs": 1000,
+        "harness": {
+          "cases": 50,
+          "old_rejected": 0,
+          "refused": 0,
+          "compared": 750,
+          "mismatch": 0,
+          "fact": 0,
+          "traps": 38,
+          "caught": 0
+        },
+        "harness_status": 0,
+        "complete": true,
+        "qualified": true,
+        "error": null,
+        "failures": [],
+        "elapsed_seconds": 27.988338850205764,
+        "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/rebinding",
+        "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/rebinding/tmp",
+        "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/ce-records-20261008/fuzz50/rebinding/sources",
+        "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/rebinding/zig",
+        "affinity": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "oracles": {
+          "old": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/tools/frozen-old-core",
+            "sha256": "ca55bbb15d1ef6accc6aa834f23651d5b3182ddf2e59136b93115ac3e41a7091"
+          },
+          "new": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/ce/compilers/final",
+            "sha256": "b8370f0dbac8acdfab5b874a1fed77c13424300b5be3d150c2f8b31249989a89"
+          }
+        },
+        "oracle_unchanged": true,
+        "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s2-20261005/wave-a/fuzz_rebinding.py",
+        "harness_sha256": "c3b97fa56f4a4c608875c42b81938bc99613c1b84f8bd6c13084ea591dbbaba6",
+        "native_comparisons": 750,
+        "native_complete": true,
+        "command_count": 1200,
+        "references": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+          "sha256": "f8db2bd9ccebf42d5f4fbbf3974a15980d97204d46a4f8ac3ca5d93f41d8c1b0",
+          "oracle": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s3/oracle/mylang",
+            "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+          }
+        }
+      }
+    },
+    "iteration": {
+      "passed": true,
+      "summary": {
+        "kind": "iteration",
+        "cases_requested": 50,
+        "seed": 3305,
+        "cases_seen": 50,
+        "accepted": 50,
+        "old_rejected": 0,
+        "core_refused": 0,
+        "core_build_failed": 0,
+        "comparisons_expected": 750,
+        "native_runs": 1000,
+        "harness": {
+          "cases": 50,
+          "old_rejected": 0,
+          "refused": 0,
+          "compared": 750,
+          "mismatch": 0,
+          "fact": 0,
+          "traps": 71,
+          "caught": 0
+        },
+        "harness_status": 0,
+        "complete": true,
+        "qualified": true,
+        "error": null,
+        "failures": [],
+        "elapsed_seconds": 44.57238686992787,
+        "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/iteration",
+        "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/iteration/tmp",
+        "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/ce-records-20261008/fuzz50/iteration/sources",
+        "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/iteration/zig",
+        "affinity": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "oracles": {
+          "old": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/tools/frozen-old-core",
+            "sha256": "ca55bbb15d1ef6accc6aa834f23651d5b3182ddf2e59136b93115ac3e41a7091"
+          },
+          "new": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/ce/compilers/final",
+            "sha256": "b8370f0dbac8acdfab5b874a1fed77c13424300b5be3d150c2f8b31249989a89"
+          }
+        },
+        "oracle_unchanged": true,
+        "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s2-20261005/wave-b/fuzz_iteration.py",
+        "harness_sha256": "f60f7b45bdebf6bf39744153de7dd37148db1d6fb4afe6438f80de8531d78d00",
+        "native_comparisons": 750,
+        "native_complete": true,
+        "command_count": 1200,
+        "references": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+          "sha256": "f8db2bd9ccebf42d5f4fbbf3974a15980d97204d46a4f8ac3ca5d93f41d8c1b0",
+          "oracle": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s3/oracle/mylang",
+            "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+          }
+        }
+      }
+    },
+    "dict": {
+      "passed": true,
+      "summary": {
+        "kind": "dict",
+        "cases_requested": 50,
+        "seed": 3306,
+        "cases_seen": 50,
+        "accepted": 50,
+        "old_rejected": 0,
+        "core_refused": 0,
+        "core_build_failed": 0,
+        "comparisons_expected": 750,
+        "native_runs": 1000,
+        "harness": {
+          "cases": 50,
+          "old_rejected": 0,
+          "refused": 0,
+          "compared": 750,
+          "mismatch": 0,
+          "fact": 0,
+          "traps": 24,
+          "caught": 0
+        },
+        "harness_status": 0,
+        "complete": true,
+        "qualified": true,
+        "error": null,
+        "failures": [],
+        "elapsed_seconds": 64.01518177590333,
+        "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/dict",
+        "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/dict/tmp",
+        "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/ce-records-20261008/fuzz50/dict/sources",
+        "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/dict/zig",
+        "affinity": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "oracles": {
+          "old": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/tools/frozen-old-core",
+            "sha256": "ca55bbb15d1ef6accc6aa834f23651d5b3182ddf2e59136b93115ac3e41a7091"
+          },
+          "new": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/ce/compilers/final",
+            "sha256": "b8370f0dbac8acdfab5b874a1fed77c13424300b5be3d150c2f8b31249989a89"
+          }
+        },
+        "oracle_unchanged": true,
+        "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s2-20261005/wave-b/s2-d/fuzz_dict.py",
+        "harness_sha256": "1266fb7256490c975587c137f5c216c87870a79701c7dfc0dc0db235713de234",
+        "native_comparisons": 750,
+        "native_complete": true,
+        "command_count": 1200,
+        "references": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+          "sha256": "f8db2bd9ccebf42d5f4fbbf3974a15980d97204d46a4f8ac3ca5d93f41d8c1b0",
+          "oracle": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s3/oracle/mylang",
+            "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+          }
+        }
+      }
+    },
+    "text": {
+      "passed": true,
+      "summary": {
+        "kind": "text",
+        "cases_requested": 50,
+        "seed": 3307,
+        "cases_seen": 50,
+        "accepted": 50,
+        "old_rejected": 0,
+        "core_refused": 0,
+        "core_build_failed": 0,
+        "comparisons_expected": 750,
+        "native_runs": 1000,
+        "harness": {
+          "cases": 50,
+          "compared": 750,
+          "mismatch": 0,
+          "fact": 0,
+          "old_rejected": 0,
+          "new_refused": 0
+        },
+        "harness_status": 0,
+        "complete": true,
+        "qualified": true,
+        "error": null,
+        "failures": [],
+        "elapsed_seconds": 32.997485782019794,
+        "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/text",
+        "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/text/tmp",
+        "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/ce-records-20261008/fuzz50/text/sources",
+        "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/text/zig",
+        "affinity": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "oracles": {
+          "old": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/tools/frozen-old-core",
+            "sha256": "ca55bbb15d1ef6accc6aa834f23651d5b3182ddf2e59136b93115ac3e41a7091"
+          },
+          "new": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/ce/compilers/final",
+            "sha256": "b8370f0dbac8acdfab5b874a1fed77c13424300b5be3d150c2f8b31249989a89"
+          }
+        },
+        "oracle_unchanged": true,
+        "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s3-20261006/wave-c/s3-char/fuzz_char.py",
+        "harness_sha256": "83d322042b9d2a32c2898a5eb018cf30f4bdd7e5a3bc799e7bc8e9d51cd60959",
+        "native_comparisons": 750,
+        "native_complete": true,
+        "command_count": 1200,
+        "references": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+          "sha256": "f8db2bd9ccebf42d5f4fbbf3974a15980d97204d46a4f8ac3ca5d93f41d8c1b0",
+          "oracle": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s3/oracle/mylang",
+            "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+          }
+        }
+      }
+    },
+    "number": {
+      "passed": true,
+      "summary": {
+        "kind": "number",
+        "cases_requested": 50,
+        "seed": 3308,
+        "cases_seen": 50,
+        "accepted": 50,
+        "old_rejected": 0,
+        "core_refused": 0,
+        "core_build_failed": 0,
+        "comparisons_expected": 750,
+        "native_runs": 1000,
+        "harness": {
+          "cases": 50,
+          "old_rejected": 0,
+          "refused": 0,
+          "compared": 750,
+          "mismatch": 0,
+          "fact": 0,
+          "traps": 0,
+          "caught": 0
+        },
+        "harness_status": 0,
+        "complete": true,
+        "qualified": true,
+        "error": null,
+        "failures": [],
+        "elapsed_seconds": 38.399917335947976,
+        "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/number",
+        "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/number/tmp",
+        "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/ce-records-20261008/fuzz50/number/sources",
+        "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/number/zig",
+        "affinity": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "oracles": {
+          "old": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/tools/frozen-old-core",
+            "sha256": "ca55bbb15d1ef6accc6aa834f23651d5b3182ddf2e59136b93115ac3e41a7091"
+          },
+          "new": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/ce/compilers/final",
+            "sha256": "b8370f0dbac8acdfab5b874a1fed77c13424300b5be3d150c2f8b31249989a89"
+          }
+        },
+        "oracle_unchanged": true,
+        "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s2-20261005/wave-b/s2-t2/fuzz_number.py",
+        "harness_sha256": "ac061245708125e9f79bb2893759ae453005ad401f62588dce5664bfe74b95f5",
+        "native_comparisons": 750,
+        "native_complete": true,
+        "command_count": 1200,
+        "references": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+          "sha256": "f8db2bd9ccebf42d5f4fbbf3974a15980d97204d46a4f8ac3ca5d93f41d8c1b0",
+          "oracle": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s3/oracle/mylang",
+            "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+          }
+        }
+      }
+    },
+    "functions": {
+      "passed": true,
+      "summary": {
+        "kind": "functions",
+        "cases_requested": 50,
+        "seed": 3309,
+        "cases_seen": 50,
+        "accepted": 50,
+        "old_rejected": 0,
+        "core_refused": 0,
+        "core_build_failed": 0,
+        "comparisons_expected": 750,
+        "native_runs": 1000,
+        "harness": {
+          "cases": 50,
+          "old_rejected": 0,
+          "refused": 0,
+          "compared": 750,
+          "mismatch": 0,
+          "fact": 0,
+          "traps": 0,
+          "caught": 0
+        },
+        "harness_status": 0,
+        "complete": true,
+        "qualified": true,
+        "error": null,
+        "failures": [],
+        "elapsed_seconds": 26.280646526953205,
+        "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/functions",
+        "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/functions/tmp",
+        "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/ce-records-20261008/fuzz50/functions/sources",
+        "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e/functions/zig",
+        "affinity": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "oracles": {
+          "old": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/tools/frozen-old-core",
+            "sha256": "ca55bbb15d1ef6accc6aa834f23651d5b3182ddf2e59136b93115ac3e41a7091"
+          },
+          "new": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/ce/compilers/final",
+            "sha256": "b8370f0dbac8acdfab5b874a1fed77c13424300b5be3d150c2f8b31249989a89"
+          }
+        },
+        "oracle_unchanged": true,
+        "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s2-20261005/wave-b/s2-f/fuzz_functions.py",
+        "harness_sha256": "b6ffc9a537d0a114285abbb80e4d573a214c832150cf02c269d49cbcdadc69b2",
+        "native_comparisons": 750,
+        "native_complete": true,
+        "command_count": 1200,
+        "references": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+          "sha256": "f8db2bd9ccebf42d5f4fbbf3974a15980d97204d46a4f8ac3ca5d93f41d8c1b0",
+          "oracle": {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s3/oracle/mylang",
+            "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+          }
+        }
+      }
+    }
+  },
+  "execution_order": [
+    "number",
+    "s0",
+    "s1",
+    "rc",
+    "rebinding",
+    "iteration",
+    "dict",
+    "text",
+    "functions"
+  ],
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/.mylang-cache/s5/fuzz/20261008T154124Z-7dce02b4802e",
+  "run_id": "20261008T154124Z-7dce02b4802e",
+  "source_unchanged": true,
+  "oracles_unchanged": true,
+  "complete": true,
+  "qualified": true
+}

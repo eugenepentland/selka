@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+"""S5 strict fuzz qualification against the frozen old-core references (S5-D2).
+
+S3's strict wrapper (wave-x/integration/fuzz_qualification.py) unchanged, except that
+the old core never runs: its builds and native runs are answered from
+references/fuzz-v1.json.gz by the generated source's SHA-256 and the run's arguments.
+Generation is deterministic per seed, so a source or run without a reference means the
+generator or seed changed, and the run stops. `--old` names tools/frozen-old-core.
+Usage: as fuzz_qualification.py plus --references FILE; launch through
+scripts/build-slot.sh build.
+"""
+import argparse
+import base64
+import gzip
+import hashlib
+import importlib.util
+import json
+from pathlib import Path
+import subprocess
+import sys
+
+ROOT = Path(__file__).resolve().parents[3]
+S3 = ROOT / "experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py"
+spec = importlib.util.spec_from_file_location("s3_qualification", S3)
+s3 = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(s3)
+
+
+class FrozenMonitor(s3.Monitor):
+    """S3's monitor whose old-core commands are answered from the references."""
+    references = {}
+
+    def __init__(self, args, original_run):
+        super().__init__(args, original_run)
+        self.real_run = original_run
+        self.original_run = self.answer
+        self.old_outputs = {}
+
+    def answer(self, argv, *arguments, **options):
+        building = len(argv) > 2 and argv[1] == "build"
+        if building and Path(argv[0]).resolve() == self.args.old:
+            source = Path(argv[2]).resolve()
+            digest = hashlib.sha256(source.read_bytes()).hexdigest()
+            entry = self.references.get(digest)
+            if entry is None:
+                self.fail(source, "frozen_reference_missing", argv)
+            output = Path(argv[argv.index("-o") + 1])
+            output.write_bytes(b"")
+            output.chmod(0o755)
+            self.old_outputs[str(output.resolve())] = digest
+            return subprocess.CompletedProcess(argv, entry["build"], b"", b"")
+        digest = self.old_outputs.get(str(Path(argv[0]).resolve()))
+        if digest is None:
+            return self.real_run(argv, *arguments, **options)
+        for run in self.references[digest]["runs"]:
+            if run["args"] == argv[1:]:
+                return subprocess.CompletedProcess(argv, run["status"], base64.b64decode(run["stdout_b64"]),
+                                                   base64.b64decode(run["stderr_b64"]))
+        self.fail(None, "frozen_run_missing", argv)
+
+
+def main():
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--references", type=Path, required=True)
+    parser.add_argument("--kind", required=True)
+    known, rest = parser.parse_known_args()
+    with gzip.open(known.references, "rt") as source:
+        document = json.load(source)
+    FrozenMonitor.references = document["kinds"][known.kind]
+    s3.Monitor = FrozenMonitor
+    sys.argv = [sys.argv[0], "--kind", known.kind, *rest]
+    status = s3.main()
+    evidence = Path(rest[rest.index("--evidence") + 1]).resolve()
+    summary = json.loads((evidence / "summary.json").read_text())
+    summary["references"] = {"path": str(known.references.resolve()),
+                             "sha256": hashlib.sha256(known.references.read_bytes()).hexdigest(),
+                             "oracle": document["oracle"]}
+    (evidence / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    return status
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+

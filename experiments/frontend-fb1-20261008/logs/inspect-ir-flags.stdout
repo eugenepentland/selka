@@ -1,0 +1,776 @@
+//! Sparse source ancestry outside Core IR, retained through optimizer edits.
+const std = @import("std");
+const ir = @import("ir.zig");
+
+/// Maximum inline ancestry; expansion is refused before changing IR beyond it.
+pub const max_depth = 32;
+
+/// Provenance recording only allocates.
+pub const Error = std.mem.Allocator.Error;
+
+/// One exact specialized callee and its original call in the parent frame.
+pub const Frame = struct { function: u32, call_span: u32, parent: ?u32 };
+
+/// Only cloned blocks and instruction overrides allocate entries.
+pub const Table = struct {
+    blocks: std.AutoHashMapUnmanaged(u64, u32) = .empty,
+    /// A present null is an explicit physical-caller scope, not block fallback.
+    instructions: std.AutoHashMapUnmanaged(u64, ?u32) = .empty,
+    frames: std.ArrayList(Frame) = .empty,
+    interned: std.AutoHashMapUnmanaged(Frame, u32) = .empty,
+    functions: std.AutoHashMapUnmanaged(u32, void) = .empty,
+
+    /// Block ancestry, absent for ordinary source blocks.
+    pub fn block(self: *const Table, function: u32, id: u32) ?u32 {
+        return self.blocks.get(key(function, id));
+    }
+
+    /// An override takes precedence over the block's default ancestry.
+    pub fn instruction(self: *const Table, function: u32, b: u32, ref: ir.Ref) ?u32 {
+        if (self.instructions.get(key(function, @intCast(ref.index())))) |frame| return frame;
+        return self.block(function, b);
+    }
+
+    /// Store one block's ancestry without a dense per-function table.
+    pub fn setBlock(self: *Table, a: std.mem.Allocator, function: u32, id: u32, frame: ?u32) Error!void {
+        if (frame) |origin| {
+            try self.functions.put(a, function, {});
+            try self.blocks.put(a, key(function, id), origin);
+        } else _ = self.blocks.remove(key(function, id));
+    }
+
+    /// Store a copied instruction's exact ancestry.
+    pub fn setInstruction(self: *Table, a: std.mem.Allocator, function: u32, ref: ir.Ref, frame: ?u32) Error!void {
+        if (frame != null) try self.functions.put(a, function, {});
+        if (!self.functions.contains(function)) return;
+        try self.instructions.put(a, key(function, @intCast(ref.index())), frame);
+    }
+
+    /// A function-local editing handle; defaults stay empty for hand-built IR.
+    pub fn context(self: *Table, function: u32) Context {
+        return .{ .table = self, .function = function };
+    }
+
+    /// Preflight every ancestry composition, then prepare one bounded clone.
+    pub fn prepare(self: *Table, a: std.mem.Allocator, site: Call, callee: *const ir.Function) Error!?Clone {
+        const parent = self.instruction(site.caller, site.block, site.ref);
+        const outer_depth = self.depth(parent) + 1;
+        if (outer_depth > max_depth) return null;
+        for (callee.blocks.items, 0..) |source, b| {
+            if (outer_depth + self.depth(self.block(site.callee, @intCast(b))) > max_depth) return null;
+            for (source.insts.items) |ref| {
+                if (outer_depth + self.depth(self.instruction(site.callee, @intCast(b), ref)) > max_depth) return null;
+            }
+        }
+        const outer = try self.intern(a, .{ .function = site.callee, .call_span = site.span, .parent = parent });
+        return .{ .table = self, .caller = site.caller, .callee = site.callee, .outer = outer };
+    }
+
+    fn depth(self: *const Table, frame: ?u32) u32 {
+        var current = frame;
+        var count: u32 = 0;
+        while (current) |id| : (count += 1) current = self.frames.items[id].parent;
+        return count;
+    }
+
+    fn intern(self: *Table, a: std.mem.Allocator, frame: Frame) Error!u32 {
+        const entry = try self.interned.getOrPut(a, frame);
+        if (entry.found_existing) return entry.value_ptr.*;
+        entry.value_ptr.* = @intCast(self.frames.items.len);
+        try self.frames.append(a, frame);
+        return entry.value_ptr.*;
+    }
+};
+
+/// A call's real function identities and unchanged source position.
+pub const Call = struct { caller: u32, callee: u32, block: u32, ref: ir.Ref, span: u32 };
+
+/// Rebase any nested callee origin beneath this call's outer frame.
+pub const Clone = struct {
+    table: *Table,
+    caller: u32,
+    callee: u32,
+    outer: u32,
+    rebased: std.AutoHashMapUnmanaged(u32, u32) = .empty,
+
+    /// CFG clones inherit block scopes; leaf overrides remain instruction-local.
+    pub fn block(self: *Clone, a: std.mem.Allocator, source: u32, destination: u32) Error!void {
+        const origin = try self.rebase(a, self.table.block(self.callee, source));
+        try self.table.setBlock(a, self.caller, destination, origin);
+    }
+
+    /// Copy a leaf instruction's effective scope or a CFG instruction override.
+    pub fn instruction(self: *Clone, a: std.mem.Allocator, b: u32, source: ir.Ref, destination: ir.Ref, leaf: bool) Error!void {
+        const old = if (leaf) self.table.instruction(self.callee, b, source) else self.table.instructions.get(key(self.callee, @intCast(source.index()))) orelse return;
+        const origin = try self.rebase(a, old);
+        try self.table.setInstruction(a, self.caller, destination, origin);
+    }
+
+    fn rebase(self: *Clone, a: std.mem.Allocator, raw: ?u32) std.mem.Allocator.Error!u32 {
+        const id = raw orelse return self.outer;
+        if (self.rebased.get(id)) |known| return known;
+        const original = self.table.frames.items[id];
+        const parent = try self.rebase(a, original.parent);
+        const next = try self.table.intern(a, .{ .function = original.function, .call_span = original.call_span, .parent = parent });
+        try self.rebased.put(a, id, next);
+        return next;
+    }
+};
+
+/// Provenance editing for one real IR function.
+//! Operand conventions the builder and the emitter share on top of `ir.zig`'s shapes.
+const std = @import("std");
+const ir = @import("ir.zig");
+
+/// `list_get.data` of the read a `pop` starts with: a failing index is reported as the pop
+/// of an empty list (`R_LIST_BOUNDS`, operation `pop`), as the old core does.
+pub const pop_read: u64 = 1;
+/// An indexed pop's checked read reports its index and length with operation `pop`.
+pub const pop_index_read: u64 = 2;
+
+/// The stream token of the entry adapter's error report (`print` with the `error_report` sink): the
+/// emitter reports its one argument through the runtime's `myl_core_main_error_*`, which writes
+/// `error: VALUE` and the error return trace to stderr (ERROR-TRACE-2).
+pub const error_stream: i64 = 3;
+
+/// The `data` bit of an `unreachable` that is a failed assertion (`assert`, `@requires`,
+/// `@ensures`, `@invariant`): the low 32 bits index the message in `Module.strings` and bits
+/// 32..39 hold the `typed.AssertionKind`. The emitter reports it through `myl_core_assert_fail`.
+pub const assertion_trap: u64 = 1 << 63;
+
+/// An `unreachable` reached when a refreshed iteration place changed its guarded length.
+pub const iteration_trap: u64 = 1 << 61;
+
+/// Allocation-free text-to-bytes identity; ownership treats its result as a source borrow.
+pub const text_encode_symbol = "myl_core_text_encode";
+
+/// The runtime's string comparison, declared in a module as a `runtime_c` function on first use
+/// (`build.zig`) and emitted with `memory(argmem: read)` attributes (`emit_llvm.zig`).
+pub const str_eq_symbol = "myl_core_str_eq";
+
+/// The runtime's count of a string's Unicode scalars (`len(text)`).
+pub const str_chars_symbol = "myl_core_str_chars";
+
+/// Compiler-authorized scalar-index conversion, with a normalized or raw input.
+pub const TextOffset = enum { normalized, raw };
+
+/// Extern lookalikes have no authority to supply text cursor or diagnostic provenance.
+pub fn textOffset(signature: ir.Signature, symbol: []const u8) ?TextOffset {
+    if (signature.linkage != .runtime_c or signature.ret != .u64 or signature.owned != 0 or signature.views != 0) return null;
+    if (signature.params.len != 2 or signature.params[0] != .str) return null;
+    if (std.mem.eql(u8, symbol, "myl_core_str_offset") and (signature.params[1] == .i64 or signature.params[1] == .u64)) return .normalized;
+    if (std.mem.eql(u8, symbol, "myl_core_str_index_offset") and signature.params[1] == .i64) return .raw;
+    return null;
+}
+
+/// The runtime's string builders: concatenation, `separator.join(parts)`, and the text of an
+/// integer or a boolean (`str(x)`, the parts of an f-string).
+pub const str_join_symbol = "myl_core_str_join";
+pub const str_from_i64_symbol = "myl_core_str_from_i64";
+pub const str_from_u64_symbol = "myl_core_str_from_u64";
+pub const str_from_bool_symbol = "myl_core_str_from_bool";
+
+/// The runtime's consuming stable sort of a unique numeric, text or bytes list.
+pub const list_sort_symbol = "myl_core_s2_sort_in_place";
+
+/// Whether `symbol` names a runtime function that only reads the blocks it is passed.
+pub fn readsOnly(symbol: []const u8) bool {
+    return std.mem.eql(u8, symbol, str_eq_symbol);
+}
+
+/// Located text traps pack their explicit TrapKind in the low byte.
+pub const text_trap: u64 = 1 << 58;
+/// A failed dictionary read or pop reports the located missing-key trap.
+pub const dict_missing_trap: u64 = 1 << 62;
+
+/// Numeric buffer pushes format a bounded stack frame and append one fragment.
+pub const buffer_append_int: u64 = 1;
+/// Binary64 formatting preserves the ordinary `str(float)` spelling.
+pub const buffer_append_float: u64 = 2;
+/// Additive consuming buffer helper, signature `(byte_buffer, i64) -> byte_buffer`.
+pub const buffer_int_symbol = "myl_core_buffer_append_i64";
+/// Additive consuming buffer helper, signature `(byte_buffer, f64) -> byte_buffer`.
+pub const buffer_float_symbol = "myl_core_buffer_append_f64";
+
+/// A compiler place path detaches its parent before transferring a child slot.
+pub const place_copy: u64 = 1 << 60;
+/// Managed indexed reads in a nested assignment take the parent's slot owner.
+pub const place_read: u64 = 1 << 60;
+
+/// Whether an indexed read transfers its managed slot into a nested update.
+pub fn transferredRead(inst: ir.Inst) bool {
+    return switch (inst.op) {
+        .list_get, .dict_entry_value => inst.data == place_read,
+        else => false,
+    };
+}
+
+/// A replacement paired with a transferred read must not release its old slot.
+pub fn transferredSlot(function: *const ir.Function, inst: ir.Inst) bool {
+    if (inst.op != .list_set and inst.op != .dict_set_value) return false;
+    for (function.blocks.items) |block| for (block.insts.items) |ref| {
+        const read = function.inst(ref);
+        if (transferredRead(read) and function.resolve(read.a) == function.resolve(inst.a) and function.resolve(read.b) == function.resolve(inst.b)) return true;
+    };
+    return false;
+}
+
+/// Heap fill loops reserve a bounded prefix without changing their empty length.
+pub const fill_capacity: u64 = 1 << 59;
+/// Limit speculative initial room; longer fills continue ordinary geometric growth.
+pub const fill_capacity_limit: u64 = 4096;
+/// A unique counted fill uses its counter as the index within its reserved prefix.
+pub const fill_push: u64 = 1 << 59;
+    /// A dictionary value; its operations do not expose any table layout.
+    dict: struct { key: Type, value: Type },
+    /// A fixed inline array of `n` elements, at the element's natural stride.
+    array: struct { elem: Type, n: u32 },
+    /// A top-level function pointer with the internal call signature.
+    @"fn": Signature,
+};
+
+/// How a union value is laid out (docs/design/new-core-s1.md §4).
+pub const UnionForm = enum(u8) {
+    /// Two cases, one without a payload and one whose payload is a block pointer
+    /// (`str`, a list or a box): the value is that pointer, null for the empty case.
+    niche,
+    /// Every case with a payload has the same scalar or pointer type: `{i8 tag, T}`
+    /// in registers.
+    scalar,
+    /// Anything else: `{i8 tag, [N x i64] words}` in registers, the payload's
+    /// memory image in the words.
+    words,
+};
+
+/// The layout of one union type. In memory every non-niche form is an 8-byte tag
+/// word followed by the payload's memory image in `payload_words` words.
+pub const UnionLayout = struct {
+    form: UnionForm,
+    /// Payload words in memory and in the `words` form's registers.
+    payload_words: u32,
+    /// `niche`: the index of the case without a payload (null pointer).
+    empty_case: u32 = 0,
+    /// `scalar`: the one payload type. `niche`: the pointer payload type.
+    payload: Type = .void,
+};
+
+/// One step of a `list_get_field` path. On a record it selects a field; on a union
+/// step 0 is the tag (`u32`) and step `k + 1` the payload of case `k`.
+pub const FieldPath = struct {
+    /// The most steps one path holds; deeper reads go through `record_get`.
+    pub const max_steps = 5;
+    len: u8 = 0,
+    steps: [max_steps]u12 = @splat(0),
+
+    /// A path from `steps`, or null when it is empty, too long or a step exceeds 4095.
+    pub fn init(steps: []const u32) ?FieldPath {
+        if (steps.len == 0 or steps.len > max_steps) return null;
+        var path: FieldPath = .{ .len = @intCast(steps.len) };
+        for (steps, 0..) |step, i| path.steps[i] = std.math.cast(u12, step) orelse return null;
+        return path;
+    }
+
+    /// Pack into an instruction's `data` field: the length in the low 4 bits, then 12 bits per step.
+    pub fn pack(self: FieldPath) u64 {
+        var data: u64 = self.len;
+        for (self.steps[0..self.len], 0..) |step, i| data |= @as(u64, step) << @intCast(4 + 12 * i);
+        return data;
+    }
+
+    /// Unpack from an instruction's `data` field.
+    pub fn unpack(data: u64) FieldPath {
+        var path: FieldPath = .{ .len = @intCast(@min(data & 0xf, max_steps)) };
+        for (0..path.len) |i| path.steps[i] = @truncate(data >> @intCast(4 + 12 * i));
+        return path;
+    }
+
+    /// The steps in order.
+    pub fn slice(self: *const FieldPath) []const u12 {
+        return self.steps[0..self.len];
+    }
+};
+
+/// The kinds of `err_trace` (ERROR-TRACE-1, design note §6.2). `origin` (building an
+/// `Err`) and `runtime` (a runtime call answered `Err`) restart the trace; `append` is a `?`
+/// that passes the error on, `converted` a `?` that wraps it into a case of the caller's
+/// error union (`a` is a `str_const` naming `Union.case`), and `returned` the `Err` path of
+/// a `return e` whose `Err` the statement did not build.
+pub const TraceMode = enum(u8) { origin, append, runtime, converted, returned };
+
+/// Records and unions of at most this many words travel as LLVM struct values in
+/// registers; larger ones are passed by pointer and returned through `sret` (§3).
+pub const max_register_words = 4;
+
+/// What a checkable instruction promises about its failure path.
+pub const Check = enum(u8) {
+    /// Cannot fail, or carries no check.
+    none,
+    /// Traps at this instruction, in program order (debug builds; release until moved).
+    exact,
+    /// The fact pass proved the failure impossible; nothing is emitted for it.
+    proven,
+};
+
+/// Comparison predicates; signedness comes from the operand type.
+pub const Predicate = enum(u8) { eq, ne, lt, le, gt, ge };
+
+/// Unary floating-point operations; `float_unary.data` is one of these tags.
+pub const FloatUnary = enum(u8) { sqrt, floor, ceil, trunc, abs, sin, cos };
+
+/// Instruction operations. Operand use is listed per operation.
+pub const Op = enum(u8) {
+    /// Function parameter `data`.
+    param,
+    /// Integer or boolean constant: the value in `data` (two's complement bits).
+    iconst,
+    /// Float constant: the IEEE bits in `data`.
+    fconst,
+    /// A value no execution reads (an unassigned local on an impossible path).
+    undef,
+    /// The immortal string constant `Module.strings[data]`.
+    str_const,
+    /// Forwarding: this value is `a` (a removed trivial phi).
+    copy,
+    /// Join value: operands in `extra` at `data`, one per predecessor.
+    phi,
+    add,
+    sub,
+    mul,
+    /// Truncating division and remainder.
+    div,
+    rem,
+    /// Python floor division and remainder.
+    floor_div,
+    floor_rem,
+    neg,
+    bit_and,
+    bit_or,
+    bit_xor,
+    /// Boolean negation.
+    not,
+    /// Integer comparison `a <data as Predicate> b`.
+    cmp,
+    fadd,
+    fsub,
+    fmul,
+    fdiv,
+    fneg,
+    /// Float comparison `a <data as Predicate> b` (ordered).
+    fcmp,
+    /// Integer to float.
+    int_to_float,
+    /// Float to integer, truncating; checked against the destination range.
+    float_to_int,
+    /// Integer to integer of another width or signedness; checked when the
+    /// source range does not fit the destination.
+    convert,
+    /// A fresh empty list with capacity `a` (`u64`).
+    list_new,
+    /// The length of list `a` (`u64`).
+    list_len,
+    /// Element `b` of list `a` (bounds-checked).
+    list_get,
+    /// List `a` with `b` appended; `a` must not be used afterwards (`own.zig` makes it so).
+    list_push,
+    /// A fresh copy of list `a` with room for one more element: what a push of a
+    /// list that may be shared appends to.
+    list_copy,
+    /// The byte length of string `a` (`u64`).
+    str_len,
+    /// `int(a)` for string `a`: an `option(i64)`.
+    str_parse_int,
+    /// A union value with tag `data` and payload `a` (none for a case without one).
+    union_make,
+    /// The tag of union `a` (`u32`).
+    union_tag,
+    /// The payload of union `a` under tag `data` (only meaningful when that is its tag).
+    union_payload,
+    /// A record of the field values in `extra` at `data`, in declaration order.
+    record_make,
+    /// Field `data` of record `a`.
+    record_get,
+    /// Record `a` with field `data` replaced by `b`; consumes `a`.
+    record_set,
+    /// List `a` with element `b` replaced by `extra[0]` at `data` (bounds-checked);
+    /// consumes `a` and the value, and drops the element it replaces.
+    list_set,
+    /// List `a` without its last element (checked: an empty list traps); consumes
+    /// `a`. The element is not dropped: the builder reads it with `list_get` first,
+    /// and that read takes the list's ownership of it.
+    list_pop,
+    /// The value at `FieldPath.unpack(data)` inside element `b` of list `a`
+    /// (bounds-checked), read without loading the whole element.
+    list_get_field,
+    /// Empty dictionary with capacity hint `a: u64`.
+    dict_new,
+    /// Live dictionary entries (`u64`).
+    dict_len,
+    /// Pure lookup of key `b` in dictionary `a`; `i64` entry or negative insertion probe.
+    dict_find,
+    /// Borrowed key at entry `b: i64` of dictionary `a`.
+    dict_entry_key,
+    /// Borrowed value at entry `b: i64` of dictionary `a`.
+    dict_entry_value,
+    /// Dictionary `a` with entry `b` assigned `extra[0]`; consumes `a` and the value.
+    dict_set_value,
+    /// Insert `extra = {key, value}` using negative probe `b` from `dict_find(a, key)`.
+    dict_insert,
+    /// Remove entry `b: i64` from dictionary `a`; consumes `a`.
+    dict_remove,
+    /// Number of written entries (`u64`), including dead entries.
+    dict_entries,
+    /// Whether entry `b: i64` of dictionary `a` is live (`bool`).
+    dict_entry_live,
+    /// Independent copy of dictionary `a`.
+    dict_copy,
+    /// Empty value of dictionary `a`'s type; consumes `a`.
+    dict_clear,
+    /// Character string at byte offset `b: u64` in string `a`.
+    str_char,
+    /// UTF-8 width (`u64`) at byte offset `b: u64` in string `a`.
+    str_width,
+    /// Unicode scalar (`u32`) at byte offset `b: u64` in string `a`.
+    str_code,
+    /// Append string `b` to string `a`; consumes `a`, borrows `b`.
+    str_append,
+    /// Append the character at `extra[0]: u64` in string `b` to string `a`; consumes `a`.
+    str_append_char,
+    /// Copy string `a` between scalar positions `b: i64` and `extra[0]: i64`.
+    str_slice,
+    /// Borrow a byte span of string `a`: offset `b: u64`, length `extra[0]: u64`.
+    str_view_of,
+    /// Materialize borrowed span `a: str_view` as an owned string.
+    str_from_view,
+    /// Stable sort of list `a`, reversed when `b: bool`; consumes `a`.
+    list_sort,
+    /// Element `b` of inline array `a`, bounds-checked against its fixed length.
+    array_get,
+    /// Array `a` with element `b` replaced by `extra[0]`; consumes the old array and value.
+    array_set,
+//! `mylang-core`: the new compiler core's executable (decision N2). It imports
+//! the existing front end as the `mylang` Zig module and owns everything below
+//! `typed.Program`: the Core IR, its facts, LLVM emission and the native build.
+const std = @import("std");
+const frontend = @import("frontend.zig");
+const typed_dump = @import("typed_dump.zig");
+const build = @import("build.zig");
+const print = @import("print.zig");
+const pipeline = @import("pipeline.zig");
+const passes = @import("passes.zig");
+const facts = @import("facts.zig");
+const test_runner = @import("test_runner.zig");
+const check_command = @import("check_command.zig");
+const cli_run = @import("cli_run.zig");
+
+/// The flag naming the build cache directory.
+const cache_dir_flag = "--cache-dir";
+
+const usage =
+    \\usage: mylang build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR] [--verify-cache] [--cache-report]
+    \\       mylang check FILE.my [--typed] [--stats] [--timings=json] [--cache-dir DIR] [--no-cache]
+    \\       mylang test FILE.my|DIR [options]   (`mylang test` alone lists them)
+    \\       mylang coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
+    \\       mylang dump-typed FILE.my [FUNCTION]
+    \\       mylang dump-ir FILE.my [--facts]   (--facts: after the release passes, with intervals)
+    \\
+;
+
+/// `mylang test`'s usage: every flag `testCommand` and the CLI accept.
+const test_usage =
+    \\usage: mylang test <entry.my|directory> [--filter SUBSTRING|GLOB] [--cases FILE] [--json]
+    \\  --release | --mode Debug|ReleaseFast    --no-facts | --verify-facts
+    \\  --affected --against REF                run only tests reaching a declaration changed since REF
+    \\  --jobs N                                tests at once (default: CPUs, capped by free memory)
+    \\  --max-steps N --max-frames N --max-memory SIZE --timeout-ms N   per-test budgets
+    \\  --seed N --property-runs N              property test inputs (runs: 1 to 1000000)
+    \\  --force --no-cache --cache-dir DIR      rerun every test / use a private cache / cache location
+    \\  --link FILE.c (repeatable) --zig PATH
+    \\
+;
+
+/// What stops a command before it has a status: memory, an unwritable stream, or a
+/// test the runner cannot encode.
+pub const Error = test_runner.Error || std.Io.File.Writer.Error || frontend.Error || build.Error || error{ReadFailed};
+
+/// Dispatch one command; the process exit status is its result.
+pub fn main(init: std.process.Init) !u8 {
+    const allocator = init.arena.allocator();
+    const args = try init.minimal.args.toSlice(allocator);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return buildCommand(init, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "check")) return check_command.run(init, args[2..]);
+    if (args.len >= 3 and std.mem.eql(u8, args[1], "test")) return testCommand(init, args[2..]);
+    // `mylang`'s run command (NEW-CORE-S5-RUN-1), which the core's own tests drive.
+    for ([_][]const u8{ "run", "run-project" }) |name| if (args.len >= 2 and std.mem.eql(u8, args[1], name)) return cli_run.runCommand(init, name, args[2..]);
+    return developer(init, args);
+}
+
+/// The developer commands `mylang` shares (S5-D8): `dump-typed`, `dump-ir` and
+/// `coverage`, from `args` (argv, the program name first). Anything else prints the usage.
+pub fn developer(init: std.process.Init, args: []const []const u8) Error!u8 {
+    if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-typed")) return dumpTyped(init, args[2], if (args.len >= 4) args[3] else null);
+    if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-ir")) return dumpIr(init, args[2], args.len == 4 and std.mem.eql(u8, args[3], "--facts"));
+    if (args.len >= 3 and std.mem.eql(u8, args[1], "coverage")) return coverageCommand(init, args[2..]);
+    try std.Io.File.stderr().writeStreamingAll(init.io, usage);
+    return 2;
+}
+
+fn dumpTyped(init: std.process.Init, path: []const u8, filter: ?[]const u8) !u8 {
+    const allocator = init.arena.allocator();
+    const entry = frontend.entryOf(path);
+    var session = frontend.Session.init(init.gpa, init.io, entry.root);
+    defer session.deinit();
+//! Small SSA construction tools shared by test dispatch and copied-value adapters.
+const std = @import("std");
+const ir = @import("ir.zig");
+/// Allocation is the only construction failure.
+pub const Error = error{OutOfMemory};
+/// One synthesized function under construction.
+pub const Builder = struct {
+    arena: std.mem.Allocator,
+    function: ir.Function,
+    /// Add an initially empty basic block.
+    pub fn block(self: *Builder) Error!ir.BlockId {
+        const id: ir.BlockId = @fromBackingInt(@intCast(self.function.blocks.items.len));
+        try self.function.blocks.append(self.arena, .{});
+        return id;
+    }
+    /// Add a parameter or constant outside the instruction lists.
+    pub fn detached(self: *Builder, inst: ir.Inst) Error!ir.Ref {
+        const ref: ir.Ref = @fromBackingInt(@intCast(self.function.insts.items.len));
+        try self.function.insts.append(self.arena, inst);
+        return ref;
+    }
+    /// Add an integer constant with its exact bit pattern.
+    pub fn constant(self: *Builder, ty: ir.Type, value: i64) Error!ir.Ref {
+        return self.detached(.{ .op = .iconst, .ty = ty, .data = @bitCast(value) });
+    }
+    /// Add an instruction to a basic block.
+    pub fn put(self: *Builder, at: ir.BlockId, inst: ir.Inst) Error!ir.Ref {
+        const ref = try self.detached(inst);
+        try self.function.blocks.items[at.index()].insts.append(self.arena, ref);
+        return ref;
+    }
+    /// Store an operand slice in the function's extra array.
+    pub fn extra(self: *Builder, refs: []const ir.Ref) Error!u64 {
+        const start: u32 = @intCast(self.function.extra.items.len);
+        try self.function.extra.appendSlice(self.arena, refs);
+        return (ir.ExtraSlice{ .start = start, .len = @intCast(refs.len) }).pack();
+    }
+    /// Add an edge and update the target's predecessor order.
+    pub fn jump(self: *Builder, from: ir.BlockId, to: ir.BlockId) Error!void {
+        _ = try self.put(from, .{ .op = .jump, .ty = .void, .data = @backingInt(to) });
+        try self.function.blocks.items[to.index()].preds.append(self.arena, from);
+    }
+    /// Add a conditional edge and both predecessor entries.
+    pub fn branch(self: *Builder, from: ir.BlockId, condition: ir.Ref, yes: ir.BlockId, no: ir.BlockId) Error!void {
+        _ = try self.put(from, .{ .op = .branch, .ty = .void, .a = condition, .data = ir.packTargets(yes, no) });
+        try self.function.blocks.items[yes.index()].preds.append(self.arena, from);
+        try self.function.blocks.items[no.index()].preds.append(self.arena, from);
+    }
+    /// Add a call to an already declared function.
+    pub fn call(self: *Builder, at: ir.BlockId, module: *const ir.Module, callee: u32, args: []const ir.Ref) Error!ir.Ref {
+        return self.put(at, .{ .op = .call, .ty = module.functions.items[callee].signature.ret, .a = @fromBackingInt(callee), .data = try self.extra(args) });
+    }
+};
+/// Declare a runtime helper once, retaining its explicit Core signature.
+pub fn helper(a: std.mem.Allocator, module: *ir.Module, name: []const u8, params: []const ir.Type, ret: ir.Type) Error!u32 {
+    for (module.functions.items, 0..) |f, index| if (std.mem.eql(u8, f.name, name) and f.signature.ret == ret and std.mem.eql(ir.Type, f.signature.params, params)) return @intCast(index);
+    const index: u32 = @intCast(module.functions.items.len);
+    try module.functions.append(a, .{ .name = name, .signature = .{ .params = try a.dupe(ir.Type, params), .ret = ret, .linkage = .runtime_c } });
+    return index;
+}
+//! S1 lane V facts: field intervals through records, list element hulls through writes, list
+//! lengths through push and pop, and the verify-mode assertions that check each at run time.
+const std = @import("std");
+const support = @import("test_support.zig");
+
+const nested_lengths =
+    \\def uniform(w: int, h: int) -> int:
+    \\    grid: list[list[int]] = []
+    \\    for i in range(h):
+    \\        grid.append([j for j in range(w)])
+    \\    total = 0
+    \\    for j in range(w):
+    \\        total += grid[0][j]
+    \\    return total
+    \\
+    \\def ragged(w: int) -> int:
+    \\    grid = [[j for j in range(w)], [j for j in range(w)]]
+    \\    _ = grid[1].pop()
+    \\    total = 0
+    \\    for j in range(w - 1):
+    \\        total += grid[1][j]
+    \\    return total
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(uniform(3, 2), ragged(3))
+    \\    return 0
+;
+
+// spec: NEW-CORE-NESTED-LENGTH-S4-1
+test "uniform child lengths prove nested accesses but pop invalidates them" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.factsText(arena.allocator(), nested_lengths);
+    const uniform_tail = text[std.mem.indexOf(u8, text, "fn uniform").?..];
+    const uniform = uniform_tail[0..(std.mem.indexOf(u8, uniform_tail, "\nfn ") orelse uniform_tail.len)];
+    try std.testing.expect(contains(uniform, "list_get.proven i64"));
+    const ragged_tail = text[std.mem.indexOf(u8, text, "fn ragged").?..];
+    const ragged = ragged_tail[0..(std.mem.indexOf(u8, ragged_tail, "\nfn ") orelse ragged_tail.len)];
+    try std.testing.expect(contains(ragged, "list_get.exact i64"));
+    const verified = try support.verifyLlvmText(arena.allocator(), nested_lengths);
+    try std.testing.expect(contains(verified, "uniform child list length"));
+}
+
+fn contains(text: []const u8, needle: []const u8) bool {
+    return std.mem.indexOf(u8, text, needle) != null;
+}
+
+const record_fields =
+    \\record P:
+    \\    x: int
+    \\    y: int
+    \\    z: int
+    \\
+    \\
+    \\def fields(n: int) -> int:
+    \\    p = P(x=n % 5, y=7, z=n % 3)
+    \\    p.y = p.y + 2
+    \\    return p.x * 1000000000000 + p.z * 1000000000000 + p.y * 1000000000000
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(fields(7))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-FACTS-6
+test "a record's field intervals flow through record_make, record_set and record_get, so field arithmetic is proven" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.factsText(arena.allocator(), record_fields);
+    const body = text[std.mem.indexOf(u8, text, "fn fields").?..];
+    // x < 5, z < 3 and y = 9 make every product and sum fit; only the remainders of the parameter keep their checks.
+    try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, body, "mul.proven"));
+    try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, body, "add.proven"));
+    try std.testing.expect(!contains(body, "mul.exact"));
+}
+
+const list_facts =
+    \\def literal() -> int:
+    \\    xs = [10, 20, 30]
+    \\    return xs[2] + xs[0] + len(xs)
+    \\
+    \\
+    \\def hull() -> int:
+    \\    xs = [1, 2, 3]
+    \\    xs[1] = 100
+    \\    xs[0] = 5
+    \\    return xs[0] * 900000000000000000 + xs[1]
+    \\
+    \\
+    \\def pops() -> int:
+    \\    xs = [1, 2]
+    \\    a = xs.pop()
+    \\    b = xs.pop()
+    \\    return a + b
+    \\
+    \\
+    \\def parameter(xs: list[int], i: int) -> int:
+    \\    ys = xs
+`--report` on `build`, `build --run` and `run` answers a different question: what the
+build cost and what the caches served. It prints one `cache-report-v1` JSON line on
+standard error:
+
+```console
+$ mylang build loop10.my -o loop10 --report
+{"version":"cache-report-v1","program":"linked","units":2,"reused":0,"compiled":2,"verified":0,"processes":3}
+$ mylang build loop10.my -o loop10 --release --report
+{"version":"cache-report-v1","program":"linked","units":1,"reused":0,"compiled":1,"verified":0,"processes":2}
+```
+
+`program` is `linked`, `reused` (the program store served the executable) or
+`replayed` (an identical earlier build was repeated without checking or compiling).
+
+`--stats` on `build` prints what the core's passes did:
+
+```console
+$ mylang build scale.my -o scale --release --stats
+mylang-core: inlined 1 calls, unswitched 0 loops, versioned 0 loops, proved 10 checks, vectorized 0 loops
+mylang-core: ownership: 7 updates in place, 1 tested, 0 copied; 0 retains, 2 releases (0 pairs elided); 0 lists on the stack
+```
+
+`mylang dump-ir prog.my --facts` prints the Core IR with the fact pass applied, so a
+check that survived (`.exact`) can be traced to the value the pass could not bound.
+
+For wall time and peak memory, build once and time the binary with the system timer,
+more than once:
+
+```bash
+mylang build prog.my -o prog --release
+{
+  "language_version": "0.1.0",
+  "primary_backend": "llvm",
+  "implemented": {
+    "tuples": {
+      "kind": "language",
+      "summary": "`tuple[T1, ..., Tn]` (two to eight elements) is an immutable, fixed-arity anonymous record: it is built with `(a, b)` and the bare forms after `return`, taken apart only by destructuring (`x, y = value`, `for a, b in pairs`, `_` for a value not needed), compares structurally, prints as `(1, 'a')`, and is rejected when indexed, named by field, called as a method or measured with `len`.",
+      "doc": "docs/tuples.md#tuples"
+    },
+    "typed-hole-obligations": {
+      "kind": "tooling",
+      "summary": "`mylang check --diagnostics=json` attaches a versioned `typed-hole-obligation` record to each `E_TYPED_HOLE` diagnostic: snapshot identity and hole range, declared and contextual expected types, usable bindings, generic requirements, effect ceiling and mutation footprint, with whole-program facts a hole cannot promise named in an `unavailable` list.",
+      "doc": "docs/typed-holes.md#structured-obligations"
+    },
+    "lint-command": {
+      "kind": "tooling",
+      "summary": "`mylang lint` reports `L_*` findings over a checked project, with profiles, waiver comments, related notes naming the tests that reach a declaration, section-9 advisory report rules, and a report/block split that only `--gate` enforces.",
+      "doc": "docs/tooling/lint.md#mylang-lint"
+    },
+    "tests-for-index": {
+      "kind": "tooling",
+      "summary": "One tests-reachability index backs `mylang tests-for`, the related notes on `mylang lint` findings, and the `tests(N)` column of `mylang list-interfaces`; on a project that does not type-check, `tests-for` answers from a syntax call graph labeled `basis: syntax`.",
+      "doc": "docs/tooling/navigation.md#which-tests-reach-a-declaration"
+    },
+    "interface-fact-status": {
+      "kind": "tooling",
+      "summary": "`mylang list-interfaces` and `mylang index-project` label every effect, mutation and return-origin fact with its analysis status (`checked`, `template`, `declaration-only`, `declared`, `lexical-only`), publish `unavailable`/`null` instead of the checker's conservative mask when no checked instantiation exists, and keep a declared `ceiling(...)` visible either way.",
+      "doc": "docs/tooling/navigation.md#fact-status-in-interface-and-navigation-output"
+    },
+    "diagnostic-fixes": {
+      "kind": "tooling",
+      "summary": "A diagnostic whose repair is certain carries a `diagnostic-v1` `fix`: exact edits as file, UTF-8 byte range and replacement text, for call-site and parameter `mut` markers, module names, renamed spellings, `_ = ` discards and unused imports.",
+      "doc": "docs/tooling/fix.md#structured-fixes-in-diagnostics"
+    },
+    "fix-command": {
+      "kind": "tooling",
+      "summary": "`mylang fix ENTRY.my|DIR [--check]` applies every structured fix across a project to a fixed point, prints what changed per file and passes on the diagnostics that need a person; `--check` writes nothing and exits 1 when a fix would apply.",
+      "doc": "docs/tooling/fix.md#mylang-fix"
+    },
+    "unused-import-warning": {
+      "kind": "tooling",
+      "summary": "A direct `import` no reference in its module resolves through is reported as the deny-able `W_UNUSED_IMPORT` warning beside `W_UNUSED_BINDING`.",
+      "doc": "docs/tooling/import-policy.md#unused-import-warnings"
+    },
+    "affected-test-selection": {
+      "kind": "tooling",
+      "summary": "`mylang test --affected --against REF` runs only the tests that reach a declaration changed since `REF`, printing the selected and skipped counts and exiting 3 on an empty derivation.",
+      "doc": "docs/tooling/guest-tests.md#affected-selection"
+    },
+    "api-diff": {
+      "kind": "tooling",
+      "summary": "`mylang api-diff` records declaration identity/fingerprint baselines and classifies later changes as additive, compatible or breaking.",
+      "doc": "docs/tooling/api-diff.md#mylang-api-diff"
+    },
+    "interface-files": {
+      "kind": "tooling",
+      "summary": "`mylang api --write|--check [--json]` keeps a generated, body-free `.api` interface file beside every project module, and `\"interface_files\": true` in `mylang.json` makes a stale one `E_INTERFACE_FILE_STALE`.",
+      "doc": "docs/tooling/interface-files.md#mylang-api"
+    },
+    "direct-c-scalar-imports": {
+      "kind": "tooling",
+      "summary": "`extern def` declarations call fixed-arity C scalar functions directly from every native build, passing narrow integers sign- or zero-extended as SysV C callers do and any NaN `float` argument as the canonical quiet NaN.",
+      "doc": "docs/c-ffi.md#direct-c-imports"
+    },
+    "explicit-native-link-inputs": {

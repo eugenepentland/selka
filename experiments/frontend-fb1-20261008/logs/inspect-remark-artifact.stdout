@@ -1,0 +1,89 @@
+-rw-rw-r-- 1 epentland epentland  107 Oct  8 08:21 /tmp/frontend-fb1-remarks.c
+-rw-rw-r-- 1 epentland epentland 3424 Oct  8 08:21 /tmp/frontend-fb1-remarks.o
+}
+
+fn compileArguments(native: Native, release: bool, object: []const u8, source: []const u8) Error![]const []const u8 {
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(native.arena, &.{ native.zig, "cc", "-c", unit_cache.level(release), "-target", target_policy.native_link_target });
+    try argv.appendSlice(native.arena, target.cpu_flags);
+    try argv.appendSlice(native.arena, &.{ "-Wno-override-module", "-o", object, source });
+    return argv.items;
+}
+
+/// One `--link` source this build compiles, and where its depfile goes.
+const Foreign = struct { manifest: []const u8, manifest_key: Digest, object: []const u8, depfile: []const u8, slot: usize };
+
+/// Serve or compile every `--link` C source. A source is served only while its
+    try std.testing.expect(contains(run.stderr, " blocks live at exit\n"));
+}
+
+// spec: NEW-CORE-RC-4
+test "the R-2 peephole drops a retain and release of one value with only pure reads between them" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var m: ir.Module = .{};
+    const ints = try m.intern(arena.allocator(), .{ .list = .i64 });
+    var h = try Hand.init(arena.allocator(), &m, "f", .{ .params = try arena.allocator().dupe(ir.Type, &.{ ints, ints }), .ret = .u64 });
+    const p = try h.param(0);
+    const q = try h.param(1);
+    _ = try h.emit(.{ .op = .retain, .ty = .void, .a = p });
+    const n = try h.emit(.{ .op = .list_len, .ty = .u64, .a = p });
+    _ = try h.emit(.{ .op = .release, .ty = .void, .a = p });
+    // A call between them keeps the second pair: the callee could drop an owner.
+    _ = try h.emit(.{ .op = .retain, .ty = .void, .a = q });
+    _ = try h.emit(.{ .op = .print, .ty = .void, .data = try h.extra(&.{ try h.int(.cap, 1), n }) });
+    _ = try h.emit(.{ .op = .call, .ty = .u64, .a = @fromBackingInt(0), .data = try h.extra(&.{ q, q }) });
+    _ = try h.emit(.{ .op = .release, .ty = .void, .a = q });
+    _ = try h.emit(.{ .op = .ret, .ty = .void, .a = n });
+    _ = try h.finish();
+    const dropped = try own.elidePairs(arena.allocator(), &m.functions.items[0]);
+    try std.testing.expectEqual(@as(u32, 1), dropped);
+    const text = try print.module(arena.allocator(), &m);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, text, "retain"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, text, "release"));
+        const stream = try self.value(operands[0]);
+        if (self.constantOf(operands[0]) == flags.error_stream) return self.reportError(out, operands[1]);
+        for (operands[1..], 0..) |argument, i| {
+            if (i != 0) try out.print(self.a(), "  call void @myl_core_print_sep(i64 {s})\n", .{stream});
+            const argument_type = self.function.inst(self.function.resolve(argument)).ty;
+            if (argument_type == .bool) {
+                try out.print(self.a(), "  call void @myl_core_print_bool(i64 {s}, i1 zeroext {s})\n", .{ stream, try self.value(argument) });
+            } else if (argument_type == .str) {
+                try out.print(self.a(), "  call void @myl_core_print_str(i64 {s}, ptr {s})\n", .{ stream, try self.value(argument) });
+            } else {
+                const info = argument_type.integer() orelse return error.UnsupportedInstruction;
+                try out.print(self.a(), "  call void @myl_core_print_{s}(i64 {s}, i64 {s})\n", .{ if (info.signed) "i64" else "u64", stream, try self.widened(out, argument) });
+            }
+        }
+        try out.print(self.a(), "  call void @myl_core_print_end(i64 {s})\n", .{stream});
+    }
+};
+
+/// Bytes one list element occupies.
+fn elementSize(ty: ir.Type) u32 {
+    return switch (ty) {
+        .bool, .i8, .u8 => 1,
+        .i16, .u16 => 2,
+        .i32, .u32 => 4,
+        else => 8,
+    };
+}
+
+/// The in-memory type of one list element.
+fn storageType(ty: ir.Type) []const u8 {
+    return switch (ty) {
+        .bool, .i8, .u8 => "i8",
+        .i16, .u16 => "i16",
+        .i32, .u32 => "i32",
+        .f64 => "double",
+        .str, .bytes, .byte_buffer, .capability, .resource => "ptr",
+        else => if (ty.isCompound()) "ptr" else "i64",
+    };
+}
+
+/// ` !dbg !N` on a function definition and `, !dbg !N` on an instruction.
+const function_scope = " !dbg !{d}";
+const instruction_location = ", !dbg !{d}";
+
+/// The DWARF metadata of a `dwarf_lines` module: one compile unit and file, one
+/// `DISubprogram` per function, one `DILocation` per call and trap. Numbered from

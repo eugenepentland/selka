@@ -1,0 +1,806 @@
+    /// Element `b` of inline array `a`, bounds-checked against its fixed length.
+    array_get,
+    /// Array `a` with element `b` replaced by `extra[0]`; consumes the old array and value.
+    array_set,
+    /// Top-level internal function `data`, with the matching function pointer type.
+    func_ref,
+    /// Call function value `a`, with arguments in `extra` at `data`.
+    call_indirect,
+    /// A fresh box holding `a`; consumes `a`.
+    box_make,
+    /// The value box `a` holds.
+    box_get,
+    /// Add one owner to managed value `a` (every block it references).
+    retain,
+    /// Drop one owner of managed value `a`; a block whose last owner goes is freed.
+    release,
+    /// Whether block pointer `a` (a `str`, list or box) has exactly one owner (`bool`).
+    is_unique,
+    /// Record the error-trace site at this instruction's span; `data` is a `TraceMode`.
+    err_trace,
+    /// Direct call of function `a` (its index into `Module.functions`), arguments in `extra` at `data`.
+    call,
+    /// Write `extra[1..]` to stream `extra[0]`, separated by spaces and ended by a newline.
+    print,
+    /// Unconditional jump to block `data`.
+    jump,
+    /// `if a: block data.low else block data.high`.
+    branch,
+    /// Return `a` (or nothing for `void`).
+    ret,
+    /// Control never reaches here.
+    @"unreachable",
+    /// Fresh mutable bytes with capacity `a: u64`.
+    buffer_new,
+    /// Independent mutable-byte copy of `a`.
+    buffer_copy,
+    /// Replace byte `b` of `a` with `extra[0]: u8`; consumes `a`, checked bounds.
+    buffer_set,
+    /// Append `b: u8` to `a: byte_buffer`; consumes `a`.
+    buffer_push,
+    /// Remove the last byte of `a`; consumes `a`, checked nonempty.
+    buffer_pop,
+    /// Checked integer shift: `a << b`, with wrapping bits, count below width.
+    shift_left,
+    /// Checked arithmetic/logical integer shift `a >> b` by signedness.
+    shift_right,
+    /// Integer addition clamped to the result type's bounds.
+    saturating_add,
+    /// Unary f64 operation selected by `data: FloatUnary`.
+    float_unary,
+
+    /// Whether this operation ends a block.
+    pub fn terminates(self: Op) bool {
+        return switch (self) {
+            .jump, .branch, .ret, .@"unreachable" => true,
+            else => false,
+        };
+    }
+
+    /// Whether `data` packs an `extra` operand list (an `ExtraSlice`).
+    pub fn hasExtra(self: Op) bool {
+        return switch (self) {
+            .phi, .call, .call_indirect, .print, .record_make, .list_set, .dict_set_value, .dict_insert, .str_append_char, .str_slice, .str_view_of, .array_set, .buffer_set => true,
+            else => false,
+        };
+    }
+
+    /// Whether the operation is a constant or parameter: defined outside every block,
+    /// materialized at each use, so it dominates every use.
+    pub fn isConstant(self: Op) bool {
+        return switch (self) {
+            .param, .iconst, .fconst, .undef, .str_const, .func_ref => true,
+            else => false,
+        };
+    }
+
+    /// Whether an update takes ownership of its first value operand.
+    pub fn consumesOperand0(self: Op) bool {
+        return switch (self) {
+            .list_push, .list_set, .list_pop, .record_set, .array_set, .dict_set_value, .dict_insert, .dict_remove, .dict_clear, .str_append, .str_append_char, .list_sort, .buffer_set, .buffer_push, .buffer_pop => true,
+            else => false,
+        };
+    }
+};
+
+/// One instruction. `data` holds the immediate (constant bits, predicate, block,
+/// callee, tag, field index, `FieldPath`, `TraceMode`, or a packed `extra` slice);
+/// `span` is the start offset of the source span in the merged source, for traps,
+/// traces and error-trace sites.
+pub const Inst = struct {
+    op: Op,
+    ty: Type,
+    a: Ref = .none,
+    b: Ref = .none,
+    data: u64 = 0,
+    check: Check = .none,
+    span: u32 = 0,
+};
+
+/// A slice of `Function.extra`, packed into an instruction's `data`.
+pub const ExtraSlice = struct {
+    start: u32,
+    len: u32,
+
+    /// Pack into an instruction's `data` field.
+    pub fn pack(self: ExtraSlice) u64 {
+        return @as(u64, self.start) | (@as(u64, self.len) << 32);
+    }
+    /// Unpack from an instruction's `data` field.
+    pub fn unpack(data: u64) ExtraSlice {
+        return .{ .start = @truncate(data), .len = @truncate(data >> 32) };
+    }
+};
+
+/// Pack the two targets of a `branch`.
+pub fn packTargets(then: BlockId, otherwise: BlockId) u64 {
+    return @as(u64, @backingInt(then)) | (@as(u64, @backingInt(otherwise)) << 32);
+}
+
+/// Unpack the two targets of a `branch`.
+pub fn unpackTargets(data: u64) struct { then: BlockId, otherwise: BlockId } {
+    return .{ .then = @fromBackingInt(@intCast(@as(u32, @truncate(data)))), .otherwise = @fromBackingInt(@intCast(@as(u32, @truncate(data >> 32)))) };
+}
+
+/// A basic block: its instructions in order (phis first, terminator last) and
+/// its predecessors in the order phi operands follow.
+pub const Block = struct {
+    insts: std.ArrayList(Ref) = .empty,
+    preds: std.ArrayList(BlockId) = .empty,
+};
+
+/// A counted or conditional loop as the checked tree wrote it, recorded by the
+/// builder so later passes never re-discover loops from back edges.
+pub const Loop = struct {
+    /// The checker's loop id (`loop_exit.target`).
+    id: usize,
+    /// Evaluates the condition; its first predecessor enters the loop.
+    header: BlockId,
+    /// The first block of the body.
+    body: BlockId,
+    /// Runs the step and jumps back to the header (`continue` target).
+    latch: BlockId,
+    /// Where control goes when the condition is false (`break` target).
+    exit: BlockId,
+};
+
+/// How a function is reached.
+pub const Linkage = enum(u8) {
+    /// A mylang function with a body, internal to the module.
+    internal,
+    /// An `extern def`: a C function; capability arguments are dropped.
+    extern_c,
+    /// A new-runtime C helper: scalar/pointer ABI, including declared capability tokens.
+    runtime_c,
+};
+
+/// Parameter and result types of a function, and its linkage.
+pub const Signature = struct {
+    params: []const Type,
+    ret: Type,
+    linkage: Linkage = .internal,
+    /// Bit `i`: parameter `i` is passed owned (a `mut` parameter, by value: the call
+    /// consumes the argument, the callee owns it and returns its final value).
+    owned: u64 = 0,
+src/core/promote.zig:5://! capacity the facts bound by a constant lives in an entry-block `alloca` instead of
+src/core/promote.zig:8://! - a straight chain `list_new → push → push …` (capacity: the number of pushes);
+src/core/promote.zig:9://! - a counted fill loop the fact pass recognized (`list_new` entering a header phi
+src/core/promote.zig:10://!   whose back edge is one push of it per iteration): capacity `hi(bound)`.
+src/core/promote.zig:13://! escape. Element types that hold blocks are left alone (a stack list releases no
+src/core/promote.zig:15://! web value reaches a phi, so every use of an instance comes before its `list_new`
+src/core/promote.zig:18://! Marks (frozen IR, `data` fields the verifier does not read): the `list_new` gets
+src/core/promote.zig:19://! `data = capacity + 1`; each filling push gets `data = stack_push` and is emitted
+src/core/promote.zig:20://! without the growth call. Verify builds put `len < capacity` before each such push
+src/core/promote.zig:21://! (an `unreachable` with `data = capacity_assert`, an `R_CORE_FACT` trap).
+src/core/promote.zig:30:/// The `data` of a push into a promoted list: no growth, the room is proven.
+src/core/promote.zig:31:pub const stack_push: u64 = 1;
+src/core/promote.zig:33:/// The `data` of an `unreachable` asserting a promoted list's room (verify builds).
+src/core/promote.zig:34:pub const capacity_assert: u64 = 2;
+src/core/promote.zig:36:/// The most bytes of elements a promoted list may take on the stack.
+src/core/promote.zig:37:pub const max_stack_bytes: u64 = 4096;
+src/core/promote.zig:39:/// Promote every qualifying list of `f`; returns the promoted values (every value of
+src/core/promote.zig:40:/// each web: the `list_new`, its pushes and the loop phi) and how many lists.
+src/core/promote.zig:47:        if (inst.op != .list_new or inst.data != 0) continue;
+src/core/promote.zig:52:        if (web.capacity * @max(1, module.size(element)) > max_stack_bytes) continue;
+src/core/promote.zig:53:        f.insts.items[i].data = web.capacity + 1;
+src/core/promote.zig:54:        for (web.pushes) |push| f.insts.items[push.index()].data = stack_push;
+src/core/promote.zig:57:        if (verify) for (web.pushes) |push| try assertRoom(arena, f, push, web.capacity, provenance);
+src/core/promote.zig:68:/// One list's values, filling pushes and proven capacity.
+src/core/promote.zig:69:const Web = struct { values: []const ir.Ref, pushes: []const ir.Ref, capacity: u64 };
+src/core/promote.zig:112:    var capacity: u64 = 0;
+src/core/promote.zig:131:            capacity += 1;
+src/core/promote.zig:137:        // A counted fill loop entered straight from the `list_new`.
+src/core/promote.zig:143:        capacity = fill.capacity;
+src/core/promote.zig:150:    return .{ .values = values.items, .pushes = pushes.items, .capacity = capacity };
+src/core/promote.zig:163:    var stack: std.ArrayList(usize) = .empty;
+src/core/promote.zig:164:    try stack.append(arena, from.block);
+src/core/promote.zig:165:    while (stack.pop()) |b| {
+src/core/promote.zig:173:            try stack.append(arena, next);
+src/core/promote.zig:180:/// push of the phi, used by nothing else; the capacity is the bound's upper end.
+src/core/promote.zig:181:fn fillLoop(f: *const ir.Function, users: Users, known: *const facts.Facts, phi: ir.Ref, list: ir.Ref) ?struct { push: ir.Ref, capacity: u64 } {
+src/core/promote.zig:195:    return .{ .push = push, .capacity = @intCast(@max(hi, 0)) };
+src/core/promote.zig:198:/// Verify builds: before `push`, trap unless its list's length is below `capacity`.
+src/core/promote.zig:199:fn assertRoom(arena: std.mem.Allocator, f: *ir.Function, push: ir.Ref, capacity: u64, provenance: ?origins.Context) Error!void {
+src/core/promote.zig:220:    const limit = try loose(arena, f, .{ .op = .iconst, .ty = .u64, .data = capacity });
+src/core/promote.zig:228:    _ = try add(arena, f, fail, .{ .op = .@"unreachable", .ty = .void, .data = capacity_assert, .span = inst.span });
+src/core/own.zig:17://!    `list_new`, `list_copy` or another update, or a phi of such values, and never
+src/core/own.zig:38://!   *promoted* instead: retained right after it is read and owned from there on.
+src/core/own.zig:55:    /// The function's facts (release builds): lists they bound may live on the stack.
+src/core/own.zig:71:    /// Lists promoted to the stack (`promote.zig`).
+src/core/own.zig:72:    promoted: u32 = 0,
+src/core/own.zig:82:        self.promoted += other.promoted;
+src/core/own.zig:116:        const promoted = try promotion.promote(arena, module, f, known, options.verify, marks.origin);
+src/core/own.zig:117:        marks.stack = promoted.values;
+src/core/own.zig:118:        stats.promoted = promoted.lists;
+src/core/own.zig:141:/// Reserve known counted fills after stack promotion. Only detached i64/u64
+src/core/own.zig:155:                if (inst.op != .list_new or inst.data != 0) continue;
+src/core/own.zig:157:                f.insts.items[entry.index()].data = flags.fill_capacity;
+src/core/own.zig:163:/// COW may replace the receiver with a copy whose capacity is unknown. Only
+src/core/own.zig:165:/// phi, uses its reserved room. Later appends must check capacity normally.
+src/core/own.zig:174:                reserved = reserved or (entry.op == .list_new and entry.data == flags.fill_capacity);
+src/core/own.zig:223:    /// Values of lists promoted to the stack: never counted.
+src/core/own.zig:224:    stack: std.AutoHashMapUnmanaged(u32, void) = .empty,
+src/core/own.zig:252:    promoted: []bool,
+src/core/own.zig:273:            .promoted = try arena.alloc(bool, n),
+src/core/own.zig:282:        @memset(self.promoted, false);
+src/core/own.zig:310:    /// Owned or promoted: the value holds its own count.
+src/core/own.zig:312:        return self.class[ref.index()] == .owned or self.promoted[ref.index()];
+src/core/own.zig:350:            if (self.marks.stack.contains(@intCast(i)) or self.marks.emptied.contains(@intCast(i))) self.class[i] = .none;
+src/core/own.zig:374:        var stack: std.ArrayList(ir.Ref) = .empty;
+src/core/own.zig:381:                for (0..operands.len()) |k| try self.markPhi(f.resolve(operands.get(k)), live, &stack);
+src/core/own.zig:384:        while (stack.pop()) |phi| {
+src/core/own.zig:385:            for (f.operands(f.inst(phi).data)) |operand| try self.markPhi(f.resolve(operand), live, &stack);
+src/core/own.zig:390:    fn markPhi(self: *Analysis, used: ir.Ref, live: []bool, stack: *std.ArrayList(ir.Ref)) Error!void {
+src/core/own.zig:393:        try stack.append(self.arena, used);
+src/core/own.zig:481:            var stack: std.ArrayList(u32) = .empty;
+src/core/own.zig:486:                    try stack.append(self.arena, use.block);
+src/core/own.zig:489:            while (stack.pop()) |b| {
+src/core/own.zig:495:                        try stack.append(self.arena, pred);
+src/core/own.zig:529:        var stack: std.ArrayList(ir.Ref) = .empty;
+src/core/own.zig:530:        stack.append(self.arena, ref) catch return true;
+src/core/own.zig:531:        while (stack.pop()) |current| {
+src/core/own.zig:539:                stack.append(self.arena, source) catch return true;
+src/core/own.zig:557:    /// returns whether any was promoted.
+src/core/own.zig:562:            if (class != .borrowed or self.promoted[i] or self.parent[i] == .none) continue;
+src/core/own.zig:570:                    self.promoted[i] = true;
+src/core/own.zig:619:            .list_new, .list_copy, .dict_new, .dict_copy, .str_from_view, .buffer_new, .buffer_copy => {},
+src/core/own.zig:638:/// values and no ordinary child read was promoted, stored, returned or lent to a
+src/core/own.zig:648:            .list_new => {},
+src/core/own.zig:741:    var stack: std.ArrayList(State) = .empty;
+src/core/runtime/core_values.c:43:    core_value_memo_entry *entries = calloc(capacity, sizeof *entries);
+src/core/runtime/core_values.c:90:        core_equal_work *items = realloc(stack->items, capacity * sizeof *items);
+src/core/runtime/core_values.c:171:        core_hash_work *items = realloc(stack->items, capacity * sizeof *items);
+src/core/runtime/core_values.c:278:        char *data = realloc(output->data, capacity);
+src/core/runtime/core_rt.c:29:#include <malloc.h>
+src/core/runtime/core_rt.c:128: * `malloc`ed, and a large list grows with `realloc`. The class sits in the high
+src/core/runtime/core_rt.c:150:static void *small_alloc(uint32_t class) {
+src/core/runtime/core_rt.c:158:        chunk_next = aligned_alloc(MYL_ALIGN, MYL_CHUNK);
+src/core/runtime/core_rt.c:170:static myl_block *block_alloc(uint32_t kind, size_t data, size_t *room) {
+src/core/runtime/core_rt.c:176:        block = small_alloc(class);
+src/core/runtime/core_rt.c:180:           16-byte `malloc` alignment cost integer_math 4% and binary_search 10%). */
+src/core/runtime/core_rt.c:181:        block = aligned_alloc(MYL_ALIGN, (bytes + MYL_ALIGN - 1) & ~(size_t)(MYL_ALIGN - 1));
+src/core/runtime/core_rt.c:183:        if (heap_ceiling) heap_charge(malloc_usable_size(block));
+src/core/runtime/core_rt.c:199:    myl_block *block = block_alloc(kind, wanted, &room);
+src/core/runtime/core_rt.c:204:/* Blocks allocated and not freed: carved and large ones, less those on free lists. */
+src/core/runtime/core_rt.c:217:        if (heap_ceiling) heap_refund(malloc_usable_size(block));
+src/core/runtime/core_rt.c:348:myl_block *myl_core_list_new_slow(int64_t cap, int64_t element_size) {
+src/core/runtime/core_rt.c:360:           way), and moves to a fresh aligned block when `realloc` loses the alignment. */
+src/core/runtime/core_rt.c:362:        if (heap_ceiling) heap_refund(malloc_usable_size(list));
+src/core/runtime/core_rt.c:363:        myl_block *moved = realloc(list, bytes);
+src/core/runtime/core_rt.c:366:            myl_block *aligned = aligned_alloc(MYL_ALIGN, (bytes + MYL_ALIGN - 1) & ~(size_t)(MYL_ALIGN - 1));
+src/core/runtime/core_rt.c:372:        if (heap_ceiling) heap_charge(malloc_usable_size(moved));
+src/core/runtime/core_rt.c:423:myl_block *myl_core_box_new(int64_t size) {
+src/core/runtime/core_rt.c:483: * last 32 appends (ERROR-TRACE-4); nothing is allocated. */
+src/core/runtime/core_rt.c:1117:/* With MYL_CORE_LEAKCHECK=1, a program that ends with blocks still allocated says
+src/core/runtime/core_rt.c:1322:    void *scratch = malloc(n * (size_t)size);
+src/core/runtime/core_text.c:294:        myl_block *grown = block_alloc(MYL_KIND_STR, (size_t)cap + 1, &room);
+src/core/runtime/core_text.c:451:    myl_block *list = myl_core_list_new_slow(0, 8);
+src/core/runtime/core_text.c:547:    myl_block *list = myl_core_list_new_slow(0, 8);
+src/core/runtime/core_text.c:563:    myl_block *list = myl_core_list_new_slow(bytes->len, 8);
+src/core/runtime/core_text.c:794:        set->wide = calloc(CORE_UNICODE_WORDS, sizeof(uint64_t));
+src/core/runtime/core_text.c:870:    myl_block *list = myl_core_list_new_slow(0, 8);
+src/core/runtime/core_test.c:270:    unsigned char *mapping = aligned_alloc(page, usable + page);
+src/core/runtime/core_test.c:356:    size_t a=strlen(core_test_path),b=strlen(suffix);char *path=malloc(a+b+1);
+src/core/runtime/core_number.c:7:/* The independent Zig formatter allocates only through this Core-block adapter. */
+src/core/runtime/core_number.c:8:myl_block *myl_core_number_text_new(size_t length) {
+src/core/runtime/core_host.c:7:static void *core_host_scratch(size_t bytes){CoreHostScratch *item=malloc(sizeof(*item)+bytes);if(!item)out_of_memory();item->next=core_host_scratch_head;core_host_scratch_head=item;return item->data;}
+src/core/runtime/core_host.c:365:    CoreHostCache *item=calloc(1,sizeof(*item));if(!item)out_of_memory();item->next=core_host_cache;core_host_cache=item;item->key=metadata;
+src/core/runtime/core_host.c:366:    item->text=malloc((size_t)metadata->len+1);if(!item->text)out_of_memory();memcpy(item->text,block_data(metadata),(size_t)metadata->len);item->text[metadata->len]=0;
+src/core/runtime/core_host.c:371:    size_t *parameters=calloc(item->declaration.count?item->declaration.count:1,sizeof(size_t)*2);if(!parameters)out_of_memory();item->declaration.parameters=parameters;
+src/core/runtime/core_host.c:373:    item->known=calloc(item->known_count?item->known_count:1,sizeof(char *));if(!item->known)out_of_memory();for(size_t i=0;i<item->known_count;++i)item->known[i]=core_host_line(&cursor);
+src/core/runtime/core_host.c:374:    item->types=calloc(type_count?type_count:1,sizeof(*item->types));if(!item->types)out_of_memory();
+src/core/runtime/core_host.c:375:    for(size_t i=0;i<type_count;++i){CoreHostType *type=&item->types[i];type->name=core_host_line(&cursor);type->kind=(unsigned)core_host_number(&cursor);type->size=core_host_number(&cursor);type->count=core_host_number(&cursor);type->stride=core_host_number(&cursor);type->bits=(unsigned)core_host_number(&cursor);type->is_signed=(unsigned)core_host_number(&cursor);size_t count=type->kind==3?1:type->count;if(count){size_t *parts=calloc(count*2,sizeof(size_t));if(!parts)out_of_memory();type->children=parts;type->offsets=parts+count;for(size_t child=0;child<count;++child){parts[child]=core_host_number(&cursor);parts[count+child]=core_host_number(&cursor);}}}
+src/core/runtime/core_dict.c:130:    core_dict_index *index = malloc(sizeof *index + controls + (size_t)slots * 4);
+src/core/runtime/core_dict.c:152:myl_block *myl_core_dict_new(uint64_t hint, const core_dict_descriptor *desc) {
+src/core/runtime/core_dict.c:156:    core_dict_meta *meta = calloc(1, sizeof *meta);
+src/core/runtime/core_dict.c:159:    meta->hashes = malloc((size_t)cap * sizeof(uint64_t));
+src/core/runtime/core_dict.c:174:    uint64_t *hashes = realloc(meta->hashes, (size_t)cap * 8);
+src/core/runtime/core_dict.c:178:        unsigned char *dead = realloc(meta->dead, (size_t)(cap + 7) / 8);
+src/core/runtime/core_dict.c:245:        meta->dead = calloc(((size_t)dict->cap + 7) / 8, 1);
+src/core/runtime/core_dict.c:290:    myl_block *copy = myl_core_dict_new((uint64_t)dict->cap, meta->desc);
+src/core/runtime/core_dict.c:298:        other->dead = malloc(bytes);
+src/core/runtime/core_dict.c:304:        other->index = malloc(bytes);
+src/core/runtime/core_sort.c:46:   the width. Sorting calls no guest code and allocates nothing managed, so no
+src/core/runtime/core_sort.c:299:        scratch = malloc(count / 2 * size);
+src/core/runtime/core_sort.c:377:   Nothing here calls guest code or allocates managed memory, so no collection
+src/core/runtime/core_sort.c:571:    uint32_t *slots = calloc((size_t)span + 1, sizeof *slots);
+src/core/runtime/core_sort.c:581:    uint64_t *dest = own ? (uint64_t *)keys->storage : malloc(count * 8);
+src/core/runtime/core_sort.c:653:    s2_keyed_entry *entries = malloc(2 * count * sizeof *entries);
+src/core/runtime/core_sort.c:693:        uint64_t *words = own ? (uint64_t *)keys->storage : malloc(count * 8);
+src/core/runtime/core_sort.c:706:    uint64_t *by_low = malloc(count * 8), *by_high = malloc(count * 8);
+src/core/runtime/core_sort.c:742:    unsigned char *held = values != source || 2 * size <= sizeof inline_held ? inline_held : malloc(2 * size);
+src/core/runtime/core_bytes.c:5:myl_block *myl_core_buffer_new(uint64_t capacity) {
+src/core/runtime/core_bytes.c:10:    myl_block *out = myl_core_buffer_new((uint64_t)source->cap);
+src/core/runtime/core_bytes.c:22:    myl_block *out = myl_core_buffer_new((uint64_t)capacity);
+src/core/runtime/core_bytes.c:41:    myl_block *out = myl_core_buffer_new((uint64_t)source->len);
+src/core/runtime/core_bytes.c:47:    myl_block *out = myl_core_buffer_new((uint64_t)source->len);
+src/core/runtime/core_io.c:271:    unsigned char *bytes = malloc(capacity);
+src/core/runtime/core_io.c:281:            unsigned char *grown = realloc(bytes, capacity * 2);
+src/core/runtime/core_io.c:309:        unsigned char *bytes = malloc(10);
+src/core/runtime/core_io.c:325:    unsigned char *bytes = malloc(1);
+src/core/runtime/core_io.c:522:    char *copy = malloc(length + 1);
+src/core/runtime/core_io.c:592:   relative path. An entry removed while a handle holds it stays allocated
+src/core/runtime/core_io.c:648:        MemoryEntry **entries = realloc(memory->entries, grown * sizeof *entries);
+src/core/runtime/core_io.c:653:    MemoryEntry *entry = calloc(1, sizeof *entry);
+src/core/runtime/core_io.c:654:    char *copy = malloc(length + 1);
+src/core/runtime/core_io.c:720:    MemoryEntry **children = malloc((memory->count ? memory->count : 1) * sizeof *children);
+src/core/runtime/core_io.c:732:    unsigned char *snapshot = malloc(bytes);
+src/core/runtime/core_io.c:756:        unsigned char *bytes = malloc(10);
+src/core/runtime/core_io.c:776:    unsigned char *bytes = malloc(1);
+src/core/runtime/core_io.c:884:        unsigned char *bytes = realloc(entry->bytes, grown);
+src/core/runtime/core_io.c:1003:        else if(test){state->memory=calloc(1,sizeof(MemoryFs));if(!state->memory)out_of_memory();state->adapter=(CoreIoResourceProvider){state->memory,7,core_io_memory_acquire,core_io_memory_complete,core_io_memory_release,core_io_memory_read,core_io_memory_write};}
+src/core/runtime/core_io.c:1015:static unsigned char *core_io_copy(const unsigned char *source,size_t length){CoreIoScratch *copy=malloc(sizeof(*copy)+(length?length:1));if(!copy)out_of_memory();copy->next=core_io_scratch_head;core_io_scratch_head=copy;if(source&&length)memcpy(copy->data,source,length);return copy->data;}
+src/core/runtime/core_io.c:1111:static myl_block *core_io_scope(myl_block *cap,myl_block *scope,unsigned family,int append){CoreIoAuthority *a=core_io_authority(cap);if(a->family!=family)core_io_fail("InvalidCapability");myl_block *joined=scope;if(append&&a->scope&&a->scope->len){size_t length=(size_t)(a->scope->len+scope->len+(scope->len!=0));unsigned char *bytes=malloc(length);if(!bytes)out_of_memory();memcpy(bytes,block_data(a->scope),(size_t)a->scope->len);if(scope->len){bytes[a->scope->len]='/';memcpy(bytes+a->scope->len+1,block_data(scope),(size_t)scope->len);}joined=core_io_string(bytes,length,1);free(bytes);}else core_io_retain(joined);myl_block *out=core_io_cap(family,a->rights,a->provider,cap,joined);myl_core_release(joined);return out;}
+src/core/runtime/core_io.c:1153:static myl_block *core_io_file_error(unsigned kind,myl_block *path,int status){static const char *verbs[]={"open","read","read","write","write","stat","listdir","mkdir","remove"};const char *verb=verbs[kind],*reason=core_io_reason(status);size_t length=strlen(verb)+strlen(reason)+(size_t)path->len+5;char *message=malloc(length+1);if(!message)out_of_memory();size_t at=(size_t)sprintf(message,"%s '",verb);memcpy(message+at,block_data(path),(size_t)path->len);at+=(size_t)path->len;at+=(size_t)sprintf(message+at,"': %s",reason);myl_block *text=core_io_string(message,at,1);free(message);return text;}
+src/core/runtime/core_io.c:1155:static void core_io_append(CoreIoBytes *bytes,const unsigned char *data,size_t length){if(bytes->length+length>64u*1024u*1024u)core_io_fail("R_FILE");if(bytes->length+length>bytes->capacity){size_t cap=bytes->capacity?bytes->capacity:128;while(cap<bytes->length+length)cap*=2;unsigned char *grown=realloc(bytes->bytes,cap);if(!grown)out_of_memory();bytes->bytes=grown;bytes->capacity=cap;}if(length)memcpy(bytes->bytes+bytes->length,data,length);bytes->length+=length;}
+src/core/runtime/core_io.c:1170:myl_block *myl_core_file_method(myl_block *owner,uint32_t request,int64_t count,myl_block *input){unsigned kind=request&255;int text=(request>>16)&1;CoreIoResource *resource=core_io_resource(owner);if(!resource->open)core_io_fail("R_FILE");int status=0;uint64_t value=0;int pointer=kind<=2;CoreIoBytes raw={0};if(kind==0||kind==1){status=core_io_read_all(owner,count<0?64u*1024u*1024u:(size_t)count,kind==1,&raw);if(!status)value=(uint64_t)(uintptr_t)core_io_sequence(&raw,text,&status);}else if(kind==2){myl_block *list=core_io_list_new(0);for(;;){CoreIoBytes line={0};status=core_io_read_all(owner,64u*1024u*1024u,1,&line);if(status||!line.length){free(line.bytes);break;}myl_block *part=core_io_sequence(&line,text,&status);free(line.bytes);if(status)break;core_io_list_add(&list,part);}value=(uint64_t)(uintptr_t)list;}else if(kind==3){size_t written;status=core_io_write_all(owner,input,&written);value=(uint64_t)written;}else if(kind==5)status=core_io_complete(owner);else if(kind!=4)core_io_fail("R_FILE");free(raw.bytes);if(status){if(pointer&&value)myl_core_release((myl_block *)(uintptr_t)value);core_io_fail("R_FILE");}return core_io_result(0,value,NULL,pointer);}
+src/core/project_entry.zig:2://! follow module paths; configuration roots separately confine embedded assets.
+src/core/project_entry.zig:12:pub const Error = error{ SourceError, OutOfMemory, PolicyDenied, ConfigurationFailed };
+src/core/project_entry.zig:31:    /// Apply source budgets, nested module identity and embedded-file boundaries.
+src/core/project_entry.zig:38:    pub fn limits(self: Entry) language.project.Options {
+src/core/project_entry.zig:39:        var options: language.project.Options = .{};
+src/core/project_entry.zig:42:            if (budgets.max_modules) |maximum| options.max_modules = maximum;
+src/core/project_entry.zig:63:                try report.appendSlice(allocator, "error[E_PROJECT_CONFIG]: configured import policy requires a complete module graph\n");
+src/core/project_entry.zig:90:    var entry: Entry = .{ .path = absolute, .root = ordinary.root, .name = ordinary.module };
+src/core/project_entry.zig:106:            const relative = language.project.modulePath(allocator, name) catch return error.OutOfMemory;
+src/core/project_entry.zig:134:fn rootFor(path: []const u8, relative: []const u8) ?[]const u8 {
+src/core/project_entry.zig:146:        if (!std.mem.startsWith(u8, line, "module ")) return null;
+src/core/project_entry.zig:147:        var words = std.mem.tokenizeAny(u8, line["module ".len..], " \t\r#");
+src/core/project_entry.zig:155:test "nested module root resolution respects file boundaries and mismatched declarations" {
+src/core/project_entry.zig:160:    try std.testing.expectEqualStrings("types.shape", declaredModule("# comment\n\nmodule types.shape\n").?);
+src/core/project_entry.zig:161:    try std.testing.expect(declaredModule("module ../escape\n") == null);
+src/core/project_entry.zig:171:    try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = "module main\nimport helper\ndef main() -> int:\n    return helper.value()\n" });
+src/core/project_entry.zig:172:    try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "helper.my", .data = "module helper\npublic def value() -> int effects():\n    return 7\n" });
+src/core/test_support.zig:19:pub const Error = language.diagnostic.Error || build.Error || emit_llvm.Error || verify_ir.Error;
+src/core/test_support.zig:26:    const module = try build.buildModule(arena, unit.program.?, refusal);
+src/core/test_support.zig:27:    try verified(arena, &module, &.{});
+src/core/test_support.zig:28:    return module;
+src/core/test_support.zig:31:/// Verify `module` and its vector plans; a failure prints the verifier's report.
+src/core/test_support.zig:32:pub fn verified(arena: std.mem.Allocator, module: *const ir.Module, plans: []const []const vector.Plan) verify_ir.Error!void {
+src/core/test_support.zig:34:    verify_ir.check(arena, module, plans, &text) catch |err| {
+src/core/test_support.zig:41:pub fn runPasses(arena: std.mem.Allocator, module: *ir.Module, mode: passes.Mode) Error!passes.Result {
+src/core/test_support.zig:42:    const result = try passes.run(arena, module, mode);
+src/core/test_support.zig:43:    try verified(arena, module, result.plans);
+src/core/test_support.zig:55:    const module = try buildSource(arena, source, &refusal);
+src/core/test_support.zig:56:    return print.module(arena, &module);
+src/core/test_support.zig:66:    const module = try buildSource(arena, source, &refusal);
+src/core/test_support.zig:68:    return emit_llvm.emitModule(arena, &module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "test.my", .main = .{ .parameters = &.{"out"} } });
+src/core/test_support.zig:74:    var module = try buildSource(arena, source, &refusal);
+src/core/test_support.zig:75:    for (module.functions.items) |*function| {
+src/core/test_support.zig:78:    try verified(arena, &module, &.{});
+src/core/test_support.zig:79:    return print.module(arena, &module);
+src/core/test_support.zig:85:    var module = try buildSource(arena, source, &refusal);
+src/core/test_support.zig:86:    _ = try runPasses(arena, &module, .trusted);
+src/core/test_support.zig:87:    return print.module(arena, &module);
+src/core/test_support.zig:98:    var module = try buildSource(arena, source, &refusal);
+src/core/test_support.zig:99:    const result = try runPasses(arena, &module, .verify);
+src/core/test_support.zig:102:    return emit_llvm.emitModule(arena, &module, .{ .locator = locator, .source_path = "test.my", .main = .{ .parameters = &.{"out"} }, .analysis = analysis(&result), .verify = true });
+src/core/test_support.zig:108:    var module = try buildSource(arena, source, &refusal);
+src/core/test_support.zig:109:    const result = try runPasses(arena, &module, .trusted);
+src/core/test_support.zig:112:    return emit_llvm.emitModule(arena, &module, .{ .locator = locator, .source_path = "test.my", .main = .{ .parameters = &.{ "args", "out" } }, .analysis = analysis(&result), .target = target });
+src/core/test_support.zig:121:    module: *ir.Module,
+src/core/test_support.zig:126:    pub fn init(arena: std.mem.Allocator, module: *ir.Module, name: []const u8, signature: ir.Signature) Error!Hand {
+src/core/test_support.zig:127:        var hand: Hand = .{ .arena = arena, .module = module, .function = .{ .name = name, .signature = signature } };
+src/core/test_support.zig:190:    /// Add the finished function to the module; returns its index.
+src/core/test_support.zig:192:        try self.module.functions.append(self.arena, self.function);
+src/core/test_support.zig:193:        return @intCast(self.module.functions.items.len - 1);
+src/core/test_support.zig:203:/// Verify `module`, emit it (traps at line 1), compile it with `zig cc` at -O0
+src/core/test_support.zig:205:pub fn runModule(arena: std.mem.Allocator, module: *const ir.Module, release: bool) RunError!Run {
+src/core/test_support.zig:206:    try verified(arena, module, &.{});
+src/core/test_support.zig:208:    const llvm = try emit_llvm.emitModule(arena, module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "hand.my", .main = .{ .parameters = &.{"out"} } });
+src/core/test_support.zig:212:/// How `runOwned` builds and runs a hand-built module.
+src/core/test_support.zig:213:pub const RunOptions = struct {
+src/core/test_support.zig:219:    /// Run the ownership pass first (off: the module counts by hand, or leaks).
+src/core/test_support.zig:229:/// Run the ownership pass over `module` (as a build would, after construction),
+src/core/test_support.zig:231:pub fn runOwned(arena: std.mem.Allocator, module: *ir.Module, options: RunOptions) RunError!Run {
+src/core/test_support.zig:234:    if (options.check_ir) try verified(arena, module, &.{});
+src/core/test_support.zig:235:    if (options.own) _ = try @import("own.zig").run(arena, module, .{ .verify = options.verify });
+src/core/test_support.zig:236:    if (options.check_ir) try verified(arena, module, &.{});
+src/core/test_support.zig:238:    const llvm = try emit_llvm.emitModule(arena, module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "hand.my", .main = options.main, .verify = options.verify, .analysis = options.analysis });
+src/core/test_support.zig:245:    var module = try buildSource(arena, source, &refusal);
+src/core/test_support.zig:246:    _ = try passes.ownership(arena, &module);
+src/core/test_support.zig:247:    try verified(arena, &module, &.{});
+src/core/test_support.zig:248:    return print.module(arena, &module);
+src/core/test_support.zig:252:fn runLlvm(arena: std.mem.Allocator, llvm: []const u8, options: RunOptions) RunError!Run {
+src/core/test_support.zig:269:        report("zig cc rejected the emitted module:\n{s}\n{s}\n", .{ log.items, llvm });
+        const configured = config.load(allocator, io, where, &failure) catch |err| {
+            if (err == error.OutOfMemory) return error.OutOfMemory;
+            try report.print(allocator, "{s}:{d}:{d}: error[E_PROJECT_CONFIG]: {s}\n", .{ failure.path, failure.location.line, failure.location.column, failure.detail });
+            return error.ConfigurationFailed;
+        };
+        if (!configured.document.value_semantics) {
+            try report.print(allocator, "{s}: error[E_CORE_UNSUPPORTED]: the new core requires value_semantics\n", .{configured.path});
+            return error.SourceError;
+        }
+        entry.configuration = configured;
+    }
+    return entry;
+}
+
+fn rootFor(path: []const u8, relative: []const u8) ?[]const u8 {
+    if (!std.mem.endsWith(u8, path, relative) or path.len <= relative.len) return null;
+    const separator = path.len - relative.len - 1;
+    if (path[separator] != std.fs.path.sep) return null;
+    return if (separator == 0) path[0..1] else path[0..separator];
+}
+
+fn declaredModule(bytes: []const u8) ?[]const u8 {
+    var lines = std.mem.splitScalar(u8, bytes, '\n');
+    while (lines.next()) |raw| {
+        const line = std.mem.trim(u8, raw, " \t\r");
+        if (line.len == 0 or line[0] == '#') continue;
+        if (!std.mem.startsWith(u8, line, "module ")) return null;
+        var words = std.mem.tokenizeAny(u8, line["module ".len..], " \t\r#");
+        const name = words.next() orelse return null;
+        return if (language.project.validName(name)) name else null;
+    }
+    return null;
+}
+
+// spec: NEW-CORE-S4-PROJECT-1
+test "nested module root resolution respects file boundaries and mismatched declarations" {
+    try std.testing.expectEqualStrings("/project/src", rootFor("/project/src/types/shape.my", "types/shape.my").?);
+    try std.testing.expectEqualStrings("/", rootFor("/main.my", "main.my").?);
+    try std.testing.expect(rootFor("/project/my_main.my", "main.my") == null);
+    try std.testing.expect(rootFor("/project/main.my", "wrong.my") == null);
+    try std.testing.expectEqualStrings("types.shape", declaredModule("# comment\n\nmodule types.shape\n").?);
+    try std.testing.expect(declaredModule("module ../escape\n") == null);
+}
+
+// spec: NEW-CORE-S5-POLICY-1
+test "an import the configured policy denies is its own failure, with the policy gate's status 3" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var tmp = std.testing.tmpDir(.{});
+    defer tmp.cleanup();
+    try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = "module main\nimport helper\ndef main() -> int:\n    return helper.value()\n" });
+    try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "helper.my", .data = "module helper\npublic def value() -> int effects():\n    return 7\n" });
+    try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":1,\"import_policy\":\"policy.json\"}" });
+    try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "policy.json", .data = "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}" });
+    const path = try tmp.dir.realPathFileAlloc(std.testing.io, "main.my", a);
+    var report: std.ArrayList(u8) = .empty;
+    const entry = try resolve(a, std.testing.io, path, &report);
+    var session = frontend.Session.init(a, std.testing.io, entry.root);
+    entry.configure(&session);
+    _ = try session.checkFile(a, path, &report);
+    try std.testing.expectError(error.PolicyDenied, entry.validate(a, &session, &report));
+    try std.testing.expectEqual(@as(u8, 3), status(error.PolicyDenied));
+    try std.testing.expectEqual(@as(u8, 1), status(error.SourceError));
+    try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "mylang.json", .data = "{" });
+    try std.testing.expectError(error.ConfigurationFailed, resolve(a, std.testing.io, path, &report));
+//! Helpers the new core's unit tests share: check a single-file program from
+//! source text and build or render its Core IR.
+const std = @import("std");
+const language = @import("mylang");
+const ir = @import("ir.zig");
+const build = @import("build.zig");
+const print = @import("print.zig");
+const emit_llvm = @import("emit_llvm.zig");
+const facts = @import("facts.zig");
+const passes = @import("passes.zig");
+const driver = @import("driver.zig");
+const verify_ir = @import("verify_ir.zig");
+const vector = @import("vector.zig");
+
+/// Failure detail goes to the test's stderr.
+const report = std.debug.print;
+
+/// Everything checking, building or emitting a test program can fail with.
+pub const Error = language.diagnostic.Error || build.Error || emit_llvm.Error || verify_ir.Error;
+
+/// Check `source` as a header-less program and build its Core IR in `arena`; the
+/// IR is verified (`verify_ir.zig`) before it is returned.
+pub fn buildSource(arena: std.mem.Allocator, source: []const u8, refusal: *build.Refusal) Error!ir.Module {
+    var unit = try language.Compilation.init(arena, "test.my", source);
+    try unit.check();
+    const module = try build.buildModule(arena, unit.program.?, refusal);
+    try verified(arena, &module, &.{});
+    return module;
+}
+
+/// Verify `module` and its vector plans; a failure prints the verifier's report.
+pub fn verified(arena: std.mem.Allocator, module: *const ir.Module, plans: []const []const vector.Plan) verify_ir.Error!void {
+    var text: std.ArrayList(u8) = .empty;
+    verify_ir.check(arena, module, plans, &text) catch |err| {
+        report("{s}", .{text.items});
+        return err;
+    };
+}
+
+/// Run the release passes in `mode` and verify the result, plans included.
+pub fn runPasses(arena: std.mem.Allocator, module: *ir.Module, mode: passes.Mode) Error!passes.Result {
+    const result = try passes.run(arena, module, mode);
+    try verified(arena, module, result.plans);
+    return result;
+}
+
+/// Carry every optimizer product to an emission fixture without dropping ancestry.
+pub fn analysis(result: *const passes.Result) emit_llvm.Analysis {
+    return .{ .facts = result.known, .vectors = result.plans, .provenance = &result.provenance };
+}
+
+/// The textual Core IR of `source`.
+pub fn irText(arena: std.mem.Allocator, source: []const u8) Error![]u8 {
+    var refusal: build.Refusal = .{};
+    const module = try buildSource(arena, source, &refusal);
+    return print.module(arena, &module);
+}
+
+fn firstLine(_: *const anyopaque, offset: u32) emit_llvm.Location {
+    return .{ .line = 1, .column = offset + 1 };
+}
+
+/// The LLVM IR of `source`, with every trap located at line 1.
+pub fn llvmText(arena: std.mem.Allocator, source: []const u8) Error![]u8 {
+    var refusal: build.Refusal = .{};
+    const module = try buildSource(arena, source, &refusal);
+    const context: u8 = 0;
+    return emit_llvm.emitModule(arena, &module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "test.my", .main = .{ .parameters = &.{"out"} } });
+}
+
+/// The textual Core IR of `source` after the release fact pass marked what it proved.
+pub fn factsText(arena: std.mem.Allocator, source: []const u8) Error![]u8 {
+    var refusal: build.Refusal = .{};
+    var module = try buildSource(arena, source, &refusal);
+    for (module.functions.items) |*function| {
+        if (function.signature.linkage == .internal) _ = try facts.analyze(arena, function, .{});
+    }
+    try verified(arena, &module, &.{});
+    return print.module(arena, &module);
+}
+
+/// The textual Core IR of `source` after the release passes.
+pub fn optimizedText(arena: std.mem.Allocator, source: []const u8) Error![]u8 {
+    var refusal: build.Refusal = .{};
+    var module = try buildSource(arena, source, &refusal);
+    _ = try runPasses(arena, &module, .trusted);
+    return print.module(arena, &module);
+}
+
+/// The LLVM IR a release build of `source` emits.
+pub fn releaseLlvmText(arena: std.mem.Allocator, source: []const u8) Error![]u8 {
+    return releaseLlvmTextFor(arena, source, @import("target.zig").current);
+}
+
+/// The LLVM IR a `--verify-facts` release build of `source` emits.
+pub fn verifyLlvmText(arena: std.mem.Allocator, source: []const u8) Error![]u8 {
+    var refusal: build.Refusal = .{};
+    var module = try buildSource(arena, source, &refusal);
+    const result = try runPasses(arena, &module, .verify);
+    const context: u8 = 0;
+    const locator: emit_llvm.Locator = .{ .context = &context, .locate = firstLine };
+    return emit_llvm.emitModule(arena, &module, .{ .locator = locator, .source_path = "test.my", .main = .{ .parameters = &.{"out"} }, .analysis = analysis(&result), .verify = true });
+}
+
+/// The LLVM IR a release build of `source` emits for target description `target`.
+pub fn releaseLlvmTextFor(arena: std.mem.Allocator, source: []const u8, target: @import("target.zig").Target) Error![]u8 {
+    var refusal: build.Refusal = .{};
+    var module = try buildSource(arena, source, &refusal);
+    const result = try runPasses(arena, &module, .trusted);
+    const context: u8 = 0;
+    const locator: emit_llvm.Locator = .{ .context = &context, .locate = firstLine };
+    return emit_llvm.emitModule(arena, &module, .{ .locator = locator, .source_path = "test.my", .main = .{ .parameters = &.{ "args", "out" } }, .analysis = analysis(&result), .target = target });
+}
+
+// ---- hand-built IR ------------------------------------------------------------------
+
+/// Builds one function's Core IR by hand, for tests of operations the builder
+/// does not produce yet. Instructions go into the current block in order.
+pub const Hand = struct {
+    arena: std.mem.Allocator,
+///   executable;
+/// - `zig build test-core` runs the core's unit tests and its end-to-end slice,
+///   which drive that `mylang`, split into `-Dcore-shards=N` concurrent shards of
+///   one test binary (default 8; a `-Dtest-filter` run is one process); it returns
+///   that step, which `zig build test` depends on.
+fn addCore(b: *std.Build, inputs: CoreInputs) *std.Build.Step {
+    const platform = b.createModule(.{ .root_source_file = b.path("src/config_core_tool_platform.zig") });
+    // The test runner's frame and byte ceilings share the run budget rules.
+    const budget = b.modules.get("memory_budget") orelse @panic("memory_budget module");
+    const options = b.addOptions();
+    options.addOptionPath("core_path", inputs.compiler.getEmittedBin());
+    // The differential mode compared the slice with the retired old back end.
+    options.addOption(bool, "differential", false);
+    options.addOption([]const u8, "old_path", "");
+    options.addOptionPath("clock_path", b.path("benchmarks/runtime/ports/native_clock.c"));
+    const root = std.Io.Dir.cwd().realPathFileAlloc(b.graph.io, ".", b.allocator) catch @panic("build root");
+    options.addOption([]const u8, "fixtures", b.pathJoin(&.{ root, "test", "core" }));
+    options.addOption([]const u8, "lang_tests", b.pathJoin(&.{ root, "tests", "lang" }));
+    const unit = b.addTest(.{ .max_rss = rss.compile, .filters = inputs.filters, .test_runner = inputs.test_runner, .root_module = b.createModule(.{
+        .root_source_file = b.path("src/core/root_test.zig"),
+        .target = inputs.target,
+        .optimize = inputs.optimize,
+        .imports = &.{.{ .name = "mylang", .module = inputs.front_end }},
+    }) });
+    unit.root_module.addImport("core_tool_platform", platform);
+    unit.root_module.addImport("build_identity", inputs.identity);
+    unit.root_module.addImport("memory_budget", budget);
+    unit.root_module.addOptions("core_test_options", options);
+    // The number-text helper's target and CPU are fixed (`-mcpu baseline`), so it is
+    // compiled once here and embedded, rather than by `zig build-obj` on a guest
+    // machine's first build that prints a number (NEW-CORE-S3-NUMBER-1).
+    const number_text = b.addObject(.{ .name = "core_number_text", .max_rss = rss.compile, .root_module = b.createModule(.{
+        .root_source_file = b.path("src/core/runtime/core_number_text.zig"),
+        .target = b.resolveTargetQuery(std.Target.Query.parse(.{ .arch_os_abi = "x86_64-linux-gnu.2.31", .cpu_features = "baseline" }) catch @panic("number-text target")),
+        .optimize = .ReleaseFast,
+        .pic = true,
+        .stack_check = false,
+        .stack_protector = false,
+        .link_libc = true,
+    }) });
+    // `mylang` runs the new core for every command that builds, runs or tests
+    // code. Its commands live in `src/core/cli.zig`, a module of its own; the core
+    // reaches the front end only as `mylang`.
+    const cli = b.createModule(.{
+        .root_source_file = b.path("src/core/cli.zig"),
+        .target = inputs.target,
+        .optimize = inputs.optimize,
+        .imports = &.{ .{ .name = "mylang", .module = inputs.front_end }, .{ .name = "core_tool_platform", .module = platform }, .{ .name = "build_identity", .module = inputs.identity }, .{ .name = "memory_budget", .module = budget } },
+    });
+    inputs.compiler.root_module.addImport("mylang_core", cli);
+    for ([_]*std.Build.Module{ unit.root_module, cli }) |module| {
+        module.addAnonymousImport("core_number_text_object", .{ .root_source_file = number_text.getEmittedBin() });
+    }
+    const step = b.step("test-core", "Run the new core's unit tests and its end-to-end slice");
+    // Most of the root's time is end-to-end builds of guest programs, so shards
+    // of the one binary run concurrently; each test uses its own temporary tree.
+    const requested = b.option(usize, "core-shards", "test-core: concurrent shards of the core test root (default 8)") orelse 8;
+    const shards = if (inputs.filters.len == 0) @max(1, requested) else 1;
+    for (0..shards) |index| {
+        const run = b.addRunArtifact(unit);
+        run.step.max_rss = rss.driver;
+        run.has_side_effects = true;
+        if (shards > 1) guardian.announceShard(run, index, shards);
+        step.dependOn(&run.step);
+    }
+    return step;
+application-trials
+artifacts
+benchmark-dashboard
+clean-runner-releasefast
+cn
+database-language
+deepseek-harness
+dsh-image-preview
+eda
+eda-bench
+eda-bench-wt
+eda-eval-workspace
+evidence
+export-relax-tests-20260908.log
+export-relax-tests-final-20260908.log
+guardian-arena
+guardian-worktrees
+guardian-zig
+localization-eval
+mylang
+mylang-ab-aggref
+mylang-ab-ast
+mylang-ab-fwd
+mylang-eval
+mylang-gapA
+mylang-gapB
+mylang-gapC
+mylang-gapD
+mylang-gapE
+mylang-gapF
+mylang-gapG
+mylang-mut
+mylang-scratch
+mylang-worktrees
+pcb-workbench
+repo-eval
+runtime-speed-20260907
+rust-workflow
+selfhost-completion-evidence
+selfhost-edit-bench-cache
+stage0-clean-ci
+tmp
+wheel-lock-matcher
+wheel-lock-matcher.zip
+wheel-lock-overlays.zip
+word-duet
+work
+zig-eda-candidate-auto-inline
+zig-eda-private
+worktree /home/epentland/ai/canopy/mylang
+HEAD acbee6032758a0cb031619c270ae3c401c1d8e7f
+branch refs/heads/local-reasoning/integration
+
+worktree /home/epentland/ai/canopy/clean-runner-releasefast
+HEAD ee52dc41a7a8d82d3e1c4e85b03330e0586c3d87
+detached
+
+worktree /home/epentland/ai/canopy/mylang-mut
+HEAD b990015aa28a8a3fdd532be498e1179ebfda7a61
+branch refs/heads/lane/mut
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore
+HEAD 5a6b501d672f884336f5749fd6a191daacaac09b
+branch refs/heads/claude/bench-newcore
+locked claude: benchmark reruns on the new core (2026-10-08)
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/claude-frontend-plan
+HEAD 637a85d6ecfdf8eb3bb68a942c04be358e914aea
+branch refs/heads/claude/frontend-plan
+locked Claude session e4195a1a: front-end plan update after S5 (2026-10-08)
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/claude-gc-delete-probe
+HEAD 6df58b02554401f9d37564cceffd14277a835ae1
+branch refs/heads/claude/gc-delete-probe
+locked claude: gc-delete-probe
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/claude-hold-census
+HEAD 1d3155f3a367bff0cfd648fa05460dcfb33bc612
+branch refs/heads/claude/hold-census
+locked claude session 2026-10-03: claude/hold-census (RC hold census)
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/claude-llvm-direct-spike-20261004
+HEAD 93351a3247258a6858052f8737531fa125791263
+branch refs/heads/claude/llvm-direct-spike-20261004
+locked claude session 2026-10-04: WP-8 llvm-direct-spike lane
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/claude-tool-gaps
+HEAD 12be156c1a97021e7c9ed627d2ee1ddcdfe85931
+branch refs/heads/claude/review-eda-merge-20261001
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/claude-typing
+HEAD 4d6ffdf74a53ca396af0c12d2f4e60b4cb79566a
+branch refs/heads/claude/typing
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-d9-closeout-integration
+HEAD 9f396a35f5bf68b072757093aececd1e982d436f
+branch refs/heads/codex/d9-closeout-integration
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-d9-contract-runtime
+HEAD cfa31018c3b60a18493931c43f74dc693ebbf611
+branch refs/heads/codex/d9-contract-runtime
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-d9-field-transfers
+HEAD d83e26a0c37758cce80482c9e106ccf83fa3ee74
+branch refs/heads/codex/d9-field-transfers
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-d9-invariant-closeout
+HEAD bb02624b9227cb7d829e31d3d507398b7a429617
+branch refs/heads/codex/d9-invariant-closeout
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-d9-library-check
+HEAD ff10f2f11370a3f31e46a5d9dff255d53cf8379a
+branch refs/heads/codex/d9-library-check
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-d9-native-test-order
+HEAD bb83e6eb215d7d43a0879652e95acae499756aad
+branch refs/heads/codex/d9-native-test-order
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep
+HEAD 05a5498ace3bad05b884abe1566d58470a5846d8
+branch refs/heads/codex/d9-stage3f-prep
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-diff-fuzz-20261002
+HEAD f40d748169a8f629f689d2cc120bf8a95117a0c0
+branch refs/heads/codex/differential-fuzz-20261002
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-allocation-a-20261001
+HEAD 6df58b02554401f9d37564cceffd14277a835ae1
+branch refs/heads/codex/eda-friction-allocation-a-20261001
+locked codex ownership allocation-only diagnostic; immutable controls untouched
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-allocation-f-20261001
+HEAD a6cad3770a317284c18e660f699354ae07e79d59
+branch refs/heads/codex/eda-friction-allocation-f-20261001
+locked codex ownership allocation-only diagnostic; immutable controls untouched
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-frontend-locations-20261002
+HEAD 89f003befca3017fa32e3997d3a331841e7fba67
+branch refs/heads/codex/eda-friction-frontend-locations-20261002
+locked Owned frontend invariant construction source-location repair, Oct 2 2026
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-gate-controls-20261001
+HEAD 1314c529ee92a6ee7ad4dbb28b1736c23c261ee9
+branch refs/heads/codex/eda-friction-gate-controls-20261001
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-merge-20261001
+HEAD 12be156c1a97021e7c9ed627d2ee1ddcdfe85931
+branch refs/heads/codex/eda-friction-merge-20261001
+locked codex coordinator: follow-up merge candidate and matched measurement

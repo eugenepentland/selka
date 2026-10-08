@@ -1,0 +1,10 @@
+row_packet_decode.my:69:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          phase = batch % 17
+          ^
+row_packet_decode.my:72:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              x = values[j]
+              ^
+mylang-core: inlined 0 calls, unswitched 0 loops, versioned 0 loops, proved 0 checks, vectorized 0 loops
+mylang-core: ownership: 12 updates in place, 0 tested, 0 copied; 0 retains, 3 releases (0 pairs elided); 0 lists on the stack
+mylang-core: cost: 109 checks kept; 18 allocation sites (4 unresolved calls); 8 unknown loops
+mylang-core: LLVM vectorized unknown; 8 unknown loops; remarks available; 2 compiles in 52525007 ns

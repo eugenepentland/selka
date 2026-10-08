@@ -1,0 +1,444 @@
+//! Core IR → LLVM IR text (docs/design/new-core-ir.md §7).
+//!
+//! Each IR block becomes one LLVM block, split after every emitted check: the
+//! check branches to a cold trap block and the block continues in a fresh
+//! label. Phis therefore name the label each predecessor *ends* in, so a
+//! function is rendered in two passes: block bodies first (recording each
+//! block's exit label), then the blocks with their phis in front.
+//!
+//! The runtime ABI (src/core/runtime/core_rt.c): list and string blocks have a
+//! 32-byte header `{u32 count, u32 kind, i64 len, i64 cap, i64 reserved}` and
+//! their data at offset 32; traps carry pointers to private, unit-local site records.
+const std = @import("std");
+const ir = @import("ir.zig");
+const facts = @import("facts.zig");
+const vector = @import("vector.zig");
+const c_abi = @import("c_abi.zig");
+const flags = @import("flags.zig");
+const emit_dict = @import("emit_dict.zig");
+const emit_bytes = @import("emit_bytes.zig");
+const emit_text_split = @import("emit_text_split.zig");
+const emit_text = @import("emit_text.zig");
+const text_builder = @import("build_text.zig");
+const emit_fn = @import("emit_fn.zig");
+const emit_number = @import("emit_number.zig");
+const internal_linkage = "internal";
+const emit_cap = @import("emit_cap.zig");
+const emit_values = @import("emit_values.zig");
+const emit_constants = @import("emit_constants.zig");
+const origins = @import("inline_origins.zig");
+
+/// A source line and column for a span start.
+pub const Location = struct { line: u32, column: u32, path: []const u8 = "" };
+
+/// Resolves span starts to lines and columns without tying the emitter to the front end.
+pub const Locator = struct {
+    context: *const anyopaque,
+    locate: *const fn (*const anyopaque, u32) Location,
+};
+
+/// Optimizer output retained together through every native emission path.
+pub const Analysis = struct {
+    facts: []const ?facts.Facts = &.{},
+    vectors: []const []const vector.Plan = &.{},
+    provenance: ?*const origins.Table = null,
+};
+
+/// What the emitted module needs from its caller.
+pub const Options = struct {
+    locator: Locator,
+    /// Fallback source path for hand-built IR and header-less files.
+    source_path: []const u8,
+    /// Parameter names of `main`, which select stdout or stderr for a `Stream`.
+    /// What the C entry needs to know about `main`.
+    main: Main,
+    /// Per function, the facts a release build computed (empty in debug builds):
+    /// element ranges become `!range` metadata on list loads.
+    analysis: Analysis = .{},
+    /// Verify mode: every proven check is emitted anyway, every fact interval and
+    /// unreachable block is asserted, and a failure traps `R_CORE_FACT`. No `nsw`,
+    /// `!range` or other fact-derived promise reaches LLVM, so it cannot fold the asserts away.
+    verify: bool = false,
+    /// The target description (`target.zig`): vector width and available intrinsics.
+    target: @import("target.zig").Target = @import("target.zig").current,
+};
+
+/// `main` as the C entry calls it.
+pub const Main = struct {
+    /// Parameter names, which select stdout or stderr for a `Stream`.
+    parameters: []const []const u8 = &.{},
+    /// When `main` returns a `Result`, the tags of its `Ok` and `Err` cases (the
+    /// checker's order): the entry reports an `Err` (RESULT-MAIN-1/2).
+    result: ?MainResult = null,
+    /// Checked capability family per parameter; 255 means ordinary data.
+    capabilities: []const u8 = &.{},
+    /// Whether the entry reads its runtime options from `MYLANG_OPTIONS` before calling
+    /// `main` (`myl_core_start`, NATIVE-ARGV-1): a program's entry does, a test executable's does not.
+    runtime_options: bool = false,
+};
+
+/// The case tags of `main`'s `Result` return type.
+pub const MainResult = struct { ok_tag: u32, error_tag: u32 };
+
+/// Trap kinds, in the order the runtime's code table lists them. `list_empty` is a
+/// pop of an empty list (`R_LIST_BOUNDS`, operation `pop`); `trace` marks an
+/// error-trace site, which never traps; `assertion` is a failed `assert` or contract clause (its
+/// `width` is the `typed.AssertionKind`, its `operation` the message).
+pub const TrapKind = enum(u8) {
+    overflow,
+1://! Turn emitted LLVM units into an executable with the bundled clang (`zig cc`),
+7://!   compile in parallel with `zig cc -c`; hits start no process;
+13://! staging directory, removed when the build ends: these stores are the cache,
+36:pub const Request = struct {
+37:    /// The `zig` executable whose `cc` compiles and links.
+39:    /// The build's cache directory: foreign objects, linked programs and staging.
+52:/// Why a native build failed; the tool's output was written to `log`.
+90:    resources: tool_identity.Request,
+93:    /// Validate the captured tool before publishing a native object or accepting a link.
+100:            try log.appendSlice(self.resources.arena, "error: guest toolchain changed during native compilation\n");
+106:/// The tools and accounting every native step of one build shares.
+122:/// and `local` (the work directory), or both inside `staging` for an unproved tool.
+123:const Places = struct { shared: []const u8, local: []const u8, staging: []const u8, cacheable: bool };
+130:pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8)) Error!Outcome {
+135:    const staging = try privateDirectory(allocator, io, request.work, "native-link");
+136:    defer removeDirectory(io, staging);
+137:    environment.put("ZIG_LOCAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ staging, "local" })) catch return error.OutOfMemory;
+138:    const resources: tool_identity.Request = .{ .arena = allocator, .io = io, .environment = &environment, .executable = request.zig, .cache = request.work };
+147:    if (!guest.cacheable) environment.put("ZIG_GLOBAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ staging, "global" })) catch return error.OutOfMemory;
+149:    const native: Native = .{ .arena = allocator, .io = io, .environment = &environment, .zig = guest.path, .log = log, .guard = .{ .resources = resources, .identity = guest }, .counts = &outcome.counts };
+151:    // a test's temporary directory) reuses them; an unproved tool keeps every
+154:        .shared = if (guest.cacheable) try runtimeDirectory(allocator, io, environ, request.work) else staging,
+155:        .local = if (guest.cacheable) request.work else staging,
+156:        .staging = staging,
+161:    const settings: unit_cache.Settings = .{ .tool = guest.digest, .cpu = guest.native_target, .release = request.release, .runtime = abi };
+163:    try objects.append(allocator, try runtimeObject(native, places.shared, abi));
+166:    try unitObjects(native, places, settings, request, &objects);
+168:    outcome.foreign = try foreignObjects(native, places, settings, request.links, &objects);
+173:        try publishOutput(native, found.path, request.output);
+178:    const linked = try std.fs.path.join(allocator, &.{ staging, "program" });
+180:    try argv.appendSlice(allocator, &.{ guest.path, "cc", unit_cache.level(request.release), "-target", target_policy.native_link_target });
+186:    try run(native, argv.items);
+187:    try native.guard.check(log);
+189:        try publishOutput(native, linked, request.output);
+193:    try publishOutput(native, published.path, request.output);
+200:/// Copy `program` to `output` under a temporary name and rename it into place.
+211:/// The link flag that keeps Zig from building and linking its UBSan runtime: `zig cc
+228:    unit_cache.field(&hash, target_policy.native_link_target);
+240:fn publishOutput(native: Native, program: []const u8, output: []const u8) Error!void {
+241:    copyOutput(native.io, program, output) catch |err| {
+242:        try native.log.print(native.arena, "error: cannot write {s}: {s}\n", .{ output, @errorName(err) });
+252:fn unitObjects(native: Native, places: Places, settings: unit_cache.Settings, request: Request, objects: *std.ArrayList(Object)) Error!void {
+253:    const a = native.arena;
+262:        native.counts.units += 1;
+263:        const served = if (places.cacheable) try store.lookup(a, native.io, key, ".o") else null;
+264:        if (served != null) native.counts.reused += 1;
+267:        const stem = try std.fs.path.join(a, &.{ places.staging, &std.fmt.bytesToHex(key, .lower) });
+270:        const object = if (served != null) try std.fmt.allocPrint(a, "{s}.verify.o", .{stem}) else if (places.cacheable) try store.partial(a, native.io, key, ".o") else try std.fmt.allocPrint(a, "{s}.o", .{stem});
+273:        std.Io.Dir.cwd().writeFile(native.io, .{ .sub_path = source, .data = unit.llvm }) catch return error.WriteFailed;
+275:        try jobs.append(a, .{ .argv = try compileArguments(native, request.release, object, source), .weight = unit.llvm.len });
+278:    defer for (pending.items) |item| removeFile(native.io, item.object);
+279:    try unit_cache.compileAll(native.resources(), jobs.items, unit_cache.width(native.environment, jobs.items.len));
+280:    native.counts.processes += @intCast(jobs.items.len);
+281:    for (jobs.items) |job| try native.log.appendSlice(a, job.log.items);
+283:    if (jobs.items.len != 0) try native.guard.check(native.log);
+286:            try verifyServed(native, item, hit);
+289:        native.counts.compiled += 1;
+290:        const stored = if (places.cacheable) try store.publish(a, native.io, item.key, ".o", item.object) else try unit_cache.found(a, native.io, item.object);
+296:fn verifyServed(native: Native, item: Pending, served: unit_cache.Found) Error!void {
+297:    const fresh = try unit_cache.found(native.arena, native.io, item.object);
+299:        try native.log.print(native.arena, "error: --verify-cache: unit {s} ({s}) compiles to different bytes than its cached object {s}\n", .{ item.unit.name, item.unit.source_path, served.path });
+302:    native.counts.verified += 1;
+305:fn compileArguments(native: Native, release: bool, object: []const u8, source: []const u8) Error![]const []const u8 {
+307:    try argv.appendSlice(native.arena, &.{ native.zig, "cc", "-c", unit_cache.level(release), "-target", target_policy.native_link_target });
+308:    try argv.appendSlice(native.arena, target.cpu_flags);
+#!/usr/bin/env python3
+"""Measure all 40 S3 rows with the accepted S1 interleaved CPU-10 method.
+
+Three one-iteration startup samples are subtracted from the median of shuffled
+rounds. Old/new core, Rust and Zig ReleaseSafe must all print exactly two integer
+fields (checksum and native elapsed nanoseconds), exit successfully, and agree
+on checksums at each size/iteration count. Cycle counters and normalized measures
+must be positive and finite. Performance misses are reported separately from
+measurement validity; binary_search's layout noise requires the plan's IR review.
+
+Run under scripts/build-slot.sh build and the shared CPU-10 flock. --build saves
+new-core LLVM for audit_all40.py. All writable paths must stay in this worktree.
+--smoke-test exercises Python parsers/registry only; it never runs a benchmark.
+"""
+import argparse
+import csv
+import importlib.util
+import io
+import json
+import math
+import os
+from pathlib import Path
+import random
+import re
+import statistics
+import subprocess
+import sys
+from unittest import mock
+
+ROOT = Path(__file__).resolve().parents[4]
+S1_SPEC = importlib.util.spec_from_file_location("s1_rows", ROOT / "experiments/new-core-s1-20261005/measure_rows.py")
+S1 = importlib.util.module_from_spec(S1_SPEC)
+S1_SPEC.loader.exec_module(S1)
+UNITS = dict(S1.UNITS)
+UNITS.update({
+    "bytes_scan": ("text", "element", 4000, 250000),
+    "string_equal": ("text", "iteration", 200000, 200000),
+    "string_search": ("text", "iteration", 40000, 40000),
+    "string_split": ("text", "element", 400, 25000),
+    "string_join": ("text", "element", 1000, 60000),
+    "dict_lookup": ("collections", "element", 4000, 250000),
+    "dict_lookup_str": ("collections", "element", 4000, 250000),
+    "dict_update": ("collections", "element", 1000, 60000),
+    "dict_update_str": ("collections", "element", 1000, 60000),
+    "set_dedup": ("collections", "element", 4000, 250000),
+    "int_parse": ("text", "iteration", 4000000, 4000000),
+    "int_format": ("text", "iteration", 4000000, 4000000),
+    "call_indirect": ("compute", "element", 4000, 250000),
+    "sort_int": ("collections", "element", 400, 25000),
+    "sort_records": ("collections", "element", 400, 25000),
+    "int_math": ("compute", "element", 4000, 250000),
+    "float_math": ("compute", "element", 4000, 250000),
+    "call_direct": ("compute", "element", 4000, 250000),
+    "branch_predictable": ("compute", "element", 4000, 250000),
+    "branch_mixed": ("compute", "element", 4000, 250000),
+    "binary_search": ("compute", "element", 400, 25000),
+})
+APPLICATIONS = {"word_count", "csv_aggregate", "json_transform", "packet_decode", "lox_eval"}
+UNITS.update({
+    "word_count": ("text", "element", 400, 25000),
+    "csv_aggregate": ("text", "element", 40, 2500),
+    "json_transform": ("text", "element", 20, 1250),
+    "packet_decode": ("compute", "element", 400, 25000),
+    "lox_eval": ("collections", "element", 40, 2500),
+})
+S0 = {"int_math", "float_math", "call_direct", "branch_predictable", "branch_mixed", "binary_search"}
+REFERENCE_NAMES = {"int_math": "integer_math"}
+SIZES = (4096, 64)
+SEED = 7
+EVENT = "cpu_core/cycles/u"
+CPU_FLAGS = ("-march=native", "-mllvm", "-x86-experimental-pref-innermost-loop-alignment=6")
+DEFAULT_BIN = ROOT / ".mylang-cache/s3-a/all40"
+
+
+class InvalidMeasurement(RuntimeError):
+    pass
+
+
+def row_names(value):
+    names = value.split(",")
+    if not names or len(names) != len(set(names)) or any(name not in UNITS for name in names):
+        raise InvalidMeasurement(f"unknown or duplicate rows: {value}")
+    return names
+
+
+def stem(row):
+    return row if row in S0 else f"row_{row}"
+
+
+def inside(path):
+    path = Path(path).resolve()
+    if not path.is_relative_to(ROOT):
+        raise InvalidMeasurement(f"writable path must be inside {ROOT}: {path}")
+    return path
+
+
+def parse_stdout(stdout):
+    match = re.fullmatch(r"(0|-?[1-9][0-9]*) (0|[1-9][0-9]*)\n", stdout)
+    if not match:
+        raise InvalidMeasurement(f"expected exactly 'checksum elapsed_ns\\n', got {stdout!r}")
+    return int(match[1]), int(match[2])
+
+
+def parse_perf(stderr):
+    cycles = []
+    for fields in csv.reader(io.StringIO(stderr)):
+        if not fields or not any(field.strip() for field in fields):
+            continue
+        fields = [field.strip() for field in fields]
+        if len(fields) >= 3 and fields[2].rstrip("/") == EVENT.rstrip("/"):
+//! Release-pass tests: leaf inlining and the narrow-lane vector lowering.
+const std = @import("std");
+const support = @import("test_support.zig");
+const vector = @import("vector.zig");
+const ir = @import("ir.zig");
+const facts = @import("facts.zig");
+const passes = @import("passes.zig");
+
+const affine =
+    \\def affine(x: int) -> int:
+    \\    return x * 3 + 7
+    \\
+    \\
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    n = len(args) + 100
+    \\    values = [(j * 37) % 1009 for j in range(n)]
+    \\    total = 0
+    \\    for j in range(n):
+    \\        total += affine(values[j] + 5)
+    \\    out.print(total)
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-INLINE-1
+test "a release build inlines a single-block helper, so its arithmetic is proven in the caller" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.optimizedText(arena.allocator(), affine);
+    const main_start = std.mem.indexOf(u8, text, "fn main(").?;
+    const main_text = text[main_start..][0..std.mem.indexOf(u8, text[main_start..], "fn affine").?];
+    try std.testing.expect(std.mem.indexOf(u8, main_text, "call i64 affine") == null);
+    try std.testing.expect(std.mem.indexOf(u8, main_text, "mul.proven i64") != null);
+}
+
+// spec-case: NEW-CORE-INLINE-1
+test "a bounded signed remainder leaf inlines for both unknown and constant negative inputs" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.optimizedText(arena.allocator(), "def bounded(x: int) -> int:\n    return x % 1000 + 1\n" ++
+        "def main(args: list[str], out: Stream) -> int:\n    out.print(bounded(len(args) - 2000), bounded(-1))\n    return 0\n");
+    const start = std.mem.indexOf(u8, text, "fn main(").?;
+    const main_text = text[start..][0..std.mem.indexOf(u8, text[start..], "fn bounded").?];
+    try std.testing.expect(std.mem.indexOf(u8, main_text, "call i64 bounded") == null);
+}
+
+const kernel =
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    n = len(args) + 100
+    \\    values = [(j * 37 + 5) % 1009 for j in range(n)]
+    \\    total = 0
+    \\    for j in range(n):
+    \\        total += ((values[j] + 3) * 17 + 23) // 7 % 1009
+    \\    out.print(total)
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-VECTOR-1
+test "a counted reduction over a list with 16-bit facts becomes packed loads, multiply-high division and pmaddwd" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.releaseLlvmText(arena.allocator(), kernel);
+    try std.testing.expect(std.mem.indexOf(u8, text, "@llvm.x86.avx2.packusdw") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "@llvm.x86.avx2.pmulhu.w") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "@llvm.x86.avx2.pmadd.wd") != null);
+    // The scalar loop stays, entered after the vector part with its counter and sum.
+    try std.testing.expect(std.mem.indexOf(u8, text, "[ %vc1, %vexit1 ]") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "[ %va1, %vexit1 ]") != null);
+}
+
+// spec-case: NEW-CORE-VECTOR-1
+test "the multiply-high reciprocal is exact over the whole proven dividend range" {
+    const seven = vector.reciprocal(7, 0, 5000).?;
+    const quotient = (@as(u64, 4999) * seven.multiplier) >> (16 + @as(u6, seven.shift));
+    try std.testing.expectEqual(@as(u64, 4999 / 7), quotient);
+    const thousand = vector.reciprocal(1009, 0, 2000).?;
+    const check = (@as(u64, 2000) * thousand.multiplier) >> (16 + @as(u6, thousand.shift));
+    try std.testing.expectEqual(@as(u64, 1), check);
+    try std.testing.expectEqual(@as(?vector.Reciprocal, null), vector.reciprocal(0, 0, 10));
+}
+
+const branchy =
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    n = len(args) + 100
+    \\    values = [(j * 37 + 5) % 1009 for j in range(n)]
+    \\    flags = [(values[j] * 73 + j) % 101 < 50 for j in range(n)]
+    \\    total = 0
+    \\    for j in range(n):
+    \\        x = values[j]
+//! Inline ancestry bounds and preservation through actual loop/ownership passes.
+const std = @import("std");
+const ir = @import("ir.zig");
+const origins = @import("inline_origins.zig");
+const support = @import("test_support.zig");
+const passes = @import("passes.zig");
+
+// spec-case: NEW-CORE-S4-SITES-1
+test "inline ancestry refuses a thirty-third frame before recording a clone" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var table: origins.Table = .{};
+    var callee: ir.Function = .{ .name = "callee", .signature = .{ .params = &.{}, .ret = .i64 } };
+    try callee.blocks.append(a, .{});
+    const ref: ir.Ref = @fromBackingInt(0);
+    for (0..origins.max_depth) |depth| {
+        const clone = (try table.prepare(a, .{ .caller = 0, .callee = 1, .block = 0, .ref = ref, .span = @intCast(depth + 7) }, &callee)).?;
+        try table.setBlock(a, 0, 0, clone.outer);
+    }
+    const before = table.frames.items.len;
+    try std.testing.expect((try table.prepare(a, .{ .caller = 0, .callee = 1, .block = 0, .ref = ref, .span = 99 }, &callee)) == null);
+    try std.testing.expectEqual(before, table.frames.items.len);
+    try std.testing.expectEqual(@as(usize, 1), callee.blocks.items.len);
+    try std.testing.expectEqual(@as(usize, 0), callee.insts.items.len);
+}
+
+// spec-case: NEW-CORE-S4-SITES-1
+test "caller root overrides survive movement and duplication into a cloned block" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var table: origins.Table = .{};
+    const callee: ir.Function = .{ .name = "callee", .signature = .{ .params = &.{}, .ret = .i64 } };
+    const call: ir.Ref = @fromBackingInt(0);
+    const clone = (try table.prepare(a, .{ .caller = 0, .callee = 1, .block = 0, .ref = call, .span = 7 }, &callee)).?;
+    const context = table.context(0);
+    try context.setBlock(a, 1, clone.outer);
+    const release: ir.Ref = @fromBackingInt(1);
+    try std.testing.expectEqual(@as(?u32, clone.outer), context.at(1, release));
+    try context.setInstruction(a, release, null);
+    try std.testing.expect(context.at(1, release) == null);
+    const copied: ir.Ref = @fromBackingInt(2);
+    try context.copyInstruction(a, release, copied);
+    try context.copyBlock(a, 1, 2);
+    try std.testing.expect(context.at(2, copied) == null);
+    try std.testing.expectEqual(@as(?u32, clone.outer), context.at(2, call));
+    try table.setInstruction(a, 9, release, null);
+    try std.testing.expect(!table.functions.contains(9));
+}
+
+const looping =
+    \\def origin(xs: mut list[int], x: int, kind: int) -> int:
+    \\    xs.append(2)
+    \\    total = 0
+    \\    for i in range(x):
+    \\        if kind == 0:
+    \\            total += xs[i]
+    \\        else:
+    \\            total += xs[i] + 1
+    \\    return total
+    \\def main(args: list[str]) -> int:
+    \\    xs = [1]
+    \\    return origin(mut xs, 3, len(args))
+;
+
+// spec-case: NEW-CORE-S4-SITES-1
+test "unswitched consuming loops and ownership keep every copied read in its exact callee" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var refusal: @import("build.zig").Refusal = .{};
+    var module = try support.buildSource(a, looping, &refusal);
+    const result = try support.runPasses(a, &module, .verify);
+    try std.testing.expect(result.counts.unswitched > 0);
+    try std.testing.expect(try copiedReads(&module, &result) >= 4);
+    const ran = try support.runOwned(a, &module, .{ .release = true, .verify = true, .own = false, .analysis = support.analysis(&result) });
+    try std.testing.expectEqual(@as(u8, 1), ran.status);
+    try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "in origin at hand.my:") != null);
+    try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "in main at hand.my:") != null);
+}
+
+fn copiedReads(module: *const ir.Module, result: *const passes.Result) !usize {
+    const function = &module.functions.items[module.entry];
+    var reads: usize = 0;
+    for (function.blocks.items, 0..) |block, b| for (block.insts.items) |ref| {
+        if (function.inst(ref).op != .list_get) continue;
+        const frame = result.provenance.instruction(module.entry, @intCast(b), ref).?;
+        try std.testing.expectEqualStrings("origin", module.functions.items[result.provenance.frames.items[frame].function].name);
+        reads += 1;
+287:    const dropped = try own.elidePairs(arena.allocator(), &m.functions.items[0]);

@@ -1,0 +1,80 @@
+    28.19%  lox-release  lox-release       [.] reference_at
+            |          
+            |--23.93%--reference_at
+            |          |          
+            |           --23.89%--myl_core_free_block
+            |                     |          
+            |                     |--5.58%--interpreter::set (inlined)
+            |                     |          0x20
+            |                     |          
+            |                     |--5.41%--interpreter::enter_function (inlined)
+            |                     |          |          
+            |                     |          |--2.87%--0x20
+            |                     |          |          
+            |                     |           --2.54%--0
+            |                     |          
+            |                     |--5.31%--heap::allocate (inlined)
+            |                     |          
+            |                     |--4.13%--heap::set_env_slot (inlined)
+            |                     |          |          
+            |                     |           --3.29%--0x1
+            |                     |          
+            |                     |--1.57%--interpreter::instantiate (inlined)
+            |                     |          interpreter::call_value (inlined)
+            |                     |          interpreter::call_expr (inlined)
+            |                     |          0x4000
+            |                     |          
+            |                      --1.12%--interpreter::call_expr (inlined)
+            |          
+             --4.26%--myl_core_free_block
+                       |          
+                        --1.41%--interpreter::enter_function (inlined)
+    26.88%  lox-release  lox-release       [.] myl_core_list_copy
+            |
+            ---myl_core_list_copy
+               |          
+               |--12.10%--heap::allocate (inlined)
+               |          0x16
+               |          0x20
+               |          
+               |--7.92%--heap::set_env_slot (inlined)
+               |          |          
+               |          |--4.08%--0x2
+               |          |          
+               |           --3.84%--0x1
+               |          
+                --6.86%--interpreter::set (inlined)
+    18.10%  lox-release  lox-release       [.] myl_core_free_block
+            |          
+            |--13.72%--myl_core_free_block
+            |          |          
+            |          |--3.43%--interpreter::set (inlined)
+            |          |          0x20
+            |          |          
+            |          |--3.32%--heap::allocate (inlined)
+            |          |          
+            |          |--2.98%--interpreter::enter_function (inlined)
+            |          |          |          
+            |          |          |--1.65%--0
+            |          |          |          
+            |          |           --1.33%--0x20
+            |          |          
+            |           --1.93%--heap::set_env_slot (inlined)
+            |                     |          
+            |                      --1.53%--0x1
+            |          
+             --4.38%--reference_at
+                       |          
+                        --1.03%--heap::allocate (inlined)
+    14.32%  lox-release  libc.so.6         [.] 0x0000000000197d07
+            |          
+            |--8.64%--0x70b7c5797d09
+            |          |          
+            |          |--2.67%--interpreter::evaluate (inlined)
+            |          |          
+            |          |--1.39%--interpreter::set (inlined)
+            |          |          
+            |          |--1.14%--heap::allocate (inlined)
+            |          |          |          
+            |          |           --1.03%--0x16
+            |          |                     0x20

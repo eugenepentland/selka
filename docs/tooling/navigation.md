@@ -219,3 +219,8 @@ and exits 1.
 The same index backs two other surfaces: `mylang lint` attaches the reachable
 tests to any finding that names a declaration, and `mylang list-interfaces`
 prints the count as a `tests(N)` column.
+
+`mylang list-interfaces ENTRY.my --cost` appends the entry's release per-function
+[cost report](cost.md) after the public declarations. The cost analysis requires
+checked bodies and an executable entry. `--cost` and the JSON `--contracts`
+manifest are mutually exclusive.

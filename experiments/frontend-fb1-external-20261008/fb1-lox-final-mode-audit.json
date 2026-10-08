@@ -1,0 +1,97 @@
+{
+  "categories": {
+    "configured-debug": {
+      "duplicate_origins": {},
+      "entries": 13,
+      "files": 1,
+      "nonpassing": {},
+      "problems": {},
+      "unique_tests": 13
+    },
+    "configured-release": {
+      "duplicate_origins": {},
+      "entries": 13,
+      "files": 1,
+      "nonpassing": {},
+      "problems": {},
+      "unique_tests": 13
+    },
+    "configured-verify": {
+      "duplicate_origins": {},
+      "entries": 13,
+      "files": 1,
+      "nonpassing": {},
+      "problems": {},
+      "unique_tests": 13
+    },
+    "current-debug": {
+      "duplicate_origins": {},
+      "entries": 65,
+      "files": 26,
+      "nonpassing": {},
+      "problems": {},
+      "unique_tests": 65
+    },
+    "current-release": {
+      "duplicate_origins": {},
+      "entries": 65,
+      "files": 26,
+      "nonpassing": {},
+      "problems": {},
+      "unique_tests": 65
+    },
+    "current-verify": {
+      "duplicate_origins": {},
+      "entries": 65,
+      "files": 26,
+      "nonpassing": {},
+      "problems": {},
+      "unique_tests": 65
+    }
+  },
+  "oracle_sha256": "5ddab7ce39d576615f55676886252e4dbfff863d0d253cc003886a769c7b1a55",
+  "slowest_commands": [
+    [
+      "commands/directory-debug.json",
+      3.8813382098451257
+    ],
+    [
+      "commands/directory-verify.json",
+      3.5636880970560014
+    ],
+    [
+      "commands/directory-release.json",
+      3.442737702978775
+    ],
+    [
+      "commands/debug/configured/driver_tests.json",
+      2.898571167839691
+    ],
+    [
+      "commands/verify/configured/driver_tests.json",
+      2.6969383331015706
+    ],
+    [
+      "commands/release/configured/driver_tests.json",
+      2.646578948944807
+    ],
+    [
+      "commands/debug/driver_tests.json",
+      2.417669723974541
+    ],
+    [
+      "commands/verify/driver_tests.json",
+      2.097710410831496
+    ],
+    [
+      "commands/release/driver_tests.json",
+      2.0279393440578133
+    ],
+    [
+      "commands/debug/resolver_test.json",
+      0.7933211310300976
+    ]
+  ],
+  "source_commit": "f44302d877dfc8a01b64673e70c44b9e0c49f063",
+  "verified_command_reports": 84
+}

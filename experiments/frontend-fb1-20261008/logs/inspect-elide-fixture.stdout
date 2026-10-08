@@ -1,0 +1,488 @@
+eck = .exact });
+    const last_list = try h.emit(.{ .op = .record_get, .ty = ints, .a = last, .data = 1 });
+    const n4 = try h.emit(.{ .op = .list_len, .ty = .u64, .a = last_list });
+    // Replace element 0: the old holder (and its list) is released.
+    const fresh = try pushed(&h, ints, &.{1});
+    const replacement = try h.emit(.{ .op = .record_make, .ty = holder, .data = try h.extra(&.{ one, fresh, tag }) });
+    const hl4 = try h.emit(.{ .op = .list_set, .ty = holders, .a = hl3, .b = try h.int(.i64, 0), .data = try h.extra(&.{replacement}), .check = .exact });
+    const f1 = try h.emit(.{ .op = .list_get_field, .ty = ints, .a = hl4, .b = try h.int(.i64, 0), .data = ir.FieldPath.init(&.{1}).?.pack(), .check = .exact });
+    const n5 = try h.emit(.{ .op = .list_len, .ty = .u64, .a = f1 });
+    // Unions: a niche option and a words-form union, each holding a list.
+    const opt = try h.emit(.{ .op = .union_make, .ty = maybe, .data = 1, .a = try pushed(&h, ints, &.{3}) });
+    const opt_tag = try h.emit(.{ .op = .union_tag, .ty = .u32, .a = opt });
+    const opt_list = try h.emit(.{ .op = .union_payload, .ty = ints, .a = opt, .data = 1 });
+    const n6 = try h.emit(.{ .op = .list_len, .ty = .u64, .a = opt_list });
+    const w = try h.emit(.{ .op = .union_make, .ty = either, .data = 1, .a = try pushed(&h, ints, &.{ 4, 4 }) });
+    const w_list = try h.emit(.{ .op = .union_payload, .ty = ints, .a = w, .data = 1 });
+    const n7 = try h.emit(.{ .op = .list_len, .ty = .u64, .a = w_list });
+    const plain = try h.emit(.{ .op = .union_make, .ty = either, .data = 0, .a = try h.int(.i64, 42) });
+    // A box of a list, and a list of unions whose integer case holds no block.
+    const bx = try h.emit(.{ .op = .box_make, .ty = boxed, .a = try pushed(&h, ints, &.{9}) });
+    const bg = try h.emit(.{ .op = .box_get, .ty = ints, .a = bx });
+    const n8 = try h.emit(.{ .op = .list_len, .ty = .u64, .a = bg });
+    const ul0 = try h.emit(.{ .op = .list_new, .ty = eithers, .a = one });
+    const ul1 = try h.emit(.{ .op = .list_push, .ty = eithers, .a = ul0, .b = w });
+    const ul2 = try h.emit(.{ .op = .list_push, .ty = eithers, .a = ul1, .b = plain });
+    const n9 = try h.emit(.{ .op = .list_len, .ty = .u64, .a = ul2 });
+    try h.printValues(out, &.{ n1, n2, n3, n4, n5, n6, n7, n8, n9, opt_tag });
+    _ = try h.emit(.{ .op = .ret, .ty = .void, .a = try h.int(.i64, 0) });
+    _ = try h.finish();
+    return m;
+}
+
+/// A fresh `list[int]` holding `values`.
+fn pushed(h: *Hand, ty: ir.Type, values: []const i64) !ir.Ref {
+    var list = try h.emit(.{ .op = .list_new, .ty = ty, .a = try h.int(.i64, 1) });
+    for (values) |value| list = try h.emit(.{ .op = .list_push, .ty = ty, .a = list, .b = try h.int(.i64, value) });
+    return list;
+}
+
+const values_output = "2 2 3 3 1 1 2 1 2 1\n";
+
+// spec: NEW-CORE-RC-3
+test "records, unions and boxes with managed parts are counted field by field and freed with their children, debug and release" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var debug_module = try valuesProgram(arena.allocator());
+    const debug = try support.runOwned(arena.allocator(), &debug_module, .{});
+    try std.testing.expectEqualStrings(values_output, debug.stdout);
+    try std.testing.expectEqualStrings("", debug.stderr);
+    var release_module = try valuesProgram(arena.allocator());
+    const release = try support.runOwned(arena.allocator(), &release_module, .{ .release = true });
+    try std.testing.expectEqualStrings(values_output, release.stdout);
+    try std.testing.expectEqualStrings("", release.stderr);
+    // The list of records and the list of unions carry element layouts for the runtime.
+    try std.testing.expect(contains(release.llvm, "@myl.layout.0 = private constant [7 x i32] [i32 24, i32 2, i32 0, i32 8, i32 0, i32 16, i32 0]"));
+    try std.testing.expect(contains(release.llvm, "[i32 16, i32 1, i32 1, i32 8, i32 1, i32 0, i32 1, i32 0]"));
+}
+
+// spec-case: NEW-CORE-RC-3
+test "without the ownership pass the leak check reports every block left live at exit" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var module = try valuesProgram(arena.allocator());
+    const run = try support.runOwned(arena.allocator(), &module, .{ .own = false });
+    try std.testing.expectEqualStrings(values_output, run.stdout);
+    try std.testing.expect(contains(run.stderr, "myl-core leakcheck: "));
+    try std.testing.expect(contains(run.stderr, " blocks live at exit\n"));
+}
+
+// spec: NEW-CORE-RC-4
+test "the R-2 peephole drops a retain and release of one value with only pure reads between them" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var m: ir.Module = .{};
+    const ints = try m.intern(arena.allocator(), .{ .list = .i64 });
+    var h = try Hand.init(arena.allocator(), &m, "f", .{ .params = try arena.allocator().dupe(ir.Type, &.{ ints, ints }), .re
+//! The release passes, in order, shared by `mylang-core build`, `dump-ir --facts`
+//! and the tests: leaf inlining, loop unswitching, facts, trip-count guards (then
+//! facts again), ownership (`own.zig`, after the facts it may not disturb), and the
+//! vector plans. Debug builds run only ownership (`ownership`).
+const std = @import("std");
+const ir = @import("ir.zig");
+const facts = @import("facts.zig");
+const inline_leaves = @import("inline.zig");
+const vector = @import("vector.zig");
+const version = @import("version.zig");
+const own = @import("own.zig");
+const origins = @import("inline_origins.zig");
+
+/// Passes only allocate.
+pub const Error = std.mem.Allocator.Error;
+
+/// How the fact pass runs: `trusted` facts drive the vector lowering; `verify` keeps
+/// comparisons unfolded and plans no vectors; `sabotage`, `sabotage_widening` and
+/// `sabotage_length` are verify with one wrong rule (`facts.Sabotage`).
+pub const Mode = enum { off, trusted, verify, sabotage, sabotage_widening, sabotage_length };
+
+/// What the passes produced, per function, and what they did.
+pub const Result = struct {
+    known: []?facts.Facts,
+    plans: [][]const vector.Plan,
+    counts: Counts = .{},
+    /// Exactly the same pass events, indexed by physical Core function.
+    per_function: []FunctionStats = &.{},
+    /// Verify builds re-emit checks the fact pass has proved.
+    verifying: bool = false,
+    /// What ownership did: copy-on-write forms, retains and releases.
+    own: own.Stats = .{},
+    /// Sparse source frames of instructions and blocks cloned by these passes.
+    provenance: origins.Table = .{},
+};
+
+/// Pass events for one emitted body; cloned work belongs to its physical caller.
+pub const FunctionStats = struct { counts: Counts = .{}, own: own.Stats = .{} };
+
+/// How often each release pass changed something (`--stats`).
+pub const Counts = struct {
+    inlined: u32 = 0,
+    /// Loop copies added by unswitching and by trip-count guards.
+    unswitched: u32 = 0,
+    versioned: u32 = 0,
+    proven: u32 = 0,
+    vectorized: u32 = 0,
+};
+
+/// The debug pipeline's only pass: ownership and counting, no facts.
+pub fn ownership(arena: std.mem.Allocator, module: *ir.Module) Error!own.Stats {
+    return own.run(arena, module, .{});
+}
+
+/// Run debug ownership with the same per-function accounting as release.
+pub fn debug(arena: std.mem.Allocator, module: *ir.Module) Error!Result {
+    var result: Result = .{ .known = &.{}, .plans = &.{}, .per_function = try arena.alloc(FunctionStats, module.functions.items.len) };
+    @memset(result.per_function, .{});
+    for (module.functions.items, result.per_function, 0..) |*function, *local, index| {
+        if (function.signature.linkage != .internal) continue;
+        local.own = try own.function(arena, module, function, .{ .function_index = @intCast(index) });
+        result.own.add(local.own);
+    }
+    return result;
+}
+
+/// Run the release passes over `module`.
+pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Result {
+    try @import("fuse_text.zig").whitespace(arena, module);
+    var result: Result = .{
+        .known = try arena.alloc(?facts.Facts, module.functions.items.len),
+        .plans = try arena.alloc([]const vector.Plan, module.functions.items.len),
+        .per_function = try arena.alloc(FunctionStats, module.functions.items.len),
+    };
+    @memset(result.known, null);
+    @memset(result.plans, &.{});
+    @memset(result.per_function, .{});
+    const inlined = try arena.alloc(u32, module.functions.items.len);
+    @memset(inlined, 0);
+    result.counts.inlined = try inline_leaves.inlineLeavesCounted(arena, module, &result.provenance, inlined);
+    if (mode == .off) {
+        for (module.functions.items, result.per_function, inlined, 0..) |*function, *local, expanded, index| {
+            if (function.signature.linkage != .internal) continue;
+            local.counts.inlined = expanded;
+            local.own = try own.function(arena, module, function, .{ .provenance = &result.provenance, .function_index = @intCast(index) });
+            result.own.add(local.own);
+        }
+        return result;
+    }
+    const verify = mode != .trusted;
+    result.verifying = verify;
+    const sabotage: facts.Sabotage = switch (mode) {
+        .sabotage => .remainder,
+        .sabotage_widening => .widening,
+        .sabotage_length => .length,
+        else => .none,
+    };
+    // A first fact pass with every parameter unknown gives each call site's argument
+    // intervals; `parameterRanges` turns them into the parameter intervals the real
+    // pass starts from. It changes no function.
+    const first = try arena.alloc(?facts.Facts, module.functions.items.len);
+    for (module.functions.items, first, 0..) |*function, *slot, index| {
+        slot.* = null;
+        if (function.signature.linkage != .internal) continue;
+        const changed = try version.unswitch(arena, function, result.provenance.context(@intCast(index)));
+        result.per_function[index].counts.unswitched = changed;
+        result.counts.unswitched += changed;
+        slot.* = try facts.analyze(arena, function, .{ .fold = !verify, .sabotage = sabotage, .mark = false });
+    }
+    const parameters = try parameterRanges(arena, module, first);
+    // Closed caller bounds can prove an affine callback safe only after the
+    // all-call parameter pass. Deliberately corrupted facts cannot prove safety.
+    if (sabotage == .none) result.counts.inlined += try inline_leaves.withParametersCounted(arena, module, parameters, &result.provenance, inlined);
+    for (module.functions.items, result.known, result.plans, parameters, 0..) |*function, *slot, *plan, params, index| {
+        if (function.signature.linkage != .internal) continue;
+        const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage, .params = params };
+        var known = try facts.analyze(arena, function, options);
+        if (!verify and @import("byte_index.zig").forward(module, function, &known) != 0) {
+            // The existing fact and vector rules now see the original counted index.
+            known = try facts.analyze(arena, function, options);
+        }
+        result.counts.proven += known.proven;
+        result.per_function[index].counts.proven += known.proven;
+        // A reduction proven only under a trip bound gets a guarded copy; the facts then run again.
+        const guarded = try version.versionReductions(arena, function, known, result.provenance.context(@intCast(index)));
+        if (guarded != 0) {
+            known = try facts.analyze(arena, function, options);
+            result.counts.proven += known.proven;
+            result.per_function[index].counts.proven += known.proven;
+        }
+        result.counts.versioned += guarded;
+        result.per_function[index].counts.versioned = guarded;
+        result.per_function[index].counts.inlined = inlined[index];
+        // Ownership after the facts: the instructions and blocks it adds have none.
+        result.per_function[index].own = try own.function(arena, module, function, .{ .verify = verify, .facts = &known, .provenance = &result.provenance, .function_index = @intCast(index) });
+        result.own.add(result.per_function[index].own);
+        try extend(arena, &known, function);
+        slot.* = known;
+        // Vector code comes only from trusted facts, never in a verify build.
+        if (!verify) plan.* = try vector.plan(arena, function, known);
+        result.per_function[index].counts.vectorized = @intCast(plan.len);
+        result.counts.vectorized += @intCast(plan.len);
+    }
+    return result;
+}
+
+/// Per function, the interval of each parameter over every call that reaches it
+/// (NEW-CORE-FACTS-10), or no intervals (the parameter types' ranges).
+///
+/// A function qualifies when it is internal, no `func_ref` names it (a function value
+/// could be called from anywhere), and every reachable call is in a function the
+/// first pass analysed. Each argument's interval comes from facts computed with that
+/// caller's own parameters unknown, so it holds whatever the caller is passed, and a
+/// recursive call needs no fixed point. An argument with no interval makes its
+/// parameter unknown.
+pub fn parameterRanges(arena: std.mem.Allocator, module: *const ir.Module, first: []const ?facts.Facts) Error![]const []const ?facts.Interval {
+    const count = module.functions.items.len;
+    const out = try arena.alloc([]const ?facts.Interval, count);
+    @memset(out, &.{});
+    
+ses: u32 = 0,
+    /// `retain x … release x` pairs the peephole removed.
+    elided: u32 = 0,
+    /// Lists promoted to the stack (`promote.zig`).
+    promoted: u32 = 0,
+
+    /// Add `other`'s counts to these.
+    pub fn add(self: *Stats, other: Stats) void {
+        self.in_place += other.in_place;
+        self.tested += other.tested;
+        self.copied += other.copied;
+        self.retains += other.retains;
+        self.releases += other.releases;
+        self.elided += other.elided;
+        self.promoted += other.promoted;
+    }
+};
+
+/// The `data` of a `release` whose value may be `undef` (a phi fed by one, on a path
+/// the checker rules out): the emitter skips every null block pointer in it.
+pub const empty_release: u64 = 2;
+
+/// The `data` of a `release` whose value is statically unique (fresh, never shared):
+/// the emitter frees the block without testing its count (verify builds assert
+/// `count == 1` first).
+pub const unique_release: u64 = 1;
+
+/// The `data` of an `unreachable` that asserts a statically unique update: verify
+/// builds emit it as an `R_CORE_FACT` trap (`emit_llvm.zig`).
+pub const unique_assert: u64 = 1;
+
+/// Run the pass over every internal function of `module`.
+pub fn run(arena: std.mem.Allocator, module: *ir.Module, options: Options) Error!Stats {
+    var total: Stats = .{};
+    for (module.functions.items, 0..) |*f, index| {
+        if (f.signature.linkage != .internal) continue;
+        var local = options;
+        local.function_index = @intCast(index);
+        total.add(try function(arena, module, f, local));
+    }
+    return total;
+}
+
+/// Run the pass over one function of `module`.
+pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, options: Options) Error!Stats {
+    var stats: Stats = .{};
+    var marks: Marks = .{ .origin = if (options.provenance) |table| table.context(options.function_index) else null };
+    if (options.facts) |known| {
+        const promoted = try promotion.promote(arena, module, f, known, options.verify, marks.origin);
+        marks.stack = promoted.values;
+        stats.promoted = promoted.lists;
+        reserveFills(f, known);
+    }
+    // Popped elements are found (or read) before anything moves.
+    try markPops(.{ .arena = arena, .f = f, .origin = marks.origin }, module, &marks);
+    for (f.insts.items, 0..) |inst, index| {
+        if (flags.transferredRead(inst) and module.managed(inst.ty)) try marks.owned_get.put(arena, @intCast(index), {});
+        if (flags.transferredSlot(f, inst)) try marks.taken.put(arena, @intCast(index), {});
+    }
+    try takeFields(
+pub fn elidePairs(arena: std.mem.Allocator, f: *ir.Function) Error!u32 {
+    var dropped: u32 = 0;
+    for (f.blocks.items) |*block| {
+        const keep = try arena.alloc(bool, block.insts.items.len);
+        @memset(keep, true);
+        for (block.insts.items, 0..) |ref, i| {
+            const retain = f.inst(ref);
+            if (retain.op != .retain) continue;
+            const value = f.resolve(retain.a);
+            for (block.insts.items[i + 1 ..], i + 1..) |later_ref, j| {
+                const later = f.inst(later_ref);
+                if (later.op == .release and keep[j] and f.resolve(later.a) == value) {
+                    keep[i] = false;
+                    keep[j] = false;
+                    dropped += 1;
+                    break;
+                }
+                if (!pure(later.op)) break;
+            }
+        }
+        var rebuilt: std.ArrayList(ir.Ref) = .empty;
+        for (block.insts.items, keep) |ref, kept| if (kept) try rebuilt.append(arena, ref);
+        block.insts = rebuilt;
+    }
+    return dropped;
+}
+
+/// Operations that neither consume nor free a value nor call out.
+fn pure(op: ir.Op) bool {
+    return switch (op) {
+        .add, .sub, .mul, .div, .rem, .floor_div, .floor_rem, .neg, .bit_and, .bit_or, .bit_xor, .not, .cmp => true,
+        .fadd, .fsub, .fmul, .fdiv, .fneg, .fcmp, .int_to_float, .float_to_int, .convert => true,
+        .list_len, .list_get, .list_get_field, .str_len, .record_get, .union_tag, .union_payload, .box_get, .is_unique, .retain => true,
+        else => false,
+    };
+}
+
+// ---- IR editing -----------------------------------------------------------------
+
+/// Small edits of one function's blocks and instructions, allocating in `arena`.
+const Editor = struct {
+    arena: std.mem.Allocator,
+    f: *ir.Function,
+    origin: ?origins.Context = null,
+
+    fn frameAt(e: Editor, ref: ir.Ref) ?u32 {
+        const origin = e.origin orelse return null;
+        const where = e.locate(ref);
+        return origin.at(@intCast(where.block), ref);
+    }
+
+    fn inherit(e: Editor, ref: ir.Ref, anchor: ir.Ref) Error!void {
+        if (e.origin) |origin| try origin.setInstruction(e.arena, ref, e.frameAt(anchor));
+    }
+
+    fn newInst(e: Editor, instruction: ir.Inst) Error!ir.Ref {
+        const ref: ir.Ref = @fromBackingInt(@intCast(e.f.insts.items.len));
+        try e.f.insts.append(e.arena, instruction);
+        return ref;
+    }
+
+    fn newBlock(e: Editor) Error!ir.BlockId {
+        try e.f.blocks.append(e.arena, .{});
+        return @fromBackingInt(@intCast(e.f.blocks.items.len - 1));
+    }
+
+    fn extraOf(e: Editor, refs: []const ir.Ref) Error!u64 {
+        const start: u32 = @intCast(e.f.extra.items.len);
+        try e.f.extra.appendSlice(e.arena, refs);
+        return (ir.ExtraSlice{ .start = start, .len = @intCast(refs.len) }).pack();
+    }
+
+    fn append(e: Editor, block: ir.BlockId, instruction: ir.Inst) Error!ir.Ref {
+        const ref = try e.newInst(instruction);
+        try e.f.blocks.items[block.index()].insts.append(e.arena, ref);
+        return ref;
+    }
+
+    /// End `block` with `terminator`, recording `block` as a predecessor of each target.
+    fn terminate(e: Editor, block: ir.BlockId, terminator: ir.Inst, targets: []const ir.BlockId) Error!void {
+        _ = try e.append(block, terminator);
+        for (targets) |target| try e.f.blocks.items[target.index()].preds.append(e.arena, block);
+    }
+
+    /// The block and position of `ref`, by search (phase A moves instructions).
+    fn locate(e: Editor, ref: ir.Ref) struct { block: usize, pos: usize } {
+        for (e.f.blocks.items, 0..) |block, b| {
+            if (std.mem.indexOfScalar(ir.Ref, block.insts.items, ref)) |pos| return .{ .block = b, .pos = pos };
+        }
+        unreachable;
+    }
+
+    fn insertBefore(e: Editor, at: ir.Ref, instruction: ir.Inst) Error!ir.Ref {
+        const where = e.locate(at);
+        const ref = try e.newInst(instruction);
+        try e.inherit(ref, at);
+        try e.f.blocks.items[where.block].insts.insert(e.arena, where.pos, ref);
+        return ref;
+    }
+
+    fn insertAfter(e: Editor, at: ir.Ref, instruction: ir.Inst) Error!ir.Ref {
+        const where = e.locate(at);
+        const ref = try e.newInst(instruction);
+        try e.inherit(ref, at);
+        try e.f.blocks.items[where.block].insts.insert(e.arena, where.pos + 1, ref);
+        return ref;
+    }
+
+    /// Split the block holding `at` before it: `head` keeps the instructions before `at`
+    /// (and no terminator yet), `tail` holds `at` and the rest. The old terminator's
+    /// targets name `tail` as their predecessor now, and a loop latch moves with it.
+    fn split(e: Editor, at: ir.Ref) Error!struct { head: ir.BlockId, tail: ir.BlockId } {
+        const f = e.f;
+        const where = e.locate(at);
+        const head: ir.BlockId = @fromBackingInt(@intCast(where.block));
+        const tail = try e.newBlock();
+        if (e.origin) |origin| try origin.copyBlock(e.arena, @intCast(head.index()), @intCast(tail.index()));
+        try f.blocks.items[tail.index()].insts.appendSlice(e.arena, f.blocks.items[where.block].insts.items[where.pos..]);
+        f.blocks.items[where.block].insts.shrinkRetainingCapacity(where.pos);
+        for (successors(f, @backingInt(tail)).slice()) |succ| {
+            for (f.blocks.items[succ].preds.items) |*pred| {
+                if (pred.* == head) pred.* = tail;
+            }
+        }
+        for (f.loops.items) |*loop| {
+            if (loop.latch == head) loop.latch = tail;
+        }
+        return .{ .head = head, .tail = tail };
+    }
+
+    /// Put `insts` on the edge `from → to`, in a new block between them.
+    fn splitEdge(e: Editor, from: u32, to: u32, insts: []const ir.Ref) Error!void {
+        const f = e.f;
+        const middle = try e.newBlock();
+        if (e.origin) |origin| try origin.copyBlock(e.arena, from, @intCast(middle.index()));
+        const source: ir.BlockId = @fromBackingInt(from);
+        const target: ir.BlockId = @fromBackingInt(to);
+        try f.blocks.items[middle.index()].insts.appendSlice(e.arena, insts);
+        _ = try e.append(middle, .{ .op = .jump, .ty = .void, .data = to });
+        try f.blocks.items[middle.index()].preds.append(e.arena, source);
+        for (f.blocks.items[to].preds.items) |*pred| {
+            if (pred.* == source) {
+                pred.* = middle;
+                break;
+            }
+        }
+        const insts_from = f.blocks.items[from].insts.items;
+        const term = &f.insts.items[insts_from[insts_from.len - 1].index()];
+        const targets = ir.unpackTargets(term.data);
+        term.data = if (targets.then == target) ir.packTargets(middle, targets.otherwise) else ir.packTargets(targets.then, middle);
+        for (f.loops.items) |*loop| {
+            if (loop.latch == source and loop.header == target) loop.latch = middle;
+        }
+    }
+};
+
+/// Up to two successor blocks of `block`, from its terminator (one when both targets are equal).
+const Successors = struct {
+    buffer: [2]u32 = undefined,
+    len: usize = 0,
+
+    fn slice(self: *const Successors) []const u32 {
+        return self.buffer[0..self.len];
+    }
+};
+
+// twin-drift-ok: facts.successorsOf keeps both targets of a branch as block ids;
+// this one works on u32 indices and lists a branch's single target once.
+fn successors(f: *const ir.Function, block: u32) Successors {
+    var out: Successors = .{};
+    const insts = f.blocks.items[block].insts.items;
+    if (insts.len == 0) return out;
+    const last = f.inst(insts[insts.len - 1]);
+    switch (last.op) {
+        .jump => {
+            out.buffer[0] = @truncate(last.data);
+            out.len = 1;
+        },
+        .branch => {
+            const targets = ir.unpackTargets(last.data);
+            out.buffer[0] = @backingInt(targets.then);
+            out.len = 1;
+            if (targets.otherwise != targets.then) {
+                out.buffer[1] = @backingInt(targets.otherwise);
+                out.len = 2;
+            }
+        },
+        else => {},
+    }
+    return out;
+}
+

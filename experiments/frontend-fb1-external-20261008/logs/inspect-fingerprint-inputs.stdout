@@ -1,0 +1,138 @@
+build.zig:78:/// `MYLANG_ZIG`, which the compiler reads when neither `--zig` nor `ZIG` names one.
+build.zig:79:var tool_zig: []const u8 = "";
+build.zig:151:/// `tools_script`). `env` then adds `MYLANG_ZIG`, which depends only on this
+build.zig:157:    prefix.append(b.allocator, b.fmt("MYLANG_ZIG={s}", .{tool_zig})) catch @panic("out of memory");
+build.zig:164:/// goes after `sh -c SCRIPT with-tools MYLANG_ZIG=PATH`, before the command itself.
+build.zig:715:    // The compiler's `compiler_identity` comes from a make-phase run of
+build.zig:717:    // share one Zig cache, the way a stale digest once reached an installed compiler.
+build.zig:720:    identity_run.addFileArg(b.path("tests/compiler_identity_cache.py"));
+src/core/frontend.zig:10:pub const compiler_identity = reuse.compiler_identity;
+scripts/frontend_compare_frozen_tests.py:30:def digest(path):
+scripts/frontend_compare_frozen_tests.py:31:    return hashlib.sha256(path.read_bytes()).hexdigest()
+scripts/frontend_compare_frozen_tests.py:44:    return {str(path.relative_to(source)): digest(path) for path in sorted(paths)}
+scripts/frontend_compare_frozen_tests.py:74:        "stdout_sha256": digest(path.with_suffix(".stdout")),
+scripts/frontend_compare_frozen_tests.py:75:        "stderr_sha256": digest(path.with_suffix(".stderr")),
+scripts/frontend_compare_frozen_tests.py:152:    compiler_sha = digest(compiler)
+scripts/frontend_compare_frozen_tests.py:159:        assert digest(reference / "identity.json") == args.against_identity_sha256, "frozen identity hash mismatch"
+scripts/frontend_compare_frozen_tests.py:178:    reference_files = {str(path.relative_to(reference)): digest(path) for path in reference.rglob("*") if path.is_file()}
+scripts/frontend_compare_frozen_tests.py:179:    assert digest(Path(identity["oracle"]["path"])) == identity["oracle"]["sha256"]
+scripts/frontend_compare_frozen_tests.py:181:        assert digest(frozen_compiler_source / name) == sha, "frozen parser hash changed"
+scripts/frontend_compare_frozen_tests.py:185:    assert digest(reference / "source-manifest.json") == identity["source_manifest_sha256"]
+scripts/frontend_compare_frozen_tests.py:187:    assert all(digest(reference_source / path) == sha for path, sha in originals.items()), "frozen sources changed"
+scripts/frontend_compare_frozen_tests.py:188:    candidate_originals = {str(path.relative_to(corpus_source)): digest(path) for path in corpus.rglob("*") if path.is_file()}
+scripts/frontend_compare_frozen_tests.py:245:            "stdout_sha256": digest(folder.with_suffix(".stdout")),
+scripts/frontend_compare_frozen_tests.py:246:            "stderr_sha256": digest(folder.with_suffix(".stderr"))})
+scripts/frontend_compare_frozen_tests.py:267:        assert digest(expected_out) == receipt["stdout_sha256"]
+scripts/frontend_compare_frozen_tests.py:268:        assert digest(expected_err) == receipt["stderr_sha256"]
+scripts/frontend_compare_frozen_tests.py:309:            "reference_receipt_sha256": digest(receipt_path), "problems": problems,
+scripts/frontend_compare_frozen_tests.py:325:            assert digest(reference_source / identity["corpus"] / (name + ".my")) == saved["source_sha256"]
+scripts/frontend_compare_frozen_tests.py:328:            entry["source_sha256"] = digest(corpus / (name + ".my"))
+scripts/frontend_compare_frozen_tests.py:331:                assert digest(reference_source / saved["cases"]["path"]) == saved["cases"]["sha256"]
+scripts/frontend_compare_frozen_tests.py:332:                entry["cases"] = {"path": saved["cases"]["path"], "sha256": digest(corpus_source / saved["cases"]["path"])}
+scripts/frontend_compare_frozen_tests.py:375:        "reference_identity_sha256": digest(reference / "identity.json"),
+scripts/frontend_compare_frozen_tests.py:376:        "source_manifest_sha256": digest(output / "source-manifest.json"),
+scripts/frontend_compare_frozen_tests.py:377:        "collector": {"path": str(Path(__file__).resolve()), "sha256": digest(Path(__file__))}}
+scripts/frontend_compare_frozen_tests.py:383:        "source_manifest_unchanged": candidate_originals == {str(path.relative_to(corpus_source)): digest(path) for path in corpus.rglob("*") if path.is_file()},
+scripts/frontend_compare_frozen_tests.py:384:        "reference_sources_unchanged": all(digest(reference_source / path) == sha for path, sha in originals.items()),
+scripts/frontend_compare_frozen_tests.py:385:        "reference_files_unchanged": reference_files == {str(path.relative_to(reference)): digest(path) for path in reference.rglob("*") if path.is_file()},
+scripts/frontend_compare_frozen_tests.py:387:        "compiler_unchanged": digest(compiler) == compiler_sha}
+src/core/test_runner_options.zig:64:    seed: ?u64 = null,
+src/core/test_runner_options.zig:65:    property_runs: u32 = property.default_runs,
+src/core/test_runner_receipt.zig:28:pub const Dependency = struct { path: []const u8, digest: ?Digest };
+src/core/test_runner_receipt.zig:39:    field(&hash, frontend.compiler_identity);
+src/core/test_runner_receipt.zig:43:    field(&hash, &context.tool.digest);
+src/core/test_runner_receipt.zig:51:        .vectors = context.options.build.show.generic_vectors,
+src/core/test_runner_receipt.zig:52:        .frames = context.options.build.show.trap_frames,
+src/core/test_runner_receipt.zig:75:        var digest: Digest = undefined;
+src/core/test_runner_receipt.zig:76:        std.crypto.hash.Blake3.hash(bytes, &digest, .{});
+src/core/test_runner_receipt.zig:77:        try inputs.append(a, .{ .path = link, .digest = digest });
+src/core/test_runner_receipt.zig:87:    var digest: Digest = undefined;
+src/core/test_runner_receipt.zig:88:    hash.final(&digest);
+src/core/test_runner_receipt.zig:89:    return digest;
+src/core/test_runner_receipt.zig:133:    var digest: Digest = undefined;
+src/core/test_runner_receipt.zig:134:    walker.hash.final(&digest);
+src/core/test_runner_receipt.zig:135:    return digest;
+src/core/test_runner_receipt.zig:216:    var digest: Digest = undefined;
+src/core/test_runner_receipt.zig:217:    hash.final(&digest);
+src/core/test_runner_receipt.zig:218:    return digest;
+src/core/test_runner_receipt.zig:303:    for (paths, found) |path, *item| item.* = .{ .path = path, .digest = try fileDigest(context, path) };
+src/core/test_runner_receipt.zig:308:/// library bytes are covered by compiler_identity rather than fictitious disk paths.
+src/core/test_runner_receipt.zig:322:            try files.append(a, .{ .path = api, .digest = try fileDigest(context, api) });
+src/core/test_runner_receipt.zig:326:        var digest: Digest = undefined;
+src/core/test_runner_receipt.zig:327:        std.crypto.hash.Blake3.hash(context.case_bytes, &digest, .{});
+src/core/test_runner_receipt.zig:328:        try files.append(a, .{ .path = path, .digest = digest });
+src/core/test_runner_receipt.zig:331:        var digest: Digest = undefined;
+src/core/test_runner_receipt.zig:332:        std.crypto.hash.Blake3.hash(configured.bytes, &digest, .{});
+src/core/test_runner_receipt.zig:333:        try files.append(a, .{ .path = configured.path, .digest = digest });
+src/core/test_runner_receipt.zig:335:            std.crypto.hash.Blake3.hash(policy.bytes, &digest, .{});
+src/core/test_runner_receipt.zig:336:            try files.append(a, .{ .path = policy.path, .digest = digest });
+src/core/test_runner_receipt.zig:345:    var digest: Digest = undefined;
+src/core/test_runner_receipt.zig:346:    std.crypto.hash.Blake3.hash(bytes, &digest, .{});
+src/core/test_runner_receipt.zig:347:    if (!overridden) try files.append(a, .{ .path = path, .digest = digest });
+src/core/test_runner_receipt.zig:351:        try files.append(a, .{ .path = asset, .digest = embed.digest });
+src/core/test_runner_receipt.zig:359:        if (current == null or file.digest == null) {
+src/core/test_runner_receipt.zig:360:            if ((current == null) != (file.digest == null)) return false;
+src/core/test_runner_receipt.zig:361:        } else if (!std.mem.eql(u8, &current.?, &file.digest.?)) return false;
+src/core/test_runner_receipt.zig:397:    var digest: Digest = undefined;
+src/core/test_runner_receipt.zig:398:    std.crypto.hash.Blake3.hash(bytes, &digest, .{});
+src/core/test_runner_receipt.zig:399:    return digest;
+src/core/test_runner_receipt.zig:409:    var digest: Digest = undefined;
+src/core/test_runner_receipt.zig:410:    hash.final(&digest);
+src/core/test_runner_receipt.zig:411:    return std.fmt.allocPrint(context.arena, "{s}/tests/manifests-v2/{s}.json", .{ context.options.build.cache, std.fmt.bytesToHex(digest, .lower) });
+src/core/test_runner_receipt.zig:429:fn field(hash: *std.crypto.hash.Blake3, bytes: []const u8) void {
+src/core/tool_identity.zig:40:pub const Identity = struct {
+src/core/tool_identity.zig:42:    digest: Digest,
+src/core/tool_identity.zig:114:    return .{ .path = path, .digest = content, .generation = identity, .native_target = cpu, .inputs = inputs.len, .memo_hit = true, .cacheable = true };
+src/core/tool_identity.zig:145:    return .{ .path = path, .digest = content, .generation = first.generation, .native_target = cpu, .inputs = first.inputs.len, .memo_hit = found != null, .cacheable = cacheable };
+src/core/tool_identity.zig:172:    var digest: Digest = undefined;
+src/core/tool_identity.zig:173:    hash.final(&digest);
+src/core/tool_identity.zig:174:    return digest;
+src/core/tool_identity.zig:182:    var digest: Digest = undefined;
+src/core/tool_identity.zig:183:    hash.final(&digest);
+src/core/tool_identity.zig:184:    return digest;
+src/core/tool_identity.zig:218:    var digest: Digest = undefined;
+src/core/tool_identity.zig:219:    hash.final(&digest);
+src/core/tool_identity.zig:220:    return digest;
+src/core/tool_identity.zig:310:    var digest: Digest = undefined;
+src/core/tool_identity.zig:311:    hash.final(&digest);
+src/core/tool_identity.zig:312:    return digest;
+src/core/tool_identity.zig:334:    var digest: Digest = undefined;
+src/core/tool_identity.zig:335:    hash.final(&digest);
+src/core/tool_identity.zig:336:    return digest;
+src/core/tool_identity.zig:396:    var digest: Digest = undefined;
+src/core/tool_identity.zig:397:    hash.final(&digest);
+src/core/tool_identity.zig:398:    return digest;
+src/core/tool_identity.zig:524:fn field(hash: *std.crypto.hash.Blake3, bytes: []const u8) void {
+src/core/tool_identity.zig:576:    var digest: Digest = undefined;
+src/core/tool_identity.zig:577:    hash.final(&digest);
+src/core/tool_identity.zig:578:    return digest;
+src/core/tool_identity.zig:627:fn matchesDigest(digest: Digest, expected: []const u8) bool {
+src/core/tool_identity.zig:628:    const hexadecimal = std.fmt.bytesToHex(digest, .lower);
+src/core/tool_identity.zig:632:fn reviewedExecutable(digest: Digest) bool {
+src/core/tool_identity.zig:633:    if (matchesDigest(digest, approved_zig)) return true;
+src/core/tool_identity.zig:637:    if (matchesDigest(digest, "2398875e514133130959973c3e5b86d2a3d99c1035ec315ee6ac102406a302fb")) return true;
+src/core/tool_identity.zig:638:    return matchesDigest(digest, "b6106403c349f4f3df7c30a9417f5a028fb6a73c7c993336787a7b63c1afff50");
+src/core/tool_identity.zig:641:fn reviewedLibrary(digest: Digest) bool {
+src/core/tool_identity.zig:642:    if (matchesDigest(digest, approved_library)) return true;
+src/core/tool_identity.zig:644:    return matchesDigest(digest, "ebac2ea5add534a13068bbc01177980c5ab49aa30e14435f8c061d4a966ebbf9");
+src/core/tool_identity.zig:653:    const digest = try fileHash(std.crypto.hash.sha2.Sha256, request, .{ .path = path, .resolved = path, .info = executable });
+src/core/tool_identity.zig:654:    if (!reviewedExecutable(digest)) return false;
+src/core/tool_identity.zig:696:    const digest = (try libraryContent(request, walked.items, root)) orelse return false;
+src/core/tool_identity.zig:697:    return reviewedLibrary(digest);
+src/core/tool_identity.zig:729:    var digest: Digest = undefined;
+src/core/tool_identity.zig:730:    hash.final(&digest);
+src/core/tool_identity.zig:731:    return digest;
+src/core/tool_identity.zig:847:    try std.testing.expectEqual(cold.digest, warm.digest);
+src/core/tool_identity.zig:853:    try std.testing.expectEqual(cold.digest, repaired.digest);
+src/core/tool_identity.zig:869:    try std.testing.expect(!std.mem.eql(u8, &changed.digest, &original.digest));
+src/core/tool_identity.zig:887:    try std.testing.expectEqual(original.digest, edited.digest);
+src/core/tool_identity.zig:891:    try std.testing.expect(!std.mem.eql(u8, &added.digest, &edited.digest));
+src/core/tool_identity.zig:894:    try std.testing.expect(!std.mem.eql(u8, &removed.digest, &added.digest));
+src/core/tool_identity.zig:899:    try std.testing.expect(!std.mem.eql(u8, &overridden.digest, &removed.digest));
+src/core/tool_identity.zig:924:    try std.testing.expect(!std.mem.eql(u8, &linked.digest, &replaced.digest));
+src/core/tool_identity.zig:952:    try std.testing.expect(!std.mem.eql(u8, &changed.digest, &original.digest));
+src/core/tool_identity.zig:1016:    try std.testing.expectEqual(original.digest, candidate.digest);
+src/core/tool_identity.zig:1038:    try std.testing.expectEqual(original.digest, edited.digest);
+src/core/tool_identity.zig:1044:    try std.testing.expect(!std.mem.eql(u8, &fresh.digest, &original.digest));
+src/core/tool_identity.zig:1266:    try std.testing.expect(!std.mem.eql(u8, &initial.digest, &after.digest));
+src/core/tool_identity.zig:1293:    try std.testing.expect(!std.mem.eql(u8, &initial.digest, &(try capture(request)).digest));
