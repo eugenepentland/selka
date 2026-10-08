@@ -7650,14 +7650,13 @@ test "loadConfiguredPolicy policy identity participates in project-dependencies 
 // spec-case: MUTATION-ENFORCE-1
 test "CLI migrated corpus projects carry the checked mutation contract" {
     // The corpus pieces M3 repaired: domain methods exposed through an exported
-    // type, a generated input accessor, guest tests that allocate, and the
-    // schematic/board applications. Every one needs an explicit, narrow ceiling.
+    // type, a generated input accessor and guest tests that allocate (the
+    // schematic and board applications left with `host def`, S5-D5). Every one
+    // needs an explicit, narrow ceiling.
     for ([_][]const u8{
         "examples/modules/main.my",
         "examples/input-values/main.my",
         "tests/guest/generics.my",
-        "src/schematic/guest/main.my",
-        "src/board_trial/guest/main.my",
     }) |entry| {
         const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", entry } });
         defer testing.allocator.free(outcome.stdout);
