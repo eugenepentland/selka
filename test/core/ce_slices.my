@@ -1,0 +1,116 @@
+module ce_slices
+
+# Slices used only as a loop source (NEW-CORE-CE-LISTS-5): every answer here is the
+# base compiler's.
+
+
+record Box:
+    x0: int
+    x1: int
+    y0: int
+    y1: int
+
+
+record Item:
+    box: Box
+    text: str
+    tags: list[str]
+    kind: int
+
+
+def items(n: int) -> list[Item]:
+    out: list[Item] = []
+    for i in range(n):
+        out.append(Item(box=Box(x0=i * 3 % 17, x1=i * 3 % 17 + 6, y0=i % 5, y1=i % 5 + 3), text="t" + str(i), tags=["a" + str(i)], kind=i % 4))
+    return out
+
+
+def ordered_pairs(xs: list[Item]) -> int:
+    n = 0
+    i = 0
+    for a in xs:
+        for b in xs[i + 1:len(xs)]:
+            if b.box.x0 >= a.box.x1 + 4:
+                break
+            if b.kind == 3:
+                continue
+            n = (n * 3 + len(b.text) + len(b.tags) + b.box.y1) % 1000003
+        i += 1
+    return n
+
+
+def sum_slice(xs: list[int], a: int, b: int) -> int:
+    total = 0
+    for x in xs[a:b]:
+        total = total * 7 + x
+    return total
+
+
+def first_big(xs: list[int], a: int, b: int, limit: int) -> int:
+    for x in xs[a:b]:
+        if x > limit:
+            return x
+    return -1
+
+
+def texts(xs: list[str], a: int, b: int) -> str:
+    out = ""
+    for s in xs[a:b]:
+        out = out + s + ","
+    return out
+
+
+# The loop writes the source list: the slice keeps the values it had.
+def write_source(xs: mut list[int]) -> int:
+    total = 0
+    for x in xs[1:len(xs)]:
+        xs[0] = xs[0] + x
+        total = total + x
+    return total * 1000 + xs[0]
+
+
+def bump(xs: mut list[int]):
+    xs.append(len(xs))
+
+
+# The loop passes the source `mut`: the slice keeps its length.
+def mut_source(xs: mut list[int]) -> int:
+    n = 0
+    for x in xs[0:3]:
+        bump(mut xs)
+        n = n * 10 + len(xs) + x
+    return n
+
+
+# The loop rebinds the source.
+def rebind_source(xs: mut list[int]) -> int:
+    n = 0
+    for x in xs[1:]:
+        xs = [x, x]
+        n = n + len(xs) + x
+    return n
+
+
+# The slice outlives the loop.
+def kept_slice(xs: list[str], a: int, b: int) -> int:
+    part = xs[a:b]
+    n = 0
+    for s in part:
+        n = n + len(s)
+    part.append("zz")
+    return n * 100 + len(part) * 10 + len(xs)
+
+
+def main(out: Stream) -> int:
+    xs = items(40)
+    out.print(ordered_pairs(xs), ordered_pairs(items(0)), ordered_pairs(items(1)))
+    ns = [5, 1, 9, 2, 8, 3, 7]
+    out.print(sum_slice(ns, 1, 5), sum_slice(ns, -3, 100), sum_slice(ns, 5, 2), sum_slice(ns, -100, -4), sum_slice(ns, 7, 9), sum_slice(ns, 0, 0), sum_slice(ns, 2, -1))
+    out.print(first_big(ns, 0, 7, 6), first_big(ns, 3, 5, 6), first_big(ns, -2, 7, 8), first_big(ns, 4, 1, 0))
+    words = ["ab", "c", "def", "", "gh"]
+    out.print(texts(words, 1, 4), texts(words, -2, 10), texts(words, 3, 3))
+    w = [1, 2, 3, 4]
+    m = [4, 5, 6, 7]
+    r = [3, 4, 5]
+    out.print(write_source(mut w), mut_source(mut m), rebind_source(mut r), kept_slice(words, 1, 3), kept_slice(words, 4, 1), w[0], len(m), len(r))
+    return 0

@@ -1320,7 +1320,7 @@ const Taking = struct {
 };
 
 /// Whether every path from the entry block to `target` passes block `through`.
-fn dominatesBlock(arena: std.mem.Allocator, f: *const ir.Function, through: u32, target: u32) Error!bool {
+pub fn dominatesBlock(arena: std.mem.Allocator, f: *const ir.Function, through: u32, target: u32) Error!bool {
     if (through == 0) return true;
     const seen = try arena.alloc(bool, f.blocks.items.len);
     @memset(seen, false);
@@ -1830,11 +1830,12 @@ const Editor = struct {
 };
 
 /// Up to two successor blocks of `block`, from its terminator (one when both targets are equal).
-const Successors = struct {
+pub const Successors = struct {
     buffer: [2]u32 = undefined,
     len: usize = 0,
 
-    fn slice(self: *const Successors) []const u32 {
+    /// The successors, in terminator order.
+    pub fn slice(self: *const Successors) []const u32 {
         return self.buffer[0..self.len];
     }
 };
@@ -1847,7 +1848,8 @@ fn endsInTrap(f: *const ir.Function, block: u32) bool {
 
 // twin-drift-ok: facts.successorsOf keeps both targets of a branch as block ids;
 // this one works on u32 indices and lists a branch's single target once.
-fn successors(f: *const ir.Function, block: u32) Successors {
+/// The successor blocks of `block`, from its terminator.
+pub fn successors(f: *const ir.Function, block: u32) Successors {
     var out: Successors = .{};
     const insts = f.blocks.items[block].insts.items;
     if (insts.len == 0) return out;

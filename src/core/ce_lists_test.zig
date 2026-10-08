@@ -328,3 +328,59 @@ test "an element's part read before a mut call and used after it holds its own c
         try std.testing.expectEqual(@as(u8, 0), ran.status);
     }
 }
+
+const slice_loops =
+    \\def total(xs: list[int], a: int, b: int) -> int:
+    \\    n = 0
+    \\    for x in xs[a:b]:
+    \\        if x < 0:
+    \\            break
+    \\        n = n * 10 + x
+    \\    return n
+    \\
+    \\
+    \\def written(xs: mut list[int]) -> int:
+    \\    n = 0
+    \\    for x in xs[1:]:
+    \\        xs[0] = x
+    \\        n = n + x
+    \\    return n
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    xs = [1, 2, 3]
+    \\    out.print(total(xs, 1, 9), written(mut xs))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-CE-LISTS-5
+test "a slice used only as a loop source is iterated in place, and a slice still built gets its exact room" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const text = try support.irText(a, slice_loops);
+    // `for x in xs[a:b]` counts over `xs` from the clamped start to the clamped end: no
+    // list is built and nothing is pushed.
+    const total = functionIr(text, "total");
+    try std.testing.expectEqual(@as(usize, 0), countOp(total, "list_new"));
+    try std.testing.expectEqual(@as(usize, 0), countOp(total, "list_push"));
+    try std.testing.expectEqual(@as(usize, 1), countOp(total, "list_get"));
+    // A loop that writes the source keeps its snapshot, built with room for exactly its elements.
+    const written = functionIr(text, "written");
+    try std.testing.expectEqual(@as(usize, 1), countOp(written, "list_new"));
+    try std.testing.expect(!contains(written, "list_new list[i64] 0:i64"));
+    try std.testing.expect(contains(written, "shift_right"));
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    // Nested slice loops with `break` and `continue`, managed elements, negative, reversed,
+    // empty and out-of-range bounds, an early `return`, and loops that write, pass `mut` or
+    // rebind the source, or keep the slice.
+    for (modes) |flags| {
+        const ran = try leakChecked(a, root, "ce_slices", flags, &.{});
+        try std.testing.expectEqualStrings("788980 0 0\n806 420 0 261 0 0 3244\n9 8 -1 -1\nc,def,, ,gh, \n9010 1023 13 435 15 10 7 2\n", ran.stdout);
+        try std.testing.expectEqualStrings("", ran.stderr);
+        try std.testing.expectEqual(@as(u8, 0), ran.status);
+    }
+}
