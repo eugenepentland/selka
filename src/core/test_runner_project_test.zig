@@ -316,6 +316,7 @@ const deep_source = "module deep\n\ndef down(n: int) -> int:\n    if n == 0:\n  
     "def test_deep() -> bool:\n    return down(40000) == 40000\n\ndef test_shallow() -> bool:\n    return down(10) == 10\n";
 
 // spec: NEW-CORE-S4-FRAMES-1
+// spec-case: NEW-CORE-S5-TRACE-1
 test "a test's call depth is bounded by --max-frames, 1024 by default, on a stack mapped for the whole budget" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
@@ -328,14 +329,17 @@ test "a test's call depth is bounded by --max-frames, 1024 by default, on a stac
     const default = try context.run("deep.my", &.{ "--max-steps", "0" });
     try expectStatus(context, default, 1);
     try verdict(default.report, "deep::test_shallow", "passed");
-    try std.testing.expect(std.mem.indexOf(u8, try reasonOf(default.report, "deep::test_deep"), "error[R_FRAME_LIMIT]") != null);
-    try std.testing.expect(std.mem.indexOf(u8, try reasonOf(default.report, "deep::test_deep"), "raise it with --max-frames=N") != null);
+    // A budget's trap is a trap (NEW-CORE-S5-TRACE-1): its code, sixteen frames, the count left out and the advice.
+    const deep_reason = try reasonOf(default.report, "deep::test_deep");
+    try std.testing.expect(std.mem.startsWith(u8, deep_reason, "R_FRAME_LIMIT\n  in deep::down at "));
+    try std.testing.expect(std.mem.indexOf(u8, deep_reason, "\n  1008 frames omitted\n\ncall-depth budget exhausted; raise it with --max-frames=N") != null);
+    try std.testing.expectEqual(@as(usize, 16), std.mem.count(u8, deep_reason, "  in deep::down at "));
     // 40,002 frames (the test and 40,001 calls of `down`) run on 1.2 GiB of mapped stack, not the 1 MiB native one.
     try expectStatus(context, try runSmallStack(context, "deep.my", "--max-frames 40002 --max-memory 2G"), 0);
     try expectStatus(context, try runSmallStack(context, "deep.my", "--max-frames=40002 --max-memory=2G --release"), 0);
     const short = try runSmallStack(context, "deep.my", "--max-frames 40001 --max-memory 2G");
     try expectStatus(context, short, 1);
-    try std.testing.expect(std.mem.indexOf(u8, try reasonOf(short.report, "deep::test_deep"), "error[R_FRAME_LIMIT]") != null);
+    try std.testing.expect(std.mem.startsWith(u8, try reasonOf(short.report, "deep::test_deep"), "R_FRAME_LIMIT\n"));
     // A budget whose stack the byte ceiling cannot back is refused before anything is built.
     const refused = try context.run("deep.my", &.{ "--max-frames", "40002" });
     try expectStatus(context, refused, 2);
@@ -348,6 +352,7 @@ test "a test's call depth is bounded by --max-frames, 1024 by default, on a stac
 }
 
 // spec: NEW-CORE-S4-MEMORY-1
+// spec-case: NEW-CORE-S5-TRACE-1
 test "a test's managed heap is bounded by --max-memory and a runaway allocation traps R_MEMORY_BUDGET" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
@@ -363,8 +368,10 @@ test "a test's managed heap is bounded by --max-memory and a runaway allocation 
     try expectStatus(context, bounded, 1);
     try verdict(bounded.report, "grow::test_modest", "passed");
     try verdict(bounded.report, "grow::test_words", "passed");
-    try std.testing.expect(std.mem.indexOf(u8, try reasonOf(bounded.report, "grow::test_runaway"), "error[R_MEMORY_BUDGET]") != null);
-    try std.testing.expect(std.mem.indexOf(u8, try reasonOf(bounded.report, "grow::test_runaway"), "memory budget exhausted; raise it with --max-memory=SIZE") != null);
+    const runaway = try reasonOf(bounded.report, "grow::test_runaway");
+    try std.testing.expect(std.mem.startsWith(u8, runaway, "R_MEMORY_BUDGET\n"));
+    try std.testing.expect(std.mem.indexOf(u8, runaway, "NativeTestProcessFailed") == null);
+    try std.testing.expect(std.mem.indexOf(u8, runaway, "memory budget exhausted; raise it with --max-memory=SIZE") != null);
     // The ceiling is part of the receipt key: a lower one runs the passing tests again.
     const lower = try context.run("grow.my", &.{ "--max-steps", "0", "--max-memory=4M", "--filter", "words" });
     try expectStatus(context, lower, 1);

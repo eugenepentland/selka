@@ -162,14 +162,21 @@ fn trap(a: std.mem.Allocator, stderr: []const u8, stdout: []const u8) Error!Outc
     var rendered: std.ArrayList(u8) = .empty;
     try rendered.print(a, "{s}{s}{s}\n", .{ code, if (contract and message.len != 0) ": " else if (!contract and detail.len != 0) " " else "", if (contract) message else detail });
     var frame: []const u8 = "";
-    while (frames.next()) |line| if (std.mem.startsWith(u8, line, "  in ")) {
+    while (frames.next()) |line| {
+        // The runtime lists at most sixteen frames and counts the rest (NEW-CORE-S5-TRACE-1).
+        if (std.mem.startsWith(u8, line, "  ") and std.mem.endsWith(u8, line, " frames omitted")) try rendered.print(a, "{s}\n", .{line});
+        if (!std.mem.startsWith(u8, line, "  in ")) continue;
+        // The compiler's per-test wrapper is no frame of the program.
         if (std.mem.startsWith(u8, line["  in ".len..], "__test_")) continue;
         try rendered.print(a, "{s}\n", .{line});
         if (frame.len == 0) {
             const end = std.mem.indexOf(u8, line, " at ") orelse line.len;
             frame = line["  in ".len..end];
         }
-    };
+    }
+    // A budget's trap ends with the runtime's advice, as the old runner reported it.
+    const head = stderr[close + 1 .. head_end];
+    if (!contract and std.mem.indexOf(u8, head, failed) == null and std.mem.startsWith(u8, head, ": ")) try rendered.print(a, "\n{s}\n", .{head[2..]});
     return .{ .status = "trap", .diagnostics = rendered.items, .output = stdout, .trap = .{ .code = code, .message = message, .frame = frame } };
 }
 
@@ -196,4 +203,20 @@ test "trap preserves contract messages and old numeric detail while excluding co
     const numeric = try trap(a, "x.my:1:1: error[R_DIVISION_BY_ZERO]: native execution failed (div: left 1, right 0)\n  in x::test_a at x.my:1:1\n", "");
     try std.testing.expectEqualStrings("R_DIVISION_BY_ZERO (div: left 1, right 0)\n  in x::test_a at x.my:1:1\n", numeric.diagnostics);
     try std.testing.expectError(error.InvalidTestValue, trapMessage(a, "\x1eMYLANG-TRAP {\n", ""));
+}
+
+// spec: NEW-CORE-S5-TRACE-1
+test "a budget trap keeps its omitted-frame count and ends with the runtime's advice" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const stderr = "error[R_FRAME_LIMIT]: call-depth budget exhausted; raise it with --max-frames=N\n" ++
+        "  in x::deep at x.my:2:12\n  in x::deep at x.my:2:12\n  1008 frames omitted\n" ++
+        "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"call-depth budget exhausted\"}\n";
+    const budget = try trap(a, stderr, "");
+    try std.testing.expectEqualStrings("R_FRAME_LIMIT", budget.trap.code);
+    try std.testing.expectEqualStrings("x::deep", budget.trap.frame);
+    try std.testing.expectEqualStrings("R_FRAME_LIMIT\n  in x::deep at x.my:2:12\n  in x::deep at x.my:2:12\n  1008 frames omitted\n\ncall-depth budget exhausted; raise it with --max-frames=N\n", budget.diagnostics);
+    const wrapped = try trap(a, "error[R_STEP_LIMIT]: instruction budget exhausted\n  in x::test_a at x.my:3:9\n  in __test_trial_0 at x.my:1:1\n", "");
+    try std.testing.expectEqualStrings("R_STEP_LIMIT\n  in x::test_a at x.my:3:9\n\ninstruction budget exhausted\n", wrapped.diagnostics);
 }

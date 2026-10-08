@@ -104,7 +104,8 @@ failed `assert` keeps its `R_ASSERT` code and source location and reports the
 message written after the condition. A test's output, written through an `out:
 Stream` or `err: Stream` parameter, is captured: the runner appends it to a
 failure's text and discards it when the test passes. A trap prints its code,
-its message, the frames that led to it and the runtime's hint.
+its message, the innermost sixteen frames that led to it (then `N frames
+omitted` when there were more) and, for a budget's trap, the runtime's hint.
 
 ```console
 $ mylang test main.my
