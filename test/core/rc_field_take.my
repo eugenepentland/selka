@@ -65,6 +65,19 @@ def heap_free(h: mut Heap, slot: int):
     h.free_slots.append(slot)
 
 
+record Shelf:
+    rows: list[list[int]]
+
+
+# A row read before the write-back, which sits in another block, is read again after it:
+# it keeps its own count, so replacing that very row in place does not free it.
+def replace_row(s: mut Shelf, at: int, row: list[int]) -> int:
+    old = s.rows[at]
+    if at != 5:
+        s.rows[at] = row
+    return len(old) * 100 + old[0]
+
+
 def main(args: list[str], out: Stream) -> int:
     rt = Runtime(objects=[], count=0)
     n = len(args) * 50000
@@ -87,4 +100,8 @@ def main(args: list[str], out: Stream) -> int:
         total = total + s
         j = j + 1
     out.print(len(h.objects), len(h.marker.marks), h.allocations, total, h.objects[0], h.objects[len(h.objects) - 1])
+    shelf = Shelf(rows=[[1, 2, 3], [4, 5]])
+    first = replace_row(mut shelf, 0, [9])
+    second = replace_row(mut shelf, -1, [7, 7, 7, 7])
+    out.print(first, second, len(shelf.rows[0]), len(shelf.rows[1]), shelf.rows[0][0])
     return 0

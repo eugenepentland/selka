@@ -736,11 +736,14 @@ test "a field read finished before the read that takes the field does not stop t
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
-    // 100,000 such appends, an element read ahead of an append, and a copy of the field still
-    // read after the append (it keeps the old list), leak-free in debug and release.
+    // 100,000 such appends, an element read ahead of an append, a copy of the field still
+    // read after the append (it keeps the old list), the heap's reuse-or-grow allocation,
+    // and a row read ahead of a write-back in another block and read again after it (it
+    // keeps its own count while the write replaces it in place), leak-free in debug and
+    // release.
     for ([_][]const []const u8{ &.{}, &.{"--release"} }) |flags_| {
         const ran = try leakChecked(arena.allocator(), root, "rc_field_take", flags_, &.{ "a", "b" });
-        try std.testing.expectEqualStrings("100000 100002 99999 199998 200005 100001 -1\n66667 66667 100000 3333266667 1 99999\n", ran.stdout);
+        try std.testing.expectEqualStrings("100000 100002 99999 199998 200005 100001 -1\n66667 66667 100000 3333266667 1 99999\n301 204 1 4 9\n", ran.stdout);
         try std.testing.expectEqualStrings("", ran.stderr);
     }
 }

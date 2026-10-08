@@ -1107,26 +1107,47 @@ const Taking = struct {
         // `r.items.append(x)`) is over by then.
         for (reads) |other| {
             if (other == get) continue;
-            if (!try self.finishedBefore(other, get, def)) return false;
+            if (!try self.clearOfWindow(other, get, update, def)) return false;
         }
         return true;
     }
 
-    /// Whether `read`, its uses and the uses of every managed part read out of it (which
-    /// borrows from it in turn) all run before `get` on every path.
-    fn finishedBefore(self: Taking, read: ir.Ref, get: ir.Ref, def: u32) Error!bool {
+    /// Whether `read`, and every managed part read out of it (which borrows from it in
+    /// turn), is used only before `get` or only after `update`: never while `get` holds the
+    /// field and the update may already have changed the list in place. A part still used
+    /// after `update` is safe: `update` consumes the record, its counted owner, so
+    /// phase B promotes the part to its own count when it is read.
+    fn clearOfWindow(self: Taking, read: ir.Ref, get: ir.Ref, update: ir.Ref, def: u32) Error!bool {
         var pending: std.ArrayList(ir.Ref) = .empty;
         try pending.append(self.arena, read);
         if (try runsAfter(self.arena, self.f, self.graph.block_of, get, read, def)) return false;
         while (pending.pop()) |value| {
             for (self.graph.uses[value.index()].items) |user| {
                 if (self.graph.block_of[user.index()] == no_block) return false;
-                if (try runsAfter(self.arena, self.f, self.graph.block_of, get, user, def)) return false;
+                const later = try runsAfter(self.arena, self.f, self.graph.block_of, get, user, def);
+                if (later and !try self.onlyAfter(user, get, update)) return false;
                 const inst = self.f.inst(user);
                 if (readsPart(inst.op) and self.module.managed(inst.ty)) try addUnique(self.arena, &pending, user);
             }
         }
         return true;
+    }
+
+    /// Whether `user`, which may run after `get`, runs only once `update` has: every path
+    /// from `get` to it passes `update`.
+    fn onlyAfter(self: Taking, user: ir.Ref, get: ir.Ref, update: ir.Ref) Error!bool {
+        const block_of = self.graph.block_of;
+        const at = block_of[user.index()];
+        const get_block = block_of[get.index()];
+        const update_block = block_of[update.index()];
+        if (at == update_block) {
+            const insts = self.f.blocks.items[at].insts.items;
+            return std.mem.indexOfScalar(ir.Ref, insts, user).? > std.mem.indexOfScalar(ir.Ref, insts, update).?;
+        }
+        if (at == get_block) return false;
+        // `get` runs ahead of `update` in their shared block, so leaving it passes `update`.
+        if (get_block == update_block) return true;
+        return !try blockReachable(self.arena, self.f, get_block, at, update_block);
     }
 
     /// Whether every path from the entry block to `target` passes block `through`.
