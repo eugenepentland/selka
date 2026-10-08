@@ -1,0 +1,227 @@
+{
+ "program": "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/cex/eda-src/src/main.my",
+ "name": "eda",
+ "cases": {
+  "rds3+flat": {
+   "args": [
+    "--model",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/rds3+flat/model.sexp",
+    "--project-dir",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+    "--out-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/eda-out",
+    "--flat"
+   ],
+   "variants": {
+    "real": {
+     "median": {
+      "instructions": 988211763,
+      "cycles": 275838855,
+      "branch-misses": 690323,
+      "L1-dcache-load-misses": 2093136
+     },
+     "status": 0,
+     "output_matches_real": true
+    },
+    "base": {
+     "median": {
+      "instructions": 988211808,
+      "cycles": 276821460,
+      "branch-misses": 690726,
+      "L1-dcache-load-misses": 2074880
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    },
+    "bounds": {
+     "median": {
+      "instructions": 978495147,
+      "cycles": 272507739,
+      "branch-misses": 682171,
+      "L1-dcache-load-misses": 2063726
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 1195
+    },
+    "overflow": {
+     "median": {
+      "instructions": 971850063,
+      "cycles": 275277809,
+      "branch-misses": 686520,
+      "L1-dcache-load-misses": 2005156
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 1306
+    },
+    "checks": {
+     "median": {
+      "instructions": 955044523,
+      "cycles": 273804848,
+      "branch-misses": 677829,
+      "L1-dcache-load-misses": 2075325
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 3497
+    },
+    "unique": {
+     "median": {
+      "instructions": 260279142,
+      "cycles": 63680716,
+      "branch-misses": 121610,
+      "L1-dcache-load-misses": 585656
+     },
+     "status": -11,
+     "output_matches_real": false,
+     "llvm_lines_changed": 231
+    },
+    "norc": {
+     "median": {
+      "instructions": 39357532,
+      "cycles": 13041084,
+      "branch-misses": 45313,
+      "L1-dcache-load-misses": 76551
+     },
+     "status": -6,
+     "output_matches_real": false,
+     "llvm_lines_changed": 50323
+    },
+    "tbaa": {
+     "median": {
+      "instructions": 988209101,
+      "cycles": 275888439,
+      "branch-misses": 684400,
+      "L1-dcache-load-misses": 2066022
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 72785
+    },
+    "checks+tbaa+unique": {
+     "median": {
+      "instructions": 252630555,
+      "cycles": 62581683,
+      "branch-misses": 119047,
+      "L1-dcache-load-misses": 587068
+     },
+     "status": -11,
+     "output_matches_real": false,
+     "llvm_lines_changed": 76513
+    }
+   }
+  },
+  "labstation": {
+   "args": [
+    "--model",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/labstation/model.sexp",
+    "--project-dir",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+    "--out-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/eda-out"
+   ],
+   "variants": {
+    "real": {
+     "median": {
+      "instructions": 741474675,
+      "cycles": 191617516,
+      "branch-misses": 637696,
+      "L1-dcache-load-misses": 1886399
+     },
+     "status": 0,
+     "output_matches_real": true
+    },
+    "base": {
+     "median": {
+      "instructions": 741474483,
+      "cycles": 191115566,
+      "branch-misses": 637980,
+      "L1-dcache-load-misses": 1882449
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    },
+    "bounds": {
+     "median": {
+      "instructions": 733686610,
+      "cycles": 190853310,
+      "branch-misses": 633134,
+      "L1-dcache-load-misses": 1899225
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 1195
+    },
+    "overflow": {
+     "median": {
+      "instructions": 729896467,
+      "cycles": 189600251,
+      "branch-misses": 635880,
+      "L1-dcache-load-misses": 1887101
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 1306
+    },
+    "checks": {
+     "median": {
+      "instructions": 715911961,
+      "cycles": 189197848,
+      "branch-misses": 633528,
+      "L1-dcache-load-misses": 1890295
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 3497
+    },
+    "unique": {
+     "median": {
+      "instructions": 257229092,
+      "cycles": 61873715,
+      "branch-misses": 122747,
+      "L1-dcache-load-misses": 547864
+     },
+     "status": -11,
+     "output_matches_real": false,
+     "llvm_lines_changed": 231
+    },
+    "norc": {
+     "median": {
+      "instructions": 29948268,
+      "cycles": 10010946,
+      "branch-misses": 40613,
+      "L1-dcache-load-misses": 58601
+     },
+     "status": -6,
+     "output_matches_real": false,
+     "llvm_lines_changed": 50323
+    },
+    "tbaa": {
+     "median": {
+      "instructions": 741473551,
+      "cycles": 191879577,
+      "branch-misses": 635872,
+      "L1-dcache-load-misses": 1878285
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 72785
+    },
+    "checks+tbaa+unique": {
+     "median": {
+      "instructions": 249688485,
+      "cycles": 61270275,
+      "branch-misses": 122093,
+      "L1-dcache-load-misses": 547534
+     },
+     "status": -11,
+     "output_matches_real": false,
+     "llvm_lines_changed": 76513
+    }
+   }
+  }
+ }
+}

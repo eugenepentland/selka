@@ -1,0 +1,43 @@
+{
+ "program": "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/bench/parity/micro/intloop.my",
+ "name": "intloop-srem",
+ "cases": {
+  "run": {
+   "args": [],
+   "variants": {
+    "real": {
+     "median": {
+      "instructions": 480183040,
+      "cycles": 466304995,
+      "branch-misses": 2903,
+      "L1-dcache-load-misses": 2176
+     },
+     "status": 0,
+     "output_matches_real": true
+    },
+    "base": {
+     "median": {
+      "instructions": 480181669,
+      "cycles": 466312307,
+      "branch-misses": 2912,
+      "L1-dcache-load-misses": 2189
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    },
+    "srem": {
+     "median": {
+      "instructions": 480181664,
+      "cycles": 466304614,
+      "branch-misses": 2896,
+      "L1-dcache-load-misses": 2202
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 1
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,104 @@
+release bench/parity/lib/scan_count.my llvm=same bytes=47271 exe=same sha=805dccbe62ba9b59
+debug bench/parity/lib/scan_count.my llvm=same bytes=54300 exe=same sha=e46a38dcc994f9bd
+release bench/parity/lib/scan_replace.my llvm=same bytes=49525 exe=same sha=c190935e9e32e2a0
+debug bench/parity/lib/scan_replace.my llvm=same bytes=56561 exe=same sha=f9c4ddf1530518bd
+release bench/parity/lib/scan_split.my llvm=same bytes=53236 exe=same sha=e18ce6ff9298432f
+debug bench/parity/lib/scan_split.my llvm=same bytes=64956 exe=same sha=c6d22512574b083e
+release bench/parity/micro/alloc_churn.my llvm=same bytes=8403 exe=same sha=7f6b356c4ed0abab
+debug bench/parity/micro/alloc_churn.my llvm=same bytes=15589 exe=same sha=8afc59c993a87bcc
+release bench/parity/micro/alloc_churn_arena.my llvm=same bytes=8424 exe=same sha=854969992da79a77
+debug bench/parity/micro/alloc_churn_arena.my llvm=same bytes=15658 exe=same sha=a26b550a068c58a3
+release bench/parity/micro/bytes_scan.my llvm=same bytes=16327 exe=same sha=25e2e82e972f2830
+debug bench/parity/micro/bytes_scan.my llvm=same bytes=20550 exe=same sha=130d95b138002b7c
+release bench/parity/micro/bytes_scan_wrapping.my llvm=same bytes=14736 exe=same sha=90eef70ad4778787
+debug bench/parity/micro/bytes_scan_wrapping.my llvm=same bytes=19011 exe=same sha=5851dc3257126fab
+release bench/parity/micro/calls.my llvm=same bytes=7308 exe=same sha=d068e56769f149db
+debug bench/parity/micro/calls.my llvm=same bytes=8093 exe=same sha=8a17c3f7c1d94e77
+release bench/parity/micro/dict_count.my llvm=same bytes=26973 exe=same sha=d0dec2a11f22de2f
+debug bench/parity/micro/dict_count.my llvm=same bytes=31243 exe=same sha=036da21ffa2113d2
+release bench/parity/micro/fib.my llvm=same bytes=7333 exe=same sha=b29c6d41e1708083
+debug bench/parity/micro/fib.my llvm=same bytes=8895 exe=same sha=3a410d0d1be20d8b
+release bench/parity/micro/float_loop.my llvm=same bytes=6838 exe=same sha=2349137cb79dc789
+debug bench/parity/micro/float_loop.my llvm=same bytes=7595 exe=same sha=99e23c53016c2a50
+release bench/parity/micro/intloop.my llvm=same bytes=5761 exe=same sha=eab77b25e5e758aa
+debug bench/parity/micro/intloop.my llvm=same bytes=8375 exe=same sha=ee3747696961d1a5
+release bench/parity/micro/list_append_sum.my llvm=same bytes=12699 exe=same sha=b5d3626731664e1e
+debug bench/parity/micro/list_append_sum.my llvm=same bytes=13432 exe=same sha=586c42cddb1277c2
+release bench/parity/micro/list_records.my llvm=same bytes=12670 exe=same sha=46ff78bfd238f7b3
+debug bench/parity/micro/list_records.my llvm=same bytes=18214 exe=same sha=1ec43d6d2b8aa1ae
+release bench/parity/micro/list_records_wrapping.my llvm=same bytes=11066 exe=same sha=4ac7e67a25d6cbf5
+debug bench/parity/micro/list_records_wrapping.my llvm=same bytes=16678 exe=same sha=97849f5c1079f35b
+release bench/parity/micro/records.my llvm=same bytes=9368 exe=same sha=6b332bc58f048884
+debug bench/parity/micro/records.my llvm=same bytes=11754 exe=same sha=9401589de02c9fd2
+release bench/parity/micro/str_build.my llvm=same bytes=14536 exe=same sha=0cd31a109b985762
+debug bench/parity/micro/str_build.my llvm=same bytes=19205 exe=same sha=8de8556041e9273a
+release bench/parity/suite/binary_trees.my llvm=same bytes=36822 exe=same sha=413361af47b8e84b
+debug bench/parity/suite/binary_trees.my llvm=same bytes=41653 exe=same sha=9678bbb9dcc3be5d
+release bench/parity/suite/binary_trees_arena.my llvm=same bytes=36873 exe=same sha=a1b65e6c6a2a76cf
+debug bench/parity/suite/binary_trees_arena.my llvm=same bytes=41741 exe=same sha=b671732d36763b79
+release bench/parity/suite/binary_trees_recursive.my llvm=same bytes=31431 exe=same sha=d72eeb2bfdd6ccb4
+debug bench/parity/suite/binary_trees_recursive.my llvm=same bytes=36301 exe=same sha=7d5654ae661f2783
+release bench/parity/suite/fannkuch_redux.my llvm=same bytes=89078 exe=same sha=2fec8cf673f2905d
+debug bench/parity/suite/fannkuch_redux.my llvm=same bytes=110108 exe=same sha=3b25bc79f9b1fb74
+release bench/parity/suite/fannkuch_redux_array.my llvm=same bytes=46102 exe=same sha=31efc35271463662
+debug bench/parity/suite/fannkuch_redux_array.my llvm=same bytes=51418 exe=same sha=4fef1afc828dd5e5
+release bench/parity/suite/fannkuch_redux_tuned.my llvm=same bytes=43527 exe=same sha=fe87520c3913e62a
+debug bench/parity/suite/fannkuch_redux_tuned.my llvm=same bytes=48009 exe=same sha=c85ff70c89733425
+release bench/parity/suite/knucleotide.my llvm=same bytes=52849 exe=same sha=9cb6588e6cec4ef0
+debug bench/parity/suite/knucleotide.my llvm=same bytes=69847 exe=same sha=ad9730a45902ece5
+release bench/parity/suite/knucleotide_arena.my llvm=same bytes=54643 exe=same sha=e0bd72e7313bb6af
+debug bench/parity/suite/knucleotide_arena.my llvm=same bytes=71847 exe=same sha=762ff53567f82963
+release bench/parity/suite/knucleotide_tuned.my llvm=same bytes=62707 exe=same sha=bfcb8e6405fb05ba
+debug bench/parity/suite/knucleotide_tuned.my llvm=same bytes=81364 exe=same sha=18c00edf307efb8a
+release bench/parity/suite/mandelbrot.my llvm=same bytes=20838 exe=same sha=ef5c606ef7adc295
+debug bench/parity/suite/mandelbrot.my llvm=same bytes=23903 exe=same sha=fb3975f183987391
+release bench/parity/suite/matmul.my llvm=same bytes=234404 exe=same sha=4641271fbae21b1f
+debug bench/parity/suite/matmul.my llvm=same bytes=84187 exe=same sha=f507f4ba3c7c3fbb
+release bench/parity/suite/matmul_flat.my llvm=same bytes=43640 exe=same sha=82c7463021d4b9ca
+debug bench/parity/suite/matmul_flat.my llvm=same bytes=63523 exe=same sha=659df5b9de37b816
+release bench/parity/suite/matmul_tuned.my llvm=same bytes=68393 exe=same sha=0deabcf8c978afe3
+debug bench/parity/suite/matmul_tuned.my llvm=same bytes=72371 exe=same sha=e3a9d8dcf0bd832e
+release bench/parity/suite/nbody.my llvm=same bytes=1449454 exe=same sha=6b6f52c2188c08bd
+debug bench/parity/suite/nbody.my llvm=same bytes=161804 exe=same sha=9713e0a3c00fe29a
+release bench/parity/suite/nbody_class.my llvm=same bytes=1457158 exe=same sha=8d6ad5280dc867c5
+debug bench/parity/suite/nbody_class.my llvm=same bytes=162590 exe=same sha=f39098739c891a72
+release bench/parity/suite/raytrace.my llvm=same bytes=49060 exe=same sha=fbe7b87478bfce20
+debug bench/parity/suite/raytrace.my llvm=same bytes=52443 exe=same sha=97b98c2335bc823f
+release bench/parity/suite/raytrace_tuned.my llvm=same bytes=40495 exe=same sha=c16d8bbd52712eae
+debug bench/parity/suite/raytrace_tuned.my llvm=same bytes=47560 exe=same sha=90c0c4745b56acc1
+release bench/parity/suite/sieve.my llvm=same bytes=34255 exe=same sha=be22f79fc87a68cf
+debug bench/parity/suite/sieve.my llvm=same bytes=39134 exe=same sha=5f52727e91e1bf79
+release bench/parity/suite/sieve_tuned.my llvm=same bytes=38365 exe=same sha=a0994f3ff39d2e3f
+debug bench/parity/suite/sieve_tuned.my llvm=same bytes=40951 exe=same sha=88225d954de084e0
+release bench/parity/suite/sort_builtin.my llvm=same bytes=22840 exe=same sha=ae20aa63aa162c3b
+debug bench/parity/suite/sort_builtin.my llvm=same bytes=30045 exe=same sha=ddf088ef8a6fe6bf
+release bench/parity/suite/sort_quick.my llvm=same bytes=44275 exe=same sha=459d7b8c39e8df71
+debug bench/parity/suite/sort_quick.my llvm=same bytes=63340 exe=same sha=7cfdcd13e75739d9
+release bench/parity/suite/sort_records.my llvm=same bytes=23945 exe=same sha=c19bad21f6aca484
+debug bench/parity/suite/sort_records.my llvm=same bytes=32286 exe=same sha=0099f8c26e91ab5c
+release bench/parity/suite/sort_records_keyed.my llvm=same bytes=24108 exe=same sha=5501be2c492cc3cb
+debug bench/parity/suite/sort_records_keyed.my llvm=same bytes=33160 exe=same sha=cbca53c54e70fdbb
+release bench/parity/suite/sort_records_sorted.my llvm=same bytes=24678 exe=same sha=e7bf9f38b6a9d9b1
+debug bench/parity/suite/sort_records_sorted.my llvm=same bytes=33283 exe=same sha=c36443d897fcfd14
+release bench/parity/suite/spectral_norm.my llvm=same bytes=63715 exe=same sha=793af9ebab8e23e7
+debug bench/parity/suite/spectral_norm.my llvm=same bytes=83887 exe=same sha=79579aa7849c737e
+release bench/parity/suite/spectral_norm_tuned.my llvm=same bytes=79006 exe=same sha=3412b4c566e35c2f
+debug bench/parity/suite/spectral_norm_tuned.my llvm=same bytes=79395 exe=same sha=26b0bd8966b3ff7f
+release bench/parity/suite/text_ops.my llvm=same bytes=204536 exe=same sha=40c87955bfb50af5
+debug bench/parity/suite/text_ops.my llvm=same bytes=83086 exe=same sha=eac29c4662a54c8e
+release bench/parity/suite/text_ops_tuned.my llvm=same bytes=70709 exe=same sha=bc8c35f26b066f5e
+debug bench/parity/suite/text_ops_tuned.my llvm=same bytes=80925 exe=same sha=02a8b0ce6f4b6ba7
+release .mylang-cache/lox/ports/mylang/main.my llvm=same bytes=3946067 exe=DIFFER sha=dc33df4bc2387de8
+debug .mylang-cache/lox/ports/mylang/main.my llvm=same bytes=3907151 exe=DIFFER sha=3e885d87749d8892
+release .mylang-cache/cex/eda-src/src/main.my llvm=same bytes=45848005 exe=DIFFER sha=1e1af92a752743f2
+debug .mylang-cache/cex/eda-src/src/main.my llvm=same bytes=14089202 exe=DIFFER sha=8a8f557747ee7874
+SUMMARY llvm_same=94 llvm_differ=0
+
+real	0m59.849s
+user	0m50.108s
+sys	0m13.277s
+# Executables: the 45 parity programs link byte-identical executables in both modes.
+# Lox and EDA executables differ only in the runtime object's DWARF comp_dir (the base
+# compiler was built from an exported tree at .tmp/pm/basebuild/src); with
+# `objcopy --strip-debug` all four are byte-identical
+# (Lox release sha256 3feec4143aff8b10285f81ffac5c10bfedb1f2b2f8fdf3a90c22ec1e88313e5d).
