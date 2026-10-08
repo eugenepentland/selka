@@ -1,0 +1,21 @@
+test-cli
++- run test w
+guardian/test: 6 test(s) selected by filter: "CLI list-interfaces", "CLI help answers" — 4 match by name, 2 unnamed test block(s) run regardless
+guardian/test: test wall 0.56s; slowest over 50ms:
+guardian/test:   0.29s  integration.test.CLI list-interfaces --cost output appends exact release costs without changing the default listing
+guardian/test:   0.21s  integration.test.CLI list-interfaces renders capability parameters with their Python spelling
+guardian/test:   0.05s  integration.test.CLI list-interfaces prints a tests column from the shared reachability index
+guardian/test: PASS — 6 passed
+guardian/test: RESULT {"passed":6,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/f42a4e19b3b1b407de3e872eacfbfd14/test "--guardian-filter=CLI list-interfaces" "--guardian-filter=CLI help answers" --cache-dir=./.zig-cache --seed=0x50eb7417 --listen=-
+
+Build Summary: 8/8 steps succeeded; 6/6 tests passed
+test-cli success
++- run test 6 pass (6 total) 580ms MaxRSS:60M
+   +- compile test debug native success 907ms MaxRSS:157M
+      +- options success
+         +- compile exe mylang debug native cached 15ms MaxRSS:41M
+            +- run exe build-identity (build_identity) cached
+            |  +- compile exe build-identity debug native cached 9ms MaxRSS:40M
+            +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 9ms MaxRSS:41M
+

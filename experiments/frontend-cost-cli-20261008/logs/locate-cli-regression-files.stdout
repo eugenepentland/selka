@@ -1,0 +1,14 @@
+test/integration.zig:732:    const help = try runInterfaces(&.{"--help"});
+test/integration.zig:3570:    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "list-interfaces", path } });
+test/integration.zig:3584:    const hidden = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "list-interfaces", path } });
+test/integration.zig:3590:    try invoke("list-interfaces",
+test/integration.zig:3594:    try invoke("list-interfaces",
+test/integration.zig:3605:    try invokeOptions("list-interfaces", "module input", &.{"--check"}, 2, "", "usage:");
+test/integration.zig:3608:test "CLI list-interfaces renders capability parameters with their Python spelling" {
+test/integration.zig:3620:    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "list-interfaces", path } });
+test/integration.zig:5860:    for ([_][]const u8{ "--help", "-h", "help" }) |flag| {
+test/integration.zig:8066:    try args.appendSlice(testing.allocator, &.{ compiler_path, "list-interfaces", "--contracts", entry });
+test/integration.zig:8951:test "CLI list-interfaces prints a tests column from the shared reachability index" {
+test/integration.zig:8971:    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "list-interfaces", path } });
+test/integration.zig:9122:    const listed = try contractCommand(&.{ compiler_path, "list-interfaces", entry });
+test/integration.zig:9126:    const manifest = try contractCommand(&.{ compiler_path, "list-interfaces", "--contracts", entry });

@@ -1,0 +1,4 @@
+module interfaces v1; declarations/signature visibility checked; bodies not type checked
+module input
+  export function changed def(xs:list[i64])->list[i64] effects() ceiling(managed_allocation) tests(0)
+  export function unused def()->i64 effects() ceiling(managed_allocation) tests(0)

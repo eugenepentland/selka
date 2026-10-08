@@ -1,0 +1,3 @@
+input.my:2:26: error[E_UNKNOWN_SYMBOL]: declaration is not present in the resolved module
+  public def answer(value: Unknown) -> int:
+                           ^

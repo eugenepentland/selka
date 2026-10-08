@@ -1,0 +1,34 @@
+{
+  "command": [
+    "python3",
+    "setup separate cost CLI evidence timer"
+  ],
+  "elapsed_seconds": 0.00027238414622843266,
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "other_heavy_processes": [
+    "    PID COMMAND         COMMAND"
+  ],
+  "exit_code": 0,
+  "phase": "evidence setup; no build/test"
+}

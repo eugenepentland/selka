@@ -1,0 +1,16 @@
+src/main.zig:57:/// The first screen of `mylang --help`: the commands an everyday edit loop uses,
+src/main.zig:63:    \\Everyday commands:
+src/main.zig:78:    \\  mylang list-interfaces ENTRY.my                 every module's public declarations
+src/main.zig:101:    "t-module|fmt-project|list-modules|list-interfaces|list-" ++
+src/main.zig:237:    // the everyday commands first, then the full reference, and exit 0.
+src/main.zig:238:    if (args.len == 2 and (std.mem.eql(u8, args[1], "--help") or std.mem.eql(u8, args[1], "-h") or std.mem.eql(u8, args[1], "help"))) {
+src/main.zig:399:        .@"list-interfaces",
+src/main.zig:533:        .@"list-interfaces",
+src/main.zig:664:    @"list-interfaces",
+src/main.zig:724:    /// `list-interfaces --contracts` emits declaration-level provider contracts.
+src/main.zig:869:            if (self.command != .@"list-interfaces" or self.contracts) return error.Usage;
+src/main.zig:1873:    // `list-interfaces` is the declaration/interface gate: it parses every module
+src/main.zig:2185:/// bodies: `list-interfaces` and `api`. Null for every other command.
+src/main.zig:2188:        .@"list-interfaces" => try listInterfaces(init, project, parsed, sources.syntax, sources.frontend),
+tests/test_deepseek_tool_audit.py:260:        self.assertEqual(audit.build_dimensions('zig build --help | head'), ('install', None, 'default', 'default'))
+tests/diagnostic_output.py:133:    _, messages = invoke(compiler, 'list-interfaces', entry, status=1)

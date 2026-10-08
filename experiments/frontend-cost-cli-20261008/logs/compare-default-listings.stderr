@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli/experiments/frontend-cost-cli-20261008/tools/compare-listing.py", line 61, in <module>
+    assert plain[2] == cost[2] == listed[2] == b"", case
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: reachable

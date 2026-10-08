@@ -1,0 +1,519 @@
+LINES 35-115
+const frontend_label = "frontend";
+/// Located `mylang.json` failure rendering shared by every loading command.
+const config_error_format = "{s}:{d}:{d}: error[E_PROJECT_CONFIG]: {s}\n";
+const std = @import("std");
+const language = @import("mylang");
+/// The compiler's language module, for command files the unit root also compiles.
+pub const compiler_language = language;
+const invalidation = @import("invalidation.zig");
+const diagnostic_output = language.diagnostic_output;
+const Reporting = struct {
+    timings: bool = false,
+    timings_json: bool = false,
+    /// `--report` asks one-shot commands for an actual-work/reuse receipt.
+    report: bool = false,
+    /// `--explain-invalidation` asks for a stage-by-stage baseline comparison.
+    explain_invalidation: bool = false,
+    diagnostics: ?diagnostic_output.Format = null,
+    /// Whether any timing/reporting sink asked for a machine-readable receipt.
+    fn measured(self: Reporting) bool {
+        return self.timings_json or self.report;
+    }
+};
+/// The first screen of `mylang --help`: the commands an everyday edit loop uses,
+/// where the guides are, and the navigation commands a large project needs.
+const everyday_help =
+    \\mylang: a Python-shaped, statically checked language compiled to native code.
+    \\New here? `mylang docs primer` prints the language on one page.
+    \\
+    \\Everyday commands:
+    \\  mylang check FILE.my              type-check without building
+    \\  mylang fix FILE.my [--check]     apply safe diagnostic repairs
+    \\  mylang run FILE.my [-- ARGS...]   build natively and run; arguments after --
+    \\  mylang build FILE.my -o OUT       native executable, a debug build one unit per module
+    \\  mylang build FILE.my -o OUT --release   optimized whole-program LLVM build, for shipping or timing
+    \\  mylang test FILE.my|DIR           run the public test_* functions
+    \\  mylang fmt FILE.my [--check]      canonical formatting
+    \\  mylang docs [TOPIC]               the user guides built into this compiler
+    \\  mylang reference --query TERM     look up a feature or an error code such as E_MODULE_NAME
+    \\
+    \\Working in a large project:
+    \\  mylang context ENTRY.my --symbol=module::name   one bounded answer about a declaration
+    \\  mylang context ENTRY.my --at=FILE:LINE:COLUMN   the same for the declaration at a position
+    \\  mylang tests-for ENTRY.my module::name          the tests that reach a declaration (also module.name)
+    \\  mylang list-interfaces ENTRY.my                 every module's public declarations
+    \\  mylang api ENTRY.my --write|--check             the checked-in .api interface file beside each module
+    \\  mylang index-project ENTRY.my                   declaration counts per module; --module=NAME, --symbol=NAME for records
+    \\  mylang test ENTRY.my --affected --against REF   only the tests an edit since REF can reach
+    \\
+;
+/// Every command and option, after `everyday_help`, and what a malformed front-end
+/// command line prints. `build`, `run`, `run-project`, `test`, `dump-ir`,
+/// `dump-typed` and `coverage` print their own usage (`src/core/cli.zig`).
+const usage = "usage: mylang build <file.my> (-o <output> | --run [-- ARGS...]) [--release] [--link FILE.c]... (native build; `mylang build` prints the options)\n" ++
+    "       mylang run <file.my> [options] [-- ARGS...] | run-project <entry.my> [options] [-- ARGS...] (build and run; `mylang run` prints the options)\n" ++
+    "       mylang test <entry.my|directory> [--filter GLOB] [--json] [--release] [--affected --against REF] (run the public test_* functions)\n" ++
+    "       mylang dump-ir <file.my> [--facts] | dump-typed <file.my> [FUNCTION] | coverage <file.my>... (developer views of the new core)\n" ++
+    "       mylang fix [--check] <entry.my|directory> (apply every structured diagnostic repair)\n" ++
+    "       mylang doc-coverage [<repo-root>] (every implemented feature and standard export needs a documented example)\n       mylang " ++
+    "doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose] (run every fenced documentation example)\n       mylang " ++
+    "reference --query TERM [--format=text|json] (compiler-derived facts from this executable)\n       mylang " ++
+    "docs [TOPIC] (list the user guides built into this executable, or print one)\n       mylang " ++
+    "packages lock CONFIG.json --output LOCK.json | build ENTRY.my --lock LOCK.json [--command C] [--receipt FILE] (offline locked local packages)\n       mylang " ++
+    "dump-tokens <file.my> (stage-0 `tokens-v1` JSON on stdout; lexical failures exit 1)\n       mylang " ++
+    "interfaces emit|check|oracle <entry.my> | show <module.myi> (per-module interface artifacts; `mylang interfaces` prints the options)\n       mylang " ++
+    "<schema-project|input-module|check|di" ++
+    "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
+    "t-module|fmt-project|list-modules|list-interfaces|list-" ++
+    "declarations|check" ++
+    "-project|check-module|check-policy> <file.my>\n  schema-project: --schema-report (include " ++
+    "checked source and compiler identities)\n  " ++
+    "check: type-check a program; a file that declares no main is checked as a library, like check-module; " ++
+    "a file that opens with a module header or an import/export directive checks its reachable module graph\n  " ++
+    "check-module: type-check a library module and its imports without an executable main\n  " ++
+    "input-module: reads a typed JSON manifest and writes generated " ++
+    "module source\n  " ++
+    "schema-project: --inputs=manifest.json (repeat for up to 16 modules)\n  " ++
+    "discover-duplicates/discover-project-duplicates: --min-nodes=N " ++
+    "--population=production|tests|generated|reference|intentional --timings --approximate " ++
+    "--max-work=N\n  report-quality/report-project-quality: --max-function-lines=N " ++
+    "--max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a " ++
+    "signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  " ++
+LINES 690-750
+
+/// `index-project` view switches: `--full` for the complete `navigation-v1`
+/// document, or the `--module`, `--symbol` and `--kind` filters of a
+/// selection. None of them asks for the default bounded summary.
+const IndexOptions = struct {
+    full: bool = false,
+    selection: language.navigation_views.Selection = .{},
+
+    /// The document these switches ask for.
+    fn view(self: IndexOptions) language.navigation_views.View {
+        if (self.full) return .full;
+        const selected = self.selection;
+        if (selected.module != null or selected.symbol != null or selected.kind != null) return .{ .selection = selected };
+        return .summary;
+    }
+
+    /// `--full` publishes everything, so it takes no filter, and `--kind` names
+    /// one of the kinds a navigation symbol carries.
+    fn validate(self: IndexOptions) error{Usage}!void {
+        const selected = self.selection;
+        if (self.full and (selected.module != null or selected.symbol != null or selected.kind != null)) return error.Usage;
+        const kind = selected.kind orelse return;
+        for (language.navigation.kinds) |known| if (std.mem.eql(u8, known, kind)) return;
+        return error.Usage;
+    }
+};
+
+const Parsed = struct {
+    schema_report: bool,
+    inputs: [16][]const u8,
+    input_count: usize,
+    policy: ?[]const u8,
+    format_check: bool,
+    write: bool,
+    /// `list-interfaces --contracts` emits declaration-level provider contracts.
+    contracts: bool,
+    quality: language.quality.Options,
+    command: Command,
+    path: []const u8,
+    discovery: language.duplicates.Options,
+    reporting: Reporting,
+    /// `lint` switches; ignored by every other command.
+    lint: language.lint.Options,
+    /// `tests-for` subject: the qualified declaration name to query.
+    subject: ?[]const u8,
+    /// `context` selector, budget and optional baseline.
+    context: ContextOptions,
+    /// `index-project` view: summary, selection or `--full`.
+    index: IndexOptions,
+    /// `api-diff` baseline to compare against, or the path to write.
+    api_against: ?[]const u8,
+    api_write: ?[]const u8,
+    api_json: bool,
+    /// `--no-cache` disables all persistent frontend reuse for this command.
+    no_cache: bool,
+    /// `--cache-dir` selects the cache root; null uses the default location.
+    cache_dir: ?[]const u8,
+    /// Persistent frontend cache opened by `run` for commands that reuse frontend
+    /// work; null for commands (or sessions) that do not.
+    frontend: ?*language.frontend_cache.Cache = null,
+    /// Persistent checked-body store opened by `run`. It shares the existing
+LINES 840-885
+    api_against: ?[]const u8 = null,
+    api_write: ?[]const u8 = null,
+    api_json: bool = false,
+    no_cache: bool = false,
+    friction_path: ?[]const u8 = null,
+    cache_dir: ?[]const u8 = null,
+    saw_min: bool = false,
+    saw_population: bool = false,
+    saw_work: bool = false,
+    /// `--cache-dir` is shared by every frontend-caching command.
+    fn cacheDirectoryOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (!std.mem.startsWith(u8, arg, cache_directory_prefix)) return false;
+        if (self.cache_dir != null or arg.len == cache_directory_prefix.len) return error.Usage;
+        self.cache_dir = arg[cache_directory_prefix.len..];
+        return true;
+    }
+
+    /// A `tests-for` subject is its second positional argument; the first is
+    /// the entry file. Any other command rejects a second positional.
+    fn subjectOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (self.command != .@"tests-for" or self.subject != null) return false;
+        if (self.path == null or std.mem.startsWith(u8, arg, "-")) return false;
+        self.subject = arg;
+        return true;
+    }
+
+    fn surfaceOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (try self.subjectOption(arg)) return true;
+        if (std.mem.eql(u8, arg, "--contracts")) {
+            if (self.command != .@"list-interfaces" or self.contracts) return error.Usage;
+            self.contracts = true;
+            return true;
+        }
+        if (std.mem.eql(u8, arg, "--schema-report")) {
+            if (self.command != .@"schema-project" or self.schema_report) return error.Usage;
+            self.schema_report = true;
+            return true;
+        }
+        if (std.mem.startsWith(u8, arg, inputs_prefix)) {
+            switch (self.command) {
+                .@"schema-project", .@"check-session", .@"project-dependencies" => {},
+                else => return error.Usage,
+            }
+            if (self.input_count == self.inputs.len or arg.len == inputs_prefix.len) return error.Usage;
+            const input = arg[inputs_prefix.len..];
+            for (self.inputs[0..self.input_count]) |previous| if (std.mem.eql(u8, previous, input)) return error.Usage;
+LINES 1820-1895
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return null,
+    };
+    return std.fs.path.dirname(config orelse return null);
+}
+
+fn entryLocation(init: Context, path: []const u8) !EntryLocation {
+    if (try project_config.testEntryLocation(init.gpa, init.io, path)) |location| {
+        return .{ .root = location.root, .name = location.name, .owned = location };
+    }
+    const basename = std.fs.path.basename(path);
+    return .{ .root = std.fs.path.dirname(path) orelse ".", .name = basename[0 .. basename.len - 3] };
+}
+
+/// How long a project request's loaded graph must outlive the request itself.
+const Lifetime = enum {
+    /// A one-shot command: the process exits right after, so an optimized
+    /// build skips tearing the project arena down page by page.
+    process,
+    /// A request inside a long-lived session, which must release everything.
+    session,
+};
+
+fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_cache.Cache, verdict: ?*language.check_cache.Cache, functions: ?*language.semantic_cache.Cache, lifetime: Lifetime) !u8 {
+    const frontend = parsed.frontend;
+    const frontend_start = if (parsed.reporting.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
+    const path = parsed.path;
+    const basename = std.fs.path.basename(path);
+    if (!validEntryBasename(basename)) {
+        try init.text("list-modules: entry must be an identifier.my file; imports resolve beneath its directory\n");
+        return 2;
+    }
+    init.timings.begin("source_load_parse", false);
+    const location = try entryLocation(init, path);
+    defer location.deinit(init.gpa);
+    var files: ModuleFiles = .{ .io = init.io, .root = location.root, .embed_root = try embedRoot(init, path) };
+    files.inputs = (try prepareInputs(init, parsed, location.name)) orelse return 2;
+    var project = language.project.Project.init(init.gpa);
+    defer if (lifetime == .session or std.debug.runtime_safety) project.deinit();
+    if (try loadModules(init, &project, &files, location.name, try projectLimits(init, parsed))) |status| return status;
+    init.timings.counts.modules = project.modules.items.len;
+    init.timings.counts.source_bytes = project.counts.bytes;
+    init.timings.end();
+    // Required architectural policy is a frontend gate: discover and evaluate
+    // it after the resolved graph is loaded but before any cached success can be
+    // replayed. A project without `mylang.json` keeps its previous behavior.
+    var configured = loadConfiguredPolicy(init, parsed, &project, frontend, verdict) catch |err| return policyFailureStatus(err);
+    defer configured.deinit();
+    try foldInterfaceFiles(init, &configured, &project, files.root, .{ .verdict = verdict, .frontend = frontend });
+    try foldEmbeds(&configured, &project, .{ .verdict = verdict, .frontend = frontend });
+    const policy_receipt = try configuredPolicyReceipt(init.arena.allocator(), &configured);
+    if (try surfaceProject(init, &project, parsed)) |status| return status;
+    if (try replayStoredVerdict(init, parsed, &project, .{ .verdict = verdict, .frontend = frontend })) return 0;
+    // `list-interfaces` is the declaration/interface gate: it parses every module
+    // and checks exported signatures without checking bodies. `--contracts`
+    // publishes those declared contracts for provider validation.
+    if (try declarationCommand(init, &project, parsed, .{ .syntax = cache, .frontend = frontend, .root = files.root })) |status| return status;
+    const output = if (parsed.command != .@"list-modules") result: {
+        var index = (try buildIndex(init, &project, cache, frontend)) orelse return partialNavigation(init, &project, parsed, &files);
+        init.timings.begin("source_merge", false);
+        var compilation = try language.project_compile.Compilation.init(&index);
+        init.timings.end();
+        if (try earlyProjectCheck(init, parsed, &compilation, functions, &files, &configured)) |status| return status;
+        const semantic_before = if (functions) |f| f.statistics else null;
+        // `check` needs no checked trees: unchanged bodies are stood in by the
+        // summaries the entry's last successful check left.
+        var summaries: language.semantic_summary.Request = .{};
+        try openSummaries(init, parsed, &project, functions, &summaries);
+        defer closeSummaries(functions);
+        // `context` answers about a project that does not check: it publishes the
+        // declarations and diagnostics it did recover and names the reason the
+        // resolved relationships are missing, rather than failing like a gate.
+        var unchecked_reason: ?[]const u8 = null;
+        compilation.checkWithCache(functions) catch |err| switch (err) {
+            error.SourceError => {
+                recordCheckWork(init, functions, semantic_before, compilation.program);
+LINES 2100-2205
+}
+
+/// Source-loading limits from the entry project's `mylang.json`, or the
+/// built-in defaults when no configuration exists or it cannot be read. Each
+/// present `budgets` field overrides the matching default. A malformed
+/// configuration is reported by `loadConfiguredPolicy` after the graph loads,
+/// exactly as before.
+fn projectLimits(init: Context, parsed: Parsed) !language.project.Options {
+    var options: language.project.Options = .{};
+    const discovered = project_config.discover(init.gpa, init.io, parsed.path) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return options,
+    };
+    const config_path = discovered orelse return options;
+    defer init.gpa.free(config_path);
+    var failure: project_config.Failure = .{};
+    var config = project_config.load(init.gpa, init.io, config_path, &failure) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return options,
+    };
+    defer config.deinit();
+    const budgets = config.document.budgets;
+    if (budgets.max_modules) |value| options.max_modules = value;
+    if (budgets.max_imports) |value| options.max_imports = value;
+    if (budgets.max_file_bytes) |value| options.max_file_bytes = value;
+    if (budgets.max_total_bytes) |value| options.max_total_bytes = value;
+    return options;
+}
+
+fn loadModules(init: Context, project: *language.project.Project, files: *ModuleFiles, entry_name: []const u8, options: language.project.Options) !?u8 {
+    project.load(files.provider(), entry_name, options) catch |err| switch (err) {
+        error.SourceError => {
+            const message = try diagnostic_output.renderProject(init.gpa, project, init.diagnostics);
+            defer init.gpa.free(message);
+            try std.Io.File.stderr().writeStreamingAll(init.io, message);
+            return 1;
+        },
+        else => return err,
+    };
+    if (!try checkImportedInputs(init, files.inputs, project)) return 2;
+    return null;
+}
+
+fn listInterfaces(init: Context, project: *language.project.Project, parsed: Parsed, cache: ?*language.syntax_cache.Cache, frontend: ?*language.frontend_cache.Cache) !u8 {
+    var index = (try buildIndex(init, project, cache, frontend)) orelse return partialNavigation(init, project, parsed, null);
+    if (parsed.contracts) {
+        const contracts = index.renderContracts(init.gpa) catch |err| switch (err) {
+            error.SourceError, error.IncompleteProject => {
+                const message = try diagnostic_output.renderProject(init.gpa, project, init.diagnostics);
+                defer init.gpa.free(message);
+                try std.Io.File.stderr().writeStreamingAll(init.io, message);
+                return 1;
+            },
+            else => return err,
+        };
+        defer init.gpa.free(contracts);
+        try std.Io.File.stdout().writeStreamingAll(init.io, contracts);
+        return 0;
+    }
+    // Attach checked bodies when they are available so the default listing can
+    // publish each function's inferred `effects(...)`. A body that fails to
+    // check is ignored: the interface gate lists declarations whether or not
+    // bodies type-check, and it never reports body diagnostics.
+    var attached: ?language.project_compile.Compilation = language.project_compile.Compilation.init(&index) catch |err| switch (err) {
+        error.OutOfMemory => return err,
+        else => null,
+    };
+    if (attached) |*compilation| {
+        // Body checking may record a project problem; the interface gate owns
+        // only declaration diagnostics, so restore the pre-check problem.
+        const saved_problem = project.problem;
+        compilation.check() catch |err| switch (err) {
+            error.OutOfMemory => return err,
+            error.SourceError, error.InternalError => {},
+        };
+        project.problem = saved_problem;
+        index.program = compilation.program;
+    }
+    const text = try index.render(init.gpa);
+    defer init.gpa.free(text);
+    try std.Io.File.stdout().writeStreamingAll(init.io, text);
+    return 0;
+}
+
+/// The commands answered from the declaration index alone, without checking
+/// bodies: `list-interfaces` and `api`. Null for every other command.
+fn declarationCommand(init: Context, project: *language.project.Project, parsed: Parsed, sources: ApiSources) !?u8 {
+    const status = switch (parsed.command) {
+        .@"list-interfaces" => try listInterfaces(init, project, parsed, sources.syntax, sources.frontend),
+        .api => try apiFiles(init, project, parsed, sources),
+        else => return null,
+    };
+    return status;
+}
+
+/// The first step after bodies check: `context` answers here (even from a
+/// project that did not check), and a project that opted into interface files
+/// rejects a stale one. Null lets the command continue.
+fn checkedCommand(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, unchecked_reason: ?[]const u8, files: *ModuleFiles, configured: *const ConfiguredPolicy) !?u8 {
+    if (parsed.command == .context) {
+        const status = try contextCommand(init, parsed, compilation, unchecked_reason, files);
+        return status;
+    }
+    return enforceInterfaceFiles(init, parsed, configured, compilation.index, files.root);
+}
+
+LINES 345-420
+    const compiler = language.source_receipt.implementation(init.gpa, identity) catch return null;
+    storage.* = language.friction_log.Recorder.init(init.gpa, init.io, init.environ, .{
+        .flag = parsed.friction_path,
+        .command = @tagName(parsed.command),
+        .path = parsed.path,
+        .snapshot = entrySnapshot(init, parsed.path),
+        .compiler = compiler,
+    }) orelse return null;
+    return storage;
+}
+
+/// The command's elapsed monotonic nanoseconds, clamped at zero so a clock that
+/// never steps backwards still cannot produce a negative duration.
+fn frictionElapsedNs(start: std.Io.Timestamp, io: std.Io) u64 {
+    const nanoseconds = start.durationTo(std.Io.Timestamp.now(io, .awake)).nanoseconds;
+    return @intCast(@max(nanoseconds, 0));
+}
+
+/// Lowercase SHA-256 of the entry file as the command was given it, or the empty
+/// string when it cannot be read. Only the digest is ever recorded, never bytes.
+fn entrySnapshot(init: Context, path: []const u8) []const u8 {
+    const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, path, init.gpa, .limited(16 * 1024 * 1024)) catch return "";
+    defer init.gpa.free(bytes);
+    return language.friction_log.snapshotHex(init.gpa, bytes) catch "";
+}
+
+/// Emit every requested machine-readable receipt after a command finishes.
+/// `frontend-cache-v1` is only emitted when a persistent cache was opened (its
+/// historical `--no-cache` behavior); `work-report-v1` is always emitted when
+/// reporting was requested, including `--no-cache`, because it records work
+/// actually performed rather than cache comparisons.
+fn reportMeasured(init: Context, parsed: Parsed, cache: ?*language.frontend_cache.Cache, observation: *RunObservation) !void {
+    if (!parsed.reporting.measured()) return;
+    if (parsed.no_cache) observation.work.addBypass("cache-disabled", 1);
+    if (cache) |opened| {
+        if (opened.statistics.damaged != 0) observation.work.addBypass("damaged-entry", opened.statistics.damaged);
+        if (opened.statistics.bypassed != 0) observation.work.addBypass("frontend-store-bypassed", opened.statistics.bypassed);
+        try reportFrontendCounters(init, opened, parsed.reporting, observation.*);
+    }
+    const rendered = try invalidation.renderWork(init.gpa, observation.work);
+    defer init.gpa.free(rendered);
+    const line = try std.fmt.allocPrint(init.gpa, "{s}\n", .{rendered});
+    defer init.gpa.free(line);
+    try std.Io.File.stderr().writeStreamingAll(init.io, line);
+}
+/// Dispatch one command with `parsed.frontend` already resolved.
+fn runCommand(init: Context, parsed: Parsed) !u8 {
+    const allocator = init.gpa;
+    switch (parsed.command) {
+        .@"index-project",
+        .@"project-dependencies",
+        .@"check-session",
+        .@"schema-project",
+        .@"list-modules",
+        .@"list-interfaces",
+        .@"check-project",
+        .@"check-module",
+        .@"check-policy",
+        .lint,
+        .@"tests-for",
+        .@"api-diff",
+        .api,
+        .context,
+        .@"discover-project-duplicates",
+        .@"report-project-quality",
+        .@"fmt-project",
+        => return listModules(init, parsed),
+        else => {},
+    }
+    init.timings.begin("source_load", false);
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, parsed.path, allocator, .limited(16 * 1024 * 1024));
+    defer allocator.free(bytes);
+    init.timings.counts.source_bytes = bytes.len;
+    init.timings.counts.modules = 1;
+    init.timings.end();
+    // `dump-tokens` is a stage-0 oracle: it lexes one file and stops, never
+LINES 490-555
+    // checked-body query path used by project commands. Reuse is recorded at the
+    // copy site; `--no-cache` keeps a zero-retention counting cache.
+    const disk_before: usize = if (parsed.frontend) |opened| opened.statistics.syntax.hits else 0;
+    var counting = try openSemanticCache(init, parsed);
+    defer counting.deinit();
+    compilation.parseCached(parsed.frontend) catch |err| switch (err) {
+        error.SourceError => {
+            try report(init, &compilation);
+            return 1;
+        },
+        else => return err,
+    };
+    const syntax_reused = (if (parsed.frontend) |opened| opened.statistics.syntax.hits else 0) - disk_before;
+    setWork(init, .parsed_modules, 1 - @min(syntax_reused, 1), @min(syntax_reused, 1));
+    checkUnit(parsed, &compilation, &counting) catch |err| switch (err) {
+        error.SourceError => {
+            recordCheckWork(init, &counting, null, compilation.program);
+            recordSemanticBypass(init, &counting, null);
+            try report(init, &compilation);
+            return 1;
+        },
+        else => return err,
+    };
+    recordCheckWork(init, &counting, null, compilation.program);
+    recordSemanticBypass(init, &counting, null);
+    init.timings.counts.ast_nodes = compilation.syntax.?.nodes.items.len + compilation.syntax.?.statements.items.len;
+    recordUnitTypedNodes(init, &compilation);
+    init.timings.end();
+    const check_ns = if (parsed.reporting.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
+    try report(init, &compilation);
+    if (unit_deny_warnings and deniesOneShotWarnings(parsed.command) and hasWarning(compilation.diagnostics.items)) return 1;
+    switch (parsed.command) {
+        .@"index-project",
+        .@"project-dependencies",
+        .@"check-session",
+        .@"schema-project",
+        .@"input-module",
+        .@"dump-tokens",
+        .fmt,
+        .@"fmt-module",
+        .@"fmt-project",
+        .@"list-declarations",
+        .@"list-modules",
+        .@"list-interfaces",
+        .@"check-project",
+        .@"check-module",
+        .@"check-policy",
+        .lint,
+        .@"tests-for",
+        .@"api-diff",
+        .api,
+        .context,
+        .@"discover-project-duplicates",
+        .@"report-project-quality",
+        => unreachable,
+        .check => {},
+        .@"report-quality" => {
+            var analysis = try language.quality.analyze(allocator, compilation.program.?, compilation.src, parsed.quality);
+            defer analysis.deinit();
+            const text = try language.quality.render(allocator, analysis, compilation.program.?, compilation.src);
+            defer allocator.free(text);
+            try std.Io.File.stdout().writeStreamingAll(init.io, text);
+        },
+        .@"discover-duplicates" => {
+            const start = std.Io.Timestamp.now(init.io, .awake);
+            init.timings.begin("discovery", false);

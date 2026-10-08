@@ -1,0 +1,14 @@
+242:/// Forward the compiler-applied `-Dtest-filter` values to the Guardian runner.
+253:/// steps — the `-Dtest-filter` values to forward and whether to cache verdicts.
+270:/// whole-root run stays uncached because `test-units`/`test-cli` report its
+366:///   one test binary (default 8; a `-Dtest-filter` run is one process); it returns
+436:    // `-Dtest-filter=SUBSTRING` narrows the unit and CLI suites to one area in seconds.
+441:    const test_filters: []const []const u8 = if (b.option([]const []const u8, "test-filter", "Run only Zig tests whose name contains this substring (repeatable)")) |needles| blk: {
+443:            std.debug.print("error: -Dtest-filter= needs a non-empty substring; run `zig build test` for the full suite\n", .{});
+454:    // falls back to the single whole-root runs `test-units`/`test-cli` use.
+585:    // and `test-cli` keep the single whole-root run, so `-Dtest-filter` behaves
+591:    // so `-Dtest-filter` returns in seconds.
+592:    b.step("test-units", "Run only src/root_test.zig, honouring -Dtest-filter").dependOn(&run_unit.step);
+593:    b.step("test-cli", "Run only test/integration.zig, honouring -Dtest-filter").dependOn(&run_integration.step);
+598:    const units_sharded = b.step("test-units-sharded", "Run src/root_test.zig split into -Dtest-shards processes, honouring -Dtest-filter");
+599:    const cli_sharded = b.step("test-cli-sharded", "Run test/integration.zig split into -Dtest-shards/2 processes, honouring -Dtest-filter");

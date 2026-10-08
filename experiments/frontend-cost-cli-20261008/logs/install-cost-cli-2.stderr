@@ -1,0 +1,34 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 5a6b501d672f884336f5749fd6a191daacaac09b: 11/505 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 13 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 1 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 307 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 2/88 failed (spec, change-classification) — diff-scoped vs 5a6b501d672f884336f5749fd6a191daacaac09b, 11 file(s) in scope
+guardian: failures grouped by check (2):
+  spec (3 findings)
+    - duplicate tag: id:frontend-cost-1
+    - in: test/integration.zig
+    - in: src/core/cost_test.zig
+  change-classification (3 findings)
+    - src/core/cost_command.zig: 11 behavioral line(s) added
+      fix: commit these lines WITH a test — add or update a `// spec:`-tagged test, or add the behavior as a SPEC.md bullet, in this same change.
+    - src/core/cli.zig: 3 behavioral line(s) added
+    - src/main.zig: 26 behavioral line(s) added
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+install
++- run ../guardian-zig/zig-out/bin/guardian-check failure
+error: process exited with code 1
+failed command: ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+
+Build Summary: 6/9 steps succeeded (1 failed)
+install transitive failure
++- install mylang transitive failure
+|  +- compile exe mylang debug native success 3s MaxRSS:459M
+|  |  +- run exe build-identity (build_identity) success 23ms
+|  |  |  +- compile exe build-identity debug native cached 6ms MaxRSS:40M
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:41M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check failure
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+

@@ -1,0 +1,10 @@
+src/doctest_command.zig:58:/// Usage and directive summary for `mylang doctest --help` and bad arguments.
+src/doctest_command.zig:239:/// Run the whole command after the `--help` shortcut has been handled.
+src/doctest_command.zig:242:        if (std.mem.eql(u8, arg, "--help") or std.mem.eql(u8, arg, "-h")) {
+src/reference_test.zig:428:    const help = try command.answer(language, t.allocator, &.{"--help"});
+src/tests_index.zig:3://! a finding, and the `tests` column of `mylang list-interfaces` all read this
+src/interfaces_test.zig:158:test "list-interfaces spells a tuple signature back in source form" {
+src/interfaces_test.zig:201:test "list-interfaces prints a declaration's first docstring line" {
+src/interfaces_test.zig:2334:/// body check fail, which is the state `mylang list-interfaces` renders after it
+src/interfaces_test.zig:2377:    // declarations anyway, exactly as `mylang list-interfaces` does.
+src/core/test_runner_contracts.zig:15:/// One module's exported declarations, as `mylang list-interfaces --contracts` renders them.
