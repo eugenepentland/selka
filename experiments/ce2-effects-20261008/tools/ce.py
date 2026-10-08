@@ -15,7 +15,7 @@ import argparse, collections, concurrent.futures, gzip, hashlib, importlib.util,
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 AREA = pathlib.Path(__file__).resolve().parents[1]
-CACHE = ROOT / ".mylang-cache/ce2a/ce"
+CACHE = ROOT / ".mylang-cache/ce2/ce"   # the same path length as CE-X's cex/ce: text copies of paths count
 SLOT = ROOT / "scripts/build-slot.sh"
 CPUS = "0,1,4-9,12-19"
 LOX = ROOT / ".mylang-cache/lox"
