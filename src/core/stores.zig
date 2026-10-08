@@ -514,7 +514,7 @@ const Context = struct {
         const start: Carrier = .{ .ref = store, .path = .{}, .key = self.keyOf(inst.b, inst.a, &.{}), .fixed = true };
         self.steps = 0;
         if (try self.unobserved(start, null)) {
-            try self.removeStore(store, &.{});
+            try self.removeStore(store);
             stats.removed += 1;
             self.graph = try Graph.of(self.scratch, f);
             return;
@@ -732,10 +732,9 @@ const Context = struct {
         return ref;
     }
 
-    /// Replace `store` by its list (keeping its bounds check), and each record it was put back
-    /// into by the record before (when the list put back was read from that record).
-    fn removeStore(self: *Context, store: ir.Ref, unused: []const ir.Ref) Error!void {
-        _ = unused;
+    /// Replace `store` by its list, keeping its bounds check; the records it was put back into
+    /// then put back the list unchanged.
+    fn removeStore(self: *Context, store: ir.Ref) Error!void {
         const f = self.fun();
         const inst = f.inst(store);
         const b = self.graph.block_of[store.index()];
@@ -953,7 +952,7 @@ const Context = struct {
         const b = self.graph.block_of[store.index()];
         const value = f.operands(inst.data)[0];
         if (changed.items.items.len == 0) {
-            try self.removeStore(store, &.{});
+            try self.removeStore(store);
             return;
         }
         const element = m.compound(inst.ty).list;

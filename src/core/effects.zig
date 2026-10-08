@@ -82,23 +82,10 @@ pub const Paths = struct {
         return .{ .whole = true };
     }
 
-    /// Whether nothing is in the set.
-    pub fn isEmpty(self: *const Paths) bool {
-        return !self.whole and self.items.items.len == 0;
-    }
-
     /// Whether some path of the set overlaps `path`.
     pub fn overlaps(self: *const Paths, path: Path) bool {
         if (self.whole) return true;
         for (self.items.items) |item| if (overlap(item, path)) return true;
-        return false;
-    }
-
-    /// Whether some path of the set overlaps some path of `other`.
-    fn meets(self: *const Paths, other: *const Paths) bool {
-        if (self.isEmpty() or other.isEmpty()) return false;
-        if (self.whole or other.whole) return true;
-        for (other.items.items) |item| if (self.overlaps(item)) return true;
         return false;
     }
 

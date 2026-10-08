@@ -98,6 +98,11 @@ const summaries_source =
     \\    return check(mut s)
     \\
     \\
+    \\def refuse(s: mut State) -> bool:
+    \\    s.count = 0
+    \\    return False
+    \\
+    \\
     \\def length(s: State) -> int:
     \\    return len(s.code)
     \\
@@ -115,7 +120,7 @@ const summaries_source =
     \\    replace(mut s, t)
     \\    countdown(mut s, 3)
     \\    ping(mut s, 4)
-    \\    out.print(check(mut s), relay(mut s), s.ip)
+    \\    out.print(check(mut s), relay(mut s), refuse(mut s), s.ip)
     \\    return 0
     \\
 ;
@@ -159,6 +164,11 @@ test "a function's effect summary names the fields each parameter may be read an
     // function returning a call's answer answers as it does.
     try expectAnswers(a, &module, &s, "check");
     try expectAnswers(a, &module, &s, "relay");
+    // A function that only answers False writes nothing on a return that answers True.
+    const refuse = try functionIndex(&module, "refuse");
+    try std.testing.expectEqual([2]bool{ false, true }, s.may[refuse]);
+    try std.testing.expectEqualStrings("-", try spell(a, s.writes(refuse, 0, true)));
+    try std.testing.expectEqualStrings("3", try spell(a, s.writes(refuse, 0, false)));
 }
 
 /// `name` writes field 0 when it answers True and field 3 when it answers False.
