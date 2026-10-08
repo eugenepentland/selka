@@ -571,3 +571,44 @@ test "a record built for a whole-element store past the index's branches is buil
     try std.testing.expectEqualStrings(construct_expected, ran.stdout);
     try std.testing.expectEqualStrings("", ran.stderr);
 }
+
+const rotate_source =
+    \\record State:
+    \\    f0: int
+    \\    f1: int
+    \\    f2: int
+    \\    f3: int
+    \\    f4: int
+    \\    f5: int
+    \\
+    \\
+    \\def rotate(s: State, x: int) -> State:
+    \\    t = (s.f0 * 31 + x) % 1009
+    \\    return State(f0=s.f1, f1=s.f2, f2=s.f3, f3=s.f4, f4=s.f5, f5=t)
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    s = State(f0=1, f1=2, f2=3, f3=4, f4=5, f5=6)
+    \\    for j in range(20):
+    \\        s = rotate(s, j)
+    \\    kept = s
+    \\    t = rotate(s, 7)
+    \\    out.print(s.f0, s.f5, kept.f5, t.f5)
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-CE2-MERGE-1
+test "a by-value argument sharing a call's sret result is written whole by the call, not where a mut summary says" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a, rotate_source, &refusal);
+    const debug = try support.runOwned(a, &module, .{});
+    // What value semantics says: twenty rotations of (1 .. 6), then a kept copy and one more.
+    try std.testing.expectEqualStrings("747 179 179 966\n", debug.stdout);
+    var again = try support.buildSource(a, rotate_source, &refusal);
+    const release = try support.runOwned(a, &again, .{ .release = true });
+    try std.testing.expectEqualStrings(debug.stdout, release.stdout);
+}

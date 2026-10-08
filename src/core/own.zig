@@ -1227,7 +1227,9 @@ const Taking = struct {
                 if (try phiAfter(self, record, get, user, def_block)) return;
                 continue;
             }
-            if (try runsAfter(self.arena, f, self.graph.block_of, get, user, def_block)) return;
+            if (!try runsAfter(self.arena, f, self.graph.block_of, get, user, def_block)) continue;
+            if (self.borrowsFirst(record, get, user)) continue;
+            return;
         }
         try self.marks.owned_get.put(self.arena, @backingInt(get), {});
         try self.marks.taken.put(self.arena, @backingInt(update), {});
@@ -1293,6 +1295,32 @@ const Taking = struct {
                 }
                 if (try runsAfter(self.arena, f, self.graph.block_of, through.get, user, def)) return false;
             }
+        }
+        return true;
+    }
+
+    /// Whether `user`, a use of `record` after `get` took its field, only lends the record to
+    /// a call in `get`'s block that runs before anything uses the taken field (CE2-B): `__wb = rt.globals;
+    /// table.set(mut __wb, name, string_hash(rt, name), item); rt.globals = __wb`. The call sees
+    /// the field as it was, since nothing can have updated it in place yet.
+    fn borrowsFirst(self: Taking, record: ir.Ref, get: ir.Ref, user: ir.Ref) bool {
+        const f = self.f;
+        const inst = f.inst(user);
+        if (inst.op != .call and inst.op != .call_indirect) return false;
+        const block = self.graph.block_of[get.index()];
+        if (self.graph.block_of[user.index()] != block) return false;
+        const signature = if (inst.op == .call_indirect) self.module.compound(f.inst(f.resolve(inst.a)).ty).@"fn" else self.module.functions.items[inst.a.index()].signature;
+        if (inst.op == .call_indirect and f.resolve(inst.a) == record) return false;
+        for (f.operands(inst.data), 0..) |argument, k| {
+            if (f.resolve(argument) == record and ownedParameter(signature, k)) return false;
+        }
+        const insts = f.blocks.items[block].insts.items;
+        const at = std.mem.indexOfScalar(ir.Ref, insts, user).?;
+        if (std.mem.indexOfScalar(ir.Ref, insts, get).? > at) return false;
+        // A use in another block, or a join on an edge, runs once this block (and `user`) has.
+        for (self.graph.uses[get.index()].items) |taker| {
+            if (self.graph.block_of[taker.index()] != block or f.inst(taker).op == .phi) continue;
+            if (std.mem.indexOfScalar(ir.Ref, insts, taker).? <= at) return false;
         }
         return true;
     }

@@ -95,11 +95,12 @@ test "a counting build records copies, count updates, uniqueness tests and memor
     try std.testing.expectEqual(@as(i64, 1), field(debug.counts, &.{ "kinds", "list_copy", "count" }));
     try std.testing.expectEqual(@as(i64, 800), field(debug.counts, &.{ "kinds", "list_copy", "bytes" }));
     try std.testing.expectEqual(@as(i64, 800), field(debug.counts, &.{ "totals", "list_copy_bytes" }));
-    // `bump` copies its 40-byte record out of the list (an argument by value) and the new one
-    // back in; the element it replaces is released where it is, never copied out
-    // (NEW-CORE-CE-LISTS-2).
+    // `bump` lends its 40-byte element to `bumped` where it lies (NEW-CORE-CE2-RESULTS-4), which
+    // copies it to update `a`, and copies the new record back in; the element it replaces is
+    // released where it is, never copied out (NEW-CORE-CE-LISTS-2).
     try std.testing.expectEqual(@as(i64, 10), calls(debug.counts, "bump"));
-    try std.testing.expectEqual(@as(i64, 400), sites(debug.counts, "record_copy", "list_get", "bump", "bytes"));
+    try std.testing.expectEqual(@as(i64, 0), sites(debug.counts, "record_copy", "list_get", "bump", "bytes"));
+    try std.testing.expectEqual(@as(i64, 400), sites(debug.counts, "record_copy", "record_set", "bumped", "bytes"));
     try std.testing.expectEqual(@as(i64, 400), sites(debug.counts, "record_copy", "list_set", "bump", "bytes"));
     try std.testing.expectEqual(@as(i64, 0), sites(debug.counts, "record_copy", "list_set.old", "bump", "bytes"));
     try std.testing.expectEqual(@as(i64, 10), sites(debug.counts, "unique_test", "is_unique", "bump", "count"));

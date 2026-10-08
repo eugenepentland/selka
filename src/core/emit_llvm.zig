@@ -31,6 +31,7 @@ const emit_count = @import("emit_count.zig");
 const origins = @import("inline_origins.zig");
 const emit_homes = @import("emit_homes.zig");
 const effects = @import("effects.zig");
+const fuse = @import("fuse.zig");
 
 /// A source line and column for a span start.
 pub const Location = struct { line: u32, column: u32, path: []const u8 = "" };
@@ -328,6 +329,9 @@ const ModuleState = struct {
     local: Local = .{},
     /// Counter sites and function records of a counting build (`emit_count.zig`).
     count: emit_count.Table = .{},
+    /// Per internal function already asked: the parameter its callers may pass in its `%ret`, or
+    /// `emit_homes.none` (`FunctionEmitter.sharedArgument`).
+    shares: std.AutoHashMapUnmanaged(u32, u32) = .empty,
 
     fn contains(self: *ModuleState, index: u32) bool {
         const selected = self.local.selection orelse return true;
@@ -759,6 +763,8 @@ const MemoryState = struct {
     in_out: InOutCalls = .{},
     /// Per instruction: the uses of its value (a read nothing uses emits only its check, CE-B).
     uses: []u32 = &.{},
+    /// Per instruction: a list element over four words lent to calls where it lies (CE2-B).
+    borrowed: []bool = &.{},
 };
 
 /// Per instruction, what an in-out call (CE-A P7) needs: its in-out arguments, and whether its
@@ -827,6 +833,29 @@ fn inOutAbi(m: *const ir.Module, signature: ir.Signature) InOutAbi {
 /// Whether a value of `ty` travels through `sret` under `abi`.
 fn returnsThroughSret(m: *const ir.Module, signature: ir.Signature, abi: InOutAbi) bool {
     return m.passedInMemory(signature.ret) and !abi.whole;
+}
+
+/// The read-only memory parameter of an internal function's result type that its callers may pass
+/// in their `sret` destination, if its plan allows it (`emit_homes.Planner.shareable`): the first
+/// one, of a function with no in-out parameter; `none` otherwise.
+fn shareCandidate(m: *const ir.Module, signature: ir.Signature, abi: InOutAbi) u32 {
+    if (signature.linkage != .internal or abi.params != 0 or !returnsThroughSret(m, signature, abi)) return emit_homes.none;
+    for (signature.params, 0..) |param, i| {
+        if (i >= 64) break;
+        if (param == signature.ret and signature.owned & (@as(u64, 1) << @intCast(i)) == 0) return @intCast(i);
+    }
+    return emit_homes.none;
+}
+
+/// Bit `k`: field `k` of the result record holds an in-out final value, which a `ret` moves to
+/// its caller's memory instead of storing it in `%ret` (`FunctionEmitter.returnFinals`).
+fn finalFields(signature: ir.Signature, abi: InOutAbi) u64 {
+    if (abi.params == 0 or abi.whole) return 0;
+    var bits: u64 = 0;
+    for (0..signature.params.len) |i| {
+        if (abi.inOut(i)) bits |= @as(u64, 1) << @intCast(abi.field(signature, i));
+    }
+    return bits;
 }
 
 /// Which count update `counted` emits.
@@ -999,20 +1028,8 @@ const FunctionEmitter = struct {
         // pointer in, through `sret` out (docs/design/new-core-s1.md §3); a `mut` one by a
         // pointer the callee updates in place (`InOutAbi`).
         const abi = inOutAbi(m, f.signature);
-        const sret = returnsThroughSret(m, f.signature, abi);
-        try out.print(self.a(), "define {s} fastcc {s} {s}(", .{ self.state.linkage(self.index), try self.state.returnType(f.signature, abi), try self.state.originalSymbol(self.index) });
-        if (sret) try out.print(self.a(), "ptr noalias sret({s}) align 8 %ret", .{try self.state.memoryType(f.signature.ret)});
-        var entry: Out = .empty;
-        // A value over four words is used where the caller keeps it: the parameter is its pointer.
-        for (f.signature.params, 0..) |param, i| {
-            const separator = if (i == 0 and !sret) "" else ", ";
-            if (abi.inOut(i)) {
-                try out.print(self.a(), "{s}ptr noalias align 8 %p{d}", .{ separator, i });
-            } else if (m.passedInMemory(param)) {
-                try out.print(self.a(), "{s}ptr noalias readonly align 8 %p{d}", .{ separator, i });
-            } else try out.print(self.a(), "{s}{s} %p{d}", .{ separator, try self.ty(param), i });
-        }
-        try self.analyzeMemory(&entry);
+        try self.analyzeMemory();
+        try self.defineLine(out, abi);
         try self.collectBoundLengths();
         if (self.state.options.counters) self.count_fn = try self.state.count.function(self.a(), f.name);
         // `uwtable`: a trap walks the stack through `.eh_frame`, which needs every frame's CFI.
@@ -1050,7 +1067,6 @@ const FunctionEmitter = struct {
         }
         try out.appendSlice(self.a(), "entry:\n  %slot = alloca i64, align 8\n");
         try out.appendSlice(self.a(), self.state.allocas.items);
-        try out.appendSlice(self.a(), entry.items);
         if (self.count_fn) |record| try emit_count.prologue(self.a(), out, record);
         try out.appendSlice(self.a(), "  br label %b0\n");
         for (f.blocks.items, 0..) |block, b| {
@@ -1074,11 +1090,38 @@ const FunctionEmitter = struct {
         try out.appendSlice(self.a(), "}\n");
     }
 
+    /// The `define` line up to its parameters: a value over four words is used where the caller keeps
+    /// it (the parameter is its pointer), and a parameter a caller may pass in `%ret` itself (CE2-B)
+    /// aliases it, so neither is `noalias`.
+    fn defineLine(self: *FunctionEmitter, out: *Out, abi: InOutAbi) !void {
+        const f = self.function;
+        const m = self.state.module;
+        const sret = returnsThroughSret(m, f.signature, abi);
+        const shared = if (self.memory.homes.shared) shareCandidate(m, f.signature, abi) else emit_homes.none;
+        try out.print(self.a(), "define {s} fastcc {s} {s}(", .{ self.state.linkage(self.index), try self.state.returnType(f.signature, abi), try self.state.originalSymbol(self.index) });
+        if (sret) try out.print(self.a(), "ptr {s}sret({s}) align 8 %ret", .{ if (shared == emit_homes.none) "noalias " else "", try self.state.memoryType(f.signature.ret) });
+        for (f.signature.params, 0..) |param, i| {
+            const separator = if (i == 0 and !sret) "" else ", ";
+            if (abi.inOut(i)) {
+                try out.print(self.a(), "{s}ptr noalias align 8 %p{d}", .{ separator, i });
+            } else if (m.passedInMemory(param)) {
+                try out.print(self.a(), "{s}ptr {s}readonly align 8 %p{d}", .{ separator, if (shared == i) "" else "noalias ", i });
+            } else try out.print(self.a(), "{s}{s} %p{d}", .{ separator, try self.ty(param), i });
+        }
+    }
+
     /// Count uses, decide which constructions are stored straight into their consumer, find each
     /// call's in-out arguments, and give every value in memory its home (`emit_homes.zig`): an
     /// entry-block slot, a parameter's memory or `%ret`, named in the entry block as `%vN`.
-    fn analyzeMemory(self: *FunctionEmitter, entry: *Out) !void {
-        _ = entry;
+    fn analyzeMemory(self: *FunctionEmitter) !void {
+        try self.prepareMemory();
+        self.memory.homes = try self.planMemory(true);
+        try self.nameHomes();
+    }
+
+    /// Count uses, find the constructions stored straight into their consumer, each call's in-out
+    /// arguments and the list elements lent to calls: what a home plan needs.
+    fn prepareMemory(self: *FunctionEmitter) Error!void {
         const f = self.function;
         const m = self.state.module;
         const count = f.insts.items.len;
@@ -1141,21 +1184,88 @@ const FunctionEmitter = struct {
             }
         }
         try self.inOutCalls();
-        mem.homes = try emit_homes.plan(self.a(), .{
+        mem.borrowed = try self.lentElements();
+    }
+
+    /// The home plan of the function (`emit_homes.zig`). With `share_calls`, a call to a callee whose
+    /// parameter may lie in its `%ret` (`sharedArgument`) treats that argument like an in-out one, so
+    /// a result and an argument that dies at the call may share one home and be passed as one
+    /// memory; a function that may itself share never does (its plan is the one callers checked).
+    fn planMemory(self: *FunctionEmitter, share_calls: bool) Error!emit_homes.Plan {
+        const f = self.function;
+        const m = self.state.module;
+        const mem = &self.memory;
+        const abi = inOutAbi(m, f.signature);
+        var input: emit_homes.Input = .{
             .module = m,
             .function = f,
             .fused = mem.fused,
             .in_out = abi.params,
             .calls = mem.in_out.args,
-            .ret_home = emit_homes.steps.in_out and abi.params == 0 and returnsThroughSret(m, f.signature, abi),
             .effects = self.state.options.analysis.effects,
-        });
-        const plan = &mem.homes;
+            .results = .{
+                .sret = returnsThroughSret(m, f.signature, abi),
+                .finals = finalFields(f.signature, abi),
+                .borrowed = mem.borrowed,
+                .share = shareCandidate(m, f.signature, abi),
+                .home = emit_homes.steps.in_out and abi.params == 0 and returnsThroughSret(m, f.signature, abi),
+            },
+        };
+        const own = try emit_homes.plan(self.a(), input);
+        if (!share_calls or own.shared) return own;
+        input.calls = try self.sharedCalls() orelse return own;
+        input.results.share = emit_homes.none;
+        return emit_homes.plan(self.a(), input);
+    }
+
+    /// The in-out arguments of every call, plus, for a direct call to a callee in this unit whose
+    /// parameter may lie in its `%ret`, that argument with the call's result as its final value; null
+    /// when no call has such an argument.
+    fn sharedCalls(self: *FunctionEmitter) Error!?[]const []const emit_homes.InOut {
+        const f = self.function;
+        var calls: ?[][]const emit_homes.InOut = null;
+        for (f.blocks.items, 0..) |block, b| {
+            if (b != 0 and block.preds.items.len == 0) continue;
+            for (block.insts.items) |ref| {
+                const inst = f.inst(ref);
+                if (inst.op != .call) continue;
+                const param = try self.sharedArgument(inst);
+                if (param == emit_homes.none) continue;
+                if (calls == null) calls = try self.a().dupe([]const emit_homes.InOut, self.memory.in_out.args);
+                calls.?[ref.index()] = try self.a().dupe(emit_homes.InOut, &.{.{ .argument = param, .final = ref }});
+            }
+        }
+        return calls;
+    }
+
+    /// The parameter of a direct call's callee that may lie in the callee's `%ret` (its plan says
+    /// `shared`), or `none`: only for a callee emitted in this unit, so the callee's own code is the
+    /// code that was checked.
+    fn sharedArgument(self: *FunctionEmitter, inst: ir.Inst) Error!u32 {
+        const m = self.state.module;
+        const callee: u32 = @intCast(inst.a.index());
+        const target = &m.functions.items[callee];
+        if (target.signature.linkage != .internal or !self.state.contains(callee)) return emit_homes.none;
+        if (shareCandidate(m, target.signature, inOutAbi(m, target.signature)) == emit_homes.none) return emit_homes.none;
+        if (self.state.shares.get(callee)) |known| return known;
+        var scratch: FunctionEmitter = .{ .state = self.state, .function = target, .index = callee };
+        try scratch.prepareMemory();
+        const plan = try scratch.planMemory(false);
+        const param = if (plan.shared) shareCandidate(m, target.signature, inOutAbi(m, target.signature)) else emit_homes.none;
+        try self.state.shares.put(self.a(), callee, param);
+        return param;
+    }
+
+    /// Name every home in the entry block (`analyzeMemory`).
+    fn nameHomes(self: *FunctionEmitter) !void {
+        const f = self.function;
+        const plan = &self.memory.homes;
         const names = try self.a().alloc([]const u8, plan.homes.len);
         for (plan.homes, names) |home, *name| name.* = switch (home) {
             .slot => |size| try self.stackSlot(size),
             .param => |index| try std.fmt.allocPrint(self.a(), "%p{d}", .{index}),
             .ret => "%ret",
+            .ret_at => |offset| try self.retPlace(offset),
             .field => "",
         };
         // A home inside another's field, once that other is named.
@@ -1168,6 +1278,102 @@ const FunctionEmitter = struct {
             if (class == emit_homes.none or f.insts.items[index].op == .param) continue;
             try self.state.allocas.print(self.a(), "  %v{d} = getelementptr inbounds i8, ptr {s}, i64 0\n", .{ index, names[class] });
         }
+    }
+
+    /// The list elements over four words read where they lie (CE2-B): a `list_get` or `list_get_field`
+    /// whose every use, in its own block, is a by-value argument of an internal call that takes no
+    /// `mut` argument able to reach a list, or a load of a part in registers, with nothing in between
+    /// that can write, free or move a list (`lendable`). The callee never writes such a parameter (it
+    /// is a read-only pointer), so passing the element's own address passes its value.
+    fn lentElements(self: *FunctionEmitter) ![]bool {
+        const f = self.function;
+        const m = self.state.module;
+        const marks = try self.a().alloc(bool, f.insts.items.len);
+        @memset(marks, false);
+        for (f.blocks.items, 0..) |block, b| {
+            if (b != 0 and block.preds.items.len == 0) continue;
+            for (block.insts.items, 0..) |ref, i| {
+                const inst = f.inst(ref);
+                if (inst.op != .list_get and inst.op != .list_get_field) continue;
+                if (!m.passedInMemory(inst.ty) or self.memory.uses[ref.index()] == 0) continue;
+                marks[ref.index()] = self.lendable(block.insts.items, i);
+            }
+        }
+        return marks;
+    }
+
+    /// Whether the element read at position `at` of `insts` may be lent: its uses all follow it in
+    /// the block, each one `lendsTo`, and every instruction up to the last is `keepsLists`.
+    fn lendable(self: *FunctionEmitter, insts: []const ir.Ref, at: usize) bool {
+        const f = self.function;
+        const ref = insts[at];
+        var remaining = self.memory.uses[ref.index()];
+        for (insts[at + 1 ..]) |next| {
+            if (remaining == 0) return true;
+            const user = f.inst(next);
+            if (user.op == .copy or user.op == .phi) continue;
+            const operands = f.valueOperands(user);
+            var reads: u32 = 0;
+            for (0..operands.len()) |k| {
+                if (f.resolve(operands.get(k)) == ref) reads += 1;
+            }
+            if (reads == 0) {
+                if (!self.keepsLists(user)) return false;
+                continue;
+            }
+            if (!self.lendsTo(user, ref)) return false;
+            remaining -= @min(remaining, reads);
+        }
+        return remaining == 0;
+    }
+
+    /// Whether `user` reads the lent element `ref` only where it lies: as by-value memory arguments of
+    /// a call that `keepsLists`, as a load of a part in registers, or to count its parts.
+    fn lendsTo(self: *FunctionEmitter, user: ir.Inst, ref: ir.Ref) bool {
+        const f = self.function;
+        const m = self.state.module;
+        switch (user.op) {
+            .record_get, .union_payload, .union_tag => return !m.passedInMemory(user.ty),
+            .retain => return true,
+            .call, .call_indirect => {
+                if (!self.keepsLists(user)) return false;
+                if (user.op == .call_indirect and f.resolve(user.a) == ref) return false;
+                const signature = self.signatureOf(user);
+                const abi = inOutAbi(m, signature);
+                for (f.operands(user.data), signature.params, 0..) |argument, param, k| {
+                    if (f.resolve(argument) != ref) continue;
+                    if (!m.passedInMemory(param) or abi.inOut(k)) return false;
+                }
+                return true;
+            },
+            else => return false,
+        }
+    }
+
+    /// Whether `inst` can neither write, free nor move a list block the caller holds: an inert
+    /// instruction, a count increment, or an internal call with no `mut` parameter that holds a block.
+    fn keepsLists(self: *FunctionEmitter, inst: ir.Inst) bool {
+        const m = self.state.module;
+        switch (inst.op) {
+            .retain, .is_unique, .err_trace => return true,
+            .call, .call_indirect => {
+                const signature = self.signatureOf(inst);
+                if (signature.linkage != .internal) return false;
+                for (signature.params, 0..) |param, k| {
+                    if (k >= 64 or signature.owned & (@as(u64, 1) << @intCast(k)) == 0) continue;
+                    if (m.managed(param)) return false;
+                }
+                return true;
+            },
+            else => return fuse.inert(inst, false),
+        }
+    }
+
+    /// The entry-block name of `%ret` at `offset`: the home of values built where a `ret` stores them (CE2-B).
+    fn retPlace(self: *FunctionEmitter, offset: u32) ![]const u8 {
+        const name = try self.fresh("%home");
+        try self.state.allocas.print(self.a(), header_pointer_line, .{ name, "%ret", offset });
+        return name;
     }
 
     /// Each call's in-out arguments and the values that hold their final values: the call itself
@@ -1853,17 +2059,46 @@ const FunctionEmitter = struct {
             try self.moveAll(out, &.{try self.finalMove(out, @ctz(abi.params), inst.a)});
         } else if (sret and abi.params != 0) {
             try self.returnFinals(out, inst.a, abi);
-        } else if (sret and !self.builtInReturn(inst.a)) try self.storeOperand(out, signature.ret, inst.a, "%ret");
+        } else if (sret and self.memory.homes.staged(self.current)) {
+            // A value it reads lies in `%ret` where an earlier store would overwrite it: built
+            // whole in a temporary first.
+            const temporary = try self.stackSlot(m.size(signature.ret));
+            try self.storeOperand(out, signature.ret, inst.a, temporary);
+            try self.copyBytes(out, "%ret", temporary, m.size(signature.ret), false);
+        } else if (sret) try self.storeAtRet(out, signature.ret, inst.a, 0);
         if (self.count_fn != null) try out.appendSlice(self.a(), emit_count.epilogue);
         if (inst.a == .none or sret or abi.whole) return out.appendSlice(self.a(), "  ret void\n");
         try out.print(self.a(), "  ret {s}\n", .{try self.typedValue(inst.a)});
     }
 
-    /// Whether the returned value already lives in the caller's destination `%ret`.
-    fn builtInReturn(self: *FunctionEmitter, raw: ir.Ref) bool {
-        const plan = &self.memory.homes;
-        const class = plan.class[self.function.resolve(raw).index()];
-        return class != emit_homes.none and plan.homes[class] == .ret;
+    /// Store `raw` at `offset` in `%ret` the way `storeOperand` would, except that a value already
+    /// at that place (built there, `emit_homes.Planner.buildInRet`) is not stored again. The
+    /// stores happen in the order `emit_homes.retStores` lists them.
+    fn storeAtRet(self: *FunctionEmitter, out: *Out, value_type: ir.Type, raw: ir.Ref, offset: u32) Error!void {
+        const m = self.state.module;
+        const f = self.function;
+        const ref = f.resolve(raw);
+        if (!self.memory.fused[ref.index()]) {
+            if (self.memory.homes.retOffset(ref) == offset) return;
+            return self.storeValue(out, value_type, try self.value(ref), try self.offsetPointer(out, "%ret", offset));
+        }
+        const inst = f.inst(ref);
+        if (m.kind(inst.ty) == .array) {
+            const elem = m.compound(inst.ty).array.elem;
+            for (f.operands(inst.data), 0..) |operand, i| try self.storeAtRet(out, elem, operand, offset + @as(u32, @intCast(i)) * m.size(elem));
+            return;
+        }
+        switch (inst.op) {
+            .record_make => for (f.operands(inst.data), m.compound(inst.ty).record, 0..) |operand, field, i| {
+                try self.storeAtRet(out, field, operand, offset + m.fieldOffset(inst.ty, i));
+            },
+            .union_make => {
+                try out.print(self.a(), "  store i64 {d}, ptr {s}, align 8, " ++ tbaa_data ++ "\n", .{ inst.data, try self.offsetPointer(out, "%ret", offset) });
+                if (inst.a == .none) return;
+                try self.storeAtRet(out, m.compound(inst.ty).@"union"[@intCast(inst.data)], inst.a, offset + 8);
+            },
+            else => unreachable,
+        }
     }
 
     /// The copy of `raw`, in-out parameter `param`'s final value, into its caller's memory (empty
@@ -1899,9 +2134,10 @@ const FunctionEmitter = struct {
         const signature = f.signature;
         const composite = f.resolve(raw);
         var moves: std.ArrayList(Move) = .empty;
+        std.debug.assert(!self.memory.homes.staged(self.current));
         if (!self.memory.fused[composite.index()]) {
             // A whole record: copied to `%ret`, and each final value from there.
-            try self.storeOperand(out, signature.ret, raw, "%ret");
+            try self.storeAtRet(out, signature.ret, raw, 0);
             for (signature.params, 0..) |param, i| {
                 if (!abi.inOut(i)) continue;
                 const at = try self.offsetPointer(out, "%ret", m.fieldOffset(signature.ret, abi.field(signature, i)));
@@ -1914,7 +2150,7 @@ const FunctionEmitter = struct {
             const final = for (0..signature.params.len) |i| {
                 if (abi.inOut(i) and abi.field(signature, i) == k) break true;
             } else false;
-            if (!final) try self.storeOperand(out, field_type, operand, try self.offsetPointer(out, "%ret", m.fieldOffset(signature.ret, k)));
+            if (!final) try self.storeAtRet(out, field_type, operand, m.fieldOffset(signature.ret, k));
         }
         for (0..signature.params.len) |i| {
             if (!abi.inOut(i)) continue;
@@ -2155,6 +2391,8 @@ const FunctionEmitter = struct {
         // build still loads it, for the fact assertions that name it).
         if (self.memory.uses[self.current.index()] == 0 and inst.data == 0 and self.knownFacts() == null) return;
         const slot = try self.elementSlot(out, list, index, inst.ty);
+        // A lent element (`lentElements`) is its slot: no copy.
+        if (self.lent(self.current)) return out.print(self.a(), identity_line, .{ name, slot });
         if (inst.ty == .bool or inst.ty.isCompound()) return self.loadValue(out, inst.ty, slot, name);
         const stored = storageType(inst.ty);
         try out.print(self.a(), "  {s} = load {s}, ptr {s}, align {d}{s}, " ++ tbaa_data ++ "\n", .{ name, stored, slot, elementSize(inst.ty), try self.loadRange(name, inst.ty) });
@@ -2634,7 +2872,8 @@ const FunctionEmitter = struct {
         const at = try self.offsetPointer(out, slot, target.offset);
         var held: std.ArrayList(Held) = .empty;
         self.count_detail = if (self.count_fn != null) "list_set_field.old" else null;
-        try self.holdManaged(out, target.ty, at, &held, null);
+        // A field a transferred read took over (`xs[i].items.append(v)`, CE2-B) is not released.
+        if (!flags.transferredSlot(self.function, inst)) try self.holdManaged(out, target.ty, at, &held, null);
         self.count_detail = null;
         try self.storeOperand(out, target.ty, self.function.operands(inst.data)[0], at);
         try self.releaseHeld(out, held.items);
@@ -2712,6 +2951,11 @@ const FunctionEmitter = struct {
 
     /// Read one field (or a union's tag or payload) of an inline element, at its
     /// offset from the element's slot, without loading the rest of the element.
+    /// Whether the element read `ref` is lent where it lies (`lentElements`).
+    fn lent(self: *FunctionEmitter, ref: ir.Ref) bool {
+        return ref.index() < self.memory.borrowed.len and self.memory.borrowed[ref.index()];
+    }
+
     fn listGetField(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const m = self.state.module;
         const list = try self.value(inst.a);
@@ -2721,6 +2965,7 @@ const FunctionEmitter = struct {
         const slot = try self.elementSlot(out, list, index, element);
         const target = m.pathTarget(element, ir.FieldPath.unpack(inst.data)) orelse return error.UnsupportedInstruction;
         const at = try self.offsetPointer(out, slot, target.offset);
+        if (target.tag_of == .void and self.lent(self.current)) return out.print(self.a(), identity_line, .{ name, at });
         if (target.tag_of == .void) return self.loadValue(out, target.ty, at, name);
         const layout = m.unionLayout(target.tag_of);
         const loaded = try self.fresh("%gt");

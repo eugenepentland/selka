@@ -161,8 +161,10 @@ test "a store into a field of a list element is one in-place field store after t
     // The element read into a local before the store is still read whole and kept.
     const keep = functionIr(text, "keep");
     try std.testing.expectEqual(@as(usize, 1), countOp(keep, "list_set_field"));
-    // An append to a list field of an element reads the element's list: not a field store.
-    try std.testing.expectEqual(@as(usize, 0), countOp(functionIr(text, "grow"), "list_set_field"));
+    // An append to a list field of an element takes the field and stores it back in place
+    // (CE2-B, NEW-CORE-CE2-RESULTS-7): no whole-element read or write.
+    try std.testing.expectEqual(@as(usize, 1), countOp(functionIr(text, "grow"), "list_set_field"));
+    try std.testing.expectEqual(@as(usize, 0), countOp(functionIr(text, "grow"), "list_set"));
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
