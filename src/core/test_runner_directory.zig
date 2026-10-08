@@ -12,13 +12,15 @@ const tool_ticket = @import("tool_ticket.zig");
 const case_settings = @import("test_runner_cases.zig");
 const receipt = @import("test_runner_receipt.zig");
 const Error = @import("test_runner_property.zig").Error;
+const root_share = @import("test_runner_shared.zig");
+const together = @import("test_runner_union.zig");
 
 const Input = struct { path: []const u8, digest: ?[32]u8 };
 const Location = struct { path: []const u8, root: []const u8, name: []const u8, configuration: ?[]const u8 };
 const Selection = struct { entries: []const []const u8, tested: []const []const u8, inputs: []const Input, discovered: []const []const u8, locations: []const Location = &.{} };
 const Orphan = struct { path: []const u8, closure: []const []const u8 };
-const Outcome = struct { code: u8 = 1, bytes: []const u8 = "" };
-const Fanout = struct { compiler: []const u8, directory: []const u8, controls: options.Options, jobs: usize, ticket: []const u8 };
+const Outcome = root_share.Outcome;
+const Fanout = struct { compiler: []const u8, directory: []const u8, controls: options.Options, jobs: usize, ticket: []const u8, run_root: root_share.RunRoot, guest: tool_identity.Identity };
 const Discovery = struct { allocator: std.mem.Allocator, gpa: std.mem.Allocator, io: std.Io };
 const Snapshot = struct {
     allocator: std.mem.Allocator,
@@ -84,8 +86,10 @@ pub fn selected(io: std.Io, path: []const u8) bool {
     return info.kind == .directory;
 }
 
-/// Discover roots and launch them with one shared bounded worker budget.
-pub fn run(init: std.process.Init, opts: options.Options) Error!u8 {
+/// Discover roots and run them with one shared bounded worker budget: in this
+/// process from a shared check where they can (NEW-CORE-TEST-UNION-1, `run_root`),
+/// else in child processes.
+pub fn run(init: std.process.Init, opts: options.Options, run_root: root_share.RunRoot) Error!u8 {
     const a = init.arena.allocator();
     if (opts.controls.cases != null) {
         try write(init.io, std.Io.File.stderr(), "error: --cases requires a single test entry\n");
@@ -125,10 +129,19 @@ pub fn run(init: std.process.Init, opts: options.Options) Error!u8 {
     const free = budget.available(init.io);
     const workers = options.width(opts.controls, init.environ_map, selection.entries.len, free);
     const overall = options.width(opts.controls, init.environ_map, std.math.maxInt(usize), free);
-    const fanout: Fanout = .{ .compiler = compiler, .directory = directory, .controls = controls, .jobs = overall, .ticket = ticket };
+    const fanout: Fanout = .{ .compiler = compiler, .directory = directory, .controls = controls, .jobs = overall, .ticket = ticket, .run_root = run_root, .guest = guest };
     const outcomes = try a.alloc(Outcome, selection.entries.len);
-    const roots: Roots = .{ .paths = selection.entries, .order = try largestFirst(a, init.io, selection.entries), .outcomes = outcomes };
-    try pool(init, fanout, .{ .roots = roots, .workers = workers });
+    const plans = try a.alloc(together.Plan, selection.entries.len);
+    var checks = try together.plan(.{ .init = init, .controls = controls, .guest = guest, .run_root = run_root, .workers = workers }, selection.entries, outcomes, plans);
+    defer checks.deinit();
+    var order: std.ArrayList(usize) = .empty;
+    for (try largestFirst(a, init.io, selection.entries)) |index| if (plans[index] != .replayed) try order.append(a, index);
+    const roots: Roots = .{ .paths = selection.entries, .order = order.items, .outcomes = outcomes, .plans = plans };
+    // Roots run in this process share one budget of test processes with the children.
+    var permits: root_share.Permits = .init(overall);
+    var sharing = false;
+    for (plans) |item| sharing = sharing or item == .together;
+    try pool(init, fanout, .{ .roots = roots, .workers = workers, .permits = if (sharing) &permits else null });
     const unchanged = tool_identity.unchanged(request, guest) catch |err| unchanged: {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         break :unchanged false;
@@ -155,10 +168,11 @@ fn programs(init: std.process.Init, opts: options.Options, diagnostics: *std.Arr
     }
     var reached: std.StringHashMapUnmanaged(void) = .empty;
     defer reached.deinit(a);
-    for (roots.items) |path| for (try closure(init, path, diagnostics, &snapshot, opts.filter)) |loaded| try reached.put(a, loaded, {});
+    const shares = try sharedClosures(init, roots.items, &snapshot);
+    for (roots.items, shares) |path, share| for (try closure(init, path, .{ .diagnostics = diagnostics, .snapshot = &snapshot, .filter = opts.filter, .share = share })) |loaded| try reached.put(a, loaded, {});
     var orphans: std.ArrayList(Orphan) = .empty;
     for (libraries.items) |path| if (!reached.contains(path)) {
-        try orphans.append(a, .{ .path = path, .closure = try closure(init, path, diagnostics, &snapshot, opts.filter) });
+        try orphans.append(a, .{ .path = path, .closure = try closure(init, path, .{ .diagnostics = diagnostics, .snapshot = &snapshot, .filter = opts.filter }) });
     };
     for (orphans.items, 0..) |orphan, index| {
         var imported = false;
@@ -201,8 +215,16 @@ fn inventory(a: std.mem.Allocator, io: std.Io, opts: options.Options) ![]const [
     return found.items;
 }
 
-fn closure(init: std.process.Init, path: []const u8, diagnostics: *std.ArrayList(u8), snapshot: *Snapshot, filter: []const u8) ![]const []const u8 {
+/// What `closure` records into and reads: where problems go, the run's input
+/// snapshot, the run's filter, and the root's import graph when a shared load
+/// already found it.
+const Reading = struct { diagnostics: *std.ArrayList(u8), snapshot: *Snapshot, filter: []const u8, share: ?[]const []const u8 = null };
+
+fn closure(init: std.process.Init, path: []const u8, reading: Reading) ![]const []const u8 {
     const a = init.arena.allocator();
+    const diagnostics = reading.diagnostics;
+    const snapshot = reading.snapshot;
+    const filter = reading.filter;
     const located = try project_entry.resolve(a, init.io, path, diagnostics);
     try snapshot.locations.append(a, .{ .path = located.path, .root = located.root, .name = located.name, .configuration = if (located.configuration) |file| file.path else null });
     try configurationInputs(snapshot, located);
@@ -219,9 +241,94 @@ fn closure(init: std.process.Init, path: []const u8, diagnostics: *std.ArrayList
         return a.dupe([]const u8, &.{located.path});
     }
     const resources: Discovery = .{ .allocator = a, .gpa = init.gpa, .io = init.io };
-    const paths = try loadedClosure(resources, located, &.{}, snapshot);
+    const paths = reading.share orelse try loadedClosure(resources, located, &.{}, snapshot);
     for (try case_settings.providerSets(a, cases, filter)) |providers| _ = try loadedClosure(resources, located, providers, snapshot);
     return paths;
+}
+
+/// The import closures of the headed roots of `roots` (those opening with a `module`
+/// header), each project's from one load of an entry importing all of them, each
+/// module read once (NEW-CORE-TEST-UNION-1); null for every other root, and for
+/// every root of a project whose shared load fails, which load alone.
+fn sharedClosures(init: std.process.Init, roots: []const []const u8, snapshot: *Snapshot) ![]const ?[]const []const u8 {
+    const a = init.arena.allocator();
+    const found = try a.alloc(?[]const []const u8, roots.len);
+    @memset(found, null);
+    const entries = try a.alloc(?project_entry.Entry, roots.len);
+    for (roots, entries) |path, *entry| entry.* = try headedEntry(init, path);
+    const done = try a.alloc(bool, roots.len);
+    @memset(done, false);
+    for (entries, 0..) |candidate, first| {
+        const entry = candidate orelse continue;
+        if (done[first]) continue;
+        var members: std.ArrayList(usize) = .empty;
+        for (entries[first..], first..) |other, index| {
+            const peer = other orelse continue;
+            if (done[index] or !sameProject(entry, peer)) continue;
+            done[index] = true;
+            try members.append(a, index);
+        }
+        try loadTogether(init, entries, members.items, snapshot, found);
+    }
+    return found;
+}
+
+/// The resolved entry of a root that opens with its `module` header, else null.
+fn headedEntry(init: std.process.Init, path: []const u8) !?project_entry.Entry {
+    const a = init.arena.allocator();
+    const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, path, a, .limited(64 << 20)) catch return null;
+    if (!together.headed(bytes)) return null;
+    var problems: std.ArrayList(u8) = .empty;
+    return project_entry.resolve(a, init.io, path, &problems) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return null;
+    };
+}
+
+fn sameProject(one: project_entry.Entry, other: project_entry.Entry) bool {
+    const mine = if (one.configuration) |file| file.path else "";
+    const theirs = if (other.configuration) |file| file.path else "";
+    return std.mem.eql(u8, one.root, other.root) and std.mem.eql(u8, mine, theirs);
+}
+
+/// Load the roots `members` of one project through one synthetic entry and record
+/// each one's closure, as `loadedClosure` records one root's.
+fn loadTogether(init: std.process.Init, entries: []const ?project_entry.Entry, members: []const usize, snapshot: *Snapshot, found: []?[]const []const u8) !void {
+    const a = init.arena.allocator();
+    const first = entries[members[0]].?;
+    if (try together.occupied(init.io, a, first.root)) return;
+    const names = try a.alloc([]const u8, members.len);
+    for (members, names) |index, *name| name.* = entries[index].?.name;
+    var session = frontend.Session.init(init.gpa, init.io, first.root);
+    defer session.deinit();
+    first.configure(&session);
+    const providers = [_]frontend.Provider{.{ .path = together.entry_name ++ ".my", .text = try together.entryText(a, names) }};
+    var overlay: Overlay = .{ .files = &session.files, .providers = &providers };
+    session.project.load(overlay.provider(), together.entry_name, first.limits()) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return;
+    };
+    for (members) |index| {
+        const reached = try root_share.closure(a, session.project.modules.items, entries[index].?.name);
+        if (reached.len == 0) continue;
+        var paths: std.ArrayList([]const u8) = .empty;
+        for (reached) |module| if (try recordModule(a, first, module, &.{}, snapshot)) |path| try paths.append(a, path);
+        found[index] = paths.items;
+    }
+}
+
+/// Record one loaded module's source, embeds and interface file in `snapshot`; its
+/// path, or null for a standard module.
+fn recordModule(a: std.mem.Allocator, located: project_entry.Entry, module: *const frontend.Module, providers: []const frontend.Provider, snapshot: *Snapshot) !?[]const u8 {
+    if (std.mem.startsWith(u8, module.src.path, "@stdlib/")) return null;
+    const path = try std.fs.path.join(a, &.{ located.root, module.src.path });
+    var overridden = false;
+    for (providers) |provider| overridden = overridden or std.mem.eql(u8, provider.path, module.src.path);
+    try snapshot.source(path, module.src, overridden);
+    if (located.configuration) |file| if (file.document.interface_files) {
+        try snapshot.disk(try std.fmt.allocPrint(a, "{s}.api", .{path[0 .. path.len - 3]}));
+    };
+    return path;
 }
 
 fn loadedClosure(resources: Discovery, located: project_entry.Entry, providers: []const frontend.Provider, snapshot: *Snapshot) ![]const []const u8 {
@@ -232,17 +339,7 @@ fn loadedClosure(resources: Discovery, located: project_entry.Entry, providers: 
     var overlay: Overlay = .{ .files = &session.files, .providers = providers };
     try session.project.load(overlay.provider(), located.name, located.limits());
     var paths: std.ArrayList([]const u8) = .empty;
-    for (session.project.modules.items) |module| {
-        if (std.mem.startsWith(u8, module.src.path, "@stdlib/")) continue;
-        const path = try std.fs.path.join(a, &.{ located.root, module.src.path });
-        try paths.append(a, path);
-        var overridden = false;
-        for (providers) |provider| overridden = overridden or std.mem.eql(u8, provider.path, module.src.path);
-        try snapshot.source(path, module.src, overridden);
-        if (located.configuration) |file| if (file.document.interface_files) {
-            try snapshot.disk(try std.fmt.allocPrint(a, "{s}.api", .{path[0 .. path.len - 3]}));
-        };
-    }
+    for (session.project.modules.items) |*module| if (try recordModule(a, located, module, providers, snapshot)) |path| try paths.append(a, path);
     return paths.items;
 }
 
@@ -262,8 +359,9 @@ fn configurationInputs(snapshot: *Snapshot, entry: project_entry.Entry) !void {
     }
 }
 
-/// The roots of one directory run, the order they start in, and where their reports go.
-const Roots = struct { paths: []const []const u8, order: []const usize, outcomes: []Outcome };
+/// The roots of one directory run, the order they start in, where their reports go,
+/// and how each runs.
+const Roots = struct { paths: []const []const u8, order: []const usize, outcomes: []Outcome, plans: []const together.Plan };
 /// The shared state of one directory run's workers.
 const Queue = struct {
     roots: Roots,
@@ -274,6 +372,8 @@ const Queue = struct {
     /// writes `failure`, which is read only after every worker has joined.
     stopped: std.atomic.Value(bool) = .init(false),
     failure: ?Error = null,
+    /// The run's test process budget when roots run in this process too.
+    permits: ?*root_share.Permits = null,
 
     fn stop(self: *Queue, err: Error) void {
         if (self.stopped.cmpxchgStrong(false, true, .acq_rel, .acquire) == null) self.failure = err;
@@ -319,8 +419,35 @@ const Worker = struct {
             defer _ = queue.running.fetchSub(1, .monotonic);
             const index = roots.order[position];
             const jobs = childJobs(self.fanout.jobs, queue.workers, roots.order.len - position - 1, running);
-            roots.outcomes[index] = self.child(roots.paths[index], index, jobs) catch |err| return queue.stop(err);
+            const outcome = switch (roots.plans[index]) {
+                .together => |view| self.inProcess(roots.paths[index], view),
+                else => self.held(roots.paths[index], index, jobs),
+            };
+            roots.outcomes[index] = outcome catch |err| return queue.stop(err);
         }
+    }
+
+    /// A child root, holding its share of the run's test process budget while it runs.
+    fn held(self: Worker, path: []const u8, slot: usize, jobs: usize) Error!Outcome {
+        const permits = self.queue.permits orelse return self.child(path, slot, jobs);
+        permits.acquire(self.init.io, jobs);
+        defer permits.release(self.init.io, jobs);
+        return self.child(path, slot, jobs);
+    }
+
+    /// Run a root in this process from its share of a shared check, with its own
+    /// arena, as a child would run it. Its tests may use the whole budget: each of its
+    /// test processes holds a permit, so it takes what the other roots leave.
+    fn inProcess(self: Worker, path: []const u8, view: root_share.View) Error!Outcome {
+        var arena = std.heap.ArenaAllocator.init(self.init.gpa);
+        defer arena.deinit();
+        var init = self.init;
+        init.arena = &arena;
+        var controls = self.fanout.controls;
+        controls.path = path;
+        controls.controls.jobs = self.fanout.jobs;
+        const outcome = try self.fanout.run_root(init, controls, .{ .guest = self.fanout.guest, .view = view, .permits = self.queue.permits }) orelse return .{};
+        return .{ .code = outcome.code, .bytes = try self.init.arena.allocator().dupe(u8, outcome.bytes) };
     }
 
     fn child(self: Worker, path: []const u8, slot: usize, jobs: usize) Error!Outcome {
@@ -678,4 +805,40 @@ test "directory roots start largest file first and each child's jobs divide the 
     try std.testing.expectEqual(@as(usize, 8), childJobs(16, 16, 0, 2));
     try std.testing.expectEqual(@as(usize, 16), childJobs(16, 4, 0, 1));
     try std.testing.expectEqual(@as(usize, 1), childJobs(1, 4, 9, 4));
+}
+
+/// Whether one of `paths` ends with `/name`.
+fn lists(paths: []const []const u8, name: []const u8) bool {
+    for (paths) |path| if (std.mem.endsWith(u8, path, name) and path[path.len - name.len - 1] == '/') return true;
+    return false;
+}
+
+// spec-case: NEW-CORE-TEST-UNION-1
+test "sharedClosures loads headed roots together (headedEntry, loadTogether) and leaves the rest and a failed load to load alone" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const io = std.testing.io;
+    try temporary.dir.writeFile(io, .{ .sub_path = "mylang.json", .data = "{\"version\": 1}\n" });
+    try temporary.dir.writeFile(io, .{ .sub_path = "dep.my", .data = "module dep\n\npublic def value() -> int:\n    return 3\n" });
+    try temporary.dir.writeFile(io, .{ .sub_path = "a_test.my", .data = "module a_test\nimport dep\n\npublic def test_a() -> bool:\n    return dep.value() == 3\n" });
+    try temporary.dir.writeFile(io, .{ .sub_path = "b_test.my", .data = "module b_test\n\npublic def test_b() -> bool:\n    return True\n" });
+    try temporary.dir.writeFile(io, .{ .sub_path = "c_test.my", .data = "public def test_c() -> bool:\n    return True\n" });
+    var environment = try std.testing.environ.createMap(a);
+    const init: std.process.Init = .{ .minimal = .{ .environ = .empty, .args = .{ .vector = &.{} } }, .arena = &arena, .gpa = std.testing.allocator, .io = io, .environ_map = &environment, .preopens = .empty };
+    const roots = [_][]const u8{ try std.fs.path.join(a, &.{ root, "a_test.my" }), try std.fs.path.join(a, &.{ root, "b_test.my" }), try std.fs.path.join(a, &.{ root, "c_test.my" }) };
+    var snapshot: Snapshot = .{ .allocator = a, .io = io };
+    const found = try sharedClosures(init, &roots, &snapshot);
+    try std.testing.expect(lists(found[0].?, "a_test.my") and lists(found[0].?, "dep.my"));
+    try std.testing.expect(lists(found[1].?, "b_test.my") and !lists(found[1].?, "dep.my"));
+    try std.testing.expectEqual(@as(?[]const []const u8, null), found[2]);
+    // A root that imports a missing module fails the shared load: every root loads alone.
+    try temporary.dir.writeFile(io, .{ .sub_path = "b_test.my", .data = "module b_test\nimport missing\n\npublic def test_b() -> bool:\n    return True\n" });
+    var fresh: Snapshot = .{ .allocator = a, .io = io };
+    const alone = try sharedClosures(init, &roots, &fresh);
+    try std.testing.expectEqual(@as(?[]const []const u8, null), alone[0]);
+    try std.testing.expectEqual(@as(?[]const []const u8, null), alone[1]);
 }

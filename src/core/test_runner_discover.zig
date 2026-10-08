@@ -42,6 +42,13 @@ pub const Module = struct { name: []const u8, text: []const u8 };
 /// tests count: the old runner discovers them in the whole project, imports included; a
 /// module with no source here has only its defaulting `test_` functions found.
 pub fn discover(allocator: std.mem.Allocator, program: typed.Program, entry: []const u8, modules: []const Module) std.mem.Allocator.Error![]Case {
+    return within(allocator, program, entry, modules, null);
+}
+
+/// `discover` over the functions of the modules named in `only`, or of every module
+/// when it is null. A directory run's shared check holds many roots' modules; each
+/// root discovers only those its own graph reaches (NEW-CORE-TEST-UNION-1).
+pub fn within(allocator: std.mem.Allocator, program: typed.Program, entry: []const u8, modules: []const Module, only: ?[]const Module) std.mem.Allocator.Error![]Case {
     const scans = try allocator.alloc([]const Declared, modules.len);
     for (modules, scans) |module, *scanned| scanned.* = try scan(allocator, module.text);
     var found: std.ArrayList(Case) = .empty;
@@ -49,6 +56,7 @@ pub fn discover(allocator: std.mem.Allocator, program: typed.Program, entry: []c
         if (function.type_arguments.len != 0 or function.policy.c_abi or function.policy.host != null) continue;
         const split = std.mem.lastIndexOf(u8, function.name, "::");
         const module = if (split) |at| function.name[0..at] else entry;
+        if (only) |names| if (!named(names, module)) continue;
         const own = if (split) |at| function.name[at + 2 ..] else function.name;
         var declared: Declared = .{};
         for (modules, scans) |source, scanned| if (std.mem.eql(u8, source.name, module)) {
@@ -79,6 +87,11 @@ pub fn discover(allocator: std.mem.Allocator, program: typed.Program, entry: []c
     }
     std.mem.sort(Case, found.items, {}, lessByName);
     return found.toOwnedSlice(allocator);
+}
+
+fn named(modules: []const Module, name: []const u8) bool {
+    for (modules) |module| if (std.mem.eql(u8, module.name, name)) return true;
+    return false;
 }
 
 fn lessByName(_: void, a: Case, b: Case) bool {
