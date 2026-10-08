@@ -1,0 +1,120 @@
+{
+ "corpus": "lang",
+ "revision": "HEAD",
+ "compiler": "/home/epentland/.cache/mylang/union-wip/bin/mylang",
+ "oracle": "MYLANG_TEST_CHILDREN",
+ "targets": [
+  {
+   "target": ".",
+   "exit": [
+    0,
+    0
+   ],
+   "wall": [
+    0.656,
+    0.983
+   ],
+   "tests": 1505,
+   "counts": {
+    "passed": 1505,
+    "failed": 0,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": ".",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.639,
+    0.93
+   ],
+   "break": {
+    "file": "live_place_iteration.my",
+    "line": 34
+   },
+   "tests": 1505,
+   "counts": {
+    "passed": 1504,
+    "failed": 1,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": ".",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.655,
+    0.918
+   ],
+   "break": {
+    "file": "migrated/effects.my",
+    "line": 28
+   },
+   "tests": 1505,
+   "counts": {
+    "passed": 1504,
+    "failed": 1,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": ".",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.644,
+    0.923
+   ],
+   "break": {
+    "file": "rc_temporary_lifetimes.my",
+    "line": 18
+   },
+   "tests": 1505,
+   "counts": {
+    "passed": 1504,
+    "failed": 1,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": ".",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    1.146,
+    0.99
+   ],
+   "break": {
+    "file": "rc_site_eliminations.my",
+    "line": 558
+   },
+   "tests": 1505,
+   "counts": {
+    "passed": 1504,
+    "failed": 1,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  }
+ ],
+ "differences": 0
+}

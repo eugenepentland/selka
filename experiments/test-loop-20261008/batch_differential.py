@@ -1,5 +1,8 @@
-"""Item 4 differential: batched test processes (NEW-CORE-TEST-BATCH-1) against one
-process per test (MYLANG_TEST_ISOLATE=1) on real suites.
+"""Process-placement differential: a run against its oracle on real suites. Item 4
+compares batched test processes (NEW-CORE-TEST-BATCH-1) with one process per test
+(`--oracle MYLANG_TEST_ISOLATE`, the default); item 5 compares directory runs in one
+process from a shared check (NEW-CORE-TEST-UNION-1) with one child per root
+(`--oracle MYLANG_TEST_CHILDREN`).
 
 Each corpus runs once in each mode with --force, so every test executes; both modes
 share one cache, so the second mode's builds come from the object cache. The reports
@@ -52,11 +55,12 @@ def extract(repo, revision, prefix, dest):
                 target.write_bytes(archive.extractfile(member).read())
 
 
-def run(compiler, work, cache, target, flags, mode):
+def run(compiler, work, cache, target, flags, mode, oracle='MYLANG_TEST_ISOLATE'):
     env = dict(os.environ)
     env.pop('MYLANG_TEST_ISOLATE', None)
+    env.pop('MYLANG_TEST_CHILDREN', None)
     if mode == 'isolated':
-        env['MYLANG_TEST_ISOLATE'] = '1'
+        env[oracle] = '1'
     for name in ('xdg', 'zig-global', 'zig-local', 'tmp'):
         (cache / name).mkdir(parents=True, exist_ok=True)
     env.update(XDG_CACHE_HOME=str(cache / 'xdg'), ZIG_GLOBAL_CACHE_DIR=str(cache / 'zig-global'),
@@ -81,6 +85,7 @@ def main():
     parser.add_argument('--out', required=True)
     parser.add_argument('--breaks', type=int, default=0)
     parser.add_argument('--seed', type=int, default=7)
+    parser.add_argument('--oracle', choices=['MYLANG_TEST_ISOLATE', 'MYLANG_TEST_CHILDREN'], default='MYLANG_TEST_ISOLATE')
     args = parser.parse_args()
     repo, revision, prefix, targets, flags = CORPORA[args.corpus]
     scratch = Path(args.scratch) / args.corpus
@@ -88,7 +93,7 @@ def main():
     work = scratch / 'tree'
     extract(repo, revision, prefix, work)
     cache = scratch / 'cache'
-    rows = {'corpus': args.corpus, 'revision': revision, 'compiler': args.compiler, 'targets': []}
+    rows = {'corpus': args.corpus, 'revision': revision, 'compiler': args.compiler, 'oracle': args.oracle, 'targets': []}
     differences = 0
     _, sites = candidates(work)
     rng = random.Random(args.seed)
@@ -104,7 +109,7 @@ def main():
         for target in targets:
             # The first run fills the object cache; the timed pair follows, isolated first.
             run(args.compiler, work, cache, target, flags, 'batched')
-            isolated = run(args.compiler, work, cache, target, flags, 'isolated')
+            isolated = run(args.compiler, work, cache, target, flags, 'isolated', args.oracle)
             batched = run(args.compiler, work, cache, target, flags, 'batched')
             row = {'target': target, 'exit': [batched['exit'], isolated['exit']],
                    'wall': [round(batched['wall'], 3), round(isolated['wall'], 3)]}

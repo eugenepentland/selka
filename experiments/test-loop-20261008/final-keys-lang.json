@@ -1,0 +1,208 @@
+{
+ "corpus": "lang",
+ "revision": "d575a1984",
+ "compiler": "/home/epentland/.cache/mylang/union-wip/bin/mylang",
+ "seed": 21,
+ "warm": {
+  "derived": {
+   "cold_wall": 15.408929497934878,
+   "cold_rerun": 1505,
+   "warm_rerun": [],
+   "warm_wall": 0.054748223861679435
+  },
+  "oracle": {
+   "cold_wall": 15.960371940862387,
+   "cold_rerun": 1505,
+   "warm_rerun": [],
+   "warm_wall": 0.05672808992676437
+  }
+ },
+ "edits": [
+  {
+   "kind": "body",
+   "file": "option_methods.my",
+   "line": 52,
+   "edit": {
+    "oracle_rerun": 5,
+    "derived_rerun": 5,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.095,
+    "derived_wall": 0.092,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.058,
+    "derived_wall": 0.054,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "option_methods.my",
+   "line": 52,
+   "edit": {
+    "oracle_rerun": 1,
+    "derived_rerun": 1,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.088,
+    "derived_wall": 0.098,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.054,
+    "derived_wall": 0.056,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "migrated/compiler.my",
+   "line": 56,
+   "edit": {
+    "oracle_rerun": 5,
+    "derived_rerun": 5,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.091,
+    "derived_wall": 0.104,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.052,
+    "derived_wall": 0.049,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "interface",
+   "file": "migrated/domain_equality_case_1.my",
+   "line": 26,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.062,
+    "derived_wall": 0.06,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.063,
+    "derived_wall": 0.063,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "python_text_surface.my",
+   "line": 20,
+   "edit": {
+    "oracle_rerun": 21,
+    "derived_rerun": 21,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.132,
+    "derived_wall": 0.135,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.057,
+    "derived_wall": 0.052,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "rc_byte_receivers.my",
+   "line": 59,
+   "edit": {
+    "oracle_rerun": 4,
+    "derived_rerun": 4,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.088,
+    "derived_wall": 0.093,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.058,
+    "derived_wall": 0.054,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "body",
+   "file": "rc_borrowed_results.my",
+   "line": 25,
+   "edit": {
+    "oracle_rerun": 4,
+    "derived_rerun": 4,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.102,
+    "derived_wall": 0.107,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.058,
+    "derived_wall": 0.052,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "move",
+   "file": "migrated/generic_arrays_case_3.my",
+   "line": 2,
+   "edit": {
+    "oracle_rerun": 1,
+    "derived_rerun": 1,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.109,
+    "derived_wall": 0.103,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.054,
+    "derived_wall": 0.061,
+    "failed_same": true
+   }
+  }
+ ],
+ "missed_total": 0,
+ "wrong_total": 0
+}
