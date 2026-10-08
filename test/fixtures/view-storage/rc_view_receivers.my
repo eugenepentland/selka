@@ -1,7 +1,6 @@
 module rc_view_receivers
 
 
-# spec: RC-HELD-RECEIVER-1
 public def test_unshared_mapping_write_preserves_live_identity() -> bool:
     mapping = {1: 7}
     view = mapping.values()
@@ -9,7 +8,6 @@ public def test_unshared_mapping_write_preserves_live_identity() -> bool:
     return list(view) == [9] and mapping[1] == 9
 
 
-# spec-case: RC-HELD-RECEIVER-1
 public def test_shared_mapping_write_replaces_only_held_edge() -> bool:
     mapping = {1: 7}
     snapshot = mapping
@@ -23,7 +21,6 @@ def only_view() -> DictValues[int, int]:
     return mapping.values()
 
 
-# spec-case: RC-HELD-RECEIVER-1
 public def test_held_only_mapping_remains_mutable() -> bool:
     view = only_view()
     view.mapping[1] = 9
@@ -35,7 +32,6 @@ record Holder:
     view: DictValues[int, int]
 
 
-# spec-case: RC-HELD-RECEIVER-1
 public def test_nested_view_field_detaches_without_releasing_snapshot() -> bool:
     mapping = {1: 7}
     snapshot = mapping
@@ -49,7 +45,6 @@ def capture_mapping(mapping: dict[int, list[int]], saved: mut list[dict[int, lis
     return 9
 
 
-# spec-case: RC-HELD-RECEIVER-1
 public def test_pending_nested_mapping_receiver_pins_snapshot_path() -> bool:
     mapping = {1: [7]}
     view = mapping.values()
@@ -63,7 +58,6 @@ def replace_mapping(view: mut DictValues[int, list[int]]) -> int:
     return 9
 
 
-# spec-case: RC-HELD-RECEIVER-1
 public def test_explicit_row_snapshot_survives_view_rebinding() -> bool:
     mapping = {1: [7]}
     view = mapping.values()
@@ -73,7 +67,6 @@ public def test_explicit_row_snapshot_survives_view_rebinding() -> bool:
     return list(view) == [[8]] and mapping[1] == [7] and selected_row == [7, 9]
 
 
-# spec-case: RC-HELD-RECEIVER-1
 public def test_list_of_views_preserves_ordinary_mapping_snapshots() -> bool:
     mapping = {1: 7}
     snapshot = mapping

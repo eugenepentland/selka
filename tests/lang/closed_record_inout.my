@@ -44,6 +44,22 @@ public def test_closed_carrier_preserves_snapshots_detached_aliases_and_record_r
     return it.rt.data == [11] and it.rt.top == 2 and alias == [1, 2]
 
 
+public def test_closed_carrier_at_a_positive_index_keeps_the_same_snapshots() -> bool:
+    it = Interpreter(Runtime([1, 2], 0), 9)
+    saved = it
+    alias = it.rt.data
+    carrier(mut it, 0, 7)
+    assert it.rt.data == [7, 2] and it.rt.top == 1
+    assert saved.rt.data == [1, 2] and saved.rt.top == 0
+    assert alias == [1, 2]
+    replacement(mut it, -1)
+    assert it.rt.data == [7, 2]
+    replacement(mut it, 11)
+    assert it.rt.data == [11] and it.rt.top == 2
+    return saved.rt.data == [1, 2] and alias == [1, 2]
+
+
 def main() -> int:
     assert test_closed_carrier_preserves_snapshots_detached_aliases_and_record_rebinding()
+    assert test_closed_carrier_at_a_positive_index_keeps_the_same_snapshots()
     return 0

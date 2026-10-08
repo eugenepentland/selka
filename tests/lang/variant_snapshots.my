@@ -1,0 +1,67 @@
+module variant_snapshots
+
+# Variant values keep their payload when the stored element is replaced after a
+# copy was taken, when a held list payload is appended to through a binding, and
+# when a `Result` carries an error record with bytes. This is the executed
+# program of the retired QBE native variant snapshot test
+# (`qbe_rc_native_variant_test.zig`, `RC-NATIVE-VARIANT-1`), which also read the
+# emitted IL and the layout proofs of the native tag helpers.
+
+
+record Fault:
+    message: bytes
+
+
+union Choice:
+    empty,
+    number: int,
+    items: list[int]
+
+
+def forwarded(value: Choice) -> Choice:
+    return value
+
+
+def result(flag: bool) -> Result[int, Fault]:
+    if flag:
+        return Ok(17)
+    return Err(Fault(bytes([65, 66])))
+
+
+def retained(items: list[Choice]) -> Choice:
+    return items[0]
+
+
+def snapshots() -> int:
+    items = [Choice.items([4]), Choice.empty]
+    prior = retained(items)
+    copied = forwarded(prior)
+    items[0] = Choice.number(99)
+    total = 0
+    match copied:
+        case Choice.items(values):
+            changed = values
+            changed.append(5)
+            total += changed[0] + changed[1]
+        case _:
+            return -1
+    match prior:
+        case Choice.items(values):
+            total += len(values)
+        case _:
+            return -2
+    match result(True):
+        case Ok(value):
+            total += value
+        case _:
+            return -3
+    match result(False):
+        case Err(fault):
+            total += len(fault.message)
+        case _:
+            return -4
+    return total
+
+
+public def test_native_snapshots_retained_loans_mutations_and_error_tags_survive() -> bool:
+    return snapshots() == 29
