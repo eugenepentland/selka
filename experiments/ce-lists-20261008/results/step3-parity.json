@@ -1,0 +1,58 @@
+{
+ "parity-nbody": {
+  "label": "parity-nbody",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "179a443bca1492bd09db9648ca9f9d7f3ae224f95c6e59a3bcb3601907c98245",
+  "outputs": {},
+  "counts": true,
+  "program": "nbody",
+  "units": 5000000,
+  "unit": "steps",
+  "expected_sha256": "179a443bca1492bd09db9648ca9f9d7f3ae224f95c6e59a3bcb3601907c98245",
+  "matches_expected": true
+ },
+ "parity-str_build": {
+  "label": "parity-str_build",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "e8e4291ddf65fcad3e471a7587aada2668080c48b025d42dbd6c7ec2b9453b34",
+  "outputs": {},
+  "counts": true,
+  "program": "str_build",
+  "units": 16000000,
+  "unit": "appends",
+  "expected_sha256": "e8e4291ddf65fcad3e471a7587aada2668080c48b025d42dbd6c7ec2b9453b34",
+  "matches_expected": true
+ },
+ "parity-matmul": {
+  "label": "parity-matmul",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "808e7e925cc6db0490c4ba77159937c810a33790b95990cb679a12cf17113bab",
+  "outputs": {},
+  "counts": true,
+  "program": "matmul",
+  "units": 125000000,
+  "unit": "multiply-adds",
+  "expected_sha256": "808e7e925cc6db0490c4ba77159937c810a33790b95990cb679a12cf17113bab",
+  "matches_expected": true
+ },
+ "parity-knucleotide": {
+  "label": "parity-knucleotide",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+  "outputs": {},
+  "counts": true,
+  "program": "knucleotide",
+  "units": 1000000,
+  "unit": "sequence bytes",
+  "expected_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+  "matches_expected": true
+ }
+}

@@ -1,0 +1,31 @@
+|  +- install (+2 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- test-core success
+|  +- run test 57 pass, 398 skip (455 total) 9s MaxRSS:73M
+|  |  +- compile test debug native success 6s MaxRSS:424M
+|  |     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|  |     +- options success
+|  |     |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+|  +- run test 57 pass, 398 skip (455 total) 10s MaxRSS:73M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  +- run test 57 pass, 398 skip (455 total) 19s MaxRSS:100M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  +- run test 57 pass, 398 skip (455 total) 7s MaxRSS:73M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  +- run test 57 pass, 398 skip (455 total) 28s MaxRSS:492M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  +- run test 57 pass, 398 skip (455 total) 15s MaxRSS:191M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  +- run test 57 pass, 398 skip (455 total) 19s MaxRSS:73M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  +- run test 56 pass, 399 skip (455 total) 18s MaxRSS:159M
+|     +- compile test debug native (+3 more reused dependencies)
++- mylang doctest . success 4s
+   +- install (+2 more reused dependencies)
+   +- hash declared test inputs (reused)
+   +- record the test environment (reused)
+   +- compile exe mylang debug native (+2 more reused dependencies)
+   +- compile exe mylang debug native (+2 more reused dependencies)
+
+Build Summary: 88/88 steps succeeded; 2046/21192 tests passed (19146 skipped)
