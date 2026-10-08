@@ -1541,7 +1541,7 @@ fn invalidBlocks(err: anyerror) native_build.Error {
     return if (err == error.OutOfMemory) error.OutOfMemory else error.InvalidNativeManifest;
 }
 
-// spec-case: MODULE-CHECK-1
+// spec: MODULE-CHECK-1
 test "unchanged state proves graph rows and shared headers before skipping publication" {
     const t = std.testing;
     var arena = std.heap.ArenaAllocator.init(t.allocator);

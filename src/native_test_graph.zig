@@ -190,7 +190,7 @@ test "a reduced graph copies dependency facts and rejects malformed manifests" {
     try std.testing.expectError(error.InvalidGraph, reduce(a, .null));
 }
 
-// spec-case: NATIVE-TEST-6
+// spec: NATIVE-TEST-6
 test "a stored reduced graph is bound to its requested input key" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
     defer environment.deinit();

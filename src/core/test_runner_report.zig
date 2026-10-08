@@ -24,7 +24,13 @@ pub const Verdict = struct {
     at: []const u8 = "",
     /// Exact property trial and counterexample evidence when this is a property.
     property: ?@import("test_runner_property.zig").Evidence = null,
+    /// What a test run against providers was accepted under (NATIVE-TEST-5).
+    identity: ?Identity = null,
 };
+
+/// The identities of a provider test's acceptance, as hex digests: the production
+/// declarations its providers replace, the providers' sources, and the run's inputs.
+pub const Identity = struct { contract: []const u8, provider: []const u8, source: []const u8 };
 
 /// The process exit status for a run: 1 when any test failed, 3 when none was selected, else 0.
 pub fn exitStatus(verdicts: []const Verdict) u8 {
@@ -74,6 +80,7 @@ pub fn json(allocator: std.mem.Allocator, verdicts: []const Verdict) std.mem.All
         try quoted(allocator, &out, verdict.reason);
         try out.appendSlice(allocator, ",\"at\":");
         try quoted(allocator, &out, verdict.at);
+        if (verdict.identity) |identity| try out.print(allocator, ",\"contract\":\"{s}\",\"provider\":\"{s}\",\"source\":\"{s}\"", .{ identity.contract, identity.provider, identity.source });
         if (verdict.property) |evidence| {
             try out.appendSlice(allocator, ",\"property\":");
             try out.appendSlice(allocator, try std.json.Stringify.valueAlloc(allocator, evidence, .{}));

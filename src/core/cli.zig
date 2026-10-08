@@ -111,6 +111,11 @@ const build_usage =
 fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     const request = try cli_run.parseRequest(init, .build, args, build_usage) orelse return 2;
     if (request.run != null) return cli_run.run(init, request, "build");
+    // CLI-INPUT-REFUSED-1: an entry that cannot be read is refused by name, as `run` refuses it.
+    if (try cli_run.unreadable(init, "build", request.path)) |message| {
+        try write(init, message);
+        return 2;
+    }
     var options = request.build;
     if (request.no_cache) options.cache = try cli_run.privateCache(init, options.cache);
     defer if (request.no_cache) cli_run.discard(init.io, options.cache);

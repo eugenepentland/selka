@@ -124,6 +124,7 @@ fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget:
             .parameters = try mainParameters(allocator, checked.program),
             .result = mainResult(checked.program),
             .capabilities = try mainCapabilities(allocator, checked.program),
+            .runtime_options = true,
         },
     };
     const outcome = try linkEmitted(init, &module, unit, options, report);

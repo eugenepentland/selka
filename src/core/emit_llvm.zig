@@ -72,6 +72,9 @@ pub const Main = struct {
     result: ?MainResult = null,
     /// Checked capability family per parameter; 255 means ordinary data.
     capabilities: []const u8 = &.{},
+    /// Whether the entry reads its runtime options from `MYLANG_OPTIONS` before calling
+    /// `main` (`myl_core_start`, NATIVE-ARGV-1): a program's entry does, a test executable's does not.
+    runtime_options: bool = false,
 };
 
 /// The case tags of `main`'s `Result` return type.
@@ -459,6 +462,7 @@ const ModuleState = struct {
             \\declare void @myl_core_trap(ptr, i64, i64) noreturn nounwind cold
             \\declare ptr @myl_core_args(i32, ptr) nounwind
             \\declare i32 @myl_core_exit(i64) nounwind
+            \\declare void @myl_core_start() nounwind
             \\declare void @myl_core_s2_unsupported(i32) noreturn nounwind cold
             \\declare ptr @myl_core_dict_new(i64, ptr) nounwind
             \\declare i32 @llvm.cttz.i32(i32, i1 immarg) nounwind readnone
@@ -558,6 +562,7 @@ const ModuleState = struct {
             at = try std.fmt.allocPrint(self.allocator, instruction_location, .{try self.debug.location(self.allocator, .{ .line = 1, .column = 1 }, node)});
         }
         try out.print(self.allocator, "define i32 @main(i32 %argc, ptr %argv) uwtable{s} {{\nentry:\n", .{scope});
+        if (self.options.main.runtime_options) try out.appendSlice(self.allocator, "  call void @myl_core_start()\n");
         var arguments: Out = .empty;
         var owns_args = false;
         var cleanup: Out = .empty;
@@ -852,6 +857,21 @@ const FunctionEmitter = struct {
     pub fn typedValue(self: *FunctionEmitter, raw: ir.Ref) Error![]const u8 {
         const ref = self.function.resolve(raw);
         return std.fmt.allocPrint(self.a(), "{s} {s}", .{ try self.ty(self.function.inst(ref).ty), try self.value(ref) });
+    }
+
+    /// FLOAT-NAN-OBSERVED-3: `argument` with any NaN replaced by the canonical quiet NaN,
+    /// selected on the double's bits with straight-line mask arithmetic, so no
+    /// floating-point rule lets LLVM keep another NaN's sign or payload.
+    fn canonicalNan(self: *FunctionEmitter, out: *Out, argument: ir.Ref) Error![]const u8 {
+        const bits = try self.fresh("%nan.bits");
+        const magnitude = try self.fresh("%nan.magnitude");
+        const is_nan = try self.fresh("%nan.is");
+        const word = try self.fresh("%nan.word");
+        const canonical = try self.fresh("%nan");
+        try out.print(self.a(), "  {s} = bitcast double {s} to i64\n  {s} = and i64 {s}, {s}\n", .{ bits, try self.value(argument), magnitude, bits, c_abi.magnitude_mask });
+        try out.print(self.a(), "  {s} = icmp ugt i64 {s}, {s}\n", .{ is_nan, magnitude, c_abi.infinity_bits });
+        try out.print(self.a(), "  {s} = select i1 {s}, i64 {s}, i64 {s}\n  {s} = bitcast i64 {s} to double\n", .{ word, is_nan, c_abi.canonical_nan_bits, bits, canonical, word });
+        return canonical;
     }
 
     fn constantOf(self: *FunctionEmitter, raw: ir.Ref) ?i64 {
@@ -2640,6 +2660,10 @@ const FunctionEmitter = struct {
             const extension = if (c_function) c_abi.argumentExtension(param) else "";
             if (extension.len != 0) {
                 try arguments.print(self.a(), "{s}{s} {s} {s}", .{ separator, try self.ty(self.typeOf(argument)), extension, try self.value(argument) });
+                continue;
+            }
+            if (c_function and c_abi.canonicalizesNan(param)) {
+                try arguments.print(self.a(), "{s}double {s}", .{ separator, try self.canonicalNan(out, argument) });
                 continue;
             }
             try arguments.print(self.a(), "{s}{s}", .{ separator, try self.typedValue(argument) });

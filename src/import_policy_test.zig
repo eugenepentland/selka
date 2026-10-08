@@ -91,7 +91,7 @@ test "first matching policy rule wins and defaults apply to remaining edges" {
     try t.expectError(error.IncompleteProject, policy.evaluate(t.allocator, &empty, fallback));
 }
 
-// spec-case: MODULE-PROJECT-1
+// spec: MODULE-PROJECT-1
 test "one edge's policy decision is the evaluator's first matching rule or the default" {
     var config = try policy.Policy.parse(t.allocator,
         \\{"version":1,"default_action":"allow","rules":[{"from":"core.*","to":"app.*","action":"deny","reason":"layering"},{"from":"core.*","to":"*","action":"allow","reason":"core may use anything else"}]}

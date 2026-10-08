@@ -12,6 +12,8 @@
  * Output: one buffer per standard stream, flushed when full, at exit and before a
  * trap report, so stdout keeps program order relative to a trap. */
 #define _POSIX_C_SOURCE 200809L
+/* XSI: the signal stack the stack-floor report runs on (`sigaltstack`, `SA_ONSTACK`). */
+#define _XOPEN_SOURCE 700
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -308,7 +310,7 @@ static void out_of_memory(void) {
     flush_all();
     /* Under a test's byte ceiling the OS refusal is its `RLIMIT_AS` backstop: the same trap,
        reported without the frame walk, which may itself need memory. */
-    static const char ceiling[] = "error[R_MEMORY_BUDGET]: native execution failed\nmemory budget exhausted; raise it with --max-memory=SIZE\n";
+    static const char ceiling[] = "error[R_MEMORY_BUDGET]: memory budget exhausted; raise it with --max-memory=SIZE\n";
     static const char message[] = "fatal: out of memory\n";
     if (heap_ceiling) os_write(2, (const unsigned char *)ceiling, sizeof ceiling - 1);
     else os_write(2, (const unsigned char *)message, sizeof message - 1);
@@ -524,7 +526,17 @@ void myl_core_err_trace_append_preserve_most(const myl_core_site *site) {
 /* The layout of a list whose elements are block pointers (`list[str]`). */
 static const int32_t layout_blocks[] = {8, 1, 0, 0, 0};
 
+static int core_io_utf8(const unsigned char *p, size_t n);
+/* A guest argument that is not UTF-8 cannot become a `str`: refused before `main` runs,
+   with the usage status, as the old core refuses it (ARGV-1). */
 myl_block *myl_core_args(int32_t argc, char **argv) {
+    for (int32_t i = 1; i < argc; ++i) {
+        if (core_io_utf8((const unsigned char *)argv[i], strlen(argv[i]))) continue;
+        static const char refused[] = "mylang: guest argument is not valid UTF-8\n";
+        flush_all();
+        os_write(2, (const unsigned char *)refused, sizeof refused - 1);
+        os_exit(2);
+    }
     int64_t count = argc > 1 ? argc - 1 : 0;
     myl_block *list = block_new(MYL_KIND_LIST, count, sizeof(void *));
     list->reserved = (int64_t)(intptr_t)layout_blocks;
@@ -839,24 +851,27 @@ static const char *dw_file(const dw_unit *unit, uint64_t index, char *out, size_
     return "?";
 }
 
+/* While set, frame lines are not written: the first one is kept here instead
+   (`trap_caller`), so a report can name its caller before it lists its frames. */
+static char *trap_capture;
+static size_t trap_capture_size;
+/* Frame lines a report may still print; negative: no limit. */
+static int trap_lines_left = -1;
+static void trap_frame_line(const char *text, size_t length) {
+    if (!trap_capture) {
+        if (trap_lines_left == 0) return;
+        if (trap_lines_left > 0) --trap_lines_left;
+        stream_write(&streams[1], text, length);
+        return;
+    }
+    if (trap_capture[0] || length >= trap_capture_size) return;
+    memcpy(trap_capture, text, length);
+    trap_capture[length] = 0;
+}
+
 /* The frames of return address `pc` (already less one, inside the call), innermost
    first, written as `  in f at path:line:column` lines; `skip` drops that many inner
    frames. Returns how many frames the address stands for (0: not this program's code). */
-/* Where `dwarf_frames` writes its `  in f at …` lines: standard error, or, while a
-   contract report renders its first line from them, this buffer. */
-static struct { char *data; size_t used, capacity; } frame_capture;
-
-static void frame_write(const char *text, size_t len) {
-    if (!frame_capture.data) {
-        stream_write(&streams[1], text, len);
-        return;
-    }
-    size_t room = frame_capture.capacity - frame_capture.used;
-    size_t take = len < room ? len : room;
-    memcpy(frame_capture.data + frame_capture.used, text, take);
-    frame_capture.used += take;
-}
-
 static int dwarf_frames(uint64_t pc, int skip) {
     dwarf_load();
     if (dwarf.state != 1) return 0;
@@ -917,7 +932,7 @@ static int dwarf_frames(uint64_t pc, int skip) {
                 continue;
             }
             int len = snprintf(text, sizeof text, "  in %s at %s:%llu:%llu\n", dw_name(&unit, &chain[k]), dw_file(&unit, file, path, sizeof path), (unsigned long long)line, (unsigned long long)column);
-            frame_write(text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
+            trap_frame_line(text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
             line = chain[k].call_line;
             column = chain[k].call_column;
                 file = chain[k].call_file;
@@ -936,6 +951,9 @@ __attribute__((noinline)) static void trap_frames(void) {
         if (dwarf_frames((uintptr_t)pcs[i] - 1, i == 2 ? 1 : 0) == 0) break;
     }
 }
+
+/* Set by a test executable (`myl_core_test_open`): every trap writes a record. */
+static bool core_trap_marks_all;
 
 /* The version-1 operation marker, shared by plain traps and contract messages. */
 static size_t core_operation_record(char *record, size_t capacity, const char *operation) {
@@ -1028,7 +1046,9 @@ void myl_core_trap(const myl_core_site *site, int64_t a, int64_t b) {
         snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"left\":%lld,\"width\":%d}\n", (long long)a, width);
         break;
     }
-    if (record[0] == 0 && site->kind != TRAP_FACT) core_operation_record(record, sizeof record, site->operation);
+    /* A program's trap without operands has no record, as in the old core; a test trial
+       still marks every trap with one, which is how its runner tells a trap apart. */
+    if (record[0] == 0 && site->kind != TRAP_FACT && core_trap_marks_all) core_operation_record(record, sizeof record, site->operation);
     stream_flush(&streams[0]);
     char text[1024];
     int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: native execution failed%s\n  in %s at %s:%d:%d\n",
@@ -1040,11 +1060,11 @@ void myl_core_trap(const myl_core_site *site, int64_t a, int64_t b) {
     os_exit(1);
 }
 
-/* The old core's advice after a test budget's trap (docs/tooling/runtime-budgets.md). */
+/* The old core's description of a budget's trap, with its advice (docs/tooling/runtime-budgets.md). */
 static const char *core_budget_hint(const char *code){
-    if(!strcmp(code,"R_STEP_LIMIT"))return "instruction budget exhausted; raise it with --max-steps=N\n";
-    if(!strcmp(code,"R_FRAME_LIMIT"))return "call-depth budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of stack, so --max-memory must cover N x 32 KiB)\n";
-    if(!strcmp(code,"R_MEMORY_BUDGET"))return "memory budget exhausted; raise it with --max-memory=SIZE\n";
+    if(!strcmp(code,"R_STEP_LIMIT"))return "instruction budget exhausted; raise it with --max-steps=N";
+    if(!strcmp(code,"R_FRAME_LIMIT"))return "call-depth budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of stack, so --max-memory must cover N x 32 KiB)";
+    if(!strcmp(code,"R_MEMORY_BUDGET"))return "memory budget exhausted; raise it with --max-memory=SIZE";
     return NULL;
 }
 static const myl_core_site *core_io_site;
@@ -1053,13 +1073,13 @@ void myl_core_io_at(const myl_core_site *site){core_io_site=site;}
    printing the guest callers, just as a generated trap keeps its site frame. */
 __attribute__((cold,noinline)) static void core_io_failure(const char *code){
     stream_flush(&streams[0]);char text[1024];int length;
-    if(core_io_site){const myl_core_site *site=core_io_site;length=snprintf(text,sizeof text,"%s:%d:%d: error[%s]: native execution failed\n  in %s at %s:%d:%d\n",site->path,site->line,site->column,code,site->function,site->path,site->line,site->column);}
-    else length=snprintf(text,sizeof text,"error[%s]: native execution failed\n",code);
+    /* A budget's trap is described as the old core describes it (BUDGET-HINT-1). */
+    const char *hint=core_budget_hint(code),*described=hint?hint:"native execution failed";
+    if(core_io_site){const myl_core_site *site=core_io_site;length=snprintf(text,sizeof text,"%s:%d:%d: error[%s]: %s\n  in %s at %s:%d:%d\n",site->path,site->line,site->column,code,described,site->function,site->path,site->line,site->column);}
+    else length=snprintf(text,sizeof text,"error[%s]: %s\n",code,described);
     stream_write(&streams[1],text,(size_t)(length<(int)sizeof text?length:(int)sizeof text-1));
     void *pcs[128];int count=os_stack(pcs,128),found=0;
     for(int i=2;i<count;++i){int frames=dwarf_frames((uintptr_t)pcs[i]-1,found?0:1);if(frames)found=1;else if(found)break;}
-    const char *hint=core_budget_hint(code);
-    if(hint)stream_write(&streams[1],hint,strlen(hint));
     flush_all();os_exit(strncmp(code,"R_",2)?2:1);
 }
 
@@ -1305,29 +1325,23 @@ void myl_core_assert_fail(const myl_core_site *site) {
     const int kind = site->width >= 0 && site->width < 4 ? site->width : 0;
     const char *code = codes[kind];
     stream_flush(&streams[0]);
-    /* The callers first, so a broken precondition can name the one that broke it, as the
-       old core does: `; broken by the caller g at p.my:6:12` (NEW-CORE-S5-CONTRACT-1). */
-    char frames[4096];
-    frame_capture.data = frames;
-    frame_capture.used = 0;
-    frame_capture.capacity = sizeof frames;
-    trap_frames();
-    frame_capture.data = NULL;
-    const char *caller = "";
-    int caller_len = 0;
-    static const char in_prefix[] = "  in ";
-    if (kind == 1 && frame_capture.used > sizeof in_prefix - 1 && memcmp(frames, in_prefix, sizeof in_prefix - 1) == 0) {
-        const char *end = memchr(frames, '\n', frame_capture.used);
-        caller = frames + sizeof in_prefix - 1;
-        caller_len = end ? (int)(end - caller) : 0;
+    /* A broken precondition is its caller's fault: name the next frame out (CONTRACT-REQUIRES-1). */
+    char caller[1024] = "";
+    if (kind == 1) {
+        trap_capture = caller;
+        trap_capture_size = sizeof caller;
+        trap_frames();
+        trap_capture = NULL;
     }
-    char text[2048];
-    int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: %s%s%s%s%.*s\n  in %s at %s:%d:%d\n",
-        site->path, site->line, site->column, code, described[kind], site->operation[0] ? ": " : "", site->operation,
-        caller_len ? "; broken by the caller " : "", caller_len, caller,
+    char blame[1100] = "";
+    size_t named = strlen(caller);
+    if (named > 6 && caller[named - 1] == '\n') snprintf(blame, sizeof blame, "; broken by the caller %.*s", (int)(named - 6), caller + 5);
+    char text[3200];
+    int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: %s%s%s%s\n  in %s at %s:%d:%d\n",
+        site->path, site->line, site->column, code, described[kind], site->operation[0] ? ": " : "", site->operation, blame,
         site->function, site->path, site->line, site->column);
     stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
-    stream_write(&streams[1], frames, frame_capture.used);
+    trap_frames();
     /* The record: {"version":1,"operation":"MESSAGE"} with the message JSON-escaped. */
     char record[2048];
     size_t used = core_operation_record(record, sizeof record, site->operation);

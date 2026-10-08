@@ -4,6 +4,7 @@ comptime {
     _ = @import("frontend_test.zig");
     _ = @import("cli.zig");
     _ = @import("cli_args.zig");
+    _ = @import("trap_contract.zig");
     _ = @import("cli_flags_test.zig");
     _ = @import("test_runner_affected.zig");
     _ = @import("build_test.zig");
@@ -32,6 +33,7 @@ comptime {
     _ = @import("test_runner_directory.zig");
     _ = @import("test_runner_receipt.zig");
     _ = @import("test_runner_cases.zig");
+    _ = @import("test_runner_contracts.zig");
     _ = @import("test_runner_project_test.zig");
     _ = @import("tool_identity.zig");
     _ = @import("tool_discovery.zig");

@@ -402,9 +402,10 @@ test "providers preserve exported record layouts behind unchanged function signa
     try context.write("app.cases.json", try std.json.Stringify.valueAlloc(a, .{ .@"app::test_answer" = .{ .providers = .{ .@"dep.my" = old } } }, .{}));
     try expectStatus(context, try context.run("app.my", &.{}), 0);
     try context.write("app.cases.json", try std.json.Stringify.valueAlloc(a, .{ .@"app::test_answer" = .{ .providers = .{ .@"dep.my" = changed } } }, .{}));
+    // NATIVE-TEST-5: the changed declaration is refused before any body is checked.
     const refused = try context.run("app.my", &.{});
-    try expectStatus(context, refused, 1);
-    try std.testing.expect(std.mem.indexOf(u8, refused.stderr, "ProviderSignatureChanged") != null);
+    try expectStatus(context, refused, 2);
+    try std.testing.expect(std.mem.indexOf(u8, refused.stderr, "IncompatibleProvider") != null);
 }
 
 // spec-case: NEW-CORE-S4-TEST-4

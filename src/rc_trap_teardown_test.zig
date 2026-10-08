@@ -130,7 +130,7 @@ test "RC-STATIC-DROPS-1 RC frames link nothing and drop through static types" {
     try t.expect(std.mem.indexOf(u8, text, "call $myl_rc_native_drop(") == null);
 }
 
-// spec-case: RC-EXIT-SCOPES-1
+// spec: RC-EXIT-SCOPES-1
 test "RC-EXIT-SCOPES-1 a frame with receiver scopes tests them at every return" {
     const saved = runtime.get();
     defer runtime.set(saved);

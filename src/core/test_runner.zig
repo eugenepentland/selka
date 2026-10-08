@@ -34,6 +34,7 @@ const tool_ticket = @import("tool_ticket.zig");
 const case_settings = @import("test_runner_cases.zig");
 const affected = @import("test_runner_affected.zig");
 const v = @import("property_value.zig");
+const test_contracts = @import("test_runner_contracts.zig");
 
 /// The old runner's stub, appended to a file that defines no `main` of its own.
 pub const check_stub = "\n\ndef main() -> int:\n    return 0\n";
@@ -62,11 +63,7 @@ pub fn run(init: std.process.Init, requested: Options) Error!u8 {
     var options = requested;
     const allocator = init.arena.allocator();
     var problems: std.ArrayList(u8) = .empty;
-    const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, options.path, allocator, .limited(64 << 20)) catch |err| {
-        const message = try std.fmt.allocPrint(allocator, "error: cannot read {s}: {s}\n", .{ options.path, @errorName(err) });
-        try writeAll(init, std.Io.File.stderr(), message);
-        return 2;
-    };
+    const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, options.path, allocator, .limited(64 << 20)) catch |err| return unreadable(init, options.path, @errorName(err));
     const located = project_entry.resolve(allocator, init.io, options.path, &problems) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         try writeAll(init, std.Io.File.stderr(), problems.items);
@@ -94,16 +91,21 @@ pub fn run(init: std.process.Init, requested: Options) Error!u8 {
     defer session.deinit();
     located.configure(&session);
     try session.enableCache(init.gpa, options.build.cache);
-    if (!definesMain(bytes)) session.entry_suffix = check_stub;
-    const checked = session.checkFile(allocator, options.path, &problems) catch |err| switch (err) {
+    const entry_text: EntryText = .{ .overlay = try headerlessTest(allocator, located, bytes), .stub = !definesMain(bytes) };
+    entry_text.apply(&session, entry_text.overlay);
+    const provider_sets = case_settings.providerSets(allocator, configured_cases, options.filter) catch |err| return casesFailure(init, err);
+    if (provider_sets.len != 0) if (try validateProviders(init, options, located, entry_text, provider_sets)) |status| return status;
+    // NATIVE-TEST-5: with providers, an unselected production body is never checked; the
+    // first provider graph then answers discovery, and a case without providers fails.
+    var first_provider = frontend.Session.init(init.gpa, init.io, located.root);
+    defer first_provider.deinit();
+    const base_checked: ?frontend.Checked = session.checkFile(allocator, options.path, &problems) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
-        else => {
-            try writeAll(init, std.Io.File.stderr(), problems.items);
-            return 1;
-        },
+        else => if (provider_sets.len == 0) return failWith(init, problems.items, 1) else null,
     };
+    const checked = base_checked orelse try providerGraph(init, options, located, entry_text, provider_sets[0], &first_provider) orelse return failWith(init, problems.items, 1);
     var before: std.ArrayList(receipt.Dependency) = .empty;
-    try before.appendSlice(allocator, try receipt.captured(context, &session, &.{}));
+    try before.appendSlice(allocator, try checkedInputs(context, &session, entry_text.overlay, bytes));
     try before.appendSlice(allocator, native_inputs.items);
     located.validate(allocator, &session, &problems) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
@@ -127,49 +129,16 @@ pub fn run(init: std.process.Init, requested: Options) Error!u8 {
         try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(allocator, "error: test providers: {s}\n", .{@errorName(err)}));
         return 1;
     };
-    var chosen: std.ArrayList(Selected) = .empty;
-    var sources: std.ArrayList([]const u8) = .empty;
-    try addSources(allocator, &sources, context, &session);
+    var collected: Collected = .{ .before = before };
+    try addSources(allocator, &collected.sources, context, &session);
+    const shared: GroupRun = .{ .init = init, .selection = .{ .receipt = context, .base = base }, .session = &session, .base_checked = base_checked, .discovery = checked, .entry = entry_text, .cases = configured_cases };
     for (groups) |group| {
-        var provider_session = frontend.Session.init(init.gpa, init.io, located.root);
-        defer provider_session.deinit();
-        var selected_program = checked;
-        var grouped_cases = group.cases;
-        if (group.providers.len != 0) {
-            case_settings.available(group.providers, &session, located.name) catch |err| {
-                if (err == error.OutOfMemory) return error.OutOfMemory;
-                try writeAll(init, std.Io.File.stderr(), "error: invalid test provider dependencies\n");
-                return 1;
-            };
-            located.configure(&provider_session);
-            try provider_session.enableCache(init.gpa, options.build.cache);
-            provider_session.setProviders(group.providers);
-            if (!definesMain(bytes)) provider_session.entry_suffix = check_stub;
-            selected_program = provider_session.checkFile(allocator, located.path, &problems) catch |err| {
-                if (err == error.OutOfMemory) return error.OutOfMemory;
-                try writeAll(init, std.Io.File.stderr(), problems.items);
-                return 1;
-            };
-            try before.appendSlice(allocator, try receipt.captured(context, &provider_session, group.providers));
-            located.validate(allocator, &provider_session, &problems) catch |err| {
-                if (err == error.OutOfMemory) return error.OutOfMemory;
-                try writeAll(init, std.Io.File.stderr(), problems.items);
-                return project_entry.status(err);
-            };
-            const provider_modules = try moduleSources(allocator, &provider_session, entry_module);
-            const discovered = try discover.discover(allocator, selected_program.program, entry_module, provider_modules);
-            case_settings.compatible(allocator, &session, &provider_session, checked, selected_program, group) catch |err| {
-                if (err == error.OutOfMemory) return error.OutOfMemory;
-                try writeAll(init, std.Io.File.stderr(), "error: ProviderSignatureChanged: test providers changed the exported type graph\n");
-                return 1;
-            };
-            grouped_cases = try remap(allocator, checked.program, selected_program.program, group.cases, discovered);
-            try addSources(allocator, &sources, context, &provider_session);
-        }
-        const items = try select(init, options, selected_program, grouped_cases, configured_cases, .{ .receipt = context, .base = base });
-        try execute(init, options, selected_program, items);
-        try chosen.appendSlice(allocator, items);
+        if (base_checked == null and group.providers.len == 0) return failWith(init, problems.items, 1);
+        if (try shared.runGroup(group, entry_module, &collected)) |status| return status;
     }
+    before = collected.before;
+    const chosen = collected.chosen;
+    const sources = collected.sources;
     const unchanged = try receipt.unchanged(context, before.items) and try receipt.toolUnchanged(context);
     if (!unchanged) {
         try writeAll(init, std.Io.File.stderr(), "error: SourceChanged: a test input changed during checking or execution\n");
@@ -186,7 +155,225 @@ pub fn run(init: std.process.Init, requested: Options) Error!u8 {
     if (successful and unchanged and options.controls.against == null) try receipt.remember(context, base, before.items, json);
     const out = if (options.json) json else try report.text(allocator, verdicts);
     try writeAll(init, std.Io.File.stdout(), out);
+    try siblingHint(init, &session, located, verdicts.len);
     return report.exitStatus(verdicts);
+}
+
+/// The entry file as every session of a run reads it: its header-less overlay
+/// (`headerlessTest`) and whether the old runner's stub `main` is appended.
+const EntryText = struct {
+    overlay: []const frontend.Provider,
+    stub: bool,
+
+    /// Read the entry this way in `session`, with `providers` replacing dependencies.
+    fn apply(self: EntryText, session: *frontend.Session, providers: []const frontend.Provider) void {
+        session.setProviders(providers);
+        if (self.stub) session.entry_suffix = check_stub;
+    }
+};
+
+/// What a run's provider groups add up: the inputs their verdicts depend on, the
+/// sources the report lists and the selected tests.
+const Collected = struct {
+    before: std.ArrayList(receipt.Dependency),
+    sources: std.ArrayList([]const u8) = .empty,
+    chosen: std.ArrayList(Selected) = .empty,
+};
+
+/// What every provider group of one run shares: the base session (fully checked, or
+/// only declared when providers replace an unfinished production body), the program
+/// that answered discovery, and the entry's text and cases.
+const GroupRun = struct {
+    init: std.process.Init,
+    selection: SelectionContext,
+    session: *frontend.Session,
+    base_checked: ?frontend.Checked,
+    discovery: frontend.Checked,
+    entry: EntryText,
+    cases: case_settings.File,
+
+    /// Check `group`'s provider graph (the base graph when it has none), select, build
+    /// and run its cases into `out`; the exit status of a refusal, or null.
+    fn runGroup(self: *const GroupRun, group: case_settings.Group, entry_module: []const u8, out: *Collected) Error!?u8 {
+        const init = self.init;
+        const a = init.arena.allocator();
+        const context = self.selection.receipt;
+        const located = context.entry;
+        var provider_session = frontend.Session.init(init.gpa, init.io, located.root);
+        defer provider_session.deinit();
+        var program = self.base_checked orelse self.discovery;
+        var cases = group.cases;
+        var identity: ?report.Identity = null;
+        if (group.providers.len != 0) {
+            var problems: std.ArrayList(u8) = .empty;
+            const overlays = try std.mem.concat(a, frontend.Provider, &.{ group.providers, self.entry.overlay });
+            located.configure(&provider_session);
+            try provider_session.enableCache(init.gpa, context.options.build.cache);
+            self.entry.apply(&provider_session, overlays);
+            program = provider_session.checkFile(a, located.path, &problems) catch |err| return checkFailure(init, err, problems.items, 1);
+            try out.before.appendSlice(a, try receipt.captured(context, &provider_session, overlays));
+            located.validate(a, &provider_session, &problems) catch |err| return checkFailure(init, err, problems.items, project_entry.status(err));
+            const discovered = try discover.discover(a, program.program, entry_module, try moduleSources(a, &provider_session, entry_module));
+            // A replacement's declarations were validated before any body was checked;
+            // with a checked production graph its exported type graph must agree too.
+            if (self.base_checked) |production| case_settings.compatible(a, self.session, &provider_session, production, program, group) catch |err|
+                return checkFailure(init, err, "error: ProviderSignatureChanged: test providers changed the exported type graph\n", 1);
+            cases = try remap(a, self.discovery.program, program.program, group.cases, discovered);
+            try addSources(a, &out.sources, context, &provider_session);
+            identity = try providerIdentities(a, self.session, group.providers, self.selection.base);
+        }
+        const items = try select(init, context.options, program, cases, self.cases, self.selection);
+        try execute(init, context.options, program, items);
+        if (identity) |known| for (items) |*item| {
+            item.verdict.identity = known;
+        };
+        try out.chosen.appendSlice(a, items);
+        return null;
+    }
+};
+
+/// NATIVE-TEST-5: the identities a provider test's report carries: the production
+/// declarations its providers replace, the providers' sources, and the run's inputs.
+fn providerIdentities(a: std.mem.Allocator, production: *frontend.Session, providers: []const frontend.Provider, base: [32]u8) Error!report.Identity {
+    var replaced: std.ArrayList(test_contracts.Module) = .empty;
+    for (providers) |provider| if (try declaredModule(production, try moduleOfPath(a, provider.path))) |module| try replaced.append(a, module);
+    return .{
+        .contract = try test_contracts.identity(a, replaced.items),
+        .provider = try test_contracts.providerIdentity(a, providers),
+        .source = try a.dupe(u8, &std.fmt.bytesToHex(base, .lower)),
+    };
+}
+
+/// Module `name`'s exported declarations in `session`'s declared graph; null when it
+/// has none or they cannot be rendered.
+fn declaredModule(session: *frontend.Session, name: []const u8) Error!?test_contracts.Module {
+    return test_contracts.declarations(session, name) catch |err| if (err == error.OutOfMemory) return error.OutOfMemory else null;
+}
+
+/// `dir/name.my` is module `dir.name`.
+fn moduleOfPath(a: std.mem.Allocator, path: []const u8) Error![]const u8 {
+    const module = try a.dupe(u8, path[0 .. path.len - ".my".len]);
+    std.mem.replaceScalar(u8, module, '/', '.');
+    return module;
+}
+
+/// NATIVE-TEST-5: before any body is checked, every provider set the selection uses
+/// must replace only modules the entry imports and keep each one's exported
+/// declarations (`test_runner_contracts.zig`). The exit status of a refusal, or null.
+fn validateProviders(init: std.process.Init, options: Options, located: project_entry.Entry, entry_text: EntryText, sets: []const []const frontend.Provider) Error!?u8 {
+    const a = init.arena.allocator();
+    var problems: std.ArrayList(u8) = .empty;
+    var production = frontend.Session.init(init.gpa, init.io, located.root);
+    defer production.deinit();
+    located.configure(&production);
+    try production.enableCache(init.gpa, options.build.cache);
+    entry_text.apply(&production, entry_text.overlay);
+    production.declare(a, located.name, &problems) catch |err| return checkFailure(init, err, problems.items, 1);
+    for (sets) |set| {
+        case_settings.available(set, &production, located.name) catch |err|
+            return checkFailure(init, err, "error: InvalidTestProviders: invalid test provider dependencies: a provider may replace only a module the entry imports, never the entry\n", 1);
+        var replacement = frontend.Session.init(init.gpa, init.io, located.root);
+        defer replacement.deinit();
+        located.configure(&replacement);
+        try replacement.enableCache(init.gpa, options.build.cache);
+        entry_text.apply(&replacement, try std.mem.concat(a, frontend.Provider, &.{ set, entry_text.overlay }));
+        replacement.declare(a, located.name, &problems) catch |err| return checkFailure(init, err, problems.items, 1);
+        for (set) |provider| if (try keeps(a, &production, &replacement, provider.path)) |refused| return checkFailure(init, error.IncompatibleProvider, refused, 2);
+    }
+    return null;
+}
+
+/// Whether the replacement graph keeps the declarations module `path` exports in
+/// production: null when it does, else the refusal to print.
+fn keeps(a: std.mem.Allocator, production: *frontend.Session, replacement: *frontend.Session, path: []const u8) Error!?[]const u8 {
+    const name = try moduleOfPath(a, path);
+    const refused = try std.fmt.allocPrint(a, "error: IncompatibleProvider: provider {s} does not keep the exported declarations of module {s}\n", .{ path, name });
+    // Declarations the production graph cannot render (a test's private parameter type)
+    // leave the comparison to the checked type graph (`case_settings.compatible`).
+    const before = try declaredModule(production, name) orelse return null;
+    const after = try declaredModule(replacement, name) orelse return refused;
+    test_contracts.validate(before, after) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else refused;
+    return null;
+}
+
+/// The first provider graph, fully checked, which answers discovery when the
+/// production graph's bodies are not checked; null after printing nothing when it
+/// does not check (its diagnostics are the production check's concern).
+fn providerGraph(init: std.process.Init, options: Options, located: project_entry.Entry, entry_text: EntryText, set: []const frontend.Provider, session: *frontend.Session) Error!?frontend.Checked {
+    const a = init.arena.allocator();
+    var problems: std.ArrayList(u8) = .empty;
+    located.configure(session);
+    try session.enableCache(init.gpa, options.build.cache);
+    entry_text.apply(session, try std.mem.concat(a, frontend.Provider, &.{ set, entry_text.overlay }));
+    if (session.checkFile(a, located.path, &problems)) |checked| return checked else |err| _ = try checkFailure(init, err, problems.items, 1);
+    return null;
+}
+
+/// A check's failure as an exit status: memory runs out of the run itself; any other
+/// error was already rendered into `text`, which goes to stderr.
+fn checkFailure(init: std.process.Init, err: anyerror, text: []const u8, status: u8) Error!?u8 {
+    if (err == error.OutOfMemory) return error.OutOfMemory;
+    try writeAll(init, std.Io.File.stderr(), text);
+    return status;
+}
+
+/// Print `text` on stderr and answer `status`.
+fn failWith(init: std.process.Init, text: []const u8, status: u8) Error!u8 {
+    try writeAll(init, std.Io.File.stderr(), text);
+    return status;
+}
+
+fn casesFailure(init: std.process.Init, err: case_settings.Error) Error!u8 {
+    if (err == error.OutOfMemory) return error.OutOfMemory;
+    return failWith(init, try std.fmt.allocPrint(init.arena.allocator(), "error: test providers: {s}\n", .{@errorName(err)}), 1);
+}
+
+/// The sources a check read, as receipts record them. A header-less test entry is
+/// overlaid with its header (`headerlessTest`), so its own bytes are its input.
+fn checkedInputs(context: receipt.Context, session: *const frontend.Session, overlay: []const frontend.Provider, bytes: []const u8) Error![]const receipt.Dependency {
+    const inputs = try receipt.captured(context, session, overlay);
+    if (overlay.len == 0) return inputs;
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.Blake3.hash(bytes, &digest, .{});
+    return std.mem.concat(context.arena, receipt.Dependency, &.{ inputs, &.{.{ .path = context.entry.path, .digest = digest }} });
+}
+
+/// CLI-INPUT-REFUSED-1: refuse an entry that cannot be read, naming it and the reason
+/// as the old CLI words them, with the usage status.
+fn unreadable(init: std.process.Init, path: []const u8, name: []const u8) Error!u8 {
+    const reason = if (std.mem.eql(u8, name, "FileNotFound")) "no such file or directory" else if (std.mem.eql(u8, name, "AccessDenied") or std.mem.eql(u8, name, "PermissionDenied")) "permission denied" else name;
+    try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(init.arena.allocator(), "mylang test: cannot read '{s}': {s}\n", .{ path, reason }));
+    return 2;
+}
+
+/// TEST-SIBLING-HINT-1: when nothing is selected and `FILE_test.my` beside the entry
+/// exists outside the loaded graph, say so on stderr and how to run it.
+fn siblingHint(init: std.process.Init, session: *const frontend.Session, located: project_entry.Entry, selected: usize) Error!void {
+    const a = init.arena.allocator();
+    if (selected != 0 or !std.mem.endsWith(u8, located.path, ".my")) return;
+    const sibling = try std.fmt.allocPrint(a, "{s}_test.my", .{located.path[0 .. located.path.len - ".my".len]});
+    std.Io.Dir.cwd().access(init.io, sibling, .{}) catch return;
+    if (session.single == null) for (session.project.modules.items) |module| {
+        const path = try std.fs.path.join(a, &.{ located.root, module.src.path });
+        if (std.mem.eql(u8, path, sibling)) return;
+    };
+    try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(a, "mylang test: no tests selected; sibling test file {s} is not included by this entry. Run that file explicitly with mylang test, or test its directory.\n", .{sibling}));
+}
+
+/// FMT-TEST-MODULE-1: a header-less `*_test.my` file that imports project modules is
+/// checked as the module its stem names, as the old runner checked it: its text with
+/// `module NAME; ` on the first line, so every line keeps its number. Empty otherwise.
+fn headerlessTest(a: std.mem.Allocator, located: project_entry.Entry, bytes: []const u8) Error![]const frontend.Provider {
+    if (!std.mem.endsWith(u8, located.path, "_test.my")) return &.{};
+    var lines = std.mem.splitScalar(u8, bytes, '\n');
+    const opening = while (lines.next()) |raw| {
+        const line = std.mem.trim(u8, raw, " \t\r");
+        if (line.len != 0 and line[0] != '#') break line;
+    } else return &.{};
+    if (!std.mem.startsWith(u8, opening, "import ")) return &.{};
+    const relative = try std.mem.concat(a, u8, &.{ try std.mem.replaceOwned(u8, a, located.name, ".", "/"), ".my" });
+    const text = try std.fmt.allocPrint(a, "module {s}; {s}", .{ located.name, bytes });
+    return a.dupe(frontend.Provider, &.{.{ .path = relative, .text = text }});
 }
 
 /// The cases `--filter` selects and, with `--against`, the ones `--affected` keeps of
@@ -374,13 +561,16 @@ fn classify(scratch: std.mem.Allocator, keep: std.mem.Allocator, checked: fronte
             if (family != 255 and family <= 5) continue;
             const name = typed.typeName(parameter.ty, checked.program.records);
             if (try property_types.refused(schema, name)) |found| {
-                const reason = try std.fmt.allocPrint(keep, "property test parameter `{s}: {s}` cannot be generated: {s}", .{ parameter.name, name, found.reason });
-                return .{ .name = case.name, .status = .failed, .reason = reason };
+                return .{ .name = case.name, .status = .failed, .reason = try property.refusedText(keep, parameter.name, name, found) };
             }
         }
     }
     // NEW-CORE-S5-TEST-1: an exported `test_*` with another result is a failed case, as the old runner reports it.
-    if (case.shape == .other and !expected) return .{ .name = case.name, .status = .failed, .reason = if (case.other_parameters != 0) "a property test returns bool or Result[bool, E]" else "test result type is not bool" };
+    if (case.shape == .other and !expected) {
+        if (case.other_parameters == 0) return .{ .name = case.name, .status = .failed, .reason = "test result type is not bool" };
+        const result = typed.typeName(checked.program.functions[@backingInt(case.function)].signature.return_type, checked.program.records);
+        return .{ .name = case.name, .status = .failed, .reason = try std.fmt.allocPrint(keep, property.non_bool_result, .{result}) };
+    }
     var why: build.Refusal = .{};
     const selected_roots = try rootsFor(scratch, checked.program, &.{case});
     const module = build.buildRootsSource(scratch, checked.program, selected_roots, checked.src, &why) catch |err| switch (err) {
@@ -558,6 +748,7 @@ fn programFor(allocator: std.mem.Allocator, options: Options, checked: frontend.
 /// `reachable` (the cases' functions) with the runner's entry and step budget added.
 fn withEntry(allocator: std.mem.Allocator, options: Options, checked: frontend.Checked, cases: []const discover.Case, reachable: @import("ir.zig").Module) (Error || batch_entry.Error)!@import("ir.zig").Module {
     var module = reachable;
+    try qualifyHeaderless(allocator, &module, checked.program, cases);
     const targets = try allocator.alloc(entry.Target, cases.len);
     for (targets, cases, 0..) |*target, case, table_index| {
         const function = checked.program.functions[@backingInt(case.function)];
@@ -668,10 +859,18 @@ fn runSelected(resources: ExecutionResources, options: Options, program: typed.P
     const passed = returned and matches;
     if (explicit and !passed and std.mem.eql(u8, outcome.status, "value")) {
         const expected_text = try std.json.Stringify.valueAlloc(a, v.get(selected.settings, case_expectation), .{});
-        const actual_text = try std.json.Stringify.valueAlloc(a, outcome.actual, .{});
+        const actual_text = if (outcome.actual == .string and integerResult(program, case)) outcome.actual.string else try std.json.Stringify.valueAlloc(a, outcome.actual, .{});
         return .{ .name = case.name, .status = .failed, .reason = try std.fmt.allocPrint(a, "expected {s}, got {s}", .{ expected_text, actual_text }) };
     }
     return .{ .name = case.name, .status = if (passed) .passed else .failed, .reason = if (passed) "" else try ordinaryReason(a, outcome) };
+}
+
+/// NATIVE-TEST-8: whether `case` returns a plain integer, whose value a failed typed
+/// expectation quotes bare (`got 3`) rather than in the cases encoding (`got "3"`).
+fn integerResult(program: typed.Program, case: discover.Case) bool {
+    const name = typed.typeName(program.functions[@backingInt(case.function)].signature.return_type, program.records);
+    for ([_][]const u8{ "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64" }) |integer| if (std.mem.eql(u8, name, integer)) return true;
+    return false;
 }
 
 fn expectedResult(a: std.mem.Allocator, program: typed.Program, case: discover.Case, expected: std.json.Value, actual: std.json.Value) Error!bool {
@@ -692,6 +891,21 @@ fn expectedResult(a: std.mem.Allocator, program: typed.Program, case: discover.C
 fn truth(value: std.json.Value) bool {
     if (value == .bool) return value.bool;
     return std.mem.eql(u8, v.text(v.get(value, "case")), "ok") and v.get(value, "value") == .bool and v.get(value, "value").bool;
+}
+
+/// ERROR-TRACE-3: a header-less file is checked alone, so its functions carry bare
+/// names; the old runner checked it as the module its stem names, and its error
+/// traces and trap frames say `module::name`. Qualify the file's own functions so the
+/// new core's say the same. A module entry's functions are already qualified.
+fn qualifyHeaderless(allocator: std.mem.Allocator, module: *@import("ir.zig").Module, program: typed.Program, cases: []const discover.Case) Error!void {
+    if (std.mem.indexOf(u8, program.functions[@backingInt(program.main)].name, "::") != null or cases.len == 0) return;
+    const split = std.mem.lastIndexOf(u8, cases[0].name, "::") orelse return;
+    const prefix = cases[0].name[0 .. split + 2];
+    for (module.functions.items) |*function| {
+        if (function.signature.linkage != .internal or function.name.len == 0) continue;
+        if (!std.ascii.isAlphabetic(function.name[0]) or std.mem.indexOf(u8, function.name, "::") != null) continue;
+        function.name = try std.mem.concat(allocator, u8, &.{ prefix, function.name });
+    }
 }
 
 /// Best-effort retirement only touches the selected test's owned directory.

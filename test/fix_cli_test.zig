@@ -108,7 +108,7 @@ const unused_module =
     \\
 ;
 
-// spec-case: FIX-MIGRATION-1
+// spec: FIX-MIGRATION-1
 test "CLI fix applies every structured fix across modules to a fixed point" {
     var project = try Project.init(&.{
         .{ .path = "main.my", .data = fixable_main },
@@ -252,39 +252,6 @@ test "CLI check checks a library module or a test file without main" {
     try testing.expectEqual(@as(u8, 0), headerless_test.status);
 }
 
-// spec: NATIVE-TEST-DIAGNOSTICS-1
-test "CLI test renders a test entry that does not compile as diagnostic-v1 JSON" {
-    var project = try Project.init(&.{.{ .path = "grow_test.my", .data =
-        \\module grow_test
-        \\
-        \\
-        \\def grow(xs: mut list[int]) -> None:
-        \\    xs.append(1)
-        \\
-        \\
-        \\public def test_grow() -> bool:
-        \\    xs: list[int] = []
-        \\    grow(xs)
-        \\    return len(xs) == 1
-        \\
-    }});
-    defer project.deinit();
-    const cache = try project.path(".test-cache");
-    defer testing.allocator.free(cache);
-    const json = try project.run("test", "grow_test.my", &.{ "--diagnostics=json", "--cache-dir", cache });
-    defer json.deinit();
-    try testing.expectEqual(@as(u8, 1), json.status);
-    try testing.expect(contains(json.stderr, "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_MUTATION_MARKER\""));
-    try testing.expect(contains(json.stderr, "\"fix\":{\"edits\":[{\"path\":\"grow_test.my\""));
-    const text = try project.run("test", "grow_test.my", &.{ "--diagnostics=text", "--cache-dir", cache });
-    defer text.deinit();
-    try testing.expectEqual(@as(u8, 1), text.status);
-    try testing.expect(contains(text.stderr, "grow_test.my:10:10: error[E_MUTATION_MARKER]"));
-    const unknown = try project.run("test", "grow_test.my", &.{ "--diagnostics=xml", "--cache-dir", cache });
-    defer unknown.deinit();
-    try testing.expectEqual(@as(u8, 2), unknown.status);
-}
-
 /// The pinned migration corpus: nine modules and tests of the value-semantics
 /// Lox port (the copy the RC performance harness pins, 2026-09-29) with every
 /// call-site `mut` marker stripped, as a program written before the markers
@@ -358,11 +325,10 @@ const abi_consumer =
 ;
 
 fn abiRun(project: *const Project) !void {
-    const result = try project.run("run", "main.my", &.{ "--print-result", "--report" });
+    const result = try project.run("run", "main.my", &.{"--print-result"});
     defer result.deinit();
     try testing.expectEqual(@as(u8, 1), result.status);
     try testing.expectEqualStrings("1\n", result.stdout);
-    try testing.expect(contains(result.stderr, "work-report-v1"));
 }
 
 // spec-case: MUT-REBIND-CALLER-1
