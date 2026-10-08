@@ -1,0 +1,3 @@
+src/main.zig:139:const budget = @import("memory_budget");
+src/core/test_runner.zig:34:const case_settings = @import("test_runner_cases.zig");
+src/core/test_runner.zig:686:    const width = @import("test_runner_options.zig").width(options.controls, init.environ_map, positions.len, @import("memory_budget").available(init.io));

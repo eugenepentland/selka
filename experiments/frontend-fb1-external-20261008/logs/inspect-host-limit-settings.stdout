@@ -1,0 +1,93 @@
+    return true;
+}
+
+/// Host restart checkpoint for the soft ceiling this compiler installed.
+/// Kept in the real environment across value/runtime-mode normalization.
+pub const checkpoint_variable = "MYLANG_HOST_LIMIT_CHECKPOINT";
+/// Guest-only carrier for restoring the original caller's soft ceiling.
+pub const restore_variable = "MYLANG_HOST_LIMIT_RESTORE";
+
+/// Add a guest-only restoration receipt. Build tools keep the host ceiling.
+pub fn guestEnvironment(_: std.mem.Allocator, environ: *std.process.Environ.Map) std.mem.Allocator.Error!void {
+    if (environ.get(checkpoint_variable)) |limit| try environ.put(restore_variable, limit);
+}
+
+/// Install the compiler's own ceiling from `MYLANG_HOST_MEMORY_LIMIT`, falling
+/// back to `host_default`. Malformed text leaves the process unbounded rather
+/// than refusing to start, because argument parsing has not run yet. Remember
+/// the original caller limit across compiler mode-normalization restarts.
+pub fn guardHost(environ: *std.process.Environ.Map) bool {
+    const before = std.posix.getrlimit(.AS) catch return false;
+    if (!guard(resolve(null, environ, host_variable, host_default) catch return false)) return false;
+    const after = std.posix.getrlimit(.AS) catch return true;
+    var buffer: [64]u8 = undefined;
+    const text = std.fmt.bufPrint(&buffer, "{d}:{d}", .{ after.cur, before.cur }) catch return true;
+    environ.put(checkpoint_variable, text) catch return true;
+    return true;
+}
+
+/// Native stack the runtime maps for each frame a `--max-frames` budget allows.
+/// It mirrors `CORE_TEST_FRAME_STACK` in `src/core/runtime/core_test.c`; a test keeps them in step.
+pub const frame_stack_bytes: u64 = 32768;
+/// Stack mapped beyond the per-frame share, mirroring `CORE_TEST_STACK_SLACK` in `core_test.c`.
+pub const stack_slack: u64 = 8 << 20;
+/// Address space a guest needs besides its stack: program text, the C library's
+/// arenas and the harness. Generous on purpose, so a budget refused here is one
+/// the mapping would have refused too.
+pub const frame_reserve: u64 = 32 << 20;
+
+/// Address space the runtime maps for a call-depth budget of `frames`, or null
+/// when the request cannot be expressed in 64 bits.
+pub fn stackReservation(frames: u64) ?u64 {
+    const share = std.math.mul(u64, frames, frame_stack_bytes) catch return null;
+    return std.math.add(u64, share, stack_slack) catch null;
+}
+
+/// How a call-depth budget stands against the address space a guest may map.
+pub const FrameFit = struct {
+    /// Whether the stack reservation fits beside the guest's other mappings.
+    fits: bool,
+    /// Bytes of address space the stack reservation asks for.
+    need: u64,
+    /// The address space the guest may map, or null when nothing bounds it.
+    limit: ?u64,
+    /// True when the process's own limit is what bounds the guest, below what
+    /// `--max-memory` asked for: the original caller's ceiling or `ulimit -v`.
+    inherited: bool,
+};
+
+/// Decide whether a call-depth budget of `frames` fits. `memory` is the guest's
+/// byte ceiling (zero means none) and `address_space` the soft `RLIMIT_AS` the
+/// process runs under (null means unlimited). A ceiling maps `memory + headroom`
+/// bytes, but never more than the process may map.
+pub fn frameFit(frames: u64, memory: u64, address_space: ?u64) FrameFit {
+    const reserved = stackReservation(frames);
+    const need = reserved orelse std.math.maxInt(u64);
+    const asked: ?u64 = if (memory == 0) null else memory +| headroom;
+    var limit = asked;
+    var inherited = false;
+    if (address_space) |bound| {
+        inherited = asked == null or bound < asked.?;
+        limit = if (asked) |wanted| @min(wanted, bound) else bound;
+    }
+    const fits = reserved != null and (if (limit) |bytes| need <= bytes -| frame_reserve else true);
+    return .{ .fits = fits, .need = need, .limit = limit, .inherited = inherited };
+}
+
+/// The soft address-space limit this process runs under, or null when unlimited.
+pub fn addressSpaceLimit() ?u64 {
+    const existing = std.posix.getrlimit(.AS) catch return null;
+    return optionalLimit(existing.cur);
+}
+
+/// The guest's address-space ceiling after a matching compiler receipt is
+/// restored; genuine caller ceilings and the inherited hard limit still apply.
+pub fn guestAddressSpaceLimit(environ: *const std.process.Environ.Map) ?u64 {
+    const text = environ.get(checkpoint_variable) orelse return addressSpaceLimit();
+    const existing = std.posix.getrlimit(.AS) catch return null;
+    return optionalLimit(restoredLimit(text, existing));
+}
+
+fn optionalLimit(limit: u64) ?u64 {
+    return if (limit == std.math.maxInt(u64)) null else limit;
+}

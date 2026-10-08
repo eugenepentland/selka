@@ -1,0 +1,47 @@
+    isolation_step.dependOn(&isolation_run.step);
+    test_step.dependOn(isolation_step);
+    const selfhost_numeric_step = b.step("test-selfhost-numeric", "Compare bootstrap and live numeric token extents");
+    const selfhost_numeric_run = driver(b, "python3 selfhost/tests/run_lexer_diff.py --compiler", rss.driver, "selfhost_numeric");
+    selfhost_numeric_run.addArgs(&.{ "python3", "selfhost/tests/run_lexer_diff.py", "--compiler" });
+    selfhost_numeric_run.addArtifactArg(exe);
+    selfhost_numeric_step.dependOn(&selfhost_numeric_run.step);
+    test_step.dependOn(selfhost_numeric_step);
+    // The SPEC.md merge driver (`scripts/merge_spec.py`): synthetic three-way
+    // cases, a throwaway repository end to end, and a replay of real merges.
+    const spec_merge_step = b.step("test-spec-merge", "Verify the SPEC.md merge driver, including replayed history");
+    const spec_merge_run = bounded(b.addSystemCommand(&.{ "python3", "tests/test_spec_merge.py" }), rss.script);
+    spec_merge_run.setCwd(b.path("."));
+    spec_merge_step.dependOn(&spec_merge_run.step);
+    test_step.dependOn(spec_merge_step);
+    // The compiler's `compiler_identity` comes from a make-phase run of
+    // `build_identity.zig`. This driver runs that file on throwaway trees that
+    // share one Zig cache, the way a stale digest once reached an installed compiler.
+    const identity_step = b.step("test-compiler-identity", "Verify the compiler identity follows its sources across trees and edits");
+    const identity_run = bounded(b.addSystemCommand(&.{"python3"}), rss.driver);
+    identity_run.addFileArg(b.path("tests/compiler_identity_cache.py"));
+    identity_run.addArgs(&.{ "--zig", b.graph.zig_exe });
+    identity_run.addFileInput(b.path("build_identity.zig"));
+    identity_run.addFileInput(environment_manifest.?);
+    identity_run.expectExitCode(0);
+    identity_step.dependOn(&identity_run.step);
+    test_step.dependOn(identity_step);
+    // The inner loop's own machinery: the change-to-test mapping behind
+    // `scripts/affected_tests.py`, and the check that every repository file a
+    // cached test root names is one of its declared inputs.
+    const affected_step = b.step("test-affected-selection", "Pin scripts/affected_tests.py's change-to-test mapping");
+    const affected_run = driver(b, "python3 tests/test_affected_tests.py", rss.script, "affected");
+    affected_run.addArgs(&.{ "python3", "tests/test_affected_tests.py" });
+    affected_step.dependOn(&affected_run.step);
+    test_step.dependOn(affected_step);
+    const coverage_step = b.step("test-inputs-coverage", "Require every repository file a cached test names to be a declared input");
+    const coverage_self = driver(b, "python3 tests/test_inputs_coverage.py --self-test", rss.script, "coverage_self");
+    coverage_self.addArgs(&.{ "python3", "tests/test_inputs_coverage.py", "--self-test" });
+    coverage_step.dependOn(&coverage_self.step);
+    const coverage_run = driver(b, "python3 tests/test_inputs_coverage.py", rss.script, "coverage");
+    const manifest_self = driver(b, "python3 tests/input_manifest.py --self-test", rss.script, "manifest_self");
+    manifest_self.addArgs(&.{ "python3", "tests/input_manifest.py", "--self-test" });
+    coverage_step.dependOn(&manifest_self.step);
+    coverage_run.addArgs(&.{ "python3", "tests/test_inputs_coverage.py" });
+    coverage_step.dependOn(&coverage_run.step);
+    test_step.dependOn(coverage_step);
+    const doc_coverage = bounded(b.addRunArtifact(exe), rss.driver);

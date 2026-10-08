@@ -1,0 +1,529 @@
+{
+  "compiler_commit": "889943fa81a7c0c69a6452b0ab6c076b42b728cc",
+  "files": {
+    "ast": {
+      "elapsed_seconds": 0.05199003894813359,
+      "receipt": "commands/debug/ast.json",
+      "reference_source_sha256": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+      "source_sha256": "e210fb35bf3125ba06ebb978bcb3592162020a77576542f2d049879a51479bf9",
+      "tests": []
+    },
+    "chunk": {
+      "elapsed_seconds": 0.035132095916196704,
+      "receipt": "commands/debug/chunk.json",
+      "reference_source_sha256": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+      "source_sha256": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66",
+      "tests": []
+    },
+    "compiler": {
+      "elapsed_seconds": 0.15184337622486055,
+      "receipt": "commands/debug/compiler.json",
+      "reference_source_sha256": "0434f5c21703997c51431350798b4918091f6ae2343f8599e188ee855d9dd52b",
+      "source_sha256": "0434f5c21703997c51431350798b4918091f6ae2343f8599e188ee855d9dd52b",
+      "tests": []
+    },
+    "compiler_test": {
+      "elapsed_seconds": 0.5609540268778801,
+      "receipt": "commands/debug/compiler_test.json",
+      "reference_source_sha256": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+      "source_sha256": "582fe817dbeffa709961b5124370ce200510adb3ac0d246572ca1c0dc19ec08a",
+      "tests": [
+        [
+          "compiler_test::test_compile_error_message",
+          "passed",
+          ""
+        ],
+        [
+          "compiler_test::test_compile_global_definition",
+          "passed",
+          ""
+        ],
+        [
+          "compiler_test::test_compile_if_jumps",
+          "passed",
+          ""
+        ],
+        [
+          "compiler_test::test_compile_local_slots",
+          "passed",
+          ""
+        ],
+        [
+          "compiler_test::test_compile_print_addition",
+          "passed",
+          ""
+        ],
+        [
+          "compiler_test::test_compile_too_many_constants",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "driver": {
+      "elapsed_seconds": 0.5702166589908302,
+      "receipt": "commands/debug/driver.json",
+      "reference_source_sha256": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+      "source_sha256": "fe831d2ec08833d11139e790ab741903b27a8e0fb43582cac11ca664b4595836",
+      "tests": []
+    },
+    "driver_tests": {
+      "elapsed_seconds": 2.309112574905157,
+      "receipt": "commands/debug/driver_tests.json",
+      "reference_source_sha256": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+      "source_sha256": "32615edbfcbe21e8d550910df45d9bfcb199ee9c8171405d38566b98d78e00bd",
+      "tests": [
+        [
+          "driver_tests::test_run_arithmetic",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_class_init_method",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_closure_counter",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_compile_error_status",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_gc_stress_same_output",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_inheritance_super",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_print_value_kinds",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_runtime_error_trace",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_set_rhs_keeps_original_receiver",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_set_rhs_keeps_receiver_mutations",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_shared_upvalue",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_stack_overflow",
+          "passed",
+          ""
+        ],
+        [
+          "driver_tests::test_run_string_concat",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "heap": {
+      "elapsed_seconds": 0.07812332198955119,
+      "receipt": "commands/debug/heap.json",
+      "reference_source_sha256": "e695f7b10cb1fb9013600a231ea3f5be556cd67fb5dd40f9275f4e20e377460b",
+      "source_sha256": "e695f7b10cb1fb9013600a231ea3f5be556cd67fb5dd40f9275f4e20e377460b",
+      "tests": []
+    },
+    "heap_test": {
+      "elapsed_seconds": 0.25064363703131676,
+      "receipt": "commands/debug/heap_test.json",
+      "reference_source_sha256": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+      "source_sha256": "c951153991a8d5d13ca1df6ded7c6f26c7b43a08ed2095f72c6091637b29b53f",
+      "tests": [
+        [
+          "heap_test::test_gc_frees_unreachable",
+          "passed",
+          ""
+        ],
+        [
+          "heap_test::test_gc_intern_table_is_weak",
+          "passed",
+          ""
+        ],
+        [
+          "heap_test::test_gc_reuses_free_slot",
+          "passed",
+          ""
+        ],
+        [
+          "heap_test::test_gc_stress_collects_each_allocation",
+          "passed",
+          ""
+        ],
+        [
+          "heap_test::test_gc_threshold_accounting",
+          "passed",
+          ""
+        ],
+        [
+          "heap_test::test_gc_traces_instance_fields",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "interpreter": {
+      "elapsed_seconds": 0.4055701100733131,
+      "receipt": "commands/debug/interpreter.json",
+      "reference_source_sha256": "b25fe023ef9979a60626cabb063d93e5a39f18b54500ef99f5a87a8ad25f3a5d",
+      "source_sha256": "b25fe023ef9979a60626cabb063d93e5a39f18b54500ef99f5a87a8ad25f3a5d",
+      "tests": []
+    },
+    "lox_strings": {
+      "elapsed_seconds": 0.07697171694599092,
+      "receipt": "commands/debug/lox_strings.json",
+      "reference_source_sha256": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+      "source_sha256": "383900dda10b9218caf2087e12a2e20089e4d48b0ec5fc3e17e960a3d70d83df",
+      "tests": []
+    },
+    "lox_strings_test": {
+      "elapsed_seconds": 0.19422932295128703,
+      "receipt": "commands/debug/lox_strings_test.json",
+      "reference_source_sha256": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+      "source_sha256": "a44545c64e9f75cc5af761d6c703feec83c4fc0a14d2678a1b2fce28067bd0c0",
+      "tests": [
+        [
+          "lox_strings_test::test_fnv1a_a",
+          "passed",
+          ""
+        ],
+        [
+          "lox_strings_test::test_fnv1a_empty",
+          "passed",
+          ""
+        ],
+        [
+          "lox_strings_test::test_fnv1a_foobar",
+          "passed",
+          ""
+        ],
+        [
+          "lox_strings_test::test_intern_same_bytes_same_ref",
+          "passed",
+          ""
+        ],
+        [
+          "lox_strings_test::test_table_find_string",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "main": {
+      "elapsed_seconds": 0.3482120300177485,
+      "receipt": "commands/debug/main.json",
+      "reference_source_sha256": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+      "source_sha256": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+      "tests": []
+    },
+    "natives": {
+      "elapsed_seconds": 0.10289276810362935,
+      "receipt": "commands/debug/natives.json",
+      "reference_source_sha256": "bdec494a2cc71bf2bebc808865e67737bde4c1f13b99d1a33d69ae0944b9b780",
+      "source_sha256": "bdec494a2cc71bf2bebc808865e67737bde4c1f13b99d1a33d69ae0944b9b780",
+      "tests": []
+    },
+    "object": {
+      "elapsed_seconds": 0.043365650810301304,
+      "receipt": "commands/debug/object.json",
+      "reference_source_sha256": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+      "source_sha256": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7",
+      "tests": []
+    },
+    "output": {
+      "elapsed_seconds": 0.08822848205454648,
+      "receipt": "commands/debug/output.json",
+      "reference_source_sha256": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+      "source_sha256": "cdc79c8a9a5eca0106fb139bca5492da201f027b0499e5e00a492368317d194c",
+      "tests": []
+    },
+    "parser": {
+      "elapsed_seconds": 0.2519128550775349,
+      "receipt": "commands/debug/parser.json",
+      "reference_source_sha256": "c93777019e58e14f0d033596905f8cf84d2cb093166b345cd7af61ad275bd5ec",
+      "source_sha256": "c93777019e58e14f0d033596905f8cf84d2cb093166b345cd7af61ad275bd5ec",
+      "tests": []
+    },
+    "parser_test": {
+      "elapsed_seconds": 0.6349249249324203,
+      "receipt": "commands/debug/parser_test.json",
+      "reference_source_sha256": "c1aeaf62d260577dec95a8ab10bd59279216eea541604774ff2609104b49a869",
+      "source_sha256": "c1aeaf62d260577dec95a8ab10bd59279216eea541604774ff2609104b49a869",
+      "tests": [
+        [
+          "parser_test::test_parse_call_get_set",
+          "passed",
+          ""
+        ],
+        [
+          "parser_test::test_parse_error_recovery",
+          "passed",
+          ""
+        ],
+        [
+          "parser_test::test_parse_logical",
+          "passed",
+          ""
+        ],
+        [
+          "parser_test::test_parse_precedence",
+          "passed",
+          ""
+        ],
+        [
+          "parser_test::test_parse_unary_grouping",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "resolver": {
+      "elapsed_seconds": 0.13062487193383276,
+      "receipt": "commands/debug/resolver.json",
+      "reference_source_sha256": "5c5ebfa55e0a8f40fa39e63a46e7ca5a59f9d73e0dbf67edb8a04f8a0a88f298",
+      "source_sha256": "5c5ebfa55e0a8f40fa39e63a46e7ca5a59f9d73e0dbf67edb8a04f8a0a88f298",
+      "tests": []
+    },
+    "resolver_test": {
+      "elapsed_seconds": 0.793773015961051,
+      "receipt": "commands/debug/resolver_test.json",
+      "reference_source_sha256": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+      "source_sha256": "72c5176ff15db240d8ec8ff8073fcdb7736e8c60ab47410bb60fce934c179d31",
+      "tests": [
+        [
+          "resolver_test::test_resolve_duplicate_local",
+          "passed",
+          ""
+        ],
+        [
+          "resolver_test::test_resolve_own_initializer",
+          "passed",
+          ""
+        ],
+        [
+          "resolver_test::test_resolve_slot_counts",
+          "passed",
+          ""
+        ],
+        [
+          "resolver_test::test_resolve_this_outside_class",
+          "passed",
+          ""
+        ],
+        [
+          "resolver_test::test_resolve_top_level_return",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "scanner": {
+      "elapsed_seconds": 0.035887699108570814,
+      "receipt": "commands/debug/scanner.json",
+      "reference_source_sha256": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+      "source_sha256": "af4bc6a57859318051dc47d6e1f6344ee98fbfff037e9be93c0a103765cd3e83",
+      "tests": []
+    },
+    "scanner_test": {
+      "elapsed_seconds": 0.17816342692822218,
+      "receipt": "commands/debug/scanner_test.json",
+      "reference_source_sha256": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+      "source_sha256": "1d7fbb34b0de402657786641217e81c9ae286cab14baf2716de2db875ae39ad0",
+      "tests": [
+        [
+          "scanner_test::test_scan_comments_and_lines",
+          "passed",
+          ""
+        ],
+        [
+          "scanner_test::test_scan_empty_source",
+          "passed",
+          ""
+        ],
+        [
+          "scanner_test::test_scan_identifiers",
+          "passed",
+          ""
+        ],
+        [
+          "scanner_test::test_scan_keywords",
+          "passed",
+          ""
+        ],
+        [
+          "scanner_test::test_scan_multiline_string_line",
+          "passed",
+          ""
+        ],
+        [
+          "scanner_test::test_scan_numbers",
+          "passed",
+          ""
+        ],
+        [
+          "scanner_test::test_scan_single_char_tokens",
+          "passed",
+          ""
+        ],
+        [
+          "scanner_test::test_scan_string",
+          "passed",
+          ""
+        ],
+        [
+          "scanner_test::test_scan_two_char_tokens",
+          "passed",
+          ""
+        ],
+        [
+          "scanner_test::test_scan_unexpected_character",
+          "passed",
+          ""
+        ],
+        [
+          "scanner_test::test_scan_unterminated_string",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "table": {
+      "elapsed_seconds": 0.033961142878979445,
+      "receipt": "commands/debug/table.json",
+      "reference_source_sha256": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+      "source_sha256": "c875ae493dbc0d6c1b70202746b0f1d2211190fa1276b9d492778455c0d0b2ca",
+      "tests": []
+    },
+    "table_test": {
+      "elapsed_seconds": 0.11933202808722854,
+      "receipt": "commands/debug/table_test.json",
+      "reference_source_sha256": "d53796ce7b9ec45b1b5dbef742b1b03becddf671852cf0004078f05c795a0edd",
+      "source_sha256": "d53796ce7b9ec45b1b5dbef742b1b03becddf671852cf0004078f05c795a0edd",
+      "tests": [
+        [
+          "table_test::test_table_add_all",
+          "passed",
+          ""
+        ],
+        [
+          "table_test::test_table_delete_leaves_tombstone",
+          "passed",
+          ""
+        ],
+        [
+          "table_test::test_table_grows_at_load_factor",
+          "passed",
+          ""
+        ],
+        [
+          "table_test::test_table_set_get",
+          "passed",
+          ""
+        ],
+        [
+          "table_test::test_table_set_reports_new_key",
+          "passed",
+          ""
+        ],
+        [
+          "table_test::test_table_tombstone_reuse",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "value": {
+      "elapsed_seconds": 0.027652889024466276,
+      "receipt": "commands/debug/value.json",
+      "reference_source_sha256": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+      "source_sha256": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0",
+      "tests": []
+    },
+    "value_test": {
+      "elapsed_seconds": 0.09157541091553867,
+      "receipt": "commands/debug/value_test.json",
+      "reference_source_sha256": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+      "source_sha256": "b766d22b25a8a8a090b4a059030cfc7462022fdacb66a0a91bf8a9e09a53fed4",
+      "tests": [
+        [
+          "value_test::test_format_fraction",
+          "passed",
+          ""
+        ],
+        [
+          "value_test::test_format_integer",
+          "passed",
+          ""
+        ],
+        [
+          "value_test::test_format_large",
+          "passed",
+          ""
+        ],
+        [
+          "value_test::test_format_small",
+          "passed",
+          ""
+        ],
+        [
+          "value_test::test_format_special",
+          "passed",
+          ""
+        ],
+        [
+          "value_test::test_format_zeros",
+          "passed",
+          ""
+        ],
+        [
+          "value_test::test_is_falsey_rules",
+          "passed",
+          ""
+        ],
+        [
+          "value_test::test_values_equal_rules",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "vm": {
+      "elapsed_seconds": 0.20247900602407753,
+      "receipt": "commands/debug/vm.json",
+      "reference_source_sha256": "737ce4acf958a94f7edadcb9adca6be231f6365f339a11dfe313f6a267fae3af",
+      "source_sha256": "737ce4acf958a94f7edadcb9adca6be231f6365f339a11dfe313f6a267fae3af",
+      "tests": []
+    }
+  },
+  "leakcheck": true,
+  "mode": "debug",
+  "oracle": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/zig-out/bin/mylang",
+    "sha256": "5ddab7ce39d576615f55676886252e4dbfff863d0d253cc003886a769c7b1a55"
+  },
+  "source_commit": "f44302d877dfc8a01b64673e70c44b9e0c49f063",
+  "version": "frontend-current-conformance-references-v1"
+}

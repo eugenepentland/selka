@@ -1,0 +1,33 @@
+28:const IndentationMode = enum(u1) {
+36:next_punctuation: enum {
+52:    enum { none, value, objectField }
+70:const safety_checks_hint: union(enum) {
+335:///      * See `Options.emit_null_optional_fields`.
+336:///  * Zig `union(enum)` -> JSON object with one field named for the active tag and a value representing the payload.
+339:///  * Zig `enum` -> JSON string naming the active tag.
+340:///      * If the enum declares a method `pub fn jsonStringify(self: *@This(), jw: anytype) !void`, it is called to do the serialization instead of the default behavior. The given `jw` is a pointer to this `Stringify`.
+341:///      * If the enum is non-exhaustive, unnamed values are rendered as integers.
+342:///  * Zig untyped enum literal -> JSON string naming the active tag.
+392:        .optional => {
+399:        .@"enum" => |enum_info| {
+404:            if (enum_info.mode == .nonexhaustive) {
+405:                inline for (enum_info.field_names) |field_name| {
+416:        .enum_literal => {
+464:                // don't include optional fields that are null when emit_null_optional_fields is set to false
+465:                if (@typeInfo(field_type) == .optional) {
+466:                    if (self.options.emit_null_optional_fields == false) {
+545:    whitespace: enum {
+555:    /// Should optional fields with null value be written?
+556:    emit_null_optional_fields: bool = true,
+779:test "stringify null optional fields" {
+781:        optional: ?[]const u8 = null,
+783:        another_optional: ?[]const u8 = null,
+787:        \\{"optional":null,"required":"something","another_optional":null,"another_required":"something else"}
+796:        .{ .emit_null_optional_fields = false },
+846:test "stringify enums" {
+847:    const E = enum {
+855:test "stringify non-exhaustive enum" {
+856:    const E = enum(u8) {
+864:test "stringify enum literals" {
+870:    const T = union(enum) {
+891:    try testStringify("\"foo\"", @as(enum { foo, bar }, .foo), .{ .emit_strings_as_arrays = true });

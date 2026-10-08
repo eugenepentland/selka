@@ -1,0 +1,71 @@
+
+fn memo(request: Request, identity: Digest) Error!?Digest {
+    const path = try memoPath(request, identity);
+    const bytes = std.Io.Dir.cwd().readFileAlloc(request.io, path, request.arena, .limited(memo_length + 1)) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return null;
+    };
+    if (bytes.len != memo_length or !std.mem.eql(u8, bytes[0..magic.len], magic)) return null;
+    if (!std.mem.eql(u8, bytes[magic.len..][0..32], &identity)) return null;
+    var checksum: Digest = undefined;
+    std.crypto.hash.Blake3.hash(bytes[0 .. memo_length - 32], &checksum, .{});
+    if (!std.mem.eql(u8, bytes[memo_length - 32 ..], &checksum)) return null;
+    return bytes[magic.len + 32 ..][0..32].*;
+}
+
+fn publish(request: Request, identity: Digest, content: Digest) Error!void {
+    const path = try memoPath(request, identity);
+    var bytes: [memo_length]u8 = undefined;
+    @memcpy(bytes[0..magic.len], magic);
+    @memcpy(bytes[magic.len..][0..32], &identity);
+    @memcpy(bytes[magic.len + 32 ..][0..32], &content);
+    std.crypto.hash.Blake3.hash(bytes[0 .. memo_length - 32], bytes[memo_length - 32 ..], .{});
+    try publishBytes(request, path, &bytes);
+}
+
+fn publishBytes(request: Request, path: []const u8, bytes: []const u8) Error!void {
+    const cwd = std.Io.Dir.cwd();
+    cwd.createDirPath(request.io, std.fs.path.dirname(path).?) catch return error.WriteFailed;
+    var nonce: [16]u8 = undefined;
+    std.Io.random(request.io, &nonce);
+    const pending = try std.fmt.allocPrint(request.arena, "{s}.{s}.pending", .{ path, std.fmt.bytesToHex(nonce, .lower) });
+    defer retire(request.io, pending);
+    cwd.writeFile(request.io, .{ .sub_path = pending, .data = bytes }) catch return error.WriteFailed;
+    cwd.rename(pending, cwd, path, request.io) catch return error.WriteFailed;
+}
+
+fn memoPath(request: Request, identity: Digest) Error![]const u8 {
+    return std.fmt.allocPrint(request.arena, "{s}/tool-identity/{s}.memo", .{ try cacheRoot(request), std.fmt.bytesToHex(identity, .lower) });
+}
+
+fn cacheRoot(request: Request) Error![]const u8 {
+    if (request.environment.get("XDG_CACHE_HOME")) |root| if (root.len != 0)
+        return std.fs.path.join(request.arena, &.{ root, "mylang", "core-tools-v1" });
+    if (request.environment.get("HOME")) |root| if (root.len != 0)
+        return std.fs.path.join(request.arena, &.{ root, ".cache", "mylang", "core-tools-v1" });
+    return request.cache;
+}
+
+fn hintKey(request: Request, path: []const u8, cpu: Digest) Error!Digest {
+    var hash = std.crypto.hash.Blake3.init(.{});
+    field(&hash, hint_magic);
+    field(&hash, path);
+    field(&hash, &cpu);
+    runtimePolicy(&hash);
+    discovery.policy(&hash);
+    if (request.environment.get(lib_directory)) |override| {
+        field(&hash, try absolutePath(request, override));
+    } else field(&hash, "");
+    var digest: Digest = undefined;
+    hash.final(&digest);
+    return digest;
+}
+
+fn hintPath(request: Request, path: []const u8, cpu: Digest) Error![]const u8 {
+    return std.fmt.allocPrint(request.arena, "{s}/tool-identity/{s}.inventory", .{ try cacheRoot(request), std.fmt.bytesToHex(try hintKey(request, path, cpu), .lower) });
+}
+
+fn inventoryHint(request: Request, path: []const u8, cpu: Digest) Error!?[]const Input {
+    const bytes = std.Io.Dir.cwd().readFileAlloc(request.io, try hintPath(request, path, cpu), request.arena, .limited(hint_limit)) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return null;

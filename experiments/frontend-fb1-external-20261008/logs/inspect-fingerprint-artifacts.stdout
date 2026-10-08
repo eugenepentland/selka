@@ -1,0 +1,64 @@
+identity {
+  "collector": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2/experiments/frontend-current-lang-oracle-20261008/tools/freeze_current.py",
+    "sha256": "8fd4e7dfd7d874fa9210dee32c23bf3deb85b3689eac2d0eabf35f5c0a46f5f3"
+  },
+  "commit": "f44302d877dfc8a01b64673e70c44b9e0c49f063",
+  "compiler_commit": "5a6b501d672f884336f5749fd6a191daacaac09b",
+  "compiler_source_worktree": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-s5-pin",
+  "configured_entries": [
+    [
+      "driver_tests",
+      "driver_cases.json"
+    ]
+  ],
+  "corpus": "benchmarks/lox/ports/mylang",
+  "cpu_affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "file_workers": 3,
+  "leak_environment": {
+    "MYL_CORE_LEAKCHECK": "1"
+  },
+  "legacy_reference": null,
+  "modes": {
+    "debug": [],
+    "release": [
+      "--release"
+    ],
+    "verify": [
+      "--release",
+      "--verify-facts"
+    ]
+  },
+  "oracle": {
+    "path": "/home/epentland/.cache/mylang/frontend-20261008/mylang-s5-pin/bin/mylang",
+    "sha256": "ec4d76d2b57a0de47eda656571952dab90cc1aa3ddea822a327b945d3c464d03"
+  },
+  "source_manifest_sha256": "d05b8f2ad64d530003d04fa06ae79391355d07bb8269e7b1b311b04064382da9",
+  "source_worktree": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox",
+  "test_arguments": [
+    "--max-steps=100000000"
+  ],
+  "test_force": true,
+  "tests_per_worker": 1,
+  "tools": {
+    "experiments/new-core-s1-20261005/conformance.py": "e6207024207f03ccd56a7f12494eb6538d98c3c9d75c94d39cc6c9a5f3f1ea7b",
+    "experiments/new-core-s2-20261005/wave-b/integration/conformance_checked.py": "5a2dc12b0189315d4891bdfda5a8f667a9d7729b414ae97b29cf2b98af8c5ced"
+  }
+}

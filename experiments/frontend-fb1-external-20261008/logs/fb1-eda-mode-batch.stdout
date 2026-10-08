@@ -1,0 +1,11 @@
+starting fb1-eda-mode-suite
+{"completed_files": 25, "total_files": 121, "elapsed_seconds": 17.74586546001956}
+{"completed_files": 50, "total_files": 121, "elapsed_seconds": 49.28352004592307}
+{"completed_files": 75, "total_files": 121, "elapsed_seconds": 58.30259924288839}
+{"completed_files": 100, "total_files": 121, "elapsed_seconds": 69.27665652404539}
+{"commands": 366, "compiler_sources_unchanged": true, "compiler_unchanged": true, "directory_counts": {"debug": 310, "release": 310, "verify": 310}, "elapsed_seconds": 161.87434009090066, "mismatches": {}, "reference_files_unchanged": true, "reference_sources_unchanged": true, "source_manifest_unchanged": true, "totals": {"current-debug": {"failed": 0, "files": 121, "tests": 310, "unique_tests": 310}, "current-release": {"failed": 0, "files": 121, "tests": 310, "unique_tests": 310}, "current-verify": {"failed": 0, "files": 121, "tests": 310, "unique_tests": 310}}}
+passed fb1-eda-mode-suite
+starting audit-fb1-eda-mode-results
+{"verified_command_reports": 366, "counts": {"current-debug": {"files": 121, "entries": 310, "unique_tests": 310}, "current-release": {"files": 121, "entries": 310, "unique_tests": 310}, "current-verify": {"files": 121, "entries": 310, "unique_tests": 310}}}
+passed audit-fb1-eda-mode-results
+EDA test modes passed

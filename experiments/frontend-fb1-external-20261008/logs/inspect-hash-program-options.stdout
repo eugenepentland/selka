@@ -1,0 +1,20 @@
+src/memory_budget.zig:18:pub const test_default: u64 = 512 << 20;
+src/memory_budget.zig:245:    ceiling: u64 = test_default,
+src/memory_budget.zig:284:    try std.testing.expectEqual(test_default, try resolve(null, &environ, variable, test_default));
+src/memory_budget.zig:286:    try std.testing.expectEqual(@as(u64, 64 << 20), try resolve(null, &environ, variable, test_default));
+src/memory_budget.zig:287:    try std.testing.expectEqual(@as(u64, 7), try resolve(7, &environ, variable, test_default));
+src/memory_budget.zig:289:    try std.testing.expectEqual(test_default, try resolve(null, &environ, variable, test_default));
+src/memory_budget.zig:291:    try std.testing.expectError(error.InvalidMemoryLimit, resolve(null, &environ, variable, test_default));
+src/core/test_runner_property.zig:20:pub const default_runs = 100;
+src/core/test_runner_property.zig:39:pub const Settings = struct { seed: u64, runs: u32 = default_runs, entry: []const u8 = "" };
+src/core/test_runner_property.zig:403:        const runs = if (self.settings.runs == default_runs) "" else try std.fmt.allocPrint(a, " --property-runs {d}", .{self.settings.runs});
+src/core/pipeline.zig:21:pub const Options = struct {
+src/core/pipeline.zig:22:    zig: []const u8,
+src/core/pipeline.zig:24:    release: bool = false,
+src/core/pipeline.zig:35:    facts: enum { on, off, verify, sabotage, sabotage_widening, sabotage_length } = .on,
+src/core/pipeline.zig:46:    generic_vectors: bool = false,
+src/core/pipeline.zig:49:    trap_frames: ?target_description.Traps = null,
+src/core/pipeline.zig:168:        .vectors = options.show.generic_vectors,
+src/core/pipeline.zig:169:        .frames = options.show.trap_frames,
+src/core/pipeline.zig:320:    var target = if (show.generic_vectors) target_description.generic_256 else target_description.current;
+src/core/pipeline.zig:321:    if (show.trap_frames) |frames| target.traps = frames;

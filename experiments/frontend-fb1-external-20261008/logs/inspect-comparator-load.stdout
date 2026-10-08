@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+"""Compare exact frozen per-file, directory and configured tests without oracle runs.
+
+Run with an outer bench-compile.lock, then scripts/build-slot.sh. Examples:
+  --source CANDIDATE_WORKTREE --compiler BINARY --against FROZEN_REF_DIR
+  --output FRESH_RESULTS --cache OWNED_CACHE [--corpus-source MIGRATED_WORKTREE]
+
+Only compiler/cache arguments change in the saved commands. Relocating a corpus
+requires --normalize-source-paths: recorded changes are confined to JSON sources
+and at fields plus diagnostic source filenames; line/column/verdict bytes remain.
+All modes, force, leak checking, jobs, timeouts and budgets come from the references.
+"""
+import argparse
+import concurrent.futures
+import datetime
+import copy
+import hashlib
+import importlib.util
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import time
+
+ORACLE_SHA = "ec4d76d2b57a0de47eda656571952dab90cc1aa3ddea822a327b945d3c464d03"
+MODES = ("debug", "release", "verify")
+
+
+def digest(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def write(path, value):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
+
+
+def production_manifest(source):
+    paths = [path for name in ("src", "std", "stdlib")
+             for path in (source / name).rglob("*") if path.is_file()]
+    paths += [source / name for name in ("build.zig", "build.zig.zon")
+              if (source / name).is_file()]
+    return {str(path.relative_to(source)): digest(path) for path in sorted(paths)}
+
+
+def load(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    result = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(result)
+    return result
+
+
+def triples(report):
+    return [[test["name"], test["status"],
+             (re.match(r"(R_[A-Z_]+)", test.get("reason", "")) or [""])[0]]
+            for test in report["tests"]]
+
+
+def timed_git(source, arguments, output, label):
+    command = ["git", "-C", str(source), *arguments]
+    sample_start = time.monotonic()
+    sample = subprocess.run(["ps", "-eo", "pid,ppid,psr,etimes,args"], capture_output=True, text=True)
+    sample_seconds = time.monotonic() - sample_start
+    started = time.monotonic()
+    done = subprocess.run(command, capture_output=True, timeout=600)
+    elapsed = time.monotonic() - started
+    path = output / "commands" / label
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.with_suffix(".stdout").write_bytes(done.stdout)
+    path.with_suffix(".stderr").write_bytes(done.stderr)
+    write(path.with_suffix(".json"), {"command": command, "returncode": done.returncode,
+        "elapsed_seconds": elapsed, "cpu_affinity": sorted(os.sched_getaffinity(0)),
+        "stdout_sha256": digest(path.with_suffix(".stdout")),
+        "stderr_sha256": digest(path.with_suffix(".stderr")),
+        "other_build_heavy_processes": [line for line in sample.stdout.splitlines() if any(
+            item in line for item in ("zig build", "zig cc", "fuzz_matrix.py", "bench-newcore"))],
+        "process_sample": {"command": ["ps", "-eo", "pid,ppid,psr,etimes,args"],
+            "elapsed_seconds": sample_seconds, "returncode": sample.returncode}})
+    assert done.returncode == 0, "source identity command failed"
+    return done.stdout.decode()
+
+
+def normalize_sources(report, stdout, stderr, root, manifest, enabled):
+    """Map only known source fields/diagnostic paths, with exact byte receipts."""
+    if not enabled or not isinstance(report, dict):
+        return report, stdout, stderr, []
+    result = copy.deepcopy(report)
+    mappings = {str(root / name): "<source>/" + name for name in manifest if name.endswith(".my")}
+    changes, substitutions = [], []
+    string_token = rb'"(?:[^"\\]|\\.)*"'
+
+    def field(value, location, begin, end):
+        path = value.split(":", 1)[0]
+        if path not in mappings:
+            return value
+        replacement = mappings[path] + value[len(path):]
+        substitutions.append((begin, end, json.dumps(replacement, ensure_ascii=False).encode()))
+        changes.append({"stream": "stdout", "field": location, "original": value,
+            "replacement": replacement, "occurrences": 1})
+        return replacement
+
+    if "sources" in result:
+        pattern = rb'(?<!\\)"sources"\s*:\s*\[(?P<items>\s*(?:' + string_token + rb'\s*(?:,\s*)?)*)\]'
+        matches = list(re.finditer(pattern, stdout))
+        assert len(matches) == 1, "ambiguous sources field in raw report"
+        match = matches[0]
+        tokens = list(re.finditer(string_token, match.group("items")))
+        assert [json.loads(token.group()) for token in tokens] == report["sources"]
+        result["sources"] = [field(value, "sources[" + str(index) + "]",
+            match.start("items") + token.start(), match.start("items") + token.end())
+            for index, (value, token) in enumerate(zip(report["sources"], tokens))]
+    at_fields = [(index, test["at"]) for index, test in enumerate(report["tests"])
+                 if isinstance(test.get("at"), str)]
+    at_matches = list(re.finditer(rb'(?<!\\)"at"\s*:\s*(?P<value>' + string_token + rb')', stdout))
+    assert len(at_fields) == len(at_matches), "ambiguous at field in raw report"
+    for (index, value), match in zip(at_fields, at_matches):
+        assert json.loads(match.group("value")) == value
+        result["tests"][index]["at"] = field(value, "tests[" + str(index) + "].at",
+            match.start("value"), match.end("value"))

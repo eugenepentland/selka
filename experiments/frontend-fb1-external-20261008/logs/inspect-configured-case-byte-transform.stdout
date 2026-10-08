@@ -1,0 +1,91 @@
+        var duplicate = false;
+        for (result.items) |previous| duplicate = duplicate or same(previous, providers);
+        if (!duplicate) try result.append(a, providers);
+    }
+    return result.items;
+}
+
+/// Validate every name and field, including cases outside the current filter.
+pub fn validate(file: File, cases: []const discover.Case) Error!void {
+    if (file.document == .null) return;
+    var entries = file.document.object.iterator();
+    while (entries.next()) |item| {
+        var found = false;
+        for (cases) |case| found = found or std.mem.eql(u8, case.name, item.key_ptr.*);
+        if (!found) return error.UnknownTestCase;
+        if (item.value_ptr.* != .object) return error.InvalidTestCases;
+        var fields = item.value_ptr.object.iterator();
+        while (fields.next()) |setting| {
+            const name = setting.key_ptr.*;
+            if (!allowedField(name)) return error.InvalidTestCases;
+        }
+        const arguments = v.get(item.value_ptr.*, "arguments");
+        const skip = v.get(item.value_ptr.*, "skip");
+        const providers = v.get(item.value_ptr.*, providers_key);
+        if (arguments != .null and arguments != .object) return error.InvalidTestCases;
+        if (skip != .null and skip != .string) return error.InvalidTestCases;
+        if (providers != .null and providers != .object) return error.InvalidTestCases;
+    }
+}
+
+/// Retain one checked graph per distinct map of provider sources.
+pub fn groups(a: std.mem.Allocator, file: File, cases: []const discover.Case) Error![]const Group {
+    var result: std.ArrayList(Group) = .empty;
+    var lists: std.ArrayList(std.ArrayList(discover.Case)) = .empty;
+    for (cases) |case| {
+        const providers = try overlays(a, v.get(v.get(file.document, case.name), providers_key));
+        var index: ?usize = null;
+        for (result.items, 0..) |group, position| if (same(group.providers, providers)) {
+            index = position;
+        };
+        if (index == null) {
+            index = result.items.len;
+            try result.append(a, .{ .providers = providers, .cases = &.{} });
+            try lists.append(a, .empty);
+        }
+        try lists.items[index.?].append(a, case);
+    }
+    for (result.items, lists.items) |*group, list| group.cases = list.items;
+    return result.items;
+}
+
+/// A provider may replace an existing dependency, never the entry or a new path.
+pub fn available(providers: []const frontend.Provider, session: *const frontend.Session, entry: []const u8) Error!void {
+    for (providers) |provider| {
+        var found = false;
+        for (session.project.modules.items) |module| if (std.mem.eql(u8, module.src.path, provider.path)) {
+            if (std.mem.eql(u8, module.name, entry)) return error.InvalidTestProviders;
+            found = true;
+        };
+        if (!found) return error.InvalidTestProviders;
+    }
+}
+
+/// Provider bodies may change; their interfaces may not. Each replaced module's
+/// own exported types and functions keep their checked structure, and so does
+/// each selected test's signature: its parameter and result types and every type
+/// they reach, including callbacks, aliases and union payloads. Other modules'
+/// exports (say, of a module the provider no longer imports) are not compared.
+pub fn compatible(a: std.mem.Allocator, original: *frontend.Session, replacement: *frontend.Session, original_checked: frontend.Checked, replacement_checked: frontend.Checked, group: Group) Error!void {
+    const left = try publicSchema(a, original, original_checked);
+    const right = try publicSchema(a, replacement, replacement_checked);
+    for (group.providers) |provider| {
+        const prefix = try modulePrefix(a, provider.path);
+        if (!sameModuleItems(left, right, "types", prefix)) return error.ProviderSignatureChanged;
+        if (!sameModuleItems(left, right, "functions", prefix)) return error.ProviderSignatureChanged;
+    }
+    for (group.cases) |case| {
+        const old = schemaFunction(left, case.name) orelse return error.ProviderSignatureChanged;
+        const new = schemaFunction(right, case.name) orelse return error.ProviderSignatureChanged;
+        for (signature_fields) |field| if (!equivalent(v.get(old, field), v.get(new, field))) return error.ProviderSignatureChanged;
+        if (!try sameReachedTypes(a, left, right, old)) return error.ProviderSignatureChanged;
+    }
+}
+
+/// The schema fields of a function that make up a selected test's signature.
+const signature_fields = [_][]const u8{ "parameters", "result" };
+
+/// `dir/name.my` declares `dir.name::` items.
+fn modulePrefix(a: std.mem.Allocator, path: []const u8) Error![]const u8 {
+    const module = try a.dupe(u8, path[0 .. path.len - ".my".len]);
+    std.mem.replaceScalar(u8, module, '/', '.');

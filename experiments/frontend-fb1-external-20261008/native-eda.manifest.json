@@ -1,0 +1,2585 @@
+{
+  "archive_bytes": 4542003,
+  "archive_sha256": "da3c5ea629adb64998e427ba5be679820e7640329029a93e0ffe15e6fa32e558",
+  "members": {
+    "answers.json": {
+      "bytes": 2994641,
+      "sha256": "c547fc610171baa2b4d9f3a4cd32e73a2ee0660846b8f98d41346e5ed74ba961"
+    },
+    "commands/Cyclops-Flex/run.json": {
+      "bytes": 1021,
+      "sha256": "0f93356fc85af81bbf97adf8d5afc7037527282e88cd611ab9d569e94539a61e"
+    },
+    "commands/Cyclops-Flex/run.stderr.gz": {
+      "bytes": 116,
+      "sha256": "074041c0638d63e3648cf319b36dd98442409a855e4fadb358936068fe80513f"
+    },
+    "commands/Cyclops-Flex/run.stdout.gz": {
+      "bytes": 95,
+      "sha256": "5f58f343dd8e136a396474f64efcdf57bc4a9ebd16f937ca80ad3b4f90581aab"
+    },
+    "commands/adf5901/run.json": {
+      "bytes": 1011,
+      "sha256": "0418c78c2619a2889192e69134e335ba218ab0a0ab05855c5965d8bce499ffe2"
+    },
+    "commands/adf5901/run.stderr.gz": {
+      "bytes": 112,
+      "sha256": "2228ba5ef0aa93b19e12f018aa6d7c5598881d140d127ea4a99196383d425f97"
+    },
+    "commands/adf5901/run.stdout.gz": {
+      "bytes": 92,
+      "sha256": "30b4b195baeebfe04395a85543e9ed30d278e9e208bec2f8b656272c49c2d83b"
+    },
+    "commands/barracuda-base/run.json": {
+      "bytes": 1025,
+      "sha256": "a21c4c824371a49e7739a7cad95932219a6269a69fe46572cae9f41e223c9b92"
+    },
+    "commands/barracuda-base/run.stderr.gz": {
+      "bytes": 254,
+      "sha256": "ae6bee5fa49c3a1077ca4ab7884a13819592f322440a23ae996c6c657d88d597"
+    },
+    "commands/barracuda-base/run.stdout.gz": {
+      "bytes": 97,
+      "sha256": "a7243d0562dfd046a4e3f32aa86e61d6d7740511143f723beba6b35b644e50c1"
+    },
+    "commands/barracuda-via-fence/run.json": {
+      "bytes": 1036,
+      "sha256": "90796f2ef933465c48b0e0259afadb4361edfee19108c95efbeb497e9769c2d6"
+    },
+    "commands/barracuda-via-fence/run.stderr.gz": {
+      "bytes": 158,
+      "sha256": "fd203ab2076816faa3645b300527171b3c6238eda5e8dad6f43f8e4035a8cfbd"
+    },
+    "commands/barracuda-via-fence/run.stdout.gz": {
+      "bytes": 102,
+      "sha256": "bc087bd810890c81a402d55fa8c09febbace7f85f022c19d05e4a6f40621032d"
+    },
+    "commands/barracuda/run.json": {
+      "bytes": 1015,
+      "sha256": "8952b2b8a2aec3901a03730b0ff9a1f0bac3f2bcfffd7c9348c79e8cf388d890"
+    },
+    "commands/barracuda/run.stderr.gz": {
+      "bytes": 152,
+      "sha256": "1966b74d06da511b04ddda63bf4d78acfa53bd08d7d274ad39a729aa48cf9451"
+    },
+    "commands/barracuda/run.stdout.gz": {
+      "bytes": 95,
+      "sha256": "70779d0bc67ca78efa08ee419994f4f8c45f04a9565cfeac6c1a162faa2f6842"
+    },
+    "commands/black-canyon+flat/run.json": {
+      "bytes": 1045,
+      "sha256": "067bb0f3d93c05335060075fb06aa3181603eccf7dfebb1022e3433443d396f1"
+    },
+    "commands/black-canyon+flat/run.stderr.gz": {
+      "bytes": 116,
+      "sha256": "cde71e7744154e3e531bf53d9a82d5ab35d4f41e41e7b219475e464e3e3f9ddb"
+    },
+    "commands/black-canyon+flat/run.stdout.gz": {
+      "bytes": 96,
+      "sha256": "a91fbd3ba946fd6a6cc0863523ed38018b25eee3822244f32239a2134dca5b2f"
+    },
+    "commands/black-canyon/run.json": {
+      "bytes": 1022,
+      "sha256": "4ead0175a882d912b3a7f2f2a898fb082b007749c9102cbd5e30cbb72abd1c4e"
+    },
+    "commands/black-canyon/run.stderr.gz": {
+      "bytes": 116,
+      "sha256": "cde71e7744154e3e531bf53d9a82d5ab35d4f41e41e7b219475e464e3e3f9ddb"
+    },
+    "commands/black-canyon/run.stdout.gz": {
+      "bytes": 96,
+      "sha256": "c33bbc57ffa7f948b856a13ca4b9b59fb07a64794cad76e8b5755aab12c37c0a"
+    },
+    "commands/blinky-breakout/run.json": {
+      "bytes": 1036,
+      "sha256": "78cfba43c6608ecabd21a3376d730f506d6a3657fbe5701c8ae47a014f825393"
+    },
+    "commands/blinky-breakout/run.stderr.gz": {
+      "bytes": 20,
+      "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    "commands/blinky-breakout/run.stdout.gz": {
+      "bytes": 97,
+      "sha256": "3234688fb38d8d6d9c87636e208962301334b795cfc199c7152652d2c7746bc6"
+    },
+    "commands/cyclops-analog+no-vendor-symbols/run.json": {
+      "bytes": 1089,
+      "sha256": "d5036cf38fb4a9294330774017da43aabe4b036cd3920e1f3bb15303d28dafd8"
+    },
+    "commands/cyclops-analog+no-vendor-symbols/run.stderr.gz": {
+      "bytes": 20,
+      "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    "commands/cyclops-analog+no-vendor-symbols/run.stdout.gz": {
+      "bytes": 98,
+      "sha256": "d5a8144a7a07c417ded8b91c2b0b45f4799e87ae5f0facf575b18f429e684fa5"
+    },
+    "commands/cyclops-analog/run.json": {
+      "bytes": 1025,
+      "sha256": "c63178aff58d48eace357932b42ce18f1e7b8689155c976d759ac06c7f5923a8"
+    },
+    "commands/cyclops-analog/run.stderr.gz": {
+      "bytes": 117,
+      "sha256": "70256e6b6d519b1c6c95c295384dcd1d310f58eb8b402fac3fb52c827a62ac85"
+    },
+    "commands/cyclops-analog/run.stdout.gz": {
+      "bytes": 99,
+      "sha256": "024dbd153fc5ef4ee234121829a113ea44bbfe6f9ba3070b9cb0b01c7ecc7a1c"
+    },
+    "commands/cyclops-breakout/run.json": {
+      "bytes": 1030,
+      "sha256": "4b870aaabbad6b75b9e4b8426d6f073c1e840b3542cd9e281da3cbe2e6c1febf"
+    },
+    "commands/cyclops-breakout/run.stderr.gz": {
+      "bytes": 117,
+      "sha256": "f49c64cc488d97c175f483081c64b725eef0e24349d516d65c6992cfecc99921"
+    },
+    "commands/cyclops-breakout/run.stdout.gz": {
+      "bytes": 96,
+      "sha256": "89371d834ab12ae776112a9dd1e7f4afd3aa15cc83ec6c1c92be9d9109bfcabc"
+    },
+    "commands/cyclops-digital-pcb/run.json": {
+      "bytes": 1035,
+      "sha256": "e6ac5a8d771d9b1d02d7ec1621ca226fb71579bc848dce58a05d7859b0d4f5a9"
+    },
+    "commands/cyclops-digital-pcb/run.stderr.gz": {
+      "bytes": 119,
+      "sha256": "93f963de1a3c9416f9fd678e0d79a44d592ff4b5d42adedcfd254e21015d0a9d"
+    },
+    "commands/cyclops-digital-pcb/run.stdout.gz": {
+      "bytes": 101,
+      "sha256": "551d045a896f8e9c8150c815c12d5f06026d9d923019b594323ed68c6c4b564c"
+    },
+    "commands/cyclops-interposer/run.json": {
+      "bytes": 1034,
+      "sha256": "d3f23423bba82332bc1278f50e4220aa7e69ef913707b29d1481598365bd47de"
+    },
+    "commands/cyclops-interposer/run.stderr.gz": {
+      "bytes": 118,
+      "sha256": "481149a84b8d501b0eb286605530a3066dd5fd98bbb0685eca574f5591bd8fc8"
+    },
+    "commands/cyclops-interposer/run.stdout.gz": {
+      "bytes": 98,
+      "sha256": "d01689ba94b776ba033b4ad33f2476518aff75dc2b65b55e887608b3d8d90ec7"
+    },
+    "commands/cyclops-kband-breakout/run.json": {
+      "bytes": 1042,
+      "sha256": "f5a09057e98e4058cbf9164e199065e3c8822a0b5720e7557044c00746995a84"
+    },
+    "commands/cyclops-kband-breakout/run.stderr.gz": {
+      "bytes": 121,
+      "sha256": "2ab47ca33a2331c25b341dd1f78b39b324aaa82db9db7bfbd567a026ad51d1d6"
+    },
+    "commands/cyclops-kband-breakout/run.stdout.gz": {
+      "bytes": 103,
+      "sha256": "45df6c836301415c9a4a7de2885dfafff6ff8e7d36b542456ffa81d7f8862e81"
+    },
+    "commands/cyclops-kband-pcb/run.json": {
+      "bytes": 1031,
+      "sha256": "b58ac6748175a785f0a679a873080e199cc0588bfb9f3cd48224d5d1f8dbe887"
+    },
+    "commands/cyclops-kband-pcb/run.stderr.gz": {
+      "bytes": 118,
+      "sha256": "80cdc1c059a8dc73d0f0e80a52f2cbd62c6dddaa869d67ae8d54b56bdaadbf0c"
+    },
+    "commands/cyclops-kband-pcb/run.stdout.gz": {
+      "bytes": 99,
+      "sha256": "c41d79d90ad5752f2c029cdcc3bb918af3465d525c3cdb8213b24826ec70dc7d"
+    },
+    "commands/cyclops-kband/run.json": {
+      "bytes": 1023,
+      "sha256": "d7416166c3d56cb55e7f545a2a3baf6217ff92549bfc6067eaca8c0573f0677b"
+    },
+    "commands/cyclops-kband/run.stderr.gz": {
+      "bytes": 116,
+      "sha256": "2045f7b59ca0101ef864345fc44747872a8ce174dbdcc7cb19640ace139ac335"
+    },
+    "commands/cyclops-kband/run.stdout.gz": {
+      "bytes": 99,
+      "sha256": "2560d4084b5ddb2c83180a996c185f82d5e904bad37dcbb94c234d3d821934d7"
+    },
+    "commands/cyclops-xband-sip/run.json": {
+      "bytes": 1031,
+      "sha256": "5e515e50367d920ffb278e1e8cf7bc513b5bcac8fb4043492981445031914ab0"
+    },
+    "commands/cyclops-xband-sip/run.stderr.gz": {
+      "bytes": 118,
+      "sha256": "5a13d81472a14aaa1273eb45db4e95fdf93f77ccaaf9e52edac351baf89545cd"
+    },
+    "commands/cyclops-xband-sip/run.stdout.gz": {
+      "bytes": 98,
+      "sha256": "0114cb9bc78f1630e958b03ba5ed95bde5e4b411938b03fb32ea2b166fe7db6e"
+    },
+    "commands/dual-flash/run.json": {
+      "bytes": 1017,
+      "sha256": "041ec3676fa61f61faf872c7b33ca06475882f22064617337548f42e093a91ac"
+    },
+    "commands/dual-flash/run.stderr.gz": {
+      "bytes": 150,
+      "sha256": "ac6f96a3472c6a885ded1efc0b04d61086c51afb3201f34e488f83155454ea8b"
+    },
+    "commands/dual-flash/run.stdout.gz": {
+      "bytes": 91,
+      "sha256": "341061306cb76f110b5ce2d383291db2151c43412a0b78050e4732e757be704b"
+    },
+    "commands/labstation+no-vendor-symbols/run.json": {
+      "bytes": 1080,
+      "sha256": "579087c94281a8a71245baa47dcba440a118696a28d9290bde968d5bb52a5c73"
+    },
+    "commands/labstation+no-vendor-symbols/run.stderr.gz": {
+      "bytes": 217,
+      "sha256": "ed1172c9f24489c0300fd6a8dc500a0767ac88bd68b53de2089fe8ae1b6ac97e"
+    },
+    "commands/labstation+no-vendor-symbols/run.stdout.gz": {
+      "bytes": 96,
+      "sha256": "28d71010c9a75dd353a5b4bcfd9e6afc6d4f3b9335eba4de94ba6dcaf4367b4b"
+    },
+    "commands/labstation/run.json": {
+      "bytes": 1017,
+      "sha256": "d5eb70bc0c6c386fd116bbd97cba4842709cc9151f6557401224e392d8121ed2"
+    },
+    "commands/labstation/run.stderr.gz": {
+      "bytes": 238,
+      "sha256": "2484b59c164071402a03ab34318a6eef66f87e6c12dd5d7e059c3ac41a3a4193"
+    },
+    "commands/labstation/run.stdout.gz": {
+      "bytes": 96,
+      "sha256": "980f75b88dc433b46fbeb40f2c686df3e3ef9659f5699f8e1f8cdd67e60c51d1"
+    },
+    "commands/lmk05318b-clock/run.json": {
+      "bytes": 1028,
+      "sha256": "4ac2484ea5933118f741e542ac03727f77e85a312fd7d603fbfc7752fc87f780"
+    },
+    "commands/lmk05318b-clock/run.stderr.gz": {
+      "bytes": 119,
+      "sha256": "ebf620a0dee84015a82c290590916b32736acb01d6a2d0c0d710dc1e98e0e6ba"
+    },
+    "commands/lmk05318b-clock/run.stdout.gz": {
+      "bytes": 98,
+      "sha256": "90e8b5ef0db6976947f5bcde63e97a636997dd3bb4f7b93118784edeff223471"
+    },
+    "commands/max860-inverter/run.json": {
+      "bytes": 1027,
+      "sha256": "fc42b5961dcebac45359af3efe0b314bd6e1eb6fc3a3b09e5f323a96ff3e36f1"
+    },
+    "commands/max860-inverter/run.stderr.gz": {
+      "bytes": 117,
+      "sha256": "c758a0180be438a1c56c7a302a10442413259783025221e00c2f41d75d1c813f"
+    },
+    "commands/max860-inverter/run.stdout.gz": {
+      "bytes": 95,
+      "sha256": "cf21f32ed5eb983973350f2d2b03d82342271b5cc7af44d8f57a8e1ea1f9ce67"
+    },
+    "commands/poe-pd-flyback-tps23757/run.json": {
+      "bytes": 1044,
+      "sha256": "cf7faa15e9f4729eacb0f50d7c1505864fad37a6df8ea9cd346a5d5073ad6e28"
+    },
+    "commands/poe-pd-flyback-tps23757/run.stderr.gz": {
+      "bytes": 223,
+      "sha256": "2cc821f40f22865b500ace7c965ba476f03e9efb763f032bdf02aa663a520af0"
+    },
+    "commands/poe-pd-flyback-tps23757/run.stdout.gz": {
+      "bytes": 104,
+      "sha256": "ad5e67e0cd0923566f18da6df2de6a9c468fd72092f2c27a1a2618acddf5d5b5"
+    },
+    "commands/rds3+flat/run.json": {
+      "bytes": 1029,
+      "sha256": "fa4086e9c3887a98dd96dfa08d0b7fbb5c84fa6e7998e9a18c14eb63b93806a6"
+    },
+    "commands/rds3+flat/run.stderr.gz": {
+      "bytes": 281,
+      "sha256": "a957c80704e7eb0c4d8222c2e303b578f8bc3385d8ce64a406df30904ca458b4"
+    },
+    "commands/rds3+flat/run.stdout.gz": {
+      "bytes": 91,
+      "sha256": "0001f719ad8287e16d8fc3586e5153a715c848d64c4d9e74dae9cdcd7b8a12b1"
+    },
+    "commands/rds3-rf-selector/run.json": {
+      "bytes": 1030,
+      "sha256": "63d9e52dcabc82bfcfde648ed92ccdd6a480a3226b112d8a7e47b1982e4b8a1d"
+    },
+    "commands/rds3-rf-selector/run.stderr.gz": {
+      "bytes": 116,
+      "sha256": "1f936fc585a2517fd1fc57cf5336ad1a19b3fb703083fb7bca30a0efb2883559"
+    },
+    "commands/rds3-rf-selector/run.stdout.gz": {
+      "bytes": 95,
+      "sha256": "f1a2f2c8325b3756c62aeb1a7f473bd8479af3f6148299c87840f6e1c24512d1"
+    },
+    "commands/rds3/run.json": {
+      "bytes": 1005,
+      "sha256": "6c0ec22d25555f57f48a3d9f13f57e97831dd3769b2ed825ac3a0e5498764ad3"
+    },
+    "commands/rds3/run.stderr.gz": {
+      "bytes": 187,
+      "sha256": "dd3a12e09627c379d97e1b39fd2d61f547cb0e7612d725dfcff5180ae3d85a11"
+    },
+    "commands/rds3/run.stdout.gz": {
+      "bytes": 93,
+      "sha256": "a736bca0365055562573959ec7bd7d4c09bca4eff2ecc4a3c7a73737b4e267a7"
+    },
+    "commands/remora-base/run.json": {
+      "bytes": 1020,
+      "sha256": "840bda75d8e17457fab9ddc8c2d117f71f7c383f983f90c60501a3451946967e"
+    },
+    "commands/remora-base/run.stderr.gz": {
+      "bytes": 250,
+      "sha256": "0032624ae82e8afe642c5bf0a735dfe2c85b0c01e01f48db0d313ba98d290112"
+    },
+    "commands/remora-base/run.stdout.gz": {
+      "bytes": 96,
+      "sha256": "62bae24e64db4ca2c00920b0149d7851d7164e1f978e3b48222b59dab67f67f1"
+    },
+    "commands/remora-rf/run.json": {
+      "bytes": 1015,
+      "sha256": "67a707351c5fc25c0505153ecb352540c1fb010ff4797409679da0cf64179168"
+    },
+    "commands/remora-rf/run.stderr.gz": {
+      "bytes": 113,
+      "sha256": "8ef3bf16c3c01a66eedbe8bc5e74686e0c2c081411e174383570b3b680bbe838"
+    },
+    "commands/remora-rf/run.stdout.gz": {
+      "bytes": 94,
+      "sha256": "c21339f7007c4d93c376cc1f4c306799b99b243cd20280a36ad78a8efeecdb7d"
+    },
+    "commands/rf-switch-8way/run.json": {
+      "bytes": 1026,
+      "sha256": "774b4c51a369fcaeec82200b81db3b931c3a85f5dd258fd8084703459476e7ab"
+    },
+    "commands/rf-switch-8way/run.stderr.gz": {
+      "bytes": 190,
+      "sha256": "53bbf07b6b3e8e95a2df92f6c3ca9ceb4c54e74e10d956643ce6681f43f68fad"
+    },
+    "commands/rf-switch-8way/run.stdout.gz": {
+      "bytes": 96,
+      "sha256": "52e38ca2b03aeb2c0abc232abd9b1bf20bf7e4e4cb9643f3e61646043f6cbd86"
+    },
+    "commands/rf-switch-eval/run.json": {
+      "bytes": 1026,
+      "sha256": "dff199e03873b87f9d9c7cdc67d5abbae316ec16b03296e90c94117d2a598542"
+    },
+    "commands/rf-switch-eval/run.stderr.gz": {
+      "bytes": 249,
+      "sha256": "e55a22cfbb01c906db2fb8a253e37d6985b57f1902ee779c78eaaca75cf2d20c"
+    },
+    "commands/rf-switch-eval/run.stdout.gz": {
+      "bytes": 95,
+      "sha256": "6c2884e7f2187d8403539e5df4ab7f5c202bf0c0c9260738b571c546821b92aa"
+    },
+    "commands/stm32n6/run.json": {
+      "bytes": 1012,
+      "sha256": "76baaa72ea08569f8d24daddc8f0b5edf0c44e2965e8b4fc535f4c0635e5aec1"
+    },
+    "commands/stm32n6/run.stderr.gz": {
+      "bytes": 358,
+      "sha256": "1a17e773034dcf2eeff8ad72acead098336eeb0d901a5e3e6a0bd989230e66c5"
+    },
+    "commands/stm32n6/run.stdout.gz": {
+      "bytes": 94,
+      "sha256": "f2f8c8835d22af61fb8d707f1abfa107cb19042f9e281b9c55ffd9e1875880fa"
+    },
+    "commands/straps-base/run.json": {
+      "bytes": 1019,
+      "sha256": "bea90100cbeac826fb0c4315837915f98e4aac23bf5dadb4f0b85fbb34595cdf"
+    },
+    "commands/straps-base/run.stderr.gz": {
+      "bytes": 202,
+      "sha256": "dc13844b37ef6d4ccc43df7bc3c15545f40da3c0ebbb025096c16d4ff2ffbd9a"
+    },
+    "commands/straps-base/run.stdout.gz": {
+      "bytes": 94,
+      "sha256": "e72c9d9a02979925b137d529da2f13a532968ed5eacd2119a7c11dc72ccee225"
+    },
+    "commands/straps/run.json": {
+      "bytes": 1009,
+      "sha256": "ff3619dac17a0e37fe92632ea0edd8a8963ae4b99d152ea139434d6e73e2acca"
+    },
+    "commands/straps/run.stderr.gz": {
+      "bytes": 112,
+      "sha256": "3841bb8f32841cb5485d5e61057bd2afb39f2e37dbcfc62d1cbecde966ccd7b6"
+    },
+    "commands/straps/run.stdout.gz": {
+      "bytes": 93,
+      "sha256": "689eb6ba7d29d22fcb746365c6e55f5428fa4ebdd18a600e3e205a0147e22ee0"
+    },
+    "commands/w55rp20/run.json": {
+      "bytes": 1012,
+      "sha256": "b3daa684644dc357abf40fa673fa6d5316189550cd4fa3beacfd1f8e77751342"
+    },
+    "commands/w55rp20/run.stderr.gz": {
+      "bytes": 152,
+      "sha256": "fcbc49050e83e6bc5ea07b6b19a45e52b6590eae6685219d9d757406db1d1d53"
+    },
+    "commands/w55rp20/run.stdout.gz": {
+      "bytes": 92,
+      "sha256": "f18d9a100c81ea6a3860883b313c8e46b878431c9cd48ee0eccc41216ae9b156"
+    },
+    "outputs/Cyclops-Flex/Cyclops-Flex.kicad_pro": {
+      "bytes": 275,
+      "sha256": "a67980cd8d26be9fcaefae095603ab16bf2a3d3326121612b939dbf25019e0aa"
+    },
+    "outputs/Cyclops-Flex/Cyclops-Flex.kicad_sch": {
+      "bytes": 15572,
+      "sha256": "120c5690a5041e673d7d21f6d2ab98411c375f534c3e9688520dfc1c88cfd6f0"
+    },
+    "outputs/Cyclops-Flex/Cyclops-Flex.net": {
+      "bytes": 2588,
+      "sha256": "dce6645f331cdc5d5b09564d06b49d0d69374357808184788a1d359a8dbac413"
+    },
+    "outputs/Cyclops-Flex/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/Cyclops-Flex/netlisp.kicad_sym": {
+      "bytes": 4357,
+      "sha256": "7acb157812927878382607861dccd25e75ea926e8ad470a885d2ca2e8cffcb8a"
+    },
+    "outputs/Cyclops-Flex/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/adf5901/adf5901.kicad_pro": {
+      "bytes": 270,
+      "sha256": "af4b289ff26dcc1011ad17b93fcc48d781632dc4554cadf739a6d5e5291243a3"
+    },
+    "outputs/adf5901/adf5901.kicad_sch": {
+      "bytes": 90736,
+      "sha256": "dafcc509cdfa77f6b1676fec5d73d86c2c032fd19193465a673e82aee4b5736f"
+    },
+    "outputs/adf5901/adf5901.net": {
+      "bytes": 24966,
+      "sha256": "859eb72ef41881c5b477d53e1b91cf918aaa4f38763c8019a45808a4ce29cd12"
+    },
+    "outputs/adf5901/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/adf5901/netlisp.kicad_sym": {
+      "bytes": 12163,
+      "sha256": "0ac2cac25fcb0d2a470c91940bb4bb1621c8ea5233f35ef80682aea34cc1a8af"
+    },
+    "outputs/adf5901/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/barracuda-base/barracuda-base-10-mhz-reference-in.kicad_sch": {
+      "bytes": 6518,
+      "sha256": "1ff298ccff31a001e0091a633b03fa38f39cc7cb825a72074156abc067496297"
+    },
+    "outputs/barracuda-base/barracuda-base-100-mhz-clock-out.kicad_sch": {
+      "bytes": 17073,
+      "sha256": "2376902b83aa19e04ebdc9608e060278d22596eafc6766d7decaf75ec097448f"
+    },
+    "outputs/barracuda-base/barracuda-base-cal-input.kicad_sch": {
+      "bytes": 31170,
+      "sha256": "3434a4a2f456ee0cbd651ffe4259381099eb39e787de943da11b61c1e3e197c2"
+    },
+    "outputs/barracuda-base/barracuda-base-fiducials.kicad_sch": {
+      "bytes": 6252,
+      "sha256": "0c052d33867d8156a1f9b5bbe1adbf3bbef8394ac418ab429e413c1ace19319f"
+    },
+    "outputs/barracuda-base/barracuda-base-frontend-power-lna-control.kicad_sch": {
+      "bytes": 10151,
+      "sha256": "e6b4cb14a8c3534d0468c4b95c038c2e6976d7fac5e611cd4fda78afd3455fe3"
+    },
+    "outputs/barracuda-base/barracuda-base-frontend-sensor-rail-i2c.kicad_sch": {
+      "bytes": 16218,
+      "sha256": "c0ae3ea808e2dc16502b7f60b794cf33fe06a68e616400fb22bb3a9d1a1c37b1"
+    },
+    "outputs/barracuda-base/barracuda-base-mounting-holes.kicad_sch": {
+      "bytes": 10073,
+      "sha256": "d2f91d9c5c37fc5d4f28069d9cc1e4b3cf40c59a87640d894b901a2d3f5b2719"
+    },
+    "outputs/barracuda-base/barracuda-base-power-input.kicad_sch": {
+      "bytes": 22131,
+      "sha256": "dee9434f44a327fb336711be0701198904faf309c6ddd0b8024b2921e4c5eaa1"
+    },
+    "outputs/barracuda-base/barracuda-base-rf-outputs.kicad_sch": {
+      "bytes": 16574,
+      "sha256": "5e2ac19517f20e6d8ce67087cfe32def3b1565eb846ae3f4b790da367ee6d977"
+    },
+    "outputs/barracuda-base/barracuda-base-rj-45-ethernet.kicad_sch": {
+      "bytes": 33018,
+      "sha256": "d984a5a4caa05d198cf5c8c1f95fda7d75fa2880371fd246a89b0e8ac68c7457"
+    },
+    "outputs/barracuda-base/barracuda-base-spi-gpio-series-resistors.kicad_sch": {
+      "bytes": 12334,
+      "sha256": "7d2e31e3a26c34f3f9cdae8711d27bdb883c24264be69c9824f2d944789bf283"
+    },
+    "outputs/barracuda-base/barracuda-base-status-leds.kicad_sch": {
+      "bytes": 17123,
+      "sha256": "9feb2abf85278f5015e42562de7454790211b79f75b7eb2ba31c6e8b9ab888d2"
+    },
+    "outputs/barracuda-base/barracuda-base-sub-block-base-5v.kicad_sch": {
+      "bytes": 39040,
+      "sha256": "70760bdab60c8ecc83112add56d747a05558e2668fc13c4891201f9e50d4fff3"
+    },
+    "outputs/barracuda-base/barracuda-base-sub-block-base-interface.kicad_sch": {
+      "bytes": 29113,
+      "sha256": "90857bb028fdfd5bb2d980790992fde2c5238bdab8c10b95b9959653f6d04309"
+    },
+    "outputs/barracuda-base/barracuda-base-sub-block-buck-3v3d.kicad_sch": {
+      "bytes": 39489,
+      "sha256": "494c775635ee2729f7bb9e0d8a4ba268ac8436069ae9e638c2ed904ca170273b"
+    },
+    "outputs/barracuda-base/barracuda-base-sub-block-calsw.kicad_sch": {
+      "bytes": 30817,
+      "sha256": "ee167758f0dc66c6ca808e928337bfbc51691fe9c718ee77c0f076fd6b668c91"
+    },
+    "outputs/barracuda-base/barracuda-base-sub-block-input-protection.kicad_sch": {
+      "bytes": 39849,
+      "sha256": "850f5bdd618c8994c7b3030942195b18324307dd0b1c7c28942f133fb4b69b18"
+    },
+    "outputs/barracuda-base/barracuda-base-sub-block-lna-sw.kicad_sch": {
+      "bytes": 19934,
+      "sha256": "b3b5af671a71680baf362c589d4216a66a263f0dd7baab1928ee7ed2242922df"
+    },
+    "outputs/barracuda-base/barracuda-base-sub-block-lna.kicad_sch": {
+      "bytes": 41344,
+      "sha256": "666b86a752d844ac4d18ac299540ee317ba38377fff99d58794bb02650da29f7"
+    },
+    "outputs/barracuda-base/barracuda-base-sub-block-mcu.kicad_sch": {
+      "bytes": 218532,
+      "sha256": "962da6eaab7b30094773c06bbe3f16f851a9358f5ad1922545bfb7549ff07262"
+    },
+    "outputs/barracuda-base/barracuda-base-sub-block-neg5v.kicad_sch": {
+      "bytes": 30997,
+      "sha256": "0963548bc15446e4fed8aac759b7e00f0c3e93e13ea740291ee78bbd71523646"
+    },
+    "outputs/barracuda-base/barracuda-base-sub-block-pwr-det.kicad_sch": {
+      "bytes": 44466,
+      "sha256": "22c39bdf8831e75c9bd3f1e5cc9bf6c8e56b9b4b2092093d49d1c90b4c49c997"
+    },
+    "outputs/barracuda-base/barracuda-base-sub-block-refclk.kicad_sch": {
+      "bytes": 229108,
+      "sha256": "58ed4d8b545ca7f232496985f4716ac8f3f43d2ceed344b3608a9ebe62afcdd6"
+    },
+    "outputs/barracuda-base/barracuda-base-sub-block-splitter.kicad_sch": {
+      "bytes": 7239,
+      "sha256": "b9682477cfb2466cd84c7b341a2d8566f91650ccae3683b28d797ef2d0d48b94"
+    },
+    "outputs/barracuda-base/barracuda-base-unsectioned.kicad_sch": {
+      "bytes": 16040,
+      "sha256": "c2344f84fa6202c9ebaf1d25272755a6fe445bfcea9b82d18908283e69add30a"
+    },
+    "outputs/barracuda-base/barracuda-base-usb-c.kicad_sch": {
+      "bytes": 50382,
+      "sha256": "e1e2aa949a669ef595d6749bbb5f2d2752c97b4d9a7677649b51084babdba450"
+    },
+    "outputs/barracuda-base/barracuda-base.kicad_pro": {
+      "bytes": 277,
+      "sha256": "21fb7d7eaf646657bdbda629416f865530b3910e0a46f63e749d57be0591da4a"
+    },
+    "outputs/barracuda-base/barracuda-base.kicad_sch": {
+      "bytes": 18632,
+      "sha256": "6d1629233a727e9cfc810baa61df9a0f2e32e3f54123be5a378fcc9eaccdfef6"
+    },
+    "outputs/barracuda-base/barracuda-base.net": {
+      "bytes": 293494,
+      "sha256": "79c86650836971cd98d36d8e42c1d4dc03c788ac9a3bcf7978d379c4bc85bd96"
+    },
+    "outputs/barracuda-base/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/barracuda-base/netlisp.kicad_sym": {
+      "bytes": 101788,
+      "sha256": "00c0888efcb51292c7a6e23ba2a8e6ea8e08ed9adb44e71a5d504af0e76a052f"
+    },
+    "outputs/barracuda-base/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-erm6-module-link.kicad_sch": {
+      "bytes": 24273,
+      "sha256": "28e84db707ad73e367ac5fa76668f74ad0b0641c19bc832b9f836f421493cace"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-frontend-id-eeprom.kicad_sch": {
+      "bytes": 10748,
+      "sha256": "bb1d6bd30163e7c309a89f6d80e84101a5bc327579196d2d6672bf9f19bc315e"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-if-filter.kicad_sch": {
+      "bytes": 22362,
+      "sha256": "20cfdb1390776463307103212fc90ae2be616c381365ba8e5f1f2d5c7b169145"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-lo-driver-pad.kicad_sch": {
+      "bytes": 8163,
+      "sha256": "c1baf51c55b6ce8bfe687d0e901e6eb266df3b27157d7e01c55610f17c79604d"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-mounting-holes.kicad_sch": {
+      "bytes": 4077,
+      "sha256": "19f04501ffec77460f3bef7ff007131b39e6a2fc111a111934e626c2f7166554"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-pll-loop-filter.kicad_sch": {
+      "bytes": 18325,
+      "sha256": "b81a6f2638d3e818fc19acd2e72a3e606aa6a89a2420acfcb090a1d4c9dde9fe"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-sub-block-adf4159.kicad_sch": {
+      "bytes": 96933,
+      "sha256": "21470ced1bf88d76c85ac167b6141c2a0deaa1b9e1a3f2050830f0d776742fef"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-sub-block-boost22.kicad_sch": {
+      "bytes": 40500,
+      "sha256": "fb1381efd35aa31881582a7c07ed16c857ca22e965225180bf9bded647f06d92"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-sub-block-buck-6v.kicad_sch": {
+      "bytes": 39768,
+      "sha256": "e2b59986f1a83db0227068837652bd9f3aefaf24247f66932815d8aa3526584d"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-sub-block-dsa.kicad_sch": {
+      "bytes": 36377,
+      "sha256": "42919806d5a5fd542a8953bbc9102efb2bd8ac1b20a2624e8d839388e568dcbe"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-sub-block-hmc451.kicad_sch": {
+      "bytes": 30975,
+      "sha256": "86c9b94e92418be19f206551563560499f0faf0744c0a6a5c37194bcc1ea0fde"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-sub-block-hmc733.kicad_sch": {
+      "bytes": 27820,
+      "sha256": "684769dd2132cd5dccc2d1eb108058295003202bd1ea1551ba5a84efb51ebf6f"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-sub-block-ldo-1v8.kicad_sch": {
+      "bytes": 14687,
+      "sha256": "5caae723d46f5e97609f40226ce187950223cfd005adb6dc8ae4a55acba88412"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-sub-block-ldo-3v3-lmx.kicad_sch": {
+      "bytes": 39170,
+      "sha256": "c3e57c43d10b127dd6e6455a5233eb3aefd62710009556f919677b825fe07048"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-sub-block-ldo-3v3a.kicad_sch": {
+      "bytes": 39086,
+      "sha256": "fb4650440367b2cfa2ffd544853d0aff6cf82edba7ac1a7dd34fce0b03086d0a"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-sub-block-ldo-5v.kicad_sch": {
+      "bytes": 39018,
+      "sha256": "fef79deec08ecec9bcb5f57e93d6769b03e765a0723f14e72bd3e40e4e35c7b7"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-sub-block-lmx2595.kicad_sch": {
+      "bytes": 130274,
+      "sha256": "ff775bae4fdf96ed835d0698f53a3a4679e90ad00b28c881cd34383ce7ce3d80"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-sub-block-loop-amp.kicad_sch": {
+      "bytes": 49290,
+      "sha256": "328d17312b0926dc9119d1a3f2f6b2a6f287ab2d51f4b099020a43752d39dd38"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-sub-block-mixer.kicad_sch": {
+      "bytes": 10598,
+      "sha256": "cbc14fc7a3fc6c4ee10c960281031ad16c2f26b48de4a308cdd551962dfab199"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-test-points-status.kicad_sch": {
+      "bytes": 19917,
+      "sha256": "12f644eed3299fe49b2f965c6f94d9d8eae32824f3f32cdafe7ae4075758e6a9"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence-x-band-bpf.kicad_sch": {
+      "bytes": 28757,
+      "sha256": "1e4b3ff50144d387c117b38d71244f978463ae4859e26e9329f8be8858b07da0"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence.kicad_pro": {
+      "bytes": 282,
+      "sha256": "aa9d2464ff51c3ecf363e7d841d1d01d0d24b8d71edd318ffa0b7e61fb4af88b"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence.kicad_sch": {
+      "bytes": 15699,
+      "sha256": "7e094de92d6870725280982d52cdcac9fa1a7f6c5d7e2a5936c634afa5b897c3"
+    },
+    "outputs/barracuda-via-fence/barracuda-via-fence.net": {
+      "bytes": 188287,
+      "sha256": "e60a169ffcc272650f6095d7760a1de376fc1b5438fb180108295affab320c6f"
+    },
+    "outputs/barracuda-via-fence/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/barracuda-via-fence/netlisp.kicad_sym": {
+      "bytes": 84747,
+      "sha256": "fcc05925ec57e852e667614451fa89fbad06766c9f027c1e6c46bf5c89ead68d"
+    },
+    "outputs/barracuda-via-fence/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/barracuda/barracuda-erm6-module-link.kicad_sch": {
+      "bytes": 35091,
+      "sha256": "16bef3210abaac33556aaa3cb6500c9dfcd30fc175cd361a662dac1b3a7609fd"
+    },
+    "outputs/barracuda/barracuda-fiducials.kicad_sch": {
+      "bytes": 6227,
+      "sha256": "e6c9b4cfef2ae294ac38ccf7cddbace507f557a378f98619bd7043ad3d3d8678"
+    },
+    "outputs/barracuda/barracuda-frontend-temperature-sensor.kicad_sch": {
+      "bytes": 10366,
+      "sha256": "c48cdf761df1bc2b7316c2c9bda85e8607a4232a4e905c44d3a52dc115b263c1"
+    },
+    "outputs/barracuda/barracuda-if-filter.kicad_sch": {
+      "bytes": 20396,
+      "sha256": "535324adff5b47baeee0110781652ac685f74c459dea29a20b2624c6a88419f1"
+    },
+    "outputs/barracuda/barracuda-lo-driver-pad.kicad_sch": {
+      "bytes": 8209,
+      "sha256": "7762189e830ece56e5c8681951ad570328578acb1125678f1f6c18b77b11c301"
+    },
+    "outputs/barracuda/barracuda-lo-output-filter.kicad_sch": {
+      "bytes": 11170,
+      "sha256": "c4e265d671b97be6d3911af3e2d1dcdcdf4b25637ec6cd774ffcd7f885c9bf5e"
+    },
+    "outputs/barracuda/barracuda-mounting-holes.kicad_sch": {
+      "bytes": 6048,
+      "sha256": "7e3eda362a18e71acfcd68ea44bd5785b44d925792eadd7215846cf0b2af86ca"
+    },
+    "outputs/barracuda/barracuda-sub-block-adf4159.kicad_sch": {
+      "bytes": 96561,
+      "sha256": "0cb69f36c56df2965ce2820668593b3d000284cd0a6d1956901a0690122accbb"
+    },
+    "outputs/barracuda/barracuda-sub-block-boost22.kicad_sch": {
+      "bytes": 50467,
+      "sha256": "359501db8032c1adb85617428bed5d2e08340fc2ddb98de0bb9b78b090df6379"
+    },
+    "outputs/barracuda/barracuda-sub-block-buck-3v75.kicad_sch": {
+      "bytes": 38950,
+      "sha256": "eca479dc0024ea6db9ea2781a6e76dce78d8d429a1119c64ed6ca0b8e82b12a3"
+    },
+    "outputs/barracuda/barracuda-sub-block-buck-5v75.kicad_sch": {
+      "bytes": 39298,
+      "sha256": "09527a2c2dbc9f597fcc376f0af2caaad3ecd5e17d0bce78f04a8be033c85198"
+    },
+    "outputs/barracuda/barracuda-sub-block-dsa.kicad_sch": {
+      "bytes": 36216,
+      "sha256": "0920e8841419689c235f66d241c360e18aafa11f099f4fd3abe60ba5566d92af"
+    },
+    "outputs/barracuda/barracuda-sub-block-hmc733.kicad_sch": {
+      "bytes": 27719,
+      "sha256": "0a24d917d49930ef57456f2cfddeaa00094b613539a001662e86011575f018ce"
+    },
+    "outputs/barracuda/barracuda-sub-block-ldo-1v8.kicad_sch": {
+      "bytes": 14627,
+      "sha256": "9844baa252f48ceae3d31f0d1633dec2c5e6a48c4ed78a29e1419a9317a61d13"
+    },
+    "outputs/barracuda/barracuda-sub-block-ldo-3v3-lmx.kicad_sch": {
+      "bytes": 39054,
+      "sha256": "363e6a0246d72e94e7e5fc074272e425198155575f04f09a2b1c4f9796b638b3"
+    },
+    "outputs/barracuda/barracuda-sub-block-ldo-3v3a.kicad_sch": {
+      "bytes": 38946,
+      "sha256": "95d805fac252ebfb62b012a4b4695556c6a4aa8a161f7bf8a4e3de043ca83fa5"
+    },
+    "outputs/barracuda/barracuda-sub-block-ldo-5v.kicad_sch": {
+      "bytes": 38920,
+      "sha256": "d1e8237bf4b5b55a411b56effbf45e046de537e9b084187d1f09af334bc2435b"
+    },
+    "outputs/barracuda/barracuda-sub-block-lmx2595.kicad_sch": {
+      "bytes": 129794,
+      "sha256": "a6e5447340801250c7a6d629e2a83647e6b1337428063590302e74d107f25113"
+    },
+    "outputs/barracuda/barracuda-sub-block-lna.kicad_sch": {
+      "bytes": 41453,
+      "sha256": "b84d6d67b9443d83069f4e0ccfedae5674bc3eb12ad54d91e2b6e28ec22f10aa"
+    },
+    "outputs/barracuda/barracuda-sub-block-loop-amp.kicad_sch": {
+      "bytes": 48992,
+      "sha256": "f44f82d9dec49f33d41e8dccf0fd573c246dfb368fee20562ddb8601a35ebcd1"
+    },
+    "outputs/barracuda/barracuda-sub-block-loop-ldo.kicad_sch": {
+      "bytes": 34531,
+      "sha256": "a97035263bf413a45f8dd810c41e62c93ec4d792a13c5cabf21814226106b610"
+    },
+    "outputs/barracuda/barracuda-sub-block-mixer.kicad_sch": {
+      "bytes": 10556,
+      "sha256": "ff356cba72246d8cf834eb76fc2f2476acb336c9cef5f83d7d83e66be4aeffc3"
+    },
+    "outputs/barracuda/barracuda-sub-block-qpl3050.kicad_sch": {
+      "bytes": 24538,
+      "sha256": "95ffe5ebc552b218775a11ab4c4f913d88ad396083f99980b6e41f086f03bfe7"
+    },
+    "outputs/barracuda/barracuda-sub-block-rf-lna-sw.kicad_sch": {
+      "bytes": 19857,
+      "sha256": "a76a0b557c9ea837794053b1bd29ddfba109f6e0c198793f6ae4cbcd76231000"
+    },
+    "outputs/barracuda/barracuda-sub-block-vco-div4.kicad_sch": {
+      "bytes": 56194,
+      "sha256": "875f9ce55de404d89c4ddaede41ab9b53347ec72f8232b02815b281c53341b2c"
+    },
+    "outputs/barracuda/barracuda-test-points-status.kicad_sch": {
+      "bytes": 22163,
+      "sha256": "1f2f514b80dbed37783b59dcad0e3051ecba6f1f9159d27d84a9bf05dde6a25b"
+    },
+    "outputs/barracuda/barracuda-unsectioned.kicad_sch": {
+      "bytes": 7434,
+      "sha256": "2d39f8bf0f2ba62afaebef4fe5904f041b0829ebf2a9b59e24ff7056664ce0cd"
+    },
+    "outputs/barracuda/barracuda-x-band-rf-filter.kicad_sch": {
+      "bytes": 25213,
+      "sha256": "ea067873b77b6e5ebfafcbdd7a52f6b2b5ac5655b353ff5591c19b02fffd14d9"
+    },
+    "outputs/barracuda/barracuda.kicad_pro": {
+      "bytes": 272,
+      "sha256": "52d3f3729967bcad3b8f2499faed9b40f3c3de1e6e28cb47a3b1f71f1a816224"
+    },
+    "outputs/barracuda/barracuda.kicad_sch": {
+      "bytes": 19645,
+      "sha256": "a56ff2641910ad930a640cebd4b04d30ca9a5fa74b6d44e61a5fbebcd10d36fe"
+    },
+    "outputs/barracuda/barracuda.net": {
+      "bytes": 242703,
+      "sha256": "f1f56c8274cbb7839a2638cd9eca708edf60c99624ad7ecc46b8f5979f3fbbc0"
+    },
+    "outputs/barracuda/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/barracuda/netlisp.kicad_sym": {
+      "bytes": 100546,
+      "sha256": "01400402f368922431fb32e69d18668c85c5517408de8037e9c934b7368a9fc9"
+    },
+    "outputs/barracuda/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/black-canyon+flat/black-canyon.kicad_pro": {
+      "bytes": 275,
+      "sha256": "852a59fcbd5c8478123651b71620554ca1cfd3538f08775ff531f8ff00ad2feb"
+    },
+    "outputs/black-canyon+flat/black-canyon.kicad_sch": {
+      "bytes": 334667,
+      "sha256": "820806356e64169df80bec947034013f08ae9e53955554f489df3eb4bf4fe89c"
+    },
+    "outputs/black-canyon+flat/black-canyon.net": {
+      "bytes": 81679,
+      "sha256": "12c5b9dc1e7ef5c2d1c763724bee33b72ca120ff5c6b2a9b745696bea139bfbb"
+    },
+    "outputs/black-canyon+flat/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/black-canyon+flat/netlisp.kicad_sym": {
+      "bytes": 51072,
+      "sha256": "e8c238c835580c4001c4dc7236759503a0637e98a900913138c3d77b472ca443"
+    },
+    "outputs/black-canyon+flat/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/black-canyon/black-canyon-5v-ldo.kicad_sch": {
+      "bytes": 4377,
+      "sha256": "d0a9527912d4f61ca3c689411f4f99ae8b3fcc6ea1908acbc3b30d180e791007"
+    },
+    "outputs/black-canyon/black-canyon-band-filter.kicad_sch": {
+      "bytes": 30418,
+      "sha256": "85095c637bb893c18aa9db711923df9d883d0f42db512ce83988989dc99650ff"
+    },
+    "outputs/black-canyon/black-canyon-bring-up.kicad_sch": {
+      "bytes": 15193,
+      "sha256": "416ab909fdbe95b369cbae42b7a15dbcc4cfe93a8b2bda9cc49246a280c15247"
+    },
+    "outputs/black-canyon/black-canyon-erm6-module-link.kicad_sch": {
+      "bytes": 24290,
+      "sha256": "53c036554b16c84d4880be4f603bf3d109d09f68cb8f9f4c64a7374a9ab83ebd"
+    },
+    "outputs/black-canyon/black-canyon-fiducials.kicad_sch": {
+      "bytes": 5223,
+      "sha256": "26319943d79b558427b3fa63488eac1ee8b29274af8dc0d011f0edba85949d1a"
+    },
+    "outputs/black-canyon/black-canyon-mounting-hole.kicad_sch": {
+      "bytes": 3680,
+      "sha256": "8b25809ae83603d353d00f1d86660e1a5520fbd2363e7e48bb9b39eac01a95ef"
+    },
+    "outputs/black-canyon/black-canyon-rf-output-stage.kicad_sch": {
+      "bytes": 45240,
+      "sha256": "220130eefa3fe505798531077bfb140c3ae5f90fe5ca0eacdd791e0e86b08b0a"
+    },
+    "outputs/black-canyon/black-canyon-sub-block-amp1.kicad_sch": {
+      "bytes": 31696,
+      "sha256": "2476a3a78de22308bde0b1017d927695deb09f3d55703b060d05822d13859001"
+    },
+    "outputs/black-canyon/black-canyon-sub-block-amp2.kicad_sch": {
+      "bytes": 31698,
+      "sha256": "9eaec0d29c117f96c79056ead649ffa66fe9bf191efad17be3fdbd2ff573f6b5"
+    },
+    "outputs/black-canyon/black-canyon-sub-block-buck-5v7.kicad_sch": {
+      "bytes": 39317,
+      "sha256": "1554f3f0b74d7c7781a4e3c50d73c4a689893bdbdef0bff3ddf333852fcb46c0"
+    },
+    "outputs/black-canyon/black-canyon-sub-block-dsa.kicad_sch": {
+      "bytes": 41451,
+      "sha256": "1ecd8d883eb141d0c0e26675991d94a8f18a0b4b54467c6278e8db668624e25e"
+    },
+    "outputs/black-canyon/black-canyon-sub-block-ldo-3v3.kicad_sch": {
+      "bytes": 12919,
+      "sha256": "c74ae1bb67e9434cfa857f6c97c6c086e8c85e464be9942d80783467ad109106"
+    },
+    "outputs/black-canyon/black-canyon-sub-block-ldo-5v.kicad_sch": {
+      "bytes": 38891,
+      "sha256": "343079309506adc0cc9b55ff2efcef1b166773d095b9cd416e1a18d6207a72d0"
+    },
+    "outputs/black-canyon/black-canyon-sub-block-mcu.kicad_sch": {
+      "bytes": 32513,
+      "sha256": "87ace1c1c10e79ebed562a60bfa5a88016597d29bf19609a26cb9c7af81133bd"
+    },
+    "outputs/black-canyon/black-canyon-supervisor-mcu.kicad_sch": {
+      "bytes": 16397,
+      "sha256": "7577d07970ab0f732546d1a37fd5df0a7087f7f6213c8314037b4aa80ffbc91e"
+    },
+    "outputs/black-canyon/black-canyon.kicad_pro": {
+      "bytes": 275,
+      "sha256": "852a59fcbd5c8478123651b71620554ca1cfd3538f08775ff531f8ff00ad2feb"
+    },
+    "outputs/black-canyon/black-canyon.kicad_sch": {
+      "bytes": 11507,
+      "sha256": "95b623c2dbf0beb91b647c98345f56cb2af07c3e33c6f68bc050cab586bc5b54"
+    },
+    "outputs/black-canyon/black-canyon.net": {
+      "bytes": 81679,
+      "sha256": "12c5b9dc1e7ef5c2d1c763724bee33b72ca120ff5c6b2a9b745696bea139bfbb"
+    },
+    "outputs/black-canyon/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/black-canyon/netlisp.kicad_sym": {
+      "bytes": 51072,
+      "sha256": "e8c238c835580c4001c4dc7236759503a0637e98a900913138c3d77b472ca443"
+    },
+    "outputs/black-canyon/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/blinky-breakout/blinky-breakout.kicad_pro": {
+      "bytes": 278,
+      "sha256": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976"
+    },
+    "outputs/blinky-breakout/blinky-breakout.kicad_sch": {
+      "bytes": 58476,
+      "sha256": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99"
+    },
+    "outputs/blinky-breakout/blinky-breakout.net": {
+      "bytes": 7642,
+      "sha256": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+    },
+    "outputs/blinky-breakout/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/blinky-breakout/netlisp.kicad_sym": {
+      "bytes": 15871,
+      "sha256": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1"
+    },
+    "outputs/blinky-breakout/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog-100-mhz-clock-fanout.kicad_sch": {
+      "bytes": 39189,
+      "sha256": "a07f2de330709f48fe77309264de445823d27260aaeb4dd5fb44b5ec4318d1f6"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog-2-5v-emvs-rail.kicad_sch": {
+      "bytes": 5112,
+      "sha256": "f9d38eefd0fbe4324dd8f6b002fe5f28d16a369f746823bf221e80fd9ac36e37"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog-5-v-pi-filter.kicad_sch": {
+      "bytes": 15920,
+      "sha256": "dd67d565e6dd3054e6aaf025804a05866175b127b22d6e32572cf6771a46a820"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog-adf4159-1-pll.kicad_sch": {
+      "bytes": 52365,
+      "sha256": "0430d473e8993e64ea1719f77b0d8f055441e34e0006a7047efedf092634dc8c"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog-adf5901-1-tx-vco.kicad_sch": {
+      "bytes": 74527,
+      "sha256": "7586ec1d8eafc6519b65717d2f4c1ffad38ea0b5fce93839af6efdbaaf649f37"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog-adf5904-rx.kicad_sch": {
+      "bytes": 53995,
+      "sha256": "278842f87a36d5f4ae0e5d8dbd764b80ae4bddd53956d5f712d823e0a9a7f8f7"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog-lmx2594-lo.kicad_sch": {
+      "bytes": 127612,
+      "sha256": "cede860420922de7cc2551acd516c5dc8bde9b7180dd17bb75ecdcee0f5d6018"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog-mezzanine-connector.kicad_sch": {
+      "bytes": 53889,
+      "sha256": "cb5157c5983f1148511676c4a59604419c06638b41a081dcb3cac3349ba4c999"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog-pcal6416a-i-o-expander.kicad_sch": {
+      "bytes": 46202,
+      "sha256": "0e0511f71f19caf9b5fad50b1aafbf71855d3a2e67da7d745318f09abce93bcd"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog-pma3-1-lna.kicad_sch": {
+      "bytes": 29285,
+      "sha256": "a411cbf6a21db7f7f01cbccf41b1e68ff65cc1d2f1d90e12bafb5c422f2bcfc2"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog-pma3-2-lna.kicad_sch": {
+      "bytes": 29285,
+      "sha256": "a03d6ab5815c79c41a719467abd958646e5d4a3b3a26037417e2e5c1d70d1584"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog-rf-feed-matching.kicad_sch": {
+      "bytes": 16267,
+      "sha256": "5ec046e61f47b058ab2ad1c7cf7c0f679395bbcb366076352ddc29affe0fdb30"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog-sit5157-tcxo.kicad_sch": {
+      "bytes": 21062,
+      "sha256": "5d355177b6d4cecc701a770b104a5e172d9c7d1777d6cf6e2fa420671f839c16"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog-sub-block-boost5.kicad_sch": {
+      "bytes": 21389,
+      "sha256": "829685ec5accb27d31d7fdc78d848086f4647ff8ca141d0b0e10bc9eb381bf14"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog-sub-block-buck25.kicad_sch": {
+      "bytes": 42971,
+      "sha256": "02a5d9cbf639ccc450bbf73db9cc6619501bbdb76381d3880d50b0303364b5d6"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog-test-points.kicad_sch": {
+      "bytes": 9479,
+      "sha256": "996d3547d0aa7d7ef2e6040d6881d78398324bc3aa7a1f0c1cf1583ffffca081"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog-txb0104-level-shifters.kicad_sch": {
+      "bytes": 101399,
+      "sha256": "46b07dc98758ae952fcfd947e92ddc57935b75e35b30fc043e98c8914dea9bb3"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog.kicad_pro": {
+      "bytes": 277,
+      "sha256": "1a8fc2df1ce71dc420480c45a2d554998b75799272c623ec6091ec45fb88bbbf"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog.kicad_sch": {
+      "bytes": 12881,
+      "sha256": "190d76c8a3fc47c5344be40d82ef1897dc5e940f7f98dd059af228afd03d3772"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/cyclops-analog.net": {
+      "bytes": 158799,
+      "sha256": "f493528de1729743c24abdaab9dd280e85102eac2ebe14f5bca30451eb626d2d"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/netlisp.kicad_sym": {
+      "bytes": 88419,
+      "sha256": "cec861146dc1ff1dcb07fcaeeed26a550d8386354b46bf34115fd2e347ab73b3"
+    },
+    "outputs/cyclops-analog+no-vendor-symbols/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/cyclops-analog/cyclops-analog-100-mhz-clock-fanout.kicad_sch": {
+      "bytes": 34263,
+      "sha256": "e8bf91a2dd3765e520ad6609c46ffb91e0a069fbcacd73dbb1688e4637c42ab3"
+    },
+    "outputs/cyclops-analog/cyclops-analog-2-5v-emvs-rail.kicad_sch": {
+      "bytes": 5112,
+      "sha256": "b9331f899044ae57fa628c71e436a2c7bd766691baa4dfd34f80614099101bad"
+    },
+    "outputs/cyclops-analog/cyclops-analog-5-v-pi-filter.kicad_sch": {
+      "bytes": 15920,
+      "sha256": "8985cd7c4e1fc13646c04c110095a45f7aabd562b7f1ea5db701f5dfe823fce3"
+    },
+    "outputs/cyclops-analog/cyclops-analog-adf4159-1-pll.kicad_sch": {
+      "bytes": 46119,
+      "sha256": "b2ccbb809d47847641960aeff7411755fa07d1cd1dfb3d10c1711098fdef2c6b"
+    },
+    "outputs/cyclops-analog/cyclops-analog-adf5901-1-tx-vco.kicad_sch": {
+      "bytes": 68540,
+      "sha256": "f459be70fe3373e585dadda418952b592109e1e4762e9e150befadd0868c484d"
+    },
+    "outputs/cyclops-analog/cyclops-analog-adf5904-rx.kicad_sch": {
+      "bytes": 48363,
+      "sha256": "cafc91f62a0fa918ebab71adaea8142a13b7ba1e309a6fb29dcdb2e5b2424210"
+    },
+    "outputs/cyclops-analog/cyclops-analog-lmx2594-lo.kicad_sch": {
+      "bytes": 119881,
+      "sha256": "adda3a5dc8efaf9c1607fdf9f06d21376475c3508246c2c6c52e8f9f03f5eef8"
+    },
+    "outputs/cyclops-analog/cyclops-analog-mezzanine-connector.kicad_sch": {
+      "bytes": 50492,
+      "sha256": "0158afa0020c10c4fa7bf4dadd281fbb3ad1fce0320fdda276857caa927bc9d2"
+    },
+    "outputs/cyclops-analog/cyclops-analog-pcal6416a-i-o-expander.kicad_sch": {
+      "bytes": 41724,
+      "sha256": "6f5b35cb50c972a85386afd093230f92a14339c7d24e4ff998f313f581309d52"
+    },
+    "outputs/cyclops-analog/cyclops-analog-pma3-1-lna.kicad_sch": {
+      "bytes": 30902,
+      "sha256": "add28999b0f480fbcabb8ad6674c5024b469f305ef4b647a1f3f179ecb21770f"
+    },
+    "outputs/cyclops-analog/cyclops-analog-pma3-2-lna.kicad_sch": {
+      "bytes": 30910,
+      "sha256": "f1abfb0ea2adffd150e369dcb50ee0e1e85b9b408b3b56838e4095fb651f0c1d"
+    },
+    "outputs/cyclops-analog/cyclops-analog-rf-feed-matching.kicad_sch": {
+      "bytes": 16232,
+      "sha256": "ee1995f02967c890eb470dd8dc4fe27205afdc27e2be95cc585821e97706b0df"
+    },
+    "outputs/cyclops-analog/cyclops-analog-sit5157-tcxo.kicad_sch": {
+      "bytes": 21075,
+      "sha256": "4c1974abbea49ef3090b69d13a95e662c66176538b6d95c0869e51e7d8d7d3a2"
+    },
+    "outputs/cyclops-analog/cyclops-analog-sub-block-boost5.kicad_sch": {
+      "bytes": 21714,
+      "sha256": "04ee23e60d291d5f320fba9244e62889802f6ece64b158fa63f1686f0e69d640"
+    },
+    "outputs/cyclops-analog/cyclops-analog-sub-block-buck25.kicad_sch": {
+      "bytes": 42981,
+      "sha256": "a48889e715898802ab8a71474957d52646b231e803d6ea365ba3fe6aee7520e8"
+    },
+    "outputs/cyclops-analog/cyclops-analog-test-points.kicad_sch": {
+      "bytes": 9479,
+      "sha256": "2aa639f5a3c1b6924f525737ed0cd7a6c6d6138529b1d1c5a3f645f424ebf597"
+    },
+    "outputs/cyclops-analog/cyclops-analog-txb0104-level-shifters.kicad_sch": {
+      "bytes": 99286,
+      "sha256": "0ad47849d9e6a6428e90c2dd03978f9505c2b98cc727ce065a7f067fbd908eca"
+    },
+    "outputs/cyclops-analog/cyclops-analog.kicad_pro": {
+      "bytes": 277,
+      "sha256": "1a8fc2df1ce71dc420480c45a2d554998b75799272c623ec6091ec45fb88bbbf"
+    },
+    "outputs/cyclops-analog/cyclops-analog.kicad_sch": {
+      "bytes": 12883,
+      "sha256": "53cf7f4e559ef33325018d36ffab17613bcd6e91355b834dceb8541b27a23b91"
+    },
+    "outputs/cyclops-analog/cyclops-analog.net": {
+      "bytes": 158799,
+      "sha256": "f493528de1729743c24abdaab9dd280e85102eac2ebe14f5bca30451eb626d2d"
+    },
+    "outputs/cyclops-analog/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/cyclops-analog/netlisp.kicad_sym": {
+      "bytes": 83433,
+      "sha256": "e3ffc93fb0d53a9bb8c24ce53f20f8d4016755305e61509f7fbc27406fe8d376"
+    },
+    "outputs/cyclops-analog/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/cyclops-breakout/cyclops-breakout.kicad_pro": {
+      "bytes": 279,
+      "sha256": "faff67f010c2594f08b3054ac4ddbbad740ded9180b982c7676ae0c2d30ab86e"
+    },
+    "outputs/cyclops-breakout/cyclops-breakout.kicad_sch": {
+      "bytes": 114625,
+      "sha256": "67111b621a47f8b932a2ad7ac463434cab3db650be5623547bebb31277eaf469"
+    },
+    "outputs/cyclops-breakout/cyclops-breakout.net": {
+      "bytes": 10990,
+      "sha256": "776439b0cc38c4352ca800491792f0222f746eaea5dc9a9c5ee043a6470da49f"
+    },
+    "outputs/cyclops-breakout/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/cyclops-breakout/netlisp.kicad_sym": {
+      "bytes": 30153,
+      "sha256": "6a35dcffbd4cb389ae940f0f0713a3ea693774179e8abf6f2e8e87482fe73360"
+    },
+    "outputs/cyclops-breakout/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/cyclops-digital-pcb/cyclops-digital-pcb.kicad_pro": {
+      "bytes": 282,
+      "sha256": "a00a4f6036efd4b93a16e79a4548d49f0553576691daab49954c2e29b0623a78"
+    },
+    "outputs/cyclops-digital-pcb/cyclops-digital-pcb.kicad_sch": {
+      "bytes": 763677,
+      "sha256": "468ed6ded0b389ccea7f529944435bf40fe07c242682e15eed5b0e2923ac155b"
+    },
+    "outputs/cyclops-digital-pcb/cyclops-digital-pcb.net": {
+      "bytes": 138149,
+      "sha256": "6ddd15389e2a275d3c82f7da336610053626a64cbd6f98b9f2820dd26221fc82"
+    },
+    "outputs/cyclops-digital-pcb/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/cyclops-digital-pcb/netlisp.kicad_sym": {
+      "bytes": 168156,
+      "sha256": "f35498d7cc5217cdfd40cdc17c1e787fba57e864cb2672d5ac981d04f9dff585"
+    },
+    "outputs/cyclops-digital-pcb/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/cyclops-interposer/cyclops-interposer-auxiliary-power-input.kicad_sch": {
+      "bytes": 7635,
+      "sha256": "57ff31821edb0081e1bf3bc9dce743acc5954794539a84996b07e57dc447285a"
+    },
+    "outputs/cyclops-interposer/cyclops-interposer-k-band-module.kicad_sch": {
+      "bytes": 158690,
+      "sha256": "0c29ed8d95da6ae28d196e59d103b92ad44f4e980605eb55deea5c150a98cd63"
+    },
+    "outputs/cyclops-interposer/cyclops-interposer-legacy-digital-host.kicad_sch": {
+      "bytes": 60957,
+      "sha256": "e5ab7db6bba51ecda255ce27feddb2d5ebf09a01bd2166f40515ecf91613fca0"
+    },
+    "outputs/cyclops-interposer/cyclops-interposer-sub-block-tcxo.kicad_sch": {
+      "bytes": 18637,
+      "sha256": "fe3b4356d4fd88278865b01a2a84d8ee7cef92dd9fcf3190376c8560596da42e"
+    },
+    "outputs/cyclops-interposer/cyclops-interposer-test-points.kicad_sch": {
+      "bytes": 14235,
+      "sha256": "d3ff6ba51ab384d18ff522696cca04203184a55952242df0ac5f590ce4e6e3e6"
+    },
+    "outputs/cyclops-interposer/cyclops-interposer-x-band-module.kicad_sch": {
+      "bytes": 92307,
+      "sha256": "5e67380c41d854463bcbc618c7427d088da70bb4f86c37ae8fca88e71a0b394a"
+    },
+    "outputs/cyclops-interposer/cyclops-interposer.kicad_pro": {
+      "bytes": 281,
+      "sha256": "10ead559f002b37d6040962cbe78cbd778ebb54fd97baf51713a3cd6c670105f"
+    },
+    "outputs/cyclops-interposer/cyclops-interposer.kicad_sch": {
+      "bytes": 5999,
+      "sha256": "109008ac8170f006fce5131a00cba5bf813f415fd800acb1d1c5c3f18c04886c"
+    },
+    "outputs/cyclops-interposer/cyclops-interposer.net": {
+      "bytes": 71616,
+      "sha256": "c8c8cd052f95cb182cea28b4e330622d7cce2c0e711d9f01e134fb8d3510adc2"
+    },
+    "outputs/cyclops-interposer/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/cyclops-interposer/netlisp.kicad_sym": {
+      "bytes": 57545,
+      "sha256": "1f74c7d044a55720a293b043116e7305b90723619d5b14a1aa60710ee4bdcaaf"
+    },
+    "outputs/cyclops-interposer/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/cyclops-kband-breakout/cyclops-kband-breakout-auxiliary-power-input.kicad_sch": {
+      "bytes": 7651,
+      "sha256": "fb8a39e7806cec9516d23ded84040c6ead8da8c2283905cfa97d92bf4efdea1e"
+    },
+    "outputs/cyclops-kband-breakout/cyclops-kband-breakout-debug-header-banks.kicad_sch": {
+      "bytes": 58950,
+      "sha256": "572d9e3d5ba44ea08263bffb702184f2338abd86ee28c4c5057d7af6aad29784"
+    },
+    "outputs/cyclops-kband-breakout/cyclops-kband-breakout-digital-support-holes.kicad_sch": {
+      "bytes": 3170,
+      "sha256": "362185c3377fb4a6a40dfb1f5cacfc1b605539cd2ee299c06570c488a147f41c"
+    },
+    "outputs/cyclops-kband-breakout/cyclops-kband-breakout-k-band-module.kicad_sch": {
+      "bytes": 158942,
+      "sha256": "2091d4bcd1f7e316301d673d7e610b44cc7a6b9fd2117e04e1c38449ba3ea731"
+    },
+    "outputs/cyclops-kband-breakout/cyclops-kband-breakout-legacy-digital-host.kicad_sch": {
+      "bytes": 61047,
+      "sha256": "4d63de0665abadda42607b4edcbcecdac25d9433a4e32950f7ce0c9ecb22916f"
+    },
+    "outputs/cyclops-kband-breakout/cyclops-kband-breakout-sub-block-tcxo.kicad_sch": {
+      "bytes": 18661,
+      "sha256": "98aab8395e14bf874ac25ee9db373985c6c7e00fee7bbb52016478469a0ff7bd"
+    },
+    "outputs/cyclops-kband-breakout/cyclops-kband-breakout-test-points.kicad_sch": {
+      "bytes": 14279,
+      "sha256": "77ef5d9c65ad8cd02a92b5eebf8e0f5d91ef8afbc0e184ce7c18ca088c8a0314"
+    },
+    "outputs/cyclops-kband-breakout/cyclops-kband-breakout-x-band-module.kicad_sch": {
+      "bytes": 92445,
+      "sha256": "c69fd3c8871b7e9f717585167bc45d94993fb004479f220ebacb46cb9c6cf494"
+    },
+    "outputs/cyclops-kband-breakout/cyclops-kband-breakout.kicad_pro": {
+      "bytes": 285,
+      "sha256": "ca509000dfc66e86f32ec1567a83deebb214104648804c4c16be7c9cb95545fd"
+    },
+    "outputs/cyclops-kband-breakout/cyclops-kband-breakout.kicad_sch": {
+      "bytes": 7366,
+      "sha256": "d6d7830433aba6b5efc186114a257e94ff1cbafa280025d7393f63e3a3e23730"
+    },
+    "outputs/cyclops-kband-breakout/cyclops-kband-breakout.net": {
+      "bytes": 79070,
+      "sha256": "d0eeba9afd17e881a93e76d705fdb080f353fc6a6cf55dc686d9cd11d6e59e06"
+    },
+    "outputs/cyclops-kband-breakout/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/cyclops-kband-breakout/netlisp.kicad_sym": {
+      "bytes": 67081,
+      "sha256": "c6f9dfdc19fddb1500052844b5c9224fc16441312111625259411536dd372701"
+    },
+    "outputs/cyclops-kband-breakout/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/cyclops-kband-pcb/cyclops-kband-pcb.kicad_pro": {
+      "bytes": 280,
+      "sha256": "ef60e61c7263ec37237d147474b5852949ab75373a154d344f3f0b43cee81172"
+    },
+    "outputs/cyclops-kband-pcb/cyclops-kband-pcb.kicad_sch": {
+      "bytes": 487656,
+      "sha256": "1997232f0aa88317e34706b4924f492ff41b116d73a7ef0d8ef807fffd8e89c8"
+    },
+    "outputs/cyclops-kband-pcb/cyclops-kband-pcb.net": {
+      "bytes": 87528,
+      "sha256": "48f06121bf802d6f87738e7509ce9df1d3523e5b774b0b42e045c6b11e5db8b1"
+    },
+    "outputs/cyclops-kband-pcb/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/cyclops-kband-pcb/netlisp.kicad_sym": {
+      "bytes": 91000,
+      "sha256": "5d1927bfe3cc9977b4a50689da376f0f60fe39434ed5e0a709b6aee43f69e20f"
+    },
+    "outputs/cyclops-kband-pcb/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/cyclops-kband/cyclops-kband-adar2004-rx-mixer.kicad_sch": {
+      "bytes": 55961,
+      "sha256": "23d153d77e638eca8bf855fd66c2278b4ad0f35f28f220c148c22b93e1a37be0"
+    },
+    "outputs/cyclops-kband/cyclops-kband-adf4159-1-pll.kicad_sch": {
+      "bytes": 47786,
+      "sha256": "7171b2afd62077d680ad652ca8bb5b2b7f1e03e7f6654b0e23a1c14df6554b04"
+    },
+    "outputs/cyclops-kband/cyclops-kband-adf5901-1-tx-vco.kicad_sch": {
+      "bytes": 78144,
+      "sha256": "dc35da69ea0c292c8a846b5b451fb28786dc6de022305adb370a9748b3dd66bb"
+    },
+    "outputs/cyclops-kband/cyclops-kband-adf5904-rx.kicad_sch": {
+      "bytes": 53635,
+      "sha256": "dac6a98c86b81930c628da3ae62484b05ccc801c55eec517e5a456bd33b8fb68"
+    },
+    "outputs/cyclops-kband/cyclops-kband-jm1-b2b-connector.kicad_sch": {
+      "bytes": 35865,
+      "sha256": "eacfa3f7b230728107293f049ded72fd6af9abbdbfe5decf17b2b0acff61ef59"
+    },
+    "outputs/cyclops-kband/cyclops-kband-jm2-b2b-connector.kicad_sch": {
+      "bytes": 92959,
+      "sha256": "2412d0c2876cd3d1afaa4cae273c768ab76855609d6a92276f5a3fd4180d5b3b"
+    },
+    "outputs/cyclops-kband/cyclops-kband-lmx2594-lo.kicad_sch": {
+      "bytes": 140209,
+      "sha256": "c88a9a6ca916dde7f6f5f8d6545da7622e6afbaa4f596fa5ba36112cb5596f38"
+    },
+    "outputs/cyclops-kband/cyclops-kband-pma3-1-lna.kicad_sch": {
+      "bytes": 30880,
+      "sha256": "fba47cf8fbce8b669cdf8d4bdfed6b9cfee6355d86a340407403ee060c039f97"
+    },
+    "outputs/cyclops-kband/cyclops-kband-pma3-2-lna.kicad_sch": {
+      "bytes": 30880,
+      "sha256": "92eae832cd76c3c312351308aa5999de7b44fabccfc67f07b538012242957869"
+    },
+    "outputs/cyclops-kband/cyclops-kband-rf-feed-matching.kicad_sch": {
+      "bytes": 8663,
+      "sha256": "11bff320926b3e0314bac0d7e61603f50fcaeddaab0ed4ef51100a58d086c065"
+    },
+    "outputs/cyclops-kband/cyclops-kband-sub-block-boost5.kicad_sch": {
+      "bytes": 21732,
+      "sha256": "730a84ba7a802c84d1c19994b5abdd4cef7ad570db3b7e4c1871a2ecda0279fe"
+    },
+    "outputs/cyclops-kband/cyclops-kband-unsectioned.kicad_sch": {
+      "bytes": 2343,
+      "sha256": "170499a9644af16387b3d5d4f34fb318d4afe4779f7cc4e3537e5413caadf7f6"
+    },
+    "outputs/cyclops-kband/cyclops-kband.kicad_pro": {
+      "bytes": 276,
+      "sha256": "8e156b00682b41d3757c64bd513063e2bb3352bee0f23b2bc07ac985508a8294"
+    },
+    "outputs/cyclops-kband/cyclops-kband.kicad_sch": {
+      "bytes": 9682,
+      "sha256": "38471eb8de265d6a5ea45b962dc0a6a9131d4587f6ae14814c59f1a775bf9c3a"
+    },
+    "outputs/cyclops-kband/cyclops-kband.net": {
+      "bytes": 135197,
+      "sha256": "dae4a504bbb7e7eddc44ced56a65b73115999058f22310226ca680c455094782"
+    },
+    "outputs/cyclops-kband/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/cyclops-kband/netlisp.kicad_sym": {
+      "bytes": 76936,
+      "sha256": "007f809e1f855d1b5413234ba5b21d13e3d89c8b98b7008165a14abef38e9b37"
+    },
+    "outputs/cyclops-kband/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/cyclops-xband-sip/cyclops-xband-sip-adar2001-emvs-tx.kicad_sch": {
+      "bytes": 64740,
+      "sha256": "887548004584d569b3c13f20333afe0b00ac0d92f149679aa168262acb34bdda"
+    },
+    "outputs/cyclops-xband-sip/cyclops-xband-sip-adar2004-rx-mixer.kicad_sch": {
+      "bytes": 55919,
+      "sha256": "b6f50e99f4d207502b464b64d062c28052d40dd92e9499d2dcf7d1a9de60d4a6"
+    },
+    "outputs/cyclops-xband-sip/cyclops-xband-sip-jm1-b2b-connector.kicad_sch": {
+      "bytes": 28666,
+      "sha256": "6b49c4831700bd59901e7f8cd327b71f7f68fc24b1dccf8a80e267af581f2676"
+    },
+    "outputs/cyclops-xband-sip/cyclops-xband-sip-lmx2594-lo.kicad_sch": {
+      "bytes": 139538,
+      "sha256": "33d4cff38969026ab11c1f77dc2fdd1f17eb263505ad8e5340a46554d66f1e40"
+    },
+    "outputs/cyclops-xband-sip/cyclops-xband-sip.kicad_pro": {
+      "bytes": 280,
+      "sha256": "f252cb58f076f4b8b58b431525c81db25105a3fdd5c9126ef25a1bbec29085f6"
+    },
+    "outputs/cyclops-xband-sip/cyclops-xband-sip.kicad_sch": {
+      "bytes": 4709,
+      "sha256": "f25042ed4bf76e8461927d2754aaac45f67638d25968a52275339e364061165c"
+    },
+    "outputs/cyclops-xband-sip/cyclops-xband-sip.net": {
+      "bytes": 70447,
+      "sha256": "e818f896ab02b7a1ec29dc17f0cfa4d8c96f2cf6e64d9cb2939eba9ba37b16cf"
+    },
+    "outputs/cyclops-xband-sip/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/cyclops-xband-sip/netlisp.kicad_sym": {
+      "bytes": 41510,
+      "sha256": "a8aa1d9a811b94f352d3d93c53cf209d3a347c0c515c2372bb0bbeeb252fff8f"
+    },
+    "outputs/cyclops-xband-sip/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/dual-flash/dual-flash.kicad_pro": {
+      "bytes": 273,
+      "sha256": "730cf158e24dc1f9803a0c0b166f061f385d291efd2a420f4a74d199d16d6a4c"
+    },
+    "outputs/dual-flash/dual-flash.kicad_sch": {
+      "bytes": 60339,
+      "sha256": "05ef411b7bb4954cdd03acdf2aaa82d400b624aab3fbcbd1b2e60b841466ab2d"
+    },
+    "outputs/dual-flash/dual-flash.net": {
+      "bytes": 16844,
+      "sha256": "06542df22fcf2ac67492c5891e3224f331dc75c9e132ae9941c72aefef729812"
+    },
+    "outputs/dual-flash/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/dual-flash/netlisp.kicad_sym": {
+      "bytes": 9859,
+      "sha256": "a14511cbefdbd0c4e18f77588f1c6fb526d6938a5eee537cc997c4e3fbc83734"
+    },
+    "outputs/dual-flash/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/labstation+no-vendor-symbols/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-bench-header.kicad_sch": {
+      "bytes": 29447,
+      "sha256": "e909f1e29014e0da3c9341a88b2483d6ad3cac237a270eb8d7d1b4ec9935fa88"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-bring-up-debug.kicad_sch": {
+      "bytes": 13528,
+      "sha256": "bdeeb40c87187b20b0f67c0f38ccb56c78bf6c1b988484f5ec5a6c849117ec5d"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-channel-1-psu-buck-boost.kicad_sch": {
+      "bytes": 94081,
+      "sha256": "24c8a500d2c779de76be30d52be46e84bf0ffdded36ba16fa4c2f4da8495d302"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-channel-2-psu-buck-boost.kicad_sch": {
+      "bytes": 94142,
+      "sha256": "ee5b1862cb84a366e7616a2c49496cd2b4aa32a2f3fc4287692ba750b452ac4c"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-display-header.kicad_sch": {
+      "bytes": 7148,
+      "sha256": "fc7ca286757095f7aeb037f9da084239e564a67ef7c4dede6c2c680e849e2a33"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-dmm-analog-front-end.kicad_sch": {
+      "bytes": 270209,
+      "sha256": "6195a84d008251f316559583266d36994f3ad29cb206672eb2db3a76bcb294ca"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-dmm-rear-channels.kicad_sch": {
+      "bytes": 8221,
+      "sha256": "d7442144441471d30103cc0b6fecac0f9dec49ba8b58320c4c497b295dbfad33"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-ethernet.kicad_sch": {
+      "bytes": 123165,
+      "sha256": "95fa63f6fb5b9e122577fffdae928a255b7f67d9b5aed83091250a6730ac5c47"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-fast-current-capture.kicad_sch": {
+      "bytes": 66180,
+      "sha256": "4ba665002845ec945ea6ac6076a34fd1a03b1601979196e9a1b260c6a3b47ca2"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-fixture-bench-i-o-protection.kicad_sch": {
+      "bytes": 81291,
+      "sha256": "c7bf403ac6be657860920c9aff0d558fa9e6c61d4ce34aa0e1e558d7ee9ed011"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-fixture-port.kicad_sch": {
+      "bytes": 67610,
+      "sha256": "2fe5354ee91a0ee97fff654c8706d8ca7e096f56d9561df6f23b90c59bdce023"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-housekeeping-i-o-expander.kicad_sch": {
+      "bytes": 24095,
+      "sha256": "101bbb7d1f3397e11be7f35b6298044c876a94e2a3375966ad9f8b0932efd590"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-mounting.kicad_sch": {
+      "bytes": 13497,
+      "sha256": "8d43b8438138e2c014c7276ad2c37d2d65e477cd2ba67bcda576f2567f2b930a"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-psu-banana-jacks.kicad_sch": {
+      "bytes": 8315,
+      "sha256": "94088e61cf52e5a27513e65223c4286dec736f446a58f97cb9f97ecd4344c39a"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-rp2350-core-system.kicad_sch": {
+      "bytes": 139934,
+      "sha256": "dd5af3275fb2dd2885ce65643f872e5759c67f8019775e99e64521a39796c65d"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-sub-block-flash.kicad_sch": {
+      "bytes": 20201,
+      "sha256": "cc90ad383054da43e3e43925d075ff7c29bb7d44a3bd2236c3750442b14646b8"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-sub-block-house2.kicad_sch": {
+      "bytes": 17789,
+      "sha256": "431c3a05ca1e240e9f48597dc3ca4fd18a1a68b3c963e66571005d85ba55e77b"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-system-rails.kicad_sch": {
+      "bytes": 88427,
+      "sha256": "4a8a2d25461c3d044a768dec39d6a5b97b26a4736e5cc35e925f7492821214e9"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-test-points.kicad_sch": {
+      "bytes": 17723,
+      "sha256": "42f5fa0f25bd5165dfd08045b427b461a5db714270d6fcc00157fbf6f111c9ed"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-unsectioned.kicad_sch": {
+      "bytes": 10461,
+      "sha256": "83412affdfb5b44644cb2fc15b331716237ca16e7c22e447d412b5204fb3b267"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-usb-c-device-port.kicad_sch": {
+      "bytes": 22970,
+      "sha256": "534b4acc0eee5bcdd1360a701e5d5d51ee46e98a7caa3b84576beb9109acfefc"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-usb-c-power-input.kicad_sch": {
+      "bytes": 75316,
+      "sha256": "cda11fcc7a4524947d717e66571d9c1c058ffce588d02e58cb1906a1c98dc5b9"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation-ux-indicators.kicad_sch": {
+      "bytes": 97167,
+      "sha256": "15d1db77556ad952f11afc0fb466b03fc451db9bf2cd44bb2a920a8d0c0bc1a5"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation.kicad_pro": {
+      "bytes": 273,
+      "sha256": "a3dc1bf7a0edb05ddf4373f64a23a38a91db953c3fd5a4c47e1d53c26388ef53"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation.kicad_sch": {
+      "bytes": 16603,
+      "sha256": "49e0f47f410c55bcec61a316417f53ee57c1fb8744bcc469fe33b8622ef20af0"
+    },
+    "outputs/labstation+no-vendor-symbols/labstation.net": {
+      "bytes": 357350,
+      "sha256": "4ef37009bae9dba3dfbca5b8a0cddb824ab9520bddcb5288addd3b2996565ada"
+    },
+    "outputs/labstation+no-vendor-symbols/netlisp.kicad_sym": {
+      "bytes": 128636,
+      "sha256": "efd87f29ef0c893206e73c7f2df84ae7f81905d8e4cba783884253f4c48c6fbd"
+    },
+    "outputs/labstation+no-vendor-symbols/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/labstation/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/labstation/labstation-bench-header.kicad_sch": {
+      "bytes": 29383,
+      "sha256": "b71e671b31c030980fd4e5647a2a39afb70880e5656bad33b4feb23adc552a1e"
+    },
+    "outputs/labstation/labstation-bring-up-debug.kicad_sch": {
+      "bytes": 13145,
+      "sha256": "bf4c616b65b5259f90889d46958147b1d630c9e90085182588afa13ff1d12a3d"
+    },
+    "outputs/labstation/labstation-channel-1-psu-buck-boost.kicad_sch": {
+      "bytes": 97110,
+      "sha256": "6c40015693f0e3bc680e12f16574d125e13c735b5e53f89b339482833cf459bc"
+    },
+    "outputs/labstation/labstation-channel-2-psu-buck-boost.kicad_sch": {
+      "bytes": 97171,
+      "sha256": "359431118a8cd7ec6b654f05ac504bef20724fdf7e6a7df1c13524a9da3ac184"
+    },
+    "outputs/labstation/labstation-display-header.kicad_sch": {
+      "bytes": 7148,
+      "sha256": "de03841fab4d1eadac22d64b21ac076cb8459e4572d6375123384f4c72ee8068"
+    },
+    "outputs/labstation/labstation-dmm-analog-front-end.kicad_sch": {
+      "bytes": 269555,
+      "sha256": "bb0b2ceab0860a97a0abecc01c8aa2fb2712f5c981d1a7bd969677bed00cc1a7"
+    },
+    "outputs/labstation/labstation-dmm-rear-channels.kicad_sch": {
+      "bytes": 8221,
+      "sha256": "3c454ae04b03938096887903c469e594e02091e44ee030df57f7b2bfe9271633"
+    },
+    "outputs/labstation/labstation-ethernet.kicad_sch": {
+      "bytes": 128827,
+      "sha256": "07d9768e6a4ac86ab82c4ae4aaff1c57c8444cdb940bfb3ed4fc4ace979eb46d"
+    },
+    "outputs/labstation/labstation-fast-current-capture.kicad_sch": {
+      "bytes": 66180,
+      "sha256": "33a1b2e480ee1404f75231d5e7492198b50e3a5c8b3eb4a7e7b86dda4480c89e"
+    },
+    "outputs/labstation/labstation-fixture-bench-i-o-protection.kicad_sch": {
+      "bytes": 81279,
+      "sha256": "9dd5aebc7fecca19ba54e4df5ec6d7a08a4744f6f642fb384e76e0db29073b28"
+    },
+    "outputs/labstation/labstation-fixture-port.kicad_sch": {
+      "bytes": 72797,
+      "sha256": "bb59b0d1eef8fc1e73584a3df5e3229cc428e463221b6a3f8a044d3b986b8473"
+    },
+    "outputs/labstation/labstation-housekeeping-i-o-expander.kicad_sch": {
+      "bytes": 24481,
+      "sha256": "cef5771a5436cec10425df030bc765e66476168abbd0b8e9230eb12e0e215187"
+    },
+    "outputs/labstation/labstation-mounting.kicad_sch": {
+      "bytes": 13497,
+      "sha256": "9dde79e36f018332d3bc6b48a24609ce959d70af54d59a0317fc7a3b29c4e2ff"
+    },
+    "outputs/labstation/labstation-psu-banana-jacks.kicad_sch": {
+      "bytes": 8320,
+      "sha256": "4aa7fb287ca9befe782a176e78e6aa40b6456a8475f9761d87bef7c96d8b41dc"
+    },
+    "outputs/labstation/labstation-rp2350-core-system.kicad_sch": {
+      "bytes": 129068,
+      "sha256": "2e69adf0a3a6e532458cc5040160f61e91612b1cbdb91c77c0bc7bfda757c94a"
+    },
+    "outputs/labstation/labstation-sub-block-flash.kicad_sch": {
+      "bytes": 20627,
+      "sha256": "26128ecca3c985d833dd7e6ec74c7ffa17b4a9632b7c6685e494e5144f54a0fe"
+    },
+    "outputs/labstation/labstation-sub-block-house2.kicad_sch": {
+      "bytes": 18196,
+      "sha256": "cf8fcc61eb13def0146b4c9783a96536f1e055d2430804c2e5636a577ff2034e"
+    },
+    "outputs/labstation/labstation-system-rails.kicad_sch": {
+      "bytes": 88971,
+      "sha256": "dfbda9c60c7eb9ce1169fa0abe0600eb0698d5c04c63ea16bd917189e7fdc8c6"
+    },
+    "outputs/labstation/labstation-test-points.kicad_sch": {
+      "bytes": 17723,
+      "sha256": "51d41dd4f9ae2aa29195be24b09364b7e6a9b553c417a05a1421bc3dee1c98d7"
+    },
+    "outputs/labstation/labstation-unsectioned.kicad_sch": {
+      "bytes": 10461,
+      "sha256": "83412affdfb5b44644cb2fc15b331716237ca16e7c22e447d412b5204fb3b267"
+    },
+    "outputs/labstation/labstation-usb-c-device-port.kicad_sch": {
+      "bytes": 25784,
+      "sha256": "c58e01d9dfdb676240ee7773f1b504e3554a336886a6126c868d61d68a1691d2"
+    },
+    "outputs/labstation/labstation-usb-c-power-input.kicad_sch": {
+      "bytes": 77048,
+      "sha256": "1b161ba9fbabface519d8d8d7d0871986bd00ebb6d1dd08b11b84f4938585b6e"
+    },
+    "outputs/labstation/labstation-ux-indicators.kicad_sch": {
+      "bytes": 97740,
+      "sha256": "1d3660031e641304725b3e93ae9319d185fdbd6ee5d16a7cb1c4b4a3e7da824a"
+    },
+    "outputs/labstation/labstation.kicad_pro": {
+      "bytes": 273,
+      "sha256": "a3dc1bf7a0edb05ddf4373f64a23a38a91db953c3fd5a4c47e1d53c26388ef53"
+    },
+    "outputs/labstation/labstation.kicad_sch": {
+      "bytes": 16603,
+      "sha256": "e72f47f9b41decb512604ef1d1867356cfd8c1355bbfe15538727cdeecef68a5"
+    },
+    "outputs/labstation/labstation.net": {
+      "bytes": 357350,
+      "sha256": "4ef37009bae9dba3dfbca5b8a0cddb824ab9520bddcb5288addd3b2996565ada"
+    },
+    "outputs/labstation/netlisp.kicad_sym": {
+      "bytes": 135344,
+      "sha256": "eff15a45d14e360c7f59d67724312f481bb8783db24ee84fa53b249d52463bff"
+    },
+    "outputs/labstation/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/lmk05318b-clock/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/lmk05318b-clock/lmk05318b-clock.kicad_pro": {
+      "bytes": 278,
+      "sha256": "8fee0801cb3b369b4bcc3c7713a40d9f1d3ee9e304c9203b9f5d31cefef82830"
+    },
+    "outputs/lmk05318b-clock/lmk05318b-clock.kicad_sch": {
+      "bytes": 226293,
+      "sha256": "6cd096be6d1e4b9d5a90d4ffc10685426a8d4989c849888ccafe617ff1a8a692"
+    },
+    "outputs/lmk05318b-clock/lmk05318b-clock.net": {
+      "bytes": 81668,
+      "sha256": "0ea771cf01081dc712c89986582924f6b3c055c5aaea0c11eb0572eb6a190210"
+    },
+    "outputs/lmk05318b-clock/netlisp.kicad_sym": {
+      "bytes": 21822,
+      "sha256": "6a2b9b89d86acc39e49676567b6fdfadb2cb471caf9c16fab2e8408ebc30d26e"
+    },
+    "outputs/lmk05318b-clock/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/max860-inverter/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/max860-inverter/max860-inverter.kicad_pro": {
+      "bytes": 278,
+      "sha256": "1c239e9eef5783de601ad50880db116e85da483d7f98394504aab561c24aff05"
+    },
+    "outputs/max860-inverter/max860-inverter.kicad_sch": {
+      "bytes": 32067,
+      "sha256": "ef4c39ec2e0ee5581496529c977bf827163d165786bd7352ab43279ccaa6423c"
+    },
+    "outputs/max860-inverter/max860-inverter.net": {
+      "bytes": 8652,
+      "sha256": "f0dd79b81d1fa057cfa99297e15d2000e5c898e77aab165de7b887c12010d3e7"
+    },
+    "outputs/max860-inverter/netlisp.kicad_sym": {
+      "bytes": 6974,
+      "sha256": "77be1921f6df7b5c2a015b40f48a017cb492992cabd44aad30c165374422958d"
+    },
+    "outputs/max860-inverter/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/poe-pd-flyback-tps23757/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/poe-pd-flyback-tps23757/netlisp.kicad_sym": {
+      "bytes": 25968,
+      "sha256": "1dd1acf870e6954e4d8614e9c823aec05b3e3e80b57b8ea2999e2b4db494de0f"
+    },
+    "outputs/poe-pd-flyback-tps23757/poe-pd-flyback-tps23757-controller-bias-and-timing.kicad_sch": {
+      "bytes": 29100,
+      "sha256": "46147034f109e318f837258182e1ce9665f6732438cba2ed71f9deb4ee74bd09"
+    },
+    "outputs/poe-pd-flyback-tps23757/poe-pd-flyback-tps23757-flyback-primary.kicad_sch": {
+      "bytes": 32830,
+      "sha256": "670c6bdce181bbf4a22a758bf8488f3859cab9cfbf09f4a02023e8ec902fb0c1"
+    },
+    "outputs/poe-pd-flyback-tps23757/poe-pd-flyback-tps23757-isolated-feedback.kicad_sch": {
+      "bytes": 31535,
+      "sha256": "d1a09105c4fb4c8b6c8820cf99280bd989bda378df5a36a2f9ab388a749f0234"
+    },
+    "outputs/poe-pd-flyback-tps23757/poe-pd-flyback-tps23757-isolated-secondary.kicad_sch": {
+      "bytes": 15394,
+      "sha256": "d36a9a6f01889896f36472787f21e79c5ab2fc04a92b96b9308aa04a9f9451ce"
+    },
+    "outputs/poe-pd-flyback-tps23757/poe-pd-flyback-tps23757-poe-interface.kicad_sch": {
+      "bytes": 38659,
+      "sha256": "2faf17b4f3cf36c53d76111e1ab80c2c495fd926bde41dae80cc2ba596b11c59"
+    },
+    "outputs/poe-pd-flyback-tps23757/poe-pd-flyback-tps23757.kicad_pro": {
+      "bytes": 286,
+      "sha256": "1ab7cd47101e3cac62a7a60b437b87c5364f56357b2faf5b7d904dc7f556622f"
+    },
+    "outputs/poe-pd-flyback-tps23757/poe-pd-flyback-tps23757.kicad_sch": {
+      "bytes": 5470,
+      "sha256": "c3f2dd76add33a06cce6a130e17017952534ab01f500021cb812e4fc60316fe6"
+    },
+    "outputs/poe-pd-flyback-tps23757/poe-pd-flyback-tps23757.net": {
+      "bytes": 36587,
+      "sha256": "d2a72e4121cb3120260d92e97d61acfc86e4eb06d7f08c57d1f25db2f2797c95"
+    },
+    "outputs/poe-pd-flyback-tps23757/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/rds3+flat/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/rds3+flat/netlisp.kicad_sym": {
+      "bytes": 80013,
+      "sha256": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e"
+    },
+    "outputs/rds3+flat/rds3.kicad_pro": {
+      "bytes": 267,
+      "sha256": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362"
+    },
+    "outputs/rds3+flat/rds3.kicad_sch": {
+      "bytes": 1644678,
+      "sha256": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2"
+    },
+    "outputs/rds3+flat/rds3.net": {
+      "bytes": 454544,
+      "sha256": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+    },
+    "outputs/rds3+flat/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/rds3-rf-selector/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/rds3-rf-selector/netlisp.kicad_sym": {
+      "bytes": 7873,
+      "sha256": "69b3c890cee8f8d3945e76bfee6c64ef92905a066dcd921466eab3d3a5316082"
+    },
+    "outputs/rds3-rf-selector/rds3-rf-selector.kicad_pro": {
+      "bytes": 279,
+      "sha256": "0ce3ab93e44ca9fcf364416552c05dd9be4fbe8542231504b6dc12f1d36c57f1"
+    },
+    "outputs/rds3-rf-selector/rds3-rf-selector.kicad_sch": {
+      "bytes": 41355,
+      "sha256": "e49176954329ac739a1d562d08f6826c37b087c0049f86a27950558bec22b9fa"
+    },
+    "outputs/rds3-rf-selector/rds3-rf-selector.net": {
+      "bytes": 10820,
+      "sha256": "5a57f0992dfdb51c27b07534a6e780ecff87aa2147a228b29554d3f1535421d0"
+    },
+    "outputs/rds3-rf-selector/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/rds3/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/rds3/netlisp.kicad_sym": {
+      "bytes": 80013,
+      "sha256": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e"
+    },
+    "outputs/rds3/rds3-board-mounting.kicad_sch": {
+      "bytes": 12659,
+      "sha256": "68428d403df4ba2b48c8075c2640596e27b36744658da2378fd27348b15b3bae"
+    },
+    "outputs/rds3/rds3-control-distribution.kicad_sch": {
+      "bytes": 67234,
+      "sha256": "515b7900f87a59f40a9d925613b59ea63be80acf8e64e52f9a2ae947ce939b7c"
+    },
+    "outputs/rds3/rds3-controller.kicad_sch": {
+      "bytes": 22829,
+      "sha256": "e40a3d45a31c1997afbae46090735213fa670df6856e3e141abb62ebd1af929e"
+    },
+    "outputs/rds3/rds3-external-calibration.kicad_sch": {
+      "bytes": 6498,
+      "sha256": "303246f1a339486182d86ce597ba6442380e2665c9ee2e4982c9f9580c259f87"
+    },
+    "outputs/rds3/rds3-internal-calibration-filter.kicad_sch": {
+      "bytes": 15516,
+      "sha256": "db8c5c4db61a29a468d81a4b8c521b9588780b79037dfbf4e934b38a05dacb2e"
+    },
+    "outputs/rds3/rds3-power-entry.kicad_sch": {
+      "bytes": 12862,
+      "sha256": "e5756cd724dfcc0615aa2b64b401277b3e6065e56ffc450f51769cf95d413337"
+    },
+    "outputs/rds3/rds3-power-indicator.kicad_sch": {
+      "bytes": 8452,
+      "sha256": "2e685ec64f8e6b5b8e0722ff823b24d817fe84d34ceb4acf1491114a29235d90"
+    },
+    "outputs/rds3/rds3-reference-connectors.kicad_sch": {
+      "bytes": 14662,
+      "sha256": "ab7763fb4596bbb0c2423b026613253777a9a67a299cd7416b498011bcec1429"
+    },
+    "outputs/rds3/rds3-rf-connector-banks.kicad_sch": {
+      "bytes": 92684,
+      "sha256": "45e0afbb62e6211f8825e28476fba10920cc1598287074254d46d2d522ca3831"
+    },
+    "outputs/rds3/rds3-service-supplies.kicad_sch": {
+      "bytes": 18649,
+      "sha256": "00345666ec902b283a6080bbf08f0c35269ad15ee41cf5a2646ba55eaa3384ac"
+    },
+    "outputs/rds3/rds3-sub-block-barracuda.kicad_sch": {
+      "bytes": 30999,
+      "sha256": "1b8a293f9a382feafdc648f028bb9e05e731eb9e889a33b2ca25b319168786f8"
+    },
+    "outputs/rds3/rds3-sub-block-buck-3v3.kicad_sch": {
+      "bytes": 39550,
+      "sha256": "95cab408f780845609c2511b672ce313c29e507fe16ccecf41d7622489000959"
+    },
+    "outputs/rds3/rds3-sub-block-buck-cal-switch-pre.kicad_sch": {
+      "bytes": 39598,
+      "sha256": "ad62075997dfee23105f6fe9188a94c1d4a9395ddb2f58144987541674453f25"
+    },
+    "outputs/rds3/rds3-sub-block-cal-div01.kicad_sch": {
+      "bytes": 7178,
+      "sha256": "05c3630cc8ad4343c833b60b30c7d97e3afdeb2bf4116339a7823ca61b6f7176"
+    },
+    "outputs/rds3/rds3-sub-block-cal-div02.kicad_sch": {
+      "bytes": 7181,
+      "sha256": "0c603d0f95cb90fdc921f236ef15725c13f7d1ea0843d4a3d8ae326f3edd9f23"
+    },
+    "outputs/rds3/rds3-sub-block-cal-div03.kicad_sch": {
+      "bytes": 7181,
+      "sha256": "21be5c4e9a03408b9231039d4670ca0eef4da2806e10a86504dce08d3033c5a7"
+    },
+    "outputs/rds3/rds3-sub-block-cal-div04.kicad_sch": {
+      "bytes": 7181,
+      "sha256": "608e15d19c48b0403e3f9147bcbed5da7cb93e6c0b8d9c16a806d32bb7009a55"
+    },
+    "outputs/rds3/rds3-sub-block-cal-div05.kicad_sch": {
+      "bytes": 7181,
+      "sha256": "c03d24e7cdaa0ff867090ec2ed0aa9d27826c2e4a0acdd79d176aaa799e70894"
+    },
+    "outputs/rds3/rds3-sub-block-cal-div06.kicad_sch": {
+      "bytes": 7181,
+      "sha256": "32b036923734e0738f1de84f49190516c61bdf6c54b96e82dbbe74d18aa8bcf6"
+    },
+    "outputs/rds3/rds3-sub-block-cal-div07.kicad_sch": {
+      "bytes": 7181,
+      "sha256": "541e73933afdb61f1316b3c25f438aa9593bd352a33a93f4d4108d3ecbdbaa6b"
+    },
+    "outputs/rds3/rds3-sub-block-cal-div08.kicad_sch": {
+      "bytes": 7177,
+      "sha256": "ba3a612c8424b45bf3ba24b00e1ca7595ef5dc29a0f4e18247a2e52c8f1b4763"
+    },
+    "outputs/rds3/rds3-sub-block-cal-div09.kicad_sch": {
+      "bytes": 7177,
+      "sha256": "644120087db34009899fe9c620061edaea4c966048625eb298238b5ea1ba76dd"
+    },
+    "outputs/rds3/rds3-sub-block-cal-div10.kicad_sch": {
+      "bytes": 7177,
+      "sha256": "638246c8250a02db8fe626332fc358a35c4a90e5aa4996570c88dd0ff8d8fedb"
+    },
+    "outputs/rds3/rds3-sub-block-cal-div11.kicad_sch": {
+      "bytes": 7177,
+      "sha256": "076949de02b15350166395688c14c8ad1a6097d6272134685e3d56f6ca1664f8"
+    },
+    "outputs/rds3/rds3-sub-block-cal-div12.kicad_sch": {
+      "bytes": 7177,
+      "sha256": "e6ae25a74c1600bdd7923877243b1dbe925e0f8cbe1cba2be2f95abbe947ecc3"
+    },
+    "outputs/rds3/rds3-sub-block-cal-div13.kicad_sch": {
+      "bytes": 7177,
+      "sha256": "e01ad9849172520faa2946ff4adb0cfb19a7cafdc94c73259535f8db4ec575aa"
+    },
+    "outputs/rds3/rds3-sub-block-cal-div14.kicad_sch": {
+      "bytes": 7177,
+      "sha256": "3a788fcff3e9a17a3f0e298428ca5aecbc55b377d68b7e6abfa8c35c33cb4873"
+    },
+    "outputs/rds3/rds3-sub-block-cal-div15.kicad_sch": {
+      "bytes": 7177,
+      "sha256": "edf36ac6c8ccb8ee1332aecd902415b204d172c31a0d329b7cc12c09782cbe72"
+    },
+    "outputs/rds3/rds3-sub-block-cal-neg5.kicad_sch": {
+      "bytes": 41729,
+      "sha256": "ce4c9fa8104ea81b2b2b3c94151457efbb23a023a76cb68f8a56df1618bd4566"
+    },
+    "outputs/rds3/rds3-sub-block-cal-source.kicad_sch": {
+      "bytes": 40308,
+      "sha256": "61e02bbe0956f68abe9e2d6e62cc3aba4cdd6a1db790db4b1f212c40dbdc0710"
+    },
+    "outputs/rds3/rds3-sub-block-cal-switch-ldo.kicad_sch": {
+      "bytes": 39147,
+      "sha256": "a380fc5277f810010e60b7b45af250027a929d107a1f29b973e0b1c8e646be28"
+    },
+    "outputs/rds3/rds3-sub-block-mcu-ldo.kicad_sch": {
+      "bytes": 38951,
+      "sha256": "4c6a7737c68a397f22935e4c792800031a0253079805d0d3f43780e183886fb8"
+    },
+    "outputs/rds3/rds3-sub-block-refclk.kicad_sch": {
+      "bytes": 228163,
+      "sha256": "f15abe7708edc7823f4d3933be375bf2f8fb3e3bb27c920bbc0db1efcfcbe5ca"
+    },
+    "outputs/rds3/rds3-sub-block-rx-select01.kicad_sch": {
+      "bytes": 40290,
+      "sha256": "f0a1e24a6442ff840525144da8abb22a87308bf9e455168d4136b44bd6a51460"
+    },
+    "outputs/rds3/rds3-sub-block-rx-select02.kicad_sch": {
+      "bytes": 40290,
+      "sha256": "eb987132ec188e3192bda77ab6a802126a31b25100f3e9ecb255e67094776884"
+    },
+    "outputs/rds3/rds3-sub-block-rx-select03.kicad_sch": {
+      "bytes": 40290,
+      "sha256": "e65f40fbe7d607e6fefc777349513a33943101d6f99d68a279c9ae775de2db2f"
+    },
+    "outputs/rds3/rds3-sub-block-rx-select04.kicad_sch": {
+      "bytes": 40290,
+      "sha256": "8a8951bab836409955ee88841936abb98b35210cae4c4669f0482716754738ff"
+    },
+    "outputs/rds3/rds3-sub-block-rx-select05.kicad_sch": {
+      "bytes": 40290,
+      "sha256": "e4d365d60d7db007566077dd48ac47ef983ba428e710376f0f40d3fa5b93ef09"
+    },
+    "outputs/rds3/rds3-sub-block-rx-select06.kicad_sch": {
+      "bytes": 40290,
+      "sha256": "0ae90cf3da34211fd15ddd7f7c005a2353049e32a4a9d3545b5bcd632758c4ae"
+    },
+    "outputs/rds3/rds3-sub-block-rx-select07.kicad_sch": {
+      "bytes": 40290,
+      "sha256": "d1777b69d81754d915199cf2c2ba17b8808fa4c7f1cbe686b193ce391e28ff26"
+    },
+    "outputs/rds3/rds3-sub-block-rx-select08.kicad_sch": {
+      "bytes": 40290,
+      "sha256": "b62d81bc53860d2afacb4d82bf589e2fb9a0f254d40aca6fcdfc290a585707eb"
+    },
+    "outputs/rds3/rds3-sub-block-rx-select09.kicad_sch": {
+      "bytes": 40290,
+      "sha256": "7fe4c253f0f1e99b876312dcfa9c9b3f719a726999b3847a48b12ab0754f2e6d"
+    },
+    "outputs/rds3/rds3-sub-block-rx-select10.kicad_sch": {
+      "bytes": 40290,
+      "sha256": "a4a4826fe92b78580e8eaaa3f27a1283937176ea95423dccf386d01864cbfa8f"
+    },
+    "outputs/rds3/rds3-sub-block-rx-select11.kicad_sch": {
+      "bytes": 40290,
+      "sha256": "b7d7a1b7344e63f555869b9ed7a7c9fb6a95e4473e2a6d072201a3c9c0ebc5ca"
+    },
+    "outputs/rds3/rds3-sub-block-rx-select12.kicad_sch": {
+      "bytes": 40290,
+      "sha256": "f3190fc627c80f489412dd3de0af5bf3d3f06abe4d577cc30c2b3884bf98fe96"
+    },
+    "outputs/rds3/rds3-sub-block-rx-select13.kicad_sch": {
+      "bytes": 40290,
+      "sha256": "0ddf367424f8b271c45b12b2c7e3500b26862c85cd26323b0d582a35e9e8903c"
+    },
+    "outputs/rds3/rds3-sub-block-rx-select14.kicad_sch": {
+      "bytes": 40290,
+      "sha256": "364cbf55ff3c17a19417851910b18ec42af5ce05c699144ce75c984d618fa7cb"
+    },
+    "outputs/rds3/rds3-sub-block-rx-select15.kicad_sch": {
+      "bytes": 40290,
+      "sha256": "0be7a0d57d98d11ae6a433a079cfb07c2bf972170deecf3b3d93ff8e12079e4c"
+    },
+    "outputs/rds3/rds3-sub-block-rx-select16.kicad_sch": {
+      "bytes": 40290,
+      "sha256": "57860b2fc7a28e7424fc1d2f41653305eaec9cb07910540368e547f41e8caf4c"
+    },
+    "outputs/rds3/rds3-sub-block-slot01.kicad_sch": {
+      "bytes": 27204,
+      "sha256": "2fd36a82dd3440883404e4ebd5d6f8b17b8a8b73e5a4373ee57c75518c400693"
+    },
+    "outputs/rds3/rds3-sub-block-slot02.kicad_sch": {
+      "bytes": 27353,
+      "sha256": "1d586ce25c450b2cccb3828ceadff658044d5c11a3150c957046a69781da056c"
+    },
+    "outputs/rds3/rds3-sub-block-slot03.kicad_sch": {
+      "bytes": 27345,
+      "sha256": "a5cbccd3d29d65624197c6b81270e8b1abfc18c48497b7b97971f7badaa09f1f"
+    },
+    "outputs/rds3/rds3-sub-block-slot04.kicad_sch": {
+      "bytes": 27492,
+      "sha256": "b2ac4b747dc7667e4dd82ead8ec620f84febe0d73fc633af16f7bc16fbed4c82"
+    },
+    "outputs/rds3/rds3-sub-block-slot05.kicad_sch": {
+      "bytes": 27347,
+      "sha256": "bec0f88c3b5eec3a551870133ca2dea65942b327c1a77868920debcc8aef3af0"
+    },
+    "outputs/rds3/rds3-sub-block-slot06.kicad_sch": {
+      "bytes": 27494,
+      "sha256": "e9185c21a4d76373b731bbbfcba126ba001153f6c102d1e991fc69979b95d369"
+    },
+    "outputs/rds3/rds3-sub-block-slot07.kicad_sch": {
+      "bytes": 27596,
+      "sha256": "6994ede7b50b03ec20909a3d62b0241d4fc938538ffa3418ed0d81eac8560fe8"
+    },
+    "outputs/rds3/rds3-sub-block-slot08.kicad_sch": {
+      "bytes": 27747,
+      "sha256": "2d13be07e72e32afe28daa4d0edc8d1c230e8635c07145449d81a5e52d2c01c4"
+    },
+    "outputs/rds3/rds3-sub-block-slot09.kicad_sch": {
+      "bytes": 27354,
+      "sha256": "b2c7f02195ffd75f32ccc913d762b15f2eaa13414fe8d856319688d0574de8cd"
+    },
+    "outputs/rds3/rds3-sub-block-slot10.kicad_sch": {
+      "bytes": 27505,
+      "sha256": "8e0579f68654d444e165c0274d38fd2e0066fe28913950ace2a41fb04f57c58a"
+    },
+    "outputs/rds3/rds3-sub-block-slot11.kicad_sch": {
+      "bytes": 27499,
+      "sha256": "2d32bc0a7aeb8f3168013192e2ccdf42b5e694877bbae105deacd9ed396d6c83"
+    },
+    "outputs/rds3/rds3-sub-block-slot12.kicad_sch": {
+      "bytes": 27646,
+      "sha256": "65b50974926c568113d42a4716c15d775cfe5426b33d870f38a9de6f016b139c"
+    },
+    "outputs/rds3/rds3-sub-block-slot13.kicad_sch": {
+      "bytes": 27608,
+      "sha256": "34b5f90cbef1cc301c5f1c090aa0a7acb04a20ac8b4c6a8580cabdea6d4632f1"
+    },
+    "outputs/rds3/rds3-sub-block-slot14.kicad_sch": {
+      "bytes": 27755,
+      "sha256": "34199fd04396c4afd1a781a6cd626c1c7678c1cccefe15da087677e7795609ca"
+    },
+    "outputs/rds3/rds3-sub-block-slot15.kicad_sch": {
+      "bytes": 27859,
+      "sha256": "cc2b2875d5ed664aab8ca2dd661026f74bc9189d544e2cc9a5722895a4bbd124"
+    },
+    "outputs/rds3/rds3-sub-block-slot16.kicad_sch": {
+      "bytes": 28004,
+      "sha256": "8751589d8f84d8db6be487deead7d61807430a146065e71e6133a12236210406"
+    },
+    "outputs/rds3/rds3-sub-block-vsys-isolation.kicad_sch": {
+      "bytes": 17360,
+      "sha256": "65db035723b5dd61515d9e009ec6814b8592f34253b95d7aefab08d027a1b223"
+    },
+    "outputs/rds3/rds3-unsectioned.kicad_sch": {
+      "bytes": 22252,
+      "sha256": "3695cd67f5ef8d3a9cf2fef14d9ed5f61ce75f6d3273fbc68446c7563924d5c5"
+    },
+    "outputs/rds3/rds3.kicad_pro": {
+      "bytes": 267,
+      "sha256": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362"
+    },
+    "outputs/rds3/rds3.kicad_sch": {
+      "bytes": 43679,
+      "sha256": "ccb46f646302e9b4b33c4e7c9ffa9b1522e7008b5bbe420475fc2bbd65a96cc4"
+    },
+    "outputs/rds3/rds3.net": {
+      "bytes": 454544,
+      "sha256": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+    },
+    "outputs/rds3/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/remora-base/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/remora-base/netlisp.kicad_sym": {
+      "bytes": 72695,
+      "sha256": "e5086f3ed106cec19e2a817a32ef1c01cc17c0af41fb7338a1dcb7f7abb0b248"
+    },
+    "outputs/remora-base/remora-base-fiducials.kicad_sch": {
+      "bytes": 4201,
+      "sha256": "972bc12f0923867233889ff6ee911e97382aef01fc939d6fd35e0e44d2bfbeba"
+    },
+    "outputs/remora-base/remora-base-mounting-holes.kicad_sch": {
+      "bytes": 6056,
+      "sha256": "5c5c7416fec40ff0761f8e478bd467599c235bfde58082eac0d3f13f69cbf17d"
+    },
+    "outputs/remora-base/remora-base-power.kicad_sch": {
+      "bytes": 52289,
+      "sha256": "9138406d5dc753c0983f516be16593742bddcaf7a2d0fd5d89e75aaa9d7721f8"
+    },
+    "outputs/remora-base/remora-base-rf-board-sensor-rail-i2c.kicad_sch": {
+      "bytes": 16201,
+      "sha256": "df459733657adc0dc163511d70c4a4dea323b96f983dc3f1161ebb9935d49989"
+    },
+    "outputs/remora-base/remora-base-rj-45-ethernet-poe.kicad_sch": {
+      "bytes": 163893,
+      "sha256": "fddb24043beb1ac64a71bbae3859c65cf1e04fb9641c8522177289a2e7886aca"
+    },
+    "outputs/remora-base/remora-base-status-leds.kicad_sch": {
+      "bytes": 17094,
+      "sha256": "3eec6bbad661462668a6f4fd6217273979851e37de992bd155df1d9f7842a7d5"
+    },
+    "outputs/remora-base/remora-base-sub-block-base-interface.kicad_sch": {
+      "bytes": 29615,
+      "sha256": "597c291d95ffc4777337e7d6bb1af342d48209a86dcc4cfcc4d432cfbc071cc2"
+    },
+    "outputs/remora-base/remora-base-sub-block-mcu.kicad_sch": {
+      "bytes": 218186,
+      "sha256": "e906061f7f94a69e3ccbf6e88e75166339cde8d7526f92de52193ddc797561a6"
+    },
+    "outputs/remora-base/remora-base-unsectioned.kicad_sch": {
+      "bytes": 9385,
+      "sha256": "f2859d1b787d3f877d4a22e312383c79748a859c8f13ab2a2a19622ae013a40f"
+    },
+    "outputs/remora-base/remora-base-usb-c.kicad_sch": {
+      "bytes": 50314,
+      "sha256": "9d6db3f7b7be31cf4d0cf94e00f08909d21a0c1ad61f62b471b3d3cc5cd3447a"
+    },
+    "outputs/remora-base/remora-base.kicad_pro": {
+      "bytes": 274,
+      "sha256": "8ba951098201cb599ddef124006fd17c1190a659b08ae29b463139988dc06451"
+    },
+    "outputs/remora-base/remora-base.kicad_sch": {
+      "bytes": 8368,
+      "sha256": "99d1c140d49c49a9afca35adb66e45ddad52b8f2161dfff1fd9d50810b565887"
+    },
+    "outputs/remora-base/remora-base.net": {
+      "bytes": 156582,
+      "sha256": "85d846592d5a261f4ecd21321a36873a96400e89fecf8a590681eacd2dc4d464"
+    },
+    "outputs/remora-base/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/remora-rf/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/remora-rf/netlisp.kicad_sym": {
+      "bytes": 42781,
+      "sha256": "4fa9100b25c8ad49341aea9bc1c26ade5258b312ebe3ba5181d1edeb00949889"
+    },
+    "outputs/remora-rf/remora-rf-board-temperature-i2c.kicad_sch": {
+      "bytes": 10327,
+      "sha256": "dc83a3fc5e4310b4d44ef4aeb352027b54f52f115ce07618cdaf47ee5bfc6885"
+    },
+    "outputs/remora-rf/remora-rf-cal-input-fan-out.kicad_sch": {
+      "bytes": 35172,
+      "sha256": "bd46f4c148701f105b65e3c168bd680ef76ffbc996d41e72e24a7af1adfd3613"
+    },
+    "outputs/remora-rf/remora-rf-erm6-module-link.kicad_sch": {
+      "bytes": 27852,
+      "sha256": "415813e79ba97a684be3fbe1521efa54be2bb44ad7fa3f1e7728b67a70887693"
+    },
+    "outputs/remora-rf/remora-rf-fiducials.kicad_sch": {
+      "bytes": 4195,
+      "sha256": "102110523e92317b6166804df02fcd9fee92d5f078c200f6f2a23ad065c9f734"
+    },
+    "outputs/remora-rf/remora-rf-mounting-holes.kicad_sch": {
+      "bytes": 10041,
+      "sha256": "55636329fc0d8a500a16be1cb65243fd186c014919b716510664660513e7d7b7"
+    },
+    "outputs/remora-rf/remora-rf-power-tree.kicad_sch": {
+      "bytes": 171512,
+      "sha256": "fa6cfe88d31f554da2f6a25c9f2e40a0f816d1c5f47359403ecf4b53b85e2280"
+    },
+    "outputs/remora-rf/remora-rf-rf-channel-1.kicad_sch": {
+      "bytes": 91732,
+      "sha256": "1eec9c9c80a159855212fbdfc5867a26fa57d587678ec5998bd3063a1ee57a1e"
+    },
+    "outputs/remora-rf/remora-rf-rf-channel-2.kicad_sch": {
+      "bytes": 91732,
+      "sha256": "8b09defc61e84af1af5955d71bee5e54aa0ce0994013754868c44498b02bcad0"
+    },
+    "outputs/remora-rf/remora-rf-rf-channel-3.kicad_sch": {
+      "bytes": 91734,
+      "sha256": "d1c27861a846432748daf2eaa2ff84a87913f0b3b569099546e23b94a7fc57c1"
+    },
+    "outputs/remora-rf/remora-rf-rf-channel-4.kicad_sch": {
+      "bytes": 91768,
+      "sha256": "a1ecb0b49de225e4183765da19b97b1dd02c7a31a61a997843ea775f054e82bd"
+    },
+    "outputs/remora-rf/remora-rf-unsectioned.kicad_sch": {
+      "bytes": 8190,
+      "sha256": "1b0ca71fb9cda88cc8d09ce084560aff5ba02bf8c0cfbc0f856b06a8d7abc558"
+    },
+    "outputs/remora-rf/remora-rf.kicad_pro": {
+      "bytes": 272,
+      "sha256": "ce822bf37409d354cde7b4858c089d72c42d1368e8e48e8549657984ee186216"
+    },
+    "outputs/remora-rf/remora-rf.kicad_sch": {
+      "bytes": 8954,
+      "sha256": "0101ed052ec38ae031495372923c8b9a9f78e265e3de3b434876901bfd32b153"
+    },
+    "outputs/remora-rf/remora-rf.net": {
+      "bytes": 163214,
+      "sha256": "c8c4847e815facf1ca1996752cab379f4014a3a636f5c55a8fa43759014fcbc3"
+    },
+    "outputs/remora-rf/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/rf-switch-8way/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/rf-switch-8way/netlisp.kicad_sym": {
+      "bytes": 22338,
+      "sha256": "feeb1883a59d4f9e7b788c408de59304b510cb480f7cb2ecf5021e318bfbad24"
+    },
+    "outputs/rf-switch-8way/rf-switch-8way.kicad_pro": {
+      "bytes": 277,
+      "sha256": "a0aad091101e44cc16416aa1165179aad5571c1a112adf23f49991e192bfd8a1"
+    },
+    "outputs/rf-switch-8way/rf-switch-8way.kicad_sch": {
+      "bytes": 114064,
+      "sha256": "9c2ae0a3f43058a7a29aae57c69eaf079b7708d4b081285253842e6001bdfdda"
+    },
+    "outputs/rf-switch-8way/rf-switch-8way.net": {
+      "bytes": 24316,
+      "sha256": "ee5fb4efcf962ca2d10be0c38d36401873c234b12f8b60abdc4b007847bde378"
+    },
+    "outputs/rf-switch-8way/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/rf-switch-eval/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/rf-switch-eval/netlisp.kicad_sym": {
+      "bytes": 26329,
+      "sha256": "cf58e2793f4f316490e466360b876e233bb55fa87309b5ad9f77559984720ff8"
+    },
+    "outputs/rf-switch-eval/rf-switch-eval-bgs12p2l6-spdt.kicad_sch": {
+      "bytes": 20162,
+      "sha256": "958486505cd543cf67400de2539d82c64faf5529bb09083d9816cdfbbb5a23fe"
+    },
+    "outputs/rf-switch-eval/rf-switch-eval-erm6-erf6-connector-coupon.kicad_sch": {
+      "bytes": 56389,
+      "sha256": "9cb758f22a4531c6bfcc549d72d47caef467647ca696719fc31e882fa0bdc170"
+    },
+    "outputs/rf-switch-eval/rf-switch-eval-power-and-control-headers.kicad_sch": {
+      "bytes": 7750,
+      "sha256": "8056f4f72322d6dc81bfc488edd872f686324c2a6dce513e4019c42ef88c44f6"
+    },
+    "outputs/rf-switch-eval/rf-switch-eval-sky13575-sp4t.kicad_sch": {
+      "bytes": 42311,
+      "sha256": "3e49a662aac6aea2880be48ea6b215c02fdaf90bb760103431ca048ca9789a54"
+    },
+    "outputs/rf-switch-eval/rf-switch-eval-through-calibration.kicad_sch": {
+      "bytes": 8407,
+      "sha256": "e33732803c64c423d9c77de7930c8230406babaf53b69314c8d4bde24b1af2b7"
+    },
+    "outputs/rf-switch-eval/rf-switch-eval.kicad_pro": {
+      "bytes": 277,
+      "sha256": "e7be12e422619fcd8e3fca91142f0b0e741760125e4f5fe9900f9e8d62205cb7"
+    },
+    "outputs/rf-switch-eval/rf-switch-eval.kicad_sch": {
+      "bytes": 5374,
+      "sha256": "62ffb9c8e622f85bcb4ca9ba779499656c05632fe21e03f2d0498eda16dc5b48"
+    },
+    "outputs/rf-switch-eval/rf-switch-eval.net": {
+      "bytes": 19920,
+      "sha256": "8a48d4c46c4387bf0713285e0e62ed1b0d0817c4339864857e07474c59d958f1"
+    },
+    "outputs/rf-switch-eval/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/stm32n6/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/stm32n6/netlisp.kicad_sym": {
+      "bytes": 130293,
+      "sha256": "f63190277710258009cbd68fe25211245f34919be0bc9aa7016db7c7219582c1"
+    },
+    "outputs/stm32n6/stm32n6-adc-array.kicad_sch": {
+      "bytes": 194125,
+      "sha256": "ae86d622bb94f2274c9e2563c559ce605c3e32c2a67eed059b77ef95249f54ba"
+    },
+    "outputs/stm32n6/stm32n6-boot-fail-led.kicad_sch": {
+      "bytes": 6272,
+      "sha256": "8aab76636f2560ce4a139807fb3942dd6376034dc9641a64c202562130774e07"
+    },
+    "outputs/stm32n6/stm32n6-boot-nor-flash-xspim-p2-port-n.kicad_sch": {
+      "bytes": 34192,
+      "sha256": "7afa628a8c7e75958f215f4d0a69935f6da0563bb18dc84abebf4c3069d8bc06"
+    },
+    "outputs/stm32n6/stm32n6-display.kicad_sch": {
+      "bytes": 24164,
+      "sha256": "6cae54ce7a37f64132dc6c700e00b1e2e6170fc3592a6abecdcac70f54b5d402"
+    },
+    "outputs/stm32n6/stm32n6-expansion-connector.kicad_sch": {
+      "bytes": 39586,
+      "sha256": "1a56a1d12a596058734d01d45bf051201fcbd41a758fbb33f949159d8f96da28"
+    },
+    "outputs/stm32n6/stm32n6-fiducials.kicad_sch": {
+      "bytes": 5203,
+      "sha256": "cc4806dd33e04d9b45f870eec00f145b75c1dede5316ba4b151c7f603f16746b"
+    },
+    "outputs/stm32n6/stm32n6-imu.kicad_sch": {
+      "bytes": 46736,
+      "sha256": "28c82576e3a2304c4cdebbe840cbbf3c50549dd42dfd4bb6dc8b7c8c8869d701"
+    },
+    "outputs/stm32n6/stm32n6-mounting.kicad_sch": {
+      "bytes": 5945,
+      "sha256": "733a95ba698b93b892fd36ee802c8604fa81a241ca920297b40ff52fd9955275"
+    },
+    "outputs/stm32n6/stm32n6-neopixel-led.kicad_sch": {
+      "bytes": 20172,
+      "sha256": "daa5f1f484f9c67aae01930b6bd4fdde75b47957b90a7717a0c48de837efc152"
+    },
+    "outputs/stm32n6/stm32n6-power-button-controller.kicad_sch": {
+      "bytes": 41246,
+      "sha256": "14a7b031d6d0aa97876d69b20aa52b477fe4320fe5686be169d005eed41c92d8"
+    },
+    "outputs/stm32n6/stm32n6-power-status-led.kicad_sch": {
+      "bytes": 7313,
+      "sha256": "2fe66f46390f60bc27afb34eb336dc88301bd578c28be0c8e52ab860f44a1301"
+    },
+    "outputs/stm32n6/stm32n6-stm32n657l0h3q-core-system.kicad_sch": {
+      "bytes": 328455,
+      "sha256": "795f626984f5762c67fe20a6103cedeeec1a7c6d351555680757805f9711a49d"
+    },
+    "outputs/stm32n6/stm32n6-sub-block-battery.kicad_sch": {
+      "bytes": 4387,
+      "sha256": "4aa37c421e9ee03e20391ad8f6f9f8ba250979f785c11ab702c13b190cd88ff9"
+    },
+    "outputs/stm32n6/stm32n6-sub-block-buck.kicad_sch": {
+      "bytes": 34681,
+      "sha256": "cf3f18169000057156cb69a515accfde03381ee53e0cf20f4ef320626366717f"
+    },
+    "outputs/stm32n6/stm32n6-sub-block-ldo.kicad_sch": {
+      "bytes": 17847,
+      "sha256": "e53c814d96ea44e74144d17c671a843b029f3ae440ca06530c3837aa7e24d7e5"
+    },
+    "outputs/stm32n6/stm32n6-sub-block-vref.kicad_sch": {
+      "bytes": 18779,
+      "sha256": "5dd54ca9f4d376c1adcf05cc95be6d32af4ad4355e4fbb56aa70e546675f4d2c"
+    },
+    "outputs/stm32n6/stm32n6-test-points.kicad_sch": {
+      "bytes": 15203,
+      "sha256": "a4abcad34c5b5329c30cb43a3f37e09b6e0d402c0c70e9bc0000d60e3be17559"
+    },
+    "outputs/stm32n6/stm32n6-unsectioned.kicad_sch": {
+      "bytes": 13979,
+      "sha256": "45585168a7444c11a8ac8686bad5e9276a3539cfe8bb5bdcc1b74d18d3d158d2"
+    },
+    "outputs/stm32n6/stm32n6-usb.kicad_sch": {
+      "bytes": 44688,
+      "sha256": "e18d30be71f72e2f90b9de411085f160dbf6a92ef8ce7b5c2df4e61c44293604"
+    },
+    "outputs/stm32n6/stm32n6-vibration-motor.kicad_sch": {
+      "bytes": 18316,
+      "sha256": "ab83c9114211ccfa2be2c19962f74f3602166c1a3bc6ea607971a7153e45796e"
+    },
+    "outputs/stm32n6/stm32n6-xspi1-psram.kicad_sch": {
+      "bytes": 31603,
+      "sha256": "3db93cee909b1f4effbc78f620b045678c79be8df629372ef3f76bdddb28dbe2"
+    },
+    "outputs/stm32n6/stm32n6.kicad_pro": {
+      "bytes": 270,
+      "sha256": "c74409205f299f5958c92a58b1071e81af835a69942521fb446bdf25bb6bc63d"
+    },
+    "outputs/stm32n6/stm32n6.kicad_sch": {
+      "bytes": 15060,
+      "sha256": "e580fbb85aed99a00113c2ce1df7737625de19d2928fa62d6ec673f7a2e37579"
+    },
+    "outputs/stm32n6/stm32n6.net": {
+      "bytes": 224723,
+      "sha256": "2e570d022faa796a3b2a4830a876f8fcc08dec887cc07227ebd0befe2e89499a"
+    },
+    "outputs/stm32n6/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/straps-base/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/straps-base/netlisp.kicad_sym": {
+      "bytes": 79349,
+      "sha256": "ca26469b7597eee7b55db9d056cb1f67b1108ddb0c3e60712cff0ed7a8b60d0d"
+    },
+    "outputs/straps-base/straps-base-sub-block-ch2.kicad_sch": {
+      "bytes": 55796,
+      "sha256": "a410297355ceecded86bfb7d28fc86e053e10f1c0845d543593ac91880b6ffb7"
+    },
+    "outputs/straps-base/straps-base-sub-block-ch3.kicad_sch": {
+      "bytes": 55796,
+      "sha256": "cacc97761208cd544d292b2adcd220b535ce1f35c0c689be9d90e0ff72ea058d"
+    },
+    "outputs/straps-base/straps-base-sub-block-ch4.kicad_sch": {
+      "bytes": 55798,
+      "sha256": "55a6dee2acd1d831ca7f3b56e0d1e3d58d7619b6c78c8559244b2fcea825b7d0"
+    },
+    "outputs/straps-base/straps-base-sub-block-ch5.kicad_sch": {
+      "bytes": 55798,
+      "sha256": "3e5ff5986d34c2fb4525d0eb3c7d5a5b56d50522713b2492e49a212cacc27665"
+    },
+    "outputs/straps-base/straps-base-sub-block-ch6.kicad_sch": {
+      "bytes": 55798,
+      "sha256": "be4faaf0f38f98544931ec679b5f1aac09a8846f80ba725b46ae4b80c6ce3ac2"
+    },
+    "outputs/straps-base/straps-base-sub-block-ch7.kicad_sch": {
+      "bytes": 55798,
+      "sha256": "6b141173b3afa701a1556218269180a32b1e6920ba4929b0ef1c91b34f0a19a9"
+    },
+    "outputs/straps-base/straps-base-sub-block-ch8.kicad_sch": {
+      "bytes": 55798,
+      "sha256": "af522bb0fcc07e7dcd90908915142ff5aa544fe619e32479b45fd7a8369b977c"
+    },
+    "outputs/straps-base/straps-base-unsectioned.kicad_sch": {
+      "bytes": 665312,
+      "sha256": "1bbc17fe3f19b9bf56da3ed434b1822da9d33c72633a0f7a9becd54eb89805e1"
+    },
+    "outputs/straps-base/straps-base.kicad_pro": {
+      "bytes": 274,
+      "sha256": "b2698a642d8655b0a874bc498bf75e5231b5fd02929e30a4fda744575412ae72"
+    },
+    "outputs/straps-base/straps-base.kicad_sch": {
+      "bytes": 7112,
+      "sha256": "2d858bd84d08473590993ad35a486a8a86d5eaeb745d3dc0df7d1a825a57d839"
+    },
+    "outputs/straps-base/straps-base.net": {
+      "bytes": 193006,
+      "sha256": "87c14b188df1ca13bacec50c190a2282bc3b75eb43d0c3c0514839be8a43db51"
+    },
+    "outputs/straps-base/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/straps/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/straps/netlisp.kicad_sym": {
+      "bytes": 61546,
+      "sha256": "738a7c47e510968ff6ce3fba26dd8d704b98178f603bee9febaadb1a3aa2fb42"
+    },
+    "outputs/straps/straps-command-control.kicad_sch": {
+      "bytes": 57841,
+      "sha256": "452b574d9b2c53ce5b371f4ee6dec802fa5a5e688fc42aeb233febc6fd1fb1fc"
+    },
+    "outputs/straps/straps-mechanical.kicad_sch": {
+      "bytes": 5200,
+      "sha256": "6ab033f3794843299f90e6266cfb483777a46c3267a9125754e7ff74b2c42d8d"
+    },
+    "outputs/straps/straps-module-connector.kicad_sch": {
+      "bytes": 24566,
+      "sha256": "6ce9182318fe3663b86dce05581617ef01dfc20ac0356772e97c52b63c043b95"
+    },
+    "outputs/straps/straps-power-supply.kicad_sch": {
+      "bytes": 121843,
+      "sha256": "8257936f862f08617cec7aeb0a5d61eb6e802256fb66a895d3a27f4682522bf9"
+    },
+    "outputs/straps/straps-rf-amplifiers.kicad_sch": {
+      "bytes": 128904,
+      "sha256": "7d08e49ff965a229c1573f70f371160494c57211ebd6f158879ae0c9658c58fa"
+    },
+    "outputs/straps/straps-rf-attenuator.kicad_sch": {
+      "bytes": 34991,
+      "sha256": "6ff5f27d2dddec709b8427af0cb1a7f81de8f7ad06181bef0b175197c0b1315e"
+    },
+    "outputs/straps/straps-rf-switches-filters.kicad_sch": {
+      "bytes": 136294,
+      "sha256": "42f530ce0fd95050b41f6965a5ddc8acc0f77950e26a244518cab8c720b2c7e6"
+    },
+    "outputs/straps/straps-sub-block-mix.kicad_sch": {
+      "bytes": 63592,
+      "sha256": "f23d45860f843e1fcead0b2882b045d6ad80d7aa102d62936f7beabfab16f835"
+    },
+    "outputs/straps/straps-temperature-sensor.kicad_sch": {
+      "bytes": 10112,
+      "sha256": "4dc552619929f84ef0033844e4653ad2f690a80d50fab6836626501f25e82381"
+    },
+    "outputs/straps/straps-unsectioned.kicad_sch": {
+      "bytes": 5843,
+      "sha256": "890adfe0ef0021632e2a284b1b508fd0b96c4251da3a79fdb4cfa1dbfe1de3d2"
+    },
+    "outputs/straps/straps.kicad_pro": {
+      "bytes": 269,
+      "sha256": "3b8541ef356591a8607afc20f0d51942135845a1d698fda752e9cf8c73480efc"
+    },
+    "outputs/straps/straps.kicad_sch": {
+      "bytes": 8278,
+      "sha256": "2a43b1e33088d2df9c6fb12aafbb0bb27e50dcccd2cce54ecf87c8997ad0fb88"
+    },
+    "outputs/straps/straps.net": {
+      "bytes": 134715,
+      "sha256": "3dd938e268bf99f6ca431f29b9b2f845a9c3791cf22f34040aa62a0d1177ad87"
+    },
+    "outputs/straps/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/w55rp20/fp-lib-table": {
+      "bytes": 172,
+      "sha256": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+    },
+    "outputs/w55rp20/netlisp.kicad_sym": {
+      "bytes": 24681,
+      "sha256": "e0a782acb4a061a852bd077610dd966bc1a3173e8d0a081557b6193ff098323f"
+    },
+    "outputs/w55rp20/sym-lib-table": {
+      "bytes": 154,
+      "sha256": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    },
+    "outputs/w55rp20/w55rp20.kicad_pro": {
+      "bytes": 270,
+      "sha256": "382c0b1bce56f41ebaed121c21a8135eee470d71d94660463c9bdcc020fac696"
+    },
+    "outputs/w55rp20/w55rp20.kicad_sch": {
+      "bytes": 216091,
+      "sha256": "28c7233c51a5799b7842f7ee3ee4e7685693a7afdc08677e090d5274a5c62d20"
+    },
+    "outputs/w55rp20/w55rp20.net": {
+      "bytes": 69884,
+      "sha256": "0fe034b512d9465781fb986aea479b619d5877c5d031fdcdf0bc62aec03aae78"
+    }
+  },
+  "source_area": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli/.mylang-cache/frontend-fb1-external/native-results/eda",
+  "verified_lossless": true,
+  "verified_members": 644
+}

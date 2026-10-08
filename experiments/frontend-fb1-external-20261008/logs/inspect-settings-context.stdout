@@ -1,0 +1,54 @@
+const IdentityResources = struct { scratch: std.mem.Allocator, io: std.Io, prebuilt: ?@import("ir.zig").Module = null };
+const ExecutionResources = struct { arena: std.mem.Allocator, backing: std.mem.Allocator, io: std.Io };
+const SelectionContext = struct { receipt: receipt.Context, base: [32]u8 };
+
+/// Check, discover, build and run the tests of `options.path`, print the report, and return
+/// the process exit status: 0 ok, 1 a test failed or the file does not check, 2 unreadable
+/// or an invalid cases file or provider fixture, 3 nothing selected or every selected test skipped.
+pub fn run(init: std.process.Init, requested: Options) Error!u8 {
+    if (directory_runner.selected(init.io, requested.path)) return directory_runner.run(init, requested);
+    var options = requested;
+    const allocator = init.arena.allocator();
+    var problems: std.ArrayList(u8) = .empty;
+    const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, options.path, allocator, .limited(64 << 20)) catch |err| return unreadable(init, options.path, @errorName(err));
+    const located = project_entry.resolve(allocator, init.io, options.path, &problems) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try writeAll(init, std.Io.File.stderr(), problems.items);
+        return project_entry.status(err);
+    };
+    // A malformed byte ceiling or a frame budget it cannot back is refused like a usage error.
+    if (!try applyLimits(init, &options, located)) return 2;
+    // An invalid cases file or provider fixture is a setup failure, status 2 (the old core's).
+    const configured_cases = try configuredCases(init, &options, located) orelse return 2;
+    options.controls.cases = configured_cases.path;
+    if (try cachedReplay(init, options, located, configured_cases.bytes)) |cached| {
+        try writeAll(init, std.Io.File.stdout(), cached);
+        return 0;
+    }
+    const guest = try guestTool(init, options) orelse return 1;
+    // Spawn the exact executable whose content and library tree were captured.
+    options.build.zig = guest.path;
+    const context: receipt.Context = .{ .arena = allocator, .io = init.io, .environment = init.environ_map, .options = options, .entry = located, .case_bytes = configured_cases.bytes, .tool = guest };
+    var native_inputs: std.ArrayList(receipt.Dependency) = .empty;
+    const base = try receipt.settings(context, &native_inputs);
+    if (try replayRun(context, base)) |cached| {
+        try writeAll(init, std.Io.File.stdout(), cached);
+        return 0;
+    }
+    var session = frontend.Session.init(init.gpa, init.io, located.root);
+    defer session.deinit();
+    located.configure(&session);
+    try session.enableCache(init.gpa, options.build.cache);
+    const entry_text: EntryText = .{ .overlay = try headerlessTest(allocator, located, bytes), .stub = !definesMain(bytes) };
+    entry_text.apply(&session, entry_text.overlay);
+    const provider_sets = case_settings.providerSets(allocator, configured_cases, options.filter) catch |err| return casesFailure(init, err);
+    if (provider_sets.len != 0) if (try validateProviders(init, options, located, entry_text, provider_sets)) |status| return status;
+    // NATIVE-TEST-5: with providers, an unselected production body is never checked; the
+    // first provider graph then answers discovery, and a case without providers fails.
+    var first_provider = frontend.Session.init(init.gpa, init.io, located.root);
+    defer first_provider.deinit();
+    const base_checked: ?frontend.Checked = session.checkFile(allocator, options.path, &problems) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => if (provider_sets.len == 0) return failWith(init, problems.items, 1) else null,
+    };
+    const checked = base_checked orelse try providerGraph(init, options, located, entry_text, provider_sets[0], &first_provider) orelse return failWith(init, problems.items, 1);

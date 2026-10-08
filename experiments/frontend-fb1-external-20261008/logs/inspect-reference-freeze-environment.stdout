@@ -1,0 +1,11 @@
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/scripts/frontend_command.py:1:#!/usr/bin/env python3
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/scripts/frontend_command.py:54:               'note': 'build-slot logs/admitted child affinity govern builds; lock wait is included'}
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/tools/freeze_current.py:1:#!/usr/bin/env python3
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/tools/freeze_current.py:5:Run the complete command through build-slot.sh and the benchmark compile lock.
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/tools/freeze_current.py:60:        raise SystemExit("must run through build-slot.sh without reserved CPUs")
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/tools/freeze_current.py:62:    def command(label, argv, env=None):
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/tools/freeze_current.py:77:            done = subprocess.run(argv, cwd=corpus_source, capture_output=True, text=True, env=env, timeout=600)
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/tools/freeze_current.py:122:        "leak_environment": {"MYL_CORE_LEAKCHECK": "1"},
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/tools/freeze_current.py:130:    env = dict(os.environ, MYL_CORE_LEAKCHECK="1")
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/tools/freeze_current.py:142:            done, timeout, elapsed = command(label, argv, env)
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008/tools/freeze_current.py:198:            done, timeout, elapsed = command("directory-" + mode, argv, env)

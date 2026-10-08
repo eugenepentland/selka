@@ -1,0 +1,14 @@
+src/core/project_entry.zig:33:        if (self.configuration) |configured| session.files.embed_root = std.fs.path.dirname(configured.path);
+src/core/project_entry.zig:90:    var entry: Entry = .{ .path = absolute, .root = ordinary.root, .name = ordinary.module };
+src/core/project_entry.zig:97:        entry.root = test_entry.root;
+src/core/project_entry.zig:108:                entry.root = root;
+src/core/project_entry.zig:129:        entry.configuration = configured;
+src/core/project_entry.zig:178:    var session = frontend.Session.init(a, std.testing.io, entry.root);
+src/core/test_runner.zig:84:    options.build.zig = guest.path;
+src/core/test_runner.zig:390:    const request: affected.Request = .{ .arena = allocator, .backing = init.gpa, .io = init.io, .root = located.root, .entry = located.path, .reference = reference };
+src/core/test_runner.zig:414:    options.build.zig = guest.path;
+src/core/test_runner.zig:428:    options.build.zig = guest.path;
+src/core/test_runner.zig:617:        const path = try std.fs.path.join(a, &.{ context.entry.root, module.src.path });
+src/core/test_runner.zig:923:    const root = try temp.dir.realPathFileAlloc(std.testing.io, ".", a);
+src/core/test_runner.zig:957:    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+src/core/test_runner.zig:967:    try std.testing.expectError(error.OutOfMemory, programIdentity(resources, .{ .path = path, .build = .{ .zig = "zig" } }, checked, cases[0], @splat(0)));

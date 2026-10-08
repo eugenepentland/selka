@@ -1,0 +1,37 @@
+    process_start.run(minimal, dispatchCommandLine);
+}
+
+const process_start = @import("wiring/process_start.zig");
+
+/// Dispatch compiler commands, reporting usage/source/IO failures through process exit status.
+/// The compiler bounds its own address space first, so a compiler defect fails
+/// loudly instead of taking the machine into swap, and the `zig cc` children a
+/// native build spawns inherit that ceiling and still finish.
+fn dispatchCommandLine(init: std.process.Init) void {
+    _ = budget.guardHost(init.environ_map);
+    const status = dispatch(init) catch |err| status: {
+        var buffer: [256]u8 = undefined;
+        const message = std.fmt.bufPrint(&buffer, "mylang: host failure: {s}\n", .{@errorName(err)}) catch "mylang: host failure\n";
+        std.Io.File.stderr().writeStreamingAll(init.io, message) catch break :status @as(u8, 2);
+        break :status @as(u8, 2);
+    };
+    if (status != 0) std.process.exit(status);
+}
+
+const project_config = @import("mylang").project_config;
+const module_syntax = @import("module_syntax.zig");
+const input_probe = @import("input_probe.zig");
+/// Per-stage observations collected when an invalidation explanation ran.
+const StageTally = struct { hits: usize = 0, misses: usize = 0, skipped: usize = 0 };
+const RunObservation = struct {
+    stages: [std.meta.tags(invalidation.Stage).len]StageTally = @splat(.{}),
+    /// Which stages this command actually executed. Skipped stages are never
+    /// reported as reuse.
+    executed: [std.meta.tags(invalidation.Stage).len]bool = @splat(true),
+    has_invalidation: bool = false,
+    /// Actual executions and true reuse observed at the work sites. The
+    /// comparison result (`fingerprint_unchanged`) travels on `work` so the
+    /// rendered report keeps the two facts distinct.
+    work: invalidation.Work = .{},
+};
+

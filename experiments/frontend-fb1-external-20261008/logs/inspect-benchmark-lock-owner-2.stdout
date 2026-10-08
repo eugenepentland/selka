@@ -1,0 +1,1 @@
+{"lslocks_seconds": 0.028208198957145214, "returncode": 0, "benchmark_compile_locks": [{"command": "flock", "pid": 2424703, "path": "/run/user/1000/mylang-slots/bench-compile.lock"}, {"command": "flock", "pid": 2419628, "path": "/run/user/1000/mylang-slots/bench-compile.lock"}, {"command": "flock", "pid": 2412835, "path": "/run/user/1000/mylang-slots/bench-compile.lock"}]}

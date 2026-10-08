@@ -1,0 +1,34 @@
+            identity = try providerIdentities(a, self.session, group.providers, self.selection.base);
+        }
+        const items = try select(init, context.options, program, cases, self.cases, self.selection);
+        try execute(init, context.options, program, items);
+        if (identity) |known| for (items) |*item| {
+            item.verdict.identity = known;
+        };
+        try out.chosen.appendSlice(a, items);
+        return null;
+    }
+};
+
+/// NATIVE-TEST-5: the identities a provider test's report carries: the production
+/// declarations its providers replace, the providers' sources, and the run's inputs.
+fn providerIdentities(a: std.mem.Allocator, production: *frontend.Session, providers: []const frontend.Provider, base: [32]u8) Error!report.Identity {
+    var replaced: std.ArrayList(test_contracts.Module) = .empty;
+    for (providers) |provider| if (try declaredModule(production, try moduleOfPath(a, provider.path))) |module| try replaced.append(a, module);
+    return .{
+        .contract = try test_contracts.identity(a, replaced.items),
+        .provider = try test_contracts.providerIdentity(a, providers),
+        .source = try a.dupe(u8, &std.fmt.bytesToHex(base, .lower)),
+    };
+}
+
+/// Module `name`'s exported declarations in `session`'s declared graph; null when it
+/// has none or they cannot be rendered.
+fn declaredModule(session: *frontend.Session, name: []const u8) Error!?test_contracts.Module {
+    return test_contracts.declarations(session, name) catch |err| if (err == error.OutOfMemory) return error.OutOfMemory else null;
+}
+
+/// `dir/name.my` is module `dir.name`.
+fn moduleOfPath(a: std.mem.Allocator, path: []const u8) Error![]const u8 {
+    const module = try a.dupe(u8, path[0 .. path.len - ".my".len]);
+    std.mem.replaceScalar(u8, module, '/', '.');

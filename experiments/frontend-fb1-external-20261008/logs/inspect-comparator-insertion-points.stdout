@@ -1,0 +1,63 @@
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--against", "--reference", dest="reference", type=Path, required=True)
+    parser.add_argument("--source", type=Path, required=True, help="candidate compiler source worktree")
+    parser.add_argument("--corpus-source", type=Path, help="candidate corpus worktree; default frozen external source or --source for internal tests")
+    parser.add_argument("--compiler-sha256", help="optional independently recorded candidate binary hash")
+    parser.add_argument("--source-commit", help="optional independently recorded candidate source HEAD")
+    parser.add_argument("--against-identity-sha256", help="optional independently recorded frozen identity hash")
+    parser.add_argument("--normalize-source-paths", action="store_true", help="audit exact source-path relocation; preserve every other field/byte")
+    parser.add_argument("--compiler", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--cache", type=Path, required=True)
+    parser.add_argument("--jobs", type=int, help="file workers; default frozen collector count")
+    parser.add_argument("--expected-tests", type=int, help="optional frozen unique test count assertion")
+    args = parser.parse_args()
+    reference, compiler, output, cache = (path.resolve() for path in
+        (args.reference, args.compiler, args.output, args.cache))
+    assert not output.exists(), "output must be fresh"
+    compiler_sha = digest(compiler)
+    if args.compiler_sha256:
+        assert compiler_sha == args.compiler_sha256, "candidate compiler hash mismatch"
+    assert not set(os.sched_getaffinity(0)) & {2, 3, 10, 11}, "reserved CPU"
+    output.mkdir(parents=True)
+    cache.mkdir(parents=True, exist_ok=True)
+    if args.against_identity_sha256:
+        assert digest(reference / "identity.json") == args.against_identity_sha256, "frozen identity hash mismatch"
+    identity = json.loads((reference / "identity.json").read_text())
+    assert identity["oracle"]["sha256"] == ORACLE_SHA, "reference does not name the immutable S5 pin"
+    assert identity["test_force"] and identity["leak_environment"] == {"MYL_CORE_LEAKCHECK": "1"}
+    assert identity["modes"] == {"debug": [], "release": ["--release"], "verify": ["--release", "--verify-facts"]}
+    reference_source = Path(identity["source_worktree"])
+    frozen_compiler_source = Path(identity["compiler_source_worktree"])
+    compiler_source = args.source.resolve()
+    corpus_source = args.corpus_source.resolve() if args.corpus_source else (
+        compiler_source if reference_source == frozen_compiler_source else reference_source)
+    corpus = corpus_source / identity["corpus"]
+    if corpus_source != reference_source:
+        assert args.normalize_source_paths, "relocated corpus requires audited source path normalization"
+    source_commit = timed_git(compiler_source, ["rev-parse", "HEAD"], output, "source-commit").strip()
+    if args.source_commit:
+        assert source_commit == args.source_commit, "candidate source commit mismatch"
+    timed_git(compiler_source, ["ls-files", "-z", "--", "src", "std", "stdlib", "build.zig", "build.zig.zon"], output, "source-files")
+    compiler_sources = production_manifest(compiler_source)
+    corpus_commit = timed_git(corpus_source, ["rev-parse", "HEAD"], output, "corpus-commit").strip()
+    reference_files = {str(path.relative_to(reference)): digest(path) for path in reference.rglob("*") if path.is_file()}
+    assert digest(Path(identity["oracle"]["path"])) == identity["oracle"]["sha256"]
+    for name, sha in identity["tools"].items():
+        assert digest(frozen_compiler_source / name) == sha, "frozen parser hash changed"
+    sweep = load("sweep", frozen_compiler_source / "experiments/new-core-s1-20261005/conformance.py")
+    checked = load("checked", frozen_compiler_source / "experiments/new-core-s2-20261005/wave-b/integration/conformance_checked.py")
+    manifest = json.loads((reference / "source-manifest.json").read_text())
+    assert digest(reference / "source-manifest.json") == identity["source_manifest_sha256"]
+    originals = manifest["files"]
+    assert all(digest(reference_source / path) == sha for path, sha in originals.items()), "frozen sources changed"
+    candidate_originals = {str(path.relative_to(corpus_source)): digest(path) for path in corpus.rglob("*") if path.is_file()}
+    write(output / "source-manifest.json", {"commit": corpus_commit, "files": candidate_originals})
+    write(output / "reference-manifest.json", {"reference": str(reference), "files": reference_files})
+    write(output / "compiler-source-manifest.json", {"source": str(compiler_source), "commit": source_commit, "files": compiler_sources})
+    categories = {}
+    for category in ("current", "configured"):
+        for mode in MODES:
+            path = reference / (category + "-" + mode + ".json")
+            if path.exists():
+                categories[category, mode] = json.loads(path.read_text())

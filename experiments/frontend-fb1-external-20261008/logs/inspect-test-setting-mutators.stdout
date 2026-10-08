@@ -1,0 +1,251 @@
+src/core/pipeline.zig:49:    trap_frames: ?target_description.Traps = null,
+src/core/pipeline.zig-50-    /// `--verify-cache`: recompile every unit the object store served and require
+src/core/pipeline.zig-51-    /// identical object bytes; such a build never replays.
+src/core/pipeline.zig-52-    verify_cache: bool = false,
+src/core/pipeline.zig-53-    /// `--cache-report` (`text`) or `--report` (`json`, NEW-CORE-S5-REPORT-1): say what
+src/core/pipeline.zig-54-    /// the caches served and how many tools ran.
+src/core/pipeline.zig-55-    cache_report: CacheReport = .off,
+src/core/pipeline.zig-56-    /// How the front end's diagnostics reach the report: `errors` only, as text
+src/core/pipeline.zig-57-    /// (`mylang-core`), or every diagnostic, warnings included, as the `mylang` CLI
+src/core/pipeline.zig-58-    /// prints them in `text` or `json` (`--diagnostics=json`, NEW-CORE-S5-CLI-1).
+src/core/pipeline.zig-59-    diagnostics: Diagnostics = .errors,
+src/core/pipeline.zig-60-};
+src/core/pipeline.zig-61-
+src/core/pipeline.zig-62-/// What `Show.diagnostics` selects.
+src/core/pipeline.zig-63-pub const Diagnostics = enum { errors, text, json };
+src/core/pipeline.zig-64-
+src/core/pipeline.zig-65-/// What `Show.cache_report` selects: no report, the `mylang-core: cache:` line, or one
+src/core/pipeline.zig-66-/// `cache-report-v1` JSON line.
+src/core/pipeline.zig-67-pub const CacheReport = enum { off, text, json };
+src/core/pipeline.zig-68-
+src/core/pipeline.zig-69-/// Why a build stopped after its report was written.
+src/core/pipeline.zig-70-pub const Error = error{ SourceError, Unsupported, ToolFailed, WriteFailed, OutOfMemory, InvalidIr, PolicyDenied, ConfigurationFailed };
+src/core/pipeline.zig-71-
+src/core/pipeline.zig-72-/// Build `path` into `options.output`. An unchanged build replays its last
+src/core/pipeline.zig-73-/// identical build's executable (`build_replay.zig`) before checking anything.
+src/core/pipeline.zig-74-pub fn build(init: std.process.Init, path: []const u8, options: Options, report: *std.ArrayList(u8)) Error!u8 {
+src/core/pipeline.zig-75-    return buildWith(init, path, options, null, report);
+src/core/pipeline.zig-76-}
+src/core/pipeline.zig-77-
+src/core/pipeline.zig-78-/// `build` for `mylang run`: the program also installs `budget` when `main` starts
+src/core/pipeline.zig-79-/// (NEW-CORE-S5-RUN-1). The budget is part of the replay key.
+src/core/pipeline.zig-80-pub fn buildRun(init: std.process.Init, path: []const u8, options: Options, budget: run_budget.RunBudget, report: *std.ArrayList(u8)) Error!u8 {
+src/core/pipeline.zig-81-    return buildWith(init, path, options, budget, report);
+src/core/pipeline.zig-82-}
+src/core/pipeline.zig-83-
+src/core/pipeline.zig-84-/// The project entry `path` resolves to, with its configuration (`mylang.json`).
+src/core/pipeline.zig-85-pub fn resolveEntry(init: std.process.Init, path: []const u8, report: *std.ArrayList(u8)) Error!project_entry.Entry {
+src/core/pipeline.zig-86-    return project_entry.resolve(init.arena.allocator(), init.io, path, report);
+src/core/pipeline.zig-87-}
+src/core/pipeline.zig-88-
+src/core/pipeline.zig-89-fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget: ?run_budget.RunBudget, report: *std.ArrayList(u8)) Error!u8 {
+src/core/pipeline.zig-90-    const allocator = init.arena.allocator();
+src/core/pipeline.zig-91-    const entry = try project_entry.resolve(allocator, init.io, path, report);
+src/core/pipeline.zig-92-    const replaying = options.show.llvm == null;
+src/core/pipeline.zig-93-    const context: build_replay.Context = .{ .arena = allocator, .io = init.io, .environment = init.environ_map, .cache = options.cache, .zig = options.zig, .flags = try flags(init, options, budget), .entry = entry };
+src/core/pipeline.zig-94-    if (replaying and !options.show.verify_cache) if (try build_replay.replay(context, options.output, report)) {
+--
+src/core/pipeline.zig:169:        .frames = options.show.trap_frames,
+src/core/pipeline.zig-170-        .links = links,
+src/core/pipeline.zig-171-        .diagnostics = options.show.diagnostics,
+src/core/pipeline.zig-172-        .run = budget,
+src/core/pipeline.zig-173-    }, .{}) catch return error.OutOfMemory;
+src/core/pipeline.zig-174-}
+src/core/pipeline.zig-175-
+src/core/pipeline.zig-176-/// Say what the caches served: for a replayed build (`outcome` null) that it replayed,
+src/core/pipeline.zig-177-/// else the units linked, reused, compiled and verified, whether the program store
+src/core/pipeline.zig-178-/// served the executable, and the tool processes started.
+src/core/pipeline.zig-179-fn cacheReport(allocator: std.mem.Allocator, form: CacheReport, outcome: ?driver.Outcome, report: *std.ArrayList(u8)) Error!void {
+src/core/pipeline.zig-180-    const c = if (outcome) |built| built.counts else driver.Counts{};
+src/core/pipeline.zig-181-    const program = if (outcome) |built| (if (built.program_reused) "reused" else "linked") else "replayed";
+src/core/pipeline.zig-182-    if (form == .json) {
+src/core/pipeline.zig-183-        const record = std.json.Stringify.valueAlloc(allocator, .{
+src/core/pipeline.zig-184-            .version = "cache-report-v1",
+src/core/pipeline.zig-185-            .program = program,
+src/core/pipeline.zig-186-            .units = c.units,
+src/core/pipeline.zig-187-            .reused = c.reused,
+src/core/pipeline.zig-188-            .compiled = c.compiled,
+src/core/pipeline.zig-189-            .verified = c.verified,
+src/core/pipeline.zig-190-            .processes = c.processes,
+src/core/pipeline.zig-191-        }, .{}) catch return error.OutOfMemory;
+src/core/pipeline.zig-192-        try report.print(allocator, "{s}\n", .{record});
+src/core/pipeline.zig-193-        return;
+src/core/pipeline.zig-194-    }
+src/core/pipeline.zig-195-    if (outcome == null) return report.appendSlice(allocator, "mylang-core: cache: replayed the last identical build\n");
+src/core/pipeline.zig-196-    const format = "mylang-core: cache: {d} units, {d} reused, {d} compiled, {d} verified; program {s}; {d} processes\n";
+src/core/pipeline.zig-197-    try report.print(allocator, format, .{ c.units, c.reused, c.compiled, c.verified, program, c.processes });
+src/core/pipeline.zig-198-}
+src/core/pipeline.zig-199-
+src/core/pipeline.zig-200-/// What the back half of a build needs to know about the checked source.
+src/core/pipeline.zig-201-pub const Unit = struct {
+src/core/pipeline.zig-202-    /// The merged source trap positions are located in.
+src/core/pipeline.zig-203-    src: language.source.Source,
+src/core/pipeline.zig-204-    /// The path traps and error traces report: the entry file's, as the old core shows it
+src/core/pipeline.zig-205-    /// (`shownPath`).
+src/core/pipeline.zig-206-    source_path: []const u8,
+src/core/pipeline.zig-207-    /// The entry function's parameter names (which pick stdout or stderr for a
+src/core/pipeline.zig-208-    /// `Stream`) and, when it returns a `Result`, its case tags.
+src/core/pipeline.zig-209-    main: emit_llvm.Main,
+src/core/pipeline.zig-210-};
+src/core/pipeline.zig-211-
+src/core/pipeline.zig-212-/// The back half of `build`: run the release passes on `module`, emit LLVM IR, and
+src/core/pipeline.zig-213-/// link the executable. `mylang-core test` reaches it with a module of its own making.
+src/core/pipeline.zig-214-pub fn finish(init: std.process.Init, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error!u8 {
+--
+src/core/pipeline.zig:321:    if (show.trap_frames) |frames| target.traps = frames;
+src/core/pipeline.zig-322-    return target;
+src/core/pipeline.zig-323-}
+src/core/pipeline.zig-324-
+src/core/pipeline.zig-325-/// The path reports show for a module-headed entry file, as the front end names it and
+src/core/pipeline.zig-326-/// the old core prints it: relative to its module root.
+src/core/pipeline.zig-327-pub fn shownPath(src: language.source.Source, program: language.typed.Program) []const u8 {
+src/core/pipeline.zig-328-    const main = program.functions[@backingInt(program.main)];
+src/core/pipeline.zig-329-    const start: u32 = @intCast(main.declaration.start);
+src/core/pipeline.zig-330-    return frontend.position(src, .{ .start = start, .end = start }).path;
+src/core/pipeline.zig-331-}
+src/core/pipeline.zig-332-
+src/core/pipeline.zig-333-/// Checked entry capability families distinguish Host from Stream and provider tokens.
+src/core/pipeline.zig-334-fn mainCapabilities(allocator: std.mem.Allocator, program: language.typed.Program) std.mem.Allocator.Error![]const u8 {
+src/core/pipeline.zig-335-    const main = program.functions[@backingInt(program.main)];
+src/core/pipeline.zig-336-    const families = try allocator.alloc(u8, main.signature.parameter_count);
+src/core/pipeline.zig-337-    for (families, main.scope.locals[0..families.len]) |*family, local| family.* = if (local.ty.capabilityIndex()) |index| @as(u8, index) else 255;
+src/core/pipeline.zig-338-    return families;
+src/core/pipeline.zig-339-}
+--
+src/core/cli.zig:99:        if (std.mem.eql(u8, command, "test")) break :status try testCommand(init, rest);
+src/core/cli.zig-100-        for ([_][]const u8{ "dump-ir", "dump-typed", "coverage" }) |name| if (std.mem.eql(u8, command, name)) break :status try core_main.developer(init, args);
+src/core/cli.zig-101-        return null;
+src/core/cli.zig-102-    };
+src/core/cli.zig-103-    return status;
+src/core/cli.zig-104-}
+src/core/cli.zig-105-
+src/core/cli.zig-106-/// The same default release cost output appended by the interface CLI.
+src/core/cli.zig-107-pub fn interfaceCost(init: std.process.Init, path: []const u8) Error!cost_command.Output {
+src/core/cli.zig-108-    return cost_command.output(init, .{ .path = path });
+src/core/cli.zig-109-}
+src/core/cli.zig-110-
+src/core/cli.zig-111-/// Whether a `build` names one of the core's developer-only switches, which the
+src/core/cli.zig-112-/// core's own build command answers (S5-D8: `mylang-core` merged into `mylang`).
+src/core/cli.zig-113-fn developerBuild(args: []const []const u8) bool {
+src/core/cli.zig-114-    for (args) |arg| {
+src/core/cli.zig-115-        if (std.mem.startsWith(u8, arg, "--sabotage-facts") or std.mem.eql(u8, arg, "--generic-vectors") or std.mem.startsWith(u8, arg, "--trap-frames=")) return true;
+src/core/cli.zig-116-    }
+src/core/cli.zig-117-    return false;
+src/core/cli.zig-118-}
+src/core/cli.zig-119-
+src/core/cli.zig-120-/// The retirement a flag before `--` names, or null.
+src/core/cli.zig-121-fn retiredFlag(args: []const []const u8) ?Retirement {
+src/core/cli.zig-122-    for (args) |arg| {
+src/core/cli.zig-123-        if (std.mem.eql(u8, arg, "--")) return null;
+src/core/cli.zig-124-        const name = arg[0 .. std.mem.indexOfScalar(u8, arg, '=') orelse arg.len];
+src/core/cli.zig-125-        for (retired_flags) |retired| if (std.mem.eql(u8, name, retired.name)) return retired;
+src/core/cli.zig-126-    }
+src/core/cli.zig-127-    return null;
+src/core/cli.zig-128-}
+src/core/cli.zig-129-
+src/core/cli.zig-130-fn refuse(init: std.process.Init, command: []const u8, message: []const u8) Error!u8 {
+src/core/cli.zig-131-    try write(init, try std.fmt.allocPrint(init.arena.allocator(), "mylang {s}: {s}\n", .{ command, message }));
+src/core/cli.zig-132-    return 2;
+src/core/cli.zig-133-}
+src/core/cli.zig-134-
+src/core/cli.zig-135-fn write(init: std.process.Init, text: []const u8) Error!void {
+src/core/cli.zig-136-    std.Io.File.stderr().writeStreamingAll(init.io, text) catch return error.WriteFailed;
+src/core/cli.zig-137-}
+src/core/cli.zig-138-
+src/core/cli.zig-139-const build_usage =
+src/core/cli.zig-140-    \\usage: mylang build <file.my> (-o <output> | --run [run options] [-- ARGS...]) [--release] [--link FILE.c]... [--emit-llvm PATH]
+src/core/cli.zig-141-    \\       [--cache-dir DIR] [--no-cache] [--zig PATH] [--report] [--cache-report] [--verify-cache] [--stats] [--diagnostics=text|json]
+src/core/cli.zig-142-    \\
+src/core/cli.zig-143-;
+src/core/cli.zig-144-
+--
+src/core/cli.zig:182:            return refuse(init, "test", try std.fmt.allocPrint(a, "{s} was dropped with the old test runner (S5-D6)", .{name}));
+src/core/cli.zig-183-        };
+src/core/cli.zig:184:        if (testRefusal(arg)) |message| return refuse(init, "test", message);
+src/core/cli.zig-185-        if (std.mem.eql(u8, arg, "--whole-program")) continue;
+src/core/cli.zig-186-        if (std.mem.eql(u8, name, "--qbe")) {
+src/core/cli.zig-187-            if (split == arg.len) index += 1;
+src/core/cli.zig-188-            continue;
+src/core/cli.zig-189-        }
+src/core/cli.zig-190-        // The core reads `--jobs=N` and `--max-steps=N` itself; any other `--flag=VALUE`
+src/core/cli.zig-191-        // is split into the `--flag VALUE` it reads.
+src/core/cli.zig-192-        const joined = std.mem.eql(u8, name, "--jobs") or std.mem.eql(u8, name, "--max-steps");
+src/core/cli.zig-193-        if (split < arg.len and std.mem.startsWith(u8, arg, "--") and !joined) {
+src/core/cli.zig-194-            try normalized.appendSlice(a, &.{ name, arg[split + 1 ..] });
+src/core/cli.zig-195-            continue;
+src/core/cli.zig-196-        }
+src/core/cli.zig-197-        try normalized.append(a, arg);
+src/core/cli.zig-198-    }
+src/core/cli.zig-199-    // Test processes inherit the caller's address space, not the compiler's own
+src/core/cli.zig-200-    // ceiling; each lowers it to its byte ceiling (NEW-CORE-S4-MEMORY-1).
+src/core/cli.zig-201-    cli_run.restoreAddressSpace(init.environ_map);
+src/core/cli.zig-202-    const status = try core_main.testCommand(init, normalized.items);
+src/core/cli.zig-203-    return status;
+src/core/cli.zig-204-}
+--
+src/core/test_runner.zig:439:fn configuredCases(init: std.process.Init, options: *const Options, located: project_entry.Entry) Error!?case_settings.File {
+src/core/test_runner.zig-440-    return case_settings.load(init.arena.allocator(), init.io, located.path, options.controls.cases) catch |err| {
+src/core/test_runner.zig-441-        if (err == error.OutOfMemory) return error.OutOfMemory;
+src/core/test_runner.zig-442-        try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(init.arena.allocator(), "error: test cases: {s}\n", .{@errorName(err)}));
+src/core/test_runner.zig-443-        return null;
+src/core/test_runner.zig-444-    };
+src/core/test_runner.zig-445-}
+src/core/test_runner.zig-446-
+src/core/test_runner.zig-447-fn guestTool(init: std.process.Init, options: Options) Error!?tool_identity.Identity {
+src/core/test_runner.zig-448-    const a = init.arena.allocator();
+src/core/test_runner.zig-449-    return tool_identity.capture(.{ .arena = a, .io = init.io, .environment = init.environ_map, .executable = options.build.zig, .cache = options.build.cache }) catch |err| {
+src/core/test_runner.zig-450-        if (err == error.OutOfMemory) return error.OutOfMemory;
+src/core/test_runner.zig-451-        try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(a, "error: cannot identify guest toolchain: {s}\n", .{@errorName(err)}));
+src/core/test_runner.zig-452-        return null;
+src/core/test_runner.zig-453-    };
+src/core/test_runner.zig-454-}
+src/core/test_runner.zig-455-
+src/core/test_runner.zig-456-/// Settle the step, frame and byte ceilings: a flag, then (memory only) `MYLANG_MEMORY_LIMIT`,
+src/core/test_runner.zig-457-/// then the project's `limits.test`, then the defaults. A frame budget the byte ceiling
+src/core/test_runner.zig-458-/// cannot back is refused before anything is built, as the old core refuses it.
+src/core/test_runner.zig:459:fn applyLimits(init: std.process.Init, options: *Options, located: project_entry.Entry) Error!bool {
+src/core/test_runner.zig-460-    var frames: ?u64 = null;
+src/core/test_runner.zig-461-    var memory: ?u64 = null;
+src/core/test_runner.zig-462-    if (located.configuration) |configured| {
+src/core/test_runner.zig-463-        const limits = configured.document.limits.tests;
+src/core/test_runner.zig-464-        if (!options.controls.ceilings.explicit_steps) if (limits.max_steps) |steps| {
+src/core/test_runner.zig-465-            options.controls.max_steps = steps;
+src/core/test_runner.zig-466-        };
+src/core/test_runner.zig-467-        frames = limits.max_frames;
+src/core/test_runner.zig-468-        memory = limits.max_memory;
+src/core/test_runner.zig-469-    }
+src/core/test_runner.zig-470-    const a = init.arena.allocator();
+src/core/test_runner.zig-471-    options.controls.ceilings = options_module.resolve(options.controls.ceilings, init.environ_map, frames, memory) catch {
+src/core/test_runner.zig-472-        try writeAll(init, std.Io.File.stderr(), "error: MYLANG_MEMORY_LIMIT is not a byte count with an optional K, M or G suffix\n");
+src/core/test_runner.zig-473-        return false;
+src/core/test_runner.zig-474-    };
+src/core/test_runner.zig-475-    if (try options_module.frameRefusal(a, init.environ_map, options.controls.ceilings)) |refused| {
+src/core/test_runner.zig-476-        try writeAll(init, std.Io.File.stderr(), refused);
+src/core/test_runner.zig-477-        return false;
+src/core/test_runner.zig-478-    }
+src/core/test_runner.zig-479-    return true;
+src/core/test_runner.zig-480-}
+src/core/test_runner.zig-481-
+src/core/test_runner.zig-482-fn programIdentity(resources: IdentityResources, options: Options, checked: frontend.Checked, case: discover.Case, base: [32]u8) Error!?[32]u8 {
+src/core/test_runner.zig-483-    // The shared checker propagates effects through calls. Host calls have
+src/core/test_runner.zig-484-    // mutable external inputs and cannot publish persistent result receipts.
+src/core/test_runner.zig-485-    const function = checked.program.functions[@backingInt(case.function)];
+src/core/test_runner.zig-486-    const effects = @import("mylang").effect_set;
+src/core/test_runner.zig-487-    if (function.policy.host != null or function.policy.effects & effects.bit(.host) != 0) return null;
+src/core/test_runner.zig-488-    const a = resources.scratch;
+src/core/test_runner.zig-489-    var why: build.Refusal = .{};
+src/core/test_runner.zig-490-    const built = if (resources.prebuilt) |prebuilt| withEntry(a, options, checked, &.{case}, prebuilt) else programFor(a, options, checked, &.{case}, &why);
+src/core/test_runner.zig-491-    const module = built catch |err| {
+src/core/test_runner.zig-492-        if (err == error.OutOfMemory) return error.OutOfMemory;
+src/core/test_runner.zig-493-        return null;
+src/core/test_runner.zig-494-    };
+src/core/test_runner.zig-495-    const source_path = std.Io.Dir.cwd().realPathFileAlloc(resources.io, options.path, a) catch options.path;
+src/core/test_runner.zig-496-    const identity = receipt.programKey(base, case.name, .{ .module = &module, .source_path = source_path, .locator = pipeline.locator(&checked.src) });
+src/core/test_runner.zig-497-    return identity;
+src/core/test_runner.zig-498-}
+src/core/test_runner.zig-499-
+src/core/test_runner.zig-500-fn select(init: std.process.Init, options: Options, checked: frontend.Checked, cases: []const discover.Case, settings: case_settings.File, selection: SelectionContext) Error![]Selected {
+src/core/test_runner.zig-501-    const a = init.arena.allocator();
+src/core/test_runner.zig-502-    const chosen = try a.alloc(Selected, cases.len);
+src/core/test_runner.zig-503-    const context = selection.receipt;
+src/core/test_runner.zig-504-    for (cases, chosen) |case, *item| {

@@ -1,0 +1,4 @@
+src/core/cli.zig:108:    return cost_command.output(init, .{ .path = path });
+src/main.zig:154:    _ = budget.guardHost(init.environ_map);
+src/main.zig:1937:        if (try requestedOutput(init, &compilation, parsed)) |output| break :result output;
+src/main.zig:2038:fn requestedOutput(init: Context, compilation: *language.project_compile.Compilation, parsed: Parsed) !?[]u8 {

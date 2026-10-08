@@ -1,0 +1,58 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/zig-out/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/eval_net_analysis_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli/.mylang-cache/frontend-fb1-external/test-cache/eda",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "cpu_affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "cwd": "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda",
+  "elapsed_seconds": 0.44461329700425267,
+  "leak_environment": {
+    "MYL_CORE_LEAKCHECK": "1"
+  },
+  "other_build_heavy_processes": [
+    " 279294  107551  17    9212 /bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until ! pgrep -f '\"'\"'probe/probe.py'\"'\"' >/dev/null; do sleep 5; done; wc -l /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/probe/smoke.log' < /dev/null && pwd -P >| /tmp/claude-7f36-cwd",
+    "3229142 3228678  16       0 /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig cc -O3 -target x86_64-linux-gnu.2.31 -march=native -mllvm -x86-experimental-pref-innermost-loop-alignment=6 -Wno-override-module -o /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli/.mylang-cache/frontend-fb1-external/test-cache/eda/native-link-c0f67d418fb503c98cdaf699d5a67314/program /home/epentland/.cache/mylang/core-runtime/core_rt-5c4040adac083b24fc449a6c819793afdbedff864c662acd49708963fc7d5955.o /home/epentland/.cache/mylang/core-runtime/units-v1/71c1d4a5671293b2b90b7b7382fa86f13ee0479315ee0dfcad14bcedffc90608.o /home/epentland/.cache/mylang/core-runtime/core_number_text-58631556747a62f8640a9c120a327f09151c6da43d8bc0024436ec8a21f1bd5d.o"
+  ],
+  "process_sample": {
+    "command": [
+      "ps",
+      "-eo",
+      "pid,ppid,psr,etimes,args"
+    ],
+    "elapsed_seconds": 0.009785327827557921,
+    "returncode": 0
+  },
+  "returncode": 0,
+  "started_at": "2026-10-08T10:57:27.918805+00:00",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "6107b609dbf8dd45176346ebc7cc46f8399bb4c013841f7f1e6e0512e1d3b774",
+  "timeout": false,
+  "timeout_seconds": 600
+}

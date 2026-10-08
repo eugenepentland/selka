@@ -1,0 +1,29 @@
+src/core/tool_ticket.zig:12:pub const hint = "MYL_CORE_PARENT_TOOL_TICKET";
+src/core/cli_run.zig:3://! `--print-result` in `MYLANG_OPTIONS` and the arguments after `--`, and adopt its
+src/core/cli_run.zig:37:    \\    --max-memory SIZE  guest byte ceiling, K/M/G suffixes (default 4G; MYLANG_MEMORY_LIMIT names the same)
+src/core/cli_run.zig:46:/// The guest `zig`: `ZIG`, else `MYLANG_ZIG`, else `zig` from `PATH`; `--zig` outranks it.
+src/core/cli_run.zig:48:    return init.environ_map.get("ZIG") orelse init.environ_map.get("MYLANG_ZIG") orelse "zig";
+src/core/cli_run.zig:158:/// `MYLANG_MEMORY_LIMIT`, else from the project's `limits.run`, else the default:
+src/core/cli_run.zig:194:        _ = environment.swapRemove("MYLANG_OPTIONS");
+src/core/cli_run.zig:196:        try environment.put("MYLANG_OPTIONS", try cli_args.encodeOptions(a, settings.options));
+src/core/cli_run.zig:201:    restoreAddressSpace(init.environ_map);
+src/core/cli_run.zig:225:/// (`MYLANG_HOST_MEMORY_LIMIT`), and the runtime lowers it to the run's ceiling.
+src/core/cli_run.zig:227:pub fn restoreAddressSpace(environment: *const std.process.Environ.Map) void {
+src/main.zig:219:    /// `--friction-log` nor `MYLANG_FRICTION_LOG` asked for one. Every write is
+src/main.zig:308:    // `MYLANG_FRICTION_LOG` asked for a log, so an ordinary run pays one check.
+src/main.zig:762:    /// `MYLANG_FRICTION_LOG` names the same destination when the flag is absent.
+src/main.zig:2624:/// default: `--cache-dir` first, then `MYLANG_FRONTEND_CACHE`. Every persistent
+src/main.zig:2630:    const variable = init.environ.get("MYLANG_FRONTEND_CACHE") orelse return null;
+src/main.zig:2636:/// `frontend/`), then `MYLANG_FRONTEND_CACHE` from a parent build driver, then
+src/main.zig:2832:/// `--cache-dir=DIR` (or `MYLANG_FRONTEND_CACHE`) nests under `DIR/semantic`, and
+src/main.zig:2853:/// 16 MiB budget; `MYLANG_SEMANTIC_BUDGET` is an opt-in profiling control used
+src/main.zig:2856:    const raw = init.environ.get("MYLANG_SEMANTIC_BUDGET") orelse return 16 * 1024 * 1024;
+src/memory_budget.zig:12:pub const variable = "MYLANG_MEMORY_LIMIT";
+src/memory_budget.zig:14:pub const host_variable = "MYLANG_HOST_MEMORY_LIMIT";
+src/memory_budget.zig:16:pub const jobs_variable = "MYLANG_JOBS";
+src/memory_budget.zig:27:/// `MYL_NATIVE_BUDGET_HEADROOM` in `native_heap.h`, which the runtime applies.
+src/memory_budget.zig:77:pub const checkpoint_variable = "MYLANG_HOST_LIMIT_CHECKPOINT";
+src/memory_budget.zig:79:pub const restore_variable = "MYLANG_HOST_LIMIT_RESTORE";
+src/memory_budget.zig:86:/// Install the compiler's own ceiling from `MYLANG_HOST_MEMORY_LIMIT`, falling
+src/memory_budget.zig:236:    /// Explicit `--jobs`/`MYLANG_JOBS` width; null asks for the derived default.
+src/memory_budget.zig:261:/// Parse a `--jobs` or `MYLANG_JOBS` width, rejecting zero and non-numeric text.

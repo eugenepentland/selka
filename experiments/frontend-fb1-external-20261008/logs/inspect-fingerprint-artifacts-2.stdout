@@ -1,0 +1,13 @@
+configured names []
+configured names []
+keyed environment {}
+identities /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/.zig-cache 6
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/.zig-cache/o/fa4bacf55e6de9f75d755fd19a6d4628/build_identity/identity.zig ['pub const zig_version = "0.17.0-dev.1683+5ceec001b";', 'pub const compiler_identity = "f90558675760893fa9167ec0956add880a83059a10492601d7d560a3744ed920";']
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/.zig-cache/o/d185dc5c3b1a8ac1fc5e0fa29d2ccb55/build_identity/identity.zig ['pub const zig_version = "0.17.0-dev.1683+5ceec001b";', 'pub const compiler_identity = "2ca83cdad34673efa34062dab2ea87daf2cbe6acf8af24673e0a1d699fac4d7e";']
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/.zig-cache/o/8f524204617db821ca83eaa634edca56/build_identity/identity.zig ['pub const zig_version = "0.17.0-dev.1683+5ceec001b";', 'pub const compiler_identity = "61d4273d52cd2946705b6e745c58e5bc5e346bc208883145af13f2752f8e23f2";']
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/.zig-cache/o/357f8481174dcf2b0252f8c3ebad061c/build_identity/identity.zig ['pub const zig_version = "0.17.0-dev.1683+5ceec001b";', 'pub const compiler_identity = "e8fd14f7b3967975a33c25f2105e64767edf21299cbffeac3f7c6df1c3c752f8";']
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/.zig-cache/o/2408a1a608185f86790508855fb8361d/build_identity/identity.zig ['pub const zig_version = "0.17.0-dev.1683+5ceec001b";', 'pub const compiler_identity = "24a913996a813eb8dcbce72c47f39026ea39590d6bb2f30bc62fbcc1909e870b";']
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/.zig-cache/o/e9d57a085e7efe1137b16d09ec59a066/build_identity/identity.zig ['pub const zig_version = "0.17.0-dev.1683+5ceec001b";', 'pub const compiler_identity = "11ebd605970053265794e17a3b79a7811dafc345bf988a910a951ff4223c8984";']
+identities /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-s5-pin/.zig-cache 2
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-s5-pin/.zig-cache/o/d5d03175a611cf1048c4ac86a4216ad1/build_identity/identity.zig ['pub const zig_version = "0.17.0-dev.1683+5ceec001b";', 'pub const compiler_identity = "684daf21ff6d228f070309b170a511d48bcf30dc691d20e1fb08639135bf87f6";']
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-s5-pin/.zig-cache/o/c3cfe18699a3a3b429e442a606711064/build_identity/identity.zig ['pub const zig_version = "0.17.0-dev.1683+5ceec001b";', 'pub const compiler_identity = "75df659aabeed10ad07b522d95138304995f8a3c69dbcf8ba153a72562b1b370";']

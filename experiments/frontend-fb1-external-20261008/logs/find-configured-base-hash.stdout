@@ -1,0 +1,174 @@
+src/core/test_runner_cases.zig:80:/// Retain one checked graph per distinct map of provider sources.
+src/tests_index.zig:8:const source = @import("source.zig");
+src/tests_index.zig:15:/// One module's parsed syntax and source, the inputs test discovery needs.
+src/tests_index.zig:16:pub const ModuleSyntax = struct { name: []const u8, src: source.Source, syntax: ast.Program };
+src/core/test_runner_test.zig:14:const discovery_source =
+src/core/test_runner_test.zig:47:    var unit = try language.Compilation.init(arena, "found.my", discovery_source ++ runner.check_stub);
+src/core/test_runner_test.zig:49:    return discover.discover(arena, unit.program.?, "found", &.{.{ .name = "found", .text = discovery_source }});
+src/core/test_runner_test.zig:111:    const llvm = try emit_llvm.emitModule(a, &module, .{ .locator = .{ .context = &context, .locate = lineOne }, .source_path = "two.my", .main = .{} });
+src/core/test_runner_test.zig:166:    const source = try std.fmt.allocPrint(arena, "{s}/{s}.my", .{ options.fixtures, fixture });
+src/core/test_runner_test.zig:168:    try argv.appendSlice(arena, &.{ options.core_path, "test", source, "--json", "--cache-dir", cache });
+src/core/test_runner_report.zig:32:/// declarations its providers replace, the providers' sources, and the run's inputs.
+src/core/test_runner_report.zig:33:pub const Identity = struct { contract: []const u8, provider: []const u8, source: []const u8 };
+src/core/test_runner_report.zig:87:        if (verdict.identity) |identity| try out.print(allocator, ",\"contract\":\"{s}\",\"provider\":\"{s}\",\"source\":\"{s}\"", .{ identity.contract, identity.provider, identity.source });
+src/core/test_runner_report.zig:99:/// Add the checked source inventory used to account for directory test programs.
+src/core/test_runner_report.zig:100:pub fn jsonSources(allocator: std.mem.Allocator, verdicts: []const Verdict, sources: []const []const u8) std.mem.Allocator.Error![]u8 {
+src/core/test_runner_report.zig:103:    const encoded = try std.json.Stringify.valueAlloc(allocator, sources, .{});
+src/core/test_runner_report.zig:105:    return std.fmt.allocPrint(allocator, "{s},\"sources\":{s}}}\n", .{ basic[0 .. basic.len - 2], encoded });
+src/core/test_runner_batch.zig:60:/// until LLVM sees their already recorded source owner. Only test modules use
+src/core/test_runner_batch.zig:83:    const source = module.functions.items[target.function].signature;
+src/core/test_runner_batch.zig:88:    const arguments = try a.alloc(ir.Ref, source.params.len);
+src/core/test_runner_batch.zig:90:    for (arguments, source.params, target.parameters, signature.parameters) |*argument, ty, family, name| {
+src/core/test_runner_batch.zig:103:    const encode = try context.adapter(signature.result, source.ret, true);
+src/core/test_runner_affected.zig:2://! narrow the discovered tests to the ones that reach a declaration whose own source
+src/core/test_runner_receipt.zig:1://! Successful test receipts key the reachable program's IR and source positions and
+src/core/test_runner_receipt.zig:17:/// Command resources and freshly resolved project configuration.
+src/core/test_runner_receipt.zig:35:pub fn settings(context: Context, inputs: *std.ArrayList(Dependency)) Error!Digest {
+src/core/test_runner_receipt.zig:115:    source_path: []const u8,
+src/core/test_runner_receipt.zig:116:    /// Where each span is: the only way emission reads the source.
+src/core/test_runner_receipt.zig:124:pub fn programKey(base: Digest, name: []const u8, program: Program) Digest {
+src/core/test_runner_receipt.zig:130:    field(&walker.hash, program.source_path);
+src/core/test_runner_receipt.zig:211:pub fn configuredKey(program: Digest, json: []const u8) Digest {
+src/core/test_runner_receipt.zig:222:pub fn hit(context: Context, identity: Digest) Error!bool {
+src/core/test_runner_receipt.zig:231:pub fn save(context: Context, identity: Digest) Error!void {
+src/core/test_runner_receipt.zig:236:pub fn replay(context: Context, base: Digest) Error!?[]const u8 {
+src/core/test_runner_receipt.zig:245:pub fn replayProvisional(context: Context, base: Digest) Error!?[]const u8 {
+src/core/test_runner_receipt.zig:307:/// Record the exact loaded sources and embedded assets, before execution. Standard
+src/core/test_runner_receipt.zig:342:fn loaded(context: Context, files: *std.ArrayList(Dependency), path: []const u8, source: @import("mylang").source.Source, suffix: []const u8, overridden: bool) Error!void {
+src/core/test_runner_receipt.zig:344:    const bytes = if (suffix.len != 0 and std.mem.endsWith(u8, source.bytes, suffix)) source.bytes[0 .. source.bytes.len - suffix.len] else source.bytes;
+src/core/test_runner_receipt.zig:348:    for (source.embeds) |embed| {
+src/core/test_runner_receipt.zig:355:/// A source edit during a run prevents reuse of its results.
+src/core/test_runner_receipt.zig:367:pub fn remember(context: Context, base: Digest, files: []const Dependency, json: []const u8) Error!void {
+src/core/test_runner_receipt.zig:384:fn fileDigest(context: Context, path: []const u8) Error!?Digest {
+src/core/test_runner_receipt.zig:390:pub fn readDigest(arena: std.mem.Allocator, io: std.Io, path: []const u8) Error!?Digest {
+src/core/test_runner_receipt.zig:401:fn receiptPath(context: Context, identity: Digest) Error![]const u8 {
+src/core/test_runner_receipt.zig:413:fn success(a: std.mem.Allocator, identity: Digest) Error![]const u8 {
+src/core/test_runner_receipt.zig:461:test "receipt keys hash the test's IR and source positions, not where other files moved them" {
+src/core/test_runner_receipt.zig:469:    const one = programKey(base, "ab", .{ .module = &module, .source_path = "app.my", .locator = .{ .context = &unmoved, .locate = Lines.locate } });
+src/core/test_runner_receipt.zig:471:    try std.testing.expectEqual(one, programKey(base, "ab", .{ .module = &moved, .source_path = "app.my", .locator = .{ .context = &shifted, .locate = Lines.locate } }));
+src/core/test_runner_receipt.zig:473:    try std.testing.expect(!std.mem.eql(u8, &one, &programKey(base, "ab", .{ .module = &line, .source_path = "app.my", .locator = .{ .context = &unmoved, .locate = Lines.locate } })));
+src/core/test_runner_receipt.zig:475:    try std.testing.expect(!std.mem.eql(u8, &one, &programKey(base, "ab", .{ .module = &data, .source_path = "app.my", .locator = .{ .context = &unmoved, .locate = Lines.locate } })));
+src/core/test_runner_receipt.zig:478:    try std.testing.expect(!std.mem.eql(u8, &one, &programKey(base, "ab", .{ .module = &named, .source_path = "app.my", .locator = .{ .context = &unmoved, .locate = Lines.locate } })));
+src/core/test_runner_receipt.zig:479:    try std.testing.expect(!std.mem.eql(u8, &one, &programKey(base, "a", .{ .module = &module, .source_path = "app.my", .locator = .{ .context = &unmoved, .locate = Lines.locate } })));
+src/core/test_runner_receipt.zig:480:    try std.testing.expect(!std.mem.eql(u8, &one, &programKey(base, "ab", .{ .module = &module, .source_path = "other.my", .locator = .{ .context = &unmoved, .locate = Lines.locate } })));
+src/core/test_runner_receipt.zig:481:    try std.testing.expect(!std.mem.eql(u8, &one, &programKey(@splat(8), "ab", .{ .module = &module, .source_path = "app.my", .locator = .{ .context = &unmoved, .locate = Lines.locate } })));
+src/core/test_runner_receipt.zig:538:    try std.Io.Dir.cwd().writeFile(context.io, .{ .sub_path = context.entry.path, .data = "source" });
+src/core/test_runner_entry.zig:37:    /// Capability families in source parameter order.
+src/core/test_runner_entry.zig:43:    /// Checked source type names for generated input and result adapters.
+src/core/test_runner_property.zig:72:/// One input as typed JSON arguments and as literal source, both keyed by parameter.
+src/core/test_runner_discover.zig:37:/// A module's name and source text, which says which of its functions are `public` or `@test`.
+src/core/test_runner_discover.zig:41:/// belongs to `entry` (a header-less file). `modules` holds the source of every module whose
+src/core/test_runner_discover.zig:43:/// module with no source here has only its defaulting `test_` functions found.
+src/core/test_runner_discover.zig:54:        for (modules, scans) |source, scanned| if (std.mem.eql(u8, source.name, module)) {
+src/core/test_runner_discover.zig:88:/// What the source says about one `def`: whether it is `public` and carries `@test`.
+src/core/test_runner_project_test.zig:21:    fn writeInterfaces(self: Context, source: []const u8) !void {
+src/core/test_runner_project_test.zig:22:        const path = try std.fs.path.join(self.arena, &.{ self.root, source });
+src/core/test_runner_project_test.zig:33:    fn run(self: Context, source: []const u8, extra: []const []const u8) !Outcome {
+src/core/test_runner_project_test.zig:34:        const path = try std.fs.path.join(self.arena, &.{ self.root, source });
+src/core/test_runner_project_test.zig:47:const project_source =
+src/core/test_runner_project_test.zig:75:    try context.write("app.my", project_source);
+src/core/test_runner_project_test.zig:110:    try context.write("app.my", project_source);
+src/core/test_runner_project_test.zig:139:    try context.write("app.my", project_source);
+src/core/test_runner_project_test.zig:157:    const replacement = try std.json.Stringify.valueAlloc(a, .{ .@"app::test_dependency" = .{ .providers = .{ .@"app.my" = project_source } } }, .{});
+src/core/test_runner_project_test.zig:173:    try context.write("app.my", project_source);
+src/core/test_runner_project_test.zig:301:/// Run `mylang-core test` on `source` under a 1 MiB native stack limit, which a
+src/core/test_runner_project_test.zig:303:fn runSmallStack(context: Context, source: []const u8, extra: []const u8) !Outcome {
+src/core/test_runner_project_test.zig:304:    const path = try std.fs.path.join(context.arena, &.{ context.root, source });
+src/core/test_runner_project_test.zig:315:const deep_source = "module deep\n\ndef down(n: int) -> int:\n    if n == 0:\n        return 0\n    return 1 + down(n - 1)\n\n" ++
+src/core/test_runner_project_test.zig:327:    try context.write("deep.my", deep_source);
+src/core/test_runner_project_test.zig:363:    const source = "module grow\n\ndef fill(rounds: int) -> int:\n    values: list[int] = []\n    for r in range(rounds):\n        values.append(r)\n    return len(values)\n\n" ++
+src/core/test_runner_project_test.zig:366:    try context.write("grow.my", source);
+src/core/test_runner_project_test.zig:396:    const source = "module app\nimport dep\n\npublic def test_dependency() -> bool:\n    return dep.value() == 3\n";
+src/core/test_runner_project_test.zig:397:    try context.write("app.my", source);
+src/core/test_runner_project_test.zig:504:        const source = try std.fs.path.join(a, &.{ tools.fixtures, "projects", "propagation", name });
+src/core/test_runner_project_test.zig:505:        const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, source, a, .limited(1 << 20));
+src/core/test_runner_project_test.zig:514:test "reserved embedded module names cannot account for an untested disk source" {
+src/core/test_runner_project_test.zig:552:        const source = try std.fmt.allocPrint(a, "module app\n\n{s}\npublic def test_z_survivor() -> bool:\n    return True\n", .{fixture.body});
+src/core/test_runner_project_test.zig:554:        try context.write("app.my", source);
+src/core/test_runner_contracts.zig:110:    var hasher = std.crypto.hash.sha2.Sha256.init(.{});
+src/core/test_runner_contracts.zig:120:/// The hex identity of a provider set's replacement sources, each path and text
+src/core/test_runner_contracts.zig:123:    var hasher = std.crypto.hash.sha2.Sha256.init(.{});
+src/core/test_runner_directory.zig:2://! source must appear in a child's checked inventory, including orphan libraries.
+src/core/test_runner_directory.zig:30:    fn record(self: *Snapshot, path: []const u8, digest: ?[32]u8) error{ OutOfMemory, SourceChanged }!void {
+src/core/test_runner_directory.zig:50:    fn source(self: *Snapshot, path: []const u8, src: language.source.Source, overridden: bool) !void {
+src/core/test_runner_directory.zig:217:        var src = try language.source.Source.init(a, std.fs.path.basename(path), bytes);
+src/core/test_runner_directory.zig:221:        try snapshot.source(located.path, src, false);
+src/core/test_runner_directory.zig:224:    const resources: Discovery = .{ .allocator = a, .gpa = init.gpa, .io = init.io };
+src/core/test_runner_directory.zig:225:    const paths = try loadedClosure(resources, located, &.{}, snapshot);
+src/core/test_runner_directory.zig:226:    for (try case_settings.providerSets(a, cases, filter)) |providers| _ = try loadedClosure(resources, located, providers, snapshot);
+src/core/test_runner_directory.zig:230:fn loadedClosure(resources: Discovery, located: project_entry.Entry, providers: []const frontend.Provider, snapshot: *Snapshot) ![]const []const u8 {
+src/core/test_runner_directory.zig:231:    const a = resources.allocator;
+src/core/test_runner_directory.zig:232:    var session = frontend.Session.init(resources.gpa, resources.io, located.root);
+src/core/test_runner_directory.zig:244:        try snapshot.source(path, module.src, overridden);
+src/core/test_runner_directory.zig:346:        const sources = value.object.get("sources") orelse .null;
+src/core/test_runner_directory.zig:347:        if (tests != .array or sources != .array) {
+src/core/test_runner_directory.zig:351:        for (sources.array.items) |source| if (source == .string) {
+src/core/test_runner_directory.zig:352:            try accounted.put(a, source.string, {});
+src/core/test_runner_directory.zig:371:    if (try sourceChanged(a, init.io, opts, selection)) try verdicts.append(a, .{ .name = opts.path, .status = .failed, .reason = "SourceChanged: directory discovery inputs changed during execution" });
+src/core/test_runner_directory.zig:373:        try verdicts.append(a, .{ .name = path, .status = .failed, .reason = "test-declaring source was not loaded by any test program" });
+src/core/test_runner_directory.zig:375:    var sources: std.ArrayList([]const u8) = .empty;
+src/core/test_runner_directory.zig:377:    while (keys.next()) |key| try sources.append(a, key.*);
+src/core/test_runner_directory.zig:378:    std.mem.sort([]const u8, sources.items, {}, before);
+src/core/test_runner_directory.zig:379:    try write(init.io, std.Io.File.stdout(), if (opts.json) try report.jsonSources(a, verdicts.items, sources.items) else try report.text(a, verdicts.items));
+src/core/test_runner_directory.zig:383:fn sourceChanged(a: std.mem.Allocator, io: std.Io, opts: options.Options, selection: Selection) Error!bool {
+src/core/test_runner_directory.zig:410:fn sameDigest(left: ?[32]u8, right: ?[32]u8) bool {
+src/core/test_runner_directory.zig:460:test "sourceChanged detects edited or removed discovery inputs and allocation failure" {
+src/core/test_runner_directory.zig:474:    try std.testing.expect(!try sourceChanged(a, std.testing.io, opts, selection));
+src/core/test_runner_directory.zig:476:    try std.testing.expect(try sourceChanged(a, std.testing.io, opts, selection));
+src/core/test_runner_directory.zig:478:    try std.testing.expect(try sourceChanged(a, std.testing.io, opts, selection));
+src/core/test_runner_directory.zig:480:    try std.testing.expectError(error.OutOfMemory, sourceChanged(failing.allocator(), std.testing.io, opts, selection));
+src/core/test_runner_directory.zig:484:test "sourceChanged detects external dependencies absent cases and required API creation" {
+src/core/test_runner_directory.zig:506:    try std.testing.expect(!try sourceChanged(a, std.testing.io, opts, selection));
+src/core/test_runner_directory.zig:508:    try std.testing.expect(try sourceChanged(a, std.testing.io, opts, selection));
+src/core/test_runner_directory.zig:511:    try std.testing.expect(try sourceChanged(a, std.testing.io, opts, selection));
+src/core/test_runner_directory.zig:514:    try std.testing.expect(try sourceChanged(a, std.testing.io, opts, selection));
+src/core/test_runner_directory.zig:531:test "sourceChanged preserves inventory additions and ignores unrelated outputs" {
+src/core/test_runner_directory.zig:546:    try std.testing.expect(!try sourceChanged(a, std.testing.io, opts, selection));
+src/core/test_runner_directory.zig:547:    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "new.my", .data = "new source" });
+src/core/test_runner_directory.zig:548:    try std.testing.expect(try sourceChanged(a, std.testing.io, opts, selection));
+src/core/test_runner_directory.zig:577:    const resources: Discovery = .{ .allocator = a, .gpa = std.testing.allocator, .io = std.testing.io };
+src/core/test_runner_directory.zig:578:    _ = try loadedClosure(resources, entry, &.{}, &snapshot);
+src/core/test_runner_directory.zig:580:    _ = try loadedClosure(resources, entry, sets[0], &snapshot);
+src/core/test_runner_directory.zig:587:    try std.testing.expect(!try sourceChanged(a, std.testing.io, opts, selection));
+src/core/test_runner_directory.zig:589:    try std.testing.expect(try sourceChanged(a, std.testing.io, opts, selection));
+src/core/test_runner.zig:55:const IdentityResources = struct { scratch: std.mem.Allocator, io: std.Io, prebuilt: ?@import("ir.zig").Module = null };
+src/core/test_runner.zig:56:const ExecutionResources = struct { arena: std.mem.Allocator, backing: std.mem.Allocator, io: std.Io };
+src/core/test_runner.zig:135:    try addSources(allocator, &collected.sources, context, &session);
+src/core/test_runner.zig:143:    const sources = collected.sources;
+src/core/test_runner.zig:156:    const json = try report.jsonSources(allocator, verdicts, sources.items);
+src/core/test_runner.zig:178:/// sources the report lists and the selected tests.
+src/core/test_runner.zig:181:    sources: std.ArrayList([]const u8) = .empty,
+src/core/test_runner.zig:224:            try addSources(a, &out.sources, context, &provider_session);
+src/core/test_runner.zig:238:/// declarations its providers replace, the providers' sources, and the run's inputs.
+src/core/test_runner.zig:245:        .source = try a.dupe(u8, &std.fmt.bytesToHex(base, .lower)),
+src/core/test_runner.zig:333:/// The sources a check read, as receipts record them. A header-less test entry is
+src/core/test_runner.zig:411:    const resources: tool_identity.Request = .{ .arena = a, .io = init.io, .environment = init.environ_map, .executable = requested.build.zig, .cache = requested.build.cache };
+src/core/test_runner.zig:412:    const guest = try tool_ticket.borrow(.{ .tool = resources, .compiler_identity = frontend.compiler_identity }) orelse return null;
+src/core/test_runner.zig:422:    const resources: tool_identity.Request = .{ .arena = a, .io = init.io, .environment = init.environ_map, .executable = requested.build.zig, .cache = requested.build.cache };
+src/core/test_runner.zig:423:    const guest = tool_identity.lookupReplayCandidate(resources) catch |err| {
+src/core/test_runner.zig:482:fn programIdentity(resources: IdentityResources, options: Options, checked: frontend.Checked, case: discover.Case, base: [32]u8) Error!?[32]u8 {
+src/core/test_runner.zig:488:    const a = resources.scratch;
+src/core/test_runner.zig:490:    const built = if (resources.prebuilt) |prebuilt| withEntry(a, options, checked, &.{case}, prebuilt) else programFor(a, options, checked, &.{case}, &why);
+src/core/test_runner.zig:495:    const source_path = std.Io.Dir.cwd().realPathFileAlloc(resources.io, options.path, a) catch options.path;
+src/core/test_runner.zig:496:    const identity = receipt.programKey(base, case.name, .{ .module = &module, .source_path = source_path, .locator = pipeline.locator(&checked.src) });
+src/core/test_runner.zig:602:/// Discover declarations from the immutable sources the checker actually used.
+src/core/test_runner.zig:606:    for (session.project.modules.items, modules) |source, *module| module.* = .{ .name = source.name, .text = source.src.bytes };
+src/core/test_runner.zig:668:    resources: ExecutionResources,
+src/core/test_runner.zig:677:        self.selected.verdict = runSelected(self.resources, self.options, self.program, self.executable, self.table_index, self.selected.*) catch |err| {
+src/core/test_runner.zig:688:    const resources: ExecutionResources = .{ .arena = a, .backing = init.gpa, .io = init.io };
+src/core/test_runner.zig:690:    for (positions, work, 0..) |position, *item, table_index| item.* = .{ .resources = resources, .options = options, .program = program, .executable = executable, .table_index = table_index, .selected = &chosen[position] };
+src/core/test_runner.zig:735:    const unit: pipeline.Unit = .{ .src = checked.src, .source_path = absolute, .main = .{} };
+src/core/test_runner.zig:784:    std.crypto.hash.sha2.Sha256.hash(name, &digest, .{});
+src/core/test_runner.zig:825:fn runSelected(resources: ExecutionResources, options: Options, program: typed.Program, executable: []const u8, table_index: usize, selected: Selected) Error!report.Verdict {
+src/core/test_runner.zig:827:    const a = resources.arena;
+src/core/test_runner.zig:830:    std.Io.random(resources.io, &nonce);
+src/core/test_runner.zig:832:    std.Io.Dir.cwd().createDirPath(resources.io, directory) catch return error.WriteFailed;
+src/core/test_runner.zig:833:    defer removePrivate(resources.io, directory);
+src/core/test_runner.zig:834:    const context: property_execute.Context = .{ .arena = a, .backing = resources.backing, .io = resources.io };
+src/core/test_runner.zig:835:    const source_path = std.Io.Dir.cwd().realPathFileAlloc(resources.io, options.path, a) catch options.path;
+src/core/test_runner.zig:836:    const executor: property_execute.Executor = .{ .context = context, .types = try property_schema.definitions(a, program), .executable = executable, .table_index = table_index, .directory = directory, .source_path = source_path };
+src/core/test_runner.zig:951:    const resources: IdentityResources = .{ .scratch = std.testing.failing_allocator, .io = std.testing.io };
+src/core/test_runner.zig:958:    const source = "module app\n\npublic def test_value() -> bool:\n    return True\n\ndef main() -> int:\n    return 0\n";
+src/core/test_runner.zig:959:    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = source });
+src/core/test_runner.zig:965:    const cases = try discover.discover(a, checked.program, "app", &.{.{ .name = "app", .text = source }});
+src/core/test_runner.zig:967:    try std.testing.expectError(error.OutOfMemory, programIdentity(resources, .{ .path = path, .build = .{ .zig = "zig" } }, checked, cases[0], @splat(0)));

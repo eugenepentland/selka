@@ -1,0 +1,1 @@
+{"sample_seconds": 0.026481491047888994, "holder_commands": ["flock /run/user/1000/mylang-slots/bench-compile.lock /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/scripts/build-slot.sh build -- python3 harness/measure.py tests --ports mylang,zig,rust,go --rounds 3 --cpus 0-1,4-9,12-19 "]}

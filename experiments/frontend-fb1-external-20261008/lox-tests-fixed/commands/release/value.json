@@ -1,0 +1,64 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/zig-out/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/value.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli/.mylang-cache/frontend-fb1-external/test-cache/lox",
+    "--release",
+    "--max-steps=100000000"
+  ],
+  "cpu_affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox",
+  "elapsed_seconds": 0.03315134393051267,
+  "expected_cli_added_keyed_environment": {
+    "MYLANG_HOST_LIMIT_CHECKPOINT": "8858370048:18446744073709551615"
+  },
+  "keyed_environment": {
+    "MYLANG_SLOT_DIR": "/run/user/1000/mylang-slots",
+    "MYLANG_TIMING_CPUS": "2,3,10,11",
+    "MYL_CORE_LEAKCHECK": "1"
+  },
+  "leak_environment": {
+    "MYL_CORE_LEAKCHECK": "1"
+  },
+  "other_build_heavy_processes": [
+    " 279294  107551  10   10638 /bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until ! pgrep -f '\"'\"'probe/probe.py'\"'\"' >/dev/null; do sleep 5; done; wc -l /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/probe/smoke.log' < /dev/null && pwd -P >| /tmp/claude-7f36-cwd"
+  ],
+  "process_sample": {
+    "command": [
+      "ps",
+      "-eo",
+      "pid,ppid,psr,etimes,args"
+    ],
+    "elapsed_seconds": 0.015705837169662118,
+    "returncode": 0
+  },
+  "returncode": 3,
+  "started_at": "2026-10-08T11:21:13.659887+00:00",
+  "stderr_sha256": "8933bf46ed94cb75a7f6794d9e9bc2d1262a91076baeffabcf4f3268ac3d07c8",
+  "stdout_sha256": "a66054f0f5a7f0c4193c506baddbbd2d2c8ab3d4dcb2ff648e9af97ed29d8323",
+  "timeout": false,
+  "timeout_seconds": 600
+}

@@ -1,0 +1,8 @@
+starting fb1-lox-fixed-mode-suite
+{"completed_files": 25, "total_files": 26, "elapsed_seconds": 8.918757390929386}
+{"collector_unchanged": true, "commands": 84, "compiler_sources_unchanged": true, "compiler_unchanged": true, "directory_counts": {"debug": 65, "release": 65, "verify": 65}, "elapsed_seconds": 28.27932547405362, "mismatches": {}, "reference_files_unchanged": true, "reference_sources_unchanged": true, "settings_context_unchanged": true, "settings_helper_unchanged": true, "settings_witness_unchanged": true, "source_manifest_unchanged": true, "totals": {"configured-debug": {"failed": 0, "files": 1, "tests": 13, "unique_tests": 13}, "configured-release": {"failed": 0, "files": 1, "tests": 13, "unique_tests": 13}, "configured-verify": {"failed": 0, "files": 1, "tests": 13, "unique_tests": 13}, "current-debug": {"failed": 0, "files": 26, "tests": 65, "unique_tests": 65}, "current-release": {"failed": 0, "files": 26, "tests": 65, "unique_tests": 65}, "current-verify": {"failed": 0, "files": 26, "tests": 65, "unique_tests": 65}}}
+passed fb1-lox-fixed-mode-suite
+starting audit-fb1-lox-mode-results
+{"verified_command_reports": 84, "counts": {"current-debug": {"files": 26, "entries": 65, "unique_tests": 65}, "current-release": {"files": 26, "entries": 65, "unique_tests": 65}, "current-verify": {"files": 26, "entries": 65, "unique_tests": 65}, "configured-debug": {"files": 1, "entries": 13, "unique_tests": 13}, "configured-release": {"files": 1, "entries": 13, "unique_tests": 13}, "configured-verify": {"files": 1, "entries": 13, "unique_tests": 13}}}
+passed audit-fb1-lox-mode-results
+Lox final test modes passed

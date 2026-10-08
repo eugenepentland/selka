@@ -1,0 +1,66 @@
+                try report.print(allocator, "{s}: error[E_INTERFACE_FILE_STALE]: cannot validate generated interfaces: {s}\n", .{ self.path, @errorName(err) });
+                return error.SourceError;
+            };
+            if (stale) |text| {
+                try report.appendSlice(allocator, text);
+                return error.SourceError;
+            }
+        }
+    }
+};
+
+/// Resolve an entry and its nearest strict mylang.json before loading sources.
+pub fn resolve(allocator: std.mem.Allocator, io: std.Io, path: []const u8, report: *std.ArrayList(u8)) Error!Entry {
+    const absolute = std.Io.Dir.cwd().realPathFileAlloc(io, path, allocator) catch path;
+    const ordinary = frontend.entryOf(absolute);
+    var entry: Entry = .{ .path = absolute, .root = ordinary.root, .name = ordinary.module };
+    const located = config.testEntryLocation(allocator, io, absolute) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try report.print(allocator, "{s}: error[E_PROJECT_CONFIG]: cannot locate project entry: {s}\n", .{ absolute, @errorName(err) });
+        return error.SourceError;
+    };
+    if (located) |test_entry| {
+        entry.root = test_entry.root;
+        entry.name = test_entry.name;
+    } else {
+        const bytes = std.Io.Dir.cwd().readFileAlloc(io, absolute, allocator, .limited(64 << 20)) catch |err| {
+            if (err == error.OutOfMemory) return error.OutOfMemory;
+            try report.print(allocator, "error: cannot read {s}: {s}\n", .{ absolute, @errorName(err) });
+            return error.SourceError;
+        };
+        if (declaredModule(bytes)) |name| {
+            const relative = language.project.modulePath(allocator, name) catch return error.OutOfMemory;
+            if (rootFor(absolute, relative)) |root| {
+                entry.root = root;
+                entry.name = name;
+            }
+        }
+    }
+    const discovered = config.discover(allocator, io, absolute) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try report.print(allocator, "{s}: error[E_PROJECT_CONFIG]: cannot discover configuration: {s}\n", .{ absolute, @errorName(err) });
+        return error.SourceError;
+    };
+    if (discovered) |where| {
+        var failure: config.Failure = .{};
+        const configured = config.load(allocator, io, where, &failure) catch |err| {
+            if (err == error.OutOfMemory) return error.OutOfMemory;
+            try report.print(allocator, "{s}:{d}:{d}: error[E_PROJECT_CONFIG]: {s}\n", .{ failure.path, failure.location.line, failure.location.column, failure.detail });
+            return error.ConfigurationFailed;
+        };
+        if (!configured.document.value_semantics) {
+            try report.print(allocator, "{s}: error[E_CORE_UNSUPPORTED]: the new core requires value_semantics\n", .{configured.path});
+            return error.SourceError;
+        }
+        entry.configuration = configured;
+    }
+    return entry;
+}
+
+fn rootFor(path: []const u8, relative: []const u8) ?[]const u8 {
+    if (!std.mem.endsWith(u8, path, relative) or path.len <= relative.len) return null;
+    const separator = path.len - relative.len - 1;
+    if (path[separator] != std.fs.path.sep) return null;
+    return if (separator == 0) path[0..1] else path[0..separator];
+}
+

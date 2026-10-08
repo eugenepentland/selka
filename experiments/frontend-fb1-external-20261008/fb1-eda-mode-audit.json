@@ -1,0 +1,73 @@
+{
+  "categories": {
+    "current-debug": {
+      "duplicate_origins": {},
+      "entries": 310,
+      "files": 121,
+      "nonpassing": {},
+      "problems": {},
+      "unique_tests": 310
+    },
+    "current-release": {
+      "duplicate_origins": {},
+      "entries": 310,
+      "files": 121,
+      "nonpassing": {},
+      "problems": {},
+      "unique_tests": 310
+    },
+    "current-verify": {
+      "duplicate_origins": {},
+      "entries": 310,
+      "files": 121,
+      "nonpassing": {},
+      "problems": {},
+      "unique_tests": 310
+    }
+  },
+  "oracle_sha256": "5ddab7ce39d576615f55676886252e4dbfff863d0d253cc003886a769c7b1a55",
+  "slowest_commands": [
+    [
+      "commands/directory-verify.json",
+      32.594003015896305
+    ],
+    [
+      "commands/directory-release.json",
+      30.99331725691445
+    ],
+    [
+      "commands/directory-debug.json",
+      26.809060933999717
+    ],
+    [
+      "commands/verify/export_kicad_sch_test.json",
+      12.186396745964885
+    ],
+    [
+      "commands/release/export_kicad_sch_test.json",
+      11.300222394056618
+    ],
+    [
+      "commands/debug/export_kicad_sch_test.json",
+      11.236635450972244
+    ],
+    [
+      "commands/verify/design_model_test.json",
+      4.37815556791611
+    ],
+    [
+      "commands/release/design_model_test.json",
+      3.690440281992778
+    ],
+    [
+      "commands/verify/export_kicad_test.json",
+      2.773968738038093
+    ],
+    [
+      "commands/verify/export_kicad_footprint_test.json",
+      2.633065007859841
+    ]
+  ],
+  "source_commit": "7e938b65a880339f0aa0d58f5805cd2cd2bbfe1b",
+  "verified_command_reports": 366
+}

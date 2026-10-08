@@ -1,0 +1,3 @@
+src/core/test_runner_receipt.zig:538:    try std.Io.Dir.cwd().writeFile(context.io, .{ .sub_path = context.entry.path, .data = "source" });
+src/main.zig:2578:            .source = try manifest.generate(input_allocator),
+src/core/test_runner.zig:245:        .source = try a.dupe(u8, &std.fmt.bytesToHex(base, .lower)),

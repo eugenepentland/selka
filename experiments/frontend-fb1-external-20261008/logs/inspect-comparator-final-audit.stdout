@@ -1,0 +1,24 @@
+    new_identity = {**identity, "commit": corpus_commit, "file_workers": jobs, "command_timeout_seconds": 600, "oracle": {"path": str(compiler), "sha256": compiler_sha},
+        "compiler_commit": source_commit, "compiler_source_worktree": str(compiler_source),
+        "source_worktree": str(corpus_source),
+        "reference": str(reference),
+        "reference_identity_sha256": digest(reference / "identity.json"),
+        "source_manifest_sha256": digest(output / "source-manifest.json"),
+        "collector": {"path": str(Path(__file__).resolve()), "sha256": digest(Path(__file__))}}
+    write(output / "identity.json", new_identity)
+    summary = {"elapsed_seconds": time.monotonic() - started, "totals": totals,
+        "directory_counts": {mode: len(entry.get("tests", [])) for mode, entry in directory.items()},
+        "commands": len(comparisons),
+        "mismatches": {name: value["problems"] for name, value in comparisons.items() if value["problems"]},
+        "source_manifest_unchanged": candidate_originals == {str(path.relative_to(corpus_source)): digest(path) for path in corpus.rglob("*") if path.is_file()},
+        "reference_sources_unchanged": all(digest(reference_source / path) == sha for path, sha in originals.items()),
+        "reference_files_unchanged": reference_files == {str(path.relative_to(reference)): digest(path) for path in reference.rglob("*") if path.is_file()},
+        "compiler_sources_unchanged": compiler_sources == production_manifest(compiler_source),
+        "compiler_unchanged": digest(compiler) == compiler_sha}
+    write(output / "summary.json", summary)
+    print(json.dumps(summary, sort_keys=True), flush=True)
+    return int(bool(summary["mismatches"]) or not summary["source_manifest_unchanged"] or not summary["compiler_unchanged"] or not summary["reference_sources_unchanged"] or not summary["reference_files_unchanged"] or not summary["compiler_sources_unchanged"])
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

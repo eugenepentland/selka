@@ -1,0 +1,2 @@
+build.zig:715:    // The compiler's `compiler_identity` comes from a make-phase run of
+build.zig:720:    identity_run.addFileArg(b.path("tests/compiler_identity_cache.py"));

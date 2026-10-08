@@ -1,0 +1,30 @@
+
+/// Resolve a ceiling in precedence order: an explicit flag, then the named
+/// environment variable, then the built-in default for that kind of run.
+pub fn resolve(flag: ?u64, environ: *const std.process.Environ.Map, name: []const u8, fallback: u64) Error!u64 {
+    if (flag) |bytes| return bytes;
+    const text = environ.get(name) orelse return fallback;
+    if (text.len == 0) return fallback;
+    return parse(text);
+}
+
+/// Render a byte count for a child's environment or command line.
+pub fn decimal(allocator: std.mem.Allocator, bytes: u64) std.mem.Allocator.Error![]const u8 {
+    return std.fmt.allocPrint(allocator, "{d}", .{bytes});
+}
+
+/// Cap this process's address space at `bytes` plus `headroom`, the kernel
+/// backstop behind every soft budget. Never raises an existing tighter ceiling
+/// and does nothing for an unbounded budget; a kernel that refuses is not an
+/// error, because the soft budget still applies. Reports whether one was set.
+pub fn guard(bytes: u64) bool {
+    if (bytes == 0 or bytes > std.math.maxInt(u64) - headroom) return false;
+    const existing = std.posix.getrlimit(.AS) catch return false;
+    var wanted: u64 = bytes + headroom;
+    if (existing.max != std.math.maxInt(u64) and wanted > existing.max) wanted = existing.max;
+    if (existing.cur <= wanted) return false;
+    std.posix.setrlimit(.AS, .{ .cur = wanted, .max = existing.max }) catch return false;
+    return true;
+}
+
+/// Host restart checkpoint for the soft ceiling this compiler installed.

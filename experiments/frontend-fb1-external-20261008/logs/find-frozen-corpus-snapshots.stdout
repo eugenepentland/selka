@@ -1,0 +1,1692 @@
+worktree /home/epentland/ai/canopy/mylang
+HEAD acbee6032758a0cb031619c270ae3c401c1d8e7f
+branch refs/heads/local-reasoning/integration
+
+worktree /home/epentland/ai/canopy/clean-runner-releasefast
+HEAD ee52dc41a7a8d82d3e1c4e85b03330e0586c3d87
+detached
+
+worktree /home/epentland/ai/canopy/mylang-mut
+HEAD b990015aa28a8a3fdd532be498e1179ebfda7a61
+branch refs/heads/lane/mut
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore
+HEAD 9c24997e9dd005230987bceedee3b11acaf8bf84
+branch refs/heads/claude/bench-newcore
+locked claude: benchmark reruns on the new core (2026-10-08)
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/claude-frontend-plan
+HEAD 637a85d6ecfdf8eb3bb68a942c04be358e914aea
+branch refs/heads/claude/frontend-plan
+locked Claude session e4195a1a: front-end plan update after S5 (2026-10-08)
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/claude-gc-delete-probe
+HEAD 6df58b02554401f9d37564cceffd14277a835ae1
+branch refs/heads/claude/gc-delete-probe
+locked claude: gc-delete-probe
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/claude-hold-census
+HEAD 1d3155f3a367bff0cfd648fa05460dcfb33bc612
+branch refs/heads/claude/hold-census
+locked claude session 2026-10-03: claude/hold-census (RC hold census)
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/claude-llvm-direct-spike-20261004
+HEAD 93351a3247258a6858052f8737531fa125791263
+branch refs/heads/claude/llvm-direct-spike-20261004
+locked claude session 2026-10-04: WP-8 llvm-direct-spike lane
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/claude-tool-gaps
+HEAD 12be156c1a97021e7c9ed627d2ee1ddcdfe85931
+branch refs/heads/claude/review-eda-merge-20261001
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/claude-typing
+HEAD 4d6ffdf74a53ca396af0c12d2f4e60b4cb79566a
+branch refs/heads/claude/typing
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-d9-closeout-integration
+HEAD 9f396a35f5bf68b072757093aececd1e982d436f
+branch refs/heads/codex/d9-closeout-integration
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-d9-contract-runtime
+HEAD cfa31018c3b60a18493931c43f74dc693ebbf611
+branch refs/heads/codex/d9-contract-runtime
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-d9-field-transfers
+HEAD d83e26a0c37758cce80482c9e106ccf83fa3ee74
+branch refs/heads/codex/d9-field-transfers
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-d9-invariant-closeout
+HEAD bb02624b9227cb7d829e31d3d507398b7a429617
+branch refs/heads/codex/d9-invariant-closeout
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-d9-library-check
+HEAD ff10f2f11370a3f31e46a5d9dff255d53cf8379a
+branch refs/heads/codex/d9-library-check
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-d9-native-test-order
+HEAD bb83e6eb215d7d43a0879652e95acae499756aad
+branch refs/heads/codex/d9-native-test-order
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-d9-stage3f-prep
+HEAD 05a5498ace3bad05b884abe1566d58470a5846d8
+branch refs/heads/codex/d9-stage3f-prep
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-diff-fuzz-20261002
+HEAD f40d748169a8f629f689d2cc120bf8a95117a0c0
+branch refs/heads/codex/differential-fuzz-20261002
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-allocation-a-20261001
+HEAD 6df58b02554401f9d37564cceffd14277a835ae1
+branch refs/heads/codex/eda-friction-allocation-a-20261001
+locked codex ownership allocation-only diagnostic; immutable controls untouched
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-allocation-f-20261001
+HEAD a6cad3770a317284c18e660f699354ae07e79d59
+branch refs/heads/codex/eda-friction-allocation-f-20261001
+locked codex ownership allocation-only diagnostic; immutable controls untouched
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-frontend-locations-20261002
+HEAD 89f003befca3017fa32e3997d3a331841e7fba67
+branch refs/heads/codex/eda-friction-frontend-locations-20261002
+locked Owned frontend invariant construction source-location repair, Oct 2 2026
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-gate-controls-20261001
+HEAD 1314c529ee92a6ee7ad4dbb28b1736c23c261ee9
+branch refs/heads/codex/eda-friction-gate-controls-20261001
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-merge-20261001
+HEAD 12be156c1a97021e7c9ed627d2ee1ddcdfe85931
+branch refs/heads/codex/eda-friction-merge-20261001
+locked codex coordinator: follow-up merge candidate and matched measurement
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-merge-repairs-20261002
+HEAD 0b333f6751577b28be4b160e053a143133920842
+branch refs/heads/codex/eda-friction-merge-repairs-20261002
+locked Codex root Oct2 premerge repairs and final qualification
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-module-diagnostic-20261002
+HEAD e5122abca88246aa0a1dc4aa752de14b02e46361
+branch refs/heads/codex/eda-friction-module-diagnostic-20261002
+locked Codex root isolated diagnostic compiler
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-module-transport-20261002
+HEAD 0b333f6751577b28be4b160e053a143133920842
+branch refs/heads/codex/eda-friction-module-transport-20261002
+locked Frontend owns Oct2 parts-bearing module transport repair
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-repair-qualification-20261001
+HEAD 4dff391daa5a4b3f4382b3b0147a153d137d8339
+branch refs/heads/codex/eda-friction-repair-qualification-20261001
+locked Root Part B repair qualification; do not prune
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-request-scratch-repair-20261001
+HEAD ad893f5c9aa264c4e710e54f4e1ff57bdf80692c
+branch refs/heads/codex/eda-friction-request-scratch-repair-20261001
+locked Owned by rev2_ownership; F-based request scratch lifetime repair
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-review-frontend-20261002
+HEAD b4779fc28c226a6acebe4c9e17565bfc2be04da4
+branch refs/heads/codex/eda-friction-review-frontend-20261002
+locked Codex frontend October 2 premerge repairs; owned by rev2_frontend
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-review-lowering-20261002
+HEAD bcc6a39c2ff1d3b757ea54147724ddaf99cc07cf
+branch refs/heads/codex/eda-friction-interface-root-routing-20261002
+locked Owned by rev2_ownership; Oct2 key certificates and out-of-line record defaults
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-temp-qa-20261001
+HEAD ad893f5c9aa264c4e710e54f4e1ff57bdf80692c
+branch refs/heads/codex/eda-friction-temp-qa-h-20261001
+locked codex frontend: F temporary-storage repair QA; preserve prior G and 72f
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-friction-temp-qualification-20261001
+HEAD bca967e56d9c0d1439133f953621007b7bc6f972
+branch refs/heads/codex/eda-friction-temp-qualification-20261001
+locked Codex root temporary-lifetime qualification, 2026-10-01
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-lease-control-candidate-20261002
+HEAD 12be156c1a97021e7c9ed627d2ee1ddcdfe85931
+branch refs/heads/codex/eda-lease-control-candidate-20261002
+locked Codex Oct2 immutable pre-repair lease control
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-eda-lease-control-main-20261002
+HEAD 6df58b02554401f9d37564cceffd14277a835ae1
+branch refs/heads/codex/eda-lease-control-main-20261002
+locked Codex Oct2 immutable pre-repair lease control
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-cost-cli
+HEAD f467c416a51eeb29b54769c33a6ce1c1e7eb9d06
+branch refs/heads/codex/frontend-cost-cli
+locked added with --lock
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-f10-tools
+HEAD 63c3be73ee6286d0b34876999427678c08467761
+branch refs/heads/codex/frontend-f10-tools
+locked added with --lock
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1
+HEAD 889943fa81a7c0c69a6452b0ab6c076b42b728cc
+branch refs/heads/codex/frontend-fb1
+locked added with --lock
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2
+HEAD 0369a480f7c2a88da1ae76c3658bdc3ea43b7864
+branch refs/heads/codex/frontend-fp2
+locked added with --lock
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox
+HEAD f44302d877dfc8a01b64673e70c44b9e0c49f063
+detached
+locked added with --lock
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration
+HEAD 6aabd4c9818502796bb92959f2453cdf1b264c43
+branch refs/heads/codex/frontend-integration
+locked Codex front-end Wave 1 integration; user-authorized 2026-10-08
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-s5-pin
+HEAD 5a6b501d672f884336f5749fd6a191daacaac09b
+detached
+locked Frozen S5 oracle for front-end Wave 1; build once
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-table
+HEAD 2321aad044671f2abc8b6428efe9cffbbb720563
+branch refs/heads/codex/frontend-table
+locked added with --lock
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-timing-tools
+HEAD ac07da24c657b76128168424f6d03e9d7dee9378
+branch refs/heads/codex/frontend-timing-tools
+locked added with --lock
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-ast-bytecode-20261003
+HEAD 33712b76b376f5a3352e555af32e205010dc248d
+branch refs/heads/codex/lox-ast-bytecode-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-borrow-assert-20261003
+HEAD e9a582aa556510548523422424a26a5792761b9a
+branch refs/heads/codex/lox-borrow-assert-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-byte-positive-20261003
+HEAD 71d6e9f6757533acf9c811a624af3e4b32c7651c
+branch refs/heads/codex/lox-byte-positive-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-case-glue-20261003
+HEAD 9ab993c1b9e2088c471ea1b57c98361b8554d0ae
+branch refs/heads/codex/lox-native-case-glue-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-native-policy-20261003
+HEAD a07fee5e878a4ad4c5610c07928b0fe9f45f0269
+branch refs/heads/codex/lox-native-policy-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-ownership-inline-20261003
+HEAD fe486f6d1053b295aa74ec89f5d844e76e83175c
+branch refs/heads/codex/lox-ownership-inline-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-20261003
+HEAD 1fd1d566793dcae92449d937aca595c55ee318c8
+branch refs/heads/codex/lox-parity-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-lowering-20261003
+HEAD 3b33df52044a10cb84b908f8b1641af439e8c729
+branch refs/heads/codex/lox-parity-lowering-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-positive-write-20261003
+HEAD ac408968358af2be798f9fc4ea8a3054cd4bac82
+branch refs/heads/codex/lox-parity-positive-write-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-tree-20261003
+HEAD e68e03b93710421eda6615ed934a4f1f49351c7f
+branch refs/heads/codex/lox-parity-tree-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-parity-vm-20261003
+HEAD 57425c7739ba1bd6a14fa127821329530c8ca28f
+branch refs/heads/codex/lox-parity-vm-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-audit-20261002
+HEAD bbefb77f711076b036bb581b0986ac91eec05ca9
+branch refs/heads/codex/lox-perf-audit-20261002
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-frames-20261002
+HEAD 36a8523c06b76ed97a788c31d79067ed42392392
+branch refs/heads/codex/lox-perf-frames-20261002
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-improvements-20261002
+HEAD fd86729e2820b9712fef3b5fcbcad7d346988018
+branch refs/heads/codex/lox-perf-improvements-20261002
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-lookup-20261002
+HEAD 654c1c579664a6c225f2a4ed49049880b2fbba5d
+branch refs/heads/codex/lox-perf-lookup-20261002
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-return-glue-20261002
+HEAD 7b283ab23a27c92e93761cc272f257c8b5e961ac
+branch refs/heads/codex/lox-perf-return-glue-20261002
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-perf-stack-20261002
+HEAD 15006c7b38813c10f6ad4ae8fb4716aaa59e59d6
+branch refs/heads/codex/lox-perf-stack-20261002
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-dispatch-20261003
+HEAD 2d19b55a3385ddef8a313a6aab0ae19028b19787
+branch refs/heads/codex/lox-qbe-dispatch-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-qbe-scratch-alias-20261003
+HEAD 9c5f283cd21ff6954929fe2e7aed37926d0dca39
+branch refs/heads/codex/lox-qbe-scratch-alias-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-number-tag-20261003
+HEAD 29883d8ae831505ac750c5e5e4b39565064791c0
+branch refs/heads/codex/lox-variant-number-tag-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-variant-wide-20261003
+HEAD 9481fbaa9df0b7703cc43c097f5199e6dc8894a6
+branch refs/heads/codex/lox-variant-wide-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-bytecode-20261003
+HEAD beaaf97c7397beafb0988f5ed73dde0bf4813ebb
+branch refs/heads/codex/lox-vm-bytecode-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-dispatch-20261003
+HEAD d6414cf693c51eb5c953a40fd74fdf45b88f1a79
+branch refs/heads/codex/lox-vm-dispatch-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-numeric-20261003
+HEAD f31cd6a9ec599a5c38f36f2e6a059fb1eb3bc2e7
+branch refs/heads/codex/lox-vm-numeric-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-lox-vm-stack-read-20261003
+HEAD fea55032b38cda58d7eb0dfdb520b1f2fa71c6e2
+branch refs/heads/codex/lox-vm-stack-read-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries
+HEAD 41deb66365c6a2f3f6e53088a2a0d7dfa6e7486f
+branch refs/heads/codex/new-core-s2-dictionaries
+locked Codex S2 Wave B: S2-D dictionaries; do not prune
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions
+HEAD e9c64002737430cee583df6d4459fbb6694821d1
+branch refs/heads/codex/new-core-s2-functions
+locked Codex S2 Wave B: S2-F functions sort arrays; do not prune
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration
+HEAD 92590700cb0bf5e4dc19cc1f0c836c3a41693f64
+branch refs/heads/codex/new-core-s2-integration
+locked Codex S2 Wave A: codex/new-core-s2-integration; do not prune
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-ir
+HEAD 6fff0fe62d52b0291a202ddebca9c50ec1428568
+branch refs/heads/codex/new-core-s2-ir
+locked Codex S2 Wave A: codex/new-core-s2-ir; do not prune
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-iteration
+HEAD 5dbfdd80e10ef09723277eb4e88ea90114426c1c
+branch refs/heads/codex/new-core-s2-iteration
+locked Codex S2 Wave A: codex/new-core-s2-iteration; do not prune
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language
+HEAD 36b8d5dd972f6ca9816626e5746b02773e0325e6
+branch refs/heads/codex/new-core-s2-language
+locked Codex S2 Wave A: codex/new-core-s2-language; do not prune
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration
+HEAD 1b3de437e5cbb587b5579dc255fcf85c95180863
+branch refs/heads/codex/new-core-s2-live-iteration
+locked Codex S2 Wave B: S2-I live iteration owned by coordinator; do not prune
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-numbers
+HEAD 995823e6f85c6691a13b81c6cb9e1e6d152c40d9
+branch refs/heads/codex/new-core-s2-numbers
+locked S2-T2 numbers lane; coordinator; cut after first Wave B merge
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-text
+HEAD c6eb77de33e146f4718b47d4426a6256f64ae069
+branch refs/heads/codex/new-core-s2-text
+locked Codex S2 Wave B: S2-T1 text; do not prune
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications
+HEAD 80fa132ad1bf5d1e5519ed9f3fb0ff65685651f6
+branch refs/heads/codex/new-core-s3-applications
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities
+HEAD 6bac5b165b1f526127c93dcc1dbd157b0ed6334d
+branch refs/heads/codex/new-core-s3-capabilities
+locked Codex S3 capabilities package, authorized Wave B/C/X
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-char-performance
+HEAD 0ecd89913b6ab4ce8490f280647906cc316804fd
+branch refs/heads/codex/new-core-s3-char-performance
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-exit-tools
+HEAD 404ba3c531846a76104467643b75d92680489648
+branch refs/heads/codex/new-core-s3-exit-tools
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration
+HEAD 82c125ddd8eacad35937a6d6cd59c5f11b7ddf3d
+branch refs/heads/codex/new-core-s3-integration
+locked Codex S3 integration; Wave A review gate; do not prune
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-ir
+HEAD 643858e3da7b1e3a2c4f31b1a13430ab3906cd0e
+branch refs/heads/codex/new-core-s3-ir
+locked Codex S3-0 design and IR; do not prune
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-language
+HEAD 225bee07da44dc57ae322d3b6c1f0f68aebb404f
+branch refs/heads/codex/new-core-s3-language
+locked Codex S3-L D2 checker; do not prune
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers
+HEAD 5d2849ff54351cfa03d6797c6454ca376274ce7f
+branch refs/heads/codex/new-core-s3-numbers
+locked Codex S3 numbers package, authorized Wave B/C/X
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance
+HEAD d8921b419c2bf3aa0932a728bc7a3f9cf0344f3c
+branch refs/heads/codex/new-core-s3-packet-performance
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-trace
+HEAD fb9f72c6da4c0d5e24b429c3e307d5518046003f
+branch refs/heads/codex/new-core-s3-packet-trace
+locked added with --lock
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-rebinding-repair
+HEAD 53bbfb5379957a4e17170d837fade52e12d84586
+branch refs/heads/codex/new-core-s3-rebinding-repair
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner
+HEAD e69c9f9855ff0d00877f3f279c640a1d3551aa64
+branch refs/heads/codex/new-core-s3-runner
+locked S3-C property runner lane; owned until qualification
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-text
+HEAD 0b48e921766b31dc70a8f1b66374bb8c7973bc5c
+branch refs/heads/codex/new-core-s3-text
+locked Codex S3 text package, authorized Wave B/C/X
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values
+HEAD d5be46e4719596080683e87e0638967a3301a6d8
+branch refs/heads/codex/new-core-s3-values
+locked Codex S3 values package, authorized Wave B/C/X
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission
+HEAD a1fa35353f3c4a89e5fef7dbff72f41c12e6e09d
+branch refs/heads/codex/new-core-s4-emission
+locked added with --lock
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend
+HEAD 8d7952f86efb57de17acda9ef9290072f97191c4
+branch refs/heads/codex/new-core-s4-frontend
+locked S4-F active package
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-integration
+HEAD f44de0fb4b87c23ecfa178e7cb5fbea6efec4479
+branch refs/heads/codex/new-core-s4-integration
+locked S4 integration; frozen IR, no pushes or main merges
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-old-reference-rf
+HEAD a16a324e629c1c68e0180017f6d2faf20364b13d
+branch refs/heads/codex/new-core-s4-old-reference-rf
+locked added with --lock
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests
+HEAD 76e2cfb56b0258db1de0e314fac5e956111fddad
+branch refs/heads/codex/new-core-s4-project-tests
+locked S4-M isolated project/test integration
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values
+HEAD f0f37baa713d8f4f1a99af8be9a83809d0ec7929
+branch refs/heads/codex/new-core-s4-values
+locked added with --lock
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-wave-a-reconciliation
+HEAD 9da20c39748a6c5e51c3ecbb26304193d5883d51
+branch refs/heads/codex/new-core-s4-wave-a-reconciliation
+locked Codex S4 private Wave A reconciliation; no integration qualification
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-abi5-review-20260930
+HEAD 790cdfb1b38a06cae3741c0c9bba724f4cf8fb77
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-b4-combined-20260929
+HEAD 909c4cd7b628a96491bb3e1c312d1c8fc8ee2017
+branch refs/heads/codex/next-b4-combined-20260929
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-closeout-20260929
+HEAD 2c05c41edfdb2e4bf9fbf93908ee091367b9bc15
+branch refs/heads/codex/next-closeout-20260929
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-combined-module-review-20260930
+HEAD 4f2222273a846ff8b40953dbece0a67efe05761d
+branch refs/heads/codex/eda-friction-integration-20260930
+locked codex integration: codex/eda-friction-integration-20260930
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-fannkuch-review-20260930
+HEAD 28d00e83eea6fef8048a39d6c306938f54a33c4a
+branch refs/heads/codex/eda-friction-frontend-20260930
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-llvm-constant-review-20260930
+HEAD 72f662f7369b581db716b6d155fab0915b5d1aae
+branch refs/heads/codex/eda-friction-oom-controls-20261001
+locked codex ownership follow-up: cached tests module fingerprints and QBE regression diagnosis
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-modules-20260929
+HEAD 89f3b9db639032174b1553728e82dc8168c8b99a
+branch refs/heads/codex/eda-friction-library-20260930
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-plain-ready-review-20260930
+HEAD 72f662f7369b581db716b6d155fab0915b5d1aae
+branch refs/heads/codex/eda-friction-repair-qa-oom-20261001
+locked codex packaging: codex/eda-friction-packaging-20261001
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-20260929
+HEAD bf43ff289985bfb87e2156a78ab5fb328fe1f8b4
+branch refs/heads/codex/next-runtime-20260929
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-count-carry-20260930
+HEAD e66b8035009674667352a09e95ab6e2b2bfb1d2c
+branch refs/heads/codex/next-runtime-count-carry-20260930
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-count-fusion-20260930
+HEAD c435008b30d719331be6fd0998c3bec8aab2c427
+branch refs/heads/codex/next-runtime-count-fusion-20260930
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-images-20260929
+HEAD 094765ce402a19d20ce5989ec7a84dadb847e4fc
+branch refs/heads/codex/next-runtime-images-20260929
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-layout-20260929
+HEAD 987a360aaed3a237b147ba7a41a0d93854be52fb
+branch refs/heads/codex/next-runtime-layout-20260929
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-llvm-affine-20260930
+HEAD cfee00704911a482bd09db880f0e20631f8b6cf1
+branch refs/heads/codex/next-runtime-llvm-affine-20260930
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-llvm-literal-20260930
+HEAD cfee00704911a482bd09db880f0e20631f8b6cf1
+branch refs/heads/codex/next-runtime-llvm-literal-20260930
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-review-20260930
+HEAD 3fe434c988123753f915bdcc801304f547e6c4d2
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-wide-counts-20260930
+HEAD 790cdfb1b38a06cae3741c0c9bba724f4cf8fb77
+branch refs/heads/codex/next-runtime-wide-counts-20260930
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-runtime-zero-branch-20260930
+HEAD f4b6647de06e556823bc960a27fdfcd58193b3d0
+branch refs/heads/codex/next-runtime-zero-branch-20260930
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-text-20260929
+HEAD 5ef8b06a2e1dacd95ffb3a6e01e883ba9f615b39
+branch refs/heads/codex/next-text-20260929
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-text-runtime-20260929
+HEAD 24ff8386ace115ab3a71dc2319ceba77a855eb9f
+branch refs/heads/codex/next-text-runtime-20260929
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-next-zero-review-20260930
+HEAD 2ca4dba61136ff92f891d805947d91a1c7bc0094
+branch refs/heads/codex/next-zero-review-20260930
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-s4-compiler-pin
+HEAD a16a324e629c1c68e0180017f6d2faf20364b13d
+detached
+locked S4 Wave 0 immutable compiler pin a16a324e
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-s4-lox-value-semantics
+HEAD f44302d877dfc8a01b64673e70c44b9e0c49f063
+branch refs/heads/codex/s4-lox-value-semantics
+locked S4-L value semantics port; no compiler edits
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-vk-vp1
+HEAD 895b2ee3b4f17a3e618912b22503701dcebe44a5
+branch refs/heads/codex/vk-vp1
+locked VP1 table-fit census; report only
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/codex-vk-vp2
+HEAD 637a85d6ecfdf8eb3bb68a942c04be358e914aea
+branch refs/heads/codex/vk-vp2
+locked VP2 trap-search prototype; scratch corpora and report only
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/compact-bench-my
+HEAD 78d78b556fd4b243d8a0483a2a4cc622e3c24c1f
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/compact-bench-stable-my
+HEAD f00f6d3abde3bc8300a322706d05e5c24e10a26c
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/compact-bench-stable-zig
+HEAD f00f6d3abde3bc8300a322706d05e5c24e10a26c
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/compact-qbe-delta-20260923
+HEAD 9996f45645d1b9e59fa7d7f633ab7a175c5a27e1
+branch refs/heads/codex/compact-qbe-delta-20260923
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-box-borrow-narrow
+HEAD 63b3a2ba47b8afe1568a3e9cf3d971de8c6e5566
+branch refs/heads/codex/d9-box-borrow-narrow
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-box-path-fix
+HEAD 05f7cb5efc9a042201b25b7b051d6decb5fddf57
+branch refs/heads/codex/d9-lazy-box-after-boxfix
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-copy-through-transfers
+HEAD 49312f625a63c124bf030c63b564eb73464f2317
+branch refs/heads/d9/copy-through-transfers
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-gc-box-repeat-astra
+HEAD 3512575cbb24805c5733df53aadf7ef17d0099b1
+branch refs/heads/codex/d9-gc-box-repeat-astra
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-indexed-transfers
+HEAD d41503c8bcd2d2257e9c120af3b1bd74617700c6
+branch refs/heads/d9/indexed-transfers
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lazy-box-proto
+HEAD ebe6b78fb8869765ba425cd68c49928b3b9af2a2
+branch refs/heads/codex/d9-lazy-box-proto
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-live-view-classify-compat
+HEAD f5172d7e37a39f8a66f61b7e2bfc44a90d674584
+branch refs/heads/d9/live-view-classify-compat
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-class-method
+HEAD dd130a99b63b8c0d949b89fd486e461611c3426e
+branch refs/heads/codex/d9-lox-class-method
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-closures-profile
+HEAD ff9096bb0891f765d70f970cfec5799b53e777cb
+branch refs/heads/codex/d9-lox-closures-profile
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-frame-return
+HEAD 56c9d0b49640c5aa2bc6c1106a80eedcb6dcac6a
+branch refs/heads/codex/d9-lox-frame-return
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-indexed-setter
+HEAD ff9096bb0891f765d70f970cfec5799b53e777cb
+branch refs/heads/codex/d9-lox-indexed-setter
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-instance-reads
+HEAD d8b741a6285093c800e24faeaa5a48305a67b82d
+branch refs/heads/codex/d9-lox-instance-reads
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-set-rhs
+HEAD 4a926ec7dc5dd1693f91a81d146b84b830460f22
+branch refs/heads/codex/d9-lox-set-rhs
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-source-perf
+HEAD 180f8629223776bd7d3ae4ff5b1946dd257363a4
+branch refs/heads/codex/d9-lox-source-perf
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-history
+HEAD 9bfd32e0053c2c96d6c3d6c9454eb871b636d716
+branch refs/heads/codex/d9-lox-stress-history
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-stress-root-fix
+HEAD 851ca3360a3da915dbda50dde3c4a4dcd9f3f82a
+branch refs/heads/d9/lox-stress-root-fix
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-lox-upvalue-reads
+HEAD 556eaafe79cbbef40c81ec779c588f1f1c518bf4
+branch refs/heads/codex/d9-lox-upvalue-reads
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-module-keyword-call
+HEAD 19d68834d224f55054d4e44a1b764c1153669f15
+branch refs/heads/codex/d9-module-keyword-call
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-nested-cow
+HEAD 8577bcb68a59ec69518e7224da3c62c56467618e
+branch refs/heads/codex/d9-nested-cow
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-performance43
+HEAD 044f8e8ac056f59c14b0129ff18e07ee013c4d30
+branch refs/heads/d9/performance43
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-performance43-scoped
+HEAD 8c369c35d25e629e9d2fe6d83183f9449f41f07c
+branch refs/heads/codex/d9-performance43-scoped
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-physical-borrow-after-astra
+HEAD f900bacd5a2ba68b8e8e15f7c84e2db7eb60690f
+branch refs/heads/codex/d9-physical-borrow-after-astra
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-pure-box-reads
+HEAD f6b5de09cbafc490593931f7b2c651ca319aa2f1
+branch refs/heads/d9/pure-box-reads
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-random-value-fix
+HEAD 9ab98d5f54daaa489fa5abfb8ad621fd2a2620d8
+branch refs/heads/codex/d9-random-value-fix
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-aggregate
+HEAD 302d7142789ebe37fa0acaf7557c08d841126c2d
+branch refs/heads/codex/d9-rc-aggregate
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-argv-astra
+HEAD 66054aab08b0fafa2b36b10c2df20bfac152e220
+branch refs/heads/codex/d9-rc-argv-astra
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-borrowed-frame
+HEAD fc3618e2fa4a84a168708ded3766d93c7d8729ad
+branch refs/heads/codex/d9-rc-byte-buffer-loop
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-box-writeback
+HEAD fd7e85320dcc81a65e67741f69c2105ed2102933
+branch refs/heads/codex/d9-rc-box-writeback
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-bytes-read
+HEAD 2af700c7bf94022db48cf7b16a2ce567f57a82a9
+branch refs/heads/codex/d9-rc-bytes-read
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-checker-publication-astra
+HEAD 3b5f54b0e5178f6bd844f7b1d98a6a001689a64e
+branch refs/heads/codex/d9-rc-checker-publication-astra
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-compiler-astra
+HEAD ee6e44e35b0509b969e66cf3bb7d3ba380a00bcc
+branch refs/heads/d9/rc-loop-operand-isolation-astra
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-contract-astra
+HEAD e8696c1315a5c0b64e1b9c2343c45f84e31b46fd
+branch refs/heads/codex/d9-rc-contract-astra
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-flat-destruction-astra
+HEAD da5b735a7795a4a7a3e9a908675ca7ee79da30e5
+branch refs/heads/codex/d9-rc-flat-destruction-astra
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-guest-probes
+HEAD 4175227594ceb381509dd3461099d77f83dbff91
+branch refs/heads/codex/d9-rc-guest-probes
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-host-bridges
+HEAD 3cf5982cc76e0644d2696669965103c2da31d9c8
+branch refs/heads/codex/d9-rc-host-bridges
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-integration
+HEAD fdf73b3004faab63150b9794e53c0a01527f9882
+branch refs/heads/codex/d9-rc-integration
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-journal-init
+HEAD bedf375118bbe90ec342b39a3b58abdc716839de
+branch refs/heads/codex/d9-rc-journal-init
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-lox-probe-astra
+HEAD b6ff7788c3639730d189ff3f9de51b752abe9550
+branch refs/heads/codex/d9-rc-lox-probe-astra
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-mut-argument-astra
+HEAD f54b88812213f645b4b8393363a87f8b43ca6e76
+branch refs/heads/codex/d9-rc-selected-field-read-astra
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-nbody-integration
+HEAD b1d747ec7e9d9c5011f97ce317d96cb2f9747c99
+branch refs/heads/codex/d9-rc-nbody-integration
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-performance
+HEAD 69c2a30a8852416f56c7b84e4a8dd197ae7be6a1
+branch refs/heads/codex/d9-rc-performance
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-plain-record-loops
+HEAD 6a544bddb68d9ff3b69fb03597c8b44cd93fa8d1
+branch refs/heads/codex/d9-rc-plain-record-loops
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-plain-replace-astra
+HEAD c13d3ecde56e5ff88a381f7e6ad3dcc04200b70e
+branch refs/heads/codex/d9-rc-plain-replace-astra
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-pure-loops
+HEAD 209d4404e32bc30d4ddd49757d804d0ed5a22bdf
+branch refs/heads/codex/d9-rc-pure-loops
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-read-version-before-astra
+HEAD e130e87ff3df525da7f1e39d0dee9890da8dff91
+branch refs/heads/codex/d9-rc-read-version-before-astra
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-readiness-before-astra
+HEAD fbcd7978d81de78fd8c8d4112d36edeeafc898fd
+branch refs/heads/codex/d9-rc-readiness-before-astra
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-readonly-compose
+HEAD c62adfb0487d77defc77f6da27f9759601f948b0
+branch refs/heads/codex/d9-rc-readonly-compose
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-runtime-docs
+HEAD abe04602de2d7352ebfdd4ce925c4c03e464afc9
+branch refs/heads/codex/d9-rc-runtime-docs
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-schematic
+HEAD 8b787925f6a450acf914dbcb50750c2bdbd9007a
+branch refs/heads/codex/d9-rc-schematic
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-slab-prefix-astra
+HEAD bc70b6e1e891de998ca6c6828a756f7908eff7e3
+branch refs/heads/codex/d9-rc-slab-prefix-astra
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-stats
+HEAD f316523cb239577d14e383064205fe75923c7692
+branch refs/heads/codex/d9-rc-stats
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-rc-unique-box-astra
+HEAD 75802ff9f8405a9363e1aaa3010f42e208e0eadf
+branch refs/heads/codex/d9-rc-unique-box-astra
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-stage3a
+HEAD 7c1fc1f858f30f6ee19055a2642205a36c8875f5
+branch refs/heads/d9/stage3a
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-stage3b
+HEAD 1b6d1002b4c7f3d4a35c9914881e2c9243e85149
+branch refs/heads/d9/stage3b
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-stage3c
+HEAD 2e4ac2510a040d0a1762b91653682886019c8b0f
+branch refs/heads/d9/stage3c
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-stage3d
+HEAD 19144c190965ea006007ffea0878a1fc6e7fca7b
+branch refs/heads/codex/d9-stage3d
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-stage3e
+HEAD dd4ee6635c06f5cfe8169ce0bebd39dc9e06541c
+branch refs/heads/codex/d9-stage3e
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-stage3f-docs
+HEAD f10aa1a570deb86cb467a406ec5e1da4c77a571a
+branch refs/heads/codex/d9-stage3f-docs
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-stage3f-legacy
+HEAD 482cab1950107698570fffddd789f74fb36dadde
+branch refs/heads/codex/d9-stage3f-legacy
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-stage3f-mode-path
+HEAD 4590cc53312121693b9e4d3358905ad29024ee61
+branch refs/heads/codex/d9-stage3f-mode-path
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-stage3f-units
+HEAD 7c7c27595e3f270fe1cda36f965eb49affe33828
+branch refs/heads/codex/d9-stage3f-units
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-stage4pre
+HEAD 450d151a2098ab01601cb144fdb7e84bf3b2166b
+branch refs/heads/codex/d9-stage4pre
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-tree-env-reads
+HEAD bb0fe9b4d144ccc71cc44fd61077cc85cffd129c
+branch refs/heads/codex/d9-tree-env-reads
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/d9-tree-small-frames
+HEAD a4260f7caca56c8deb35f72b81fbd3ce70681909
+branch refs/heads/codex/d9-tree-small-frames
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/development-tooling-20260922
+HEAD 7ab6febd2ec9c0e486afcade8dce486fee0b3aff
+branch refs/heads/codex/development-tooling-20260922
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/devspeed-audit-20260923
+HEAD 35fcbc02943ef9319286edd97b0d2593581763a8
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/devspeed-integration
+HEAD 6eae537a2359aaefc643f1bb44eef1b2fcea0250
+branch refs/heads/devspeed/integration
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/dot-lox-go-runtime-20261002
+HEAD 568ab7513922accf16fdd8d97684c8919e4c2c05
+branch refs/heads/dot/lox-go-runtime-20261002
+locked Codex Go Lox optimization lane 2026-10-02
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/dot-lox-zig-runtime-20261002
+HEAD 79d53d9da47d487036b21c6f9f9ab75a0e1cf392
+branch refs/heads/dot/lox-zig-runtime-20261002
+locked zig-lox-optimization-20261002
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/exp-e2
+HEAD 038636f2906890f904f1bce68761405d105811ae
+branch refs/heads/exp/e2-value-semantics
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/exp-e2-p3
+HEAD 6007ff54109bd2fbdc50ded98d2c68aafdeee928
+branch refs/heads/exp/e2-p3-value-copies
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/exp-e2b
+HEAD 21a2a4a1788c43e2bfb89ce5fb2d37d2176ab933
+branch refs/heads/exp/e2b-rc-runtime
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/final-bench-my
+HEAD 98317cbcd53f5790c587490de81775a7c8a0d997
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/final-bench-zig
+HEAD 98317cbcd53f5790c587490de81775a7c8a0d997
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/fix-mut-dict-element
+HEAD cf5edfb95fc3f115e6df3971c73e1d36dc4fc0f2
+branch refs/heads/fix/mut-dict-element
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/fix-mut-marker-unwritten
+HEAD a7d30dbe4046e387f2b5f2264c4c21ebbce9e7b2
+branch refs/heads/fix/mut-marker-unwritten-calls
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-bounded-rem-20261004
+HEAD bdcfac1e8751982fd4ac1dafdc3f93e21d94bdc5
+branch refs/heads/perf/goal110-bounded-rem-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-bounded-rem-llvm-20261004
+HEAD 1d01c0d6f6968c646e50d7ddc9ccafd93a196137
+branch refs/heads/perf/goal110-bounded-rem-llvm-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004
+HEAD 8b7017b84381b0ae49a00e33c8740feca0454f0a
+branch refs/heads/perf/goal110-calls-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-collections-hot-20261004
+HEAD 6cd171436b3e2d39556352fbac1a22a4372c78f2
+branch refs/heads/perf/goal110-collections-hot-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004
+HEAD c36df19d9d0e206f558197ff39144986500c5f90
+branch refs/heads/perf/goal110-dict-read-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-20261004
+HEAD 64fb7e62732db9cea46414248fd59ba362e31b56
+branch refs/heads/perf/goal110-dict-word-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004
+HEAD b31743c3b7c34f241afb8f7a7e39defeb182673c
+branch refs/heads/perf/goal110-dict-word-integrated-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-rf-20261004
+HEAD 0d8a360c35221424436ee65157beaab7b16639a8
+branch refs/heads/perf/goal110-dict-word-rf-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-dispatch-projection-20261004
+HEAD 1a3980631e79bc65f048acd063d7250800f01901
+branch refs/heads/perf/goal110-dispatch-projection-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-equality-always-20261004
+HEAD 073572f7d74dc186f19ef863836eb84422d86c7e
+branch refs/heads/perf/goal110-equality-always-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004
+HEAD 6e6e92c31d6672383c541eb095a1ec6148bdb04f
+branch refs/heads/perf/goal110-equality-bounded-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-equality-inline-20261004
+HEAD 0d720fa8c31fd146261e4a6db0decc5417bb97ac
+branch refs/heads/perf/goal110-equality-inline-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-floor-result-range-20261004
+HEAD eaad2f761c92a4815aa97e78d2a23200ca20618d
+branch refs/heads/perf/goal110-floor-result-range-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-g4-rf-20261004
+HEAD 35917617144f1ce86cf882ace4dc00a1283fa204
+branch refs/heads/perf/goal110-g4-rf-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-20261004
+HEAD 1b8ab336cf657a02c7c693a974c763ef551bb438
+branch refs/heads/perf/goal110-index-forward-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004
+HEAD 14ffa2c0f385a11e5216bbdec5bdff429f9f981b
+branch refs/heads/perf/goal110-index-forward-rf-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-int-parse-20261004
+HEAD 706660351d0bc52865d3c9d71fee10cbd3eeef00
+branch refs/heads/perf/goal110-int-parse-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-integrated-20261004
+HEAD 0a64082265ceaef41ee46629330d4da9169bfe2e
+branch refs/heads/perf/goal110-integrated-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-join-rf-20261004
+HEAD d53d17b4fbf96cd5e4ffc9519c7e2d4a81f4b8fb
+branch refs/heads/perf/goal110-integrated-rf-evidence-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-join-short-20261004
+HEAD 84092ce01ca561f2af3f6477d67226f9270c97cf
+branch refs/heads/perf/goal110-join-short-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004
+HEAD 1d02c3dc2ae34fb25bfa550371dafd7f0e5fa084
+branch refs/heads/perf/goal110-llvm-slots-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-natural-loop-align-20261004
+HEAD dbd53bacbf03945856cb8f5eaf0fbe568dd8f49d
+branch refs/heads/perf/goal110-natural-loop-align-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004
+HEAD 27de73d302d23a9efaf811d541f1cb723323c434
+branch refs/heads/perf/goal110-nonnegative-rem-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004
+HEAD 945f488bb17d7e682954b580748b2cfd3d2b1005
+branch refs/heads/perf/goal110-nonnegative-rem-llvm-rf-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-presize-ready-20261004
+HEAD aced4ec8e1aaad1a0a9db7adfaa54466c47408ae
+branch refs/heads/perf/goal110-presize-ready-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-private-slot-range-20261004
+HEAD 1a3980631e79bc65f048acd063d7250800f01901
+branch refs/heads/perf/goal110-private-slot-range-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-reporting-20261004
+HEAD 1140cc28bbb73e8b22379a21702101b44f4dce33
+branch refs/heads/perf/goal110-reporting-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-search-align-20261004
+HEAD eafafc75aa27be182684910b08b5cdd6f80afdf5
+branch refs/heads/perf/goal110-search-align-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-sort-permutation-20261004
+HEAD bb0827af33c56b0de35f767b96e8b286599f9996
+branch refs/heads/perf/goal110-sort-permutation-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-sort-rotation-20261004
+HEAD 5feb60623bd746498e5166a63e1122e38ca802ac
+branch refs/heads/perf/goal110-sort-rotation-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-text-20261004
+HEAD 108edd3901483e35a52e6629606f9f597d088b02
+branch refs/heads/perf/goal110-text-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-text-combined-20261004
+HEAD 0370c9168220d8b11f39e6de6cf28e9dc2a8d766
+branch refs/heads/perf/goal110-text-combined-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004
+HEAD b1021e2bd1ab36f936a866d71c0524e7f0c84c15
+branch refs/heads/perf/goal110-join-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004
+HEAD 5771a0b0aaeb77cf66f48109759bbe00fdf2546f
+branch refs/heads/perf/goal110-unique-capture-20261004
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/overnight-2026-09-22-44fd2472
+HEAD ef9fac3ec6208ee4b5c2d14d36944c08df2ff226
+branch refs/heads/overnight/2026-09-22-44fd2472
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/overnight-2026-09-22-44fd2472-worktrees/overnight-2026-09-22-6ba75bc6
+HEAD 3225291d791958a4080ad336f3c530e91c59fc67
+branch refs/heads/overnight/2026-09-22-6ba75bc6
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/overnight-2026-09-22-44fd2472-worktrees/overnight-2026-09-22-6ba75bc6-worker-7f2f2dce-worker-task-4290979a561b
+HEAD d6204614f374eca870f9c6b5f66ba5b8f78c3254
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/overnight-2026-09-22-44fd2472-worktrees/overnight-2026-09-22-6ba75bc6-worker-7f2f2dce-worker-task-5322a4a6c709
+HEAD 51daacd113436808e70c4a3003fa8c224ade12c3
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/overnight-2026-09-22-44fd2472-worktrees/overnight-2026-09-22-6ba75bc6-worker-7f2f2dce-worker-task-9d4f9a352e0f
+HEAD c2fb7ae8ab3b5b2af306b6f881380995d053fec3
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/overnight-2026-09-22-c96ce8c8
+HEAD 9bf88751068b7fe029256f215d4ebad30e51741f
+branch refs/heads/overnight/2026-09-22-c96ce8c8
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/parser-edit-probe-20260923
+HEAD d72a85eaf930f83000648728488015705fb9a845
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/pcb-run-cache
+HEAD 3c984e381f7bfd0f1e48a21b405bf07d7e9bcc6c
+branch refs/heads/codex/pcb-run-cache
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/pcb-test-cache
+HEAD 94bd30ed29b7671d911bce51d50682135ec5318b
+branch refs/heads/codex/pcb-test-cache
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/perf-check
+HEAD 8d4b80b1f44cc8b7990dc6ba87325046841fe652
+branch refs/heads/perf/check-20260925
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/releasefast-prekey-probe
+HEAD 521ca08ba2cab34a41959f92e6f6b69f637268fd
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003
+HEAD 9e126b553353148b955add3ac1eb5b710a9b8e7f
+branch refs/heads/bench/runtime-baseline-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-cold-allocation-20261005
+HEAD 9c86cecfd305782e2c2ca0d5b75ae9bbe53296ed
+branch refs/heads/perf/runtime-levers-cold-allocation-20261005
+locked Owned memory lane: conditional Wave1 cold allocation-failure repair 2026-10-05
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-default-identity-test-20261005
+HEAD 197e441e7926be7d79fa362ee6d456fc32ffb285
+branch refs/heads/fix/runtime-levers-default-identity-test-20261005
+locked Codex final Wave1 test-only default-identity repair and corrected immutable RF
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-default-policy-restore-20261005
+HEAD e0cc505dc86944dc2372314abd0328975abebcba
+branch refs/heads/fix/runtime-levers-default-policy-restore-20261005
+locked Owned measurement lane: narrow Wave1 ordinary LLVM default restore; source-only until coordinator authorization
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-deferred-floor-range-20261004
+HEAD fc910eff1d64bd6291bb0aa4f7d4a1a290905669
+branch refs/heads/perf/runtime-levers-deferred-floor-range-20261004
+locked Measurement lane source-only isolated deferred control; no builds/timing admitted
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-deferred-parser-split-off-20261004
+HEAD b16004b798635c9e9ddab7accd8245f6fdd43d5b
+branch refs/heads/perf/runtime-levers-deferred-parser-split-off-20261004
+locked Measurement lane source-only isolated deferred control; no builds/timing admitted
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-deferred-text-endpoints-20261004
+HEAD c70a639805fe1dbb6bd0cd8b31efb1344deccded
+branch refs/heads/perf/runtime-levers-deferred-text-endpoints-20261004
+locked Measurement lane source-only isolated deferred control; no builds/timing admitted
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-deferred-text-inline-off-20261004
+HEAD fd48215b119d0424915dc173de0b1cca80b9a4d1
+branch refs/heads/perf/runtime-levers-deferred-text-inline-off-20261004
+locked Measurement lane source-only isolated deferred control; no builds/timing admitted
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-eda-prereq-20261004
+HEAD bca226101839c6ac292138481ae6cebf83ea3ece
+branch refs/heads/perf/runtime-levers-eda-prereq-20261004
+locked Codex coordinator EDA prerequisite integration 2026-10-04
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-fatal-write-warning-20261004
+HEAD 9e712dd3d9be81941868dee459a28911320398dc
+branch refs/heads/fix/runtime-levers-fatal-write-warning-20261004
+locked Measurement-owned isolated fatal OOM write-result warning repair; frozen RF controls unaffected
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-fault-anchor-20261004
+HEAD b6477c60fd1aeeca748756e7a35425c8e0bab45f
+branch refs/heads/perf/runtime-levers-fault-anchor-20261004
+locked Codex levers_traps: isolated compiler correctness fault/control validation
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-fault-baseline-20261004
+HEAD b6477c60fd1aeeca748756e7a35425c8e0bab45f
+branch refs/heads/perf/runtime-levers-fault-baseline-20261004
+locked Codex levers_traps: isolated compiler correctness fault/control validation
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-fault-cow-20261004
+HEAD b6477c60fd1aeeca748756e7a35425c8e0bab45f
+branch refs/heads/perf/runtime-levers-fault-cow-20261004
+locked Codex levers_traps: isolated compiler correctness fault/control validation
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-fault-owner-20261004
+HEAD b6477c60fd1aeeca748756e7a35425c8e0bab45f
+branch refs/heads/perf/runtime-levers-fault-owner-20261004
+locked Codex levers_traps: isolated compiler correctness fault/control validation
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-fault-transfer-20261004
+HEAD b6477c60fd1aeeca748756e7a35425c8e0bab45f
+branch refs/heads/perf/runtime-levers-fault-transfer-20261004
+locked Codex levers_traps: isolated compiler correctness fault/control validation
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-fault-transfer-control-20261004
+HEAD b6477c60fd1aeeca748756e7a35425c8e0bab45f
+branch refs/heads/perf/runtime-levers-fault-transfer-control-20261004
+locked Codex levers_traps: isolated compiler correctness fault/control validation
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-gatefix-20261004
+HEAD 7e54d85e8876507dbac8dcdaa411c2229b1c1f8a
+branch refs/heads/perf/runtime-levers-gatefix-20261004
+locked Codex coordinator baseline gate repairs 2026-10-04
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-goal-layout-anchor-20261004
+HEAD 4fc5d98d6c50a1dff5d681aedcf82c8f792a9728
+branch refs/heads/fix/runtime-levers-goal-layout-anchor-20261004
+locked Codex reporting-only WP1 authorized layout anchor repair; frozen source trees remain unchanged
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-layout-default-20261004
+HEAD 580ce19ad4ff3673484c3f223d5d83a1ab05af70
+branch refs/heads/perf/runtime-levers-layout-default-20261004
+locked Measurement lane isolated selected function64-loop64 production default; frozen hosts unchanged
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-measurement-20261004
+HEAD 5c8c4d4caffc0711a66daecd6288e13bcd31da79
+branch refs/heads/perf/runtime-levers-measurement-20261004
+locked runtime levers measurement lane 2026-10-04
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-memory-20261004
+HEAD 866704cbd173ed2a4cb335327d2e5db1060d6e40
+branch refs/heads/perf/runtime-levers-memory-20261004
+locked Codex runtime-levers memory lane Oct4: allocator/CLI ceilings; owned worktree
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-placement-20261004
+HEAD 90b79144e330321c09aa47312c24a3878ea51b8a
+branch refs/heads/perf/runtime-levers-placement-20261004
+locked runtime levers WP1 placement preparation 2026-10-04
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-preparation-evidence-20261004
+HEAD 3b221409df826dd6a4cb5314b1b05d72beb974b5
+branch refs/heads/perf/runtime-levers-preparation-evidence-20261004
+locked Measurement lane preparation evidence only; immutable RF and grid trees remain untouched
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-rc-check-20261004
+HEAD a72367eba41a3d66aa0d6e8db4094d50547d551b
+branch refs/heads/perf/runtime-levers-rc-check-20261004
+locked Codex G1b/C0 RC check census shadow reference lane October4; owned successor source
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-rc-off-control-20261004
+HEAD a02d58e1722ba41de1bd574c1029d8ceba15d59b
+branch refs/heads/perf/runtime-levers-rc-off-control-20261004
+locked RC ordinary off-mode inverse control source preparation 2026-10-04
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-rc-oracle-20261004
+HEAD 5662a1b335dbf44bfc427372cf523ee7f825e8d1
+branch refs/heads/perf/runtime-levers-rc-oracle-20261004
+locked Codex runtime-levers G1(a) RC oracle 2026-10-04; isolated owner
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-reference-20261004
+HEAD dea9ffd5fcace042df3a9ac7410f4483481f6146
+branch refs/heads/perf/runtime-levers-reference-20261004
+locked Codex runtime-levers C0 reference planner lane, October 4 2026
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-reference-pinned-20261004
+HEAD 7dd03470f12a4a2845cee4b6499cb2cf78673edd
+branch refs/heads/perf/runtime-levers-reference-pinned-20261004
+locked Codex levers_traps owns reference pinned scalar semantic repair; no shared edits
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-scalar-inline-20261004
+HEAD 06a7fa138e5900a8d1389f377f623e3b1bfeb2ad
+branch refs/heads/perf/runtime-levers-scalar-inline-20261004
+locked WP-10a source-only checked scalar inline lane 2026-10-04
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-shadow-20261004
+HEAD 0c9bb808dc3f5fa9130e8ff7f8cfb3bde82e6bf2
+branch refs/heads/perf/runtime-levers-shadow-20261004
+locked Codex C0 hold-as-owner shadow lane October 4; source work isolated from frozen check gates
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-shadow-census-20261004
+HEAD 975dcd8ea2e8b779980a9b2c21e6453af31ba7d6
+branch refs/heads/perf/runtime-levers-shadow-census-20261004
+locked Codex memory lane: isolated counting-only trap census accounting repair; final RF/source remains immutable
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-small-blit-20261004
+HEAD 3102074bb50e8032c47e12f1faad040f8046be90
+branch refs/heads/perf/runtime-levers-small-blit-20261004
+locked WP-10b source-only small LLVM blit lane 2026-10-04
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-small-blit-baseline-20261004
+HEAD e267232fa5cfa25a05eba1d418eaae8c3864b54a
+branch refs/heads/perf/runtime-levers-small-blit-baseline-20261004
+locked WP-10b exact no-blit e267 ReleaseFast baseline; preserve paired artifacts
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-stage-a-20261004
+HEAD b401c95e6adddddc858ac5eb79d3a0fa534de15d
+branch refs/heads/perf/runtime-levers-stage-a-20261004
+locked Codex runtime-levers Stage A source preparation 2026-10-04; isolated owner
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-transfer-diagnostic-20261004
+HEAD df6ea3a0c978e40cd2ec5c79ef70cc86fbdf9986
+branch refs/heads/fix/runtime-levers-transfer-diagnostic-20261004
+locked Measurement lane harness-only exact transfer diagnostic repair; no compiler build or guest execution
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-traps-20261004
+HEAD 9df107d0741e78264e0a084c763819552fe9e29b
+branch refs/heads/perf/runtime-levers-traps-20261004
+locked Codex runtime-levers trap lane 2026-10-04; isolated owner
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-wave1-acceptance-rf-20261004
+HEAD 11c8cc1dd320c11e696cf81c1ae1a79695031a9f
+branch refs/heads/perf/runtime-levers-wave1-acceptance-rf-20261004
+locked Codex immutable final Wave 1 acceptance compiler and guests; preserve evidence
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-wave1-final-rf-20261004
+HEAD b6477c60fd1aeeca748756e7a35425c8e0bab45f
+branch refs/heads/perf/runtime-levers-wave1-final-rf-20261004
+locked Final Wave1 immutable ReleaseFast and guest preparation b647 2026-10-04
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-wave1-gate-20261004
+HEAD 733f61285762ebd72bbb72e532e9503c1f6e42fa
+branch refs/heads/perf/runtime-levers-wave1-gate-20261004
+locked runtime-levers wave1 Debug gates 2026-10-04
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-wave1-integration-final-20261004
+HEAD e0cc505dc86944dc2372314abd0328975abebcba
+branch refs/heads/perf/runtime-levers-wave1-integration-final-20261004
+locked Codex root final Wave 1 integration 2026-10-04
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-wave1-measurement-20261004
+HEAD 2db7c6ba4ad0e9695c094c41fd01bfa186332764
+branch refs/heads/perf/runtime-levers-wave1-measurement-20261004
+locked runtime levers wave1 measurement successor owned by measurement lane
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-wave1-rf-20261004
+HEAD b401c95e6adddddc858ac5eb79d3a0fa534de15d
+branch refs/heads/perf/runtime-levers-wave1-rf-20261004
+locked runtime levers coordinator RF compiler 2026-10-04
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-levers-wave1-successor-rf-20261004
+HEAD bca226101839c6ac292138481ae6cebf83ea3ece
+branch refs/heads/perf/runtime-levers-wave1-successor-rf-20261004
+locked Measurement lane immutable repaired Wave1 RF host and ordinary guests
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003
+HEAD c42ebe93841a9c9c954e661b1bf050bdc6d29e5c
+branch refs/heads/perf/runtime-parity-20261003
+locked Codex runtime levers coordinator 2026-10-04
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003
+HEAD 1c421d997874f64b1578ada73a921e231d3dad5f
+branch refs/heads/perf/runtime-parity-arithmetic-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-candidate-188da416-20261003
+HEAD 188da41681162db93c6783bd3bbc7a63ca87bfd6
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-candidate-1ec716ce-20261003
+HEAD 1ec716ce1c4658ad876deed742ceecc35b02afd7
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-candidate-33e781a1-20261003
+HEAD 33e781a11b5f7bbe1c2e1c308a67cc7ec222457a
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-candidate-58c5d826-20261003
+HEAD 58c5d82673282ecb77c04eae969deaa5ec74aa3c
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-candidate-5cb344f8-20261003
+HEAD 5cb344f8d09c486e8ef8c507c7792c9604093faa
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-candidate-6111ce9e-20261003
+HEAD 6111ce9e9bb1f43be1476105b99b5f85cc916377
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-candidate-730a86e6-debug-20261003
+HEAD 730a86e62b47c922dc1411d24b5868c3bd2132f3
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-candidate-730a86e6-releasefast-20261003
+HEAD 730a86e62b47c922dc1411d24b5868c3bd2132f3
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-candidate-b22dac0e-20261003
+HEAD b22dac0ed3a2c0cc941328790f66a055a091ad41
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-candidate-b3ff3bfb-20261003
+HEAD b3ff3bfb41ba94bc023651e34be24a41e6a2f5f0
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-candidate-d348026f-20261003
+HEAD d348026f52eb02792e8c0c1d07dae7f6c8e26bd7
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-final-validation-20261003
+HEAD 730a86e62b47c922dc1411d24b5868c3bd2132f3
+branch refs/heads/perf/runtime-parity-final-validation-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003
+HEAD aca9835758131b8535e071440f4107fc007329b9
+branch refs/heads/perf/runtime-parity-harness-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-frozen-89f4f85b-20261003
+HEAD 89f4f85b68480664bdccb4d424abbd8476e36510
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-text-20261003
+HEAD 37c61a825d0ab4607f58a9bd99d730443bcf1a77
+branch refs/heads/perf/runtime-parity-text-p7-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-validation-20261003
+HEAD 6111ce9e9bb1f43be1476105b99b5f85cc916377
+branch refs/heads/perf/runtime-parity-validation-20261003
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/selfhost
+HEAD fe94e0d0d347c35bf194bd60acb021c781c84fb3
+branch refs/heads/selfhost/integration
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/selfhost-baseline-0414
+HEAD 0414b57ed8227006368d09c1285456099685e9eb
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/selfhost-bench-my
+HEAD 668130d1f5271ce37215ca3d06a43f457a04ef41
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/selfhost-bench-zig
+HEAD 668130d1f5271ce37215ca3d06a43f457a04ef41
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/selfhost-completion-plan-20260922
+HEAD 34e7eedffe78774d09faae4027c522710e04bf7c
+branch refs/heads/codex/selfhost-completion-plan-20260922
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/span-bench-my
+HEAD 029f8a70d89364fb83e93f1606ac49f03a8f27c6
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/span-bench-zig
+HEAD 029f8a70d89364fb83e93f1606ac49f03a8f27c6
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/speed-incremental-probe-20260923
+HEAD d72a85eaf930f83000648728488015705fb9a845
+detached
+
+worktree /home/epentland/ai/canopy/mylang-worktrees/speed-index-probe-current-20260923
+HEAD 60467e4d98a3f7c908808c62998b3ac9a0ad32d6
+detached
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a0ae86c834c3d24f2
+HEAD cecfae642b12d5c61ca07790bc46f14179785af2
+branch refs/heads/devspeed/python-free-tooling
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a0e9d190215349ff5
+HEAD d18304c138fe8d5d22c5a12a9e1f6be6f56700cd
+branch refs/heads/devloop/split-sema-qbe
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a0eefa470b9038d54
+HEAD 531253c963122a9855ef3a9c920eed825482e6e8
+branch refs/heads/devloop/spec-merge
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a0fe0151961e92d1c
+HEAD 174849572f4dc5e5521cd8e95cd4cafa0e2fc44a
+branch refs/heads/fix/array-inplace
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a104d23a285901d10
+HEAD b336ecaed91566462c0d9da30ec86db30754ec01
+branch refs/heads/devspeed/check-at-scale
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a10dcf4aa014ebde6
+HEAD ea554b54aad599898bccc15fdd04a8a8a1b95d02
+branch refs/heads/lang/fixed-array-writes
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a1eec88eb28ee6084
+HEAD 03bdd6b6b0c6ab44935ed15c5665f42e44ed4e02
+branch refs/heads/perf/lib-sort
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a2017629aa194019c
+HEAD 6732a1eb3f5cc2b0bbd481fbb81e2c29bfdc5d93
+branch refs/heads/devspeed/module-nowait
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a26a188437651c22f
+HEAD 7b5e2d79e2478cc4bb7018709df8e3284b4588c2
+branch refs/heads/perf/schematic-3-adapter-alias
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a291229945ce2b569
+HEAD fb0f6ae1facb5671f5c0e3e5cffd1b91e8a4aa77
+branch refs/heads/fix/dict-hash
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a2cbf9d444e858cc9
+HEAD d550eb2ed6e1d8657eb6802bfedef44850438faf
+branch refs/heads/fix/dict-gc-stress
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a33a43c4cd674d3c1
+HEAD 1b48be90629e613d9e2924de0aaeb13765fde60a
+branch refs/heads/devspeed/expression-fidelity
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a3f2b6a1581d89fca
+HEAD a3cce834f1848858ab0401e1b154a748646c2a1b
+branch refs/heads/perf/lib-text-scan
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a405955446a0e7882
+HEAD 9213dd1dabd4305cbe23f83fe28de45fdfcc0e52
+branch refs/heads/perf/alloc-gc
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a495fdd23ddc44668
+HEAD de5200379c23fef6f6e1121e445730699ffc3582
+branch refs/heads/devspeed/test-loop-scale
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a49c685ec6b24167f
+HEAD 6d2bd782c60b42b142e8f1a965c685bf500cfde1
+branch refs/heads/devspeed/collections-fidelity
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a4f59527c9d802fac
+HEAD d96a2e0e2d278aafb2b860ba2c7d448532dd6c31
+branch refs/heads/perf/schematic-7-step-batching
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a51ef34a909eba80f
+HEAD 611203a097ee4ff880f0239f87adf4f8b747dbb3
+branch refs/heads/perf/lib-dict-hash
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a55bf8363e37f054d
+HEAD 684be597d4f40f02eaaed30a937f9315901e9741
+branch refs/heads/perf/schematic-5-aggregate-reads
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a56db90697875a63a
+HEAD 8851b6f6f5f73e2bacd71b66aed0de2b77ef5be2
+branch refs/heads/perf/memory-footprint-2
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a572fdd9838d40360
+HEAD 5049393cb8683662d1126ac78c1a96358260016e
+branch refs/heads/lang/keyed-sort
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a5c70f118e9cb2042
+HEAD 0227b20c4c0842dd8b037d1c716857979f3987ee
+branch refs/heads/devspeed/module-interface
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a6070d11680248d96
+HEAD 0446b125ba09318dae49a64084ffd6c9f729e4ce
+branch refs/heads/devspeed/llvm-zig
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a60a438bbf66076ba
+HEAD 4e51677e3baf7526164bc17d4bfdc769b1b34a45
+branch refs/heads/perf/schematic-2-unchecked-policy
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a61d95ac259932ae4
+HEAD b92fe6fe75055b6abb7d2e456742cec2f83867d6
+branch refs/heads/devspeed/compilation-model-audit
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a61eea1742b770d52
+HEAD 49d9e097eac4ad93138266558a1ee4165170bf77
+branch refs/heads/devspeed/scale-limits
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a6a0cb7d360826b1b
+HEAD a425c0f2d9058a950183b8a6a5eacebf7ff62468
+branch refs/heads/fix/checker-bugs
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a6ad9e73db6cf19f9
+HEAD b12b00e165d5eaf7d1807e3999a35c45b4724a60
+branch refs/heads/perf/vectorizer-blockers
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a7fe8727a075af7ba
+HEAD 31ea01dc9d4b8770d00b38960c1722c3033e8beb
+branch refs/heads/perf/frame-return-map
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a85b22dc47672a3be
+HEAD 43dedc7c3c89c280047f4d4e2e62ea3db56a2012
+branch refs/heads/fix/guest-test-tmpdir
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a8698c85a3d6f7e87
+HEAD 3aab446b1ee07b6053f463d06d80d75a23341b57
+branch refs/heads/devloop/tooling
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a88a6f2359c01af40
+HEAD 535c38da47aefc3564ed99dc3d97d3296e66a90c
+branch refs/heads/perf/noreturn-fail-paths
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a8969cdc017ce196c
+HEAD ff60490a3e6e27d92600bc21b2e5763daa012a69
+branch refs/heads/fix/arena-region-lookup
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a8b549d02c349588b
+HEAD 29f100d79f391187bd89ae5c2060b188302c9acf
+branch refs/heads/devspeed/build-frontend-reuse
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a8f9623b18b6aa632
+HEAD 0913e935f8294a5f3e5e2a37fd2292773b7c09ff
+branch refs/heads/perf/schematic-8-invocation-cache
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a90392923dd2f6d5f
+HEAD 88e4d291690a1697e2fe0d4d65414d27bac9fe83
+branch refs/heads/perf/option-niche
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a9175044e5dcae4a9
+HEAD 89d302dc37b7e270bed72ab728f73f4fc947ba3b
+branch refs/heads/l2/docstring-examples
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a9242f6c7a68b6f73
+HEAD ddb511044476e323392d58a7d0dd64bab8325875
+branch refs/heads/integration/l1-l2
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a9b7032ee49980905
+HEAD 049b2dd4def0cd1e5f5d1da8a14c4a9d81af8f34
+branch refs/heads/perf/text-dict-leftovers
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-aa2119ff6e33675a8
+HEAD d87210bbcf5fe6cc8f87b6acf64bbf0b08b85c02
+branch refs/heads/perf/root-liveness
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-aa38de62d360055e6
+HEAD 6a1a9c4d47f83a263db00f301f537c435befb1ae
+branch refs/heads/fix/loop-variable-rebinding
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-ab720a83061a25063
+HEAD c8dd36ff2db34f3bb28f5dc5fdd9bd09d6c32175
+branch refs/heads/lang/nan-when-observed
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-ab8933ab39feefa34
+HEAD a09ddfd57afe962f6b1a6067b2686293ef4aef78
+branch refs/heads/perf/str-views
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-abec19122d610f60c
+HEAD fbd12a85ac7c19133054154b577d11b6ffff58d3
+branch refs/heads/merge/devspeed-into-main
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-ac2d1596dbbb76472
+HEAD 377f2964b30b73cbb1126055fcce7b18d3eea88b
+branch refs/heads/perf/schematic-6-output-emission
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-ace808d4899b6a8ab
+HEAD 3bbef7e0c567b497e5d35404ecb8e90dadc63293
+branch refs/heads/perf/schematic-4-bulk-bytes-io
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-ad08875315bea3391
+HEAD b56b12b766a6282b26eb3b6568ff61ad9b9a4b5d
+branch refs/heads/fix/arena-chunk-reuse
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-ad345966f0b99fc8a
+HEAD d62695c256fcd64a344fae8cd45aa444d2188dc6
+branch refs/heads/devspeed/defaults-and-docs
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-ad55695aaf2cb6bb4
+HEAD f5c48347c697204949cffc041bb73795a61b8117
+branch refs/heads/devspeed/build-residue
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-ad59f229cfd824c2d
+HEAD 724761b9f0169b37e7a6753aa661fdde6a307301
+branch refs/heads/perf/loop-range-facts
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-ae5d5dee35459c9cc
+HEAD 3ba29ad49f84e8cda6a1de414f704609c65a4bcf
+branch refs/heads/devspeed/fix-tool
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-aea0c2dba18f942d5
+HEAD 055f0e739eae762b635475a5f7848454ffdd988d
+branch refs/heads/devspeed/codegen-throughput
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-aeb72dc0dc4c9de99
+HEAD ba0fa2fc349a41d5f33f67aef8b24554dd6408cd
+branch refs/heads/lang/array-negative-index
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af1e52d0014d5c70d
+HEAD 7b4d2860cf4ec5ee1a958e86564ff49b679faef8
+branch refs/heads/devloop/test-loop
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387
+HEAD 79326afca2e83fd0d515389fffadb5f10d0ef2de
+branch refs/heads/perf/schematic-1-runner-policy
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af5ef1df1ad755ff3
+HEAD 2bb315c1dd9208fe42517b1f82a683bdac1cc0b0
+branch refs/heads/devspeed/test-capabilities
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af62bdfbb6290d985
+HEAD c0c00ee315e50e5180b50f131ab9d74812561d64
+branch refs/heads/bench/parity-step
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af68384efb69de709
+HEAD 9d9227a3aabe6f61550bc6ed494b95c9c4ba2f14
+branch refs/heads/perf/checked-arith-intrinsics
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af8b6caa09265e232
+HEAD a84a1a5be19a5d65a33d0d45852f85a4234428be
+branch refs/heads/devspeed/navigation-scale
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/dazzling-ptolemy-0b0649
+HEAD 4d54b21017a7da39dad7f2674e9df49eb1ac946f
+branch refs/heads/claude/dazzling-ptolemy-0b0649
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/fervent-banach-b0de9f
+HEAD acbee6032758a0cb031619c270ae3c401c1d8e7f
+branch refs/heads/claude/fervent-banach-b0de9f
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/frosty-visvesvaraya-65afa4
+HEAD acbee6032758a0cb031619c270ae3c401c1d8e7f
+branch refs/heads/claude/frosty-visvesvaraya-65afa4
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/hungry-sammet-00f7c0
+HEAD 55814e530cba3277a7582a04c57da9f825a8da64
+branch refs/heads/fix/runtime-content-hash
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/upbeat-mendeleev-9d70bd
+HEAD d87dd687640357a559f78d62def62a7cd477ace1
+branch refs/heads/fix/test-tmpdir
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/vibrant-joliot-8efdae
+HEAD 820491a5573f42826b5875703fd835c66f71fee7
+branch refs/heads/fix/stale-mutates-fixtures
+
+worktree /home/epentland/ai/canopy/mylang/.claude/worktrees/zen-darwin-3c55b9
+HEAD 1384b9f5c2c1eec93d759de23afcc28d28f577d8
+branch refs/heads/claude/zen-darwin-3c55b9
+
+worktree /home/epentland/ai/canopy/mylang/.tmp/lox-bench/tree
+HEAD 4e48a09220c2e018eba8c4b1eb3fe1137a3dae73
+branch refs/heads/bench/lox-20260922
+
+worktree /home/epentland/ai/canopy/mylang/.tmp/lox-bench/wt-go
+HEAD 12a901345c63ea43028d6796ca4862bb13a5ba8c
+branch refs/heads/bench/lox-go
+
+worktree /home/epentland/ai/canopy/mylang/.tmp/lox-bench/wt-mylang
+HEAD 06323364e402936ae07e28a83cde56a1325b7fab
+branch refs/heads/bench/lox-mylang
+
+worktree /home/epentland/ai/canopy/mylang/.tmp/lox-bench/wt-rust
+HEAD 28705899cb4afa6664ac29e538d188153f4da25e
+branch refs/heads/bench/lox-rust
+
+worktree /home/epentland/ai/canopy/mylang/.tmp/lox-bench/wt-rust-runtime-20261002
+HEAD 73fb12bf47a727b582b28ab0c8466cd026911617
+branch refs/heads/dot/lox-rust-runtime-20261002
+locked Codex Rust Lox runtime optimization 2026-10-02; isolated from baseline
+
+worktree /home/epentland/ai/canopy/mylang/.tmp/lox-bench/wt-rust-runtime-stack-20261002
+HEAD e8a6d4a971a5b17c459161a78ef6d0e692959064
+branch refs/heads/dot/lox-rust-runtime-stack-20261002
+locked Codex Rust Lox second runtime pass 2026-10-02; freeze first timing candidate
+
+worktree /home/epentland/ai/canopy/mylang/.tmp/lox-bench/wt-zig
+HEAD fc698f5c038a77c356c6a18dfe352ab440610986
+branch refs/heads/bench/lox-zig
+
+worktree /home/epentland/ai/canopy/mylang/.tmp/lox-fixes/tree
+HEAD 386ffbade3bcbd648882671b687f389014e4975b
+branch refs/heads/fix/lox-port-bugs
+
+worktree /home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/tree
+HEAD 386ffbade3bcbd648882671b687f389014e4975b
+branch refs/heads/perf/schematic-integration
+
+worktree /home/epentland/ai/canopy/mylang/.worktrees/base-l1l2
+HEAD ddb511044476e323392d58a7d0dd64bab8325875
+detached
+
+worktree /home/epentland/ai/canopy/mylang/.worktrees/i2-values
+HEAD b91719643dbce9c1e31f2eae40057eaf2fc0c206
+branch refs/heads/i2/values
+
+worktree /home/epentland/ai/canopy/mylang/.worktrees/svg-bench-d93
+HEAD d93cab7c1f4d68d22e1637c7f39c1ce8917fdfd6
+detached
+

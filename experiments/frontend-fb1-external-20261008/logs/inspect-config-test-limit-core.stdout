@@ -1,0 +1,72 @@
+fn testControls(options: *test_runner.Options, args: []const []const u8, index: *usize) error{Usage}!bool {
+    const arg = args[index.*];
+    const has_value = index.* + 1 < args.len;
+    if (std.mem.eql(u8, arg, "--mode") and has_value) {
+        index.* += 1;
+        if (std.mem.eql(u8, args[index.*], "ReleaseFast")) options.build.release = true else if (std.mem.eql(u8, args[index.*], "Debug")) options.build.release = false else return error.Usage;
+    } else if (std.mem.eql(u8, arg, "--force")) {
+        options.controls.force = true;
+    } else if (std.mem.eql(u8, arg, "--cases") and has_value) {
+        index.* += 1;
+        options.controls.cases = args[index.*];
+    } else if (std.mem.eql(u8, arg, "--jobs") and has_value) {
+        index.* += 1;
+        options.controls.jobs = std.fmt.parseInt(usize, args[index.*], 10) catch return error.Usage;
+        if (options.controls.jobs.? == 0) return error.Usage;
+    } else if (std.mem.startsWith(u8, arg, "--jobs=")) {
+        options.controls.jobs = std.fmt.parseInt(usize, arg[7..], 10) catch return error.Usage;
+        if (options.controls.jobs.? == 0) return error.Usage;
+    } else if (std.mem.eql(u8, arg, "--timeout-ms") and has_value) {
+        index.* += 1;
+        options.controls.timeout_ms = std.fmt.parseInt(u32, args[index.*], 10) catch return error.Usage;
+        if (options.controls.timeout_ms == 0) return error.Usage;
+    } else if (std.mem.eql(u8, arg, "--max-steps") and has_value) {
+        index.* += 1;
+        options.controls.max_steps = std.fmt.parseInt(u64, args[index.*], 10) catch return error.Usage;
+        options.controls.ceilings.explicit_steps = true;
+    } else if (std.mem.startsWith(u8, arg, "--max-steps=")) {
+        options.controls.max_steps = std.fmt.parseInt(u64, arg[12..], 10) catch return error.Usage;
+        options.controls.ceilings.explicit_steps = true;
+    } else if (flagValue(args, index, "--max-frames")) |text| {
+        options.controls.ceilings.frames = std.fmt.parseInt(u32, text, 10) catch return error.Usage;
+        if (options.controls.ceilings.frames == 0) return error.Usage;
+        options.controls.ceilings.explicit_frames = true;
+    } else if (flagValue(args, index, "--max-memory")) |text| {
+        options.controls.ceilings.memory = @import("memory_budget").parse(text) catch return error.Usage;
+        options.controls.ceilings.explicit_memory = true;
+    } else return false;
+    return true;
+}
+
+/// The value of `--NAME VALUE` or `--NAME=VALUE` at `index` (advancing past a separate
+/// value), or null when the argument is another flag.
+fn flagValue(args: []const []const u8, index: *usize, comptime name: []const u8) ?[]const u8 {
+    const arg = args[index.*];
+    if (std.mem.startsWith(u8, arg, name ++ "=")) return arg[name.len + 1 ..];
+    if (!std.mem.eql(u8, arg, name) or index.* + 1 >= args.len) return null;
+    index.* += 1;
+    return args[index.*];
+}
+
+/// The coverage sweep: check each file and try to build each of its functions alone.
+/// Prints `ok NAME\tproven=P exact=E` (the checks the fact pass proves and keeps in
+/// reachable code of the function analysed alone; `stack=S`, the lists it would put on
+/// the stack), `refused REASON\tNAME` or
+/// `frontend FILE` per line.
+fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
+    var out: std.ArrayList(u8) = .empty;
+    for (arguments) |path| {
+        var scratch = std.heap.ArenaAllocator.init(init.gpa);
+        defer scratch.deinit();
+        const allocator = scratch.allocator();
+        const entry = frontend.entryOf(path);
+        var session = frontend.Session.init(init.gpa, init.io, entry.root);
+        defer session.deinit();
+        var report: std.ArrayList(u8) = .empty;
+        const checked = session.checkFile(allocator, path, &report) catch |err| switch (err) {
+            error.OutOfMemory => return err,
+            else => {
+                const first = std.mem.sliceTo(report.items, '\n');
+                try out.print(init.arena.allocator(), "frontend {s}\t{s}\n", .{ path, first });
+                continue;
+            },

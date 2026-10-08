@@ -1,0 +1,38 @@
+{
+  "commands": [
+    {
+      "command": [
+        "git",
+        "-C",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1",
+        "rev-parse",
+        "HEAD"
+      ],
+      "stdout": "889943fa81a7c0c69a6452b0ab6c076b42b728cc",
+      "elapsed_seconds": 0.0016296419780701399
+    },
+    {
+      "command": [
+        "git",
+        "-C",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1",
+        "rev-parse",
+        "HEAD:src"
+      ],
+      "stdout": "a45dd2386068c2d28ba2f042cc2a62837e661f12",
+      "elapsed_seconds": 0.0018892339430749416
+    },
+    {
+      "command": [
+        "git",
+        "-C",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1",
+        "rev-parse",
+        "061f46aba144c00bf2094fcdada9a2c682696105:src"
+      ],
+      "stdout": "a45dd2386068c2d28ba2f042cc2a62837e661f12",
+      "elapsed_seconds": 0.001638062996789813
+    }
+  ],
+  "source_tree_identical": true
+}

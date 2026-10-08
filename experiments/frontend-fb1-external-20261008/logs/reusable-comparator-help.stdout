@@ -1,0 +1,43 @@
+usage: frontend_compare_frozen_tests.py [-h] --against REFERENCE
+                                        --source SOURCE
+                                        [--corpus-source CORPUS_SOURCE]
+                                        [--compiler-sha256 COMPILER_SHA256]
+                                        [--source-commit SOURCE_COMMIT]
+                                        [--against-identity-sha256 AGAINST_IDENTITY_SHA256]
+                                        [--normalize-source-paths]
+                                        --compiler COMPILER --output OUTPUT
+                                        --cache CACHE [--jobs JOBS]
+                                        [--expected-tests EXPECTED_TESTS]
+
+Compare exact frozen per-file, directory and configured tests without oracle
+runs. Run with an outer bench-compile.lock, then scripts/build-slot.sh.
+Examples: --source CANDIDATE_WORKTREE --compiler BINARY --against
+FROZEN_REF_DIR --output FRESH_RESULTS --cache OWNED_CACHE [--corpus-source
+MIGRATED_WORKTREE] Only compiler/cache arguments change in the saved commands.
+Relocating a corpus requires --normalize-source-paths: recorded changes are
+confined to JSON sources and at fields plus diagnostic source filenames;
+line/column/verdict bytes remain. All modes, force, leak checking, jobs,
+timeouts and budgets come from the references.
+
+options:
+  -h, --help            show this help message and exit
+  --against, --reference REFERENCE
+  --source SOURCE       candidate compiler source worktree
+  --corpus-source CORPUS_SOURCE
+                        candidate corpus worktree; default frozen external
+                        source or --source for internal tests
+  --compiler-sha256 COMPILER_SHA256
+                        optional independently recorded candidate binary hash
+  --source-commit SOURCE_COMMIT
+                        optional independently recorded candidate source HEAD
+  --against-identity-sha256 AGAINST_IDENTITY_SHA256
+                        optional independently recorded frozen identity hash
+  --normalize-source-paths
+                        audit exact source-path relocation; preserve every
+                        other field/byte
+  --compiler COMPILER
+  --output OUTPUT
+  --cache CACHE
+  --jobs JOBS           file workers; default frozen collector count
+  --expected-tests EXPECTED_TESTS
+                        optional frozen unique test count assertion
