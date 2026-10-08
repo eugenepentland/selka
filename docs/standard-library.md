@@ -41,16 +41,16 @@ module uses the resource-result types documented below.
 
 ```text
 # doc: not-mylang
-class Builder: ...
+record Builder: ...
 create() -> Builder
-append(builder: Builder, data: bytes) -> None
-append_range(builder: Builder, data: bytes, start: int, end: int) -> bool
-append_text(builder: Builder, text: str) -> None
-append_int(builder: Builder, value: int) -> None
-append_byte(builder: Builder, value: int) -> bool
-append_float(builder: Builder, value: float) -> bool
-append_spaces(builder: Builder, count: int) -> bool
-reserve(builder: Builder, extra: int) -> bool
+append(builder: mut Builder, data: bytes) -> None
+append_range(builder: mut Builder, data: bytes, start: int, end: int) -> bool
+append_text(builder: mut Builder, text: str) -> None
+append_int(builder: mut Builder, value: int) -> None
+append_byte(builder: mut Builder, value: int) -> bool
+append_float(builder: mut Builder, value: float) -> bool
+append_spaces(builder: mut Builder, count: int) -> bool
+reserve(builder: mut Builder, extra: int) -> bool
 finish(builder: Builder) -> bytes
 ```
 
@@ -83,8 +83,7 @@ capacity for a further `extra` octets without changing the finished length.
 `finish` returns an immutable snapshot. The builder remains usable, and later
 appends — including an append of a snapshot back into its own builder — do not
 change earlier results. All mutating operations carry `mutation` and
-`managed_allocation` effects and mutate only their builder argument; the buffer
-stays traced, so a builder survives collection at every allocation.
+`managed_allocation` effects and mutate only their builder argument.
 
 ```mylang
 # doc: expect 42
@@ -537,8 +536,8 @@ capacity[T: copy + storable](store: Pool[T]) -> int
 handles[T: copy + storable](store: Pool[T]) -> list[Handle[T]]
 ```
 
-A pool is the escape hatch for graphs and entity tables that a tracing collector
-handles awkwardly: a stable, copyable name for a slot that stays valid while the
+A pool is the escape hatch for graphs and entity tables that values cannot
+express directly: a stable, copyable name for a slot that stays valid while the
 slot lives and reports absence once it does not. Removing a slot bumps its
 generation, so every handle to the old occupant stops matching. A stale handle
 and an out-of-range handle report `None` or `False`, and no handle ever traps.
@@ -590,7 +589,7 @@ yet spell `create[int]()`. Pass an empty annotated list for an empty pool.
 # doc: not-mylang
 resource Connection: network
 
-class Chunk[const N: u64]:       result Connected:
+record Chunk[const N: u64]:      result Connected:
     bytes: [N]u8                     ok: Connection,
     length: u64                      err: int
     eof: bool
@@ -599,7 +598,7 @@ result Read[const N: u64]:       result Written:
     ok: Chunk[N],                    ok: u64,
     err: int                         err: int
 
-class Failure:                   result Closed:
+record Failure:                  result Closed:
     resource: Connection             ok: bool,
     code: int                        err: Failure
 
@@ -660,8 +659,7 @@ The stream is SplitMix64: deterministic simulation state, not a cryptographic
 generator. Equal seeds give equal streams, and seed zero's first word is
 `16294208416658607535`. Copying a `Random` snapshots its current position;
 each copy advances independently through the same remaining sequence. Pass
-`mut generator` to advance the caller's stream. `--legacy-sharing` preserves
-the shared state list, so copies in that mode advance one shared stream.
+`mut generator` to advance the caller's stream.
 
 `random` returns one of the 2^53 multiples of 2^-53 in `[0, 1)`. `randint` is
 inclusive at both ends, covers the entire signed range without overflowing, and
@@ -883,8 +881,8 @@ def main(out: Stream) -> int:
 
 ## Contracts these modules share
 
-Managed collections grow automatically; see [managed memory](managed-memory.md),
-and [managed arenas](arenas.md) for releasing a phase of work in one step. A
+Managed collections grow automatically and are released when their last owner
+goes away; see [managed memory](managed-memory.md). A
 module import grants no authority: clock and entropy functions take capability
 parameters the host supplies, and every other module is pure. Runtime byte budgets
 bound backing and bookkeeping allocation. Text indexes count Unicode scalar

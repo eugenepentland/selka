@@ -135,11 +135,14 @@ reads selected environment values explicitly, writes normal machine output to
 stdout and diagnostics through the canonical stderr operation, and returns
 `int` or `Result[int, str]`. The `list[str]` argument, `--` launch boundary,
 `eprint`, explicit environment access, and checked exit results are implemented;
-`Cell[T]` and constant `str`/`bytes` are implemented as Wave 2 boundary work.
+Constant `str`/`bytes` are implemented as Wave 2 boundary work. `Cell[T]` was
+implemented too and then retired with legacy sharing in S5 (`E_VALUE_CELL`).
 
 ## Runtime boundary
 
-Compiler source emits QBE text and calls only `runtime-abi-v1` adapters described
-by [D6](adr/D6-runtime-boundary.md). Managed allocation, traps, process startup,
+Compiler source was to emit QBE text and call only `runtime-abi-v1` adapters
+described by [D6](adr/D6-runtime-boundary.md); the QBE back end was retired in S5,
+so this boundary must be restated against the new core before self-hosting
+resumes. Managed allocation, traps, process startup,
 capability providers, platform calls, assembly, and linking stay outside `.my`
 compiler code. No implementation detail of the Zig launcher is part of this API.

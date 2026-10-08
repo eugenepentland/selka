@@ -16,25 +16,24 @@ intend to use; historical counts are not current verification receipts.
 
 | Area | Supported surface | Executable example / restriction |
 | --- | --- | --- |
-| Values | `int`, binary64 `float`, booleans, managed Unicode strings/dictionaries/lists, byte literals, value records, checked Result/Option, `Cell[T]`, domains/arrays, scalar and literal `str`/`bytes` constants and transparent aliases | [constants](module-constants.md), [aliases](type-aliases.md); [bounded scalar source evaluation](source-evaluation.md) |
+| Values | `int`, binary64 `float`, booleans, managed Unicode strings/dictionaries/lists, byte literals, value records, checked Result/Option, domains/arrays, scalar and literal `str`/`bytes` constants and transparent aliases | [constants](module-constants.md), [aliases](type-aliases.md); [bounded scalar source evaluation](source-evaluation.md) |
 | Control flow | Indented if/elif/else, while, foreach/enumerate/range (with an optional step), break/continue and match/case | [range iteration](range-iteration.md), [stepped ranges](range-iteration.md#stepped-ranges), [matching a variant](match-expressions.md); conservative outer ownership on loop exits |
 | Python expressions | Chained comparisons, `str`/`bytes` ordering, `*` repetition of text and lists, `round(x, n)`, and CPython format specifications in `f"{value:spec}"` | [operators Python has](python-syntax.md#operators-python-has), [ordering and repetition](text.md#ordering-and-repetition), [format specifications](text.md#format-specifications); `round` breaks ties away from zero (a declared divergence); `**` stays rejected |
 | Generics | Functions and nominal records/unions/results/enums; structural field/operation contracts and const length parameters | [structural contracts](../examples/structural-constraints.my); [inferred call type arguments](generic-inference.md) |
-| Managed allocation | Independent growing lists and dictionaries with copy-on-write, immutable strings, reference counting by default and a nonmoving tracing GC (`--gc-runtime`, which also reclaims legacy-sharing cycles) | [Managed memory](managed-memory.md#runtime-selection); managed graph host/native boundaries remain excluded |
-| Managed arenas | `with arena() as name:` region blocks over ordinary managed objects, bulk release, `escape` copy-out, static and runtime escape checks | [Managed arenas](arenas.md); [runnable example](../examples/arena-managed/main.my); QBE native |
-| Managed bytes | Immutable GC byte strings with Python indexing, slicing, membership, split/join and text/hex conversions | [Managed byte strings](bytes.md); byte strings are rejected at JSON and host boundaries like `str` |
-| Ordinary I/O | `print` with Python rendering and an `output` effect; `with open(...)`, handle methods and whole-path file helpers over granted directories | [printing, files and authority](io.md); QBE native |
-| Program boundary | `main(args: list[str], ...)` receives guest arguments after `--` from `run`/`build --run` or after `argv[0]` from an installed executable; `eprint` writes diagnostics; explicit `Environment` access and `main -> Result[int, str]` are supported | [arguments](io.md#arguments); [exit results](io.md#what-mylang-run-prints-and-returns); a synthetic program name is never placed in the list |
+| Managed memory | Value semantics: lists, dictionaries, sets and byte buffers are independent values; one-count reference counting with copy-on-write releases each value when its last owner goes away; no collector and no runtime choice | [Value semantics](value-semantics.md), [releasing memory](managed-memory.md#releasing-memory); `class` and builtin `Cell` are rejected |
+| Managed arenas | Retired: `with arena():` runs as an ordinary block and warns `W_ARENA_RETIRED`; remove the line and dedent its body | [Managed arenas](arenas.md) records the retirement |
+| Managed bytes | Immutable reference-counted byte strings with Python indexing, slicing, membership, split/join and text/hex conversions | [Managed byte strings](bytes.md); byte strings are rejected at JSON and C boundaries like `str` |
+| Ordinary I/O | `print` with Python rendering and an `output` effect; `with open(...)`, handle methods and whole-path file helpers over granted directories | [printing, files and authority](io.md) |
+| Program boundary | `main(args: list[str], ...)` receives guest arguments after `--` from `run`/`build --run` or after `argv[0]` from an installed executable; an `err: Stream` parameter writes diagnostics; explicit `Environment` access and `main -> Result[int, str]` are supported | [arguments](io.md#arguments); [exit results](io.md#what-mylang-run-prints-and-returns); a synthetic program name is never placed in the list |
 | Resources | External resource owners, explicit completion and deterministic cleanup | [source resources](experiments/source-resources.md) and [resource reads and writes](experiments/resource-io.md), with runnable [`examples/resources.my`](../examples/resources.my) and [`examples/resource-io.my`](../examples/resource-io.my); no ambient operating-system authority |
-| Authority | Explicit host capabilities and transitive effect ceilings; `mylang run` grants them all, and `--restrict` plus `--allow-*` withholds and narrows them | [capability effects](effects.md); [command-line grants](io.md#capabilities); [byte runner scoped directory/endpoint grants](experiments/scoped-providers.md) |
+| Authority | Explicit host capabilities and transitive effect ceilings; `mylang run` grants them all, and `--restrict` plus `--allow-*` withholds and narrows them | [capability effects](effects.md); [command-line grants](io.md#capabilities); [scoped directory/endpoint grants](experiments/scoped-providers.md) |
 | Modules | Disk imports, explicit exports, nominal identity and embedded standard modules | [domain codecs](../examples/domain-codecs/main.my); [local locked package roots](experiments/local-packages.md); no network version resolver |
 | Standard library | Ten embedded Python-syntax modules over managed types: `math`, `strings`, `sort`, `path`, `hex`, `base64`, `json`, `pool`, `random`, `time` | [standard library](standard-library.md); no transcendental functions, no ordering contract for a generic sort, no filesystem or network module |
-| Data interchange | Typed JSON codecs at the CLI and host boundary, and managed byte strings | [managed byte strings](bytes.md); `bytes` is not a Unicode string type; guest-source JSON operations were removed with the explicit storage tier |
+| Data interchange | Typed JSON codecs for exported types (`schema-project`, `mylang test --cases`), and managed byte strings | [managed byte strings](bytes.md); `bytes` is not a Unicode string type; guest-source JSON operations were removed with the explicit storage tier |
 | Development | Independent function diagnostics, navigation, parse-only declaration listing, formatting, syntax/exact-verdict/function-body caches, symbolic-template and concrete-specialization reuse, receipt-first native-test result and preparation reuse, affected verification | [navigation](experiments/navigation-client.md); [declaration listing](experiments/list-declarations.md) reports kinds and byte ranges without checking; [checked-body and specialization reuse](tooling/caches.md#persistent-checked-body-store) keeps fresh global effect/mutation checks and conservative fallbacks; [guest tests](tooling/guest-tests.md#reusing-unaffected-results) reuse receipts and a reduced preparation graph |
 | Documentation | Every fenced `mylang` example in README, SPEC and docs is run, type-checked or explicitly skipped by the default test gate | [executable documentation](experiments/doc-examples.md); directives pin expected output, expected diagnostics and explicit skips |
 | Tests | Exported test_ function discovery, typed expected values, filters and explicit skips | [guest test workflow](experiments/guest-tests.md); deterministic arguments and isolated source-provider fixtures |
-| Byte application I/O | Scalar compatibility and bounded copied 256-byte blocks, configurable input/output/execution budgets | [bulk I/O](byte-io-bulk.md); output publishes only on successful guest exit |
-| Execution | Native code is the only runtime: QBE is the default in every mode, `mylang build --release` (LLVM `-O3` with LTO) or `--backend llvm` selects the LLVM adapter, and `mylang build` writes an executable, `mylang run`, `run-project` and `test` build one and execute it in a child process, and `emit-qbe`/`emit-project-qbe` stop at QBE IL | [native experiments](experiments/roadmap.md); [direct C imports](c-ffi.md) and [guest tests](experiments/guest-tests.md) describe the native route |
+| Execution | Native code is the only runtime: the compiler lowers to Core IR, emits LLVM and links with the C runtime. Builds are debug by default (one LLVM unit per module); `--release` optimizes the whole program as one unit. `mylang build` writes an executable; `mylang run`, `run-project` and `test` build one and execute it in a child process; `mylang dump-ir` prints the Core IR | [native builds](tooling/native-build.md), [performance](performance.md#build-for-speed); [direct C imports](c-ffi.md) and [guest tests](tooling/guest-tests.md) describe the native route |
 
 The detailed [SPEC](../SPEC.md) and focused experiment references describe
 operation contracts and their tests. [legacy/semantics.md](legacy/semantics.md) preserves
@@ -44,12 +43,12 @@ Absent features include capturing closures, guest shared-memory threads, arbitra
 stored reference lifetimes and unrestricted source compile-time execution. The [feature audit](audits/feature-completeness-2026-09-07.md) proposes
 extensions; their presence in that backlog does not claim implementation.
 
-Memory safety combines automatic reclamation (reference counting by default, or
-the nonmoving tracing collector) with the runtime's checked
-handles, generations and leases. The guest runtime is single-threaded and the language
+Memory safety combines automatic reclamation (one-count reference counting) with
+the runtime's checked pool handles and generations. The guest runtime is single-threaded and the language
 has no spawn syntax: parallelism is one guest process per task, arranged by the host.
 `noalloc` restricts managed guest allocation, not all compiler/runtime/host allocation.
-Host callbacks are trusted implementations of documented contracts. These limits are
+C functions called through `extern def` are trusted implementations of their
+declared signatures. These limits are
 part of the current model, not guarantees supplied by a future thread system.
 
 `float` provides decimal literals and ordinary numeric operators over IEEE binary64; the standard `math` module adds classification, rounding, roots and integer helpers, and the raw `f64_*` intrinsics over `u64` representations remain available. See [floating-point.md](floating-point.md).
@@ -58,7 +57,7 @@ part of the current model, not guarantees supplied by a future thread system.
 
 Scalar constants may call bounded nongeneric source functions with scalar locals and control flow; see [source-evaluation.md](source-evaluation.md).
 
-Every process that runs guest code runs under a byte ceiling; see [runtime budgets](tooling/runtime-budgets.md). Typed holes are an experimental agent-facing tool; comparative productivity evidence remains pending. Sampled named laws are an experiment outside mylang (`experiments/guest-laws/`, see [named executable laws](experiments/guest-laws.md)).
+A program started by `mylang run`, `build --run` or `mylang test` runs under a byte ceiling; see [runtime budgets](tooling/runtime-budgets.md). Typed holes are an experimental agent-facing tool; comparative productivity evidence remains pending. Sampled named laws are an experiment outside mylang (`experiments/guest-laws/`, see [named executable laws](experiments/guest-laws.md)).
 
 Run `python3 tests/feature_surface.py --compiler zig-out/bin/mylang --output receipt.json`
 to execute the documented feature-surface examples and verify explicit
@@ -78,7 +77,7 @@ A statement ends at its newline, at the dedent that closes its suite, or at end 
 
 The brace dialect this language grew out of was removed on 2026-09-13, together with the `migrate` tool that converted it; [the removed-features index](legacy/README.md) records what each spelling became.
 
-The bytecode interpreter was removed on 2026-09-14. QBE native code is the only runtime, so `mylang run`, `run-project` and `test` build a program before executing it, and the `eval-project`, `check-value-project` and `invoke-project` commands went with the interpreter. Bytecode remains the compiler's internal IR that QBE consumes, and `dump-bytecode` still prints it.
+The bytecode interpreter was removed on 2026-09-14, and the QBE back end, the tracing collector, managed arenas, legacy sharing and host functions (`host def`, `mylang invoke`) were retired with the switch to the new compiler core in October 2026. `mylang run`, `run-project` and `test` build a program before executing it, and the retired commands (`invoke`, `emit-qbe`, `dump-bytecode` and others) are refused with status 2 and a line naming what replaces them.
 
 ## Feature reference pages
 
@@ -94,7 +93,7 @@ Language surface:
 - [Statements and bindings](statements.md), [functions and calls](functions.md), [docstrings](functions.md#docstrings)
 - [Records, unions and enums](records-and-unions.md), [results and options](results-and-options.md)
 - [Text and strings](text.md), [managed byte strings](bytes.md)
-- [Managed application collections](managed-memory.md), [managed arenas](arenas.md)
+- [Managed application collections](managed-memory.md), [value semantics](value-semantics.md)
 - [Generic functions and types](generics.md), [generic call inference](generic-inference.md), [constant length parameters](const-length-generics.md)
 - [Explicit integer operations](integer-operations.md), [binary64 floating point](floating-point.md)
 - [Modules, imports and exports](modules.md), [immutable constants](module-constants.md), [transparent type aliases](type-aliases.md)
@@ -104,14 +103,14 @@ Language surface:
 - [Standard library](standard-library.md), [time and randomness](standard-time-random.md)
 - [Typed JSON boundaries](typed-json.md), [typed holes](typed-holes.md)
 - [Bounded source evaluation in constants](source-evaluation.md), [checking independent function faults](diagnostic-recovery.md)
-- [Direct C imports](c-ffi.md), [bounded byte block I/O](byte-io-bulk.md)
+- [Direct C imports](c-ffi.md)
 
 Tooling:
 
 - [Native builds](tooling/native-build.md), [guest tests](tooling/guest-tests.md)
 - [Fixes and migrations](tooling/fix.md): `mylang fix` and the `fix` field of `diagnostic-v1`
 - [Compiler caches](tooling/caches.md), [source navigation](tooling/navigation.md)
-- [Agent-facing inspection](tooling/agent-tools.md), [focused declaration context](tooling/agent-context.md), [calling one export](tooling/invoke.md), [documentation gates](tooling/documentation-gate.md)
+- [Agent-facing inspection](tooling/agent-tools.md), [focused declaration context](tooling/agent-context.md), [documentation gates](tooling/documentation-gate.md)
 - [Local packages](tooling/packages.md)
-- [The byte runner host](tooling/byte-runner.md), [runtime budgets](tooling/runtime-budgets.md)
+- [Runtime budgets](tooling/runtime-budgets.md)
 - [Command phase timings](tooling/timings.md)

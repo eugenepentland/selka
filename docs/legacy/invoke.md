@@ -1,5 +1,9 @@
 # Calling one export
 
+> **Removed 2026-10 (new core S5-D5).** `mylang invoke` was retired with host
+> functions; it is refused with status 2. Call the function from a `main` or a
+> test. This page is kept as a record.
+
 `mylang invoke` calls **one ordinary exported function** through the native
 runtime `mylang test` already uses: the same checked schema, the same
 copied-value codec, the same isolated bounded child process and the same

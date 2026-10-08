@@ -13,7 +13,7 @@ validates it, then reports `E_TYPED_HOLE` at the `todo` with a related span on
 the declared type. Ordinary bodies and uncalled generic bodies each report their
 own holes in one check, at safe recovery boundaries, so a file with several
 gaps names all of them instead of stopping at the first. Nothing is published
-while a hole remains — no checked program, no bytecode, no executable — which is
+while a hole remains — no checked program, no Core IR, no executable — which is
 what makes the construct an obligation rather than a runtime panic hidden behind
 a passing check.
 
@@ -44,7 +44,7 @@ initialized binding with its type, the generic requirements in force, the declar
 effect ceiling and the permitted `mutates(...)` footprint, plus the contextual expected
 type when the checker knows one. Facts a hole cannot promise — a transitive effect
 summary needs a whole program, which an unresolved hole prevents — are named in an
-`unavailable` list rather than guessed. Uninitialized, consumed and arena-confined
+`unavailable` list rather than guessed. Uninitialized and consumed
 bindings never appear as inputs; they are counted in `unusable_bindings`. The text
 diagnostic stays as short as before.
 

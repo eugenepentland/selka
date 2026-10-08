@@ -3,9 +3,9 @@
 `set[T]` holds each distinct value of a hashable type once. It keeps its elements in
 the order they were first added, answers `in`, `add`, `remove` and `discard` in
 expected constant time, and prints the way Python prints a set. Like a list or a
-dictionary it lives on the tracing heap. Assignment gives the destination an
-independent value, even if the implementation shares backing storage until a
-write. A function that changes its caller's set declares the parameter `mut`,
+dictionary it is reference counted. Assignment gives the destination an
+independent value; the implementation shares backing storage until a write
+(copy-on-write). A function that changes its caller's set declares the parameter `mut`,
 and the call site marks the argument with `mut`.
 
 ## Set literals and construction
@@ -142,8 +142,7 @@ def main() -> int:
 A key type that cannot be hashed is rejected where the dictionary or set is built,
 with `E_DICT_KEY` or `E_SET_ELEMENT` naming the offending part: `float`, because NaN
 is not equal to itself; a mutable `list`, `dict`, `set` or `byte_buffer` value,
-whose contents can change after it is stored; a `class` in legacy-sharing mode,
-whose referenced contents are mutable; a
+whose contents can change after it is stored; a
 function value, which has no equality; and a capability, file or resource. A record
 with a `float` field nested in it is refused with the path to that field, such as
 `Reading.at.x`. Inside a generic function a type parameter used as
@@ -153,8 +152,8 @@ accepted as they are.
 ## Representation and cost
 
 A set is a dictionary from its elements to unit: the same insertion-ordered entry
-list and open-addressing hash index, the same tracing, the same arena escape copy and
-the same store barrier. Membership, `add`, `remove` and `discard` probe the index
+list and open-addressing hash index, and the same reference count and
+copy-on-write. Membership, `add`, `remove` and `discard` probe the index
 once. Removing an element from the middle takes its slot out of the index and leaves
 its entry to be squeezed out the next time the entries are read in order, so a
 removal moves nothing; `dict.pop(key)` shares that path. The combining operators

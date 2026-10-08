@@ -1,6 +1,6 @@
 # Text and strings
 
-`str` is the language's Unicode text type: an immutable, garbage-collected value
+`str` is the language's Unicode text type: an immutable, reference-counted value
 with the same runtime shape as the [managed collections](managed-memory.md) and
 the [`bytes`](bytes.md) byte string. This page covers the text surface itself —
 scalar-value indexing, ordering, repetition, the Python string methods, `f"..."`
@@ -15,9 +15,9 @@ and not by grapheme cluster, so `len` counts scalar values and `text[0]` answers
 one-scalar `str`. Strings are immutable: there is no `text[i] = c` and no
 `append`, and every operation that produces text — `+`, a slice, `split`, `join`,
 a method — answers a new string value and carries the `managed_allocation`
-effect. Assignment shares one traced object, which is safe precisely because
-nothing can change it; for the same reason a slice may share its receiver's
-octets rather than copy them ([below](#slices-share-their-receivers-octets)). An index outside the string traps with `R_TEXT_BOUNDS`, while slices
+effect. Assignment shares one reference-counted value, which is safe precisely
+because nothing can change it; a slice copies its octets
+([below](#slices-are-new-strings)). An index outside the string traps with `R_TEXT_BOUNDS`, while slices
 clamp both endpoints and produce an empty string for a reversed interval, exactly
 as list and byte-string slices do. Literals accept ordinary escapes including
 `é`, and `str(value)` converts a scalar using Python's spellings.
@@ -84,44 +84,25 @@ def main() -> int:
     return len("ab" * 3) * 7
 ```
 
-## Slices share their receiver's octets
+## Slices are new strings
 
 A slice `text[a:b]`, a piece of `split(separator)`, `split()` or `splitlines()`,
-and the result of `strip`, `lstrip` or `rstrip` can be a *view*: a small header
-that reads a range of an existing string's UTF-8 octets instead of a copy of
-them. Nothing observable changes — a view compares, hashes, prints, indexes,
-parses and crosses every file, stream, host and codec boundary exactly as a copy
-does, and it outlives every other reference to the string it reads — so the
-choice is the runtime's, made per piece:
-
-- a piece shorter than 9 octets is copied, because its copy is no larger than a
-  view;
-- a longer bounded piece is a view when it is at least a quarter of the string that owns
-  the octets, and a copy otherwise, so a live piece keeps at most four times its
-  own octets reachable and a short piece of a large text never keeps the large
-  text alive;
-- an omitted upper endpoint, `text[a:]`, shares every suffix of at least 9
-  octets, even below a quarter of its owner. This streaming exception avoids
-  copying the final quarter repeatedly when a parser takes tails of its
-  original input. A retained tail can keep the whole input alive; use an
-  explicit upper endpoint, `text[a:len(text)]`, to request the bounded policy;
-- a piece that is the whole receiver is the receiver itself;
-- a piece of a view reads the first string's octets directly, so views never
-  chain.
-
-The practical effect is that walking a long text by repeatedly slicing off its
-front costs time proportional to the text, not to its square, and a stripped or
-halved large text does not duplicate it:
+and the result of `strip`, `lstrip` or `rstrip` is a new string holding its own
+copy of its octets. A short piece of a large text therefore never keeps the large
+text alive. The cost is the copy: walking a long text by repeatedly slicing off its
+front (`rest = rest[end + 1:]`) copies the remainder every time. Walk it with an
+index and the start bound of a search method instead, and slice only the pieces you
+keep:
 
 ```mylang
 # doc: expect 42
 def main() -> int:
     text = "".join([f"line {i}\n" for i in range(10000)])
-    rest = text
+    start = 0
     lines = 0
-    while len(rest) > 0:
-        end = rest.find("\n")
-        rest = rest[end + 1:]
+    while start < len(text):
+        end = text.find("\n", start)
+        start = end + 1
         lines += 1
     half = text[len(text) // 2:]
     if lines != 10000 or not half.startswith("5055\nline"):
@@ -129,50 +110,38 @@ def main() -> int:
     return len(text.strip().splitlines()[9999]) - 7 + 40
 ```
 
-Inside `with arena()` every piece still belongs to the arena, as a copy would, so
-the arena's store barrier traps where it always did, and `escape` copies a view
-into a string of its own octets.
-
 ## Indexing long text that is not ASCII
 
 A string is stored as UTF-8 and indexed by scalar value, so `text[i]` has to turn
 a scalar position into an octet offset. On ASCII text they are the same number and
-the lookup is free. A string that holds any non-ASCII scalar and at least 256
-octets carries a small position index inside its own block (about 3 % of its
-scalar count): the octet offset of the last scalar looked up, and a table with the
-offset of every 128th scalar. A lookup walks, a word of eight octets at a time,
-from whichever of the two ends, the last lookup or the table entry is nearest, and
-the table is built by the first lookup that is far from all of them, so text that
-is only scanned in order never builds it.
+the lookup is free. On a string that holds any non-ASCII scalar, the runtime finds
+the offset by counting scalars through the octets, 32 at a time, from the start
+(or from the offset of the previous lookup, when the string has one recorded).
 
-Long non-ASCII literals use the same sample spacing, precomputed into their
-image data. Their tables are read-only and have no mutable last-lookup cursor;
-lookups walk from the nearest end or sample. ASCII and shorter literals retain
-their original layout.
-
-You do not have to choose between `str` and `bytes` for speed on account of one
-`é`. `for ch in text`, `text[i]` in any order, `text[a:b]`, `enumerate`, `find`,
-`strip` and `text[pos:]` in a parser loop are all linear in the text, on a
-megabyte of source with one accented name or a megabyte of mostly non-ASCII text.
-Reach for `bytes` when the data is bytes, or when you want one octet per element
-rather than one scalar, not to avoid a quadratic cliff:
+So on long non-ASCII text, a loop that visits scalar after scalar (`for ch in text`,
+`enumerate(text)`, `text[i]` for each `i`, or `find(sub, start)` with a moving
+`start`) can cost time that grows with the square of the text's length. When the
+input is large and the work is octet-shaped (scanning for ASCII delimiters, as a
+parser does), convert it once with `encode()` and scan the `bytes`, whose indexing
+is always one octet per element:
 
 ```mylang
 # doc: expect 42
 def main() -> int:
     text = "".join(["(pin 12 " for _ in range(20000)]) + "é" + "".join(["(pin 12 " for _ in range(20000)])
+    data = text.encode()
     opens = 0
-    for i in range(len(text)):
-        if text[i] == "(":
+    for octet in data:
+        if octet == 40:
             opens += 1
-    rest = text
+    start = 0
     pins = 0
-    while len(rest) > 0:
-        at = rest.find("(pin")
+    while start < len(data):
+        at = data.find(b"(pin", start)
         if at < 0:
             break
         pins += 1
-        rest = rest[at + 4:]
+        start = at + 4
     if opens != 40000 or pins != 40000 or text.find("é") != 160000:
         return 1
     return 42
@@ -194,8 +163,8 @@ boundaries; empty split/replace needles trap `R_EMPTY_SEPARATOR`. See the
 [Python text surface](python-text-surface.md) for these exact rules. These text
 methods are rejected on lists and dictionaries. `ljust` and `rjust` are absent; use
 [`strings.pad_left` and `strings.pad_right`](standard-library.md#strings). Every
-one of these methods runs on the QBE native backend, over a single immutable
-text runtime.
+one of these methods is native code over the C runtime's one immutable text
+representation.
 
 ```mylang
 # doc: expect 43

@@ -42,8 +42,7 @@ iterations in mind, and a loop that might never run establishes no new fact afte
 The declared binding remains an Option. Assign `None` or `Some(...)` to replace it;
 an annotated destination or parameter expecting that same Option type receives the
 original wrapper. Repeated `is None` tests and explicit `match` also see the wrapper.
-Narrowed record field updates preserve the wrapper, while class and collection
-mutation preserve the payload's usual shared identity.
+Narrowed record field and collection updates preserve the wrapper.
 
 Only local bindings are refined. A test of `box.item` evaluates that expression once,
 but does not establish a fact about future reads through a mutable alias. Assign the
@@ -143,7 +142,7 @@ carries the propagated error type as a case payload, the error converts into tha
 and no hand-written translation helper is needed. `?` on a value that is neither a
 result nor an option is rejected, as is `?` in a function that returns a plain value. The early return
 releases the scope it leaves the way an ordinary `return` does, including closing an open
-file or ending an arena block.
+file.
 
 ```mylang
 # doc: expect 37

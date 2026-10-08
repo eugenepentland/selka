@@ -11,15 +11,17 @@ guides with it: `mylang docs` lists them and `mylang docs syntax` (or `io`,
 ```bash
 mylang check prog.my                  # type-check a program, or a library that has no main (fast)
 mylang run prog.my -- ARG1 ARG2       # build and run; the program's arguments go after --
-mylang build prog.my -o prog          # native executable (QBE: about a second)
-mylang build prog.my -o prog --release  # optimized: LLVM -O3 + LTO, for shipping or timing
+mylang build prog.my -o prog          # native executable (debug build)
+mylang build prog.my -o prog --release  # optimized whole program, for shipping or timing
 mylang test prog.my                   # run the public test_* functions; `mylang test DIR` runs every file
 mylang fmt prog.my --check            # formatter (drop --check to print the formatted file)
 mylang docs primer                    # this page; `mylang --help` lists every command
 ```
 
-`run`, `build` and `test` all build with QBE unless you pass `--release`, so the
-edit-build-test loop stays fast; `--release` pays an LTO link on every rebuild.
+`run`, `build` and `test` make a debug build unless you pass `--release`: one unit
+per module, so an edit recompiles only what changed. `--release` optimizes the
+whole program as one unit and recompiles all of it after any change. Both keep
+every overflow, cast and bounds check.
 A file argument that is missing, unreadable or a directory is refused by every
 command with `mylang COMMAND: cannot read 'PATH': REASON` and exit status 2.
 `run` takes its budgets as `--max-steps N`, `--max-frames N`, `--timeout N` and
@@ -237,7 +239,7 @@ def main(out: Stream) -> int:
     return 0
 ```
 
-A function that writes a list, dict or class parameter declares it `mut`, its
+A function that writes a list, dict or record parameter declares it `mut`, its
 callers write `mut arg`, and a `mut` that is never written is an error. Mutating
 locals needs nothing. The compiler's message quotes the exact fix. Two `mut`
 arguments of one call must name disjoint places: `f(mut a, mut a)`,

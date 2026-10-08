@@ -74,8 +74,7 @@ def main(out: Stream) -> int noio:
     return 0
 ```
 
-Write `effects(output)` to permit printing under an explicit bound. `stream.print`
-runs on the QBE native backend, the only runtime.
+Write `effects(output)` to permit printing under an explicit bound.
 
 The bare `print(...)` and `eprint(...)` spellings are gone. They report
 `E_OUTPUT_CAPABILITY` with the fix "add `out: Stream` to this function and pass
@@ -149,8 +148,8 @@ def main(out: Stream) -> int:
 
 `debug(values...)` writes to standard error without a capability and without
 contributing any effect, so it is safe inside a `noio` function. It renders like
-`stream.print` and returns unit. Debug builds and `mylang run`/`mylang test` emit
-it; a `--mode ReleaseFast` build drops it in lowering.
+`stream.print` and returns unit. Every build emits it, `--release` included, so
+remove `debug` calls before shipping.
 
 ```mylang
 # doc: check
@@ -231,7 +230,7 @@ $ mylang run report.my -- --format=json "two words" ""
 
 The list never contains a synthetic program name. An installed executable
 hands `main` every OS argument after `argv[0]` unchanged — `--` and
-flag-looking values such as `--gc-stress` included — because it reads its own
+flag-looking values such as `--restrict` included — because it reads its own
 runtime options from the `MYLANG_OPTIONS` environment variable instead (see
 [the native backend](#the-native-backend)). Every argument is validated as
 Unicode before guest execution, and invalid platform bytes fail with a stable
@@ -435,8 +434,9 @@ def main(fs: Filesystem) -> int noio:
     return 0
 ```
 
-`with` on anything that is not `arena()` or an open file is rejected with
-`E_WITH_RESOURCE`:
+`with` on anything that is not an open file is rejected with `E_WITH_RESOURCE`
+(the retired `with arena():` still runs as a plain block and warns
+`W_ARENA_RETIRED`):
 
 ```mylang
 # doc: expect-error E_WITH_RESOURCE
@@ -445,23 +445,24 @@ def main() -> int:
         return 0
 ```
 
-Generic function bodies reject file operations. The native backend runs them.
+Generic function bodies reject file operations.
 
 ## The native backend
 
-`print` and every file operation run on the QBE native backend, so `mylang
-build` and `mylang build --run` accept a program that uses them.
-A native executable grants every capability by default, exactly as `mylang run`
-does. It never reads an option from its own arguments — every one of them is the
-program's — so the runtime options `mylang run` takes travel in the
-`MYLANG_OPTIONS` environment variable instead: `--restrict` and the `--allow-*`
-grants, `--max-steps=N`, `--max-frames=N`, `--timeout=SECONDS`, `--gc-stress`
-(accepted only by a program built with `--gc-runtime`; a reference-counted build
-refuses it) and `--print-result`, separated by spaces. Wrap an option that contains a space
-in double quotes (a backslash inside the quotes escapes the next character). An
-unknown or repeated option, or an unterminated quote, exits 2 before the program
-runs. `mylang build --run` takes the same options on its own command line,
-before `--`, and passes the values after `--` to the program:
+`mylang build` writes a native executable, and `mylang run` and `mylang build
+--run` build one and run it. A native executable grants every capability by
+default, exactly as `mylang run` does. It never reads an option from its own
+arguments — every one of them is the program's — so its runtime options travel
+in the `MYLANG_OPTIONS` environment variable instead: `--restrict`, the `--allow-*`
+grants and `--print-result`, separated by spaces. Wrap an option that contains a
+space in double quotes (a backslash inside the quotes escapes the next character).
+An unknown option, a repeated grant or an unterminated quote exits 2 when the runtime
+reads its grants, which happens at start-up for an entry point that takes a
+capability. Budgets (`--max-steps`, `--max-frames`, `--timeout`, `--max-memory`)
+are not runtime options: `mylang run` and `build --run` build them into the program
+they run, and a binary from `mylang build -o` has none. `mylang build --run` takes
+the grants on its own command line, before `--`, and passes the values after `--`
+to the program:
 
 ```text
 $ MYLANG_OPTIONS='--restrict --allow-read=notes' ./report --format=json
@@ -481,6 +482,4 @@ generic one.
 
 ## Related pages
 
-- [Managed arenas](arenas.md) — the other `with` resource kind
 - [Scoped providers](experiments/scoped-providers.md) — the adapter these grants configure
-- [Byte application I/O](byte-io-bulk.md) — the separate copied-block runner

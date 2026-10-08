@@ -1,5 +1,10 @@
 # Implementation progress
 
+> **Record.** Progress up to the new compiler core. Stage S5 (2026-10) replaced
+> the QBE back end, the bytecode IR, the tracing collector, two-count reference
+> counting, arenas and host functions; see [native builds](tooling/native-build.md)
+> and [removed features](legacy/README.md).
+
 > Removed on 2026-09-13: the explicit storage tier (buffers, pools, legacy `list`
 > declarations, the `allocator` capability, references and slices, lexical borrows and
 > legacy arena scopes), the C backend and the brace dialect these entries are written

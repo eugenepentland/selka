@@ -2,8 +2,8 @@
 
 This is the language guide. There is one syntax: `def`, `record`, indentation and
 `#` comments. The compiler checks types before execution and manages ordinary
-lists, strings and dictionaries by reference counting (`--gc-runtime` selects a
-tracing collector instead). There are no allocator arguments
+lists, strings and dictionaries by reference counting with copy-on-write; there is
+no garbage collector to tune. There are no allocator arguments
 or ownership annotations in ordinary data code.
 
 A file that opens with `module NAME` is a project entry. `mylang run` loads its
@@ -43,8 +43,7 @@ def main() -> int:
 
 Save it as `main.my` too; `check` type-checks either file without building. The
 [schematic application](../src/schematic/guest/main.my) is a larger example; its
-[instructions](../experiments/schematic/README.md) describe rendering and GC
-stress testing.
+[instructions](../experiments/schematic/README.md) describe rendering it.
 
 Write `def`, `record`, four-space indentation, `#` comments, `True`, `False`,
 `None`, and `and`/`or`/`not`. A statement ends at its newline; a `;` separates two
@@ -402,7 +401,7 @@ compatible `Result`. `Option[T]` represents an optional value: construct it with
 Prelude `list`, `Result`, and `Option` have one identity across every module;
 ordinary procedures use `None`.
 
-Generic functions and classes use square brackets, for example
+Generic functions and records use square brackets, for example
 `def identity[T](value: T) -> T:`. Calls infer type arguments when possible, and
 `identity[int](2)` supplies them explicitly.
 Unconstrained parameters default to copyable values. Additional operations on an
@@ -447,7 +446,7 @@ class Point:
         self.x = x
 ```
 
-There are no methods on `class` or `record`; write a top-level function that
+There are no methods on records (and no `class`); write a top-level function that
 takes the record as its first parameter, `def norm1(p: Point) -> int:`, and call
 it as `norm1(p)`.
 
@@ -561,14 +560,13 @@ also builds native children, but reports the test runner's aggregate status rath
 than treating a test function's value as a process exit status. Guest tests
 receive no ambient capabilities.
 
-Capability denial currently has two diagnostic renderings: `run` catches a
-missing restricted grant before execution, while `build --run` and installed
-executables report the native runtime's `CapabilityUnavailable` failure. They
-all deny the capability and exit 2; unifying the stderr wording is pending.
+A missing grant under `--restrict` is caught before `main` runs, with the same
+message from `run`, `build --run` and a built executable: it names the `--allow-*`
+flag to pass, and the process exits 2.
 
-`with` is one statement form with two resource kinds. Wrap a phase of work in
-`with arena() as scratch:` to free everything it allocates in one step and copy
-the result out with `scratch.escape(value)`; see [managed arenas](arenas.md).
+`with` opens a file and closes it when the block ends; see
+[files](io.md#files). `with arena():` is retired: it runs as an ordinary block and
+warns `W_ARENA_RETIRED`; remove the `with arena():` line and dedent its body.
 
 Ten modules ship inside the compiler and are imported by name: `math`, `strings`,
 `sort`, `path`, `hex`, `base64`, `json`, `pool`, `random` and `time`. They are
@@ -591,15 +589,13 @@ In particular:
   afterward.
 - Integers have fixed width, conditions require booleans, and records are values.
   Records, fixed arrays, unions, `Result` and `Option` compare structurally with
-  `==`/`!=`; a `class` compares by reference identity.
+  `==`/`!=`. There are no reference types: `class` is rejected.
 - Binary64 arithmetic follows IEEE behavior, including infinities/NaNs on floating
   division by zero. It does not raise Python exceptions.
 - Lists are homogeneous; `range` takes one to three arguments and slices have no
   step. A live list place accepts growth and traps a decrease from the last
   observed length; indexed ancestors, dictionaries and sets retain exact length
   checks.
-- GC roots and collection transport across host/JSON boundaries are not
-  implemented.
 - Formatting validates source and rewrites it into the one canonical layout;
   `fmt --check` is nonzero when the input bytes differ from that layout.
 

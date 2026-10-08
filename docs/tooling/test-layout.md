@@ -1,7 +1,11 @@
 # Where tests live: Zig or mylang
 
 Language behaviour is tested in the language, under `tests/lang`, and run by
-`mylang test`. The compiler's machinery is tested in Zig, under
+`mylang test`. `zig build test-lang` runs `tests/lang` and `tests/value_semantics`
+twice each: a debug run, and a release run with `--release --verify-facts` under
+`MYL_CORE_LEAKCHECK=1`, so a test that ends with blocks still live fails. Each run
+keeps its own result cache (`.mylang-cache/lang-tests`, `lang-tests-release`,
+`value-semantics-tests` and `value-semantics-tests-release`). The compiler's machinery is tested in Zig, under
 `src/root_test.zig`. This page states that rule, shows the inner loop each side
 gives you, and lists the Zig tests that still belong on the mylang side as of
 2026-09-18.
@@ -10,10 +14,10 @@ gives you, and lists the Zig tests that still belong on the mylang side as of
 
 | What the test checks | Where it lives | How you run one |
 | --- | --- | --- |
-| A guest program's value, output or collector behaviour | `tests/lang/<area>.my`, a `public def test_*() -> bool` | `mylang test tests/lang/<area>.my --filter <name> --cache-dir .mylang-cache/lang-tests` (RC default); add `--gc-runtime --gc-stress --cache-dir .mylang-cache/lang-tests-gc` for the collector lane |
+| A guest program's value or output | `tests/lang/<area>.my`, a `public def test_*() -> bool` | `mylang test tests/lang/<area>.my --filter <name> --cache-dir .mylang-cache/lang-tests`; add `--release --verify-facts` (with `MYL_CORE_LEAKCHECK=1`) and `--cache-dir .mylang-cache/lang-tests-release` for the release run |
 | A source that must be rejected with a diagnostic code | Zig, `src/<area>_test.zig` | `python3 scripts/focused_test.py units <name>` |
 | A guest that must trap with a runtime code | Zig | same |
-| A guest that needs a `Filesystem`, `Environment`, provider or stdin fixture | Zig | same |
+| A guest that needs a real `Filesystem`, `Environment` or stdin fixture | Zig | same |
 | Cache statistics, reuse counts, invalidation, formatting round trips, AST relocation, emitted-unit facts, allocation-failure injection | Zig | same |
 | A CLI command's exit status, flags and text | Zig, `test/integration.zig` | `python3 scripts/focused_test.py cli <name>` |
 | A documentation example | the fenced `mylang` block itself | `zig build test-docs` |
@@ -33,15 +37,17 @@ the `tests/lang` fan-out. Both were decided on 2026-09-18 and are recorded in
 ## Why the mylang side is the faster inner loop
 
 The gate does not care which side a test is on; it runs both in parallel and
-its floor is the CLI root. The per-edit check does care. Measured on
-2026-09-18 on the 20-core machine:
+its floor is the CLI root. The per-edit check does care:
 
-| Loop | Command | Cost |
+| Loop | Command | What it costs |
 | --- | --- | --- |
-| One Zig area | `python3 scripts/focused_test.py units arena` | 1.5 s for 34 tests, and every run recompiles the 1113-test root binary |
-| One mylang area, warm | `mylang test tests/lang/python_values.my --cache-dir .mylang-cache/lang-tests` | 0.06 s, every unchanged test replays its receipt |
-| One mylang area, cold | same after editing the file | under 1 s, only the edited tests execute |
-| Whole `tests/lang` after one edit | `mylang test tests/lang --cache-dir .mylang-cache/lang-tests` | about 0.5 s; every unchanged test, output-effect tests included, replays its receipt |
+| One Zig area | `python3 scripts/focused_test.py units <name>` | every run recompiles the whole unit-root binary before it runs the selected tests |
+| One mylang area, warm | `mylang test tests/lang/python_values.my --cache-dir .mylang-cache/lang-tests` | an unchanged file replays its recorded report without checking the project |
+| One mylang area after an edit | same | the file is checked again, and only the tests whose reached Core IR changed are built and executed; the rest replay their receipts |
+| Whole `tests/lang` after one edit | `mylang test tests/lang --cache-dir .mylang-cache/lang-tests` | the same per program, in parallel; output-effect tests replay like any other |
+
+See [guest tests](guest-tests.md#reusing-unaffected-results) for what a receipt
+keys.
 
 `--affected --against HEAD` narrows a mylang run further to the tests whose
 dependency closure reaches a changed declaration. A Zig root has no such
@@ -55,12 +61,13 @@ every selection with the reason for it:
 ```console
 $ python3 scripts/affected_tests.py --dry-run --base HEAD
 affected tests: the inner loop, NOT the gate
-base: fe465f32ab10 (HEAD) plus uncommitted and untracked files; 1 changed file(s)
+base: a5efd98ba39f (HEAD) plus uncommitted and untracked files; 1 changed file(s)
 selected:
-  zig unit filter  qbe_test.test.
-                     <- src/qbe_test.zig is the test file for src/qbe.zig
-  guest tests      tests/lang/python_core.my
-                     <- compiler source src/qbe.zig (guest smoke)
+  zig unit filter  formatter_test.test.
+                     <- src/formatter_test.zig is the test file for src/formatter.zig
+  guest tests      tests/lang/callbacks.my
+                     <- compiler source src/formatter.zig (guest smoke)
+  ...
 ```
 
 It is a selection, not a proof: the full gate is still the finishing check. In
@@ -117,21 +124,10 @@ Summary by action, after the first pass:
 | split | 71 |
 | audited to stay | 36 |
 
-### `src/arena_managed_test.zig` (11)
-
-| Zig test | Spec tags | Action |
-| --- | --- | --- |
-| ARENA-MANAGED-1 nested arenas redirect helper allocation and release each scope in bulk | `ARENA-MANAGED-1` | move |
-| ARENA-MANAGED-1 an anonymous arena scope still bulk releases its allocations | `ARENA-MANAGED-1` | move |
-| ARENA-MANAGED-2 escape copies a shared subgraph once into the enclosing region | `ARENA-MANAGED-2` | move |
-| ARENA-MANAGED-2 escape preserves a cycle through a record field | `ARENA-MANAGED-2` | move |
-| ARENA-MANAGED-2 an escaped copy may be returned from the outermost arena scope | `ARENA-MANAGED-2` | move |
-| ARENA-MANAGED-2 escape shares objects that already live in the enclosing region | `ARENA-MANAGED-2` | move |
-| ARENA-MANAGED-5 result propagation out of an arena releases its storage in bulk | `ARENA-MANAGED-5` | move |
-| ARENA-MANAGED-5 break and continue out of an arena close the scope exactly once | `ARENA-MANAGED-5` | move |
-| ARENA-MANAGED-6 stress collection inside an arena sweeps unreachable arena objects | `ARENA-MANAGED-6` | move |
-| ARENA-MANAGED-6 noalloc still rejects arena allocation while entering a scope is free | `ARENA-MANAGED-6` | split |
-| ARENA-MANAGED-9 a managed binding first assigned inside an arena is confined once the block ends | `ARENA-MANAGED-9` | split |
+These counts are the 2026-09-18 audit's. The sections for
+`src/arena_managed_test.zig` (11 tests) and `src/managed_cell_test.zig` (2) were
+removed when arenas and `Cell` were retired (S5-D3, S5-D4); their tests leave
+with those features instead of moving.
 
 ### `src/effects_test.zig` (9)
 
@@ -346,13 +342,6 @@ Summary by action, after the first pass:
 | generic match payload scopes and fallthrough preserve independent arm checking | — | split |
 | generic concrete enum tables require complete unique nominal keys | — | split |
 
-### `src/managed_cell_test.zig` (2)
-
-| Zig test | Spec tags | Action |
-| --- | --- | --- |
-| generic Cell construction is recognized and tracks allocation effects | `CELL-GENERIC-1` | split |
-| Cell equality is rejected for membership search and nested containers | `CELL-EQUALITY-1` | split |
-
 ### `src/managed_frontend_test.zig` (2)
 
 | Zig test | Spec tags | Action |
@@ -492,7 +481,7 @@ Whole files that stay for those reasons, so nobody re-audits them:
 `external_capabilities_test`, `resource_source_test`, `resource_io_test`,
 `nominal_providers_test`, `nominal_environment_test`, `python_bytes_test`, `python_collections_test`, `python_strings_test`,
 `python_values_test`, `python_generics_test`,
-`generic_results_test`, `generic_codecs_test`, `nominal_type_syntax_test`, `diagnostic_recovery_test`, `qbe_test`,
+`generic_results_test`, `generic_codecs_test`, `nominal_type_syntax_test`, `diagnostic_recovery_test`,
 `source_map_test`, `semantic_project_test`, `tables_test`, `variants_test`,
 `arrays_test`.
 

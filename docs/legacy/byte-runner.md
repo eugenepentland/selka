@@ -1,10 +1,15 @@
 # The byte runner host
 
+> **Removed 2026-10 (new core S5-D5).** The `mylang-io` byte runner host was
+> retired with the other host applications. A program reads and writes through its
+> `Stream` and capability parameters under `mylang run` ([I/O](../io.md)). This page
+> is kept as a record.
+
 `mylang-io --project DIRECTORY` is the smallest useful host for a guest program:
 it reads standard input as raw bytes, checks and runs the project's `main`, and
 publishes the buffered output only when the guest exits successfully. Everything
 the guest is allowed to touch beyond those bytes is named on the command line.
-The design records are [bounded byte block I/O](../byte-io-bulk.md) and
+The design records are [bounded byte block I/O](byte-io-bulk.md) and
 [scoped synchronous resource providers](../experiments/scoped-providers.md).
 
 ## Scoped directory and endpoint providers

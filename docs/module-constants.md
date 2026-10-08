@@ -34,12 +34,10 @@ Importers read `settings::ANSWER`. Generic functions may read concrete constants
 there are no generic constants yet. Constants cannot be assigned or mutably
 reassigned, and they cannot replace the required `def main` entry point.
 
-Checking folds scalar initializers before executable publication. The current typed
-program represents a scalar constant as a pure zero-argument getter containing its
-literal value; uses retain resolved call identities, and exported schema clients
-can invoke that getter. Reading a constant therefore has normal call/frame/step
-accounting, but there is no dynamic initializer, initialization order, or mutable
-storage. A later optimizer can inline this representation.
+Checking folds scalar initializers before anything is built, and each read of a
+scalar constant is its literal value (`mylang dump-ir` shows `42:i64` where
+`MAX` was read). There is no dynamic initializer, initialization order, or mutable
+storage.
 
 Dependency/expression nesting is bounded at 256 and validation/evaluation work
 at 65,536 expression, statement and name-lookup work units per evaluation.
@@ -124,7 +122,7 @@ These constants use the same export/privacy rules and can be read by generic
 functions. Each getter evaluates its ordinary checked literal, allocating a
 managed value; reads therefore contribute `managed_allocation` and are rejected
 in `noalloc` or `effects()` functions. There is no module initialization order
-or shared mutable storage. Ordinary garbage collection and allocation budgets apply.
+or shared mutable storage. Ordinary reference counting and allocation budgets apply.
 
 `check`, `run`, `build --run` and installed programs use the same checked getter.
 Function-body semantic caching remains disabled for programs with constants;

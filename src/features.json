@@ -1,6 +1,6 @@
 {
   "language_version": "0.1.0",
-  "primary_backend": "qbe",
+  "primary_backend": "llvm",
   "implemented": {
     "tuples": {
       "kind": "language",
@@ -37,11 +37,6 @@
       "summary": "`mylang fix ENTRY.my|DIR [--check]` applies every structured fix across a project to a fixed point, prints what changed per file and passes on the diagnostics that need a person; `--check` writes nothing and exits 1 when a fix would apply.",
       "doc": "docs/tooling/fix.md#mylang-fix"
     },
-    "test-diagnostics-json": {
-      "kind": "tooling",
-      "summary": "`mylang test --diagnostics=json` reports a test entry that does not compile as `diagnostic-v1` JSON lines, `fix` fields included, exactly as `check --diagnostics=json` does.",
-      "doc": "docs/tooling/fix.md#checking-libraries-and-test-files"
-    },
     "unused-import-warning": {
       "kind": "tooling",
       "summary": "A direct `import` no reference in its module resolves through is reported as the deny-able `W_UNUSED_IMPORT` warning beside `W_UNUSED_BINDING`.",
@@ -62,19 +57,19 @@
       "summary": "`mylang api --write|--check [--json]` keeps a generated, body-free `.api` interface file beside every project module, and `\"interface_files\": true` in `mylang.json` makes a stale one `E_INTERFACE_FILE_STALE`.",
       "doc": "docs/tooling/interface-files.md#mylang-api"
     },
-    "direct-c-scalar-imports-qbe": {
+    "direct-c-scalar-imports": {
       "kind": "tooling",
-      "summary": "`extern def` declarations call fixed-arity C scalar functions directly from QBE native builds.",
+      "summary": "`extern def` declarations call fixed-arity C scalar functions directly from every native build, passing narrow integers sign- or zero-extended as SysV C callers do and any NaN `float` argument as the canonical quiet NaN.",
       "doc": "docs/c-ffi.md#direct-c-imports"
     },
     "explicit-native-link-inputs": {
       "kind": "tooling",
-      "summary": "`mylang build` and `mylang test` accept repeatable object, library and search-path link inputs.",
+      "summary": "`mylang build`, `run` and `test` accept repeatable `--link FILE.c` C sources, compiled with the build's toolchain and reused only while the source and every header its depfile listed keep their bytes.",
       "doc": "docs/c-ffi.md#linking-your-code"
     },
     "python-free-native-build-driver": {
       "kind": "tooling",
-      "summary": "`mylang build` drives QBE, the assembler and the linker itself, with no Python installer in the loop.",
+      "summary": "`mylang build` drives the Zig toolchain's clang (`zig cc`) itself, compiling each LLVM unit and linking it with the core runtime, with no Python or installer in the loop.",
       "doc": "docs/tooling/native-build.md#mylang-build"
     },
     "python-free-native-guest-tests": {
@@ -87,11 +82,6 @@
       "summary": "A native test run reuses receipts for cases whose sources and compiler identity did not change.",
       "doc": "docs/tooling/guest-tests.md#reusing-unaffected-results"
     },
-    "guest-test-gc-stress": {
-      "kind": "tooling",
-      "summary": "`mylang test --gc-stress` runs every collected test under the runtime's stress collector and folds the switch into receipt identity.",
-      "doc": "docs/tooling/guest-tests.md#collector-stress"
-    },
     "parallel-guest-test-directories": {
       "kind": "tooling",
       "summary": "`mylang test` runs a whole directory of `.my` programs as parallel child commands sharing one cache, with one merged summary.",
@@ -101,11 +91,6 @@
       "kind": "tooling",
       "summary": "A test case may replace dependency sources inside a private bounded snapshot that never edits the originals.",
       "doc": "docs/tooling/guest-tests.md#isolated-source-provider-fixtures"
-    },
-    "guest-performance-benchmarks": {
-      "kind": "tooling",
-      "summary": "`mylang test --bench` measures exported `bench_` workloads against versioned baselines and reviewed policy limits.",
-      "doc": "docs/tooling/guest-tests.md#performance-benchmarks"
     },
     "property-tests": {
       "kind": "tooling",
@@ -149,17 +134,12 @@
     },
     "collection-membership-and-value-equality": {
       "kind": "language",
-      "summary": "`in`, `not in`, `==` and `!=` compare managed collection contents rather than identities; records, fixed arrays, unions, `Result` and `Option` compare structurally with cycle detection. In legacy-sharing mode, a managed `class` compares by reference identity.",
+      "summary": "`in`, `not in`, `==` and `!=` compare managed collection contents rather than identities; records, fixed arrays, unions, `Result` and `Option` compare structurally.",
       "doc": "docs/managed-memory.md#membership-and-value-equality"
-    },
-    "managed-arenas": {
-      "kind": "language",
-      "summary": "`with arena() as name:` releases every managed object allocated during the block in one step.",
-      "doc": "docs/arenas.md#managed-arenas"
     },
     "python-indented-syntax": {
       "kind": "language",
-      "summary": "`def`, `class`, four-space indentation and `#` comments are the source syntax; there is no second spelling.",
+      "summary": "`def`, `record`, four-space indentation and `#` comments are the source syntax; there is no second spelling.",
       "doc": "docs/python-syntax.md#the-language"
     },
     "python-payload-variant-construction": {
@@ -324,7 +304,7 @@
     },
     "python-assignments-and-value-records": {
       "kind": "language",
-      "summary": "Assignment creates a mutable function-scoped local; records and managed collections are independent values. In legacy-sharing mode, `class` assignments share one managed object.",
+      "summary": "Assignment creates a mutable function-scoped local; records and managed collections are independent values.",
       "doc": "docs/statements.md#assignments-and-value-records"
     },
     "discard-name": {
@@ -364,18 +344,8 @@
     },
     "value-semantics": {
       "kind": "language",
-      "summary": "Value semantics is the default: `list`, `dict`, `set` and `byte_buffer` values, and aggregates holding one, are independent across assignments, stores, returns and bindings unless ownership proves a move or borrow. Copies use copy-on-write storage; read-only arguments are lent, `mut` records are `inout`, and writes through loop or match bindings and into returned values are errors. `class` declarations and builtin `Cell` are rejected; `--legacy-sharing` or `\"value_semantics\": false` in `mylang.json` selects their former shared behavior for one migration release.",
+      "summary": "Value semantics is the only model: `list`, `dict`, `set` and `byte_buffer` values, and aggregates holding one, are independent across assignments, stores, returns and bindings, with copy-on-write storage under one-count reference counting. Read-only arguments are lent, `mut` records are `inout`, and writes through loop or match bindings and into returned values are errors. `class` declarations and builtin `Cell` are rejected.",
       "doc": "docs/value-semantics.md#value-semantics"
-    },
-    "ownership-explain": {
-      "kind": "tooling",
-      "summary": "`mylang check FILE.my --explain-ownership=OUT.jsonl` writes the ownership analysis of every lowered function as JSON Lines: each local's role, every transfer classed move, borrow or copy, every copy-on-write check site with the loop header it is hoisted to, and the loads that move.",
-      "doc": "docs/tooling/ownership.md#explain-ownership"
-    },
-    "rc-ownership-sites": {
-      "kind": "tooling",
-      "summary": "`--rc-runtime=sites` builds a counting RC program that charges every physical ownership event (owner and hold acquire and release, allocation, retirement, clone, uniqueness check, receiver-scope and frame-journal operations) to the emitted runtime or glue call that caused it, and at exit prints the top sites by events with their function, source position, operation and static type, writing every site as JSON to the file `MYLANG_RC_SITES` names.",
-      "doc": "docs/tooling/ownership.md#ownership-sites"
     },
     "aggregate-copy-elision": {
       "kind": "language",
@@ -519,13 +489,8 @@
     },
     "nominal-records": {
       "kind": "language",
-      "summary": "`record` declares a nominal value record of annotated fields; `class` is the managed reference spelling.",
+      "summary": "`record` declares a nominal value record of annotated fields; `class` is rejected.",
       "doc": "docs/records-and-unions.md#records"
-    },
-    "managed-class-records": {
-      "kind": "language",
-      "summary": "In legacy-sharing mode, `class` declares a GC-managed reference record whose assignments, calls and field reads share one object. Default value semantics rejects `class`; use a `record` for values or a pool handle for identity.",
-      "doc": "docs/records-and-unions.md#managed-class-records"
     },
     "tagged-unions": {
       "kind": "language",
@@ -569,7 +534,7 @@
     },
     "generic-nominals": {
       "kind": "language",
-      "summary": "`class` and `union` declarations take type parameters and specialize by argument identity.",
+      "summary": "`record` and `union` declarations take type parameters and specialize by argument identity.",
       "doc": "docs/generics.md#generic-records-and-unions"
     },
     "structural-contracts": {
@@ -596,16 +561,6 @@
       "kind": "language",
       "summary": "Exported signatures over JSON-compatible types are checked, rendered by `schema-project`, and carried as `typed-json-v1` test arguments and expectations.",
       "doc": "docs/typed-json.md#typed-json-boundaries"
-    },
-    "scoped-directory-and-endpoint-providers": {
-      "kind": "tooling",
-      "summary": "The byte runner grants a guest a named directory or network endpoint instead of ambient authority.",
-      "doc": "docs/tooling/byte-runner.md#scoped-directory-and-endpoint-providers"
-    },
-    "scoped-filesystem-metadata-and-listings": {
-      "kind": "tooling",
-      "summary": "Scoped directory providers answer bounded metadata and directory listings.",
-      "doc": "docs/tooling/byte-runner.md#filesystem-metadata-and-listings"
     },
     "public-declarations": {
       "kind": "language",
@@ -651,16 +606,6 @@
       "kind": "language",
       "summary": "One `check` reports the first fault in each independently checked function instead of stopping at the first.",
       "doc": "docs/diagnostic-recovery.md#checking-independent-function-faults"
-    },
-    "copied-block-byte-io": {
-      "kind": "tooling",
-      "summary": "The byte host moves data in copied bounded blocks rather than shared buffers.",
-      "doc": "docs/byte-io-bulk.md#bounded-byte-block-io"
-    },
-    "configurable-byte-io-budgets": {
-      "kind": "tooling",
-      "summary": "Input, output and execution budgets for the byte runner are set on its command line.",
-      "doc": "docs/tooling/byte-runner.md#budgets"
     },
     "scalar-module-constants": {
       "kind": "language",
@@ -719,18 +664,13 @@
     },
     "guest-memory-ceilings": {
       "kind": "tooling",
-      "summary": "Every process that runs guest code runs under a byte ceiling the heap traps on and the kernel backs with RLIMIT_AS.",
+      "summary": "`mylang run` and every `mylang test` child run under a byte ceiling (4 GiB and 512 MiB by default; `--max-memory`, `MYLANG_MEMORY_LIMIT`, `limits` in `mylang.json`) that the runtime traps on with `R_MEMORY_BUDGET` and the kernel backs with `RLIMIT_AS`.",
       "doc": "docs/tooling/runtime-budgets.md#guest-memory-ceilings"
-    },
-    "native-default-releasefast": {
-      "kind": "tooling",
-      "summary": "`mylang build` and `mylang run` build ReleaseFast unless `--mode Debug` selects an unoptimized binary, and `--report` states the mode.",
-      "doc": "docs/performance.md#build-for-speed"
     },
     "release-builds": {
       "kind": "tooling",
-      "summary": "`mylang build`, `run` and `test` use QBE in either optimize mode unless a backend is named; `--release` is the shorthand for `--mode ReleaseFast --backend llvm --llvm-opt 3 --lto`, and `--report` states the resolved backend.",
-      "doc": "docs/tooling/native-build.md#backends"
+      "summary": "`mylang build`, `run` and `test` build debug by default, one LLVM unit per source module so an edit recompiles only the units whose text changed; `--release` (or `--mode ReleaseFast`) builds the whole program as one optimized LLVM unit, keeping every check its facts do not prove.",
+      "doc": "docs/tooling/native-build.md#debug-and-release-builds"
     },
     "docs-command": {
       "kind": "tooling",
@@ -762,29 +702,9 @@
       "summary": "A project check stands stored per-function summaries (dependency context, region digest and referenced names, propagated effect and mutation facts, region-relative diagnostics, callees) in for every unchanged body, so a one-body edit checks only that body; a changed cross-function fact, a cycle through a stood-in body or a pass error repeats the check in full, and build/run use the summaries for pass facts only.",
       "doc": "docs/tooling/caches.md#check-summaries"
     },
-    "module-compile": {
-      "kind": "tooling",
-      "summary": "`mylang compile-module` compiles one module from its own source and its imports' interfaces to the units, interface (with the emission facts dependents read) and objects a whole-program build produces for it, key for key; `mylang link-modules` links a program from its modules' outputs into the whole-program build's executable.",
-      "doc": "docs/tooling/module-interfaces.md#compiling-a-module-on-its-own"
-    },
-    "module-build": {
-      "kind": "tooling",
-      "summary": "`mylang build`, `build --run` and `run` of a project compile it module by module: a scheduler compiles each stale module in a child process over the import graph, in parallel, starting a dependent once its imports have published their interfaces, and stops an edit at any module whose interface and emission facts held; the standard library is compiled once per cache and compiler; the link reads one record per module and makes the `--whole-program` build's executable, byte for byte.",
-      "doc": "docs/tooling/module-interfaces.md#building-a-project-module-by-module"
-    },
-    "module-check": {
-      "kind": "tooling",
-      "summary": "`mylang check` of a project checks it module by module: each stale module against its imports' interfaces, with no emission, its warnings replayed in the whole-program order; a module that does not check goes to the whole-program check, and the modules that did keep their records.",
-      "doc": "docs/tooling/module-interfaces.md#checking-a-project-module-by-module"
-    },
-    "module-test": {
-      "kind": "tooling",
-      "summary": "`mylang test` of a project builds its tests module by module: each stale module's compile also writes its share of the test facts, contracts, test exports and wire and codec tables; the run merges them (adding the program-wide indirect and codec edges), replays receipts as before, and links the tests it runs into one executable with the harness from the modules' objects; `--whole-program` keeps the whole-program session.",
-      "doc": "docs/tooling/guest-tests.md#tests-module-by-module"
-    },
     "module-interfaces": {
       "kind": "tooling",
-      "summary": "`mylang interfaces emit` writes one `module-interface-v2` artifact per module from the whole-program check (declaration text with only the bodies a dependent reads, the facts that stand in for the rest, interface fingerprints and reached shapes) with an interface hash that a body-only edit keeps and an implementation hash; `interfaces check` checks one module against interfaces alone and `interfaces oracle` proves every module's such check equals the whole-program check.",
+      "summary": "`mylang interfaces emit` writes one `module-interface-v5` artifact per module from the whole-program check (declaration text with only the bodies a dependent reads, the facts that stand in for the rest, interface fingerprints and reached shapes) with an interface hash that a body-only edit keeps and an implementation hash; `interfaces check` checks one module against interfaces alone and `interfaces oracle` proves every module's such check equals the whole-program check.",
       "doc": "docs/tooling/module-interfaces.md#module-interfaces"
     },
     "persistent-checked-bodies": {
@@ -794,12 +714,7 @@
     },
     "native-test-preparation-reuse": {
       "kind": "tooling",
-      "summary": "A warm unchanged native-test run validates through the shared query cache, reuses closure-bound result receipts and executes zero tests without lowering, emitting or linking; durable checked facts key fully cached selections, and a miss lowers, emits and links only the selected tests' reachable closure.",
-      "doc": "docs/tooling/guest-tests.md#reusing-unaffected-results"
-    },
-    "signature-pure-outcome-replay": {
-      "kind": "tooling",
-      "summary": "An opt-in `mylang test --pure-skip` replays a recorded pass-or-fail outcome for an unchanged signature-pure test without executing it; a recorded failure is replayed as a failure, and the record is bound to the same closure, contract, provider and expected value as the receipt.",
+      "summary": "A warm unchanged test run checks the project through the shared query cache and replays result receipts keyed by each test's Core IR before passes, so looking up a cached test emits and links no code.",
       "doc": "docs/tooling/guest-tests.md#reusing-unaffected-results"
     },
     "selected-test-providers": {
@@ -839,18 +754,8 @@
     },
     "native-instruction-and-frame-budgets": {
       "kind": "tooling",
-      "summary": "`--max-steps=N` and `--max-frames=N` impose opt-in instruction and call-depth ceilings on an otherwise unbounded guest run, and each trap names the flag that raises it.",
+      "summary": "`mylang run`, `run-project` and `build --run` take opt-in `--max-steps` and `--max-frames` ceilings (one step per executed block, one frame per call of a program function), compiled into `main`, and each trap names the flag that raises it; a test defaults to 1,000,000 steps and 1,024 frames.",
       "doc": "docs/tooling/runtime-budgets.md#instruction-and-frame-budgets"
-    },
-    "host-application-guest-bounds": {
-      "kind": "tooling",
-      "summary": "A host application bounds its guest with the ceilings its build can enforce: `schematic-svg` renders under a call-depth and wall-clock ceiling with no instruction accounting, and `--bounded` restores the instruction ceiling.",
-      "doc": "docs/tooling/runtime-budgets.md#host-application-guests"
-    },
-    "memory-bounded-test-fanout": {
-      "kind": "tooling",
-      "summary": "A directory test run sizes its worker pool from free memory as well as cores, with --jobs and MYLANG_JOBS to override it.",
-      "doc": "docs/tooling/runtime-budgets.md#fan-out-bounded-by-memory"
     },
     "typed-holes": {
       "kind": "language",
@@ -889,18 +794,8 @@
     },
     "managed-lists": {
       "kind": "language",
-      "summary": "`list[T]` is a growing garbage-collected sequence shared by assignment.",
+      "summary": "`list[T]` is a growing managed sequence; assignment, arguments and stores give independent values over copy-on-write storage.",
       "doc": "docs/managed-memory.md#managed-lists"
-    },
-    "nonmoving-tracing-gc": {
-      "kind": "language",
-      "summary": "A single-threaded nonmoving tracing collector reclaims managed objects at allocation safepoints.",
-      "doc": "docs/managed-memory.md#the-tracing-collector"
-    },
-    "managed-list-cycles": {
-      "kind": "language",
-      "summary": "Cyclic managed graphs are reclaimed; reference counting only protects temporary roots.",
-      "doc": "docs/managed-memory.md#reclaiming-cycles"
     },
     "standard-math": {
       "kind": "language",
@@ -1004,7 +899,7 @@
     },
     "invalidation-report": {
       "kind": "tooling",
-      "summary": "`--explain-invalidation` reports per-stage hit/miss and the first changed dependency against a stored baseline; `--report` adds per-stage counts.",
+      "summary": "`mylang check-project --explain-invalidation` reports per-stage hit/miss and the first changed dependency against a stored baseline; `--report` adds per-stage counts.",
       "doc": "docs/experiments/incremental-contract.md#invalidation-observability"
     },
     "incremental-cache-contract": {
@@ -1014,7 +909,7 @@
     },
     "clean-warm-invalidation-matrix": {
       "kind": "tooling",
-      "summary": "A clean-versus-warm invalidation matrix proves status, diagnostics, interface manifest, QBE and reuse counts agree.",
+      "summary": "A clean-versus-warm invalidation matrix proves status, diagnostics, interface manifest and reuse counts agree.",
       "doc": "docs/experiments/incremental-contract.md#correctness-clean-versus-warm"
     },
     "list-interfaces-signature": {
@@ -1059,8 +954,8 @@
     },
     "host-capability-foreign-calls": {
       "kind": "tooling",
-      "summary": "Every `extern def` and `host def` takes `host: Host` as its first parameter; the checker verifies it at each call and the C ABI drops it before the foreign call, with `--allow-host` under `--restrict`.",
-      "doc": "docs/c-ffi.md#direct-c-imports"
+      "summary": "Every `extern def` takes `host: Host` as its first parameter and declares `effects(host)`; the checker verifies it at each call and the C ABI drops it before the foreign call, with `--allow-host` under `--restrict`.",
+      "doc": "docs/c-ffi.md#the-host-parameter"
     },
     "buffered-stream-write": {
       "kind": "language",
@@ -1101,11 +996,6 @@
       "kind": "tooling",
       "summary": "`mylang context <entry.my> --symbol 'module::name'` or `--at 'path:line:column'` answers one `agent-context-v1` object about one declaration from the facts `mylang index-project`, `mylang list-interfaces`, `mylang tests-for` and `mylang api-diff` already publish: declaration, contract with fact status, types, dependencies, tests and optional changes in a fixed priority order inside a `--context-bytes` budget, with per-section `omissions`, a `continuation` query, and a labeled partial answer on an incomplete project.",
       "doc": "docs/tooling/agent-context.md#mylang-context"
-    },
-    "native-invocation": {
-      "kind": "tooling",
-      "summary": "`mylang invoke <entry.my> --function 'module::name' --describe` reports the selected export's checked argument and result contract, wire representation, effects, required capabilities and invocation eligibility without running it, and `--input=FILE` executes exactly one call in a bounded native child and writes one `native-invocation-v1` JSON object on stdout, where a returned `Result.Err` is a completed call and traps, timeouts and malformed requests are distinguished from it.",
-      "doc": "docs/tooling/invocation.md#mylang-invoke"
     },
     "keyword-only-parameters": {
       "kind": "language",
@@ -1169,22 +1059,22 @@
     "type_aliases": "non-parameterized",
     "constants": "bounded-scalar-expressions-and-nongeneric-source-functions-plus-str-bytes-literals",
     "iteration": "range(end/start,end), list/str/dict/fixed-array foreach and enumerate; fixed bounds and structural mutation checks",
-    "native_runtime": "QBE only; host effects require explicit ABI registration",
+    "native_runtime": "the new core: Core IR to LLVM text, compiled with the pinned Zig toolchain's clang and linked with the core C runtime; amd64 Linux (SysV) only; foreign calls through scalar `extern def` with `--link FILE.c`",
     "workers": "no host worker facility and no guest spawn syntax; parallelism is one guest process per task",
     "floating_point": "float literals, ordinary operators, signed int conversions; IEEE binary64; standard sqrt is the correctly rounded binary64 operation, decimal parsing is accurate rather than correctly rounded; no transcendentals",
     "callbacks": "generic signatures, exact effect ceilings, explicit readonly context borrows, no captures or reference results",
     "semantic_reuse": "ordinary checked bodies and concrete specializations replay across processes; symbolic templates keep abstract checking; unresolved nested or interned-identity references stay conservative; in-memory retention is bounded by one shared reuse.max_bytes budget and a zero budget disables reuse",
-    "text_data": "managed Unicode scalar strings and managed bytes; host byte I/O keeps its scalar ABI",
+    "text_data": "managed Unicode scalar strings and managed bytes; foreign calls take scalars only",
     "time_random": "Unix wall clock and explicit entropy capabilities; deterministic noncryptographic SplitMix64",
-    "managed_lists": "independent values by default with copy-on-write payloads; shared aliases only in legacy-sharing mode; automatic growth; no owned/resource elements, borrowed interiors, untraced storage embedding, or host escape",
-    "gc": "single-threaded nonmoving tracing; retained guest values root intermediates; collect-on-allocation stress option",
+    "managed_lists": "independent values with copy-on-write payloads; automatic growth; no owned/resource elements, borrowed interiors or host escape",
     "python": "static fixed-width types, function-scoped locals with E_UNBOUND definite assignment, value records; indentation is the only block syntax",
     "dictionaries": "managed insertion order; homogeneous hashable keys (integers, bool, str, bytes, and tuples, records, unions, enums, domains, Option and fixed arrays of those) and copyable values",
-    "value_semantics": "default model: independent collection and aggregate values with rooted copy-on-write transfers (up to 1,024 descriptor edges), cloning writable payloads in their owning arena region; a copy is not a `managed_allocation` effect. `class` declarations and builtin Cell are rejected by default and retained only by the one-release `--legacy-sharing` or project opt-out. A `mut` collection parameter writes the caller's collection but whole-parameter rebinding does not; a `mut` record parameter is inout and cannot be a function value",
+    "value_semantics": "the only model: independent collection and aggregate values with copy-on-write transfers; a copy is not a `managed_allocation` effect. `class` declarations and builtin Cell are rejected. A `mut` collection parameter writes the caller's collection but whole-parameter rebinding does not; a `mut` record parameter is inout and cannot be a function value",
     "sets": "managed insertion order over hashable elements; `set()` needs an expected type; no frozenset, no augmented operators (`|=`); generic bodies key only by integer-bounded parameters, `str` or concrete hashable types; a module that declares its own function named `set` keeps it, and there the type spelling `set[T]` is unavailable while literals still work",
     "generators": "generator expressions only as the argument of sum, any, all, min, max, sorted, list, set, dict or str.join; no yield and no generator values",
-    "native_tests": "fresh QBE processes; exported typed-call-compatible signatures; positive deterministic receipts only; project validity is always checked through the shared query cache; only a fully cached selection skips lowering/emission/linking, while a changed snapshot still pays one whole-project preparation emission and an uncached selection builds the whole selected-provider library; provider snapshots at most 128 sources/16 MiB",
-    "standard_library": "ten embedded Python-syntax modules over managed types: math, strings, sort, path, hex, base64, json, pool, random, time"
+    "native_tests": "one native process per test; exported test_ functions returning bool or Result[bool, E]; positive deterministic receipts keyed by the test program's Core IR, settings, toolchain and outcome-relevant environment; a run with --link or --verify-facts never reuses a receipt; directory runs share one worker budget (--jobs, MYLANG_JOBS or CPUs)",
+    "standard_library": "ten embedded Python-syntax modules over managed types: math, strings, sort, path, hex, base64, json, pool, random, time",
+    "memory": "one-count reference counting with copy-on-write; no tracing collector; value semantics prevents cycles, and identity graphs use pool handles; `with arena()` is a retired plain block"
   },
   "removed": {
     "explicit-storage-tier": {
@@ -1242,6 +1132,98 @@
     "unchecked-release-builds": {
       "date": "2026-09-24",
       "note": "`mylang build --unchecked` (and `run`/`run-project`/`build --run --unchecked`, and the emitters' internal `--drop-safety-checks`) omitted the overflow, narrowing-cast and index-bounds guards and, with no ceiling, the frame record, so a would-be trap was undefined behaviour and optimization could change a program's result. Every build now keeps them (RELEASE-CHECKED-1), and `--unchecked` is refused as removed."
+    },
+    "guest-test-gc-stress": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `mylang test --gc-stress` ran tests under the tracing collector's stress mode. The collector is gone; one-count reference counting is the only memory model, and the flag is refused."
+    },
+    "nonmoving-tracing-gc": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): the single-threaded nonmoving tracing collector, `--gc-runtime` and `MYLANG_RUNTIME=gc-v1`. Managed objects are reference counted once and released when their last owner goes away."
+    },
+    "managed-list-cycles": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): reclaiming cyclic managed graphs needed the tracing collector and legacy sharing. Value semantics cannot build a cycle; identity graphs use pool handles."
+    },
+    "managed-arenas": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `with arena() as name:` regions and their escape checks (`E_ARENA_ESCAPE`). The block still runs as an ordinary block and warns `W_ARENA_RETIRED`."
+    },
+    "managed-class-records": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): legacy-sharing mode and its GC-managed `class` reference records, `--legacy-sharing` and the `value_semantics: false` opt-out. `class` and builtin `Cell` are rejected; use records for values and pool handles for identity."
+    },
+    "rc-ownership-sites": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `--rc-runtime=sites` and `MYLANG_RC_SITES`, the counting two-count RC runtime that charged ownership events to call sites. `mylang build --stats` reports the new core's ownership plan."
+    },
+    "ownership-explain": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `mylang check --explain-ownership=OUT.jsonl`, which wrote the old bytecode ownership analysis. The flag is refused; `mylang build --stats` reports the new core's ownership plan."
+    },
+    "native-invocation": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `mylang invoke` and its `native-invocation-v1` envelope, retired with host functions (S5-D5). Call the function from a `main` or a test."
+    },
+    "module-compile": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `mylang compile-module` and `link-modules`, the old back end's per-module QBE builds. `mylang build` emits and caches one LLVM unit per module instead."
+    },
+    "module-build": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): the module-by-module scheduler of `compile-module` children behind `build` and `run`. A debug build emits one LLVM unit per module and recompiles only units whose text changed."
+    },
+    "module-check": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): module-by-module `mylang check` from `compile-module` records. A project check checks the merged program with the semantic cache."
+    },
+    "module-test": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): per-module test libraries built from `compile-module` records. `mylang test` builds each test program with the new core and keys receipts on its Core IR."
+    },
+    "guest-performance-benchmarks": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `mylang test --bench*` with its baselines and policies, and `bench-promote` (S5-D6). Time a program with `mylang run --timings` or an external benchmark harness."
+    },
+    "host-application-guest-bounds": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): the host applications `schematic-svg`, `board-trial` and `mylang-io` and the ceilings they chose for their guests (S5-D5)."
+    },
+    "memory-bounded-test-fanout": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): the old test runner sized a directory run's workers from `MemAvailable`. The new runner takes `--jobs`, `MYLANG_JOBS` or the CPU count."
+    },
+    "signature-pure-outcome-replay": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `mylang test --pure-skip`, which replayed a recorded outcome for a signature-pure test without running it (S5-D6)."
+    },
+    "test-diagnostics-json": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `mylang test --diagnostics=json` (S5-D6). `mylang check --diagnostics=json` reports an entry that does not compile, `fix` fields included."
+    },
+    "copied-block-byte-io": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): copied 256-byte blocks, an ABI of the retired `mylang-io` byte runner host (S5-D5)."
+    },
+    "configurable-byte-io-budgets": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): the `mylang-io` byte runner's input, output and execution budgets (S5-D5)."
+    },
+    "scoped-directory-and-endpoint-providers": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): the `mylang-io` byte runner's `--allow-dir` and `--allow-endpoint` providers (S5-D5). `mylang run --restrict --allow-read/--allow-write/--allow-endpoint` grants the same authority."
+    },
+    "scoped-filesystem-metadata-and-listings": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): metadata and listings of the `mylang-io` byte runner's scoped directory providers (S5-D5)."
+    },
+    "native-default-releasefast": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): builds defaulted to QBE at ReleaseFast. A build is now a debug build, one LLVM unit per module, unless `--release` asks for the optimized whole-program build (`release-builds`)."
+    },
+    "direct-c-scalar-imports-qbe": {
+      "date": "2026-10-08",
+      "note": "merged into direct-c-scalar-imports when the QBE back end was retired (new-core stage S5, 2026-10); `extern def` calls work the same in every build."
     }
   }
 }

@@ -2,7 +2,7 @@
 
 `break;` leaves the nearest enclosing `while` loop. `continue;` starts that
 loop's next condition check. Both work in ordinary and generic functions,
-including inside `if`, `match` and nested arena scopes.
+including inside `if`, `match` and `with` blocks.
 
 ```my
 def sum() -> i64:
@@ -18,8 +18,7 @@ def sum() -> i64:
     return total
 ```
 
-Each exit releases the owned values and arena scopes it leaves before
-jumping. An arena surrounding the loop remains active. Results created
+Each exit releases the owned values it leaves before jumping. Results created
 inside the iteration must still be handled, transferred, returned, or explicitly
 acknowledged before either exit. Exit statements reject outside loops; statements
 following an unconditional exit in the same block are unreachable errors.
@@ -31,7 +30,7 @@ more precise loop analysis could establish that the owner will not be used again
 Loop return analysis still permits the condition to be initially false; a return
 after the loop remains necessary when the function could fall through.
 
-Lowering uses the existing checked jumps, local drops and arena endings, so every
+Lowering uses the existing checked jumps and local drops, so every
 exit path shares the same cleanup sequence.
 The formatter, source maps, generic checker and duplicate analysis preserve the
 new statements.

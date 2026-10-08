@@ -24,7 +24,7 @@ root again, verifies all of those hashes, copies the verified bytes (and the
 nearest `mylang.json`, with its import policy when it sits beside the entry)
 into a private directory under `TMPDIR`, and runs `project-dependencies` and one
 project command over that snapshot: `check-project` by default, or the one
-`--command` names (`run-project`, `index-project`, `emit-project-qbe`). The
+`--command` names (`run-project` or `index-project`). The
 shared checkout is never compiled in place, the application tree stays
 unchanged, and the snapshot is deleted afterwards.
 

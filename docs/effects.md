@@ -29,8 +29,8 @@ use, so the fix is to pass it on or drop it.
 Because the ceiling follows from the signature, it is what the interfaces
 publish: `list-interfaces` prints `ceiling(...)` for a declaration whose body was
 never checked, the contract manifest and public schema publish it, and it is part
-of `interface_sha256` while the inferred body set is not. A host declaration
-(`host def`, `extern def`) has no body to derive from, so its `effects(...)`
+of `interface_sha256` while the inferred body set is not. A foreign declaration
+(`extern def`) has no body to derive from, so its `effects(...)`
 clause stays its ceiling as written.
 
 A compile-time `str` literal is an immutable constant, not an allocation:
@@ -94,7 +94,7 @@ source error.
 
 | Effect | Contributed by |
 | --- | --- |
-| `managed_allocation` | creating or growing a list, dictionary, string or byte string, including `escape` out of an arena; a compile-time `str` literal is an immutable constant and is not an allocation |
+| `managed_allocation` | creating or growing a list, dictionary, string or byte string; a compile-time `str` literal is an immutable constant and is not an allocation |
 | `filesystem` | `open` and the whole-path file helpers |
 | `network` | the network capability surface |
 | `clock` | reading wall-clock time |
@@ -154,9 +154,6 @@ def main() -> int:
   still needs a `Filesystem` value to do anything with the filesystem, and that
   value comes from the entry point's parameters — which `mylang run` provisions
   by default and `--restrict` withholds until a matching `--allow-*` grants it.
-- The bytecode validator recomputes every summary from the emitted instructions
-  and rejects a forged annotation, so an effect cannot be hidden by editing
-  metadata.
 - A contract condition (`@requires`, `@ensures`, `@invariant` and each `old(...)`)
   is held to the empty ceiling apart from `managed_allocation`, judged by the
   same inference: any other effect it or a function it calls has is
@@ -190,7 +187,6 @@ compiler snapshots any read-only argument that might overlap it. Two overlapping
 always be built and mutated.
 
 ```mylang
-# doc: value-semantics
 # doc: expect 7
 def replace_first(values: mut list[int], replacement: int) -> None effects(mutation):
     values[0] = replacement
@@ -206,7 +202,6 @@ A write through a parameter that is not declared `mut` is rejected at the write
 site with the declaration to paste:
 
 ```mylang
-# doc: value-semantics
 # doc: expect-error E_MUTATION_MARKER
 def overwrite(values: list[int]) -> None effects(mutation):
     values[0] = 42
@@ -223,7 +218,6 @@ Assignment preserves an independent value. A helper changes its caller's value
 only through a `mut` parameter and a marked argument:
 
 ```mylang
-# doc: value-semantics
 # doc: expect 1
 # doc: expect 5
 def set_first(values: mut list[int], replacement: int) -> None effects(mutation):
@@ -244,7 +238,6 @@ its inner lists independent when one of them is changed. The implementation may
 share storage until a write, but that sharing has no observable mutation effect:
 
 ```mylang
-# doc: value-semantics
 # doc: expect 1
 # doc: expect 9
 def main(out: Stream) -> int effects(managed_allocation, output):
@@ -264,7 +257,6 @@ or `f(mut a, mut a[0])` (see
 [value semantics](value-semantics.md#the-rules)).
 
 ```mylang
-# doc: value-semantics
 # doc: expect 23
 def touch(target: mut list[int], source: list[int]) -> int effects(mutation, managed_allocation):
     target.append(len(source))
@@ -285,7 +277,6 @@ a caller can update its own copy. A write through a read-only parameter itself
 remains `E_MUTATION_MARKER`.
 
 ```mylang
-# doc: value-semantics
 # doc: expect 1
 # doc: expect 9
 def identity(values: list[int]) -> list[int] effects():
@@ -311,7 +302,6 @@ Definitely-fresh storage may be built, filled and mutated locally without a
 caller can also write a returned value without changing the input:
 
 ```mylang
-# doc: value-semantics
 # doc: expect 1
 # doc: expect 9
 def doubled(values: list[int]) -> list[int] effects(managed_allocation):
@@ -471,7 +461,7 @@ parameters supply no `clock` can therefore hold only a simulated clock, and
 reading it is not an effect of that function: it neither widens the function's
 inferred effects nor breaks the ceiling its signature implies. The same holds for
 `random`, `filesystem`, `network` and `environment`. A function with a `Host`
-parameter, a `host def` and an `extern def` can reach the host by other means,
+parameter and an `extern def` can reach the host by other means,
 so for them nothing is contained. That is what lets a caller with no capability
 at all test code that takes one:
 
@@ -516,5 +506,4 @@ declares a capability parameter; see
 
 - [Contracts](contracts.md) — why a `@requires`, `@ensures` or `@invariant` condition must be effect-free
 - [Printing, files and command-line authority](io.md) — the capability values and the grants that provision them
-- [Managed arenas](arenas.md) — why allocation inside an arena still contributes `managed_allocation`
 - [Transitive effect bounds](experiments/effects.md) — the dated checkpoint this contract grew from

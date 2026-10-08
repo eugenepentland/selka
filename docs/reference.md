@@ -85,7 +85,7 @@ a `reference-v1` envelope:
   "query": "sort_ints",
   "match": "substring",
   "count": 1,
-  "language": { "version": "0.1.0", "primary_backend": "qbe" },
+  "language": { "version": "0.1.0", "primary_backend": "llvm" },
   "library": { "status": "checked", "reason": null, "modules": 12, "exports": 168 },
   "declarations": [
     {

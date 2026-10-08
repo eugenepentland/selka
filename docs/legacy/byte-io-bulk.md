@@ -1,5 +1,8 @@
 # Bounded byte block I/O
 
+> **Removed 2026-10 (new core S5-D5).** Copied byte blocks were an ABI of the
+> retired `mylang-io` byte runner host. This page is kept as a record.
+
 `mylang-io` supports copied 256-byte blocks alongside its existing scalar calls.
 Projects opt in by adding the following exports and declarations to `io.my`:
 
@@ -78,7 +81,7 @@ Reproduce the end-to-end comparison with:
 python3 scripts/benchmark_byte_io.py --runner zig-out/bin/mylang-io
 ```
 
-The [recorded run](experiments/byte-io-bulk-20260907.json) includes all timings,
+The [recorded run](../experiments/byte-io-bulk-20260907.json) includes all timings,
 binary and payload hashes, callback limits, and platform. These timings include
 process startup and checking; they do not isolate callback cost or imply results
 on another workload or build configuration.

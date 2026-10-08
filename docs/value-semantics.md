@@ -1,11 +1,8 @@
 # Value semantics
 
-This is the default value model of
-[D9](adr/D9-value-semantics-then-rc.md). The default runtime implements it with
-reference counting and copy-on-write; the `--gc-runtime` opt-out implements the
-same rules over the tracing collector.
-The one-release compatibility mode restores the previous shared-reference
-behavior for code that has not yet migrated.
+This is mylang's one value model ([D9](adr/D9-value-semantics-then-rc.md)). The
+runtime implements it with reference counting and copy-on-write; there is no
+other mode and no switch to select one.
 
 Under value semantics every `list`, `dict`, `set` and `byte_buffer` is an
 independent value, like a record or an `int` already is. Assignment, argument
@@ -14,7 +11,6 @@ reach the same collection. A function changes its caller's value only through a
 `mut` parameter, marked `mut` at the call site.
 
 ```mylang
-# doc: value-semantics
 # doc: expect 12
 def main() -> int:
     a = [1]
@@ -24,23 +20,11 @@ def main() -> int:
 ```
 
 This returns `12`: `b` is an independent value, so appending to `b` leaves `a`
-with one element. Compatibility mode returns `22` because the names share one
+with one element; Python would return `22`, because there both names reach one
 list. The syntax resembles Python's; the value rule differs.
 
-## Selecting a mode
-
-- Value semantics need no flag. `--value-semantics` remains an explicit spelling
-  for scripts that already use it.
-- `--legacy-sharing` temporarily selects the old shared-reference behavior on
-  commands that accept the value-semantics flag.
-- `"value_semantics": false` in `mylang.json` or
-  `MYLANG_VALUE_SEMANTICS=0` in the environment selects compatibility mode;
-  `true` or `1` selects value semantics. A command-line flag takes priority over
-  the environment, then project configuration, then the default.
-
-The selected mode is part of every cache identity, so a cached check, object or test
-result from one mode is never reused in the other. `.api` interface files do
-not change.
+The retired flags `--value-semantics` and `--legacy-sharing` are refused with
+status 2.
 
 ## The rules
 
@@ -50,7 +34,6 @@ and does not change the parameter it came from, and a returned value never
 aliases an argument:
 
 ```mylang
-# doc: value-semantics
 # doc: expect 21
 def appended(xs: list[int]) -> list[int]:
     ys = xs
@@ -72,7 +55,6 @@ is the caller's variable: a field assignment, a nested field or collection
 write and a rebinding of the whole parameter all reach the caller.
 
 ```mylang
-# doc: value-semantics
 # doc: expect 22
 record Counter:
     n: int
@@ -110,7 +92,6 @@ leaves the replacement intact. If the entry is unchanged, whole rebinding by
 the callee publishes its final value into that entry.
 
 ```mylang
-# doc: value-semantics
 # doc: expect 27
 
 def replace(items: mut list[int], source: list[int], choose: bool):
@@ -132,7 +113,6 @@ the iteration ends: it is `E_VALUE_BINDING_WRITE`. The same holds for
 payload binding of a value another name holds.
 
 ```mylang
-# doc: value-semantics
 # doc: expect-error E_VALUE_BINDING_WRITE
 def pad(grid: mut list[list[int]]) -> None:
     for row in grid:
@@ -143,7 +123,6 @@ Change the collection through its place instead, or copy the binding into a
 local if the change is meant to stay local:
 
 ```mylang
-# doc: value-semantics
 # doc: expect 22
 def pad(grid: mut list[list[int]]) -> None:
     for i in range(len(grid)):
@@ -156,8 +135,8 @@ def main() -> int:
 ```
 
 A `match` on a call result binds the result itself, which nothing else holds.
-Under the default mode a `class` declaration is `E_VALUE_CLASS`: use a record or
-recursive union for finite values, or a pool handle for stable graph identity.
+A `class` declaration is `E_VALUE_CLASS`: use a record or recursive union for
+finite values, or a pool handle for stable graph identity.
 
 **Writing into a returned value is an error.** `lookup(table, key).items.append(1)`
 changes a temporary copy no name holds: `E_VALUE_TEMPORARY_WRITE`. Assign the
@@ -169,7 +148,6 @@ Where one could share storage with a `mut` argument of the same call, the
 compiler passes a copy taken before the call:
 
 ```mylang
-# doc: value-semantics
 # doc: expect 23
 def touch(target: mut list[int], source: list[int]) -> int:
     target.append(len(source))
@@ -194,7 +172,6 @@ fields or roots stay legal, and read-only arguments keep their snapshots.
 Save the call's result first, then select the receiver from its current value:
 
 ```mylang
-# doc: value-semantics
 # doc: expect 19
 
 def selected(items: mut list[int]) -> int:
@@ -223,7 +200,6 @@ because a negative index counts back from the end. Different fields, different
 constant indices of one sign and different constant keys are disjoint:
 
 ```mylang
-# doc: value-semantics
 # doc: expect 1 2 1 2 1 2
 record Pair:
     left: list[int]
@@ -245,7 +221,6 @@ def main(out: Stream) -> int:
 ```
 
 ```mylang
-# doc: value-semantics
 # doc: expect-error E_MUTATION_OVERLAP
 def fill(a: mut list[int], b: mut list[list[int]]) -> None:
     a.append(1)
@@ -272,8 +247,7 @@ arguments of one call must name disjoint places. Copy one into a local, pass
 ```
 
 The rule holds for every call that takes `mut` arguments, including keyword
-arguments and calls through function values, and under `--legacy-sharing` too.
-It compares `mut` arguments only: a read-only argument next to a `mut` one
+arguments and calls through function values. It compares `mut` arguments only: a read-only argument next to a `mut` one
 still gets its snapshot, and a `mut` call nested inside another argument
 (`emit(mut p, make(mut p))`) finishes before the outer call starts. Because two
 `mut` parameters never name the same storage, a callee can read one while it
@@ -300,88 +274,59 @@ change goes to `row`, a copy of `rows[i]`; store the copy back after changing it
 - The builtin `Cell[T]` is `E_VALUE_CELL` in type positions and calls. A local
   mutable slot is a record changed through `mut`; a shared slot uses a pool
   handle. An ordinary user-defined record named `Cell` remains legal.
-- Under `--legacy-sharing`, existing classes and builtin Cells continue to
-  compile during the one-release migration window.
 - `str` and `bytes` are immutable, so sharing them is invisible.
 
 ```mylang
-# doc: value-semantics
 # doc: expect-error E_VALUE_CLASS
 class Node:
     next: Option[Node]
 ```
 
 ```mylang
-# doc: value-semantics
 # doc: expect-error E_VALUE_CELL
 def read(slot: Cell[int]) -> int:
     return slot.value
 ```
 
-## Arenas and contracts
-
-A transfer made inside `with arena()` usually marks an existing collection
-shared without allocating. When a later write must clone a shared payload,
-the clone uses that payload's owning region. In particular, writing an outer
-value while an inner arena is open cannot leave its new storage dangling when
-the inner arena ends. New collections still allocate in the current arena and
-leave it only through `escape` ([arenas](arenas.md#getting-a-result-out)). The
-static escape rules and runtime store barrier apply unchanged.
+## Contracts
 
 `old(xs)` of a collection is accepted in an `@ensures` clause: the capture is a
-value of its own. The compatibility checker still rejects an `old(...)` value that
-reaches a `class` or builtin Cell with `E_CONTRACT_OLD_SHARED`
-([contracts](contracts.md)).
+value of its own ([contracts](contracts.md)).
 
 ## How it is implemented
 
-Lowering places one `value_copy` instruction after every transfer that is not
-fresh. The ownership analysis of stage 2
-([ownership](tooling/ownership.md)) then leaves out every copy it proves a move
-(the source is never read again) or a borrow (neither side is written while
-both are read); `mylang check --explain-ownership` lists each copy site with
-`"copy": true` or `false`. A remaining copy takes shallow private scratch and
-marks its held mutable collection payloads shared. Fixed flat records and
-arrays mark up to eight payloads inline; boxed, variant and larger values use
-a rooted runtime transfer, as does a pinned payload that must be cloned. A
-read-only argument is lent without a copy, unless a later operand of the same
-expression may write it: `lst(xs, xs.pop())` and `out.print(xs, push(mut xs))`
-see `xs` as it was when it was evaluated, because lowering copies it then. Before a write, an inline check
-clones a shared payload and redirects the owning slot; nested writes repeat
-that step along their path, including fixed-array elements and alternating
-list and dictionary lookups such as `changed[0]["items"][0].append(2)`.
-Every intermediate collection belongs to the changed value, so an earlier snapshot keeps its
-original contents. Receivers and keys still evaluate once in source order.
-A read also captures its receiver value before evaluating the key. For example,
-if `values` is `[7, 8]`, then `values[change(mut values)]` reads the captured
-list even when `change` clears `values`, appends `91` and returns `0`: the read
-returns `7`, and `values` is `[91]` afterward. A negative index is normalized
-using the captured list's length. The same rule applies to dictionary keys;
-copying an already pinned receiver preserves the caller's mutation target.
-Reads and mut arguments retain the value selected before later arguments
-evaluate. Replacing or removing its containing entry leaves that selected
-value alive through the call. A statement that updates a receiver while an
-evaluated mut call overlaps it is rejected; call first, then perform the
-update in a separate statement. Temporary pins protect just the selected
-field path and its possible array elements; unrelated recursive branches
-stay lazy. The pins are released when evaluation finishes or returns early.
-Checks proven stable across a loop are hoisted.
+A `list`, `dict`, `set`, `byte_buffer` or recursive box keeps its contents in
+heap storage with a single reference count. Assignment, argument passing, storing
+and returning share that storage and add a reference; nothing is copied there. A write first tests the
+count: storage with one owner is written in place, and shared storage is copied and
+the copy written (copy-on-write). Nested writes repeat that step along their path,
+including fixed-array elements and alternating list and dictionary lookups such
+as `changed[0]["items"][0].append(2)`, so an earlier snapshot keeps its original
+contents. Storage is freed when its last reference goes away; there is no
+collector.
 
-For internal measurements, `MYLANG_COW_COUNTING=1` in the default value mode
-builds a separately cached instrumented binary. At exit it
-prints a `cow-stats` JSON line on stderr with marks, checks, hoisted checks,
-copies, copied bytes and pins. Legacy-sharing runs ignore this selector;
-ordinary builds emit no counter calls.
+A release build's ownership pass removes most of that work. It proves where a
+value's old version is never read again, so a write needs neither the count test
+nor the copy, and where a retain and a release cancel. `mylang build --release
+--stats` prints its counts: updates in place, writes left to a run-time count test,
+copies, and the retains and releases it kept (see
+[performance](performance.md#measure)).
+
+Receivers and keys evaluate once, in source order, and a read captures its
+receiver before evaluating the key. For example, if `values` is `[7, 8]`, then
+`values[change(mut values)]` reads the captured list even when `change` clears
+`values`, appends `91` and returns `0`: the read returns `7`, and `values` is
+`[91]` afterward. A negative index counts from the captured list's length. The
+same rule applies to dictionary keys. A read-only argument sees its value as it
+was when it was evaluated, so `both(xs, xs.pop())` passes `xs` before the pop.
+A statement that updates a receiver while an evaluated `mut` call overlaps it is
+rejected; call first, then perform the update in a separate statement.
 
 ## Limits
 
-- A transfer carries immutable recursive boxes without walking their bodies.
-  Projecting a box makes a private shallow snapshot and shares its immediate
-  mutable children; a write through a box detaches it first. Box hops alone
-  do not consume the copy-on-write depth budget, so a deep boxed chain can be
-  copied and traversed. Inline record, array and variant descriptor walks
-  remain bounded at 1,024 edges and trap `R_COW_DEPTH` if exceeded rather
-  than leaving a mutable child unshared.
+- Copying a recursive value shares its boxes without walking their bodies, and a
+  write through a box copies only the boxes on its path, so a deep chain can be
+  copied and traversed.
 - A copy is not reported as a `managed_allocation` effect.
 - A function with a `mut` record parameter cannot be a function value, and a
   callback type with one cannot take a lambda.

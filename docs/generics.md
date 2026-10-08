@@ -174,8 +174,7 @@ def main() -> int:
   the generic one.
 - Structural contracts apply to function type parameters only.
 - The public schema lists generic templates separately from concrete functions
-  and types. A template cannot be invoked through the JSON API without explicit
-  specialization, and schema export of a generic type constructor is unsupported.
+  and types, and schema export of a generic type constructor is unsupported.
 
 ## Related pages
 
