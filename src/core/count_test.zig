@@ -95,8 +95,9 @@ test "a counting build records copies, count updates, uniqueness tests and memor
     try std.testing.expectEqual(@as(i64, 1), field(debug.counts, &.{ "kinds", "list_copy", "count" }));
     try std.testing.expectEqual(@as(i64, 800), field(debug.counts, &.{ "kinds", "list_copy", "bytes" }));
     try std.testing.expectEqual(@as(i64, 800), field(debug.counts, &.{ "totals", "list_copy_bytes" }));
-    // `bump` copies its 40-byte record out of the list, before the field store, and back in;
-    // the element it replaces is released where it is, never copied out (NEW-CORE-CE-LISTS-2).
+    // `bump` copies its 40-byte record out of the list (an argument by value) and the new one
+    // back in; the element it replaces is released where it is, never copied out
+    // (NEW-CORE-CE-LISTS-2).
     try std.testing.expectEqual(@as(i64, 10), calls(debug.counts, "bump"));
     try std.testing.expectEqual(@as(i64, 400), sites(debug.counts, "record_copy", "list_get", "bump", "bytes"));
     try std.testing.expectEqual(@as(i64, 400), sites(debug.counts, "record_copy", "list_set", "bump", "bytes"));
@@ -108,8 +109,8 @@ test "a counting build records copies, count updates, uniqueness tests and memor
     try std.testing.expectEqual(field(debug.counts, &.{ "totals", "list_grow_bytes" }) + field(debug.counts, &.{ "totals", "realloc_moved_bytes" }), field(debug.counts, &.{ "kinds", "list_push", "extra" }));
     try std.testing.expect(field(debug.counts, &.{ "kinds", "list_push", "extra" }) > 0);
     try std.testing.expect(field(debug.counts, &.{ "kinds", "retain", "count" }) >= 10);
-    // Each retain in `bump` shares one record's one-element list: 8 data bytes.
-    try std.testing.expectEqual(@as(i64, 80), sites(debug.counts, "retain", "retain", "bump", "bytes"));
+    // Each retain in `bumped` shares one record's one-element list: 8 data bytes.
+    try std.testing.expectEqual(@as(i64, 80), sites(debug.counts, "retain", "retain", "bumped", "bytes"));
     try std.testing.expect(field(debug.counts, &.{ "totals", "list_grows" }) > 0);
     try std.testing.expectEqual(field(debug.counts, &.{ "totals", "allocs" }), field(debug.counts, &.{ "totals", "frees" }));
     try std.testing.expectEqual(@as(i64, 0), field(debug.counts, &.{ "totals", "live_bytes_at_exit" }));

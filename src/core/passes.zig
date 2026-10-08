@@ -9,6 +9,7 @@ const inline_leaves = @import("inline.zig");
 const vector = @import("vector.zig");
 const version = @import("version.zig");
 const own = @import("own.zig");
+const effects = @import("effects.zig");
 const origins = @import("inline_origins.zig");
 
 /// Passes only allocate.
@@ -56,9 +57,10 @@ pub fn ownership(arena: std.mem.Allocator, module: *ir.Module) Error!own.Stats {
 pub fn debug(arena: std.mem.Allocator, module: *ir.Module) Error!Result {
     var result: Result = .{ .known = &.{}, .plans = &.{}, .per_function = try arena.alloc(FunctionStats, module.functions.items.len) };
     @memset(result.per_function, .{});
+    const summaries = try effects.analyze(arena, module);
     for (module.functions.items, result.per_function, 0..) |*function, *local, index| {
         if (function.signature.linkage != .internal) continue;
-        local.own = try own.function(arena, module, function, .{ .function_index = @intCast(index) });
+        local.own = try own.function(arena, module, function, .{ .function_index = @intCast(index), .effects = &summaries });
         result.own.add(local.own);
     }
     return result;
@@ -79,10 +81,11 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
     @memset(inlined, 0);
     result.counts.inlined = try inline_leaves.inlineLeavesCounted(arena, module, &result.provenance, inlined);
     if (mode == .off) {
+        const summaries = try effects.analyze(arena, module);
         for (module.functions.items, result.per_function, inlined, 0..) |*function, *local, expanded, index| {
             if (function.signature.linkage != .internal) continue;
             local.counts.inlined = expanded;
-            local.own = try own.function(arena, module, function, .{ .provenance = &result.provenance, .function_index = @intCast(index) });
+            local.own = try own.function(arena, module, function, .{ .provenance = &result.provenance, .function_index = @intCast(index), .effects = &summaries });
             result.own.add(local.own);
         }
         return result;
@@ -111,6 +114,8 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
     // Closed caller bounds can prove an affine callback safe only after the
     // all-call parameter pass. Deliberately corrupted facts cannot prove safety.
     if (sabotage == .none) result.counts.inlined += try inline_leaves.withParametersCounted(arena, module, parameters, &result.provenance, inlined);
+    // The effect summaries of the inlined module; the passes below keep every function's meaning.
+    const summaries = try effects.analyze(arena, module);
     for (module.functions.items, result.known, result.plans, parameters, 0..) |*function, *slot, *plan, params, index| {
         if (function.signature.linkage != .internal) continue;
         const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage, .params = params };
@@ -132,7 +137,7 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         result.per_function[index].counts.versioned = guarded;
         result.per_function[index].counts.inlined = inlined[index];
         // Ownership after the facts: the instructions and blocks it adds have none.
-        result.per_function[index].own = try own.function(arena, module, function, .{ .verify = verify, .facts = &known, .provenance = &result.provenance, .function_index = @intCast(index) });
+        result.per_function[index].own = try own.function(arena, module, function, .{ .verify = verify, .facts = &known, .provenance = &result.provenance, .function_index = @intCast(index), .effects = &summaries });
         result.own.add(result.per_function[index].own);
         try extend(arena, &known, function);
         slot.* = known;

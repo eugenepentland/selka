@@ -298,7 +298,7 @@ pub fn analyze(arena: std.mem.Allocator, module: *const ir.Module) Error!Summari
 }
 
 /// Per instruction of `f`, the instructions of reachable blocks that read it (copies resolved).
-fn usersOf(arena: std.mem.Allocator, f: *const ir.Function) Error![]const []const ir.Ref {
+pub fn usersOf(arena: std.mem.Allocator, f: *const ir.Function) Error![]const []const ir.Ref {
     const lists = try arena.alloc(std.ArrayList(ir.Ref), f.insts.items.len);
     @memset(lists, .empty);
     for (f.blocks.items, 0..) |block, b| {

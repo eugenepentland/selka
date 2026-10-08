@@ -45,6 +45,8 @@ const flags = @import("flags.zig");
 const promotion = @import("promote.zig");
 const elements = @import("elements.zig");
 const buffers = @import("buffers.zig");
+const stores = @import("stores.zig");
+const effects = @import("effects.zig");
 const origins = @import("inline_origins.zig");
 
 /// The pass only allocates.
@@ -59,6 +61,9 @@ pub const Options = struct {
     /// Optional source ancestry of instructions cloned before ownership.
     provenance: ?*origins.Table = null,
     function_index: u32 = 0,
+    /// The module's effect summaries (`effects.zig`): with them, element stores nothing reads
+    /// are removed or sunk and the rest narrowed to the fields that changed (`stores.zig`).
+    effects: ?*const effects.Summaries = null,
 };
 
 /// What the pass did, summed over functions.
@@ -101,10 +106,12 @@ pub const unique_assert: u64 = 1;
 /// Run the pass over every internal function of `module`.
 pub fn run(arena: std.mem.Allocator, module: *ir.Module, options: Options) Error!Stats {
     var total: Stats = .{};
+    const summaries = options.effects orelse &try effects.analyze(arena, module);
     for (module.functions.items, 0..) |*f, index| {
         if (f.signature.linkage != .internal) continue;
         var local = options;
         local.function_index = @intCast(index);
+        local.effects = summaries;
         total.add(try function(arena, module, f, local));
     }
     return total;
@@ -124,6 +131,8 @@ pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Funct
     _ = try elements.fieldStores(arena, module, f);
     // Byte-buffer appends become updates the emitter does inline.
     _ = try buffers.appends(arena, module, f);
+    // Element stores nothing reads go, and the rest store only the fields that changed.
+    if (options.effects) |summaries| _ = try stores.run(arena, module, f, summaries);
     // Popped elements are found (or read) before anything moves.
     try markPops(.{ .arena = arena, .f = f, .origin = marks.origin }, module, &marks);
     for (f.insts.items, 0..) |inst, index| {

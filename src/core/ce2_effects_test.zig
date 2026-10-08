@@ -276,8 +276,171 @@ test "an in-place update of one field goes ahead while a view of a disjoint fiel
         // another field and then of its own, loops, recursion, counted fields and a union
         // payload all print what copies would, and free every block.
         const ran = try fixture(a, root, flags, &.{});
-        try std.testing.expectEqualStrings(fields_expected, ran.stdout);
+        try std.testing.expectStringStartsWith(ran.stdout, fields_expected);
         try std.testing.expectEqual(@as(u8, 0), ran.status);
         try std.testing.expect(!contains(ran.stderr, "leak"));
     }
+}
+
+/// What the base compiler prints for the element-store section of `ce2_effects.my`.
+const stores_expected =
+    \\6 1 4 2 t5 6m 0m 0m 0m
+    \\8 1 4 1 i6 t7 8m 0m 0m 0m
+    \\3 1 4 0 t24 3m 5c 0m 0m
+    \\3 1 4 1 t26 3m 7c 0m 0m
+    \\-2 0 4 1 big:3 3m 0m 0m 4m
+    \\5 1 6 0 t2 t4 5m 0m 0m 0m 1m 3m
+    \\6 1 2 1 t2 t5 6m 1m
+    \\5 1 4 1 i1 i4 5m 0m 0m 0m
+    \\6 1 4 0 m!5 t3 m!!6 6m!! 0m 0m 0m
+    \\3 1 4 0 3m 0m 0m 0m
+    \\-2 0 4 0 deep:2666 2m 6c 6c 6c
+    \\
+;
+
+const loop_source =
+    \\record Frame:
+    \\    closure: int
+    \\    name: str
+    \\    ops: list[int]
+    \\    ip: int
+    \\    base: int
+    \\
+    \\
+    \\record Machine:
+    \\    frames: list[Frame]
+    \\    count: int
+    \\    stack: list[int]
+    \\
+    \\
+    \\def next_op(frame: mut Frame) -> int:
+    \\    op = frame.ops[frame.ip]
+    \\    frame.ip = frame.ip + 1
+    \\    return op
+    \\
+    \\
+    \\def fail(m: mut Machine) -> bool:
+    \\    total = 0
+    \\    for frame in m.frames:
+    \\        total = total + frame.ip
+    \\    m.stack.append(total)
+    \\    m.count = 0
+    \\    return False
+    \\
+    \\
+    \\def checked(m: mut Machine, x: int) -> bool:
+    \\    if x > 9:
+    \\        return fail(mut m)
+    \\    m.stack.append(x)
+    \\    return True
+    \\
+    \\
+    \\def run(m: mut Machine) -> int:
+    \\    frame = m.frames[m.count - 1]
+    \\    while True:
+    \\        op = next_op(mut frame)
+    \\        m.frames[m.count - 1] = frame
+    \\        ok = True
+    \\        if op == 0:
+    \\            return len(m.stack)
+    \\        elif op == 1:
+    \\            m.stack.append(next_op(mut frame))
+    \\        elif op == 2:
+    \\            ok = checked(mut m, next_op(mut frame))
+    \\        m.frames[m.count - 1] = frame
+    \\        if not ok:
+    \\            return -1
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    frame = Frame(closure=0, name="f", ops=[1, 4, 2, 5, 2, 12, 0], ip=0, base=0)
+    \\    m = Machine(frames=[frame, frame], count=1, stack=[])
+    \\    out.print(run(mut m), m.frames[0].ip, m.frames[1].ip, m.stack[0])
+    \\    return 0
+    \\
+;
+
+/// What the base compiler prints for `loop_source`: the error path stores the frame into the
+/// last element (the count is 0, so `count - 1` is -1).
+const loop_expected = "-1 5 6 4\n";
+
+/// The text of one function in a module's textual IR, from its header to the next function.
+fn functionIr(text: []const u8, name: []const u8) []const u8 {
+    var start: usize = 0;
+    while (std.mem.indexOfPos(u8, text, start, "fn ")) |header| {
+        const line_end = std.mem.indexOfScalarPos(u8, text, header, '\n') orelse text.len;
+        const line = text[header..line_end];
+        const paren = std.mem.indexOfScalar(u8, line, '(') orelse line.len;
+        if (std.mem.endsWith(u8, line[0..paren], name)) {
+            const next = std.mem.indexOfPos(u8, text, line_end, "\nfn ") orelse text.len;
+            return text[header..next];
+        }
+        start = line_end;
+    }
+    return "";
+}
+
+/// Instructions of operation `op` in IR text (`%N = op` or `op` at a line's start).
+fn countOp(text: []const u8, op: []const u8) usize {
+    var total: usize = 0;
+    var lines = std.mem.splitScalar(u8, text, '\n');
+    while (lines.next()) |raw| {
+        var line = std.mem.trimStart(u8, raw, " ");
+        if (std.mem.indexOf(u8, line, " = ")) |at| {
+            if (line.len > 0 and line[0] == '%') line = line[at + 3 ..];
+        }
+        if (!std.mem.startsWith(u8, line, op)) continue;
+        const rest = line[op.len..];
+        if (rest.len == 0 or rest[0] == ' ' or rest[0] == '.') total += 1;
+    }
+    return total;
+}
+
+// spec: NEW-CORE-CE2-EFFECTS-3
+test "an element store a later store of the same element overwrites before anything reads it goes, or moves to the exits that read it" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    // The store at the end of each step is overwritten by the next step's first store, with
+    // only `if not ok: return` and `next_op(mut frame)` between: it stays only on the return
+    // path, where the caller sees the machine; its bounds check stays where it was.
+    const run = functionIr(try support.ownedText(a, loop_source), "run");
+    try std.testing.expectEqual(@as(usize, 1), countOp(run, "list_set"));
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for (modes) |flags| {
+        // Reads through callees (a trace, an error report that resets the count, an indirect
+        // call), a list that grows or is replaced, calls that push frames, `continue`, early
+        // returns, counted fields and a store whose index runs past the list all print what
+        // the stores as written print, and free every block.
+        const ran = try fixture(a, root, flags, &.{});
+        try std.testing.expectEqualStrings(fields_expected ++ stores_expected, ran.stdout);
+        try std.testing.expectEqual(@as(u8, 0), ran.status);
+        const read_trap = try fixture(a, root, flags, &.{"x"});
+        try std.testing.expectEqual(@as(u8, 1), read_trap.status);
+        try std.testing.expectEqualStrings(fields_expected ++ stores_expected, read_trap.stdout);
+        try std.testing.expect(contains(read_trap.stderr, "ce2_effects.my:239:30: error[R_LIST_BOUNDS]: native execution failed (index 7, length 1)\n"));
+        const store_trap = try fixture(a, root, flags, &.{"y"});
+        try std.testing.expectEqual(@as(u8, 1), store_trap.status);
+        try std.testing.expect(contains(store_trap.stderr, "ce2_effects.my:247:9: error[R_LIST_BOUNDS]: native execution failed (index 10, length 4)\n"));
+    }
+}
+
+// spec: NEW-CORE-CE2-EFFECTS-4
+test "an element store of a record read from that element stores only the fields that changed" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    // `next_op(mut frame)` writes only `frame.ip` (field 3): the step's first store, and the
+    // store on the return path's only predecessor that keeps the count, write that field in
+    // place. The error path, where `fail` reset the count, still stores the whole frame.
+    const run = functionIr(try support.ownedText(a, loop_source), "run");
+    try std.testing.expect(countOp(run, "list_set_field") >= 1);
+    try std.testing.expect(contains(run, "path 3, "));
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a, loop_source, &refusal);
+    const ran = try support.runOwned(a, &module, .{});
+    try std.testing.expectEqualStrings(loop_expected, ran.stdout);
+    try std.testing.expectEqualStrings("", ran.stderr);
 }

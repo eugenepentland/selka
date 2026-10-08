@@ -10,10 +10,16 @@ record P:
     e: int
 
 
+def bumped(p: P) -> P:
+    q = p
+    q.a += 1
+    return q
+
+
+# The element goes out by value and a new record comes back: both are copied. (Read and
+# written back in place, `p = ps[i]; p.a += 1; ps[i] = p` stores only `a`, NEW-CORE-CE2-EFFECTS-4.)
 def bump(ps: mut list[P], i: int) -> None:
-    p = ps[i]
-    p.a += 1
-    ps[i] = p
+    ps[i] = bumped(ps[i])
 
 
 def main(args: list[str], out: Stream) -> int:
