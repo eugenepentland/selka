@@ -1,6 +1,6 @@
 # Structured concurrency, phase 1: packages P1 and P2, 2026-10-08
 
-Status: **P1 stopped during P1-0 under §9:** the emitted uniqueness count load needs an atomic-read change outside §5's emitter scope; see [the P1 report](../../experiments/concurrency-p1-2026-10-08/REPORT.md). P1 is not implemented or qualified. P2 is fully specified here, but it starts only after the front-end plan's F4 exit and the user's go (§6).
+Status: **P1 is ready to resume (revision 1, 2026-10-08).** P1-0 stopped correctly at the §9 scope boundary; see [the P1 report](../../experiments/concurrency-p1-2026-10-08/REPORT.md). §4.7 records the decisions on its findings and extends §5's ownership; P1-0's inventory is accepted as the design for §4.3. P2 is fully specified here, but it starts only after the front-end plan's F4 exit and the user's go (§6).
 - **Decisions:** C1–C7, accepted by the user on 2026-10-08 (§2).
 - **What it delivers:** CPU fork/join parallelism. `parallel.map` and task groups run on a work-stealing pool of OS threads. Only values that cross into a task get atomic counts.
 - **Size (estimates):** P1 about 25–40 h; P2 about 30–45 h. Each package ends with a stop for the user.
@@ -8,6 +8,8 @@ Status: **P1 stopped during P1-0 under §9:** the emitted uniqueness count load 
 
 ## Launch instruction (for Codex)
 
+> **Resuming P1 (revision 1).** Fast-forward `codex/concurrency-p1` to `claude/concurrency-plan`, which already contains your P1-0 commits. Read §4.7 first, then continue with P1-1. Everything else below is unchanged.
+>
 > **Now, package P1 only.** Implement package P1 of `docs/audits/concurrency-plan-2026-10-08.md` (branch `claude/concurrency-plan`) on `codex/concurrency-p1`, created from `claude/concurrency-plan`.
 > - If `main` has moved, merge `main` into it first with a real merge commit.
 > - Follow §9's rules.
@@ -205,6 +207,8 @@ def totals(board: Board) -> int:
 
 So the fast path keeps one compare. The immortal case gains one compare off the fast path, and string constants still never call out.
 
+**Count reads are `unordered` atomic loads** (revision 1, §4.7 R1). The shared template `count_load_line` becomes `load atomic i32, ptr …, unordered, align 8`, with its TBAA and range metadata. It feeds every emitted count read: `countBlock`, `isUnique` and `freeUnique`'s verification read. The parent's uniqueness test can run while a worker updates the same shared count, so a plain load is a data race (P1-0's probe reproduced it). Fast-path **stores** stay plain: they happen only on plain blocks, which one thread owns.
+
 **Unchanged:**
 - **The uniqueness test** stays `count == 1`. A shared count is never 1, so every update of a shared value copies (form 2 takes its copy path). Form 1 never applies, because a value placed in a task's environment has been retained.
 - **The range metadata `[1, 0)`** stays valid.
@@ -281,14 +285,17 @@ P1-0 produces the complete inventory: every object with static storage duration 
 **The internal ABI** (P2 lowers to it; the names may change in P1-0):
 
 ```c
+/* Revision 1 (§4.7 R4, R5): no site parameters; `run` is a fastcc thunk called
+   through the emitted bridge `myl_core_task_call`. */
 void       myl_core_share(myl_block *root);
-myl_block *myl_core_group_open(const myl_core_site *site);
-myl_block *myl_core_task_submit(myl_block *group, myl_block *(*run)(myl_block *env),
-                                myl_block *env, const myl_core_site *site, int64_t item);
+myl_block *myl_core_group_open(void);
+myl_block *myl_core_task_submit(myl_block *group, void *run, myl_block *env, int64_t item);
 myl_block *myl_core_task_result(myl_block *task);   /* waits, running other tasks; +1 */
 void       myl_core_group_close(myl_block *group);   /* waits for every task of the group */
 int64_t    myl_core_threads(void);
 int64_t    myl_core_map_chunks(int64_t items);       /* how many tasks a map of `items` uses */
+/* Defined by the emitter in LLVM text, C calling convention (§4.7 R4): */
+myl_block *myl_core_task_call(void *run, myl_block *env);
 ```
 
 **Ownership follows the IR's call convention:** calls borrow, results are owned.
@@ -315,6 +322,60 @@ Only the concurrency suite uses it. It catches a missing mark, because the emitt
 
 The slow helpers record the first two. The P2 report uses them to show what C3's "marks never come off" costs on a real program.
 
+### 4.7 Revision 1: decisions on P1-0's findings (2026-10-08)
+
+P1-0's inventory (`experiments/concurrency-p1-2026-10-08/REPORT.md` §2 and its evidence) is **accepted as the design for §4.3**, with every proposed treatment in it. Where it left a choice open, R1–R8 decide it.
+
+**R1. Count reads are `unordered`, not `monotonic`.** Claude's probes (2026-10-08, the same pinned toolchain, P1-0's `count-reader` harness):
+- **ThreadSanitizer:** the P1-0 probe with `load atomic … unordered` ran 100 times with 0 reports and the expected `unique=0 count=80000002`.
+- **Optimisation:** a loop whose body tests one block's count, compiled at `-O2`:
+  - a plain load and an `unordered` load are both hoisted out of the loop, and the loop vectorises;
+  - a `monotonic` load stays in the loop, is reloaded every iteration (unrolled ×8) and blocks vectorisation.
+- Copy-on-write tests are hoisted out of hot loops (E2b found that essential), so `monotonic` risks the tax gate for nothing.
+- **Why `unordered` is enough:** a thread holding a reference to a shared block either set the shared bit itself or received the block through an acquire (task pickup, `result()`). No write that clears the bit can come after that while the reference is held. An `unordered` load cannot tear and returns a value at or after that write in happens-before order, so it always sees the bit.
+- **Rule:** use `unordered`. Fall back to `monotonic` only if a TSan run or a P1-5 test shows `unordered` failing, and report it if so.
+- The `[1, 0)` range and the TBAA tag stay on the load.
+
+**R2. Text caches.** Lazily filled caches on a block (the hash and scalar-count caches in `reserved`, their `kind` flags, the cursor in `cap` or spare bytes) are written only while `myl_core_pool_started` is false, or on a plain block.
+- `myl_core_pool_started` is a process-wide flag. The thread that starts the pool sets it once, with a relaxed atomic store, before creating workers.
+- After the pool starts, shared and immortal blocks are read-only: a cache that is already filled is read, and a missing one is computed without being stored.
+- Immortal string constants are reachable from every thread, which is why they are included.
+- A single-threaded program never starts the pool, so it keeps today's behaviour and pays no tax.
+- The P2 report counts cache misses on shared text in the scaling programs.
+- `core_ascii` (the lazy immortal ASCII table) is initialised before the pool starts.
+
+**R3. The fatal path never blocks.** The thread that wins the trap once-flag:
+- tries the stream lock a bounded number of times. If another thread holds it, the winner writes its report straight to fd 2 with `write(2)` and drops staged output;
+- once the pool has started, skips I/O, provider and Host cleanup (`core_io_cleanup`, `core_host_cleanup`), because another thread may be inside them, and then `_exit`s;
+- leaves the single-threaded path exactly as it is today.
+
+The rules cover every fatal path P1-0 listed: traps, assertion failures, output refusal, out of memory, I/O failure and the stack-floor signal handler. `core_host.c` stays untouched. A trap after the pool starts may lose data a program wrote to its own files but did not flush; that is acceptable for phase 1, and `docs/concurrency.md` (P2) says so.
+
+**R4. Calling a thunk.** Emitted functions use `fastcc`, and a `func_ref` names one directly. The runtime never calls such a pointer from C. Instead:
+- The emitter defines one C-ABI bridge in the fixed runtime text beside `@myl_core_free`:
+
+  ```llvm
+  define linkonce_odr hidden ptr @myl_core_task_call(ptr %run, ptr %env) {
+    %result = call fastcc ptr %run(ptr %env)
+    ret ptr %result
+  }
+  ```
+
+  It is defined in every unit and merged by the linker.
+- `core_tasks.c` declares `myl_core_task_call` and calls tasks only through it.
+- P1-5's hand-built-IR tests are the proof that a `func_ref` thunk round-trips through the bridge at 1, 2 and 8 threads, and under TSan.
+- If the bridge needs a different form (linkage, attributes, a signature that is not `ptr (ptr)`), choose it, test it, and record why in the report. **No `ir.zig` change.**
+
+**R5. Sites come from return addresses.** `myl_core_group_open` and `myl_core_task_submit` take no site. They record `__builtin_return_address(0)`. A trap in a task then names it as `in task submitted at …`, using the same DWARF line lookup that already names a trap's callers.
+- `parallel.map` passes the item index in `item`. A plain `submit` passes −1.
+- If an emitted helper call can lack line information (a build mode, or an inlined helper), P1-5 tests that case. The report falls back to `in task submitted at <unknown>` rather than failing.
+
+**R6. Allocator registry.** Each thread's allocator state (free lists, chunk cursor, text-walk counter) registers itself, under a mutex, in a process-wide list when the thread starts. Leak checks and the text-walk report sum over that list at exit, after the pool is quiescent.
+
+**R7. Providers.** Provider operations, not only handle-table changes, run under the I/O mutex. The child iterator covers the provider's `pairs`, which today only `core_io_finalize` releases. Startup options and grants are frozen before the pool starts.
+
+**R8. The source guard** matches reference-count accesses on `myl_block`, through P1-0's typed AST inventory or an equivalent check. It does not ban the token `count`, which other structures use for lengths and arities. It allows the helper implementations, block initialisation and the share walk.
+
 ## 5. Package P1: the runtime (about 25–40 h)
 
 **P1-0. Inventory (1–2 h).**
@@ -323,8 +384,13 @@ The slow helpers record the first two. The P2 report uses them to show what C3's
 - Confirmation that a hand-built IR program can call the §4.4 ABI with `func_ref`, boxes and helper calls. If something is missing, write it down for P2-0 and carry on.
 
 **P1-1. Count encoding (§4.1), then an early tax check.**
-- **Code:** `countBlock`; the two slow helpers; `count_retain`/`count_release`/`count_is_unique`, with every runtime count site moved onto them; the source test.
-- **Then measure** the single-threaded tax (§7.1) with the TLS declaration still plain.
+- **Code:**
+  - the `unordered` count loads (R1);
+  - `countBlock`;
+  - the two slow helpers;
+  - `count_retain`, `count_release` and `count_is_unique`, with every runtime count site moved onto them (P1-0's 19 lines, plus the count-bearing operations it lists);
+  - the source test (R8).
+- **Then measure** the single-threaded tax (§7.1), with the `unordered` loads in and the TLS declaration still plain. If the tax gate fails, also time a build with plain loads and report both, so the cost of the loads is separated from the cost of the encoding.
 - **Stop rule:** if the wall-time geomean of any corpus is above 1.010, or any row's median is above 1.03×, stop and report. That would contradict C3's premise.
 
 **P1-2. Per-thread runtime state (§4.3).**
@@ -346,11 +412,18 @@ The slow helpers record the first two. The P2 report uses them to show what C3's
 
 **P1-6. Measurement and the report** (§7, §8), then **stop**.
 
-**P1 owns:**
-- `src/core/runtime/core_rt.c`, `core_test.c`, `core_io.c` (locks only), `core_text.c`, `core_dict.c`, `core_bytes.c`, `core_values.c` (count sites only);
-- the counting runtime (`core_count.c`, `core_count.h`, `src/core/count_runtime.zig`, `src/core/emit_count.zig`);
-- the new `core_tasks.c`;
-- in `src/core/emit_llvm.zig`: **only** `countBlock`, the `@myl_core_free_lists` declaration and the inline allocation and free text (around lines 3432–3510), plus the `sanitize_thread` attribute;
+**P1 owns** (extended in revision 1):
+- `src/core/runtime/core_rt.c`, `core_test.c`, `core_text.c` (whole file: counts, caches, the ASCII table; R2) and the new `core_tasks.c`;
+- `core_io.c`: locks, provider serialisation, frozen startup state and the provider's `pairs` in the child iterator (R7);
+- `core_dict.c`, `core_bytes.c`, `core_values.c`: count sites and cache rules only;
+- the counting runtime (`core_count.c`, `core_count.h`, `src/core/count_runtime.zig` with its anchors, `src/core/emit_count.zig`);
+- in `src/core/emit_llvm.zig`, **only**:
+  - `count_load_line` and its comment (R1), which is shared by `countBlock`, `isUnique` and `freeUnique`'s verification read; their comparisons do not change;
+  - `countBlock`;
+  - the fixed runtime text: the `@myl_core_free_lists` declaration, the inline allocation and free text (around lines 3432–3510), and the `@myl_core_task_call` bridge (R4);
+  - the counting-build global declarations made thread-local (`@myl_count_current`, `@myl_count_copy_site`, `@myl_count_push_site`);
+  - the `sanitize_thread` attribute;
+- not `core_host.c`: R3 keeps the fatal path out of it;
 - the runtime asset build and link flags for the TSan switch;
 - new tests under `src/core/`;
 - `SPEC.md` (§7.2 tags), `docs/tooling/native-build.md` (one paragraph on the TSan switch, as internal), and this plan's Status line;
