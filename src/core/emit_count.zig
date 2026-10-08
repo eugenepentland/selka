@@ -39,7 +39,8 @@ pub const Kind = enum(u8) {
     /// A record, union or array over four words copied with `llvm.memcpy`/`memmove`:
     /// `c0` copies, `c1` bytes. The detail names the operation that copies it.
     record_copy,
-    /// A push into a heap list: `c0` pushes, `c1` element bytes written.
+    /// A push into a list: `c0` pushes, `c1` element bytes written, `c2` bytes the
+    /// growths it caused moved (credited by the runtime).
     list_push,
     /// A whole aggregate element (four words or less) read out of a list: `c0`, `c1` bytes.
     element_load,
@@ -133,6 +134,7 @@ pub const Table = struct {
 pub const declarations =
     \\@myl_count_current = external global ptr
     \\@myl_count_copy_site = external global ptr
+    \\@myl_count_push_site = external global ptr
     \\
 ;
 

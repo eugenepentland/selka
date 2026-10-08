@@ -43,18 +43,19 @@ the work:
 | `list_copies`, `dict_copies`, `buffer_copies`, `text_copies` and their `_bytes` | Copy-on-write and value copies the runtime made: list elements, dictionary entries plus their hashes, buffer bytes, text bytes (`str_from_view`) |
 | `runtime_retains`, `runtime_releases` | Count updates the runtime made itself: a copy's children, a freed block's children, out-of-line releases |
 | `dict_grows`, `buffer_grows`, `text_grows` and their `_bytes` | Growth that copied the old contents |
-| `text_appends`, `text_append_bytes`, `buffer_pushes` | Out-of-line text appends and byte pushes |
+| `text_appends`, `text_append_bytes`, `buffer_pushes`, `buffer_appends`, `buffer_append_bytes` | Out-of-line text appends, byte pushes and byte appends (`append_range`, number spellings) |
 
 Site kinds:
 
 | Kind | `count` | `bytes` | `extra` |
 |---|---|---|---|
-| `retain`, `release` | Inline count updates of one block | | |
+| `retain` | Inline count increments of one block: each makes a second owner of a value that stays live | Data bytes of the shared block (elements times stride, text length, entries times key and value size, a box's value): what a copy would move instead | |
+| `release` | Inline count decrements of one block | | |
 | `release_unique` | Frees of a block ownership proved unique | | |
 | `unique_test` | `is_unique` tests | | Tests that found the block unique |
 | `list_copy`, `dict_copy`, `buffer_copy`, `text_copy` | Copies made for this Core instruction | Bytes copied | |
 | `record_copy` | `memcpy`/`memmove` of a record, union or array over four words | Bytes copied | |
-| `list_push` | Pushes into a heap list | Element bytes written | |
+| `list_push` | Pushes into a list | Element bytes written | Bytes the growths this push caused moved (a small list's copy into the next class, a large list's bytes in use when `realloc` moved it) |
 | `element_load`, `element_store` | Whole aggregates of four words or less read from or written into a list | Element bytes | |
 
 A `record_copy`'s detail names the operation: `list_get` (an element copied out),

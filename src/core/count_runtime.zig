@@ -41,7 +41,7 @@ const patches = [_]Patch{
     // A small list grows into a fresh block of the next class.
     .{
         .anchor = "    myl_block *grown = block_new(MYL_KIND_LIST, cap, element_size);\n    memcpy(block_data(grown), block_data(list), (size_t)list->len * (size_t)element_size);\n",
-        .after = "    myl_count_event(MYL_COUNT_LIST_GROWS, (size_t)list->len * (size_t)element_size);\n",
+        .after = "    myl_count_list_grow((size_t)list->len * (size_t)element_size);\n",
     },
     .{ .anchor = "myl_block *myl_core_list_copy(myl_block *list, int64_t element_size) {\n", .after = "    myl_count_copy(MYL_COUNT_LIST_COPIES, (size_t)list->len * (size_t)element_size);\n" },
     .{ .anchor = "static void retain_block(myl_block *block) {\n", .after = "    myl_count_event(MYL_COUNT_RUNTIME_RETAINS, 0);\n" },
@@ -67,6 +67,10 @@ const patches = [_]Patch{
     .{ .anchor = "myl_block *myl_core_buffer_copy(myl_block *source) {\n", .after = "    myl_count_copy(MYL_COUNT_BUFFER_COPIES, (size_t)source->len);\n" },
     .{ .anchor = "    myl_block *out = myl_core_buffer_new((uint64_t)capacity);\n    out->len = buffer->len;\n", .after = "    myl_count_event(MYL_COUNT_BUFFER_GROWS, (size_t)buffer->len);\n" },
     .{ .anchor = "myl_block *myl_core_buffer_push(myl_block *buffer, uint8_t value) {\n", .after = "    myl_count_event(MYL_COUNT_BUFFER_PUSHES, 1);\n" },
+    .{
+        .anchor = "myl_block *myl_core_buffer_append_spelled(myl_block *buffer, const unsigned char *bytes, size_t length) {\n",
+        .after = "    myl_count_event(MYL_COUNT_BUFFER_APPENDS, length);\n",
+    },
     .{ .anchor = "    leak_report();\n    core_text_walk_report();\n", .before = "    myl_count_dump();\n" },
 };
 

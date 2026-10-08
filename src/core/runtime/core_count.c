@@ -40,6 +40,8 @@ extern myl_count_site __stop_myl_count_sites[] __attribute__((weak, visibility("
 myl_count_fn *myl_count_current;
 /* The site of the Core copy instruction whose runtime call comes next, or null. */
 myl_count_site *myl_count_copy_site;
+/* The list push whose reserve call is running, or null: a growth credits its moved bytes there. */
+myl_count_site *myl_count_push_site;
 
 static myl_count_fn myl_count_outside = { "<outside>", { 0 } };
 static uint64_t myl_count_live, myl_count_peak;
@@ -59,7 +61,7 @@ static const char *const myl_count_slot_names[MYL_COUNT_SLOTS] = {
     "list_copies", "list_copy_bytes", "dict_copies", "dict_copy_bytes", "buffer_copies", "buffer_copy_bytes",
     "text_copies", "text_copy_bytes", "runtime_retains", NULL, "runtime_releases", NULL,
     "dict_grows", "dict_grow_bytes", "buffer_grows", "buffer_grow_bytes", "text_grows", "text_grow_bytes",
-    "text_appends", "text_append_bytes", "buffer_pushes", NULL, NULL, NULL,
+    "text_appends", "text_append_bytes", "buffer_pushes", NULL, "buffer_appends", "buffer_append_bytes",
 };
 
 static myl_count_fn *myl_count_function(void) {
@@ -81,6 +83,11 @@ static void myl_count_copy(int slot, size_t bytes) {
     site->c[1] += bytes;
 }
 
+static void myl_count_list_grow(size_t bytes) {
+    myl_count_event(MYL_COUNT_LIST_GROWS, bytes);
+    if (myl_count_push_site) myl_count_push_site->c[2] += bytes;
+}
+
 static void myl_count_alloc(size_t bytes) {
     myl_count_event(MYL_COUNT_ALLOCS, bytes);
     myl_count_live += bytes;
@@ -95,6 +102,7 @@ static void myl_count_free(size_t bytes) {
 static void myl_count_realloc(size_t before, size_t after, int moved, size_t used) {
     myl_count_event(MYL_COUNT_REALLOCS, after > before ? after - before : 0);
     if (moved) myl_count_event(MYL_COUNT_REALLOC_MOVES, used);
+    if (moved && myl_count_push_site) myl_count_push_site->c[2] += used;
     myl_count_live += after;
     myl_count_live -= before < myl_count_live ? before : myl_count_live;
     if (myl_count_live > myl_count_peak) myl_count_peak = myl_count_live;

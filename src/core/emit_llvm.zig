@@ -2327,7 +2327,7 @@ const FunctionEmitter = struct {
     fn counted(self: *FunctionEmitter, out: *Out, mode: Counting, value_type: ir.Type, text: []const u8) Error!void {
         const m = self.state.module;
         if (!m.managed(value_type)) return;
-        if (m.isBlock(value_type)) return self.countBlock(out, mode, text);
+        if (m.isBlock(value_type)) return self.countBlock(out, mode, text, value_type);
         const tyname = try self.ty(value_type);
         switch (m.compound(value_type)) {
             .record => |fields| for (fields, 0..) |field, i| {
@@ -2342,7 +2342,7 @@ const FunctionEmitter = struct {
                     const present = try self.fresh("%cn");
                     try out.print(self.a(), "  {s} = icmp ne ptr {s}, null\n", .{ present, text });
                     const join = try self.enterIf(out, present);
-                    try self.countBlock(out, mode, text);
+                    try self.countBlock(out, mode, text, layout.payload);
                     return self.leaveIf(out, join);
                 }
                 const tag = try self.fresh("%ct");
@@ -2522,7 +2522,7 @@ const FunctionEmitter = struct {
     /// 0, tagged `myl.count` and known non-zero; `0xFFFFFFFF` is saturated (D4) and
     /// never changes, so immortal string constants are never written; a release
     /// that drops the last owner calls the cold, out-of-line `myl_core_free`.
-    fn countBlock(self: *FunctionEmitter, out: *Out, mode: Counting, block: []const u8) !void {
+    fn countBlock(self: *FunctionEmitter, out: *Out, mode: Counting, block: []const u8, block_type: ir.Type) !void {
         if (self.may_be_empty) {
             // An `undef` value is all null pointers (`undefValue`): nothing to count.
             const present = try self.fresh("%re");
@@ -2530,10 +2530,13 @@ const FunctionEmitter = struct {
             const join = try self.enterIf(out, present);
             self.may_be_empty = false;
             defer self.may_be_empty = true;
-            try self.countBlock(out, mode, block);
+            try self.countBlock(out, mode, block, block_type);
             return self.leaveIf(out, join);
         }
-        _ = try self.countSite(out, if (mode == .retain) .retain else .release, "");
+        if (self.count_fn != null) {
+            const bytes = if (mode == .retain) try self.blockBytes(out, block, block_type) else "";
+            _ = try self.countSite(out, if (mode == .retain) .retain else .release, bytes);
+        }
         const count = try self.fresh("%rc");
         const saturated = try self.fresh("%rs");
         const update = try self.fresh(if (mode == .retain) "rc.inc" else "rc.dec");
@@ -2607,11 +2610,33 @@ const FunctionEmitter = struct {
         };
         const bytes = try std.fmt.allocPrint(self.a(), "{d}", .{self.state.stride(element)});
         if (inst.op == .list_push) {
-            _ = try self.countSite(out, .list_push, bytes);
+            const record = (try self.countSite(out, .list_push, bytes)).?;
+            // A growth this push causes credits its moved bytes to this site (`extra`).
+            if (inst.data != stack_push) try out.print(self.a(), "  store ptr {s}, ptr @myl_count_push_site, align 8\n", .{record});
             return;
         }
         const aggregate = element.isCompound() and !m.isBlock(element) and !m.passedInMemory(element) and m.kind(element) != .@"fn";
         if (aggregate) _ = try self.countSite(out, if (inst.op == .list_get) .element_load else .element_store, bytes);
+    }
+
+    /// A counting build's measure of what a retain shares: the data bytes of `block`
+    /// (elements times their stride, text and byte lengths, entries times key and value
+    /// sizes, a box's value), the bytes a copy would move instead.
+    fn blockBytes(self: *FunctionEmitter, out: *Out, block: []const u8, block_type: ir.Type) Error![]const u8 {
+        const m = self.state.module;
+        const textual = block_type == .str or block_type == .bytes or block_type == .byte_buffer;
+        const kind = if (textual) null else m.kind(block_type);
+        const per: u32 = if (textual) 1 else if (kind == null) return "0" else switch (kind.?) {
+            .list => self.state.stride(m.compound(block_type).list),
+            .dict => m.size(m.compound(block_type).dict.key) + m.size(m.compound(block_type).dict.value),
+            .box => return std.fmt.allocPrint(self.a(), "{d}", .{m.size(m.compound(block_type).box)}),
+            else => return "0",
+        };
+        const at = try self.fresh("%cnt");
+        const len = try self.fresh("%cnt");
+        const bytes = try self.fresh("%cnt");
+        try out.print(self.a(), header_load_line ++ "  {s} = mul i64 {s}, {d}\n", .{ at, block, len_offset, len, at, bytes, len, per });
+        return bytes;
     }
 
     /// The value an `%vN` name stands for.
@@ -2670,6 +2695,7 @@ const FunctionEmitter = struct {
         } else if (counter != null) {
             try out.print(self.a(), "  {s} = call ptr @myl_core_list_fill_reserve(ptr {s}, i64 {d}, i64 {s})\n", .{ name, try self.value(inst.a), self.state.stride(element), len });
         } else try out.print(self.a(), "  {s} = call ptr @myl_core_list_reserve(ptr {s}, i64 {d})\n", .{ name, try self.value(inst.a), self.state.stride(element) });
+        if (self.count_fn != null and inst.data != stack_push) try out.appendSlice(self.a(), "  store ptr null, ptr @myl_count_push_site, align 8\n");
         if (counter != null) {
             try out.print(self.a(), header_pointer_line, .{ len_at, name, len_offset });
             if (self.state.options.verify) try self.assertFillRoom(out, name, len_at, len, inst);

@@ -24,6 +24,7 @@ enum {
     MYL_COUNT_TEXT_GROWS = 28,      /* text appends that moved the text, bytes copied */
     MYL_COUNT_TEXT_APPENDS = 30,    /* out-of-line text appends, bytes appended */
     MYL_COUNT_BUFFER_PUSHES = 32,   /* out-of-line byte pushes, bytes */
+    MYL_COUNT_BUFFER_APPENDS = 34,  /* out-of-line byte appends (`append_range`, numbers), bytes */
     MYL_COUNT_SLOTS = 36
 };
 
@@ -31,5 +32,6 @@ static void myl_count_alloc(size_t bytes);
 static void myl_count_free(size_t bytes);
 static void myl_count_realloc(size_t before, size_t after, int moved, size_t used);
 static void myl_count_event(int slot, size_t bytes);
+static void myl_count_list_grow(size_t bytes);
 static void myl_count_copy(int slot, size_t bytes);
 static void myl_count_dump(void);
