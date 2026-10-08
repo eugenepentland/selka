@@ -933,6 +933,9 @@ __attribute__((noinline)) static void trap_frames(void) {
     }
 }
 
+/* Set by a test executable (`myl_core_test_open`): every trap writes a record. */
+static bool core_trap_marks_all;
+
 /* The version-1 operation marker, shared by plain traps and contract messages. */
 static size_t core_operation_record(char *record, size_t capacity, const char *operation) {
     size_t used = (size_t)snprintf(record, capacity, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"");
@@ -1019,7 +1022,9 @@ void myl_core_trap(const myl_core_site *site, int64_t a, int64_t b) {
         snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"cast\"%s,\"left\":%s,\"width\":%d}\n", marked, left, width);
         break;
     }
-    /* A trap without operands has no record, as in the old core. */
+    /* A program's trap without operands has no record, as in the old core; a test trial
+       still marks every trap with one, which is how its runner tells a trap apart. */
+    if (record[0] == 0 && site->kind != TRAP_FACT && core_trap_marks_all) core_operation_record(record, sizeof record, site->operation);
     stream_flush(&streams[0]);
     char text[1024];
     int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: native execution failed%s\n  in %s at %s:%d:%d\n",

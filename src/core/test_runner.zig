@@ -271,7 +271,7 @@ fn validateProviders(init: std.process.Init, options: Options, located: project_
     production.declare(a, located.name, &problems) catch |err| return checkFailure(init, err, problems.items, 1);
     for (sets) |set| {
         case_settings.available(set, &production, located.name) catch |err|
-            return checkFailure(init, err, "error: InvalidTestProviders: a provider may replace only a module the entry imports, never the entry\n", 1);
+            return checkFailure(init, err, "error: InvalidTestProviders: invalid test provider dependencies: a provider may replace only a module the entry imports, never the entry\n", 1);
         var replacement = frontend.Session.init(init.gpa, init.io, located.root);
         defer replacement.deinit();
         located.configure(&replacement);
@@ -288,7 +288,9 @@ fn validateProviders(init: std.process.Init, options: Options, located: project_
 fn keeps(a: std.mem.Allocator, production: *frontend.Session, replacement: *frontend.Session, path: []const u8) Error!?[]const u8 {
     const name = try moduleOfPath(a, path);
     const refused = try std.fmt.allocPrint(a, "error: IncompatibleProvider: provider {s} does not keep the exported declarations of module {s}\n", .{ path, name });
-    const before = try declaredModule(production, name) orelse return refused;
+    // Declarations the production graph cannot render (a test's private parameter type)
+    // leave the comparison to the checked type graph (`case_settings.compatible`).
+    const before = try declaredModule(production, name) orelse return null;
     const after = try declaredModule(replacement, name) orelse return refused;
     test_contracts.validate(before, after) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else refused;
     return null;

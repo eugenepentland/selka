@@ -395,6 +395,7 @@ bool myl_core_test_open(myl_block *input,myl_block *output){
     core_test_input=fopen((const char *)block_data(input),"rb");
     core_test_output=fopen((const char *)block_data(output),"wb");
     core_test_path=strdup((const char *)block_data(output));
+    core_trap_marks_all=true;
     if(!core_test_input||!core_test_output||!core_test_path)return false;
     core_test_trials=core_test_word(core_test_input);return true;
 }

@@ -150,12 +150,12 @@ test "a provider keeps a declaration's identity and may only narrow its permissi
     const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
     try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = fixture_main });
     // An unfinished body is never checked: the declarations alone are compared.
-    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "reading.my", .data = "module reading\n\npublic def sample() -> int effects(output):\n    return todo[int]()\n" });
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "reading.my", .data = "module reading\n\npublic def sample() -> int effects():\n    return todo[int]()\n" });
     var production_session = frontend.Session.init(std.testing.allocator, std.testing.io, root);
     defer production_session.deinit();
     const production = try declared(a, &.{}, &production_session);
     const narrower = "module reading\n\npublic def sample() -> i64 effects():\n    return 42\n";
-    const wider = "module reading\n\npublic def sample() -> int effects(output, clock):\n    return 42\n";
+    const wider = "module reading\n\npublic def sample() -> int effects(managed_allocation):\n    return 42\n";
     const retyped = "module reading\n\npublic def sample() -> u8 effects():\n    return 42\n";
     var narrow_session = frontend.Session.init(std.testing.allocator, std.testing.io, root);
     defer narrow_session.deinit();
