@@ -15,6 +15,7 @@ const facts = @import("facts.zig");
 const vector = @import("vector.zig");
 const c_abi = @import("c_abi.zig");
 const flags = @import("flags.zig");
+const elements = @import("elements.zig");
 const emit_dict = @import("emit_dict.zig");
 const emit_bytes = @import("emit_bytes.zig");
 const emit_text_split = @import("emit_text_split.zig");
@@ -202,6 +203,10 @@ const tbaa_metadata =
 ;
 /// `  %x = load i64, ptr %at` of one data word (a union's tag word or payload word).
 const word_load_line = "  {s} = load i64, ptr {s}, align 8, " ++ tbaa_data ++ "\n";
+/// A union's tag word loaded from memory, then its tag byte.
+const tag_load_line = word_load_line ++ "  {s} = trunc i64 {s} to i8\n";
+/// Whether a union's tag byte names case `k`.
+const case_test_line = "  {s} = icmp eq i8 {s}, {d}\n";
 /// The count load every `retain`, `release` and `is_unique` starts with.
 const count_load_line = "  {s} = load i32, ptr {s}, align 8, " ++ tbaa_count ++ ", " ++ count_range ++ "\n";
 /// The header field loads of a list or string, tagged as header data.
@@ -738,6 +743,10 @@ const MemoryState = struct {
 
 /// Which count update `counted` emits.
 const Counting = enum { retain, release };
+
+/// One managed part of a value a store replaces, read before the store and released after
+/// it; `guard` is the union-case condition under which it is live, or null.
+const Held = struct { ty: ir.Type, text: []const u8, guard: ?[]const u8 = null };
 
 /// One `union_payload` read: the name it defines, the union's type and value, and the case.
 const PayloadRead = struct { result: []const u8, union_type: ir.Type, value: []const u8, case: u32 };
@@ -1540,6 +1549,7 @@ const FunctionEmitter = struct {
             .list_set => try self.listSet(out, name, inst),
             .list_pop => try self.listPop(out, name, inst),
             .list_get_field => try self.listGetField(out, name, inst),
+            .list_set_field => try self.listSetField(out, name, inst),
             .box_make => {
                 const inner = self.state.module.compound(inst.ty).box;
                 try out.print(self.a(), "  {s} = call ptr @myl_core_box_new(i64 {d})\n", .{ name, self.state.module.size(inner) });
@@ -1820,6 +1830,9 @@ const FunctionEmitter = struct {
         const list = try self.value(inst.a);
         const index = try self.value(inst.b);
         try self.boundsCheck(out, inst, list, index);
+        // A read nothing uses is only its bounds check: the element is never loaded (a verify
+        // build still loads it, for the fact assertions that name it).
+        if (self.memory.uses[self.current.index()] == 0 and inst.data == 0 and self.knownFacts() == null) return;
         const slot = try self.elementSlot(out, list, index, inst.ty);
         if (inst.ty == .bool or inst.ty.isCompound()) return self.loadValue(out, inst.ty, slot, name);
         const stored = storageType(inst.ty);
@@ -1967,7 +1980,7 @@ const FunctionEmitter = struct {
                 }
                 const word = try self.fresh("%lt");
                 const tag = try self.fresh("%lt");
-                try out.print(self.a(), word_load_line ++ "  {s} = trunc i64 {s} to i8\n", .{ word, ptr, tag, word });
+                try out.print(self.a(), tag_load_line, .{ word, ptr, tag, word });
                 const last_words = layout.form == .words and layout.payload_words == 0;
                 const tagged = if (last_words) result else try self.fresh("%lu");
                 try out.print(self.a(), "  {s} = insertvalue {s} poison, i8 {s}, 0\n", .{ tagged, tyname, tag });
@@ -2270,14 +2283,88 @@ const FunctionEmitter = struct {
         try self.boundsCheck(out, inst, list, index);
         const slot = try self.elementSlot(out, list, index, element);
         const managed = m.managed(element) and !flags.transferredSlot(self.function, inst);
-        const old = if (managed) try self.fresh("%old") else "";
-        // A counting build names the copy of the old element made to release it.
+        var held: std.ArrayList(Held) = .empty;
+        // A counting build names a copy of the old element made to release it.
         self.count_detail = if (self.count_fn != null) "list_set.old" else null;
-        if (managed) try self.loadValue(out, element, slot, old);
+        if (managed) try self.holdManaged(out, element, slot, &held, null);
         self.count_detail = null;
         try self.storeOperand(out, element, self.function.operands(inst.data)[0], slot);
-        if (managed) try self.countedValue(out, .release, element, old);
+        try self.releaseHeld(out, held.items);
         try out.print(self.a(), identity_line, .{ name, list });
+    }
+
+    /// `list_set_field`: store the value at the path's offset inside the element, in place
+    /// (the list is unique by now), releasing the part it replaces; the rest of the element
+    /// is never read.
+    fn listSetField(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+        const m = self.state.module;
+        const list = try self.value(inst.a);
+        const index = try self.value(inst.b);
+        const element = m.compound(inst.ty).list;
+        try self.boundsCheck(out, inst, list, index);
+        const slot = try self.elementSlot(out, list, index, element);
+        const path = elements.setPath(self.function, inst) orelse return error.UnsupportedInstruction;
+        const target = m.pathTarget(element, path) orelse return error.UnsupportedInstruction;
+        const at = try self.offsetPointer(out, slot, target.offset);
+        var held: std.ArrayList(Held) = .empty;
+        self.count_detail = if (self.count_fn != null) "list_set_field.old" else null;
+        try self.holdManaged(out, target.ty, at, &held, null);
+        self.count_detail = null;
+        try self.storeOperand(out, target.ty, self.function.operands(inst.data)[0], at);
+        try self.releaseHeld(out, held.items);
+        try out.print(self.a(), identity_line, .{ name, list });
+    }
+
+    /// Read the managed parts of the `value_type` value at `ptr` that a store is about to
+    /// replace, for `releaseHeld` after it: a value of at most four words into registers,
+    /// and a record, array or union over four words part by part — only its managed parts
+    /// are read, never the whole value; a union's are read for every managed case and
+    /// released only under the case its tag names. `guard` is the condition (`i1`) under
+    /// which the value is live, or null.
+    fn holdManaged(self: *FunctionEmitter, out: *Out, value_type: ir.Type, ptr: []const u8, held: *std.ArrayList(Held), guard: ?[]const u8) Error!void {
+        const m = self.state.module;
+        if (!m.managed(value_type)) return;
+        if (m.passedInMemory(value_type)) switch (m.compound(value_type)) {
+            .record => |fields| {
+                for (fields, 0..) |field, i| try self.holdManaged(out, field, try self.offsetPointer(out, ptr, m.fieldOffset(value_type, i)), held, guard);
+                return;
+            },
+            .array => |array| {
+                for (0..array.n) |i| try self.holdManaged(out, array.elem, try self.offsetPointer(out, ptr, @as(u32, @intCast(i)) * m.size(array.elem)), held, guard);
+                return;
+            },
+            .@"union" => |cases| {
+                const word = try self.fresh("%oldw");
+                const tag = try self.fresh("%oldt");
+                try out.print(self.a(), tag_load_line, .{ word, ptr, tag, word });
+                for (cases, 0..) |case, k| {
+                    if (!m.managed(case)) continue;
+                    const here = try self.fresh("%oldc");
+                    try out.print(self.a(), case_test_line, .{ here, tag, k });
+                    const live = if (guard) |outer| blk: {
+                        const both = try self.fresh("%oldc");
+                        try out.print(self.a(), "  {s} = and i1 {s}, {s}\n", .{ both, outer, here });
+                        break :blk both;
+                    } else here;
+                    try self.holdManaged(out, case, try self.offsetPointer(out, ptr, 8), held, live);
+                }
+                return;
+            },
+            else => {},
+        };
+        const loaded = try self.fresh("%old");
+        try self.loadValue(out, value_type, ptr, loaded);
+        try held.append(self.a(), .{ .ty = value_type, .text = loaded, .guard = guard });
+    }
+
+    /// Release the parts `holdManaged` read, once the store that replaced them is done, each
+    /// under the case condition it was read for.
+    fn releaseHeld(self: *FunctionEmitter, out: *Out, held: []const Held) Error!void {
+        for (held) |part| {
+            const join = if (part.guard) |live| try self.enterIf(out, live) else null;
+            try self.countedValue(out, .release, part.ty, part.text);
+            if (join) |label| try self.leaveIf(out, label);
+        }
     }
 
     /// Drop the last element of list `a` in place (its value was read before, and is
@@ -2350,7 +2437,7 @@ const FunctionEmitter = struct {
                 for (cases, 0..) |case, k| {
                     if (!m.managed(case)) continue;
                     const here = try self.fresh("%cc");
-                    try out.print(self.a(), "  {s} = icmp eq i8 {s}, {d}\n", .{ here, tag, k });
+                    try out.print(self.a(), case_test_line, .{ here, tag, k });
                     const join = try self.enterIf(out, here);
                     const payload = try self.fresh("%cp");
                     try self.unionPayload(out, .{ .result = payload, .union_type = value_type, .value = text, .case = @intCast(k) });

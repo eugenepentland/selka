@@ -9,6 +9,7 @@
 const std = @import("std");
 const ir = @import("ir.zig");
 const vector = @import("vector.zig");
+const elements = @import("elements.zig");
 
 /// Verification only allocates, or finds the IR malformed.
 pub const Error = error{ OutOfMemory, InvalidIr };
@@ -533,6 +534,7 @@ const Verifier = struct {
             .list_copy, .list_pop => self.compoundOf(s.a, .list) != null and inst.ty == s.a,
             .list_set => if (self.compoundOf(s.a, .list)) |element| inst.ty == s.a and isInteger(s.b) and s.extra.len == 1 and self.typeOf(s.extra[0]) == element else false,
             .list_get_field => self.fieldSignature(s),
+            .list_set_field => self.setFieldSignature(s),
             .union_make, .union_tag, .union_payload => self.unionSignature(s),
             .record_make => if (self.compoundOf(inst.ty, .record)) |fields| self.typesMatch(s.extra, fields) else if (self.compoundOf(inst.ty, .array)) |array| blk: {
                 if (s.extra.len != array.n) break :blk false;
@@ -588,6 +590,16 @@ const Verifier = struct {
         if (path.len == 0) return false;
         const target = self.module.pathTarget(element, path) orelse return false;
         return isInteger(s.b) and target.ty == s.inst.ty;
+    }
+
+    /// `list_set_field`: a list, an integer index, and a value of the type the path reaches.
+    fn setFieldSignature(self: *Verifier, s: Shape) bool {
+        const element = self.compoundOf(s.a, .list) orelse return false;
+        if (s.inst.ty != s.a or !isInteger(s.b) or s.extra.len != 2) return false;
+        const path = elements.setPath(self.f, s.inst) orelse return false;
+        if (path.len == 0) return false;
+        const target = self.module.pathTarget(element, path) orelse return false;
+        return target.tag_of == .void and target.ty == self.typeOf(s.extra[0]);
     }
 
     fn unionSignature(self: *Verifier, s: Shape) bool {

@@ -147,6 +147,18 @@ fn instruction(allocator: std.mem.Allocator, out: *std.ArrayList(u8), m: *const 
             try out.appendSlice(allocator, ", path");
             for (path.slice(), 0..) |step, i| try out.print(allocator, "{s}{d}", .{ if (i == 0) " " else ".", step });
         },
+        .list_set_field => {
+            const operands = f.operands(inst.data);
+            try out.appendSlice(allocator, " ");
+            try operand(allocator, out, m, f, inst.a);
+            try out.appendSlice(allocator, ", ");
+            try operand(allocator, out, m, f, inst.b);
+            const path = @import("elements.zig").setPath(f, inst) orelse ir.FieldPath{};
+            try out.appendSlice(allocator, ", path");
+            for (path.slice(), 0..) |step, i| try out.print(allocator, "{s}{d}", .{ if (i == 0) " " else ".", step });
+            try out.appendSlice(allocator, ", ");
+            try operand(allocator, out, m, f, operands[0]);
+        },
         .err_trace => try out.print(allocator, " {s}", .{@tagName(@as(ir.TraceMode, @fromBackingInt(@intCast(@min(inst.data, 4)))))}),
         .record_make, .list_set, .dict_set_value, .dict_insert, .str_append_char, .str_slice, .str_view_of, .array_set, .call_indirect, .buffer_set => {
             const operands = f.valueOperands(inst);

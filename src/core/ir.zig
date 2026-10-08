@@ -374,6 +374,10 @@ pub const Op = enum(u8) {
     saturating_add,
     /// Unary f64 operation selected by `data: FloatUnary`.
     float_unary,
+    /// List `a` with the field at `FieldPath.unpack` of the `u64` constant `extra[1]`
+    /// inside element `b` replaced by `extra[0]` (bounds-checked): an element-field
+    /// store done in place. Consumes `a` and the value, and drops the field it replaces.
+    list_set_field,
 
     /// Whether this operation ends a block.
     pub fn terminates(self: Op) bool {
@@ -386,7 +390,7 @@ pub const Op = enum(u8) {
     /// Whether `data` packs an `extra` operand list (an `ExtraSlice`).
     pub fn hasExtra(self: Op) bool {
         return switch (self) {
-            .phi, .call, .call_indirect, .print, .record_make, .list_set, .dict_set_value, .dict_insert, .str_append_char, .str_slice, .str_view_of, .array_set, .buffer_set => true,
+            .phi, .call, .call_indirect, .print, .record_make, .list_set, .list_set_field, .dict_set_value, .dict_insert, .str_append_char, .str_slice, .str_view_of, .array_set, .buffer_set => true,
             else => false,
         };
     }
@@ -403,7 +407,7 @@ pub const Op = enum(u8) {
     /// Whether an update takes ownership of its first value operand.
     pub fn consumesOperand0(self: Op) bool {
         return switch (self) {
-            .list_push, .list_set, .list_pop, .record_set, .array_set, .dict_set_value, .dict_insert, .dict_remove, .dict_clear, .str_append, .str_append_char, .list_sort, .buffer_set, .buffer_push, .buffer_pop => true,
+            .list_push, .list_set, .list_set_field, .list_pop, .record_set, .array_set, .dict_set_value, .dict_insert, .dict_remove, .dict_clear, .str_append, .str_append_char, .list_sort, .buffer_set, .buffer_push, .buffer_pop => true,
             else => false,
         };
     }

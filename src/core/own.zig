@@ -43,6 +43,7 @@ const ir = @import("ir.zig");
 const facts = @import("facts.zig");
 const flags = @import("flags.zig");
 const promotion = @import("promote.zig");
+const elements = @import("elements.zig");
 const origins = @import("inline_origins.zig");
 
 /// The pass only allocates.
@@ -118,6 +119,8 @@ pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Funct
         stats.promoted = promoted.lists;
         reserveFills(f, known);
     }
+    // Element-field stores in place, before any update gets its copy-on-write form.
+    _ = try elements.fieldStores(arena, module, f);
     // Popped elements are found (or read) before anything moves.
     try markPops(.{ .arena = arena, .f = f, .origin = marks.origin }, module, &marks);
     for (f.insts.items, 0..) |inst, index| {
@@ -590,7 +593,7 @@ fn consuming(instruction: ir.Inst, k: usize) bool {
         // a (the list) and b (the value); a (the record) and b (the field value).
         .list_push, .record_set => true,
         // a (the list), b (the index), then extra[0] (the value).
-        .list_set, .array_set, .dict_set_value, .dict_insert => k >= 2,
+        .list_set, .list_set_field, .array_set, .dict_set_value, .dict_insert => k >= 2,
         .list_pop, .union_make, .box_make, .ret, .release, .record_make => true,
         else => false,
     };
