@@ -1814,8 +1814,21 @@ const FunctionEmitter = struct {
             return self.trapIf(out, outside, try self.site(.list_pop_index, inst, "pop"), original, len);
         }
         const source_index = emit_bytes.sourceIndex(@TypeOf(self), self, inst.b);
-        const reported = if (source_index) |raw| try self.value(raw) else if (self.countsFromEnd(inst.b)) try self.originalIndex(out, index, len) else index;
-        try self.trapIf(out, outside, try self.site(.list_bounds, inst, "index"), reported, len);
+        if (source_index) |raw| return self.trapIf(out, outside, try self.site(.list_bounds, inst, "index"), try self.value(raw), len);
+        try self.trapBounds(out, outside, try self.site(.list_bounds, inst, "index"), .{ .index = index, .len = len, .from_end = self.countsFromEnd(inst.b) });
+    }
+
+    /// An index bounds check's operands: the normalized index, the length, and whether the
+    /// index was normalized from the end.
+    pub const TrapBounds = struct { index: []const u8, len: []const u8, from_end: bool };
+
+    /// Trap when `failed`, reporting the index the program wrote: an index normalized from
+    /// the end is recovered on the trap's cold path, so the in-bounds path is unchanged.
+    pub fn trapBounds(self: *FunctionEmitter, out: *Out, failed: []const u8, site_index: u32, bounds: TrapBounds) Error!void {
+        if (!bounds.from_end) return self.trapIf(out, failed, site_index, bounds.index, bounds.len);
+        const branch = try self.trapBegin(out, failed, site_index);
+        const original = try self.originalIndex(out, bounds.index, bounds.len);
+        try self.trapEnd(out, branch, .{ .left = original, .right = bounds.len });
     }
 
     /// Whether `index` is the join of a Python index normalization: a phi of the
