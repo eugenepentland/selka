@@ -83,6 +83,11 @@ const cursor =
     \\    return it.rt.top + it.rt.a
     \\
     \\
+    \\def nested(k: int) -> int:
+    \\    it = Interp(name="n", rt=Runtime(stack=[], top=k, a=k, b=k, c=k), depth=k)
+    \\    return it.rt.top + it.depth
+    \\
+    \\
     \\def push(rt: mut Runtime, v: int):
     \\    rt.stack.append(v)
     \\    rt.top += 1
@@ -156,7 +161,7 @@ const cursor =
     \\    out.print(kept(Cursor(pos=1, line=0, col=0, span=Span(line=0, col=0, offset=0))), overlapping())
     \\    it = Interp(name="i", rt=Runtime(stack=[], top=0, a=0, b=0, c=0), depth=0)
     \\    pushes(mut it, 4)
-    \\    out.print(wander(9), write_backs(5), it.rt.top, len(it.rt.stack))
+    \\    out.print(wander(9), write_backs(5), it.rt.top, len(it.rt.stack), nested(3))
     \\    return 0
     \\
 ;
@@ -168,6 +173,20 @@ test "a record carried around a loop with break and continue lives in one home: 
     const llvm = try support.llvmText(arena.allocator(), cursor);
     // Every join of the updated record shares the home it was built in.
     try std.testing.expectEqual(@as(usize, 0), copies(functionText(llvm, "@\"my.wander\"")));
+}
+
+// spec: NEW-CORE-CE-RECORDS-2
+test "a record field over four words is read where it lies: a pointer into its parent, not a copy" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const llvm = try support.llvmText(arena.allocator(), cursor);
+    const through = functionText(llvm, "@\"my.through\"");
+    try std.testing.expectEqual(@as(usize, 0), copies(through));
+    // `o.inner` is the parameter's own bytes at offset 0, passed straight to `weight`.
+    try std.testing.expect(contains(through, "= getelementptr inbounds i8, ptr %p0, i64 0\n"));
+    try std.testing.expect(contains(through, "(ptr %v"));
+    // `Runtime(...)` inside `Interp(...)` is stored straight into the field: no copy of it.
+    try std.testing.expectEqual(@as(usize, 0), copies(functionText(llvm, "@\"my.nested\"")));
 }
 
 const fixture_expected =
@@ -235,7 +254,7 @@ test "the CE-A shapes print what value semantics says, debug and release" {
     // walk ends at pos 5, col 5 (the newline resets the column; even steps add one); `through`
     // sees the bumped copy (5 + 6) plus the tag 5; the snapshot keeps 1 next to the store's 7;
     // the read-only arguments saw pos 3 and offset 4 next to the in-out store of 1000.
-    try std.testing.expectEqualStrings("505 16\n8 2007\n2704 30 4 4\n", debug.stdout);
+    try std.testing.expectEqualStrings("505 16\n8 2007\n2704 30 4 4 6\n", debug.stdout);
     var again = try support.buildSource(arena.allocator(), cursor, &refusal);
     const release = try support.runOwned(arena.allocator(), &again, .{ .release = true });
     try std.testing.expectEqualStrings(debug.stdout, release.stdout);
