@@ -78,3 +78,16 @@ ownership exposes conditional and unconditional copy-on-write allocations. This
 prevents release-only stack promotion or unreachable-code proof from satisfying
 an allocation promise that fails in debug builds. The report itself describes
 the chosen optimized build, which may eliminate those sites.
+
+## Costs alongside interfaces
+
+`mylang list-interfaces ENTRY.my --cost` prints the ordinary public declaration
+listing followed by the exact release `cost-v1` report from `mylang cost ENTRY.my`.
+It is mutually exclusive with `--contracts`, which emits a JSON manifest. The
+cost rows describe the entry's reachable emitted functions, including private functions and specializations; an uncalled
+public declaration has no emitted cost row. Totals sum those emitted rows.
+
+The option checks bodies and requires an executable entry. A body or Core error
+fails the command before it prints a partial listing. Without `--cost`, the
+existing declaration listing and its handling of bodies are unchanged. Use
+`mylang cost` directly for JSON, function selection and alternative build modes.

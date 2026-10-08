@@ -103,6 +103,11 @@ pub fn dispatch(init: std.process.Init, args: []const []const u8) Error!?u8 {
     return status;
 }
 
+/// The same default release cost output appended by the interface CLI.
+pub fn interfaceCost(init: std.process.Init, path: []const u8) Error!cost_command.Output {
+    return cost_command.output(init, .{ .path = path });
+}
+
 /// Whether a `build` names one of the core's developer-only switches, which the
 /// core's own build command answers (S5-D8: `mylang-core` merged into `mylang`).
 fn developerBuild(args: []const []const u8) bool {

@@ -52,12 +52,22 @@ pub fn parse(args: []const []const u8) ?Request {
 /// Errors already have diagnostics; other failures propagate to the shared CLI.
 pub const Error = frontend.Error || build.Error || project_entry.Error || pipeline.Error || std.Io.File.Writer.Error;
 
-/// Run one cost analysis. Project policy, configuration and refusal handling match build.
+/// Rendered command output and its diagnosed exit status.
+pub const Output = struct { text: []const u8 = "", status: u8 = 0 };
+
+/// Run one cost analysis and write its result.
 pub fn run(init: std.process.Init, args: []const []const u8) Error!u8 {
     const request = parse(args) orelse {
         try std.Io.File.stderr().writeStreamingAll(init.io, usage);
         return 2;
     };
+    const rendered = try output(init, request);
+    try std.Io.File.stdout().writeStreamingAll(init.io, rendered.text);
+    return rendered.status;
+}
+
+/// Shared output for cost and list-interfaces --cost; one pipeline and schema.
+pub fn output(init: std.process.Init, request: Request) Error!Output {
     const a = init.arena.allocator();
     var diagnostics: std.ArrayList(u8) = .empty;
     const entry = project_entry.resolve(a, init.io, request.path, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
@@ -87,21 +97,20 @@ pub fn run(init: std.process.Init, args: []const []const u8) Error!u8 {
     if (report.functions.len == 0) {
         const message = try std.fmt.allocPrint(a, "mylang cost: no reachable function named {s}\n", .{request.function orelse "<entry>"});
         try std.Io.File.stderr().writeStreamingAll(init.io, message);
-        return 2;
+        return .{ .status = 2 };
     }
     if (request.llvm_remarks) |path| {
         const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, path, a, .limited(64 << 20)) catch {
             try std.Io.File.stderr().writeStreamingAll(init.io, "mylang cost: cannot read LLVM optimization remarks\n");
-            return 2;
+            return .{ .status = 2 };
         };
         remarks.apply(&report, bytes);
     }
-    try std.Io.File.stdout().writeStreamingAll(init.io, try cost.render(a, report, request.json));
-    return 0;
+    return .{ .text = try cost.render(a, report, request.json) };
 }
 
-fn failure(init: std.process.Init, text: []const u8, err: anyerror) Error!u8 {
+fn failure(init: std.process.Init, text: []const u8, err: anyerror) Error!Output {
     if (err == error.OutOfMemory) return error.OutOfMemory;
     try std.Io.File.stderr().writeStreamingAll(init.io, text);
-    return if (err == error.PolicyDenied) 3 else if (err == error.ConfigurationFailed or err == error.ToolFailed or err == error.InvalidIr or err == error.WriteFailed) 2 else 1;
+    return .{ .status = if (err == error.PolicyDenied) 3 else if (err == error.ConfigurationFailed or err == error.ToolFailed or err == error.InvalidIr or err == error.WriteFailed) 2 else 1 };
 }

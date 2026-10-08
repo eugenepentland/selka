@@ -67,6 +67,7 @@ const everyday_help =
     \\  mylang build FILE.my -o OUT       native executable, a debug build one unit per module
     \\  mylang build FILE.my -o OUT --release   optimized whole-program LLVM build, for shipping or timing
     \\  mylang test FILE.my|DIR           run the public test_* functions
+    \\  mylang cost ENTRY.my [FUNCTION] [--json]   per-function checks, updates and allocation sites
     \\  mylang fmt FILE.my [--check]      canonical formatting
     \\  mylang docs [TOPIC]               the user guides built into this compiler
     \\  mylang reference --query TERM     look up a feature or an error code such as E_MODULE_NAME
@@ -75,7 +76,7 @@ const everyday_help =
     \\  mylang context ENTRY.my --symbol=module::name   one bounded answer about a declaration
     \\  mylang context ENTRY.my --at=FILE:LINE:COLUMN   the same for the declaration at a position
     \\  mylang tests-for ENTRY.my module::name          the tests that reach a declaration (also module.name)
-    \\  mylang list-interfaces ENTRY.my                 every module's public declarations
+    \\  mylang list-interfaces ENTRY.my [--cost]        public declarations and optional emitted-function costs
     \\  mylang api ENTRY.my --write|--check             the checked-in .api interface file beside each module
     \\  mylang index-project ENTRY.my                   declaration counts per module; --module=NAME, --symbol=NAME for records
     \\  mylang test ENTRY.my --affected --against REF   only the tests an edit since REF can reach
@@ -88,6 +89,8 @@ const usage = "usage: mylang build <file.my> (-o <output> | --run [-- ARGS...]) 
     "       mylang run <file.my> [options] [-- ARGS...] | run-project <entry.my> [options] [-- ARGS...] (build and run; `mylang run` prints the options)\n" ++
     "       mylang test <entry.my|directory> [--filter GLOB] [--json] [--release] [--affected --against REF] (run the public test_* functions)\n" ++
     "       mylang dump-ir <file.my> [--facts] | dump-typed <file.my> [FUNCTION] | coverage <file.my>... (developer views of the new core)\n" ++
+    "       mylang cost <entry.my> [FUNCTION] [--json] [--debug | --no-facts | --verify-facts] [--llvm-remarks FILE.opt.yaml] (per-function Core costs)\n" ++
+    "       mylang list-interfaces <entry.my> [--contracts | --cost] (public declarations; --cost checks bodies and appends release costs)\n" ++
     "       mylang fix [--check] <entry.my|directory> (apply every structured diagnostic repair)\n" ++
     "       mylang doc-coverage [<repo-root>] (every implemented feature and standard export needs a documented example)\n       mylang " ++
     "doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose] (run every fenced documentation example)\n       mylang " ++
@@ -216,6 +219,8 @@ const Context = struct {
     /// `--friction-log` nor `MYLANG_FRICTION_LOG` asked for one. Every write is
     /// best effort: a failure drops information rather than failing the command.
     friction: ?*language.friction_log.Recorder = null,
+    /// Original process services for an opt-in Core cost analysis.
+    process: ?*const std.process.Init = null,
     fn text(self: Context, bytes: []const u8) !void {
         if (self.diagnostics == .text) return std.Io.File.stderr().writeStreamingAll(self.io, bytes);
         const rendered = try diagnostic_output.message(self.gpa, bytes, self.diagnostics);
@@ -272,6 +277,7 @@ fn dispatch(process: std.process.Init) !u8 {
     };
     var timings = language.timings.Profile.init(process.io, parsed.reporting.timings_json, .compiler);
     const init: Context = .{
+        .process = &process,
         .timings = &timings,
         .gpa = process.gpa,
         .arena = process.arena,
@@ -723,6 +729,8 @@ const Parsed = struct {
     write: bool,
     /// `list-interfaces --contracts` emits declaration-level provider contracts.
     contracts: bool,
+    /// Append release costs of the entry's emitted functions.
+    cost: bool,
     quality: language.quality.Options,
     command: Command,
     path: []const u8,
@@ -816,6 +824,7 @@ const ArgumentParser = struct {
     command: Command,
     schema_report: bool = false,
     contracts: bool = false,
+    cost: bool = false,
     inputs: [16][]const u8 = @splat(""),
     input_count: usize = 0,
     quality: language.quality.Options = .{},
@@ -865,8 +874,13 @@ const ArgumentParser = struct {
 
     fn surfaceOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
         if (try self.subjectOption(arg)) return true;
+        if (std.mem.eql(u8, arg, "--cost")) {
+            if (self.command != .@"list-interfaces" or self.cost or self.contracts) return error.Usage;
+            self.cost = true;
+            return true;
+        }
         if (std.mem.eql(u8, arg, "--contracts")) {
-            if (self.command != .@"list-interfaces" or self.contracts) return error.Usage;
+            if (self.command != .@"list-interfaces" or self.contracts or self.cost) return error.Usage;
             self.contracts = true;
             return true;
         }
@@ -1138,6 +1152,7 @@ const ArgumentParser = struct {
             .format_check = self.format_check,
             .write = self.write,
             .contracts = self.contracts,
+            .cost = self.cost,
             .quality = self.quality,
             .command = self.command,
             .path = self.path orelse return error.Usage,
@@ -2153,8 +2168,7 @@ fn listInterfaces(init: Context, project: *language.project.Project, parsed: Par
             else => return err,
         };
         defer init.gpa.free(contracts);
-        try std.Io.File.stdout().writeStreamingAll(init.io, contracts);
-        return 0;
+        return interfaceListing(init, contracts, parsed);
     }
     // Attach checked bodies when they are available so the default listing can
     // publish each function's inferred `effects(...)`. A body that fails to
@@ -2177,7 +2191,19 @@ fn listInterfaces(init: Context, project: *language.project.Project, parsed: Par
     }
     const text = try index.render(init.gpa);
     defer init.gpa.free(text);
+    return interfaceListing(init, text, parsed);
+}
+
+/// Keep the declaration bytes intact and append the exact cost command output.
+fn interfaceListing(init: Context, text: []const u8, parsed: Parsed) !u8 {
+    var extra: []const u8 = "";
+    if (parsed.cost) {
+        const rendered = try @import("mylang_core").interfaceCost(init.process.?.*, parsed.path);
+        if (rendered.status != 0) return rendered.status;
+        extra = rendered.text;
+    }
     try std.Io.File.stdout().writeStreamingAll(init.io, text);
+    if (parsed.cost) try std.Io.File.stdout().writeStreamingAll(init.io, extra);
     return 0;
 }
 
