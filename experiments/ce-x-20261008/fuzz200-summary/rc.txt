@@ -1,0 +1,14 @@
+source_commit=41931120d5a364c67eca80ea6cf776e7eb941674
+$ /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/experiments/new-core-s5-20261007/tools/fuzz_frozen.py --kind rc --references /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz --cases 200 --seed 3303 --old /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/experiments/new-core-s5-20261007/tools/frozen-old-core --new /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/.mylang-cache/cex/mylang-debug --evidence /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/experiments/ce-x-20261008/fuzz200/rc --cache-root /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/.mylang-cache/s5/fuzz/20261008T165521Z-fcf3a42eff5c/rc
+qualification progress: rc: seen=25 elapsed=15.59s
+qualification progress: rc: seen=50 elapsed=28.09s
+qualification progress: rc: seen=75 elapsed=36.82s
+qualification progress: rc: seen=100 elapsed=45.80s
+qualification progress: rc: seen=125 elapsed=54.60s
+qualification progress: rc: seen=150 elapsed=64.22s
+qualification progress: rc: seen=175 elapsed=75.43s
+qualification progress: rc: seen=200 elapsed=86.61s
+cases=200 refused=0 rejected=0 compared=1800 mismatch=0
+qualification {"kind": "rc", "qualified": true, "accepted": 200, "native_comparisons": 1800, "elapsed_seconds": 87.06962101720273}
+
+exit=0

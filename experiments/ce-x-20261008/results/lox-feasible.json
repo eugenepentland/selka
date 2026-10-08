@@ -1,0 +1,86 @@
+[
+ {
+  "cell": "binary_trees/tree",
+  "binary": "zig",
+  "seconds": 0.136,
+  "status": 0,
+  "output_ok": true
+ },
+ {
+  "cell": "binary_trees/tree",
+  "binary": "final",
+  "seconds": 0.268,
+  "status": 0,
+  "output_ok": true
+ },
+ {
+  "cell": "binary_trees/vm",
+  "binary": "zig",
+  "seconds": 0.584,
+  "status": 0,
+  "output_ok": true
+ },
+ {
+  "cell": "binary_trees/vm",
+  "binary": "final",
+  "seconds": 2.691,
+  "status": 0,
+  "output_ok": true
+ },
+ {
+  "cell": "trees/tree",
+  "binary": "zig",
+  "seconds": 0.143,
+  "status": 0,
+  "output_ok": true
+ },
+ {
+  "cell": "trees/tree",
+  "binary": "final",
+  "seconds": 0.254,
+  "status": 0,
+  "output_ok": true
+ },
+ {
+  "cell": "trees/vm",
+  "binary": "zig",
+  "seconds": 0.987,
+  "status": 0,
+  "output_ok": true
+ },
+ {
+  "cell": "trees/vm",
+  "binary": "final",
+  "seconds": 5.635,
+  "status": 0,
+  "output_ok": true
+ },
+ {
+  "cell": "instantiation/vm",
+  "binary": "zig",
+  "seconds": 0.407,
+  "status": 0,
+  "output_ok": true
+ },
+ {
+  "cell": "instantiation/vm",
+  "binary": "final",
+  "seconds": 1.957,
+  "status": 0,
+  "output_ok": true
+ },
+ {
+  "cell": "method_call/tree",
+  "binary": "zig",
+  "seconds": 0.281,
+  "status": 0,
+  "output_ok": true
+ },
+ {
+  "cell": "method_call/tree",
+  "binary": "final",
+  "seconds": 0.543,
+  "status": 0,
+  "output_ok": true
+ }
+]

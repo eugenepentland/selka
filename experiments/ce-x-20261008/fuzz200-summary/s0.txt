@@ -1,0 +1,20 @@
+source_commit=41931120d5a364c67eca80ea6cf776e7eb941674
+$ /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/experiments/new-core-s5-20261007/tools/fuzz_frozen.py --kind s0 --references /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz --cases 200 --seed 3301 --old /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/experiments/new-core-s5-20261007/tools/frozen-old-core --new /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/.mylang-cache/cex/mylang-debug --evidence /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/experiments/ce-x-20261008/fuzz200/s0 --cache-root /home/epentland/ai/canopy/mylang-worktrees/claude-copy-elim/.mylang-cache/s5/fuzz/20261008T165521Z-fcf3a42eff5c/s0
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (61s so far)
+build-slot: all 3 build slot(s) busy; waiting (121s so far)
+build-slot: all 3 build slot(s) busy; waiting (181s so far)
+build-slot: all 3 build slot(s) busy; waiting (241s so far)
+build-slot: build slot 3 after 301s (all 3 build slot(s) busy)
+qualification progress: s0: seen=25 elapsed=13.14s
+qualification progress: s0: seen=50 elapsed=27.60s
+qualification progress: s0: seen=75 elapsed=43.12s
+qualification progress: s0: seen=100 elapsed=57.26s
+qualification progress: s0: seen=125 elapsed=70.63s
+qualification progress: s0: seen=150 elapsed=84.33s
+qualification progress: s0: seen=175 elapsed=97.90s
+qualification progress: s0: seen=200 elapsed=110.36s
+cases=200 old_rejected=0 new_refused=0 compared=3000 mismatch=0 fact=0 traps=422 caught=0 vectorized=42 versioned=3
+qualification {"kind": "s0", "qualified": true, "accepted": 200, "native_comparisons": 3000, "elapsed_seconds": 111.07188181905076}
+
+exit=0
