@@ -972,7 +972,7 @@ static myl_block *core_io_string(const void *bytes,size_t len,int text) {
     if(text){block_data(value)[len]=0;core_text_publish(value);}
     return value;
 }
-static void core_io_retain(myl_block *block) { if(block&&block->count!=MYL_SATURATED)++block->count; }
+static void core_io_retain(myl_block *block) { count_retain(block); }
 static const int32_t core_io_cap_layout[]={32,3,0,8,0,16,0,24,0};
 static const int32_t core_io_resource_layout[]={64,1,0,0,0};
 static const int32_t core_io_provider_layout[]={1,0,0};

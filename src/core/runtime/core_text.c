@@ -64,7 +64,7 @@ uint32_t myl_core_span_hash(const unsigned char *bytes, uint64_t length) {
 uint32_t myl_core_str_hash(const myl_block *text) {
     if (text->kind & MYL_TEXT_HASHED) return (uint32_t)text->reserved;
     uint32_t folded = myl_core_span_hash((const unsigned char *)text + MYL_HEADER, (uint64_t)text->len);
-    if (text->count != MYL_SATURATED) {
+    if (count_can_cache(text)) {
         myl_block *mutable = (myl_block *)text;
         mutable->reserved = (int64_t)(((uint64_t)text->reserved & UINT64_C(0xffffffff00000000)) | folded);
         mutable->kind |= MYL_TEXT_HASHED;
@@ -99,7 +99,7 @@ uint64_t myl_core_str_chars(const myl_block *text) {
     uint64_t scalars = 0;
     core_text_walked += (uint64_t)text->len;
     for (int64_t i = 0; i < text->len; ++i) scalars += (bytes[i] & 0xc0) != 0x80;
-    if (text->count != MYL_SATURATED && scalars <= UINT32_MAX) {
+    if (count_can_cache(text) && scalars <= UINT32_MAX) {
         myl_block *mutable = (myl_block *)text;
         mutable->reserved = (int64_t)((scalars << 32) | (uint32_t)text->reserved);
         mutable->kind |= MYL_TEXT_SCALARS;
@@ -126,7 +126,7 @@ static bool core_cursor_get(const myl_block *text, core_anchor *cursor) {
 }
 
 static void core_cursor_set(const myl_block *text, core_anchor cursor) {
-    if (text->count == MYL_SATURATED || text->len < 256 || text->len > UINT32_MAX || cursor.scalar > UINT32_MAX) return;
+    if (!count_can_cache(text) || text->len < 256 || text->len > UINT32_MAX || cursor.scalar > UINT32_MAX) return;
     myl_block *mutable = (myl_block *)text;
     uint64_t packed = cursor.scalar << 32 | cursor.at;
     if (!(text->kind & MYL_TEXT_CURSOR)) {
@@ -284,7 +284,7 @@ static inline void core_text_copy_short(unsigned char *output, const unsigned ch
 
 static inline myl_block *core_text_append_bytes(myl_block *a, const unsigned char *bytes, int64_t count, bool ascii) {
     int64_t len = a->len + count;
-    if (a->count != 1) myl_core_s2_unsupported(-1);
+    if (!count_is_unique(a)) myl_core_s2_unsupported(-1);
     if ((a->kind & (MYL_TEXT_CURSOR | MYL_TEXT_TAIL)) == MYL_TEXT_CURSOR) a->cap = a->len;
     a->kind &= ~(MYL_TEXT_CURSOR | MYL_TEXT_TAIL);
     if (len > a->cap) {

@@ -62,6 +62,7 @@ static const char *const myl_count_slot_names[MYL_COUNT_SLOTS] = {
     "text_copies", "text_copy_bytes", "runtime_retains", NULL, "runtime_releases", NULL,
     "dict_grows", "dict_grow_bytes", "buffer_grows", "buffer_grow_bytes", "text_grows", "text_grow_bytes",
     "text_appends", "text_append_bytes", "buffer_pushes", NULL, "buffer_appends", "buffer_append_bytes",
+    "shared_retains", NULL, "shared_releases", NULL, "share_marks", "share_bytes",
 };
 
 static myl_count_fn *myl_count_function(void) {

@@ -25,7 +25,10 @@ enum {
     MYL_COUNT_TEXT_APPENDS = 30,    /* out-of-line text appends, bytes appended */
     MYL_COUNT_BUFFER_PUSHES = 32,   /* out-of-line byte pushes, bytes */
     MYL_COUNT_BUFFER_APPENDS = 34,  /* out-of-line byte appends (`append_range`, numbers), bytes */
-    MYL_COUNT_SLOTS = 36
+    MYL_COUNT_SHARED_RETAINS = 36,
+    MYL_COUNT_SHARED_RELEASES = 38,
+    MYL_COUNT_SHARE_MARKS = 40,     /* marked blocks and their allocated bytes */
+    MYL_COUNT_SLOTS = 42
 };
 
 static void myl_count_alloc(size_t bytes);

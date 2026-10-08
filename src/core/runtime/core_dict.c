@@ -205,7 +205,7 @@ myl_block *myl_core_dict_set(myl_block *dict, int64_t entry, const void *value) 
 myl_block *myl_core_dict_insert(myl_block *dict, int64_t probe, const void *key, const void *value, bool verify) {
     core_dict_meta *meta = dict_meta(dict);
     uint64_t hash = dict_hash(meta->desc, key);
-    if (verify && (probe >= 0 || dict->count != 1)) abort();
+    if (verify && (probe >= 0 || !count_is_unique(dict))) abort();
     if (!meta->index && dict->len >= DICT_SMALL) {
         /* Crossing the small-table boundary builds the first index after append. */
     } else if (meta->index && meta->index->used * 2 >= meta->index->slots) {
@@ -309,7 +309,7 @@ myl_block *myl_core_dict_copy(const myl_block *dict) {
         if (!dict_live(meta, i)) continue;
         for (int32_t r = 0; r < meta->desc->layout[1]; ++r) {
             myl_block *child = reference_at(meta->desc->layout, dict_entry(copy, i), r);
-            if (child && child->count != MYL_SATURATED) ++child->count;
+            count_retain(child);
         }
     }
     return copy;
@@ -338,11 +338,10 @@ static void core_dict_free_pending(myl_block *dict, myl_block **pending) {
         if (!dict_live(meta, i)) continue;
         for (int32_t r = 0; r < meta->desc->layout[1]; ++r) {
             myl_block *child = reference_at(meta->desc->layout, dict_entry(dict, i), r);
-            if (!child || child->count == MYL_SATURATED) continue;
-            if (child->count == 1) {
+            if (count_release(child)) {
                 child->cap = (int64_t)(intptr_t)*pending;
                 *pending = child;
-            } else --child->count;
+            }
         }
     }
     free(meta->index);

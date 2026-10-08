@@ -58,7 +58,7 @@ pub const site_extra = 64;
 /// kind, padding, then the counters `c0`..`c3` (80 bytes, 8-byte aligned).
 pub const site_type = "{ ptr, ptr, ptr, ptr, i32, i32, i32, i32, [4 x i64] }";
 /// Runtime counters per function record (`MYL_COUNT_SLOTS` in `runtime/core_count.h`).
-pub const function_slots = 36;
+pub const function_slots = 42;
 /// Byte offset of the calls counter (slot 0) in a function record.
 pub const function_calls = 8;
 
@@ -165,6 +165,8 @@ pub const epilogue = "  store ptr %myl.cnt.saved, ptr @myl_count_current, align 
 /// through the runtime, which counts it. Pushes with room stay inline.
 pub const fast_paths =
     \\@myl_core_free_lists = external global [33 x ptr]
+    \\declare void @myl_core_retain_slow(ptr) nounwind cold
+    \\declare void @myl_core_release_slow(ptr) nounwind cold
     \\declare ptr @myl_core_list_new_slow(i64, i64) nounwind
     \\declare ptr @myl_core_list_grow(ptr, i64) nounwind
     \\declare void @myl_core_free_block(ptr) nounwind cold

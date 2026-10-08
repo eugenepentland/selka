@@ -84,6 +84,74 @@ enum { MYL_KIND_LIST = 0, MYL_KIND_STR = 1, MYL_KIND_BOX = 2, MYL_KIND_BYTES = 3
 enum { MYL_HEADER = 32, MYL_ALIGN = 32 };
 /* A saturated count (D4): the block is immortal, never written and never freed. */
 #define MYL_SATURATED UINT32_MAX
+#define MYL_SHARED UINT32_C(0x80000000)
+#define MYL_PLAIN_MAX UINT32_C(0x7ffffffe)
+
+/* SHARED-COUNTS-1: only unpublished/plain blocks may use non-atomic writes.
+   A count read can race with shared retains/releases, even a uniqueness test.
+   C's relaxed load is the weakest available atomic load; the LLVM emitter uses
+   unordered so its loop-invariant uniqueness tests can still be hoisted. */
+static uint32_t count_load(const myl_block *block) {
+    return __atomic_load_n(&block->count, __ATOMIC_RELAXED);
+}
+
+static bool count_is_unique(const myl_block *block) { return count_load(block) == 1; }
+static bool count_can_cache(const myl_block *block) { return count_load(block) < MYL_SHARED; }
+
+/* CAS keeps immortality sticky even if a retain saturates while a release is
+   in flight. An unconditional fetch-add/sub after testing for immortality
+   could wrap or decrement the immortal sentinel. Both operations are cold. */
+__attribute__((cold, noinline)) void myl_core_retain_slow(myl_block *block) {
+    uint32_t count = count_load(block);
+    if (count < MYL_SHARED) {
+        block->count = MYL_SATURATED;
+        return;
+    }
+    while (count != MYL_SATURATED) {
+        if (__atomic_compare_exchange_n(&block->count, &count, count + 1, true,
+                                        __ATOMIC_RELAXED, __ATOMIC_RELAXED)) return;
+    }
+}
+
+/* Drop a shared owner; only the thread that removed the last one may free.
+   The acquire fence makes every prior owner's release visible to destruction. */
+__attribute__((cold, noinline)) static bool count_release_shared(myl_block *block) {
+    uint32_t count = count_load(block);
+    while (count != MYL_SATURATED) {
+        if (__atomic_compare_exchange_n(&block->count, &count, count - 1, true,
+                                        __ATOMIC_RELEASE, __ATOMIC_RELAXED)) {
+            if (count != MYL_SHARED + 1) return false;
+            __atomic_thread_fence(__ATOMIC_ACQUIRE);
+            return true;
+        }
+    }
+    return false;
+}
+
+static void count_retain(myl_block *block) {
+    if (!block) return;
+    uint32_t count = count_load(block);
+    if (count < MYL_PLAIN_MAX) block->count = count + 1;
+    else if (count != MYL_SATURATED) myl_core_retain_slow(block);
+}
+
+/* Return last-owner status rather than recurse: the free walk enqueues children. */
+static bool count_release(myl_block *block) {
+    if (!block) return false;
+    uint32_t count = count_load(block);
+    if (count < MYL_SHARED) {
+        if (count == 1) return true;
+        block->count = count - 1;
+        return false;
+    }
+    if (count == MYL_SATURATED) return false;
+    return count_release_shared(block);
+}
+
+__attribute__((cold)) void myl_core_free_block(myl_block *block);
+__attribute__((cold, noinline)) void myl_core_release_slow(myl_block *block) {
+    if (count_release_shared(block)) myl_core_free_block(block);
+}
 
 static unsigned char *block_data(myl_block *block) { return (unsigned char *)block + MYL_HEADER; }
 
@@ -383,7 +451,7 @@ myl_block *myl_core_list_grow(myl_block *list, int64_t element_size) {
 
 /* One more owner of `block` (D4: a count that reaches the saturated value stays there). */
 static void retain_block(myl_block *block) {
-    if (block->count != MYL_SATURATED) ++block->count;
+    count_retain(block);
 }
 
 /* A fresh copy of `list` with room for one more element: the copy arm of a
@@ -457,11 +525,10 @@ __attribute__((cold)) void myl_core_free_block(myl_block *block) {
                 const unsigned char *element = block_data(dying) + i * (int64_t)layout[0];
                 for (int32_t r = 0; r < layout[1]; ++r) {
                     myl_block *child = reference_at(layout, element, r);
-                    if (!child || child->count == MYL_SATURATED) continue;
-                    if (child->count == 1) {
+                    if (count_release(child)) {
                         child->cap = (int64_t)(intptr_t)pending;
                         pending = child;
-                    } else --child->count;
+                    }
                 }
             }
         }
@@ -471,9 +538,7 @@ __attribute__((cold)) void myl_core_free_block(myl_block *block) {
 
 /* Drop one owner of `block` out of line: the C entry's `args` and `main`'s error. */
 void myl_core_release(myl_block *block) {
-    if (!block || block->count == MYL_SATURATED) return;
-    if (block->count == 1) myl_core_free_block(block);
-    else --block->count;
+    if (count_release(block)) myl_core_free_block(block);
 }
 
 /* ---- error traces (ERROR-TRACE-1..5) -------------------------------------------

@@ -44,16 +44,23 @@ const patches = [_]Patch{
         .after = "    myl_count_list_grow((size_t)list->len * (size_t)element_size);\n",
     },
     .{ .anchor = "myl_block *myl_core_list_copy(myl_block *list, int64_t element_size) {\n", .after = "    myl_count_copy(MYL_COUNT_LIST_COPIES, (size_t)list->len * (size_t)element_size);\n" },
-    .{ .anchor = "static void retain_block(myl_block *block) {\n", .after = "    myl_count_event(MYL_COUNT_RUNTIME_RETAINS, 0);\n" },
-    .{ .anchor = "void myl_core_release(myl_block *block) {\n", .after = "    if (block && block->count != MYL_SATURATED) myl_count_event(MYL_COUNT_RUNTIME_RELEASES, 0);\n" },
-    // The children of a freed list or box, and of a freed dictionary.
-    .{ .anchor = "\n                    if (!child || child->count == MYL_SATURATED) continue;\n", .after = "                    myl_count_event(MYL_COUNT_RUNTIME_RELEASES, 0);\n" },
-    .{ .anchor = "\n            if (!child || child->count == MYL_SATURATED) continue;\n", .after = "            myl_count_event(MYL_COUNT_RUNTIME_RELEASES, 0);\n" },
-    .{ .anchor = "    memcpy(other->hashes, meta->hashes, (size_t)meta->elen * 8);\n", .after = "    myl_count_copy(MYL_COUNT_DICT_COPIES, (size_t)meta->elen * ((size_t)meta->desc->stride + 8));\n" },
     .{
-        .anchor = "            if (child && child->count != MYL_SATURATED) ++child->count;\n",
-        .before = "            if (child && child->count != MYL_SATURATED) myl_count_event(MYL_COUNT_RUNTIME_RETAINS, 0);\n",
+        .anchor = "static void count_retain(myl_block *block) {\n    if (!block) return;\n    uint32_t count = count_load(block);\n",
+        .after = "    if (count != MYL_SATURATED) myl_count_event(MYL_COUNT_RUNTIME_RETAINS, 0);\n",
     },
+    .{
+        .anchor = "static bool count_release(myl_block *block) {\n    if (!block) return false;\n    uint32_t count = count_load(block);\n",
+        .after = "    if (count != MYL_SATURATED) myl_count_event(MYL_COUNT_RUNTIME_RELEASES, 0);\n",
+    },
+    .{
+        .anchor = "void myl_core_retain_slow(myl_block *block) {\n    uint32_t count = count_load(block);\n",
+        .after = "    if (count >= MYL_SHARED && count != MYL_SATURATED) myl_count_event(MYL_COUNT_SHARED_RETAINS, 0);\n",
+    },
+    .{
+        .anchor = "static bool count_release_shared(myl_block *block) {\n    uint32_t count = count_load(block);\n",
+        .after = "    if (count != MYL_SATURATED) myl_count_event(MYL_COUNT_SHARED_RELEASES, 0);\n",
+    },
+    .{ .anchor = "    memcpy(other->hashes, meta->hashes, (size_t)meta->elen * 8);\n", .after = "    myl_count_copy(MYL_COUNT_DICT_COPIES, (size_t)meta->elen * ((size_t)meta->desc->stride + 8));\n" },
     .{
         .anchor = "    memcpy(block_data(grown), block_data(dict), (size_t)meta->elen * meta->desc->stride);\n",
         .after = "    myl_count_event(MYL_COUNT_DICT_GROWS, (size_t)meta->elen * ((size_t)meta->desc->stride + 8));\n",
