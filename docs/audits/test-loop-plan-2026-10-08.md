@@ -1,6 +1,8 @@
 # Test loop after an edit: plan for items 4 and 5, 2026-10-08
 
-Status: **items 1–3 are done** (§2). This plan covers what is left: item 4 (batch a program's tests into one process) and item 5 (one-process directory runs). Two smaller pieces from the investigation, T3b and the jobserver fallback, are included because they feed the same goal. Nothing in this plan is implemented.
+Status, 2026-10-08 (end of day): **everything in this plan is done and merged into `main`**: items 1–3 (§2, §6), T3b (§3, §6b), item 4 (§4, §6c), fast launches and the cache sync (§6d), and item 5 (§5, §6e). The benchmark rerun on the merged `main` is §6f. **What is left, deliberately deferred, is §8**: where the remaining time goes, three further levers with their estimated cost and payoff, and when to come back to them.
+
+The text below was first written as the plan for items 4 and 5, when only items 1–3 were done. Two smaller pieces from the investigation, T3b and the jobserver fallback, were included because they feed the same goal.
 
 **Goal.** A test step after an edit on the EDA port that is at or below Go's. The benchmark medians to beat are 1.19 s (Go), 1.64 s (Rust) and 2.20 s (Zig).
 
@@ -318,3 +320,61 @@ A run with nothing changed is also faster: 0.46 s → 0.34 s in the same session
   - at most 7 struct fields and 6 parameters;
   - `///` on pub declarations;
   - no pushes; nothing merged into `main` without the user's go.
+
+## 8. Deferred: what is left, and when to come back
+
+**Decision, 2026-10-08.** After item 5 the test step is about 2× faster than Go's on EDA. The user chose to stop here: merge, rerun the benchmark (§6f), and keep this section so the work can be resumed. The rest is diminishing returns at today's project size. Each further 0.1–0.2 s costs days of front-end or back-end work. The test step is also now small next to the rest of an agent's edit loop.
+
+**Where the time goes now.** Phase probes on the final branch, load about 8, all CPUs. The probes were temporary `elapsed` prints, built and then reverted (§6e).
+
+| phase | comment or interface edit (0 rerun, wall ≈ 0.42 s) | hub edit (111 rerun, wall ≈ 0.65 s) |
+|---|---:|---:|
+| start, header discovery (one shared load) | 25 ms | 25 ms |
+| replay of roots outside the edit's reach | to 32 ms | — |
+| the shared check (uncached, whole union) | to 215 ms (≈ 180 ms of it) | to 220 ms |
+| the in-process roots: selection, keys, input hashing, receipts; for the hub, also build and run | to 428 ms (≈ 210 ms) | to 649 ms (≈ 430 ms) |
+| of that, the hub's largest root (`export_kicad_sch_test`, 28 tests) build | — | ≈ 280 ms: lowering, LLVM emission, `zig cc` |
+
+**Further levers, cheapest first.** The gains are estimates from the probes above, not measurements.
+
+1. **One set of keys for the whole directory run (cheap: about half a day to a day).**
+   - **What repeats now:** each in-process root calls `sharedKeys` in `test_runner.zig`. That lowers the reachable program of its own ready tests (`build.buildRootsSource`) and digests every function of it (`test_runner_identity.Shared.build`). The roots share most of their import graph, so the same shared-module functions are lowered and digested once per root, 28 times on EDA.
+   - **The change:** build one `Shared` over the union program once, in the directory run, beside the shared check, and hand it to each root through `test_runner_shared.View`. A root then only maps its tests to function indices and hashes their reach (`test_keys.key`).
+   - **Also share:** the source digests that `checkedInputs` computes per root (every module of the root's closure is read and hashed again), and the settings key from `receipt.settings`.
+   - **Measure first:** add a phase probe inside the roots' ≈ 210 ms, split across `sharedKeys`, `checkedInputs`, discovery and receipt writes. That shows how much this lever can reach.
+   - **Correctness:**
+     - a T3b function digest must not depend on which other functions share the lowering (it is canonical: references by name, no positions or table indices), so the keys from the union lowering must equal the per-root ones;
+     - check it with a key-equality differential (union keys vs per-root keys on EDA, Lox and `tests/lang`), plus `keys_differential.py` and `batch_differential.py --oracle MYLANG_TEST_CHILDREN`;
+     - a root that fails the union `Shared` (for example `UnknownMetadata`) falls back to its own `sharedKeys`.
+   - **Expected:** comment and interface edits about 0.40 s → 0.25–0.30 s; hub and leaf edits save the same 100–150 ms where they wait on key derivation.
+2. **An incremental shared check (days of front-end work).**
+   - **The cost:** the shared check reruns the whole program's checking every time, ≈ 180 ms on EDA (about 26k lines). That includes the whole-program summary and mutation passes.
+   - **Why the cache doesn't help:** the per-module semantic cache made this check 40–50 ms *slower* here (§6e), so the check runs uncached.
+   - **The lever:** re-run the whole-program passes only for the modules whose interface or body digest changed, keeping the rest from the previous run.
+   - **Why it matters later:** the cost grows with the project, not with the edit. At the EDA port's ~100k-line stage it could pass a second, and at that point this lever matters more than everything else here. It would also speed up `mylang check`, `run` and `build`, not only tests.
+   - **Expected now:** maybe 100+ ms off every edit.
+3. **Faster debug code generation for the rebuilt test file (40–80 h).**
+   - **The cost:** the hub edit's critical path ends with one root's build, ≈ 280 ms of lowering, LLVM emission and `zig cc`.
+   - **The plan:** this is `docs/audits/debug-llvm-plan-2026-10-07.md` (the custom debug back end, deferred until its DL package reports).
+   - **Expected:** maybe 150 ms off edits that rerun tests.
+4. **A resident process, a daemon or watch mode (a different product).** It keeps the checked program and the lowering in memory between edits, so there is no start-up, discovery or reload at all. Consider it only if levers 1–3 fall short at the large stages.
+
+**The estimated ceiling with levers 1–3:**
+- edits that rerun nothing: about 0.15–0.20 s, from 0.40 s;
+- hub and leaf edits: about 0.3 s, from 0.5–0.6 s;
+- so at most another 2×, of which only lever 1 is cheap.
+
+**When to come back.**
+- **When the EDA port reaches its ~100k-line stage** (`eda-port-benchmark-plan`): rerun the probes above at that size. If the shared check has grown past about 0.5 s, do lever 2 first. Otherwise do lever 1.
+- **If the benchmark's test step is again slower than Go's**, by the `bench.py time` protocol of §6f.
+- **When the debug back end is taken up** for build speed: lever 3 comes with it.
+
+**How to resume.**
+- **Timing:**
+  - the interleaved scripts in `experiments/test-loop-20261008/` (`interleave-final.sh` is the template: two compilers, five rounds, each in its own warm cache);
+  - `probe.sh` for single runs;
+  - the benchmark protocol in `experiments/test-loop-20261008/bench-main/run.sh`.
+- **The differentials every change must pass:**
+  - `keys_differential.py` (0 missed, 0 wrong);
+  - `batch_differential.py --oracle MYLANG_TEST_ISOLATE` and `--oracle MYLANG_TEST_CHILDREN`, with `--breaks`.
+- **The oracle variables:** `MYLANG_TEST_KEYS=per-test`, `MYLANG_TEST_ISOLATE=1` and `MYLANG_TEST_CHILDREN=1`.
