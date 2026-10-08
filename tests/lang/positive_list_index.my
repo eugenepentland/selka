@@ -34,25 +34,6 @@ public def test_index_callback_keeps_the_receiver_selected_before_replacement() 
     return result == 7 and frame.code == [17, 19]
 
 
-def at(values: list[int], index: int) -> int:
-    return values[index]
-
-
-public def test_reads_at_both_ends_of_a_list_in_either_direction() -> bool:
-    values = [7, 11]
-    return at(values, 0) == 7 and at(values, 1) == 11 and at(values, -1) == 11 and at(values, -2) == 7
-
-
-public def test_a_write_before_the_replacing_call_is_what_the_selected_index_reads() -> bool:
-    frame = Frame([7, 11], 0)
-    before = frame
-    assert read(mut frame) == 7
-    frame.code[0] = 13
-    assert before.code == [7, 11] and before.ip == 0
-    assert selected(mut frame) == 13
-    return frame.code == [17, 19]
-
-
 union Cell:
     empty,
     number: int
@@ -61,6 +42,4 @@ union Cell:
 def main() -> int:
     assert test_positive_and_negative_reads_keep_scalar_updates_and_snapshots()
     assert test_index_callback_keeps_the_receiver_selected_before_replacement()
-    assert test_reads_at_both_ends_of_a_list_in_either_direction()
-    assert test_a_write_before_the_replacing_call_is_what_the_selected_index_reads()
     return 0

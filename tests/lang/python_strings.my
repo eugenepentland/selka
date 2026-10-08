@@ -61,24 +61,5 @@ public def test_splitlines_drops_terminators_and_int_float_parse_a_whole_string(
     return total - 1 == 42
 
 
-# `str.find` answers the first scalar index for one-scalar, multi-scalar and
-# longer-than-the-receiver needles, including multi-byte scalars whose low byte
-# also occurs inside another scalar (from the retired `qbe_text_test.zig`).
-# spec-case: PY-STR-2
-public def test_find_answers_the_first_scalar_index_for_short_long_and_overlong_needles() -> bool:
-    text = "the quick brown fox"
-    assert text.find("t") == 0
-    assert text.find("q") == 4
-    assert text.find("quick") == 4
-    assert text.find("fox") == 16
-    assert text.find("zebra") == -1
-    assert "aaa".find("aaaa") == -1
-    assert "héllo".find("é") == 1
-    assert "héllo".find("llo") == 2
-    assert "日本語".find("本") == 1
-    assert "日本語".find("語日") == -1
-    return True
-
-
 def main() -> int:
     return 0

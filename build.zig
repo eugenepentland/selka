@@ -749,7 +749,7 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&guest_tests.step);
     guardian.addAllChecks(b, guardian_exe, guest_step, .{});
     boundedChecks(guest_step);
-    const lang_step = b.step("test-lang", "Run tests/lang and tests/value_semantics through mylang test, at debug and at release with the leak and fact checks");
+    const lang_step = b.step("test-lang", "Run tests/lang, tests/value_semantics and tests/ported through mylang test, at debug and at release with the leak and fact checks");
     // S5-C: the language-level guest tests run on the new core in both of its
     // modes: the debug build, and the release build with its facts asserted
     // (`--verify-facts`) and the runtime's leak check on (`MYL_CORE_LEAKCHECK=1`:
@@ -761,6 +761,10 @@ pub fn build(b: *std.Build) void {
     for ([_]LangSuite{
         .{ .dir = "tests/lang", .cache = ".mylang-cache/lang-tests" },
         .{ .dir = "tests/value_semantics", .cache = ".mylang-cache/value-semantics-tests" },
+        // Tests ported from the retired back end's Zig tests (S5-D1); outside
+        // tests/lang, whose files the S5 conformance sweep compares with the
+        // frozen old-core references.
+        .{ .dir = "tests/ported", .cache = ".mylang-cache/ported-tests" },
     }) |suite| {
         const debug = bounded(b.addRunArtifact(exe), rss.suite);
         debug.setName(b.fmt("mylang test {s}", .{suite.dir}));

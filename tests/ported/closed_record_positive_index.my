@@ -1,0 +1,56 @@
+module closed_record_positive_index
+
+# Ported from the retired QBE field-inout tests: a closed carrier written at a
+# positive index keeps its snapshots and detached aliases.
+
+record Runtime:
+    data: list[int]
+    top: int
+
+
+record Interpreter:
+    rt: Runtime
+    tag: int
+
+
+def update(rt: mut Runtime, index: int, value: int):
+    rt.data[index] = value
+    rt.top += 1
+
+
+def carrier(it: mut Interpreter, index: int, value: int):
+    rt = it.rt
+    update(mut rt, index, value)
+    it.rt = rt
+
+
+def replace(rt: mut Runtime, value: int):
+    if value < 0:
+        return
+    rt = Runtime([value], 2)
+
+
+def replacement(it: mut Interpreter, value: int):
+    rt = it.rt
+    replace(mut rt, value)
+    it.rt = rt
+
+
+public def test_closed_carrier_at_a_positive_index_keeps_the_same_snapshots() -> bool:
+    it = Interpreter(Runtime([1, 2], 0), 9)
+    saved = it
+    alias = it.rt.data
+    carrier(mut it, 0, 7)
+    assert it.rt.data == [7, 2] and it.rt.top == 1
+    assert saved.rt.data == [1, 2] and saved.rt.top == 0
+    assert alias == [1, 2]
+    replacement(mut it, -1)
+    assert it.rt.data == [7, 2]
+    replacement(mut it, 11)
+    assert it.rt.data == [11] and it.rt.top == 2
+    return saved.rt.data == [1, 2] and alias == [1, 2]
+
+
+def main() -> int:
+    assert test_closed_carrier_at_a_positive_index_keeps_the_same_snapshots()
+    return 0
