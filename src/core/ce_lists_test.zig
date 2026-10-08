@@ -384,3 +384,85 @@ test "a slice used only as a loop source is iterated in place, and a slice still
         try std.testing.expectEqual(@as(u8, 0), ran.status);
     }
 }
+
+const appends_loop =
+    \\def main(out: Stream) -> int:
+    \\    empty: list[int] = []
+    \\    buffer = byte_buffer(empty)
+    \\    piece = b"mylang!\n"
+    \\    for i in range(1000):
+    \\        _ = buffer.append_range(piece, 0, 8)
+    \\    out.print(len(buffer))
+    \\    return 0
+    \\
+;
+
+const appends_several =
+    \\def fill(buffer: mut byte_buffer, piece: bytes, text: str) -> int:
+    \\    n = 0
+    \\    if buffer.append_range(piece, 1, 3):
+    \\        n += 1
+    \\    if buffer.append_utf8(text):
+    \\        n += 1
+    \\    if buffer.append_range(piece, 0, len(piece)):
+    \\        n += 1
+    \\    return n
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    empty: list[int] = []
+    \\    buffer = byte_buffer(empty)
+    \\    out.print(fill(mut buffer, b"abcd", "xy"), len(buffer))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-CE-LISTS-6
+test "a byte-buffer append copies in place when the range fits the room and calls the runtime only to grow" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    // The range test is comparisons and the append an inline copy: the runtime's checked
+    // append is called once, on the slow path, and the range test never.
+    const llvm = try support.releaseLlvmText(a, appends_loop);
+    try std.testing.expect(contains(llvm, "append.fast"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, llvm, "call ptr @myl_core_buffer_append_checked("));
+    try std.testing.expect(!contains(llvm, "call i1 @myl_core_buffer_range_valid"));
+    const text = try support.ownedText(a, appends_loop);
+    try std.testing.expectEqual(@as(usize, 1), countOp(text, "buffer_append"));
+    // Several appends in one function, each rewritten with its own operands (the IR is
+    // verified after ownership).
+    const several = try support.ownedText(a, appends_several);
+    try std.testing.expectEqual(@as(usize, 3), countOp(functionIr(several, "fill"), "buffer_append"));
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    // Valid, empty, reversed, negative and past-the-end ranges through several growths, a
+    // fill exactly to the reserved room and one octet past it, a snapshot that shares the
+    // buffer's storage, and appends from another buffer.
+    const expected = "2729 1026 435284\n16 17 697512\n2729 2743 2729 770813\n2747 905629 48633\n10 771938\n";
+    for (modes) |flags| {
+        const ran = try leakChecked(a, root, "ce_appends", flags, &.{});
+        try std.testing.expectEqualStrings(expected, ran.stdout);
+        try std.testing.expectEqualStrings("", ran.stderr);
+        const grown = try leakChecked(a, root, "ce_appends", flags, &.{ "grow", "100000" });
+        try std.testing.expectEqualStrings(expected ++ "100000\n", grown.stdout);
+    }
+    // A growth past the memory budget traps inside the append, at the append.
+    try expectGrowthTrap(a, root, expected, &.{});
+    try expectGrowthTrap(a, root, expected, &.{"--release"});
+}
+
+/// `mylang run` of `ce_appends grow` under a 1 MiB budget traps in the append, reported there.
+fn expectGrowthTrap(a: std.mem.Allocator, root: []const u8, expected: []const u8, flags: []const []const u8) !void {
+    const source = try std.fmt.allocPrint(a, "{s}/ce_appends.my", .{options.fixtures});
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(a, &.{ options.core_path, "run", source, "--max-memory=1M", "--cache-dir", try std.fmt.allocPrint(a, "{s}/run-cache", .{root}) });
+    try argv.appendSlice(a, flags);
+    try argv.appendSlice(a, &.{ "--", "grow", "10000000" });
+    const ran = try std.process.run(a, std.testing.io, .{ .argv = argv.items });
+    try std.testing.expect(ran.term == .exited and ran.term.exited == 1);
+    try std.testing.expectEqualStrings(expected, ran.stdout);
+    try std.testing.expect(contains(ran.stderr, "error[R_MEMORY_BUDGET]: memory budget exhausted"));
+    try std.testing.expect(contains(ran.stderr, "in ce_appends::main at ce_appends.my:61:17\n"));
+}

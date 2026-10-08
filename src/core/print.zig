@@ -160,7 +160,7 @@ fn instruction(allocator: std.mem.Allocator, out: *std.ArrayList(u8), m: *const 
             try operand(allocator, out, m, f, operands[0]);
         },
         .err_trace => try out.print(allocator, " {s}", .{@tagName(@as(ir.TraceMode, @fromBackingInt(@intCast(@min(inst.data, 4)))))}),
-        .record_make, .list_set, .dict_set_value, .dict_insert, .str_append_char, .str_slice, .str_view_of, .array_set, .call_indirect, .buffer_set => {
+        .record_make, .list_set, .dict_set_value, .dict_insert, .str_append_char, .str_slice, .str_view_of, .array_set, .call_indirect, .buffer_set, .buffer_append => {
             const operands = f.valueOperands(inst);
             for (0..operands.len()) |i| {
                 try out.appendSlice(allocator, if (i == 0) " " else ", ");

@@ -44,6 +44,7 @@ const facts = @import("facts.zig");
 const flags = @import("flags.zig");
 const promotion = @import("promote.zig");
 const elements = @import("elements.zig");
+const buffers = @import("buffers.zig");
 const origins = @import("inline_origins.zig");
 
 /// The pass only allocates.
@@ -121,6 +122,8 @@ pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Funct
     }
     // Element-field stores in place, before any update gets its copy-on-write form.
     _ = try elements.fieldStores(arena, module, f);
+    // Byte-buffer appends become updates the emitter does inline.
+    _ = try buffers.appends(arena, module, f);
     // Popped elements are found (or read) before anything moves.
     try markPops(.{ .arena = arena, .f = f, .origin = marks.origin }, module, &marks);
     for (f.insts.items, 0..) |inst, index| {

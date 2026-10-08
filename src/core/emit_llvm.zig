@@ -1443,7 +1443,7 @@ const FunctionEmitter = struct {
             .dict_insert, .dict_remove, .dict_entries, .dict_entry_live, .dict_copy, .dict_clear => try emit_dict.instruction(@TypeOf(self), self, out, name, inst),
             .str_char, .str_width, .str_code, .str_append, .str_append_char, .str_slice, .str_view_of, .str_from_view => try emit_text.instruction(self, out, name, inst),
             .list_sort, .array_get, .array_set, .call_indirect => try emit_fn.instruction(self, out, name, inst),
-            .buffer_new, .buffer_copy, .buffer_set, .buffer_push, .buffer_pop => try emit_bytes.instruction(self, out, name, inst),
+            .buffer_new, .buffer_copy, .buffer_set, .buffer_push, .buffer_pop, .buffer_append => try emit_bytes.instruction(self, out, name, inst),
             .shift_left, .shift_right, .saturating_add, .float_unary => try emit_number.instruction(self, out, name, inst),
             .add, .sub, .mul => try self.arithmetic(out, name, inst),
             .div, .rem, .floor_div, .floor_rem => try self.division(out, name, inst),
@@ -2500,7 +2500,7 @@ const FunctionEmitter = struct {
 
     /// `, !dbg !N` for a call at `span` (`dwarf_lines` only): LLVM keeps it through
     /// inlining as an inline record, so a return address maps to every frame it stands for.
-    fn callLocation(self: *FunctionEmitter, span: u32) ![]const u8 {
+    pub fn callLocation(self: *FunctionEmitter, span: u32) Error![]const u8 {
         if (self.scope.definition == 0) return "";
         const location = self.state.options.locator.locate(self.state.options.locator.context, span);
         const node = try self.sourceLocation(location, self.scope.origin);

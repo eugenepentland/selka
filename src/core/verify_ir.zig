@@ -535,6 +535,7 @@ const Verifier = struct {
             .list_set => if (self.compoundOf(s.a, .list)) |element| inst.ty == s.a and isInteger(s.b) and s.extra.len == 1 and self.typeOf(s.extra[0]) == element else false,
             .list_get_field => self.fieldSignature(s),
             .list_set_field => self.setFieldSignature(s),
+            .buffer_append => inst.ty == .byte_buffer and s.a == .byte_buffer and (s.b == .bytes or s.b == .byte_buffer) and s.extra.len == 2 and self.typeOf(s.extra[0]) == .i64 and self.typeOf(s.extra[1]) == .i64,
             .union_make, .union_tag, .union_payload => self.unionSignature(s),
             .record_make => if (self.compoundOf(inst.ty, .record)) |fields| self.typesMatch(s.extra, fields) else if (self.compoundOf(inst.ty, .array)) |array| blk: {
                 if (s.extra.len != array.n) break :blk false;
