@@ -148,6 +148,7 @@ def main():
     parser.add_argument("--jobs", type=int, help="file workers; default frozen collector count")
     parser.add_argument("--expected-tests", type=int, help="optional frozen unique test count assertion")
     args = parser.parse_args()
+    collector_sha = digest(Path(__file__))
     reference, compiler, output, cache = (path.resolve() for path in
         (args.reference, args.compiler, args.output, args.cache))
     assert not output.exists(), "output must be fresh"
@@ -215,10 +216,13 @@ def main():
     comparisons = {}
     env = dict(os.environ, MYL_CORE_LEAKCHECK="1", PYTHONDONTWRITEBYTECODE="1")
     settings_context, settings_helper = None, None
+    settings_helper_sha = None
     settings_context_sha = digest(args.settings_context) if args.settings_context else None
     assert bool(args.settings_context) == bool(args.settings_hasher), "settings context and witness must be paired"
     if args.settings_context:
-        settings_helper = load("settings_helper", Path(__file__).with_name("frontend_compare_settings.py"))
+        helper_path = Path(__file__).with_name("frontend_compare_settings.py")
+        settings_helper_sha = digest(helper_path)
+        settings_helper = load("settings_helper", helper_path)
         settings_context = json.loads(args.settings_context.read_text())
         settings_helper.validate_context(settings_context, Path(identity["oracle"]["path"]), compiler,
             frozen_compiler_source, compiler_source)
@@ -416,7 +420,7 @@ def main():
         "reference": str(reference),
         "reference_identity_sha256": digest(reference / "identity.json"),
         "source_manifest_sha256": digest(output / "source-manifest.json"),
-        "collector": {"path": str(Path(__file__).resolve()), "sha256": digest(Path(__file__))}}
+        "collector": {"path": str(Path(__file__).resolve()), "sha256": collector_sha}}
     write(output / "identity.json", new_identity)
     summary = {"elapsed_seconds": time.monotonic() - started, "totals": totals,
         "directory_counts": {mode: len(entry.get("tests", [])) for mode, entry in directory.items()},
@@ -428,10 +432,12 @@ def main():
         "compiler_sources_unchanged": compiler_sources == production_manifest(compiler_source),
         "compiler_unchanged": digest(compiler) == compiler_sha,
         "settings_context_unchanged": not settings_context or digest(args.settings_context) == settings_context_sha,
-        "settings_witness_unchanged": not settings_context or digest(args.settings_hasher) == settings_context["hasher_sha256"]}
+        "settings_witness_unchanged": not settings_context or digest(args.settings_hasher) == settings_context["hasher_sha256"],
+        "collector_unchanged": digest(Path(__file__)) == collector_sha,
+        "settings_helper_unchanged": not settings_context or digest(helper_path) == settings_helper_sha}
     write(output / "summary.json", summary)
     print(json.dumps(summary, sort_keys=True), flush=True)
-    return int(bool(summary["mismatches"]) or not summary["source_manifest_unchanged"] or not summary["compiler_unchanged"] or not summary["reference_sources_unchanged"] or not summary["reference_files_unchanged"] or not summary["compiler_sources_unchanged"] or not summary["settings_context_unchanged"] or not summary["settings_witness_unchanged"])
+    return int(bool(summary["mismatches"]) or not summary["source_manifest_unchanged"] or not summary["compiler_unchanged"] or not summary["reference_sources_unchanged"] or not summary["reference_files_unchanged"] or not summary["compiler_sources_unchanged"] or not summary["settings_context_unchanged"] or not summary["settings_witness_unchanged"] or not summary["collector_unchanged"] or not summary["settings_helper_unchanged"])
 
 
 if __name__ == "__main__":
