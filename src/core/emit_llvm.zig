@@ -30,6 +30,7 @@ const emit_constants = @import("emit_constants.zig");
 const emit_count = @import("emit_count.zig");
 const origins = @import("inline_origins.zig");
 const emit_homes = @import("emit_homes.zig");
+const effects = @import("effects.zig");
 
 /// A source line and column for a span start.
 pub const Location = struct { line: u32, column: u32, path: []const u8 = "" };
@@ -45,6 +46,8 @@ pub const Analysis = struct {
     facts: []const ?facts.Facts = &.{},
     vectors: []const []const vector.Plan = &.{},
     provenance: ?*const origins.Table = null,
+    /// The final IR's effect summaries (`effects.zig`); computed here when null.
+    effects: ?*const effects.Summaries = null,
 };
 
 /// What the emitted module needs from its caller.
@@ -242,7 +245,13 @@ pub fn emitUnit(allocator: std.mem.Allocator, module: *const ir.Module, options:
     return render(allocator, module, options, selection);
 }
 
-fn render(allocator: std.mem.Allocator, module: *const ir.Module, options: Options, selection: ?Selection) Error![]u8 {
+fn render(allocator: std.mem.Allocator, module: *const ir.Module, given: Options, selection: ?Selection) Error![]u8 {
+    var options = given;
+    if (options.analysis.effects == null) {
+        const summaries = try allocator.create(effects.Summaries);
+        summaries.* = try effects.analyze(allocator, module);
+        options.analysis.effects = summaries;
+    }
     var state: ModuleState = .{ .allocator = allocator, .module = module, .options = options, .local = .{ .selection = selection }, .debug = .{ .fallback = if (selection) |chosen| chosen.source_path else options.source_path } };
     var body: Out = .empty;
     if (selection) |chosen| {
@@ -1135,6 +1144,7 @@ const FunctionEmitter = struct {
             .in_out = abi.params,
             .calls = mem.in_out.args,
             .ret_home = emit_homes.steps.in_out and abi.params == 0 and returnsThroughSret(m, f.signature, abi),
+            .effects = self.state.options.analysis.effects,
         });
         const plan = &mem.homes;
         const names = try self.a().alloc([]const u8, plan.homes.len);

@@ -1,0 +1,140 @@
+module ce2_effects
+# CE2-A (field effects): per-field interference of memory homes, dead and sunk element
+# stores, and element stores narrowed to the fields that changed. Every case prints what
+# value semantics says it must; the copies and stores the compiler removed must not be
+# observable.
+
+
+record Code:
+    consts: list[int]
+    lines: list[int]
+    name: str
+    n: int
+    m: int
+
+
+record Frame:
+    closure: int
+    code: Code
+    ops: list[int]
+    ip: int
+    base: int
+
+
+union Slot:
+    empty,
+    frame: Frame,
+    count: int
+
+
+record Machine:
+    frames: list[Frame]
+    count: int
+    stack: list[int]
+    top: int
+    log: list[str]
+
+
+# ---- per-field interference ---------------------------------------------------------
+
+# Writes only `frame.ip`.
+def next_op(frame: mut Frame) -> int:
+    op = frame.ops[frame.ip]
+    frame.ip = frame.ip + 1
+    return op
+
+
+# A view of `frame.code` is live across a call that writes only `frame.ip`.
+def read_const(frame: mut Frame) -> int:
+    return frame.code.consts[next_op(mut frame)]
+
+
+# Writes `frame.code.n`: the same field as the view the caller keeps.
+def touch_code(frame: mut Frame):
+    frame.code.n = frame.code.n + 100
+
+
+# The old `code` must survive a callee that writes inside it.
+def same_field(frame: mut Frame) -> int:
+    old = frame.code
+    touch_code(mut frame)
+    return old.n * 1000 + frame.code.n
+
+
+# A view held across an in-place update of a disjoint field, then of the same field.
+def held_view(frame: mut Frame) -> int:
+    code = frame.code
+    frame.ip = frame.ip + 5
+    first = code.n + frame.ip
+    frame.code = Code(consts=[7], lines=[], name="new", n=50, m=0)
+    return first * 1000 + code.n + frame.code.n
+
+
+# A loop with `break` and `continue` keeps a view of `code` while it updates `ip`.
+def loop_view(frame: mut Frame, limit: int) -> int:
+    code = frame.code
+    total = 0
+    while True:
+        if frame.ip >= limit:
+            break
+        op = next_op(mut frame)
+        if op % 2 == 0:
+            continue
+        total = total + code.consts[op % len(code.consts)]
+    return total * 100 + frame.ip
+
+
+# Recursion through `mut`: each level reads a view of `code` after the callee's update.
+def recurse(frame: mut Frame, depth: int) -> int:
+    if depth == 0:
+        return frame.ip
+    code = frame.code
+    frame.ip = frame.ip + 1
+    inner = recurse(mut frame, depth - 1)
+    return inner + code.m
+
+
+# Counted fields: a list field is replaced while a view of another counted field is live.
+def swap_ops(frame: mut Frame) -> int:
+    code = frame.code
+    frame.ops = [9, 8, 7]
+    return len(code.consts) * 10 + len(frame.ops)
+
+
+# A union payload over four words read where it lies while another field changes.
+def slot_ip(slot: Slot, bump: int) -> int:
+    match slot:
+        case Slot.frame(frame):
+            inner = frame
+            inner.ip = inner.ip + bump
+            return inner.ip * 100 + frame.ip
+        case Slot.count(n):
+            return n
+        case _:
+            return -1
+
+
+def make_code(tag: str, n: int) -> Code:
+    return Code(consts=[10, 20, 30, 40], lines=[1, 2], name=tag, n=n, m=n * 2)
+
+
+def make_frame(tag: str, n: int) -> Frame:
+    return Frame(closure=n, code=make_code(tag, n), ops=[1, 2, 3, 0, 1], ip=0, base=n)
+
+
+def fields_section(out: Stream):
+    frame = make_frame("a", 3)
+    out.print(read_const(mut frame), read_const(mut frame), frame.ip, frame.code.n)
+    out.print(same_field(mut frame), frame.code.n)
+    out.print(held_view(mut frame), frame.ip, frame.code.name)
+    loop = make_frame("b", 4)
+    out.print(loop_view(mut loop, 5), loop.ip)
+    deep = make_frame("c", 5)
+    out.print(recurse(mut deep, 4), deep.ip)
+    out.print(swap_ops(mut deep), deep.ops[0], len(deep.code.consts))
+    out.print(slot_ip(Slot.frame(make_frame("d", 6)), 3), slot_ip(Slot.count(4), 1), slot_ip(Slot.empty, 1))
+
+
+def main(args: list[str], out: Stream) -> int:
+    fields_section(out)
+    return 0

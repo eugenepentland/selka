@@ -22,6 +22,7 @@
 //! construction stored straight into its consumer reads its operands at the consumer.
 const std = @import("std");
 const ir = @import("ir.zig");
+const effects = @import("effects.zig");
 
 /// The coalescings that run, in the order CE-A landed them: shared homes for phis and records
 /// updated in place, views, write-backs built in their field, and in-out `mut` records. A
@@ -134,6 +135,9 @@ pub const Input = struct {
     calls: []const []const InOut = &.{},
     /// Whether a returned value travels through `sret` and may be built in the caller's destination.
     ret_home: bool = false,
+    /// The module's effect summaries (`effects.zig`): an in-out call writes only the fields its
+    /// callee's summary names. Null: every in-out call writes its whole argument.
+    effects: ?*const effects.Summaries = null,
 };
 
 /// The definition point of a tracked value: block and position, or the function entry.
@@ -178,18 +182,27 @@ const Classes = struct {
 };
 
 /// Where each instruction sits: its block and position in reachable blocks, `none` elsewhere;
-/// and, for an in-out call's final value, the argument position it is the final value of.
-const Places = struct { block: []u32, pos: []u32, final: []u32 };
+/// for an in-out call's final value, the argument position it is the final value of; and its
+/// dense index among tracked values, or `none`.
+const Places = struct { block: []u32, pos: []u32, final: []u32, dense: []u32 };
+
+/// Per-field interference (CE2-A): the pair of classes a merge is weighing (a value's definition
+/// writes only part of its home when it shares the home with the value it updates), and per
+/// pair of tracked values the liveness of the first restricted to the bytes the second's
+/// definition writes.
+const Partial = struct {
+    pending: ?[2]u32 = null,
+    live: std.AutoHashMapUnmanaged(u64, Live) = .empty,
+};
 
 const Planner = struct {
     arena: std.mem.Allocator,
     input: Input,
     plan: Plan,
-    /// Per instruction: its dense index among tracked values, or `none`.
-    dense: []u32,
     places: Places,
     tracked: Tracked = .{},
     classes: Classes = .{},
+    partial: Partial = .{},
 
     fn fun(self: *const Planner) *const ir.Function {
         return self.input.function;
@@ -214,7 +227,7 @@ const Planner = struct {
 
     fn track(self: *Planner, ref: ir.Ref, def: Def, home: ?Home, writable: bool) !void {
         const index: u32 = @intCast(self.tracked.refs.items.len);
-        self.dense[ref.index()] = index;
+        self.places.dense[ref.index()] = index;
         const blocks = self.fun().blocks.items.len;
         try self.tracked.refs.append(self.arena, ref);
         try self.tracked.defs.append(self.arena, def);
@@ -255,7 +268,7 @@ const Planner = struct {
         // An in-out call's final value is written by the call: it is defined where the call is.
         for (self.input.calls, 0..) |in_outs, call| for (in_outs) |in_out| {
             if (in_out.final == .none) continue;
-            const dense = self.dense[in_out.final.index()];
+            const dense = self.places.dense[in_out.final.index()];
             if (dense == none or self.places.block[call] == none) continue;
             self.tracked.defs.items[dense] = .{ .block = self.places.block[call], .pos = self.places.pos[call] };
         };
@@ -264,7 +277,7 @@ const Planner = struct {
     /// The tracked value whose bytes `raw` reads (through views), or `none`.
     fn rootDense(self: *const Planner, raw: ir.Ref) u32 {
         const at = self.plan.root(self.fun().resolve(raw));
-        return if (at == .none) none else self.dense[at.index()];
+        return if (at == .none) none else self.places.dense[at.index()];
     }
 
     /// Every operand `inst` reads, a fused construction's operands included (they are read
@@ -326,7 +339,7 @@ const Planner = struct {
             var list: std.ArrayList(u32) = .empty;
             const skipped = self.exempt(ref, defining);
             for (operands.items) |operand| {
-                if (operand.index != none and operand.index == skipped and self.dense[operand.ref.index()] != none) continue;
+                if (operand.index != none and operand.index == skipped and self.places.dense[operand.ref.index()] != none) continue;
                 const d = self.rootDense(operand.ref);
                 if (d != none and std.mem.indexOfScalar(u32, list.items, d) == null) try list.append(self.arena, d);
             }
@@ -385,15 +398,82 @@ const Planner = struct {
         return liveAfterIn(&self.tracked.live.items[d], self.tracked.defs.items[d], b, i);
     }
 
-    /// Whether `u` holds bytes some read still needs when `v`'s home is written.
-    fn liveAtDef(self: *const Planner, u: u32, v: u32) bool {
+    /// Whether `u` holds bytes some read still needs when `v`'s home is written: `u` is live
+    /// just after `v`'s definition (only its reads of the bytes that definition writes count,
+    /// when it writes part of the home), or that definition reads `u` after writing.
+    fn liveAtDef(self: *Planner, u: u32, v: u32) !bool {
         const def = self.tracked.defs.items[v];
         if (def.entry) return self.tracked.defs.items[u].entry;
-        if (self.liveAfter(u, def.block, def.pos)) return true;
+        if (try self.writtenRegions(v)) |regions| {
+            if (liveAfterIn(try self.regionLive(u, v, regions), self.tracked.defs.items[u], def.block, def.pos)) return true;
+        } else if (self.liveAfter(u, def.block, def.pos)) return true;
         return std.mem.indexOfScalar(u32, self.tracked.reads.items[v], u) != null;
     }
 
-    fn interferes(self: *const Planner, u: u32, v: u32) bool {
+    /// Whether tracked values `x` and `y` share a home, or will once the merge being weighed is made.
+    fn sameHome(self: *Planner, x: u32, y: u32) bool {
+        const rx = self.find(x);
+        const ry = self.find(y);
+        if (rx == ry) return true;
+        const pair = self.partial.pending orelse return false;
+        return (rx == pair[0] and ry == pair[1]) or (rx == pair[1] and ry == pair[0]);
+    }
+
+    /// The bytes `v`'s definition writes in its home when that is not the whole value (null):
+    /// a `record_set` that shares the home of the record it updates writes its field; an in-out
+    /// call's final value that shares its argument's home is written where the callee's summary
+    /// says it writes (`effects.zig`), and nowhere when it writes nothing.
+    fn writtenRegions(self: *Planner, v: u32) !?[]const Region {
+        const f = self.fun();
+        const m = self.mod();
+        const ref = self.tracked.refs.items[v];
+        const def = self.tracked.defs.items[v];
+        if (def.entry) return null;
+        const inst = f.inst(ref);
+        if (inst.op == .record_set) {
+            const old = self.places.dense[f.resolve(inst.a).index()];
+            if (old == none or !self.sameHome(old, v)) return null;
+            const field_type = m.compound(inst.ty).record[@intCast(inst.data)];
+            const region = try self.arena.alloc(Region, 1);
+            region[0] = .{ .offset = m.fieldOffset(inst.ty, @intCast(inst.data)), .size = m.size(field_type) };
+            return region;
+        }
+        const argument = self.places.final[ref.index()];
+        if (argument == none) return null;
+        const summaries = self.input.effects orelse return null;
+        const call = f.inst(f.blocks.items[def.block].insts.items[def.pos]);
+        if (call.op != .call) return null;
+        const passed = f.resolve(f.operands(call.data)[argument]);
+        const holder = self.places.dense[passed.index()];
+        if (holder == none or !self.sameHome(holder, v)) return null;
+        const paths = summaries.writes(call.a.index(), argument, null);
+        if (paths.whole) return null;
+        const regions = try self.arena.alloc(Region, paths.items.items.len);
+        for (paths.items.items, regions) |path, *region| {
+            const target = m.pathTarget(f.inst(passed).ty, path) orelse return null;
+            if (target.tag_of != .void) return null;
+            region.* = .{ .offset = target.offset, .size = m.size(target.ty) };
+        }
+        return regions;
+    }
+
+    /// The liveness of `u` from only its uses that read some of `regions` (the bytes `v`'s
+    /// definition writes), computed once per pair.
+    fn regionLive(self: *Planner, u: u32, v: u32, regions: []const Region) !*const Live {
+        const key = (@as(u64, u) << 32) | v;
+        if (self.partial.live.getPtr(key)) |known| return known;
+        var live = try self.emptyLive(self.fun().blocks.items.len);
+        for (self.tracked.sites.items[u].items) |site| {
+            const reads = for (regions) |region| {
+                if (self.readsRegion(u, site, region)) break true;
+            } else false;
+            if (reads) try self.record(&live, self.tracked.defs.items[u], site);
+        }
+        try self.partial.live.put(self.arena, key, live);
+        return self.partial.live.getPtr(key).?;
+    }
+
+    fn interferes(self: *Planner, u: u32, v: u32) !bool {
         const du = self.tracked.defs.items[u];
         const dv = self.tracked.defs.items[v];
         const placed = !du.entry and !dv.entry;
@@ -403,7 +483,9 @@ const Planner = struct {
             const f = self.fun();
             if (f.inst(self.tracked.refs.items[u]).op == .phi and f.inst(self.tracked.refs.items[v]).op == .phi) return true;
         }
-        return self.liveAtDef(u, v) or self.liveAtDef(v, u);
+        const forward = try self.liveAtDef(u, v);
+        const backward = forward or try self.liveAtDef(v, u);
+        return backward;
     }
 
     fn find(self: *Planner, x: u32) u32 {
@@ -429,8 +511,10 @@ const Planner = struct {
         if (fa != null and fb != null) return false;
         if (fa != null and !self.classes.writable.items[ra]) return false;
         if (fb != null and !self.classes.writable.items[rb]) return false;
+        self.partial.pending = .{ ra, rb };
+        defer self.partial.pending = null;
         for (self.classes.members.items[ra].items) |x| for (self.classes.members.items[rb].items) |y| {
-            if (self.interferes(x, y)) return false;
+            if (try self.interferes(x, y)) return false;
         };
         const keep, const gone = if (fb != null) .{ rb, ra } else .{ ra, rb };
         self.classes.parent.items[gone] = keep;
@@ -446,20 +530,20 @@ const Planner = struct {
         for (self.tracked.refs.items, 0..) |ref, d| {
             const inst = f.inst(ref);
             if (!steps.homes or inst.op != .record_set) continue;
-            const old = self.dense[f.resolve(inst.a).index()];
+            const old = self.places.dense[f.resolve(inst.a).index()];
             if (old != none) _ = try self.merge(@intCast(d), old);
         }
         for (self.input.calls, 0..) |in_outs, call| for (in_outs) |in_out| {
             if (in_out.final == .none) continue;
-            const final = self.dense[in_out.final.index()];
-            const argument = self.dense[f.resolve(f.operands(f.insts.items[call].data)[in_out.argument]).index()];
+            const final = self.places.dense[in_out.final.index()];
+            const argument = self.places.dense[f.resolve(f.operands(f.insts.items[call].data)[in_out.argument]).index()];
             if (final != none and argument != none) _ = try self.merge(final, argument);
         };
         for (self.tracked.refs.items, 0..) |ref, d| {
             const inst = f.inst(ref);
             if (!steps.homes or inst.op != .phi) continue;
             for (f.operands(inst.data)) |raw| {
-                const incoming = self.dense[f.resolve(raw).index()];
+                const incoming = self.places.dense[f.resolve(raw).index()];
                 if (incoming != none) _ = try self.merge(@intCast(d), incoming);
             }
         }
@@ -469,7 +553,7 @@ const Planner = struct {
             if (!reachable(f, b)) continue;
             const last = f.inst(block.insts.items[block.insts.items.len - 1]);
             if (last.op != .ret or last.a == .none) continue;
-            const value = self.dense[f.resolve(last.a).index()];
+            const value = self.places.dense[f.resolve(last.a).index()];
             if (value != none) _ = try self.merge(ret, value);
         }
     }
@@ -510,8 +594,8 @@ const Planner = struct {
             if (inst.op != .record_set) continue;
             const field_type = m.compound(inst.ty).record[@intCast(inst.data)];
             if (!m.passedInMemory(field_type)) continue;
-            const old = self.dense[f.resolve(inst.a).index()];
-            const stored = self.dense[f.resolve(inst.b).index()];
+            const old = self.places.dense[f.resolve(inst.a).index()];
+            const stored = self.places.dense[f.resolve(inst.b).index()];
             if (old == none or stored == none) continue;
             const outer = self.find(@intCast(d));
             const inner = self.find(stored);
@@ -565,7 +649,7 @@ const Planner = struct {
             const known = home orelse continue;
             if (known != .field or known.field.class != outer or known.field.offset != region.offset) continue;
             for (self.classes.members.items[other].items) |x| for (self.classes.members.items[inner].items) |y| {
-                if (self.interferes(x, y)) return false;
+                if (try self.interferes(x, y)) return false;
             };
         }
         return true;
@@ -590,7 +674,7 @@ const Planner = struct {
     fn readsRegion(self: *const Planner, w: u32, site: UseSite, region: Region) bool {
         const f = self.fun();
         if (site.operand != self.tracked.refs.items[w]) return overlaps(self.viewRegion(site.operand), region);
-        const user_class = self.dense[site.user.index()];
+        const user_class = self.places.dense[site.user.index()];
         const shared = user_class != none and self.classes.parent.items.len != 0 and self.findConst(user_class) == self.findConst(w);
         // A phi that shares the home is filled by no copy; any other reads the whole value.
         if (site.end) return !shared;
@@ -615,12 +699,12 @@ const Planner = struct {
         const inst = f.inst(ref);
         if (self.tracked.defs.items[w].entry) return false;
         if (inst.op != .record_set) return true;
-        const old = self.dense[f.resolve(inst.a).index()];
+        const old = self.places.dense[f.resolve(inst.a).index()];
         if (old == none or self.findConst(old) != self.findConst(w)) return true;
         const field_type = m.compound(inst.ty).record[@intCast(inst.data)];
         const written: Region = .{ .offset = m.fieldOffset(inst.ty, @intCast(inst.data)), .size = m.size(field_type) };
         if (!overlaps(written, region)) return false;
-        const stored = self.dense[f.resolve(inst.b).index()];
+        const stored = self.places.dense[f.resolve(inst.b).index()];
         return !(written.offset == region.offset and stored != none and self.findConst(stored) == inner);
     }
 
@@ -662,13 +746,12 @@ pub fn plan(arena: std.mem.Allocator, input: Input) std.mem.Allocator.Error!Plan
         .arena = arena,
         .input = input,
         .plan = .{ .class = try arena.alloc(u32, count), .view = try arena.alloc(ir.Ref, count), .homes = &.{}, .view_offset = try arena.alloc(u32, count) },
-        .dense = try arena.alloc(u32, count),
-        .places = .{ .block = try arena.alloc(u32, count), .pos = try arena.alloc(u32, count), .final = try arena.alloc(u32, count) },
+        .places = .{ .block = try arena.alloc(u32, count), .pos = try arena.alloc(u32, count), .final = try arena.alloc(u32, count), .dense = try arena.alloc(u32, count) },
     };
     @memset(p.plan.class, none);
     @memset(p.plan.view, .none);
     @memset(p.plan.view_offset, 0);
-    @memset(p.dense, none);
+    @memset(p.places.dense, none);
     @memset(p.places.block, none);
     @memset(p.places.pos, none);
     @memset(p.places.final, none);

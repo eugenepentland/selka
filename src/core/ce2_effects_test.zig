@@ -168,3 +168,116 @@ fn expectAnswers(a: std.mem.Allocator, module: *const ir.Module, s: *const effec
     try std.testing.expectEqualStrings("3", try spell(a, s.writes(index, 0, false)));
     try std.testing.expectEqual([2]bool{ true, true }, s.may[index]);
 }
+
+const options = @import("core_test_options");
+
+fn contains(text: []const u8, needle: []const u8) bool {
+    return std.mem.indexOf(u8, text, needle) != null;
+}
+
+/// The LLVM definition whose `define` line names `symbol`, up to its closing brace.
+fn definition(llvm: []const u8, symbol: []const u8) ![]const u8 {
+    var lines = std.mem.splitScalar(u8, llvm, '\n');
+    while (lines.next()) |line| {
+        if (!std.mem.startsWith(u8, line, "define ") or std.mem.indexOf(u8, line, symbol) == null) continue;
+        const start = @intFromPtr(line.ptr) - @intFromPtr(llvm.ptr);
+        const end = std.mem.indexOfPos(u8, llvm, start, "\n}\n") orelse llvm.len;
+        return llvm[start..end];
+    }
+    return error.TestUnexpectedResult;
+}
+
+const Ran = struct { stdout: []const u8, stderr: []const u8, status: u8 };
+
+/// Build `test/core/ce2_effects.my` with `flags` and run it with `args` under the leak check.
+fn fixture(arena: std.mem.Allocator, root: []const u8, flags: []const []const u8, args: []const []const u8) !Ran {
+    const source = try std.fmt.allocPrint(arena, "{s}/ce2_effects.my", .{options.fixtures});
+    const output = try std.fmt.allocPrint(arena, "{s}/ce2_effects-{d}", .{ root, flags.len });
+    const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, "--cache-dir", cache });
+    try argv.appendSlice(arena, flags);
+    const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
+    try std.testing.expect(built.term == .exited and built.term.exited == 0);
+    var environment = try std.testing.environ.createMap(arena);
+    try environment.put("MYL_CORE_LEAKCHECK", "1");
+    var run_argv: std.ArrayList([]const u8) = .empty;
+    try run_argv.append(arena, output);
+    try run_argv.appendSlice(arena, args);
+    const ran = try std.process.run(arena, std.testing.io, .{ .argv = run_argv.items, .environ_map = &environment });
+    try std.testing.expect(ran.term == .exited);
+    return .{ .stdout = ran.stdout, .stderr = ran.stderr, .status = ran.term.exited };
+}
+
+/// Debug, release, and release with the facts verified.
+const modes = [_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } };
+
+/// What the base compiler (`claude/copy-elim-2` 9f9667b1b) prints for `ce2_effects.my`, by section.
+const fields_expected =
+    \\20 30 2 3
+    \\3103 103
+    \\110153 7 new
+    \\8005 5
+    \\44 4
+    \\43 9 4
+    \\300 4 -1
+    \\
+;
+
+const view_source =
+    \\record Code:
+    \\    consts: list[int]
+    \\    lines: list[int]
+    \\    name: str
+    \\    n: int
+    \\    m: int
+    \\
+    \\
+    \\record Frame:
+    \\    closure: int
+    \\    code: Code
+    \\    ops: list[int]
+    \\    ip: int
+    \\    base: int
+    \\
+    \\
+    \\def next_op(frame: mut Frame) -> int:
+    \\    op = frame.ops[frame.ip]
+    \\    frame.ip = frame.ip + 1
+    \\    return op
+    \\
+    \\
+    \\def read_const(frame: mut Frame) -> int:
+    \\    return frame.code.consts[next_op(mut frame)]
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    frame = Frame(closure=0, code=Code(consts=[5, 6], lines=[], name="x", n=0, m=0), ops=[1, 0], ip=0, base=0)
+    \\    out.print(read_const(mut frame), read_const(mut frame))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-CE2-EFFECTS-2
+test "an in-place update of one field goes ahead while a view of a disjoint field is live, across a call that writes only other fields" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    // `frame.code` is read where it lies and stays live across `next_op(mut frame)`, which
+    // writes only `frame.ip`: the frame is passed in its own memory and nothing is copied.
+    const llvm = try support.llvmText(a, view_source);
+    const body = try definition(llvm, "@\"my.read_const\"(");
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "@llvm.memcpy"));
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for (modes) |flags| {
+        // A callee writing the very field a view holds, a view across in-place updates of
+        // another field and then of its own, loops, recursion, counted fields and a union
+        // payload all print what copies would, and free every block.
+        const ran = try fixture(a, root, flags, &.{});
+        try std.testing.expectEqualStrings(fields_expected, ran.stdout);
+        try std.testing.expectEqual(@as(u8, 0), ran.status);
+        try std.testing.expect(!contains(ran.stderr, "leak"));
+    }
+}
