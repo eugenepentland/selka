@@ -1028,27 +1028,26 @@ const Taking = struct {
     graph: UseGraph,
     marks: *Marks,
 
-    /// `g = record_get(r, f)` then `update = record_set(r, f, v)` in one block: `g` owns
-    /// the field when it is the only read of it there and nothing but reads of other
-    /// fields can use `r` after it.
+    /// `g = record_get(r, f)` then `update = record_set(r, f, v)`: `g` owns the field (the
+    /// record's reference goes to it, and the set drops nothing) when it is the last read
+    /// of the field ahead of the set on every path, every path from it reaches the set
+    /// (or a trap), every earlier read of the field is finished before it, and nothing but
+    /// reads of other fields can use `r` after it. The read and the set may sit in
+    /// different blocks: an index's negative-index branch splits `r.items[i] = v`
+    /// (NEW-CORE-TAKE-READS-1).
     fn takeReplaced(self: Taking, record: ir.Ref, update: ir.Ref) Error!void {
         const f = self.f;
         const field = f.inst(update).data;
         if (!self.module.managed(self.module.compound(f.inst(record).ty).record[@intCast(field)])) return;
-        const update_block = self.graph.block_of[update.index()];
-        var taker: ?ir.Ref = null;
-        var readers: u32 = 0;
-        for (f.blocks.items[update_block].insts.items) |user| {
-            if (user == update) break;
-            const inst = f.inst(user);
-            if (inst.op != .record_get or inst.data != field or f.resolve(inst.a) != record) continue;
-            taker = user;
-            readers += 1;
-        }
-        // An earlier read of the field would lose the record's reference under it.
-        const get = taker orelse return;
-        if (readers != 1) return;
         const def_block = if (f.inst(record).op == .param) 0 else self.graph.block_of[record.index()];
+        var reads: std.ArrayList(ir.Ref) = .empty;
+        for (self.graph.uses[record.index()].items) |user| {
+            const inst = f.inst(user);
+            if (inst.op == .record_get and inst.data == field and f.resolve(inst.a) == record) try addUnique(self.arena, &reads, user);
+        }
+        const get = for (reads.items) |candidate| {
+            if (try self.takes(candidate, update, reads.items, def_block)) break candidate;
+        } else return;
         for (self.graph.uses[record.index()].items) |user| {
             const inst = f.inst(user);
             if (user == get or user == update) continue;
@@ -1061,6 +1060,86 @@ const Taking = struct {
         }
         try self.marks.owned_get.put(self.arena, @backingInt(get), {});
         try self.marks.taken.put(self.arena, @backingInt(update), {});
+    }
+
+    /// Whether read `get` of the field `update` replaces can take it over: it runs ahead of
+    /// the set on every path, every path from it reaches the set or a trap, and every other
+    /// read of the field (`reads`), with the parts read out of it, is finished before it.
+    fn takes(self: Taking, get: ir.Ref, update: ir.Ref, reads: []const ir.Ref, def: u32) Error!bool {
+        const get_block = self.graph.block_of[get.index()];
+        const update_block = self.graph.block_of[update.index()];
+        if (get_block == no_block or update_block == no_block) return false;
+        if (get_block == update_block) {
+            const insts = self.f.blocks.items[get_block].insts.items;
+            if (std.mem.indexOfScalar(ir.Ref, insts, get).? > std.mem.indexOfScalar(ir.Ref, insts, update).?) return false;
+        } else {
+            if (!try self.dominates(get_block, update_block)) return false;
+            if (!try self.reachesOrTraps(get_block, update_block)) return false;
+        }
+        // An earlier read still in use would lose the record's reference under it once `get`
+        // takes the field; one whose uses all come before `get` (`len(r.items)` ahead of
+        // `r.items.append(x)`) is over by then.
+        for (reads) |other| {
+            if (other == get) continue;
+            if (!try self.finishedBefore(other, get, def)) return false;
+        }
+        return true;
+    }
+
+    /// Whether `read`, its uses and the uses of every managed part read out of it (which
+    /// borrows from it in turn) all run before `get` on every path.
+    fn finishedBefore(self: Taking, read: ir.Ref, get: ir.Ref, def: u32) Error!bool {
+        var pending: std.ArrayList(ir.Ref) = .empty;
+        try pending.append(self.arena, read);
+        if (try runsAfter(self.arena, self.f, self.graph.block_of, get, read, def)) return false;
+        while (pending.pop()) |value| {
+            for (self.graph.uses[value.index()].items) |user| {
+                if (self.graph.block_of[user.index()] == no_block) return false;
+                if (try runsAfter(self.arena, self.f, self.graph.block_of, get, user, def)) return false;
+                const inst = self.f.inst(user);
+                if (readsPart(inst.op) and self.module.managed(inst.ty)) try addUnique(self.arena, &pending, user);
+            }
+        }
+        return true;
+    }
+
+    /// Whether every path from the entry block to `target` passes block `through`.
+    fn dominates(self: Taking, through: u32, target: u32) Error!bool {
+        if (through == 0) return true;
+        const seen = try self.arena.alloc(bool, self.f.blocks.items.len);
+        @memset(seen, false);
+        var stack: std.ArrayList(u32) = .empty;
+        try stack.append(self.arena, 0);
+        seen[0] = true;
+        while (stack.pop()) |b| {
+            if (b == target) return false;
+            for (successors(self.f, b).slice()) |succ| {
+                if (succ == through or seen[succ]) continue;
+                seen[succ] = true;
+                try stack.append(self.arena, succ);
+            }
+        }
+        return true;
+    }
+
+    /// Whether every path leaving block `from` reaches block `target` or ends in a trap,
+    /// without coming back to `from` first.
+    fn reachesOrTraps(self: Taking, from: u32, target: u32) Error!bool {
+        const seen = try self.arena.alloc(bool, self.f.blocks.items.len);
+        @memset(seen, false);
+        var stack: std.ArrayList(u32) = .empty;
+        try stack.append(self.arena, from);
+        while (stack.pop()) |b| {
+            const next = successors(self.f, b);
+            if (next.len == 0 and !endsInTrap(self.f, b)) return false;
+            for (next.slice()) |succ| {
+                if (succ == from) return false;
+                if (succ == target or seen[succ]) continue;
+                seen[succ] = true;
+                try stack.append(self.arena, succ);
+            }
+        }
+        return true;
     }
 
     /// A record used only by reads in its own block, each block-holding field read once:
@@ -1090,6 +1169,14 @@ const Taking = struct {
         try self.marks.emptied.put(self.arena, @backingInt(record), {});
     }
 };
+
+/// Whether `op` reads a part of its first operand that borrows from it (§5).
+fn readsPart(op: ir.Op) bool {
+    return switch (op) {
+        .list_get, .list_get_field, .record_get, .union_payload, .box_get => true,
+        else => false,
+    };
+}
 
 /// Whether join `phi` can receive `record` on an edge taken after `get`: a phi reads each
 /// operand at the end of its predecessor, so only the edges carrying `record` from `get`'s
@@ -1551,6 +1638,12 @@ const Successors = struct {
         return self.buffer[0..self.len];
     }
 };
+
+/// Whether `block` ends in `unreachable` (a trap: the process ends there).
+fn endsInTrap(f: *const ir.Function, block: u32) bool {
+    const insts = f.blocks.items[block].insts.items;
+    return insts.len != 0 and f.inst(insts[insts.len - 1]).op == .@"unreachable";
+}
 
 // twin-drift-ok: facts.successorsOf keeps both targets of a branch as block ids;
 // this one works on u32 indices and lists a branch's single target once.

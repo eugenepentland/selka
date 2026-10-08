@@ -1,0 +1,50 @@
+module rc_field_take
+
+
+record Runtime:
+    objects: list[int]
+    count: int
+
+
+# The Lox heap's shape: the slot is the length read before the append.
+def allocate(rt: mut Runtime, obj: int) -> int:
+    slot = len(rt.objects)
+    rt.objects.append(obj)
+    rt.count = rt.count + 1
+    return slot
+
+
+# An earlier read of the same field reaches its element before the append.
+def bump_last(rt: mut Runtime, obj: int) -> int:
+    last = rt.objects[len(rt.objects) - 1]
+    rt.objects.append(obj + last)
+    return last
+
+
+# A write through an index: a negative index's branch puts the read and the write-back
+# in different blocks.
+def put(rt: mut Runtime, at: int, v: int):
+    rt.objects[at] = v
+
+
+# A copy of the field taken before the append is still read after it: it keeps the
+# list as it was.
+def keep(rt: mut Runtime, obj: int) -> int:
+    before = rt.objects
+    rt.objects.append(obj)
+    return len(before)
+
+
+def main(args: list[str], out: Stream) -> int:
+    rt = Runtime(objects=[], count=0)
+    n = len(args) * 50000
+    last = 0
+    i = 0
+    while i < n:
+        last = allocate(mut rt, i)
+        put(mut rt, -1, i * 2)
+        i = i + 1
+    previous = bump_last(mut rt, 7)
+    kept = keep(mut rt, -1)
+    out.print(rt.count, len(rt.objects), last, previous, rt.objects[n], kept, rt.objects[n + 1])
+    return 0
