@@ -69,12 +69,13 @@ front-end waves that own the same files.
 > - Apply the front-end plan's §6.1 slow-step rule.
 > - Finish each with its report and stop. Never merge into `main` and never push.
 
-**After FB1's report** (front-end wave 1). VP3 follows FB1 instead of running beside it,
-because both add to the core's stats code:
-
-> Implement package VP3 of the values-and-keys plan on `codex/vk-vp3`, created from
-> `codex/frontend-fb1` after FB1's report. Touch only `src/core/`. Never merge into
-> `main` and never push. Finish with VP3's report and stop.
+**VP3 runs now (2026-10-08), by a Claude agent at the user's request.** It follows FB1
+rather than running beside it, because both add to the core's stats code. Its branch is
+`claude/vk-vp3`, created from `codex/frontend-cost-cli`, FB1's final state. It merges
+`claude/bench-newcore` for the three NEW-CORE-TAKE-READS-1 fixes; without them the Lox
+interpreter copies its whole heap on every append, which would swamp the counts. VP3
+touches only `src/core/`, never merges into `main` and never pushes. §4.1 has the
+retargeted exit.
 
 **The front-end amendments** (§4.2, AM1–AM3) are already applied to the front-end plan.
 
@@ -529,31 +530,71 @@ Classify each edge into one of three:
 
 This sizes T1-R: how much the gate would ask of existing code.
 
-#### VP3. Ownership cost counters (after FB1's report, in front-end wave 1; about 3–5 h)
+#### VP3. Run-time cost counters (after FB1's report; about 4–6 h)
 
-VP3 starts from `codex/frontend-fb1` once FB1 has reported. Running the two side by side
-would have both packages editing the core's stats code at the same time. FB1 counts per
-function from the program text; VP3 adds what happens at run time.
+VP3 starts from FB1's final state (`codex/frontend-cost-cli`). Running the two side by
+side would have both packages editing the core's stats code at the same time. FB1 counts
+sites per function from the program text; VP3 counts what actually happens at run time.
 
-**What.** Runtime counters in stats builds, reported per function and per row:
-- retains and releases executed;
-- uniqueness tests executed, with the unique and shared outcomes;
-- copies executed and bytes copied;
-- allocations, and peak live bytes.
+**Retargeted 2026-10-08.** The question VP3 was written for, whether static ownership is
+worth prototyping, is mostly answered by profiles of the 2026-10-08 benchmark binaries
+(`experiments/bench-newcore-20261008/`, with perf on non-timing CPUs):
 
-From these, estimate what static ownership would add: copies, and bytes copied, at every
-point where RC shares instead of copying.
+| Program | Copying records and buffers | Count updates |
+|---|---|---|
+| Lox VM, fib (28× Zig) | ~58% of samples: 32-byte vector moves of records in `vm::run` (16.9 KB frame, 1,454 vector moves) | ~5% |
+| Lox tree, properties (6× Zig) | ~35% in the hottest functions | ~4% |
+| EDA, rds3+flat (3.3× Zig) | ~44% in the runtime: freeing blocks 17%, glibc `memmove` 15% (6 points from `realloc` in list growth in `kicad_sch_textbox::scan`), dict copy plus its child walk ~14%, allocation 3% | ~2–3% |
 
-**Owns:** the runtime counters in `src/core/runtime/` and their stats plumbing, and the
-dynamic columns VP3 adds to FB1's `cost` report. It changes FB1's static counts only
-through the coordinator.
+So VP3's main job is now the **copy-elimination target list.** Static ownership becomes a
+side verdict.
+
+**What.** Runtime counters in a counting build, off by default:
+- **Count operations:** retains and releases executed.
+- **Uniqueness tests:** executed, with their unique and shared outcomes.
+- **Copies:** executed, by kind (list, dict, text and bytes, record or aggregate), with
+  bytes copied.
+- **Memory:** allocations and frees, with bytes; list and buffer growth (realloc) events
+  and bytes moved; peak live bytes.
+- **Attribution:** each count goes to its emitting function, and to its source span where
+  the core knows it.
+
+With the counters off, the emitted LLVM text and the executables are byte-identical to
+FB1's, as FB1 guaranteed for its own stats.
+
+**Owns:** the counters in `src/core/runtime/` and the core's emission of them, their stats
+plumbing, the dynamic columns added to FB1's `cost` report, and
+`experiments/vk-vp3-<date>/`. It changes FB1's static counts only through the coordinator.
+
+**Programs:**
+- Lox, tree and VM engines, on the ten timed scripts at reduced sizes, plus
+  `instantiation` and `binary_trees` at small sizes;
+- the EDA slice, on all 34 designs, with the six slowest reported separately;
+- the parity programs `nbody` and `str_build`, plus `matmul` and `knucleotide`;
+- totals over the 46 rows.
 
 **Exit:**
-- the table over the 46 rows, Lox and EDA;
-- the estimate;
-- a recommendation on whether O1 is worth running: run it if the estimated net saving is
-  at least 3% of instructions on the rows' geomean, or at least 10% on five rows, Lox or
-  EDA.
+- **Per program:** totals, and bytes copied per unit of work.
+- **The top 20 functions by bytes copied,** each with its sites (source span, copy kind)
+  and the pattern behind it. The known candidates to confirm or reject:
+  - a whole record written back into a list element while the local stays live (the Lox
+    VM frame);
+  - an element-field store lowered as a whole-record copy (nbody);
+  - copy-on-write of a whole list when only one element is held across a `mut` call (Lox
+    `instantiation`);
+  - a materialized slice in a `for` loop, or an accessor returning a payload copy (EDA
+    `as_list`, `cl[1:len(cl)]`);
+  - dict copies;
+  - list growth through `realloc`;
+  - out-of-line checked appends (str_build).
+- **The ranked copy-elimination target list,** with each pattern's share of bytes copied
+  across the programs. This is the input to a copy-elimination package that replaces the
+  O wave.
+- **The static-ownership verdict.**
+  - Count operations removed, against the extra copies static ownership would make at
+    each point where RC shares (shares are retains on still-live values).
+  - Run O1 only if the estimated net saving is at least 3% of instructions on the rows'
+    geomean, or at least 10% on five rows, Lox or EDA.
 
 ### 4.2 Amendments to the front-end plan (applied 2026-10-07, `befaf67e` on `claude/frontend-plan`)
 
