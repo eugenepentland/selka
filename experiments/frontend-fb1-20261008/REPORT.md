@@ -125,3 +125,7 @@ focused test wrapper prints `failed command` despite a PASS result and exit 0.
 | text | 50 | 750 | 15.511 | pass |
 | number | 50 | 750 | 29.368 | pass |
 | functions | 50 | 750 | 24.019 | pass |
+
+Closeout staging/commit/status commands are timed with the same runner in
+`.mylang-cache/frontend-fb1/closeout/logs`, preserved locally; this avoids a
+commit attempting to include its own completed receipt recursively.
