@@ -51,7 +51,6 @@ def choice(flag: bool) -> Choice:
     return Choice.full(make(1))
 
 
-# spec-case: RC-INERT-RETURN-1
 public def test_zero_tagged_union_and_nonempty_case_preserve_their_layout() -> bool:
     match choice(True):
         case Choice.empty:
@@ -64,17 +63,14 @@ public def test_zero_tagged_union_and_nonempty_case_preserve_their_layout() -> b
             return False
 
 
-# spec-case: RC-INERT-RETURN-1
 public def test_null_return_preserves_both_scalar_comparison_paths() -> bool:
     return empty(make(0)) and empty(make(-1)) and not empty(make(3))
 
 
-# spec-case: RC-INERT-RETURN-1
 public def test_boolean_null_branch_and_nonempty_fallback_stay_distinct() -> bool:
     return empty(boolean(False)) and not empty(boolean(True))
 
 
-# spec-case: RC-INERT-RETURN-1
 public def test_wide_zero_return_preserves_every_inline_field() -> bool:
     zero = wide(True)
     full = wide(False)
@@ -87,7 +83,6 @@ def shared(items: list[int], flag: bool) -> Node:
     return make(len(items))
 
 
-# spec-case: RC-INERT-RETURN-1
 public def test_incoming_managed_owner_retains_ordinary_cleanup() -> bool:
     items = [1, 2]
     first = shared(items, True)
@@ -101,7 +96,6 @@ def nonzero(flag: bool) -> Tagged:
     return Tagged(Some(make(1)), 9)
 
 
-# spec-case: RC-INERT-RETURN-1
 public def test_nonzero_plain_fields_are_not_replaced_by_zero() -> bool:
     return nonzero(True).tag == 7 and nonzero(False).tag == 9
 
@@ -120,7 +114,6 @@ def resource_check() -> Result[bool, str]:
     return Ok(empty(value) and text == "saved")
 
 
-# spec-case: RC-INERT-RETURN-1
 public def test_unique_incoming_resource_is_closed_on_null_return() -> bool:
     match resource_check():
         case Ok(result):

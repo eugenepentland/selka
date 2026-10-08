@@ -28,7 +28,6 @@ test "overflow traps at the responsible operator without folding during check" {
         var compilation = try language.Compilation.init(testing.allocator, "trap.my", text);
         defer compilation.deinit();
         try compilation.check();
-        try testing.expect(compilation.code == null);
         const outcome = try native.run(&compilation);
         try testing.expectEqualStrings("R_OVERFLOW", outcome.trap.code);
         try testing.expectEqual(@as(u64, 2), outcome.trap.line);
@@ -64,7 +63,7 @@ test "malformed source and range errors are normal located diagnostics" {
         var compilation = try language.Compilation.init(testing.allocator, "bad.my", case.text);
         defer compilation.deinit();
         try testing.expectError(error.SourceError, compilation.check());
-        try testing.expect(compilation.program == null and compilation.code == null);
+        try testing.expect(compilation.program == null);
         try testing.expectEqualStrings(case.code, compilation.diagnostics.items[0].code);
         try testing.expect(compilation.diagnostics.items[0].span.end <= case.text.len);
     }
@@ -106,20 +105,6 @@ test "source is owned and CRLF diagnostics locate operators and EOF" {
     try testing.expectEqual(@as(usize, 4), compilation.src.locate(compilation.src.bytes.len).line);
 }
 
-test "bytecode dump is deterministic and multiplication precedes addition" {
-    var compilation = try language.Compilation.init(testing.allocator, "test.my",
-        \\def main() -> i64:
-        \\    return 1 + 2 * 3
-    );
-    defer compilation.deinit();
-    const first = try compilation.dump(testing.allocator);
-    defer testing.allocator.free(first);
-    const second = try compilation.dump(testing.allocator);
-    defer testing.allocator.free(second);
-    try testing.expectEqualStrings(first, second);
-    try testing.expect(std.mem.indexOf(u8, first, "MUL_I64_CHECKED").? < std.mem.indexOf(u8, first, "ADD_I64_CHECKED").?);
-}
-
 test "parser rejects excessive nesting without a host stack overflow" {
     var text: std.Io.Writer.Allocating = .init(testing.allocator);
     defer text.deinit();
@@ -140,25 +125,12 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
         \\    return (1 + 2) * 3
     );
     defer compilation.deinit();
-    try compilation.emit();
-    try testing.expect(compilation.code != null);
-    const text = try compilation.dump(allocator);
-    defer allocator.free(text);
+    try compilation.check();
+    try testing.expect(compilation.program != null);
 }
 
 test "request allocation failures release all owned storage" {
     try testing.checkAllAllocationFailures(testing.allocator, allocationScenario, .{});
-}
-
-test "invalid internal bytecode is not a guest trap" {
-    const program: language.bytecode.Program = .{ .functions = &.{.{
-        .id = @fromBackingInt(@intCast(0)),
-        .name = "main",
-        .scope = .{
-            .instructions = &.{.{ .span = .{ .start = 0, .end = 0 }, .op = .ret }},
-        },
-    }} };
-    try testing.expectError(error.InternalError, language.bytecode.validate(testing.allocator, program));
 }
 
 fn programResult(text: []const u8, expected: i64) !void {
@@ -256,7 +228,7 @@ fn localAllocationScenario(allocator: std.mem.Allocator) !void {
         \\    return x
     );
     defer compilation.deinit();
-    try compilation.emit();
+    try compilation.check();
     try testing.expect(compilation.diagnostics.items.len != 0);
     for (compilation.diagnostics.items) |diagnostic| {
         const text = try diagnostic.render(allocator, compilation.src);
@@ -282,10 +254,9 @@ test "long left-associative expressions do not recursively traverse host stacks"
     try additions(&deep, 4096);
     var compilation = try language.Compilation.init(testing.allocator, "long.my", deep.written());
     defer compilation.deinit();
-    // Parsing, checking and lowering 4,096 operands stay iterative; a shorter
-    // chain then proves the same lowering still evaluates from the left.
-    try compilation.emit();
-    try testing.expectEqual(@as(usize, 1), compilation.code.?.functions.len);
+    // Parsing and checking 4,096 operands stay iterative; a shorter chain then
+    // proves the program still evaluates from the left.
+    try compilation.check();
     var shorter: std.Io.Writer.Allocating = .init(testing.allocator);
     defer shorter.deinit();
     try additions(&shorter, 1024);
@@ -309,8 +280,7 @@ fn flowAllocationScenario(allocator: std.mem.Allocator) !void {
         \\    return i
     );
     defer compilation.deinit();
-    try compilation.emit();
-    try testing.expectEqual(@as(usize, 1), compilation.code.?.functions.len);
+    try compilation.check();
 }
 
 test "allocation failures during label patching and control-flow validation release storage" {
@@ -543,10 +513,7 @@ fn callAllocationScenario(allocator: std.mem.Allocator) !void {
         \\    return f(50)
     );
     defer compilation.deinit();
-    try compilation.emit();
-    const dumped = try compilation.dump(allocator);
-    defer allocator.free(dumped);
-    try testing.expect(dumped.len != 0);
+    try compilation.check();
 }
 
 test "allocation failures in signature collection and call emission release storage" {
@@ -608,27 +575,6 @@ test "all recursive syntax forms obey the parser nesting budget" {
         defer compilation.deinit();
         try testing.expectError(error.SourceError, compilation.check());
         try testing.expectEqualStrings("E_NESTING_LIMIT", compilation.diagnostics.items[0].code);
-    }
-}
-
-test "emission validation rejects invalid references jumps and inconsistent joins" {
-    const bc = language.bytecode;
-    const span: language.source.Span = .{ .start = 0, .end = 0 };
-    const variants = [_][]const bc.Instruction{
-        &.{.{ .span = span, .op = .{ .jump = 1 } }},
-        &.{.{ .span = span, .op = .{ .call = @fromBackingInt(1) } }},
-        &.{.{ .span = span, .op = .{ .load_local = @fromBackingInt(0) } }},
-        &.{ .{ .span = span, .op = .{ .push_bool = true } }, .{ .span = span, .op = .{ .jump_if_false = 3 } }, .{ .span = span, .op = .{ .push_i64 = 1 } }, .{ .span = span, .op = .{ .jump = 3 } } },
-    };
-    for (variants) |instructions| {
-        const program: bc.Program = .{ .functions = &.{.{
-            .id = @fromBackingInt(0),
-            .name = "main",
-            .scope = .{
-                .instructions = instructions,
-            },
-        }} };
-        try testing.expectError(error.InternalError, language.bytecode.validate(testing.allocator, program));
     }
 }
 
@@ -835,7 +781,6 @@ test "located source diagnostics include EOF explicit drops and previous declara
     try testing.expectEqualStrings("E_EXPLICIT_DISCARD_REQUIRED", discard.diagnostics.items[0].code);
     try testing.expectEqualStrings("1 + 2", discard.src.text(discard.diagnostics.items[0].span));
 }
-// spec: GC-PACING-1
 test "the pausing collector reclaims garbage and still enforces the byte budget" {
     var reclaiming = try language.Compilation.init(testing.allocator, "pacing.my",
         \\def main() -> i64:
@@ -864,84 +809,6 @@ test "the pausing collector reclaims garbage and still enforces the byte budget"
     // every allocation and not only when a collection would have run.
     const refused = try native.runWithOptions(&bounded, .{ .max_memory = 1 << 20 });
     try testing.expectEqualStrings("R_MEMORY_BUDGET", refused.trap.code);
-}
-
-/// A program of `count` small functions, each a loop over a list, called from `main`.
-fn loopFunctions(allocator: std.mem.Allocator, count: usize) ![]u8 {
-    var text: std.Io.Writer.Allocating = .init(allocator);
-    defer text.deinit();
-    for (0..count) |index| try text.writer.print("def f{d}(n: int) -> int:\n    xs: list[int] = []\n    for k in range(n):\n        if k % 3 == 0:\n            xs.append(k * {d})\n    return len(xs)\n\n\n", .{ index, index });
-    try text.writer.writeAll("def main() -> int:\n    total = 0\n");
-    for (0..count) |index| try text.writer.print("    total += f{d}(4)\n", .{index});
-    try text.writer.writeAll("    return total\n");
-    return text.toOwnedSlice();
-}
-/// Bytes lowering reserved in its output arena when its scratch draws from
-/// `scratch` (null: from the output itself), and the lowered program's size.
-fn loweredBytes(program: @import("typed.zig").Program, scratch: ?std.mem.Allocator) !struct { bytes: usize, instructions: usize } {
-    const lower = @import("lower.zig");
-    var counting = testing.FailingAllocator.init(testing.allocator, .{});
-    var output = std.heap.ArenaAllocator.init(counting.allocator());
-    defer output.deinit();
-    const lowered = try lower.lowerWith(.{ .output = output.allocator(), .scratch = scratch orelse output.allocator() }, program, false);
-    var instructions: usize = 0;
-    for (lowered.functions) |function| instructions += function.scope.instructions.len;
-    return .{ .bytes = counting.allocated_bytes, .instructions = instructions };
-}
-// spec: LOWER-EXACT-1
-test "lowering keeps only each function's exact instructions in its output" {
-    const text = try loopFunctions(testing.allocator, 200);
-    defer testing.allocator.free(text);
-    var compilation = try language.Compilation.init(testing.allocator, "lowering.my", text);
-    defer compilation.deinit();
-    try compilation.check();
-    const inside = try loweredBytes(compilation.program.?, null);
-    const apart = try loweredBytes(compilation.program.?, testing.allocator);
-    try testing.expectEqual(inside.instructions, apart.instructions);
-    // The emitter's lists and the validation tables were most of the output.
-    try testing.expect(apart.bytes * 2 < inside.bytes);
-}
-
-const Modules = struct {
-    fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
-        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
-            \\module main
-            \\import helper
-            \\
-            \\
-            \\def main() -> int:
-            \\    return helper.twice(20) + 2
-        );
-        if (std.mem.eql(u8, path, "helper.my")) return allocator.dupe(u8,
-            \\module helper
-            \\
-            \\
-            \\public def twice(n: int) -> int:
-            \\    xs: list[int] = [n, n]
-            \\    return xs[0] + xs[1]
-        );
-        return error.NotFound;
-    }
-};
-/// The QBE a checked project emits, with its merged syntax released first or not.
-fn emittedAfterCheck(release: bool) ![]u8 {
-    var project = language.project.Project.init(testing.allocator);
-    defer project.deinit();
-    try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
-    var index = try language.interfaces.build(&project);
-    var compilation = try language.project_compile.Compilation.init(&index);
-    try compilation.check();
-    if (release) compilation.releaseSyntax();
-    try testing.expectEqual(!release, compilation.syntax.nodes.items.len != 0);
-    return compilation.emitQbe(testing.allocator);
-}
-// spec: SYNTAX-RELEASE-1
-test "a checked project lowers and emits the same program after its merged syntax is released" {
-    const kept = try emittedAfterCheck(false);
-    defer testing.allocator.free(kept);
-    const released = try emittedAfterCheck(true);
-    defer testing.allocator.free(released);
-    try testing.expectEqualStrings(kept, released);
 }
 
 /// A library with `public def wide(a0: int, ..., items: mut list[int])` of `count`

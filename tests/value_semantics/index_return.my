@@ -30,7 +30,6 @@ def contents(items: list[Item], index: int) -> list[int]:
             return []
 
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_mut_list_caller_detaches_shared_outer_before_projection() -> bool:
     items = [Item.payload(Payload(0, [1]))]
     saved = items
@@ -51,7 +50,6 @@ def observe(items: mut list[Item], index: int) -> int:
     return seen
 
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_parent_observation_keeps_snapshot() -> bool:
     items = [Item.payload(Payload(0, [1]))]
     return observe(mut items, 0) == 1 and contents(items, 0) == [1, 2]
@@ -70,7 +68,6 @@ def observe_payload(items: mut list[Item], index: int) -> int:
     return seen
 
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_payload_observation_keeps_snapshot() -> bool:
     items = [Item.payload(Payload(0, [1]))]
     return observe_payload(mut items, 0) == 1 and contents(items, 0) == [1, 2]
@@ -88,7 +85,6 @@ def leave_early(items: mut list[Item], index: int, stop: bool):
             pass
 
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_early_return_keeps_original_element() -> bool:
     items = [Item.payload(Payload(0, [1]))]
     leave_early(mut items, 0, True)
@@ -106,7 +102,6 @@ def change_index(items: mut list[Item], index: int):
             pass
 
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_changed_index_keeps_original_element() -> bool:
     items = [Item.payload(Payload(0, [1])), Item.empty]
     change_index(mut items, 0)
@@ -124,7 +119,6 @@ def capture_index(items: mut list[Item], index: int):
             pass
 
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_index_changed_before_extraction_keeps_original() -> bool:
     items = [Item.payload(Payload(1, [1])), Item.empty]
     capture_index(mut items, 0)
@@ -144,7 +138,6 @@ def survive(items: mut list[Item], index: int) -> list[int]:
     return fields
 
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_surviving_temporary_keeps_independent_post_store_value() -> bool:
     items = [Item.payload(Payload(0, [1]))]
     fields = survive(mut items, 0)
@@ -167,7 +160,6 @@ def alias_parameter(items: mut list[Item], other: mut list[Item], index: int) ->
 
 # `alias_parameter(mut items, mut items, 0)` is E_MUTATION_OVERLAP
 # (MUT-EXCLUSIVE-1); a copy sharing the element must not see the early write.
-# spec-case: COW-INDEX-RETURN-1
 public def test_other_mut_parameter_cannot_observe_early_mutation() -> bool:
     items = [Item.payload(Payload(0, [1]))]
     other = items
@@ -186,7 +178,6 @@ def grow_parent(items: mut list[Item], index: int):
             pass
 
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_parent_growth_keeps_checked_original_index() -> bool:
     items = [Item.payload(Payload(0, [1]))]
     grow_parent(mut items, -1)
@@ -205,7 +196,6 @@ def local_parent(items: list[Item], index: int) -> list[Item]:
     return changed
 
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_local_parent_retains_outer_snapshot() -> bool:
     items = [Item.payload(Payload(0, [1]))]
     changed = local_parent(items, 0)
@@ -223,7 +213,6 @@ def loop_commit(items: mut list[Item], index: int):
             pass
 
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_closed_loop_commits_and_preserves_a_caller_snapshot() -> bool:
     items = [Item.payload(Payload(0, [1]))]
     saved = items
@@ -248,7 +237,6 @@ def leave_loop(items: mut list[Item], index: int, breaking: bool):
                 pass
 
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_break_and_continue_cannot_skip_commit() -> bool:
     first = [Item.payload(Payload(0, [1]))]
     second = [Item.payload(Payload(0, [3]))]
@@ -273,7 +261,6 @@ def earlier_match(items: mut list[Item], index: int) -> int:
             pass
     return -1
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_earlier_match_binding_stays_independent() -> bool:
     items = [Item.payload(Payload(0, [1]))]
     return earlier_match(mut items, 0) == 1 and contents(items, 0) == [1, 2]
@@ -296,7 +283,6 @@ def earlier_local(items: mut list[Item], index: int) -> int:
             pass
     return -1
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_earlier_element_local_stays_independent() -> bool:
     items = [Item.payload(Payload(0, [1]))]
     return earlier_local(mut items, 0) == 1 and contents(items, 0) == [1, 2]
@@ -314,7 +300,6 @@ def earlier_parent(items: mut list[Item], index: int) -> int:
             pass
     return -1
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_earlier_parent_snapshot_stays_independent() -> bool:
     items = [Item.payload(Payload(0, [1]))]
     return earlier_parent(mut items, 0) == 1 and contents(items, 0) == [1, 2]
@@ -331,7 +316,6 @@ def readonly_alias(items: mut list[Item], before: list[Item], index: int) -> int
             pass
     return -1
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_readonly_parameter_alias_is_a_snapshot() -> bool:
     items = [Item.payload(Payload(0, [1]))]
     return readonly_alias(mut items, items, 0) == 1 and contents(items, 0) == [1, 2]
@@ -354,12 +338,10 @@ def iterator_alias(items: mut list[Item], index: int) -> int:
                 pass
     return -1
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_iteration_binding_stays_independent() -> bool:
     items = [Item.payload(Payload(0, [1]))]
     return iterator_alias(mut items, 0) == 1 and contents(items, 0) == [1, 2]
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_earlier_match_with_caller_snapshot_stays_independent() -> bool:
     items = [Item.payload(Payload(0, [1]))]
     saved = items
@@ -381,7 +363,6 @@ def earlier_match_after(items: mut list[Item], index: int) -> int:
             pass
     return -1
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_earlier_match_observed_after_store() -> bool:
     items = [Item.payload(Payload(0, [1]))]
     return earlier_match_after(mut items, 0) == 1 and contents(items, 0) == [1, 2]
@@ -403,7 +384,6 @@ def earlier_child(items: mut list[Item], index: int) -> int:
             pass
     return -1
 
-# spec-case: COW-INDEX-RETURN-1
 public def test_earlier_borrowed_child_survives_dead_match_binding() -> bool:
     items = [Item.payload(Payload(0, [1]))]
     return earlier_child(mut items, 0) == 1 and contents(items, 0) == [1, 2]

@@ -246,10 +246,6 @@ pub const Callable = struct {
     effects: effect_set.Mask,
     mutates: []const u16 = &.{},
     return_origin: ReturnOrigin = .unknown,
-    /// Every callback parameter is an ordinary operand-stack value.
-    pub fn valueCount(self: Callable) usize {
-        return self.parameters.len;
-    }
 };
 /// Ownership and public schema policy for each concrete type.
 pub const RecordContract = struct {

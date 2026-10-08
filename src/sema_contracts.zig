@@ -27,16 +27,6 @@ pub const old_code = "E_CONTRACT_OLD";
 /// Diagnostic code for `old(...)` of a value that shares mutable storage.
 pub const old_shared_code = "E_CONTRACT_OLD_SHARED";
 
-/// The trap code each assertion kind raises, independently of its message.
-pub fn trapCode(kind: typed.AssertionKind) []const u8 {
-    return switch (kind) {
-        .statement => "R_ASSERT",
-        .requires => "R_REQUIRES",
-        .ensures => "R_ENSURES",
-        .invariant => "R_INVARIANT",
-    };
-}
-
 /// One contract trap message: `subject kind `clause`[: message]`. The
 /// clause text has its whitespace runs folded to one space, so a condition
 /// written across lines still reads as one.

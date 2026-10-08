@@ -229,36 +229,3 @@ test "resource requests reject payloads that are not fixed byte arrays" {
         \\            return code
     , "E_RESOURCE_REQUEST");
 }
-test "emission rejects forged resource IO metadata before provider callbacks" {
-    var c = try language.Compilation.init(t.allocator, "invalid.my", declarations ++
-        \\def work(fs: Filesystem) -> Status:
-        \\    request: [10]u8 = [114u8, 58u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8]
-        \\    file = acquire_resource[Open](fs, request)?
-        \\    chunk = read_resource[Read](file)?
-        \\    match complete_resource[Finish](file):
-        \\        case Finish.ok(done):
-        \\            _ = done
-        \\        case Finish.err(failure):
-        \\            return Err(failure.code)
-        \\    return Ok(i64(chunk.length))
-        \\
-        \\
-        \\def main(fs: Filesystem) -> i64:
-        \\    match work(fs):
-        \\        case Status.ok(value):
-        \\            return value
-        \\        case Status.err(code):
-        \\            return -code
-    );
-    defer c.deinit();
-    try c.emit();
-    const instruction = try @import("instruction_test.zig").find(@constCast(c.code.?.functions[0].scope.instructions), .resource_io);
-    const original = instruction.*;
-    instruction.op.resource_io.owner = @fromBackingInt(std.math.maxInt(usize));
-    try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
-    instruction.* = original;
-    instruction.op.resource_io.output = .i64;
-    try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
-    instruction.* = original;
-    try language.bytecode.validate(t.allocator, c.code.?);
-}

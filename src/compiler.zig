@@ -1,20 +1,11 @@
-//! One request owns source, syntax, semantic nodes, and lowered instructions.
-/// Failures returned by format; callers must handle these boundary errors.
+//! The front end: one request owns its source, syntax and checked program. The
+//! new core (`src/core/`) lowers the checked program from here.
 pub const allocation_budget = @import("codec_memory.zig");
+/// Failures returned by format; callers must handle these boundary errors.
 pub const FormatError = error{
     OutOfMemory,
     SourceError,
     InternalError,
-};
-/// Failures returned by emit; callers must handle these boundary errors.
-pub const EmitError = error{
-    InternalError,
-    OutOfMemory,
-    SourceError,
-};
-/// Failures returned by emitQbe; callers must handle these boundary errors.
-pub const EmitNativeError = EmitError || error{
-    WriteFailed,
 };
 
 const std = @import("std");
@@ -30,12 +21,6 @@ pub const project_files = @import("project_files.zig");
 /// Compile-time file embedding: `embed_bytes("path")` and `embed_str("path")` (`EMBED-1`).
 pub const embed = @import("embed.zig");
 pub const project_compile = @import("project_compile.zig");
-/// Checked native-test facts and their per-module shares (MODULE-TEST-1).
-pub const native_test_facts = @import("native_test_facts.zig");
-/// Export snapshot and the safety/accounting policy one native emission runs under.
-pub const native_interface = @import("native_interface.zig");
-/// Per-function reuse of emitted QBE units across builds.
-pub const qbe_fragments = @import("qbe_fragments.zig");
 const project_syntax = @import("project_syntax.zig");
 pub const interfaces = @import("interfaces.zig");
 pub const check_cache = @import("check_cache.zig");
@@ -49,20 +34,6 @@ pub const module_interface = @import("module_interface.zig");
 pub const module_interface_build = @import("module_interface_build.zig");
 /// Whole-program check and per-module check against interfaces, compared.
 pub const module_interface_oracle = @import("module_interface_oracle.zig");
-/// One module compiled from its imports' interfaces (MODULE-COMPILE-1).
-pub const module_physical = @import("module_physical.zig");
-pub const module_compile = @import("module_compile.zig");
-/// What a module compile consumed of each import's emission section, by
-/// symbol (MODULE-SYMBOL-CUTOFF-1).
-pub const module_symbols = @import("module_symbols.zig");
-/// The per-module units of a program merged into one manifest (MODULE-COMPILE-3).
-pub const module_link = @import("module_link.zig");
-/// Canonical codec tables merged by explicit module links and linked tests.
-pub const module_codecs = @import("module_codecs.zig");
-/// Generated C descriptors, split into mergeable blocks for a module link.
-pub const native_descriptors = @import("native_descriptors.zig");
-/// Generated C renderers, split into mergeable blocks for a module link.
-pub const native_render = @import("native_render.zig");
 pub const syntax_cache = @import("syntax_cache.zig");
 /// Persistent content-addressed frontend reuse for ordinary one-shot commands.
 pub const frontend_cache = @import("frontend_cache.zig");
@@ -83,16 +54,11 @@ pub const lexer = @import("lexer.zig");
 pub const tokens_dump = @import("tokens_dump.zig");
 const parser = @import("parser.zig");
 const ast = @import("ast.zig");
-/// The checked program the new compiler core (`src/core/`, `mylang-core`) lowers from.
+/// The checked program the new compiler core (`src/core/`) lowers from.
 pub const typed = @import("typed.zig");
 const sema = @import("sema.zig");
-const lower = @import("lower.zig");
-pub const bytecode = @import("bytecode.zig");
-/// Opt-in value semantics (`VALUE-SEMANTICS-1`): the process switch, its
-/// environment carrier and cache-key byte.
+/// Value semantics (`VALUE-SEMANTICS-1`): the process switch and cache-key byte.
 pub const value_semantics = @import("value_semantics.zig");
-/// Resolved, versioned native memory implementation used during lowering.
-pub const runtime_mode = @import("runtime_mode.zig");
 pub const effect_set = @import("effect_set.zig");
 pub const navigation = @import("navigation.zig");
 pub const navigation_partial = @import("navigation_partial.zig");
@@ -118,9 +84,8 @@ pub const interface_files = @import("interface_files.zig");
 pub const api_files = @import("api_files.zig");
 /// `mylang context` bounded per-declaration answer for a coding agent.
 pub const context = @import("context.zig");
-const disassemble = @import("disassemble.zig");
 
-/// Owns one source unit and all parsed, checked, and lowered data in its arena.
+/// Owns one source unit and all parsed and checked data in its arena.
 pub const Compilation = struct {
     arena: std.heap.ArenaAllocator,
     src: source.Source,
@@ -128,7 +93,6 @@ pub const Compilation = struct {
     tokens: ?[]const lexer.Token = null,
     syntax: ?ast.Program = null,
     program: ?typed.Program = null,
-    code: ?bytecode.Program = null,
 
     /// Copy the source path and bytes into a new compilation arena; release with deinit.
     pub fn init(allocator: std.mem.Allocator, path: []const u8, bytes: []const u8) std.mem.Allocator.Error!Compilation {
@@ -238,47 +202,6 @@ pub const Compilation = struct {
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
         try sema.checkLibrary(sink.allocator, self.src, self.syntax.?, &sink, null);
-    }
-
-    /// Lazily lower the checked program into bytecode owned by the compilation.
-    pub fn emit(self: *Compilation) EmitError!void {
-        return self.emitWithOptions(false);
-    }
-
-    /// Lower with an explicit `debug` policy: a ReleaseFast build drops the nodes.
-    pub fn emitWithOptions(self: *Compilation, drop_debug: bool) EmitError!void {
-        try self.check();
-        if (self.code == null) {
-            const lowered = try lower.lowerWith(.{ .output = self.arena.allocator(), .scratch = self.arena.child_allocator }, self.program.?, drop_debug);
-            const inlined = try @import("bytecode_inline.zig").inlineProgram(self.arena.allocator(), lowered);
-            self.code = try @import("mut_callback_abi.zig").adapt(self.arena.allocator(), inlined);
-        }
-    }
-
-    /// Allocate independently compilable scalar QBE units after full checking.
-    pub fn emitQbe(self: *Compilation, allocator: std.mem.Allocator) EmitNativeError![]u8 {
-        return self.emitQbeWithOptions(allocator, .{});
-    }
-
-    /// Emit QBE units under an explicit debug, accounting and safety policy.
-    pub fn emitQbeWithOptions(self: *Compilation, allocator: std.mem.Allocator, policy: @import("native_interface.zig").Policy) EmitNativeError![]u8 {
-        try self.emitWithOptions(policy.drop_debug);
-        var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
-        defer self.diagnostics = sink.items;
-        return @import("qbe.zig").generateWithInterface(allocator, self.code.?, self.src, &sink, .{ .policy = policy });
-    }
-
-    /// Allocate the ownership analysis of every lowered function as JSON Lines
-    /// (`OWNERSHIP-EXPLAIN-1`): roles, transfers, copy-on-write sites, moves.
-    pub fn explainOwnership(self: *Compilation, allocator: std.mem.Allocator) EmitNativeError![]u8 {
-        try self.emit();
-        return @import("ownership_explain.zig").render(allocator, self.code.?);
-    }
-
-    /// Allocate a source-annotated disassembly of the lowered program.
-    pub fn dump(self: *Compilation, allocator: std.mem.Allocator) EmitError![]u8 {
-        try self.emit();
-        return disassemble.dump(allocator, self.code.?, self.src);
     }
 };
 

@@ -32,7 +32,6 @@ def total(buffer: byte_buffer) -> int:
     return sum
 
 
-# spec-case: VALUE-BUFFER-FRESH-1
 public def test_writing_a_buffer_built_from_a_list_leaves_the_list_alone() -> bool:
     values = [1, 2, 3]
     buffer = byte_buffer(values)
@@ -40,7 +39,6 @@ public def test_writing_a_buffer_built_from_a_list_leaves_the_list_alone() -> bo
     return values == [1, 2, 3] and buffer == b"\x01\x02\x03\x04"
 
 
-# spec-case: VALUE-BUFFER-FRESH-1
 public def test_writing_the_list_after_the_conversion_leaves_the_buffer_alone() -> bool:
     values = [1, 2, 3]
     buffer = byte_buffer(values)
@@ -49,7 +47,6 @@ public def test_writing_the_list_after_the_conversion_leaves_the_buffer_alone() 
     return buffer == b"\x01\x02\x03" and values == [7, 2, 3, 9]
 
 
-# spec-case: VALUE-BUFFER-FRESH-1
 public def test_two_buffers_built_from_one_list_are_independent() -> bool:
     values = [10, 20]
     a = byte_buffer(values)
@@ -59,7 +56,6 @@ public def test_two_buffers_built_from_one_list_are_independent() -> bool:
     return a == b"\x0a\x14\x01" and b == b"\x0a\x14\x02" and values == [10, 20]
 
 
-# spec-case: VALUE-BUFFER-FRESH-1
 public def test_a_buffer_built_from_a_record_field_leaves_the_field_alone() -> bool:
     source = Source([5, 6])
     buffer = byte_buffer(source.items)
@@ -68,7 +64,6 @@ public def test_a_buffer_built_from_a_record_field_leaves_the_field_alone() -> b
     return source.items == [1, 6] and buffer == b"\x05\x06\x07"
 
 
-# spec-case: VALUE-BUFFER-FRESH-1
 public def test_a_returned_buffer_owns_its_octets() -> bool:
     values = [1, 2, 3]
     buffer = widen(values)
@@ -77,14 +72,12 @@ public def test_a_returned_buffer_owns_its_octets() -> bool:
     return buffer == b"\x01\x02\x03\x04" and again == b"\x01\x02\x03" and values == [1, 2, 3]
 
 
-# spec-case: VALUE-BUFFER-FRESH-1
 public def test_a_buffer_grown_in_a_callee_is_independent_of_its_list() -> bool:
     values = [1]
     buffer = fill(values, 300)
     return len(buffer) == 301 and values == [1] and buffer[0] == 1 and buffer[300] == 43
 
 
-# spec-case: VALUE-BUFFER-FRESH-1
 public def test_a_snapshot_taken_before_a_write_keeps_its_octets() -> bool:
     values = [1, 2]
     buffer = byte_buffer(values)
@@ -95,7 +88,6 @@ public def test_a_snapshot_taken_before_a_write_keeps_its_octets() -> bool:
     return snapshot == b"\x01\x02" and later == b"\x01\x02\x03" and buffer == b"\x01\x02\x03\x04"
 
 
-# spec-case: VALUE-BUFFER-FRESH-1
 public def test_a_rebuilt_buffer_in_a_loop_starts_from_the_list_every_time() -> bool:
     values = [9]
     sums = 0
@@ -106,7 +98,6 @@ public def test_a_rebuilt_buffer_in_a_loop_starts_from_the_list_every_time() -> 
     return sums == 9 * 10 + 2 + (10 * 10 + 2) + (11 * 10 + 2)
 
 
-# spec-case: VALUE-BUFFER-FRESH-1
 public def test_a_renamed_buffer_is_still_a_value_of_its_own() -> bool:
     values = [1, 2]
     buffer = byte_buffer(values)
@@ -115,7 +106,6 @@ public def test_a_renamed_buffer_is_still_a_value_of_its_own() -> bool:
     return buffer == b"\x01\x02" and other == b"\x01\x02\x03"
 
 
-# spec-case: VALUE-BUFFER-FRESH-1
 public def test_a_buffer_stored_in_a_record_is_a_value_of_its_own() -> bool:
     values = [1, 2]
     buffer = byte_buffer(values)

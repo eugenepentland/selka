@@ -74,9 +74,7 @@ test "integer widths remain distinct in functions records compound assignment an
     var compilation = try language.Compilation.init(testing.allocator, "widths.my", source);
     defer compilation.deinit();
     try testing.expectEqual(@as(i64, 8), (try native.run(&compilation)).value);
-    const dump = try compilation.dump(testing.allocator);
-    defer testing.allocator.free(dump);
-    try testing.expect(std.mem.indexOf(u8, dump, "CAST_INT u64") != null);
+    try compilation.check();
     var discovery = try language.duplicates.discover(testing.allocator, compilation.program.?, .{});
     defer discovery.deinit();
 }
@@ -97,8 +95,6 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
     );
     defer compilation.deinit();
     try compilation.check();
-    const dump = try compilation.dump(allocator);
-    defer allocator.free(dump);
     var discovery = try language.duplicates.discover(allocator, compilation.program.?, .{});
     defer discovery.deinit();
 }
@@ -205,7 +201,6 @@ test "no implicit width or boolean conversions and unknown suffixes are rejected
     }
 }
 
-// spec: QBE-INTOPS-1
 test "inlined multiplication keeps every width and traps past its bounds" {
     try evaluate("i64(100i8 * 1i8)", 100);
     try evaluate("i64(-64i8 * 2i8)", -128);

@@ -163,7 +163,6 @@ public def test_propagating_none_releases_preceding_constructor_operands() -> bo
     return none_after_prior_operand() is None
 
 
-# spec-case: RC-AGGREGATE-1
 public def test_reordered_constructor_fields_preserve_aliased_input_snapshots() -> bool:
     source = [17, 23]
     result = Pair(right=source, left=source)
@@ -177,7 +176,6 @@ record HeldFields:
     snapshot: dict[int, int]
 
 
-# spec-case: RC-AGGREGATE-1
 public def test_constructor_publishes_nested_holds_and_converts_held_mapping_inputs() -> bool:
     mapping = {1: 7}
     live = list(mapping.values())

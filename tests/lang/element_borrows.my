@@ -31,7 +31,6 @@ def find(entries: list[Entry], key: int) -> int:
     return -2
 
 
-# spec: RC-ELEMENT-BORROW-2
 public def test_readonly_probe_reads_borrowed_elements() -> bool:
     entries = [Entry(key=3, hash=1u32, weight=0.5), Entry(key=7, hash=2u32, weight=1.5), Entry(key=-1, hash=0u32, weight=0.0)]
     return find(entries, 7) == 1 and find(entries, 9) == -1 and find(entries, 3) == 0
@@ -50,7 +49,6 @@ def bump(rows: mut list[Row]) -> None:
         rows[i].d = rows[i].d * 2
 
 
-# spec-case: RC-ELEMENT-BORROW-1
 public def test_iterated_and_updated_elements_keep_value_semantics() -> bool:
     rows = [Row(a=1, b=2, c=3, d=4), Row(a=5, b=6, c=7, d=8)]
     before = rows

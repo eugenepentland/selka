@@ -103,7 +103,6 @@ public def test_augmented_assignment_to_a_field_of_an_element_keeps_its_operator
     return points[1].x == 13 and points[0].y == 10 and points[1].y == 3 and points[0].x == 1
 
 
-# spec-case: QBE-ARRAYWRITE-2
 public def test_a_record_field_array_takes_a_negative_index() -> bool:
     grid = Grid(cells=[1, 2, 3, 4], label="g")
     copy = grid
@@ -112,7 +111,6 @@ public def test_a_record_field_array_takes_a_negative_index() -> bool:
     return grid.cells[3] == 40 and grid.cells[0] == 11 and copy.cells[3] == 4 and copy.cells[0] == 1
 
 
-# spec-case: QBE-ARRAYWRITE-2
 public def test_a_record_field_array_is_independent_of_an_earlier_copy() -> bool:
     board = Board(cells=[0, 0, 0])
     alias = board

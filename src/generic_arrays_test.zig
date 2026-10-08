@@ -200,7 +200,7 @@ fn moduleScenario(allocator: std.mem.Allocator) !void {
     try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     try t.expectEqual(@as(i64, 1), (try native.run(&compilation)).value);
 }
 test "exported generic arrays resolve imported nominal arguments across source relocation" {

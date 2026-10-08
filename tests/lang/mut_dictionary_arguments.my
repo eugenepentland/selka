@@ -7,8 +7,6 @@ def clone_during(target: mut dict[int, int], source: dict[int, dict[int, int]]) 
 
 # spec-case: MUT-EXPRESSION-STACK-1
 # spec-case: COW-MUT-ARGUMENT-1
-# spec-case: COW-SHARED-1
-# spec-case: COW-UNIQUE-1
 public def test_dictionary_element_argument_keeps_pinned_copy_independent() -> bool:
     original = {0: {1: 7}}
     copied = clone_during(mut original[0], original)

@@ -373,7 +373,6 @@ def last_owned(count: int) -> Value:
     return owned_rows(count)[-1]
 
 
-# spec-case: RC-LOAN-RELOCATE-1
 public def test_loaned_field_reads_keep_values_through_their_temporaries() -> bool:
     rt = Runtime([Value.number(1.5), Value.nil, Value.number(2.5)], 3)
     snapshot = rt
@@ -383,20 +382,17 @@ public def test_loaned_field_reads_keep_values_through_their_temporaries() -> bo
     return first == 2.5 and second == Value.nil and third == 1.5 and rt.top == 0 and snapshot.stack == rt.stack
 
 
-# spec-case: RC-LOAN-RELOCATE-1
 public def test_loaned_reads_through_negative_indices_and_readonly_parameters() -> bool:
     rt = Runtime([Value.number(4.0), Value.text("x")], 0)
     return pop(mut rt) == Value.text("x") and number(peek(rt, 0)) == 4.0 and rt.top == -1
 
 
-# spec-case: RC-LOAN-RELOCATE-1
 public def test_index_callback_replacing_the_list_keeps_the_loaned_original() -> bool:
     rt = Runtime([Value.number(7.0), Value.number(8.0)], 2)
     item = replaced_during_index(mut rt)
     return number(item) == 7.0 and rt.stack == [Value.number(99.0)]
 
 
-# spec-case: RC-LOAN-RELOCATE-1
 public def test_managed_elements_and_nested_record_fields_relocate_whole_values() -> bool:
     frame = Frame(Chunk([1, 2], ["alpha", "beta"]), 0)
     saved = frame
@@ -404,12 +400,10 @@ public def test_managed_elements_and_nested_record_fields_relocate_whole_values(
     return names == "alphabeta" and frame.at == 2 and saved.at == 0 and saved.chunk.names == ["alpha", "beta"]
 
 
-# spec-case: RC-LOAN-RELOCATE-1
 public def test_owned_temporaries_are_taken_not_relocated() -> bool:
     return number(last_owned(5)) == 4.0 and number(last_owned(1)) == 0.0
 
 
-# spec-case: RC-INERT-FIELD-RECEIVER-1
 public def test_field_receivers_write_through_mut_records_and_keep_snapshots() -> bool:
     m = Machine([Value.nil, Value.nil, Value.nil], [CallFrame(0, 0), CallFrame(5, 1)], ["a"], 0, 2)
     before = m
@@ -420,19 +414,16 @@ public def test_field_receivers_write_through_mut_records_and_keep_snapshots() -
     return m.stack == [Value.number(1.0), Value.text("two"), Value.nil] and m.top == 2 and m.frames[1].ip == 11 and m.frames[0].ip == 0 and before.stack == [Value.nil, Value.nil, Value.nil] and before.frames[1].ip == 5
 
 
-# spec-case: RC-INERT-FIELD-RECEIVER-1
 public def test_field_receivers_of_local_records_and_negative_indices() -> bool:
     return local_machine(Value.number(3.0)) == [Value.number(3.0), Value.number(3.0)]
 
 
-# spec-case: RC-INERT-FIELD-RECEIVER-1
 public def test_completed_callback_replaces_the_field_list_before_update() -> bool:
     m = Machine([Value.nil, Value.nil], [], [], 0, 0)
     replaced_receiver(mut m, Value.number(4.0))
     return m.stack == [Value.nil, Value.number(4.0), Value.nil]
 
 
-# spec-case: RC-INERT-FIELD-RECEIVER-1
 public def test_managed_element_field_stores_keep_their_scope() -> bool:
     m = Machine([], [], ["a", "b"], 0, 0)
     saved = m
@@ -440,7 +431,6 @@ public def test_managed_element_field_stores_keep_their_scope() -> bool:
     return m.names == ["c", "b"] and saved.names == ["a", "b"]
 
 
-# spec-case: RC-SELF-STORE-1
 public def test_payload_bindings_read_in_place_keep_their_owner() -> bool:
     objects = [Obj.free, Obj.callable(Callable(2, Code([1, 2, 3])))]
     saved = objects
@@ -450,7 +440,6 @@ public def test_payload_bindings_read_in_place_keep_their_owner() -> bool:
     return total == 16 and saved == objects
 
 
-# spec-case: RC-SELF-STORE-1
 public def test_payload_bindings_outliving_a_scrutinee_write_keep_their_copy() -> bool:
     objects = [Obj.callable(Callable(4, Code([9])))]
     first = freed_arity(mut objects, 0)
@@ -458,7 +447,6 @@ public def test_payload_bindings_outliving_a_scrutinee_write_keep_their_copy() -
     return first == 5 and second == -1 and objects == [Obj.free]
 
 
-# spec-case: RC-RETURN-MOVE-1
 public def test_returned_bindings_and_locals_move_their_owner() -> bool:
     objects = [Obj.name(Name(b"ab" + b"c", 7u32)), Obj.free]
     found = name_of(objects, 0)
@@ -467,7 +455,6 @@ public def test_returned_bindings_and_locals_move_their_owner() -> bool:
     return found.chars == b"abc" and found.hash == 7u32 and made.chars == b"xyz" and name_of(objects, 1).chars == b""
 
 
-# spec-case: RC-RETURN-MOVE-1
 public def test_returned_parameters_keep_the_callers_value() -> bool:
     original = Name(b"k" + b"eep", 1u32)
     copy = same(original)
@@ -475,7 +462,6 @@ public def test_returned_parameters_keep_the_callers_value() -> bool:
     return copy.chars == b"keep" and again.chars == b"keep" and original.chars == b"keep"
 
 
-# spec-case: RC-TRANSIENT-FIELD-1
 public def test_nested_field_copies_into_constructors_stay_independent() -> bool:
     unit = Unit(1, Chunk([1, 2], ["a", "b"]))
     loaded = load(unit, 7)
@@ -484,7 +470,6 @@ public def test_nested_field_copies_into_constructors_stay_independent() -> bool
     return loaded.code == [1, 2, 3] and loaded.names == ["z", "b"] and unit.chunk.code == [1, 2] and unit.chunk.names == ["a", "b"] and loaded.at == 7
 
 
-# spec-case: RC-TRANSIENT-FIELD-1
 public def test_nested_field_copies_from_mut_parameters_and_call_results() -> bool:
     unit = Unit(2, Chunk([8], ["m"]))
     loaded = load_mut(mut unit)
@@ -492,7 +477,6 @@ public def test_nested_field_copies_from_mut_parameters_and_call_results() -> bo
     return loaded.code == [8] and unit.chunk.code == [8, 99] and loaded.at == 2 and made.code == [4, 5] and made.names == ["made"]
 
 
-# spec-case: RC-READONLY-ANCHOR-1
 public def test_readonly_table_reads_borrow_payloads_in_place() -> bool:
     table = Table([Obj.callable(Callable(1, Code([4, 5]))), Obj.name(Name(b"n" + b"ame", 9u32))], 2)
     saved = table
@@ -504,20 +488,17 @@ public def test_readonly_table_reads_borrow_payloads_in_place() -> bool:
     return arity == 2 and name.chars == b"name" and ops == [4, 5, 6] and saved.objects[1] == Obj.name(Name(b"name", 9u32)) and table_ops(saved, 0) == [4, 5]
 
 
-# spec-case: RC-READONLY-ANCHOR-1
 public def test_nested_readonly_matches_in_loops() -> bool:
     table = Table([Obj.callable(Callable(1, Code([]))), Obj.name(Name(b"abc", 1u32)), Obj.free], 3)
     return nested_anchor(table) == 5
 
 
-# spec-case: RC-READONLY-ANCHOR-1
 public def test_mut_roots_keep_owned_bindings() -> bool:
     table = Table([Obj.callable(Callable(3, Code([1])))], 0)
     first = replaced_table(mut table, 0)
     return first == 4 and table.count == 1 and table.objects == [Obj.free]
 
 
-# spec-case: RC-INTERVAL-ANCHOR-1
 public def test_mut_root_list_reads_across_unrelated_calls() -> bool:
     rt = Runtime([Value.number(1.0), Value.text("b"), Value.nil], 0)
     cursor = Cursor([2, 0, 1], 0)
@@ -527,14 +508,12 @@ public def test_mut_root_list_reads_across_unrelated_calls() -> bool:
     return first == Value.nil and number(second) == 1.0 and third == Value.text("b") and rt.top == 3 and cursor.ip == 3
 
 
-# spec-case: RC-INTERVAL-ANCHOR-1
 public def test_mut_root_list_reads_keep_the_list_a_call_replaces() -> bool:
     rt = Runtime([Value.number(8.0), Value.nil], 0)
     item = fetch_reset(mut rt)
     return number(item) == 8.0 and rt.stack == [Value.text("fresh")]
 
 
-# spec-case: RC-OPERAND-ANCHOR-1
 public def test_mut_root_fields_passed_to_calls_read_the_current_value() -> bool:
     vm = Vm(Globals([Value.nil, Value.number(1.0), Value.text("two")]), ["a", "bb"], 0)
     first = global_value(mut vm, 0)
@@ -542,7 +521,6 @@ public def test_mut_root_fields_passed_to_calls_read_the_current_value() -> bool
     return number(first) == 1.0 and second == Value.text("two") and vm.top == 2
 
 
-# spec-case: RC-OPERAND-ANCHOR-1
 public def test_mut_root_fields_passed_to_calls_whose_results_are_matched() -> bool:
     vm = Vm(Globals([Value.nil, Value.text("one")]), ["a", "bbb"], 0)
     first = matched_global(mut vm, 0)
@@ -553,14 +531,12 @@ public def test_mut_root_fields_passed_to_calls_whose_results_are_matched() -> b
 # The collector lends the argument's field in place, so it reads the list the
 # later `mut` call installed; RC keeps its loan on the list read first. Both
 # must survive the replacement; the counted build checks nothing leaks.
-# spec-case: RC-OPERAND-ANCHOR-1
 public def test_mut_root_fields_keep_the_value_a_later_mut_call_replaces() -> bool:
     vm = Vm(Globals([Value.number(6.0)]), [], 0)
     item = wiped_value(mut vm)
     return (number(item) == 6.0 or item == Value.text("wiped")) and vm.globals.entries == [Value.text("wiped")]
 
 
-# spec-case: RC-BORROW-MATCH-1
 public def test_borrowed_match_accessors_read_in_place_and_copy_when_kept() -> bool:
     table = Table([Obj.name(Name(b"ke" + b"y", 11u32)), Obj.free], 2)
     hash = table_name_hash(table, 0) + table_name_hash(table, 1)
@@ -570,7 +546,6 @@ public def test_borrowed_match_accessors_read_in_place_and_copy_when_kept() -> b
     return hash == 11u32 and chars == b"key" and kept.chars == b"key" and table_name_hash(table, 0) == 0u32
 
 
-# spec-case: RC-PLAIN-UPDATE-CALL-1
 public def test_borrowed_fields_across_calls_that_only_advance_the_root() -> bool:
     frame = Bytecode([Value.number(1.0), Value.text("b"), Value.nil], [2, 0, 1], 0)
     first = read_value(mut frame)
@@ -579,14 +554,12 @@ public def test_borrowed_fields_across_calls_that_only_advance_the_root() -> boo
     return first == Value.nil and number(second) == 1.0 and third == Value.text("b") and frame.ip == 3
 
 
-# spec-case: RC-PLAIN-UPDATE-CALL-1
 public def test_borrowed_fields_across_calls_that_replace_them() -> bool:
     frame = Bytecode([Value.number(5.0)], [0], 0)
     item = read_reloaded(mut frame)
     return (number(item) == 5.0 or item == Value.text("reloaded")) and frame.constants == [Value.text("reloaded")]
 
 
-# spec-case: RC-READONLY-ANCHOR-1
 public def test_records_copied_out_of_readonly_lists_into_named_locals() -> bool:
     wires = [Wire(Name(b"ab" + b"c", 1u32), 1, False), Wire(Name(b"d", 2u32), 2, False), Wire(Name(b"e", 3u32), 1, True)]
     kept = first_wire(wires)

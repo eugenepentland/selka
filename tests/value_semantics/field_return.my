@@ -129,7 +129,6 @@ def joined_extraction(owner: mut Owner, choose: bool):
     owner.box = work
 
 
-# spec-case: COW-FIELD-RETURN-1
 public def test_field_return_preserves_existing_copies_and_sibling_values() -> bool:
     box = Box([1])
     owner = Owner(box, box)
@@ -139,14 +138,12 @@ public def test_field_return_preserves_existing_copies_and_sibling_values() -> b
     return owner.box.items == [1, 2, 2] and owner.other.items == [1] and saved.box.items == [1] and box.items == [1]
 
 
-# spec-case: COW-FIELD-RETURN-1
 public def test_observation_before_store_back_sees_original_value() -> bool:
     owner = Owner(Box([1]), Box([]))
     seen = observe(mut owner)
     return seen == 1 and owner.box.items == [1, 2]
 
 
-# spec-case: COW-FIELD-RETURN-1
 public def test_early_return_does_not_write_the_original_field() -> bool:
     owner = Owner(Box([1]), Box([]))
     conditional(mut owner, True)
@@ -155,7 +152,6 @@ public def test_early_return_does_not_write_the_original_field() -> bool:
     return untouched and owner.box.items == [1, 2]
 
 
-# spec-case: COW-FIELD-RETURN-1
 public def test_retained_temporary_and_other_destination_stay_independent() -> bool:
     owner = Owner(Box([1]), Box([]))
     size = retain(mut owner)
@@ -165,7 +161,6 @@ public def test_retained_temporary_and_other_destination_stay_independent() -> b
 
 # `observe_alias(mut owner, mut owner)` is E_MUTATION_OVERLAP (MUT-EXCLUSIVE-1);
 # a copy sharing the original field must not see the temporary's write.
-# spec-case: COW-FIELD-RETURN-1
 public def test_a_second_mut_parameter_observes_its_own_original_field() -> bool:
     owner = Owner(Box([1]), Box([]))
     other = owner
@@ -173,14 +168,12 @@ public def test_a_second_mut_parameter_observes_its_own_original_field() -> bool
     return seen == 1 and owner.box.items == [1, 2] and owner.other.items == [] and other.box.items == [1] and other.other.items == [9]
 
 
-# spec-case: COW-FIELD-RETURN-1
 public def test_a_sibling_scalar_field_stays_readable_during_mutation() -> bool:
     owner = CountOwner(Box([1]), 7)
     seen = observe_sibling(mut owner)
     return seen == 7 and owner.box.items == [1, 2]
 
 
-# spec-case: COW-FIELD-RETURN-1
 public def test_sibling_index_normalization_keeps_shared_snapshots_independent() -> bool:
     original = Box([7])
     owner = IndexedOwner(original, [original])
@@ -188,7 +181,6 @@ public def test_sibling_index_normalization_keeps_shared_snapshots_independent()
     return seen == 7 and owner.box.items == [7, 2] and owner.others[0].items == [7] and original.items == [7]
 
 
-# spec-case: COW-FIELD-RETURN-1
 public def test_closed_loop_and_match_store_back_preserve_copies() -> bool:
     original = Box([1])
     owner = Owner(original, original)
@@ -198,7 +190,6 @@ public def test_closed_loop_and_match_store_back_preserve_copies() -> bool:
     return owner.box.items == [1, 2, 2, 2, 2] and owner.other.items == [1] and saved.box.items == [1] and original.items == [1]
 
 
-# spec-case: COW-FIELD-RETURN-1
 public def test_loop_exit_does_not_commit_a_partial_field_update() -> bool:
     owner = Owner(Box([1]), Box([]))
     looped(mut owner, Some(3), True)
@@ -207,14 +198,12 @@ public def test_loop_exit_does_not_commit_a_partial_field_update() -> bool:
     return unchanged and owner.box.items == [1, 2, 2, 2]
 
 
-# spec-case: COW-FIELD-RETURN-1
 public def test_loop_observations_read_the_original_field_until_store_back() -> bool:
     owner = Owner(Box([1]), Box([]))
     seen = loop_observation(mut owner, False)
     return seen == 3 and owner.box.items == [1, 2, 2, 2]
 
 
-# spec-case: COW-FIELD-RETURN-1
 public def test_external_join_preserves_preexisting_values() -> bool:
     owner = Owner(Box([1]), Box([3]))
     saved = owner

@@ -9,7 +9,6 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const buffer_operations = @import("buffer_operations.zig");
 const source = @import("source.zig");
-const model = @import("bytecode_model.zig");
 
 /// Error set for mutation-footprint helpers.
 pub const MutationError = error{OutOfMemory};
@@ -114,35 +113,6 @@ pub fn typedNode(program: typed.Program, function: typed.Function, node: typed.N
             if (!program.records[node.ty.recordIndex()].isManagedRecord()) return null;
             const owner = rootLocal(program, update.base, 0);
             return .{ .span = node.span, .operation = .receiver_write, .input = if (owner) |slot| localInput(program, function, slot) else null, .owner = owner };
-        },
-        else => return null,
-    }
-}
-
-/// Classify one instruction from the checked bytecode model.
-pub fn instruction(program: model.Program, function: model.Function, op: @FieldType(model.Instruction, "op"), span: source.Span) ?Witness {
-    switch (op) {
-        .replace_index => |access| {
-            const ty = access.ty;
-            if (!ty.isAggregate()) return null;
-            if (ty.recordIndex() >= program.records.len) return null;
-            if (!program.records[ty.recordIndex()].managed) return null;
-            return .{ .span = span, .operation = .receiver_write, .input = null };
-        },
-        .update_record => |update| {
-            if (!update.ty.isAggregate() or update.ty.recordIndex() >= program.records.len) return null;
-            if (!program.records[update.ty.recordIndex()].isManagedRecord()) return null;
-            return .{ .span = span, .operation = .receiver_write, .input = null };
-        },
-        .buffer_operation => |operation| {
-            if (@backingInt(operation.owner) >= function.scope.locals.len) return null;
-            const local = function.scope.locals[@backingInt(operation.owner)];
-            if (!local.ty.isAggregate() or local.ty.recordIndex() >= program.records.len) return null;
-            const record = program.records[local.ty.recordIndex()];
-            const classification = buffer(operation.kind, record.collection.kind == .dictionary);
-            if (!classification.writes_receiver and !classification.severs_outer) return null;
-            const input: ?u16 = if (@backingInt(operation.owner) < function.signature.parameter_count) @intCast(@backingInt(operation.owner)) else null;
-            return .{ .span = span, .operation = classification.operation, .input = input, .owner = operation.owner };
         },
         else => return null,
     }

@@ -28,10 +28,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try t.expect(result.trapped());
     const text = result.stderr;
     for ([_][]const u8{ "part1.my:2:", "R_DIVISION_BY_ZERO", "in main at part0.my:", "in helper at part1.my:" }) |part| try t.expect(std.mem.indexOf(u8, text, part) != null);
-    const dump = try compilation.dump(allocator);
-    defer allocator.free(dump);
-    try t.expect(std.mem.indexOf(u8, dump, "; part0.my:") != null);
-    try t.expect(std.mem.indexOf(u8, dump, "; part1.my:") != null);
+    try compilation.check();
 }
 // spec: PROJ-4
 test "mapped related diagnostics identify each original declaration" {

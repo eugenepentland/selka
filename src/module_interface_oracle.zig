@@ -19,9 +19,6 @@ const project_compile = @import("project_compile.zig");
 const semantic_cache = @import("semantic_cache.zig");
 const semantic_key = @import("semantic_key.zig");
 const summary = @import("semantic_summary.zig");
-const lower = @import("lower.zig");
-const bytecode = @import("bytecode.zig");
-const bytecode_inline = @import("bytecode_inline.zig");
 const entry_adapter = @import("entry_adapter.zig");
 const iface = @import("module_interface.zig");
 const builder = @import("module_interface_build.zig");
@@ -139,26 +136,10 @@ pub const Whole = struct {
         gpa.destroy(self);
     }
 
-    /// Build every module's interface from this check. Two lowerings (with and
-    /// without `debug` statements) decide which bodies the inliner may splice.
-    /// Every function is lowered through the selective path, whose validation
-    /// is the per-function one the test runner's lowering uses.
+    /// Build every module's interface from this check.
     pub fn buildInterfaces(self: *Whole) Error!builder.Set {
         const arena = self.project.arena.allocator();
         const program = self.compilation.program orelse return error.InternalError;
-        const every = try arena.alloc(bool, program.functions.len);
-        @memset(every, true);
-        var lowered: [2]bytecode.Program = undefined;
-        for (&lowered, [_]bool{ false, true }) |*code, drop_debug| {
-            const plain = lower.lowerSelectedWith(.{ .output = arena, .scratch = self.gpa }, program, every, drop_debug) catch |err| switch (err) {
-                error.OutOfMemory => return error.OutOfMemory,
-                else => return error.InternalError,
-            };
-            code.* = bytecode_inline.inlineProgram(arena, plain) catch |err| switch (err) {
-                error.OutOfMemory => return error.OutOfMemory,
-                else => return error.InternalError,
-            };
-        }
         return builder.build(arena, .{
             .index = &self.index,
             .src = self.compilation.src,
@@ -166,14 +147,13 @@ pub const Whole = struct {
             .program = program,
             .prepared = self.request.prepared orelse return error.InternalError,
             .facts = self.request.produced orelse return error.InternalError,
-            .lowered = &lowered,
         });
     }
 
     /// This check's canonical result for comparison with per-module checks,
     /// allocated with `allocator` so it outlives the check.
     pub fn result(self: *Whole, allocator: std.mem.Allocator) Error!Result {
-        return resultOf(allocator, .{ .gpa = self.gpa, .compilation = &self.compilation, .request = &self.request, .stubs = null });
+        return resultOf(allocator, .{ .compilation = &self.compilation, .request = &self.request, .stubs = null });
     }
 };
 
@@ -377,7 +357,7 @@ pub const Single = struct {
     /// back to their modules' sources, allocated with `allocator` so it
     /// outlives the check.
     pub fn result(self: *Single, allocator: std.mem.Allocator, library: *const Library, module: []const u8) Error!Result {
-        return resultOf(allocator, .{ .gpa = self.gpa, .compilation = &self.compilation, .request = &self.request, .stubs = library, .root = root_module, .own = module });
+        return resultOf(allocator, .{ .compilation = &self.compilation, .request = &self.request, .stubs = library, .root = root_module, .own = module });
     }
 };
 
@@ -407,9 +387,6 @@ pub const Result = struct {
     functions: []const Checked,
     /// Stable key and dependency context of every ordinary declaration.
     contexts: []const Context,
-    /// Canonical digest of every lowered and inlined function body the check
-    /// produced itself (none of a stood-in function).
-    lowered: []const Checked = &.{},
     /// Diagnostics located in interface text no verbatim stretch covers.
     unmapped: usize = 0,
 };
@@ -418,8 +395,6 @@ pub const Result = struct {
 pub const Context = struct { key: []const u8, context: [32]u8 };
 
 const ResultInputs = struct {
-    /// A freeing allocator for lowering's per-function scratch.
-    gpa: std.mem.Allocator,
     compilation: *project_compile.Compilation,
     request: *const summary.Request,
     /// Interfaces the check read in place of sources, to map positions back.
@@ -465,114 +440,12 @@ fn resultOf(allocator: std.mem.Allocator, inputs: ResultInputs) Error!Result {
         try checked.append(allocator, .{ .name = name, .digest = functionDigest(function, typed_program.records), .stood_in = stood[index] });
     };
     std.mem.sort(Checked, checked.items, {}, checkedBefore);
-    const lowered = if (program) |typed_program| try loweredDigests(allocator, inputs, typed_program, stood) else &.{};
     var contexts: std.ArrayList(Context) = .empty;
     if (inputs.request.prepared) |prepared| for (prepared.ordinary_ast) |ast_index| {
         try contexts.append(allocator, .{ .key = try allocator.dupe(u8, prepared.keys[ast_index]), .context = prepared.contexts[ast_index] });
     };
     std.mem.sort(Context, contexts.items, {}, contextBefore);
-    return .{ .diagnostics = located.items, .functions = checked.items, .contexts = contexts.items, .lowered = lowered, .unmapped = unmapped };
-}
-
-/// Lower every function the check produced a body for (a stood-in function
-/// keeps only its signature, as a per-module lowering must), inline, and
-/// digest each body canonically: types by name, callees by canonical name,
-/// positions in their module's own source (mapped back from interface text).
-fn loweredDigests(allocator: std.mem.Allocator, inputs: ResultInputs, program: typed.Program, stood: []const bool) Error![]const Checked {
-    const selected = try allocator.alloc(bool, program.functions.len);
-    for (selected, stood) |*chosen, skipped| chosen.* = !skipped;
-    const plain = lower.lowerSelectedWith(.{ .output = allocator, .scratch = inputs.gpa }, program, selected, false) catch |err| switch (err) {
-        error.OutOfMemory => return error.OutOfMemory,
-        else => return error.InternalError,
-    };
-    const code = bytecode_inline.inlineProgram(allocator, plain) catch |err| switch (err) {
-        error.OutOfMemory => return error.OutOfMemory,
-        else => return error.InternalError,
-    };
-    const canon: Canon = .{ .allocator = allocator, .inputs = inputs, .program = program, .records = code.records };
-    var out: std.ArrayList(Checked) = .empty;
-    for (code.functions, selected, 0..) |function, chosen, index| {
-        if (!chosen or std.mem.eql(u8, function.name, entry_adapter.wrapper_name)) continue;
-        const name = try canonicalName(allocator, inputs.compilation, program.functions[index]);
-        if (inputs.root) |root| if (std.mem.startsWith(u8, name, root) and std.mem.startsWith(u8, name[root.len..], "::")) continue;
-        var hash = std.crypto.hash.Blake3.init(.{});
-        hash.update("oracle-lowered-v1");
-        for (function.scope.locals) |local| {
-            try canon.value(&hash, []const u8, local.name);
-            try canon.value(&hash, typed.Type, local.ty);
-        }
-        for (function.scope.instructions) |instruction| try canon.value(&hash, bytecode.Instruction, instruction);
-        var digest: [32]u8 = undefined;
-        hash.final(&digest);
-        try out.append(allocator, .{ .name = name, .digest = digest, .stood_in = false });
-    }
-    std.mem.sort(Checked, out.items, {}, checkedBefore);
-    return out.items;
-}
-
-/// Canonical, program-independent hashing of lowered instructions.
-const Canon = struct {
-    allocator: std.mem.Allocator,
-    inputs: ResultInputs,
-    program: typed.Program,
-    records: []const typed.Record,
-
-    fn value(self: Canon, hash: *std.crypto.hash.Blake3, comptime T: type, item: T) Error!void {
-        if (T == typed.Type) return frameHash(hash, typed.typeName(item, self.records));
-        if (T == typed.FunctionId) {
-            const index = @backingInt(item);
-            if (index >= self.program.functions.len) return frameHash(hash, "?");
-            return frameHash(hash, try canonicalName(self.allocator, self.inputs.compilation, self.program.functions[index]));
-        }
-        if (T == source.Span) return self.span(hash, item);
-        switch (@typeInfo(T)) {
-            .void => {},
-            .bool => hash.update(&.{@as(u8, @intFromBool(item))}),
-            .int => hash.update(std.mem.asBytes(&@as(i128, @intCast(item)))),
-            .float => hash.update(std.mem.asBytes(&@as(f64, @floatCast(item)))),
-            .@"enum" => hash.update(std.mem.asBytes(&@as(i128, @intCast(@backingInt(item))))),
-            .optional => |optional| if (item) |present| {
-                hash.update("+");
-                try self.value(hash, optional.child, present);
-            } else hash.update("-"),
-            .pointer => |pointer| {
-                if (pointer.size == .one and pointer.child == typed.Blob) return self.value(hash, typed.Blob, item.*);
-                if (pointer.size != .slice) @compileError("canonical hashing needs a slice: " ++ @typeName(T));
-                if (pointer.child == u8) return frameHash(hash, item);
-                hash.update(std.mem.asBytes(&@as(u64, item.len)));
-                for (item) |element| try self.value(hash, pointer.child, element);
-            },
-            .array => |array| for (item) |element| try self.value(hash, array.child, element),
-            .@"struct" => |structure| inline for (structure.field_names, structure.field_types) |field, Field| try self.value(hash, Field, @field(item, field)),
-            .@"union" => |choice| {
-                const tag = std.meta.activeTag(item);
-                frameHash(hash, @tagName(tag));
-                inline for (choice.field_names, choice.field_types) |field, Field| {
-                    if (tag == @field(std.meta.Tag(T), field)) try self.value(hash, Field, @field(item, field));
-                }
-            },
-            else => @compileError("canonical hashing needs a rule for " ++ @typeName(T)),
-        }
-    }
-
-    /// A position as its module and module-local offsets; one inside an
-    /// interface's text is mapped back to the source it was copied from.
-    fn span(self: Canon, hash: *std.crypto.hash.Blake3, item: source.Span) Error!void {
-        const compilation = self.inputs.compilation;
-        const at = compilation.src.originalSpan(item) catch return frameHash(hash, "unmapped");
-        const module = compilation.index.project.modules.items[at.input].name;
-        var local = at.span;
-        if (self.inputs.stubs) |library| if (!std.mem.eql(u8, module, self.inputs.own)) if (library.by_name.get(module)) |interface| {
-            local = mapStub(interface, local) orelse return frameHash(hash, "unmapped");
-        };
-        frameHash(hash, module);
-        hash.update(std.mem.asBytes(&[2]u64{ local.start, local.end }));
-    }
-};
-
-fn frameHash(hash: *std.crypto.hash.Blake3, bytes: []const u8) void {
-    hash.update(std.mem.asBytes(&@as(u64, bytes.len)));
-    hash.update(bytes);
+    return .{ .diagnostics = located.items, .functions = checked.items, .contexts = contexts.items, .unmapped = unmapped };
 }
 
 /// Which checked functions an interface's facts stood in for: the ordinary
@@ -628,8 +501,6 @@ pub const Comparison = struct {
     functions: Tally = .{},
     /// The module's own declarations' dependency contexts.
     contexts: Tally = .{},
-    /// Lowered and inlined bodies, instruction by instruction.
-    lowered: Tally = .{},
     /// Diagnostics the module's check reported that the whole program did not.
     extra_diagnostics: []const Located = &.{},
     /// Diagnostics the module's check reported, for the whole-program union.
@@ -638,7 +509,7 @@ pub const Comparison = struct {
 
     /// Everything that differed, counted.
     pub fn mismatches(self: Comparison) usize {
-        return self.functions.mismatches.len + self.contexts.mismatches.len + self.lowered.mismatches.len + self.extra_diagnostics.len + self.unmapped;
+        return self.functions.mismatches.len + self.contexts.mismatches.len + self.extra_diagnostics.len + self.unmapped;
     }
 };
 
@@ -669,7 +540,6 @@ fn tally(allocator: std.mem.Allocator, whole: []const Checked, single: []const C
 pub fn compare(allocator: std.mem.Allocator, whole: Result, single: Result, module: []const u8) Error!Comparison {
     var out: Comparison = .{ .diagnostics = single.diagnostics, .unmapped = single.unmapped };
     out.functions = try tally(allocator, whole.functions, single.functions);
-    out.lowered = try tally(allocator, whole.lowered, single.lowered);
     var contexts: std.StringHashMapUnmanaged([32]u8) = .empty;
     for (whole.contexts) |context| try contexts.put(allocator, context.key, context.context);
     var differing: std.ArrayList([]const u8) = .empty;

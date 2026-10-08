@@ -478,7 +478,7 @@ fn checkedScenario(allocator: std.mem.Allocator) !void {
     try project.load(files.provider(), "main", .{});
     var index = try interfaces.build(&project);
     var compilation = try project_compile_module.Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     const result = try native.run(&compilation);
     try t.expectEqual(@as(i64, 12), result.value);
 }
@@ -542,7 +542,7 @@ test "shared record types cross module boundaries and hidden names do not shadow
     try project.load(files.provider(), "main", .{});
     var index = try interfaces.build(&project);
     var compilation = try project_compile_module.Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     const result = try native.run(&compilation);
     try t.expectEqual(@as(i64, 7), result.value);
 }
@@ -741,42 +741,6 @@ test "module quality reports distinguish main export and private helper reachabi
     try qualityScenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), qualityScenario, .{});
-}
-
-fn nativeModuleScenario(allocator: std.mem.Allocator) !void {
-    var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes =
-        \\module main
-        \\import helper
-        \\
-        \\
-        \\def main() -> i64:
-        \\    return helper.twice(7)
-        },
-        .{ .path = "helper.my", .bytes =
-        \\module helper
-        \\
-        \\
-        \\public def twice(x: i64) -> i64 effects():
-        \\    return x * 2
-        },
-    } };
-    var project = graph.Project.init(allocator);
-    defer project.deinit();
-    try project.load(files.provider(), "main", .{});
-    var index = try interfaces.build(&project);
-    var compilation = try project_compile_module.Compilation.init(&index);
-    const first = try compilation.emitQbe(allocator);
-    defer allocator.free(first);
-    const second = try compilation.emitQbe(allocator);
-    defer allocator.free(second);
-    try t.expectEqualStrings(first, second);
-    try t.expect(std.mem.indexOf(u8, first, "helper") != null);
-}
-test "module native emission is deterministic and cleans all failed allocations" {
-    try nativeModuleScenario(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), nativeModuleScenario, .{});
 }
 
 fn expectQualifiedSyntax(syntax: @import("ast.zig").Program, src: @import("source.zig").Source) !void {
@@ -1201,7 +1165,6 @@ fn acceptNamedConstraintModule(main: []const u8, contracts: []const u8) !void {
     var index = try interfaces.build(&project);
     var compilation = try project_compile_module.Compilation.init(&index);
     try compilation.check();
-    try compilation.emit();
     try t.expectEqual(@as(i64, 0), (try native.run(&compilation)).value);
 }
 
@@ -1570,7 +1533,6 @@ fn acceptChecked(main: []const u8, dependency: []const u8) !void {
     var index = try interfaces.build(&project);
     var compilation = try project_compile_module.Compilation.init(&index);
     try compilation.check();
-    try compilation.emit();
     try t.expectEqual(@as(i64, 0), (try native.run(&compilation)).value);
 }
 
@@ -1629,7 +1591,7 @@ fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
     try project.load(files.provider(), "main", .{});
     var index = try interfaces.build(&project);
     var compilation = try project_compile_module.Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     try t.expectEqual(@as(i64, 7), (try native.run(&compilation)).value);
     var nominal_instance = false;
     for (compilation.program.?.functions) |function| {
@@ -1770,7 +1732,7 @@ fn scatteredExports(allocator: std.mem.Allocator) !void {
         last = unit.symbols.items[id].span.start;
     }
     var compilation = try project_compile_module.Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     try t.expectEqual(@as(i64, 0), (try native.run(&compilation)).value);
 }
 
@@ -1860,7 +1822,7 @@ fn facadeScenario(allocator: std.mem.Allocator) !void {
     try t.expect(std.mem.indexOf(u8, text, "module facade\n  export type Distance\n") != null);
     try t.expect(std.mem.indexOf(u8, text, "  export function make def(value:i64)->shared.units::Distance") != null);
     var compilation = try project_compile_module.Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     const result = try native.run(&compilation);
     try t.expectEqual(@as(i64, 42), result.value);
 }

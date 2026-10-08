@@ -33,7 +33,6 @@ def late(first: bytes, second: bytes) -> bytes:
     return first
 
 
-# spec-case: RC-BORROW-LOOP-1
 public def test_search_first_late_missing_and_empty() -> bool:
     nodes = [Node(Span(bytes([65, 66]), 1), 4), Node(Span(bytes([67, 68]), 2), 9)]
     first = find(nodes, 4)
@@ -44,7 +43,6 @@ public def test_search_first_late_missing_and_empty() -> bool:
     return first.span.text == b"AB" and last.span.text == b"CD" and absent.id == -1 and none.span.text == b""
 
 
-# spec-case: RC-BORROW-LOOP-1
 public def test_callers_snapshots_keep_ordinary_ownership() -> bool:
     nodes = [Node(Span(bytes([65]), 3), 1)]
     snapshot = nodes
@@ -53,7 +51,6 @@ public def test_callers_snapshots_keep_ordinary_ownership() -> bool:
     return snapshot[0].span.text == b"A" and result.span.text == b"A" and nodes[0].span.text == b"B"
 
 
-# spec-case: RC-BORROW-LOOP-1
 public def test_indirect_entry_stays_owned() -> bool:
     selected = find
     nodes = [Node(Span(bytes([81]), 8), 2)]
@@ -62,7 +59,6 @@ public def test_indirect_entry_stays_owned() -> bool:
     return result.span.text == b"Q" and result.span.start == 8
 
 
-# spec-case: RC-BORROW-LOOP-1
 public def test_loop_backedge_returns_the_second_live_argument() -> bool:
     first = bytes([65])
     second = bytes([66])

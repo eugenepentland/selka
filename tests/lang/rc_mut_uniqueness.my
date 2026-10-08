@@ -11,7 +11,6 @@ def capture_and_write(items: mut list[int]) -> list[int]:
     return before
 
 
-# spec-case: RC-MUT-UNIQUE-1
 public def test_caller_and_callee_snapshots_survive_mutable_scalar_writes() -> bool:
     items = [1, 2]
     caller = items
@@ -25,7 +24,6 @@ def replace_and_write(items: mut list[int], other: list[int]) -> list[int]:
     return items
 
 
-# spec-case: RC-MUT-UNIQUE-1
 public def test_rebinding_a_mutable_parameter_requires_fresh_uniqueness() -> bool:
     items = [1]
     other = [2]

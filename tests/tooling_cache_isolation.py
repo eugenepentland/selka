@@ -45,7 +45,6 @@ def main():
         assert not (docs / ".mylang-cache").exists(), "doctest wrote its document root"
         assert not (work / ".mylang-cache").exists(), "doctest children leaked a cwd cache"
         assert not list(scratch.glob("doctest-*")), "doctest left its scratch workspace"
-        # spec-case: TEST-FRAME-ADVICE-1
         source.write_text("def recurse(n: int) -> bool:\n    if n == 0:\n        return True\n    return recurse(n - 1)\n\npublic def test_depth() -> bool:\n    return recurse(20)\n")
         failure = run(compiler, ["test", str(source), "--no-cache", "--cache-dir", str(cache), "--max-frames", "2"], work, status=1)
         assert "R_FRAME_LIMIT" in failure.stdout + failure.stderr

@@ -19,13 +19,11 @@ def produce() -> Owner:
     return Owner([1], Plain(Marker.second, 42))
 
 
-# spec-case: RC-PLAIN-PROJECTION-1
 public def test_plain_record_projection_survives_parent_cleanup() -> bool:
     value = produce().plain
     return value.number == 42 and value.marker == Marker.second
 
 
-# spec-case: RC-PLAIN-PROJECTION-1
 public def test_plain_enum_projection_survives_parent_cleanup() -> bool:
     return produce().plain.marker == Marker.second
 

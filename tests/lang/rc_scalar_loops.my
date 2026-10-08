@@ -12,17 +12,14 @@ def with_owner(items: list[int], count: int) -> int:
     return total + items[-1]
 
 
-# spec-case: RC-SCALAR-LOOP-VERSION-1
 public def test_numeric_guards_keep_long_short_and_empty_results() -> bool:
     return calculate(64, 0) == 14112 and calculate(4, 0) == 42 and calculate(0, 17) == 17 and calculate(-3, 19) == 19
 
 
-# spec-case: RC-SCALAR-LOOP-VERSION-1
 public def test_negative_and_large_initial_values_keep_checked_fallback() -> bool:
     return calculate(64, -31) == 14081 and calculate(0, 9223372036854775807) == 9223372036854775807
 
 
-# spec-case: RC-SCALAR-LOOP-VERSION-1
 public def test_ownership_outside_numeric_loop_remains_live() -> bool:
     items = [3, 9]
     saved = items

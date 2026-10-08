@@ -33,7 +33,7 @@ def record_paths(value: mut Box, other: Box, choose: bool):
     value.n += 4
 
 
-# spec-case: MUT-REBIND-CALLER-1
+# spec: MUT-REBIND-CALLER-1
 public def test_conditional_list_rebind_reaches_caller_and_preserves_sources() -> bool:
     items = [1]
     saved = items

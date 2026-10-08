@@ -9,8 +9,7 @@
 //! which sees the updated source. `--check` runs one round and writes nothing.
 const std = @import("std");
 const project_config = @import("mylang").project_config;
-const fs = @import("qbe_build_io.zig");
-const snapshot = @import("native_test_snapshot.zig");
+const reach = @import("project_reach.zig");
 const input_probe = @import("input_probe.zig");
 
 const usage = "usage: mylang fix [--check] [--diagnostics=text|json] [--cache-dir=DIR] [--no-cache] <entry.my|directory>\n";
@@ -107,8 +106,6 @@ fn runCommand(process: std.process.Init, args: []const []const u8) !u8 {
         try std.Io.File.stderr().writeStreamingAll(process.io, message);
         return 2;
     };
-    var context = try fs.Context.init(process.gpa, process.io, process.environ_map);
-    defer context.deinit();
     var covered: std.StringHashMapUnmanaged(void) = .empty;
     var status: u8 = 0;
     for (entries) |entry| {
@@ -117,7 +114,7 @@ fn runCommand(process: std.process.Init, args: []const []const u8) !u8 {
         status = @max(status, outcome);
         if (outcome == 2) break;
         // A module an entry imports was checked, and fixed, with it.
-        const reached = snapshot.reach(context, entry) catch continue;
+        const reached = reach.reach(allocator, process.io, entry) catch continue;
         for (reached) |path| try covered.put(allocator, path, {});
     }
     try summarize(&session);
@@ -200,7 +197,7 @@ fn fixEntry(session: *Session, entry: []const u8) !u8 {
     var round: usize = 0;
     while (round < max_rounds) : (round += 1) {
         const result = try check(session, entry, true);
-        if (fs.exitCode(result.term) > 1) {
+        if (reach.exitCode(result.term) > 1) {
             try std.Io.File.stderr().writeStreamingAll(session.io, result.stderr);
             return 2;
         }
@@ -219,7 +216,7 @@ fn fixEntry(session: *Session, entry: []const u8) !u8 {
     // The remaining diagnostics are the entry's own check, in the requested format.
     const final = try check(session, entry, session.options.json);
     try forward(session, final.stderr);
-    return @min(fs.exitCode(final.term), 2);
+    return @min(reach.exitCode(final.term), 2);
 }
 
 /// Print a final check's diagnostics, each one once per invocation. A

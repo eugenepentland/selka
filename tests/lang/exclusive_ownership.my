@@ -50,7 +50,6 @@ def change_pairs(a: mut Pair, b: mut Pair) -> int:
     return seen
 
 
-# spec-case: MUT-EXCLUSIVE-PROOFS-1
 public def test_disjoint_mut_record_parameters_keep_shared_inputs_independent() -> bool:
     owner = Owner(Box([1]), 0)
     other = owner
@@ -59,7 +58,6 @@ public def test_disjoint_mut_record_parameters_keep_shared_inputs_independent() 
     return owner.box.items == [1, 2] and owner.count == 0 and other.box.items == [1] and other.count == 1 and kept.box.items == [1] and kept.count == 0
 
 
-# spec-case: MUT-EXCLUSIVE-PROOFS-1
 public def test_disjoint_mut_list_parameters_return_only_the_selected_payload() -> bool:
     items = [Item.payload(Payload(3, [1]))]
     other = items
@@ -68,7 +66,6 @@ public def test_disjoint_mut_list_parameters_return_only_the_selected_payload() 
     return items == [Item.payload(Payload(0, [1, 2]))] and other == [Item.payload(Payload(3, [1])), Item.empty] and kept == [Item.payload(Payload(3, [1]))]
 
 
-# spec-case: MUT-EXCLUSIVE-PROOFS-1
 public def test_disjoint_mut_plain_record_parameters_use_their_own_storage() -> bool:
     a = Pair(5, 9)
     b = a

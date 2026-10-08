@@ -26,13 +26,11 @@ const Outcome = struct {
     accepted: bool,
     diagnostics: []const u8,
     manifest: ?[]const u8,
-    qbe: ?[]const u8,
     manifest_error: ?anyerror,
 
     fn deinit(self: Outcome, allocator: std.mem.Allocator) void {
         allocator.free(self.diagnostics);
         if (self.manifest) |value| allocator.free(value);
-        if (self.qbe) |value| allocator.free(value);
     }
 };
 
@@ -78,13 +76,12 @@ fn evaluate(
         // A rejected program must fail the same exported manifest query on both sides.
         var manifest_error: ?anyerror = null;
         if (compilation.exportRoots(allocator)) |_| {} else |err| manifest_error = err;
-        return .{ .accepted = false, .diagnostics = try diagnostics.toOwnedSlice(allocator), .manifest = null, .qbe = null, .manifest_error = manifest_error };
+        return .{ .accepted = false, .diagnostics = try diagnostics.toOwnedSlice(allocator), .manifest = null, .manifest_error = manifest_error };
     }
     const roots = try compilation.exportRoots(allocator);
     defer allocator.free(roots);
     const manifest = try schema_graph.render(allocator, compilation.index, compilation.program.?, roots);
-    const qbe = try compilation.emitQbe(allocator);
-    return .{ .accepted = true, .diagnostics = try diagnostics.toOwnedSlice(allocator), .manifest = manifest, .qbe = qbe, .manifest_error = null };
+    return .{ .accepted = true, .diagnostics = try diagnostics.toOwnedSlice(allocator), .manifest = manifest, .manifest_error = null };
 }
 
 fn sameOptional(a: ?[]const u8, b: ?[]const u8) bool {
@@ -502,10 +499,7 @@ fn expectCase(allocator: std.mem.Allocator, case: Case) !void {
     try t.expectEqualStrings(clean.diagnostics, warm.diagnostics);
     try t.expect(sameOptional(clean.manifest, warm.manifest));
     try t.expectEqual(clean.manifest_error, warm.manifest_error);
-    if (warm.accepted) {
-        try t.expect(sameOptional(clean.qbe, warm.qbe));
-        try t.expect(warm.qbe.?.len > 0);
-    }
+    if (warm.accepted) {}
     try t.expectEqual(case.reused, observed.reused);
     try t.expectEqual(case.checked, observed.checked);
 }
@@ -663,20 +657,4 @@ test "invalidation matrix damaged frontend entries recompute the clean program" 
         defer t.allocator.free(right);
         try t.expectEqualStrings(left, right);
     }
-    const warm_qbe = try warm.emitQbe(t.allocator);
-    defer t.allocator.free(warm_qbe);
-    const fresh_qbe = try fresh.emitQbe(t.allocator);
-    defer t.allocator.free(fresh_qbe);
-    try t.expectEqualStrings(fresh_qbe, warm_qbe);
-}
-
-// The native-build module cannot import the language module's cache_key.zig, so
-// its shadow contract must stay byte-for-byte identical.
-// spec-case: INCREMENTAL-KEYS-1
-test "invalidation matrix qbe contract shadow matches the canonical fingerprint" {
-    const canonical = try cache_key.Contract.default.fingerprint(t.allocator);
-    defer t.allocator.free(canonical);
-    const shadow = try @import("qbe_build_cache.zig").Contract.default.fingerprint(t.allocator);
-    defer t.allocator.free(shadow);
-    try t.expectEqualStrings(canonical, shadow);
 }

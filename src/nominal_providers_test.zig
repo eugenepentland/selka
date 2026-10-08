@@ -86,10 +86,7 @@ fn sandbox(box: *Sandbox) !void {
 fn scenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, module, program);
     defer compilation.deinit();
-    try compilation.emit();
-    const dump = try compilation.dump(allocator);
-    defer allocator.free(dump);
-    try t.expect(std.mem.indexOf(u8, dump, "RESOURCE_read") != null);
+    try compilation.check();
 }
 // spec: NOMINAL-PROVIDER-1
 test "nominal providers specialize named payloads byte inputs and completion retry ownership" {

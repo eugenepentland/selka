@@ -62,7 +62,6 @@ def heap_frame(cursor: mut Cursor, values: [4096]int) -> int:
     return item + padding[0]
 
 
-# spec-case: RC-CALLER-FIELD-READ-1
 public def test_direct_and_forwarded_references_keep_callers_value() -> bool:
     cursor = Cursor([7, 11, 13], 0)
     first = advance(mut cursor)
@@ -70,7 +69,6 @@ public def test_direct_and_forwarded_references_keep_callers_value() -> bool:
     return first == 7 and second == 11 and cursor.index == 2 and cursor.code == [7, 11, 13]
 
 
-# spec-case: RC-CALLER-FIELD-READ-1
 public def test_negative_index_and_later_replacement_keep_scalar_snapshot() -> bool:
     cursor = Cursor([7, 11, 13], -1)
     snapshot = cursor
@@ -78,7 +76,6 @@ public def test_negative_index_and_later_replacement_keep_scalar_snapshot() -> b
     return item == 13 and cursor.code == [29] and snapshot.code == [7, 11, 13]
 
 
-# spec-case: RC-CALLER-FIELD-READ-1
 public def test_repeated_entry_and_rebinding_keep_anchor_current() -> bool:
     cursor = Cursor([7], 0)
     total = 0
@@ -92,7 +89,6 @@ public def test_repeated_entry_and_rebinding_keep_anchor_current() -> bool:
 
 # `cross(mut cursor, mut cursor)` is E_MUTATION_OVERLAP (MUT-EXCLUSIVE-1), so
 # the two inout homes are always distinct; swapping them keeps both readers.
-# spec-case: RC-CALLER-FIELD-READ-1
 public def test_distinct_inout_homes_in_both_orders() -> bool:
     cursor = Cursor([7], 0)
     second = Cursor([11], 0)
@@ -101,20 +97,17 @@ public def test_distinct_inout_homes_in_both_orders() -> bool:
     return first == 7 and again == 31 and second.code == [31] and cursor.code == [31]
 
 
-# spec-case: RC-CALLER-FIELD-READ-1
 public def test_callback_capture_retains_original_field_value() -> bool:
     cursor = Cursor([7], 0)
     item = callback(mut cursor)
     return item == 7 and cursor.code == [41]
 
 
-# spec-case: RC-CALLER-FIELD-READ-1
 public def test_readonly_parameter_retains_its_separate_convention() -> bool:
     cursor = Cursor([7, 11], 1)
     return readonly(cursor) == 11 and cursor.index == 1
 
 
-# spec-case: RC-CALLER-FIELD-READ-1
 public def test_live_leaf_reached_through_parent_field() -> bool:
     rows = [Cursor([7, 11], 0)]
     snapshot = rows

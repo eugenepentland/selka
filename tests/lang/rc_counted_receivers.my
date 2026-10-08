@@ -51,7 +51,6 @@ def size(tree: Tree) -> int:
             return total
 
 
-# spec-case: RC-INERT-COUNTED-RECEIVER-1
 public def test_stored_row_is_an_independent_value() -> bool:
     table = fresh_table()
     row = [7, 8]

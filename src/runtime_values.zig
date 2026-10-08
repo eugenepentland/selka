@@ -153,11 +153,6 @@ pub const Value = union(enum) {
         };
     }
 
-    /// Test an authority category without reading an inactive union field.
-    pub fn isCapability(self: Value, kind: std.meta.Tag(CapabilityValue)) bool {
-        return self == .capability and self.capability == kind;
-    }
-
     /// Construct the representation of a previously range-checked integer.
     pub fn number(ty: Type, value: i128) Value {
         std.debug.assert(ty.isInteger());

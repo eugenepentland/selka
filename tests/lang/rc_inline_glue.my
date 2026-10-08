@@ -27,7 +27,6 @@ def load(holder: Holder) -> Frame:
     return Frame(holder.frame.constants, holder.items, holder.frame.names, holder.frame.ip + 1)
 
 
-# spec-case: RC-PUBLISH-FAST-1
 public def test_published_lists_are_independent_values() -> bool:
     holder = Holder(Frame([1], [2], ["a"], 0), [3])
     frame = load(holder)
@@ -36,7 +35,6 @@ public def test_published_lists_are_independent_values() -> bool:
     return holder.frame.constants == [1] and holder.items == [3] and frame.constants == [1, 4] and frame.code == [3, 5]
 
 
-# spec-case: RC-FLAT-DROP-1
 public def test_replaced_frames_release_their_lists() -> bool:
     holder = Holder(Frame([1], [2], ["a"], 0), [3])
     frame = load(holder)

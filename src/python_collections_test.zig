@@ -61,7 +61,6 @@ test "iteration break exits a grown list without another iteration check" {
     try t.expectEqual(@as(i64, 42), (try native.run(&compilation)).value);
 }
 
-// spec-case: RC-PLACE-ROLE-1
 test "record field growth refreshes the active iterator place" {
     var compilation = try language.Compilation.init(t.allocator, "field_iteration.my",
         \\record Holder:

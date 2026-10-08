@@ -40,8 +40,8 @@ fn scenario(allocator: std.mem.Allocator) !void {
         \\    return 0
     );
     defer c.deinit();
-    try c.emit();
-    const code = c.code.?;
+    try c.check();
+    const code = c.program.?;
     var domain: typed.Type = undefined;
     for (code.records) |record| if (record.contract.codec != null) {
         domain = record.id;
@@ -178,7 +178,7 @@ fn projectScenario(allocator: std.mem.Allocator) !void {
     try project.load(.{ .context = null, .read = Provider.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var c = try language.project_compile.Compilation.init(&index);
-    try c.emit();
+    try c.check();
     try t.expectEqual(@as(i64, 7), (try native.run(&c)).value);
     const json = try @import("schema.zig").render(allocator, &c);
     defer allocator.free(json);

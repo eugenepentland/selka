@@ -58,7 +58,6 @@ def total(rt: Rt) -> int:
     return sum
 
 
-# spec-case: RC-CLOSED-FIELD-TRANSFER-2
 public def test_owned_local_writeback_loop_appends_in_place() -> bool:
     it = fresh()
     i = 0

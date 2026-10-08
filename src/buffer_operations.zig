@@ -662,15 +662,3 @@ fn boundedMethod(kind: Kind, arguments: usize) Kind {
         else => kind,
     };
 }
-
-/// Whether one operation uses the new statically selected Python runtime entries.
-pub fn pythonOperation(kind: Kind, bytes: bool) bool {
-    if (kind == .text_repr) return true;
-    if (trim(kind) != null) return bytes or kind.arity() == 1;
-    if (search(kind) == null) return false;
-    return switch (kind) {
-        .find, .starts_with, .ends_with => false,
-        .count => bytes,
-        else => true,
-    };
-}

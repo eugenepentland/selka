@@ -11,7 +11,6 @@ def frequencies(seq: str, k: int) -> dict[str, int]:
     return counts
 
 
-# spec-case: RC-ANCHORED-RANGE-KEY-1
 public def test_counted_slices_store_owned_copies_of_new_keys() -> bool:
     text = "GATTACA" + "GATTACA"
     counts = frequencies(text, 2)
@@ -19,7 +18,6 @@ public def test_counted_slices_store_owned_copies_of_new_keys() -> bool:
     return counts["GA"] == 2 and counts["AT"] == 2 and counts["AG"] == 1 and len(counts) == 7 and text == "changed"
 
 
-# spec-case: RC-ANCHORED-RANGE-KEY-1
 public def test_empty_and_whole_slices_count_the_same() -> bool:
     single = frequencies("ACGT", 4)
     none = frequencies("ACGT", 5)
@@ -39,7 +37,6 @@ def presence(seq: str, probe: str) -> int:
     return found * 100 + counts[probe]
 
 
-# spec-case: RC-ANCHORED-RANGE-KEY-1
 public def test_contains_and_get_read_the_borrowed_span() -> bool:
     return presence("AACAA", "A") == 404 and presence("CCC", "C") == 303
 
@@ -53,7 +50,6 @@ def rewritten(seq: str, k: int) -> dict[str, int]:
     return counts
 
 
-# spec-case: RC-ANCHORED-RANGE-KEY-1
 public def test_a_rewritten_parameter_keeps_owned_slices() -> bool:
     counts = rewritten("ACGA", 2)
     return counts["AC"] == 1 and counts["GA"] == 1 and counts["TT"] == 1 and len(counts) == 3
@@ -67,7 +63,6 @@ def kept(seq: str, k: int) -> list[str]:
     return keys
 
 
-# spec-case: RC-ANCHORED-RANGE-KEY-1
 public def test_slices_that_escape_are_built_as_texts() -> bool:
     source = "xy" + "z"
     keys = kept(source, 2)

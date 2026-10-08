@@ -27,7 +27,6 @@ def total(value: Branch) -> int:
     return result
 
 
-# spec-case: RC-FRESH-SPAN-1
 public def test_nullable_literal_and_reordered_fields_publish_the_complete_value() -> bool:
     value = branch(5)
     return total(value) == 57 and value.enabled and not branch(0).enabled
@@ -48,7 +47,6 @@ def callback(depth: int) -> Branch:
     return Branch(0, True, child, child)
 
 
-# spec-case: RC-FRESH-SPAN-1
 public def test_uncertified_aliases_keep_their_generic_ownership() -> bool:
     value = callback(4)
     snapshot = value
@@ -75,7 +73,6 @@ def last(value: LiteralChain) -> int:
             return last(rest)
 
 
-# spec-case: RC-FRESH-SPAN-1
 public def test_inactive_counted_variant_fields_keep_literal_payload_bits() -> bool:
     return last(literal_chain(12)) == 17
 

@@ -50,7 +50,6 @@ def held(rows: list[HeldRow], output: mut list[int]) -> int:
     return number
 
 
-# spec-case: RC-PLAIN-FIELD-LOAN-1
 public def test_nested_fields_keep_bounds_and_copy_the_scalar() -> bool:
     rows = [Row(Label(b"a" + bytes([49]), 3), 7), Row(Label(b"b" + bytes([50]), 5), 11)]
     output: list[int] = []
@@ -60,20 +59,17 @@ public def test_nested_fields_keep_bounds_and_copy_the_scalar() -> bool:
     return first == 3 and last == 5 and output == [3, 5]
 
 
-# spec-case: RC-SCALAR-LENGTH-BODY-1
 public def test_readonly_length_loop_keeps_managed_local_bits_borrowed() -> bool:
     rows = [Row(Label(b"a" + bytes([49]), 3), 7), Row(Label(b"b" + bytes([50]), 5), 11)]
     return total(rows) == 8 and total([]) == 0 and rows[0].label.text == b"a1"
 
 
-# spec-case: RC-PLAIN-FIELD-LOAN-1
 public def test_callback_keeps_the_receiver_snapshot() -> bool:
     rows = [Row(Label(b"old" + bytes([49]), 3), 7)]
     value = callback(mut rows)
     return value == 3 and rows[0].label.number == 9
 
 
-# spec-case: RC-PLAIN-FIELD-LOAN-1
 public def test_escaped_record_keeps_ordinary_ownership() -> bool:
     rows = [Row(Label(b"old" + bytes([49]), 3), 7)]
     output: list[int] = []
@@ -82,7 +78,6 @@ public def test_escaped_record_keeps_ordinary_ownership() -> bool:
     return row.label.text == b"old1" and row.label.number == 3 and output == [7]
 
 
-# spec-case: RC-PLAIN-FIELD-LOAN-1
 public def test_snapshot_sibling_stays_independent() -> bool:
     mapping = {1: 7}
     rows = [HeldRow(list(mapping.values()), 3)]

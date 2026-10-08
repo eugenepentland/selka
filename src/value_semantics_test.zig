@@ -1,12 +1,10 @@
 //! Value semantics (`VALUE-SEMANTICS-1`..`-7`): the checker's verdicts and
-//! messages with the switch on and off, the copy sites lowering places and the
-//! ones the ownership analysis keeps, and the cache keys the switch changes.
+//! messages with the switch on and off.
 //! Guest behaviour under the switch is tested in `tests/value_semantics`.
 const std = @import("std");
 const t = std.testing;
 const compiler = @import("compiler.zig");
 const values = @import("value_semantics.zig");
-const fragments = @import("qbe_fragments.zig");
 
 const entry = "\n\ndef main() -> int:\n    return 0\n";
 
@@ -111,9 +109,6 @@ test "physical return origins survive value copies and chained accessors" {
         found += 1;
     }
     try t.expectEqual(@as(usize, 4), found);
-    const explanation = try compilation.explainOwnership(t.allocator);
-    defer t.allocator.free(explanation);
-    try t.expect(std.mem.indexOf(u8, explanation, "\"borrow_origin\":{\"kind\":\"params\",\"params\":[0]}") != null);
 }
 
 /// The switch as a test left it, restored when the test ends.
@@ -166,239 +161,6 @@ fn expectCodes(body: []const u8, off: []const u8, on: []const u8) !void {
 /// The message of the first error of `body` under the switch.
 fn switchedMessage(a: std.mem.Allocator, body: []const u8) ![]const u8 {
     return (try verdict(a, body, true)).message;
-}
-
-/// How many copy sites lowering placed in `source`, and how many of them the
-/// ownership analysis keeps as real copies.
-const Sites = struct { placed: usize = 0, copies: usize = 0 };
-
-fn sites(source: []const u8, on: bool) !Sites {
-    const saved = Saved.set(on);
-    defer saved.restore();
-    var compilation = try compiler.Compilation.init(t.allocator, "sites.my", source);
-    defer compilation.deinit();
-    const text = try compilation.explainOwnership(t.allocator);
-    defer t.allocator.free(text);
-    var counted: Sites = .{};
-    counted.placed = std.mem.count(u8, text, "\"site\":");
-    counted.copies = std.mem.count(u8, text, "\"copy\":true");
-    return counted;
-}
-
-const assignments =
-    \\def main() -> int:
-    \\    a = [1]
-    \\    b = a
-    \\    b.append(2)
-    \\    c = b
-    \\    c.append(3)
-    \\    return len(a) * 10 + len(c)
-    \\
-;
-
-fn fieldReturnSites(body: []const u8) !Sites {
-    const prefix =
-        \\record Box:
-        \\    items: list[int]
-        \\
-        \\record Owner:
-        \\    box: Box
-        \\    count: int
-        \\    others: list[Box]
-        \\
-        \\def push(box: mut Box):
-        \\    box.items.append(2)
-        \\
-        \\def change(owner: mut Owner, stop: bool):
-        \\    work = owner.box
-        \\    push(mut work)
-        \\
-    ;
-    const source = try std.mem.concat(t.allocator, u8, &.{ prefix, body, entry });
-    defer t.allocator.free(source);
-    return sites(source, true);
-}
-
-// spec: COW-FIELD-RETURN-1
-test "record field return avoids copies only without observations or exits" {
-    const returned = try fieldReturnSites("    owner.box = work\n");
-    try t.expect(returned.placed >= 2);
-    try t.expectEqual(@as(usize, 0), returned.copies);
-    const sibling = try fieldReturnSites("    seen = owner.count\n    owner.box = work\n    assert seen == 7\n");
-    try t.expectEqual(@as(usize, 0), sibling.copies);
-    const indexed = try fieldReturnSites("    seen = owner.others[0].items[-1]\n    owner.box = work\n    assert seen == 7\n");
-    try t.expectEqual(@as(usize, 0), indexed.copies);
-    const observed = try fieldReturnSites("    seen = len(owner.box.items)\n    owner.box = work\n    assert seen == 1\n");
-    try t.expect(observed.copies >= 1);
-    const branched = try fieldReturnSites("    if stop:\n        return\n    owner.box = work\n");
-    try t.expect(branched.copies >= 1);
-    const retained = try fieldReturnSites("    owner.box = work\n    push(mut work)\n    assert len(work.items) == 3\n");
-    try t.expect(retained.copies >= 1);
-    const conditional_observation = try fieldReturnSites("    if stop:\n        assert len(owner.box.items) == 1\n    owner.box = work\n");
-    try t.expect(conditional_observation.copies >= 1);
-}
-
-// spec-case: COW-FIELD-RETURN-1
-test "record field return accepts closed loops and match joins" {
-    const loop = try fieldReturnSites("    i = 0\n    while i < 3:\n        push(mut work)\n        i += 1\n    owner.box = work\n");
-    try t.expectEqual(@as(usize, 0), loop.copies);
-    const matched = try fieldReturnSites("    choice: Option[int] = Some(3)\n    match choice:\n        case Some(n):\n" ++
-        "            for i in range(n):\n                push(mut work)\n        case None:\n            push(mut work)\n    owner.box = work\n");
-    try t.expectEqual(@as(usize, 0), matched.copies);
-    const observed = try fieldReturnSites("    for i in range(3):\n        assert len(owner.box.items) == 1\n        push(mut work)\n    owner.box = work\n");
-    try t.expect(observed.copies >= 1);
-    const exits = try fieldReturnSites("    for i in range(3):\n        push(mut work)\n        if stop:\n            return\n    owner.box = work\n");
-    try t.expect(exits.copies >= 1);
-    const breaks = try fieldReturnSites("    for i in range(3):\n        if stop:\n            break\n        push(mut work)\n    owner.box = work\n");
-    try t.expectEqual(@as(usize, 0), breaks.copies);
-    const continues = try fieldReturnSites("    for i in range(3):\n        if stop:\n            continue\n        push(mut work)\n    owner.box = work\n");
-    try t.expectEqual(@as(usize, 0), continues.copies);
-}
-
-// spec-case: COW-FIELD-RETURN-1
-test "record field return rejects an external branch into its store back" {
-    const source =
-        \\record Box:
-        \\    items: list[int]
-        \\
-        \\record Owner:
-        \\    box: Box
-        \\
-        \\def change(owner: mut Owner, stop: bool):
-        \\    if stop:
-        \\        work = owner.box
-        \\        work.items.append(2)
-        \\    else:
-        \\        work = Box([3])
-        \\    owner.box = work
-        \\
-    ;
-    const counted = try sites(source ++ entry, true);
-    try t.expect(counted.copies >= 1);
-}
-
-fn handoverSites(body: []const u8) !Sites {
-    const prefix =
-        \\record Holder:
-        \\    items: list[int]
-        \\    count: int
-        \\
-        \\def fill(h: mut Holder, other: list[int]):
-        \\
-    ;
-    const source = try std.mem.concat(t.allocator, u8, &.{ prefix, body, entry });
-    defer t.allocator.free(source);
-    return sites(source, true);
-}
-
-// spec: VALUE-SEMANTICS-13
-test "a field store of a local's last read hands the value over" {
-    const moved = try handoverSites("    items = [1, 2]\n    items.append(3)\n    h.items = items\n");
-    try t.expect(moved.placed >= 1);
-    try t.expectEqual(@as(usize, 0), moved.copies);
-    const read_after = try handoverSites("    items = [1, 2]\n    h.items = items\n    items.append(3)\n    h.count = len(items)\n");
-    try t.expect(read_after.copies >= 1);
-    const parameter = try handoverSites("    h.items = other\n");
-    try t.expect(parameter.copies >= 1);
-    const place = try handoverSites("    items = h.items\n    h.items = items\n    h.count = len(h.items)\n");
-    try t.expect(place.placed >= 1);
-    const looped = try handoverSites("    items = [1]\n    for i in range(3):\n        h.items = items\n        items.append(i)\n");
-    try t.expect(looped.copies >= 1);
-}
-
-// spec-case: VALUE-SEMANTICS-1
-test "value semantics off places no copy site at all" {
-    const off = try sites(assignments, false);
-    try t.expectEqual(@as(usize, 0), off.placed);
-    const on = try sites(assignments, true);
-    try t.expect(on.placed >= 2);
-}
-
-// spec-case: VALUE-SEMANTICS-2
-test "a copy another name still reads is kept and a dead source moves" {
-    // `b = a` copies (`a` is read after `b` is written); `c = b` moves (`b`
-    // is dead), as does the literal's move into `a`.
-    const on = try sites(assignments, true);
-    try t.expectEqual(@as(usize, 1), on.copies);
-    try t.expect(on.placed > on.copies);
-}
-
-// spec-case: VALUE-SEMANTICS-2
-test "a transfer neither side writes is a borrow and copies nothing" {
-    const shared =
-        \\def total(xs: list[int]) -> int:
-        \\    return len(xs)
-        \\
-        \\def main() -> int:
-        \\    a = [1, 2]
-        \\    b = a
-        \\    return total(b) + total(a)
-        \\
-    ;
-    const on = try sites(shared, true);
-    try t.expect(on.placed >= 1);
-    try t.expectEqual(@as(usize, 0), on.copies);
-}
-
-// spec: VALUE-BUFFER-FRESH-1
-test "a byte_buffer built from a list is fresh and copies nothing" {
-    const built =
-        \\def main() -> int:
-        \\    values: list[int] = [1, 2]
-        \\    buffer = byte_buffer(values)
-        \\    _ = buffer.append_byte(3)
-        \\    return len(buffer) + len(values)
-        \\
-    ;
-    // Only the list literal's transfer into `values` is a site. Before the rule
-    // the conversion into `buffer` was a second site and a copy.
-    const on = try sites(built, true);
-    try t.expectEqual(@as(usize, 1), on.placed);
-    try t.expectEqual(@as(usize, 0), on.copies);
-    // Only the conversion is fresh: naming the buffer again still transfers a
-    // place.
-    const renamed =
-        \\def main() -> int:
-        \\    values: list[int] = [1, 2]
-        \\    buffer = byte_buffer(values)
-        \\    other = buffer
-        \\    _ = other.append_byte(3)
-        \\    return len(buffer) + len(other)
-        \\
-    ;
-    const again = try sites(renamed, true);
-    try t.expect(again.placed >= 1);
-    try t.expect(again.copies >= 1);
-}
-
-// spec-case: VALUE-SEMANTICS-2
-test "a read-only list taken from a record borrows until a write" {
-    const through_class =
-        \\record Box:
-        \\    items: list[int]
-        \\
-        \\def main() -> int:
-        \\    box = Box(items=[1])
-        \\    taken = box.items
-        \\    return len(taken)
-        \\
-    ;
-    const on = try sites(through_class, true);
-    try t.expect(on.placed >= 1);
-    try t.expectEqual(@as(usize, 0), on.copies);
-}
-
-// spec-case: VALUE-SEMANTICS-2
-test "a shallow copy of nested lists copies the inner lists" {
-    const nested =
-        \\def main() -> int:
-        \\    grid = [[1], [2]]
-        \\    rows = grid.copy()
-        \\    return len(rows) + len(grid)
-        \\
-    ;
-    const on = try sites(nested, true);
-    try t.expect(on.copies >= 1);
 }
 
 // spec-case: VALUE-SEMANTICS-4
@@ -507,33 +269,6 @@ test "a mut record parameter is inout and its argument must be a local" {
     try t.expect(std.mem.indexOf(u8, try switchedMessage(arena.allocator(), "def f(n: mut int) -> None:\n    n = n + 1\n"), "return the new value instead") != null);
 }
 
-// spec-case: VALUE-SEMANTICS-5
-test "a read-only argument never overlaps and one a mut argument reaches is a snapshot" {
-    try expectCodes("def touch(x: mut list[int], y: list[int]) -> None:\n    x.append(len(y))\n\ndef use(a: mut list[int], b: list[int]) -> None:\n    touch(mut a, b)\n", "E_MUTATION_OVERLAP", "ok");
-    const helper =
-        \\def walk(adj: list[list[int]], node: int, path: mut list[int], found: mut list[list[int]]) -> None:
-        \\    path.append(node)
-        \\    found.append(path.copy())
-        \\    for nxt in adj[node]:
-        \\        walk(adj, nxt, mut path, mut found)
-        \\    _ = path.pop()
-        \\
-    ;
-    try expectCodes(helper, "E_MUTATION_OVERLAP", "ok");
-    const same_root =
-        \\def touch(x: mut list[int], y: list[int]) -> int:
-        \\    x.append(len(y))
-        \\    return len(y)
-        \\
-        \\def main() -> int:
-        \\    a = [1, 2]
-        \\    return touch(mut a, a)
-        \\
-    ;
-    const on = try sites(same_root, true);
-    try t.expect(on.copies >= 1);
-}
-
 // spec: VALUE-SEMANTICS-6
 test "a mut parameter whose only change went to a local copy says to store it back" {
     const lost =
@@ -582,35 +317,6 @@ test "class and builtin Cell retire only under value semantics" {
     try t.expect(std.mem.indexOf(u8, cell_message, "store-back") != null);
 }
 
-// spec-case: VALUE-SEMANTICS-1
-test "the switch changes the fragment record key and nothing without it" {
-    const identity: fragments.Digest = @splat(7);
-    const saved = Saved.set(false);
-    defer saved.restore();
-    const off = fragments.recordKey(identity, false);
-    values.setEnabled(true);
-    const on = fragments.recordKey(identity, false);
-    values.setEnabled(false);
-    try t.expect(!std.mem.eql(u8, &off, &on));
-    try t.expectEqualSlices(u8, &off, &fragments.recordKey(identity, false));
-    try t.expect(values.environmentEnables("1"));
-    try t.expect(!values.environmentEnables("0"));
-    try t.expect(!values.environmentEnables(null));
-}
-
-// spec: COW-STATS-1
-test "counting emission has a distinct fragment key from ordinary value semantics" {
-    const identity: fragments.Digest = @splat(9);
-    const saved = Saved.set(true);
-    defer saved.restore();
-    const ordinary = fragments.recordKey(identity, false);
-    values.setCounting(true);
-    const counted = fragments.recordKey(identity, false);
-    try t.expect(!std.mem.eql(u8, &ordinary, &counted));
-    values.setCounting(false);
-    try t.expectEqualSlices(u8, &ordinary, &fragments.recordKey(identity, false));
-}
-
 /// How many diagnostics with `code` checking `body` reports with the switch at `on`.
 fn countCode(body: []const u8, code: []const u8, on: bool) !usize {
     const saved = Saved.set(on);
@@ -642,25 +348,4 @@ test "D2 declarations reject nested recursive view projection storage" {
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings("E_VIEW_STORED", compilation.diagnostics.items[0].code);
-}
-
-// spec-case: MUT-EXCLUSIVE-PROOFS-1
-test "exclusive mut parameters permit a closed record field return" {
-    const source =
-        \\record Box:
-        \\    items: list[int]
-        \\record Owner:
-        \\    box: Box
-        \\    count: int
-        \\def push(box: mut Box):
-        \\    box.items.append(2)
-        \\def change(owner: mut Owner, other: mut Owner):
-        \\    work = owner.box
-        \\    push(mut work)
-        \\    other.count += 1
-        \\    owner.box = work
-    ;
-    const result = try sites(source ++ entry, true);
-    try t.expect(result.placed >= 2);
-    try t.expectEqual(@as(usize, 0), result.copies);
 }

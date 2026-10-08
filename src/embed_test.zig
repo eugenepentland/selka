@@ -7,7 +7,6 @@ const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const embed = @import("embed.zig");
 const semantic_key = @import("semantic_key.zig");
-const outputs = @import("qbe_build_outputs.zig");
 
 /// A compilation of `text` whose embed calls were read from `directory`.
 fn compile(allocator: std.mem.Allocator, directory: []const u8, text: []const u8) !language.Compilation {
@@ -239,61 +238,6 @@ fn mix(file: language.source.Embed) [32]u8 {
     return out;
 }
 
-/// How many times the units load an embedded object, requiring that none holds a payload.
-fn loadsWithoutPayload(units: []const std.json.Value) !usize {
-    var loads: usize = 0;
-    for (units) |unit| {
-        const il = unit.object.get("il").?.string;
-        try t.expect(il.len < 64 * 1024);
-        loads += std.mem.count(u8, il, "loadl $myl_emb_");
-    }
-    return loads;
-}
-
-// spec: EMBED-4
-test "the manifest carries an embedded file once and its unit only loads it" {
-    var temporary = t.tmpDir(.{});
-    defer temporary.cleanup();
-    const payload = try t.allocator.alloc(u8, 1 << 20);
-    defer t.allocator.free(payload);
-    for (payload, 0..) |*byte, index| byte.* = @truncate(index *% 31);
-    try temporary.dir.writeFile(t.io, .{ .sub_path = "big.bin", .data = payload });
-    try temporary.dir.writeFile(t.io, .{ .sub_path = "note.txt", .data = "h\xc3\xa9" });
-    const root = try rootOf(&temporary);
-    defer t.allocator.free(root);
-    var compilation = try compile(t.allocator, root,
-        \\const BIG: bytes = embed_bytes("big.bin")
-        \\
-        \\
-        \\def again() -> int:
-        \\    return len(embed_bytes("big.bin"))
-        \\
-        \\
-        \\def main() -> int:
-        \\    return again() + len(BIG) + len(embed_str("note.txt"))
-    );
-    defer compilation.deinit();
-    const manifest = try compilation.emitQbe(t.allocator);
-    defer t.allocator.free(manifest);
-    const parsed = try std.json.parseFromSlice(std.json.Value, t.allocator, manifest, .{});
-    defer parsed.deinit();
-    const table = parsed.value.object.get("embeds").?.array.items;
-    try t.expectEqual(@as(usize, 2), table.len);
-    try t.expectEqual(@as(i64, 1 << 20), table[0].object.get("count").?.integer);
-    try t.expectEqual(@as(usize, 2 << 20), table[0].object.get("hex").?.string.len);
-    try t.expectEqual(@as(i64, 2), table[1].object.get("scalars").?.integer);
-    try t.expectEqual(@as(i64, 3), table[1].object.get("count").?.integer);
-    try t.expect(try loadsWithoutPayload(parsed.value.object.get("functions").?.array.items) >= 3);
-    // The metadata unit defines each object once: a long payload as one C string
-    // literal, a short one as a brace list.
-    const metadata = try outputs.metadata(t.allocator, parsed.value);
-    defer t.allocator.free(metadata);
-    try t.expectEqual(@as(usize, 2), std.mem.count(u8, metadata, "const void *const myl_emb_"));
-    try t.expect(std.mem.indexOf(u8, metadata, ".storage = \"") != null);
-    try t.expect(std.mem.indexOf(u8, metadata, ".storage = {0x68,0xc3,0xa9,}") != null);
-}
-
-// spec-case: EMBED-4
 test "a module constant of an embedded file allocates nothing when read" {
     var temporary = t.tmpDir(.{});
     defer temporary.cleanup();

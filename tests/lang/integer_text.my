@@ -1,6 +1,5 @@
 module integer_text
 
-# spec-case: PY-NUM-3
 public def test_integer_formatting_roundtrips_signed_limits_and_retained_outputs() -> bool:
     values: list[int] = [0, 1, -1, 9, -9, 10, -10, 1000000000000000000, -9223372036854775808, 9223372036854775807]
     kept: list[str] = []

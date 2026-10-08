@@ -1,9 +1,0 @@
-module broken
-
-# A source error: `label` is a str, and `+ 1` is not defined for it. The
-# compiler's located diagnostic is what `mylang invoke` must report.
-
-
-public def bad(value: i64) -> i64 effects():
-    label = "n"
-    return value + label

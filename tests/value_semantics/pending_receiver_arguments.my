@@ -4,7 +4,6 @@ def save_pending_rows(rows: list[list[int]], saved: mut list[list[list[int]]]) -
     saved.append(rows)
     return 2
 
-# spec-case: COW-RECEIVER-ARGUMENT-1
 public def test_callback_snapshot_keeps_captured_receiver_independent() -> bool:
     rows = [[1]]
     saved: list[list[list[int]]] = []
@@ -17,7 +16,6 @@ def main() -> int:
     return 1
 
 
-# spec-case: COW-RECEIVER-ARGUMENT-1
 public def test_loop_receiver_scopes_restore_the_previous_pin_state() -> bool:
     rows = [[1]]
     saved: list[list[list[int]]] = []
@@ -31,7 +29,6 @@ def nested_argument(rows: mut list[list[int]], saved: mut list[list[list[int]]])
     return 3
 
 
-# spec-case: COW-RECEIVER-ARGUMENT-1
 public def test_nested_mut_call_finishes_before_the_outer_receiver_update() -> bool:
     rows = [[1], [8]]
     saved: list[list[list[int]]] = []
@@ -49,7 +46,6 @@ def abandoned(rows: mut list[list[int]]) -> Option[int]:
     return Some(1)
 
 
-# spec-case: COW-RECEIVER-ARGUMENT-1
 public def test_argument_propagation_releases_the_receiver_scope() -> bool:
     rows = [[1]]
     result = abandoned(mut rows)
@@ -63,7 +59,6 @@ def save_entries(entries: dict[str, list[int]], saved: mut list[dict[str, list[i
     return 2
 
 
-# spec-case: COW-RECEIVER-ARGUMENT-1
 public def test_dictionary_receiver_survives_argument_snapshot() -> bool:
     entries = {"k": [1]}
     saved: list[dict[str, list[int]]] = []
@@ -81,7 +76,6 @@ def save_nodes(nodes: list[Node], saved: mut list[list[Node]]) -> int:
     return 2
 
 
-# spec-case: COW-RECEIVER-ARGUMENT-1
 public def test_recursive_box_receiver_survives_argument_snapshot() -> bool:
     nodes = [Node(items=[1], next=None)]
     saved: list[list[Node]] = []

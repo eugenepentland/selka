@@ -115,42 +115,6 @@ test "ord and chr trap R_TEXT_SCALAR on anything but one Unicode scalar" {
     try trapped("def main() -> int:\n    return len(chr(1114112))\n", "R_TEXT_SCALAR");
 }
 
-test "ord of a one-scalar literal lowers to the same QBE as the raw code" {
-    // spec: PRELUDE-SCALAR-3
-    const folded =
-        \\def letter(code: int) -> bool:
-        \\    return code == ord("m")
-        \\
-        \\
-        \\def main() -> int:
-        \\    if letter(109):
-        \\        return 42
-        \\    return 1
-        \\
-    ;
-    const raw =
-        \\def letter(code: int) -> bool:
-        \\    return code == 109
-        \\
-        \\
-        \\def main() -> int:
-        \\    if letter(109):
-        \\        return 42
-        \\    return 1
-        \\
-    ;
-    var first = try language.Compilation.init(t.allocator, "fold.my", folded);
-    defer first.deinit();
-    var second = try language.Compilation.init(t.allocator, "fold.my", raw);
-    defer second.deinit();
-    const left = try first.emitQbe(t.allocator);
-    defer t.allocator.free(left);
-    const right = try second.emitQbe(t.allocator);
-    defer t.allocator.free(right);
-    try t.expectEqualStrings(left, right);
-    try t.expect(std.mem.indexOf(u8, left, "call $myl_native_text_ord") == null);
-}
-
 test "requireArgument attaches the callee signature to a rejected argument" {
     // spec: DIAGNOSTIC-SITES-1
     var compilation = try language.Compilation.init(t.allocator, "sites.my", "def main() -> int:\n    return len(\"abc\".find(1))\n");

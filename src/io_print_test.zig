@@ -103,39 +103,6 @@ test "generic function bodies reject the reserved io builtins with a located dia
     try reject("def look[T](fs: Filesystem, value: T) -> int:\n    _ = exists(fs, \"x\")\n    return 0\n\ndef main(fs: Filesystem) -> int:\n    return look(fs, 7)\n", "E_GENERIC_BODY_UNSUPPORTED");
 }
 
-// spec: IO-6
-test "IO-6 the native backend lowers print through generated per-type renderers" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    const source =
-        \\class Point:
-        \\    x: int
-        \\    y: float
-        \\
-        \\enum Colour:
-        \\    red,
-        \\    green
-        \\
-        \\
-        \\def main(out: Stream) -> int:
-        \\    rows: dict[str, list[bytes]] = {"a": [b"\\x00"]}
-        \\    found: Option[Point] = Some(Point(x=1, y=2.5))
-        \\    out.print(rows, found, Colour.green, sep="-", end="!\\n")
-        \\    out.print()
-        \\    return 0
-    ;
-    var compilation = try language.Compilation.init(t.allocator, module, source);
-    defer compilation.deinit();
-    const manifest = try compilation.emitQbe(t.allocator);
-    defer t.allocator.free(manifest);
-    for ([_][]const u8{ "myl_qbe_stream_begin", "myl_qbe_stream_finish", "myl_qbe_print_raw", "myl_print_dictionary", "myl_print_bytes", "myl_print_class", "myl_print_variant", "myl_print_float" }) |symbol| {
-        try t.expect(std.mem.indexOf(u8, manifest, symbol) != null);
-    }
-    // Case spellings and field names travel in the generated renderers.
-    try t.expect(std.mem.indexOf(u8, manifest, "\\\"Colour.green\\\"") != null);
-    try t.expect(std.mem.indexOf(u8, manifest, "\\\"Some\\\"") != null);
-}
-
 // spec: IO-15
 test "IO-15 print and write work on a Stream held in a record field" {
     const source =
@@ -161,7 +128,6 @@ test "IO-15 print and write work on a Stream held in a record field" {
     try reject("record Sink:\n    stream: Stream\n\ndef main(out: Stream) -> int:\n    sink = Sink(stream=out)\n    sink.stream.flush()\n    return 0\n", "E_COLLECTION_METHOD");
 }
 
-// spec: QBE-BULK-TEXT-1
 test "QBE-BULK-TEXT-1 raw top-level text is encoded into the line buffer in one pass" {
     // Empty text writes nothing and still ends the line.
     try expectOutput("def main(out: Stream) -> int:\n    out.print(\"\")\n    return 0\n", "\n");
@@ -185,15 +151,6 @@ test "QBE-BULK-TEXT-1 raw top-level text is encoded into the line buffer in one 
     // `stream.write` is the other raw-text caller and returns the scalar count.
     const write = "def show(log: Stream) -> int:\n    return log.write(\"h\\u00e9\\u2192\\U0001F600\")\n\ndef main(out: Stream) -> int:\n    out.print(show(out))\n    return 0\n";
     try expectOutput(write, wide ++ "4\n");
-}
-
-// spec-case: IO-6
-test "IO-6 a program that never prints carries no rendering runtime" {
-    var compilation = try language.Compilation.init(t.allocator, module, "def main() -> int:\n    return 7\n");
-    defer compilation.deinit();
-    const manifest = try compilation.emitQbe(t.allocator);
-    defer t.allocator.free(manifest);
-    try t.expect(std.mem.indexOf(u8, manifest, "native_print.h") == null);
 }
 
 /// Execute one program natively and return both standard streams. A guest that
@@ -299,22 +256,6 @@ test "DEBUG-LINE-1 debug writes to stderr and contributes no output effect" {
     try t.expectEqualStrings("trace\n", result.stderr);
 }
 
-// spec-case: DEBUG-LINE-1
-test "DEBUG-LINE-1 a ReleaseFast build drops debug nodes in lowering" {
-    const source = "def main() -> int:\n    debug(\"trace\")\n    return 0\n";
-    var dropped = try language.Compilation.init(t.allocator, module, source);
-    defer dropped.deinit();
-    const dropped_manifest = try dropped.emitQbeWithOptions(t.allocator, .{ .drop_debug = true });
-    defer t.allocator.free(dropped_manifest);
-    try t.expect(std.mem.indexOf(u8, dropped_manifest, "myl_qbe_eprint_begin") == null);
-    try t.expect(std.mem.indexOf(u8, dropped_manifest, "native_print.h") == null);
-    var kept = try language.Compilation.init(t.allocator, module, source);
-    defer kept.deinit();
-    const kept_manifest = try kept.emitQbe(t.allocator);
-    defer t.allocator.free(kept_manifest);
-    try t.expect(std.mem.indexOf(u8, kept_manifest, "myl_qbe_eprint_begin") != null);
-}
-
 // spec: STREAM-BYTES-2
 test "STREAM-BYTES-2 a mutable buffer writes its own octets without a snapshot" {
     const source =
@@ -354,8 +295,5 @@ test "STREAM-BYTES-2 a buffer write keeps the output effect of the bytes it writ
 test "VALUE-SEMANTICS-14 print renders a lent operand as it was before a later operand writes it" {
     const program = "def push(xs: mut list[int]) -> int:\n    xs.append(9)\n    return 1\n\ndef main(out: Stream) -> int:\n    zs = [1, 2, 3]\n    out.print(zs, push(mut zs), zs)\n    out.print(zs, zs.pop())\n    return 0\n";
     const expected = "[1, 2, 3] 1 [1, 2, 3, 9]\n[1, 2, 3, 9] 9\n";
-    try expectOutput(program, expected);
-    const selected = language.runtime_mode.pinCollector();
-    defer language.runtime_mode.set(selected);
     try expectOutput(program, expected);
 }

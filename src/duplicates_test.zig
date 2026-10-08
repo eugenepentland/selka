@@ -9,7 +9,6 @@ fn groups(source: []const u8, expected: usize) !void {
     var analysis = try language.duplicates.discover(testing.allocator, compilation.program.?, .{ .min_nodes = 1 });
     defer analysis.deinit();
     try testing.expectEqual(expected, analysis.groups.len);
-    try testing.expect(compilation.code == null);
 }
 
 // spec: TOOL-1

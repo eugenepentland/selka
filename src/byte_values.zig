@@ -4,12 +4,6 @@ pub const ToOwnedBytesError = error{
     InternalError,
     OutOfMemory,
 };
-/// Failures returned by fromBytes; callers must handle these boundary errors.
-pub const FromBytesError = error{
-    InternalError,
-    InvalidAggregateType,
-    OutOfMemory,
-};
 
 const std = @import("std");
 const typed = @import("typed.zig");
@@ -25,14 +19,6 @@ pub fn toOwnedBytes(allocator: std.mem.Allocator, value: typed.Value, ty: typed.
         byte.* = std.math.cast(u8, try element.asInteger()) orelse return error.InternalError;
     }
     return bytes;
-}
-/// Allocate a typed byte aggregate from host bytes using the supplied nominal schema.
-pub fn fromBytes(allocator: std.mem.Allocator, bytes: []const u8, ty: typed.Type, records: []const typed.Record) FromBytesError!typed.Value {
-    if (!typed.byteRequest(ty, records) or records[ty.recordIndex()].shape.array.?.length != bytes.len) return error.InternalError;
-    const fields = try allocator.alloc(typed.Value, bytes.len);
-    defer allocator.free(fields);
-    for (bytes, fields) |byte, *field| field.* = typed.Value.number(.u8, byte);
-    return typed.Value.create(allocator, ty, fields);
 }
 
 /// Copy an acquisition request without borrowing guest backing into a provider call.

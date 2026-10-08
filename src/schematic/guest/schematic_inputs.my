@@ -1,8 +1,0 @@
-module schematic_inputs
-import io
-
-# The schematic host supplies these three named documents.
-
-
-public def load(host: Host) -> Result[io.Inputs, int]:
-    return io.inputs(host)

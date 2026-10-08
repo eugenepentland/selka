@@ -242,7 +242,8 @@ test "verify-cache recompiles served units, damaged entries are rebuilt, and for
     try std.testing.expectEqualStrings(expected, try project.output());
     try project.forge("forged object");
     const refused = try project.attempt(&.{"--verify-cache"});
-    try std.testing.expect(refused.term == .exited and refused.term.exited == 1);
+    // `mylang build` reports a refused cached object as a tool failure, status 2.
+    try std.testing.expect(refused.term == .exited and refused.term.exited == 2);
     try std.testing.expect(std.mem.indexOf(u8, refused.stderr, "--verify-cache: unit") != null);
 }
 

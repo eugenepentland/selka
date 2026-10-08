@@ -30,9 +30,6 @@ pub const Error = std.mem.Allocator.Error;
 /// a command spawns (the build driver's frontend, the test runner's builds).
 pub const variable = "MYLANG_VALUE_SEMANTICS";
 
-/// Internal instrumentation selector inherited by build and test children.
-pub const counting_variable = "MYLANG_COW_COUNTING";
-
 /// The command-line spelling of the switch.
 pub const option = "--value-semantics";
 
@@ -55,12 +52,6 @@ pub fn counting() bool {
 /// Set counting before frontend caching or native emission begins.
 pub fn setCounting(value: bool) void {
     flag.counting = value;
-}
-
-/// Whether an environment value turns the switch on: exactly `1`.
-pub fn environmentEnables(value: ?[]const u8) bool {
-    const text = value orelse return false;
-    return std.mem.eql(u8, text, "1");
 }
 
 /// Whether a value of `ty` reaches a list, dict, set or byte_buffer that a
@@ -100,19 +91,6 @@ fn needsCopyDepth(records: []const typed.Record, ty: typed.Type, path: *[1024]us
     }
     for (record.fields) |field| if (needsCopyDepth(records, field.ty, path, depth + 1)) return true;
     return false;
-}
-
-/// Whether the elements (or dictionary values) of the collection type `ty`
-/// need copies of their own: a shallow copy, a slice or a concatenation of such
-/// a collection is a fresh outer collection whose elements are still shared.
-pub fn childrenNeedCopy(records: []const typed.Record, ty: typed.Type) bool {
-    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return false;
-    const record = records[ty.recordIndex()];
-    if (!record.isCollection()) return false;
-    return switch (record.collection.kind) {
-        .list, .dictionary => needsCopy(records, record.shape.buffer.?),
-        .string, .bytes => false,
-    };
 }
 
 /// Whether a deep value copy of `ty` shares nothing writable with its source:
@@ -164,13 +142,6 @@ pub fn sharedRecord(records: []const typed.Record, ty: typed.Type) bool {
 /// last read of the aggregate that exposes it.
 pub fn sharedFields(records: []const typed.Record, ty: typed.Type) bool {
     return sharedRecord(records, ty) or isLiveView(records, ty);
-}
-
-/// Whether a value can contain a live dictionary view, including through
-/// recursive boxes, containers and inline aggregates. Exhausted proof bounds
-/// conservatively answer yes. This does not make the view itself a snapshot.
-pub fn containsLiveView(records: []const typed.Record, ty: typed.Type) bool {
-    return @import("value_semantics_views.zig").contains(records, ty);
 }
 
 /// A `DictKeys`, `DictValues` or `DictItems` projection record.
@@ -314,15 +285,6 @@ fn bufferSource(kind: buffer_operations.Kind) Source {
     };
 }
 
-/// Whether a collection operation builds a fresh outer collection that still
-/// shares the receiver's elements, which a transfer must copy.
-pub fn shallowResult(kind: buffer_operations.Kind) bool {
-    return switch (kind) {
-        .copy, .slice, .slice_step, .to_list => true,
-        else => false,
-    };
-}
-
 /// The argument of a collection operation that the operation stores or hands
 /// back, and so transfers: an appended, written or inserted element, a
 /// dictionary value, a default `get`, `setdefault` or `pop` may return, and the
@@ -366,27 +328,6 @@ fn sameRoot(program: typed.Program, previous: typed.NodeId, value: typed.NodeId)
     const a = pathRoot(program, previous) orelse return null;
     const b = pathRoot(program, value) orelse return null;
     return if (a == b) previous else null;
-}
-
-/// Whether a read-only argument could share storage with one of the same
-/// call's `mut` arguments, which the callee may write while it reads the other.
-/// Two distinct named locals or parameters are distinct values under value
-/// semantics, so only a common root, an untraceable temporary, or a shared
-/// `class` object reached from either side can link them. Such an argument is
-/// passed as a real copy taken before the call (`VALUE-SEMANTICS-5`).
-pub fn argumentConflicts(facts: *const Facts, argument: typed.NodeId, writable: []const typed.NodeId) bool {
-    const records = facts.program.records;
-    const ty = facts.program.nodes[@backingInt(argument)].ty;
-    if (!needsCopy(records, ty) or facts.classify(argument, null) == .fresh) return false;
-    const root = valueRoot(facts, argument);
-    for (writable) |other| {
-        const other_root = valueRoot(facts, other) orelse return true;
-        if (root == null or root.? == other_root) return true;
-        const other_ty = facts.program.nodes[@backingInt(other)].ty;
-        const linked = !copiesAll(records, ty) or !copiesAll(records, other_ty);
-        if (linked and sharesWritableType(records, ty, other_ty)) return true;
-    }
-    return false;
 }
 
 /// The named local or parameter a value is read from, following synthetic

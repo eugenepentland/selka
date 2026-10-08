@@ -74,10 +74,7 @@ const forwarded = declarations ++
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.initTrusted(allocator, module, forwarded);
     defer c.deinit();
-    try c.emit();
-    const dump = try c.dump(allocator);
-    defer allocator.free(dump);
-    try t.expect(std.mem.indexOf(u8, dump, "EXTERNAL_clock") != null);
+    try c.check();
 }
 test "external execution and emission release every failed allocation" {
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
@@ -126,8 +123,7 @@ const generic_provider_source = declarations ++
 fn genericProviderScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.initTrusted(allocator, "generic-provider.my", generic_provider_source);
     defer c.deinit();
-    try c.emit();
-    try t.expect(c.code.?.functions.len != 0);
+    try c.check();
 }
 test "clock and random bounds propagate through calls independently of noio and noalloc" {
     try reject(declarations ++
@@ -156,23 +152,5 @@ test "clock and random bounds propagate through calls independently of noio and 
         \\    return 0
     );
     defer c.deinit();
-    try c.emit();
-    const functions = @constCast(c.code.?.functions);
-    functions[0].policy.effects = 0;
-    try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
-}
-test "external emission rejects a forged result shape before any provider call" {
-    var c = try language.Compilation.initTrusted(t.allocator, module, declarations ++
-        \\def main(c: Clock) -> i64:
-        \\    _ = clock_now[Time](c)
-        \\    return 0
-    );
-    defer c.deinit();
-    try c.emit();
-    const instruction = try @import("instruction_test.zig").find(@constCast(c.code.?.functions[0].scope.instructions), .external_read);
-    const original = instruction.*;
-    instruction.op.external_read.output = .i64;
-    try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
-    instruction.* = original;
-    try language.bytecode.validate(t.allocator, c.code.?);
+    try c.check();
 }

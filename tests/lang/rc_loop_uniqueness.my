@@ -5,7 +5,6 @@ def repeated(count: int) -> list[int]:
     return items
 
 
-# spec-case: RC-PHYSICAL-HOIST-1
 public def test_zero_iterations_and_branch_exits_keep_loop_values() -> bool:
     items = [1, 2]
     before = items
@@ -18,7 +17,6 @@ public def test_zero_iterations_and_branch_exits_keep_loop_values() -> bool:
     return items == [1, 7] and before == [1, 2] and repeated(0) == [0, 0]
 
 
-# spec-case: RC-PHYSICAL-HOIST-1
 public def test_shared_nested_elements_detach_before_the_loop() -> bool:
     row = [1, 2]
     rows = [row, row]
@@ -33,7 +31,6 @@ def selected(items: mut list[int]) -> int:
     return 1
 
 
-# spec-case: RC-PHYSICAL-HOIST-1
 public def test_callback_and_named_snapshot_keep_checks_inside_the_loop() -> bool:
     items = [1, 2]
     before = items
@@ -44,7 +41,6 @@ public def test_callback_and_named_snapshot_keep_checks_inside_the_loop() -> boo
     return items == [9, 4] and before == [9, 3]
 
 
-# spec-case: RC-PHYSICAL-HOIST-1
 public def test_nested_loops_preserve_captured_scalar_receivers() -> bool:
     rows = [[1, 2], [3, 4]]
     before = rows

@@ -88,7 +88,7 @@ test "prelude containers results options and dictionary views keep one identity 
     try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     try t.expectEqual(@as(i64, 42), (try native.runWithOptions(&compilation, .{})).value);
 }
 // spec: PYTHON-CORE-2
@@ -117,22 +117,6 @@ const Entries = struct {
         return allocator.dupe(u8, "module main\n\ndef main() -> Result[None, int]:\n    return Ok(None)\n");
     }
 };
-// spec-case: PYTHON-CORE-2
-test "PYTHON-CORE-2 a project with an adapted entry still emits native units" {
-    var project = language.project.Project.init(t.allocator);
-    defer project.deinit();
-    try project.load(.{ .context = null, .read = Entries.read }, "main", .{});
-    var index = try language.interfaces.build(&project);
-    var compilation = try language.project_compile.Compilation.init(&index);
-    const manifest = compilation.emitQbe(t.allocator) catch |err| {
-        for (compilation.diagnostics.items.items) |diag| debug.print("{s}: {s}\n", .{ diag.code, diag.message });
-        return err;
-    };
-    defer t.allocator.free(manifest);
-    // The synthesized wrapper is the entry symbol and names no public export.
-    try t.expect(std.mem.indexOf(u8, manifest, "language-schema-v1") != null);
-    try t.expect(std.mem.indexOf(u8, manifest, "qbe-units-v1") != null);
-}
 const PythonModules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
@@ -169,7 +153,7 @@ test "Python exported module signatures share builtin types and resolve enum mem
     try project.load(.{ .context = null, .read = PythonModules.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     try t.expectEqual(@as(i64, 42), (try native.runWithOptions(&compilation, .{})).value);
 }
 // spec: PYTHON-CORE-3

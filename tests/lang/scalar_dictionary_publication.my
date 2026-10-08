@@ -6,7 +6,6 @@ record PlainKey:
     low: i16
 
 
-# spec-case: RC-DICT-SCALAR-INSERT-1
 public def test_scalar_updates_keep_deletion_history_and_snapshot_values() -> bool:
     mapping: dict[int, int] = {}
     for i in range(128):
@@ -33,7 +32,6 @@ public def test_scalar_updates_keep_deletion_history_and_snapshot_values() -> bo
     return len(mapping) == 192 and len(snapshot) == 128
 
 
-# spec-case: RC-DICT-SCALAR-INSERT-1
 public def test_payload_free_sets_keep_order_and_plain_structural_keys() -> bool:
     members: set[u8] = set()
     for i in range(1000):
@@ -52,7 +50,6 @@ public def test_payload_free_sets_keep_order_and_plain_structural_keys() -> bool
     return len(points) == 45 and PlainKey(high=u64(8), low=i16(4)) in points
 
 
-# spec-case: RC-DICT-SCALAR-INSERT-1
 public def test_equal_texts_and_views_keep_owned_keys_across_growth() -> bool:
     mapping: dict[str, int] = {}
     for i in range(96):

@@ -28,17 +28,14 @@ def borrowed(items: list[int], count: int) -> int:
     return total + noise[0]
 
 
-# spec-case: RC-READ-LIST-VERSION-1
 public def test_owned_held_and_empty_read_loops() -> bool:
     return owned(9, 0) == 45 and owned(0, 999) == 0 and owned(-1, 999) == 0 and fold([]) == 0 and fresh() == 45
 
 
-# spec-case: RC-READ-LIST-VERSION-1
 public def test_short_and_negative_index_fallbacks() -> bool:
     return owned(4, -9) == 10 and owned(1, -1) == 9 and borrowed([2, 4, 6], 3) == 19
 
 
-# spec-case: RC-READ-LIST-VERSION-1
 public def test_snapshot_and_callback_after_fold_keep_original_owners() -> bool:
     items = [3, 9, 17]
     snapshot = items
@@ -47,7 +44,6 @@ public def test_snapshot_and_callback_after_fold_keep_original_owners() -> bool:
     return total == 29 and snapshot == [3, 9, 17] and items == [3, 9, 17, 29]
 
 
-# spec-case: RC-READ-LIST-VERSION-1
 public def test_nested_dynamic_entries_retain_each_iterator() -> bool:
     total = 0
     for outer in range(4):
@@ -56,7 +52,6 @@ public def test_nested_dynamic_entries_retain_each_iterator() -> bool:
     return total == 30
 
 
-# spec-case: RC-READ-LIST-VERSION-1
 public def test_narrow_and_boolean_elements_keep_width_semantics() -> bool:
     values = [u8(1), u8(127), u8(255)]
     total = 0
@@ -70,7 +65,6 @@ public def test_narrow_and_boolean_elements_keep_width_semantics() -> bool:
     return total == 383 and count == 3
 
 
-# spec-case: RC-READ-LIST-VERSION-1
 public def test_multiple_stable_sources_keep_each_owner() -> bool:
     left = [1, 2, 3, 4, 5, 6, 7, 8, 9]
     right = [9, 8, 7, 6, 5, 4, 3, 2, 1]
@@ -80,7 +74,6 @@ public def test_multiple_stable_sources_keep_each_owner() -> bool:
     return total == 165
 
 
-# spec-case: RC-READ-LIST-VERSION-1
 public def test_unrelated_managed_values_remain_journaled() -> bool:
     values = [[1, 2], [3, 4]]
     total = fresh()

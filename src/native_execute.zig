@@ -20,7 +20,7 @@ const wiring = @import("wiring/core_runner.zig");
 /// Checking, host and child-process failures a guest execution can report.
 /// `NewCoreBuildFailed` means `mylang` refused or could not build a program the
 /// front end accepted; its report is printed to the test's stderr.
-pub const Error = language.EmitNativeError || project_compile.EmitNativeError || std.process.RunError ||
+pub const Error = project_compile.CheckError || std.process.RunError ||
     error{ UnreadableNativeResult, NewCoreBuildFailed, NativeHostFailed };
 
 /// One native stack frame the runtime reported beneath a trap.
@@ -88,19 +88,6 @@ pub fn runWithOptions(compilation: anytype, options: Options) Error!Run {
     const a = session.allocator();
     const sources = if (@TypeOf(compilation.*) == project_compile.Compilation) try projectSources(a, compilation.index.project.modules.items) else try singleSource(a, compilation.src);
     return execute(session, try write(session, sources), options);
-}
-
-/// `runWithOptions` for a test that compared the old core's unaccounted protocol
-/// with `run`: the new core has one protocol, so this is `runWithOptions`.
-pub fn runUnaccounted(compilation: *language.Compilation, options: Options) Error!Run {
-    return runWithOptions(compilation, options);
-}
-
-/// `runWithOptions` for a test that named an old emission policy: the new core
-/// has none, so the policy is ignored.
-pub fn runWithPolicy(compilation: *language.Compilation, policy: @import("native_interface.zig").Policy, options: Options) Error!Run {
-    _ = policy;
-    return runWithOptions(compilation, options);
 }
 
 /// Build one checked single-file compilation into an executable with `mylang build`

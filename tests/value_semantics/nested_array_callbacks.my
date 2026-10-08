@@ -75,7 +75,6 @@ def stop_early(value: mut dict[str, [1]list[int]]) -> Option[int]:
     return Some(1)
 
 
-# spec-case: COW-NESTED-1
 public def test_equal_replacements_before_update_have_equal_results() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     first = original
@@ -87,7 +86,6 @@ public def test_equal_replacements_before_update_have_equal_results() -> bool:
     return original["k"][0] == [1] and first["k"][0] == [1, 2] and second["k"][0] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_reinserted_equal_entry_is_updated_after_the_call() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
@@ -96,7 +94,6 @@ public def test_reinserted_equal_entry_is_updated_after_the_call() -> bool:
     return original["k"][0] == [1] and changed["k"][0] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_deleted_and_reinserted_entry_is_updated_after_the_call() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
@@ -105,7 +102,6 @@ public def test_deleted_and_reinserted_entry_is_updated_after_the_call() -> bool
     return original["k"][0] == [1] and changed["k"][0] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_other_entry_write_finishes_before_the_current_update() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]], "other": [[0]]}
     changed = original
@@ -114,7 +110,6 @@ public def test_other_entry_write_finishes_before_the_current_update() -> bool:
     return original["k"][0] == [1] and original["other"][0] == [0] and changed["k"][0] == [1, 2] and changed["other"][0] == [8]
 
 
-# spec-case: COW-NESTED-1
 public def test_leaf_call_and_later_update_keep_both_writes() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
@@ -123,7 +118,6 @@ public def test_leaf_call_and_later_update_keep_both_writes() -> bool:
     return original["k"][0] == [1] and changed["k"][0] == [1, 7, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_a_callback_can_snapshot_the_whole_parent() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
@@ -133,7 +127,6 @@ public def test_a_callback_can_snapshot_the_whole_parent() -> bool:
     return original["k"][0] == [1] and changed["k"][0] == [1, 2] and saved[0]["k"][0] == [1] and len(saved[0]) == 1
 
 
-# spec-case: COW-NESTED-1
 public def test_a_callback_can_snapshot_an_outer_ancestor() -> bool:
     original: list[dict[str, [1]list[int]]] = [{"k": [[1]]}]
     changed = original
@@ -143,7 +136,6 @@ public def test_a_callback_can_snapshot_an_outer_ancestor() -> bool:
     return original[0]["k"][0] == [1] and changed[0]["k"][0] == [1, 2] and saved[0][0]["k"][0] == [1] and len(saved[0][0]) == 1
 
 
-# spec-case: COW-NESTED-1
 public def test_equal_list_element_replacement_is_updated_after_the_call() -> bool:
     original: list[[1]list[int]] = [[[1]]]
     changed = original
@@ -152,7 +144,6 @@ public def test_equal_list_element_replacement_is_updated_after_the_call() -> bo
     return original[0][0] == [1] and changed[0][0] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_reordering_finishes_before_selecting_the_current_receiver() -> bool:
     original: list[[1]list[int]] = [[[1]], [[8]]]
     changed = original
@@ -161,7 +152,6 @@ public def test_reordering_finishes_before_selecting_the_current_receiver() -> b
     return original[0][0] == [1] and changed[0][0] == [8, 2] and changed[1][0] == [1]
 
 
-# spec-case: COW-NESTED-1
 public def test_removing_an_element_finishes_before_selecting_the_shifted_receiver() -> bool:
     original: list[[1]list[int]] = [[[8]], [[1]]]
     changed = original
@@ -170,7 +160,6 @@ public def test_removing_an_element_finishes_before_selecting_the_shifted_receiv
     return original[1][0] == [1] and changed[0][0] == [1, 2] and len(changed) == 1
 
 
-# spec-case: COW-NESTED-1
 public def test_nested_calls_finish_before_each_receiver_is_selected() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
@@ -181,7 +170,6 @@ public def test_nested_calls_finish_before_each_receiver_is_selected() -> bool:
     return original["k"][0] == [1] and copied["k"][0] == [1, 7, 2] and changed["k"][0] == [1, 7, 2, 3]
 
 
-# spec-case: COW-NESTED-1
 public def test_option_propagation_releases_a_pending_receiver() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
@@ -197,7 +185,6 @@ def overwrite_collision(value: mut dict[int, [1]list[int]]) -> int:
     return 0
 
 
-# spec-case: COW-NESTED-1
 public def test_colliding_keys_do_not_invalidate_the_other_receiver() -> bool:
     original: dict[int, [1]list[int]] = {73358: [[1]], 137867: [[0]]}
     changed = original
@@ -220,7 +207,6 @@ def capture_box(value: [1]A, saved: mut list[[1]A]) -> int:
     return 0
 
 
-# spec-case: COW-NESTED-1
 public def test_a_callback_can_snapshot_a_box_on_the_pending_path() -> bool:
     original: [1]A = [A(child=B(items=[[1]], tail=[]))]
     changed = original
@@ -239,7 +225,6 @@ def capture_branch(value: [1]Branch, saved: mut list[[1]Branch]) -> int:
     return 0
 
 
-# spec-case: COW-NESTED-1
 public def test_deep_recursive_siblings_are_outside_the_pending_path() -> bool:
     branch = Branch(items=[1], next=None)
     for i in range(1200):
@@ -265,7 +250,6 @@ def capture_outer_box(value: [1]OuterA, saved: mut list[[1]OuterA]) -> int:
     return 0
 
 
-# spec-case: COW-NESTED-1
 public def test_a_callback_can_snapshot_a_box_above_the_dictionary_owner() -> bool:
     original: [1]OuterA = [OuterA(child=OuterB(entries={"k": [[1]]}, tail=[]))]
     changed = original
@@ -279,7 +263,6 @@ def capture_rows(value: list[[1]list[int]], saved: mut list[list[[1]list[int]]])
     return 0
 
 
-# spec-case: COW-NESTED-1
 public def test_a_negative_list_index_retains_its_pending_array() -> bool:
     original: list[[1]list[int]] = [[[1]]]
     changed = original
@@ -298,7 +281,6 @@ def discard_keys(keys: mut list[LookupKey]) -> int:
     return 0
 
 
-# spec-case: COW-NESTED-1
 public def test_a_last_use_key_borrow_survives_its_list_being_cleared() -> bool:
     key = LookupKey(label="target", number=1)
     original: dict[LookupKey, [1]list[int]] = {key: [[1]]}

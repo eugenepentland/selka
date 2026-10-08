@@ -39,9 +39,9 @@ test "the refusal names the reservation, the limit and both ways out" {
 
 // spec-case: RUN-FRAME-BUDGET-1
 test "the per-frame stack constants match the runtime that maps the stack" {
-    const runtime = @embedFile("qbe_stack.c");
-    try std.testing.expect(std.mem.indexOf(u8, runtime, "#define FRAME_STACK_BYTES 32768") != null);
-    try std.testing.expect(std.mem.indexOf(u8, runtime, "#define STACK_SLACK (8u*1024u*1024u)") != null);
+    const runtime = @embedFile("core/runtime/core_test.c");
+    try std.testing.expect(std.mem.indexOf(u8, runtime, "CORE_TEST_FRAME_STACK = 32768, CORE_TEST_STACK_SLACK = 8 << 20") != null);
+    try std.testing.expectEqual(@as(u64, 32768), budget.frame_stack_bytes);
 }
 
 // spec-case: RUN-FRAME-BUDGET-1

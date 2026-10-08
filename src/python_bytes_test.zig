@@ -101,7 +101,7 @@ test "PY-BYTES-1 byte strings are immutable and never convert through str" {
 }
 
 // spec: PY-BYTES-5
-test "PY-BYTES-5 the native backend lowers every byte-string operation" {
+test "PY-BYTES-5 every byte-string operation builds and runs natively" {
     const source =
         \\def parsed(digits: str) -> Result[bytes, str]:
         \\    return bytes.fromhex(digits)
@@ -129,16 +129,6 @@ test "PY-BYTES-5 the native backend lowers every byte-string operation" {
         \\        case Err(message):
         \\            return 0 - len(message)
     ;
-    var compilation = try language.Compilation.init(t.allocator, "bytes-native.my", source);
-    defer compilation.deinit();
-    const manifest = compilation.emitQbe(t.allocator) catch |err| {
-        for (compilation.diagnostics.items) |d| debug.print("{s}: {s}\n", .{ d.code, d.message });
-        return err;
-    };
-    defer t.allocator.free(manifest);
-    for ([_][]const u8{ "myl_native_bytes_split", "myl_native_bytes_join", "myl_native_bytes_slice", "myl_qbe_bytes_decode", "myl_qbe_bytes_from_list" }) |symbol| {
-        try t.expect(std.mem.indexOf(u8, manifest, symbol) != null);
-    }
     try run(source, 2);
 }
 

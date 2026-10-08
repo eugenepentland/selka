@@ -1,17 +1,4 @@
 //! Read-only environment authority, explicitly injected per execution.
-/// Failures returned by readValue; callers must handle these boundary errors.
-pub const ReadValueError = error{
-    Denied,
-    Failed,
-    InternalError,
-    InvalidAggregateType,
-    InvalidCapability,
-    InvalidProvider,
-    NoCapacity,
-    OutOfMemory,
-    Unavailable,
-};
-
 const std = @import("std");
 const typed = @import("typed.zig");
 const byte_values = @import("byte_values.zig");
@@ -56,38 +43,6 @@ pub const Runtime = struct {
         return length;
     }
 };
-/// Decode a typed lookup request and allocate its declared result representation.
-pub fn readValue(allocator: std.mem.Allocator, runtime: *Runtime, request: Lookup, records: []const typed.Record) ReadValueError!typed.Value {
-    const output = request.output;
-    const capability = request.capability;
-    const name = request.name;
-    const name_type = request.name_type;
-    if (!capability.isCapability(.environment_capability)) return error.InternalError;
-    const shape = typed.environmentShape(output, records).?;
-    const key = try byte_values.toOwnedBytes(allocator, name, name_type, records);
-    defer allocator.free(key);
-    const bytes = try allocator.alloc(u8, records[shape.bytes_type.recordIndex()].shape.array.?.length);
-    defer allocator.free(bytes);
-    const length = runtime.get(capability.capability.environment_capability, key, bytes) catch |err| {
-        const code: i64 = switch (err) {
-            error.Unavailable => 1,
-            error.Denied => 2,
-            error.Failed => 3,
-            error.NoCapacity => 4,
-            else => return err,
-        };
-        return typed.Value.createVariant(allocator, output, shape.result.error_tag, .{ .i64 = code });
-    };
-    const array = try byte_values.fromBytes(allocator, bytes, shape.bytes_type, records);
-    defer array.release(allocator);
-    var fields: [3]typed.Value = undefined;
-    fields[shape.bytes_field] = array;
-    fields[shape.length_field] = typed.Value.number(.u64, length orelse 0);
-    fields[shape.flag_field] = .{ .bool = length != null };
-    const value = try typed.Value.create(allocator, shape.result.ok_type, &fields);
-    defer value.release(allocator);
-    return typed.Value.createVariant(allocator, output, shape.result.ok_tag, value);
-}
 
 /// Borrowed typed environment lookup, including the checked input and output schemas.
 pub const Lookup = struct { output: typed.Type, capability: typed.Value, name: typed.Value, name_type: typed.Type };

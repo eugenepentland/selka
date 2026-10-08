@@ -63,8 +63,7 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, owned_source);
     defer compilation.deinit();
     try testing.expectEqual(@as(i64, 7), (try native.run(&compilation)).value);
-    const dump = try compilation.dump(allocator);
-    defer allocator.free(dump);
+    try compilation.check();
     var discovery = try language.duplicates.discover(allocator, compilation.program.?, .{});
     defer discovery.deinit();
 }
@@ -75,29 +74,6 @@ test "propagation releases partial aggregate operands and survives every allocat
     const success = try std.mem.replaceOwned(u8, testing.allocator, owned_source, "match build(True)", "match build(False)");
     defer testing.allocator.free(success);
     try result(success, 9);
-}
-
-test "bytecode validates propagation result identity and failure stack targets" {
-    var compilation = try language.Compilation.init(testing.allocator, "invalid-try.my", owned_source);
-    defer compilation.deinit();
-    try compilation.emit();
-    const original = compilation.code.?;
-    const functions = try testing.allocator.dupe(language.bytecode.Function, original.functions);
-    defer testing.allocator.free(functions);
-    const instructions = try testing.allocator.dupe(language.bytecode.Instruction, functions[1].scope.instructions);
-    defer testing.allocator.free(instructions);
-    functions[1].scope.instructions = instructions;
-    var program = original;
-    program.functions = functions;
-    const propagation = try @import("instruction_test.zig").index(instructions, .try_result);
-    instructions[propagation].op.try_result.error_target = instructions.len;
-    try testing.expectError(error.InternalError, language.bytecode.validate(testing.allocator, program));
-    instructions[propagation] = original.functions[1].scope.instructions[propagation];
-    instructions[propagation].op.try_result.output = .i64;
-    try testing.expectError(error.InternalError, language.bytecode.validate(testing.allocator, program));
-    instructions[propagation] = original.functions[1].scope.instructions[propagation];
-    instructions[propagation].op.try_result.input = .bool;
-    try testing.expectError(error.InternalError, language.bytecode.validate(testing.allocator, program));
 }
 
 // spec-case: TRY-CONVERT-1

@@ -248,7 +248,18 @@ pub const Scope = struct {
     pub fn moveTo(self: *Scope, owner: Owner, destination: *Scope) Error!Owner {
         const index = try self.indexOf(owner);
         if (self.store != destination.store) return error.InvalidOwner;
-        return @import("owner_transfer.zig").between(Owner, Error, self.store, &self.owners, index, &destination.owners);
+        const owner_list = &self.owners;
+        if (owner_list == &destination.owners) {
+            const moved = try self.store.transfer(owner);
+            owner_list.items[index] = moved;
+            return moved;
+        }
+        // Destination capacity is reserved before rekeying so failure preserves ownership.
+        try destination.owners.ensureUnusedCapacity(self.store.allocator, 1);
+        const moved = try self.store.transfer(owner);
+        _ = owner_list.orderedRemove(index);
+        destination.owners.appendAssumeCapacity(moved);
+        return moved;
     }
     /// Complete a tracked resource; failed completion preserves the live owner.
     pub fn complete(self: *Scope, owner: Owner) Error!void {

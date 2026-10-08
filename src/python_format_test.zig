@@ -107,35 +107,7 @@ test "a native build spells an interpolated aggregate exactly as print writes it
 }
 
 // spec-case: PY-FSTRING-1
-test "an aggregate hole renders through the renderers print itself calls" {
-    var c = try language.Compilation.init(t.allocator, "format.my", rendered_holes);
-    defer c.deinit();
-    const manifest = try c.emitQbe(t.allocator);
-    defer t.allocator.free(manifest);
-    try t.expect(std.mem.indexOf(u8, manifest, "myl_qbe_text_render") != null);
-    try t.expect(std.mem.indexOf(u8, manifest, "myl_print_list") != null);
-    try t.expect(std.mem.indexOf(u8, manifest, "myl_print_dictionary") != null);
-    try t.expect(std.mem.indexOf(u8, manifest, "myl_print_variant") != null);
-}
-
-// spec-case: PY-FSTRING-1
-test "an f-string joins rendered pieces once without prefix concatenations" {
-    var c = try language.Compilation.init(t.allocator, "format.my",
-        \\def main() -> int:
-        \\    x = 20
-        \\    y = 22
-        \\    text = f"x={x}; y={y}!"
-        \\    return len(text)
-    );
-    defer c.deinit();
-    const manifest = try c.emitQbe(t.allocator);
-    defer t.allocator.free(manifest);
-    try t.expectEqual(@as(usize, 1), std.mem.count(u8, manifest, "myl_native_text_join"));
-    try t.expectEqual(@as(usize, 0), std.mem.count(u8, manifest, "myl_native_text_concat"));
-}
-
-// spec-case: PY-FSTRING-1
-test "a single f-string piece needs no joining or intermediate list" {
+test "a single f-string piece checks under noalloc" {
     var c = try language.Compilation.init(t.allocator, "format.my",
         \\def identity(value: str) -> str noalloc:
         \\    return f"{value}"
@@ -145,10 +117,8 @@ test "a single f-string piece needs no joining or intermediate list" {
         \\    return len(generic(identity("hello"), 1)) + len(f"")
     );
     defer c.deinit();
-    const manifest = try c.emitQbe(t.allocator);
-    defer t.allocator.free(manifest);
-    try t.expectEqual(@as(usize, 0), std.mem.count(u8, manifest, "myl_native_text_join"));
-    try t.expectEqual(@as(usize, 0), std.mem.count(u8, manifest, "myl_native_list_new"));
+    try c.check();
+    try t.expect(c.program != null);
 }
 
 // spec-case: PY-FSTRING-1

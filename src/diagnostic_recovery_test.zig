@@ -30,7 +30,7 @@ fn faults(allocator: std.mem.Allocator) !void {
         try t.expectEqual(std.mem.indexOf(u8, text, name).?, item.span.start);
     }
     try t.expectError(error.SourceError, native.run(&compilation));
-    try t.expect(compilation.program == null and compilation.code == null);
+    try t.expect(compilation.program == null);
     try t.expectEqual(@as(usize, 2), compilation.diagnostics.items.len);
     for ([_][]const u8{ "missing_first", "missing_second" }) |repair| {
         // Equal-length repairs preserve the unaffected function's byte offsets.
@@ -134,7 +134,7 @@ test "project diagnostics retain each module location and reject repeated loweri
         const location = compilation.src.locate(item.span.start);
         try t.expectEqualStrings(path, location.path);
     }
-    try t.expectError(error.SourceError, compilation.emit());
-    try t.expect(compilation.program == null and compilation.code == null);
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expect(compilation.program == null);
     try t.expectEqual(@as(usize, 2), compilation.diagnostics.items.items.len);
 }

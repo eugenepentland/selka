@@ -16,7 +16,6 @@ def rebuilt(mapping: dict[int, list[int]], count: int) -> Mixed:
     return result
 
 
-# spec: RC-STABLE-JOURNAL-1
 public def test_reused_constructor_values_keep_their_current_cleanup_roles() -> bool:
     mapping = {1: [7, 8]}
     result = rebuilt(mapping, 6)
@@ -31,7 +30,6 @@ def escaped() -> Mixed:
         return scratch.escape(value)
 
 
-# spec-case: RC-STABLE-JOURNAL-1
 public def test_reused_owners_and_held_values_escape_with_valid_storage() -> bool:
     result = escaped()
     return result.values == [4, 5] and list(result.view) == [[3, 4]]

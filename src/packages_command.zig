@@ -23,7 +23,7 @@ const package_byte_budget: usize = 16 * 1024 * 1024;
 /// Most directory entries one inventory walk may visit.
 const max_entries: usize = 50_000;
 /// Project commands `build --command` may run over the staged snapshot.
-const commands = [_][]const u8{ "check-project", "run-project", "index-project", "emit-project-qbe" };
+const commands = [_][]const u8{ "check-project", "run-project", "index-project" };
 /// Refusal for a file that could not be opened, stated or read.
 const unreadable = "cannot read {s}: {t}";
 /// Refusal for a lock that is not a `package-lock-v1` document.
@@ -33,12 +33,12 @@ const source_suffix = ".my";
 /// Prefix reserved for the standard modules the compiler embeds.
 const reserved_prefix = "std_";
 /// The project configuration copied into the staged snapshot.
-const config_name = @import("native_test_root").compiler_language.project_config.config_name;
+const config_name = @import("compiler_root").compiler_language.project_config.config_name;
 
 /// Usage text for `mylang packages --help` and a malformed command line.
 const usage =
     \\usage: mylang packages lock CONFIG.json --output LOCK.json
-    \\       mylang packages build ENTRY.my --lock LOCK.json [--command check-project|run-project|index-project|emit-project-qbe] [--receipt FILE]
+    \\       mylang packages build ENTRY.my --lock LOCK.json [--command check-project|run-project|index-project] [--receipt FILE]
     \\  lock inventories every package root CONFIG names ({"packages":[{"name":...,"root":...}]}) and
     \\  writes each module's SHA-256 into a package-lock-v1 file. build verifies the application
     \\  directory and every locked package against it, stages the verified bytes privately, and runs
@@ -444,7 +444,7 @@ fn copyPolicy(session: *Session, base: []const u8, directory: []const u8, raw: [
 /// A fresh private directory under `TMPDIR` (or the default scratch root).
 fn makeStage(session: *Session, environ: *const std.process.Environ.Map) Error![]const u8 {
     const configured = environ.get("TMPDIR") orelse "";
-    const parent = if (configured.len == 0) @import("qbe_build_io.zig").default_scratch_root else configured;
+    const parent = if (configured.len == 0) "/tmp" else configured;
     var random: [8]u8 = undefined;
     std.Io.random(session.io, &random);
     const name = try std.fmt.allocPrint(session.allocator, "mylang-packages-{s}", .{std.fmt.bytesToHex(random, .lower)});
@@ -584,6 +584,7 @@ test "package command lines take one positional and each flag once, spaced or wi
     try std.testing.expectError(error.Usage, parse(&.{ "a.my", "--lock", "x", "--lock=y" }));
     try std.testing.expectError(error.Usage, parse(&.{ "a.my", "--compiler", "zig-out/bin/mylang" }));
     try std.testing.expectError(error.Usage, parse(&.{ "a.my", "--lock" }));
-    try std.testing.expect(known("emit-project-qbe"));
+    try std.testing.expect(known("index-project"));
     try std.testing.expect(!known("run"));
+    try std.testing.expect(!known("emit-project-qbe"));
 }

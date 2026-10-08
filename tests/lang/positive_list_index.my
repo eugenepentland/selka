@@ -9,7 +9,6 @@ def read(frame: mut Frame) -> int:
     return value
 
 
-# spec-case: QBE-POSITIVE-INDEX-1
 public def test_positive_and_negative_reads_keep_scalar_updates_and_snapshots() -> bool:
     frame = Frame([7, 11, 13], 0)
     before = frame
@@ -29,7 +28,6 @@ def selected(frame: mut Frame) -> int:
     return frame.code[replace(mut frame)]
 
 
-# spec-case: QBE-POSITIVE-INDEX-1
 public def test_index_callback_keeps_the_receiver_selected_before_replacement() -> bool:
     frame = Frame([7, 11], 0)
     result = selected(mut frame)

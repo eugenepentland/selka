@@ -7,8 +7,6 @@ const native = @import("native_execute.zig");
 const sets = @import("effect_set.zig");
 const typed = @import("typed.zig");
 const callables = @import("callables.zig");
-const lower = @import("lower.zig");
-const bytecode_model = @import("bytecode_model.zig");
 const effect_engine = @import("effects.zig");
 /// Stable code for the call-site `&` marker diagnostic exercised below.
 const marker_code = "E_MUTATION_MARKER";
@@ -34,7 +32,6 @@ fn accept(source: []const u8) !void {
     var c = try language.Compilation.init(t.allocator, fixture_path, source);
     defer c.deinit();
     try c.check();
-    try c.emit();
 }
 /// Check one source and return its first error. The message is copied out
 /// because the compilation arena is released with the compilation.
@@ -103,21 +100,16 @@ test "noalloc permits scalar edits while the managed caller declares its allocat
     try result(accepted, 14);
     var c = try language.Compilation.init(t.allocator, fixture_path, accepted);
     defer c.deinit();
-    try c.emit();
+    try c.check();
     try t.expectEqual(@as(sets.Mask, 0), c.program.?.functions[0].policy.effects);
     try t.expectEqual(sets.bit(.managed_allocation), c.program.?.functions[2].policy.effects);
-    const dump = try c.dump(t.allocator);
-    defer t.allocator.free(dump);
-    try t.expect(std.mem.indexOf(u8, dump, "effects {managed_allocation} allowed {managed_allocation}") != null);
 }
 
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, fixture_path, accepted);
     defer c.deinit();
-    try c.emit();
+    try c.check();
     try t.expectEqual(sets.bit(.managed_allocation), c.program.?.functions[2].policy.effects);
-    const dump = try c.dump(allocator);
-    defer allocator.free(dump);
     var found = try language.duplicates.discover(allocator, c.program.?, .{ .min_nodes = 1 });
     defer found.deinit();
 }
@@ -248,7 +240,6 @@ test "M1 mutates clause parses normalizes and publishes checked metadata" {
     );
     defer c.deinit();
     try c.check();
-    try c.emit();
     var found = false;
     for (c.program.?.functions) |function| {
         if (!std.mem.eql(u8, function.name, "touch")) continue;
@@ -462,7 +453,6 @@ test "M1 definitely fresh local construction does not require mutation permissio
     );
     defer c.deinit();
     try c.check();
-    try c.emit();
     try t.expectEqual(@as(usize, 0), c.program.?.functions[0].signature.mutates.len);
     try t.expect((c.program.?.functions[0].policy.effects & sets.bit(.mutation)) == 0);
 }
@@ -495,7 +485,6 @@ test "M2 unused generic body enforces its declared mutation contract" {
         try t.expectEqualSlices(u16, &.{0}, function.signature.inferred_mutates);
     }
     try t.expect(found);
-    try c.emit();
 }
 
 test "M1 callback body carries its direct mutation fact" {
@@ -545,33 +534,6 @@ test "M1 callable assignability accepts narrower mutation footprints and return 
         .return_origin = .unknown,
     }, destination));
     try t.expect(callables.originSubset(.fresh, destination.return_origin));
-}
-
-test "M1 forged or missing IR mutation summaries reject" {
-    var c = try language.Compilation.init(t.allocator, fixture_path,
-        \\def touch(values: mut list[int]) -> None:
-        \\    values[0] = 1
-        \\
-        \\
-        \\def main() -> int:
-        \\    values = [7]
-        \\    touch(mut values)
-        \\    return values[0]
-    );
-    defer c.deinit();
-    try c.check();
-    var arena = std.heap.ArenaAllocator.init(t.allocator);
-    defer arena.deinit();
-    const program = try lower.lower(arena.allocator(), c.program.?);
-    var forged = false;
-    for (@constCast(program.functions)) |*function| {
-        if (!std.mem.eql(u8, function.name, "touch")) continue;
-        function.signature.inferred = .{};
-        function.signature.mutates = &.{};
-        forged = true;
-    }
-    try t.expect(forged);
-    try t.expectError(error.InternalError, effect_engine.validate(t.allocator, program));
 }
 
 test "M1 callback mutates metadata survives source checking and callable interning" {
@@ -679,25 +641,6 @@ const mutation_forms =
     \\    return 0
 ;
 
-test "legacy sharing: M1 every managed write form contributes a mutation fact" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    var c = try language.Compilation.init(t.allocator, fixture_path, mutation_forms);
-    defer c.deinit();
-    try c.check();
-    const expected = [_][]const u8{ "slot", "augment", "append", "extend", "insert", "remove", "pop", "clear", "reverse", "sort", "update", "delete", "set_cell" };
-    for (expected) |name| {
-        var found = false;
-        for (c.program.?.functions) |function| {
-            if (!std.mem.eql(u8, function.name, name)) continue;
-            found = true;
-            try t.expect(function.signature.inferred.writes);
-            try t.expectEqualSlices(u16, &.{0}, function.signature.mutates);
-        }
-        try t.expect(found);
-    }
-}
-
 test "M1 mutates clause normalizes duplicate names to sorted positions" {
     var c = try language.Compilation.init(t.allocator, fixture_path,
         \\def touch(a: mut list[int], b: mut list[int]) -> None:
@@ -715,33 +658,6 @@ test "M1 mutates clause normalizes duplicate names to sorted positions" {
         try t.expectEqualSlices(u16, &.{ 0, 1 }, function.signature.declared_mutates);
         try t.expectEqualSlices(u16, &.{ 0, 1 }, function.signature.mutates);
     }
-}
-
-// spec-case: MUTATION-METADATA-1
-// spec: MUTATION-ENFORCE-1
-test "legacy sharing: M2 a write through an unmarked parameter is the marker error, not a permission one" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    try reject(
-        \\def touch(values: list[int]) -> None effects():
-        \\    values[0] = 1
-        \\
-        \\
-        \\def main() -> int:
-        \\    values = [1]
-        \\    touch(values)
-        \\    return 0
-    , marker_code, "declare `values: mut list[int]`");
-    try reject(
-        \\def set_value(cell: Cell[int]) -> None effects():
-        \\    cell.value = 1
-        \\
-        \\
-        \\def main() -> int:
-        \\    cell = Cell(value=0)
-        \\    set_value(cell)
-        \\    return 0
-    , marker_code, "declare `cell: mut Cell[int]`");
 }
 
 // spec: MUT-PARAM-4
@@ -873,25 +789,6 @@ const recursive_graphs_tail =
     \\
 ;
 
-// The per-path walk this replaced re-walked every path to a pair, so these two
-// graphs never finished checking; expanding each pair once settles them at once.
-// spec: MUT-OVERLAP-PROOF-1
-test "legacy sharing: the overlap proof over two recursive class graphs expands each type pair once" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    var c = try language.Compilation.init(t.allocator, fixture_path, recursive_graphs_head ++ "    extra: list[Heap]\n" ++ recursive_graphs_tail);
-    defer c.deinit();
-    try c.check();
-    try t.expectEqual(@as(?language.diagnostic.Diagnostic, null), firstError(c.diagnostics.items));
-}
-
-// spec-case: MUT-OVERLAP-PROOF-1
-test "legacy sharing: the overlap proof still rejects two recursive graphs that share one component deep down" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    try reject(recursive_graphs_head ++ "    source: list[Expr]\n" ++ recursive_graphs_tail, "E_MUTATION_OVERLAP", "may alias");
-}
-
 /// A runtime whose object table holds classes behind a union, as the Lox VM's
 /// does; `close` writes an upvalue it takes out of the table with `match`.
 fn upvalueProgram(comptime parameter: []const u8, comptime argument: []const u8) []const u8 {
@@ -920,63 +817,6 @@ fn upvalueProgram(comptime parameter: []const u8, comptime argument: []const u8)
         \\    return 0
         \\
     , .{ parameter, argument });
-}
-
-// spec: MUT-TRACK-1
-test "legacy sharing: a write through a match payload writes the owner of the matched value" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    try accept(comptime upvalueProgram("rt: mut Runtime", "mut rt"));
-    try reject(comptime upvalueProgram("rt: Runtime", "rt"), marker_code, "declare `rt: mut Runtime`");
-}
-
-// A binding a later loop statement widens carries the widened origin at the
-// write: on the second iteration `b` is `a`, which the first made `p`.
-// spec-case: MUT-TRACK-1
-test "legacy sharing: binding origins reach a fixed point across a loop" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    try reject(
-        \\class Box:
-        \\    n: int
-        \\
-        \\def shuffle(p: Box):
-        \\    a = Box(n=0)
-        \\    b = Box(n=0)
-        \\    for i in range(2):
-        \\        b.n = i
-        \\        b = a
-        \\        a = p
-        \\
-        \\def main() -> int:
-        \\    shuffle(Box(n=0))
-        \\    return 0
-    , marker_code, "declare `p: mut Box`");
-}
-
-// spec-case: MUT-TRACK-1
-test "legacy sharing: the missing-marker diagnostic points at the write that needs the marker" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    const source =
-        \\class Box:
-        \\    n: int
-        \\
-        \\def both(r: mut Box, x: Box):
-        \\    r.n = 1
-        \\    x.n = 2
-        \\
-        \\def main() -> int:
-        \\    r = Box(n=0)
-        \\    both(mut r, Box(n=0))
-        \\    return 0
-    ;
-    var c = try language.Compilation.init(t.allocator, fixture_path, source);
-    defer c.deinit();
-    try t.expectError(error.SourceError, c.check());
-    const diag = firstError(c.diagnostics.items) orelse return error.TestUnexpectedResult;
-    try t.expectEqualStrings(marker_code, diag.code);
-    try t.expectEqualStrings("x.n", source[diag.span.start..][0..3]);
 }
 
 // spec-case: MUT-PARAM-4
@@ -1451,120 +1291,6 @@ test "M1 an unmarked written parameter is rejected with every position listed" {
     try t.expectEqual(@as(usize, 1), messages.len);
     try t.expect(std.mem.indexOf(u8, messages[0], "this function writes `first` (parameter 1), `second` (parameter 2)") != null);
     try t.expect(std.mem.indexOf(u8, messages[0], "declare `first: mut list[int]`, `second: mut list[int]`") != null);
-}
-
-// spec-case: MUT-PARAM-2
-test "legacy sharing: M1 a class parameter written through needs its own mut" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    const messages = try markerMessages(
-        \\class Cursor:
-        \\    pos: int
-        \\
-        \\
-        \\def bump(cursor: Cursor) -> int:
-        \\    cursor.pos = cursor.pos + 1
-        \\    return cursor.pos
-        \\
-        \\
-        \\def main() -> int:
-        \\    cursor = Cursor(pos=0)
-        \\    return bump(cursor) - 1
-    );
-    defer {
-        for (messages) |message| t.allocator.free(message);
-        t.allocator.free(messages);
-    }
-    try t.expectEqual(@as(usize, 1), messages.len);
-    try t.expect(std.mem.indexOf(u8, messages[0], "declare `cursor: mut Cursor`") != null);
-}
-
-// spec-case: MUT-PARAM-2
-test "legacy sharing: M1 a class parameter written through is accepted once marked" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    try accept(
-        \\class Cursor:
-        \\    pos: int
-        \\
-        \\
-        \\def bump(cursor: mut Cursor) -> int:
-        \\    cursor.pos = cursor.pos + 1
-        \\    return cursor.pos
-        \\
-        \\
-        \\def main() -> int:
-        \\    cursor = Cursor(pos=0)
-        \\    return bump(mut cursor) - 1
-    );
-}
-
-// spec-case: MUT-PARAM-2
-test "legacy sharing: M1 a write through a match payload binding needs the matched parameter's mut" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    const messages = try markerMessages(
-        \\def grow(candidate: Option[list[int]]) -> int:
-        \\    match candidate:
-        \\        case Some(items):
-        \\            items.append(1)
-        \\            return len(items)
-        \\        case None:
-        \\            return 0
-        \\
-        \\
-        \\def main() -> int:
-        \\    return 0
-    );
-    defer {
-        for (messages) |message| t.allocator.free(message);
-        t.allocator.free(messages);
-    }
-    try t.expectEqual(@as(usize, 1), messages.len);
-    try t.expect(std.mem.indexOf(u8, messages[0], "declare `candidate: mut Option[list[int]]`") != null);
-}
-
-// spec-case: MUT-PARAM-2
-test "legacy sharing: M1 a field write through a narrowed Option parameter needs mut and is accepted once marked" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    const messages = try markerMessages(
-        \\class Counter:
-        \\    value: int
-        \\
-        \\
-        \\def bump(candidate: Option[Counter]) -> int:
-        \\    if candidate is None:
-        \\        return 0
-        \\    candidate.value = candidate.value + 1
-        \\    return candidate.value
-        \\
-        \\
-        \\def main() -> int:
-        \\    return 0
-    );
-    defer {
-        for (messages) |message| t.allocator.free(message);
-        t.allocator.free(messages);
-    }
-    try t.expectEqual(@as(usize, 1), messages.len);
-    try t.expect(std.mem.indexOf(u8, messages[0], "declare `candidate: mut Option[Counter]`") != null);
-    try accept(
-        \\class Counter:
-        \\    value: int
-        \\
-        \\
-        \\def bump(candidate: mut Option[Counter]) -> int:
-        \\    if candidate is None:
-        \\        return 0
-        \\    candidate.value = candidate.value + 1
-        \\    return candidate.value
-        \\
-        \\
-        \\def main() -> int:
-        \\    candidate: Option[Counter] = Some(Counter(value=41))
-        \\    return bump(mut candidate) - 42
-    );
 }
 
 // spec-case: MUT-PARAM-2

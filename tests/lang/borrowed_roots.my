@@ -15,7 +15,6 @@ def fresh(n: int) -> list[int]:
     return [n, n + 1, n + 2]
 
 
-# spec-case: QBE-BORROW-ROOT-1
 public def test_a_loop_variable_survives_allocations_while_its_list_does() -> bool:
     rows = [fresh(0), fresh(10), fresh(20)]
     total = 0
@@ -26,7 +25,6 @@ public def test_a_loop_variable_survives_allocations_while_its_list_does() -> bo
     return total == 1 * 5 + 11 * 5 + 21 * 5 + 3 * 10
 
 
-# spec-case: QBE-BORROW-ROOT-1
 public def test_an_element_removed_from_its_list_keeps_its_own_root() -> bool:
     rows = [fresh(0), fresh(10)]
     row = rows[1]
@@ -42,7 +40,6 @@ def drop_all(rows: mut list[list[int]]) -> int:
     return 0
 
 
-# spec-case: QBE-BORROW-ROOT-1
 public def test_an_element_a_callee_removes_keeps_its_own_root() -> bool:
     rows = [fresh(0), fresh(10)]
     row = rows[0]
@@ -53,7 +50,6 @@ public def test_an_element_a_callee_removes_keeps_its_own_root() -> bool:
     return row[1] == 1 and status == 0 and scratch[2] == 71
 
 
-# spec-case: QBE-BORROW-ROOT-1
 public def test_an_element_overwritten_in_its_list_keeps_its_own_root() -> bool:
     rows = [fresh(0), fresh(10)]
     row = rows[0]
@@ -62,7 +58,6 @@ public def test_an_element_overwritten_in_its_list_keeps_its_own_root() -> bool:
     return row[0] == 0 and rows[0][0] == 100 and scratch[0] == 1
 
 
-# spec-case: QBE-BORROW-ROOT-1
 public def test_a_field_read_survives_while_the_instance_holds_it() -> bool:
     node = Node(items=fresh(3), next=None)
     items = node.items
@@ -75,7 +70,6 @@ public def test_a_field_read_survives_while_the_instance_holds_it() -> bool:
     return total == 30 + 45 and items[1] == 4 and node.items[0] == 50 and extra[0] == 2
 
 
-# spec-case: QBE-BORROW-ROOT-1
 public def test_a_dictionary_value_survives_until_it_is_replaced() -> bool:
     table = {"a": fresh(1), "b": fresh(2)}
     held = table["a"]
@@ -85,7 +79,6 @@ public def test_a_dictionary_value_survives_until_it_is_replaced() -> bool:
     return held[0] == 1 and table["a"][0] == 40 and scratch[0] == 9 and after[0] == 8
 
 
-# spec-case: QBE-BORROW-ROOT-1
 public def test_a_chain_of_borrows_survives_through_dead_owners() -> bool:
     grid = [[fresh(1), fresh(2)], [fresh(3)]]
     row = grid[0]

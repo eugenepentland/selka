@@ -31,7 +31,6 @@ def replacement(it: mut Interpreter, value: int):
     it.rt = rt
 
 
-# spec-case: RC-FIELD-INOUT-1
 public def test_closed_carrier_preserves_snapshots_detached_aliases_and_record_rebinding() -> bool:
     it = Interpreter(Runtime([1, 2], 0), 9)
     saved = it

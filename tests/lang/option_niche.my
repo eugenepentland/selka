@@ -94,7 +94,6 @@ def forget(candidate: Option[Node]) -> Option[Node] effects():
     return None
 
 
-# spec: QBE-NICHE-2
 public def test_construct_test_and_match_a_niche_optional() -> bool:
     present: Option[Node] = Some(leaf(7))
     absent: Option[Node] = None
@@ -102,14 +101,12 @@ public def test_construct_test_and_match_a_niche_optional() -> bool:
     return present is not None and absent is None and value_of(present) == 7 and value_of(absent) == -1
 
 
-# spec-case: QBE-NICHE-2
 public def test_a_tree_of_optional_children_survives_collection() -> bool:
     kept = tree(6)
     total = churn(30)
     return count(kept) == 127 and total == 30 * 7
 
 
-# spec-case: QBE-NICHE-2
 public def test_question_mark_propagates_none_and_unwraps_some() -> bool:
     parent = Node(value=1, left=Some(leaf(5)), right=None)
     lone = leaf(2)
@@ -118,7 +115,6 @@ public def test_question_mark_propagates_none_and_unwraps_some() -> bool:
     return value_of(left_child(parent)) == 5 and left_child(lone) is None and grandchild(lone) is None and value_of(deep) == 1
 
 
-# spec-case: QBE-NICHE-2
 public def test_methods_on_niche_optionals() -> bool:
     node = leaf(3)
     present = pick(True, node)
@@ -127,7 +123,6 @@ public def test_methods_on_niche_optionals() -> bool:
     return present.is_some() and absent.is_none() and present.unwrap_or(fallback).value == 3 and absent.unwrap_or(fallback).value == 9
 
 
-# spec-case: QBE-NICHE-2
 public def test_equality_of_niche_optionals() -> bool:
     node = leaf(1)
     other = leaf(1)
@@ -141,7 +136,6 @@ public def test_equality_of_niche_optionals() -> bool:
     return same == again and none_a == none_b and same != none_a and none_b != again and text_a == text_b and text_a != first_word(empty) and (Some(other) == same) == (other == node)
 
 
-# spec-case: QBE-NICHE-2
 public def test_niche_optionals_render_like_tagged_ones() -> bool:
     word = first_word(["hi"])
     empty: list[str] = []
@@ -151,7 +145,6 @@ public def test_niche_optionals_render_like_tagged_ones() -> bool:
     return f"{word}" == "Some('hi')" and f"{missing}" == "None" and f"{numbers}" == "Some([1, 2])" and f"{nothing}" == "None"
 
 
-# spec-case: QBE-NICHE-2
 public def test_niche_optionals_in_lists_dicts_records_and_arrays() -> bool:
     items: list[Option[Node]] = []
     for i in range(12):
@@ -167,7 +160,6 @@ public def test_niche_optionals_in_lists_dicts_records_and_arrays() -> bool:
     return present == 0 + 3 + 6 + 9 and value_of(table["a"]) == 4 and value_of(table["b"]) == -1 and value_of(holder.node) == 8 and value_of(fixed[1]) == 5 and fixed[2] is None
 
 
-# spec-case: QBE-NICHE-2
 public def test_niche_optionals_cross_callbacks() -> bool:
     node = leaf(6)
     kept = apply(through, Some(node))
@@ -176,7 +168,6 @@ public def test_niche_optionals_cross_callbacks() -> bool:
     return value_of(kept) == 6 and dropped is None and apply(through, None) is None
 
 
-# spec-case: QBE-NICHE-2
 public def test_an_optional_optional_keeps_some_none_apart_from_none() -> bool:
     inner_none: Option[Option[Node]] = Some(None)
     outer_none: Option[Option[Node]] = None
@@ -197,7 +188,6 @@ public def test_an_optional_optional_keeps_some_none_apart_from_none() -> bool:
     return inner_ok and outer_none is None and full_value == 2 and inner_none != outer_none
 
 
-# spec-case: QBE-NICHE-2
 public def test_a_user_union_of_the_same_shape_matches_like_an_option() -> bool:
     filled = Slot.some(leaf(4))
     empty = Slot.none
@@ -217,7 +207,6 @@ public def test_a_user_union_of_the_same_shape_matches_like_an_option() -> bool:
     return got == 4 and missing == -1
 
 
-# spec-case: QBE-NICHE-2
 public def test_an_escaped_graph_keeps_its_optional_links() -> bool:
     kept: list[Option[list[int]]] = []
     with arena() as scratch:
@@ -239,7 +228,6 @@ public def test_an_escaped_graph_keeps_its_optional_links() -> bool:
             return False
 
 
-# spec-case: QBE-NICHE-2
 public def test_optional_text_and_lists_survive_collection() -> bool:
     words: list[Option[str]] = []
     for i in range(10):

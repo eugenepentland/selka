@@ -75,7 +75,7 @@ fn scenario(allocator: std.mem.Allocator, main: []const u8, expected_error: ?[]c
         return err;
     };
     var compilation = try language.project_compile.Compilation.init(&index);
-    compilation.emit() catch |err| {
+    compilation.check() catch |err| {
         if (err != error.SourceError) return err;
         if (expected_error) |code| return t.expectEqualStrings(code, compilation.diagnostics.items.items[0].code);
         for (compilation.diagnostics.items.items) |diag| debug.print("{s}: {s} ({s})\n", .{ diag.code, diag.message, compilation.src.text(diag.span) });

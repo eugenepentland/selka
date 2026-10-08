@@ -1,7 +1,6 @@
 module iteration_identity
 
 
-# spec-case: COW-ITERATION-IDENTITY-1
 public def test_nonstructural_dictionary_writes_remain_visible() -> bool:
     values = {1: 10, 2: 20}
     total = 0
@@ -11,7 +10,6 @@ public def test_nonstructural_dictionary_writes_remain_visible() -> bool:
     return total == 32 and values == {1: 11, 2: 21}
 
 
-# spec-case: COW-ITERATION-IDENTITY-1
 public def test_list_iteration_observes_later_element_writes() -> bool:
     values = [1, 2]
     total = 0
@@ -21,7 +19,6 @@ public def test_list_iteration_observes_later_element_writes() -> bool:
     return total == 10 and values == [1, 9]
 
 
-# spec-case: COW-ITERATION-IDENTITY-1
 public def test_rebinding_source_preserves_original_iteration_storage() -> bool:
     values = [1, 2]
     total = 0
@@ -35,7 +32,6 @@ public def test_rebinding_source_preserves_original_iteration_storage() -> bool:
     return total == 6 and values == [7] and mapping == {7: 70}
 
 
-# spec-case: COW-ITERATION-IDENTITY-1
 public def test_named_snapshot_remains_independent_of_iteration_writes() -> bool:
     values = [1, 2]
     snapshot = values
@@ -46,7 +42,6 @@ public def test_named_snapshot_remains_independent_of_iteration_writes() -> bool
     return total == 10 and values == [1, 9] and snapshot == [1, 2]
 
 
-# spec-case: COW-ITERATION-IDENTITY-1
 public def test_fresh_managed_sources_survive_without_an_owner_local() -> bool:
     total = 0
     for value in [2, 3]:
@@ -62,7 +57,6 @@ public def test_fresh_managed_sources_survive_without_an_owner_local() -> bool:
     return total == 189
 
 
-# spec-case: COW-ITERATION-IDENTITY-1
 public def test_fixed_array_iteration_reads_the_place_and_preserves_a_copy() -> bool:
     values: [2]int = [1, 2]
     snapshot = values

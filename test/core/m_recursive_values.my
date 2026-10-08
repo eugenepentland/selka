@@ -138,7 +138,6 @@ public def test_keyword_temporaries_capture_in_source_order() -> bool:
     return rows == [[1, 7], [2, 9]] and cursor.rows == [[1], [2]] and cursor.ticks == 1
 
 # spec-case: NEW-CORE-S3-VALUES-1
-# spec-case: RC-SCALAR-REPLACE-1
 public def test_unit_assignment_through_nested_list_places_survives_control_flow() -> bool:
     row: [2]int = [2, 3]
     empty: None = None

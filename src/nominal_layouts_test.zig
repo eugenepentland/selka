@@ -101,11 +101,11 @@ fn finite(text: []const u8) !void {
 fn reject(text: []const u8, code: []const u8, detail: []const u8) !void {
     var compilation = try language.Compilation.init(t.allocator, "recursive.my", text);
     defer compilation.deinit();
-    try t.expectError(error.SourceError, compilation.emit());
+    try t.expectError(error.SourceError, compilation.check());
     const problem = compilation.diagnostics.items[0];
     try t.expectEqualStrings(code, problem.code);
     try t.expect(std.mem.indexOf(u8, problem.message, detail) != null);
-    try t.expect(compilation.program == null and compilation.code == null);
+    try t.expect(compilation.program == null);
 }
 test "nominal layout expansion bounds argument growth without host stack recursion" {
     try reject(
@@ -182,7 +182,7 @@ fn sharedWorkSource(allocator: std.mem.Allocator, count: usize) ![]u8 {
 fn limitSite(text: []const u8) ![2][]const u8 {
     var compilation = try language.Compilation.init(t.allocator, "limit.my", text);
     defer compilation.deinit();
-    try t.expectError(error.SourceError, compilation.emit());
+    try t.expectError(error.SourceError, compilation.check());
     const problem = compilation.diagnostics.items[0];
     try t.expectEqualStrings("E_GENERIC_LIMIT", problem.code);
     try t.expect(problem.related != null);

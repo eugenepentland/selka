@@ -19,7 +19,6 @@ def loop(points: mut list[Point], count: int) -> int:
     return points[0].x
 
 
-# spec-case: RC-EMPTY-FRAME-1
 public def test_caller_snapshot_and_negative_index_survive_unlinked_callee() -> bool:
     points = [Point(3, 5), Point(7, 11)]
     before = points
@@ -37,7 +36,6 @@ def callback(points: mut list[Point]):
     points[mutation_result_57].x = 23
 
 
-# spec-case: RC-EMPTY-FRAME-1
 public def test_completed_callback_keeps_caller_and_snapshot_independent() -> bool:
     points = [Point(3, 5)]
     before = points

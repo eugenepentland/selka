@@ -103,7 +103,6 @@ def all_true(checks: list[bool]) -> bool:
     return len(checks) > 1
 
 
-# spec-case: RC-MATCH-SCALAR-1
 public def test_bool_payload_binding_ignores_stale_slot_bytes() -> bool:
     _ = stain(-1)
     text_false = flag_text(Payload.flag(False))
@@ -114,7 +113,6 @@ public def test_bool_payload_binding_ignores_stale_slot_bytes() -> bool:
     return text_false == "false" and all_true(checks) and text_true == "true"
 
 
-# spec-case: RC-MATCH-SCALAR-1
 public def test_signed_payload_bindings_are_sign_extended() -> bool:
     _ = stain(0)
     tiny = signed_checks(Payload.tiny(-1))
@@ -125,7 +123,6 @@ public def test_signed_payload_bindings_are_sign_extended() -> bool:
     return all_true(tiny) and all_true(short) and all_true(word)
 
 
-# spec-case: RC-MATCH-SCALAR-1
 public def test_unsigned_payload_bindings_are_zero_extended() -> bool:
     _ = stain(-1)
     octet = unsigned_checks(Payload.octet(200))
@@ -134,7 +131,6 @@ public def test_unsigned_payload_bindings_are_zero_extended() -> bool:
     return all_true(octet) and all_true(wide)
 
 
-# spec-case: RC-MATCH-SCALAR-1
 public def test_lox_value_text_prints_false() -> bool:
     _ = stain(-1)
     falsy = value_text(Value.boolean(False))
