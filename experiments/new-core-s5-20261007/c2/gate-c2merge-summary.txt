@@ -1,0 +1,5 @@
+Build Summary: 85/88 steps succeeded (1 failed); 3260/35887 tests passed (32627 skipped)
+test transitive failure
++- run ../guardian-zig/zig-out/bin/guardian-check success 5s
+gate wall 195.89 s
+only failing step: test-cache-isolation (driver assertion predating --no-cache semantics; fixed in this commit, step rerun green)

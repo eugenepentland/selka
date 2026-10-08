@@ -31,7 +31,9 @@ def main():
         run(compiler, ["test", str(source), "--no-cache", "--cache-dir", str(cache)], work)
         assert not (work / ".mylang-cache").exists(), "test --no-cache leaked a cwd cache"
         run(compiler, ["build", str(source), "-o", str(root / "built"), "--no-cache", "--cache-dir", str(cache)], work)
-        assert any(path.is_file() for path in cache.rglob("*")), "build did not publish into its explicit cache"
+        # --no-cache builds in a private directory under the explicit cache and removes it
+        # (NEW-CORE-S5-NO-CACHE-1): nothing is published, and nothing goes to the cwd.
+        assert cache.is_dir() and not any(path.name.startswith("no-cache-") for path in cache.iterdir()), "build --no-cache left its private cache"
         assert not (work / ".mylang-cache").exists(), "build --no-cache leaked a cwd cache"
         docs = root / "documentation"
         docs.mkdir()
