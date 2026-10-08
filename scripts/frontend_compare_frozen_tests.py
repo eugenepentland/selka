@@ -15,13 +15,13 @@ import concurrent.futures
 import datetime
 import copy
 import hashlib
-import importlib.util
 import json
 import os
 from pathlib import Path
 import re
 import subprocess
 import time
+import types
 
 ORACLE_SHA = "ec4d76d2b57a0de47eda656571952dab90cc1aa3ddea822a327b945d3c464d03"
 MODES = ("debug", "release", "verify")
@@ -45,9 +45,9 @@ def production_manifest(source):
 
 
 def load(name, path):
-    spec = importlib.util.spec_from_file_location(name, path)
-    result = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(result)
+    result = types.ModuleType(name)
+    result.__file__ = str(path)
+    exec(compile(path.read_bytes(), str(path), "exec"), result.__dict__)
     return result
 
 

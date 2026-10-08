@@ -104,5 +104,18 @@ class ProductionIdentity(unittest.TestCase):
             self.assertNotEqual(before, gate.production_manifest(root))
 
 
+class ImmutableLoader(unittest.TestCase):
+    def test_loading_a_frozen_helper_creates_no_cache_or_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            helper = root / "helper.py"
+            helper.write_text("value = 42\n")
+            before = {path.name: path.read_bytes() for path in root.iterdir()}
+            loaded = gate.load("frozen_helper", helper)
+            self.assertEqual(loaded.value, 42)
+            self.assertEqual(loaded.__file__, str(helper))
+            self.assertEqual(before, {path.name: path.read_bytes() for path in root.iterdir()})
+
+
 if __name__ == "__main__":
     unittest.main()
