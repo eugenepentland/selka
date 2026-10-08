@@ -483,12 +483,16 @@ A receipt's identity (NEW-CORE-S4-TEST-3) is:
   `ZIG_LIB_DIR`, `SOURCE_DATE_EPOCH` and the like). A shell's `_` or `OLDPWD`,
   a terminal's variables or a wrapper such as `time` leave receipts valid.
 
-A program also keys all its ready tests at once (NEW-CORE-TEST-WHOLE-1): the
-program the runner builds for all of them, with the same settings and every
-test's case. When nothing any of them reaches has changed since they all
-passed, they are all reused without building each test's own program to find its
-key. Any change falls back to the per-test keys above, so only the tests that
-reach the change run again.
+A program lowers all its ready tests once and derives each test's key from that
+lowering (NEW-CORE-TEST-KEYS-1): every function gets a digest of what it means
+(its callees by name and signature, its strings by their bytes, its types by
+structure), and a test's key hashes the digests of the functions it reaches. The
+key changes exactly when the test's own program above does, so an edit to a
+function only some tests reach reruns only those, and finding the keys costs one
+lowering for the file instead of one per test. The program also keeps one key for
+all its ready tests together (NEW-CORE-TEST-WHOLE-1): when it has a receipt, every
+test is reused with a single lookup. `MYLANG_TEST_KEYS=per-test` keys each test
+from its own lowering instead, as the check the derived keys are tested against.
 
 Output and capabilities do not prevent reuse. A test that prints through a
 `Stream` parameter is reused like any other, because its output is discarded on

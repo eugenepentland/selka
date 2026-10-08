@@ -3,7 +3,8 @@ const std = @import("std");
 const ir = @import("ir.zig");
 const emit_render = @import("emit_render.zig");
 const Out = std.ArrayList(u8);
-const equal_prefix = "myl_core_equal_";
+/// The name prefix of a structural equality adapter: `myl_core_equal_<IR type index>`.
+pub const equal_prefix = "myl_core_equal_";
 /// Allocation or an unsupported representation stops this stage.
 pub const Error = error{ OutOfMemory, UnsupportedEntry, UnsupportedInstruction };
 

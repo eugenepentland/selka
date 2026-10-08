@@ -185,7 +185,7 @@ fn aloneSufficient(context: Context, source: []const u8, all: []const Saved) !us
 }
 
 // spec: NEW-CORE-TEST-WHOLE-1
-test "wholeKey: a program's whole-file receipt alone replays every test, and an edit reruns only the tests that reach it" {
+test "sharedKeys: a program's whole-file receipt alone replays every test, and an edit reruns only the tests that reach it" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var temporary = std.testing.tmpDir(.{});
@@ -204,6 +204,93 @@ test "wholeKey: a program's whole-file receipt alone replays every test, and an 
     try expectStatus(context, changed, 1);
     try verdict(changed.report, "app::test_dependency", "failed");
     try verdict(changed.report, "app::test_constant", "cached");
+}
+
+const keys_app =
+    \\module app
+    \\import dep
+    \\
+    \\public def test_value() -> bool:
+    \\    return dep.value() == 3
+    \\
+    \\public def test_greeting() -> bool:
+    \\    return len(dep.greeting()) == 2
+    \\
+    \\public def test_point() -> bool:
+    \\    return dep.origin().x == 0
+    \\
+    \\public def test_alone() -> bool:
+    \\    return True
+    \\
+    \\def main() -> int:
+    \\    return 0
+    \\
+;
+const keys_dep_parts = [_][]const u8{
+    "module dep\n\npublic record Point:\n    x: int\n    y: int\n\n",
+    "public def value() -> int:\n    return 3\n\n",
+    "public def greeting() -> str:\n    return \"hi\"\n\n",
+    "public def origin() -> Point:\n    return Point(x=0, y=0)\n\n",
+    "public def unused() -> int:\n    return 1\n",
+};
+/// One step of the key differential: the dependency's source after it, and the tests
+/// whose program it changes.
+const KeyEdit = struct { dep: []const u8, rerun: []const []const u8 };
+
+fn byName(_: void, left: []const u8, right: []const u8) bool {
+    return std.mem.lessThan(u8, left, right);
+}
+
+/// Run `app.my` with derived keys and with `MYLANG_TEST_KEYS=per-test`, each in its own
+/// cache, and require both to rerun exactly the tests named in `expected` (in any
+/// order; every other test `cached`).
+fn sameReruns(context: Context, expected: []const []const u8) !void {
+    for ([_]bool{ false, true }) |oracle| {
+        var environment = try std.testing.environ.createMap(context.arena);
+        if (oracle) try environment.put("MYLANG_TEST_KEYS", "per-test");
+        const cache = try std.fs.path.join(context.arena, &.{ context.root, if (oracle) "cache-oracle" else "cache-derived" });
+        const entry_path = try std.fs.path.join(context.arena, &.{ context.root, "app.my" });
+        const argv = [_][]const u8{ tools.core_path, "test", entry_path, "--json", command_cache, cache };
+        const result = try std.process.run(context.arena, std.testing.io, .{ .argv = &argv, .environ_map = &environment });
+        const report = try std.json.parseFromSliceLeaky(std.json.Value, context.arena, result.stdout, .{});
+        var rerun: std.ArrayList([]const u8) = .empty;
+        for (v.array(v.get(report, "tests"))) |item| if (!std.mem.eql(u8, v.text(v.get(item, "status")), "cached")) try rerun.append(context.arena, v.text(v.get(item, "name")));
+        const wanted = try context.arena.dupe([]const u8, expected);
+        std.mem.sort([]const u8, wanted, {}, byName);
+        std.mem.sort([]const u8, rerun.items, {}, byName);
+        try std.testing.expectEqual(wanted.len, rerun.items.len);
+        for (wanted, rerun.items) |want, got| try std.testing.expectEqualStrings(want, got);
+    }
+}
+
+// spec-case: NEW-CORE-TEST-KEYS-1
+test "derived per-test keys rerun exactly the tests the per-test oracle reruns across body, string, type and interface edits" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
+    const parts = keys_dep_parts;
+    try context.write("app.my", keys_app);
+    try context.write("dep.my", try std.mem.concat(a, u8, &parts));
+    try sameReruns(context, &.{ "app::test_value", "app::test_greeting", "app::test_point", "app::test_alone" });
+    const value_sum = "public def value() -> int:\n    return 1 + 2\n\n";
+    const unused_text = "public def unused() -> int:\n    _ = \"new text\"\n    return 1\n";
+    const greeting_ho = "public def greeting() -> str:\n    return \"ho\"\n\n";
+    const point_z = "module dep\n\npublic record Point:\n    x: int\n    y: int\n    z: int\n\n";
+    const origin_z = "public def origin() -> Point:\n    return Point(x=0, y=0, z=0)\n\n";
+    const added = "\npublic def added() -> int:\n    return 2\n";
+    const edits = [_]KeyEdit{
+        .{ .dep = try std.mem.concat(a, u8, &.{ parts[0], value_sum, parts[2], parts[3], parts[4] }), .rerun = &.{"app::test_value"} },
+        .{ .dep = try std.mem.concat(a, u8, &.{ parts[0], value_sum, parts[2], parts[3], unused_text }), .rerun = &.{} },
+        .{ .dep = try std.mem.concat(a, u8, &.{ parts[0], value_sum, greeting_ho, parts[3], unused_text }), .rerun = &.{"app::test_greeting"} },
+        .{ .dep = try std.mem.concat(a, u8, &.{ point_z, value_sum, greeting_ho, origin_z, unused_text, added }), .rerun = &.{ "app::test_value", "app::test_greeting", "app::test_point" } },
+    };
+    for (edits) |edit| {
+        try context.write("dep.my", edit.dep);
+        try sameReruns(context, edit.rerun);
+    }
 }
 
 // spec: NEW-CORE-S4-TEST-4

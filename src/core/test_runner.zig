@@ -29,6 +29,7 @@ const property_execute = @import("property_execute.zig");
 const batch_entry = @import("test_runner_batch.zig");
 const directory_runner = @import("test_runner_directory.zig");
 const receipt = @import("test_runner_receipt.zig");
+const test_keys = @import("test_runner_identity.zig");
 const tool_identity = @import("tool_identity.zig");
 const tool_ticket = @import("tool_ticket.zig");
 const case_settings = @import("test_runner_cases.zig");
@@ -524,12 +525,21 @@ fn select(init: std.process.Init, options: Options, checked: frontend.Checked, c
         const refused = if (skip == .string and skip.string.len != 0) report.Verdict{ .name = case.name, .status = .skipped, .reason = skip.string } else try screen(a, checked, case, configured);
         item.* = .{ .case = case, .verdict = refused orelse .{ .name = case.name, .status = .failed, .reason = "not run" }, .ready = refused == null, .settings = configured };
     }
-    const whole = try wholeKey(init, options, checked, chosen, selection.base);
-    if (whole) |found| if (try receipt.hit(context, found.key)) {
-        for (chosen) |*item| if (item.ready) {
-            item.* = .{ .case = item.case, .verdict = .{ .name = item.case.name, .status = .cached }, .ready = false, .identity = found.key, .settings = item.settings };
+    if (!perTestKeys(init.environ_map)) if (try sharedKeys(init, options, checked, chosen, selection.base)) |keys| {
+        if (try receipt.hit(context, keys.whole.key)) {
+            for (chosen, keys.tests) |*item, key| if (item.ready) {
+                item.* = .{ .case = item.case, .verdict = .{ .name = item.case.name, .status = .cached }, .ready = false, .identity = key, .settings = item.settings };
+            };
+            return .{ .items = chosen };
+        }
+        for (chosen, keys.tests) |*item, key| if (item.ready) {
+            item.identity = key;
+            if (try receipt.hit(context, key.?)) {
+                item.verdict = .{ .name = item.case.name, .status = .cached };
+                item.ready = false;
+            }
         };
-        return .{ .items = chosen };
+        return .{ .items = chosen, .whole = keys.whole };
     };
     for (chosen) |*item| {
         if (!item.ready) continue;
@@ -549,16 +559,27 @@ fn select(init: std.process.Init, options: Options, checked: frontend.Checked, c
             }
         }
     }
-    return .{ .items = chosen, .whole = whole };
+    return .{ .items = chosen };
 }
 
-/// NEW-CORE-TEST-WHOLE-1: one key for every ready test of the program at once: the
-/// program the runner builds for all of them (their reachable functions, entry and
-/// budget) and each one's configured case. Tests run from that combined program, so
-/// when it has not changed since a run where they all passed, none needs its own
-/// program built to be reused. Null when no test is ready, one may call `Host`, or the
-/// builder refuses a function or a result, so the per-test path reports it.
-fn wholeKey(init: std.process.Init, options: Options, checked: frontend.Checked, chosen: []const Selected, base: [32]u8) Error!?Whole {
+/// Whether `MYLANG_TEST_KEYS=per-test` asks for every test's key from its own lowering
+/// (NEW-CORE-S4-TEST-6) instead of the shared one: the oracle the derived keys are
+/// checked against. As a `MYLANG_` variable it also separates the two modes' receipts.
+fn perTestKeys(environment: *const std.process.Environ.Map) bool {
+    return std.mem.eql(u8, environment.get("MYLANG_TEST_KEYS") orelse "", "per-test");
+}
+
+/// Every ready test's configured key (null for the others), and the whole-file key.
+const Keys = struct { tests: []const ?[32]u8, whole: Whole };
+
+/// NEW-CORE-TEST-KEYS-1 and NEW-CORE-TEST-WHOLE-1: lower every ready test of the
+/// program once, digest each function canonically, and key each test on the functions
+/// it reaches (`test_runner_identity.zig`); the whole-file key joins those keys.
+/// Null when no test is ready, one may call `Host`, the builder refuses a function or
+/// a result, or the lowering carries metadata the digests do not know, so each test is
+/// keyed and reported from its own lowering.
+fn sharedKeys(init: std.process.Init, options: Options, checked: frontend.Checked, chosen: []const Selected, base: [32]u8) Error!?Keys {
+    const a = init.arena.allocator();
     var scratch = std.heap.ArenaAllocator.init(init.gpa);
     defer scratch.deinit();
     const s = scratch.allocator();
@@ -574,23 +595,85 @@ fn wholeKey(init: std.process.Init, options: Options, checked: frontend.Checked,
         if (err == error.OutOfMemory) return error.OutOfMemory;
         return null;
     };
-    // `rootsFor` lists the cases first, so case `i` is function `i`.
-    for (cases.items, 0..) |case, root| {
-        const configured = for (chosen) |item| {
-            if (item.ready and std.mem.eql(u8, item.case.name, case.name)) break item.settings;
-        } else .null;
-        if (!expects(configured) and !entry.readable(&reachable, reachable.functions.items[root].signature.ret)) return null;
-    }
-    const module = withEntry(s, options, checked, cases.items, reachable) catch |err| {
+    // `rootsFor` lists the cases first, so ready case `i` is function `i`.
+    var root: u32 = 0;
+    for (chosen) |item| if (item.ready) {
+        if (!expects(item.settings) and !entry.readable(&reachable, reachable.functions.items[root].signature.ret)) return null;
+        root += 1;
+    };
+    const shared = test_keys.Shared.build(s, &reachable, pipeline.locator(&checked.src)) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         return null;
     };
     const source_path = std.Io.Dir.cwd().realPathFileAlloc(init.io, options.path, s) catch options.path;
-    var key = receipt.programKey(base, "", .{ .module = &module, .source_path = source_path, .locator = pipeline.locator(&checked.src) });
-    for (chosen) |item| if (item.ready) {
-        key = receipt.configuredKey(receipt.configuredKey(key, item.case.name), try std.json.Stringify.valueAlloc(s, item.settings, .{}));
-    };
-    return .{ .key = key, .ready = cases.items.len };
+    var schema: ?[32]u8 = null;
+    const tests = try a.alloc(?[32]u8, chosen.len);
+    var whole = std.crypto.hash.Blake3.init(.{});
+    whole.update("core-test-whole-v2");
+    for (chosen, tests) |item, *slot| {
+        slot.* = null;
+        if (!item.ready) continue;
+        const target = try testTarget(s, options, checked, item.case, 0);
+        if (needsSchema(target) and schema == null) schema = try schemaDigest(s, checked.program);
+        // Only generated parameters add invariant roots, and finding them reads the schema.
+        const generated = std.mem.indexOfScalar(u8, item.case.parameters, 255) != null;
+        const own = if (generated) try rootsFor(s, checked.program, &.{item.case}) else &.{item.case.function};
+        const indices = try s.alloc(u32, own.len);
+        for (own, indices) |function, *index| index.* = @intCast(std.mem.indexOfScalar(typed.FunctionId, roots, function) orelse return null);
+        const derived = test_keys.key(shared, s, .{ .base = base, .name = item.case.name, .source_path = source_path, .entry = entryDigest(target), .schema = if (needsSchema(target)) schema else null, .roots = indices }) catch |err| {
+            if (err == error.OutOfMemory) return error.OutOfMemory;
+            return null;
+        };
+        slot.* = receipt.configuredKey(derived, try std.json.Stringify.valueAlloc(s, item.settings, .{}));
+        whole.update(&slot.*.?);
+    }
+    var key: [32]u8 = undefined;
+    whole.final(&key);
+    return .{ .tests = tests, .whole = .{ .key = key, .ready = cases.items.len } };
+}
+
+/// Whether a test's entry reads or writes values through the copied-value adapters,
+/// whose code follows the type schema: a generated or cases-file data parameter, or a
+/// result other than `bool`.
+fn needsSchema(target: entry.Target) bool {
+    for (target.parameters) |family| if (family > 5) return true;
+    const data = target.data orelse return true;
+    return !std.mem.eql(u8, data.result, "bool");
+}
+
+/// The type schema the adapters are generated from, as one digest.
+fn schemaDigest(a: std.mem.Allocator, program: typed.Program) Error![32]u8 {
+    const definitions = try property_schema.definitions(a, program);
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.Blake3.hash(try std.json.Stringify.valueAlloc(a, definitions, .{}), &digest, .{});
+    return digest;
+}
+
+/// Everything a test's generated entry is built from besides its functions and schema.
+fn entryDigest(target: entry.Target) [32]u8 {
+    var hash = std.crypto.hash.Blake3.init(.{});
+    hash.update("core-test-entry-v1");
+    hash.update(std.mem.asBytes(&@as(u64, target.streams.len)));
+    for (target.streams) |stream| hash.update(std.mem.asBytes(&@as(i64, stream)));
+    hash.update(std.mem.asBytes(&@as(u64, target.parameters.len)));
+    hash.update(target.parameters);
+    hash.update(std.mem.asBytes(&target.seed));
+    if (target.data) |data| {
+        hash.update(std.mem.asBytes(&@as(u64, data.parameters.len)));
+        for (data.parameters) |name| {
+            hash.update(std.mem.asBytes(&@as(u64, name.len)));
+            hash.update(name);
+        }
+        hash.update(std.mem.asBytes(&@as(u64, data.result.len)));
+        hash.update(data.result);
+    }
+    if (target.result) |shape| {
+        hash.update(std.mem.asBytes(&shape.ok_tag));
+        hash.update(std.mem.asBytes(&shape.error_tag));
+    }
+    var digest: [32]u8 = undefined;
+    hash.final(&digest);
+    return digest;
 }
 
 /// Whether every test a whole-file key covers passed or was reused: each keeps its own
@@ -846,25 +929,28 @@ fn programFor(allocator: std.mem.Allocator, options: Options, checked: frontend.
     return withEntry(allocator, options, checked, cases, reachable);
 }
 
+/// Case `case`'s row of the runner's dispatch table, at `table_index`.
+fn testTarget(allocator: std.mem.Allocator, options: Options, checked: frontend.Checked, case: discover.Case, table_index: u32) Error!entry.Target {
+    const function = checked.program.functions[@backingInt(case.function)];
+    const result = typed.resultShape(function.signature.return_type, checked.program.records);
+    const parameters = try allocator.alloc([]const u8, function.signature.parameter_count);
+    for (parameters, function.scope.locals[0..function.signature.parameter_count]) |*name_slot, parameter| name_slot.* = typed.typeName(parameter.ty, checked.program.records);
+    return .{
+        .function = table_index,
+        .streams = case.streams,
+        .parameters = case.parameters,
+        .seed = entropySeed(options.seed, case.name),
+        .data = .{ .parameters = parameters, .result = typed.typeName(function.signature.return_type, checked.program.records) },
+        .result = if (result) |shape| .{ .ok_tag = @intCast(shape.ok_tag), .error_tag = @intCast(shape.error_tag) } else null,
+    };
+}
+
 /// `reachable` (the cases' functions) with the runner's entry and step budget added.
 fn withEntry(allocator: std.mem.Allocator, options: Options, checked: frontend.Checked, cases: []const discover.Case, reachable: @import("ir.zig").Module) (Error || batch_entry.Error)!@import("ir.zig").Module {
     var module = reachable;
     try qualifyHeaderless(allocator, &module, checked.program, cases);
     const targets = try allocator.alloc(entry.Target, cases.len);
-    for (targets, cases, 0..) |*target, case, table_index| {
-        const function = checked.program.functions[@backingInt(case.function)];
-        const result = typed.resultShape(function.signature.return_type, checked.program.records);
-        const parameters = try allocator.alloc([]const u8, function.signature.parameter_count);
-        for (parameters, function.scope.locals[0..function.signature.parameter_count]) |*name_slot, parameter| name_slot.* = typed.typeName(parameter.ty, checked.program.records);
-        target.* = .{
-            .function = @intCast(table_index),
-            .streams = case.streams,
-            .parameters = case.parameters,
-            .seed = entropySeed(options.seed, case.name),
-            .data = .{ .parameters = parameters, .result = typed.typeName(function.signature.return_type, checked.program.records) },
-            .result = if (result) |shape| .{ .ok_tag = @intCast(shape.ok_tag), .error_tag = @intCast(shape.error_tag) } else null,
-        };
-    }
+    for (targets, cases, 0..) |*target, case, table_index| target.* = try testTarget(allocator, options, checked, case, @intCast(table_index));
     const schema = try property_types.Schema.init(allocator, try property_schema.definitions(allocator, checked.program));
     const originals = module.functions.items.len;
     try batch_entry.add(allocator, &module, targets, schema);

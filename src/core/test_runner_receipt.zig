@@ -191,6 +191,9 @@ const Walker = struct {
                 },
             },
             .@"struct" => |info| if (@hasField(T, "items") and @hasField(T, "capacity")) self.value(item.items) else inline for (info.field_names, info.field_types) |member, Member| {
+                // A loop's `id` counts the checker's loops program-wide, so it moves with which
+                // modules were rechecked; the loop itself is its blocks (NEW-CORE-TEST-KEYS-2).
+                if (comptime T == ir.Loop and std.mem.eql(u8, member, "id")) continue;
                 if (comptime std.mem.eql(u8, member, "span") and Member == u32) self.position(@field(item, member)) else self.value(@field(item, member));
             },
             else => @compileError("no receipt hashing for " ++ @typeName(T)),
