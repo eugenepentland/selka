@@ -59,7 +59,7 @@ The user decided on 2026-10-04 (L1) to gate on Zig ReleaseSafe, the same safety 
   - the Lox VM at or under 1.5× Zig ReleaseFast.
 - **No language change for speed.** Facts stay optimizer-only, the rule from the values-and-keys plan: the compiler uses what it can prove, and the programmer writes nothing new.
 
-## 3. What is left: five levers (hypotheses for PM to measure)
+## 3. What is left: five levers (hypotheses for PM to measure; measured in §8)
 
 1. **Checks that block optimization.**
    - **What:** bounds and overflow checks in inner loops. They add instructions and stop vectorization.
@@ -181,3 +181,62 @@ Each wave runs like CE and CE2: lanes in their own worktrees, then a coordinator
 **Expected time:**
 - PM: 6–10 h.
 - F, U, S and R together: about 60–100 lane-hours, about 3–5 days of wall time at two to four lanes. That is an estimate until PM's table.
+
+## 8. PM results: the waves, finalized (2026-10-08)
+
+Wave PM's report is `experiments/parity-measure-20261008/REPORT.md`. Its measurements replace §3's hypotheses and §5's sketch.
+
+**The four facts that carry most of the gap.** Each bound is cycles relative to today.
+1. **Element-type alias facts.** TBAA by element type, plus no store-back of an unchanged element pointer. matmul goes to 0.11, from 2.78× to 0.31× Zig ReleaseSafe.
+2. **Overflow facts for counters and loop variables.**
+   - bytes_scan 0.29;
+   - sieve 0.74.
+3. **Views for substrings and split pieces.**
+   - knucleotide 0.44, or 0.37 with the short-key compare inlined;
+   - scan_split 0.49, or 0.40 with a lazy split;
+   - most of text_ops, and part of EDA.
+4. **Count traffic, uniqueness tests and loop-carried state kept in memory.**
+   - Lox VM 0.49–0.71;
+   - nbody 0.82;
+   - str_build 0.42 in the ladder.
+
+**Bounds checks matter less than §3 assumed:**
+- the Lox VM 0.73–0.92;
+- sort_quick 0.93;
+- sieve 0.96.
+
+**Not compiler levers:**
+- **calls and intloop against Rust.** These come from LLVM's modulo codegen, plus calls' floor-mod fix-up (0.94). Both programs are level with Zig.
+- **fib against Zig ReleaseFast.** Matching it needs both the overflow checks and `notail` dropped, which L1 rules out. fib is level with Zig ReleaseSafe.
+- **nbody's remaining 1.33×.** The references unroll fixed arrays.
+- **sort_builtin.** The cost is the runtime's sort algorithm; that goes to wave R.
+
+**Lanes.** Each exit is stated in counters, then confirmed by CPU-10 timing at the X integration. Every lane also keeps "nothing else slower than 1.03×".
+
+| lane | levers | exit | size |
+|---|---|---|---|
+| **F1** aliasing and overflow facts | TBAA by element type (union payloads and integer-word aggregate copies keep the generic tag); no store-back of an unchanged element pointer; overflow facts from trip counts, loop conditions and floor-mod ranges | matmul ≤ 0.4× Zig RS; bytes_scan ≤ 0.4×; sieve ≤ 0.9×; calls ≤ 1.02×; `overflow_check` 0 at bytes_scan:17 and sieve:16/21 | 14–22 h |
+| **S1** substring views | a substring used as a dict key or a slice is a view; allocate only on insert | knucleotide ≤ 1.0× Zig RS; at most 0.05 allocations per position | 12–20 h |
+| **F2** index facts | check hoisting and loop versioning; no negative-index wrap for indexes ≥ 0 | Lox VM bounds checks ≤ 2 per dispatch (about 7 today); vm/string_equality ≤ 0.80× today's cycles; sort_quick ≤ 1.0× Zig RS | 12–20 h |
+| **U1** uniqueness and state | uniqueness tests hoisted out of loops; loop-carried state (len/cap, the VM frame, stack_top) promoted to registers | `unique_test` once per loop in nbody and str_build; nbody ≤ 1.35× Zig RS; str_build ≤ 1.0×; Lox step loop ≤ 0.85× today | 10–16 h |
+| **U2** borrows and release cost | nested-field borrows; frame copies on call and return; generated per-layout release instead of the interpreted `reference_at` walk | `read_constant` retains and releases 0; vm/invocation ≤ 0.70× today; tree/equality ≤ 0.65×; EDA allocation and free ≤ 15% of instructions | 12–16 h |
+| **S2** split views and search | split views or a lazy split; search fast paths; starts with a text_ops ladder | scan_split ≤ 0.6× Zig RS; text_ops ≤ 1.5×; EDA text materialization halved | 12–20 h |
+| **R** leftovers | fixed-array element access in place; the runtime i64 sort; CE2's sret sharing that keeps `noalias`; EDA P6 | fannkuch `my-array` and `my-tuned` ≤ 1.05× `my`; sort_builtin ≤ 1.2× Rust with overflow checks | 8–12 h |
+
+**Order:**
+1. **F1 and S1:** the largest bounds, in disjoint code.
+2. **F2 with U1:** the Lox VM. They coordinate on index lowering in `emit_llvm`.
+3. **U2, S2 and R.**
+
+**Projected position after all lanes, in cycles against Zig ReleaseSafe:**
+- matmul 0.31; bytes_scan 0.31; scan_split 0.56; sieve 0.83;
+- knucleotide 0.82–0.97; sort_quick 0.99; calls 1.00;
+- Lox tree/equality 0.86;
+- str_build 0.7–1.4; nbody 1.33;
+- Lox VM 1.25–1.5 (2.2–2.9 today);
+- EDA about 1.15–1.2; text_ops about 1.5.
+
+**Before F1 and S1 start.** The coordinator confirms the main bounds as wall time on CPU 10:
+- matmul `tbaa` and its ladder rungs;
+- the knucleotide and scan_split ladders;
+- bytes_scan `overflow`.
