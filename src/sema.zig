@@ -1392,7 +1392,7 @@ fn normalizeDiagnostics(sink: *diagnostic.Sink) void {
     const rejected = reportedError(sink.items.items);
     var count: usize = 0;
     for (sink.items.items) |item| {
-        if (rejected and std.mem.eql(u8, item.code, @import("sema_statements.zig").arena_retired_code)) continue;
+        if (rejected and std.mem.eql(u8, item.code, @import("arena_fix.zig").retired_code)) continue;
         if (count != 0) {
             const previous = sink.items.items[count - 1];
             if (previous.span.start == item.span.start and previous.span.end == item.span.end and
@@ -1881,6 +1881,7 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     try @import("alias_warning.zig").check(allocator, src, checked, sink);
     try warnBindings(allocator, checker.catalog.records, functions, stubs, sink);
     try warnImports(module_names, sink);
+    try @import("arena_fix.zig").warn(allocator, src, program, sink);
     const pass_items: []const diagnostic.Diagnostic = if (plan != null) try allocator.dupe(diagnostic.Diagnostic, sink.items.items[pass_start..]) else &.{};
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
     timingAdd(timing, "warning_derivation", warnings_start);

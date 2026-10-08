@@ -118,3 +118,12 @@ written before the markers were required reads; the test copies them, runs
 `mylang fix` on the directory, and requires all 91 markers restored, every entry checking clean, and a second `mylang fix --check`
 finding nothing. The per-change scripts under `scripts/` (such as
 `migrate_mut_arguments.py`) are superseded by the fixes the compiler carries.
+
+A retired feature migrates the same way. `with arena():` blocks were retired in
+S5 and warn `W_ARENA_RETIRED`; the warning carries the edit that deletes the
+`with` line, dedents the block's body and rewrites `name.escape(value)` to
+`value`, so `mylang fix` turns pre-S5 arena code into a clean check
+(`NEW-CORE-S5-ARENA-3`, corpus `test/fixtures/fix-migration/arenas.my`). Where the
+edit is not certain (tab indentation, a triple-quoted string in the body, a
+header that shares its line with code) the warning carries no fix and the block
+is left for a hand edit.
