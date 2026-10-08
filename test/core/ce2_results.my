@@ -1,0 +1,218 @@
+module ce2_results
+
+# CE2-B fixture (docs/audits/values-keys-trap-search-plan-2026-10-07.md §4.5 "CE2"): results built
+# in the caller's `sret` destination, arguments read where they lie, `sret` shared with a by-value
+# argument, pushes and element-field containers updated in place. Every function prints what value
+# semantics says; the shapes are the adversarial ones each transformation must refuse or survive.
+
+
+record Span:
+    line: int
+    col: int
+    offset: int
+
+
+record Token:
+    tag: int
+    text: str
+    span: Span
+
+
+record Cursor:
+    pos: int
+    line: int
+    col: int
+    error_span: Span
+
+
+record Tokenizer:
+    source: bytes
+    cur: Cursor
+
+
+enum LexError:
+    bad,
+    eof
+
+
+record Diag:
+    count: int
+    last: str
+
+
+record Big:
+    a: int
+    b: int
+    c: int
+    d: int
+    e: int
+
+
+record Pair:
+    x: Big
+    y: Big
+
+
+# ---- step 1: declared results built in %ret ----
+
+def make_token(src: bytes, t: Cursor, tag: int) -> Token:
+    return Token(tag=tag, text=str(len(src) * 10 + t.pos), span=Span(line=t.line, col=t.col, offset=t.pos))
+
+
+def advance(src: bytes, t: mut Cursor):
+    if t.pos < len(src):
+        if src[t.pos] == 10:
+            t.line += 1
+            t.col = 1
+        else:
+            t.col += 1
+        t.pos += 1
+
+
+# `return Ok(make_token(...))` next to a `mut` cursor, with early returns of other shapes.
+def next_in(src: bytes, t: mut Cursor) -> Result[Token, LexError]:
+    if t.pos >= len(src):
+        return Ok(Token(tag=0, text="", span=Span(line=t.line, col=t.col, offset=t.pos)))
+    c = src[t.pos]
+    if c == 33:
+        t.error_span = Span(line=t.line, col=t.col, offset=t.pos)
+        advance(src, mut t)
+        return Err(LexError.bad)
+    start = t
+    advance(src, mut t)
+    if c == 35:
+        # The token is built from the cursor before the advance: a snapshot still read.
+        return Ok(make_token(src, start, 2))
+    return Ok(make_token(src, t, 1))
+
+
+# `r = next_in(...)`, then the cursor written back and `r` returned: `r` is a view of the call's
+# result, so that result is built where `r` is returned.
+def next(t: mut Tokenizer) -> Result[Token, LexError]:
+    src = t.source
+    cur = t.cur
+    r = next_in(src, mut cur)
+    t.cur = cur
+    return r
+
+
+# The payload of a callee's result returned again under another error type (`?`-style).
+def next_token(tok: mut Tokenizer, errors: mut Diag) -> Result[Token, str]:
+    match next(mut tok):
+        case Ok(token):
+            return Ok(token)
+        case Err(err):
+            errors.count += 1
+            if err == LexError.bad:
+                return Err("bad")
+            return Err("eof")
+
+
+def tokens(text: bytes) -> str:
+    tok = Tokenizer(source=text, cur=Cursor(pos=0, line=1, col=1, error_span=Span(line=0, col=0, offset=0)))
+    errors = Diag(count=0, last="")
+    out = ""
+    for _ in range(len(text) + 2):
+        match next_token(mut tok, mut errors):
+            case Ok(token):
+                out = out + str(token.tag) + ":" + token.text + "@" + str(token.span.line) + "." + str(token.span.col) + " "
+            case Err(e):
+                out = out + e + " "
+    return out + str(errors.count) + " " + str(tok.cur.error_span.offset)
+
+
+def make_pair(k: int) -> Pair:
+    return Pair(x=Big(a=k, b=k + 1, c=k + 2, d=k + 3, e=k + 4), y=Big(a=10 * k, b=0, c=0, d=0, e=10 * k + 4))
+
+
+# A value returned whole on one path and read field-swapped on another: the swap must not
+# overwrite a half it still reads.
+def pick(k: int, flag: bool) -> Pair:
+    w = make_pair(k)
+    if flag:
+        return w
+    return Pair(x=w.y, y=w.x)
+
+
+# The same swap next to a `mut` record: `w` may live inside `%ret` where its halves land.
+def swap_mut(k: int, t: mut Cursor) -> Pair:
+    t.pos += k
+    w = make_pair(k)
+    return Pair(x=w.y, y=w.x)
+
+
+# The same half stored twice, and a half moved into the other's place.
+def twice(k: int, t: mut Cursor) -> Pair:
+    t.col += 1
+    w = make_pair(k)
+    if k % 2 == 0:
+        return Pair(x=w.y, y=w.y)
+    return Pair(x=w.x, y=w.x)
+
+
+# A value built in %ret and then overwritten by another built while it is still read.
+def rebuild(k: int, t: mut Cursor) -> Result[Big, LexError]:
+    first = make_pair(k)
+    second = make_pair(first.y.a)
+    t.line += 1
+    if k > 5:
+        return Ok(first.x)
+    return Ok(Big(a=second.x.a, b=first.x.b, c=second.y.a, d=first.y.e, e=k))
+
+
+# A result carried around a loop with an early return of a trap-checked value.
+def walk(n: int, t: mut Cursor) -> Result[Big, LexError]:
+    acc = Big(a=0, b=0, c=0, d=0, e=0)
+    for i in range(n):
+        t.pos += 1
+        if i == 7:
+            return Err(LexError.eof)
+        acc.a += i
+        acc.e = acc.e * 2 + 1
+    return Ok(acc)
+
+
+def pairs() -> str:
+    t = Cursor(pos=0, line=0, col=0, error_span=Span(line=0, col=0, offset=0))
+    p = pick(1, False)
+    q = pick(2, True)
+    s = swap_mut(3, mut t)
+    w1 = twice(4, mut t)
+    w2 = twice(5, mut t)
+    out = str(p.x.a) + " " + str(p.y.a) + " " + str(p.x.e) + " " + str(p.y.e) + " " + str(q.x.a) + " " + str(q.y.a)
+    out = out + " | " + str(s.x.a) + " " + str(s.y.a) + " " + str(s.x.e) + " " + str(s.y.e) + " " + str(t.pos)
+    out = out + " | " + str(w1.x.a) + " " + str(w1.y.e) + " " + str(w2.x.a) + " " + str(w2.y.e) + " " + str(t.col)
+    for k in [1, 7]:
+        match rebuild(k, mut t):
+            case Ok(b):
+                out = out + " | " + str(b.a) + " " + str(b.b) + " " + str(b.c) + " " + str(b.d) + " " + str(b.e)
+            case Err(_):
+                out = out + " | err"
+    for n in [5, 9]:
+        match walk(n, mut t):
+            case Ok(b):
+                out = out + " | " + str(b.a) + " " + str(b.e)
+            case Err(_):
+                out = out + " | early"
+    return out + " | " + str(t.line) + " " + str(t.pos)
+
+
+# A trap between the build in %ret and the return.
+def trapping(k: int, t: mut Cursor) -> Result[Token, LexError]:
+    tok = make_token(b"xyz", t, 3)
+    t.col += k
+    return Ok(tok)
+
+
+def main(args: list[str], out: Stream) -> int:
+    out.print(tokens(b"ab\n#c!d"))
+    out.print(tokens(b"!!x"))
+    out.print(pairs())
+    if len(args) > 0:
+        t = Cursor(pos=0, line=0, col=9223372036854775807, error_span=Span(line=0, col=0, offset=0))
+        match trapping(len(args), mut t):
+            case Ok(tok):
+                out.print(tok.text)
+            case Err(_):
+                out.print("err")
+    return 0

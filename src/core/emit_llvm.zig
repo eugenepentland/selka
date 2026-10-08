@@ -820,6 +820,17 @@ fn returnsThroughSret(m: *const ir.Module, signature: ir.Signature, abi: InOutAb
     return m.passedInMemory(signature.ret) and !abi.whole;
 }
 
+/// Bit `k`: field `k` of the result record holds an in-out final value, which a `ret` moves to
+/// its caller's memory instead of storing it in `%ret` (`FunctionEmitter.returnFinals`).
+fn finalFields(signature: ir.Signature, abi: InOutAbi) u64 {
+    if (abi.params == 0 or abi.whole) return 0;
+    var bits: u64 = 0;
+    for (0..signature.params.len) |i| {
+        if (abi.inOut(i)) bits |= @as(u64, 1) << @intCast(abi.field(signature, i));
+    }
+    return bits;
+}
+
 /// Which count update `counted` emits.
 const Counting = enum { retain, release };
 
@@ -1135,6 +1146,7 @@ const FunctionEmitter = struct {
             .in_out = abi.params,
             .calls = mem.in_out.args,
             .ret_home = emit_homes.steps.in_out and abi.params == 0 and returnsThroughSret(m, f.signature, abi),
+            .results = .{ .sret = returnsThroughSret(m, f.signature, abi), .finals = finalFields(f.signature, abi) },
         });
         const plan = &mem.homes;
         const names = try self.a().alloc([]const u8, plan.homes.len);
@@ -1142,6 +1154,7 @@ const FunctionEmitter = struct {
             .slot => |size| try self.stackSlot(size),
             .param => |index| try std.fmt.allocPrint(self.a(), "%p{d}", .{index}),
             .ret => "%ret",
+            .ret_at => |offset| try self.retPlace(offset),
             .field => "",
         };
         // A home inside another's field, once that other is named.
@@ -1154,6 +1167,13 @@ const FunctionEmitter = struct {
             if (class == emit_homes.none or f.insts.items[index].op == .param) continue;
             try self.state.allocas.print(self.a(), "  %v{d} = getelementptr inbounds i8, ptr {s}, i64 0\n", .{ index, names[class] });
         }
+    }
+
+    /// The entry-block name of `%ret` at `offset`: the home of values built where a `ret` stores them (CE2-B).
+    fn retPlace(self: *FunctionEmitter, offset: u32) ![]const u8 {
+        const name = try self.fresh("%home");
+        try self.state.allocas.print(self.a(), header_pointer_line, .{ name, "%ret", offset });
+        return name;
     }
 
     /// Each call's in-out arguments and the values that hold their final values: the call itself
@@ -1839,17 +1859,46 @@ const FunctionEmitter = struct {
             try self.moveAll(out, &.{try self.finalMove(out, @ctz(abi.params), inst.a)});
         } else if (sret and abi.params != 0) {
             try self.returnFinals(out, inst.a, abi);
-        } else if (sret and !self.builtInReturn(inst.a)) try self.storeOperand(out, signature.ret, inst.a, "%ret");
+        } else if (sret and self.memory.homes.staged(self.current)) {
+            // A value it reads lies in `%ret` where an earlier store would overwrite it: built
+            // whole in a temporary first.
+            const temporary = try self.stackSlot(m.size(signature.ret));
+            try self.storeOperand(out, signature.ret, inst.a, temporary);
+            try self.copyBytes(out, "%ret", temporary, m.size(signature.ret), false);
+        } else if (sret) try self.storeAtRet(out, signature.ret, inst.a, 0);
         if (self.count_fn != null) try out.appendSlice(self.a(), emit_count.epilogue);
         if (inst.a == .none or sret or abi.whole) return out.appendSlice(self.a(), "  ret void\n");
         try out.print(self.a(), "  ret {s}\n", .{try self.typedValue(inst.a)});
     }
 
-    /// Whether the returned value already lives in the caller's destination `%ret`.
-    fn builtInReturn(self: *FunctionEmitter, raw: ir.Ref) bool {
-        const plan = &self.memory.homes;
-        const class = plan.class[self.function.resolve(raw).index()];
-        return class != emit_homes.none and plan.homes[class] == .ret;
+    /// Store `raw` at `offset` in `%ret` the way `storeOperand` would, except that a value already
+    /// at that place (built there, `emit_homes.Planner.buildInRet`) is not stored again. The
+    /// stores happen in the order `emit_homes.retStores` lists them.
+    fn storeAtRet(self: *FunctionEmitter, out: *Out, value_type: ir.Type, raw: ir.Ref, offset: u32) Error!void {
+        const m = self.state.module;
+        const f = self.function;
+        const ref = f.resolve(raw);
+        if (!self.memory.fused[ref.index()]) {
+            if (self.memory.homes.retOffset(ref) == offset) return;
+            return self.storeValue(out, value_type, try self.value(ref), try self.offsetPointer(out, "%ret", offset));
+        }
+        const inst = f.inst(ref);
+        if (m.kind(inst.ty) == .array) {
+            const elem = m.compound(inst.ty).array.elem;
+            for (f.operands(inst.data), 0..) |operand, i| try self.storeAtRet(out, elem, operand, offset + @as(u32, @intCast(i)) * m.size(elem));
+            return;
+        }
+        switch (inst.op) {
+            .record_make => for (f.operands(inst.data), m.compound(inst.ty).record, 0..) |operand, field, i| {
+                try self.storeAtRet(out, field, operand, offset + m.fieldOffset(inst.ty, i));
+            },
+            .union_make => {
+                try out.print(self.a(), "  store i64 {d}, ptr {s}, align 8, " ++ tbaa_data ++ "\n", .{ inst.data, try self.offsetPointer(out, "%ret", offset) });
+                if (inst.a == .none) return;
+                try self.storeAtRet(out, m.compound(inst.ty).@"union"[@intCast(inst.data)], inst.a, offset + 8);
+            },
+            else => unreachable,
+        }
     }
 
     /// The copy of `raw`, in-out parameter `param`'s final value, into its caller's memory (empty
@@ -1885,9 +1934,10 @@ const FunctionEmitter = struct {
         const signature = f.signature;
         const composite = f.resolve(raw);
         var moves: std.ArrayList(Move) = .empty;
+        std.debug.assert(!self.memory.homes.staged(self.current));
         if (!self.memory.fused[composite.index()]) {
             // A whole record: copied to `%ret`, and each final value from there.
-            try self.storeOperand(out, signature.ret, raw, "%ret");
+            try self.storeAtRet(out, signature.ret, raw, 0);
             for (signature.params, 0..) |param, i| {
                 if (!abi.inOut(i)) continue;
                 const at = try self.offsetPointer(out, "%ret", m.fieldOffset(signature.ret, abi.field(signature, i)));
@@ -1900,7 +1950,7 @@ const FunctionEmitter = struct {
             const final = for (0..signature.params.len) |i| {
                 if (abi.inOut(i) and abi.field(signature, i) == k) break true;
             } else false;
-            if (!final) try self.storeOperand(out, field_type, operand, try self.offsetPointer(out, "%ret", m.fieldOffset(signature.ret, k)));
+            if (!final) try self.storeAtRet(out, field_type, operand, m.fieldOffset(signature.ret, k));
         }
         for (0..signature.params.len) |i| {
             if (!abi.inOut(i)) continue;
