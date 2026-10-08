@@ -170,3 +170,25 @@ Per file: `test/integration.zig` 70 deleted; `test/fix_cli_test.zig` 1 (class 3)
 | `src/main_runtime_flags.zig` | RC-RUNTIME-CLI-1 |
 
 `// spec: DIAGNOSTIC-JSON-1` was dropped from the trimmed snapshot-budget test (the tag has other carriers).
+
+## `test/golden_parity.zig` (test-golden)
+
+The replay of `tests/goldens/qbe_*.json` (recorded by the old core, unchanged) now runs
+through `mylang run` on the new core, without `--qbe`. 222 cases checked (167 source,
+55 fixture), 0 mismatches. Changes:
+
+| Cases | Class | Handling |
+|---|---|---|
+| 24 recorded under `--gc-stress` (`qbe_files`, `qbe_native_cases`) | 3 (option retired, S5-D4) | the option is dropped and the recorded outcome still checked (stress mode never changed an outcome) |
+| 5 recorded under `--legacy-sharing` (`qbe_managed`, `qbe_arena`, `qbe_parity`) | 3 (S5-D4) | counted as retired skips |
+| 3 recording `R_ARENA_ESCAPE` (`qbe_arena`) | 3 (managed arenas, S5-D3) | counted as retired skips |
+| 1: `qbe_native_cases/4031fd54…`, `arithmetic` under `--max-steps=1` (one block) | 2 (per-dispatch step count, src/vm.zig) | counted as a retired skip by key |
+
+## Other edits to kept tests
+
+- "the old back end's commands and flags are refused by name …": `run --no-cache` (ported
+  by S5-B2) replaced by `run --explain-invalidation`, which B2 retired (coordinator note).
+- `src/core/test_runner_project_test.zig` "providers preserve exported record layouts …":
+  the changed record layout is now refused `IncompatibleProvider` (status 2) by the
+  declaration-level provider validation (NATIVE-TEST-5) rather than
+  `ProviderSignatureChanged` (status 1) after a full check.
