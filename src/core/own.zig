@@ -1218,7 +1218,7 @@ const Taking = struct {
         }
         const get = for (reads.items) |candidate| {
             if (try self.takes(candidate, update, reads.items, def_block)) break candidate;
-        } else return;
+        } else return self.takeThrough(record, update);
         for (self.graph.uses[record.index()].items) |user| {
             const inst = f.inst(user);
             if (user == get or user == update) continue;
@@ -1231,6 +1231,70 @@ const Taking = struct {
         }
         try self.marks.owned_get.put(self.arena, @backingInt(get), {});
         try self.marks.taken.put(self.arena, @backingInt(update), {});
+    }
+
+    /// `update` replaces a field of `record`, which updates of other fields made from an earlier
+    /// record: a read of the field from that earlier record takes it over the same way, when
+    /// nothing but reads of other fields and those updates uses the records in between while
+    /// it holds the field (`wb = it.rt; it.returned = pop(mut wb); it.rt = wb`,
+    /// NEW-CORE-CE2-EFFECTS-5).
+    fn takeThrough(self: Taking, record: ir.Ref, update: ir.Ref) Error!void {
+        const f = self.f;
+        const field = f.inst(update).data;
+        var chain: [4]ir.Ref = undefined;
+        var len: usize = 0;
+        var current = record;
+        while (len < chain.len) {
+            const inst = f.inst(current);
+            if (inst.op != .record_set or inst.data == field) return;
+            chain[len] = current;
+            len += 1;
+            const earlier = f.resolve(inst.a);
+            if (!ownedRecord(f, f.inst(earlier)) and !self.marks.owned_get.contains(@backingInt(earlier))) return;
+            const def_block = if (f.inst(earlier).op == .param) 0 else self.graph.block_of[earlier.index()];
+            var reads: std.ArrayList(ir.Ref) = .empty;
+            for (self.graph.uses[earlier.index()].items) |user| {
+                const got = f.inst(user);
+                if (got.op == .record_get and got.data == field and f.resolve(got.a) == earlier) try addUnique(self.arena, &reads, user);
+            }
+            for (reads.items) |get| {
+                if (!try self.takes(get, update, reads.items, def_block)) continue;
+                if (!try self.clearThrough(.{ .earlier = earlier, .get = get, .update = update, .chain = chain[0..len] })) continue;
+                try self.marks.owned_get.put(self.arena, @backingInt(get), {});
+                try self.marks.taken.put(self.arena, @backingInt(update), {});
+                return;
+            }
+            current = earlier;
+        }
+    }
+
+    /// A field taken from `earlier` by `get` and put back by `update`, through `chain`: the
+    /// updates of other fields from the record `update` replaces it in back to `earlier`'s.
+    const Through = struct { earlier: ir.Ref, get: ir.Ref, update: ir.Ref, chain: []const ir.Ref };
+
+    /// Whether, while `get` holds the field, only reads of other fields and the chain's own
+    /// updates use `earlier` and the records of the chain.
+    fn clearThrough(self: Taking, through: Through) Error!bool {
+        const f = self.f;
+        const field = f.inst(through.update).data;
+        const holders = through.chain.len + 1;
+        for (0..holders) |k| {
+            const holder = if (k == through.chain.len) through.earlier else through.chain[k];
+            // The one use that carries the hole on: the next update of the chain, or `update`.
+            const next = if (k == 0) through.update else through.chain[k - 1];
+            const def = if (f.inst(holder).op == .param) 0 else self.graph.block_of[holder.index()];
+            for (self.graph.uses[holder.index()].items) |user| {
+                const inst = f.inst(user);
+                if (user == through.get or user == next) continue;
+                if (inst.op == .record_get and inst.data != field) continue;
+                if (inst.op == .phi) {
+                    if (try phiAfter(self, holder, through.get, user, def)) return false;
+                    continue;
+                }
+                if (try runsAfter(self.arena, f, self.graph.block_of, through.get, user, def)) return false;
+            }
+        }
+        return true;
     }
 
     /// Whether read `get` of the field `update` replaces can take it over: it runs ahead of

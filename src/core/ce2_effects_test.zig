@@ -415,11 +415,11 @@ test "an element store a later store of the same element overwrites before anyth
         // returns, counted fields and a store whose index runs past the list all print what
         // the stores as written print, and free every block.
         const ran = try fixture(a, root, flags, &.{});
-        try std.testing.expectEqualStrings(fields_expected ++ stores_expected, ran.stdout);
+        try std.testing.expectEqualStrings(fields_expected ++ takes_expected ++ stores_expected, ran.stdout);
         try std.testing.expectEqual(@as(u8, 0), ran.status);
         const read_trap = try fixture(a, root, flags, &.{"x"});
         try std.testing.expectEqual(@as(u8, 1), read_trap.status);
-        try std.testing.expectEqualStrings(fields_expected ++ stores_expected, read_trap.stdout);
+        try std.testing.expectEqualStrings(fields_expected ++ takes_expected ++ stores_expected, read_trap.stdout);
         try std.testing.expect(contains(read_trap.stderr, "ce2_effects.my:239:30: error[R_LIST_BOUNDS]: native execution failed (index 7, length 1)\n"));
         const store_trap = try fixture(a, root, flags, &.{"y"});
         try std.testing.expectEqual(@as(u8, 1), store_trap.status);
@@ -442,5 +442,70 @@ test "an element store of a record read from that element stores only the fields
     var module = try support.buildSource(a, loop_source, &refusal);
     const ran = try support.runOwned(a, &module, .{});
     try std.testing.expectEqualStrings(loop_expected, ran.stdout);
+    try std.testing.expectEqualStrings("", ran.stderr);
+}
+
+/// What the base compiler prints for the write-back section of `ce2_effects.my`.
+const takes_expected =
+    \\9 5 i
+    \\8 4 renamed
+    \\413 7 3 1
+    \\23 6 2 2 1
+    \\
+;
+
+const take_source =
+    \\record Machine:
+    \\    frames: list[int]
+    \\    count: int
+    \\    stack: list[int]
+    \\    top: int
+    \\    log: list[str]
+    \\
+    \\
+    \\record Interp:
+    \\    name: str
+    \\    m: Machine
+    \\    returned: int
+    \\    depth: int
+    \\
+    \\
+    \\def take_pop(m: mut Machine) -> int:
+    \\    m.top = m.top - 1
+    \\    return m.stack[m.top]
+    \\
+    \\
+    \\def return_value(it: mut Interp):
+    \\    wb = it.m
+    \\    it.returned = take_pop(mut wb)
+    \\    it.m = wb
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    it = Interp(name="i", m=Machine(frames=[], count=0, stack=[4, 5, 6], top=3, log=[]), returned=0, depth=0)
+    \\    return_value(mut it)
+    \\    return_value(mut it)
+    \\    out.print(it.returned, it.m.top, len(it.m.stack))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-CE2-EFFECTS-5
+test "a write-back takes its field from the record before updates of other fields, without counting or copying it" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    // `wb = it.m; it.returned = take_pop(mut wb); it.m = wb`: the read of `it.m` owns the
+    // field until it is written back (no retain of it, no release of the old one), so the
+    // machine is updated where it lies in `it`.
+    const body = functionIr(try support.ownedText(a, take_source), "return_value");
+    try std.testing.expectEqual(@as(usize, 0), countOp(body, "retain"));
+    try std.testing.expectEqual(@as(usize, 0), countOp(body, "release"));
+    const llvm = try support.llvmText(a, take_source);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, try definition(llvm, "@\"my.return_value\"("), "@llvm.memcpy"));
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a, take_source, &refusal);
+    const ran = try support.runOwned(a, &module, .{});
+    try std.testing.expectEqualStrings("5 1 3\n", ran.stdout);
     try std.testing.expectEqualStrings("", ran.stderr);
 }

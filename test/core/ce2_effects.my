@@ -288,8 +288,72 @@ def stores_section(out: Stream, trap: str):
         out.print(show(t, result))
 
 
+# ---- write-backs through updates of other fields ------------------------------------
+
+record Interp:
+    name: str
+    m: Machine
+    returned: int
+    depth: int
+
+
+def take_pop(m: mut Machine) -> int:
+    m.top = m.top - 1
+    return m.stack[m.top]
+
+
+# `it.m` is read, `it.returned` updated, then `it.m` written back: the read takes the field.
+def return_value(it: mut Interp):
+    wb = it.m
+    it.returned = take_pop(mut wb)
+    it.m = wb
+
+
+# A managed field is replaced between the read and the write-back.
+def rename_and_pop(it: mut Interp, name: str):
+    wb = it.m
+    it.name = name
+    it.returned = take_pop(mut wb)
+    it.m = wb
+
+
+# The whole record is copied between the read and the write-back: the copy keeps the old field.
+def snapshot_between(it: mut Interp) -> int:
+    wb = it.m
+    it.depth = it.depth + 1
+    keep = it
+    it.returned = take_pop(mut wb)
+    it.m = wb
+    return keep.m.top * 100 + keep.depth * 10 + it.m.top
+
+
+def depth_of(it: Interp) -> int:
+    return it.depth * 10 + it.m.top
+
+
+# A call reads the record between the read and the write-back.
+def read_between(it: mut Interp) -> int:
+    wb = it.m
+    it.depth = it.depth + 1
+    seen = depth_of(it)
+    it.returned = take_pop(mut wb)
+    it.m = wb
+    return seen
+
+
+def takes_section(out: Stream):
+    it = Interp(name="i", m=Machine(frames=[], count=0, stack=[4, 5, 6, 7, 8, 9], top=6, log=["a"]), returned=0, depth=0)
+    return_value(mut it)
+    out.print(it.returned, it.m.top, it.name)
+    rename_and_pop(mut it, "renamed")
+    out.print(it.returned, it.m.top, it.name)
+    out.print(snapshot_between(mut it), it.returned, it.m.top, it.depth)
+    out.print(read_between(mut it), it.returned, it.m.top, it.depth, len(it.m.log))
+
+
 def main(args: list[str], out: Stream) -> int:
     fields_section(out)
+    takes_section(out)
     trap = ""
     if len(args) > 0:
         trap = args[0]
