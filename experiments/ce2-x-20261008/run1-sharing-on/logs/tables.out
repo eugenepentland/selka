@@ -1,0 +1,88 @@
+
+### lox
+
+| pattern | CE-X (base) | CE2-A final | CE2-B final | merged (CE2-X) | merged vs CE-X |
+|---|---:|---:|---:|---:|---:|
+| P1 | 304.92 k | 304.92 k | 304.92 k | 304.92 k | +0.0% |
+| P2 | 7.73 G | 9.22 M | 7.73 G | 9.22 M | -99.9% |
+| P7 | 5.34 G | 6.40 M | 5.33 G | 4.97 M | -99.9% |
+| P8 | 3.30 G | 2.85 G | 3.06 G | 2.61 G | -20.9% |
+| P3 | 4.67 G | 4.67 G | 1.66 G | 1.66 G | -64.5% |
+| P4 | 27.47 G | 1.94 G | 27.47 G | 1.94 G | -92.9% |
+| P6 | 19.53 M | 19.53 M | 19.53 M | 19.53 M | +0.0% |
+| P9 | 2.76 G | 2.76 G | 1.07 G | 1.07 G | -61.5% |
+| P13 | 23.00 M | 23.36 M | 23.26 M | 22.93 M | -0.3% |
+| **P1+P2+P7+P8** | 16.36 G | 2.87 G | 16.12 G | 2.62 G | -84.0% |
+| **P3+P4+P5** | 32.15 G | 6.62 G | 29.13 G | 3.60 G | -88.8% |
+| **all** | 51.32 G | 12.30 G | 46.35 G | 7.33 G | -85.7% |
+
+### eda
+
+| pattern | CE-X (base) | CE2-A final | CE2-B final | merged (CE2-X) | merged vs CE-X |
+|---|---:|---:|---:|---:|---:|
+| P1 | 3.10 M | 4.10 M | 3.10 M | 4.10 M | +32.1% |
+| P2 | 1.37 M | 58.45 k | 1.37 M | 58.45 k | -95.7% |
+| P7 | 2.11 G | 2.11 G | 2.63 M | 1.32 M | -99.9% |
+| P8 | 9.45 M | 7.83 M | 9.45 M | 7.83 M | -17.2% |
+| P3 | 673.58 M | 673.58 M | 397.98 M | 397.98 M | -40.9% |
+| P4 | 38.07 M | 37.60 M | 38.07 M | 37.60 M | -1.2% |
+| P6 | 477.60 M | 477.60 M | 477.60 M | 477.60 M | +0.0% |
+| P9 | 6.07 M | 6.07 M | 6.07 M | 6.07 M | +0.0% |
+| P13 | 90.10 M | 90.08 M | 90.10 M | 90.08 M | -0.0% |
+| P14 | 49.00 M | 49.00 M | 49.00 M | 49.00 M | -0.0% |
+| P10 | 4.90 M | 4.90 M | 4.90 M | 4.90 M | +0.0% |
+| P11 | 594.27 k | 595.35 k | 595.35 k | 593.19 k | -0.2% |
+| **P1+P2+P7+P8** | 2.13 G | 2.12 G | 16.55 M | 13.30 M | -99.4% |
+| **P3+P4+P5** | 711.65 M | 711.19 M | 436.05 M | 435.58 M | -38.8% |
+| **all** | 3.47 G | 3.46 G | 1.08 G | 1.08 G | -68.9% |
+
+### parity
+
+| pattern | CE-X (base) | CE2-A final | CE2-B final | merged (CE2-X) | merged vs CE-X |
+|---|---:|---:|---:|---:|---:|
+| P3 | 560 | 560 | 560 | 560 | +0.0% |
+| P13 | 8.00 M | 8.00 M | 8.00 M | 8.00 M | +0.0% |
+| P14 | 146.91 M | 146.91 M | 146.91 M | 146.91 M | +0.0% |
+| **P3+P4+P5** | 560 | 560 | 560 | 560 | +0.0% |
+| **all** | 154.91 M | 154.91 M | 154.91 M | 154.91 M | +0.0% |
+
+### rows
+
+| pattern | CE-X (base) | CE2-A final | CE2-B final | merged (CE2-X) | merged vs CE-X |
+|---|---:|---:|---:|---:|---:|
+| P1 | 362.94 M | 362.94 M | 0 | 0 | -100.0% |
+| P9 | 26.23 M | 26.23 M | 26.23 M | 26.23 M | +0.0% |
+| P13 | 17.51 M | 17.51 M | 17.51 M | 17.51 M | +0.0% |
+| P14 | 468.25 M | 468.25 M | 468.25 M | 468.25 M | +0.0% |
+| P11 | 148.48 k | 148.48 k | 148.48 k | 148.48 k | +0.0% |
+| **P1+P2+P7+P8** | 362.94 M | 362.94 M | 0 | 0 | -100.0% |
+| **all** | 875.07 M | 875.07 M | 512.13 M | 512.13 M | -41.5% |
+
+### highlights
+
+- lox_vm_fib27_dispatches: cex: 7627457 | ce2a: 6356215 | ce2b: 7627457 | final: 6356215
+- lox_vm_fib27_bytes_per_dispatch: cex: 257.37 | ce2a: 27.24 | ce2b: 257.37 | final: 27.24
+- lox_vm_fib27_record_bytes_per_dispatch: cex: 52.01 | ce2a: 4.81 | ce2b: 52.01 | final: 4.81
+- lox_vm_fib27_element_bytes_per_dispatch: cex: 205.34 | ce2a: 22.4 | ce2b: 205.34 | final: 22.4
+- nbody_bytes_per_step: cex: 0.0 | ce2a: 0.0 | ce2b: 0.0 | final: 0.0
+- nbody_P3P4_bytes_per_step: cex: 0.0 | ce2a: 0.0 | ce2b: 0.0 | final: 0.0
+- eda_rds3_flat_bytes: cex: 238964445 | ce2a: 238666863 | ce2b: 103344159 | final: 103046499
+- eda_rds3_flat_overlaps_of_bytes: cex: 7331384 | ce2a: 7331384 | ce2b: 7331384 | final: 7331384
+- lox_tree_instantiation: cex: {"n": [5000, 10000], "bytes": [123358704, 244731080], "ratio": 1.983897950160047, "p9": [3942080, 7622080], "p9_ratio": 1.9335173309521876} | ce2a: {"n": [5000, 10000], "bytes": [90582280, 178723864], "ratio": 1.9730554806083485, "p9": [3942080, 7622080], "p9_ratio": 1.9335173309521876} | ce2b: {"n": [5000, 10000], "bytes": [72398648, 142829440], "ratio": 1.9728191609323975, "p9": [2661056, 5061056], "p9_ratio": 1.901897592534693} | final: {"n": [5000, 10000], "bytes": [39163440, 76363440], "ratio": 1.9498654867907417, "p9": [2661056, 5061056], "p9_ratio": 1.901897592534693}
+- lox_vm_instantiation: cex: {"n": [200, 400], "bytes": [11131664, 21573072], "ratio": 1.9379916605459884, "p9": [371304, 422504], "p9_ratio": 1.1378924008359728} | ce2a: {"n": [200, 400], "bytes": [3135792, 5622000], "ratio": 1.7928485052580019, "p9": [371304, 422504], "p9_ratio": 1.1378924008359728} | ce2b: {"n": [200, 400], "bytes": [11071320, 21461528], "ratio": 1.938479603154818, "p9": [319336, 319336], "p9_ratio": 1.0} | final: {"n": [200, 400], "bytes": [3075448, 5510456], "ratio": 1.7917571683865245, "p9": [319336, 319336], "p9_ratio": 1.0}
+- str_build_out_of_line_buffer_appends: cex: 25 | ce2a: 25 | ce2b: 25 | final: 25
+
+### top 10 functions still copying (merged compiler, all corpora)
+
+| # | corpus | function | bytes | share of corpus | patterns | top site |
+|---:|---|---|---:|---:|---|---|
+| 1 | lox | `vm::run` | 1.63 G | 22.2% | P3 1.63 G, P1 7.00 k, P2 7.00 k | P3 vm.my:525 list_get (814.70 M) |
+| 2 | lox | `interpreter::evaluate` | 1.60 G | 21.8% | P8 1.60 G | P8 interpreter.my:346 list_get_field (1.60 G) |
+| 3 | lox | `heap::allocate` | 1.54 G | 20.9% | P4 1.50 G, P13 18.82 M, P6 18.39 M | P4 heap.my:124 list_set (1.50 G) |
+| 4 | lox | `interpreter::call_node` | 518.97 M | 7.1% | P8 518.97 M | P8 interpreter.my:265 list_get_field (518.97 M) |
+| 5 | lox | `compiler::emit_byte` | 489.61 M | 6.7% | P9 486.04 M, P2 2.05 M, P3 981.29 k | P9 compiler.my:153 list_copy (486.04 M) |
+| 6 | eda | `sexpr_parser::parse_list` | 476.36 M | 44.2% | P6 444.83 M, P13 31.53 M | P6 sexpr_parser.my:225 list_push (444.83 M) |
+| 7 | lox | `heap::function_obj` | 453.99 M | 6.2% | P8 453.99 M | P8 heap.my:144 list_get_field (453.99 M) |
+| 8 | lox | `vm::call` | 444.38 M | 6.1% | P4 444.38 M | P4 vm.my:135 list_set (444.38 M) |
+| 9 | lox | `resolver::resolve_expr` | 238.82 M | 3.3% | P9 238.38 M, P8 247.68 k, P4 192.65 k | P9 resolver.my:143 list_copy (238.38 M) |
+| 10 | rows | `row_dict_update::batch_result` | 196.42 M | 38.4% | P14 196.42 M |  |

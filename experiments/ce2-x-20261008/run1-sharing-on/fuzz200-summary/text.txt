@@ -1,0 +1,14 @@
+source_commit=93547d3100ae729f611146f79d2e924d16ca3638
+$ /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/new-core-s5-20261007/tools/fuzz_frozen.py --kind text --references /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz --cases 200 --seed 3307 --old /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/new-core-s5-20261007/tools/frozen-old-core --new /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/cex/mylang-debug --evidence /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/ce2-x-20261008/fuzz200/text --cache-root /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261008T210652Z-4104be492420/text --harness /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/new-core-s3-20261006/wave-c/s3-char/fuzz_char.py
+qualification progress: text: seen=25 elapsed=6.39s
+qualification progress: text: seen=50 elapsed=13.10s
+qualification progress: text: seen=75 elapsed=27.85s
+qualification progress: text: seen=100 elapsed=42.71s
+qualification progress: text: seen=125 elapsed=57.74s
+qualification progress: text: seen=150 elapsed=72.86s
+qualification progress: text: seen=175 elapsed=88.02s
+qualification progress: text: seen=200 elapsed=103.07s
+cases=200 compared=3000 mismatch=0 fact=0 old_rejected=0 new_refused=0
+qualification {"kind": "text", "qualified": true, "accepted": 200, "native_comparisons": 3000, "elapsed_seconds": 103.72387510002591}
+
+exit=0
