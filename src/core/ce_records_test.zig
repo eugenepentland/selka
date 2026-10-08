@@ -189,6 +189,22 @@ test "a record field over four words is read where it lies: a pointer into its p
     try std.testing.expectEqual(@as(usize, 0), copies(functionText(llvm, "@\"my.nested\"")));
 }
 
+// spec: NEW-CORE-CE-RECORDS-3
+test "a record whose old value has no later reader is updated in place; a snapshot still read keeps a copy" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const llvm = try support.llvmText(arena.allocator(), cursor);
+    // The read-only parameter is copied once and both stores write that copy where it is; the
+    // return copies it into the caller's destination.
+    const bumped = functionText(llvm, "@\"my.bumped\"");
+    try std.testing.expectEqual(@as(usize, 2), copies(bumped));
+    // `old` is read after the store, so the store writes a copy.
+    const kept = functionText(llvm, "@\"my.kept\"");
+    try std.testing.expectEqual(@as(usize, 1), copies(kept));
+    // `wb = it.rt; ...; it.rt = wb`: the write-back's value is built in the field itself.
+    try std.testing.expectEqual(@as(usize, 0), copies(functionText(llvm, "@\"my.write_backs\"")));
+}
+
 const fixture_expected =
     \\11030375
     \\9905151
