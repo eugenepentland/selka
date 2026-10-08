@@ -24,7 +24,7 @@ are not carried into the next function. Multiple callers discovering the same
 invalid signature produce one diagnostic for that signature's range and code.
 Fixing either independent body leaves the other diagnostic intact.
 
-An error result means checking is incomplete. No typed program or bytecode is
+An error result means checking is incomplete. No typed program or Core IR is
 published, execution is rejected, and whole-program ownership/effect/codec passes
 are deferred until all bodies pass. Repeating `check`, `emit`, or `execute` on the
 same rejected compilation preserves its errors without accumulating duplicates.

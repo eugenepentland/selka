@@ -132,16 +132,12 @@ whose signature fixes both types.
   nodes, 262,144 scanner tokens and 64 typed levels. These are work and size
   bounds, not a memory quota or a timeout.
 - A document selects an exact qualified exported type name, not a local import
-  alias; private and unknown names reject. Root structural arrays are reachable
-  only through the embedding API.
+  alias; private and unknown names reject.
 - There is no longer a command that decodes a standalone value *document*: no
-  surface reads a `typed-json-v1` envelope from a file and materializes it. Two
-  commands execute guest code from typed JSON, and neither takes an envelope.
-  `mylang test --cases` runs a test, and `mylang invoke --input=FILE` calls one
-  exported function from a bare object of named arguments; both take the values
-  directly, because the selected signature already fixes every type. `invoke`
-  carries integers, booleans and an injected `Stream` across the call boundary;
-  see [calling one export](tooling/invoke.md).
+  surface reads a `typed-json-v1` envelope from a file and materializes it. The
+  one command that executes guest code from typed JSON, `mylang test --cases`,
+  takes bare values rather than envelopes, because the selected signature
+  already fixes every type.
 - Explicit domain codecs, external key mappings and source-level codec operations
   remain unfinished.
 

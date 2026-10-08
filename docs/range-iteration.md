@@ -43,8 +43,7 @@ the increment. Nested loops always receive their own nearest `break` or
 `continue`.
 
 Range loops use the same conservative outer-ownership rules and result
-obligations as while loops. They support owned values and per-iteration
-arenas; exited resources are released before incrementing. The first iteration
+obligations as while loops. They support owned values; exited resources are released before incrementing. The first iteration
 may never occur, so a range loop alone does not prove a function returns.
 
 This form covers integer ranges. Collection iteration can currently use indices
