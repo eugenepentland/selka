@@ -9,6 +9,7 @@ const remarks = @import("cost_remarks.zig");
 const pipeline = @import("pipeline.zig");
 const driver = @import("driver.zig");
 const cli_run = @import("cli_run.zig");
+const dynamic = @import("cost_dynamic.zig");
 
 /// A malformed request is rendered as usage, with exit 2.
 pub const Request = struct {
@@ -18,8 +19,10 @@ pub const Request = struct {
     debug: bool = false,
     mode: passes.Mode = .trusted,
     llvm_remarks: ?[]const u8 = null,
+    /// `--counters FILE.json`: a counting run's counts, added after the static report.
+    counters: ?[]const u8 = null,
 };
-const usage = "usage: mylang cost <entry.my> [function] [--json] [--debug | --no-facts | --verify-facts] [--llvm-remarks FILE.opt.yaml]\n";
+const usage = "usage: mylang cost <entry.my> [function] [--json] [--debug | --no-facts | --verify-facts] [--llvm-remarks FILE.opt.yaml] [--counters FILE.json]\n";
 
 /// Parse supported modes and reject flags rather than silently changing the analysis.
 pub fn parse(args: []const []const u8) ?Request {
@@ -40,6 +43,10 @@ pub fn parse(args: []const []const u8) ?Request {
             if (request == null or index + 1 == args.len) return null;
             index += 1;
             request.?.llvm_remarks = args[index];
+        } else if (std.mem.eql(u8, arg, "--counters")) {
+            if (request == null or request.?.counters != null or index + 1 == args.len) return null;
+            index += 1;
+            request.?.counters = args[index];
         } else if (std.mem.startsWith(u8, arg, "--")) return null else if (request == null) {
             request = .{ .path = arg };
         } else if (request.?.function == null) {
@@ -106,7 +113,32 @@ pub fn output(init: std.process.Init, request: Request) Error!Output {
         };
         remarks.apply(&report, bytes);
     }
-    return .{ .text = try cost.render(a, report, request.json) };
+    const path = request.counters orelse return .{ .text = try cost.render(a, report, request.json) };
+    const document = std.Io.Dir.cwd().readFileAlloc(init.io, path, a, .limited(256 << 20)) catch {
+        try std.Io.File.stderr().writeStreamingAll(init.io, "mylang cost: cannot read the counters file\n");
+        return .{ .status = 2 };
+    };
+    const section = dynamic.rows(a, report, document) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.InvalidCounters => {
+            try std.Io.File.stderr().writeStreamingAll(init.io, "mylang cost: the counters file is not a mylang-counters-v1 document\n");
+            return .{ .status = 2 };
+        },
+    };
+    return .{ .text = try withCounters(a, report, section, request.json) };
+}
+
+/// The static report followed by the counters section, as text or as one JSON document
+/// whose `counters` member follows the static members unchanged.
+fn withCounters(a: std.mem.Allocator, report: cost.Report, section: []const dynamic.Row, json: bool) std.mem.Allocator.Error![]const u8 {
+    if (json) {
+        const document = .{ .version = report.version, .functions = report.functions, .totals = report.totals, .counters = section };
+        return std.fmt.allocPrint(a, "{s}\n", .{try std.json.Stringify.valueAlloc(a, document, .{})});
+    }
+    var out: std.ArrayList(u8) = .empty;
+    try out.appendSlice(a, try cost.render(a, report, false));
+    try dynamic.render(a, &out, section);
+    return out.toOwnedSlice(a);
 }
 
 fn failure(init: std.process.Init, text: []const u8, err: anyerror) Error!Output {

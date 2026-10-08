@@ -68,3 +68,19 @@ The counts are of the core's emitted operations, before LLVM optimizes them: a
 copy LLVM later removes is still counted, and nothing LLVM adds is. Dictionary
 side tables, text scratch and other `malloc`s outside managed blocks are not in
 the memory counters.
+
+## Counts beside the static cost
+
+`mylang cost ENTRY.my --counters FILE.json` prints the ordinary
+[cost report](cost.md) and then one line per reported function with what the run
+in `FILE.json` did there: calls, inline retains and releases, the runtime's own
+count updates, uniqueness tests and how many found the block shared, copies and
+the bytes they moved, the bytes growth moved, and managed allocations. Build the
+counting run from the same source and mode as the report.
+
+```bash
+mylang build program.my -o program --release --counters
+MYLANG_COUNTERS=counts.json ./program
+mylang cost program.my --counters counts.json
+mylang cost program.my --counters counts.json --json   # `counters` after the static members
+```

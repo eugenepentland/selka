@@ -207,3 +207,44 @@ test "--counters is a build and run flag given once, and part of the build's rep
     const default: pipeline.Codegen = .{};
     try std.testing.expect(!default.counters);
 }
+
+// spec: NEW-CORE-COUNTERS-5
+test "cost --counters adds one counting run's executions per function after the unchanged static report" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const cost = @import("cost.zig");
+    const dynamic = @import("cost_dynamic.zig");
+    const command = @import("cost_command.zig");
+    var functions = [_]cost.Function{ .{ .name = "main", .counts = .{} }, .{ .name = "bump", .counts = .{} }, .{ .name = "idle", .counts = .{} } };
+    const static: cost.Report = .{ .functions = &functions, .totals = .{} };
+    const document =
+        \\{"version":"mylang-counters-v1","totals":{},"kinds":{},
+        \\"functions":[{"name":"main","calls":1,"allocs":3,"alloc_bytes":96,"list_copies":1,"list_copy_bytes":800,"list_grow_bytes":64,"runtime_retains":2},
+        \\  {"name":"bump","calls":10},{"name":"<outside>","calls":0,"allocs":1}],
+        \\"sites":[{"function":"bump","kind":"record_copy","count":20,"bytes":800,"extra":0},
+        \\  {"function":"bump","kind":"unique_test","count":10,"bytes":0,"extra":7},
+        \\  {"function":"bump","kind":"retain","count":10,"bytes":80,"extra":0},
+        \\  {"function":"main","kind":"list_copy","count":1,"bytes":800,"extra":0}]}
+    ;
+    const section = try dynamic.rows(a, static, document);
+    try std.testing.expectEqual(@as(usize, 3), section.len);
+    try std.testing.expectEqual(@as(u64, 1), section[0].run.copies);
+    try std.testing.expectEqual(@as(u64, 800), section[0].run.copied_bytes);
+    try std.testing.expectEqual(@as(u64, 64), section[0].run.growth_bytes);
+    try std.testing.expectEqual(@as(u64, 2), section[0].run.rc.runtime);
+    try std.testing.expectEqual(@as(u64, 10), section[1].run.calls);
+    try std.testing.expectEqual(@as(u64, 20), section[1].run.copies);
+    try std.testing.expectEqual(@as(u64, 3), section[1].run.unique.shared);
+    try std.testing.expectEqual(@as(u64, 10), section[1].run.rc.retains);
+    try std.testing.expectEqual(@as(u64, 0), section[2].run.calls);
+    var text: std.ArrayList(u8) = .empty;
+    try dynamic.render(a, &text, section);
+    try std.testing.expect(contains(text.items, "bump: calls 10; retains 10; releases 0; runtime count updates 0; unique tests 10 (3 shared); copies 20 (800 bytes)"));
+    try std.testing.expect(contains(text.items, "TOTAL: calls 11;"));
+    try std.testing.expectError(error.InvalidCounters, dynamic.rows(a, static, "{\"version\":\"cost-v1\"}"));
+    try std.testing.expectError(error.InvalidCounters, dynamic.rows(a, static, "not json"));
+    try std.testing.expectEqualStrings("c.json", command.parse(&.{ "p.my", "--counters", "c.json" }).?.counters.?);
+    try std.testing.expectEqual(@as(?command.Request, null), command.parse(&.{ "p.my", "--counters", "a.json", "--counters", "b.json" }));
+    try std.testing.expectEqual(@as(?command.Request, null), command.parse(&.{ "p.my", "--counters" }));
+}
