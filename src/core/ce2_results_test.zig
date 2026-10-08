@@ -293,12 +293,103 @@ test "s = advance(s, x): a by-value argument that dies at the call shares the ca
     try std.testing.expectEqualStrings(debug.stdout, release.stdout);
 }
 
+/// The text of one function in a module's textual IR, from its header to the next function.
+fn functionIr(text: []const u8, name: []const u8) []const u8 {
+    var start: usize = 0;
+    while (std.mem.indexOfPos(u8, text, start, "fn ")) |header| {
+        const line_end = std.mem.indexOfScalarPos(u8, text, header, '\n') orelse text.len;
+        const line = text[header..line_end];
+        const paren = std.mem.indexOfScalar(u8, line, '(') orelse line.len;
+        if (std.mem.endsWith(u8, line[0..paren], name)) {
+            const next = std.mem.indexOfPos(u8, text, line_end, "\nfn ") orelse text.len;
+            return text[header..next];
+        }
+        start = line_end;
+    }
+    return "";
+}
+
+const globals =
+    \\record Entry:
+    \\    key: int
+    \\    value: int
+    \\
+    \\
+    \\record Table:
+    \\    entries: list[Entry]
+    \\    count: int
+    \\
+    \\
+    \\record Runtime:
+    \\    names: list[str]
+    \\    globals: Table
+    \\
+    \\
+    \\def hash_of(rt: Runtime, k: int) -> int:
+    \\    return len(rt.names[k % len(rt.names)]) + len(rt.globals.entries)
+    \\
+    \\
+    \\def put(t: mut Table, k: int, h: int, v: int) -> bool:
+    \\    i = (k + h) % len(t.entries)
+    \\    fresh = t.entries[i].key == -1
+    \\    t.entries[i] = Entry(key=k, value=v)
+    \\    return fresh
+    \\
+    \\
+    \\def set_global(rt: mut Runtime, k: int, v: int) -> bool:
+    \\    wb = rt.globals
+    \\    r = put(mut wb, k, hash_of(rt, k), v)
+    \\    rt.globals = wb
+    \\    return r
+    \\
+    \\
+    \\def peek_after(rt: mut Runtime, k: int) -> int:
+    \\    wb = rt.globals
+    \\    r = put(mut wb, k, 0, 7)
+    \\    seen = hash_of(rt, k) + rt.globals.entries[k % len(rt.globals.entries)].value
+    \\    rt.globals = wb
+    \\    return seen + (1 if r else 0)
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    rt = Runtime(names=["a", "bb"], globals=Table(entries=[Entry(key=-1, value=0) for _ in range(8)], count=0))
+    \\    snapshot = rt.globals
+    \\    for k in range(12):
+    \\        _ = set_global(mut rt, k, k * 2)
+    \\    out.print(rt.globals.entries[3].value, snapshot.entries[3].value, peek_after(mut rt, 5), rt.globals.entries[5].value)
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-CE2-RESULTS-6
+test "a field taken for a mut call survives a call that borrows its record first: the update finds it unique" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.ownedText(arena.allocator(), globals);
+    // `wb = rt.globals; put(mut wb, k, hash_of(rt, k), v)`: `hash_of` reads `rt` before `put`
+    // takes the field, so the field is taken, not retained, and the write-back drops nothing.
+    const set_global = functionIr(text, "set_global");
+    try std.testing.expect(set_global.len != 0);
+    try std.testing.expect(!contains(set_global, "retain"));
+    try std.testing.expect(!contains(set_global, "release"));
+    // A read of `rt.globals` after `put` must see the old table: the field is retained.
+    try std.testing.expect(contains(functionIr(text, "peek_after"), "retain"));
+    var refusal: @import("build.zig").Refusal = .{};
+    var module = try support.buildSource(arena.allocator(), globals, &refusal);
+    const debug = try support.runOwned(arena.allocator(), &module, .{});
+    try std.testing.expectEqualStrings("20 0 32 7\n", debug.stdout);
+    var again = try support.buildSource(arena.allocator(), globals, &refusal);
+    const release = try support.runOwned(arena.allocator(), &again, .{ .release = true });
+    try std.testing.expectEqualStrings(debug.stdout, release.stdout);
+}
+
 const fixture_expected =
     \\1:71@1.2 1:72@1.3 1:73@2.1 2:73@2.1 1:75@2.3 bad 1:77@2.5 0:@2.5 0:@2.5 1 5
     \\bad bad 1:33@1.4 0:@1.4 0:@1.4 2 1
     \\10 1 14 5 2 20 | 30 3 34 7 3 | 40 44 5 9 2 | 10 2 100 14 1 | 7 8 9 10 11 | 10 31 | early | 2 16
     \\617 5 -1 6 0 50 7 8
     \\747 179 179 966 | 7 3 5 | 1 1 1 | 7 8 | 1673 926 | 388
+    \\16 16 99 0 16 64099 91 7
     \\
 ;
 

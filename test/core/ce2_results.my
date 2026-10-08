@@ -338,6 +338,76 @@ def sharing() -> str:
     return str(s.f0) + " " + str(s.f5) + " " + str(kept.f5) + " " + str(t.f5) + " | " + str(p.x.a) + " " + str(p.y.a) + " " + str(p.y.e) + " | " + str(q.x.a) + " " + str(q.y.b) + " " + str(q.y.c) + " | " + str(u.f0) + " " + str(u.f5) + " | " + str(w.f0) + " " + str(w.f5) + " | " + str(v.f5)
 
 
+# ---- step 5: a field taken for a `mut` call next to calls that borrow its record ----
+
+record Slot:
+    key: int
+    value: int
+
+
+record Table:
+    entries: list[Slot]
+    count: int
+
+
+record Globals:
+    names: list[str]
+    table: Table
+
+
+def hash_of(g: Globals, k: int) -> int:
+    return len(g.names[k % len(g.names)]) + len(g.table.entries)
+
+
+def grab(g: Globals) -> Table:
+    return g.table
+
+
+def put(t: mut Table, k: int, h: int, v: int) -> bool:
+    i = (k + h) % len(t.entries)
+    fresh = t.entries[i].key == -1
+    t.entries[i] = Slot(key=k, value=v)
+    if fresh:
+        t.count += 1
+    return fresh
+
+
+def set_global(g: mut Globals, k: int, v: int) -> bool:
+    wb = g.table
+    r = put(mut wb, k, hash_of(g, k), v)
+    g.table = wb
+    return r
+
+
+# The borrowing call keeps the old table: the update must copy, and the kept table is the old one.
+def keep_then_put(g: mut Globals, k: int) -> int:
+    wb = g.table
+    kept = grab(g)
+    _ = put(mut wb, k, 0, 99)
+    g.table = wb
+    return kept.entries[k % len(kept.entries)].value * 1000 + g.table.entries[k % len(g.table.entries)].value
+
+
+# A read of the field after the `mut` call sees the old table.
+def peek_after(g: mut Globals, k: int) -> int:
+    wb = g.table
+    r = put(mut wb, k, 0, 7)
+    seen = hash_of(g, k) + g.table.entries[k % len(g.table.entries)].value
+    g.table = wb
+    return seen + (1 if r else 0)
+
+
+def globals() -> str:
+    g = Globals(names=["a", "bb", "ccc"], table=Table(entries=[Slot(key=-1, value=0) for _ in range(16)], count=0))
+    snapshot = g.table
+    n = 0
+    for k in range(40):
+        if set_global(mut g, k, k * 2):
+            n += 1
+    kept = keep_then_put(mut g, 3)
+    return str(n) + " " + str(g.table.count) + " " + str(g.table.entries[3].value) + " " + str(snapshot.count) + " " + str(len(snapshot.entries)) + " " + str(kept) + " " + str(peek_after(mut g, 5)) + " " + str(g.table.entries[5].value)
+
+
 # A trap between the build in %ret and the return.
 def trapping(k: int, t: mut Cursor) -> Result[Token, LexError]:
     tok = make_token(b"xyz", t, 3)
@@ -351,6 +421,7 @@ def main(args: list[str], out: Stream) -> int:
     out.print(pairs())
     out.print(lent())
     out.print(sharing())
+    out.print(globals())
     if len(args) > 0:
         t = Cursor(pos=0, line=0, col=9223372036854775807, error_span=Span(line=0, col=0, offset=0))
         match trapping(len(args), mut t):
