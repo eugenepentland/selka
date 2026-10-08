@@ -135,11 +135,19 @@ const usage = "usage: mylang build <file.my> (-o <output> | --run [-- ARGS...]) 
 /// Byte ceilings for guest execution, shared by every command that runs one.
 const budget = @import("memory_budget");
 
+/// Start the process as Zig would, without a stack trace per allocation
+/// (`wiring/process_start.zig`, MYLANG-START-1), and run the command line.
+pub fn main(minimal: std.process.Init.Minimal) void {
+    process_start.run(minimal, dispatchCommandLine);
+}
+
+const process_start = @import("wiring/process_start.zig");
+
 /// Dispatch compiler commands, reporting usage/source/IO failures through process exit status.
 /// The compiler bounds its own address space first, so a compiler defect fails
 /// loudly instead of taking the machine into swap, and the `zig cc` children a
 /// native build spawns inherit that ceiling and still finish.
-pub fn main(init: std.process.Init) void {
+fn dispatchCommandLine(init: std.process.Init) void {
     _ = budget.guardHost(init.environ_map);
     const status = dispatch(init) catch |err| status: {
         var buffer: [256]u8 = undefined;

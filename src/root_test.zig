@@ -18,6 +18,7 @@ test {
     _ = @import("context_test.zig");
 
     _ = @import("native_execute.zig");
+    _ = @import("wiring/process_start.zig");
     _ = @import("exit_status_test.zig");
     _ = @import("error_trace_test.zig");
     _ = @import("wiring/core_runner.zig");
