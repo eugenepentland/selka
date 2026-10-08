@@ -106,7 +106,9 @@ fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget:
     const sources = if (replaying) try build_replay.inputs(context, &session) else null;
     try entry.validate(allocator, &session, report);
     var refusal: build_ir.Refusal = .{};
-    var module = build_ir.buildModuleSource(allocator, checked.program, checked.src, &refusal) catch |err| switch (err) {
+    // A `build --release` executable drops `debug(...)`; a run keeps it (DEBUG-LINE-1).
+    const input: build_ir.Input = .{ .program = checked.program, .source = checked.src, .drop_debug = options.release and budget == null };
+    var module = build_ir.buildExecutable(allocator, input, &refusal) catch |err| switch (err) {
         error.Unsupported => {
             try refused(allocator, checked.src, refusal, options.show.diagnostics, report);
             return error.Unsupported;

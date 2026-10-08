@@ -5,6 +5,7 @@ const language = @import("mylang");
 const project_entry = @import("project_entry.zig");
 const frontend = @import("frontend.zig");
 const options = @import("test_runner_options.zig");
+const budget = @import("memory_budget");
 const report = @import("test_runner_report.zig");
 const tool_identity = @import("tool_identity.zig");
 const tool_ticket = @import("tool_ticket.zig");
@@ -121,8 +122,9 @@ pub fn run(init: std.process.Init, opts: options.Options) Error!u8 {
     std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = ticket, .data = encoded }) catch return error.WriteFailed;
     var controls = opts;
     controls.build.zig = guest.path;
-    const workers = options.width(opts.controls, init.environ_map, selection.entries.len);
-    const overall = options.width(opts.controls, init.environ_map, std.math.maxInt(usize));
+    const free = budget.available(init.io);
+    const workers = options.width(opts.controls, init.environ_map, selection.entries.len, free);
+    const overall = options.width(opts.controls, init.environ_map, std.math.maxInt(usize), free);
     const fanout: Fanout = .{ .compiler = compiler, .directory = directory, .controls = controls, .jobs = @max(1, overall / workers), .ticket = ticket };
     const outcomes = try a.alloc(Outcome, selection.entries.len);
     var begin: usize = 0;
@@ -325,10 +327,14 @@ fn summarize(init: std.process.Init, opts: options.Options, selection: Selection
     var verdicts: std.ArrayList(report.Verdict) = .empty;
     var accounted: std.StringHashMapUnmanaged(void) = .empty;
     defer accounted.deinit(a);
+    // A program that failed to set up (status 2: an invalid cases file or provider
+    // fixture, an unreadable entry) makes the whole run status 2, as in the old core.
+    var setup_failed = false;
     for (selection.entries, outcomes) |path, outcome| {
         const first_verdict = verdicts.items.len;
+        setup_failed = setup_failed or outcome.code == 2;
         const parsed = std.json.parseFromSlice(std.json.Value, a, outcome.bytes, .{ .allocate = .alloc_always }) catch {
-            try verdicts.append(a, .{ .name = path, .status = .failed, .reason = "test program produced no usable report" });
+            try verdicts.append(a, .{ .name = path, .status = .failed, .reason = if (outcome.code == 2) "test program failed to set up (status 2)" else "test program produced no usable report" });
             continue;
         };
         const value = parsed.value;
@@ -371,7 +377,7 @@ fn summarize(init: std.process.Init, opts: options.Options, selection: Selection
     while (keys.next()) |key| try sources.append(a, key.*);
     std.mem.sort([]const u8, sources.items, {}, before);
     try write(init.io, std.Io.File.stdout(), if (opts.json) try report.jsonSources(a, verdicts.items, sources.items) else try report.text(a, verdicts.items));
-    return report.exitStatus(verdicts.items);
+    return if (setup_failed) 2 else report.exitStatus(verdicts.items);
 }
 
 fn sourceChanged(a: std.mem.Allocator, io: std.Io, opts: options.Options, selection: Selection) Error!bool {
