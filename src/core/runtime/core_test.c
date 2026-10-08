@@ -248,6 +248,11 @@ void myl_core_test_enter(void) {
     if (++core_test_depth > core_test_frame_limit && core_test_frame_limit) core_io_fail("R_FRAME_LIMIT");
 }
 void myl_core_test_leave(void) { --core_test_depth; }
+/* The program frames live now, when a frame budget counts them; else 0. */
+static uint64_t core_test_frames_live(void) {
+    if (!core_test_frame_limit) return 0;
+    return core_test_depth > core_test_frame_limit ? core_test_frame_limit : core_test_depth;
+}
 static void (*core_test_body)(void);
 static void core_test_launch(void) { core_test_body(); }
 /* Run `trial` on the budget's stack, with one guard page below it. A mapping the

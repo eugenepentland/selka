@@ -88,6 +88,8 @@ enum { MYL_HEADER = 32, MYL_ALIGN = 32 };
 static unsigned char *block_data(myl_block *block) { return (unsigned char *)block + MYL_HEADER; }
 
 static void out_of_memory(void);
+/* Set by a test executable (`myl_core_test_open`): every trap writes a record. */
+static bool core_trap_marks_all;
 static void core_io_failure(const char *code);
 
 /* A test child's byte ceiling (`mylang-core test --max-memory`, set by
@@ -312,8 +314,11 @@ static void out_of_memory(void) {
        reported without the frame walk, which may itself need memory. */
     static const char ceiling[] = "error[R_MEMORY_BUDGET]: memory budget exhausted; raise it with --max-memory=SIZE\n";
     static const char message[] = "fatal: out of memory\n";
+    /* A test trial's trap record, so its runner reports the trap (NEW-CORE-S5-TRACE-1). */
+    static const char record[] = "\036MYLANG-TRAP {\"version\":1,\"operation\":\"memory budget exhausted\"}\n";
     if (heap_ceiling) os_write(2, (const unsigned char *)ceiling, sizeof ceiling - 1);
     else os_write(2, (const unsigned char *)message, sizeof message - 1);
+    if (heap_ceiling && core_trap_marks_all) os_write(2, (const unsigned char *)record, sizeof record - 1);
     os_exit(1);
 }
 
@@ -433,6 +438,7 @@ myl_block *myl_core_box_new(int64_t size) {
  * recognized by the caller, never by its count. */
 static void core_dict_free_pending(myl_block *dict, myl_block **pending);
 static void core_io_finalize(myl_block *block);
+static void core_text_walk_report(void);
 static int64_t core_io_live_handles(void);
 
 __attribute__((cold)) void myl_core_free_block(myl_block *block) {
@@ -952,8 +958,21 @@ __attribute__((noinline)) static void trap_frames(void) {
     }
 }
 
-/* Set by a test executable (`myl_core_test_open`): every trap writes a record. */
-static bool core_trap_marks_all;
+
+/* A trap lists at most its innermost sixteen frames, the site's own included, as the
+   old core listed them; a test trial, which counts the frames it entered, then says
+   how many deeper ones it left out (NEW-CORE-S5-TRACE-1). Set before a frame walk. */
+enum { CORE_TRACE_FRAMES = 16 };
+static uint64_t core_test_frames_live(void);
+static void trap_omitted(void) {
+    const uint64_t printed = (uint64_t)(CORE_TRACE_FRAMES - (trap_lines_left < 0 ? 0 : trap_lines_left));
+    const uint64_t live = core_test_frames_live();
+    trap_lines_left = -1;
+    if (!core_trap_marks_all || live <= printed) return;
+    char text[64];
+    int length = snprintf(text, sizeof text, "  %llu frames omitted\n", (unsigned long long)(live - printed));
+    stream_write(&streams[1], text, (size_t)length);
+}
 
 /* The version-1 operation marker, shared by plain traps and contract messages. */
 static size_t core_operation_record(char *record, size_t capacity, const char *operation) {
@@ -1054,7 +1073,9 @@ void myl_core_trap(const myl_core_site *site, int64_t a, int64_t b) {
     int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: native execution failed%s\n  in %s at %s:%d:%d\n",
         site->path, site->line, site->column, code, detail, site->function, site->path, site->line, site->column);
     stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
+    trap_lines_left = CORE_TRACE_FRAMES - 1;
     trap_frames();
+    trap_omitted();
     stream_write(&streams[1], record, strlen(record));
     flush_all();
     os_exit(1);
@@ -1073,14 +1094,24 @@ void myl_core_io_at(const myl_core_site *site){core_io_site=site;}
    printing the guest callers, just as a generated trap keeps its site frame. */
 __attribute__((cold,noinline)) static void core_io_failure(const char *code){
     stream_flush(&streams[0]);char text[1024];int length;
-    /* A budget's trap is described as the old core describes it (BUDGET-HINT-1). */
+    /* A budget's trap is described as the old core describes it (BUDGET-HINT-1). It
+       names no site: a budget is charged anywhere, and the last I/O site may be stale,
+       so its frames start at the innermost program frame (NEW-CORE-S5-TRACE-1). */
     const char *hint=core_budget_hint(code),*described=hint?hint:"native execution failed";
-    if(core_io_site){const myl_core_site *site=core_io_site;length=snprintf(text,sizeof text,"%s:%d:%d: error[%s]: %s\n  in %s at %s:%d:%d\n",site->path,site->line,site->column,code,described,site->function,site->path,site->line,site->column);}
+    const myl_core_site *site=hint?NULL:core_io_site;
+    if(site)length=snprintf(text,sizeof text,"%s:%d:%d: error[%s]: %s\n  in %s at %s:%d:%d\n",site->path,site->line,site->column,code,described,site->function,site->path,site->line,site->column);
     else length=snprintf(text,sizeof text,"error[%s]: %s\n",code,described);
     stream_write(&streams[1],text,(size_t)(length<(int)sizeof text?length:(int)sizeof text-1));
+    trap_lines_left=site?CORE_TRACE_FRAMES-1:CORE_TRACE_FRAMES;
     void *pcs[128];int count=os_stack(pcs,128),found=0;
-    for(int i=2;i<count;++i){int frames=dwarf_frames((uintptr_t)pcs[i]-1,found?0:1);if(frames)found=1;else if(found)break;}
-    flush_all();os_exit(strncmp(code,"R_",2)?2:1);
+    /* A frame budget traps on entering a frame it cannot hold: the frames start at the call. */
+    const bool skip=site||!strcmp(code,"R_FRAME_LIMIT");
+    for(int i=2;i<count;++i){int frames=dwarf_frames((uintptr_t)pcs[i]-1,found||!skip?0:1);if(frames)found=1;else if(found)break;}
+    trap_omitted();
+    /* A test trial's trap is told apart from a crash by its record. */
+    const bool trapped=!strncmp(code,"R_",2);
+    if(trapped&&core_trap_marks_all){char record[512];size_t used=core_operation_record(record,sizeof record,described);stream_write(&streams[1],record,used);}
+    flush_all();os_exit(trapped?1:2);
 }
 
 /* With MYL_CORE_LEAKCHECK=1, a program that ends with blocks still allocated says
@@ -1129,6 +1160,7 @@ int32_t myl_core_exit(int64_t status) {
     }
     flush_all();
     leak_report();
+    core_text_walk_report();
     core_io_cleanup();
     return (int32_t)(status & 0xFF);
 }
@@ -1341,7 +1373,9 @@ void myl_core_assert_fail(const myl_core_site *site) {
         site->path, site->line, site->column, code, described[kind], site->operation[0] ? ": " : "", site->operation, blame,
         site->function, site->path, site->line, site->column);
     stream_write(&streams[1], text, (size_t)(len < (int)sizeof text ? len : (int)sizeof text - 1));
+    trap_lines_left = CORE_TRACE_FRAMES - 1;
     trap_frames();
+    trap_omitted();
     /* The record: {"version":1,"operation":"MESSAGE"} with the message JSON-escaped. */
     char record[2048];
     size_t used = core_operation_record(record, sizeof record, site->operation);

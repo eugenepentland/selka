@@ -1,6 +1,18 @@
 /* S2 text ABI: shared str/bytes leaf blocks; header flags and cache are §3.1. */
 enum { MYL_TEXT_ASCII = 1u << 8, MYL_TEXT_HASHED = 2u << 8,
-       MYL_TEXT_SCALARS = 4u << 8, MYL_TEXT_CURSOR = 8u << 8 };
+       MYL_TEXT_SCALARS = 4u << 8, MYL_TEXT_CURSOR = 8u << 8, MYL_TEXT_TAIL = 16u << 8 };
+
+/* Octets the scalar-position walks of this process have stepped over. With
+   MYL_CORE_TEXTWALK=1 the total is reported on stderr at exit, so a test can bound
+   the lookup work of a scan without timing it (NEW-CORE-TEXT-CURSOR-1). */
+static uint64_t core_text_walked;
+static void core_text_walk_report(void) {
+    const char *flag = getenv("MYL_CORE_TEXTWALK");
+    if (!flag || strcmp(flag, "1") != 0) return;
+    char text[64];
+    int len = snprintf(text, sizeof text, "myl-core textwalk: %llu octets\n", (unsigned long long)core_text_walked);
+    os_write(2, (const unsigned char *)text, (size_t)len);
+}
 
 static bool core_text_ascii(const unsigned char *bytes, uint64_t len) {
     uint64_t at = 0;
@@ -14,7 +26,7 @@ static bool core_text_ascii(const unsigned char *bytes, uint64_t len) {
 }
 
 static void core_text_publish(myl_block *text) {
-    text->kind &= ~(MYL_TEXT_ASCII | MYL_TEXT_HASHED | MYL_TEXT_SCALARS | MYL_TEXT_CURSOR);
+    text->kind &= ~(MYL_TEXT_ASCII | MYL_TEXT_HASHED | MYL_TEXT_SCALARS | MYL_TEXT_CURSOR | MYL_TEXT_TAIL);
     text->reserved = 0;
     if (core_text_ascii(block_data(text), (uint64_t)text->len)) text->kind |= MYL_TEXT_ASCII;
 }
@@ -85,6 +97,7 @@ uint64_t myl_core_str_chars(const myl_block *text) {
     if (text->kind & MYL_TEXT_SCALARS) return (uint64_t)text->reserved >> 32;
     const unsigned char *bytes = (const unsigned char *)text + MYL_HEADER;
     uint64_t scalars = 0;
+    core_text_walked += (uint64_t)text->len;
     for (int64_t i = 0; i < text->len; ++i) scalars += (bytes[i] & 0xc0) != 0x80;
     if (text->count != MYL_SATURATED && scalars <= UINT32_MAX) {
         myl_block *mutable = (myl_block *)text;
@@ -94,32 +107,109 @@ uint64_t myl_core_str_chars(const myl_block *text) {
     return scalars;
 }
 
+/* A scalar position: scalar index `scalar` begins at octet `at`. */
+typedef struct { uint64_t scalar, at; } core_anchor;
+
+/* The text cursor (NEW-CORE-TEXT-CURSOR-1) is the last position a lookup resolved,
+   packed `scalar << 32 | at`. A text with no spare capacity keeps it in its `cap`
+   word (an append restores `cap = len`); a text with at least eight spare octets keeps
+   it in its last eight, past the terminating NUL (MYL_TEXT_TAIL). Immortal texts,
+   texts under 256 octets and texts past 4 GiB keep none. */
+static unsigned char *core_cursor_tail(const myl_block *text) { return (unsigned char *)text + MYL_HEADER + text->cap - 7; }
+
+static bool core_cursor_get(const myl_block *text, core_anchor *cursor) {
+    if (!(text->kind & MYL_TEXT_CURSOR)) return false;
+    uint64_t packed = (uint64_t)text->cap;
+    if (text->kind & MYL_TEXT_TAIL) memcpy(&packed, core_cursor_tail(text), 8);
+    *cursor = (core_anchor){packed >> 32, (uint32_t)packed};
+    return true;
+}
+
+static void core_cursor_set(const myl_block *text, core_anchor cursor) {
+    if (text->count == MYL_SATURATED || text->len < 256 || text->len > UINT32_MAX || cursor.scalar > UINT32_MAX) return;
+    myl_block *mutable = (myl_block *)text;
+    uint64_t packed = cursor.scalar << 32 | cursor.at;
+    if (!(text->kind & MYL_TEXT_CURSOR)) {
+        if (text->cap == text->len) mutable->kind |= MYL_TEXT_CURSOR;
+        else if (text->cap - text->len >= 8) mutable->kind |= MYL_TEXT_CURSOR | MYL_TEXT_TAIL;
+        else return;
+    }
+    if (text->kind & MYL_TEXT_TAIL) memcpy(core_cursor_tail(text), &packed, 8);
+    else mutable->cap = (int64_t)packed;
+}
+
+/* Scalar starts in the 32 octets at `bytes`: every octet that is not a continuation. */
+static uint64_t core_text_starts32(const unsigned char *bytes) {
+    uint64_t count = 0;
+    for (unsigned word_at = 0; word_at < 32; word_at += 8) {
+        uint64_t word;
+        memcpy(&word, bytes + word_at, 8);
+        uint64_t continuation = (word & ~(word << 1)) & UINT64_C(0x8080808080808080);
+        count += 8 - (uint64_t)__builtin_popcountll(continuation);
+    }
+    return count;
+}
+
+/* Walk from `from` to scalar `target`, forward or back, 32 octets at a time while the
+   target is not in the next block. A forward walk stops at the end of the text. */
+static core_anchor core_text_step(const unsigned char *bytes, uint64_t len, core_anchor from, uint64_t target) {
+    uint64_t at = from.at, index = from.scalar;
+    if (target >= index) {
+        while (at + 32 <= len) {
+            uint64_t count = core_text_starts32(bytes + at);
+            if (index + count >= target) break;
+            index += count; at += 32;
+            while (at < len && (bytes[at] & 0xc0) == 0x80) ++at;
+        }
+        while (at < len && index < target) { ++at; while (at < len && (bytes[at] & 0xc0) == 0x80) ++at; ++index; }
+        return (core_anchor){index, at};
+    }
+    uint64_t left = index - target;
+    while (at >= 32) {
+        uint64_t count = core_text_starts32(bytes + at - 32);
+        if (count >= left) break;
+        left -= count; at -= 32;
+    }
+    while (left) { --at; if ((bytes[at] & 0xc0) != 0x80) --left; }
+    return (core_anchor){target, at};
+}
+
+static core_anchor core_text_move(const unsigned char *bytes, uint64_t len, core_anchor from, uint64_t target) {
+    core_anchor found = core_text_step(bytes, len, from, target);
+    core_text_walked += found.at > from.at ? found.at - from.at : from.at - found.at;
+    return found;
+}
+
+static void core_text_nearer(core_anchor *best, uint64_t *gap, uint64_t target, core_anchor anchor) {
+    uint64_t distance = anchor.scalar <= target ? target - anchor.scalar : anchor.scalar - target;
+    if (distance < *gap) { *best = anchor; *gap = distance; }
+}
+
+/* The octet where scalar `scalar` of a non-ASCII text begins (its length past the
+   end): a walk from the nearest of the text's start, its end when the scalar count
+   is cached, its cursor and the caller's `hint`. A walk records where it ended, so
+   a scan that moves its index either way pays for the distance moved. */
+static uint64_t core_text_locate(const myl_block *text, uint64_t scalar, core_anchor hint) {
+    const unsigned char *bytes = (const unsigned char *)text + MYL_HEADER;
+    const uint64_t len = (uint64_t)text->len;
+    core_anchor best = {0, 0}, cursor;
+    uint64_t gap = scalar;
+    if (text->kind & MYL_TEXT_SCALARS) {
+        uint64_t chars = (uint64_t)text->reserved >> 32;
+        if (scalar >= chars) return len;
+        core_text_nearer(&best, &gap, scalar, (core_anchor){chars, len});
+    }
+    core_text_nearer(&best, &gap, scalar, hint);
+    if (core_cursor_get(text, &cursor)) core_text_nearer(&best, &gap, scalar, cursor);
+    if (!gap) return best.at;
+    core_anchor found = core_text_move(bytes, len, best, scalar);
+    core_cursor_set(text, found);
+    return found.at;
+}
+
 uint64_t myl_core_str_offset(const myl_block *text, uint64_t scalar) {
     if (text->kind & MYL_TEXT_ASCII) return scalar < (uint64_t)text->len ? scalar : (uint64_t)text->len;
-    const unsigned char *bytes = (const unsigned char *)text + MYL_HEADER;
-    uint64_t at = 0, index = 0;
-    if ((text->kind & MYL_TEXT_CURSOR) && scalar <= UINT32_MAX) {
-        uint64_t cursor = (uint64_t)text->cap;
-        if ((uint32_t)(cursor >> 32) <= scalar) { index = cursor >> 32; at = (uint32_t)cursor; }
-    }
-    while (at + 32 <= (uint64_t)text->len) {
-        uint64_t count = 0;
-        for (unsigned word_at = 0; word_at < 32; word_at += 8) {
-            uint64_t word;
-            memcpy(&word, bytes + at + word_at, 8);
-            uint64_t continuation = (word & ~(word << 1)) & UINT64_C(0x8080808080808080);
-            count += 8 - (uint64_t)__builtin_popcountll(continuation);
-        }
-        if (index + count >= scalar) break;
-        index += count; at += 32;
-        while (at < (uint64_t)text->len && (bytes[at] & 0xc0) == 0x80) ++at;
-    }
-    while (at < (uint64_t)text->len && index < scalar) { ++at; while (at < (uint64_t)text->len && (bytes[at] & 0xc0) == 0x80) ++at; ++index; }
-    if (text->count != MYL_SATURATED && text->len >= 256 && text->len <= UINT32_MAX && scalar <= UINT32_MAX && ((text->kind & MYL_TEXT_CURSOR) || text->cap == text->len)) {
-        ((myl_block *)text)->cap = (int64_t)((scalar << 32) | at);
-        ((myl_block *)text)->kind |= MYL_TEXT_CURSOR;
-    }
-    return at;
+    return core_text_locate(text, scalar, (core_anchor){0, 0});
 }
 
 uint64_t myl_core_ir_str_width(myl_block *text, uint64_t offset) {
@@ -195,7 +285,8 @@ static inline void core_text_copy_short(unsigned char *output, const unsigned ch
 static inline myl_block *core_text_append_bytes(myl_block *a, const unsigned char *bytes, int64_t count, bool ascii) {
     int64_t len = a->len + count;
     if (a->count != 1) myl_core_s2_unsupported(-1);
-    if (a->kind & MYL_TEXT_CURSOR) { a->cap = a->len; a->kind &= ~MYL_TEXT_CURSOR; }
+    if ((a->kind & (MYL_TEXT_CURSOR | MYL_TEXT_TAIL)) == MYL_TEXT_CURSOR) a->cap = a->len;
+    a->kind &= ~(MYL_TEXT_CURSOR | MYL_TEXT_TAIL);
     if (len > a->cap) {
         int64_t cap = a->cap > 0 ? a->cap * 2 : 16;
         if (cap < len) cap = len;
@@ -212,7 +303,7 @@ static inline myl_block *core_text_append_bytes(myl_block *a, const unsigned cha
     else memmove(block_data(a) + a->len, bytes, (size_t)count);
     a->len = len;
     block_data(a)[len] = 0;
-    a->kind &= ~(MYL_TEXT_ASCII | MYL_TEXT_HASHED | MYL_TEXT_SCALARS | MYL_TEXT_CURSOR);
+    a->kind &= ~(MYL_TEXT_ASCII | MYL_TEXT_HASHED | MYL_TEXT_SCALARS);
     if (ascii) a->kind |= MYL_TEXT_ASCII;
     a->reserved = 0;
     return a;
@@ -241,7 +332,8 @@ static int64_t core_text_clamp(int64_t index, int64_t len) {
 myl_block *myl_core_ir_str_slice(myl_block *text, int64_t start, int64_t end) {
     int64_t len = (int64_t)myl_core_str_chars(text);
     start = core_text_clamp(start, len); end = core_text_clamp(end, len);
-    uint64_t a = myl_core_str_offset(text, (uint64_t)start), b = end > start ? myl_core_str_offset(text, (uint64_t)end) : a;
+    uint64_t a = myl_core_str_offset(text, (uint64_t)start), b = a;
+    if (end > start) b = (text->kind & MYL_TEXT_ASCII) ? (uint64_t)end : core_text_locate(text, (uint64_t)end, (core_anchor){(uint64_t)start, a});
     return str_from((const char *)block_data(text) + a, (size_t)(b - a));
 }
 
@@ -331,6 +423,8 @@ static int64_t core_text_find_bytes(const myl_block *text, const myl_block *need
 /* Scalars that start in bytes [from, to): every byte that is not a UTF-8 continuation. */
 static uint64_t core_text_starts(const unsigned char *bytes, uint64_t from, uint64_t to) {
     uint64_t count = 0;
+    core_text_walked += to - from;
+    for (; from + 32 <= to; from += 32) count += core_text_starts32(bytes + from);
     for (uint64_t i = from; i < to; ++i) count += (bytes[i] & 0xc0) != 0x80;
     return count;
 }
@@ -415,8 +509,12 @@ static myl_block *core_text_slice_step(myl_block *text, int64_t start, int64_t e
     start = core_text_step_bound(start, len, step, false); end = core_text_step_bound(end, len, step, true);
     myl_block *out = str_new(text->len);
     out->len = 0;
+    const bool ascii = !unicode || (text->kind & MYL_TEXT_ASCII);
+    core_anchor walked = {0, 0};
     for (int64_t i = start; step > 0 ? i < end : i > end;) {
-        uint64_t at = unicode ? myl_core_str_offset(text, (uint64_t)i) : (uint64_t)i;
+        /* Each element is found from the previous one: the walk costs the step. */
+        if (!ascii) walked = core_text_move(block_data(text), (uint64_t)text->len, walked, (uint64_t)i);
+        uint64_t at = ascii ? (uint64_t)i : walked.at;
         uint64_t width = unicode ? myl_core_ir_str_width(text, at) : 1;
         memcpy(block_data(out) + out->len, block_data(text) + at, (size_t)width);
         out->len += (int64_t)width;
@@ -657,10 +755,18 @@ int64_t myl_core_text_search(myl_block *input, myl_block *needle, int64_t start,
     core_search_window bounds = core_window((size_t)myl_core_str_chars(input), start, end);
     if (!needle->len) return core_empty_answer(bounds, mode);
     if (!bounds.valid) return mode >= CORE_COUNT ? 0 : -1;
-    size_t first = (size_t)myl_core_str_offset(input, bounds.first), last = (size_t)myl_core_str_offset(input, bounds.last);
+    const bool ascii = (input->kind & MYL_TEXT_ASCII) != 0;
+    size_t first = (size_t)myl_core_str_offset(input, bounds.first), last = (size_t)bounds.last;
+    if (!ascii) last = (size_t)core_text_locate(input, bounds.last, (core_anchor){bounds.first, first});
     int64_t found = core_search_octets((core_octets){block_data(input) + first, last - first, false}, (core_octets){block_data(needle), (size_t)needle->len, false}, mode);
     if (found < 0 || mode >= CORE_COUNT) return found;
-    return (int64_t)core_text_starts(block_data(input), 0, first + (size_t)found);
+    if (ascii) return (int64_t)(first + (size_t)found);
+    /* Count from the nearer window end, and leave the cursor on the match: the next
+       call of a scan starts or ends there (NEW-CORE-TEXT-CURSOR-1). */
+    const uint64_t hit = first + (uint64_t)found;
+    const uint64_t index = hit - first <= last - hit ? bounds.first + core_text_starts(block_data(input), first, hit) : bounds.last - core_text_starts(block_data(input), hit, last);
+    core_cursor_set(input, (core_anchor){index, hit});
+    return (int64_t)index;
 }
 
 int64_t myl_core_bytes_search(myl_block *input, myl_block *needle, int64_t start, int64_t end, int32_t mode) {

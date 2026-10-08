@@ -55,7 +55,9 @@ pub fn frame(b: *tools.Builder, module: *const ir.Module, enter: u32, leave: u32
     try prepend(b, @fromBackingInt(0), module, enter, &.{});
 }
 
-/// Insert a call of `helper` at the start of `block`, after its phis and copies.
+/// Insert a call of `helper` at the start of `block`, after its phis and copies. The
+/// call takes the source position of the instruction it precedes, so a budget's trap
+/// in it is located at the block's first statement (NEW-CORE-S5-TRACE-1).
 pub fn prepend(b: *tools.Builder, block: ir.BlockId, module: *const ir.Module, helper: u32, arguments: []const ir.Ref) error{OutOfMemory}!void {
     const ref = try b.call(block, module, helper, arguments);
     const list = &b.function.blocks.items[block.index()].insts;
@@ -65,5 +67,19 @@ pub fn prepend(b: *tools.Builder, block: ir.BlockId, module: *const ir.Module, h
         const op = b.function.inst(list.items[first]).op;
         if (op != .phi and op != .copy) break;
     }
+    b.function.insts.items[ref.index()].span = located(&b.function, block);
     try list.insert(b.arena, first, ref);
+}
+
+/// The first source position in `block`, else in the block its bare jump reaches (a
+/// loop's latch holds only the jump back to its header); 0 when neither has one.
+fn located(function: *const ir.Function, block: ir.BlockId) u32 {
+    var at = block;
+    for (0..2) |_| {
+        const list = function.blocks.items[at.index()].insts.items;
+        for (list) |ref| if (function.inst(ref).span != 0) return function.inst(ref).span;
+        if (list.len == 0 or function.inst(list[list.len - 1]).op != .jump) return 0;
+        at = @fromBackingInt(@as(u32, @intCast(function.inst(list[list.len - 1]).data)));
+    }
+    return 0;
 }

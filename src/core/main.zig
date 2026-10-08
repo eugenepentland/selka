@@ -13,13 +13,29 @@ const test_runner = @import("test_runner.zig");
 const check_command = @import("check_command.zig");
 const cli_run = @import("cli_run.zig");
 
+/// The flag naming the build cache directory.
+const cache_dir_flag = "--cache-dir";
+
 const usage =
-    \\usage: mylang-core build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR] [--verify-cache] [--cache-report]
-    \\       mylang-core check FILE.my [--typed] [--stats] [--timings=json] [--cache-dir DIR] [--no-cache]
-    \\       mylang-core test FILE.my|DIR [--release] [--json] [--filter S] [--affected --against REF] [--no-cache] [--jobs N] [--force] [--cases PATH] [--max-steps N] [--max-frames N] [--max-memory SIZE] [--timeout-ms N]
-    \\       mylang-core coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
-    \\       mylang-core dump-typed FILE.my [FUNCTION]
-    \\       mylang-core dump-ir FILE.my [--facts]   (--facts: after the release passes, with intervals)
+    \\usage: mylang build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR] [--verify-cache] [--cache-report]
+    \\       mylang check FILE.my [--typed] [--stats] [--timings=json] [--cache-dir DIR] [--no-cache]
+    \\       mylang test FILE.my|DIR [options]   (`mylang test` alone lists them)
+    \\       mylang coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
+    \\       mylang dump-typed FILE.my [FUNCTION]
+    \\       mylang dump-ir FILE.my [--facts]   (--facts: after the release passes, with intervals)
+    \\
+;
+
+/// `mylang test`'s usage: every flag `testCommand` and the CLI accept.
+const test_usage =
+    \\usage: mylang test <entry.my|directory> [--filter SUBSTRING|GLOB] [--cases FILE] [--json]
+    \\  --release | --mode Debug|ReleaseFast    --no-facts | --verify-facts
+    \\  --affected --against REF                run only tests reaching a declaration changed since REF
+    \\  --jobs N                                tests at once (default: CPUs, capped by free memory)
+    \\  --max-steps N --max-frames N --max-memory SIZE --timeout-ms N   per-test budgets
+    \\  --seed N --property-runs N              property test inputs (runs: 1 to 1000000)
+    \\  --force --no-cache --cache-dir DIR      rerun every test / use a private cache / cache location
+    \\  --link FILE.c (repeatable) --zig PATH
     \\
 ;
 
@@ -165,7 +181,7 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
         } else if (std.mem.eql(u8, arg, "--zig") and has_value) {
             index += 1;
             options.zig = args[index];
-        } else if (std.mem.eql(u8, arg, "--cache-dir") and has_value) {
+        } else if (std.mem.eql(u8, arg, cache_dir_flag) and has_value) {
             index += 1;
             options.cache = args[index];
         } else if (path == null and !std.mem.startsWith(u8, arg, "-")) {
@@ -201,7 +217,8 @@ pub fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     var no_cache = false;
     var index: usize = 0;
     while (index < args.len) : (index += 1) {
-        if (testControls(&options, args, &index) catch return 2) continue;
+        const start = index;
+        if (testControls(&options, args, &index) catch return invalidValue(init, args, start, index)) continue;
         const arg = args[index];
         const has_value = index + 1 < args.len;
         if (std.mem.eql(u8, arg, "--affected")) {
@@ -223,37 +240,58 @@ pub fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
             try links.append(init.arena.allocator(), args[index]);
         } else if (std.mem.eql(u8, arg, "--seed") and has_value) {
             index += 1;
-            options.seed = std.fmt.parseInt(u64, args[index], 10) catch return 2;
+            options.seed = std.fmt.parseInt(u64, args[index], 10) catch return invalidValue(init, args, index - 1, index);
         } else if (std.mem.eql(u8, arg, "--property-runs") and has_value) {
             index += 1;
-            options.property_runs = std.fmt.parseInt(u32, args[index], 10) catch return 2;
-            if (options.property_runs == 0 or options.property_runs > 1000000) return 2;
+            options.property_runs = std.fmt.parseInt(u32, args[index], 10) catch return invalidValue(init, args, index - 1, index);
+            if (options.property_runs == 0 or options.property_runs > 1000000) return invalidValue(init, args, index - 1, index);
         } else if (std.mem.eql(u8, arg, "--filter") and has_value) {
             index += 1;
             options.filter = args[index];
         } else if (std.mem.eql(u8, arg, "--zig") and has_value) {
             index += 1;
             options.build.zig = args[index];
-        } else if (std.mem.eql(u8, arg, "--cache-dir") and has_value) {
+        } else if (std.mem.eql(u8, arg, cache_dir_flag) and has_value) {
             index += 1;
             options.build.cache = args[index];
         } else if (options.path.len == 0 and !std.mem.startsWith(u8, arg, "-")) {
             options.path = arg;
         } else {
-            try std.Io.File.stderr().writeStreamingAll(init.io, usage);
-            return 2;
+            const problem = if (std.mem.startsWith(u8, arg, "-")) (if (has_value or !takesValue(arg)) "unknown option" else "missing value for") else "unexpected argument";
+            return testUsage(init, try std.fmt.allocPrint(init.arena.allocator(), "{s} '{s}'", .{ problem, arg }));
         }
     }
+    if (options.path.len == 0) return testUsage(init, null);
     // NEW-CORE-S5-AFFECTED-1: the two switches only mean something together.
-    if (options.path.len == 0 or affected != (options.controls.against != null)) {
-        try std.Io.File.stderr().writeStreamingAll(init.io, usage);
-        return 2;
-    }
+    if (affected != (options.controls.against != null)) return testUsage(init, "--affected and --against REF go together");
     options.build.links = links.items;
     // NEW-CORE-S5-NO-CACHE-1: run against a private cache, removed afterwards.
     if (no_cache) options.build.cache = try cli_run.privateCache(init, options.build.cache);
     defer if (no_cache) cli_run.discard(init.io, options.build.cache);
     return test_runner.run(init, options);
+}
+
+/// Print `mylang test: PROBLEM` (when there is one) and the test usage; status 2.
+fn testUsage(init: std.process.Init, problem: ?[]const u8) Error!u8 {
+    const text = if (problem) |line| try std.fmt.allocPrint(init.arena.allocator(), "mylang test: {s}\n" ++ test_usage, .{line}) else test_usage;
+    try std.Io.File.stderr().writeStreamingAll(init.io, text);
+    return 2;
+}
+
+/// The usage error for the flag at `args[start]` whose value (after `=`, or the
+/// argument at `index`) is not one the flag accepts (NEW-CORE-S5-TEST-USAGE-1).
+fn invalidValue(init: std.process.Init, args: []const []const u8, start: usize, index: usize) Error!u8 {
+    const arg = args[start];
+    const split = std.mem.indexOfScalar(u8, arg, '=');
+    const value = if (split) |at| arg[at + 1 ..] else if (index > start) args[index] else "";
+    return testUsage(init, try std.fmt.allocPrint(init.arena.allocator(), "invalid value '{s}' for {s}", .{ value, arg[0 .. split orelse arg.len] }));
+}
+
+/// Whether `arg` is a `mylang test` flag that reads the next argument as its value.
+fn takesValue(arg: []const u8) bool {
+    const valued = [_][]const u8{ "--filter", "--cases", "--jobs", "--mode", "--max-steps", "--max-frames", "--max-memory", "--timeout-ms", "--seed", "--property-runs", "--link", "--zig", cache_dir_flag, "--against" };
+    for (valued) |name| if (std.mem.eql(u8, arg, name)) return true;
+    return false;
 }
 
 fn testControls(options: *test_runner.Options, args: []const []const u8, index: *usize) error{Usage}!bool {

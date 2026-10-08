@@ -3,13 +3,15 @@ const std = @import("std");
 const options = @import("core_test_options");
 const report = std.debug.print;
 const cache_argument = "--cache-dir";
+const cache_pattern = "{s}/cache";
+const leak_check = "MYL_CORE_LEAKCHECK";
 
 fn qualified(arena: std.mem.Allocator) !bool {
     var directory = std.testing.tmpDir(.{});
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", arena);
     const source = try std.fmt.allocPrint(arena, "{s}/t_text.my", .{options.fixtures});
-    const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
+    const cache = try std.fmt.allocPrint(arena, cache_pattern, .{root});
     for ([_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } }) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;
         try argv.appendSlice(arena, &.{ options.core_path, "test", source, "--json", cache_argument, cache });
@@ -79,7 +81,7 @@ const fast_paths =
 fn fastPathsOutput(arena: std.mem.Allocator, root: []const u8, mode: []const []const u8) ![]const u8 {
     const source = try std.fmt.allocPrint(arena, "{s}/fast.my", .{root});
     const output = try std.fmt.allocPrint(arena, "{s}/fast-{d}", .{ root, mode.len });
-    const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
+    const cache = try std.fmt.allocPrint(arena, cache_pattern, .{root});
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, cache_argument, cache });
     try argv.appendSlice(arena, mode);
@@ -87,7 +89,7 @@ fn fastPathsOutput(arena: std.mem.Allocator, root: []const u8, mode: []const []c
     if (built.term != .exited or built.term.exited != 0) report("text build failed: {s}{s}\n", .{ built.stdout, built.stderr });
     try std.testing.expect(built.term == .exited and built.term.exited == 0);
     var environment = try std.testing.environ.createMap(arena);
-    try environment.put("MYL_CORE_LEAKCHECK", "1");
+    try environment.put(leak_check, "1");
     const ran = try std.process.run(arena, std.testing.io, .{ .argv = &.{output}, .environ_map = &environment });
     try std.testing.expect(ran.term == .exited and ran.term.exited == 0);
     try std.testing.expectEqualStrings("", ran.stderr);
@@ -115,7 +117,7 @@ fn methodsRun(allocator: std.mem.Allocator, mode: []const []const u8) !void {
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", allocator);
     var environment = try std.testing.environ.createMap(allocator);
-    try environment.put("MYL_CORE_LEAKCHECK", "1");
+    try environment.put(leak_check, "1");
     const source = try std.fs.path.join(allocator, &.{ options.fixtures, "t_methods.my" });
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(allocator, &.{ options.core_path, "test", source, "--json", cache_argument, root });
@@ -315,4 +317,72 @@ test "private split fusion requires the authorized runtime declaration even with
     _ = try @import("test_support.zig").runPasses(arena, &module, .trusted);
     const text = try @import("print.zig").module(arena, &module);
     try std.testing.expect(std.mem.indexOf(u8, text, "myl_core_split_ws_start") == null);
+}
+
+const moving_scans =
+    \\def appended(n: int) -> str:
+    \\    out = ""
+    \\    for i in range(n):
+    \\        out += "é€"[i % 2]
+    \\    return out
+    \\
+    \\def scan(s: str) -> int:
+    \\    n = len(s)
+    \\    total = 0
+    \\    start = 0
+    \\    while s.find("é", start) >= 0:
+    \\        start = s.index("é", start) + 1
+    \\        total += start
+    \\    end = n
+    \\    while s.rfind("é", 0, end) >= 0:
+    \\        end = s.rfind("é", 0, end)
+    \\        total += end
+    \\    i = n - 1
+    \\    while i >= 0:
+    \\        total += ord(s[i]) + len(s[i:i + 2])
+    \\        i -= 1
+    \\    total += ord(s[::-1][0]) + len(s[::-3])
+    \\    return total
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(scan("é" * 20000), scan(appended(20000)))
+    \\    return 0
+    \\
+;
+
+/// Build `moving_scans` in `mode`, run it with the walk report on, and return the
+/// octets its scalar lookups walked after checking its output against the old core's.
+fn movingScanWalk(arena: std.mem.Allocator, root: []const u8, mode: []const []const u8) !u64 {
+    const output = try std.fmt.allocPrint(arena, "{s}/scan-{d}", .{ root, mode.len });
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(arena, &.{ options.core_path, "build", try std.fmt.allocPrint(arena, "{s}/scan.my", .{root}), "-o", output, cache_argument, try std.fmt.allocPrint(arena, cache_pattern, .{root}) });
+    try argv.appendSlice(arena, mode);
+    const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
+    if (built.term != .exited or built.term.exited != 0) report("scan build failed: {s}{s}\n", .{ built.stdout, built.stderr });
+    try std.testing.expect(built.term == .exited and built.term.exited == 0);
+    var environment = try std.testing.environ.createMap(arena);
+    try environment.put("MYL_CORE_TEXTWALK", "1");
+    try environment.put(leak_check, "1");
+    const ran = try std.process.run(arena, std.testing.io, .{ .argv = &.{output}, .environ_map = &environment });
+    try std.testing.expect(ran.term == .exited and ran.term.exited == 0);
+    // The old core's output for the same program.
+    try std.testing.expectEqualStrings("404706899 286015030\n", ran.stdout);
+    const prefix = "myl-core textwalk: ";
+    try std.testing.expect(std.mem.startsWith(u8, ran.stderr, prefix));
+    return std.fmt.parseInt(u64, std.mem.trimEnd(u8, ran.stderr[prefix.len..], " octets\n"), 10);
+}
+
+// spec: NEW-CORE-TEXT-CURSOR-1
+test "scalar lookups that move through non-ASCII text either way walk only the distance moved" {
+    var state = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer state.deinit();
+    const arena = state.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", arena);
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "scan.my", .data = moving_scans });
+    // The two texts hold 90,000 octets; the scans walk about 1.6 million in all. A
+    // lookup that walked from the start of the text would walk hundreds of millions.
+    try std.testing.expect(try movingScanWalk(arena, root, &.{}) < 4_000_000);
+    try std.testing.expect(try movingScanWalk(arena, root, &.{"--release"}) < 4_000_000);
 }

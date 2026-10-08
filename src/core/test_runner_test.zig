@@ -141,6 +141,7 @@ test "the text report is the old runner's lines and summary, with unsupported te
 }
 
 // spec-case: NEW-CORE-TEST-3
+// spec-case: NEW-CORE-S5-TEST-STATUS-1
 test "the JSON report keys tests by name, status and reason, and the exit status is 0, 1 or 3" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
@@ -152,6 +153,9 @@ test "the JSON report keys tests by name, status and reason, and the exit status
     try std.testing.expectEqual(@as(u8, 0), report.exitStatus(verdicts[0..1]));
     try std.testing.expectEqual(@as(u8, 0), report.exitStatus(verdicts[2..3]));
     try std.testing.expectEqual(@as(u8, 3), report.exitStatus(&.{}));
+    const skipped = [_]report.Verdict{ .{ .name = "m::test_d", .status = .skipped, .reason = "later" }, .{ .name = "m::test_e", .status = .skipped, .reason = "later" } };
+    try std.testing.expectEqual(@as(u8, 3), report.exitStatus(&skipped));
+    try std.testing.expectEqual(@as(u8, 0), report.exitStatus(&.{ skipped[0], verdicts[0] }));
 }
 
 /// One run of `mylang-core test` on a fixture: exit status and the parsed `--json` report.

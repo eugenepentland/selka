@@ -148,8 +148,9 @@ def main(out: Stream) -> int:
 
 `debug(values...)` writes to standard error without a capability and without
 contributing any effect, so it is safe inside a `noio` function. It renders like
-`stream.print` and returns unit. Every build emits it, `--release` included, so
-remove `debug` calls before shipping.
+`stream.print` and returns unit. A debug build, `mylang run` (with `--release`
+too), `build --run` and `mylang test` emit it; a `mylang build --release`
+executable drops it in lowering, arguments included.
 
 ```mylang
 # doc: check
