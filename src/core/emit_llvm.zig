@@ -839,6 +839,7 @@ fn returnsThroughSret(m: *const ir.Module, signature: ir.Signature, abi: InOutAb
 /// in their `sret` destination, if its plan allows it (`emit_homes.Planner.shareable`): the first
 /// one, of a function with no in-out parameter; `none` otherwise.
 fn shareCandidate(m: *const ir.Module, signature: ir.Signature, abi: InOutAbi) u32 {
+    if (!emit_homes.steps.share_sret) return emit_homes.none;
     if (signature.linkage != .internal or abi.params != 0 or !returnsThroughSret(m, signature, abi)) return emit_homes.none;
     for (signature.params, 0..) |param, i| {
         if (i >= 64) break;

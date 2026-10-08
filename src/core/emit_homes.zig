@@ -31,7 +31,10 @@ const effects = @import("effects.zig");
 /// updated in place, views, write-backs built in their field, and in-out `mut` records. A
 /// measurement build may switch later ones off to count what each removes
 /// (experiments/ce-records-20261008/tools/stepbuild.sh).
-pub const steps: struct { homes: bool, views: bool, write_backs: bool, in_out: bool } = .{ .homes = true, .views = true, .write_backs = true, .in_out = true };
+/// Which home transformations are on. `share_sret` (CE2-B step 3, `Planner.shareable`) is off: a
+/// callee that shares its by-value parameter's memory with `%ret` loses `noalias` on both, and the
+/// rows' `record_pass` ran 15-19% slower than the copy it saved (CE2-X, NEW-CORE-CE2-RESULTS-5).
+pub const steps: struct { homes: bool, views: bool, write_backs: bool, in_out: bool, share_sret: bool } = .{ .homes = true, .views = true, .write_backs = true, .in_out = true, .share_sret = false };
 
 /// No class: a value that is not homed (a register value, a view, or one with a private slot).
 pub const none: u32 = std.math.maxInt(u32);

@@ -273,14 +273,15 @@ const sharing =
 ;
 
 // spec: NEW-CORE-CE2-RESULTS-5
-test "s = advance(s, x): a by-value argument that dies at the call shares the callee's sret destination" {
+test "s = advance(s, x): with sret sharing off, the callee keeps noalias and the loop copies its record once" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const llvm = try support.llvmText(arena.allocator(), sharing);
-    // `advance` reads every field of `s` before its `ret` stores any: one memory may be both.
-    try std.testing.expect(contains(llvm, "define internal fastcc void @\"my.advance\"(ptr sret([48 x i8]) align 8 %ret, ptr readonly align 8 %p0, i64 %p1)"));
-    // The loop's record lives in one home, passed as both: no copy on the back edge.
-    try std.testing.expectEqual(@as(usize, 0), copies(functionText(llvm, "@\"my.run\"")));
+    // Sharing is off (`emit_homes.steps.share_sret`): `advance` keeps `noalias` on `%ret` and on
+    // its parameter, so LLVM may move the record's fields in wide loads and stores.
+    try std.testing.expect(contains(llvm, "define internal fastcc void @\"my.advance\"(ptr noalias sret([48 x i8]) align 8 %ret, ptr noalias readonly align 8 %p0, i64 %p1)"));
+    // The loop's record is copied once from the call's result on the back edge.
+    try std.testing.expect(copies(functionText(llvm, "@\"my.run\"")) >= 1);
     // `swap` reads `p.x` after storing over it: it may not share, and its caller copies.
     try std.testing.expect(contains(llvm, "define internal fastcc void @\"my.swap\"(ptr noalias sret([96 x i8]) align 8 %ret, ptr noalias readonly align 8 %p0)"));
     try std.testing.expect(copies(functionText(llvm, "@\"my.swaps\"")) >= 1);
