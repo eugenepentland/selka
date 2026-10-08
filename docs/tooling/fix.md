@@ -95,13 +95,14 @@ mylang fix app/main.my --diagnostics=json
 — a library module, a `*_test.my` file or any headerless file — is checked as a
 library (`CHECK-LIBRARY-2`), so its real diagnostics come back located in the
 file as written instead of one `E_MAIN`, and `mylang fix DIR` can check every
-file it visits. `mylang test --diagnostics=json` reports a test entry that does
-not compile the same way `check --diagnostics=json` does, `fix` fields included.
+file it visits. To get a test entry's diagnostics as `diagnostic-v1` JSON
+lines, `fix` fields included, run `mylang check --diagnostics=json` on it:
+`mylang test` prints a test entry that does not compile as text and exits 1,
+and its `--diagnostics` flag was dropped (S5-D6).
 
 ```bash
 mylang check parser.my          # a library module: its own diagnostics, no E_MAIN
 mylang check parser_test.my --diagnostics=json
-mylang test parser_test.my --diagnostics=json
 ```
 
 ## Migrating across a breaking change

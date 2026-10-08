@@ -23,8 +23,8 @@ scripts/build-slot.sh status            # slots, MemAvailable, CPUs builds may u
 ```
 
 `build` covers any compile or install, the focused `test-units`/`test-cli`
-steps, `fmt-check` and `mylang test <dir>`. `gate` covers the full gate steps:
-`zig build test`, `test-qbe`, `test-qbe-build`, `test-schematic` and `test-byte-io`.
+steps, `fmt-check` and `mylang test <dir>`. `gate` covers the full gate,
+`zig build test`.
 The wrapper runs a job only when a slot of its kind is free **and**
 `MemAvailable` is at least that kind's threshold. Otherwise it waits and says
 why. When it finally runs the job it prints how long it waited, and it passes the
@@ -43,7 +43,8 @@ job's exit status through unchanged.
 
 The thresholds come from peaks measured on this machine with `/usr/bin/time -v`,
 and from the peak anonymous memory of the job's cgroup. All builds used Zig's
-default `-j`, except the ReleaseFast one, which used `-j2`. The report is
+default `-j`, except the ReleaseFast one, which used `-j2`. They were measured
+on 2026-09-23, before the S5 switch to the compiler's core. The report is
 [`docs/audits/devloop-tooling-2026-09-23.md`](../audits/devloop-tooling-2026-09-23.md).
 
 | job | wall | peak anon | cgroup `memory.peak` |
@@ -51,8 +52,6 @@ default `-j`, except the ReleaseFast one, which used `-j2`. The report is
 | Debug `zig build` after a `src/` change | 11 s | 0.8 GB | 1.2 GB |
 | ReleaseFast `-Dcompiler-only=true -j2`, clean cache | 277 s | 3.0 GB | 3.0 GB |
 | `zig build test`, clean cache | 217 s | 2.1 GB | 3.9 GB |
-| `zig build test-qbe`, clean cache | 48 s | 0.7 GB | 1.1 GB |
-| `test-qbe-build`, `test-schematic`, `test-byte-io` | 1–2 s each | 0.3 GB | 0.3 GB |
 
 The thresholds are those peaks rounded up with 1 to 2 GB to spare: 4 GB for a
 build and 6 GB for a gate. In the worst case, three ReleaseFast builds and one
@@ -120,12 +119,11 @@ export TMPDIR=$HOME/.cache/mylang-tmp/<lane>
 mkdir -p "$TMPDIR"
 ```
 
-- **One `ZIG_LOCAL_CACHE_DIR` per worktree.** Two trees sharing one cache once
-  embedded the wrong runtime. The build now refuses a configuration that belongs
-  to another tree ([native builds](native-build.md#where-the-content-hash-comes-from)).
+- **One `ZIG_LOCAL_CACHE_DIR` per worktree.** Zig's configure cache ignores the
+  build root, so two trees sharing one cache once embedded the wrong runtime.
 - **`TMPDIR` on disk, not the `/tmp` tmpfs.** `/tmp` has a per-user quota. When
-  other sessions filled it, every command failed with `DiskQuota`, including the
-  guest-test scratch that `mylang test` stages under `TMPDIR`.
+  other sessions filled it, every command that writes scratch under `TMPDIR`
+  failed with `DiskQuota`.
 - **Measure guest programs with the Debug compiler** (`CLAUDE.md`, "Measuring
   guest programs"). A Debug and a ReleaseFast compiler emit identical binaries,
   so a lane that only times programs never needs a ReleaseFast build.

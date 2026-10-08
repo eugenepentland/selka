@@ -20,13 +20,13 @@ current inventory.
 
 ```sh
 zig build test-docs
-zig-out/bin/mylang doctest . --filter 'docs/arenas.md' --verbose
+zig-out/bin/mylang doctest . --filter 'docs/value-semantics.md' --verbose
 zig-out/bin/mylang doctest . --jobs 4
 ```
 
-Examples run on a bounded pool of workers, sized like `mylang test <dir>`'s
-fan-out from the machine's cores and free memory unless `--jobs N` or
-`MYLANG_JOBS` says otherwise; the report is assembled after every unit finishes,
+Examples run on a bounded pool of workers, sized from the machine's cores capped
+by how many 512 MiB per-test ceilings its free memory holds, unless `--jobs N`
+or `MYLANG_JOBS` says otherwise; the report is assembled after every unit finishes,
 so it reads the same as a one-at-a-time run.
 
 ## Feature and export coverage
@@ -52,7 +52,7 @@ when anything is undocumented, so adding a feature slug without writing its
 section breaks the build:
 
 ```text
-  ! managed-arenas: doc page 'docs/arenas.md' does not exist
+  ! example-feature: doc page 'docs/example-feature.md' does not exist
   ! standard-hex: 'docs/standard-library.md' has no heading with anchor 'hex'
 doc-coverage: 2 failures
 ```

@@ -24,10 +24,14 @@ $ mylang check-project app/main.my --report
 
 ## Emission and versions
 
-`mylang check`, `check-project`, `run`, `run-project`, `emit-qbe`,
-`emit-project-qbe` and the other one-shot project commands emit one
-`work-report-v1` JSON line on stderr when `--report` or `--timings=json` is
-given. `--report --no-cache` still emits the work report (with a
+`mylang check`, `check-project`, `lint` and the other one-shot front-end
+commands emit one `work-report-v1` JSON line on stderr when `--report` or
+`--timings=json` is given. These reports describe the front end only: `build`,
+`build --run`, `run`, `run-project` and `test` refuse `--timings=json` and
+`--explain-invalidation` with status 2, `--report` on `build` and `run` prints
+the compiler core's one-line `cache-report-v1` instead
+([native builds](native-build.md)), and `test` refuses `--report` (its `--json`
+report marks each replayed test `cached`). `--report --no-cache` still emits the work report (with a
 `cache-disabled` bypass) because the work happened even though reuse was
 disabled; it does not emit the `frontend-cache-v1` line, which describes an
 opened persistent cache.
@@ -80,10 +84,10 @@ whose `version` is `work-report-v1`; do not assume a single stderr line.
 | `parsed_modules` | module bodies lexed and parsed fresh vs returned by the in-process or persistent syntax lookup |
 | `checked_bodies` | `sema` body-check iterations vs checked-body and concrete-specialization copies and bodies a [check summary](caches.md#check-summaries) stood in for |
 | `instantiated_specializations` | concrete specializations present in the checked program; a specialization body replay is an actual `checked_bodies.reused` hit |
-| `lowered_functions` | functions in the retained bytecode program after lowering |
-| `emitted_fragments` | independently linkable QBE units emitted |
-| `links` | native publish/run steps; object-level build reuse is not claimed here |
-| `executed_tests` | native guest-test executions; see below |
+| `lowered_functions` | always `skipped`: no front-end command lowers |
+| `emitted_fragments` | always `skipped`: no front-end command emits code |
+| `links` | always `skipped`: no front-end command links |
+| `executed_tests` | always `skipped`: `mylang test` reports through `native-tests-v1` |
 
 ## Check sessions
 
@@ -103,25 +107,19 @@ the caches' own cumulative execution-site counters.
 
 ## Native tests
 
-`mylang test` keeps its `native-tests-v1` receipt. Its `executed` field counts
-tests that ran (`passed + failed`) and `cached` counts replayed receipts, so
-`executed + cached == selected` for a successful run. `mylang test --report`
-emits a `work-report-v1` line whose `executed_tests.performed`/`reused` counts
-name the same quantity and reconcile with `native-tests-v1` `executed`/`cached`.
-The test command folds the parser, body-check, lowering, emission and link
-counters from the compiler children that actually prepared or emitted code, so a
-fully cached selection reports zero executions, lowerings, emissions and links.
+`mylang test` reports through its `native-tests-v1` report (`--json`), not
+through `work-report-v1`: each test's `status` is `passed`, `cached`, `failed`,
+`skipped` or `unsupported`, and the counts `passed + cached` cover the tests that
+succeeded. See [guest tests](guest-tests.md#reusing-unaffected-results).
 
 ## Limitations
 
-- Link-stage object reuse inside the native build is not distinguished; the
-  report conservatively counts a publish step and never claims link reuse.
 - `instantiated_specializations` counts the concrete specializations present in
   the fresh checked program. A replayed concrete-specialization body is an actual
   `checked_bodies.reused` hit; the separate `specialization_bodies` object reports
   specialization-specific performed/reused counts.
-- One-shot checked-body reuse is implemented by C2 for ordinary `check`,
-  project checking, `build`, `run` and native-test preparation; C3a replays
+- One-shot checked-body reuse is implemented by C2 for ordinary `check` and
+  project checking, whose caches `build`, `run` and `test` also use; C3a replays
   symbolic generic templates and C3S replays validated concrete specializations
   through the same checked-body path. The one-shot `checked_bodies.reused` count
   is observed at the body-copy site, not inferred from a fingerprint; a

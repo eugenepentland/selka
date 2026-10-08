@@ -704,7 +704,7 @@
     },
     "module-interfaces": {
       "kind": "tooling",
-      "summary": "`mylang interfaces emit` writes one `module-interface-v2` artifact per module from the whole-program check (declaration text with only the bodies a dependent reads, the facts that stand in for the rest, interface fingerprints and reached shapes) with an interface hash that a body-only edit keeps and an implementation hash; `interfaces check` checks one module against interfaces alone and `interfaces oracle` proves every module's such check equals the whole-program check.",
+      "summary": "`mylang interfaces emit` writes one `module-interface-v5` artifact per module from the whole-program check (declaration text with only the bodies a dependent reads, the facts that stand in for the rest, interface fingerprints and reached shapes) with an interface hash that a body-only edit keeps and an implementation hash; `interfaces check` checks one module against interfaces alone and `interfaces oracle` proves every module's such check equals the whole-program check.",
       "doc": "docs/tooling/module-interfaces.md#module-interfaces"
     },
     "persistent-checked-bodies": {
