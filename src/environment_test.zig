@@ -60,10 +60,7 @@ const forwarded = declarations ++
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.initTrusted(allocator, module, forwarded);
     defer c.deinit();
-    try c.emit();
-    const dump = try c.dump(allocator);
-    defer allocator.free(dump);
-    try t.expect(std.mem.indexOf(u8, dump, "ENVIRONMENT_GET") != null);
+    try c.check();
     var duplicates = try language.duplicates.discover(allocator, c.program.?, .{ .min_nodes = 1 });
     defer duplicates.deinit();
 }
@@ -119,8 +116,7 @@ const generic_environment = declarations ++
 fn genericEnvironmentScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.initTrusted(allocator, "generic-environment.my", generic_environment);
     defer c.deinit();
-    try c.emit();
-    try t.expect(c.code.?.functions.len != 0);
+    try c.check();
 }
 const python_get =
     \\def main(env: Environment) -> i64 effects(environment):

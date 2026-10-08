@@ -15,10 +15,13 @@ fn buildAndRun(a: std.mem.Allocator, root: []const u8, name: []const u8, source:
     try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = path, .data = source });
     const output = try std.fmt.allocPrint(a, "{s}/{s}-{s}", .{ root, name, if (release) "release" else "debug" });
     const cache = try std.fmt.allocPrint(a, "{s}/cache", .{root});
+    // `mylang build` reports the source path as it was given, so build from
+    // `root` by the file's own name.
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(a, &.{ options.core_path, "build", path, "-o", output, "--cache-dir", cache });
+    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, options.core_path, a);
+    try argv.appendSlice(a, &.{ compiler, "build", try std.fmt.allocPrint(a, "{s}.my", .{name}), "-o", output, "--cache-dir", cache });
     if (release) try argv.append(a, "--release");
-    const built = try std.process.run(a, std.testing.io, .{ .argv = argv.items });
+    const built = try std.process.run(a, std.testing.io, .{ .argv = argv.items, .cwd = .{ .path = root } });
     if (built.term != .exited or built.term.exited != 0) report("{s}{s}", .{ built.stdout, built.stderr });
     try std.testing.expect(built.term == .exited and built.term.exited == 0);
     const ran = try std.process.run(a, std.testing.io, .{ .argv = &.{output} });

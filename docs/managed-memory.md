@@ -93,10 +93,25 @@ under that bound. Managed mutation is not a promise of purity or exclusive acces
 Every process that runs a program under `mylang run` or `mylang test` has a byte
 ceiling ([guest memory ceilings](tooling/runtime-budgets.md#guest-memory-ceilings)).
 
-`with arena():` blocks, which once released a phase's objects in bulk, were retired:
-the block still runs as an ordinary block and warns `W_ARENA_RETIRED`, and
-`mylang fix` removes it ([arenas](arenas.md)). The tracing collector and its
-`--gc-runtime` and `--gc-stress` switches were retired with it.
+`with arena():` blocks, which once released a phase's objects in bulk, were retired
+([retired arenas](#retired-arenas)). The tracing collector and its `--gc-runtime` and
+`--gc-stress` switches were retired with them.
+
+## Retired arenas
+
+`with arena():` regions released every managed object a phase of work allocated in
+one step. They were retired in stage S5 of the new compiler core (2026-10): every
+object is now released as soon as its last owner goes away, so a region has nothing
+left to free early.
+
+A `with arena():` or `with arena() as name:` block still checks and runs as an
+ordinary block, so existing programs keep their output, and it warns
+`W_ARENA_RETIRED` at the `with` (a program with an error does not carry the
+warning). The block has no rules of its own: the old escape checks
+(`E_ARENA_ESCAPE`, `E_ARENA_BINDING`) are gone, and `name.escape(value)` is `value`.
+`mylang fix` migrates a file: it deletes the `with arena():` line, dedents the
+block's body by one level and rewrites `name.escape(value)` to `value`
+([fix](tooling/fix.md)).
 
 ## Managed lists
 

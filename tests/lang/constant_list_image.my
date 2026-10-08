@@ -15,7 +15,6 @@ def append(items: mut list[int]) -> int:
     items.append(64)
     return len(before)
 
-# spec-case: LIST-LITERAL-PAYLOAD-1
 public def test_constant_list_image_detaches_before_write_and_growth() -> bool:
     first = image()
     second = image()
@@ -24,7 +23,6 @@ public def test_constant_list_image_detaches_before_write_and_growth() -> bool:
     first.append(64)
     return first[0] == -7 and len(first) == 65 and second[0] == 0 and len(second) == 64 and saved[0] == 0 and len(saved) == 64
 
-# spec-case: LIST-LITERAL-PAYLOAD-1
 public def test_constant_list_image_mut_parameter_preserves_snapshot() -> bool:
     items = image()
     before = items
@@ -35,7 +33,6 @@ def tick(counter: mut list[int]) -> int:
     counter[0] += 1
     return counter[0]
 
-# spec-case: LIST-LITERAL-PAYLOAD-1
 public def test_nonconstant_list_elements_keep_order_and_run_once() -> bool:
     counter = [0]
     items = [
@@ -76,7 +73,6 @@ def bytes_image() -> list[bytes]:
         b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff",
     ]
 
-# spec-case: LIST-LITERAL-PAYLOAD-1
 public def test_immortal_list_elements_detach_and_preserve_empty_values() -> bool:
     texts = text_image()
     saved_texts = texts

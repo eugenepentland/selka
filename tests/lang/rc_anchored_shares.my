@@ -32,14 +32,12 @@ def read_both(frame: mut Frame) -> int:
     return total
 
 
-# spec: RC-ANCHORED-SHARE-1
 public def test_a_receiver_read_across_a_count_free_update_is_read_in_place() -> bool:
     frame = Frame([1, 2], "nm" + "x", 1)
     first = read_touched(mut frame)
     return first == 1 and frame.items == [1, 2] and frame.n == 8
 
 
-# spec-case: RC-ANCHORED-SHARE-1
 public def test_count_free_and_growing_index_calls_mix_in_one_frame() -> bool:
     frame = Frame([1, 2], "nm" + "x", 1)
     first = read_both(mut frame)

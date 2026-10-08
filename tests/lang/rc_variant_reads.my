@@ -40,7 +40,6 @@ def through_callback(pool: mut Pool, at: int) -> Payload:
             return Payload([], [])
 
 
-# spec-case: RC-ADJACENT-VARIANT-READ-1
 public def test_returned_payload_outlives_rebound_and_grown_pool() -> bool:
     pool = Pool([Item.value(Payload([3], [7]))])
     result = selected(pool, -1)
@@ -49,7 +48,6 @@ public def test_returned_payload_outlives_rebound_and_grown_pool() -> bool:
     return result.left == [3, 9] and result.right == [7] and len(pool.items) == 300
 
 
-# spec-case: RC-ADJACENT-VARIANT-READ-1
 public def test_arm_callback_keeps_snapshot_and_duplicate_children() -> bool:
     values = [5]
     pool = Pool([Item.value(Payload(values, values))])
@@ -74,7 +72,6 @@ def repeated(pool: Pool) -> int:
     return total
 
 
-# spec-case: RC-ADJACENT-VARIANT-READ-1
 public def test_repeated_pattern_slots_switch_between_owned_and_plain_arms() -> bool:
     pool = Pool([Item.value(Payload([2], [3])), Item.empty, Item.number(7), Item.value(Payload([11], [13]))])
     return repeated(pool) == 37
@@ -97,7 +94,6 @@ def nested(rows: list[Outer]) -> Payload:
             return Payload([], [])
 
 
-# spec-case: RC-ADJACENT-VARIANT-READ-1
 public def test_nested_matches_publish_the_selected_payload() -> bool:
     rows = [Outer.values([Item.value(Payload([23], [29]))])]
     result = nested(rows)
@@ -119,14 +115,12 @@ def index_callback(pool: mut Pool) -> Payload:
             return Payload([], [])
 
 
-# spec-case: RC-ADJACENT-VARIANT-READ-1
 public def test_index_callback_keeps_the_original_receiver_snapshot() -> bool:
     pool = Pool([Item.value(Payload([37], [39]))])
     result = index_callback(mut pool)
     return result.left == [37] and selected(pool, 0).left == [41]
 
 
-# spec-case: RC-ADJACENT-VARIANT-READ-1
 public def test_payload_free_arm_and_empty_return_keep_clean_guards() -> bool:
     pool = Pool([Item.empty, Item.number(53)])
     first = selected(pool, 0)

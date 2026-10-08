@@ -284,7 +284,6 @@ pub const Index = struct {
             span,
             "dictionary views cannot appear in type declarations or annotations; use list snapshots instead",
         );
-        if (!value_semantics.enabled()) return;
         if (std.mem.eql(u8, builtin, "Cell")) return self.context.sink.fail(
             "E_VALUE_CELL",
             span,
@@ -632,7 +631,7 @@ pub fn depends(value: Expression) bool {
 pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!Index {
     var index: Index = .{ .context = .{ .allocator = allocator, .src = src, .sink = sink, .names = module_names } };
     for (program.types.records) |declaration| {
-        if (declaration.managed and value_semantics.enabled()) return sink.fail(
+        if (declaration.managed) return sink.fail(
             "E_VALUE_CLASS",
             declaration.name,
             "class is shared mutable state under value semantics; use a record or recursive union for values, or a pool handle for identity",

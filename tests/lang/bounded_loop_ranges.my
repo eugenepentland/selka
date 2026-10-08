@@ -37,19 +37,15 @@ def domains(count: int) -> int:
         checksum += at
     return int(value) + checksum
 
-# spec-case: QBE-LOOP-BOUNDED-WRITE-1
 public def test_modular_replacements_keep_seed_and_loop_boundaries() -> bool:
     return calculate(64, 0) == 14112 and calculate(4, 0) == 42 and calculate(0, 17) == 17 and calculate(-3, 19) == 19
 
-# spec-case: QBE-LOOP-BOUNDED-WRITE-1
 public def test_negative_truncating_replacements_keep_their_sign() -> bool:
     return replaced(32, -100000) == 336 and replaced(64, -31) == 964 and replaced(0, -31) == -31
 
-# spec-case: QBE-LOOP-BOUNDED-WRITE-1
 public def test_conditional_replacements_break_and_continue_keep_carried_values() -> bool:
     return skipped(64, 17) == 209 and skipped(0, 19) == 19 and continued(32, -31) == 300
 
-# spec-case: RC-SCALAR-LOOP-COMPOSE-1
 public def test_float_domains_keep_ordered_exact_dyadic_arithmetic() -> bool:
     return domains(32) == 744 and domains(4) == 9 and domains(0) == 0
 

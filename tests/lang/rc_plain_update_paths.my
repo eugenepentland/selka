@@ -44,21 +44,18 @@ def read_element_argument(frame: mut Frame) -> int:
     return len(frame.rows[element_argument(mut frame)])
 
 
-# spec-case: RC-PLAIN-UPDATE-CALL-2
 public def test_a_nested_write_callee_keeps_the_captured_receiver() -> bool:
     frame = Frame([[1, 2], [3]], 0)
     seen = read_nested(mut frame)
     return seen == 2 and frame.rows == [[1, 2, 5], [3]] and frame.ip == 1
 
 
-# spec-case: RC-PLAIN-UPDATE-CALL-2
 public def test_a_mut_field_argument_callee_keeps_the_captured_receiver() -> bool:
     frame = Frame([[1, 2], [3]], 0)
     seen = read_field_argument(mut frame)
     return seen == 2 and frame.rows == [[42], [3]]
 
 
-# spec-case: RC-PLAIN-UPDATE-CALL-2
 public def test_a_mut_element_argument_callee_keeps_the_captured_receiver() -> bool:
     frame = Frame([[1, 2], [3]], 0)
     seen = read_element_argument(mut frame)

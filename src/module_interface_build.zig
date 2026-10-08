@@ -11,8 +11,6 @@ const diagnostic = @import("diagnostic.zig");
 const interfaces = @import("interfaces.zig");
 const semantic_key = @import("semantic_key.zig");
 const summary = @import("semantic_summary.zig");
-const bytecode = @import("bytecode.zig");
-const bytecode_inline = @import("bytecode_inline.zig");
 const iface = @import("module_interface.zig");
 
 /// Failures of `build`: allocation, or a compilation that is not the checked
@@ -31,62 +29,7 @@ pub const Inputs = struct {
     prepared: semantic_key.Prepared,
     /// The check's summaries: one fact per ordinary instance.
     facts: summary.Table,
-    /// Lowered and inlined programs whose inliner decisions the interface must
-    /// reproduce: a function any of them may splice keeps its body.
-    lowered: []const bytecode.Program = &.{},
 };
-
-/// Roles and facts other modules' interfaces declare, by stable key.
-pub const Foreign = std.StringHashMapUnmanaged(ForeignFunction);
-/// One function's role and facts as its own module's interface states them.
-pub const ForeignFunction = struct { role: iface.Role, fact: summary.Fact };
-
-/// MODULE-COMPILE-1: what one module's interface is built from besides the
-/// compilation: the roles and facts of every function another module's
-/// interface declares, by stable key (they replace what the compilation would
-/// derive from interface text, where a declared body is `pass`, so
-/// fingerprints fold what the whole program folds), and the interface hash of
-/// each direct import.
-pub const Around = struct { foreign: *const Foreign, import_hashes: []iface.ImportHash };
-
-/// MODULE-COMPILE-1: build one module's interface from a compilation that
-/// checked it against its imports' interfaces, and its implementation hash.
-pub fn buildOne(allocator: std.mem.Allocator, inputs: Inputs, module: usize, around: Around) Error!Built {
-    var state: State = .{
-        .allocator = allocator,
-        .inputs = inputs,
-        .surface = try semantic_key.Surface.init(allocator, inputs.src, inputs.syntax, inputs.index),
-        .functions = &.{},
-        .by_module = &.{},
-        .foreign = around.foreign,
-    };
-    defer state.surface.deinit();
-    try state.describeFunctions();
-    try state.groupByModule();
-    try state.indexCatalog();
-    const modules = inputs.index.project.modules.items;
-    if (module >= modules.len) return error.InternalError;
-    const interface = try state.moduleInterface(module);
-    return .{
-        .interface = interface,
-        .implementation_hash = iface.implementationHash(modules[module].name, modules[module].src, around.import_hashes),
-        .uses = try state.foreignUses(module),
-    };
-}
-
-/// One module's interface built from its compilation, its implementation
-/// hash, and the other modules' declarations its own declarations name.
-pub const Built = struct { interface: iface.Interface, implementation_hash: [32]u8, uses: []const Use };
-
-/// MODULE-INTERFACE-CUTOFF-1: one declaration of another module that a
-/// module's own declarations name, by module and identity: `f` and the
-/// function's stable key, or `t` and the type's module-local name.
-pub const Use = struct { module: usize, identity: []const u8 };
-
-/// The identity a use of declaration `key` is recorded under.
-pub fn useIdentity(allocator: std.mem.Allocator, kind: enum { function, type }, name: []const u8) Error![]const u8 {
-    return std.fmt.allocPrint(allocator, "{s}\x1f{s}", .{ if (kind == .function) "f" else "t", name });
-}
 
 /// Every module's interface and its two hashes, indexed by module id.
 pub const Set = struct {
@@ -127,14 +70,12 @@ pub fn build(allocator: std.mem.Allocator, inputs: Inputs) Error!Set {
     return out;
 }
 
-/// The role a function's declaration gives it; `inlined` says the inliner may
-/// splice its lowered body.
-pub fn roleOf(function: ast.Function, inlined: bool) iface.Role {
+/// The role a function's declaration gives it.
+pub fn roleOf(function: ast.Function) iface.Role {
     if (function.signature.type_parameters.len != 0) return .template;
     if (function.policy.constant) return .constant;
     if (function.policy.conversion) return .conversion;
     if (function.policy.host != null or function.policy.c_abi) return .foreign;
-    if (inlined) return .inlined;
     return .declared;
 }
 
@@ -180,8 +121,6 @@ const State = struct {
     /// Declaration keys (functions and types) of each module.
     by_module: [][]const u64,
     catalog: Catalog = .{},
-    /// Roles and facts other modules' interfaces state (`buildOne`).
-    foreign: ?*const Foreign = null,
 
     /// Role, facts and local spans of every merged-program function.
     fn describeFunctions(self: *State) Error!void {
@@ -189,32 +128,19 @@ const State = struct {
         const prepared = self.inputs.prepared;
         var facts: std.StringHashMapUnmanaged(summary.Fact) = .empty;
         for (self.inputs.facts.summaries) |stored| try facts.put(self.allocator, stored.key, stored.fact);
-        const inlined = try self.allocator.alloc(bool, syntax.functions.len);
-        @memset(inlined, false);
-        for (prepared.ordinary_ast, 0..) |ast_index, instance| {
-            for (self.inputs.lowered) |code| {
-                if (instance < code.functions.len and bytecode_inline.eligibleFunction(code, instance)) inlined[ast_index] = true;
-            }
-        }
         self.functions = try self.allocator.alloc(FunctionInfo, syntax.functions.len);
         for (syntax.functions, self.functions, 0..) |function, *info, i| {
             const name = try localSpan(self.inputs.src, function.name);
             const body = try localSpan(self.inputs.src, syntax.statements.items[@backingInt(function.body)].span);
             info.* = .{
                 .module = name.module,
-                .role = roleOf(function, inlined[i]),
+                .role = roleOf(function),
                 .fact = facts.get(prepared.keys[i]) orelse .{},
                 .name = name.span,
                 .body = body.span,
             };
         }
         try self.markEvaluated();
-        // Another module's function is what its own interface says it is.
-        if (self.foreign) |foreign| for (self.functions, 0..) |*info, i| {
-            const stated = foreign.get(prepared.keys[i]) orelse continue;
-            info.role = stated.role;
-            info.fact = stated.fact;
-        };
     }
 
     /// A constant's value is evaluated where the constant is checked, running
@@ -231,7 +157,7 @@ const State = struct {
                 if (decl.kind != .function or seen[decl.index]) continue;
                 seen[decl.index] = true;
                 const info = &self.functions[decl.index];
-                if (info.role == .declared or info.role == .inlined) info.role = .evaluated;
+                if (info.role == .declared) info.role = .evaluated;
                 try pending.append(self.allocator, decl.index);
             }
         }
@@ -446,42 +372,6 @@ const State = struct {
         hash.final(&out);
         try self.fingerprints.full.put(self.allocator, key, out);
         return out;
-    }
-
-    /// MODULE-INTERFACE-CUTOFF-1: every declaration of another module that
-    /// module `module`'s own declarations name, in their declarations or
-    /// bodies, or that its facade re-exports, sorted and unique.
-    fn foreignUses(self: *State, module: usize) Error![]const Use {
-        var seen: std.AutoHashMapUnmanaged(u64, void) = .empty;
-        var out: std.ArrayList(Use) = .empty;
-        for (self.by_module[module]) |key| {
-            for ((try self.surface.own(key)).edges) |edge| try self.addUse(module, edge, &seen, &out);
-            const decl = semantic_key.Surface.declaration(key);
-            if (decl.kind != .function) continue;
-            for (try self.surface.bodyReferences(self.allocator, decl.index)) |edge| try self.addUse(module, edge, &seen, &out);
-        }
-        for (self.inputs.index.units[module].symbols.items) |symbol| {
-            const target = symbol.re_export orelse continue;
-            const target_name = self.inputs.index.units[target.module].symbols.items[target.symbol].name;
-            for (self.surface.named(target.module, target_name)) |key| try self.addUse(module, key, &seen, &out);
-        }
-        std.mem.sort(Use, out.items, {}, useBefore);
-        return out.items;
-    }
-
-    fn addUse(self: *State, module: usize, key: u64, seen: *std.AutoHashMapUnmanaged(u64, void), out: *std.ArrayList(Use)) Error!void {
-        const owner = self.surface.moduleOfKey(key);
-        if (owner == module) return;
-        const entry = try seen.getOrPut(self.allocator, key);
-        if (entry.found_existing) return;
-        const decl = semantic_key.Surface.declaration(key);
-        const identity = if (decl.kind == .function)
-            try useIdentity(self.allocator, .function, self.inputs.prepared.keys[decl.index])
-        else blk: {
-            const name = try self.typeName(key);
-            break :blk try useIdentity(self.allocator, .type, self.moduleText(owner)[name.start..name.end]);
-        };
-        try out.append(self.allocator, .{ .module = owner, .identity = identity });
     }
 
     /// One module's interface.
@@ -772,11 +662,6 @@ fn lessDigest(_: void, a: [32]u8, b: [32]u8) bool {
 
 fn lessText(_: void, a: []const u8, b: []const u8) bool {
     return std.mem.lessThan(u8, a, b);
-}
-
-fn useBefore(_: void, a: Use, b: Use) bool {
-    if (a.module != b.module) return a.module < b.module;
-    return std.mem.lessThan(u8, a.identity, b.identity);
 }
 
 fn functionBefore(_: void, a: iface.Function, b: iface.Function) bool {

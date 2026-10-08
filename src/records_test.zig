@@ -46,8 +46,6 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
     );
     defer compilation.deinit();
     try compilation.check();
-    const dump = try compilation.dump(allocator);
-    defer allocator.free(dump);
     var discovery = try language.duplicates.discover(allocator, compilation.program.?, .{});
     defer discovery.deinit();
 }

@@ -49,24 +49,6 @@ test "Core Host extern authority is checked before its scalar erasing call" {
     try std.testing.expect(check < call);
 }
 
-// spec-case: NEW-CORE-S3-ABI-1
-test "Core copied Host aggregate calls keep the runtime token out of value payloads" {
-    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
-    defer arena.deinit();
-    const text = try support.irText(arena.allocator(),
-        \\record Pair:
-        \\    number: int
-        \\    small: u8
-        \\
-        \\host def echo(host: Host, value: Pair) -> Pair effects(host)
-        \\
-        \\def main(host: Host) -> int:
-        \\    return echo(host, Pair(number=42, small=7u8)).number
-    );
-    try std.testing.expect(std.mem.indexOf(u8, text, "myl_core_host_invoke") != null);
-    try std.testing.expect(std.mem.indexOf(u8, text, "box_make") != null);
-}
-
 fn trustedIrText(arena: std.mem.Allocator, source: []const u8) ![]u8 {
     var unit = try language.Compilation.initTrusted(arena, "cap_fixture.my", source);
     try unit.check();

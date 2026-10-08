@@ -26,7 +26,6 @@ def replace_after_match(items: mut list[Item], index: int) -> list[int]:
             return []
 
 
-# spec-case: QBE-VARIANT-ELEMENT-1
 public def test_payload_survives_parent_replacement_growth_and_collection() -> bool:
     items = [Item.payload(Payload([1, 2], 9))]
     saved = replace_after_match(mut items, -1)
@@ -43,13 +42,11 @@ def read_saved_after_replacement(items: mut list[Item]) -> int:
             return -1
 
 
-# spec-case: QBE-VARIANT-ELEMENT-1
 public def test_nonadjacent_dispatch_keeps_its_original_snapshot() -> bool:
     items = [Item.payload(Payload([1], 7))]
     return read_saved_after_replacement(mut items) == 7 and items[0] == Item.empty
 
 
-# spec-case: QBE-VARIANT-ELEMENT-1
 public def test_empty_arm_copies_no_payload() -> bool:
     items = [Item.empty]
     return len(replace_after_match(mut items, 0)) == 0 and len(items) == 1

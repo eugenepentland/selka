@@ -26,10 +26,9 @@ test "a scalar-only mut record parameter writes the caller" {
     ;
     try invokeOptions("run", program, &.{}, 10, "10\n", "");
 }
-/// `run` and `run-project` build natively; the fixtures name this build's tools
-/// because the compiler under test is not installed beside them.
+/// `run` and `run-project` build natively; the fixtures name this build's Zig
+/// because the compiler under test is not installed beside it.
 const tools = [_][]const u8{
-    "--qbe=" ++ @import("test_options").qbe_path,
     "--zig=" ++ @import("test_options").zig_path,
 };
 const host_program =
@@ -81,9 +80,9 @@ fn managedConstantModes(temporary: *testing.TmpDir, data: []const u8, expected: 
     const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
     defer testing.allocator.free(cache_argument);
     try expectConstantProcess(&.{ compiler_path, "check-project", entry, cache_argument }, "");
-    try expectConstantProcess(&.{ compiler_path, "run", entry, cache_argument, tools[0], tools[1] }, expected);
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "--run", "--cache-dir", cache, tools[0], tools[1] }, expected);
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "--project", "-o", output, "--cache-dir", cache, tools[0], tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "run", entry, cache_argument, tools[0] }, expected);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "--run", "--cache-dir", cache, tools[0] }, expected);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "--project", "-o", output, "--cache-dir", cache, tools[0] }, "");
     try expectConstantProcess(&.{output}, expected);
 }
 
@@ -131,11 +130,10 @@ test "CLI managed constants import run build installed and invalidate warm cache
     try managedConstantModes(&temporary, "module constants\npublic const TEXT: str = \"hà🙃\"\npublic const DATA: bytes = b\"\\x00\\xfe\"\n", "hà🙃\n2\n254\n");
 }
 
-test "CLI checks host declarations and refuses to run one with no registration" {
-    try invoke("check", host_program, 0, "", "");
-    // Nothing registers a host implementation for a plain `mylang run`, so the
-    // program cannot start; that is a host-boundary refusal, not a guest trap.
-    try invoke("run", host_program, 2, "", "HostMissingRegistration");
+// spec-case: NEW-CORE-S5-HOST-1
+test "CLI refuses a retired host declaration at check time and names extern def" {
+    try invoke("check", host_program, 1, "", "error[E_HOST_RETIRED]");
+    try invoke("run", host_program, 1, "", "declare the function `extern def`");
 }
 // spec: HOST-CAPABILITY-1
 test "CLI threads a Host capability through an extern call and runs it natively" {
@@ -182,8 +180,8 @@ test "CLI withholds Host under restrict and grants it with --allow-host" {
     try invokeOptions("run", source, &.{"--restrict"}, 2, "", "--allow-host");
     try invokeOptions("run", source, &.{ "--restrict", "--allow-host" }, 0, "7\n", "");
 }
-// spec-case: ARENA-MANAGED-4
-test "CLI reports managed arena escapes as machine-readable diagnostics" {
+// spec-case: NEW-CORE-S5-ARENA-2
+test "CLI checks and runs a managed value assigned across a retired arena block" {
     const source =
         \\def main() -> int:
         \\    keeper: list[int] = []
@@ -191,8 +189,8 @@ test "CLI reports managed arena escapes as machine-readable diagnostics" {
         \\        keeper = [1, 2]
         \\    return len(keeper)
     ;
-    try invoke("check", source, 1, "", "error[E_ARENA_ESCAPE]");
-    try invokeOptions("check", source, &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_ARENA_ESCAPE\"");
+    try invoke("check", source, 0, "", "warning[W_ARENA_RETIRED]");
+    try invoke("run", source, 0, "2\n", "warning[W_ARENA_RETIRED]");
 }
 fn invoke(command: []const u8, text: []const u8, expected_status: u8, expected_stdout: []const u8, stderr_part: []const u8) !void {
     return invokeOptions(command, text, &.{}, expected_status, expected_stdout, stderr_part);
@@ -984,7 +982,7 @@ fn buildExecutable(temp: *testing.TmpDir, program: []const u8) ![]const u8 {
     const output = try std.fs.path.join(testing.allocator, &.{ root, "argv-bin" });
     const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
     defer testing.allocator.free(cache);
-    try expectConstantProcess(&.{ compiler_path, "build", path, "-o", output, "--cache-dir", cache, tools[0], tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", path, "-o", output, "--cache-dir", cache, tools[0] }, "");
     return output;
 }
 
@@ -1043,7 +1041,7 @@ test "run replaces an inherited MYLANG_OPTIONS with its own command line" {
     try temp.dir.writeFile(testing.io, .{ .sub_path = "argv.my", .data = argv_echo });
     const path = try temp.dir.realPathFileAlloc(testing.io, "argv.my", testing.allocator);
     defer testing.allocator.free(path);
-    const inherited = try runExecutable(&.{ compiler_path, "run", path, tools[0], tools[1], "--", "--gc-stress" }, "--print-result");
+    const inherited = try runExecutable(&.{ compiler_path, "run", path, tools[0], "--", "--gc-stress" }, "--print-result");
     defer testing.allocator.free(inherited.stdout);
     defer testing.allocator.free(inherited.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, inherited.term);
@@ -1140,10 +1138,10 @@ test "CLI reports main's Err and its error return trace the same from run, Debug
     defer a.free(fast);
     const release = try std.fmt.allocPrint(a, "{s}/traced-release", .{directory});
     defer a.free(release);
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", debug, cache_argument, tools[0], tools[1] }, "");
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", fast, "--mode", "ReleaseFast", cache_argument, tools[0], tools[1] }, "");
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", release, "--release", cache_argument, tools[1] }, "");
-    const ran = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "run", entry, cache_argument, tools[0], tools[1] } });
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", debug, cache_argument, tools[0] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", fast, "--mode", "ReleaseFast", cache_argument, tools[0] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", release, "--release", cache_argument, tools[0] }, "");
+    const ran = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "run", entry, cache_argument, tools[0] } });
     defer a.free(ran.stdout);
     defer a.free(ran.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, ran.term);
@@ -1236,7 +1234,6 @@ fn expectKeptReport(binary: []const u8, wanted: []const u8) !void {
     try testing.expectEqualStrings(wanted, reported.stderr);
 }
 
-// spec-case: ERROR-TRACE-6
 test "CLI computes and traces the same from a debug build and from --release" {
     const a = testing.allocator;
     var temporary = testing.tmpDir(.{});
@@ -1253,8 +1250,8 @@ test "CLI computes and traces the same from a debug build and from --release" {
     defer a.free(debug);
     const release = try std.fmt.allocPrint(a, "{s}/kept-release", .{directory});
     defer a.free(release);
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", debug, cache_argument, tools[1] }, "");
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", release, "--release", cache_argument, tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", debug, cache_argument, tools[0] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", release, "--release", cache_argument, tools[0] }, "");
     try expectKeptReport(debug, wanted);
     try expectKeptReport(release, wanted);
 }
@@ -1266,7 +1263,7 @@ fn testReason(report: std.json.Value, name: []const u8) []const u8 {
     return "";
 }
 
-// spec-case: ERROR-TRACE-3
+// spec: ERROR-TRACE-3
 test "CLI test reports a Result test's Err with its error return trace in text and JSON" {
     const a = testing.allocator;
     var temporary = testing.tmpDir(.{});
@@ -1288,7 +1285,7 @@ test "CLI test reports a Result test's Err with its error return trace in text a
     defer a.free(entry);
     const cache = try std.fmt.allocPrint(a, "{s}/cache", .{std.fs.path.dirname(entry).?});
     defer a.free(cache);
-    const text = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "test", entry, "--cache-dir", cache, tools[0], tools[1] } });
+    const text = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "test", entry, "--cache-dir", cache, tools[0] } });
     defer a.free(text.stdout);
     defer a.free(text.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, text.term);
@@ -1299,7 +1296,7 @@ test "CLI test reports a Result test's Err with its error return trace in text a
         \\  config_test.my:7:12  config_test::test_port   ? propagated
         \\
     ) != null);
-    const json = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "test", entry, "--json", "--cache-dir", cache, tools[0], tools[1] } });
+    const json = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "test", entry, "--json", "--cache-dir", cache, tools[0] } });
     defer a.free(json.stdout);
     defer a.free(json.stderr);
     const parsed = try std.json.parseFromSlice(std.json.Value, a, json.stdout, .{});
@@ -1558,7 +1555,7 @@ const empty_path_words =
 /// A child environment whose `PATH` names only an empty directory under `root`,
 /// with `HOME` and `TMPDIR` inside the fixture and Zig's global cache forwarded.
 /// A command that reached for `python3`, or for any program it was not handed
-/// by `--zig`/`--qbe`, cannot start it here.
+/// by `--zig`, cannot start it here.
 fn emptyPathEnvironment(root: []const u8) !std.process.Environ.Map {
     var environment: std.process.Environ.Map = .init(testing.allocator);
     errdefer environment.deinit();
@@ -1602,10 +1599,10 @@ test "CLI user commands need no interpreter: check, build, run, test, fmt, docs,
     var environment = try emptyPathEnvironment(root);
     defer environment.deinit();
     try expectEmptyPathRun(&.{ compiler_path, "check", entry }, &environment, "");
-    try expectEmptyPathRun(&.{ compiler_path, "build", entry, "-o", program, "--cache-dir", cache, tools[0], tools[1] }, &environment, "");
+    try expectEmptyPathRun(&.{ compiler_path, "build", entry, "-o", program, "--cache-dir", cache, tools[0] }, &environment, "");
     try expectEmptyPathRun(&.{program}, &environment, "words: 4\n");
-    try expectEmptyPathRun(&.{ compiler_path, "run", entry, cache_argument, tools[0], tools[1] }, &environment, "words: 4\n");
-    try expectEmptyPathRun(&.{ compiler_path, "test", entry, cache_argument, tools[0], tools[1] }, &environment, "2 passed");
+    try expectEmptyPathRun(&.{ compiler_path, "run", entry, cache_argument, tools[0] }, &environment, "words: 4\n");
+    try expectEmptyPathRun(&.{ compiler_path, "test", entry, cache_argument, tools[0] }, &environment, "2 passed");
     try expectEmptyPathRun(&.{ compiler_path, "fmt-project", entry, "--check" }, &environment, "");
     try expectEmptyPathRun(&.{ compiler_path, "docs", "primer" }, &environment, "mylang");
     try expectEmptyPathRun(&.{ compiler_path, "index-project", entry }, &environment, "\"version\":\"navigation-summary-v1\"");
@@ -1613,9 +1610,9 @@ test "CLI user commands need no interpreter: check, build, run, test, fmt, docs,
     // The LLVM release path is built into the compiler (LLVM-ZIG-1): it runs no adapter.
     const release = try std.fs.path.join(testing.allocator, &.{ root, "program-release" });
     defer testing.allocator.free(release);
-    try expectEmptyPathRun(&.{ compiler_path, "build", entry, "-o", release, "--release", "--cache-dir", cache, tools[1] }, &environment, "");
+    try expectEmptyPathRun(&.{ compiler_path, "build", entry, "-o", release, "--release", "--cache-dir", cache, tools[0] }, &environment, "");
     try expectEmptyPathRun(&.{release}, &environment, "words: 4\n");
-    try expectEmptyPathRun(&.{ compiler_path, "run", entry, "--release", cache_argument, tools[1] }, &environment, "words: 4\n");
+    try expectEmptyPathRun(&.{ compiler_path, "run", entry, "--release", cache_argument, tools[0] }, &environment, "words: 4\n");
 }
 
 /// The shared library every packages fixture locks.
@@ -1626,8 +1623,8 @@ const package_application = "module main\nimport numbers\n\ndef main() -> int:\n
 /// A temporary tree holding `library/numbers.my`, `packages.json` naming it, and
 /// the absolute compiler, plus the environment every `mylang packages` call runs
 /// under: an empty `PATH`, `HOME` and `TMPDIR` inside the tree, and the native
-/// tools named the way `zig build` names them, since a staged build spawns this
-/// compiler with no `--qbe`/`--zig` of its own.
+/// toolchain named the way `zig build` names it, since a staged build spawns this
+/// compiler with no `--zig` of its own.
 const PackagesFixture = struct {
     temporary: testing.TmpDir,
     root: [:0]const u8,
@@ -1643,9 +1640,6 @@ const PackagesFixture = struct {
         errdefer testing.allocator.free(root);
         var environment = try emptyPathEnvironment(root);
         errdefer environment.deinit();
-        const qbe = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, @import("test_options").qbe_path, testing.allocator);
-        defer testing.allocator.free(qbe);
-        try environment.put("MYLANG_QBE", qbe);
         try environment.put("MYLANG_ZIG", @import("test_options").zig_path);
         const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
         return .{ .temporary = temporary, .root = root, .compiler = compiler, .environment = environment };
@@ -1967,7 +1961,7 @@ test "CLI missing arguments and missing files are host or usage failures" {
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, no_args.term);
     try testing.expectEqualStrings("", no_args.stdout);
     // A bare `mylang` prints the general usage; `mylang run` with no file prints run's own.
-    try testing.expect(std.mem.startsWith(u8, no_args.stderr, "usage: mylang test <entry.my>"));
+    try testing.expect(std.mem.startsWith(u8, no_args.stderr, "usage: mylang build <file.my>"));
     const no_file = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run" } });
     defer testing.allocator.free(no_file.stdout);
     defer testing.allocator.free(no_file.stderr);
@@ -2082,7 +2076,7 @@ test "an executable built without a frame ceiling refuses a runtime frame budget
     const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
     defer testing.allocator.free(cache_argument);
     // A built executable carries no call-depth accounting.
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", output, cache_argument, tools[0], tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", output, cache_argument, tools[0] }, "");
     try expectConstantProcess(&.{output}, "");
     // A ceiling it cannot enforce is refused instead of silently ignored.
     var one_frame = try runtimeOptions("--max-frames=1");
@@ -2117,8 +2111,8 @@ fn expectHaltedTrapIdentical(temporary: *testing.TmpDir, name: []const u8, sourc
     defer a.free(fast);
     const framed = try std.fmt.allocPrint(a, "{s}/{s}-release", .{ directory, name });
     defer a.free(framed);
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", fast, cache_argument, tools[1] }, "");
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", framed, "--release", cache_argument, tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", fast, cache_argument, tools[0] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", framed, "--release", cache_argument, tools[0] }, "");
     const wanted = try std.mem.replaceOwned(u8, a, expected, "{path}", entry);
     defer a.free(wanted);
     const halted = try std.process.run(a, testing.io, .{ .argv = &.{fast} });
@@ -2133,10 +2127,10 @@ fn expectHaltedTrapIdentical(temporary: *testing.TmpDir, name: []const u8, sourc
     try testing.expectEqualStrings(wanted, halted.stderr);
     try testing.expectEqualStrings(halted.stderr, sticky.stderr);
     // `mylang run` compiles a frame ceiling's accounting in; both report the trap the same way.
-    const run_fast = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "run", entry, cache_argument, tools[0], tools[1] } });
+    const run_fast = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "run", entry, cache_argument, tools[0] } });
     defer a.free(run_fast.stdout);
     defer a.free(run_fast.stderr);
-    const run_framed = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "run", entry, cache_argument, tools[0], tools[1], "--max-frames=100000" } });
+    const run_framed = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "run", entry, cache_argument, tools[0], "--max-frames=100000" } });
     defer a.free(run_framed.stdout);
     defer a.free(run_framed.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, run_fast.term);
@@ -2164,8 +2158,8 @@ fn expectFrameMapTrap(temporary: *testing.TmpDir, name: []const u8, source: []co
     defer a.free(release);
     const debug = try std.fmt.allocPrint(a, "{s}/{s}-debug", .{ directory, name });
     defer a.free(debug);
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", release, "--release", cache_argument, tools[1] }, "");
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", debug, cache_argument, tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", release, "--release", cache_argument, tools[0] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", debug, cache_argument, tools[0] }, "");
     for ([_][]const u8{ release, debug }) |binary| {
         const trapped = try std.process.run(a, testing.io, .{ .argv = &.{binary} });
         defer a.free(trapped.stdout);
@@ -2175,8 +2169,6 @@ fn expectFrameMapTrap(temporary: *testing.TmpDir, name: []const u8, source: []co
         try testing.expectEqualStrings(wanted, trapped.stderr);
     }
 }
-// spec-case: QBE-FRAMEMAP-1
-// spec-case: LLVM-THINLTO-1
 test "a frame-map trap names every logical frame an inlined callee, a callback, a runtime helper or recursion passes through" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
@@ -2284,7 +2276,6 @@ test "a frame-map trap names every logical frame an inlined callee, a callback, 
         \\    return 0
     , recursion_trace);
 }
-// spec-case: QBE-NORETURN-1
 test "a trap through a halting failure path reports the same code, trace, record and status" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
@@ -2525,7 +2516,6 @@ fn expectCheckedBoundaries(binaries: [2][]const u8) !void {
         try testing.expect(std.mem.indexOf(u8, trapped, detail) != null);
     }
 }
-// spec: LLVM-OVERFLOW-INTRINSIC-1
 test "checked arithmetic at every width reports the same result and trap from a release build as from a debug build" {
     const a = testing.allocator;
     var temporary = testing.tmpDir(.{});
@@ -2542,8 +2532,8 @@ test "checked arithmetic at every width reports the same result and trap from a 
     defer a.free(debug);
     // The release build (whole-program LLVM with LTO) lowers the checks to the
     // overflow intrinsics and optimizes around them; the debug build is the reference.
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", release, "--release", cache_argument, tools[1] }, "");
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", debug, cache_argument, tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", release, "--release", cache_argument, tools[0] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", debug, cache_argument, tools[0] }, "");
     try expectCheckedBoundaries(.{ release, debug });
     // One trap in full: code, detail, the three frames and the record.
     const trapped = try expectSameBoundary(.{ release, debug }, .{ "i64", "add", "9223372036854775806", "2" }, 1, "");
@@ -2611,8 +2601,6 @@ fn expectLiteralBoundaries(binaries: [2][]const u8) !void {
     }
 }
 
-// spec-case: LLVM-CONSTANT-OVERFLOW-1
-// spec-case: RC-FAIL-COLD-1
 test "literal signed overflow preserves exact QBE output trap details traces and records" {
     const a = testing.allocator;
     var temporary = testing.tmpDir(.{});
@@ -2627,8 +2615,8 @@ test "literal signed overflow preserves exact QBE output trap details traces and
     defer a.free(llvm);
     const qbe = try std.fmt.allocPrint(a, "{s}/literal-qbe", .{directory});
     defer a.free(qbe);
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", llvm, "--release", cache, tools[1] }, "");
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", qbe, cache, tools[0], tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", llvm, "--release", cache, tools[0] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", qbe, cache, tools[0] }, "");
     try expectLiteralBoundaries(.{ llvm, qbe });
 }
 
@@ -2793,8 +2781,8 @@ fn buildBothBackends(temporary: *testing.TmpDir, name: []const u8, program: []co
     errdefer a.free(llvm);
     const qbe = try std.fmt.allocPrint(a, "{s}/{s}-qbe", .{ directory, name });
     errdefer a.free(qbe);
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", llvm, cache_argument, tools[1] }, "");
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", qbe, cache_argument, tools[0], tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", llvm, cache_argument, tools[0] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", qbe, cache_argument, tools[0] }, "");
     return .{ .llvm = llvm, .qbe = qbe, .entry = entry };
 }
 /// Every row of `reduction_cases` runs the same on both backends, and traps
@@ -2806,7 +2794,6 @@ fn expectReductionCases(binaries: [2][]const u8) !void {
         try testing.expectEqual(case.status == 1, std.mem.indexOf(u8, stderr, "error[R_OVERFLOW]") != null);
     }
 }
-// spec: LLVM-STICKY-REDUCTION-1
 test "checked reduction loops sum and trap the same from the LLVM fast copy as from QBE" {
     const a = testing.allocator;
     var temporary = testing.tmpDir(.{});
@@ -2908,7 +2895,6 @@ const element_loops_program =
     \\    out.print(prefix(values, at))
     \\    return 0
 ;
-// spec: LLVM-ELEMENT-GEP-1
 test "element loops over lists, nested lists, records and bytes compute and trap the same from LLVM as from QBE" {
     const a = testing.allocator;
     var temporary = testing.tmpDir(.{});
@@ -2963,7 +2949,6 @@ const vector_loops_program =
     \\    out.print(int(total))
     \\    return 0
 ;
-// spec-case: QBE-LOOP-VERSION-1
 test "versioned loops LLVM vectorizes compute and trap exactly as QBE does" {
     const a = testing.allocator;
     var temporary = testing.tmpDir(.{});
@@ -2978,8 +2963,8 @@ test "versioned loops LLVM vectorizes compute and trap exactly as QBE does" {
     defer a.free(llvm);
     const qbe = try std.fmt.allocPrint(a, "{s}/vector-qbe", .{directory});
     defer a.free(qbe);
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", llvm, cache_argument, tools[1] }, "");
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", qbe, cache_argument, tools[0], tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", llvm, cache_argument, tools[0] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", qbe, cache_argument, tools[0] }, "");
     // Every index proven: 1000 words of "mylang ", and 1000 + 0.5 * (0 + ... + 999).
     const quiet = try expectSameBoundary(.{ llvm, qbe }, .{ "1000", "0", "", "" }, 0, "1000\n250750\n");
     defer a.free(quiet);
@@ -2990,7 +2975,6 @@ test "versioned loops LLVM vectorizes compute and trap exactly as QBE does" {
     try testing.expect(std.mem.indexOf(u8, trapped, "index 1000, length 1000") != null);
     try testing.expect(std.mem.indexOf(u8, trapped, "  in axpy at ") != null);
 }
-// spec-case: QBE-STEP-ACCOUNTING-1
 test "an executable built without a requested ceiling refuses a runtime step budget" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
@@ -3008,7 +2992,7 @@ test "an executable built without a requested ceiling refuses a runtime step bud
     const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
     defer testing.allocator.free(cache_argument);
     // A built executable carries no step accounting.
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", output, cache_argument, tools[0], tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", output, cache_argument, tools[0] }, "");
     try expectConstantProcess(&.{output}, "");
     // A ceiling it cannot enforce is refused instead of silently ignored.
     var one_step = try runtimeOptions("--max-steps=1");
@@ -3748,7 +3732,6 @@ test "CLI build loads a module project entry without --project" {
     try testing.expectEqualStrings("42\n", installed.stdout);
 }
 
-// spec-case: NATIVE-TEST-1
 test "CLI test discovers a test_ function without an explicit export" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
@@ -3806,13 +3789,8 @@ test "a guest build inside a build.zig project leaves no Zig cache in that proje
     defer environment.deinit();
     // An inherited local cache would hide where the tools put their cache.
     _ = environment.swapRemove("ZIG_LOCAL_CACHE_DIR");
-    // The child runs somewhere else, so the native tools must name themselves.
-    const tool = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, @import("test_options").qbe_path, testing.allocator);
-    defer testing.allocator.free(tool);
-    const qbe = try std.fmt.allocPrint(testing.allocator, "--qbe={s}", .{tool});
-    defer testing.allocator.free(qbe);
     const built = try std.process.run(testing.allocator, testing.io, .{
-        .argv = &.{ compiler, "build", "hello.my", "-o", "hello", "--cache-dir", "cache", qbe, tools[1] },
+        .argv = &.{ compiler, "build", "hello.my", "-o", "hello", "--cache-dir", "cache", tools[0] },
         .cwd = .{ .dir = temporary.dir },
         .environ_map = &environment,
     });
@@ -3841,13 +3819,9 @@ test "mylang test inside a build.zig project compiles its runner without a Zig c
     var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
     defer environment.deinit();
     _ = environment.swapRemove("ZIG_LOCAL_CACHE_DIR");
-    const tool = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, @import("test_options").qbe_path, testing.allocator);
-    defer testing.allocator.free(tool);
-    const qbe = try std.fmt.allocPrint(testing.allocator, "--qbe={s}", .{tool});
-    defer testing.allocator.free(qbe);
     // A fresh cache directory makes this run compile the runner harness itself.
     const tested = try std.process.run(testing.allocator, testing.io, .{
-        .argv = &.{ compiler, "test", "checks.my", "--cache-dir=cache", qbe, tools[1] },
+        .argv = &.{ compiler, "test", "checks.my", "--cache-dir=cache", tools[0] },
         .cwd = .{ .dir = temporary.dir },
         .environ_map = &environment,
     });
@@ -3858,7 +3832,6 @@ test "mylang test inside a build.zig project compiles its runner without a Zig c
     try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, ".zig-cache", .{}));
 }
 
-// spec-case: NATIVE-TEST-1
 test "CLI test ignores unexported test_ helpers that cannot default" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
@@ -3926,7 +3899,6 @@ test "CLI directory test applies each entry's own cases file and lets a test fil
     try testing.expect(explicit.term.exited != 0);
 }
 
-// spec-case: NATIVE-TEST-1
 test "CLI test reports an exported ill-shaped test as a failed case" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
@@ -4067,9 +4039,9 @@ test "CLI check keeps plain single-file programs on the one-unit path" {
     , 1, "", "E_TYPE");
 }
 // spec: CLI-6
-test "CLI answers removed C-backend commands with their QBE migration" {
-    try invokeOptions("emit-c", "def main() -> int:\n    return 0\n", &.{}, 2, "", "emit-qbe");
-    try invokeOptions("emit-project-c", "module main\n\n\ndef main() -> int:\n    return 0\n", &.{}, 2, "", "emit-project-qbe");
+test "CLI answers removed C-backend commands with what replaces them" {
+    try invokeOptions("emit-c", "def main() -> int:\n    return 0\n", &.{}, 2, "", "--emit-llvm PATH");
+    try invokeOptions("emit-project-c", "module main\n\n\ndef main() -> int:\n    return 0\n", &.{}, 2, "", "--emit-llvm PATH");
 }
 test "CLI checks and runs module programs with private boundaries and cross-file traps" {
     var temp = testing.tmpDir(.{});
@@ -5893,7 +5865,7 @@ test "CLI help answers on stdout with the everyday commands first and exits 0" {
         try testing.expectEqualStrings("", result.stderr);
         try testing.expect(std.mem.startsWith(u8, result.stdout, "mylang: a Python-shaped"));
         const everyday = std.mem.indexOf(u8, result.stdout, "mylang check FILE.my").?;
-        const reference = std.mem.indexOf(u8, result.stdout, "usage: mylang test").?;
+        const reference = std.mem.indexOf(u8, result.stdout, "usage: mylang build").?;
         try testing.expect(everyday < reference);
         // The guides and the large-project commands are on the first screen too.
         try testing.expect(std.mem.indexOf(u8, result.stdout, "mylang docs primer").? < everyday);
@@ -6001,7 +5973,7 @@ const listing_module =
     \\    id: Count
     \\
     \\
-    \\host def measure(host: Host, x: i64) -> i64 effects(host)
+    \\extern def measure(host: Host, x: i64) -> i64 effects(host)
     \\
     \\
     \\
@@ -6534,7 +6506,7 @@ test "CLI grants a narrowed endpoint and the network module exchanges bytes over
     defer output.close(testing.io);
     const failure = try temporary.dir.createFile(testing.io, "stderr", .{});
     defer failure.close(testing.io);
-    const argv = [_][]const u8{ compiler_path, "run", entry, "--print-result", tools[0], tools[1], "--restrict", grant };
+    const argv = [_][]const u8{ compiler_path, "run", entry, "--print-result", tools[0], "--restrict", grant };
     var child = try std.process.spawn(testing.io, .{ .argv = &argv, .stdin = .ignore, .stdout = .{ .file = output }, .stderr = .{ .file = failure } });
     defer child.kill(testing.io);
     // The guest opens two connections: send `ping` on the first (summed bytes:
@@ -6694,7 +6666,7 @@ test "CLI clock entropy and environment providers honour their grants" {
     try invokeOptions("run", missing, &.{ "--restrict", "--allow-env=OTHER" }, 1, "", "R_CAPABILITY");
 }
 
-// spec-case: CAPABILITY-4
+// spec: CAPABILITY-4
 // spec-case: IO-9
 test "CLI directory grants scope the file surface and separate reading from writing" {
     var temporary = testing.tmpDir(.{});
@@ -6811,13 +6783,8 @@ test "CLI grants every capability by default and resolves paths against the work
     // a path that leaves it is an ordinary filesystem failure rather than a denial.
     const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
     defer testing.allocator.free(compiler);
-    // The child runs somewhere else, so the native tools must name themselves.
-    const tool = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, @import("test_options").qbe_path, testing.allocator);
-    defer testing.allocator.free(tool);
-    const qbe = try std.fmt.allocPrint(testing.allocator, "--qbe={s}", .{tool});
-    defer testing.allocator.free(qbe);
     const outcome = try std.process.run(testing.allocator, testing.io, .{
-        .argv = &.{ compiler, "run", entry, qbe, tools[1] },
+        .argv = &.{ compiler, "run", entry, tools[0] },
         .cwd = .{ .path = directory },
     });
     defer testing.allocator.free(outcome.stdout);
@@ -7255,6 +7222,35 @@ fn runNamedConstraintProbes(allocator: std.mem.Allocator) !void {
 
 // The named-constraints review repros stay executable: imported export identity,
 // declaration-scoped type resolution, identity-based merging, implied copy,
+// spec: NEW-CORE-S5-ONE-BINARY-1
+test "mylang build answers the core's developer switches as mylang-core did" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "def main(out: Stream) -> int:\n    out.print(6 * 7)\n    return 0\n" });
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
+    defer testing.allocator.free(compiler);
+    const built = try std.process.run(testing.allocator, testing.io, .{
+        .argv = &.{ compiler, "build", "main.my", "-o", "program", "--generic-vectors", "--trap-frames=posix_exit", "--cache-dir", "cache", "--zig", @import("test_options").zig_path },
+        .cwd = .{ .dir = temporary.dir },
+    });
+    defer testing.allocator.free(built.stdout);
+    defer testing.allocator.free(built.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, built.term);
+    const program = try std.fs.path.join(testing.allocator, &.{ root, "program" });
+    defer testing.allocator.free(program);
+    try expectConstantProcess(&.{program}, "42\n");
+    // The core's build takes no `--run`: the switch is a usage error there.
+    const refused = try std.process.run(testing.allocator, testing.io, .{
+        .argv = &.{ compiler, "build", "main.my", "--run", "--generic-vectors" },
+        .cwd = .{ .dir = temporary.dir },
+    });
+    defer testing.allocator.free(refused.stdout);
+    defer testing.allocator.free(refused.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, refused.term);
+}
+
 // normalized limits, standalone namespace rules, and unused declaration checks.
 // spec: NAMED-CONSTRAINT-REVIEW-1
 test "named constraints review repros keep their repaired checking outcomes" {
@@ -7648,17 +7644,15 @@ test "loadConfiguredPolicy policy identity participates in project-dependencies 
     try testing.expect(std.mem.indexOf(u8, second.stderr, "main -> helper: deny") != null);
 }
 
-// spec-case: MUTATION-ENFORCE-1
+// spec: MUTATION-ENFORCE-1
 test "CLI migrated corpus projects carry the checked mutation contract" {
     // The corpus pieces M3 repaired: domain methods exposed through an exported
-    // type, a generated input accessor, guest tests that allocate, and the
-    // schematic/board applications. Every one needs an explicit, narrow ceiling.
+    // type, a generated input accessor and guest tests that allocate. Every one
+    // needs an explicit, narrow ceiling.
     for ([_][]const u8{
         "examples/modules/main.my",
         "examples/input-values/main.my",
         "tests/guest/generics.my",
-        "src/schematic/guest/main.my",
-        "src/board_trial/guest/main.my",
     }) |entry| {
         const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", entry } });
         defer testing.allocator.free(outcome.stdout);
@@ -7800,7 +7794,6 @@ fn p1Invoke(entry: []const u8, cases_path: ?[]const u8, cache: []const u8) !std.
     return runCompiler(testing.allocator, args.items);
 }
 
-// spec-case: NATIVE-TEST-3
 // spec: NATIVE-TEST-5
 test "P1 selects a validated fake while the unfinished production body is never checked" {
     var temp = testing.tmpDir(.{});
@@ -7856,7 +7849,6 @@ test "P1 selects a validated fake while the unfinished production body is never 
     try testing.expect(std.mem.indexOf(u8, full.stderr, "E_TYPED_HOLE") != null);
 }
 
-// spec-case: NATIVE-TEST-3
 test "P1 rejects stronger or malformed replacements and a bad production interface" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
@@ -7914,7 +7906,6 @@ test "P1 rejects stronger or malformed replacements and a bad production interfa
     try testing.expect(std.mem.indexOf(u8, interface_error.stderr, "E_MODULE_NAME") != null);
 }
 
-// spec-case: NATIVE-TEST-3
 test "P1 rejects every incompatible replacement dimension" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
@@ -7955,7 +7946,6 @@ test "P1 rejects every incompatible replacement dimension" {
     }
 }
 
-// spec-case: NATIVE-TEST-3
 test "P1 ignores an unselected production body type error while its declarations stay valid" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
@@ -8053,7 +8043,6 @@ const r3_alias_main =
     \\    return 0
 ;
 
-// spec-case: NATIVE-TEST-3
 test "R3 canonical descriptors expand transparent aliases for discovery and nested contracts" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
@@ -8156,7 +8145,6 @@ const r3_nominal_fake =
     \\    return E.make(1)
 ;
 
-// spec-case: NATIVE-TEST-3
 test "R3 canonical descriptors compare provider scalar and nominal contracts" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
@@ -8671,7 +8659,6 @@ fn moduleScaleRunWith(paths: ScalePaths, extra: []const [2][]const u8) !std.proc
     return spawnWithEnv(args.items, &environment);
 }
 
-// spec: MODULE-TEST-3
 test "module by module, a trapping and a printing test report what the whole-program run reports" {
     var arena_state = std.heap.ArenaAllocator.init(testing.allocator);
     defer arena_state.deinit();
@@ -8742,8 +8729,6 @@ const guest_output_program =
 ;
 
 // spec: NATIVE-TEST-10
-// spec-case: NATIVE-TEST-7
-// spec-case: NATIVE-TEST-8
 test "guest print output stays off the test protocol and shows on failure" {
     var arena = std.heap.ArenaAllocator.init(testing.allocator);
     defer arena.deinit();
@@ -8782,7 +8767,6 @@ const guest_typed_program =
     \\    return 0
 ;
 
-// spec-case: NATIVE-TEST-8
 test "a typed expectation failure names both actual and expected values" {
     var arena = std.heap.ArenaAllocator.init(testing.allocator);
     defer arena.deinit();
@@ -8815,7 +8799,6 @@ const bare_test_entry_program =
     \\    return True
 ;
 
-// spec-case: NATIVE-TEST-9
 test "library modules and bare *_test.my files are valid guest test entries" {
     var arena = std.heap.ArenaAllocator.init(testing.allocator);
     defer arena.deinit();
@@ -8865,7 +8848,6 @@ const directory_project_test =
     \\    return True
 ;
 
-// spec-case: NATIVE-TEST-4
 test "a directory run discovers project roots instead of every module" {
     var arena = std.heap.ArenaAllocator.init(testing.allocator);
     defer arena.deinit();
@@ -8945,7 +8927,6 @@ test "a directory run runs a main-less test library no root imports, and every t
     }
 }
 
-// spec-case: NATIVE-TEST-15
 test "a single-entry test report lists the project sources its check loaded" {
     var arena = std.heap.ArenaAllocator.init(testing.allocator);
     defer arena.deinit();
@@ -9016,7 +8997,7 @@ fn expectUncheckedRemoved(argv: []const []const u8, command: []const u8) !void {
     try testing.expectEqualStrings("", result.stdout);
 }
 
-// spec-case: RELEASE-CHECKED-1
+// spec: RELEASE-CHECKED-1
 test "every building and running command refuses --unchecked as removed" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
@@ -9099,25 +9080,25 @@ test "CLI an edit to one contract clause is never served from a warm cache" {
     defer testing.allocator.free(cache);
     const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
     defer testing.allocator.free(cache_argument);
-    const warm_test = try contractCommand(&.{ compiler_path, "test", entry, cache_argument, tools[0], tools[1] });
+    const warm_test = try contractCommand(&.{ compiler_path, "test", entry, cache_argument, tools[0] });
     defer freeResult(warm_test);
     try testing.expect(std.mem.indexOf(u8, warm_test.stdout, "2 passed") != null);
-    const warm_run = try contractCommand(&.{ compiler_path, "run", entry, cache_argument, tools[0], tools[1] });
+    const warm_run = try contractCommand(&.{ compiler_path, "run", entry, cache_argument, tools[0] });
     defer freeResult(warm_run);
     try testing.expectEqual(std.process.Child.Term{ .exited = 5 }, warm_run.term);
     // Only the precondition changes: the same caches must now trap under it.
     try writeContractFixture(temporary.dir, "amount > 10", "self.low <= self.high");
-    const run = try contractCommand(&.{ compiler_path, "run", entry, cache_argument, tools[0], tools[1] });
+    const run = try contractCommand(&.{ compiler_path, "run", entry, cache_argument, tools[0] });
     defer freeResult(run);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, run.term);
     try testing.expect(std.mem.indexOf(u8, run.stderr, "error[R_REQUIRES]: precondition violated: half requires `amount > 10`") != null);
-    const tested = try contractCommand(&.{ compiler_path, "test", entry, cache_argument, tools[0], tools[1] });
+    const tested = try contractCommand(&.{ compiler_path, "test", entry, cache_argument, tools[0] });
     defer freeResult(tested);
     try testing.expect(std.mem.indexOf(u8, tested.stdout, "failed main::test_half: R_REQUIRES: half requires `amount > 10`") != null);
     try testing.expect(std.mem.indexOf(u8, tested.stdout, "1 failed") != null);
     // An invariant lives on another declaration than the body that checks it.
     try writeContractFixture(temporary.dir, "amount > 10", "self.low > self.high");
-    const rechecked = try contractCommand(&.{ compiler_path, "test", entry, cache_argument, tools[0], tools[1] });
+    const rechecked = try contractCommand(&.{ compiler_path, "test", entry, cache_argument, tools[0] });
     defer freeResult(rechecked);
     try testing.expect(std.mem.indexOf(u8, rechecked.stdout, "failed main::test_make: R_INVARIANT: Range invariant `self.low > self.high`") != null);
     try testing.expect(std.mem.indexOf(u8, rechecked.stdout, "2 failed") != null);
@@ -9194,14 +9175,14 @@ test "CLI a release build and a JSON diagnostic report the contract that failed"
     defer testing.allocator.free(program);
     const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}/cache", .{root});
     defer testing.allocator.free(cache_argument);
-    const built = try contractCommand(&.{ compiler_path, "build", entry, "-o", program, "--release", cache_argument, tools[1] });
+    const built = try contractCommand(&.{ compiler_path, "build", entry, "-o", program, "--release", cache_argument, tools[0] });
     defer freeResult(built);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, built.term);
     const released = try contractCommand(&.{program});
     defer freeResult(released);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, released.term);
     try testing.expect(std.mem.indexOf(u8, released.stderr, "error[R_ENSURES]: postcondition violated: grow ensures `result > 100`") != null);
-    const json = try contractCommand(&.{ compiler_path, "run", caller, "--diagnostics=json", cache_argument, tools[0], tools[1] });
+    const json = try contractCommand(&.{ compiler_path, "run", caller, "--diagnostics=json", cache_argument, tools[0] });
     defer freeResult(json);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, json.term);
     try testing.expect(std.mem.indexOf(u8, json.stderr, "\"code\":\"R_REQUIRES\"") != null);
@@ -9266,7 +9247,7 @@ const failing_property =
     \\    return 0
 ;
 
-// spec-case: PROPERTY-TEST-3
+// spec: PROPERTY-TEST-3
 test "CLI property test shrinks a failing sum to the single-element list [100] and reports how to reproduce it" {
     var project = try PropertyProject.init(failing_property);
     defer project.deinit();
@@ -9329,7 +9310,7 @@ const refused_properties =
     \\    return 0
 ;
 
-// spec-case: PROPERTY-TEST-1
+// spec: PROPERTY-TEST-1
 test "CLI property test names the parameter and type it cannot generate" {
     var project = try PropertyProject.init(refused_properties);
     defer project.deinit();
@@ -9412,7 +9393,7 @@ const hanging_property =
     \\    return 0
 ;
 
-// spec-case: PROPERTY-TEST-4
+// spec: PROPERTY-TEST-4
 test "CLI property test runs in one process, reuses a pass until its seed or runs change, and survives a child that dies mid-batch" {
     var project = try PropertyProject.init(failing_property);
     defer project.deinit();
@@ -9477,7 +9458,7 @@ const boundary_cases =
     \\ "main::test_echo_float":{"arguments":{"f":"-inf"},"expected":"-inf"}}
 ;
 
-// spec-case: PROPERTY-TEST-5
+// spec: PROPERTY-TEST-5
 test "CLI test carries sets, dictionaries with tuple keys, bytes and floats across the copied-value boundary" {
     var project = try PropertyProject.init(boundary_values);
     defer project.deinit();
@@ -9897,7 +9878,7 @@ test "mylang test runs a module that embeds and reruns it when only the fixture 
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "emb.my", .data = "module emb\n\nconst NUL: bytes = embed_bytes(\"fixtures/nul.bin\")\n\n\npublic def test_nul() -> bool:\n    return len(NUL) == 3 and NUL[1] == 0\n" });
     const entry = try std.fs.path.join(a, &.{ root, "emb.my" });
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
-    const argv = [_][]const u8{ compiler_path, "test", entry, "--cache-dir", cache, tools[0], tools[1] };
+    const argv = [_][]const u8{ compiler_path, "test", entry, "--cache-dir", cache, tools[0] };
     const first = try std.process.run(a, testing.io, .{ .argv = &argv });
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
     try testing.expect(std.mem.indexOf(u8, first.stdout, "passed emb::test_nul") != null);
@@ -10025,8 +10006,6 @@ test "CLI directory tests forward the installed host receipt when modes are alre
     const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
     var environment = try std.process.Environ.createMap(testing.environ, a);
-    try environment.put("MYLANG_VALUE_SEMANTICS", "1");
-    try environment.put("MYLANG_RUNTIME", @import("runtime_contract").Selection.rc.identity());
     try environment.put("MYLANG_HOST_MEMORY_LIMIT", "8G");
     _ = environment.swapRemove("MYLANG_HOST_LIMIT_CHECKPOINT");
     _ = environment.swapRemove("MYLANG_HOST_LIMIT_RESTORE");
@@ -10083,7 +10062,6 @@ test "CLI test retains exact embedded budgets and recaptures tightened and widen
 }
 
 // spec-case: EMBED-PROJECT-BUDGET-1
-// spec-case: NATIVE-TEST-12
 test "CLI provider replacements recapture embedded fixture edits with a warm test cache" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
@@ -10119,9 +10097,7 @@ test "CLI native build forwards diagnostic presentation to its source frontend" 
     try invokeOptions("build", "def main() -> int:\n    return False\n", &.{ "--run", "--diagnostics=json" }, 1, "", "\"code\":\"E_TYPE\"");
 }
 
-test {
-    _ = @import("qbe_algebra_test.zig");
-}
+test {}
 
 const s5_loop =
     \\def main() -> int:

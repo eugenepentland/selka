@@ -34,7 +34,6 @@ def operand(frame: mut Frame, other: mut Frame) -> int:
     return count(frame.rows, reset(mut other))
 
 
-# spec-case: RC-INTERVAL-ANCHOR-3
 public def test_a_receiver_read_survives_a_write_through_another_mut_argument() -> bool:
     frame = Frame([[1, 2], [3]], 0)
     other = Frame([[4]], 0)
@@ -42,7 +41,6 @@ public def test_a_receiver_read_survives_a_write_through_another_mut_argument() 
     return seen == 2 and frame.rows == [[1, 2], [3]] and other.rows == [[7, 7, 7]] and frame.n == 1
 
 
-# spec-case: RC-INTERVAL-ANCHOR-3
 public def test_an_argument_read_survives_a_write_through_another_mut_argument() -> bool:
     frame = Frame([[1, 2], [3]], 0)
     other = Frame([[4]], 0)

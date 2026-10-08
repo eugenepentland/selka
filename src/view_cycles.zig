@@ -114,7 +114,6 @@ fn location(records: []const typed.Record, nodes: []const Node, view: usize) Spa
 /// Reject only components containing a real builtin view-to-dictionary edge.
 /// Names and generic type arguments alone are not storage or view identity.
 pub fn validate(allocator: std.mem.Allocator, catalog: Catalog, sink: *diagnostic.Sink) diagnostic.Error!void {
-    if (!@import("value_semantics.zig").enabled()) return;
     var any = false;
     for (catalog.records) |schema| if (schema.shape.builtin == .live_view) {
         any = true;

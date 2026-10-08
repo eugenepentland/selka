@@ -1,5 +1,5 @@
 //! `set[T]` and hashable dictionary keys: the checker's refusals, the traps a
-//! set shares with a dictionary, the collector and arena paths, and allocation
+//! set shares with a dictionary, the collector paths, and allocation
 //! failure. Guest behaviour lives in `tests/lang/sets.my`.
 const std = @import("std");
 const t = std.testing;
@@ -38,8 +38,6 @@ fn value(source: []const u8) !i64 {
 
 // spec: HASH-KEYS-1
 test "an unhashable key or element type is refused with the path to its offending part" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
     try rejected("def main() -> int:\n    d: dict[float, int] = {}\n    return len(d)\n", "E_DICT_KEY", "`float` cannot be a dictionary key: a float is not hashable because NaN is not equal to itself");
     try rejected(
         "record At:\n    x: float\n\nrecord Reading:\n    name: str\n    at: At\n\ndef main() -> int:\n    d: dict[Reading, int] = {}\n    return len(d)\n",
@@ -48,7 +46,6 @@ test "an unhashable key or element type is refused with the path to its offendin
     );
     try rejected("def main() -> int:\n    s = {(1, 2.5)}\n    return len(s)\n", "E_SET_ELEMENT", "`tuple[int, float][1]` is `float`");
     try rejected("def main() -> int:\n    s: set[list[int]] = set()\n    return len(s)\n", "E_SET_ELEMENT", "is a shared reference whose contents can change after it is stored");
-    try rejected("class Box:\n    n: int\n\ndef main() -> int:\n    s = {Box(n=1)}\n    return len(s)\n", "E_SET_ELEMENT", "`Box` cannot be a set element");
     try rejected("def main() -> int:\n    d = {{1}: 2}\n    return len(d)\n", "E_DICT_KEY", "`set[int]` cannot be a dictionary key");
     try rejected("union Maybe:\n    none,\n    some: float\n\ndef main() -> int:\n    s: set[Maybe] = set()\n    return len(s)\n", "E_SET_ELEMENT", "`Maybe.some` is `float`");
     try rejected("def keyed[T: copy + storable](value: T) -> set[T]:\n    return {value}\n\ndef main() -> int:\n    return 0\n", "E_GENERIC_OPERATION", "requires declared integer support");
@@ -91,33 +88,6 @@ test "the set operators are refused on operands that are neither sets nor intege
 test "a set parameter a function writes must be declared and passed mut" {
     try rejected("def grow(s: set[int]) -> None:\n    s.add(1)\n\ndef main() -> int:\n    t: set[int] = set()\n    grow(t)\n    return len(t)\n", "E_MUTATION_MARKER", "declare `s: mut set[int]`");
     try t.expectEqual(@as(i64, 2), try value("def grow(s: mut set[int]) -> None:\n    s.add(1)\n    s.update({2})\n\ndef main() -> int:\n    t: set[int] = set()\n    grow(mut t)\n    return len(t)\n"));
-}
-
-// spec-case: SET-1
-test "a set store or update from inside an arena into an outer set is refused" {
-    try rejected("def main() -> int:\n    outer: set[str] = set()\n    with arena() as scratch:\n        outer.add(\"a\" + str(1))\n    return len(outer)\n", "E_ARENA_ESCAPE", "outlives arena `scratch`");
-    try rejected("def main() -> int:\n    outer: set[str] = set()\n    with arena() as scratch:\n        inner = {\"a\" + str(1)}\n        outer.update(inner)\n    return len(outer)\n", "E_ARENA_ESCAPE", "outlives arena `scratch`");
-    try rejected("def main() -> int:\n    outer: dict[str, int] = {}\n    with arena() as scratch:\n        inner = {\"a\" + str(1): 1}\n        outer.update(inner)\n    return len(outer)\n", "E_ARENA_ESCAPE", "outlives arena `scratch`");
-    try t.expectEqual(@as(i64, 39), try value(
-        \\record Key:
-        \\    name: str
-        \\    n: int
-        \\
-        \\def main() -> int:
-        \\    kept: set[Key] = set()
-        \\    with arena() as scratch:
-        \\        local: set[Key] = set()
-        \\        for i in range(40):
-        \\            local.add(Key(name=str(i), n=i))
-        \\        local.discard(Key(name="7", n=7))
-        \\        kept = scratch.escape(local)
-        \\    found = 0
-        \\    for i in range(40):
-        \\        if Key(name=str(i), n=i) in kept:
-        \\            found += 1
-        \\    return found
-        \\
-    ));
 }
 
 // spec-case: HASH-KEYS-2

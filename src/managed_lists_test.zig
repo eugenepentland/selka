@@ -31,30 +31,6 @@ fn rejectAll(sources: []const []const u8, code: []const u8) !void {
     for (sources) |source| try reject(source, code);
 }
 
-// spec: GC-SOURCE-9
-test "bytecode rejects managed metadata on a shape that cannot own storage" {
-    var compilation = try language.Compilation.init(t.allocator, "forged-managed.my",
-        \\record Record:
-        \\    left: i64
-        \\    right: i64
-        \\
-        \\
-        \\def main() -> i64:
-        \\    return 0
-    );
-    defer compilation.deinit();
-    try compilation.emit();
-    var program = compilation.code.?;
-    const records = try t.allocator.dupe(@import("typed.zig").Record, program.records);
-    defer t.allocator.free(records);
-    // A managed nominal record is legal now that `class` is a managed reference;
-    // an array or variant is not a record and cannot own managed storage.
-    records[0].managed = true;
-    records[0].shape = .{ .array = .{ .element = .i64, .length = 2 } };
-    program.records = records;
-    try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, program));
-}
-
 // spec: GC-SOURCE-1
 test "managed copies are stored back after helper mutation without allocator authority" {
     const source =
@@ -251,7 +227,6 @@ test "a managed list read past its initialized bounds is a located trap" {
     try t.expectEqual(@as(u64, 4), result.trap.line);
 }
 
-// spec-case: QBE-ELEMENT-READ-1
 test "scalar element reads load every width and keep a record read's copy" {
     const source =
         \\record Pair:
@@ -273,7 +248,6 @@ test "scalar element reads load every width and keep a record read's copy" {
     try t.expectEqual(@as(i64, 407), result.value);
 }
 
-// spec-case: QBE-ELEMENT-READ-1
 test "a scalar element read past the end keeps the original index in its detail" {
     const source =
         \\def main() -> i64:
@@ -287,7 +261,6 @@ test "a scalar element read past the end keeps the original index in its detail"
     try t.expectEqual(@as(u64, 3), result.trap.detail.values.length);
 }
 
-// spec-case: QBE-ELEMENT-READ-1
 test "negative element indexes count from the end for lists byte strings and text" {
     // A list index reaches the read already normalized by the checked frontend,
     // so the read only compares it unsigned. A byte string and a `str` pass the
@@ -344,7 +317,6 @@ test "a managed element declaration refuses a capability, directly or inside a r
     }, "E_LIST_CAPABILITY");
 }
 
-// spec: QBE-TEXT-BLOCK-1
 test "QBE-TEXT-BLOCK-1 run-time text shares one allocation with its payload" {
     const source =
         \\def main() -> i64:
@@ -488,7 +460,6 @@ test "UTF8-TEXT-1 text stores UTF-8 octets and still indexes Unicode scalars" {
     try t.expectEqualStrings("", result.trap.code);
 }
 
-// spec: GC-OBJECT-1
 test "GC-OBJECT-1 a two-word header fits thousands of live lists under one budget" {
     // Each live four-element `list[i64]` costs one 72-byte list header object
     // plus a 32-byte backing; the two-word header is what lets four thousand of
@@ -510,7 +481,6 @@ test "GC-OBJECT-1 a two-word header fits thousands of live lists under one budge
     try t.expectEqualStrings("", result.trap.code);
 }
 
-// spec: GC-SEGMENT-1
 test "GC-SEGMENT-1 a churn loop reuses reclaimed slots without stale fields" {
     // Every allocation collects under gc-stress, so each iteration's scratch list
     // is swept and its slots come back through the size-class free list. A slot

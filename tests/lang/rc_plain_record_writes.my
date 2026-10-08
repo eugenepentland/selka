@@ -33,7 +33,6 @@ def loop(state: mut State, times: int):
         i += 1
 
 
-# spec-case: RC-PLAIN-RECORD-WRITE-1
 public def test_saved_record_and_child_snapshots_survive_scalar_publication() -> bool:
     state = State([7], 3, True)
     saved = state
@@ -44,14 +43,12 @@ public def test_saved_record_and_child_snapshots_survive_scalar_publication() ->
     return state.count == 9 and saved.count == 3 and saved.values == [7] and children == [7]
 
 
-# spec-case: RC-PLAIN-RECORD-WRITE-1
 public def test_rhs_observation_and_mutation_complete_before_final_store() -> bool:
     state = State([1], 5, True)
     from_callback(mut state)
     return state.count == 7 and state.values == [1, 5]
 
 
-# spec-case: RC-PLAIN-RECORD-WRITE-1
 public def test_loop_reuse_and_boolean_width_preserve_siblings() -> bool:
     state = State([2, 4], 0, True)
     loop(mut state, 50)
@@ -69,7 +66,6 @@ def with_snapshot(state: mut State, snapshot: State) -> bool:
     return snapshot.count + 1 == state.count
 
 
-# spec-case: RC-PLAIN-RECORD-WRITE-1
 public def test_same_call_snapshot_and_pinned_parent_keep_distinct_scalar_bits() -> bool:
     state = State([5], 2, True)
     first = with_snapshot(mut state, state)

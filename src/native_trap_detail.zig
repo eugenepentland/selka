@@ -77,11 +77,6 @@ pub const Detail = struct {
         return if (self.has(present_unsigned)) @as(u64, @bitCast(bits)) else bits;
     }
 
-    /// Map a bounded operation name to the known set.
-    pub fn operationFromName(name: []const u8) Operation {
-        return std.meta.stringToEnum(Operation, name) orelse .operation;
-    }
-
     /// Render the bounded suffix appended to the human trap message. The exact
     /// shape matches `detail_text` in `qbe_runtime.c` so both renderers quote
     /// the same values.

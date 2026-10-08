@@ -13,7 +13,6 @@ def forwarded(fail: bool) -> Result[list[str], str]:
     return Ok(values)
 
 
-# spec-case: RC-CONTRACT-RESULT-1
 public def test_postcondition_keeps_the_managed_success_payload() -> bool:
     count = 0
     while count < 40:
@@ -27,7 +26,6 @@ public def test_postcondition_keeps_the_managed_success_payload() -> bool:
     return True
 
 
-# spec-case: RC-CONTRACT-RESULT-1
 public def test_postcondition_preserves_the_propagated_error() -> bool:
     match forwarded(True):
         case Ok(_):
@@ -49,7 +47,6 @@ def unique_roundtrip() -> Result[bool, str]:
     return Ok(text == "hello")
 
 
-# spec-case: RC-CONTRACT-RESULT-1
 public def test_postcondition_keeps_the_unique_file_payload() -> bool:
     match unique_roundtrip():
         case Ok(correct):

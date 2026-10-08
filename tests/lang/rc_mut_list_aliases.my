@@ -68,7 +68,6 @@ def contained(frame: mut Frame, rows: mut list[list[int]]) -> int:
     return len(first) * 10 + k
 
 
-# spec-case: RC-INTERVAL-ANCHOR-4
 public def test_an_element_read_survives_a_store_through_another_mut_list() -> bool:
     a = [pin(3, b"abc" + b"def"), pin(4, b"de")]
     other = a
@@ -76,7 +75,6 @@ public def test_an_element_read_survives_a_store_through_another_mut_list() -> b
     return seen == 3157 and len(a) == 3 and a[0].part == 3 and other[0].part == 1 and len(other) == 2
 
 
-# spec-case: RC-INTERVAL-ANCHOR-4
 public def test_an_element_read_survives_a_clear_through_another_mut_list() -> bool:
     b = [pin(3, b"abc" + b"def"), pin(4, b"de")]
     other = b
@@ -84,7 +82,6 @@ public def test_an_element_read_survives_a_clear_through_another_mut_list() -> b
     return seen == 3157 and len(b) == 3 and len(other) == 0
 
 
-# spec-case: RC-INTERVAL-ANCHOR-4
 public def test_distinct_mut_lists_still_answer_the_same() -> bool:
     a = [pin(3, b"abc" + b"def"), pin(4, b"de")]
     c = [pin(5, b"zz")]
@@ -92,7 +89,6 @@ public def test_distinct_mut_lists_still_answer_the_same() -> bool:
     return seen == 3157 and len(a) == 3 and c[0].part == 1
 
 
-# spec-case: RC-INTERVAL-ANCHOR-4
 public def test_a_record_read_survives_a_wipe_through_a_held_mut_list() -> bool:
     frame = Frame([[1, 2], [3]], 0)
     rows = frame.rows

@@ -57,40 +57,34 @@ def append_then_read(items: mut list[Point], first: Point) -> i64:
     return first.x * 1000 + first.y
 
 
-# spec-case: QBE-AGGREF-1
 public def test_a_written_record_parameter_leaves_the_callers_value_alone() -> bool:
     original = Point(x=1, y=2)
     inside = bump(original)
     return inside == 101 and original.x == 1 and original.y == 2
 
 
-# spec-case: QBE-AGGREF-1
 public def test_a_field_write_inside_a_callee_leaves_the_callers_value_alone() -> bool:
     original = Point(x=5, y=6)
     inside = bump_field(original)
     return inside == 105 and original.x == 5 and original.y == 6
 
 
-# spec-case: QBE-AGGREF-1
 public def test_a_returned_record_stored_into_a_local_carries_its_fields() -> bool:
     base = Point(x=10, y=20)
     moved = shifted(base)
     return moved.x == 11 and moved.y == 22 and base.x == 10 and base.y == 20
 
 
-# spec-case: QBE-AGGREF-1
 public def test_a_returned_record_passed_straight_into_another_call() -> bool:
     return pack(shifted(Point(x=1, y=2)), shifted(Point(x=3, y=4))) == 2050
 
 
-# spec-case: QBE-AGGREF-1
 public def test_a_record_read_from_a_list_argument_keeps_its_value_across_a_write() -> bool:
     items: list[Point] = [Point(x=7, y=8)]
     read = append_then_read(mut items, items[0])
     return read == 7008 and len(items) == 2 and items[0].x == 7 and items[1].x == 100
 
 
-# spec-case: QBE-AGGREF-1
 public def test_a_record_returned_from_a_generic_body_keeps_its_value() -> bool:
     items: list[Point] = [Point(x=11, y=12), Point(x=13, y=14)]
     got = pick_first[Point](items)
@@ -99,7 +93,6 @@ public def test_a_record_returned_from_a_generic_body_keeps_its_value() -> bool:
     return got.x == 11 and got.y == 12 and held.point.y == 22 and len(held.label) == 3
 
 
-# spec-case: QBE-AGGREF-1
 public def test_a_match_payload_bound_from_a_record_local_keeps_the_local_intact() -> bool:
     point = Point(x=3, y=4)
     slot = Slot.filled(point, 5)
@@ -107,7 +100,6 @@ public def test_a_match_payload_bound_from_a_record_local_keeps_the_local_intact
     return score == 35 and point.x == 3 and point.y == 4
 
 
-# spec-case: QBE-AGGREF-1
 public def test_a_returned_union_payload_reaches_the_caller_unchanged() -> bool:
     held = Slot.filled(shifted(Point(x=2, y=3)), 9)
     return classify(held) == 39
@@ -119,7 +111,6 @@ def guarded(count: i64) -> Point:
     return Point(x=count, y=count + 1)
 
 
-# spec-case: QBE-AGGREF-1
 public def test_a_returning_path_still_returns_its_record_next_to_a_trapping_one() -> bool:
     got = guarded(4)
     return got.x == 4 and got.y == 5
@@ -196,7 +187,6 @@ def bumped(values: [1024]i64) -> [1024]i64:
     return replace(values, 0, values[0] + 1)
 
 
-# spec-case: QBE-FRAMEFIT-1
 public def test_a_large_array_parameter_is_read_where_it_lives_across_many_calls() -> bool:
     data: [1024]i64 = ones()
     total = 0
@@ -207,13 +197,11 @@ public def test_a_large_array_parameter_is_read_where_it_lives_across_many_calls
     return total == 2000 and data[0] == 1 and data[1023] == 1
 
 
-# spec-case: QBE-FRAMEFIT-1
 public def test_a_large_array_parameter_survives_deep_recursion_and_a_relay() -> bool:
     data: [1024]i64 = ones()
     return first_after(data, 200) == 201 and relay(data) == 1025
 
 
-# spec-case: QBE-AGGREF-9
 public def test_a_copy_returned_from_a_large_array_parameter_leaves_the_argument_alone() -> bool:
     data: [1024]i64 = ones()
     turned: [1024]i64 = bumped(data)

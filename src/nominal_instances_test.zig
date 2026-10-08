@@ -180,7 +180,7 @@ fn moduleScenario(allocator: std.mem.Allocator) !void {
     try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     const public_type = try compilation.publicValueType("model::Box<i64>");
     try t.expectEqual(typed.Type.i64, compilation.program.?.records[public_type.recordIndex()].fields[0].ty);
     try t.expectError(error.UnknownPublicValueType, compilation.publicValueType("model::Box<model::Hidden>"));

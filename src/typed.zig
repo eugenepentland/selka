@@ -13,7 +13,7 @@ pub const StatementId = enum(usize) { _ };
 pub const FunctionId = enum(usize) { _ };
 /// Index of a function-local value slot.
 pub const LocalId = enum(usize) { _ };
-pub const Type = values.Type;
+pub const Type = @import("type_identity.zig").Type;
 pub const Value = values.Value;
 /// Checked arithmetic, logical, and comparison operation categories.
 pub const BinaryOp = enum {
@@ -149,7 +149,7 @@ pub const Array = struct { element: Type, length: usize, key: ?Type = null };
 pub const Codec = struct { wire: Type, decode: FunctionId, encode: FunctionId };
 /// Nominal aggregate schema and associated array, domain, collection, or variant metadata.
 pub const Record = struct {
-    collection: @import("runtime_values.zig").CollectionShape = .{},
+    collection: @import("type_identity.zig").CollectionShape = .{},
     managed: bool = false,
     id: Type,
     name: []const u8,
@@ -185,10 +185,6 @@ pub const Record = struct {
     /// Return the number of statically addressable aggregate elements.
     pub fn count(self: Record) usize {
         return if (self.shape.array) |a| a.length else if (self.shape.domain != null) 1 else self.fields.len;
-    }
-    /// Resolve a field or array element type by its checked index.
-    pub fn elementType(self: Record, index: usize) Type {
-        return if (self.shape.array) |a| a.element else self.shape.domain orelse self.fields[index].ty;
     }
 };
 /// Optional specialized representations; bytecode validation rejects incompatible combinations.
@@ -246,10 +242,6 @@ pub const Callable = struct {
     effects: effect_set.Mask,
     mutates: []const u16 = &.{},
     return_origin: ReturnOrigin = .unknown,
-    /// Every callback parameter is an ordinary operand-stack value.
-    pub fn valueCount(self: Callable) usize {
-        return self.parameters.len;
-    }
 };
 /// Ownership and public schema policy for each concrete type.
 pub const RecordContract = struct {
@@ -581,7 +573,6 @@ pub const Store = struct { slot: LocalId, value: NodeId, element: bool = false }
 pub const Statement = struct {
     span: Span,
     terminates: bool,
-    owned_cleanup: []const LocalId = &.{},
     data: union(enum) {
         with_scope: struct { slot: LocalId, resource: ?NodeId, body: StatementId },
         block: []const StatementId,
@@ -591,7 +582,7 @@ pub const Statement = struct {
         branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },
         match: struct { value: NodeId, arms: []const MatchArm, borrowed: bool = false },
         loop: struct { id: usize = 0, condition: NodeId, body: StatementId, step: ?StatementId = null },
-        loop_exit: struct { target: usize, continuing: bool, arenas: []const LocalId = &.{} },
+        loop_exit: struct { target: usize, continuing: bool },
         initialize: Store,
         assign: Store,
     },
@@ -617,7 +608,7 @@ pub const Local = struct {
     origin: LocalOrigin = .local,
 };
 /// Compile-time ownership availability, definite-assignment, and arena confinement.
-pub const LocalOwnership = struct { transfer_span: ?Span = null, initialized: bool = false, arena_confined: bool = false, transfer_available: bool = false };
+pub const LocalOwnership = struct { transfer_span: ?Span = null, initialized: bool = false, transfer_available: bool = false };
 /// Static binding reads and writes used by quality diagnostics.
 pub const LocalUsage = struct {
     temporary: bool = false,
@@ -656,17 +647,12 @@ pub const FunctionPolicy = struct {
     restricted: bool = false,
     conversion: bool = false,
 };
-/// Checked write and physical-result facts used after body inference.
+/// Checked write facts used after body inference.
 pub const InferredFacts = struct {
-    /// Lowered mut collection positions that receive caller storage, including transitive rebinding.
-    caller_storage: u16 = 0,
     /// Any managed receiver write in the body.
     writes: bool = false,
     /// A write not proven to target definitely fresh local storage.
     external: bool = false,
-    /// Backing a result may retain even when value semantics make it logically
-    /// independent of its source.
-    borrow_origin: ReturnOrigin = .unknown,
 };
 /// Resolved value result and parameter count of a checked function.
 pub const FunctionSignature = struct {

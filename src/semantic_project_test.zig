@@ -22,7 +22,7 @@ fn evaluate(files: *Files, cache: ?*Cache) ![]u8 {
         if (err != error.SourceError) return err;
         return language.diagnostic_output.render(t.allocator, compilation.diagnostics.items.items[0], compilation.src, .json);
     };
-    try compilation.emit();
+    try compilation.check();
     const result = try native.run(&compilation);
     return std.fmt.allocPrint(t.allocator, "value:{d}", .{result.value});
 }

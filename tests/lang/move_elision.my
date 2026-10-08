@@ -17,7 +17,6 @@ def point(x: int) -> Point:
     return Point(x=x, y=x + 1, tag=f"p{x}", marks=[x])
 
 
-# spec-case: QBE-MOVE-ELIDE-1
 public def test_a_field_write_updates_only_its_own_record() -> bool:
     p = point(1)
     q = p
@@ -26,7 +25,6 @@ public def test_a_field_write_updates_only_its_own_record() -> bool:
     return p.x == 1 and p.tag == "p1" and q.x == 10 and q.y == 2 and q.tag == "q"
 
 
-# spec-case: QBE-MOVE-ELIDE-1
 public def test_field_writes_in_a_loop_accumulate_in_place() -> bool:
     p = point(0)
     for i in range(50):
@@ -37,7 +35,6 @@ public def test_field_writes_in_a_loop_accumulate_in_place() -> bool:
     return p.x == 1225 and p.tag == "t49" and p.y == 1 + 1275
 
 
-# spec-case: QBE-MOVE-ELIDE-1
 public def test_a_record_read_after_a_copy_is_written_keeps_its_value() -> bool:
     p = point(3)
     q = p
@@ -52,14 +49,12 @@ def bumped(p: Point) -> Point:
     return q
 
 
-# spec-case: QBE-MOVE-ELIDE-1
 public def test_a_parameter_the_callee_updates_is_the_callers_value_still() -> bool:
     p = point(5)
     q = bumped(p)
     return p.x == 5 and q.x == 6 and q.tag == "p5"
 
 
-# spec-case: QBE-MOVE-ELIDE-1
 public def test_a_list_element_field_write_lands_in_that_element_only() -> bool:
     ps = [point(0), point(1), point(2)]
     kept = ps[1]
@@ -71,7 +66,6 @@ public def test_a_list_element_field_write_lands_in_that_element_only() -> bool:
     return ps[0].x == 0 and ps[1].x == 21 and ps[2].x == 42 and ps[2].tag == "r19" and kept.x == 1 and kept.tag == "p1"
 
 
-# spec-case: QBE-MOVE-ELIDE-1
 public def test_a_negative_index_element_write_lands_in_the_same_element() -> bool:
     ps = [point(0), point(1)]
     ps[-1].x = ps[-1].x + 7
@@ -83,7 +77,6 @@ def both(a: Point, b: Point) -> int:
     return a.x * 100 + b.x
 
 
-# spec-case: QBE-MOVE-ELIDE-1
 public def test_an_argument_that_names_the_record_keeps_the_old_value() -> bool:
     p = point(1)
     return both(p, replace(p, x=2)) == 102

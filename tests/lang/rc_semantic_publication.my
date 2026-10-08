@@ -1,7 +1,6 @@
 module rc_semantic_publication
 
 
-# spec-case: RC-SEMANTIC-LOWERING-1
 public def test_repeated_optional_unwrap_replaces_a_private_loan_with_an_owner() -> bool:
     words: list[Option[str]] = [Some("left" + "0"), None, Some("right" + "2"), None]
     joined = ""
@@ -10,7 +9,6 @@ public def test_repeated_optional_unwrap_replaces_a_private_loan_with_an_owner()
     return joined == "left0.right2."
 
 
-# spec-case: RC-SEMANTIC-LOWERING-1
 public def test_shallow_copy_marks_reused_children_before_a_later_view() -> bool:
     source = [{1: 7}]
     copied = source.copy()
@@ -19,7 +17,6 @@ public def test_shallow_copy_marks_reused_children_before_a_later_view() -> bool
     return list(live) == [7] and copied[0][1] == 13 and source[0][1] == 7
 
 
-# spec-case: RC-SEMANTIC-LOWERING-1
 public def test_slice_marks_reused_children_before_a_later_view() -> bool:
     source = [{1: 7}]
     copied = source[:]
@@ -42,7 +39,6 @@ def selected(indices: mut list[int]) -> int:
     return indices.pop()
 
 
-# spec: RC-PLACE-ROLE-1
 public def test_augmented_field_detaches_an_owned_edge_from_a_private_capture() -> bool:
     receiver = fields()
     before = receiver
@@ -50,7 +46,6 @@ public def test_augmented_field_detaches_an_owned_edge_from_a_private_capture() 
     return receiver.items == [1, 2] and before.items == [1]
 
 
-# spec-case: RC-PLACE-ROLE-1
 public def test_dictionary_field_detachment_preserves_the_captured_snapshot() -> bool:
     receiver = fields()
     before = receiver
@@ -58,7 +53,6 @@ public def test_dictionary_field_detachment_preserves_the_captured_snapshot() ->
     return receiver.mapping[0] == [5, 6] and before.mapping[0] == [5]
 
 
-# spec-case: RC-PLACE-ROLE-1
 public def test_scoped_field_path_keeps_the_original_snapshot_during_a_callback() -> bool:
     receiver = fields()
     before = receiver

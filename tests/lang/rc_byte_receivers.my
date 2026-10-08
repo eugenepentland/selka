@@ -55,7 +55,6 @@ def append_rebound(out: mut Output, value: bytes):
         out.failed = True
 
 
-# spec-case: RC-INERT-BYTES-RECEIVER-1
 public def test_appends_through_a_mut_record_field_write_in_place() -> bool:
     out = output()
     append(mut out, b"ab")
@@ -65,7 +64,6 @@ public def test_appends_through_a_mut_record_field_write_in_place() -> bool:
     return bytes(out.buffer) == b"abC-12\xce\xbb" and not out.failed
 
 
-# spec-case: RC-INERT-BYTES-RECEIVER-1
 public def test_appending_a_snapshot_of_the_same_buffer_reads_the_old_octets() -> bool:
     out = output()
     append(mut out, b"abc")
@@ -75,7 +73,6 @@ public def test_appending_a_snapshot_of_the_same_buffer_reads_the_old_octets() -
     return bytes(out.buffer) == b"abcabcabcabc" and snapshot == b"abc"
 
 
-# spec-case: RC-INERT-BYTES-RECEIVER-1
 public def test_computed_and_rebound_inputs_keep_their_scopes() -> bool:
     out = output()
     append_twice(mut out, b"ab")
@@ -83,7 +80,6 @@ public def test_computed_and_rebound_inputs_keep_their_scopes() -> bool:
     return bytes(out.buffer) == b"ababd!"
 
 
-# spec-case: RC-OPERAND-ANCHOR-2
 public def test_length_limits_read_the_field_in_place() -> bool:
     out = output()
     i = 0

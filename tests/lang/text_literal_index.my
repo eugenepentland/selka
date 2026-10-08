@@ -21,7 +21,6 @@ abcdefghijklmnoé😀pqrstuvwxyz012345
 abcdefghijklmnoé😀pqrstuvwxyz012345"""
 
 
-# spec-case: TEXT-INDEX-4
 public def test_literal_indexes_in_both_directions_and_ranges() -> bool:
     line = "abcdefghijklmnoé😀pqrstuvwxyz012345"
     ok = len(TEXT) == 699

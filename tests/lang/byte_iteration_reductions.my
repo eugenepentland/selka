@@ -15,7 +15,6 @@ def indexed(raw: bytes, mask: int, seed: int) -> int:
     return total
 
 
-# spec-case: RC-READ-BYTE-ITERATION-1
 public def test_byte_iteration_lengths_views_and_unbounded_masks() -> bool:
     masks = [0, 1, 127, 255, -1, 256, 1000003]
     for length in [0, 1, 15, 16, 17, 31, 32, 1024, 1041]:
@@ -27,7 +26,6 @@ public def test_byte_iteration_lengths_views_and_unbounded_masks() -> bool:
     return reduce(b"", 255, -9223372036854775808) == -9223372036854775808
 
 
-# spec-case: RC-READ-BYTE-ITERATION-1
 public def test_byte_iteration_keeps_immutable_snapshot_storage() -> bool:
     empty: list[int] = []
     builder = byte_buffer(empty)

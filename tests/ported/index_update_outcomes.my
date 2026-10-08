@@ -1,0 +1,235 @@
+module index_update_outcomes
+
+# `values[index] = values[index] + delta` and its neighbours: the value each
+# update leaves, for positive and negative indices, with and without a second
+# name sharing the list, around floor remainders and quotients, and with a
+# snapshot, rebinding, resize or mutating call between the read and the write.
+# These are the executed programs of the retired QBE `RC-INDEX-UPDATE-1` tests
+# (`qbe_rc_index_update_test.zig`). The traps those tests also pinned (the
+# R_LIST_BOUNDS of an out-of-range index, R_OVERFLOW, R_DIVISION_BY_ZERO with
+# their lines and operand details, and a step budget) cannot be expected from a
+# guest test, so only the non-trapping runs and their edge values are kept.
+
+
+def update(index: int, delta: int, shared: bool) -> int:
+    values = [7, 11]
+    snapshot = values if shared else [0, 0]
+    values[index] = values[index] + delta
+    return values[index] + snapshot[index] * 100
+
+
+def modulo(index: int, divisor: int, shared: bool) -> int:
+    values = [7, 11]
+    snapshot = values if shared else [0, 0]
+    values[index] = (values[index] + 1) % divisor
+    return values[index] + snapshot[index] * 100
+
+
+def quotient(index: int, divisor: int) -> int:
+    values = [-9223372036854775807 - 1, 11]
+    values[index] = values[index] // divisor
+    return values[index]
+
+
+def checksum_update(index: int, delta: int, shared: bool) -> int:
+    values = [7, 11]
+    snapshot = values if shared else [0, 0]
+    values[index] = (values[index] + delta) % 1000003
+    checksum = 29
+    checksum = (checksum + values[index]) % 1000000007
+    return checksum + values[0] + values[1] + snapshot[index] * 100
+
+
+def combine(values: list[int], value: int) -> int:
+    return values[0] + value
+
+
+def managed_prefix(index: int, delta: int) -> int:
+    values = [7, 11]
+    values[index] = values[index] + delta
+    return combine(values, values[index])
+
+
+def shared_read(index: int, delta: int) -> int:
+    values = [7, 11]
+    snapshot = values
+    values[index] = values[index] + delta
+    return snapshot[index] + values[index] + values[0] + values[1]
+
+
+def provenance(index: int, delta: int) -> int:
+    values = [7, 11]
+    next_value = values[index] + delta
+    values[index] = next_value
+    return values[index]
+
+
+def descriptor(index: int) -> int:
+    values = [7, 11]
+    flags = [True, False]
+    values[index] = values[index] + 3
+    return values[index] + (1 if flags[0] else 0)
+
+
+def alias(index: int, delta: int) -> int:
+    values = [7, 11]
+    next_value = values[index] + delta
+    snapshot = values
+    values[index] = next_value
+    return snapshot[index] * 100 + values[index]
+
+
+def rebound(index: int, delta: int) -> int:
+    values = [7, 11]
+    next_value = values[index] + delta
+    values = [19, 23]
+    values[index] = next_value
+    return values[index]
+
+
+def resized(index: int, delta: int) -> int:
+    values = [7, 11]
+    next_value = values[index] + delta
+    values.clear()
+    values.append(17)
+    values[index] = next_value
+    return values[index]
+
+
+def change(values: mut list[int]) -> int:
+    values.clear()
+    values.append(17)
+    return 0
+
+
+def callback(index: int) -> int:
+    values = [7, 11]
+    cleared = change(mut values)
+    values[index] = values[index] + cleared
+    return values[index]
+
+
+def distinct(index: int) -> int:
+    left = [7, 11]
+    right = [19, 23]
+    right[index] = left[index] + 3
+    return right[index]
+
+
+def changed_index(index: int) -> int:
+    values = [7, 11]
+    next_value = values[index] + 3
+    index = (index + 1) % 2
+    values[index] = next_value
+    return values[index]
+
+
+def narrow(index: int) -> i32:
+    values: list[i32] = [7, 11]
+    values[index] = values[index] + 3
+    return values[index]
+
+
+def managed(index: int) -> int:
+    values = [[7], [11]]
+    values[index] = values[index]
+    return values[index][0]
+
+
+def repeat(times: int, index: int) -> int:
+    values = [7, 11]
+    total = 0
+    for at in range(times):
+        values[index] = values[index] + at + 1
+        total += values[index]
+    return total + values[0] + values[1]
+
+
+public def test_positive_and_negative_indices_update_the_selected_element_with_and_without_a_snapshot() -> bool:
+    assert update(-2, 3, False) == 10
+    assert update(-2, 3, True) == 710
+    assert update(-1, 3, False) == 14
+    assert update(-1, 3, True) == 1114
+    assert update(0, 3, False) == 10
+    assert update(0, 3, True) == 710
+    assert update(1, 3, False) == 14
+    assert update(1, 3, True) == 1114
+    return True
+
+
+public def test_the_stored_value_is_forwarded_exactly_across_the_integer_range() -> bool:
+    assert provenance(1, -9223372036854775807 - 1) == 11 + (-9223372036854775807 - 1)
+    assert provenance(1, -10) == 1
+    assert provenance(1, 9223372036854775807 - 11) == 9223372036854775807
+    assert provenance(0, 3) == 10
+    return True
+
+
+public def test_floor_remainders_keep_the_divisors_sign() -> bool:
+    assert modulo(-1, -5, False) == -3
+    assert modulo(-1, -5, True) == 1097
+    assert modulo(-1, -3, False) == 0
+    assert modulo(-1, -3, True) == 1100
+    assert modulo(-1, 3, False) == 0
+    assert modulo(-1, 3, True) == 1100
+    assert modulo(-1, 5, False) == 2
+    assert modulo(-1, 5, True) == 1102
+    return True
+
+
+public def test_floor_quotients_and_the_minimum_integer_are_stored_exactly() -> bool:
+    assert quotient(-1, -3) == -4
+    assert quotient(-1, 3) == 3
+    assert quotient(0, 1) == -9223372036854775807 - 1
+    return True
+
+
+public def test_a_checksum_following_the_update_sees_the_stored_value() -> bool:
+    assert checksum_update(-2, -10, False) == 2000040
+    assert checksum_update(-2, -10, True) == 2000740
+    assert checksum_update(-2, 3, False) == 60
+    assert checksum_update(-2, 3, True) == 760
+    assert checksum_update(-1, -10, False) == 38
+    assert checksum_update(-1, -10, True) == 1138
+    assert checksum_update(-1, 3, False) == 64
+    assert checksum_update(-1, 3, True) == 1164
+    assert checksum_update(0, -10, False) == 2000040
+    assert checksum_update(0, -10, True) == 2000740
+    assert checksum_update(0, 3, False) == 60
+    assert checksum_update(0, 3, True) == 760
+    assert checksum_update(1, -10, False) == 38
+    assert checksum_update(1, -10, True) == 1138
+    assert checksum_update(1, 3, False) == 64
+    assert checksum_update(1, 3, True) == 1164
+    return True
+
+
+public def test_a_managed_prefix_and_a_snapshot_read_after_the_update_see_both_versions() -> bool:
+    assert managed_prefix(-1, 3) == 21
+    assert shared_read(-1, 3) == 46
+    return True
+
+
+public def test_zero_trips_and_repeated_updates_keep_their_totals() -> bool:
+    assert repeat(0, -9223372036854775807 - 1) == 18
+    assert repeat(3, -1) == 67
+    return True
+
+
+public def test_aliases_rebinds_resizes_and_calls_before_the_write_keep_their_meaning() -> bool:
+    assert alias(0, 3) == 710
+    assert rebound(0, 3) == 10
+    assert resized(0, 3) == 10
+    assert callback(0) == 17
+    assert distinct(0) == 10
+    assert changed_index(0) == 10
+    return True
+
+
+public def test_other_element_types_and_a_flag_list_keep_the_update() -> bool:
+    assert descriptor(-1) == 15
+    assert int(narrow(-1)) == 14
+    assert int(narrow(0)) == 10
+    assert managed(-1) == 11
+    assert managed(0) == 7
+    return True

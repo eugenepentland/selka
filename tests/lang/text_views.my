@@ -162,7 +162,6 @@ def inner_piece(index: int) -> str:
 
 # Omitted upper bounds keep streaming tails, including a tail of a tail. A
 # bounded slice still asks for the ordinary retention policy.
-# spec-case: TEXT-VIEW-5
 public def test_streaming_tails_preserve_scalars_and_consumers() -> bool:
     owner = repeated("abcdefé😀", 40) + "é😀abcdefghi"
     tail = owner[-11:]

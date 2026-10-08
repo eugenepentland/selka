@@ -9,7 +9,7 @@ test "standard json parses renders navigates and rejects noncompliant documents"
 }
 
 // spec-case: STANDARD-JSON-1
-test "standard json scanner and writer lower scalar positions and buffered spans" {
+test "standard json scanner keeps its position a scalar" {
     const language = @import("compiler.zig");
     var entry: fixture.Entry = .{ .text =
         \\module main
@@ -25,28 +25,6 @@ test "standard json scanner and writer lower scalar positions and buffered spans
     try program.init(t.allocator, .{ .context = &entry, .read = fixture.Entry.read });
     defer program.deinit();
     try expectScalarPosition(program.compilation.program.?.records);
-    var integer_range = false;
-    var float_range = false;
-    var quoted = false;
-    for (program.compilation.code.?.functions) |function| {
-        const number = std.mem.endsWith(u8, function.name, "::read_number");
-        const quote = std.mem.endsWith(u8, function.name, "::write_quoted");
-        for (function.scope.instructions) |instruction| switch (instruction.op) {
-            .buffer_operation => |operation| {
-                if (number) {
-                    integer_range = integer_range or operation.kind == .parse_int_range;
-                    float_range = float_range or operation.kind == .parse_float_range;
-                    try t.expect(operation.kind != .slice and operation.kind != .decode);
-                }
-                if (quote and operation.kind == .buffer_append_range) quoted = true;
-            },
-            else => {},
-        };
-    }
-    try t.expect(integer_range and float_range and quoted);
-    const emitted = try program.compilation.emitQbe(t.allocator);
-    defer t.allocator.free(emitted);
-    try t.expect(std.mem.indexOf(u8, emitted, "myl_native_bytes_buffer_append_range") != null);
 }
 
 /// The private scanner's position is a scalar; passing it to an inout callee

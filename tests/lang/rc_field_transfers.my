@@ -45,7 +45,6 @@ def nested(holder: mut Nested):
     push(mut work, 2)
     holder.inner.items = work
 
-# spec-case: RC-CLOSED-FIELD-TRANSFER-1
 public def test_closed_field_restores_empty_and_nonempty_source() -> bool:
     empty = Holder([], 7)
     change(mut empty, 4)

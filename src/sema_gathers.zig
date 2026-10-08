@@ -332,18 +332,12 @@ fn less(comptime Checker: type, self: *Checker, b: collections.Builder(Checker),
     return b.binary(.lt, left, right, .bool);
 }
 
-/// The statement that leaves the outermost loop of the gather `sink`, with
-/// the cleanup a `break` there performs.
+/// The statement that leaves the outermost loop of the gather `sink`.
 fn leaveGather(comptime Checker: type, self: *Checker, b: collections.Builder(Checker), sink: Sink) Error!typed.StatementId {
     if (sink.depth >= self.loops.active.items.len) return error.InternalError;
     const loop = self.loops.active.items[sink.depth];
-    var owned: std.ArrayList(typed.LocalId) = .empty;
-    for (self.locals.items[loop.before.len..], loop.before.len..) |local, index| {
-        if (typed.moveOnly(local.ty, self.catalog.records)) try owned.append(self.allocator, @fromBackingInt(index));
-    }
     const id = try b.stmt(.{ .loop_exit = .{ .target = loop.id, .continuing = false } });
     self.statements.items[@backingInt(id)].terminates = true;
-    self.statements.items[@backingInt(id)].owned_cleanup = try owned.toOwnedSlice(self.allocator);
     return id;
 }
 

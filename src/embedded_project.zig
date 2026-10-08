@@ -1,46 +1,22 @@
-//! Shared compilation ownership for interpreter applications hosted in Zig.
+//! Shared ownership of one checked project compilation for Zig-hosted tests.
 const std = @import("std");
-const print = std.debug.print;
 const project = @import("project.zig");
 const interfaces = @import("interfaces.zig");
 const project_compile = @import("project_compile.zig");
-const disk_files = @import("project_files.zig");
 /// Loading and compilation errors retain their originating diagnostic identity.
 pub const InitError = project.RenderProblemError || project.LoadError || @import("diagnostic.zig").Error || project_compile.InitError;
-/// Stable-address project, interface and bytecode storage; initialize in place and never copy.
+/// Stable-address project, interface and checked-program storage; initialize in place and never copy.
 pub const Program = struct {
     loaded: project.Project,
     index: interfaces.Index,
     compilation: project_compile.Compilation,
     /// Compile a supplied main module graph, releasing partially initialized storage on failure.
     pub fn init(self: *Program, allocator: std.mem.Allocator, provider: project.Provider) InitError!void {
-        try self.initSource(allocator, provider, false);
-    }
-    /// Compile main.my and its imports from disk, reporting source errors before releasing storage.
-    pub fn initDisk(self: *Program, allocator: std.mem.Allocator, io: std.Io, root: []const u8) InitError!void {
-        var disk: disk_files.Files = .{ .io = io, .root = root };
-        try self.initSource(allocator, disk.provider(), true);
-    }
-    fn initSource(self: *Program, allocator: std.mem.Allocator, provider: project.Provider, report: bool) InitError!void {
         self.loaded = project.Project.init(allocator);
         errdefer self.loaded.deinit();
-        self.loadIndex(provider) catch |err| {
-            if (report and self.loaded.problem != null) {
-                const message = try self.loaded.renderProblem(allocator);
-                defer allocator.free(message);
-                print("{s}", .{message});
-            }
-            return err;
-        };
+        try self.loadIndex(provider);
         self.compilation = try project_compile.Compilation.init(&self.index);
-        self.compilation.emit() catch |err| {
-            if (report) for (self.compilation.diagnostics.items.items) |diag| {
-                const message = try diag.render(allocator, self.compilation.src);
-                defer allocator.free(message);
-                print("{s}", .{message});
-            };
-            return err;
-        };
+        try self.compilation.check();
     }
     fn loadIndex(self: *Program, provider: project.Provider) InitError!void {
         try self.loaded.load(provider, "main", .{});

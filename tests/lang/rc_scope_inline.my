@@ -10,7 +10,6 @@ def nested(items: mut list[int], depth: int) -> int:
     return len(before)
 
 
-# spec-case: RC-SCOPE-IL-1
 public def test_nested_pins_restore_the_outer_snapshot_state() -> bool:
     items = [7]
     before = items
@@ -27,7 +26,6 @@ def snapshots(first: mut list[int], second: mut list[int]) -> int:
     return len(a) + len(b)
 
 
-# spec-case: RC-SCOPE-IL-1
 public def test_reused_multi_pin_journals_preserve_growth_and_snapshots() -> bool:
     first = [0]
     second = [9]

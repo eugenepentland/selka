@@ -88,7 +88,7 @@ test "prelude containers results options and dictionary views keep one identity 
     try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     try t.expectEqual(@as(i64, 42), (try native.runWithOptions(&compilation, .{})).value);
 }
 // spec: PYTHON-CORE-2
@@ -117,22 +117,6 @@ const Entries = struct {
         return allocator.dupe(u8, "module main\n\ndef main() -> Result[None, int]:\n    return Ok(None)\n");
     }
 };
-// spec-case: PYTHON-CORE-2
-test "PYTHON-CORE-2 a project with an adapted entry still emits native units" {
-    var project = language.project.Project.init(t.allocator);
-    defer project.deinit();
-    try project.load(.{ .context = null, .read = Entries.read }, "main", .{});
-    var index = try language.interfaces.build(&project);
-    var compilation = try language.project_compile.Compilation.init(&index);
-    const manifest = compilation.emitQbe(t.allocator) catch |err| {
-        for (compilation.diagnostics.items.items) |diag| debug.print("{s}: {s}\n", .{ diag.code, diag.message });
-        return err;
-    };
-    defer t.allocator.free(manifest);
-    // The synthesized wrapper is the entry symbol and names no public export.
-    try t.expect(std.mem.indexOf(u8, manifest, "language-schema-v1") != null);
-    try t.expect(std.mem.indexOf(u8, manifest, "qbe-units-v1") != null);
-}
 const PythonModules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
@@ -169,7 +153,7 @@ test "Python exported module signatures share builtin types and resolve enum mem
     try project.load(.{ .context = null, .read = PythonModules.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     try t.expectEqual(@as(i64, 42), (try native.runWithOptions(&compilation, .{})).value);
 }
 // spec: PYTHON-CORE-3
@@ -271,23 +255,7 @@ test "an unannotated function whose body exceeds the slot it fills is rejected a
     , "E_EFFECT_BOUND", "`key` fills a callback slot of type `def(int) -> int effects()`, but its body has effect `managed_allocation`: key; keep the body within the slot's ceiling, or widen the callback type's `effects(...)`");
 }
 // spec: DEAD-RECORD-WRITE-1
-test "dead record writes reject loop and parameter copies but not fresh locals" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    var loop = try language.Compilation.init(t.allocator, "dead-loop.my",
-        \\record Item:
-        \\    visited: bool
-        \\
-        \\
-        \\def main() -> int:
-        \\    items = [Item(visited=False)]
-        \\    for it in items:
-        \\        it.visited = True
-        \\    return 0
-    );
-    defer loop.deinit();
-    try t.expectError(error.SourceError, loop.check());
-    try t.expectEqualStrings("E_DEAD_RECORD_WRITE", loop.diagnostics.items[0].code);
+test "dead record writes reject parameter and collection copies but not fresh locals" {
     var parameter = try language.Compilation.init(t.allocator, "dead-parameter.my",
         \\record Counter:
         \\    n: int

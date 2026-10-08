@@ -1,0 +1,41 @@
+module byte_iteration_sums
+
+# Ported from the retired QBE byte-iteration tests: exact sums across lengths,
+# masks beyond a byte and extreme seeds.
+
+
+def reduce(raw: bytes, mask: int, seed: int) -> int:
+    total = seed
+    for value in raw:
+        total += value ^ mask
+    return total
+
+
+def pattern_sum(length: int, mask: int, seed: int) -> int:
+    raw = bytes([(i * 37) % 256 for i in range(length)])
+    total = seed
+    for value in raw:
+        total += value ^ mask
+    return total
+
+
+public def test_byte_iteration_sums_keep_exact_values_across_lengths() -> bool:
+    assert reduce(b"abcd", 7, 13) == 415
+    assert pattern_sum(0, 255, 13) == 13
+    assert pattern_sum(1, 255, 13) == 268
+    assert pattern_sum(15, 255, 13) == 2257
+    assert pattern_sum(16, 255, 13) == 2469
+    assert pattern_sum(17, 255, 13) == 2644
+    assert pattern_sum(1024, 255, 13) == 130573
+    assert pattern_sum(1041, 255, 13) == 133204
+    return True
+
+
+public def test_byte_iteration_keeps_exact_values_for_masks_beyond_a_byte_and_extreme_seeds() -> bool:
+    assert pattern_sum(32, -1, 0) == -3536
+    assert pattern_sum(32, 256, 0) == 11696
+    assert pattern_sum(1, -9223372036854775807 - 1, 0) == -9223372036854775807 - 1
+    assert pattern_sum(1, 9223372036854775807, 0) == 9223372036854775807
+    assert pattern_sum(32, 0, -9223372036854775807 - 1) == -9223372036854772304
+    assert pattern_sum(32, 0, 9223372036854775807 - 1000000) == 9223372036853779311
+    return True

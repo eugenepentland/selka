@@ -133,7 +133,10 @@ fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool) !u8 {
     return 0;
 }
 
-fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
+/// The developer build (`mylang build` given `--sabotage-facts`,
+/// `--generic-vectors` or `--trap-frames=`, S5-D8): the core's own flag set,
+/// every failure exit 1, the source path displayed relative to its directory.
+pub fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     const allocator = init.arena.allocator();
     var options: pipeline.Options = .{ .zig = init.environ_map.get("ZIG") orelse "zig" };
     var links: std.ArrayList([]const u8) = .empty;
@@ -202,7 +205,7 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
     }
     var report: std.ArrayList(u8) = .empty;
     const status = pipeline.build(init, source, options, &report) catch |err| switch (err) {
-        error.OutOfMemory => return err,
+        error.OutOfMemory => return error.OutOfMemory,
         else => 1,
     };
     if (report.items.len != 0) try std.Io.File.stderr().writeStreamingAll(init.io, report.items);

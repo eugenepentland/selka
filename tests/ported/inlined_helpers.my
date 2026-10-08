@@ -1,0 +1,278 @@
+module inlined_helpers
+
+# Small helper functions called from other functions, where a compiler may
+# splice the callee into the caller: the answer is the same whether or not it
+# does. These are the value-returning programs of the retired bytecode inlining
+# tests (`bytecode_inline_test.zig`, `BYTECODE-INLINE-1` to `-5`), which also
+# counted the calls left in the lowered bytecode. The traps and frame traces those
+# tests also pinned (a bounds trap through two spliced helpers, an overflow
+# inside a spliced callee, a float conversion trap, the R_FRAME_LIMIT of a
+# four-frame ceiling, and the exact error return trace text) cannot be expected
+# from a guest test, so each trapping program keeps its nearest non-trapping
+# input and the value it reaches at the edge.
+
+
+def helper(x: i64) -> bool:
+    return x > 0
+
+
+def use(x: i64) -> bool:
+    return helper(x)
+
+
+def pure_answer() -> i64:
+    if use(41):
+        return 7
+    return 0
+
+
+public def test_a_leaf_helper_returns_its_comparison_through_a_caller() -> bool:
+    return pure_answer() == 7 and not use(-1) and not use(0)
+
+
+record Cell:
+    value: i64
+
+
+def risky(x: i64) -> i64:
+    return x + 1
+
+
+def make_cell(x: i64) -> Cell:
+    return Cell(value=x)
+
+
+def use_cell(x: i64) -> i64:
+    cell = make_cell(x)
+    return risky(cell.value)
+
+
+public def test_a_checked_add_in_a_helper_returns_its_sum_up_to_the_limit() -> bool:
+    return use_cell(41) == 42 and use_cell(9223372036854775806) == 9223372036854775807
+
+
+def make_list(x: i64) -> list[int]:
+    return [x]
+
+
+def use_list(x: i64) -> i64:
+    return make_list(x)[0]
+
+
+public def test_a_helper_that_builds_a_list_returns_its_element() -> bool:
+    return use_list(5) == 5
+
+
+record Buffer:
+    data: bytes
+
+
+def peek(buf: Buffer, i: i64) -> i64:
+    return buf.data[i]
+
+
+def use_peek(buf: Buffer, i: i64) -> i64:
+    return peek(buf, i)
+
+
+public def test_a_bytes_read_through_two_helpers_returns_each_in_range_byte() -> bool:
+    buf = Buffer(data=b"abc")
+    return use_peek(buf, 0) == 97 and use_peek(buf, 2) == 99 and use_peek(buf, -1) == 99
+
+
+def first_step(x: i64) -> i64:
+    return x + 1
+
+
+def second_step(x: i64) -> i64:
+    return first_step(x)
+
+
+def resweep(x: i64) -> i64:
+    first = second_step(0)
+    return first + first_step(x)
+
+
+public def test_nested_helpers_called_before_their_definitions_add_up_to_the_limit() -> bool:
+    return resweep(9223372036854775805) == 9223372036854775807 and resweep(0) == 2
+
+
+def scaled(x: i64, factor: float) -> i64:
+    return int(float(x) * factor)
+
+
+def use_scaled(x: i64, factor: float) -> i64:
+    return scaled(x, factor)
+
+
+public def test_a_helper_converting_between_integers_and_floats_truncates_toward_zero() -> bool:
+    return use_scaled(3, 2.5) == 7 and use_scaled(1, 2.0) == 2 and use_scaled(-3, 2.5) == -7 and use_scaled(1, 1e18) == 1000000000000000000
+
+
+def big(x: i64) -> i64:
+    v0 = x + 1
+    v1 = v0 + 1
+    v2 = v1 + 1
+    v3 = v2 + 1
+    v4 = v3 + 1
+    v5 = v4 + 1
+    v6 = v5 + 1
+    v7 = v6 + 1
+    v8 = v7 + 1
+    v9 = v8 + 1
+    v10 = v9 + 1
+    v11 = v10 + 1
+    v12 = v11 + 1
+    v13 = v12 + 1
+    return v13
+
+
+def cold(x: i64) -> i64:
+    return big(x)
+
+
+def hot(x: i64) -> i64:
+    total = 0
+    index = 0
+    while index < 4:
+        total = total + big(x)
+        index = index + 1
+    return total
+
+
+public def test_a_large_callee_returns_its_value_from_a_straight_line_and_a_loop_call() -> bool:
+    return cold(0) + hot(0) == 70 and cold(0) == 14 and hot(0) == 56
+
+
+def leaf() -> i64:
+    return 7
+
+
+def middle() -> i64:
+    return leaf()
+
+
+def zero_argument_answer() -> i64:
+    first = middle()
+    return first + middle()
+
+
+public def test_zero_argument_helpers_called_twice_add_up() -> bool:
+    return zero_argument_answer() == 14
+
+
+record Pair:
+    left: int
+    right: int
+
+
+def make_pair(value: int) -> Pair:
+    return Pair(left=value, right=value + 1)
+
+
+def score(pair: Pair) -> int:
+    return pair.left + pair.right
+
+
+def changed(pair: Pair) -> int:
+    pair.left += 1
+    return score(pair)
+
+
+def pair_answer() -> int:
+    pair = make_pair(7)
+    alias = pair
+    return changed(pair) + score(alias)
+
+
+public def test_a_constructor_helper_returns_a_record_whose_alias_keeps_its_fields() -> bool:
+    return pair_answer() == 31
+
+
+def checked(value: int) -> Result[int, int]:
+    if value < 0:
+        return Err(3)
+    return Ok(value)
+
+
+def forwarded(value: int) -> Result[int, int]:
+    result = checked(value)?
+    return Ok(result + 1)
+
+
+def result_answer() -> int:
+    match forwarded(-1):
+        case Ok(value):
+            return value
+        case Err(code):
+            return code
+
+
+def forwarded_ok_answer() -> int:
+    match forwarded(4):
+        case Ok(value):
+            return value
+        case Err(code):
+            return code
+
+
+public def test_a_propagated_error_reaches_a_caller_that_returns_another_type() -> bool:
+    return result_answer() == 3 and forwarded_ok_answer() == 5
+
+
+def through(value: Result[int, int]) -> Result[int, int]:
+    return Ok(value?)
+
+
+def operands_answer() -> int:
+    first, result = 7, through(Err(3))
+    match result:
+        case Ok(value):
+            return first + value
+        case Err(code):
+            return first + code
+
+
+public def test_a_propagation_with_an_unfinished_caller_operand_keeps_that_operand() -> bool:
+    return operands_answer() == 10
+
+
+record Owner:
+    values: list[int]
+
+
+def make_owner(values: list[int]) -> Owner:
+    return Owner(values=values)
+
+
+def owner_answer() -> int:
+    values = [7]
+    owner = make_owner(values)
+    values[0] = 9
+    return owner.values[0]
+
+
+public def test_a_construction_helper_keeps_the_payload_it_was_given() -> bool:
+    return owner_answer() == 7
+
+
+def optional(value: int) -> Option[int]:
+    if value < 0:
+        return None
+    return Some(value)
+
+
+def optional_answer() -> int:
+    match optional(-1):
+        case Some(value):
+            return value
+        case None:
+            match optional(7):
+                case Some(value):
+                    return value
+                case None:
+                    return 0
+
+
+public def test_an_option_helper_keeps_both_its_some_and_none_branches() -> bool:
+    return optional_answer() == 7

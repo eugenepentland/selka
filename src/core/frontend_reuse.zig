@@ -6,7 +6,7 @@ const language = @import("mylang");
 
 /// Every production source, including core/runtime/property adapters, plus the
 /// Zig version and compiler build mode participates in this generated identity.
-pub const compiler_identity = @import("qbe_build_assets").compiler_identity;
+pub const compiler_identity = @import("build_identity").compiler_identity;
 
 /// Actual front-end work, available to checks and compiler profiling tools.
 pub const Statistics = struct {

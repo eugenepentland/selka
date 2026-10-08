@@ -29,7 +29,6 @@ def edit(values: mut list[Scalars]) -> None:
     values[0].distance = Distance.make(42000u16)
 
 
-# spec-case: RC-SCALAR-REPLACE-1
 public def test_canonical_scalar_widths_and_domain_values_survive_replacement() -> bool:
     values = [Scalars(1i8, 2u16, False, 3.5, Distance.make(4u16))]
     snapshot = values
@@ -38,7 +37,6 @@ public def test_canonical_scalar_widths_and_domain_values_survive_replacement() 
     return current.small == -120i8 and current.medium == 65000u16 and current.enabled and current.number == -1.25 and Distance.value(current.distance) == 42000u16 and snapshot[0].small == 1i8 and not snapshot[0].enabled
 
 
-# spec-case: RC-SCALAR-REPLACE-1
 public def test_plain_and_owning_fields_alternate_without_losing_pending_tokens() -> bool:
     row: [2]int = [2, 3]
     values = [Mixed(1, [4], row, None)]
@@ -59,7 +57,6 @@ def replacement(values: mut list[Scalars]) -> i8:
     return -13i8
 
 
-# spec-case: RC-SCALAR-REPLACE-1
 public def test_callback_replacement_refreshes_the_parent_before_scalar_store() -> bool:
     values = [Scalars(1i8, 2u16, False, 3.5, Distance.make(4u16))]
     before = values

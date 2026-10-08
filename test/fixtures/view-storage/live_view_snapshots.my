@@ -11,7 +11,6 @@ union Held:
     values: DictValues[int, int],
     empty
 
-# spec-case: LIVE-VIEW-SNAPSHOT-1
 public def test_last_view_read_does_not_move_its_mapping() -> bool:
     mapping = {1: 7}
     live = mapping.values()
@@ -22,7 +21,6 @@ public def test_last_view_read_does_not_move_its_mapping() -> bool:
     mapping[1] = 13
     return result.snapshot[1] == 11 and mapping[1] == 13
 
-# spec-case: LIVE-VIEW-SNAPSHOT-1
 public def test_nested_record_projection_keeps_view_live_and_mapping_independent() -> bool:
     mapping = {1: 7}
     owner = Envelope(mapping.values())
@@ -33,7 +31,6 @@ public def test_nested_record_projection_keeps_view_live_and_mapping_independent
     mapping[1] = 13
     return result.snapshot[1] == 11 and mapping[1] == 13
 
-# spec-case: LIVE-VIEW-SNAPSHOT-1
 public def test_fixed_array_projection_preserves_external_mapping_owner() -> bool:
     mapping = {1: 7}
     owners: [1]Envelope = [Envelope(mapping.values())]
@@ -44,7 +41,6 @@ public def test_fixed_array_projection_preserves_external_mapping_owner() -> boo
     mapping[1] = 13
     return result.snapshot[1] == 11 and mapping[1] == 13
 
-# spec-case: LIVE-VIEW-SNAPSHOT-1
 public def test_list_projection_preserves_external_mapping_owner() -> bool:
     mapping = {1: 7}
     owners = [Envelope(mapping.values())]
@@ -55,7 +51,6 @@ public def test_list_projection_preserves_external_mapping_owner() -> bool:
     mapping[1] = 13
     return result.snapshot[1] == 11 and mapping[1] == 13
 
-# spec-case: LIVE-VIEW-SNAPSHOT-1
 public def test_variant_payload_projection_preserves_external_mapping_owner() -> bool:
     mapping = {1: 7}
     owner = Held.values(mapping.values())
@@ -70,7 +65,6 @@ public def test_variant_payload_projection_preserves_external_mapping_owner() ->
         case Held.empty:
             return False
 
-# spec-case: LIVE-VIEW-SNAPSHOT-1
 public def test_fresh_view_mapping_projection_still_creates_a_snapshot() -> bool:
     mapping = {1: 7}
     snapshot = mapping.values().mapping
@@ -82,7 +76,6 @@ def replace_mapping(live: mut DictValues[int, int]):
     fields[1] = 11
     live.mapping = fields
 
-# spec-case: LIVE-VIEW-SNAPSHOT-1
 public def test_field_extract_mutate_and_return_cannot_mutate_external_mapping() -> bool:
     mapping = {1: 7}
     live = mapping.values()
@@ -98,7 +91,6 @@ def replace_payload(items: mut list[Held], index: int):
         case Held.empty:
             pass
 
-# spec-case: LIVE-VIEW-SNAPSHOT-1
 public def test_indexed_payload_return_cannot_elide_mapping_snapshot() -> bool:
     mapping = {1: 7}
     items = [Held.values(mapping.values())]
@@ -109,7 +101,6 @@ public def test_indexed_payload_return_cannot_elide_mapping_snapshot() -> bool:
         case Held.empty:
             return False
 
-# spec-case: LIVE-VIEW-SNAPSHOT-1
 public def test_copying_the_view_itself_keeps_external_identity() -> bool:
     mapping = {1: 7}
     live = mapping.values()

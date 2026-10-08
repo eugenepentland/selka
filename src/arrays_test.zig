@@ -66,8 +66,6 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, allocation_source);
     defer compilation.deinit();
     try compilation.check();
-    const dump = try compilation.dump(allocator);
-    defer allocator.free(dump);
     var discovery = try language.duplicates.discover(allocator, compilation.program.?, .{});
     defer discovery.deinit();
 }
@@ -134,32 +132,4 @@ test "deep array type syntax observes the shared parser budget" {
     for (0..300) |_| try source.writer.writeAll("[1]");
     try source.writer.writeAll("i64\n\n\ndef main() -> i64:\n    return 0\n");
     try reject(source.written(), "E_NESTING_LIMIT");
-}
-
-test "array bytecode validates schema kinds and stack counts" {
-    const typed = @import("typed.zig");
-    const bc = language.bytecode;
-    const span: language.source.Span = .{ .start = 0, .end = 1 };
-    const ty: typed.Type = @fromBackingInt(typed.Type.record_base);
-    const schema: typed.Record = .{
-        .id = ty,
-        .name = "[1]i64",
-        .declaration = span,
-        .fields = &.{},
-        .shape = .{
-            .array = .{ .element = .i64, .length = 1 },
-        },
-    };
-    const Op = @FieldType(bc.Instruction, "op");
-    for ([_]Op{ .{ .get_index = .{ .ty = .i64 } }, .{ .array_length = ty }, .{ .replace_index = .{ .ty = ty } }, .{ .make_record = .{ .ty = ty, .fields = 2 } } }) |op| {
-        const instructions = [_]bc.Instruction{ .{ .span = span, .op = op }, .{ .span = span, .op = .ret } };
-        const program: bc.Program = .{ .records = &.{schema}, .functions = &.{.{
-            .id = @fromBackingInt(0),
-            .name = "main",
-            .scope = .{
-                .instructions = &instructions,
-            },
-        }} };
-        try testing.expectError(error.InternalError, bc.validate(testing.allocator, program));
-    }
 }

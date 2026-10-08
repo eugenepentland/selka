@@ -35,7 +35,6 @@ $ mylang reference --query E_MODULE_NAME   # one feature or error code, from the
 | `modules` | [modules, imports and exports](modules.md) |
 | `memory` | [managed collections](managed-memory.md) |
 | `sets` | [sets and hashable keys](sets.md) |
-| `arenas` | [arenas (retired)](arenas.md) |
 | `stdlib` | [the standard library](standard-library.md) |
 | `tests` | [guest tests](tooling/guest-tests.md) |
 | `build` | [native builds](tooling/native-build.md) |

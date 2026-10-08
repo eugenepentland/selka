@@ -9,7 +9,6 @@ const ast = @import("ast.zig");
 const diagnostic = @import("diagnostic.zig");
 const effect_set = @import("effect_set.zig");
 const ids = @import("identity.zig");
-const bytecode = @import("bytecode.zig");
 const interface = @import("interfaces.zig");
 const lexer = @import("lexer.zig");
 const project_compile = @import("project_compile.zig");
@@ -274,12 +273,8 @@ pub fn describe(allocator: std.mem.Allocator, compilation: *project_compile.Comp
     }
     std.mem.sort(Specialization, specializations.items, {}, lessSpecialization);
 
-    // Lowered fragments require bytecode. `describe` is the check-only
-    // `project-dependencies` path, so when `compilation.emit()` has not run the
-    // fragment table stays empty rather than forcing a lowering pass.
-    var fragments: std.ArrayList(Fragment) = .empty;
-    if (compilation.code) |code| try buildFragments(scratch, &fragments, code, &declarations_by_name, specializations.items);
-    std.mem.sort(Fragment, fragments.items, {}, lessFragment);
+    // The front end lowers nothing, so the lowered-fragment table stays empty:
+    // the new core keys its own units by their LLVM text.
 
     return materialize(allocator, .{
         .version = "incremental-identities-v2",
@@ -288,7 +283,7 @@ pub fn describe(allocator: std.mem.Allocator, compilation: *project_compile.Comp
         .modules = modules.items,
         .types = types.items,
         .specializations = specializations.items,
-        .fragments = fragments.items,
+        .fragments = &.{},
     });
 }
 
@@ -750,108 +745,6 @@ fn specializationKey(scratch: std.mem.Allocator, template_identity: []const u8, 
     return hashFields(scratch, "mylang-specialization-key-v1", &.{ template_identity, arguments_sha256, provider_sha256, target_abi, compiler_sha256 });
 }
 
-/// `describe` is check-only, so fragments are built only when the caller has
-/// already lowered the project (`compilation.code != null`).
-fn buildFragments(scratch: std.mem.Allocator, fragments: *std.ArrayList(Fragment), code: bytecode.Program, declarations: *const std.StringHashMapUnmanaged(DeclInfo), specializations: []const Specialization) Error!void {
-    for (code.functions) |function| {
-        const symbol_identity = try fragmentSymbolIdentity(scratch, function.name, declarations, specializations);
-        var normalized: std.Io.Writer.Allocating = .init(scratch);
-        defer normalized.deinit();
-        try writeLoweredFunction(&normalized.writer, code, function);
-        const bytes = normalized.toOwnedSlice() catch return error.OutOfMemory;
-        try fragments.append(scratch, .{
-            .name = try scratch.dupe(u8, function.name),
-            .symbol_identity = symbol_identity,
-            .kind = function_kind,
-            .sha256 = try hashFields(scratch, "mylang-fragment-content-v1", &.{bytes}),
-            .identity = try fragmentIdentity(scratch, symbol_identity, function_kind, bytes),
-        });
-    }
-}
-
-fn fragmentSymbolIdentity(scratch: std.mem.Allocator, name: []const u8, declarations: *const std.StringHashMapUnmanaged(DeclInfo), specializations: []const Specialization) Error![]const u8 {
-    for (specializations) |item| if (std.mem.eql(u8, item.name, name)) return item.identity;
-    if (declarations.get(name)) |info| return info.identity;
-    const separator = std.mem.indexOf(u8, name, "::") orelse return declarationIdentity(scratch, "", function_kind, null, name);
-    return declarationIdentity(scratch, name[0..separator], function_kind, null, name[separator + 2 ..]);
-}
-
-fn writeLoweredFunction(writer: *std.Io.Writer, code: bytecode.Program, function: bytecode.Function) Error!void {
-    try writerWrite(writer, "function\nname=");
-    try writerWrite(writer, function.name);
-    try writerWrite(writer, "\nreturn=");
-    try writerWrite(writer, typed.typeName(function.signature.return_type, code.records));
-    try writerWrite(writer, "\nparameters=");
-    for (function.scope.locals[0..@min(function.signature.parameter_count, function.scope.locals.len)]) |parameter| {
-        try writerWrite(writer, typed.typeName(parameter.ty, code.records));
-        try writerWrite(writer, "\x00");
-    }
-    try writerWrite(writer, "\ninstructions\n");
-    for (function.scope.instructions) |instruction| {
-        switch (instruction.op) {
-            inline else => |payload| {
-                try writerWrite(writer, @tagName(instruction.op));
-                try writerWrite(writer, "=");
-                try writePayload(writer, code, payload);
-                try writerWrite(writer, "\n");
-            },
-        }
-    }
-}
-
-/// Structural payload writer: maps types and function ids to stable names, keeps
-/// local/jump ordinals (they are function-local, not source offsets), and never
-/// emits spans.
-fn writePayload(writer: *std.Io.Writer, code: bytecode.Program, payload: anytype) Error!void {
-    const P = @TypeOf(payload);
-    if (P == typed.Type) return writerWrite(writer, typed.typeName(payload, code.records));
-    if (P == typed.FunctionId) {
-        if (@backingInt(payload) < code.functions.len) return writerWrite(writer, code.functions[@backingInt(payload)].name);
-        return writerWrite(writer, "<invalid-function>");
-    }
-    if (P == typed.LocalId) return writerPrint(writer, "{d}", .{@backingInt(payload)});
-    switch (@typeInfo(P)) {
-        .bool => return writerWrite(writer, if (payload) "true" else "false"),
-        .int => return writerPrint(writer, "{d}", .{payload}),
-        .float => return writerPrint(writer, "{d}", .{payload}),
-        .@"enum" => return writerWrite(writer, @tagName(payload)),
-        .optional => {
-            if (payload) |value| return writePayload(writer, code, value);
-            return writerWrite(writer, "null");
-        },
-        .pointer => |pointer| {
-            if (pointer.size != .slice) return writerWrite(writer, "<pointer>");
-            try writerWrite(writer, "[");
-            for (payload, 0..) |item, index| {
-                if (index != 0) try writerWrite(writer, ",");
-                try writePayload(writer, code, item);
-            }
-            return writerWrite(writer, "]");
-        },
-        .array => {
-            try writerWrite(writer, "[");
-            for (payload, 0..) |item, index| {
-                if (index != 0) try writerWrite(writer, ",");
-                try writePayload(writer, code, item);
-            }
-            return writerWrite(writer, "]");
-        },
-        .@"struct" => {
-            try writerWrite(writer, "{");
-            inline for (@typeInfo(P).@"struct".field_names, @typeInfo(P).@"struct".field_types, 0..) |field_name, Field, index| {
-                _ = Field;
-                if (index != 0) try writerWrite(writer, ",");
-                try writerWrite(writer, field_name);
-                try writerWrite(writer, ":");
-                try writePayload(writer, code, @field(payload, field_name));
-            }
-            return writerWrite(writer, "}");
-        },
-        .void => return,
-        else => return writerWrite(writer, "<value>"),
-    }
-}
-
 fn classify(err: anyerror) Error {
     return switch (err) {
         error.OutOfMemory => error.OutOfMemory,
@@ -870,9 +763,6 @@ fn lessNominal(_: void, a: Nominal, b: Nominal) bool {
     return std.mem.lessThan(u8, a.name, b.name);
 }
 fn lessSpecialization(_: void, a: Specialization, b: Specialization) bool {
-    return std.mem.lessThan(u8, a.name, b.name);
-}
-fn lessFragment(_: void, a: Fragment, b: Fragment) bool {
     return std.mem.lessThan(u8, a.name, b.name);
 }
 

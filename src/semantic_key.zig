@@ -187,20 +187,6 @@ pub fn contractDigest(function: typed.Function) [32]u8 {
             }
         },
     }
-    switch (function.signature.inferred.borrow_origin) {
-        .fresh => frame(&hash, "borrow-fresh"),
-        .unknown => frame(&hash, "borrow-unknown"),
-        .params => |positions| {
-            frame(&hash, "borrow-params");
-            std.mem.writeInt(u64, &count, positions.len, .little);
-            hash.update(&count);
-            for (positions) |position| {
-                var encoded: [2]u8 = undefined;
-                std.mem.writeInt(u16, &encoded, position, .little);
-                hash.update(&encoded);
-            }
-        },
-    }
     frame(&hash, if (function.signature.inferred.writes) "writes" else "no-writes");
     frame(&hash, if (function.signature.inferred.external) "external" else "internal");
     return hash.finalResult();

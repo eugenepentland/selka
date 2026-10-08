@@ -63,24 +63,20 @@ def aliased(depth: int) -> Node:
     return Node(0, child, child)
 
 
-# spec-case: RC-FRESH-CONSTRUCTOR-1
 public def test_recursive_fresh_record_children_have_independent_owners() -> bool:
     value = tree(5)
     value.left = None
     return weight(value) == 47 and weight(tree(5)) == 89
 
 
-# spec-case: RC-FRESH-CONSTRUCTOR-1
 public def test_named_constructor_order_preserves_the_result() -> bool:
     return weight(reordered(5)) == 89
 
 
-# spec-case: RC-FRESH-CONSTRUCTOR-1
 public def test_recursive_variant_payloads_retain_every_child() -> bool:
     return chain_sum(chain(20)) == 210 and chain_sum(chain(0)) == 0
 
 
-# spec-case: RC-FRESH-CONSTRUCTOR-1
 public def test_aliased_immutable_boxes_keep_the_generic_transfer_path() -> bool:
     value = aliased(4)
     before = value

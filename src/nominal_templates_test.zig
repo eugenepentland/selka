@@ -101,7 +101,7 @@ fn rejectionScenario(allocator: std.mem.Allocator) !void {
     compilation.check() catch |err| {
         if (err != error.SourceError) return err;
         try t.expectEqualStrings("E_GENERIC_REQUIREMENT", compilation.diagnostics.items[0].code);
-        try t.expect(compilation.program == null and compilation.code == null);
+        try t.expect(compilation.program == null);
         return;
     };
     return error.TestUnexpectedResult;
@@ -137,7 +137,7 @@ fn reject(text: []const u8, code: []const u8, token: []const u8) !void {
     const diagnostic = compilation.diagnostics.items[0];
     try t.expectEqualStrings(code, diagnostic.code);
     try t.expectEqualStrings(token, compilation.src.text(diagnostic.span));
-    try t.expect(compilation.program == null and compilation.code == null);
+    try t.expect(compilation.program == null);
 }
 test "unused nominal template fields reject unknown names duplicate members and invalid result schemas" {
     try reject(

@@ -1,0 +1,80 @@
+module mut_callback_slots
+
+# A function value called with `mut` arguments that name interior slots of a
+# list or a record: two slots of one list, a replaced slot next to a read-only
+# snapshot of the whole list, and a replaced field next to a snapshot of the
+# whole record, each called directly and through a function value. These are the
+# executed programs of the retired mut callback adapter tests
+# (`mut_callback_abi_test.zig`, `MUT-REBIND-CALLER-1`); the RC and tracing
+# collector variants of each ran the same source and are one test here.
+
+
+def change(first: mut list[int], second: mut list[int], replacement: list[int]) -> list[list[int]]:
+    first.append(8)
+    second = replacement
+    second.append(9)
+    return [first, second]
+
+
+def nested() -> int:
+    rows = [[1], [2]]
+    saved = rows
+    action = change
+    result = action(mut rows[0], mut rows[1], [3])
+    rows[0].append(10)
+    return 1 if rows == [[1, 8, 10], [3, 9]] and saved == [[1], [2]] and result == [[1, 8], [3, 9]] else 0
+
+
+# spec-case: MUT-REBIND-CALLER-1
+public def test_two_interior_slots_and_managed_returns_stay_independent() -> bool:
+    return nested() == 1
+
+
+def replace_row(target: mut list[int], snapshot: list[list[int]]) -> list[int]:
+    target = [9]
+    return snapshot[0]
+
+
+def rows_snapshot() -> int:
+    rows = [[1]]
+    saved = rows
+    prior = replace_row(mut rows[0], rows)
+    rows[0].append(10)
+    other = [[2]]
+    other_saved = other
+    action = replace_row
+    other_prior = action(mut other[0], other)
+    other[0].append(11)
+    return 1 if rows == [[9, 10]] and saved == [[1]] and prior == [1] and other == [[9, 11]] and other_saved == [[2]] and other_prior == [2] else 0
+
+
+# spec-case: MUT-REBIND-CALLER-1
+public def test_a_later_readonly_rows_argument_keeps_the_captured_leaf_and_snapshots() -> bool:
+    return rows_snapshot() == 1
+
+
+record Box:
+    items: list[int]
+
+
+def replace_items(target: mut list[int], snapshot: Box) -> list[int]:
+    target = [9]
+    return snapshot.items
+
+
+def field_snapshot() -> int:
+    box = Box([1])
+    saved = box
+    prior = replace_items(mut box.items, box)
+    box.items.append(10)
+    other = Box([2])
+    other_saved = other
+    action = replace_items
+    other_prior = action(mut other.items, other)
+    other.items.append(11)
+    return 1 if box.items == [9, 10] and saved.items == [1] and prior == [1] and other.items == [9, 11] and other_saved.items == [2] and other_prior == [2] else 0
+
+
+# spec-case: MUT-REBIND-CALLER-1
+public def test_a_later_readonly_record_argument_keeps_the_captured_field_and_snapshots() -> bool:
+    return field_snapshot() == 1

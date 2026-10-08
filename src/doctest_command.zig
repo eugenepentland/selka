@@ -1471,7 +1471,6 @@ test "doctest skips units of retired modes and runs value-semantics units withou
     try testing.expectEqualStrings(retired_mode, (try plan(allocator, units[2])).detail);
 }
 
-// spec-case: RC-DEFAULT-1
 test "doctest runs a gc-runtime unit under the collector and plain units under the default" {
     const text =
         "```mylang\n" ++
@@ -1620,7 +1619,7 @@ test "a host-failed child fails its example even when the example expects nothin
     try testing.expect(!hostFailed(.{ .status = 2, .stdout = "hello\n", .stderr = "", .diagnosed = false }));
 }
 
-// spec-case: CLI-CACHE-ISOLATION-1
+// spec: CLI-CACHE-ISOLATION-1
 test "doctest scratch follows TMPDIR independently of its document root" {
     var environ: std.process.Environ.Map = .init(std.testing.allocator);
     defer environ.deinit();

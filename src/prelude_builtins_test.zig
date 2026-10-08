@@ -153,7 +153,6 @@ test "sorted key lambdas order records stably and diagnose invalid inputs" {
     try run("def main() -> int:\n    ys = sorted([3, 1, 2], key=lambda v: 0 - v, reverse=True)\n    return ys[0] * 100 + ys[1] * 10 + ys[2]\n", 123);
 }
 
-// spec: QBE-INVOKE-ROOTS-1
 test "a callback that allocates keeps the caller's managed locals alive" {
     try run(
         \\record Entry:

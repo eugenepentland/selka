@@ -103,7 +103,7 @@ fn projectScenario(allocator: std.mem.Allocator) !void {
     try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     try t.expectEqual(@as(i64, 23), (try native.run(&compilation)).value);
 }
 test "generic codecs follow imported contracts and declaring domain privacy through module relocation" {

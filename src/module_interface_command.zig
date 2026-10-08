@@ -273,13 +273,12 @@ const Row = struct {
     compared: Compared,
     mismatches: Mismatches,
 };
-/// How many checked functions, contexts and lowered bodies one module's check compared.
-const Compared = struct { functions: usize, contexts: usize, lowered: usize };
+/// How many checked functions and contexts one module's check compared.
+const Compared = struct { functions: usize, contexts: usize };
 /// Everything that differed for one module.
 const Mismatches = struct {
     functions: []const []const u8 = &.{},
     contexts: []const []const u8 = &.{},
-    lowered: []const []const u8 = &.{},
     diagnostics: []const []const u8 = &.{},
     unmapped: usize = 0,
     fallback: bool = false,
@@ -323,7 +322,6 @@ fn verify(context: Context, options: Options) Error!u8 {
         .modules = rows.items.len,
         .functions_compared = totals.functions,
         .contexts_compared = totals.contexts,
-        .lowered_compared = totals.lowered,
         .stood_in = totals.stood_in,
         .whole_program_diagnostics = reference.diagnostics.len,
         .missing_diagnostics = missing,
@@ -337,12 +335,10 @@ fn verify(context: Context, options: Options) Error!u8 {
 const Totals = struct {
     functions: usize = 0,
     contexts: usize = 0,
-    lowered: usize = 0,
     stood_in: usize = 0,
     fn add(self: *Totals, outcome: Outcome) void {
         self.functions += outcome.row.compared.functions;
         self.contexts += outcome.row.compared.contexts;
-        self.lowered += outcome.row.compared.lowered;
         self.stood_in += outcome.row.stood_in;
     }
 };
@@ -372,11 +368,10 @@ fn checkModule(context: Context, request: oracle.ModuleRequest, reference: oracl
             .module = request.module,
             .status = status,
             .stood_in = single.request.stood_in,
-            .compared = .{ .functions = comparison.functions.compared, .contexts = comparison.contexts.compared, .lowered = comparison.lowered.compared },
+            .compared = .{ .functions = comparison.functions.compared, .contexts = comparison.contexts.compared },
             .mismatches = .{
                 .functions = comparison.functions.mismatches,
                 .contexts = comparison.contexts.mismatches,
-                .lowered = comparison.lowered.mismatches,
                 .diagnostics = comparison.extra_diagnostics,
                 .unmapped = comparison.unmapped,
                 .fallback = !single.declaredOnly(),

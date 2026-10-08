@@ -88,10 +88,7 @@ const retry = declarations ++
 fn retryScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, module, retry);
     defer c.deinit();
-    try c.emit();
-    const dump = try c.dump(allocator);
-    defer allocator.free(dump);
-    try t.expect(std.mem.indexOf(u8, dump, "COMPLETE_RESOURCE") != null);
+    try c.check();
     var discovery = try language.duplicates.discover(allocator, c.program.?, .{ .min_nodes = 1 });
     defer discovery.deinit();
 }
@@ -127,11 +124,7 @@ const complete_once = declarations ++ helpers ++
     \\    return attempt(fs) * 100 + attempt(fs.read_only())
 ;
 
-// spec: RC-RESOURCE-COMPLETE-1
 test "RC completion takes its handle over whether the provider completes or refuses it" {
-    const saved = language.runtime_mode.get();
-    defer language.runtime_mode.set(saved);
-    language.runtime_mode.set(.rc);
     var box: Sandbox = undefined;
     try sandbox(&box);
     defer box.deinit();
@@ -140,11 +133,7 @@ test "RC completion takes its handle over whether the provider completes or refu
     try t.expectEqual(@as(i64, 702), outcome.value);
 }
 
-// spec: RC-UNIQUE-FIELD-TAKE-1
 test "RC moves a refused handle out of its failure record into a second completion" {
-    const saved = language.runtime_mode.get();
-    defer language.runtime_mode.set(saved);
-    language.runtime_mode.set(.rc);
     var box: Sandbox = undefined;
     try sandbox(&box);
     defer box.deinit();
@@ -270,22 +259,6 @@ test "nested resource wrappers release at scope exit and traps unwind every inst
     options.max_steps = null;
     try t.expectEqual(@as(i64, 1000), (try native.runWithOptions(&compilation, options)).value);
 }
-test "independent bytecode validation rejects suppressed cleanup effects and malformed resource results" {
-    var c = try language.Compilation.init(t.allocator, "invalid.my", retry);
-    defer c.deinit();
-    try c.emit();
-    const functions = @constCast(c.code.?.functions);
-    const effects = functions[1].policy.effects;
-    functions[1].policy.effects = 0;
-    try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
-    functions[1].policy.effects = effects;
-    const instruction = try @import("instruction_test.zig").find(@constCast(functions[1].scope.instructions), .complete_resource);
-    const original = instruction.*;
-    instruction.op.complete_resource = .i64;
-    try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
-    instruction.* = original;
-    try language.bytecode.validate(t.allocator, c.code.?);
-}
 
 test "resource acquisition identity and cleanup contracts survive exact duplicate discovery" {
     const source = declarations ++
@@ -314,7 +287,6 @@ test "resource acquisition identity and cleanup contracts survive exact duplicat
     defer analysis.deinit();
     try t.expectEqual(@as(usize, 1), analysis.groups.len);
     try t.expectEqual(@as(usize, 2), analysis.groups[0].members.len);
-    try t.expect(compilation.code == null);
 }
 test "source frame traps release the resource moved through recursive calls" {
     var box: Sandbox = undefined;
@@ -381,8 +353,7 @@ const generic_cleanup = declarations ++ helpers ++
 fn genericCleanupScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "generic-cleanup.my", generic_cleanup);
     defer c.deinit();
-    try c.emit();
-    try t.expect(c.code.?.functions.len != 0);
+    try c.check();
 }
 // spec: GENERIC-CLEANUP-1
 test "generic owned resources clean up explicit and implicit drops under allocation failure" {
@@ -435,8 +406,7 @@ const generic_retry = declarations ++
 fn genericRetryScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "generic-retry.my", generic_retry);
     defer c.deinit();
-    try c.emit();
-    try t.expect(c.code.?.functions.len != 0);
+    try c.check();
 }
 test "generic resource acquisition and completion return ownership for retry under allocation failures" {
     var box: Sandbox = undefined;
@@ -585,8 +555,7 @@ const generic_dir = declarations ++ helpers ++
 fn genericDirScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "generic-dir.my", generic_dir);
     defer c.deinit();
-    try c.emit();
-    try t.expect(c.code.?.functions.len != 0);
+    try c.check();
 }
 // spec-case: FILESYSTEM-DIR-1
 test "generic bodies derive a dir scope and resolve under it" {

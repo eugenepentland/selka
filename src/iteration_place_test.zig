@@ -2,13 +2,10 @@
 const std = @import("std");
 const compiler = @import("compiler.zig");
 const native = @import("native_execute.zig");
-const runtime = @import("runtime_mode.zig");
 const t = std.testing;
 
-fn trapped(source: []const u8, mode: runtime.Selection) !void {
-    const saved = runtime.get();
-    defer runtime.set(saved);
-    runtime.set(mode);
+/// The program traps `R_LIST_ITERATION_MUTATION` on the refreshed place.
+fn trapsOnRefreshedPlace(source: []const u8) !void {
     var compilation = try compiler.Compilation.init(t.allocator, "live_place.my", source);
     defer compilation.deinit();
     const result = try native.runWithOptions(&compilation, .{});
@@ -16,14 +13,9 @@ fn trapped(source: []const u8, mode: runtime.Selection) !void {
     try t.expectEqualStrings("R_LIST_ITERATION_MUTATION", result.trap.code);
 }
 
-fn trappedBoth(source: []const u8) !void {
-    try trapped(source, .rc);
-    try trapped(source, .gc);
-}
-
 // spec-case: D1-LIVE-PLACE
 test "D1 live list shrink traps on the final continued step" {
-    try trappedBoth(
+    try trapsOnRefreshedPlace(
         \\def main() -> int:
         \\    items = [1, 2]
         \\    for value in items:
@@ -36,7 +28,7 @@ test "D1 live list shrink traps on the final continued step" {
 
 // spec-case: D1-LIVE-PLACE
 test "D1 growth then shrink traps against the last observed length" {
-    try trappedBoth(
+    try trapsOnRefreshedPlace(
         \\def main() -> int:
         \\    items = [1]
         \\    for value in items:
@@ -50,7 +42,7 @@ test "D1 growth then shrink traps against the last observed length" {
 
 // spec-case: D1-LIVE-PLACE
 test "D1 indexed ancestor growth traps before switching storage" {
-    try trappedBoth(
+    try trapsOnRefreshedPlace(
         \\def main() -> int:
         \\    rows = [[1, 2]]
         \\    for value in rows[0]:
@@ -61,7 +53,7 @@ test "D1 indexed ancestor growth traps before switching storage" {
 
 // spec-case: D1-LIVE-PLACE
 test "D1 indexed ancestor shrink by mut callee traps" {
-    try trappedBoth(
+    try trapsOnRefreshedPlace(
         \\def shrink(rows: mut list[list[int]]) -> None:
         \\    rows.clear()
         \\def main() -> int:
@@ -75,7 +67,7 @@ test "D1 indexed ancestor shrink by mut callee traps" {
 
 // spec-case: D1-LIVE-PLACE
 test "D1 shared dictionary growth still traps" {
-    try trappedBoth(
+    try trapsOnRefreshedPlace(
         \\def main() -> int:
         \\    values = {1: 10}
         \\    snapshot = values
@@ -87,7 +79,7 @@ test "D1 shared dictionary growth still traps" {
 
 // spec-case: D1-LIVE-PLACE
 test "D1 shared set growth still traps" {
-    try trappedBoth(
+    try trapsOnRefreshedPlace(
         \\def main() -> int:
         \\    values = {1}
         \\    snapshot = values
@@ -99,7 +91,7 @@ test "D1 shared set growth still traps" {
 
 // spec-case: D1-LIVE-PLACE
 test "D1 dictionary ancestor growth traps before indexed list refresh" {
-    try trappedBoth(
+    try trapsOnRefreshedPlace(
         \\def main() -> int:
         \\    rows = {1: [1, 2]}
         \\    for value in rows[1]:
@@ -110,7 +102,7 @@ test "D1 dictionary ancestor growth traps before indexed list refresh" {
 
 // spec-case: D1-LIVE-PLACE
 test "D1 managed ancestor of a fixed array still guards length" {
-    try trappedBoth(
+    try trapsOnRefreshedPlace(
         \\def main() -> int:
         \\    rows: list[[2]int] = [[1, 2]]
         \\    for value in rows[0]:
@@ -121,7 +113,7 @@ test "D1 managed ancestor of a fixed array still guards length" {
 
 // spec-case: D1-LIVE-PLACE
 test "D1 managed ancestor of immutable text still guards length" {
-    try trappedBoth(
+    try trapsOnRefreshedPlace(
         \\def main() -> int:
         \\    rows = ["a🙂"]
         \\    snapshot = rows
@@ -134,7 +126,7 @@ test "D1 managed ancestor of immutable text still guards length" {
 
 // spec-case: D1-LIVE-PLACE
 test "D1 managed ancestor of immutable bytes still guards length" {
-    try trappedBoth(
+    try trapsOnRefreshedPlace(
         \\def main() -> int:
         \\    rows = [b"ab"]
         \\    snapshot = rows

@@ -8,41 +8,6 @@ const iface = language.module_interface;
 const oracle = language.module_interface_oracle;
 const effect_set = language.effect_set;
 
-// spec-case: MODULE-INTERFACE-3
-test "interface oracle hashes records introduced by recursive lowering from the lowered catalog" {
-    var arena = std.heap.ArenaAllocator.init(t.allocator);
-    defer arena.deinit();
-    const bytes =
-        \\module main
-        \\record Node:
-        \\    value: int
-        \\    next: Option[Node]
-        \\public def test_value() -> bool:
-        \\    leaf = Node(value=3, next=None)
-        \\    node = Node(value=7, next=Some(leaf))
-        \\    match node.next:
-        \\        case Some(child):
-        \\            return child.value == 3
-        \\        case None:
-        \\            return False
-        \\def main() -> int:
-        \\    return 0 if test_value() else 1
-    ;
-    var whole: *oracle.Whole = undefined;
-    try oracle.Whole.open(t.allocator, t.io, .{ .root = "", .name = "main", .bytes = bytes }, &whole);
-    defer whole.deinit();
-    const first = try whole.result(arena.allocator());
-    try t.expect(first.lowered.len > 0);
-    const built = try whole.buildInterfaces();
-    var library = try oracle.Library.of(arena.allocator(), built.interfaces);
-    var single: *oracle.Single = undefined;
-    try oracle.Single.open(t.allocator, .{ .module = "main", .bytes = bytes, .is_entry = true, .library = &library }, &single);
-    defer single.deinit();
-    const second = try single.result(arena.allocator(), &library, "main");
-    const comparison = try oracle.compare(arena.allocator(), first, second, "main");
-    try t.expectEqual(@as(usize, 0), comparison.lowered.mismatches.len);
-}
-
 const shapes_source =
     \\module shapes
     \\
@@ -233,22 +198,6 @@ fn mismatches(comparison: oracle.Comparison) usize {
     return comparison.mismatches();
 }
 
-// spec-case: MODULE-COMPILE-1
-test "physical helper bodies invalidate RC authority but preserve scalar allocation cutoff" {
-    const private_before = [_]language.module_physical.Data{.{ .name = "lib::private", .bytes = "before" }};
-    const private_after = [_]language.module_physical.Data{.{ .name = "lib::private", .bytes = "after" }};
-    const known = [_]iface.EmittedFunction{.{ .name = "lib::public", .allocates = false, .writes = &.{}, .physical = @splat(1) }};
-    var first: iface.Interface = .{ .module = "lib", .text = "", .emission = .{ .functions = &known, .physical = .{ .functions = &private_before } } };
-    var second = first;
-    second.emission.physical.functions = &private_after;
-    try t.expect(changed(iface.emissionHash(first), iface.emissionHash(second)));
-    try t.expectEqualSlices(u8, &iface.interfaceHash(first), &iface.interfaceHash(second));
-    const scalar = [_]iface.EmittedFunction{.{ .name = "lib::public", .allocates = true, .writes = &.{} }};
-    first.emission.functions = &scalar;
-    second.emission.functions = &scalar;
-    try t.expectEqualSlices(u8, &iface.emissionHash(first), &iface.emissionHash(second));
-}
-
 // spec: MODULE-INTERFACE-1
 test "an interface keeps each exported declaration and what it reaches, and only the bodies a dependent reads" {
     const built = try build(.{});
@@ -265,9 +214,9 @@ test "an interface keeps each exported declaration and what it reaches, and only
     try t.expectEqual(iface.Role.template, built.role("lib", "first").?);
     try t.expectEqual(iface.Role.declared, built.role("lib", "helper").?);
     try t.expectEqual(iface.Role.constant, built.role("lib", "LIMIT").?);
-    // A leaf the inliner splices keeps its body; the deprecation stays on its declaration.
-    try t.expectEqual(iface.Role.inlined, built.role("lib", "twice").?);
-    try t.expect(std.mem.indexOf(u8, lib.text, "return x * 2") != null);
+    // A small leaf is declared like any other body; the deprecation stays on its declaration.
+    try t.expectEqual(iface.Role.declared, built.role("lib", "twice").?);
+    try t.expect(std.mem.indexOf(u8, lib.text, "return x * 2") == null);
     try t.expect(std.mem.indexOf(u8, lib.text, "@deprecated(\"use count\")\npublic def old_count") != null);
     // A constant is evaluated where it is used, running the bodies it calls.
     try t.expectEqual(iface.Role.constant, built.role("lib", "TRIANGLE").?);
@@ -351,11 +300,12 @@ test "every edit a dependent can observe changes the interface hash" {
     defer arena.deinit();
     const a = arena.allocator();
     const base = try hashOf(.{}, "lib");
-    // A signature, a fact, a template body, an inlined body, a constant and a deprecation.
+    // A signature, a fact, a template body, a constant and a deprecation.
     try t.expect(changed(base, try hashOf(.{ .lib = try edit(a, lib_source, "count(o: shapes.Outer) -> int", "count(o: shapes.Outer, bias: int = 0) -> int") }, "lib")));
     try t.expect(changed(base, try hashOf(.{ .lib = try edit(a, lib_source, "    total = 0\n", "    total = 0\n    extra: list[int] = [1]\n    total += len(extra)\n") }, "lib")));
     try t.expect(changed(base, try hashOf(.{ .lib = try edit(a, lib_source, "values[helper(0) - LIMIT]", "values[helper(1) - LIMIT - 1]") }, "lib")));
-    try t.expect(changed(base, try hashOf(.{ .lib = try edit(a, lib_source, "x * 2", "x * 3") }, "lib")));
+    // A small leaf's body is a declared body like any other: no dependent reads it.
+    try t.expectEqualSlices(u8, &base, &(try hashOf(.{ .lib = try edit(a, lib_source, "x * 2", "x * 3") }, "lib")));
     try t.expect(changed(base, try hashOf(.{ .lib = try edit(a, lib_source, "LIMIT: int = 10", "LIMIT: int = 11") }, "lib")));
     try t.expect(changed(base, try hashOf(.{ .lib = try edit(a, lib_source, "total += k + LIMIT", "total += k + LIMIT + 1") }, "lib")));
     try t.expect(changed(base, try hashOf(.{ .lib = try edit(a, lib_source, "use count", "use count instead") }, "lib")));
@@ -385,9 +335,6 @@ test "a module checked against its imports' interfaces reports what the whole pr
     try t.expect(main.functions.compared > 3);
     try t.expectEqual(@as(usize, 1), main.contexts.compared);
     try t.expectEqual(@as(usize, 8), lib.contexts.compared);
-    // Its lowered body, with `lib.twice` spliced in from the interface's text,
-    // is the whole program's instruction for instruction.
-    try t.expect(main.lowered.compared > 1);
     // The deprecation warning at `main`'s call site is the whole program's.
     try t.expectEqual(@as(usize, 1), main.diagnostics.len);
     try t.expect(std.mem.indexOf(u8, main.diagnostics[0], "W_DEPRECATED") != null);

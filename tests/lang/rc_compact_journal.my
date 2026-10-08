@@ -10,7 +10,6 @@ def update(value: mut Plain, items: list[int]) -> int:
     return value.left + value.right
 
 
-# spec-case: RC-COMPACT-JOURNAL-1
 public def test_plain_updates_stage_bits_inside_a_managed_frame() -> bool:
     items = [8]
     value = Plain(1, 2)
@@ -35,7 +34,6 @@ def escaped() -> list[int]:
         return outer.escape(first)
 
 
-# spec-case: RC-COMPACT-JOURNAL-1
 public def test_reused_operands_retain_ordinary_and_held_cleanup_roles() -> bool:
     mapping = {1: [3]}
     live = list(mapping.values())

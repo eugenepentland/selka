@@ -50,10 +50,6 @@ pub const Writer = struct {
     pub fn write(self: *Writer, comptime T: type, value: T) std.mem.Allocator.Error!void {
         try encode(self, Unmapped, .{}, T, value);
     }
-    /// Encode with explicit domain-specific reference rules, never inferred fixups.
-    pub fn writeMapped(self: *Writer, comptime T: type, value: T, comptime Mapping: type, mapping: Mapping) std.mem.Allocator.Error!void {
-        try encode(self, Mapping, mapping, T, value);
-    }
 };
 
 /// Exact-length little-endian reader; every over-read is a miss, never a panic.
@@ -84,11 +80,6 @@ pub const Reader = struct {
     /// Decode one value; malformed or truncated bytes are `InvalidEncoding`.
     pub fn read(self: *Reader, comptime T: type) DecodeError!T {
         return decode(self, Unmapped, .{}, T) catch |err| return err;
-    }
-    /// Decode with explicit domain-specific reference rules; ordinary cache data
-    /// still refuses pointers and uses the unchanged owned-tree encoding.
-    pub fn readMapped(self: *Reader, comptime T: type, comptime Mapping: type, mapping: Mapping) DecodeError!T {
-        return decode(self, Mapping, mapping, T);
     }
     /// Borrow the next `count` bytes; never allocates and never over-reads.
     pub fn slice(self: *Reader, count: usize) DecodeError![]const u8 {

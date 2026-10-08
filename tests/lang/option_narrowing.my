@@ -135,7 +135,7 @@ public def test_option_narrowing_false_disjunction_and_repeated_guard() -> bool:
         return False
     return first + second == 42
 
-# spec-case: OPTION-FLOW-4
+# spec: OPTION-FLOW-4
 # spec-case: GENERIC-EXPECTED-1
 public def test_option_narrowing_tests_and_contextual_calls_evaluate_once() -> bool:
     counter: list[int] = [0]

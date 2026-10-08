@@ -204,12 +204,6 @@ test "contracts: old captures an entry value once and rejects a shared one" {
     // In the default model, old(...) captures an independent value.
     try returns("@ensures(len(items) == len(old(items.copy())) + 1)\ndef add(items: mut list[int]):\n    items.append(0)\n\ndef main() -> int:\n    items = [1]\n    add(mut items)\n    return len(items)\n", 2);
     try returns("@ensures(len(old(items)) == 1)\ndef add(items: mut list[int]):\n    items.append(0)\n\ndef main() -> int:\n    items = [1]\n    add(mut items)\n    return len(items)\n", 2);
-    {
-        const legacy = @import("test_support.zig").LegacySharing.enter();
-        defer legacy.restore();
-        try rejects("@ensures(len(old(items)) == 0)\ndef add(items: mut list[int]):\n    items.append(0)\n\ndef main() -> int:\n    items = [1]\n    add(mut items)\n    return 0\n", sema_contracts.old_shared_code);
-        try rejects("@ensures(len(old(rows.copy())) == 0)\ndef add(rows: mut list[list[int]]):\n    rows.append([0])\n\ndef main() -> int:\n    rows = [[1]]\n    add(mut rows)\n    return 0\n", sema_contracts.old_shared_code);
-    }
     try rejects("@requires(old(x) > 0)\ndef f(x: int) -> int:\n    return x\n\ndef main() -> int:\n    return f(1)\n", sema_contracts.old_code);
     try rejects("def f(x: int) -> int:\n    return old(x)\n\ndef main() -> int:\n    return f(1)\n", sema_contracts.old_code);
     try rejects("@ensures(old(old(x)) > 0)\ndef f(x: int) -> int:\n    return x\n\ndef main() -> int:\n    return f(1)\n", sema_contracts.old_code);
@@ -354,19 +348,11 @@ test "contracts: an invariant traps R_INVARIANT where a value is built or change
 }
 
 // spec: CONTRACT-TRAP-1
-test "contracts: every run protocol reports the contract's own trap code" {
+test "contracts: a run reports the contract's own trap code" {
     const text = "@requires(x > 0)\ndef f(x: int) -> int:\n    return x\n\ndef main() -> int:\n    return f(0)\n";
     var accounted = try language.Compilation.init(t.allocator, unit, text);
     defer accounted.deinit();
     _ = try traps(&accounted, .{ .code = "R_REQUIRES", .line = 1, .column = 11, .text = "f requires `x > 0`" });
-    // The protocol a published executable and an unbounded `mylang run` use
-    // links no frame record, and still reports the same trap.
-    var fast = try language.Compilation.init(t.allocator, unit, text);
-    defer fast.deinit();
-    const run = try native.runUnaccounted(&fast, .{});
-    try t.expectEqualStrings("R_REQUIRES", run.trap.code);
-    try t.expectEqual(@as(u64, 1), run.trap.line);
-    try t.expect(std.mem.indexOf(u8, run.stderr, "f requires `x > 0`") != null);
     // A plain `assert` keeps `R_ASSERT`.
     var plain = try language.Compilation.init(t.allocator, unit, "def main() -> int:\n    assert 1 > 2, \"R_REQUIRES looks alike\"\n    return 0\n");
     defer plain.deinit();
@@ -382,9 +368,6 @@ fn assertPrefixStaysLiteral(prefix: []const u8) !void {
     const accounted = try native.run(&c);
     try t.expectEqualStrings("R_ASSERT", accounted.trap.code);
     try t.expect(std.mem.indexOf(u8, accounted.stderr, prefix) != null);
-    const fast = try native.runUnaccounted(&c, .{});
-    try t.expectEqualStrings("R_ASSERT", fast.trap.code);
-    try t.expect(std.mem.indexOf(u8, fast.stderr, prefix) != null);
 }
 
 // spec: CONTRACT-TRAP-2

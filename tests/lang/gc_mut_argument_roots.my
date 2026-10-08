@@ -8,7 +8,6 @@ def replace_first(xs: mut list[list[int]]) -> int:
     return 0
 
 
-# spec: GC-MUT-ARG-ROOT-1
 public def test_snapshot_survives_mut_argument_clone() -> bool:
     rows = Rows([[1, 2], [3]], [])
     before = len(rows.items[replace_first(mut rows.items)])

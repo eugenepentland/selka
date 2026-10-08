@@ -165,8 +165,6 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, nested);
     defer compilation.deinit();
     try compilation.check();
-    const dump = try compilation.dump(allocator);
-    defer allocator.free(dump);
     var discovery = try language.duplicates.discover(allocator, compilation.program.?, .{});
     defer discovery.deinit();
 }
@@ -229,63 +227,4 @@ test "duplicate identity retains resolved variants arms and payload bindings" {
     try testing.expectEqual(@as(usize, 2), members.len);
     try testing.expectEqualStrings("one", compilation.program.?.functions[@backingInt(members[0])].name);
     try testing.expectEqualStrings("two", compilation.program.?.functions[@backingInt(members[1])].name);
-}
-
-test "variant bytecode validates tags exhaustive targets and payload destination types" {
-    const typed = @import("typed.zig");
-    const bc = language.bytecode;
-    const span: language.source.Span = .{ .start = 0, .end = 1 };
-    const ty: typed.Type = @fromBackingInt(typed.Type.record_base);
-    const schema: typed.Record = .{
-        .id = ty,
-        .name = "U",
-        .declaration = span,
-        .fields = &.{},
-        .shape = .{
-            .variants = .{
-                .is_union = true,
-                .cases = &.{ .{
-                    .name = "a",
-                    .declaration = span,
-                    .payload = .i64,
-                }, .{
-                    .name = "b",
-                    .declaration = span,
-                    .payload = null,
-                } },
-            },
-        },
-    };
-    const Op = @FieldType(bc.Instruction, "op");
-    const operations = [_]Op{
-        .{ .make_variant = .{ .ty = ty, .tag = 2 } },
-        .{ .make_variant = .{ .ty = .i64, .tag = 0 } },
-        .{ .switch_variant = .{ .ty = ty, .arms = &.{.{ .target = 1, .slot = null }} } },
-        .{ .switch_variant = .{ .ty = ty, .arms = &.{ .{ .target = 99, .slot = null }, .{ .target = 1, .slot = null } } } },
-        .{ .switch_variant = .{ .ty = ty, .arms = &.{ .{ .target = 1, .slot = @fromBackingInt(0) }, .{ .target = 1, .slot = null } } } },
-        .{ .cmp_enum = .{ .ty = ty, .predicate = .eq } },
-        .{ .make_record = .{ .ty = ty, .fields = 0 } },
-    };
-    for (operations) |op| {
-        const instructions = [_]bc.Instruction{ .{ .span = span, .op = op }, .{ .span = span, .op = .ret } };
-        const program: bc.Program = .{
-            .records = &.{
-                schema,
-            },
-            .functions = &.{.{
-                .id = @fromBackingInt(0),
-                .name = "main",
-                .scope = .{
-                    .locals = &.{.{
-                        .name = "payload",
-                        .declaration = span,
-                        .ty = .bool,
-                        .mutable = false,
-                    }},
-                    .instructions = &instructions,
-                },
-            }},
-        };
-        try testing.expectError(error.InternalError, bc.validate(testing.allocator, program));
-    }
 }

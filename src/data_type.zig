@@ -20,10 +20,6 @@ pub fn checkHost(allocator: std.mem.Allocator, records: []const typed.Record, ro
     if (root.isAggregate() and root.recordIndex() < records.len and typed.isByteString(records[root.recordIndex()])) return;
     return check(allocator, records, root, true);
 }
-/// Validate the complete wire graph, requiring explicit codecs for every encountered domain.
-pub fn checkCodecs(allocator: std.mem.Allocator, records: []const typed.Record, root: typed.Type) CheckError!void {
-    return checkMode(allocator, records, root, .wire);
-}
 fn checkMode(allocator: std.mem.Allocator, records: []const typed.Record, root: typed.Type, mode: enum { reject, backing, wire }) !void {
     // A builtin integer or bool terminates the graph by itself. Traversal state
     // exists only for nominal graphs, so scalar boundaries -- every argument and

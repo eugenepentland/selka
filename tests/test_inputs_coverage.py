@@ -6,7 +6,7 @@ its declared inputs changes (`build_test_inputs.zig`). A test that starts
 reading a fixture nobody declared would keep a stale green verdict after that
 fixture changes. This check reads every test source a cached Zig root compiles,
 collects the repository paths it names — string literals such as
-``"tests/native/list_boundary.my"`` and path joins such as
+``"tests/lang/text_views.my"`` and path joins such as
 ``&.{ root, "tests", "goldens" }`` — and requires each path that exists in the
 repository to be covered by that root's declared entries. Paths that do not
 exist are fixtures a test writes into a temporary directory and are ignored.
@@ -32,14 +32,7 @@ ROOTS = {
     "src/memory_budget.zig": "memory_budget",
     "src/root_test.zig": "unit",
     "test/integration.zig": "cli",
-    "src/schematic/tests.zig": "schematic",
-    "src/board_trial/tests.zig": "board",
-    "src/byte_io/tests.zig": "byte_io",
     "test/golden_parity.zig": "golden",
-    "src/native_test_cli_test.zig": "native_roots",
-    "src/c_abi_test.zig": "native_roots",
-    "src/qbe_build_test.zig": "native_roots",
-    "src/host_native.zig": "native_roots",
 }
 TOP = ("tests", "test", "examples", "docs", "experiments", "velocity", "bench", "selfhost", "scripts", "vendor")
 LITERAL = re.compile(r'"((?:%s)/[^"\s]*)"' % "|".join(TOP))
@@ -54,7 +47,6 @@ STRING = re.compile(r'"([^"]*)"|\b([a-z_]+)\b')
 NOT_READ = {
     ("src/doctest_command.zig", "docs"): "glob-matching cases in a pure `globMatches` test",
     ("src/doctest_command.zig", "docs/arenas.md"): "glob-matching cases in a pure `globMatches` test",
-    ("src/native_test_directory.zig", "tests/lang/callbacks.my"): "a program name in a rendered summary line",
 }
 
 

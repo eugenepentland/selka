@@ -40,7 +40,6 @@ def changed(items: mut list[Item]) -> int:
     return total(items)
 
 
-# spec-case: RC-READONLY-CALLS-1
 public def test_composed_reader_preserves_snapshot_and_later_mutation() -> bool:
     items = [Item(b"first", 3), Item(b"second", 7)]
     snapshot = items
@@ -49,7 +48,6 @@ public def test_composed_reader_preserves_snapshot_and_later_mutation() -> bool:
     return before == 20 and total(items) == 38 and total(snapshot) == 20
 
 
-# spec-case: RC-READONLY-CALLS-1
 public def test_composed_reader_handles_empty_and_repeated_inputs() -> bool:
     empty: list[Item] = []
     items = [Item(b"first", 3)]
@@ -59,13 +57,11 @@ public def test_composed_reader_handles_empty_and_repeated_inputs() -> bool:
     return result == 48 and total(empty) == 0 and items[0].text == b"first"
 
 
-# spec-case: RC-READONLY-CALLS-1
 public def test_composed_helper_preserves_self_recursion() -> bool:
     items = [Item(b"first", 3)]
     return recursive(items, 64) == 3 and items[0].text == b"first"
 
 
-# spec-case: RC-READONLY-CALLS-1
 public def test_managed_result_helper_keeps_owned_fallback() -> bool:
     items = [Item(b"first", 3)]
     saved = returned(items)
@@ -74,7 +70,6 @@ public def test_managed_result_helper_keeps_owned_fallback() -> bool:
     return result == 3 and saved.text == b"first" and saved.number == 3
 
 
-# spec-case: RC-READONLY-CALLS-1
 public def test_mutating_helper_keeps_snapshot_and_ordinary_cleanup() -> bool:
     items = [Item(b"first", 3)]
     snapshot = items

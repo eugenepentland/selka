@@ -92,13 +92,22 @@ pub fn dispatch(init: std.process.Init, args: []const []const u8) Error!?u8 {
     const status = status: {
         for (retired_commands) |retired| if (std.mem.eql(u8, command, retired.name)) break :status try refuse(init, command, retired.message);
         if (retiredFlag(rest)) |retired| break :status try refuse(init, command, retired.message);
-        if (std.mem.eql(u8, command, "build")) break :status try buildCommand(init, rest);
+        if (std.mem.eql(u8, command, "build")) break :status if (developerBuild(rest)) try core_main.buildCommand(init, rest) else try buildCommand(init, rest);
         if (std.mem.eql(u8, command, "run") or std.mem.eql(u8, command, "run-project")) break :status try cli_run.runCommand(init, command, rest);
         if (std.mem.eql(u8, command, "test")) break :status try testCommand(init, rest);
         for ([_][]const u8{ "dump-ir", "dump-typed", "coverage" }) |name| if (std.mem.eql(u8, command, name)) break :status try core_main.developer(init, args);
         return null;
     };
     return status;
+}
+
+/// Whether a `build` names one of the core's developer-only switches, which the
+/// core's own build command answers (S5-D8: `mylang-core` merged into `mylang`).
+fn developerBuild(args: []const []const u8) bool {
+    for (args) |arg| {
+        if (std.mem.startsWith(u8, arg, "--sabotage-facts") or std.mem.eql(u8, arg, "--generic-vectors") or std.mem.startsWith(u8, arg, "--trap-frames=")) return true;
+    }
+    return false;
 }
 
 /// The retirement a flag before `--` names, or null.

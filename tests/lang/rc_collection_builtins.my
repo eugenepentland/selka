@@ -1,6 +1,5 @@
 module rc_collection_builtins
 
-# spec-case: RC-COLLECTION-1
 public def test_nested_list_mutators_publish_owned_results() -> bool:
     values = [[1], [2]]
     first = values.pop(0)
@@ -13,7 +12,6 @@ public def test_nested_list_mutators_publish_owned_results() -> bool:
     return len(values) == 0 and first == [1]
 
 
-# spec-case: RC-DICTIONARY-1
 public def test_dictionary_results_survive_receiver_clear() -> bool:
     mapping = {"a": [10], "b": [20]}
     existing = mapping.setdefault("a", [99])
@@ -38,7 +36,6 @@ def word_fold(word: str) -> str:
     return word.lower()
 
 
-# spec-case: RC-COLLECTION-1
 public def test_keyed_sort_owns_its_managed_elements() -> bool:
     words = ["pear", "apple", "fig"]
     ordered = sorted(words, key=word_length)
@@ -48,7 +45,6 @@ public def test_keyed_sort_owns_its_managed_elements() -> bool:
     return folded == ["alpha", "BEE", "ZED"]
 
 
-# spec-case: RC-DICTIONARY-1
 public def test_set_pop_owns_the_removed_key() -> bool:
     selected = {"first", "second"}
     last = selected.pop()
@@ -56,7 +52,6 @@ public def test_set_pop_owns_the_removed_key() -> bool:
     return last == "second" and len(selected) == 0
 
 
-# spec-case: RC-COLLECTION-1
 public def test_identity_text_conversion_retains_its_input() -> bool:
     parts = ("head" + "-tail").split("-")
     converted = str(parts[0])
@@ -76,7 +71,6 @@ def detached_text() -> str:
     return source[100:500][10:310]
 
 
-# spec-case: RC-VIEWS-1
 public def test_detached_views_keep_their_canonical_storage() -> bool:
     octets = detached_octets()
     text = detached_text()

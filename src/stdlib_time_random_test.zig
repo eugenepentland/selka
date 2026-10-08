@@ -2,13 +2,9 @@
 const std = @import("std");
 const t = std.testing;
 const fixture = @import("stdlib_fixture.zig");
-const values = @import("value_semantics.zig");
 
 // spec: STANDARD-TIME-RANDOM-1
 test "standard time random boundary arithmetic and independent deterministic streams" {
-    const saved = values.enabled();
-    values.setEnabled(true);
-    defer values.setEnabled(saved);
     try fixture.run(t.allocator, @embedFile("stdlib/fixtures/time_random.my"), 0);
     try fixture.run(t.allocator, @embedFile("stdlib/fixtures/time_random.my"), 0);
 }

@@ -20,7 +20,6 @@ def next_key(log: mut list[int]) -> str:
 
 # Check both values together: dropping either alias before the write could
 # turn the transfer into a move and hide a missing parent write-back.
-# spec-case: COW-NESTED-1
 public def test_list_dictionary_list_path() -> bool:
     original: list[dict[str, list[int]]] = [{"k": [1]}]
     changed = original
@@ -28,7 +27,6 @@ public def test_list_dictionary_list_path() -> bool:
     return original[0]["k"] == [1] and changed[0]["k"] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_dictionary_list_dictionary_path() -> bool:
     original: dict[str, list[dict[str, int]]] = {"k": [{"n": 1}]}
     changed = original
@@ -36,7 +34,6 @@ public def test_dictionary_list_dictionary_path() -> bool:
     return original["k"][0]["n"] == 1 and changed["k"][0]["n"] == 2
 
 
-# spec-case: COW-NESTED-1
 public def test_repeated_dictionary_wrappers() -> bool:
     original: dict[str, dict[str, dict[str, list[int]]]] = {"a": {"b": {"c": [1]}}}
     changed = original
@@ -44,7 +41,6 @@ public def test_repeated_dictionary_wrappers() -> bool:
     return original["a"]["b"]["c"] == [1] and changed["a"]["b"]["c"] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_repeated_list_dictionary_wrappers() -> bool:
     original: list[dict[str, list[dict[str, list[int]]]]] = [{"a": [{"b": [1]}]}]
     changed = original
@@ -52,7 +48,6 @@ public def test_repeated_list_dictionary_wrappers() -> bool:
     return original[0]["a"][0]["b"] == [1] and changed[0]["a"][0]["b"] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_dictionary_field_in_list() -> bool:
     original = [DictionaryField(entries={"k": [1]})]
     changed = original
@@ -60,7 +55,6 @@ public def test_dictionary_field_in_list() -> bool:
     return original[0].entries["k"] == [1] and changed[0].entries["k"] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_list_field_in_dictionary() -> bool:
     original = {"outer": ListField(items=[{"k": [1]}])}
     changed = original
@@ -68,7 +62,6 @@ public def test_list_field_in_dictionary() -> bool:
     return original["outer"].items[0]["k"] == [1] and changed["outer"].items[0]["k"] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_named_alias_of_nested_dictionary() -> bool:
     original: list[dict[str, list[int]]] = [{"k": [1]}]
     changed = original[0]
@@ -76,7 +69,6 @@ public def test_named_alias_of_nested_dictionary() -> bool:
     return original[0]["k"] == [1] and changed["k"] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_both_aliases_can_change_different_nested_values() -> bool:
     original: list[dict[str, list[int]]] = [{"k": [1]}]
     changed = original
@@ -85,7 +77,6 @@ public def test_both_aliases_can_change_different_nested_values() -> bool:
     return original[0]["k"] == [1, 3] and changed[0]["k"] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_nested_writes_inside_a_loop() -> bool:
     original: list[dict[str, list[int]]] = [{"k": [1]}]
     changed = original
@@ -94,7 +85,6 @@ public def test_nested_writes_inside_a_loop() -> bool:
     return original[0]["k"] == [1] and changed[0]["k"] == [1, 2, 3, 4]
 
 
-# spec-case: COW-NESTED-1
 public def test_receivers_and_keys_evaluate_once_in_source_order() -> bool:
     original: list[dict[str, list[int]]] = [{"k": [1]}]
     changed = original
@@ -103,7 +93,6 @@ public def test_receivers_and_keys_evaluate_once_in_source_order() -> bool:
     return original[0]["k"] == [1] and changed[0]["k"] == [1, 2] and log == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_nested_integer_keys() -> bool:
     original: list[dict[int, dict[int, list[int]]]] = [{1: {2: [1]}}]
     changed = original
@@ -111,7 +100,6 @@ public def test_nested_integer_keys() -> bool:
     return original[0][1][2] == [1] and changed[0][1][2] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_nested_sliced_string_keys() -> bool:
     original: list[dict[str, list[int]]] = [{"k": [1]}]
     changed = original
@@ -120,7 +108,6 @@ public def test_nested_sliced_string_keys() -> bool:
     return original[0]["k"] == [1] and changed[0]["k"] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_nested_set_leaf() -> bool:
     original: list[dict[str, set[int]]] = [{"k": {1}}]
     changed = original
@@ -128,7 +115,6 @@ public def test_nested_set_leaf() -> bool:
     return original[0]["k"] == {1} and changed[0]["k"] == {1, 2}
 
 
-# spec-case: COW-NESTED-1
 public def test_nested_byte_buffer_leaf() -> bool:
     original: list[dict[str, byte_buffer]] = [{"k": byte_buffer([1])}]
     changed = original
@@ -146,7 +132,6 @@ def replace_key(value: mut list[dict[str, list[int]]]) -> str:
     return "k"
 
 
-# spec-case: COW-NESTED-1
 public def test_key_mutates_original() -> bool:
     original: list[dict[str, list[int]]] = [{"k": [1]}]
     changed = original
@@ -154,7 +139,6 @@ public def test_key_mutates_original() -> bool:
     return original[0]["k"] == [1, 7] and changed[0]["k"] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_key_replacement_finishes_before_receiver_selection() -> bool:
     original: list[dict[str, list[int]]] = [{"k": [1]}]
     changed = original
@@ -163,7 +147,6 @@ public def test_key_replacement_finishes_before_receiver_selection() -> bool:
     return original[0]["k"] == [1] and changed[0]["k"] == [9, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_key_growth_finishes_before_receiver_selection() -> bool:
     original: list[dict[str, list[int]]] = [{"k": [1]}]
     changed = original

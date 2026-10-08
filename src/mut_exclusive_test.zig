@@ -4,7 +4,6 @@
 const std = @import("std");
 const t = std.testing;
 const compiler = @import("compiler.zig");
-const LegacySharing = @import("test_support.zig").LegacySharing;
 const File = compiler.embedded_project.File;
 
 const helpers =
@@ -164,10 +163,6 @@ test "the exclusivity rule covers keyword and indirect calls but not read-only o
     try accepts(main("    v = [1]\n    w = [2]\n    action = two\n    action(mut v, mut w)\n"));
     try accepts(main("    a = [1, 2]\n    _ = read_one(mut a, a)\n"));
     try accepts(main("    p = [1]\n    emit(mut p, make(mut p))\n"));
-    const legacy = LegacySharing.enter();
-    defer legacy.restore();
-    try rejects(main("    b = [[1, 2], [3]]\n    same(mut b, mut b)\n"), "mut b", "mut b", "both name `b`");
-    try accepts(main("    xs = [[1], [2], [3]]\n    two(mut xs[0], mut xs[2])\n"));
 }
 
 // spec: MUT-EXCLUSIVE-3

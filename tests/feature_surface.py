@@ -28,7 +28,7 @@ def main():
         text = (ROOT / 'docs' / document).read_text()
         source = re.search(r'```(?:mylang|my)\n(.*?)\n```', text, re.S).group(1)
         examples.append((document, source, expected, None))
-    for path, expected in [('arena-managed/main.my', '38\n'), ('callbacks.my', '17\n'), ('gc-default/main.my', '142\n'), ('python-bytes/main.my', '51\n'), ('python-word-count/main.my', '42\n')]:
+    for path, expected in [('callbacks.my', '17\n'), ('gc-default/main.my', '142\n'), ('python-bytes/main.my', '51\n'), ('python-word-count/main.my', '42\n')]:
         examples.append((path, (ROOT / 'examples' / path).read_text(), expected, None))
     examples.extend([
         ('unknown-f64-alias-excluded', 'def main() -> f64:\n    return 0\n', '', 'E_UNKNOWN_TYPE'),

@@ -12,7 +12,7 @@ The broad removals recorded here:
   return-provenance, legacy `arena parent as name { }` scopes and `reset_arena`,
   and every standard module built on them. Garbage-collected managed collections
   (`list`, `str`, `dict`, `bytes`) and `with arena()` regions replace them; see
-  [../managed-memory.md](../managed-memory.md) and [../arenas.md](../arenas.md).
+  [../managed-memory.md](../managed-memory.md) (arenas are [retired](../managed-memory.md#retired-arenas) too).
 - **C backend** (removed 2026-09-13). `emit-c`, `emit-project-c`, `src/native.zig`
   and the C-only runtime units. QBE is the only native backend; see
   [../experiments/incremental-qbe.md](../experiments/incremental-qbe.md) and

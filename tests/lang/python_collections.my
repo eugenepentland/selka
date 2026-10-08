@@ -328,7 +328,6 @@ public def test_generic_lists_preserve_literal_foreach_slice_and_write_element_t
     return xs[0] + xs[1] == 42
 
 
-# spec-case: QBE-ELEMENT-READ-1
 public def test_scalar_element_reads_load_every_width_from_backing_storage() -> bool:
     narrow = [1i16, 2i16, 300i16]
     wide = [7i64, 8i64, 9i64]

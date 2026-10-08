@@ -1,0 +1,45 @@
+module bounded_loop_seeds
+
+# Ported from the retired QBE loop tests: modular loop totals at extreme seeds,
+# a helper call inside the loop, and a float-to-i8 conversion per iteration.
+
+def calculate(count: int, seed: int) -> int:
+    total = seed
+    for at in range(count):
+        total = (total + at * 7) % 1000003
+    return total
+
+def domains(count: int) -> int:
+    value = 0.0
+    checksum = 0
+    for at in range(count):
+        value += float(at) * 0.5
+        checksum += at
+    return int(value) + checksum
+
+def affine(at: int) -> int:
+    return at * 7
+
+def inlined(count: int, seed: int) -> int:
+    total = seed
+    for at in range(count):
+        total = (total + affine(at)) % 1000003
+    return total
+
+def convert_loop(count: int, value: float) -> int:
+    checksum = 0
+    for at in range(count):
+        checksum = int(i8(value))
+    return checksum
+
+public def test_extreme_and_short_seeds_keep_their_modular_totals() -> bool:
+    return calculate(32, -9223372036854775807 - 1) == 328130 and calculate(32, -31) == 3441 and calculate(0, 9223372036854775807) == 9223372036854775807 and calculate(4, 17) == 59
+
+public def test_a_helper_call_in_a_modular_loop_keeps_the_same_totals() -> bool:
+    return inlined(32, 17) == 3489 and inlined(32, 17) + domains(32) == 4233 and inlined(0, 5) == 5
+
+public def test_a_float_to_i8_conversion_in_a_loop_truncates_toward_zero() -> bool:
+    return convert_loop(32, 1.5) == 1 and convert_loop(32, -1.5) == -1 and convert_loop(32, 127.9) == 127 and convert_loop(0, 128.0) == 0
+
+def main() -> int:
+    return 0
