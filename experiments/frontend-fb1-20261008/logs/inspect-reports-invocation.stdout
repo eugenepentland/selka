@@ -1,0 +1,11 @@
+usage: reports.py [-h] --core CORE [--rows ROWS] --run-id RUN_ID [--p1]
+
+FB1 exit: report/stats equality and unchanged bytes on the 46-row registry;
+P1.
+
+options:
+  -h, --help       show this help message and exit
+  --core CORE
+  --rows ROWS      comma-separated subset, only for fixture smoke runs
+  --run-id RUN_ID
+  --p1

@@ -1,0 +1,1378 @@
+{
+  "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/zig-out/bin/mylang",
+  "core_sha256": "5ddab7ce39d576615f55676886252e4dbfff863d0d253cc003886a769c7b1a55",
+  "source_commit": "061f46aba144c00bf2094fcdada9a2c682696105",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "rows": 2,
+  "results": {
+    "lox": {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/main.my",
+      "entry_sha256": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+      "functions": 294,
+      "totals": {
+        "checks": {
+          "kept": 651,
+          "proved": 958
+        },
+        "updates": {
+          "in_place": 48,
+          "tested": 52,
+          "copied": 193
+        },
+        "allocation": {
+          "sites": 801,
+          "unresolved_calls": 338
+        },
+        "rc": {
+          "retains": 344,
+          "releases": 480,
+          "elided_pairs": 0,
+          "stack_lists": 0
+        },
+        "inlined_calls": 221,
+        "loops": {
+          "unswitched": 0,
+          "versioned": 0,
+          "vector_plans": 0,
+          "unknown": 81
+        },
+        "llvm_vectorized_loops": null
+      },
+      "top20": [
+        {
+          "name": "vm::run",
+          "counts": {
+            "checks": {
+              "kept": 102,
+              "proved": 88
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 15
+            },
+            "allocation": {
+              "sites": 16,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 11,
+              "releases": 8,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 30,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 1
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "heap::blacken",
+          "counts": {
+            "checks": {
+              "kept": 20,
+              "proved": 40
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 8,
+              "copied": 8
+            },
+            "allocation": {
+              "sites": 24,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 18,
+              "releases": 9,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 8,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 3
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "parser::primary",
+          "counts": {
+            "checks": {
+              "kept": 4,
+              "proved": 16
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 8
+            },
+            "allocation": {
+              "sites": 22,
+              "unresolved_calls": 6
+            },
+            "rc": {
+              "retains": 9,
+              "releases": 11,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 8,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 0
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "heap::mark_roots",
+          "counts": {
+            "checks": {
+              "kept": 19,
+              "proved": 48
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 7,
+              "copied": 7
+            },
+            "allocation": {
+              "sites": 21,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 15,
+              "releases": 0,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 7,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 6
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "resolver::resolve_class",
+          "counts": {
+            "checks": {
+              "kept": 9,
+              "proved": 26
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 2,
+              "copied": 5
+            },
+            "allocation": {
+              "sites": 16,
+              "unresolved_calls": 3
+            },
+            "rc": {
+              "retains": 3,
+              "releases": 2,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 4,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 1
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "parser::for_statement",
+          "counts": {
+            "checks": {
+              "kept": 0,
+              "proved": 10
+            },
+            "updates": {
+              "in_place": 4,
+              "tested": 0,
+              "copied": 5
+            },
+            "allocation": {
+              "sites": 19,
+              "unresolved_calls": 3
+            },
+            "rc": {
+              "retains": 5,
+              "releases": 6,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 5,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 0
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "vm::numeric",
+          "counts": {
+            "checks": {
+              "kept": 14,
+              "proved": 14
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 5
+            },
+            "allocation": {
+              "sites": 6,
+              "unresolved_calls": 1
+            },
+            "rc": {
+              "retains": 0,
+              "releases": 0,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 7,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 0
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "compiler::patch_jump",
+          "counts": {
+            "checks": {
+              "kept": 8,
+              "proved": 14
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 4
+            },
+            "allocation": {
+              "sites": 5,
+              "unresolved_calls": 1
+            },
+            "rc": {
+              "retains": 4,
+              "releases": 1,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 0
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "resolver::declare",
+          "counts": {
+            "checks": {
+              "kept": 7,
+              "proved": 18
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 4
+            },
+            "allocation": {
+              "sites": 6,
+              "unresolved_calls": 1
+            },
+            "rc": {
+              "retains": 4,
+              "releases": 3,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 0
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "resolver::resolve_expr",
+          "counts": {
+            "checks": {
+              "kept": 6,
+              "proved": 12
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 4
+            },
+            "allocation": {
+              "sites": 7,
+              "unresolved_calls": 3
+            },
+            "rc": {
+              "retains": 5,
+              "releases": 13,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 1
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "compiler::init_compiler",
+          "counts": {
+            "checks": {
+              "kept": 2,
+              "proved": 6
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 2,
+              "copied": 3
+            },
+            "allocation": {
+              "sites": 15,
+              "unresolved_calls": 2
+            },
+            "rc": {
+              "retains": 8,
+              "releases": 3,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 2,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 0
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "heap::allocate",
+          "counts": {
+            "checks": {
+              "kept": 5,
+              "proved": 4
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 1,
+              "copied": 3
+            },
+            "allocation": {
+              "sites": 6,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 3,
+              "releases": 0,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 0
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "resolver::resolve_statement",
+          "counts": {
+            "checks": {
+              "kept": 9,
+              "proved": 14
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 1,
+              "copied": 3
+            },
+            "allocation": {
+              "sites": 8,
+              "unresolved_calls": 2
+            },
+            "rc": {
+              "retains": 4,
+              "releases": 11,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 1,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 1
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "compiler::add_upvalue",
+          "counts": {
+            "checks": {
+              "kept": 5,
+              "proved": 7
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 3
+            },
+            "allocation": {
+              "sites": 5,
+              "unresolved_calls": 1
+            },
+            "rc": {
+              "retains": 3,
+              "releases": 1,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 1
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "interpreter::execute",
+          "counts": {
+            "checks": {
+              "kept": 22,
+              "proved": 24
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 3
+            },
+            "allocation": {
+              "sites": 3,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 20,
+              "releases": 29,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 10,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 1
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "interpreter::instantiate",
+          "counts": {
+            "checks": {
+              "kept": 10,
+              "proved": 9
+            },
+            "updates": {
+              "in_place": 3,
+              "tested": 0,
+              "copied": 3
+            },
+            "allocation": {
+              "sites": 11,
+              "unresolved_calls": 3
+            },
+            "rc": {
+              "retains": 8,
+              "releases": 8,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 5,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 0
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "vm::call_value",
+          "counts": {
+            "checks": {
+              "kept": 11,
+              "proved": 8
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 3
+            },
+            "allocation": {
+              "sites": 5,
+              "unresolved_calls": 1
+            },
+            "rc": {
+              "retains": 1,
+              "releases": 7,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 2,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 0
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "compiler::class_declaration",
+          "counts": {
+            "checks": {
+              "kept": 10,
+              "proved": 12
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 2,
+              "copied": 2
+            },
+            "allocation": {
+              "sites": 11,
+              "unresolved_calls": 6
+            },
+            "rc": {
+              "retains": 1,
+              "releases": 2,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 3,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 1
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "compiler::emit_byte",
+          "counts": {
+            "checks": {
+              "kept": 3,
+              "proved": 8
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 2,
+              "copied": 2
+            },
+            "allocation": {
+              "sites": 6,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 4,
+              "releases": 1,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 1,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 0
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "vm::make_closure",
+          "counts": {
+            "checks": {
+              "kept": 11,
+              "proved": 11
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 2,
+              "copied": 2
+            },
+            "allocation": {
+              "sites": 4,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 2,
+              "releases": 2,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 3,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 1
+            },
+            "llvm_vectorized_loops": null
+          }
+        }
+      ]
+    },
+    "eda": {
+      "entry": "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/main.my",
+      "entry_sha256": "0c091863d6c0b54134bec116d2e03931f6ed6a6fa5e78c7b7189588be19aa6b3",
+      "functions": 749,
+      "totals": {
+        "checks": {
+          "kept": 1294,
+          "proved": 2095
+        },
+        "updates": {
+          "in_place": 1270,
+          "tested": 159,
+          "copied": 90
+        },
+        "allocation": {
+          "sites": 3585,
+          "unresolved_calls": 1551
+        },
+        "rc": {
+          "retains": 2539,
+          "releases": 14432,
+          "elided_pairs": 0,
+          "stack_lists": 6
+        },
+        "inlined_calls": 212,
+        "loops": {
+          "unswitched": 105,
+          "versioned": 1,
+          "vector_plans": 0,
+          "unknown": 608
+        },
+        "llvm_vectorized_loops": null
+      },
+      "top20": [
+        {
+          "name": "export_kicad_sch::build_components",
+          "counts": {
+            "checks": {
+              "kept": 5,
+              "proved": 12
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 2,
+              "copied": 5
+            },
+            "allocation": {
+              "sites": 15,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 11,
+              "releases": 14,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 3
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "flat_netlist::apply_net_ties_mapped",
+          "counts": {
+            "checks": {
+              "kept": 26,
+              "proved": 72
+            },
+            "updates": {
+              "in_place": 14,
+              "tested": 1,
+              "copied": 5
+            },
+            "allocation": {
+              "sites": 28,
+              "unresolved_calls": 4
+            },
+            "rc": {
+              "retains": 11,
+              "releases": 27,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 4,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 16
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "export_kicad_sch::index_nets",
+          "counts": {
+            "checks": {
+              "kept": 3,
+              "proved": 10
+            },
+            "updates": {
+              "in_place": 3,
+              "tested": 0,
+              "copied": 4
+            },
+            "allocation": {
+              "sites": 16,
+              "unresolved_calls": 6
+            },
+            "rc": {
+              "retains": 3,
+              "releases": 9,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 3
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "export_kicad_sch::index_section",
+          "counts": {
+            "checks": {
+              "kept": 3,
+              "proved": 6
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 4
+            },
+            "allocation": {
+              "sites": 6,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 0,
+              "releases": 4,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 3
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "export_kicad_sch::index_wiring",
+          "counts": {
+            "checks": {
+              "kept": 3,
+              "proved": 9
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 4
+            },
+            "allocation": {
+              "sites": 6,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 2,
+              "releases": 7,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 2
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "kicad_sch_verify::scan_wire",
+          "counts": {
+            "checks": {
+              "kept": 4,
+              "proved": 7
+            },
+            "updates": {
+              "in_place": 1,
+              "tested": 0,
+              "copied": 4
+            },
+            "allocation": {
+              "sites": 5,
+              "unresolved_calls": 1
+            },
+            "rc": {
+              "retains": 1,
+              "releases": 72,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 3,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 5
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "flat_netlist::net_tie_sets_get_or_add",
+          "counts": {
+            "checks": {
+              "kept": 0,
+              "proved": 1
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 1,
+              "copied": 3
+            },
+            "allocation": {
+              "sites": 7,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 1,
+              "releases": 2,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 0
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "kicad_sch_compose::pose_items",
+          "counts": {
+            "checks": {
+              "kept": 12,
+              "proved": 22
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 1,
+              "copied": 3
+            },
+            "allocation": {
+              "sites": 8,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 0,
+              "releases": 16,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 3
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "export_kicad_sch::load_footprints",
+          "counts": {
+            "checks": {
+              "kept": 1,
+              "proved": 7
+            },
+            "updates": {
+              "in_place": 1,
+              "tested": 0,
+              "copied": 3
+            },
+            "allocation": {
+              "sites": 7,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 3,
+              "releases": 18,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 1
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "kicad_sch_verify::scan_placed",
+          "counts": {
+            "checks": {
+              "kept": 4,
+              "proved": 7
+            },
+            "updates": {
+              "in_place": 1,
+              "tested": 0,
+              "copied": 3
+            },
+            "allocation": {
+              "sites": 16,
+              "unresolved_calls": 8
+            },
+            "rc": {
+              "retains": 8,
+              "releases": 106,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 3,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 5
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "kicad_sch_compose::join_sites",
+          "counts": {
+            "checks": {
+              "kept": 14,
+              "proved": 20
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 3,
+              "copied": 2
+            },
+            "allocation": {
+              "sites": 8,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 7,
+              "releases": 10,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 2,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 1
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "export_kicad_sch::synth_shapes",
+          "counts": {
+            "checks": {
+              "kept": 3,
+              "proved": 7
+            },
+            "updates": {
+              "in_place": 9,
+              "tested": 1,
+              "copied": 2
+            },
+            "allocation": {
+              "sites": 32,
+              "unresolved_calls": 14
+            },
+            "rc": {
+              "retains": 11,
+              "releases": 22,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 3
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "kicad_sch_compose::rail_index",
+          "counts": {
+            "checks": {
+              "kept": 0,
+              "proved": 1
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 1,
+              "copied": 2
+            },
+            "allocation": {
+              "sites": 5,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 0,
+              "releases": 2,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 0
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "export_kicad_sch::caption_for",
+          "counts": {
+            "checks": {
+              "kept": 4,
+              "proved": 6
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 2
+            },
+            "allocation": {
+              "sites": 10,
+              "unresolved_calls": 7
+            },
+            "rc": {
+              "retains": 7,
+              "releases": 5,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 0
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "export_kicad_sch::note_pad_net",
+          "counts": {
+            "checks": {
+              "kept": 0,
+              "proved": 0
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 2
+            },
+            "allocation": {
+              "sites": 3,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 0,
+              "releases": 2,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 0
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "kicad_sch_shape::gang_edge",
+          "counts": {
+            "checks": {
+              "kept": 10,
+              "proved": 19
+            },
+            "updates": {
+              "in_place": 5,
+              "tested": 0,
+              "copied": 2
+            },
+            "allocation": {
+              "sites": 9,
+              "unresolved_calls": 1
+            },
+            "rc": {
+              "retains": 3,
+              "releases": 6,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 3
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "kicad_sch_shape::order_edges",
+          "counts": {
+            "checks": {
+              "kept": 6,
+              "proved": 9
+            },
+            "updates": {
+              "in_place": 5,
+              "tested": 0,
+              "copied": 2
+            },
+            "allocation": {
+              "sites": 11,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 0,
+              "releases": 2,
+              "elided_pairs": 0,
+              "stack_lists": 1
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 2
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "kicad_sch_vendor::ctx_index_names",
+          "counts": {
+            "checks": {
+              "kept": 1,
+              "proved": 2
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 2
+            },
+            "allocation": {
+              "sites": 3,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 2,
+              "releases": 2,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 1
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "kicad_sch_verify::multiset_add",
+          "counts": {
+            "checks": {
+              "kept": 2,
+              "proved": 0
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 2
+            },
+            "allocation": {
+              "sites": 3,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 0,
+              "releases": 1,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 0
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "kicad_sym_library::index_file",
+          "counts": {
+            "checks": {
+              "kept": 5,
+              "proved": 4
+            },
+            "updates": {
+              "in_place": 4,
+              "tested": 0,
+              "copied": 2
+            },
+            "allocation": {
+              "sites": 15,
+              "unresolved_calls": 5
+            },
+            "rc": {
+              "retains": 0,
+              "releases": 9,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 1,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 1
+            },
+            "llvm_vectorized_loops": null
+          }
+        }
+      ]
+    }
+  }
+}

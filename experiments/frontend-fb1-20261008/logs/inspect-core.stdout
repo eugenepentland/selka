@@ -1,0 +1,798 @@
+//! The `mylang` commands that build, run or test code, on the new core (S5-A,
+//! NEW-CORE-S5-CLI-1): `build` (and `build --run`), `run`, `run-project`, `test`,
+//! and the developer commands `dump-ir`, `dump-typed` and `coverage` (S5-D8). The
+//! old back end's commands and flags are refused by name with what replaces them
+//! (NEW-CORE-S5-RETIRED-1). `src/main.zig` asks `dispatch` first; null hands the
+//! command to the front-end commands it still owns.
+const std = @import("std");
+const core_main = @import("main.zig");
+const cli_args = @import("cli_args.zig");
+const cli_run = @import("cli_run.zig");
+const pipeline = @import("pipeline.zig");
+
+/// What stops a command before it has a status: memory, an unwritable stream, or a
+/// test the runner cannot encode.
+pub const Error = core_main.Error;
+
+/// A retired command or flag and the one-line reason the CLI gives.
+const Retirement = struct { name: []const u8, message: []const u8 };
+
+const qbe_emission = "QBE IL emission was retired with the old back end (S5); the compiler emits LLVM: use `mylang build FILE.my -o OUT --emit-llvm PATH`";
+const host_retired = "host functions, libraries and providers were retired (S5-D5); use `extern` with `--link FILE.c` for C interop";
+const runtime_retired = "runtime selection was retired (S5-D4): one-count reference counting is the only memory model; drop the flag";
+const module_build_retired = "per-module QBE builds were retired (S5); `mylang build` compiles and caches one unit per module";
+
+/// Commands the new core does not have, with what replaces them.
+const retired_commands = [_]Retirement{
+    .{ .name = "invoke", .message = "`mylang invoke` was retired with host functions (S5-D5); call the function from a `main` or a test" },
+    .{ .name = "emit-qbe", .message = qbe_emission },
+    .{ .name = "emit-project-qbe", .message = qbe_emission },
+    .{ .name = "emit-runtime", .message = "the prebuilt QBE runtime archive was retired (S5); a build compiles the new core's runtime once per machine" },
+    .{ .name = "dump-bytecode", .message = "the bytecode IR was retired (S5); `mylang dump-ir FILE.my` prints the Core IR" },
+    .{ .name = "compile-module", .message = module_build_retired },
+    .{ .name = "link-modules", .message = module_build_retired },
+    .{ .name = "native-test-graph", .message = "the old test runner's internal commands were retired (S5); `mylang test` runs tests on the new core" },
+    .{ .name = "native-test-compile", .message = "the old test runner's internal commands were retired (S5); `mylang test` runs tests on the new core" },
+    .{ .name = "bench-promote", .message = "benchmark promotion was dropped (S5-D6)" },
+};
+
+/// Flags any command refuses, before `--`.
+const retired_flags = [_]Retirement{
+    .{ .name = "--gc-runtime", .message = runtime_retired },
+    .{ .name = "--gc-stress", .message = "the tracing collector and its stress mode were retired (S5-D4); drop the flag" },
+    .{ .name = "--rc-runtime", .message = runtime_retired },
+    .{ .name = "--legacy-sharing", .message = "legacy sharing was retired (S5-D4): value semantics is the only mode; drop the flag" },
+    .{ .name = "--value-semantics", .message = "--value-semantics was retired (S5-D4): value semantics is always on; drop the flag" },
+    .{ .name = "--library", .message = host_retired },
+    .{ .name = "--provider", .message = host_retired },
+    .{ .name = "--link-library", .message = host_retired },
+    .{ .name = "--library-path", .message = host_retired },
+    .{ .name = "--unchecked", .message = "--unchecked was removed: every build keeps overflow, cast and bounds checks so optimization never changes a program's result" },
+    .{ .name = "--explain-ownership", .message = "--explain-ownership read the old back end's ownership lowering (retired, S5); `mylang build --stats` reports the new core's" },
+};
+
+/// Flags `mylang test` refuses that its new runner dropped (S5-D6).
+const dropped_test_flags = [_][]const u8{
+    "--pure-skip",        "--diagnostics",  "--max-calls",     "--bench",        "--bench-only",    "--bench-output",
+    "--bench-baseline",   "--bench-policy", "--bench-profile", "--bench-warmup", "--bench-batches", "--bench-batch-ms",
+    "--bench-timeout-ms",
+};
+
+/// `build` and `run` flags `mylang test` has no use for, with the reason (S5-B2).
+const test_only_retired = [_]Retirement{
+    .{ .name = "--report", .message = "`mylang test --report` printed the old runner's work report (retired, S5-B2); `--json` reports each test, `cached` for a replayed receipt" },
+    .{ .name = "--timings", .message = "`mylang test --timings` was retired with the old runner (S5-B2); `mylang run FILE.my --timings` times one program" },
+    .{ .name = "--explain-invalidation", .message = "--explain-invalidation compared the old back end's nine stage fingerprints (retired, S5-B2); `--json` reports each test, `cached` for a replayed receipt" },
+};
+
+/// Why `mylang test` refuses the flag `name` (its `--flag` part): a flag `build` and
+/// `run` retire with a pointer `test` cannot follow says what `test` offers instead.
+fn testRefusal(arg: []const u8) ?[]const u8 {
+    const name = arg[0 .. std.mem.indexOfScalar(u8, arg, '=') orelse arg.len];
+    for (test_only_retired) |retired| if (std.mem.eql(u8, name, retired.name)) return retired.message;
+    return cli_args.unported(arg);
+}
+
+// spec-case: NEW-CORE-S5-RETIRED-1
+test "test refusals point at what test offers, not at flags test also refuses" {
+    try std.testing.expect(std.mem.indexOf(u8, testRefusal("--explain-invalidation").?, "`--json`") != null);
+    try std.testing.expect(std.mem.indexOf(u8, testRefusal("--explain-invalidation").?, "`--report`") == null);
+    try std.testing.expect(std.mem.indexOf(u8, testRefusal("--report").?, "`--json`") != null);
+    try std.testing.expect(std.mem.indexOf(u8, testRefusal("--friction-log=x").?, "mylang check") != null);
+    try std.testing.expect(testRefusal("--json") == null);
+    try std.testing.expect(std.mem.indexOf(u8, cli_args.unported("--explain-invalidation").?, "`--report`") != null);
+}
+
+/// Run `args` (argv, the program name first) when it names a command of the new
+/// core or a retired one, returning its exit status; null leaves it to the caller.
+pub fn dispatch(init: std.process.Init, args: []const []const u8) Error!?u8 {
+    if (args.len < 2) return null;
+    const command = args[1];
+    const rest = args[2..];
+    const status = status: {
+        for (retired_commands) |retired| if (std.mem.eql(u8, command, retired.name)) break :status try refuse(init, command, retired.message);
+        if (retiredFlag(rest)) |retired| break :status try refuse(init, command, retired.message);
+        if (std.mem.eql(u8, command, "build")) break :status if (developerBuild(rest)) try core_main.buildCommand(init, rest) else try buildCommand(init, rest);
+        if (std.mem.eql(u8, command, "run") or std.mem.eql(u8, command, "run-project")) break :status try cli_run.runCommand(init, command, rest);
+        if (std.mem.eql(u8, command, "test")) break :status try testCommand(init, rest);
+        for ([_][]const u8{ "dump-ir", "dump-typed", "coverage" }) |name| if (std.mem.eql(u8, command, name)) break :status try core_main.developer(init, args);
+        return null;
+    };
+    return status;
+}
+
+/// Whether a `build` names one of the core's developer-only switches, which the
+/// core's own build command answers (S5-D8: `mylang-core` merged into `mylang`).
+fn developerBuild(args: []const []const u8) bool {
+    for (args) |arg| {
+        if (std.mem.startsWith(u8, arg, "--sabotage-facts") or std.mem.eql(u8, arg, "--generic-vectors") or std.mem.startsWith(u8, arg, "--trap-frames=")) return true;
+    }
+    return false;
+}
+
+/// The retirement a flag before `--` names, or null.
+fn retiredFlag(args: []const []const u8) ?Retirement {
+    for (args) |arg| {
+        if (std.mem.eql(u8, arg, "--")) return null;
+        const name = arg[0 .. std.mem.indexOfScalar(u8, arg, '=') orelse arg.len];
+        for (retired_flags) |retired| if (std.mem.eql(u8, name, retired.name)) return retired;
+    }
+    return null;
+}
+
+fn refuse(init: std.process.Init, command: []const u8, message: []const u8) Error!u8 {
+    try write(init, try std.fmt.allocPrint(init.arena.allocator(), "mylang {s}: {s}\n", .{ command, message }));
+    return 2;
+}
+
+fn write(init: std.process.Init, text: []const u8) Error!void {
+    std.Io.File.stderr().writeStreamingAll(init.io, text) catch return error.WriteFailed;
+}
+
+const build_usage =
+    \\usage: mylang build <file.my> (-o <output> | --run [run options] [-- ARGS...]) [--release] [--link FILE.c]... [--emit-llvm PATH]
+    \\       [--cache-dir DIR] [--no-cache] [--zig PATH] [--report] [--cache-report] [--verify-cache] [--stats] [--diagnostics=text|json]
+    \\
+;
+
+/// `mylang build FILE.my -o OUT` and `build --run`.
+fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
+    const request = try cli_run.parseRequest(init, .build, args, build_usage) orelse return 2;
+    if (request.run != null) return cli_run.run(init, request, "build");
+    // CLI-INPUT-REFUSED-1: an entry that cannot be read is refused by name, as `run` refuses it.
+    if (try cli_run.unreadable(init, "build", request.path)) |message| {
+        try write(init, message);
+        return 2;
+    }
+    var options = request.build;
+    if (request.no_cache) options.cache = try cli_run.privateCache(init, options.cache);
+    defer if (request.no_cache) cli_run.discard(init.io, options.cache);
+    var report: std.ArrayList(u8) = .empty;
+    const status = pipeline.build(init, request.path, options, &report) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.SourceError, error.Unsupported => 1,
+        error.PolicyDenied => 3,
+        error.ConfigurationFailed => 2,
+        error.ToolFailed, error.WriteFailed, error.InvalidIr => 2,
+    };
+    try write(init, report.items);
+    return status;
+}
+
+/// `mylang test`: the new core's runner (`test_runner.zig`), with the old CLI's
+/// `--flag=VALUE` spellings, `--qbe` ignored and `--whole-program` accepted (S5-D6).
+fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
+    const a = init.arena.allocator();
+    var normalized: std.ArrayList([]const u8) = .empty;
+    // A later `--zig` wins over the environment's.
+    try normalized.appendSlice(a, &.{ "--zig", cli_run.zigPath(init) });
+    var index: usize = 0;
+    while (index < args.len) : (index += 1) {
+const promotion = @import("promote.zig");
+const origins = @import("inline_origins.zig");
+
+/// The pass only allocates.
+pub const Error = std.mem.Allocator.Error;
+
+/// How the pass runs.
+pub const Options = struct {
+    /// Verify builds assert every statically unique update (form 1) at run time.
+    verify: bool = false,
+    /// The function's facts (release builds): lists they bound may live on the stack.
+    facts: ?*const facts.Facts = null,
+    /// Optional source ancestry of instructions cloned before ownership.
+    provenance: ?*origins.Table = null,
+    function_index: u32 = 0,
+};
+
+/// What the pass did, summed over functions.
+pub const Stats = struct {
+    in_place: u32 = 0,
+    tested: u32 = 0,
+    copied: u32 = 0,
+    retains: u32 = 0,
+    releases: u32 = 0,
+    /// `retain x … release x` pairs the peephole removed.
+    elided: u32 = 0,
+    /// Lists promoted to the stack (`promote.zig`).
+    promoted: u32 = 0,
+
+    /// Add `other`'s counts to these.
+    pub fn add(self: *Stats, other: Stats) void {
+        self.in_place += other.in_place;
+        self.tested += other.tested;
+        self.copied += other.copied;
+        self.retains += other.retains;
+        self.releases += other.releases;
+        self.elided += other.elided;
+        self.promoted += other.promoted;
+    }
+};
+
+/// The `data` of a `release` whose value may be `undef` (a phi fed by one, on a path
+/// the checker rules out): the emitter skips every null block pointer in it.
+pub const empty_release: u64 = 2;
+
+/// The `data` of a `release` whose value is statically unique (fresh, never shared):
+/// the emitter frees the block without testing its count (verify builds assert
+/// `count == 1` first).
+pub const unique_release: u64 = 1;
+
+/// The `data` of an `unreachable` that asserts a statically unique update: verify
+/// builds emit it as an `R_CORE_FACT` trap (`emit_llvm.zig`).
+pub const unique_assert: u64 = 1;
+
+/// Run the pass over every internal function of `module`.
+pub fn run(arena: std.mem.Allocator, module: *ir.Module, options: Options) Error!Stats {
+    var total: Stats = .{};
+    for (module.functions.items, 0..) |*f, index| {
+        if (f.signature.linkage != .internal) continue;
+        var local = options;
+        local.function_index = @intCast(index);
+        total.add(try function(arena, module, f, local));
+    }
+    return total;
+}
+
+/// Run the pass over one function of `module`.
+pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, options: Options) Error!Stats {
+    var stats: Stats = .{};
+    var marks: Marks = .{ .origin = if (options.provenance) |table| table.context(options.function_index) else null };
+    if (options.facts) |known| {
+        const promoted = try promotion.promote(arena, module, f, known, options.verify, marks.origin);
+        marks.stack = promoted.values;
+        stats.promoted = promoted.lists;
+        reserveFills(f, known);
+    }
+    // Popped elements are found (or read) before anything moves.
+    try markPops(.{ .arena = arena, .f = f, .origin = marks.origin }, module, &marks);
+    for (f.insts.items, 0..) |inst, index| {
+        if (flags.transferredRead(inst) and module.managed(inst.ty)) try marks.owned_get.put(arena, @intCast(index), {});
+        if (flags.transferredSlot(f, inst)) try marks.taken.put(arena, @intCast(index), {});
+    }
+    try takeFields(arena, module, f, &marks);
+    var phase_a = try Analysis.of(arena, module, f, &marks);
+    try phase_a.analyze();
+    try copyOnWrite(&phase_a, options, &stats);
+    var phase_b = try Analysis.of(arena, module, f, &marks);
+    try phase_b.analyze();
+    try count(&phase_b, &stats);
+    if (options.facts) |known| markFillPushes(f, known);
+    stats.elided = try elidePairs(arena, f);
+    stats.retains -= stats.elided;
+    stats.releases -= stats.elided;
+    return stats;
+}
+
+/// Reserve known counted fills after stack promotion. Only detached i64/u64
+/// parameters qualify, so the bound always dominates the empty constructor.
+fn reserveFills(f: *ir.Function, known: *const facts.Facts) void {
+    for (known.counted) |counted| {
+        const bound = f.resolve(counted.bound);
+        const source = f.inst(bound);
+        if (source.op != .param or (source.ty != .i64 and source.ty != .u64)) continue;
+        for (f.blocks.items[counted.loop.header.index()].insts.items) |ref| {
+            const phi = f.inst(ref);
+            if (phi.op != .phi or !known.aggregates.lists[ref.index()].pattern) continue;
+            if (f.resolve(known.aggregates.lists[ref.index()].length) != bound) continue;
+            for (f.operands(phi.data)) |operand| {
+                const entry = f.resolve(operand);
+                const inst = f.inst(entry);
+                if (inst.op != .list_new or inst.data != 0) continue;
+                f.insts.items[entry.index()].a = bound;
+                f.insts.items[entry.index()].data = flags.fill_capacity;
+            }
+        }
+    }
+//! Release builds inline small leaf functions before the fact pass, so the facts
+//! (and the vector lowering) see through helpers such as `affine_a(x) = x*3+7`.
+//!
+//! A callee qualifies when it is internal, has exactly one block, ends in
+//! `ret value`, and contains no call, print, phi or error trace. Trace-bearing
+//! functions retain their specialized names and sites until LLVM inlining.
+//! Other instructions are cloned
+//! into the caller in front of the call, its parameters replaced by the call's
+//! arguments, and the call becomes a forwarding `copy` of the returned value.
+//! A checked body is copied only with proof that its checks cannot fail; unsafe
+//! or unproved bodies retain their source frames until LLVM inlining.
+const std = @import("std");
+const ir = @import("ir.zig");
+const facts = @import("facts.zig");
+const proof = @import("inline_proof.zig");
+const cfg = @import("inline_cfg.zig");
+const origins = @import("inline_origins.zig");
+
+/// Inlining only allocates.
+pub const Error = std.mem.Allocator.Error;
+
+/// Inline every qualifying call in `module`'s internal functions; returns how many.
+pub fn inlineLeaves(arena: std.mem.Allocator, module: *ir.Module, provenance: *origins.Table) Error!u32 {
+    const leaves = try withParameters(arena, module, &.{}, provenance);
+    const helpers = try inlineCfg(arena, module, provenance);
+    return leaves + helpers;
+}
+
+/// Apply bounded consuming CFG cloning once, before the caller parameter pass.
+fn inlineCfg(arena: std.mem.Allocator, module: *ir.Module, provenance: *origins.Table) Error!u32 {
+    var count: u32 = 0;
+    for (module.functions.items, 0..) |*caller, index| {
+        if (caller.signature.linkage != .internal) continue;
+        var b: usize = 0;
+        while (b < caller.blocks.items.len) : (b += 1) {
+            var at: usize = 0;
+            while (at < caller.blocks.items[b].insts.items.len) : (at += 1) {
+                const ref = caller.blocks.items[b].insts.items[at];
+                const call = caller.inst(ref);
+                if (call.op != .call or call.a.index() == index) continue;
+                const callee = &module.functions.items[call.a.index()];
+                if (!cfg.qualifies(callee)) continue;
+                var clone = try provenance.prepare(arena, .{ .caller = @intCast(index), .callee = @intCast(call.a.index()), .block = @intCast(b), .ref = ref, .span = call.span }, callee) orelse continue;
+                try cfg.splice(arena, caller, callee, b, at, &clone);
+                count += 1;
+                break;
+            }
+        }
+    }
+    return count;
+}
+
+/// Revisit checked leaves with sound caller parameter intervals, retaining every
+/// unproved callee frame. This only copies single-block leaves, never CFG helpers.
+pub fn withParameters(arena: std.mem.Allocator, module: *ir.Module, parameters: []const []const ?facts.Interval, provenance: *origins.Table) Error!u32 {
+    var count: u32 = 0;
+    for (module.functions.items, 0..) |*caller, index| {
+        if (caller.signature.linkage != .internal) continue;
+        var known: ?facts.Facts = null;
+        for (caller.blocks.items, 0..) |*block, b| {
+            var at: usize = 0;
+            while (at < block.insts.items.len) : (at += 1) {
+                const ref = block.insts.items[at];
+                var call = caller.insts.items[ref.index()];
+                @import("build_fn.zig").directTarget(caller, &call);
+                caller.insts.items[ref.index()] = call;
+                if (call.op != .call or call.a.index() == index) continue;
+                const callee = &module.functions.items[call.a.index()];
+                const result = leaf(callee) orelse continue;
+                if (proof.needsProof(callee)) {
+                    if (known == null) known = try facts.analyze(arena, caller, .{ .fold = false, .mark = false, .params = if (index < parameters.len) parameters[index] else &.{} });
+                    if (!try proof.trapFree(arena, caller, call, callee, known.?)) continue;
+                }
+                var clone = try provenance.prepare(arena, .{ .caller = @intCast(index), .callee = @intCast(call.a.index()), .block = @intCast(b), .ref = ref, .span = call.span }, callee) orelse continue;
+                const cloned = try splice(arena, caller, callee, .{ .block = block, .at = at, .call = ref, .result = result }, &clone);
+                at += cloned;
+                count += 1;
+            }
+        }
+    }
+    return count;
+}
+
+/// The returned value of a qualifying leaf, or null.
+fn leaf(callee: *const ir.Function) ?ir.Ref {
+    if (callee.signature.linkage != .internal or callee.blocks.items.len != 1 or callee.signature.ret == .void) return null;
+    const insts = callee.blocks.items[0].insts.items;
+    if (insts.len == 0) return null;
+    const last = callee.inst(insts[insts.len - 1]);
+    if (last.op != .ret or last.a == .none) return null;
+    for (insts[0 .. insts.len - 1]) |ref| switch (callee.inst(ref).op) {
+        .call, .call_indirect, .print, .phi, .jump, .branch, .ret, .@"unreachable", .err_trace => return null,
+        else => {},
+    };
+    return last.a;
+}
+
+/// Where one call is replaced.
+const Site = struct { block: *ir.Block, at: usize, call: ir.Ref, result: ir.Ref };
+
+/// Clone the callee's body into the caller before `site.at`; returns the number of instructions inserted.
+fn splice(arena: std.mem.Allocator, caller: *ir.Function, callee: *const ir.Function, site: Site, clone: *origins.Clone) Error!usize {
+    const arguments = caller.operands(caller.insts.items[site.call.index()].data);
+    const map = try arena.alloc(ir.Ref, callee.insts.items.len);
+    @memset(map, .none);
+    // Parameters become the arguments; block-less constants are cloned on demand.
+    for (callee.insts.items, 0..) |inst, i| {
+        map[i] = switch (inst.op) {
+            .param => arguments[@intCast(inst.data)],
+            .iconst, .fconst, .undef, .str_const, .func_ref => try append(arena, caller, inst),
+            else => .none,
+        };
+    }
+    var inserted: std.ArrayList(ir.Ref) = .empty;
+    const body = callee.blocks.items[0].insts.items;
+    for (body[0 .. body.len - 1]) |old| {
+        var inst = callee.inst(old);
+        inst.a = remap(callee, map, inst.a);
+        inst.b = remap(callee, map, inst.b);
+        if (inst.op.hasExtra()) {
+            // `record_make` and `list_set` carry operands in the callee's extra list.
+            const start: u32 = @intCast(caller.extra.items.len);
+            for (callee.operands(inst.data)) |operand| try caller.extra.append(arena, remap(callee, map, operand));
+            inst.data = (ir.ExtraSlice{ .start = start, .len = @intCast(caller.extra.items.len - start) }).pack();
+        }
+        const ref = try append(arena, caller, inst);
+        try clone.instruction(arena, 0, old, ref, true);
+        map[old.index()] = ref;
+        try inserted.append(arena, ref);
+    }
+    try site.block.insts.insertSlice(arena, site.at, inserted.items);
+    caller.insts.items[site.call.index()] = .{ .op = .copy, .ty = caller.insts.items[site.call.index()].ty, .a = remap(callee, map, site.result) };
+    return inserted.items.len;
+}
+
+fn remap(callee: *const ir.Function, map: []const ir.Ref, raw: ir.Ref) ir.Ref {
+    if (raw == .none) return .none;
+    return map[callee.resolve(raw).index()];
+}
+
+fn append(arena: std.mem.Allocator, function: *ir.Function, inst: ir.Inst) Error!ir.Ref {
+    const ref: ir.Ref = @fromBackingInt(@intCast(function.insts.items.len));
+    try function.insts.append(arena, inst);
+    return ref;
+}
+//! `mylang-core`: the new compiler core's executable (decision N2). It imports
+//! the existing front end as the `mylang` Zig module and owns everything below
+//! `typed.Program`: the Core IR, its facts, LLVM emission and the native build.
+const std = @import("std");
+const frontend = @import("frontend.zig");
+const typed_dump = @import("typed_dump.zig");
+const build = @import("build.zig");
+const print = @import("print.zig");
+const pipeline = @import("pipeline.zig");
+const passes = @import("passes.zig");
+const facts = @import("facts.zig");
+const test_runner = @import("test_runner.zig");
+const check_command = @import("check_command.zig");
+const cli_run = @import("cli_run.zig");
+
+/// The flag naming the build cache directory.
+const cache_dir_flag = "--cache-dir";
+
+const usage =
+    \\usage: mylang build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR] [--verify-cache] [--cache-report]
+    \\       mylang check FILE.my [--typed] [--stats] [--timings=json] [--cache-dir DIR] [--no-cache]
+    \\       mylang test FILE.my|DIR [options]   (`mylang test` alone lists them)
+    \\       mylang coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
+    \\       mylang dump-typed FILE.my [FUNCTION]
+    \\       mylang dump-ir FILE.my [--facts]   (--facts: after the release passes, with intervals)
+    \\
+;
+
+/// `mylang test`'s usage: every flag `testCommand` and the CLI accept.
+const test_usage =
+    \\usage: mylang test <entry.my|directory> [--filter SUBSTRING|GLOB] [--cases FILE] [--json]
+    \\  --release | --mode Debug|ReleaseFast    --no-facts | --verify-facts
+    \\  --affected --against REF                run only tests reaching a declaration changed since REF
+    \\  --jobs N                                tests at once (default: CPUs, capped by free memory)
+    \\  --max-steps N --max-frames N --max-memory SIZE --timeout-ms N   per-test budgets
+    \\  --seed N --property-runs N              property test inputs (runs: 1 to 1000000)
+    \\  --force --no-cache --cache-dir DIR      rerun every test / use a private cache / cache location
+    \\  --link FILE.c (repeatable) --zig PATH
+    \\
+;
+
+/// What stops a command before it has a status: memory, an unwritable stream, or a
+/// test the runner cannot encode.
+pub const Error = test_runner.Error || std.Io.File.Writer.Error || frontend.Error || build.Error || error{ReadFailed};
+
+/// Dispatch one command; the process exit status is its result.
+pub fn main(init: std.process.Init) !u8 {
+    const allocator = init.arena.allocator();
+    const args = try init.minimal.args.toSlice(allocator);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return buildCommand(init, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "check")) return check_command.run(init, args[2..]);
+    if (args.len >= 3 and std.mem.eql(u8, args[1], "test")) return testCommand(init, args[2..]);
+    // `mylang`'s run command (NEW-CORE-S5-RUN-1), which the core's own tests drive.
+    for ([_][]const u8{ "run", "run-project" }) |name| if (args.len >= 2 and std.mem.eql(u8, args[1], name)) return cli_run.runCommand(init, name, args[2..]);
+    return developer(init, args);
+}
+
+/// The developer commands `mylang` shares (S5-D8): `dump-typed`, `dump-ir` and
+/// `coverage`, from `args` (argv, the program name first). Anything else prints the usage.
+pub fn developer(init: std.process.Init, args: []const []const u8) Error!u8 {
+    if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-typed")) return dumpTyped(init, args[2], if (args.len >= 4) args[3] else null);
+    if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-ir")) return dumpIr(init, args[2], args.len == 4 and std.mem.eql(u8, args[3], "--facts"));
+    if (args.len >= 3 and std.mem.eql(u8, args[1], "coverage")) return coverageCommand(init, args[2..]);
+    try std.Io.File.stderr().writeStreamingAll(init.io, usage);
+    return 2;
+}
+
+fn dumpTyped(init: std.process.Init, path: []const u8, filter: ?[]const u8) !u8 {
+    const allocator = init.arena.allocator();
+    const entry = frontend.entryOf(path);
+    var session = frontend.Session.init(init.gpa, init.io, entry.root);
+    defer session.deinit();
+    var report: std.ArrayList(u8) = .empty;
+    const checked = session.checkFile(allocator, path, &report) catch |err| switch (err) {
+        error.SourceError, error.ReadFailed => {
+            try std.Io.File.stderr().writeStreamingAll(init.io, report.items);
+            return 1;
+        },
+        else => return err,
+    };
+    const text = try typed_dump.render(allocator, checked.program, filter);
+    try std.Io.File.stdout().writeStreamingAll(init.io, text);
+    return 0;
+}
+
+fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool) !u8 {
+    const allocator = init.arena.allocator();
+    const entry = frontend.entryOf(path);
+    var session = frontend.Session.init(init.gpa, init.io, entry.root);
+    defer session.deinit();
+    var report: std.ArrayList(u8) = .empty;
+    const checked = session.checkFile(allocator, path, &report) catch |err| switch (err) {
+        error.SourceError, error.ReadFailed => {
+            try std.Io.File.stderr().writeStreamingAll(init.io, report.items);
+            return 1;
+        },
+        else => return err,
+    };
+    var refusal: build.Refusal = .{};
+    var module = build.buildModuleSource(allocator, checked.program, checked.src, &refusal) catch |err| switch (err) {
+        error.Unsupported => {
+            const at = frontend.position(checked.src, .{ .start = refusal.span, .end = refusal.span });
+            const text = try std.fmt.allocPrint(allocator, "{s}:{d}:{d}: error[E_CORE_UNSUPPORTED]: the new core does not support {s} yet\n", .{ at.path, at.line, at.column, refusal.reason });
+            try std.Io.File.stderr().writeStreamingAll(init.io, text);
+            return 1;
+        },
+        else => return err,
+    };
+    var ranges: std.ArrayList(u8) = .empty;
+    if (with_facts) {
+        const result = try passes.run(allocator, &module, .trusted);
+        for (module.functions.items, result.known) |function, maybe| {
+            const known = maybe orelse continue;
+            try ranges.print(allocator, "facts {s}:", .{function.name});
+            for (known.ranges, known.floats, 0..) |range, float, index| {
+                if (range) |r| try ranges.print(allocator, " %{d}=[{d},{d}]", .{ index, r.lo, r.hi });
+                if (float) |r| try ranges.print(allocator, " %{d}=[{e},{e}]", .{ index, r.lo, r.hi });
+            }
+            try ranges.appendSlice(allocator, "\n");
+            // List facts (settled, length, elements, len), for the lists that carry any.
+            for (known.aggregates.lists, 0..) |list, index| {
+                if (!list.settled and list.len == null and list.elements == null) continue;
+                try ranges.print(allocator, "list {s} %{d}: settled={} length=%{d}", .{ function.name, index, list.settled, if (list.length == .none) -1 else @as(i64, @intCast(list.length.index())) });
+                if (list.elements) |e| try ranges.print(allocator, " elements=[{d},{d}]", .{ e.lo, e.hi });
+                if (list.len) |e| try ranges.print(allocator, " len=[{d},{d}]", .{ e.lo, e.hi });
+                try ranges.appendSlice(allocator, "\n");
+            }
+        }
+    }
+    const text = try print.module(allocator, &module);
+    try std.Io.File.stdout().writeStreamingAll(init.io, text);
+    try std.Io.File.stdout().writeStreamingAll(init.io, ranges.items);
+    return 0;
+}
+
+/// The developer build (`mylang build` given `--sabotage-facts`,
+/// `--generic-vectors` or `--trap-frames=`, S5-D8): the core's own flag set,
+/// every failure exit 1, the source path displayed relative to its directory.
+pub fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
+    const allocator = init.arena.allocator();
+    var options: pipeline.Options = .{ .zig = init.environ_map.get("ZIG") orelse "zig" };
+    var links: std.ArrayList([]const u8) = .empty;
+    var path: ?[]const u8 = null;
+    var index: usize = 0;
+    while (index < args.len) : (index += 1) {
+570:    pub fn intern(self: *Module, allocator: std.mem.Allocator, wanted: Compound) std.mem.Allocator.Error!Type {
+575:            .record => |fields| .{ .record = try allocator.dupe(Type, fields) },
+576:            .@"union" => |cases| .{ .@"union" = try allocator.dupe(Type, cases) },
+577:            .@"fn" => |signature| .{ .@"fn" = .{ .params = try allocator.dupe(Type, signature.params), .ret = signature.ret, .linkage = signature.linkage, .owned = signature.owned, .views = signature.views } },
+580:        try self.compounds.append(allocator, owned);
+585:    pub fn option(self: *Module, allocator: std.mem.Allocator, payload: Type) std.mem.Allocator.Error!Type {
+586:        return self.intern(allocator, .{ .@"union" = &.{ .void, payload } });
+//! Shared release analysis reaches split units, whole output and native receipts.
+const std = @import("std");
+const frontend = @import("frontend.zig");
+const build = @import("build.zig");
+const pipeline = @import("pipeline.zig");
+const driver = @import("driver.zig");
+
+const app = "module app\nimport leaf\ndef main() -> int:\n    xs = [1]\n    return leaf.origin(mut xs, 2)\n";
+const leaf = "module leaf\npublic def origin(xs: mut list[int], x: int) -> int:\n    xs.append(2)\n    return xs[x]\n";
+
+fn snapshot(a: std.mem.Allocator, release: bool, whole: bool) !pipeline.Emission {
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    try dir.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = app });
+    try dir.dir.writeFile(std.testing.io, .{ .sub_path = "leaf.my", .data = leaf });
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var session = frontend.Session.init(a, std.testing.io, root);
+    defer session.deinit();
+    var report: std.ArrayList(u8) = .empty;
+    const checked = try session.check(a, "app", &report);
+    var refusal: build.Refusal = .{};
+    var module = try build.buildModuleSource(a, checked.program, checked.src, &refusal);
+    const emitted = try pipeline.emitted(a, &module, .{ .src = checked.src, .source_path = "app.my", .main = .{} }, .{
+        .zig = "unused",
+        .release = release,
+        .show = .{ .llvm = if (whole) "unused" else null, .stats = true },
+    }, &report);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, report.items, "mylang-core: inlined "));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, report.items, "mylang-core: ownership: "));
+    return emitted;
+}
+
+// spec-case: NEW-CORE-S4-UNITS-1
+test "pipeline emitted optional whole output preserves every native unit and cloned source frame" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    for ([_]bool{ false, true }) |release| {
+        const split = try snapshot(a, release, false);
+        const both = try snapshot(a, release, true);
+        try std.testing.expect(split.whole == null);
+        try std.testing.expectEqual(split.units.len, both.units.len);
+        for (split.units, both.units) |left, right| {
+            try std.testing.expectEqualStrings(left.name, right.name);
+            try std.testing.expectEqualStrings(left.llvm, right.llvm);
+        }
+        try std.testing.expect(std.mem.indexOf(u8, both.whole.?, "!DIFile(filename: \"leaf.my\"") != null);
+        if (release) try std.testing.expect(std.mem.indexOf(u8, both.whole.?, "inlinedAt:") != null);
+    }
+}
+
+fn native(a: std.mem.Allocator, emission: pipeline.Emission, split: bool) !std.process.RunResult {
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var environment = try std.testing.environ.createMap(a);
+    defer environment.deinit();
+    try environment.put("MYL_CORE_LEAKCHECK", "1");
+    const output = try std.fs.path.join(a, &.{ root, "program" });
+    var report: std.ArrayList(u8) = .empty;
+    _ = try driver.link(a, std.testing.io, &environment, .{
+        .zig = environment.get("MYLANG_ZIG") orelse "zig",
+        .work = root,
+        .output = output,
+        .release = true,
+        .links = &.{},
+        .units = if (split) emission.units else &.{driver.wholeUnit(emission.whole.?)},
+    }, &report);
+    return std.process.run(a, std.testing.io, .{ .argv = &.{output}, .environ_map = &environment });
+}
+
+// spec-case: NEW-CORE-S4-SITES-1
+test "pipeline emitted split and whole native traps preserve exact consuming callee and caller frames" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const emission = try snapshot(a, true, true);
+    const split = try native(a, emission, true);
+    const whole = try native(a, emission, false);
+    try std.testing.expectEqual(@as(u8, 1), split.term.exited);
+    try std.testing.expectEqual(@as(u8, 1), whole.term.exited);
+    try std.testing.expectEqualStrings("", split.stdout);
+    try std.testing.expectEqualStrings(split.stdout, whole.stdout);
+    try std.testing.expectEqualStrings(split.stderr, whole.stderr);
+    try std.testing.expect(std.mem.indexOf(u8, split.stderr, "in leaf::origin at leaf.my:4:12") != null);
+    try std.testing.expect(std.mem.indexOf(u8, split.stderr, "in app::main at app.my:5:12") != null);
+}
+//! Test root of the new compiler core (`zig build test-core`): unit tests of
+//! each stage, then the end-to-end slice programs under `test/core`.
+comptime {
+    _ = @import("frontend_test.zig");
+    _ = @import("cli.zig");
+    _ = @import("cli_args.zig");
+    _ = @import("trap_contract.zig");
+    _ = @import("cli_flags_test.zig");
+    _ = @import("test_runner_affected.zig");
+    _ = @import("build_test.zig");
+    _ = @import("emit_llvm_test.zig");
+    _ = @import("emit_units_test.zig");
+    _ = @import("inline_origins_test.zig");
+    _ = @import("driver.zig");
+    _ = @import("driver_test.zig");
+    _ = @import("pipeline_emission_test.zig");
+    _ = @import("driver_native_cache_test.zig");
+    _ = @import("unit_cache.zig");
+    _ = @import("build_replay.zig");
+    _ = @import("driver_cache_test.zig");
+    _ = @import("facts_test.zig");
+    _ = @import("vector_test.zig");
+    _ = @import("e2e_test.zig");
+    _ = @import("values_test.zig");
+    _ = @import("verify_ir_test.zig");
+    _ = @import("value_build_test.zig");
+    _ = @import("value_e2e_test.zig");
+    _ = @import("value_facts_test.zig");
+    _ = @import("value_emit_test.zig");
+    _ = @import("test_runner_test.zig");
+    _ = @import("project_entry.zig");
+    _ = @import("test_runner_options.zig");
+    _ = @import("test_runner_directory.zig");
+    _ = @import("test_runner_receipt.zig");
+    _ = @import("test_runner_cases.zig");
+    _ = @import("test_runner_contracts.zig");
+    _ = @import("test_runner_project_test.zig");
+    _ = @import("tool_identity.zig");
+    _ = @import("tool_discovery.zig");
+    _ = @import("tool_ticket.zig");
+    _ = @import("runner_property_test.zig");
+    _ = @import("property_codec.zig");
+    _ = @import("property_validate.zig");
+    _ = @import("property_types.zig");
+    _ = @import("property_generate.zig");
+    _ = @import("property_shrink.zig");
+    _ = @import("property_render.zig");
+    _ = @import("conformance_test.zig");
+    _ = @import("rows_test.zig");
+    _ = @import("own_test.zig");
+    _ = @import("trace_test.zig");
+    _ = @import("s2_ir_test.zig");
+    _ = @import("iteration_test.zig");
+    _ = @import("text_test.zig");
+    _ = @import("byte_index_test.zig");
+    _ = @import("function_build_test.zig");
+    _ = @import("dict_test.zig");
+    _ = @import("dict_scalar_store_test.zig");
+    _ = @import("number_test.zig");
+    _ = @import("s3_ir_test.zig");
+    _ = @import("s3_numeric_test.zig");
+    _ = @import("cap_test.zig");
+    _ = @import("environment_names_test.zig");
+    _ = @import("s3_values_test.zig");
+    _ = @import("s3_none_keys_test.zig");
+    _ = @import("s3_list_methods_test.zig");
+    _ = @import("s3_number_test.zig");
+    _ = @import("fuse_text_scalar_test.zig");
+    _ = @import("emit_text_split_test.zig");
+    _ = @import("s5_units_test.zig");
+}
+242:/// Forward the compiler-applied `-Dtest-filter` values to the Guardian runner.
+244:/// runner the filter lets it refuse a filter that named nothing instead of
+245:/// silently passing with only the unnamed `test { }` blocks it cannot filter.
+246:fn forwardFilters(b: *std.Build, step: *std.Build.Step.Run, filters: []const []const u8) void {
+247:    for (filters) |filter| step.addArg(b.fmt("--guardian-filter={s}", .{filter}));
+253:/// steps — the `-Dtest-filter` values to forward and whether to cache verdicts.
+259:    filters: []const []const u8 = &.{},
+281:        forwardFilters(b, run, shards.filters);
+319:    const filter = b.option([]const u8, "bench-filter", "bench-parity: comma-separated substrings of GROUP/NAME, e.g. sieve or micro/");
+326:    if (filter) |needle| {
+328:            std.debug.print("error: -Dbench-filter= needs a non-empty substring; omit it to run every program\n", .{});
+331:        bench.addArgs(&.{ "--filter", needle });
+353:    filters: []const []const u8,
+364:/// - `zig build test-core` runs the core's unit tests and its end-to-end slice,
+366:///   one test binary (default 8; a `-Dtest-filter` run is one process); it returns
+381:    const unit = b.addTest(.{ .max_rss = rss.compile, .filters = inputs.filters, .test_runner = inputs.test_runner, .root_module = b.createModule(.{
+416:    const step = b.step("test-core", "Run the new core's unit tests and its end-to-end slice");
+419:    const requested = b.option(usize, "core-shards", "test-core: concurrent shards of the core test root (default 8)") orelse 8;
+420:    const shards = if (inputs.filters.len == 0) @max(1, requested) else 1;
+436:    // `-Dtest-filter=SUBSTRING` narrows the unit and CLI suites to one area in seconds.
+441:    const test_filters: []const []const u8 = if (b.option([]const []const u8, "test-filter", "Run only Zig tests whose name contains this substring (repeatable)")) |needles| blk: {
+443:            std.debug.print("error: -Dtest-filter= needs a non-empty substring; run `zig build test` for the full suite\n", .{});
+450:    // root, which is what the gate did before sharding existed. A filter is
+453:    // yields empty shards and counts nobody can read. A filtered run therefore
+465:    const unit_shards = if (test_filters.len == 0) requested_shards else 1;
+469:    const cli_shards = if (test_filters.len == 0) @max(1, requested_shards / 2) else 1;
+526:        .filters = test_filters,
+544:    const core_tests = addCore(b, .{ .target = target, .optimize = optimize, .front_end = core, .compiler = exe, .filters = test_filters, .test_runner = guardian.testRunner(guardian_dep), .identity = identity });
+551:    const integration = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .filters = test_filters, .root_module = b.createModule(.{
+563:    forwardFilters(b, run_integration, test_filters);
+583:    forwardFilters(b, run_unit, test_filters);
+585:    // and `test-cli` keep the single whole-root run, so `-Dtest-filter` behaves
+591:    // so `-Dtest-filter` returns in seconds.
+592:    b.step("test-units", "Run only src/root_test.zig, honouring -Dtest-filter").dependOn(&run_unit.step);
+593:    b.step("test-cli", "Run only test/integration.zig, honouring -Dtest-filter").dependOn(&run_integration.step);
+595:    // under a filter, for `scripts/affected_tests.py`: its selections can name a
+598:    const units_sharded = b.step("test-units-sharded", "Run src/root_test.zig split into -Dtest-shards processes, honouring -Dtest-filter");
+599:    const cli_sharded = b.step("test-cli-sharded", "Run test/integration.zig split into -Dtest-shards/2 processes, honouring -Dtest-filter");
+600:    dependOnAll(units_sharded, shardRuns(b, unit, .{ .count = requested_shards, .bytes = rss.shard_unit, .inputs = "", .whole = run_unit, .filters = test_filters, .cache = false }));
+601:    dependOnAll(cli_sharded, shardRuns(b, integration, .{ .count = @max(1, requested_shards / 2), .bytes = rss.shard_cli, .inputs = "", .whole = run_integration, .filters = test_filters, .cache = false }));
+621:    const golden_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .filters = test_filters, .root_module = b.createModule(.{
+631:    forwardFilters(b, run_golden, test_filters);
+docs/performance.md:32:`mylang build --stats` prints what the ownership pass did for a build: how many
+docs/performance.md:159:as does a sum of unbounded terms. `mylang build --release --stats` counts what the
+docs/performance.md:160:passes did, and `mylang dump-ir --facts` shows which operations were proven
+docs/performance.md:197:copy of the array (`array_set` in `mylang dump-ir`).
+docs/performance.md:259:`--stats` on `build` prints what the core's passes did:
+docs/performance.md:262:$ mylang build scale.my -o scale --release --stats
+docs/performance.md:267:`mylang dump-ir prog.my --facts` prints the Core IR with the fact pass applied, so a
+src/features.json:1163:      "note": "Retired with the old back end in new-core stage S5 (2026-10): `--rc-runtime=sites` and `MYLANG_RC_SITES`, the counting two-count RC runtime that charged ownership events to call sites. `mylang build --stats` reports the new core's ownership plan."
+src/features.json:1167:      "note": "Retired with the old back end in new-core stage S5 (2026-10): `mylang check --explain-ownership=OUT.jsonl`, which wrote the old bytecode ownership analysis. The flag is refused; `mylang build --stats` reports the new core's ownership plan."
+docs/value-semantics.md:311:--stats` prints its counts: updates in place, writes left to a run-time count test,
+docs/README.md:79:  [ownership](tooling/ownership.md) (`--stats`).
+docs/mvp-audit.md:16:> `dump-bytecode`. Native code now comes from Core IR through LLVM (`mylang dump-ir`).
+docs/module-constants.md:38:scalar constant is its literal value (`mylang dump-ir` shows `42:i64` where
+docs/current-language.md:36:| Execution | Native code is the only runtime: the compiler lowers to Core IR, emits LLVM and links with the C runtime. Builds are debug by default (one LLVM unit per module); `--release` optimizes the whole program as one unit. `mylang build` writes an executable; `mylang run`, `run-project` and `test` build one and execute it in a child process; `mylang dump-ir` prints the Core IR | [native builds](tooling/native-build.md), [performance](performance.md#build-for-speed); [direct C imports](c-ffi.md) and [guest tests](tooling/guest-tests.md) describe the native route |
+SPEC.md:1383:- [NEW-CORE-S5-CLI-1] `mylang build` (and `build --run`), `run`, `run-project` and `test` run the new core (`src/core/cli.zig`), and `dump-ir`, `dump-typed` and `coverage` are `mylang` developer commands. They take the old CLI's spellings: `--flag VALUE` or `--flag=VALUE`; `--qbe PATH` names a tool the new core never runs and is ignored; `--project` and `--whole-program` ask for nothing more (S5-D6); `--mode ReleaseFast` is `--release`. A build or run prints the front end's warnings to stderr before the program runs, as the old CLI did, and `--diagnostics=json` renders them, check errors, the new core's refusals and a trap as `diagnostic-v1` records (a trap's record carries its frames and the runtime's `trap_detail`).

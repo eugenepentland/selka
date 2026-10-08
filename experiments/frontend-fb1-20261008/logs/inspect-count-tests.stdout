@@ -1,0 +1,491 @@
+//! Regression coverage for the cost report and its allocation contract.
+const std = @import("std");
+const ir = @import("ir.zig");
+const support = @import("test_support.zig");
+const build = @import("build.zig");
+const passes = @import("passes.zig");
+const cost = @import("cost.zig");
+const command = @import("cost_command.zig");
+const remarks = @import("cost_remarks.zig");
+const flags = @import("flags.zig");
+
+const program =
+    \\def leaf(x: int) -> int:
+    \\    return x & 7
+    \\def borrowed(xs: list[int]) -> list[int]:
+    \\    ys = xs
+    \\    ys[0] = 4
+    \\    return ys
+    \\def consuming(xs: mut list[int]) -> int:
+    \\    xs[0] = 5
+    \\    return xs[0]
+    \\def fresh(n: int) -> int:
+    \\    xs: list[int] = []
+    \\    xs.append(n)
+    \\    return xs[0] + leaf(n)
+    \\def main(out: Stream) -> int:
+    \\    xs = [1, 2]
+    \\    snapshots = [xs, xs]
+    \\    out.print(snapshots)
+    \\    ys = borrowed(xs)
+    \\    out.print(ys, consuming(mut xs), fresh(3))
+    \\    return 0
+;
+
+fn measured(a: std.mem.Allocator, source: []const u8, mode: ?passes.Mode) !cost.Report {
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a, source, &refusal);
+    const result = if (mode) |release| try support.runPasses(a, &module, release) else try passes.debug(a, &module);
+    const report = try cost.measure(a, &module, &result, null);
+    // The report's whole-program events must be identical to the optimizer's counters.
+    try std.testing.expectEqual(result.counts.inlined, report.totals.inlined_calls);
+    try std.testing.expectEqual(result.counts.proven, report.totals.checks.proved);
+    try std.testing.expectEqual(result.counts.unswitched, report.totals.loops.unswitched);
+    try std.testing.expectEqual(result.counts.versioned, report.totals.loops.versioned);
+    try std.testing.expectEqual(result.counts.vectorized, report.totals.loops.vector_plans);
+    try std.testing.expectEqual(result.own.in_place, report.totals.updates.in_place);
+    try std.testing.expectEqual(result.own.tested, report.totals.updates.tested);
+    try std.testing.expectEqual(result.own.copied, report.totals.updates.copied);
+    try std.testing.expectEqual(result.own.retains, report.totals.rc.retains);
+    try std.testing.expectEqual(result.own.releases, report.totals.rc.releases);
+    try std.testing.expectEqual(result.own.elided, report.totals.rc.elided_pairs);
+    try std.testing.expectEqual(result.own.promoted, report.totals.rc.stack_lists);
+    return report;
+}
+
+fn named(report: cost.Report, name: []const u8) cost.Counts {
+    for (report.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.counts;
+    unreachable;
+}
+
+// spec: FRONTEND-COST-1
+test "cost attributes inlining checks and all ownership forms to emitted bodies in debug release and verify" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const debug = try measured(a, program, null);
+    try std.testing.expect(named(debug, "borrowed").updates.copied > 0);
+    try std.testing.expect(named(debug, "consuming").updates.tested > 0);
+    try std.testing.expect(named(debug, "fresh").updates.in_place > 0);
+    try std.testing.expect(debug.totals.checks.kept > 0);
+    try std.testing.expect(debug.totals.allocation.sites > 0);
+    try std.testing.expect(debug.totals.rc.retains > 0);
+    try std.testing.expect(debug.totals.rc.releases > 0);
+    try std.testing.expectEqual(@as(u32, 0), debug.totals.inlined_calls);
+    const release = try measured(a, program, .trusted);
+    try std.testing.expect(named(release, "fresh").inlined_calls > 0);
+    try std.testing.expect(release.totals.checks.proved > 0);
+    try std.testing.expect(release.totals.rc.stack_lists > 0);
+    const verify = try measured(a, program, .verify);
+    try std.testing.expect(verify.totals.checks.kept >= release.totals.checks.kept);
+    _ = try measured(a, program, .off);
+}
+
+// spec-case: FRONTEND-COST-1
+test "cost allocation classification includes growth scratch and unresolved calls but excludes stack and borrow identity" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module: ir.Module = .{};
+    try module.functions.appendSlice(a, &.{
+        .{ .name = "local", .signature = .{ .params = &.{}, .ret = .void } },
+        .{ .name = "myl_core_text_encode", .signature = .{ .params = &.{.str}, .ret = .bytes, .linkage = .runtime_c } },
+        .{ .name = "myl_core_str_join", .signature = .{ .params = &.{}, .ret = .str, .linkage = .runtime_c } },
+        .{ .name = "foreign", .signature = .{ .params = &.{}, .ret = .void, .linkage = .extern_c } },
+    });
+    var function: ir.Function = .{ .name = "test", .signature = .{ .params = &.{}, .ret = .void } };
+    try function.insts.appendSlice(a, &.{ .{ .op = .func_ref, .ty = .void, .data = 0 }, .{ .op = .param, .ty = .void } });
+    for ([_]ir.Op{ .list_new, .list_push, .list_copy, .dict_new, .dict_copy, .dict_insert, .box_make, .str_char, .str_append, .str_append_char, .str_slice, .str_from_view, .list_sort, .buffer_new, .buffer_copy, .buffer_push }) |op| {
+        try std.testing.expectEqual(cost.Allocation.may, cost.allocation(&module, &function, .{ .op = op, .ty = .void }));
+    }
+    try std.testing.expectEqual(cost.Allocation.never, cost.allocation(&module, &function, .{ .op = .list_new, .ty = .void, .data = 3 }));
+    try std.testing.expectEqual(cost.Allocation.may, cost.allocation(&module, &function, .{ .op = .list_new, .ty = .void, .data = flags.fill_capacity }));
+    try std.testing.expectEqual(cost.Allocation.never, cost.allocation(&module, &function, .{ .op = .list_push, .ty = .void, .data = @import("promote.zig").stack_push }));
+    try directCalls(&module, &function);
+    try std.testing.expectEqual(cost.Allocation.never, cost.allocation(&module, &function, .{ .op = .call_indirect, .ty = .void, .a = @fromBackingInt(0) }));
+    try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, &function, .{ .op = .call_indirect, .ty = .void, .a = @fromBackingInt(1) }));
+    try std.testing.expect(!cost.runtimeAllocationFree("myl_core_future_helper"));
+}
+
+// spec-case: FRONTEND-COST-1
+test "cost LLVM remarks distinguish successful vectorization from plans misses and unavailable evidence" {
+    var rows = [_]cost.Function{ .{ .name = "app::loop", .counts = .{ .loops = .{ .unknown = 2, .vector_plans = 1 } } }, .{ .name = "app::other", .counts = .{ .loops = .{ .unknown = 1 } } } };
+    var report: cost.Report = .{ .functions = &rows, .totals = .{} };
+    remarks.apply(&report,
+        \\--- !Passed
+        \\Pass:            loop-vectorize
+        \\Name:            Vectorized
+        \\Function:        'my.app::loop'
+        \\...
+        \\--- !Missed
+        \\Pass:            loop-vectorize
+        \\Name:            MissedDetails
+        \\Function:        'app::other'
+        \\...
+        \\--- !Passed
+        \\Pass:            inline
+        \\Name:            Inlined
+        \\Function:        'app::other'
+        \\...
+    );
+    try std.testing.expectEqual(@as(?u32, 1), rows[0].counts.llvm_vectorized_loops);
+    try std.testing.expect(rows[1].counts.llvm_vectorized_loops == null);
+    try std.testing.expectEqual(@as(u32, 3), report.totals.loops.unknown);
+    try std.testing.expectEqual(@as(u32, 1), report.totals.loops.vector_plans);
+}
+
+// spec-case: FRONTEND-COST-1
+test "cost command filters names rejects unknown flags and renders stable totals as text and JSON" {
+    try std.testing.expect(command.parse(&.{ "entry.my", "f", "--json" }).?.json);
+    try std.testing.expect(command.parse(&.{ "entry.my", "--debug", "--verify-facts" }) == null);
+    try std.testing.expect(command.parse(&.{ "entry.my", "--unknown" }) == null);
+    try std.testing.expect(command.parse(&.{ "entry.my", "--llvm-remarks" }) == null);
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a, program, &refusal);
+    const result = try support.runPasses(a, &module, .trusted);
+    const report = try cost.measure(a, &module, &result, "fresh");
+    try std.testing.expectEqual(@as(usize, 1), report.functions.len);
+    try std.testing.expectEqualDeep(report.functions[0].counts, report.totals);
+    const json = try cost.render(a, report, true);
+    const parsed = try std.json.parseFromSlice(cost.Report, a, json, .{});
+    try std.testing.expectEqualDeep(report.totals, parsed.value.totals);
+    const text = try cost.render(a, report, false);
+    try std.testing.expect(std.mem.indexOf(u8, text, "TOTAL:") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "LLVM vectorized unknown") != null);
+    try std.testing.expectEqual(@as(usize, 0), (try cost.measure(a, &module, &result, "missing")).functions.len);
+}
+
+fn directCalls(module: *const ir.Module, function: *const ir.Function) !void {
+    for ([_]cost.Allocation{ .never, .never, .may, .unresolved }, 0..) |expected, index| {
+        try std.testing.expectEqual(expected, cost.allocation(module, function, .{ .op = .call, .ty = .void, .a = @fromBackingInt(@intCast(index)) }));
+    }
+}
+
+const reduction =
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    n = len(args) + 100
+    \\    values = [(j * 37 + 5) % 1009 for j in range(n)]
+    \\    total = 0
+    \\    for j in range(n):
+    \\        total += ((values[j] + 3) * 17 + 23) // 7 % 1009
+    \\    out.print(total)
+    \\    return 0
+;
+
+// spec-case: FRONTEND-COST-1
+test "cost includes real vector plans loop guards and unswitched cloned body events" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const vectorized = try measured(a, reduction, .trusted);
+    try std.testing.expect(vectorized.totals.loops.vector_plans > 0);
+    const guarded = try measured(a,
+        \\def main(args: list[str], out: Stream) -> int:
+        \\    n = len(args) + 100
+        \\    values = [(j * 37) % 1009 for j in range(n)]
+        \\    total = 0
+        \\    for j in range(n):
+        \\        total += int((float(values[j]) / 8.0 + 0.5) * 128000.0)
+        \\    out.print(total)
+        \\    return 0
+    , .trusted);
+    try std.testing.expect(guarded.totals.loops.versioned > 0);
+    const unswitched = try measured(a,
+        \\def origin(xs: mut list[int], x: int, kind: int) -> int:
+        \\    xs.append(2)
+        \\    total = 0
+        \\    for i in range(x):
+        \\        if kind == 0:
+        \\            total += xs[i]
+        \\        else:
+        \\            total += xs[i] + 1
+        \\    return total
+        \\def main(args: list[str]) -> int:
+        \\    xs = [1]
+        \\    return origin(mut xs, 3, len(args))
+    , .verify);
+    try std.testing.expect(unswitched.totals.loops.unswitched > 0);
+}
+
+// spec-case: FRONTEND-COST-1
+test "cost allocation sites remain in cold callees two calls down before release optimization" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const debug = try measured(arena.allocator(),
+        \\def deep(flag: bool) -> int:
+        \\    if flag:
+        \\        xs = [1]
+        \\        return len(xs)
+        \\    return 0
+        \\def second(flag: bool) -> int:
+        \\    return deep(flag)
+        \\def first(flag: bool) -> int:
+        \\    return second(flag)
+        \\def main(out: Stream) -> int:
+        \\    out.print(first(False))
+        \\    return 0
+    , null);
+    try std.testing.expect(named(debug, "deep").allocation.sites > 0);
+    try std.testing.expectEqual(@as(u32, 0), named(debug, "first").allocation.sites);
+    try std.testing.expectEqual(@as(u32, 0), named(debug, "second").allocation.sites);
+}
+
+#!/usr/bin/env bash
+# build-slot.sh — run one build or gate command without overloading a shared machine.
+#
+# usage: scripts/build-slot.sh KIND [--] CMD...
+#        scripts/build-slot.sh status
+#
+# KIND is `build` (any `zig build` compile or install, a focused `test-units`/
+# `test-cli`, `mylang test <dir>`, a guest benchmark build) or `gate` (a full gate
+# step: `zig build test`, `test-qbe`, `test-qbe-build`, `test-schematic`,
+# `test-byte-io`). A job is admitted only when both hold:
+#   * a slot of its kind is free (flock on a per-slot lock file), and
+#   * MemAvailable is at least the kind's threshold.
+# Otherwise it waits, polling, and reports how long it waited. An admitted job
+# runs under `taskset` with the reserved timing CPUs removed from its affinity,
+# so benchmarks pinned to those CPUs are not disturbed by builds.
+#
+# Environment (defaults measured on the i7-12700H / 30 GB development box,
+# docs/tooling/many-agents.md):
+#   MYLANG_BUILD_SLOTS=3          concurrent `build` jobs
+#   MYLANG_GATE_SLOTS=1           concurrent `gate` jobs
+#   MYLANG_BUILD_MEM=4G           MemAvailable needed to admit a build
+#   MYLANG_GATE_MEM=6G            MemAvailable needed to admit a gate
+#   MYLANG_TIMING_CPUS=2,3,10,11  CPUs kept free of admitted jobs ("" keeps none)
+#   MYLANG_SLOT_POLL=5            seconds between admission attempts
+#   MYLANG_SLOT_SETTLE=5          seconds an admitted job delays the next admission,
+#                                 so its memory shows up in MemAvailable first
+#   MYLANG_SLOT_DIR               lock directory (default $XDG_RUNTIME_DIR/mylang-slots,
+#                                 else ~/.cache/mylang/slots)
+# Memory sizes take a K/M/G suffix or plain bytes.
+#
+# The wrapper does not cap memory itself; combine it with a cgroup cap when you
+# want one, e.g. `scripts/build-slot.sh gate systemd-run --user --scope -p MemoryMax=16G zig build test`.
+set -u
+
+die() { echo "build-slot: $*" >&2; exit 2; }
+
+bytes() {
+  local text=$1 number unit
+  number=${text%[KkMmGg]}
+  unit=${text#"$number"}
+  [[ $number =~ ^[0-9]+$ ]] || die "not a size: '$text' (use bytes or a K/M/G suffix)"
+  case $unit in
+    "") echo "$number" ;;
+    K|k) echo $((number << 10)) ;;
+    M|m) echo $((number << 20)) ;;
+    G|g) echo $((number << 30)) ;;
+  esac
+}
+
+available() { awk '$1 == "MemAvailable:" { print $2 * 1024; exit }' /proc/meminfo; }
+
+human() { awk -v b="$1" 'BEGIN { printf "%.1f GiB", b / 1073741824 }'; }
+
+slot_dir() {
+  if [ -n "${MYLANG_SLOT_DIR:-}" ]; then echo "$MYLANG_SLOT_DIR"
+  elif [ -n "${XDG_RUNTIME_DIR:-}" ] && [ -d "${XDG_RUNTIME_DIR}" ]; then echo "$XDG_RUNTIME_DIR/mylang-slots"
+  else echo "$HOME/.cache/mylang/slots"; fi
+}
+
+# The CPUs this process may use, minus the reserved timing CPUs, as a taskset list.
+allowed_cpus() {
+  local reserved=${MYLANG_TIMING_CPUS-2,3,10,11} list cpu keep=() skipped usable
+  list=$(awk '/^Cpus_allowed_list:/ { print $2 }' /proc/self/status)
+  skipped=$(expand "$reserved") || exit 2
+  usable=$(expand "$list") || exit 2
+  declare -A skip=()
+  for cpu in $skipped; do skip[$cpu]=1; done
+  for cpu in $usable; do [ -z "${skip[$cpu]:-}" ] && keep+=("$cpu"); done
+  [ ${#keep[@]} -gt 0 ] || die "MYLANG_TIMING_CPUS=$reserved leaves no CPU for builds"
+  local IFS=,; echo "${keep[*]}"
+}
+
+# Expand a CPU list such as 0-3,8,10-11 into one number per line.
+expand() {
+  local part low high
+  local IFS=,
+  for part in $1; do
+    [ -n "$part" ] || continue
+    low=${part%-*}; high=${part#*-}
+    [[ $low =~ ^[0-9]+$ && $high =~ ^[0-9]+$ ]] || die "not a CPU list: '$1'"
+    seq "$low" "$high"
+  done
+}
+
+status() {
+  local dir kind n i
+  dir=$(slot_dir)
+  echo "slot dir: $dir"
+  echo "MemAvailable: $(human "$(available)")"
+  echo "timing CPUs kept free: ${MYLANG_TIMING_CPUS-2,3,10,11}; builds run on: $(allowed_cpus)"
+  for kind in build gate; do
+    if [ $kind = build ]; then n=${MYLANG_BUILD_SLOTS:-3}; else n=${MYLANG_GATE_SLOTS:-1}; fi
+    for i in $(seq 1 "$n"); do
+      if [ -e "$dir/$kind$i.lock" ] && ! flock -n "$dir/$kind$i.lock" true; then
+        echo "$kind$i: busy"
+      else
+        echo "$kind$i: free"
+      fi
+    done
+  done
+}
+
+[ $# -ge 1 ] || die "usage: build-slot.sh build|gate [--] CMD...  |  build-slot.sh status"
+kind=$1; shift
+case $kind in
+  status) status; exit 0 ;;
+  build) slots=${MYLANG_BUILD_SLOTS:-3}; need=$(bytes "${MYLANG_BUILD_MEM:-4G}") || exit 2 ;;
+  gate) slots=${MYLANG_GATE_SLOTS:-1}; need=$(bytes "${MYLANG_GATE_MEM:-6G}") || exit 2 ;;
+  *) die "kind must be build, gate or status, not '$kind'" ;;
+esac
+[ "${1:-}" = "--" ] && shift
+[ $# -ge 1 ] || die "no command given"
+[[ $slots =~ ^[1-9][0-9]*$ ]] || die "slot count must be a positive integer, not '$slots'"
+poll=${MYLANG_SLOT_POLL:-5}
+[[ $poll =~ ^[1-9][0-9]*$ ]] || die "MYLANG_SLOT_POLL must be a positive integer"
+cpus=$(allowed_cpus) || exit 2
+dir=$(slot_dir)
+mkdir -p "$dir" || die "cannot create $dir"
+
+settle=${MYLANG_SLOT_SETTLE:-5}
+[[ $settle =~ ^[0-9]+$ ]] || die "MYLANG_SLOT_SETTLE must be a non-negative integer"
+
+waited=0
+reason=""
+started=$(date +%s)
+while :; do
+  for i in $(seq 1 "$slots"); do
+    exec 9>"$dir/$kind$i.lock"
+    if flock -n 9; then
+      # Admissions are serialized, and each admitted job keeps the admission
+      # lock for MYLANG_SLOT_SETTLE seconds, so the next job's memory check sees
+      # this one's footprint instead of the idle moment before it grew.
+      exec 8>"$dir/admit.lock"
+      flock 8
+      free=$(available)
+      if [ "$free" -ge "$need" ]; then
+        if [ $waited -gt 0 ]; then
+          echo "build-slot: $kind slot $i after ${waited}s ($reason)" >&2
+        fi
+        if [ "$settle" -gt 0 ]; then sleep "$settle" 9>&- & fi
+        exec 8>&-
+        # Hold the slot lock (fd 9, inherited) for the job's lifetime; exec keeps
+        # the job's exit status and signals exactly as if it ran directly.
+        exec taskset -c "$cpus" "$@"
+      fi
+      exec 8>&-
+      reason="waiting for memory: $(human "$free") available, $kind needs $(human "$need")"
+      exec 9>&-
+      break
+    fi
+    exec 9>&-
+    reason="all $slots $kind slot(s) busy"
+  done
+  if [ $waited -eq 0 ] || [ $((waited % 60)) -lt "$poll" ]; then
+    echo "build-slot: $reason; waiting (${waited}s so far)" >&2
+  fi
+  sleep "$poll"
+  waited=$(( $(date +%s) - started ))
+done
+
+-c/s3-char/fuzz_char.py"
+NUMBER_HARNESS = ROOT / "experiments/new-core-s2-20261005/wave-b/s2-t2/fuzz_number.py"
+
+
+def identity(path):
+    path = path.resolve()
+    if not path.is_file() or not os.access(path, os.X_OK):
+        raise ValueError(f"oracle must be an executable file: {path}")
+    with path.open("rb") as binary:
+        return {"path": str(path), "sha256": hashlib.file_digest(binary, "sha256").hexdigest()}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--references", type=Path, required=True, help="Frozen old-core outcomes (references/fuzz-v1.json.gz)")
+    parser.add_argument("--cases", type=int, default=200, help="Cases per kind: 50 per package, 200 at S5-X")
+    parser.add_argument("--new", type=Path, required=True, help="Explicit qualified final integrated new oracle")
+    parser.add_argument("--qualified-head", help="Require this full qualified source commit to remain HEAD")
+    parser.add_argument("--evidence", type=Path, help="Fresh directory below experiments; default is a unique UTC/UUID run")
+    parser.add_argument("--jobs", type=int, choices=(1, 2, 3), default=3)
+    args = parser.parse_args()
+    try:
+        oracles = {"old": identity(STUB), "new": identity(args.new)}
+        if os.path.samefile(STUB, args.new):
+            raise ValueError("--old and --new must name distinct oracle files")
+    except (OSError, ValueError) as error:
+        parser.error(str(error))
+    commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    if args.qualified_head and args.qualified_head != commit:
+        parser.error("--qualified-head must be the full current HEAD commit")
+    if subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=no"], cwd=ROOT, text=True):
+        parser.error("tracked source must be clean before the final matrix")
+    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:12]
+    area = (args.evidence or HERE / f"fuzz-{args.cases}-{run_id}").resolve()
+    if not area.is_relative_to(ROOT / "experiments"):
+        parser.error("evidence must be below this worktree's experiments directory")
+    if area.exists():
+        parser.error("evidence directory already exists; retain it and choose a fresh directory")
+    cache = ROOT / ".mylang-cache/s5/fuzz" / run_id
+    references = {"path": str(args.references.resolve()), "sha256": hashlib.sha256(args.references.read_bytes()).hexdigest()}
+    area.mkdir(parents=True)
+    print(f"evidence={area}\nsource_commit={commit}", flush=True)
+    manifest = {"source_commit": commit, "qualified_head_requested": args.qualified_head,
+                "oracles": oracles, "references": references, "cases_per_kind": args.cases, "maximum_parallel_jobs": args.jobs,
+                "kinds": list(KINDS), "execution_order": list(EXECUTION_ORDER),
+                "cache_root": str(cache), "run_id": run_id}
+    (area / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+
+    def run(kind):
+        command = [str(ROOT / "scripts/build-slot.sh"), "build", "--", "nice", "-n", "10",
+                   sys.executable, str(HERE / "fuzz_frozen.py"), "--kind", kind, "--references", references["path"],
+                   "--cases", str(args.cases), "--seed", str(3301 + KINDS.index(kind)),
+                   "--old", oracles["old"]["path"], "--new", oracles["new"]["path"],
+                   "--evidence", str(area / kind), "--cache-root", str(cache / kind)]
+        if kind in ("text", "number"):
+            command += ["--harness", str(TEXT_HARNESS if kind == "text" else NUMBER_HARNESS)]
+        with (area / f"{kind}.txt").open("x") as log:
+            log.write(f"source_commit={commit}\n$ {shlex.join(command)}\n")
+            log.flush()
+            try:
+                result = subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+                status = result.returncode
+                log.write(f"\nexit={status}\n")
+            except OSError as error:
+                log.write(f"\nlaunch_error={error}\n")
+                return kind, False, {"error": str(error)}
+        try:
+            summary = json.loads((area / kind / "summary.json").read_text())
+        except (OSError, ValueError) as error:
+            return kind, False, {"error": str(error), "worker_status": status}
+        passed = (status == 0 and summary.get("qualified") is True and summary.get("accepted") == args.cases
+                  and summary.get("cases_requested") == args.cases and summary.get("oracles") == oracles)
+        print(f"{kind}: {'PASS' if passed else 'STOP'}; {summary.get('elapsed_seconds', '?')}s", flush=True)
+        return kind, passed, summary
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as pool:
+        completed = {kind: (passed, summary) for kind, passed, summary in pool.map(run, EXECUTION_ORDER)}
+    results = [(kind, *completed[kind]) for kind in KINDS]
+    try:
+        oracles_unchanged = all(identity(Path(item["path"])) == item for item in oracles.values())
+    except (OSError, ValueError):
+        oracles_unchanged = False
+    source_unchanged = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip() == commit and not subprocess.check_output(
+        ["git", "status", "--porcelain", "--untracked-files=no"], cwd=ROOT, text=True)
+    report = {**manifest, "source_unchanged": source_unchanged, "oracles_unchanged": oracles_unchanged,
+              "complete": len(results) == len(KINDS),
+              "qualified": source_unchanged and oracles_unchanged and all(passed for _, passed, _ in results),
+              "kinds": {kind: {"passed": passed, "summary": summary} for kind, passed, summary in results}}
+    (area / "matrix.json").write_text(json.dumps(report, indent=2) + "\n")
+    if not report["qualified"]:
+        raise SystemExit("STOP: strict matrix failed; inspect retained evidence")
+
+
+if __name__ == "__main__":
+    main()
+

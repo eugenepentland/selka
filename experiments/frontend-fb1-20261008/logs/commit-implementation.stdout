@@ -1,0 +1,7 @@
+[codex/frontend-fb1 ea61b771a] frontend: report per-function Core costs and LLVM remarks
+ 14 files changed, 826 insertions(+), 40 deletions(-)
+ create mode 100644 docs/tooling/cost.md
+ create mode 100644 src/core/cost.zig
+ create mode 100644 src/core/cost_command.zig
+ create mode 100644 src/core/cost_remarks.zig
+ create mode 100644 src/core/cost_test.zig

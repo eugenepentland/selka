@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+"""S5 conformance against the frozen old-core references (S5-D2).
+
+S2's conformance_checked.py unchanged, except that the old core never runs:
+`Tool.old` returns its frozen report from references/conformance-v1.json (each
+test's name, status and trap code, which is all conformance.py compares).
+`--references FILE` replaces `--mylang`; every other conformance.py option is the same.
+"""
+import argparse
+import importlib.util
+import json
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[3]
+
+
+def load(name, path):
+    spec = importlib.util.spec_from_file_location(name, ROOT / path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def main():
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--references", type=Path, required=True)
+    known, rest = parser.parse_known_args()
+    files = json.loads(known.references.read_text())["files"]
+    checked = load("conformance_checked", "experiments/new-core-s2-20261005/wave-b/integration/conformance_checked.py")
+    sweep = load("conformance", "experiments/new-core-s1-20261005/conformance.py")
+    original = sweep.parse
+    sweep.parse = lambda done, what: checked.checked_report(original, done, what)
+
+    def frozen(self, path):
+        entry = files.get(sweep.short(path))
+        if entry is None:
+            return "old core (frozen): no reference for %s" % sweep.short(path)
+        if "problem" in entry:
+            return entry["problem"]
+        return {"tests": [{"name": name, "status": status, "reason": trap} for name, status, trap in entry["tests"]]}
+
+    sweep.Tool.old = frozen
+    sys.argv = [sys.argv[0], *rest]
+    return sweep.main()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+
+#!/usr/bin/env python3
+"""S5: S3's install, test-core and strict full-conformance gates, with conformance against the
+frozen old-core references (tools/conformance_ref.py) instead of the live oracle. `--compiler`
+names the binary under test (mylang-core until S5-A lands, then mylang); `--install` the zig build step."""
+import argparse,hashlib,importlib.util,json,os,re,shlex,subprocess,time
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[3]
+REFERENCES=ROOT/'experiments/new-core-s5-20261007/references/conformance-v1.json'
+RETAIN='"$@"; result=$?; exit "$result"'
+spec=importlib.util.spec_from_file_location('old_gate_tools',ROOT/'experiments/new-core-s2-20261005/wave-b/integration/full_old_gate.py')
+gate_tools=importlib.util.module_from_spec(spec); spec.loader.exec_module(gate_tools)
+
+def main():
+ p=argparse.ArgumentParser(description=__doc__)
+ p.add_argument('--evidence',type=Path,required=True)
+ p.add_argument('--shards',type=int,default=32)
+ p.add_argument('--compiler',default='zig-out/bin/mylang-core')
+ p.add_argument('--install',default='core')
+ a=p.parse_args(); out=a.evidence.resolve()
+ if not out.is_relative_to(ROOT/'experiments') or out.exists(): p.error('evidence must be a fresh directory inside experiments')
+ out.mkdir(parents=True)
+ commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
+ core=ROOT/a.compiler
+ digest=hashlib.sha256(REFERENCES.read_bytes()).hexdigest()
+ env=os.environ.copy(); temporary=ROOT/'.mylang-cache/s5/integration-qualify'/out.name/'tmp'; temporary.mkdir(parents=True)
+ env.update(TMPDIR=str(temporary),ZIG_GLOBAL_CACHE_DIR='/home/epentland/ai/canopy/.zig-global-cache')
+ results=[]; summary={'source_commit':commit,'references_sha256':digest,'compiler':a.compiler,'core_shards':a.shards,'results':results,'qualified':False}
+ def run(name,command,exclusive=False):
+  timer=out/(name+'.seconds'); timed=['/usr/bin/time','-f','%e','-o',str(timer),*command]
+  if exclusive: timed=['python3','experiments/new-core-s3-20261006/wave-a/exclusive_core.py','--',*timed]
+  wrapped=['scripts/build-slot.sh','gate','--','bash','-c',RETAIN,'--','scripts/build-slot.sh','build','--',*timed]
+  started=time.monotonic(); log=out/(name+'.log'); print(name+': '+str(log),flush=True)
+  with log.open('x') as f:
+   f.write('source_commit='+commit+'\n$ '+shlex.join(wrapped)+'\n'); f.flush()
+   status=subprocess.run(wrapped,cwd=ROOT,env=env,stdout=f,stderr=subprocess.STDOUT).returncode
+  report=log.read_text(); seconds=float(timer.read_text()) if timer.exists() else None
+  item={'command':wrapped,'log':str(log.relative_to(ROOT)),'status':status,'seconds':seconds,'wall_including_admission':time.monotonic()-started}
+  results.append(item); (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+  if status or seconds is None: raise RuntimeError(name+' failed; retained '+str(log))
+  return report,item
+ try:
+  _,install=run('install-core',['zig','build',a.install,'--summary','all'],True)
+  summary['core_sha256']=hashlib.sha256(core.read_bytes()).hexdigest()
+  if install['seconds']>10: raise RuntimeError('exclusive core rebuild exceeds10seconds')
+  report,test=run('test-core',['zig','build','test-core',f'-Dcore-shards={a.shards}','--summary','all'])
+  test['build_inspection']=gate_tools.inspect(report)
+  if test['build_inspection']['errors']: raise RuntimeError('test-core summary/RSS failed: '+ '; '.join(test['build_inspection']['errors']))
+  walls=[float(x) for x in re.findall(r'guardian/test: test wall ([0-9.]+)s',report)]
+  test['longest_shard_seconds']=max(walls) if walls else None
+  verdicts=[json.loads(x) for x in re.findall(r'guardian/test: RESULT (\{[^\n]+\})',report)]
+  test['tests']={k:sum(x[k] for x in verdicts) for k in ('passed','failed','skipped')}
+  if len(verdicts)!=a.shards or test['tests']['failed']: raise RuntimeError('test-core shard verdicts are missing or failed')
+  if test['seconds']>300 or not walls or max(walls)>90: raise RuntimeError('test-core time requires resharding')
+  run('full-conformance',['python3','experiments/new-core-s5-20261007/tools/conformance_ref.py','--references',str(REFERENCES),'--set','all','--core',str(core),'--cache-dir',str(temporary.parent/'conformance'),'--jobs','4','--why','--leakcheck','--verify'])
+  summary['qualified']=True
+ except Exception as e:
+  summary['error']=str(e); raise
+ finally:
+  (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+ print(json.dumps(summary,indent=2),flush=True)
+if __name__=='__main__': main()
+
+#!/usr/bin/env python3
+"""Record one command, wall time, affinities and concurrent heavy processes."""
+import json, os, pathlib, subprocess, sys, time
+root = pathlib.Path(__file__).resolve().parents[1]
+label, *command = sys.argv[1:]
+if command and command[0] == "--": command.pop(0)
+start = time.monotonic()
+heavy = subprocess.run(["ps", "-eo", "pid,comm,args"], capture_output=True, text=True).stdout
+heavy = [line for line in heavy.splitlines() if any(x in line for x in ("zig build", "fuzz_matrix", "bench-newcore", "test-units", "core.test")) and "time-command.py" not in line]
+admission_wait = 0.0
+parent = os.getppid()
+for _ in range(6):
+    try:
+        stat = pathlib.Path(f"/proc/{parent}/stat").read_text().rsplit(")", 1)[1].split()
+        name = pathlib.Path(f"/proc/{parent}/comm").read_text().strip()
+        if name == "flock": admission_wait = max(admission_wait, time.clock_gettime(time.CLOCK_BOOTTIME) - int(stat[19]) / os.sysconf("SC_CLK_TCK"))
+        parent = int(stat[1])
+    except (OSError, ValueError): break
+record = {"admission_wait_seconds": round(admission_wait, 6), "command": command, "cwd": os.getcwd(), "affinity": sorted(os.sched_getaffinity(0)), "other_heavy_processes": heavy}
+out = root / "logs" / (label + ".stdout")
+err = root / "logs" / (label + ".stderr")
+with out.open("wb") as stdout, err.open("wb") as stderr:
+    process = subprocess.Popen(command, stdout=stdout, stderr=stderr)
+    record["process_affinity"] = sorted(os.sched_getaffinity(process.pid))
+    observed = set()
+    while True:
+        try:
+            observed.add(tuple(sorted(os.sched_getaffinity(process.pid))))
+            status = process.wait(timeout=0.2)
+            break
+        except subprocess.TimeoutExpired:
+            pass
+        except ProcessLookupError:
+            status = process.wait()
+            break
+    record["observed_process_affinities"] = sorted(observed)
+record.update(elapsed_seconds=round(time.monotonic()-start, 6), exit_code=status)
+(root / "logs" / (label + ".json")).write_text(json.dumps(record, indent=2) + "\n")
+print(out.read_text(), end="")
+print(err.read_text(), end="", file=sys.stderr)
+print(json.dumps({"label": label, "elapsed_seconds": record["elapsed_seconds"], "exit_code": status}), file=sys.stderr)
+sys.exit(status)
+

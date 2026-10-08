@@ -1,0 +1,25 @@
+test-core
++- run test
+   +- compile test debug native
+      +- options
+         +- compile exe mylang debug native 1 errors
+src/core/cost.zig:85:49: error: no field named 'fields' in struct 'lang.Type.Struct'
+        inline for (@typeInfo(Counts).@"struct".fields) |field| {
+                                                ^~~~~~
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/lang.zig:744:24: note: struct declared here
+    pub const Struct = struct {
+                       ^~~~~~
+referenced by:
+    apply: src/core/cost_remarks.zig:23:51
+    run: src/core/cost_command.zig:88:22
+    10 reference(s) hidden; use '-freference-trace=12' to see all references
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang --dep memory_budget --dep compiler_root=root --dep user-doc/primer --dep user-doc/syntax --dep user-doc/statements --dep user-doc/records --dep user-doc/functions --dep user-doc/errors --dep user-doc/text --dep user-doc/bytes --dep user-doc/io --dep user-doc/effects --dep user-doc/contracts --dep user-doc/modules --dep user-doc/memory --dep user-doc/sets --dep user-doc/stdlib --dep user-doc/tests --dep user-doc/build --dep user-doc/navigation --dep user-doc/context --dep user-doc/api --dep user-doc/fix --dep build_identity --dep mylang_core -Mroot=src/main.zig -ODebug --dep memory_budget -Mmylang=src/compiler.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig -Muser-doc/primer=docs/primer.md -Muser-doc/syntax=docs/python-syntax.md -Muser-doc/statements=docs/statements.md -Muser-doc/records=docs/records-and-unions.md -Muser-doc/functions=docs/functions.md -Muser-doc/errors=docs/results-and-options.md -Muser-doc/text=docs/text.md -Muser-doc/bytes=docs/bytes.md -Muser-doc/io=docs/io.md -Muser-doc/effects=docs/effects.md -Muser-doc/contracts=docs/contracts.md -Muser-doc/modules=docs/modules.md -Muser-doc/memory=docs/managed-memory.md -Muser-doc/sets=docs/sets.md -Muser-doc/stdlib=docs/standard-library.md -Muser-doc/tests=docs/tooling/guest-tests.md -Muser-doc/build=docs/tooling/native-build.md -Muser-doc/navigation=docs/tooling/navigation.md -Muser-doc/context=docs/tooling/agent-context.md -Muser-doc/api=docs/tooling/interface-files.md -Muser-doc/fix=docs/tooling/fix.md -ODebug -Mbuild_identity=.zig-cache/o/fa4bacf55e6de9f75d755fd19a6d4628/build_identity/identity.zig -ODebug --dep mylang --dep core_tool_platform --dep build_identity --dep memory_budget --dep core_number_text_object -Mmylang_core=src/core/cli.zig -Mcore_tool_platform=src/config_core_tool_platform.zig -Mcore_number_text_object=.zig-cache/o/613a15d57de9e110f222ab5a539d578c/core_number_text.o --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 3/8 steps succeeded (1 failed)
+test-core transitive failure
++- run test transitive failure
+   +- compile test debug native transitive failure
+      +- options transitive failure
+         +- compile exe mylang debug native 1 errors
+

@@ -1,0 +1,8 @@
+test-core
++- run test w
+guardian/test: 7 test(s) selected
+guardian/test: test wall 0.03s
+guardian/test: PASS — 7 passed
+guardian/test: RESULT {"passed":7,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/a92ce574b99b8ffc8b1502b3559aa163/test --cache-dir=./.zig-cache --seed=0x4dd694e9 --listen=-
+

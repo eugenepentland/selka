@@ -1,0 +1,13 @@
+row_csv_aggregate.my:88:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_csv_aggregate.my:103:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+row_csv_aggregate.my:106:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          cursor = seed + step
+          ^
+mylang-core: inlined 0 calls, unswitched 16 loops, versioned 0 loops, proved 14 checks, vectorized 0 loops
+mylang-core: ownership: 58 updates in place, 5 tested, 1 copied; 17 retains, 29 releases (0 pairs elided); 0 lists on the stack
+mylang-core: cost: 50 checks kept; 75 allocation sites (10 unresolved calls); 21 unknown loops
+mylang-core: LLVM vectorized unknown; 21 unknown loops; remarks available; 1 compiles in 253693583 ns

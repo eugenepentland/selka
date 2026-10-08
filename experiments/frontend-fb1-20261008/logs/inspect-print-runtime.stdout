@@ -1,0 +1,58 @@
+e).
+    union_make,
+    /// The tag of union `a` (`u32`).
+    union_tag,
+    /// The payload of union `a` under tag `data` (only meaningful when that is its tag).
+    union_payload,
+    /// A record of the field values in `extra` at `data`, in declaration order.
+    record_make,
+    /// Field `data` of record `a`.
+    record_get,
+    /// Record `a` with field `data` replaced by `b`; consumes `a`.
+    record_set,
+    /// List `a` with element `b` replaced by `extra[0]` at `data` (bounds-checked);
+    /// consumes `a` and the value, and drops the element it replaces.
+    list_set,
+    /// List `a` without its last element (checked: an empty list traps); consumes
+    /// `a`. The element is not dropped: the builder reads it with `list_get` first,
+    /// and that read takes the list's ownership of it.
+    list_pop,
+    /// The value at `FieldPath.unpack(data)` inside element `b` of list `a`
+    /// (bounds-checked), read without loading the whole element.
+    list_get_field,
+    /// Empty dictionary with capacity hint `a: u64`.
+    dict_new,
+    /// Live dictionary entries (`u64`).
+    dict_len,
+    /// Pure lookup of key `b` in dictionary `a`; `i64` entry or negative insertion probe.
+    dict_find,
+    /// Borrowed key at entry `b: i64` of dictionary `a`.
+    dict_entry_key,
+    /// Borrowed value at entry `b: i64` of dictionary `a`.
+    dict_entry_value,
+    /// Dictionary `a` with entry `b` assigned `extra[0]`; consumes `a` and the value.
+    dict_set_value,
+    /// Insert `extra = {key, value}` using negative probe `b` from `dict_find(a, key)`.
+    dict_insert,
+    /// Remove entry `b: i64` from dictionary `a`; consumes `a`.
+    dict_remove,
+    /// Number of written entries (`u64`), including dead entries.
+    dict_entries,
+    /// Whether entry `b: i64` of dictionary `a` is live (`bool`).
+    dict_entry_live,
+    /// Independent copy of dictionary `a`.
+    dict_copy,
+    /// Empty value of dictionary `a`'s type; consumes `a`.
+    dict_clear,
+    /// Character string at byte offset `b: u64` in string `a`.
+    str_char,
+    /// UTF-8 width (`u64`) at byte offset `b: u64` in string `a`.
+    str_width,
+    /// Unicode scalar (`u32`) at byte offset `b: u64` in string `a`.
+    str_code,
+    /// Append string `b` to string `a`; consumes `a`, borrows `b`.
+    str_append,
+    /// Append the character at `extra[0]: u64` in string `b` to string `a`; consumes `a`.
+    str_append_char,
+    /// Copy string `a` between scalar positions `b: i64` and `extra[0]: i64`.
+  

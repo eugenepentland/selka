@@ -1,0 +1,3 @@
+src/core/cost_test.zig:12:16: error: expected expression, found 'invalid token'
+const program =
+               ^

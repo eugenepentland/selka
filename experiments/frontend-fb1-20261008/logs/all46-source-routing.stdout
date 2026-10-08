@@ -1,0 +1,32 @@
+66:S0 = {"int_math", "float_math", "call_direct", "branch_predictable", "branch_mixed", "binary_search"}
+79:def row_names(value):
+87:    return row if row in S0 else f"row_{row}"
+146:        source = ROOT / f"test/core/{name}.my"
+147:        if not source.is_file():
+148:            raise InvalidMeasurement(f"row source missing (package not integrated): {source}")
+152:            command = [str(compiler), "build", str(source), "-o", str(output), "--release",
+230:    assert len(UNITS) == 40 and len(APPLICATIONS) == 5 and len(S0) == 6
+250:    print("measure_all40 Python smoke: registry40, S0 names/units, strict stdout/counter/error parsers pass; no native runs")
+276:        selected = row_names(args.rows)
+#!/usr/bin/env python3
+"""Measure all 40 S3 rows with the accepted S1 interleaved CPU-10 method.
+
+Three one-iteration startup samples are subtracted from the median of shuffled
+rounds. Old/new core, Rust and Zig ReleaseSafe must all print exactly two integer
+fields (checksum and native elapsed nanoseconds), exit successfully, and agree
+on checksums at each size/iteration count. Cycle counters and normalized measures
+must be positive and finite. Performance misses are reported separately from
+measurement validity; binary_search's layout noise requires the plan's IR review.
+
+Run under scripts/build-slot.sh build and the shared CPU-10 flock. --build saves
+new-core LLVM for audit_all40.py. All writable paths must stay in this worktree.
+--smoke-test exercises Python parsers/registry only; it never runs a benchmark.
+"""
+import argparse
+import csv
+import importlib.util
+import io
+import json
+import math
+import os
+from pathlib import Path

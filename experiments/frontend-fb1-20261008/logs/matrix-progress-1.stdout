@@ -1,0 +1,18 @@
+dict True 50 64.6082086309325
+functions True 50 24.019427933963016
+iteration True 50 42.16756430082023
+number True 50 29.3684082061518
+rc True 50 18.472064999863505
+rebinding True 50 28.88995878607966
+s0 True 50 23.951185785001144
+s1 True 50 33.51027400093153
+text True 50 15.510562092065811
+dict.txt exit=0
+functions.txt exit=0
+iteration.txt exit=0
+number.txt exit=0
+rc.txt exit=0
+rebinding.txt exit=0
+s0.txt exit=0
+s1.txt exit=0
+text.txt exit=0

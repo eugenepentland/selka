@@ -1,0 +1,157 @@
+src/core/vector_test.zig:137:test "a reduction too wide for 2^47 trips gets a guarded copy where its sum is proven" {
+src/core/vector_test.zig:141:    // The guard compares the bound with the largest safe trip count.
+src/core/facts_test.zig:223:const guarded_reads =
+src/core/facts_test.zig:255:    const text = try support.factsText(arena.allocator(), guarded_reads);
+src/core/facts_test.zig:264:    \\    for j in range(0 - 9223372036854775807, n):
+4://! count is bounded well enough: `hi(acc0) + trips * hi(s) <= i64 max`. When the
+5://! static bound (the 2^47 list-length rule) is not enough, the loop is versioned:
+8://! preheader → guard: if bound < K + 1 → clone (checks proven under trips ≤ K)
+13://! guard's taken edge, so the next fact pass refines `bound <= K` there and proves
+26:/// a trip bound; returns how many loops were versioned. Run the fact pass again after.
+27:pub fn versionReductions(arena: std.mem.Allocator, f: *ir.Function, known: facts.Facts, provenance: origins.Context) Error!u32 {
+57:        // One trip of slack: the facts bound the accumulator phi by its value after the
+58:        // last trip, and the body adds one more summand to that bound.
+59:        const bound = @divFloor(room, s.hi) - 1;
+60:        limit = if (limit) |other| @min(other, bound) else bound;
+125:    const condition: ir.Inst = .{ .op = .cmp, .ty = .bool, .a = f.resolve(counted.bound), .b = cap, .data = @backingInt(ir.Predicate.lt), .span = span };
+174:    // taken edge dominates the clone and the facts refine the bound there.
+//! Trip-count guards (docs/design/new-core-ir.md §5, runtime guards).
+//!
+//! A counted reduction `acc += s` with `s >= 0` is proven safe only when its trip
+//! count is bounded well enough: `hi(acc0) + trips * hi(s) <= i64 max`. When the
+//! static bound (the 2^47 list-length rule) is not enough, the loop is versioned:
+//!
+//! ```
+//! preheader → guard: if bound < K + 1 → clone (checks proven under trips ≤ K)
+//!                    else             → original (unchanged, exact checks)
+//! ```
+//!
+//! with `K = (i64 max - hi(acc0)) / hi(s)`. The clone's header is dominated by the
+//! guard's taken edge, so the next fact pass refines `bound <= K` there and proves
+//! the reduction. Values the loop defines and later code reads are merged by new
+//! phis in the exit block, which both copies reach. Only counted loops from 0
+//! whose exit is reached from inside the loop alone are versioned.
+const std = @import("std");
+const ir = @import("ir.zig");
+const facts = @import("facts.zig");
+const origins = @import("inline_origins.zig");
+
+/// Versioning only allocates.
+pub const Error = std.mem.Allocator.Error;
+
+/// Version every reduction loop of `f` whose sum the facts could prove only under
+/// a trip bound; returns how many loops were versioned. Run the fact pass again after.
+pub fn versionReductions(arena: std.mem.Allocator, f: *ir.Function, known: facts.Facts, provenance: origins.Context) Error!u32 {
+    var count: u32 = 0;
+    for (known.counted) |counted| {
+        const limit = tripLimit(f, known, counted) orelse continue;
+        if (try version(arena, f, counted, limit, provenance)) count += 1;
+    }
+    return count;
+}
+
+/// The largest trip count for which every reduction of the loop is safe, when
+/// some reduction is not proven already; null when versioning cannot help.
+fn tripLimit(f: *const ir.Function, known: facts.Facts, counted: facts.Counted) ?i128 {
+    const start = f.inst(f.resolve(counted.start));
+    if (start.op != .iconst or start.data != 0) return null;
+    const header = f.blocks.items[counted.loop.header.index()];
+    if (header.preds.items.len != 2) return null;
+    const latch_index: usize = if (header.preds.items[0] == counted.loop.latch) 0 else 1;
+    var limit: ?i128 = null;
+    for (header.insts.items) |ref| {
+        const phi = f.inst(ref);
+        if (phi.op != .phi or ref == counted.counter or phi.ty != .i64) continue;
+        const operands = f.operands(phi.data);
+        const update = f.inst(f.resolve(operands[latch_index]));
+        if (update.op != .add or update.check != .exact) continue;
+        const step = if (f.resolve(update.a) == ref) update.b else if (f.resolve(update.b) == ref) update.a else continue;
+        const s = rangeOf(f, known, step) orelse return null;
+        const init = rangeOf(f, known, operands[1 - latch_index]) orelse return null;
+        if (s.lo < 0 or s.hi <= 0 or init.lo < 0) return null;
+        const room = @as(i128, std.math.maxInt(i64)) - init.hi;
+        if (room <= 0) return null;
+        // One trip of slack: the facts bound the accumulator phi by its value after the
+        // last trip, and the body adds one more summand to that bound.
+        const bound = @divFloor(room, s.hi) - 1;
+        limit = if (limit) |other| @min(other, bound) else bound;
+    }
+    const found = limit orelse return null;
+    return if (found >= 1) @min(found, @as(i128, 1) << 62) else null;
+}
+
+fn rangeOf(f: *const ir.Function, known: facts.Facts, raw: ir.Ref) ?facts.Interval {
+    const ref = f.resolve(raw);
+    const inst = f.inst(ref);
+    if (inst.op == .iconst) return facts.Interval.point(@as(i64, @bitCast(inst.data)));
+    // An earlier copy in this pass may have added values the facts have not seen.
+    if (ref.index() >= known.ranges.len) return null;
+    return known.ranges[ref.index()];
+}
+
+/// The blocks of a loop: everything reachable from its body without passing its header or exit.
+fn members(arena: std.mem.Allocator, f: *const ir.Function, loop: ir.Loop) Error![]bool {
+    const inside = try arena.alloc(bool, f.blocks.items.len);
+    @memset(inside, false);
+    inside[loop.header.index()] = true;
+    var pending: std.ArrayList(ir.BlockId) = .empty;
+    try pending.append(arena, loop.body);
+    while (pending.pop()) |block| {
+        if (inside[block.index()] or block == loop.exit) continue;
+        inside[block.index()] = true;
+        const insts = f.blocks.items[block.index()].insts.items;
+        const last = f.inst(insts[insts.len - 1]);
+        switch (last.op) {
+            .jump => try pending.append(arena, @fromBackingInt(@intCast(@as(u32, @intCast(last.data))))),
+            .branch => {
+                const targets = ir.unpackTargets(last.data);
+                try pending.append(arena, targets.then);
+                try pending.append(arena, targets.otherwise);
+            },
+            else => {},
+        }
+    }
+    return inside;
+}
+
+fn appendInst(arena: std.mem.Allocator, f: *ir.Function, inst: ir.Inst) Error!ir.Ref {
+    const ref: ir.Ref = @fromBackingInt(@intCast(f.insts.items.len));
+    try f.insts.append(arena, inst);
+    return ref;
+}
+
+fn packOperands(arena: std.mem.Allocator, f: *ir.Function, refs: []const ir.Ref) Error!u64 {
+    const start: u32 = @intCast(f.extra.items.len);
+    try f.extra.appendSlice(arena, refs);
+    return (ir.ExtraSlice{ .start = start, .len = @intCast(refs.len) }).pack();
+}
+
+/// The loop's preheader: the header's predecessor outside the loop, ending in a jump to it.
+fn preheaderOf(f: *const ir.Function, loop: ir.Loop) ?ir.BlockId {
+    const preds = f.blocks.items[loop.header.index()].preds.items;
+    const index: usize = if (preds[0] == loop.latch) 1 else 0;
+    const block = preds[index];
+    const insts = f.blocks.items[block.index()].insts.items;
+    if (f.inst(insts[insts.len - 1]).op != .jump) return null;
+    return block;
+}
+
+fn version(arena: std.mem.Allocator, f: *ir.Function, counted: facts.Counted, limit: i128, provenance: origins.Context) Error!bool {
+    const span = f.inst(f.blocks.items[counted.loop.header.index()].insts.items[0]).span;
+    const cap = try appendInst(arena, f, .{ .op = .iconst, .ty = .i64, .data = @bitCast(@as(i64, @intCast(limit + 1))) });
+    const condition: ir.Inst = .{ .op = .cmp, .ty = .bool, .a = f.resolve(counted.bound), .b = cap, .data = @backingInt(ir.Predicate.lt), .span = span };
+    const anchor = f.blocks.items[counted.loop.header.index()].insts.items[0];
+    const copies = try duplicate(arena, f, counted.loop, condition, provenance, provenance.at(@intCast(counted.loop.header.index()), anchor));
+    return copies != null;
+}
+
+/// Clone `loop` behind a guard block that evaluates `condition` and enters the clone
+/// when it holds, the original otherwise. Returns the maps from original to clone,
+/// or null (nothing changed) when the loop's shape does not allow it.
+fn duplicate(arena: std.mem.Allocator, f: *ir.Function, loop: ir.Loop, condition_inst: ir.Inst, provenance: origins.Context, frame: ?u32) Error!?Copies {
+    const preheader = preheaderOf(f, loop) orelse return null;
+    const inside = try members(arena, f, loop);
+    // The exit may also be entered by earlier copies of this loop; it must be entered from it.
+    var exits = false;
+    for (f.blocks.items[loop.exit.index()].preds.items) |pred| exits = exits or inside[pred.index()];
+    if (!exits) return null;

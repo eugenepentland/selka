@@ -1,0 +1,264 @@
+  counts; F1-0's extended `count_spellings.py` is authoritative.
+
+  | Row | `.my` | Zig and docs |
+  |---|---:|---:|
+  | A7 module headers | 566 | ~630 |
+  | A4 effect clauses | 366 | ~560 in Zig literals, plus docs |
+  | A1 `replace(` | 54 | 76 |
+  | A3 `bit_*`/`shift_*` | 59 | 44 |
+  | A12 `strings.` calls | 58 | 56 |
+  | A13 `sort.` calls | 31 | 24 |
+  | A16 `domain` declarations | 27 | 25 |
+  | A11 `== None` | 20 | 6 |
+  | A15 `constraint` declarations | 14 | 6 |
+  | A9 type aliases | 6 | 3 |
+
+**Rules specific to rows:**
+- **F1-M:**
+  - A file whose path is not a dotted identifier path can be an entry but cannot be
+    imported. The import's error says why.
+  - `mylang run` loads the reachable graph whenever the entry imports a non-standard
+    module.
+- **F1-E:** if a fix makes an accepted program reject, stop and report. The rewrite
+  only widens ceilings, so that must not happen.
+- **F1-D:**
+  - first inventory every domain declaration in the live sources, Lox and EDA, with
+    their members and codecs;
+  - a domain's one-field record must have the same layout and cost as its field in the
+    core: check it with FB1's report and `dump-ir` on the migrated examples;
+  - the removed spelling is `E_DOMAIN_REMOVED`, naming the record form.
+- **F1-L:** a function is removed only when a property test over random inputs shows the
+  replacement gives the same result on every input. For text, that includes non-ASCII
+  input; for floats, NaN and signed zero. Otherwise the function stays.
+
+#### F1-F. The canonical format gate (after the four merge; about 2–3 h)
+
+- `mylang fmt` is idempotent over every live `.my`: formatting twice gives the same
+  bytes.
+- The gate gains a `.my` step beside `fmt-check`.
+- One reformat commit.
+
+#### F1-X. External corpora and the wave exit (coordinator; about 3–5 h)
+
+- **Lox and EDA:** apply `mylang fix` and `mylang fmt` on new branches from their S4-P
+  states.
+  - Lox conformance stays 974/974 with its 65 tests.
+  - EDA stays at 310 tests and 34 byte-identical goldens.
+- **The idiom suite:**
+  - C2 stays 0;
+  - every probe that F1 newly rejects is listed with its error and its fix, and C3
+    counts it;
+  - C1 is reported against F1-0's baseline.
+- **The spelling counts:** 0 for every removed spelling in live sources.
+
+### F2. Local analyses and stable type identity (about 13–18 h)
+#!/usr/bin/env python3
+"""S5's strict nine-kind fuzz matrix against the frozen old-core references.
+
+S3-X's fuzz_matrix.py unchanged except: the old core is answered from
+references/fuzz-v1.json.gz by tools/fuzz_frozen.py (S5-D2), `--references`
+replaces `--old`, and `--cases` (default 200; 50 per package) sets the cases per
+kind. Every worker obtains a build slot; the parent needs no gate slot. This driver
+never builds the compiler or runs gates.
+"""
+import argparse
+import concurrent.futures
+from datetime import datetime, timezone
+import hashlib
+import json
+import os
+from pathlib import Path
+import shlex
+import subprocess
+import sys
+import uuid
+
+ROOT = Path(__file__).resolve().parents[3]
+HERE = Path(__file__).resolve().parent
+KINDS = ("s0", "s1", "rc", "rebinding", "iteration", "dict", "text", "number", "functions")
+# Float-runtime builds are the longest package sweep. Start that worker first;
+# keep the registry and its per-kind seeds fixed so scheduling changes no cases.
+EXECUTION_ORDER = ("number",) + tuple(kind for kind in KINDS if kind != "number")
+S3 = ROOT / "experiments/new-core-s3-20261006/wave-x/integration"
+STUB = HERE / "frozen-old-core"
+TEXT_HARNESS = ROOT / "experiments/new-core-s3-20261006/wave-c/s3-char/fuzz_char.py"
+NUMBER_HARNESS = ROOT / "experiments/new-core-s2-20261005/wave-b/s2-t2/fuzz_number.py"
+
+
+def identity(path):
+    path = path.resolve()
+    if not path.is_file() or not os.access(path, os.X_OK):
+        raise ValueError(f"oracle must be an executable file: {path}")
+    with path.open("rb") as binary:
+        return {"path": str(path), "sha256": hashlib.file_digest(binary, "sha256").hexdigest()}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--references", type=Path, required=True, help="Frozen old-core outcomes (references/fuzz-v1.json.gz)")
+    parser.add_argument("--cases", type=int, default=200, help="Cases per kind: 50 per package, 200 at S5-X")
+    parser.add_argument("--new", type=Path, required=True, help="Explicit qualified final integrated new oracle")
+    parser.add_argument("--qualified-head", help="Require this full qualified source commit to remain HEAD")
+    parser.add_argument("--evidence", type=Path, help="Fresh directory below experiments; default is a unique UTC/UUID run")
+    parser.add_argument("--jobs", type=int, choices=(1, 2, 3), default=3)
+    args = parser.parse_args()
+    try:
+        oracles = {"old": identity(STUB), "new": identity(args.new)}
+        if os.path.samefile(STUB, args.new):
+            raise ValueError("--old and --new must name distinct oracle files")
+    except (OSError, ValueError) as error:
+        parser.error(str(error))
+    commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    if args.qualified_head and args.qualified_head != commit:
+        parser.error("--qualified-head must be the full current HEAD commit")
+    if subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=no"], cwd=ROOT, text=True):
+        parser.error("tracked source must be clean before the final matrix")
+    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:12]
+    area = (args.evidence or HERE / f"fuzz-{args.cases}-{run_id}").resolve()
+    if not area.is_relative_to(ROOT / "experiments"):
+        parser.error("evidence must be below this worktree's experiments directory")
+    if area.exists():
+        parser.error("evidence directory already exists; retain it and choose a fresh directory")
+    cache = ROOT / ".mylang-cache/s5/fuzz" / run_id
+    references = {"path": str(args.references.resolve()), "sha256": hashlib.sha256(args.references.read_bytes()).hexdigest()}
+    area.mkdir(parents=True)
+    print(f"evidence={area}\nsource_commit={commit}", flush=True)
+    manifest = {"source_commit": commit, "qualified_head_requested": args.qualified_head,
+                "oracles": oracles, "references": references, "cases_per_kind": args.cases, "maximum_parallel_jobs": args.jobs,
+                "kinds": list(KINDS), "execution_order": list(EXECUTION_ORDER),
+                "cache_root": str(cache), "run_id": run_id}
+    (area / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+
+    def run(kind):
+        command = [str(ROOT / "scripts/build-slot.sh"), "build", "--", "nice", "-n", "10",
+                   sys.executable, str(HERE / "fuzz_frozen.py"), "--kind", kind, "--references", references["path"],
+                   "--cases", str(args.cases), "--seed", str(3301 + KINDS.index(kind)),
+                   "--old", oracles["old"]["path"], "--new", oracles["new"]["path"],
+                   "--evidence", str(area / kind), "--cache-root", str(cache / kind)]
+        if kind in ("text", "number"):
+            command += ["--harness", str(TEXT_HARNESS if kind == "text" else NUMBER_HARNESS)]
+        with (area / f"{kind}.txt").open("x") as log:
+            log.write(f"source_commit={commit}\n$ {shlex.join(command)}\n")
+            log.flush()
+            try:
+                result = subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+                status = result.returncode
+                log.write(f"\nexit={status}\n")
+            except OSError as error:
+                log.write(f"\nlaunch_error={error}\n")
+                return kind, False, {"error": str(error)}
+        try:
+            summary = json.loads((area / kind / "summary.json").read_text())
+        except (OSError, ValueError) as error:
+            return kind, False, {"error": str(error), "worker_status": status}
+        passed = (status == 0 and summary.get("qualified") is True and summary.get("accepted") == args.cases
+                  and summary.get("cases_requested") == args.cases and summary.get("oracles") == oracles)
+        print(f"{kind}: {'PASS' if passed else 'STOP'}; {summary.get('elapsed_seconds', '?')}s", flush=True)
+        return kind, passed, summary
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as pool:
+        completed = {kind: (passed, summary) for kind, passed, summary in pool.map(run, EXECUTION_ORDER)}
+    results = [(kind, *completed[kind]) for kind in KINDS]
+    try:
+        oracles_unchanged = all(identity(Path(item["path"])) == item for item in oracles.values())
+    except (OSError, ValueError):
+        oracles_unchanged = False
+    source_unchanged = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip() == commit and not subprocess.check_output(
+        ["git", "status", "--porcelain", "--untracked-files=no"], cwd=ROOT, text=True)
+    report = {**manifest, "source_unchanged": source_unchanged, "oracles_unchanged": oracles_unchanged,
+              "complete": len(results) == len(KINDS),
+              "qualified": source_unchanged and oracles_unchanged and all(passed for _, passed, _ in results),
+              "kinds": {kind: {"passed": passed, "summary": summary} for kind, passed, summary in results}}
+    (area / "matrix.json").write_text(json.dumps(report, indent=2) + "\n")
+    if not report["qualified"]:
+        raise SystemExit("STOP: strict matrix failed; inspect retained evidence")
+
+
+if __name__ == "__main__":
+    main()
+#!/usr/bin/env bash
+# S5-X phase 2: the CPU-10 measurements, run on a quiet machine after phase 1.
+# 1. All 46 rows: the final mylang against the archived old core (interleaved) and Zig.
+# 2. Lox and EDA build/test times, three runs each, medians (ReleaseFast mylang).
+# 3. The dev-loop table on the synthetic projects (48k and 192k lines, debug and release).
+# 4. The check after a one-function edit at 96k lines.
+# Usage: phase2.sh FINAL_MYLANG RELEASEFAST_MYLANG
+set -u
+here=$(cd "$(dirname "$0")" && pwd)
+root=$(cd "$here/../../.." && pwd)
+final=$1
+fast=$2
+oracle=$HOME/.cache/mylang/oracles/old-core-d36658db
+lock=/run/user/1000/mylang-slots/cpu10.lock
+work=$root/.mylang-cache/s5/x2
+mkdir -p "$work/tmp"
+export TMPDIR=$work/tmp MYLANG_QBE=$oracle/qbe
+cd "$root" || exit 2
+
+echo "== 46 rows"
+rows=$work/all46
+"$root/scripts/build-slot.sh" build -- python3 experiments/new-core-s4-20261006/integration/measure_all46.py --build-only \
+    --mylang "$oracle/mylang" --core "$final" --bin "$rows" > "$here/all46-01-build.log" 2>&1
+echo "rows build exit=$?"
+flock "$lock" python3 experiments/new-core-s4-20261006/integration/measure_all46.py \
+    --mylang "$oracle/mylang" --core "$final" --bin "$rows" --json "$here/all46-01.json" > "$here/all46-01.log" 2>&1
+echo "rows exit=$?"
+python3 -c "
+import json; d = json.load(open('$here/all46-01.json'))
+print({k: d[k] for k in ('valid', 'all_within_old_limit', 'all_within_zig_limit', 'speed_gate_misses')})"
+
+echo "== ports (warm runtime from the ReleaseFast binary, then 3 runs)"
+warm=$work/warm-runtime
+rm -rf "$warm"; mkdir -p "$warm/p"
+printf 'def main(out: Stream) -> int:\n    out.print(2.5)\n    return 0\n' > "$warm/p/app.my"
+XDG_CACHE_HOME=$warm/xdg "$fast" build "$warm/p/app.my" -o "$warm/p/app" --cache-dir "$warm/p/cache" > /dev/null 2>&1
+for i in 1 2 3; do
+    rm -rf "$work/ports-$i"
+    flock "$lock" python3 "$here/measure_ports.py" --core "$fast" --area "$work/ports-$i" \
+        --json "$here/ports-0$i.json" --runtime "$warm/xdg/mylang/core-runtime" > "$here/ports-0$i.log" 2>&1
+    echo "ports run $i exit=$?"
+done
+python3 - "$here" <<'EOF'
+import json, statistics, sys
+here = sys.argv[1]
+runs = [json.load(open(f"{here}/ports-0{i}.json")) for i in (1, 2, 3)]
+base = runs[0]["baselines"]
+rows = [("lox", "build", ["build"], base["lox"]["build"]),
+        ("lox", "tests", ["tests-directory", "tests-driver"], [sum(x) for x in zip(base["lox"]["tests-directory"], base["lox"]["tests-driver"])]),
+        ("eda", "build", ["build"], base["eda"]["build"]), ("eda", "test", ["test"], base["eda"]["test"])]
+out = {}
+for port, name, kinds, old in rows:
+    for j, state in enumerate(("cold", "unchanged", "one-function-edit")):
+        values = [sum(r[port][k][state] for k in kinds) for r in runs]
+        median = statistics.median(values)
+        out[f"{port} {name} {state}"] = {"old": old[j], "runs": [round(v, 4) for v in values], "median": round(median, 4), "ratio": round(median / old[j], 3)}
+        print(f"{port:4} {name:6} {state:18} old {old[j]:9.4f} median {median:8.4f} ratio {median / old[j]:.3f}")
+json.dump(out, open(f"{here}/ports-median.json", "w"), indent=1)
+EOF
+
+echo "== dev loop (synthetic projects)"
+for spec in "1200 debug" "4800 debug" "1200 release" "4800 release"; do
+    set -- $spec
+    name="devloop-$2-$1"
+    python3 "$here/measure_devloop.py" "$fast" "$work/$name" "$1" "$2" > "$here/$name.json" 2> "$here/$name.err"
+    echo "$name exit=$?"
+done
+
+echo "== check after an edit, 96k lines"
+flock "$lock" python3 "$here/measure_check.py" "$fast" "$work/check-96k" > "$here/check-96k.json" 2> "$here/check-96k.err"
+echo "check exit=$?"
+echo "phase 2 done"
+40
+/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/main.my
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/scanner.my
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/resolver.my
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/natives.my
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/scanner_test.my
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/value.my
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/table.my
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/driver.my
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/driver_tests.my
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/lox_strings.my
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/heap_test.my
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/resolver_test.my
+/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/main.my

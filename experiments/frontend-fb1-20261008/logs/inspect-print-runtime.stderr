@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from pathlib import Path; p=Path("src/core/ir.zig").read_text(); print(p[10000:12500]); p=Path("src/core/emit_llvm.zig").read_text(); a=p.index("fn emitPrint"); print(p[a:a+6000])
+                                                                                                                                            ~~~~~~~^^^^^^^^^^^^^^^^
+ValueError: substring not found

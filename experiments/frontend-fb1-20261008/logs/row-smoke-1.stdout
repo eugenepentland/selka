@@ -1,0 +1,2 @@
+int_math: all four modes matched stats; LLVM and executable hashes identical
+{"output": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/experiments/frontend-fb1-20261008/smoke-1", "rows": 4, "passed": true}

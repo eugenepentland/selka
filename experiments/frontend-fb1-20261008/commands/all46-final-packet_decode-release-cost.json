@@ -1,0 +1,39 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/zig-out/bin/mylang",
+    "cost",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/test/core/row_packet_decode.my",
+    "--json"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "other_heavy_processes": [
+    {
+      "pid": 279294,
+      "command": "/bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until ! pgrep -f '\"'\"'probe/probe.py'\"'\"' >/dev/null; do sleep 5; done; wc -l /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/probe/smoke.log' < /dev/null && pwd -P >| /tmp/claude-7f36-cwd "
+    },
+    {
+      "pid": 1476564,
+      "command": "/bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'cd /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore && python3 - <<'\"'\"'EOF'\"'\"'\np='\"'\"'src/core/own.zig'\"'\"'\ns=open(p).read()\ns=s.replace('\"'\"''\"'\"''\"'\"'            if (!self.finishedBefore(user, update_block, taken_at)) return;'\"'\"''\"'\"''\"'\"','\"'\"''\"'\"''\"'\"'            if (!try self.finishedBefore(user, update_block, taken_at)) return;'\"'\"''\"'\"''\"'\"',1)\nanchor='\"'\"'/// Whether join `phi` can receive `record` on an edge taken after `get`'\"'\"'\ns=s.replace(anchor,'\"'\"''\"'\"''\"'\"'/// Whether `op` reads a part of its first operand that borrows from it (\u00a75).\nfn readsPart(op: ir.Op) bool {\n    return switch (op) {\n        .list_get, .list_get_field, .record_get, .union_payload, .box_get => true,\n        else => false,\n    };\n}\n\n'\"'\"''\"'\"''\"'\"'+anchor,1)\nopen(p,'\"'\"'w'\"'\"').write(s)\nEOF\ngrep -n \"box_get\\|union_payload\" src/core/ir.zig | head -3; zig fmt src/core/own.zig && export TMPDIR=$PWD/.mylang-cache/tmp && scripts/build-slot.sh build -- zig build --summary none 2>&1 | grep -E \"error|failed|guardian: run-all\" | head; S=/tmp/claude-1000/-home-epentland-ai-canopy-mylang/03fe2647-29f7-4cb8-b6b6-59b6334d6da0/scratchpad/fix; export TMPDIR=$S; rm -rf $S/c2; for f in field_append lox_shape; do zig-out/bin/mylang build $S/$f/main.my -o $S/$f/new --release --cache-dir=$S/c2; done; timeout 60 /usr/bin/time -f \"lox_shape n=40000 fixed: %e s\" $S/lox_shape/new 40000; zig-out/bin/mylang build test/core/rc_field_take.my -o $S/take-new --cache-dir=$S/c2 && MYL_CORE_LEAKCHECK=1 $S/take-new a b; echo \"status $?\"' && pwd -P >| /tmp/claude-631a-cwd "
+    }
+  ],
+  "seconds": 0.1529822659213096,
+  "status": 0
+}

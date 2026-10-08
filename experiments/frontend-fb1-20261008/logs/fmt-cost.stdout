@@ -1,0 +1,3 @@
+src/core/cost.zig
+src/core/cost_command.zig
+src/core/passes.zig

@@ -1,0 +1,246 @@
+SUMMARY
+{
+  "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/zig-out/bin/mylang",
+  "core_sha256": "724beae04cf76e2d6fda723ffb5a3320de72d00da39ff14b876f3426bed2a165",
+  "source_commit": "637a85d6ecfdf8eb3bb68a942c04be358e914aea",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "rows": 184,
+  "results": {
+    "all46-1-record_reads-debug": {
+      "source": "test/core/row_record_reads.my",
+      "mode": "debug",
+      "totals": {
+        "inlined_calls": 0,
+        "unswitched_loops": 0,
+        "versioned_loops": 0,
+        "checks_proved": 0,
+        "vector_plans": 0,
+        "updates_in_place": 5,
+        "updates_tested": 0,
+        "updates_copied": 0,
+        "retains": 0,
+        "releases": 1,
+        "elided_pairs": 0,
+        "stack_lists": 0,
+        "checks_kept": 42,
+        "allocations": 11,
+        "unresolved_allocation_calls": 2,
+        "loops_unknown": 2,
+        "llvm_vectorized_loops": null
+      },
+      "llvm_sha256": "d76dcfd5c292f6c89a2dd32a6cddcd041c64f7a0e7dba870cd3dbd6c2907f7f4",
+      "executable_sha256": "6a0f40df74b44babe8f074c43f88de5a88fa84590ea7c31295e4c6c68d95266b",
+      "equal": true
+    },
+    "all46-1-record_reads-release": {
+      "source": "test/core/row_record_reads.my",
+      "mode": "release",
+      "totals": {
+        "inlined_calls": 0,
+        "unswitched_loops": 0,
+        "versioned_loops": 0,
+        "checks_proved": 11,
+        "vector_plans": 0,
+        "updates_in_place": 5,
+        "updates_tested": 0,
+        "updates_copied": 0,
+        "retains": 0,
+        "releases": 1,
+        "elided_pairs": 0,
+        "stack_lists": 0,
+        "checks_kept": 21,
+        "allocations": 11,
+        "unresolved_allocation_calls": 2,
+        "loops_unknown": 2,
+        "llvm_vectorized_loops": null
+      },
+      "llvm_sha256": "5599d7ee8d6df9eae12d034e4bbeef44caffad84d99b18f737e874b0bfc6d528",
+      "executable_sha256": "747322010769badf5b559acc3c783574554d7b50e0081d3bae8e1bcd2206eeee",
+      "equal": true
+    },
+    "all46-1-record_reads-verify": {
+      "source": "test/core/row_record_reads.my",
+      "mode": "verify",
+      "totals": {
+        "inlined_calls": 0,
+        "unswitched_loops": 0,
+        "versioned_loops": 0,
+        "checks_proved": 11,
+        "vector_plans": 0,
+        "updates_in_place": 5,
+        "updates_tested": 0,
+        "updates_copied": 0,
+        "retains": 0,
+        "releases": 1,
+        "elided_pairs": 0,
+        "stack_lists": 0,
+        "checks_kept": 32,
+        "allocations": 11,
+        "unresolved_allocation_calls": 2,
+        "loops_unknown": 2,
+        "llvm_vectorized_loops": null
+      },
+      "llvm_sha256": "3648c3a46fe71827bb0ba54de43c09ee9a6aa9d6279efffdc29d7861132ec944",
+      "executable_sha256": "0d5adad26ac8a102484903769009274e2784a919c7a64affe2895fd62c343e5f",
+      "equal": true
+    },
+    "all46-1-record_reads-off": {
+      "source": "test/core/row_record_reads.my",
+      "mode": "off",
+      "totals": {
+        "inlined_calls": 0,
+        "unswitched_loops": 0,
+        "versioned_loops": 0,
+        "checks_proved": 0,
+        "vector_plans": 0,
+        "updates_in_place": 5,
+        "updates_tested": 0,
+        "updates_copied": 0,
+        "retains": 0,
+        "releases": 1,
+        "elided_pairs": 0,
+        "stack_lists": 0,
+        "checks_kept": 42,
+        "allocations": 11,
+        "unresolved_allocation_calls": 2,
+        "loops_unknown": 2,
+        "llvm_vectorized_loops": null
+      },
+      "llvm_sha256": "d76dcfd5c292f6c89a2dd32a6cddcd041c64f7a0e7dba870cd3dbd6c2907f7f4",
+      "executable_sha256": "057133ac6dbd4c6394eb787a1db3b9d7695b67c71c5bd4c0cd2f2f6a170ed4e2",
+      "equal": true
+    },
+    "all46-1-tagged_stack-debug": {
+      "source": "test/core/row_tagged_stack.my",
+      "mode": "debug",
+      "totals": {
+        "inlined_calls": 0,
+        "unswitched_loops": 0,
+        "versioned_loops": 0,
+        "ch
+{
+  "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/zig-out/bin/mylang",
+  "core_sha256": "724beae04cf76e2d6fda723ffb5a3320de72d00da39ff14b876f3426bed2a165",
+  "source_commit": "637a85d6ecfdf8eb3bb68a942c04be358e914aea",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "rows": 2,
+  "results": {
+    "lox": {
+      "entry": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/main.my",
+      "entry_sha256": "18c1f669b1683123e635256c9f66c6db2766383391371c3822e61df7d9732274",
+      "functions": 294,
+      "totals": {
+        "checks": {
+          "kept": 651,
+          "proved": 958
+        },
+        "updates": {
+          "in_place": 48,
+          "tested": 52,
+          "copied": 193
+        },
+        "allocation": {
+          "sites": 801,
+          "unresolved_calls": 338
+        },
+        "rc": {
+          "retains": 344,
+          "releases": 480,
+          "elided_pairs": 0,
+          "stack_lists": 0
+        },
+        "inlined_calls": 221,
+        "loops": {
+          "unswitched": 0,
+          "versioned": 0,
+          "vector_plans": 0,
+          "unknown": 81
+        },
+        "llvm_vectorized_loops": null
+      },
+      "top20": [
+        {
+          "name": "vm::run",
+          "counts": {
+            "checks": {
+              "kept": 102,
+              "proved": 88
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 15
+            },
+            "allocation": {
+              "sites": 16,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 11,
+              "releases": 8,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 30,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 1
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "heap::blacken",
+          "counts": {
+            "checks": {
+              "kept": 20,
+              "proved": 40
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 8,
+              "copied": 8
+            },
+            "allocation": {
+              "sites": 24,
+              "unresolved_calls": 0
+           
+STATUS
+['experiments/frontend-fb1-20261008/commands', 'experiments/frontend-fb1-20261008/logs', 'experiments/frontend-fb1-20261008/p1', 'experiments/frontend-fb1-20261008/all46-1', 'experiments/frontend-fb1-20261008/smoke-1', 'experiments/frontend-fb1-20261008/tools']
+False

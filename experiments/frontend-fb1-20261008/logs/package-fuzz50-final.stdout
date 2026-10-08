@@ -1,0 +1,11 @@
+evidence=/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/experiments/frontend-fb1-20261008/fuzz50-final
+source_commit=061f46aba144c00bf2094fcdada9a2c682696105
+s0: PASS; 23.951185785001144s
+number: PASS; 29.3684082061518s
+rc: PASS; 18.472064999863505s
+rebinding: PASS; 28.88995878607966s
+s1: PASS; 33.51027400093153s
+iteration: PASS; 42.16756430082023s
+text: PASS; 15.510562092065811s
+functions: PASS; 24.019427933963016s
+dict: PASS; 64.6082086309325s

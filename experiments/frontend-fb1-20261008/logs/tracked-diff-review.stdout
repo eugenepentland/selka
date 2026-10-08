@@ -1,0 +1,39 @@
+diff --git a/src/core/cost_test.zig b/src/core/cost_test.zig
+index d618beebb..4adfac6ef 100644
+--- a/src/core/cost_test.zig
++++ b/src/core/cost_test.zig
+@@ -79,6 +79,7 @@ test "cost attributes inlining checks and all ownership forms to emitted bodies
+     const verify = try measured(a, program, .verify);
+     try std.testing.expect(verify.totals.checks.kept >= release.totals.checks.kept);
+     _ = try measured(a, program, .off);
++    try elidedCount(a);
+ }
+ 
+ // spec-case: FRONTEND-COST-1
+@@ -232,3 +233,26 @@ test "cost allocation sites remain in cold callees two calls down before release
+     try std.testing.expectEqual(@as(u32, 0), named(debug, "first").allocation.sites);
+     try std.testing.expectEqual(@as(u32, 0), named(debug, "second").allocation.sites);
+ }
++
++// The removed instructions cannot be counted after the pass. Preserve its actual
++// event in the same per-function result that a build supplies to the cost report.
++fn elidedCount(a: std.mem.Allocator) !void {
++    var module: ir.Module = .{};
++    const ints = try module.intern(a, .{ .list = .i64 });
++    var h = try support.Hand.init(a, &module, "peephole", .{ .params = try a.dupe(ir.Type, &.{ints}), .ret = .u64 });
++    const p = try h.param(0);
++    _ = try h.emit(.{ .op = .retain, .ty = .void, .a = p });
++    const n = try h.emit(.{ .op = .list_len, .ty = .u64, .a = p });
++    _ = try h.emit(.{ .op = .release, .ty = .void, .a = p });
++    _ = try h.emit(.{ .op = .ret, .ty = .void, .a = n });
++    _ = try h.finish();
++    const dropped = try @import("own.zig").elidePairs(a, &module.functions.items[0]);
++    try std.testing.expectEqual(@as(u32, 1), dropped);
++    var local = [_]passes.FunctionStats{.{ .own = .{ .elided = dropped } }};
++    const result: passes.Result = .{ .known = &.{}, .plans = &.{}, .per_function = &local, .own = local[0].own };
++    const report = try cost.measure(a, &module, &result, null);
++    try std.testing.expectEqual(@as(u32, 1), named(report, "peephole").rc.elided_pairs);
++    try std.testing.expectEqual(result.own.elided, report.totals.rc.elided_pairs);
++    try std.testing.expectEqual(@as(u32, 0), report.totals.rc.retains);
++    try std.testing.expectEqual(@as(u32, 0), report.totals.rc.releases);
++}

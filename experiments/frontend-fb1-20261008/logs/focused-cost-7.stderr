@@ -1,0 +1,20 @@
+test-core
++- run test 6 pass, 1 fail (7 total)
+guardian/test: test wall 0.33s; slowest over 50ms:
+guardian/test:   0.30s  cost_test.test.cost includes real vector plans loop guards and unswitched cloned body events
+guardian/test: FAIL — 1 failed of 7
+guardian/test: RESULT {"passed":6,"failed":1,"skipped":0}
+error: 'cost_test.test.cost includes real vector plans loop guards and unswitched cloned body events' failed:
+       guardian/test: 7 test(s) selected
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1371239 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/src/core/cost_test.zig:185:5: 0x2022f83 in test.cost includes real vector plans loop guards and unswitched cloned body events (root_test.zig)
+           try std.testing.expect(vectorized.totals.loops.versioned > 0);
+           ^
+failed command: ./.zig-cache/o/c2ddf6351300a76cdffe583ca909fa9f/test --cache-dir=./.zig-cache --seed=0xbe9535a9 --listen=-
+
+Build Summary: 6/8 steps succeeded (1 failed); 6/7 tests passed (1 failed)
+test-core transitive failure
++- run test 6 pass, 1 fail (7 total)
+

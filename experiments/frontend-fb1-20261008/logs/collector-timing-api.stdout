@@ -1,0 +1,72 @@
+fn privateDirectory(allocator: std.mem.Allocator, io: std.Io, work: []const u8, prefix: []const u8) Error![]const u8 {
+    var nonce: [16]u8 = undefined;
+    std.Io.random(io, &nonce);
+    const path = try std.fs.path.join(allocator, &.{ work, try std.fmt.allocPrint(allocator, "{s}-{s}", .{ prefix, std.fmt.bytesToHex(nonce, .lower) }) });
+    std.Io.Dir.cwd().createDirPath(io, path) catch return error.WriteFailed;
+    return path;
+}
+
+/// The runtime object for this runtime source, compiled on first use.
+fn runtimeObject(native: Native, directory: []const u8, abi: Digest) Error!Object {
+    const allocator = native.arena;
+    const io = native.io;
+    var digest: Digest = undefined;
+    var hash = std.crypto.hash.Blake3.init(.{});
+fn run(native: Native, argv: []const []const u8) Error!void {
+    native.counts.processes += 1;
+    const result = std.process.run(native.arena, native.io, .{ .argv = argv, .environ_map = native.environment }) catch |err| {
+        try native.log.print(native.arena, "error: cannot run {s}: {s}\n", .{ argv[0], @errorName(err) });
+        return error.ToolFailed;
+    };
+    try native.log.appendSlice(native.arena, result.stderr);
+    const ok = switch (result.term) {
+        .exited => |code| code == 0,
+        else => false,
+    };
+    if (!ok) return error.ToolFailed;
+}
+
+// spec: NEW-CORE-S4-LINK-1
+test "a debug link without foreign C objects leaves out Zig's UBSan runtime" {
+    try std.testing.expectEqualStrings("-fno-sanitize=undefined", linkSanitizer(false, 0));
+    try std.testing.expectEqualStrings("", linkSanitizer(false, 1));
+    try std.testing.expectEqualStrings("", linkSanitizer(true, 0));
+}
+
+// spec-case: NEW-CORE-S4-TEST-3
+test "Guard.check refuses changed and missing tool inputs and propagates allocation failure" {
+    const symbols = try a.alloc(?[]const u8, owner.len);
+    @memset(owner, null);
+    @memset(exported, false);
+    @memset(symbols, null);
+    for (module.functions.items, 0..) |*function, index| {
+        const adapter = values.generated(function);
+        const synthetic = function.signature.linkage == .internal and
+            (std.mem.startsWith(u8, function.name, "lambda@") or std.mem.startsWith(u8, function.name, "__test_") or std.mem.eql(u8, function.name, "<entry>"));
+        const helper = adapter or synthetic;
+        if (function.signature.linkage != .internal and !helper) continue;
+        const location = options.locator.locate(options.locator.context, function.span);
+        const path = if (location.path.len != 0) location.path else options.source_path;
+        const kind: Kind = if (helper) .helper else if (std.mem.indexOfScalar(u8, function.name, '[') != null) .generic else .module;
+        const group = if (kind == .module) moduleGroup(groups.items, path) else null;
+        const target = group orelse blk: {
+            try groups.append(a, .{ .path = try a.dupe(u8, if (adapter) "myl.helper" else path), .kind = kind });
+            break :blk @as(u32, @intCast(groups.items.len - 1));
+    const catalog = try constants.Catalog.init(a, module);
+    // Hash an adapter's complete closed text with a fixed self-name. Neither an IR
+    // type ID nor the eventual hash can enter this seed, including recursively.
+    for (groups.items) |group| {
+        if (group.kind != .helper) continue;
+        const index = group.functions.items[0];
+        if (!values.generated(&module.functions.items[index])) continue;
+        symbols[index] = "myl.helper.self";
+        const seed = try llvm.emitUnit(a, module, options, .{
+            .functions = group.functions.items,
+            .exported = exported,
+            .symbols = symbols,
+            .source_path = group.path,
+            .constants = &catalog,
+        });
+        symbols[index] = try std.fmt.allocPrint(a, "myl.helper.{s}", .{try digest(a, seed)});
+    }
+    var units: std.ArrayList(Unit) = .empty;

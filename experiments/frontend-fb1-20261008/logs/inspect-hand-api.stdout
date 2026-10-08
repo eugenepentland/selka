@@ -1,0 +1,141 @@
+test "the R-2 peephole drops a retain and release of one value with only pure reads between them" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var m: ir.Module = .{};
+    const ints = try m.intern(arena.allocator(), .{ .list = .i64 });
+    var h = try Hand.init(arena.allocator(), &m, "f", .{ .params = try arena.allocator().dupe(ir.Type, &.{ ints, ints }), .ret = .u64 });
+    const p = try h.param(0);
+    const q = try h.param(1);
+    _ = try h.emit(.{ .op = .retain, .ty = .void, .a = p });
+    const n = try h.emit(.{ .op = .list_len, .ty = .u64, .a = p });
+    _ = try h.emit(.{ .op = .release, .ty = .void, .a = p });
+    // A call between them keeps the second pair: the callee could drop an owner.
+    _ = try h.emit(.{ .op = .retain, .ty = .void, .a = q });
+    _ = try h.emit(.{ .op = .print, .ty = .void, .data = try h.extra(&.{ try h.int(.cap, 1), n }) });
+    _ = try h.emit(.{ .op = .call, .ty = .u64, .a = @fromBackingInt(0), .data = try h.extra(&.{ q, q }) });
+    _ = try h.emit(.{ .op = .release, .ty = .void, .a = q });
+    _ = try h.emit(.{ .op = .ret, .ty = .void, .a = n });
+    _ = try h.finish();
+    const dropped = try own.elidePairs(arena.allocator(), &m.functions.items[0]);
+    try std.testing.expectEqual(@as(u32, 1), dropped);
+    const text = try print.module(arena.allocator(), &m);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, text, "retain"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, text, "release"));
+}
+
+// spec: NEW-CORE-RC-5
+test "a verify build traps R_CORE_FACT when an update the pass called unique finds a shared list" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var m: ir.Module = .{};
+    const ints = try m.intern(arena.allocator(), .{ .list = .i64 });
+    var h = try Hand.init(arena.allocator(), &m, "main", .{ .params = try arena.allocator().dupe(ir.Type, &.{.cap}), .ret = .i64 });
+    const list = try h.emit(.{ .op = .list_new, .ty = ints, .a = try h.int(.i64, 1) });
+    _ = try h.emit(.{ .op = .retain, .ty = .void, .a = list });
+    const unique = try h.emit(.{ .op = .is_unique, .ty = .bool, .a = list });
+    const ok = try h.newBlock();
+    const fail = try h.newBlock();
+    try h.branch(unique, ok, fail);
+    h.block = fail;
+    _ = try h.emit(.{ .op = .@"unreachable", .ty = .void, .data = own.unique_assert });
+    h.block = ok;
+    _ = try h.emit(.{ .op = .ret, .ty = .void, .a = try h.int(.i64, 0) });
+    _ = try h.finish();
+    const run = try support.runOwned(arena.allocator(), &m, .{ .own = false, .verify = true, .leakcheck = false });
+    try std.testing.expectEqual(@as(u8, 1), run.status);
+    try std.testing.expect(contains(run.stderr, "error[R_CORE_FACT]: native e
+pub const Hand = struct {
+    arena: std.mem.Allocator,
+    module: *ir.Module,
+    function: ir.Function,
+    block: ir.BlockId = @fromBackingInt(0),
+
+    /// A function `name(params) -> ret` with one empty entry block.
+    pub fn init(arena: std.mem.Allocator, module: *ir.Module, name: []const u8, signature: ir.Signature) Error!Hand {
+        var hand: Hand = .{ .arena = arena, .module = module, .function = .{ .name = name, .signature = signature } };
+        _ = try hand.newBlock();
+        return hand;
+    }
+
+    /// Append `inst` to the current block; returns its value.
+    pub fn emit(self: *Hand, inst: ir.Inst) Error!ir.Ref {
+        const ref = try self.loose(inst);
+        try self.function.blocks.items[self.block.index()].insts.append(self.arena, ref);
+        return ref;
+    }
+
+    /// An instruction outside every block: a constant or parameter.
+    pub fn loose(self: *Hand, inst: ir.Inst) Error!ir.Ref {
+        const ref: ir.Ref = @fromBackingInt(@intCast(self.function.insts.items.len));
+        try self.function.insts.append(self.arena, inst);
+        return ref;
+    }
+
+    /// An integer constant of type `ty`.
+    pub fn int(self: *Hand, ty: ir.Type, value: i64) Error!ir.Ref {
+        return self.loose(.{ .op = .iconst, .ty = ty, .data = @bitCast(value) });
+    }
+
+    /// Parameter `index`.
+    pub fn param(self: *Hand, index: u32) Error!ir.Ref {
+        return self.loose(.{ .op = .param, .ty = self.function.signature.params[index], .data = index });
+    }
+
+    /// Pack `refs` as an instruction's `extra` list.
+    pub fn extra(self: *Hand, refs: []const ir.Ref) Error!u64 {
+        const start: u32 = @intCast(self.function.extra.items.len);
+        try self.function.extra.appendSlice(self.arena, refs);
+        return (ir.ExtraSlice{ .start = start, .len = @intCast(refs.len) }).pack();
+    }
+
+    /// A new empty block (not entered).
+    pub fn newBlock(self: *Hand) Error!ir.BlockId {
+        try self.function.blocks.append(self.arena, .{});
+        return @fromBackingInt(@intCast(self.function.blocks.items.len - 1));
+    }
+
+    /// End the current block with a jump to `target`, recording the edge.
+    pub fn jump(self: *Hand, target: ir.BlockId) Error!void {
+        _ = try self.emit(.{ .op = .jump, .ty = .void, .data = @backingInt(target) });
+        try self.function.blocks.items[target.index()].preds.append(self.arena, self.block);
+    }
+
+    /// End the current block with `if condition: then else otherwise`.
+    pub fn branch(self: *Hand, condition: ir.Ref, then: ir.BlockId, otherwise: ir.BlockId) Error!void {
+        _ = try self.emit(.{ .op = .branch, .ty = .void, .a = condition, .data = ir.packTargets(then, otherwise) });
+        try self.function.blocks.items[then.index()].preds.append(self.arena, self.block);
+        try self.function.blocks.items[otherwise.index()].preds.append(self.arena, self.block);
+    }
+
+    /// Print `values` (integers, booleans or strings) on the stream parameter `stream`.
+    pub fn printValues(self: *Hand, stream: ir.Ref, values: []const ir.Ref) Error!void {
+        var operands: std.ArrayList(ir.Ref) = .empty;
+        try operands.append(self.arena, stream);
+        try operands.appendSlice(self.arena, values);
+        _ = try self.emit(.{ .op = .print, .ty = .void, .data = try self.extra(operands.items) });
+    }
+
+    /// Add the finished function to the module; returns its index.
+    pub fn finish(self: *Hand) Error!u32 {
+        try self.module.functions.append(self.arena, self.function);
+        return @intCast(self.module.functions.items.len - 1);
+    }
+};
+
+/// What running a hand-built program printed and returned.
+pub const Run = struct { stdout: []const u8, stderr: []const u8, status: u8, llvm: []const u8 };
+
+/// Why a hand-built program could not be built or run.
+pub const RunError = Error || driver.Error || error{AnalyzedOwnership};
+
+/// Verify `module`, emit it (traps at line 1), compile it with `zig cc` at -O0
+/// (or -O3 when `release`) and run it with no arguments.
+pub fn runModule(arena: std.mem.Allocator, module: *const ir.Module, release: bool) RunError!Run {
+    try verified(arena, module, &.{});
+    const context: u8 = 0;
+    const llvm = try emit_llvm.emitModule(arena, module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "hand.my", .main = .{ .parameters = &.{"out"} } });
+    return runLlvm(arena, llvm, .{ .release = release, .leakcheck = false });
+}
+
+/// How `runOwned` builds and runs a hand-built module.
+pub const Ru

@@ -1,0 +1,172 @@
+src/core/runtime/core_text.c:13:    int len = snprintf(text, sizeof text, "myl-core textwalk: %llu octets\n", (unsigned long long)core_text_walked);
+src/core/runtime/core_text.c:488:myl_block *myl_core_text_encode(myl_block *text) { retain_block(text); return text; }
+src/core/runtime/core_text.c:794:        set->wide = calloc(CORE_UNICODE_WORDS, sizeof(uint64_t));
+src/core/runtime/core_text.c:997:/* Scalar repr ports native_repr.c's quote/escape/Unicode16 printability rules. */
+src/core/runtime/core_text.c:1000:static bool core_printable(uint32_t point) {
+src/core/runtime/core_text.c:1001:    size_t low = 0, high = sizeof core_nonprintable / sizeof core_nonprintable[0];
+src/core/runtime/core_text.c:1004:        if (point < core_nonprintable[middle][0]) high = middle;
+src/core/runtime/core_text.c:1005:        else if (point > core_nonprintable[middle][1]) low = middle + 1;
+src/core/runtime/core_text.c:1028:    if (!(input.bytes ? point >= 32 && point < 127 : core_printable(point))) {
+src/core/runtime/core_text.c:1033:static void core_repr_render(core_repr_input input, core_repr_output *out) {
+src/core/runtime/core_text.c:1047:    core_repr_render(input, &measured);
+src/core/runtime/core_text.c:1051:    core_repr_render(input, &output);
+src/core/runtime/core_dict.c:30:    fprintf(stderr, "error[E_CORE_UNSUPPORTED]: S2 IR operation %d is not implemented\n", operation);
+src/core/runtime/core_dict.c:99:int64_t myl_core_dict_find(const myl_block *dict, const void *key, uint64_t hash) {
+src/core/runtime/core_dict.c:107:uint64_t myl_core_dict_hash(const myl_block *dict, const void *key) { return dict_hash(dict_meta(dict)->desc, key); }
+src/core/runtime/core_dict.c:130:    core_dict_index *index = malloc(sizeof *index + controls + (size_t)slots * 4);
+src/core/runtime/core_dict.c:152:myl_block *myl_core_dict_new(uint64_t hint, const core_dict_descriptor *desc) {
+src/core/runtime/core_dict.c:156:    core_dict_meta *meta = calloc(1, sizeof *meta);
+src/core/runtime/core_dict.c:159:    meta->hashes = malloc((size_t)cap * sizeof(uint64_t));
+src/core/runtime/core_dict.c:174:    uint64_t *hashes = realloc(meta->hashes, (size_t)cap * 8);
+src/core/runtime/core_dict.c:178:        unsigned char *dead = realloc(meta->dead, (size_t)(cap + 7) / 8);
+src/core/runtime/core_dict.c:197:myl_block *myl_core_dict_set(myl_block *dict, int64_t entry, const void *value) {
+src/core/runtime/core_dict.c:205:myl_block *myl_core_dict_insert(myl_block *dict, int64_t probe, const void *key, const void *value, bool verify) {
+src/core/runtime/core_dict.c:215:        probe = myl_core_dict_find(dict, key, hash);
+src/core/runtime/core_dict.c:242:myl_block *myl_core_dict_remove(myl_block *dict, int64_t entry) {
+src/core/runtime/core_dict.c:245:        meta->dead = calloc(((size_t)dict->cap + 7) / 8, 1);
+src/core/runtime/core_dict.c:278:uint64_t myl_core_dict_entries(const myl_block *dict) { return dict_meta(dict)->elen; }
+src/core/runtime/core_dict.c:279:bool myl_core_dict_live(const myl_block *dict, uint64_t entry) { return dict_live(dict_meta(dict), entry); }
+src/core/runtime/core_dict.c:280:int64_t myl_core_dict_ordinal(const myl_block *dict, uint64_t ordinal) {
+src/core/runtime/core_dict.c:288:myl_block *myl_core_dict_copy(const myl_block *dict) {
+src/core/runtime/core_dict.c:290:    myl_block *copy = myl_core_dict_new((uint64_t)dict->cap, meta->desc);
+src/core/runtime/core_dict.c:298:        other->dead = malloc(bytes);
+src/core/runtime/core_dict.c:304:        other->index = malloc(bytes);
+src/core/runtime/core_dict.c:318:myl_block *myl_core_dict_clear(myl_block *dict) {
+src/core/runtime/core_dict.c:361:int64_t myl_core_dict_find_span(const myl_block *dict, const unsigned char *data, uint64_t length) {
+src/core/runtime/core_values.c:43:    core_value_memo_entry *entries = calloc(capacity, sizeof *entries);
+src/core/runtime/core_values.c:90:        core_equal_work *items = realloc(stack->items, capacity * sizeof *items);
+src/core/runtime/core_values.c:98:bool myl_core_values_equal(const core_value_shape *root, const void *left, const void *right) {
+src/core/runtime/core_values.c:146:                    int64_t found = myl_core_dict_find(b, entry, hash);
+src/core/runtime/core_values.c:171:        core_hash_work *items = realloc(stack->items, capacity * sizeof *items);
+src/core/runtime/core_values.c:261:/* The old print/str spelling from io_render.zig and native_render.zig.
+src/core/runtime/core_values.c:262: * Source rendering descriptors retain unit payload presence in union offsets,
+src/core/runtime/core_values.c:267: * iterative for equality/hashing, where no rendering depth cap applies. */
+src/core/runtime/core_values.c:268:typedef struct { char *data; size_t count, capacity; } core_render_buffer;
+src/core/runtime/core_values.c:269:static void value_render_bytes(core_render_buffer *output, const void *bytes, size_t count) {
+src/core/runtime/core_values.c:278:        char *data = realloc(output->data, capacity);
+src/core/runtime/core_values.c:286:static void value_render_text(core_render_buffer *output, const char *text) {
+src/core/runtime/core_values.c:287:    value_render_bytes(output, text, strlen(text));
+src/core/runtime/core_values.c:289:static void value_render_octets(core_render_buffer *output, const myl_block *block, bool bytes, unsigned depth) {
+src/core/runtime/core_values.c:291:    if (bytes) value_render_text(output, "b");
+src/core/runtime/core_values.c:292:    if (quoted) value_render_text(output, "'");
+src/core/runtime/core_values.c:297:            value_render_text(output, "\\");
+src/core/runtime/core_values.c:298:            value_render_bytes(output, &byte, 1);
+src/core/runtime/core_values.c:301:            value_render_bytes(output, escape, 2);
+src/core/runtime/core_values.c:305:            value_render_bytes(output, escape, 4);
+src/core/runtime/core_values.c:306:        } else value_render_bytes(output, &byte, 1);
+src/core/runtime/core_values.c:308:    if (quoted) value_render_text(output, "'");
+src/core/runtime/core_values.c:311:static void value_render(core_render_buffer *output, const core_value_shape *shape, const unsigned char *at, unsigned depth) {
+src/core/runtime/core_values.c:312:    if (depth > 24) { value_render_text(output, "..."); return; }
+src/core/runtime/core_values.c:314:    case 0: value_render_text(output, "None"); break;
+src/core/runtime/core_values.c:318:        if (shape->aux == 1) { value_render_text(output, bits ? "True" : "False"); break; }
+src/core/runtime/core_values.c:325:            snprintf(number, sizeof number, "%" PRId64, signed_value);
+src/core/runtime/core_values.c:326:        } else snprintf(number, sizeof number, "%" PRIu64, bits);
+src/core/runtime/core_values.c:327:        value_render_text(output, number);
+src/core/runtime/core_values.c:335:        value_render_bytes(output, block_data(text), (size_t)text->len);
+src/core/runtime/core_values.c:339:    case 3: value_render_octets(output, value_block(at), shape->aux != 0, depth); break;
+src/core/runtime/core_values.c:342:        if (!shape->aux) value_render_text(output, shape->names[0]);
+src/core/runtime/core_values.c:343:        value_render_text(output, "(");
+src/core/runtime/core_values.c:345:            if (i) value_render_text(output, ", ");
+src/core/runtime/core_values.c:346:            if (!shape->aux) { value_render_text(output, shape->names[i + 1]); value_render_text(output, "="); }
+src/core/runtime/core_values.c:347:            value_render(output, shape->children[i], at + shape->offsets[i], depth + 1);
+src/core/runtime/core_values.c:349:        value_render_text(output, ")");
+src/core/runtime/core_values.c:354:        value_render_text(output, shape->names[tag]);
+src/core/runtime/core_values.c:356:            value_render_text(output, "(");
+src/core/runtime/core_values.c:357:            value_render(output, shape->children[tag], value_payload(shape, at), depth + 1);
+src/core/runtime/core_values.c:358:            value_render_text(output, ")");
+src/core/runtime/core_values.c:363:        value_render(output, shape->children[0], (const unsigned char *)value_block(at) + MYL_HEADER, depth);
+src/core/runtime/core_values.c:373:        value_render_text(output, "[");
+src/core/runtime/core_values.c:375:            if (i) value_render_text(output, ", ");
+src/core/runtime/core_values.c:376:            value_render(output, shape->children[0], data + i * shape->children[0]->size, depth + 1);
+src/core/runtime/core_values.c:378:        value_render_text(output, "]");
+src/core/runtime/core_values.c:384:        if (set && !dict->len) { value_render_text(output, "set()"); break; }
+src/core/runtime/core_values.c:386:        value_render_text(output, "{");
+src/core/runtime/core_values.c:390:            if (!first) value_render_text(output, ", ");
+src/core/runtime/core_values.c:393:            value_render(output, shape->children[0], entry, depth + 1);
+src/core/runtime/core_values.c:395:                value_render_text(output, ": ");
+src/core/runtime/core_values.c:396:                value_render(output, shape->children[1], entry + meta->desc->value_offset, depth + 1);
+src/core/runtime/core_values.c:399:        value_render_text(output, "}");
+src/core/runtime/core_values.c:403:        value_render_text(output, shape->names[0]);
+src/core/runtime/core_values.c:404:        value_render_text(output, "(");
+src/core/runtime/core_values.c:405:        value_render(output, shape->children[0], at, depth + 1);
+src/core/runtime/core_values.c:406:        value_render_text(output, ")");
+src/core/runtime/core_values.c:411:myl_block *myl_core_values_render(const core_value_shape *shape, const void *at) {
+src/core/runtime/core_values.c:412:    core_render_buffer output = {0};
+src/core/runtime/core_values.c:413:    value_render(&output, shape, at, 0);
+src/core/runtime/core_rt.c:29:#include <malloc.h>
+src/core/runtime/core_rt.c:128: * `malloc`ed, and a large list grows with `realloc`. The class sits in the high
+src/core/runtime/core_rt.c:180:           16-byte `malloc` alignment cost integer_math 4% and binary_search 10%). */
+src/core/runtime/core_rt.c:183:        if (heap_ceiling) heap_charge(malloc_usable_size(block));
+src/core/runtime/core_rt.c:217:        if (heap_ceiling) heap_refund(malloc_usable_size(block));
+src/core/runtime/core_rt.c:326:void myl_core_print_i64(int64_t fd, int64_t value);
+src/core/runtime/core_rt.c:327:void myl_core_print_u64(int64_t fd, uint64_t value);
+src/core/runtime/core_rt.c:329:void myl_core_print_bool(int64_t fd, bool value) {
+src/core/runtime/core_rt.c:334:void myl_core_print_str(int64_t fd, myl_block *text) {
+src/core/runtime/core_rt.c:338:void myl_core_print_sep(int64_t fd) { stream_write(stream_for(fd), " ", 1); }
+src/core/runtime/core_rt.c:340:void myl_core_print_end(int64_t fd) {
+src/core/runtime/core_rt.c:360:           way), and moves to a fresh aligned block when `realloc` loses the alignment. */
+src/core/runtime/core_rt.c:362:        if (heap_ceiling) heap_refund(malloc_usable_size(list));
+src/core/runtime/core_rt.c:363:        myl_block *moved = realloc(list, bytes);
+src/core/runtime/core_rt.c:372:        if (heap_ceiling) heap_charge(malloc_usable_size(moved));
+src/core/runtime/core_rt.c:854:        snprintf(out, capacity, "%s/%s", prefix, name);
+src/core/runtime/core_rt.c:864:/* Frame lines a report may still print; negative: no limit. */
+src/core/runtime/core_rt.c:926:        /* chain[0..chain_length) from the subprogram inward; print innermost first. */
+src/core/runtime/core_rt.c:930:        int printed = 0;
+src/core/runtime/core_rt.c:931:        for (int k = chain_length - 1; k >= 0; --k, ++printed) {
+src/core/runtime/core_rt.c:934:            if (printed < skip) {
+src/core/runtime/core_rt.c:940:            int len = snprintf(text, sizeof text, "  in %s at %s:%llu:%llu\n", dw_name(&unit, &chain[k]), dw_file(&unit, file, path, sizeof path), (unsigned long long)line, (unsigned long long)column);
+src/core/runtime/core_rt.c:968:    const uint64_t printed = (uint64_t)(CORE_TRACE_FRAMES - (trap_lines_left < 0 ? 0 : trap_lines_left));
+src/core/runtime/core_rt.c:971:    if (!core_trap_marks_all || live <= printed) return;
+src/core/runtime/core_rt.c:973:    int length = snprintf(text, sizeof text, "  %llu frames omitted\n", (unsigned long long)(live - printed));
+src/core/runtime/core_rt.c:979:    size_t used = (size_t)snprintf(record, capacity, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"");
+src/core/runtime/core_rt.c:981:        if (*byte == '"' || *byte == '\\') used += (size_t)snprintf(record + used, capacity - used, "\\%c", *byte);
+src/core/runtime/core_rt.c:982:        else if (*byte < 0x20) used += (size_t)snprintf(record + used, capacity - used, "\\u%04x", *byte);
+src/core/runtime/core_rt.c:985:    used += (size_t)snprintf(record + used, capacity - used, "\"}\n");
+src/core/runtime/core_rt.c:996:    /* TRAP-UNSIGNED-1: an unsigned operation's operands print unsigned, and its record says so. */
+src/core/runtime/core_rt.c:1002:            snprintf(detail, sizeof detail, " (%s: left %llu, right %llu, width %d)", site->operation, (unsigned long long)a, (unsigned long long)b, width);
+src/core/runtime/core_rt.c:1003:            snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"unsigned\":true,\"left\":%llu,\"right\":%llu,\"width\":%d}\n", site->operation, (unsigned long long)a, (unsigned long long)b, width);
+src/core/runtime/core_rt.c:1006:        snprintf(detail, sizeof detail, " (%s: left %lld, right %lld, width %d)", site->operation, (long long)a, (long long)b, width);
+src/core/runtime/core_rt.c:1007:        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"left\":%lld,\"right\":%lld,\"width\":%d}\n", site->operation, (long long)a, (long long)b, width);
+src/core/runtime/core_rt.c:1012:            snprintf(detail, sizeof detail, " (%s: left %llu, right %llu)", site->operation, (unsigned long long)a, (unsigned long long)b);
+src/core/runtime/core_rt.c:1013:            snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"unsigned\":true,\"left\":%llu,\"right\":%llu}\n", site->operation, (unsigned long long)a, (unsigned long long)b);
+src/core/runtime/core_rt.c:1016:        snprintf(detail, sizeof detail, " (%s: left %lld, right %lld)", site->operation, (long long)a, (long long)b);
+src/core/runtime/core_rt.c:1017:        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"%s\",\"left\":%lld,\"right\":%lld}\n", site->operation, (long long)a, (long long)b);
+src/core/runtime/core_rt.c:1022:        snprintf(detail, sizeof detail, " (index %lld, length %lld)", (long long)a, (long long)b);
+src/core/runtime/core_rt.c:1023:        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":%lld,\"length\":%lld}\n", (long long)a, (long long)b);
+src/core/runtime/core_rt.c:1028:        snprintf(detail, sizeof detail, " (length %lld)", (long long)b);
+src/core/runtime/core_rt.c:1029:        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"pop\",\"length\":%lld}\n", (long long)b);
+src/core/runtime/core_rt.c:1034:        snprintf(detail, sizeof detail, " (index %lld, length %lld)", (long long)a, (long long)b);
+src/core/runtime/core_rt.c:1035:        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"pop\",\"index\":%lld,\"length\":%lld}\n", (long long)a, (long long)b);
+src/core/runtime/core_rt.c:1056:        snprintf(detail, sizeof detail, " (%s: value %lld, other %lld)", site->operation, (long long)a, (long long)b);
+src/core/runtime/core_rt.c:1060:            snprintf(detail, sizeof detail, " (cast: left %llu, width %d)", (unsigned long long)a, width);
+src/core/runtime/core_rt.c:1061:            snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"unsigned\":true,\"left\":%llu,\"width\":%d}\n", (unsigned long long)a, width);
+src/core/runtime/core_rt.c:1064:        snprintf(detail, sizeof detail, " (cast: left %lld, width %d)", (long long)a, width);
+src/core/runtime/core_rt.c:1065:        snprintf(record, sizeof record, "\036MYLANG-TRAP {\"version\":1,\"operation\":\"cast\",\"left\":%lld,\"width\":%d}\n", (long long)a, width);
+src/core/runtime/core_rt.c:1073:    int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: native execution failed%s\n  in %s at %s:%d:%d\n",
+src/core/runtime/core_rt.c:1094:   printing the guest callers, just as a generated trap keeps its site frame. */
+src/core/runtime/core_rt.c:1102:    if(site)length=snprintf(text,sizeof text,"%s:%d:%d: error[%s]: %s\n  in %s at %s:%d:%d\n",site->path,site->line,site->column,code,described,site->function,site->path,site->line,site->column);
+src/core/runtime/core_rt.c:1103:    else length=snprintf(text,sizeof text,"error[%s]: %s\n",code,described);
+src/core/runtime/core_rt.c:1127:        int width = snprintf(message, sizeof message, "myl-core leakcheck: %lld handles live at exit\n", (long long)handles);
+src/core/runtime/core_rt.c:1133:    int len = snprintf(text, sizeof text, "myl-core leakcheck: %lld blocks live at exit\n", (long long)live);
+src/core/runtime/core_rt.c:1137:/* Whether `MYLANG_OPTIONS` names `--print-result`, bare or quoted, as `mylang run
+src/core/runtime/core_rt.c:1138:   --print-result` sets it (NEW-CORE-S5-RUN-1). Reads the variable only at exit. */
+src/core/runtime/core_rt.c:1139:static bool print_result_requested(void) {
+src/core/runtime/core_rt.c:1141:    static const char wanted[] = "--print-result";
+src/core/runtime/core_rt.c:1153:/* `main`'s result is the exit status, truncated to the low 8 bits; `--print-result`
+src/core/runtime/core_rt.c:1154:   also prints the whole value on its own line. */
+src/core/runtime/core_rt.c:1156:    if (print_result_requested()) {
+src/core/runtime/core_rt.c:1158:        int length = snprintf(line, sizeof line, "%lld\n", (long long)status);
+src/core/runtime/core_rt.c:1171:    return snprintf(out, size, "%s:%d:%d", site->path, site->line, site->column);
+src/core/runtime/core_rt.c:1205:            int len = snprintf(line, sizeof line, "  ... %llu more %s dropped ...\n", (unsigned long long)dropped, dropped == 1 ? "entry" : "entries");
+src/core/runtime/core_rt.c:1210:        int len = snprintf(line, sizeof line, "  %-*s  %-*s  %s\n", width, where, name_width, listed[i]->function, listed[i]->operation);
+src/core/runtime/core_rt.c:1229:    myl_core_print_i64(2, value);
+src/core/runtime/core_rt.c:1235:    myl_core_print_u64(2, value);
+src/core/runtime/core_rt.c:1241:    myl_core_print_bool(2, value);
+src/core/runtime/core_rt.c:1247:    myl_core_print_str(2, text);
+src/core/runtime/core_rt.c:1322:    void *scratch = malloc(n * (size_t)size);
+src/core/runtime/core_rt.c:1370:    if (named > 6 && caller[named - 1] == '\n') snprintf(blame, sizeof blame, "; broken by the caller %.*s", (int)(named - 6), caller + 5);
+src/core/runtime/core_rt.c:1372:    int len = snprintf(text, sizeof text, "%s:%d:%d: error[%s]: %s%s%s%s\n  in %s at %s:%d:%d\n",
+src/core/runtime/core_bytes.c:69:myl_block *myl_core_buffer_reverse(myl_block *source) {
+src/core/ir.zig:350:    print,
+src/core/ir.zig:389:            .phi, .call, .call_indirect, .print, .record_make, .list_set, .dict_set_value, .dict_insert, .str_append_char, .str_slice, .str_view_of, .array_set, .buffer_set => true,
+src/core/ir.zig:530:            .phi, .call, .print, .record_make => {},

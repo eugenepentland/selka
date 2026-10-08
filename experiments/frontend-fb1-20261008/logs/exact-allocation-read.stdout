@@ -1,0 +1,247 @@
+    fn functionName(self: *ModuleState, index: u32) []const u8 {
+        if (self.local.selection) |selected| if (selected.symbols[index]) |name| return name;
+        return self.module.functions.items[index].name;
+    }
+
+    fn originalSymbol(self: *ModuleState, index: u32) ![]const u8 {
+        const function = &self.module.functions.items[index];
+        return if (function.signature.linkage == .internal) symbol(self.allocator, self.functionName(index)) else std.fmt.allocPrint(self.allocator, "@{s}", .{c_abi.symbol(self.functionName(index))});
+    }
+
+    fn dependency(self: *ModuleState, index: u32) !void {
+    }
+
+    /// The check an instruction gets emitted with: verify mode emits proven checks as exact ones.
+    pub fn checkOf(self: *FunctionEmitter, inst: ir.Inst) ir.Check {
+        return if (inst.check == .proven and self.state.options.verify) .exact else inst.check;
+    }
+
+    /// Whether `pred` → `header` is the edge a vectorized loop is entered by.
+    fn vectorPreheader(self: *FunctionEmitter, pred: ir.BlockId, header: u32) bool {
+        for (self.vectors.plans) |plan| {
+            if (plan.loop.header.index() == header and plan.preheader == pred) return true;
+        return self.state.rangeNode(info.bits, range);
+    }
+
+    /// Append in place: `myl_core_list_reserve` returns a block with room for one more element.
+    fn listPush(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+        const element = self.state.module.compound(inst.ty).list;
+        const len_at = try self.fresh("%pl");
+        const counter = if (inst.data == flags.fill_push) self.fillCounter(inst.a) else null;
+        const len = if (counter) |ref| try self.value(ref) else try self.fresh("%plen");
+        const next = try self.fresh("%pn");
+        if (inst.data == stack_push) {
+            // A promoted list's room is proven (`promote.zig`): no growth call.
+            try out.print(self.a(), same_pointer, .{ name, try self.value(inst.a) });
+        } else if (counter != null) {
+            try out.print(self.a(), "  {s} = call ptr @myl_core_list_fill_reserve(ptr {s}, i64 {d}, i64 {s})\n", .{ name, try self.value(inst.a), self.state.stride(element), len });
+        } else try out.print(self.a(), "  {s} = call ptr @myl_core_list_reserve(ptr {s}, i64 {d})\n", .{ name, try self.value(inst.a), self.state.stride(element) });
+        if (counter != null) {
+            try out.print(self.a(), header_pointer_line, .{ len_at, name, len_offset });
+            if (self.state.options.verify) try self.assertFillRoom(out, name, len_at, len, inst);
+        } else try out.print(self.a(), header_tagged_line, .{ len_at, name, len_offset, len, len_at });
+        const slot = try self.elementSlot(out, name, len, element);
+        if (element == .bool or element.isCompound()) {
+            try self.storeOperand(out, element, inst.b, slot);
+        } else {
+            try out.print(self.a(), "  store {s}, ptr {s}, align {d}, " ++ tbaa_data ++ "\n", .{ try self.typedValue(inst.b), slot, elementSize(element) });
+        }
+        try out.print(self.a(), "  {s} = add nuw nsw i64 {s}, 1\n  store i64 {s}, ptr {s}, align 8, " ++ tbaa_header ++ "\n", .{ next, len, next, len_at });
+    }
+
+            while (at < block.insts.items.len) : (at += 1) {
+                const ref = block.insts.items[at];
+                var call = caller.insts.items[ref.index()];
+                @import("build_fn.zig").directTarget(caller, &call);
+                caller.insts.items[ref.index()] = call;
+                if (call.op != .call or call.a.index() == index) continue;
+                const callee = &module.functions.items[call.a.index()];
+                const result = leaf(callee) orelse continue;
+                if (proof.needsProof(callee)) {
+                    if (known == null) known = try facts.analyze(arena, caller, .{ .fold = false, .mark = false, .params = if (index < parameters.len) parameters[index] else &.{} });
+                    if (!try proof.trapFree(arena, caller, call, callee, known.?)) continue;
+                }
+                var clone = try provenance.prepare(arena, .{ .caller = @intCast(index), .callee = @intCast(call.a.index()), .block = @intCast(b), .ref = ref, .span = call.span }, callee) orelse continue;
+                const cloned = try splice(arena, caller, callee, .{ .block = block, .at = at, .call = ref, .result = result }, &clone);
+                at += cloned;
+                count += 1;
+            }
+        }
+    }
+    return count;
+}
+
+/// The returned value of a qualifying leaf, or null.
+/// Builds one function's Core IR by hand, for tests of operations the builder
+/// does not produce yet. Instructions go into the current block in order.
+pub const Hand = struct {
+    arena: std.mem.Allocator,
+    module: *ir.Module,
+    function: ir.Function,
+    block: ir.BlockId = @fromBackingInt(0),
+
+    /// A function `name(params) -> ret` with one empty entry block.
+    pub fn init(arena: std.mem.Allocator, module: *ir.Module, name: []const u8, signature: ir.Signature) Error!Hand {
+        var hand: Hand = .{ .arena = arena, .module = module, .function = .{ .name = name, .signature = signature } };
+        _ = try hand.newBlock();
+        return hand;
+    }
+
+    /// Append `inst` to the current block; returns its value.
+    pub fn emit(self: *Hand, inst: ir.Inst) Error!ir.Ref {
+        const ref = try self.loose(inst);
+        try self.function.blocks.items[self.block.index()].insts.append(self.arena, ref);
+        return ref;
+    }
+
+    /// An instruction outside every block: a constant or parameter.
+    pub fn loose(self: *Hand, inst: ir.Inst) Error!ir.Ref {
+        const ref: ir.Ref = @fromBackingInt(@intCast(self.function.insts.items.len));
+        try self.function.insts.append(self.arena, inst);
+        return ref;
+    }
+
+    /// An integer constant of type `ty`.
+    pub fn int(self: *Hand, ty: ir.Type, value: i64) Error!ir.Ref {
+        return self.loose(.{ .op = .iconst, .ty = ty, .data = @bitCast(value) });
+    }
+
+    /// Parameter `index`.
+    pub fn param(self: *Hand, index: u32) Error!ir.Ref {
+        return self.loose(.{ .op = .param, .ty = self.function.signature.params[index], .data = index });
+    }
+
+    /// Pack `refs` as an instruction's `extra` list.
+    pub fn extra(self: *Hand, refs: []const ir.Ref) Error!u64 {
+        const start: u32 = @intCast(self.function.extra.items.len);
+        try self.function.extra.appendSlice(self.arena, refs);
+        return (ir.ExtraSlice{ .start = start, .len = @intCast(refs.len) }).pack();
+    }
+
+    /// A new empty block (not entered).
+    pub fn newBlock(self: *Hand) Error!ir.BlockId {
+        try self.function.blocks.append(self.arena, .{});
+        return @fromBackingInt(@intCast(self.function.blocks.items.len - 1));
+    }
+
+    /// End the current block with a jump to `target`, recording the edge.
+    pub fn jump(self: *Hand, target: ir.BlockId) Error!void {
+        _ = try self.emit(.{ .op = .jump, .ty = .void, .data = @backingInt(target) });
+        try self.function.blocks.items[target.index()].preds.append(self.arena, self.block);
+    }
+
+    /// End the current block with `if condition: then else otherwise`.
+    pub fn branch(self: *Hand, condition: ir.Ref, then: ir.BlockId, otherwise: ir.BlockId) Error!void {
+        _ = try self.emit(.{ .op = .branch, .ty = .void, .a = condition, .data = ir.packTargets(then, otherwise) });
+        try self.function.blocks.items[then.index()].preds.append(self.arena, self.block);
+        try self.function.blocks.items[otherwise.index()].preds.append(self.arena, self.block);
+    }
+src/core/runtime/core_number.c:8:myl_block *myl_core_number_text_new(size_t length) {
+src/core/runtime/core_number.c:21:bool myl_core_str_parse_int(myl_block *text, int64_t *out) {
+src/core/runtime/core_number.c:91:myl_block *myl_core_str_from_i64(int64_t value) {
+src/core/runtime/core_number.c:103:myl_block *myl_core_str_from_u64(uint64_t value) {
+src/core/runtime/core_number.c:111:void myl_core_print_i64(int64_t fd, int64_t value) {
+src/core/runtime/core_number.c:121:void myl_core_print_u64(int64_t fd, uint64_t value) {
+src/core/runtime/core_number.c:167:myl_core_parsed_int myl_core_parse_int_range(myl_block *source, int64_t start, int64_t end) {
+src/core/runtime/core_number.c:175:uint64_t myl_core_saturating_integer(uint64_t left, uint64_t right, uint32_t width, uint32_t mode) {
+src/core/runtime/core_bytes.c:5:myl_block *myl_core_buffer_new(uint64_t capacity) {
+src/core/runtime/core_bytes.c:9:myl_block *myl_core_buffer_copy(myl_block *source) {
+src/core/runtime/core_bytes.c:28:myl_block *myl_core_buffer_push(myl_block *buffer, uint8_t value) {
+src/core/runtime/core_bytes.c:34:myl_block *myl_core_buffer_set(myl_block *buffer, uint64_t index, uint8_t value) {
+src/core/runtime/core_bytes.c:38:myl_block *myl_core_buffer_pop(myl_block *buffer) { --buffer->len; return buffer; }
+src/core/runtime/core_bytes.c:39:uint64_t myl_core_buffer_capacity(myl_block *buffer) { return (uint64_t)buffer->cap; }
+src/core/runtime/core_bytes.c:40:myl_block *myl_core_buffer_from_bytes(myl_block *source) {
+src/core/runtime/core_bytes.c:46:myl_block *myl_core_buffer_from_list(myl_block *source) {
+src/core/runtime/core_bytes.c:53:myl_block *myl_core_buffer_snapshot(myl_block *source) {
+src/core/runtime/core_bytes.c:59:bool myl_core_buffer_range_valid(myl_block *source, int64_t start, int64_t end) {
+src/core/runtime/core_bytes.c:62:bool myl_core_buffer_reserve_valid(myl_block *source, int64_t extra) {
+src/core/runtime/core_bytes.c:65:myl_block *myl_core_buffer_reserved(myl_block *source, int64_t extra) {
+src/core/runtime/core_bytes.c:69:myl_block *myl_core_buffer_reverse(myl_block *source) {
+src/core/runtime/core_bytes.c:79:myl_block *myl_core_bytes_hex(myl_block *source) {
+src/core/runtime/core_bytes.c:96:bool myl_core_from_hex_valid(myl_block *source) {
+src/core/runtime/core_bytes.c:101:myl_block *myl_core_from_hex(myl_block *source) {
+src/core/runtime/core_bytes.c:109:myl_block *myl_core_buffer_append_spelled(myl_block *buffer, const unsigned char *bytes, size_t length) {
+src/core/runtime/core_bytes.c:128:myl_block *myl_core_buffer_append_checked(myl_block *buffer, myl_block *source, int64_t start, int64_t end) {
+src/core/runtime/core_bytes.c:134:myl_block *myl_core_buffer_push_checked(myl_block *buffer, int64_t value) {
+src/core/runtime/core_bytes.c:139:myl_block *myl_core_buffer_append_i64(myl_block *buffer, int64_t value) {
+src/core/runtime/core_text.c:80:bool myl_core_str_eq(const myl_block *a, const myl_block *b) {
+src/core/runtime/core_text.c:95:uint64_t myl_core_str_chars(const myl_block *text) {
+src/core/runtime/core_text.c:210:uint64_t myl_core_str_offset(const myl_block *text, uint64_t scalar) {
+src/core/runtime/core_text.c:215:uint64_t myl_core_ir_str_width(myl_block *text, uint64_t offset) {
+src/core/runtime/core_text.c:245:myl_block *myl_core_ir_str_char(myl_block *text, uint64_t offset) {
+src/core/runtime/core_text.c:251:myl_block *myl_core_ir_str_from_view(const unsigned char *data, uint64_t len) { return str_from((const char *)data, (size_t)len); }
+src/core/runtime/core_text.c:252:myl_block *myl_core_ir_span_materialize(const unsigned char *data, uint64_t len) { return myl_core_ir_str_from_view(data, len); }
+src/core/runtime/core_text.c:261:myl_block *myl_core_str_concat(const myl_block *a, const myl_block *b) {
+src/core/runtime/core_text.c:312:myl_block *myl_core_ir_str_append(myl_block *a, const myl_block *b) {
+src/core/runtime/core_text.c:317:myl_block *myl_core_ir_str_append_char(myl_block *a, myl_block *text, uint64_t offset) {
+src/core/runtime/core_text.c:332:myl_block *myl_core_ir_str_slice(myl_block *text, int64_t start, int64_t end) {
+src/core/runtime/core_text.c:381:myl_block *myl_core_str_join(const myl_block *separator, myl_block *parts) {
+src/core/runtime/core_text.c:435:int64_t myl_core_str_find(myl_block *text, myl_block *needle) {
+src/core/runtime/core_text.c:444:bool myl_core_str_contains(myl_block *text, myl_block *needle) { return core_text_find_bytes(text, needle, 0) >= 0; }
+src/core/runtime/core_text.c:445:bool myl_core_str_starts(myl_block *text, myl_block *needle) { return needle->len <= text->len && memcmp(block_data(text), block_data(needle), (size_t)needle->len) == 0; }
+src/core/runtime/core_text.c:446:bool myl_core_str_ends(myl_block *text, myl_block *needle) { return needle->len <= text->len && memcmp(block_data(text) + text->len - needle->len, block_data(needle), (size_t)needle->len) == 0; }
+src/core/runtime/core_text.c:449:myl_block *myl_core_str_split(myl_block *text, myl_block *separator) {
+src/core/runtime/core_text.c:466:bool myl_core_bytes_valid_list(myl_block *list) {
+src/core/runtime/core_text.c:472:myl_block *myl_core_bytes_from_list(myl_block *list) {
+src/core/runtime/core_text.c:480:myl_block *myl_core_bytes_concat(const myl_block *a, const myl_block *b) { myl_block *out = myl_core_str_concat(a, b); out->kind = (out->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES; return out; }
+src/core/runtime/core_text.c:481:myl_block *myl_core_bytes_slice(myl_block *text, int64_t start, int64_t end) {
+src/core/runtime/core_text.c:488:myl_block *myl_core_text_encode(myl_block *text) { retain_block(text); return text; }
+src/core/runtime/core_text.c:489:int64_t myl_core_bytes_find(myl_block *text, myl_block *needle) { return core_text_find_bytes(text, needle, 0); }
+src/core/runtime/core_text.c:491:uint64_t myl_core_str_index_offset(myl_block *text, int64_t index) {
+src/core/runtime/core_text.c:495:uint64_t myl_core_bytes_index_offset(myl_block *text, int64_t index) {
+src/core/runtime/core_text.c:530:myl_block *myl_core_str_slice_step(myl_block *text, int64_t start, int64_t end, int64_t step) { return core_text_slice_step(text, start, end, step, true); }
+src/core/runtime/core_text.c:531:myl_block *myl_core_bytes_slice_step(myl_block *text, int64_t start, int64_t end, int64_t step) { return core_text_slice_step(text, start, end, step, false); }
+src/core/runtime/core_text.c:536:int64_t myl_core_split_ws_start(myl_block *text, int64_t at) {
+src/core/runtime/core_text.c:541:int64_t myl_core_split_ws_end(myl_block *text, int64_t at) {
+src/core/runtime/core_text.c:546:myl_block *myl_core_str_split_whitespace(myl_block *text) {
+src/core/runtime/core_text.c:562:myl_block *myl_core_bytes_to_list(myl_block *bytes) {
+src/core/runtime/core_text.c:569:bool myl_core_bytes_contains_value(myl_block *bytes, int64_t value) {
+src/core/runtime/core_text.c:605:int64_t myl_core_text_bound(uint64_t value) { return value > INT64_MAX ? INT64_MAX : (int64_t)value; }
+src/core/runtime/core_text.c:607:myl_block *myl_core_text_case(myl_block *input, bool upper) {
+src/core/runtime/core_text.c:619:bool myl_core_text_every(myl_block *input, int32_t property) {
+src/core/runtime/core_text.c:630:bool myl_core_text_scalar_valid(uint64_t code) {
+src/core/runtime/core_text.c:647:myl_block *myl_core_text_chr(uint64_t code) {
+src/core/runtime/core_text.c:654:int64_t myl_core_text_ord(myl_block *text) {
+src/core/runtime/core_text.c:754:int64_t myl_core_text_search(myl_block *input, myl_block *needle, int64_t start, int64_t end, int32_t mode) {
+src/core/runtime/core_text.c:772:int64_t myl_core_bytes_search(myl_block *input, myl_block *needle, int64_t start, int64_t end, int32_t mode) {
+src/core/runtime/core_text.c:802:myl_block *myl_core_text_trim(myl_block *input, myl_block *chars, int32_t ends, bool explicit_chars) {
+src/core/runtime/core_text.c:822:myl_block *myl_core_bytes_trim(myl_block *input, myl_block *chars, int32_t ends, bool explicit_chars) {
+src/core/runtime/core_text.c:841:myl_block *myl_core_text_replace(myl_block *input, myl_block *needle, myl_block *insert) {
+src/core/runtime/core_text.c:869:myl_block *myl_core_text_splitlines(myl_block *input) {
+src/core/runtime/core_text.c:885:myl_block *myl_core_text_zfill(myl_block *input, int64_t width) {
+src/core/runtime/core_text.c:898:int64_t myl_core_bytes_find_any(myl_block *input, myl_block *values, int64_t start) {
+src/core/runtime/core_text.c:933:int64_t myl_core_span_utf8_count(const unsigned char *bytes, uint64_t length) {
+src/core/runtime/core_text.c:965:int64_t myl_core_bytes_utf8_count(myl_block *bytes) { return myl_core_span_utf8_count(block_data(bytes), (uint64_t)bytes->len); }
+src/core/runtime/core_text.c:966:int64_t myl_core_bytes_utf8_count_range(myl_block *bytes, int64_t start, int64_t end) {
+src/core/runtime/core_text.c:970:myl_block *myl_core_bytes_decode_text(myl_block *bytes) { return str_from((const char *)block_data(bytes), (size_t)bytes->len); }
+src/core/runtime/core_text.c:971:myl_block *myl_core_bytes_utf8_error(void) { return str_from("invalid UTF-8 in byte string", sizeof("invalid UTF-8 in byte string") - 1); }
+src/core/runtime/core_text.c:975:myl_block *myl_core_text_format(myl_block *input, uint64_t spec) {
+src/core/runtime/core_text.c:1043:myl_block *myl_core_text_repr(myl_block *source, bool bytes) {
+        const inst = f.inst(ref);
+        switch (inst.op) {
+            .phi => {
+                if (ref == counted.counter) continue;
+                if (acc != .none or inst.ty != .i64) return null;
+                acc = ref;
+            },
+            .cmp, .branch, .copy => {},
+            else => return null,
+        }
+    }
+    if (acc == .none) return null;
+    const operands = f.operands(f.inst(acc).data);
+    const update_ref = f.resolve(operands[latch_index]);
+    const update = f.inst(update_ref);
+    if (update.op != .add or update.check != .proven) return null;
+    const summand = if (f.resolve(update.a) == acc) f.resolve(update.b) else if (f.resolve(update.b) == acc) f.resolve(update.a) else return null;
+    return .{ .acc = acc, .update = update_ref, .summand = summand, .init = f.resolve(operands[1 - latch_index]) };
+}
+
+/// The flattened body of a loop: its lane instructions, its selects, and which blocks it covers.
+const Body = struct { refs: std.ArrayList(ir.Ref) = .empty, selects: std.ArrayList(Select) = .empty, in_loop: []bool };
+
+/// Walk from the body block to the latch, flattening if/else diamonds; null when the shape does not fit.
+fn walkBody(arena: std.mem.Allocator, f: *const ir.Function, known: facts.Facts, loop: ir.Loop, update: ir.Ref) Error!?Body {
+    var body: Body = .{ .in_loop = try arena.alloc(bool, f.blocks.items.len) };
+    @memset(body.in_loop, false);
+    body.in_loop[loop.header.index()] = true;

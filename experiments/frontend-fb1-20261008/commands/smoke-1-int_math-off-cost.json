@@ -1,0 +1,56 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/zig-out/bin/mylang",
+    "cost",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/test/core/int_math.my",
+    "--json",
+    "--no-facts"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "other_heavy_processes": [
+    {
+      "pid": 279294,
+      "command": "/bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until ! pgrep -f '\"'\"'probe/probe.py'\"'\"' >/dev/null; do sleep 5; done; wc -l /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/probe/smoke.log' < /dev/null && pwd -P >| /tmp/claude-7f36-cwd "
+    },
+    {
+      "pid": 880050,
+      "command": "/bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'cd /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/experiments/bench-newcore-20261008/eda && mv results/runtime.json results/runtime-first-pass.json && mv logs/runtime.log logs/runtime-first-pass.log && ROUNDS=10 ./run.sh runtime > /home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/run-runtime2.out 2>&1; echo exit $?; tail -10 /home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/run-runtime2.out' < /dev/null && pwd -P >| /tmp/claude-6c37-cwd "
+    },
+    {
+      "pid": 880617,
+      "command": "flock /run/user/1000/mylang-slots/cpu10.lock python3 /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/experiments/bench-newcore-20261008/eda/runtime.py --repo /home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore --rounds 10 --cpu 10 --work /home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/runtime-out --out /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/experiments/bench-newcore-20261008/eda/results/runtime.json zig-fast=/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/zig-fast/bin/eda-sch zig-safe=/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/zig-safe/bin/eda-sch rust=/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/rust-target/release/eda-sch go=/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/go/eda-sch mylang=/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/mylang/eda-sch "
+    },
+    {
+      "pid": 880618,
+      "command": "tee /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/experiments/bench-newcore-20261008/eda/logs/runtime.log "
+    },
+    {
+      "pid": 880619,
+      "command": "python3 /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/experiments/bench-newcore-20261008/eda/runtime.py --repo /home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore --rounds 10 --cpu 10 --work /home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/runtime-out --out /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/experiments/bench-newcore-20261008/eda/results/runtime.json zig-fast=/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/zig-fast/bin/eda-sch zig-safe=/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/zig-safe/bin/eda-sch rust=/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/rust-target/release/eda-sch go=/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/go/eda-sch mylang=/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/mylang/eda-sch "
+    },
+    {
+      "pid": 910205,
+      "command": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/mylang/eda-sch --model /home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/cyclops-interposer/model.sexp --project-dir /home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs --out-dir /home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/runtime-out/mylang/cyclops-interposer "
+    }
+  ],
+  "seconds": 0.08184979809448123,
+  "status": 0
+}

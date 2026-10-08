@@ -1,0 +1,6 @@
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 13 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 18 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 7134 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 2 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed

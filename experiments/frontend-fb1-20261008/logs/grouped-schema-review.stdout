@@ -1,0 +1,183 @@
+        "myl_core_buffer_reserve_valid",   "myl_core_buffer_reverse",     "myl_core_from_hex_valid",
+    };
+    for (names) |name| if (std.mem.eql(u8, name, symbol)) return true;
+    return false;
+}
+
+/// Static sites and exact pass events for one emitted body.
+pub const Counts = struct {
+    checks: struct { kept: u32 = 0, proved: u32 = 0 } = .{},
+    updates: struct { in_place: u32 = 0, tested: u32 = 0, copied: u32 = 0 } = .{},
+    allocation: struct { sites: u32 = 0, unresolved_calls: u32 = 0 } = .{},
+    rc: struct { retains: u32 = 0, releases: u32 = 0, elided_pairs: u32 = 0, stack_lists: u32 = 0 } = .{},
+    inlined_calls: u32 = 0,
+    loops: struct { unswitched: u32 = 0, versioned: u32 = 0, vector_plans: u32 = 0, unknown: u32 = 0 } = .{},
+    /// Null means LLVM supplied no loop-vectorization remark for this body.
+    llvm_vectorized_loops: ?u32 = null,
+
+    /// Sum all known site/event counts; missing LLVM evidence remains unknown.
+    pub fn add(self: *Counts, other: Counts) void {
+        inline for (.{ "checks", "updates", "allocation", "rc", "loops" }) |group| {
+            inline for (@typeInfo(@FieldType(Counts, group)).@"struct".field_names) |name| {
+                @field(@field(self, group), name) += @field(@field(other, group), name);
+            }
+        }
+        self.inlined_calls += other.inlined_calls;
+        if (other.llvm_vectorized_loops) |count| self.llvm_vectorized_loops = (self.llvm_vectorized_loops orelse 0) + count;
+    }
+};
+
+/// Names are the specialized Core names, with module qualification when present.
+pub const Function = struct { name: []const u8, counts: Counts };
+/// Versioned output; filtering also filters totals, so they always sum the rows.
+pub const Report = struct { version: []const u8 = "cost-v1", functions: []Function, totals: Counts };
+
+/// Read the transformed instructions and the same per-function events as --stats.
+pub fn measure(a: std.mem.Allocator, module: *const ir.Module, result: *const passes.Result, filter: ?[]const u8) std.mem.Allocator.Error!Report {
+    var functions: std.ArrayList(Function) = .empty;
+    var total: Counts = .{};
+    for (module.functions.items, 0..) |*function, index| {
+        if (function.signature.linkage != .internal or !matches(function.name, filter)) continue;
+        const events = if (index < result.per_function.len) result.per_function[index] else passes.FunctionStats{};
+        var local: Counts = .{
+            .checks = .{ .proved = events.counts.proven },
+            .updates = .{ .in_place = events.own.in_place, .tested = events.own.tested, .copied = events.own.copied },
+            .rc = .{ .rc.retains = events.own.rc.retains, .rc.releases = events.own.rc.releases, .rc.elided_pairs = events.own.elided, .rc.stack_lists = events.own.promoted },
+            .inlined_calls = events.counts.inlined,
+            .loops = .{ .unswitched = events.counts.unswitched, .versioned = events.counts.versioned, .loops.vector_plans = events.counts.vectorized, .unknown = @intCast(function.loops.items.len) },
+        };
+        const known = if (index < result.known.len) result.known[index] else null;
+        for (function.blocks.items, 0..) |block, b| {
+            if (known) |facts| if (b < facts.reachable.len and !facts.reachable[b]) continue;
+            for (block.insts.items) |ref| {
+                const inst = function.inst(ref);
+                if (inst.op == .copy) continue;
+                if (inst.check == .exact or (result.verifying and inst.check == .proven)) local.checks.kept += 1;
+                switch (allocation(module, function, inst)) {
+                    .never => {},
+                    .may => local.allocation.sites += 1,
+                    .unresolved => {
+                        local.allocation.sites += 1;
+                        local.allocation.unresolved_calls += 1;
+                    },
+                }
+            }
+        }
+        try functions.append(a, .{ .name = function.name, .counts = local });
+        total.add(local);
+    }
+    return .{ .functions = try functions.toOwnedSlice(a), .totals = total };
+}
+
+/// Select report rows after LLVM remarks have been attached; totals still sum rows.
+pub fn select(a: std.mem.Allocator, report: Report, filter: ?[]const u8) std.mem.Allocator.Error!Report {
+    if (filter == null) return report;
+    var rows: std.ArrayList(Function) = .empty;
+    var total: Counts = .{};
+    for (report.functions) |function| if (matches(function.name, filter)) {
+    const format = "{s}: checks {d} kept / {d} proved; updates {d} in place / {d} tested / {d} copied; " ++
+        "allocations {d} ({d} unresolved); retains {d}; releases {d}; inlined {d}; vector plans {d}; LLVM vectorized ";
+    try out.print(a, format, .{
+        name, c.checks.kept, c.checks.proved, c.updates.in_place, c.updates.tested, c.updates.copied,
+        c.allocation.sites, c.allocation.unresolved_calls, c.rc.retains, c.rc.releases, c.inlined_calls, c.loops.vector_plans,
+    });
+    if (c.llvm_vectorized_loops) |count| try out.print(a, "{d}", .{count}) else try out.appendSlice(a, "unknown");
+    try out.print(a, "; unknown loops {d}; unswitched {d}; versioned {d}; RC pairs elided {d}; stack lists {d}\n", .{ c.loops.unknown, c.loops.unswitched, c.loops.versioned, c.rc.elided_pairs, c.rc.stack_lists });
+}
+
+/// Print legacy stats from the report totals, plus the newly visible site counts.
+pub fn stats(a: std.mem.Allocator, out: *std.ArrayList(u8), c: Counts) std.mem.Allocator.Error!void {
+    const changes = "mylang-core: inlined {d} calls, unswitched {d} loops, versioned {d} loops, proved {d} checks, vectorized {d} loops\n";
+    try out.print(a, changes, .{ c.inlined_calls, c.loops.unswitched, c.loops.versioned, c.checks.proved, c.loops.vector_plans });
+    const ownership = "mylang-core: ownership: {d} updates in place, {d} tested, {d} copied; " ++
+        "{d} retains, {d} releases ({d} pairs elided); {d} lists on the stack\n";
+    try out.print(a, ownership, .{ c.updates.in_place, c.updates.tested, c.updates.copied, c.rc.retains, c.rc.releases, c.rc.elided_pairs, c.rc.stack_lists });
+    try out.print(a, "mylang-core: cost: {d} checks kept; {d} allocation sites ({d} unresolved calls); {d} unknown loops\n", .{ c.checks.kept, c.allocation.sites, c.allocation.unresolved_calls, c.loops.unknown });
+}
+
+/// Add LLVM evidence without changing the two established --stats lines.
+pub fn llvmStats(a: std.mem.Allocator, out: *std.ArrayList(u8), counts: Counts, remarks: @import("driver.zig").OptimizationRemarks) std.mem.Allocator.Error!void {
+    try out.appendSlice(a, "mylang-core: LLVM vectorized ");
+    if (counts.llvm_vectorized_loops) |known| try out.print(a, "{d}", .{known}) else try out.appendSlice(a, "unknown");
+    try out.print(a, "; {d} unknown loops; remarks {s}; {d} compiles in {d} ns\n", .{ counts.loops.unknown, if (remarks.yaml != null) "available" else "unavailable", remarks.processes, remarks.compile_ns });
+}
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a, source, &refusal);
+    const result = if (mode) |release| try support.runPasses(a, &module, release) else try passes.debug(a, &module);
+    const report = try cost.measure(a, &module, &result, null);
+    // The report's whole-program events must be identical to the optimizer's counters.
+    try std.testing.expectEqual(result.counts.inlined, report.totals.inlined_calls);
+    try std.testing.expectEqual(result.counts.proven, report.totals.checks.proved);
+    try std.testing.expectEqual(result.counts.unswitched, report.totals.loops.unswitched);
+    try std.testing.expectEqual(result.counts.versioned, report.totals.loops.versioned);
+    try std.testing.expectEqual(result.counts.vectorized, report.totals.loops.vector_plans);
+    try std.testing.expectEqual(result.own.in_place, report.totals.updates.in_place);
+    try std.testing.expectEqual(result.own.tested, report.totals.updates.tested);
+    try std.testing.expectEqual(result.own.copied, report.totals.updates.copied);
+    try std.testing.expectEqual(result.own.rc.retains, report.totals.rc.retains);
+    try std.testing.expectEqual(result.own.rc.releases, report.totals.rc.releases);
+    try std.testing.expectEqual(result.own.elided, report.totals.rc.elided_pairs);
+    try std.testing.expectEqual(result.own.promoted, report.totals.rc.stack_lists);
+    return report;
+}
+
+fn named(report: cost.Report, name: []const u8) cost.Counts {
+    for (report.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.counts;
+    unreachable;
+}
+
+// spec: FRONTEND-COST-1
+test "cost attributes inlining checks and all ownership forms to emitted bodies in debug release and verify" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const debug = try measured(a, program, null);
+    try std.testing.expect(named(debug, "borrowed").updates.copied > 0);
+    try std.testing.expect(named(debug, "consuming").updates.tested > 0);
+    try std.testing.expect(named(debug, "fresh").updates.in_place > 0);
+    try std.testing.expect(debug.totals.checks.kept > 0);
+    try std.testing.expect(debug.totals.allocation.sites > 0);
+    try std.testing.expect(debug.totals.rc.retains > 0);
+    try std.testing.expect(debug.totals.rc.releases > 0);
+    try std.testing.expectEqual(@as(u32, 0), debug.totals.inlined_calls);
+    const release = try measured(a, program, .trusted);
+    try std.testing.expect(named(release, "fresh").inlined_calls > 0);
+    try std.testing.expect(release.totals.checks.proved > 0);
+    try std.testing.expect(release.totals.rc.stack_lists > 0);
+    const verify = try measured(a, program, .verify);
+    try std.testing.expect(verify.totals.checks.kept >= release.totals.checks.kept);
+    _ = try measured(a, program, .off);
+}
+
+// spec-case: FRONTEND-COST-1
+    try std.testing.expectEqual(@as(u32, 3), report.totals.loops.unknown);
+    try std.testing.expectEqual(@as(u32, 1), report.totals.loops.vector_plans);
+}
+
+// spec-case: FRONTEND-COST-1
+test "cost command filters names rejects unknown flags and renders stable totals as text and JSON" {
+    try std.testing.expect(command.parse(&.{ "entry.my", "f", "--json" }).?.json);
+    try std.testing.expect(command.parse(&.{ "entry.my", "--debug", "--verify-facts" }) == null);
+    try std.testing.expect(command.parse(&.{ "entry.my", "--unknown" }) == null);
+    try std.testing.expect(command.parse(&.{ "entry.my", "--llvm-remarks" }) == null);
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a, program, &refusal);
+    const result = try support.runPasses(a, &module, .trusted);
+    const report = try cost.measure(a, &module, &result, "fresh");
+    try std.testing.expectEqual(@as(usize, 1), report.functions.len);
+    try std.testing.expectEqualDeep(report.functions[0].counts, report.totals);
+130:pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8)) Error!Outcome {
+135:    const staging = try privateDirectory(allocator, io, request.work, "native-link");
+207:pub fn optimizationRemarks(a: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request) std.mem.Allocator.Error!OptimizationRemarks {
+208:    const staging = privateDirectory(a, io, request.work, "llvm-remarks") catch |err| {
+260:pub fn copyOutput(io: std.Io, program: []const u8, output: []const u8) std.Io.Dir.CopyFileError!void {
+550:pub fn runtimeDirectory(allocator: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, work: []const u8) Error![]const u8 {
+570:fn privateDirectory(allocator: std.mem.Allocator, io: std.Io, work: []const u8, prefix: []const u8) Error![]const u8 {
+693:test "privateDirectory refuses unwritable paths and allocation failure" {
+701:    try std.testing.expectError(error.WriteFailed, privateDirectory(a, std.testing.io, try std.fs.path.join(a, &.{ root, "blocked" }), "native-link"));
+702:    try std.testing.expectError(error.OutOfMemory, privateDirectory(std.testing.failing_allocator, std.testing.io, root, "native-link"));
+703:    const first = try privateDirectory(a, std.testing.io, root, "native-link");
+704:    const second = try privateDirectory(a, std.testing.io, root, "native-link");

@@ -1,0 +1,2 @@
+rg: tests/lang/dicts.my: No such file or directory (os error 2)
+rg: test/core/row_dict_count.my: No such file or directory (os error 2)

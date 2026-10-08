@@ -1,0 +1,532 @@
+pub const Op = enum(u8) {
+    /// Function parameter `data`.
+    param,
+    /// Integer or boolean constant: the value in `data` (two's complement bits).
+    iconst,
+    /// Float constant: the IEEE bits in `data`.
+    fconst,
+    /// A value no execution reads (an unassigned local on an impossible path).
+    undef,
+    /// The immortal string constant `Module.strings[data]`.
+    str_const,
+    /// Forwarding: this value is `a` (a removed trivial phi).
+    copy,
+    /// Join value: operands in `extra` at `data`, one per predecessor.
+    phi,
+    add,
+    sub,
+    mul,
+    /// Truncating division and remainder.
+    div,
+    rem,
+    /// Python floor division and remainder.
+    floor_div,
+    floor_rem,
+    neg,
+    bit_and,
+    bit_or,
+    bit_xor,
+    /// Boolean negation.
+    not,
+    /// Integer comparison `a <data as Predicate> b`.
+    cmp,
+    fadd,
+    fsub,
+    fmul,
+    fdiv,
+    fneg,
+    /// Float comparison `a <data as Predicate> b` (ordered).
+    fcmp,
+    /// Integer to float.
+    int_to_float,
+    /// Float to integer, truncating; checked against the destination range.
+    float_to_int,
+    /// Integer to integer of another width or signedness; checked when the
+    /// source range does not fit the destination.
+    convert,
+    /// A fresh empty list with capacity `a` (`u64`).
+    list_new,
+    /// The length of list `a` (`u64`).
+    list_len,
+    /// Element `b` of list `a` (bounds-checked).
+    list_get,
+    /// List `a` with `b` appended; `a` must not be used afterwards (`own.zig` makes it so).
+    list_push,
+    /// A fresh copy of list `a` with room for one more element: what a push of a
+    /// list that may be shared appends to.
+    list_copy,
+    /// The byte length of string `a` (`u64`).
+    str_len,
+    /// `int(a)` for string `a`: an `option(i64)`.
+    str_parse_int,
+    /// A union value with tag `data` and payload `a` (none for a case without one).
+    union_make,
+    /// The tag of union `a` (`u32`).
+    union_tag,
+    /// The payload of union `a` under tag `data` (only meaningful when that is its tag).
+    union_payload,
+    /// A record of the field values in `extra` at `data`, in declaration order.
+    record_make,
+    /// Field `data` of record `a`.
+    record_get,
+    /// Record `a` with field `data` replaced by `b`; consumes `a`.
+    record_set,
+    /// List `a` with element `b` replaced by `extra[0]` at `data` (bounds-checked);
+    /// consumes `a` and the value, and drops the element it replaces.
+    list_set,
+    /// List `a` without its last element (checked: an empty list traps); consumes
+    /// `a`. The element is not dropped: the builder reads it with `list_get` first,
+    /// and that read takes the list's ownership of it.
+    list_pop,
+    /// The value at `FieldPath.unpack(data)` inside element `b` of list `a`
+    /// (bounds-checked), read without loading the whole element.
+    list_get_field,
+    /// Empty dictionary with capacity hint `a: u64`.
+    dict_new,
+    /// Live dictionary entries (`u64`).
+    dict_len,
+    /// Pure lookup of key `b` in dictionary `a`; `i64` entry or negative insertion probe.
+    dict_find,
+    /// Borrowed key at entry `b: i64` of dictionary `a`.
+    dict_entry_key,
+    /// Borrowed value at entry `b: i64` of dictionary `a`.
+    dict_entry_value,
+    /// Dictionary `a` with entry `b` assigned `extra[0]`; consumes `a` and the value.
+    dict_set_value,
+    /// Insert `extra = {key, value}` using negative probe `b` from `dict_find(a, key)`.
+    dict_insert,
+    /// Remove entry `b: i64` from dictionary `a`; consumes `a`.
+    dict_remove,
+    /// Number of written entries (`u64`), including dead entries.
+    dict_entries,
+    /// Whether entry `b: i64` of dictionary `a` is live (`bool`).
+    dict_entry_live,
+    /// Independent copy of dictionary `a`.
+    dict_copy,
+    /// Empty value of dictionary `a`'s type; consumes `a`.
+    dict_clear,
+    /// Character string at byte offset `b: u64` in string `a`.
+    str_char,
+    /// UTF-8 width (`u64`) at byte offset `b: u64` in string `a`.
+    str_width,
+    /// Unicode scalar (`u32`) at byte offset `b: u64` in string `a`.
+    str_code,
+    /// Append string `b` to string `a`; consumes `a`, borrows `b`.
+    str_append,
+    /// Append the character at `extra[0]: u64` in string `b` to string `a`; consumes `a`.
+    str_append_char,
+    /// Copy string `a` between scalar positions `b: i64` and `extra[0]: i64`.
+    str_slice,
+    /// Borrow a byte span of string `a`: offset `b: u64`, length `extra[0]: u64`.
+    str_view_of,
+    /// Materialize borrowed span `a: str_view` as an owned string.
+    str_from_view,
+    /// Stable sort of list `a`, reversed when `b: bool`; consumes `a`.
+    list_sort,
+    /// Element `b` of inline array `a`, bounds-checked against its fixed length.
+    array_get,
+    /// Array `a` with element `b` replaced by `extra[0]`; consumes the old array and value.
+    array_set,
+    /// Top-level internal function `data`, with the matching function pointer type.
+    func_ref,
+    /// Call function value `a`, with arguments in `extra` at `data`.
+    call_indirect,
+    /// A fresh box holding `a`; consumes `a`.
+    box_make,
+    /// The value box `a` holds.
+    box_get,
+    /// Add one owner to managed value `a` (every block it references).
+    retain,
+    /// Drop one owner of managed value `a`; a block whose last owner goes is freed.
+    release,
+    /// Whether block pointer `a` (a `str`, list or box) has exactly one owner (`bool`).
+    is_unique,
+    /// Record the error-trace site at this instruction's span; `data` is a `TraceMode`.
+    err_trace,
+    /// Direct call of function `a` (its index into `Module.functions`), arguments in `extra` at `data`.
+    call,
+    /// Write `extra[1..]` to stream `extra[0]`, separated by spaces and ended by a newline.
+    print,
+    /// Unconditional jump to block `data`.
+    jump,
+    /// `if a: block data.low else block data.high`.
+    branch,
+    /// Return `a` (or nothing for `void`).
+    ret,
+    /// Control never reaches here.
+    @"unreachable",
+    /// Fresh mutable bytes with capacity `a: u64`.
+    buffer_new,
+    /// Independent mutable-byte copy of `a`.
+    buffer_copy,
+    /// Replace byte `b` of `a` with `extra[0]: u8`; consumes `a`, checked bounds.
+    buffer_set,
+    /// Append `b: u8` to `a: byte_buffer`; consumes `a`.
+    buffer_push,
+    /// Remove the last byte of `a`; consumes `a`, checked nonempty.
+    buffer_pop,
+    /// Checked integer shift: `a << b`, with wrapping bits, count below width.
+    shift_left,
+    /// Checked arithmetic/logical integer shift `a >> b` by signedness.
+    shift_right,
+    /// Integer addition clamped to the result type's bounds.
+    saturating_add,
+    /// Unary f64 operation selected by `data: FloatUnary`.
+    float_unary,
+
+    /// Whether this operation ends a block.
+    pub fn terminates(self: Op) bool {
+        return switch (self) {
+            .jump, .branch, .ret, .@"unreachable" => true,
+            else => false,
+        };
+    }
+
+    /// Whether `data` packs an `extra` operand list (an `ExtraSlice`).
+    pub fn hasExtra(self: Op) bool {
+        return switch (self) {
+            .phi, .call, .call_indirect, .print, .record_make, .list_set, .dict_set_value, .dict_insert, .str_append_char, .str_slice, .str_view_of, .array_set, .buffer_set => true,
+            else => false,
+        };
+    }
+
+    /// Whether the operation is a constant or parameter: defined outside every block,
+    /// materialized at each use, so it dominates every use.
+    pub fn isConstant(self: Op) bool {
+        return switch (self) {
+            .param, .iconst, .fconst, .undef, .str_const, .func_ref => true,
+            else => false,
+        };
+    }
+
+    /// Whether an update takes ownership of its first value operand.
+    pub fn consumesOperand0(self: Op) bool {
+        return switch (self) {
+            .list_push, .list_set, .list_pop, .record_set, .array_set, .dict_set_value, .dict_insert, .dict_remove, .dict_clear, .str_append, .str_append_char, .list_sort, .buffer_set, .buffer_push, .buffer_pop => true,
+            else => false,
+        };
+    }
+};
+
+/// One instruction. `data` holds the immediate (constant bits, predicate, block,
+/// callee, tag, field index, `FieldPath`, `TraceMode`, or a packed `extra` slice);
+/// `span` is the start offset of the source span in the merged source, for traps,
+/// traces and error-trace sites.
+pub const Inst = struct {
+    op: Op,
+    ty: Type,
+    a: Ref = .none,
+    b: Ref = .none,
+    data: u64 = 0,
+    check: Check = .none,
+    span: u32 = 0,
+};
+
+/// A slice of `Function.extra`, packed into an instruction's `data`.
+pub const ExtraSlice = struct {
+    start: u32,
+    len: u32,
+
+    /// Pack into an instruction's `data` field.
+    pub fn pack(self: ExtraSlice) u64 {
+        return @as(u64, self.start) | (@as(u64, self.len) << 32);
+    }
+    /// Unpack from an instruction's `data` field.
+    pub fn unpack(data: u64) ExtraSlice {
+        return .{ .start = @truncate(data), .len = @truncate(data >> 32) };
+    }
+};
+
+/// Pack the two targets of a `branch`.
+pub fn packTargets(then: BlockId, otherwise: BlockId) u64 {
+    return @as(u64, @backingInt(then)) | (@as(u64, @backingInt(otherwise)) << 32);
+}
+
+/// Unpack the two targets of a `branch`.
+pub fn unpackTargets(data: u64) struct { then: BlockId, otherwise: BlockId } {
+    return .{ .then = @fromBackingInt(@intCast(@as(u32, @truncate(data)))), .otherwise = @fromBackingInt(@intCast(@as(u32, @truncate(data >> 32)))) };
+}
+
+/// A basic block: its instructions in order (phis first, terminator last) and
+/// its predecessors in the order phi operands follow.
+pub const Block = struct {
+    insts: std.ArrayList(Ref) = .empty,
+    preds: std.ArrayList(BlockId) = .empty,
+};
+
+/// A counted or conditional loop as the checked tree wrote it, recorded by the
+/// builder so later passes never re-discover loops from back edges.
+pub const Loop = struct {
+    /// The checker's loop id (`loop_exit.target`).
+    id: usize,
+    /// Evaluates the conditi
+    fn print(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
+        const operands = self.function.operands(inst.data);
+        const stream = try self.value(operands[0]);
+        if (self.constantOf(operands[0]) == flags.error_stream) return self.reportError(out, operands[1]);
+        for (operands[1..], 0..) |argument, i| {
+            if (i != 0) try out.print(self.a(), "  call void @myl_core_print_sep(i64 {s})\n", .{stream});
+            const argument_type = self.function.inst(self.function.resolve(argument)).ty;
+            if (argument_type == .bool) {
+                try out.print(self.a(), "  call void @myl_core_print_bool(i64 {s}, i1 zeroext {s})\n", .{ stream, try self.value(argument) });
+            } else if (argument_type == .str) {
+                try out.print(self.a(), "  call void @myl_core_print_str(i64 {s}, ptr {s})\n", .{ stream, try self.value(argument) });
+            } else {
+                const info = argument_type.integer() orelse return error.UnsupportedInstruction;
+                try out.print(self.a(), "  call void @myl_core_print_{s}(i64 {s}, i64 {s})\n", .{ if (info.signed) "i64" else "u64", stream, try self.widened(out, argument) });
+            }
+        }
+        try out.print(self.a(), "  call void @myl_core_print_end(i64 {s})\n", .{stream});
+    }
+};
+
+/// Bytes one list element occupies.
+fn elementSize(ty: ir.Type) u32 {
+    return switch (ty) {
+        .bool, .i8, .u8 => 1,
+        .i16, .u16 => 2,
+        .i32, .u32 => 4,
+        else => 8,
+    };
+}
+
+/// The in-memory type of one list element.
+fn storageType(ty: ir.Type) []const u8 {
+    return switch (ty) {
+        .bool, .i8, .u8 => "i8",
+        .i16, .u16 => "i16",
+        .i32, .u32 => "i32",
+        .f64 => "double",
+        .str, .bytes, .byte_buffer, .capability, .resource => "ptr",
+        else => if (ty.isCompound()) "ptr" else "i64",
+    };
+}
+
+/// ` !dbg !N` on a function definition and `, !dbg !N` on an instruction.
+const function_scope = " !dbg !{d}";
+const instruction_location = ", !dbg !{d}";
+
+/// The DWARF metadata of a `dwarf_lines` module: one compile unit and file, one
+/// `DISubprogram` per function, one `DILocation` per call and trap. Numbered from
+/// `first_node`, clear of the TBAA and `!range` nodes.
+const Debug = struct {
+    text: Out = .empty,
+    next: u32 = first_node,
+    unit: u32 = 0,
+    files: std.ArrayList(File) = .empty,
+    fallback: []const u8 = "",
+    scopes: std.AutoHashMapUnmanaged(u32, u32) = .empty,
+
+    const File = struct { path: []const u8, id: u32 };
+
+    const first_node = 1_000_000;
+
+    fn node(self: *Debug, allocator: std.mem.Allocator, comptime format: []const u8, args: anytype) !u32 {
+        const id = self.next;
+        self.next += 1;
+        try self.text.print(allocator, "!{d} = ", .{id});
+        try self.text.print(allocator, format ++ "\n", args);
+        return id;
+    }
+
+    /// Start the compile unit (file, unit and subroutine type) on first use.
+    fn file(self: *Debug, allocator: std.mem.Allocator, input: []const u8) !u32 {
+        const path = if (input.len == 0) self.fallback else input;
+        for (self.files.items) |known| if (std.mem.eql(u8, known.path, path)) return known.id;
+        var quoted: Out = .empty;
+        try escaped(allocator, &quoted, path);
+        const id = try self.node(allocator, "!DIFile(filename: \"{s}\", directory: \"\")", .{quoted.items});
+        try self.files.append(allocator, .{ .path = path, .id = id });
+        return id;
+    }
+
+    fn begin(self: *Debug, allocator: std.mem.Allocator, path: []const u8) !void {
+        if (self.unit != 0) return;
+        _ = try self.file(allocator, path);
+        self.unit = try self.node(allocator, "distinct !DICompileUnit(language: DW_LANG_C99, file: !{d}, producer: \"mylang-core\", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug)", .{first_node});
+        _ = try self.node(allocator, "!DISubroutineType(types: !{{}})", .{});
+    }
+
+    fn subprogram(self: *Debug, allocator: std.mem.Allocator, name: []const u8, at: Location) !u32 {
+        try self.begin(allocator, at.path);
+        const source = try self.file(allocator, at.path);
+        const format = "distinct !DISubprogram(name: \"{s}\", scope: !{d}, file: !{d}, line: {d}, type: !{d}, scopeLine: {d}, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !{d})";
+        return self.node(allocator, format, .{ name, source, source, at.line, first_node + 2, at.line, self.unit });
+    }
+
+    fn function(self: *Debug, allocator: std.mem.Allocator, index: u32, f: *const ir.Function, at: Location) !u32 {
+        if (self.scopes.get(index)) |known| return known;
+        const created = try self.subprogram(allocator, f.name, at);
+        try self.scopes.put(allocator, index, created);
+        return created;
+    }
+
+    fn location(self: *Debug, allocator: std.mem.Allocator, at: Location, scope: u32) !u32 {
+        const source = try self.file(allocator, at.path);
+        const local = try self.node(allocator, 
+= MYL_CLASSES; ++class) {
+        for (void *at = free_lists[class]; at; at = *(void **)at) --live;
+    }
+    return live;
+}
+
+static void block_free(myl_block *block) {
+    uint32_t class = class_of(block);
+    if (class == 0) {
+        --live_blocks;
+        if (heap_ceiling) heap_refund(malloc_usable_size(block));
+        free(block);
+        return;
+    }
+    *(void **)block = free_lists[class];
+    free_lists[class] = block;
+}
+
+/* ---- element layouts ---------------------------------------------------------
+ * Where the blocks inside one element (or a box's value) are, as the emitter
+ * writes them (`@myl.layout.N`, an i32 array):
+ *   [0] element size in bytes, [1] reference count R, [2] guard count G,
+ *   then R pairs {offset, guard}: an 8-byte block pointer (null allowed) at
+ *   `offset`, counted only when guard `guard` holds (0: always; else 1-based),
+ *   then G triples {offset, value, parent}: the 8-byte union tag word at
+ *   `offset` equals `value`, and guard `parent` holds too (0: none).
+ * A union's payload references are guarded by its tag, so an integer in a
+ * payload word is never taken for a pointer. */
+typedef const int32_t myl_layout;
+
+static myl_layout *layout_of(const myl_block *block) { return (myl_layout *)(intptr_t)block->reserved; }
+
+static bool guard_holds(myl_layout *layout, const unsigned char *element, int32_t guard) {
+    myl_layout *guards = layout + 3 + 2 * layout[1];
+    while (guard != 0) {
+        myl_layout *g = guards + 3 * (guard - 1);
+        int64_t tag;
+        memcpy(&tag, element + g[0], sizeof tag);
+        if (tag != g[1]) return false;
+        guard = g[2];
+    }
+    return true;
+}
+
+/* The block pointer of reference `r` in `element`, or null when its guard fails. */
+static myl_block *reference_at(myl_layout *layout, const unsigned char *element, int32_t r) {
+    myl_layout *ref = layout + 3 + 2 * r;
+    if (!guard_holds(layout, element, ref[1])) return NULL;
+    myl_block *child;
+    memcpy(&child, element + ref[0], sizeof child);
+    return child;
+}
+
+/* How many elements a block's layout covers: a list's length, a box's one value. */
+static int64_t element_count(const myl_block *block) { return kind_of(block) == MYL_KIND_BOX ? 1 : block->len; }
+
+/* ---- buffered streams ------------------------------------------------------- */
+
+typedef struct {
+    size_t used;
+    unsigned char bytes[1 << 16];
+} myl_stream;
+
+/* Zero-initialized (in .bss, not 128 KiB of .data): stream i writes descriptor i + 1. */
+static myl_stream streams[2];
+
+static myl_stream *stream_for(int64_t fd) { return &streams[fd == 2 ? 1 : 0]; }
+
+/* Standard output refused a write: the program's output is lost, so it fails with
+   `R_OUTPUT` and status 1, as the old core's did (STREAM-BYTES-1, IO-6), instead of
+   exiting with `main`'s status. Output is buffered, so the report has no location. */
+static void output_refused(void);
+
+static void stream_flush(myl_stream *stream) {
+    size_t used = stream->used;
+    stream->used = 0;
+    if (!os_write(stream == &streams[1] ? 2 : 1, stream->bytes, used) && stream == &streams[0]) output_refused();
+}
+
+static void output_refused(void) {
+    static const char text[] = "error[R_OUTPUT]: native execution failed\nstandard output refused a write\n";
+    stream_flush(&streams[1]);
+    os_write(2, (const unsigned char *)text, sizeof text - 1);
+    os_exit(1);
+}
+
+static void stream_write(myl_stream *stream, const void *data, size_t len) {
+    const unsigned char *bytes = data;
+    while (len > 0) {
+        if (stream->used == sizeof stream->bytes) stream_flush(stream);
+        size_t room = sizeof stream->bytes - stream->used;
+        size_t take = len < room ? len : room;
+        memcpy(stream->bytes + stream->used, bytes, take);
+        stream->used += take;
+        bytes += take;
+        len -= take;
+    }
+}
+
+static void flush_all(void) {
+    stream_flush(&streams[0]);
+    stream_flush(&streams[1]);
+}
+
+static void out_of_memory(void) {
+    flush_all();
+    /* Under a test's byte ceiling the OS refusal is its `RLIMIT_AS` backstop: the same trap,
+       reported without the frame walk, which may itself need memory. */
+    static const char ceiling[] = "error[R_MEMORY_BUDGET]: memory budget exhausted; raise it with --max-memory=SIZE\n";
+    static const char message[] = "fatal: out of memory\n";
+    /* A test trial's trap record, so its runner reports the trap (NEW-CORE-S5-TRACE-1). */
+    static const char record[] = "\036MYLANG-TRAP {\"version\":1,\"operation\":\"memory budget exhausted\"}\n";
+    if (heap_ceiling) os_write(2, (const unsigned char *)ceiling, sizeof ceiling - 1);
+    else os_write(2, (const unsigned char *)message, sizeof message - 1);
+    if (heap_ceiling && core_trap_marks_all) os_write(2, (const unsigned char *)record, sizeof record - 1);
+    os_exit(1);
+}
+
+/* Integer formatting is supplied by core_number.c after the text runtime. */
+void myl_core_print_i64(int64_t fd, int64_t value);
+void myl_core_print_u64(int64_t fd, uint64_t value);
+
+void myl_core_print_bool(int64_t fd, bool value) {
+    if (value) stream_write(stream_for(fd), "True", 4);
+    else stream_write(stream_for(fd), "False", 5);
+}
+
+void myl_core_print_str(int64_t fd, myl_block *text) {
+    stream_write(stream_for(fd), block_data(text), (size_t)text->len);
+}
+
+void myl_core_print_sep(int64_t fd) { stream_write(stream_for(fd), " ", 1); }
+
+void myl_core_print_end(int64_t fd) {
+    stream_write(stream_for(fd), "\n", 1);
+    if (fd == 2) stream_flush(stream_for(fd));
+}
+
+/* ---- lists and strings ------------------------------------------------------ */
+
+/* A fresh list, when the emitted fast path finds no free block of its class. */
+myl_block *myl_core_list_new_slow(int64_t cap, int64_t element_size) {
+    return block_new(MYL_KIND_LIST, cap, element_size);
+}
+
+/* A block with room for one more element: `list` itself while it has room,
+   else a grown copy. The caller's old value is dead after the push (the IR's
+   uniqueness rule), so growing frees the old block. */
+myl_block *myl_core_list_grow(myl_block *list, int64_t element_size) {
+    if (list->len < list->cap) return list;
+    int64_t cap = list->cap < 4 ? 8 : list->cap * 2;
+    if (class_of(list) == 0) {
+        /* A large block grows in place where the allocator can (one block either
+           way), and moves to a fresh aligned block when `realloc` loses the alignment. */
+        size_t bytes = MYL_HEADER + (size_t)cap * (size_t)element_size;
+        if (heap_ceiling) heap_refund(malloc_usable_size(list));
+        myl_block *moved = realloc(list, bytes);
+        if (!moved) out_of_memory();
+        if (((uintptr_t)moved & (MYL_ALIGN - 1)) != 0) {
+            myl_block *aligned = aligned_alloc(MYL_ALIGN, (bytes + MYL_ALIGN - 1) & ~(size_t)(MYL_ALIGN - 1));
+            if (!aligned) out_of_memory();
+            memcpy(aligned, moved, MYL_HEADER + (size_t)moved->len * (size_t)element_size);
+            free(moved);
+            moved = aligned;
+        }
+        if (heap_ceiling) heap_ch

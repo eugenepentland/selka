@@ -1,0 +1,542 @@
+src/core/emit_llvm.zig:219:/// Functions and cross-unit ABI decisions for one independent LLVM module.
+src/core/emit_llvm.zig:238:        for (chosen.functions) |index| try renderFunction(&state, &body, index);
+src/core/emit_llvm.zig:239:    } else for (module.functions.items, 0..) |_, index| try renderFunction(&state, &body, @intCast(index));
+src/core/emit_llvm.zig:262:fn renderFunction(state: *ModuleState, body: *Out, index: u32) Error!void {
+src/core/emit_llvm.zig:266:            _ = try emit_values.adapterNamed(state.allocator, body, function, .{ .symbol = state.functionName(index), .linkage = state.linkage(index) });
+src/core/emit_llvm.zig:270:    var emitter: FunctionEmitter = .{ .state = state, .function = function, .index = index };
+src/core/emit_llvm.zig:272:    try emitter.emitFunction(body);
+src/core/emit_llvm.zig:319:    fn functionName(self: *ModuleState, index: u32) []const u8 {
+src/core/emit_llvm.zig:326:        return if (function.signature.linkage == .internal) symbol(self.allocator, self.functionName(index)) else std.fmt.allocPrint(self.allocator, "@{s}", .{c_abi.symbol(self.functionName(index))});
+src/core/emit_llvm.zig:345:        return self.external(function, self.functionName(index));
+src/core/emit_llvm.zig:348:    fn external(self: *ModuleState, function: *const ir.Function, name: []const u8) !void {
+src/core/emit_llvm.zig:614:        var helper: FunctionEmitter = .{ .state = self, .function = &self.module.functions.items[self.module.entry], .index = self.module.entry };
+src/core/emit_llvm.zig:739:const FunctionEmitter = struct {
+src/core/emit_llvm.zig:741:    function: *const ir.Function,
+src/core/emit_llvm.zig:763:    fn sourceFunction(self: *FunctionEmitter) *const ir.Function {
+src/core/emit_llvm.zig:769:    fn selectBlock(self: *FunctionEmitter, b: u32) void {
+src/core/emit_llvm.zig:773:    fn selectInstruction(self: *FunctionEmitter, b: u32, ref: ir.Ref) void {
+src/core/emit_llvm.zig:778:    pub fn verifyMode(self: *FunctionEmitter) bool {
+src/core/emit_llvm.zig:783:    pub fn module(self: *FunctionEmitter) *const ir.Module {
+src/core/emit_llvm.zig:788:    pub fn dictDescriptor(self: *FunctionEmitter, dict_type: ir.Type) Error![]const u8 {
+src/core/emit_llvm.zig:825:    pub fn a(self: *FunctionEmitter) std.mem.Allocator {
+src/core/emit_llvm.zig:830:    pub fn fresh(self: *FunctionEmitter, prefix: []const u8) Error![]const u8 {
+src/core/emit_llvm.zig:836:    pub fn ty(self: *FunctionEmitter, t: ir.Type) Error![]const u8 {
+src/core/emit_llvm.zig:842:    pub fn value(self: *FunctionEmitter, raw: ir.Ref) Error![]const u8 {
+src/core/emit_llvm.zig:857:    pub fn typedValue(self: *FunctionEmitter, raw: ir.Ref) Error![]const u8 {
+src/core/emit_llvm.zig:865:    fn canonicalNan(self: *FunctionEmitter, out: *Out, argument: ir.Ref) Error![]const u8 {
+src/core/emit_llvm.zig:877:    fn constantOf(self: *FunctionEmitter, raw: ir.Ref) ?i64 {
+src/core/emit_llvm.zig:882:    fn emitFunction(self: *FunctionEmitter, out: *Out) !void {
+src/core/emit_llvm.zig:960:    fn analyzeMemory(self: *FunctionEmitter, entry: *Out) !void {
+src/core/emit_llvm.zig:1033:    fn fillMemoryPhis(self: *FunctionEmitter, out: *Out, pred: usize, target: usize) !void {
+src/core/emit_llvm.zig:1065:    fn branchTo(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:1085:    fn countedMemory(self: *FunctionEmitter, out: *Out, mode: Counting, value_type: ir.Type, ptr: []const u8) Error!void {
+src/core/emit_llvm.zig:1120:    fn countedValue(self: *FunctionEmitter, out: *Out, mode: Counting, value_type: ir.Type, text: []const u8) Error!void {
+src/core/emit_llvm.zig:1126:    pub fn checkOf(self: *FunctionEmitter, inst: ir.Inst) ir.Check {
+src/core/emit_llvm.zig:1131:    fn vectorPreheader(self: *FunctionEmitter, pred: ir.BlockId, header: u32) bool {
+src/core/emit_llvm.zig:1139:        const self: *FunctionEmitter = @ptrCast(@alignCast(context));
+src/core/emit_llvm.zig:1144:    fn vectorPrologue(self: *FunctionEmitter, out: *Out, target: u32) !void {
+src/core/emit_llvm.zig:1162:    fn knownFacts(self: *FunctionEmitter) ?facts.Facts {
+src/core/emit_llvm.zig:1168:    fn assertReachable(self: *FunctionEmitter, out: *Out, block: u32) !void {
+src/core/emit_llvm.zig:1171:        const at: ir.Inst = .{ .op = .@"unreachable", .ty = .void, .span = self.sourceFunction().span };
+src/core/emit_llvm.zig:1173:        const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 64, .operation = "unreachable block", .function = self.sourceFunction().name });
+src/core/emit_llvm.zig:1178:    fn assertFacts(self: *FunctionEmitter, out: *Out, ref: ir.Ref, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:1185:    fn assertEntryFacts(self: *FunctionEmitter, out: *Out) !void {
+src/core/emit_llvm.zig:1196:    fn collectBoundLengths(self: *FunctionEmitter) !void {
+src/core/emit_llvm.zig:1209:    fn captureBoundLength(self: *FunctionEmitter, out: *Out, ref: ir.Ref) !void {
+src/core/emit_llvm.zig:1218:    fn assertAggregate(self: *FunctionEmitter, out: *Out, ref: ir.Ref, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:1233:            const index = try self.state.site(.{ .kind = .fact, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = 64, .operation = operation, .function = self.sourceFunction().name });
+src/core/emit_llvm.zig:1267:                .function = self.sourceFunction().name,
+src/core/emit_llvm.zig:1275:    fn assertChildLength(self: *FunctionEmitter, out: *Out, ref: ir.Ref, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:1294:        const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 64, .operation = "uniform child list length", .function = self.sourceFunction().name });
+src/core/emit_llvm.zig:1300:    fn assertBound(self: *FunctionEmitter, out: *Out, ref: ir.Ref, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:1313:        const index = try self.state.site(.{ .kind = .fact, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = info.bits, .operation = operation, .function = self.sourceFunction().name });
+src/core/emit_llvm.zig:1318:    fn assertRange(self: *FunctionEmitter, out: *Out, ref: ir.Ref, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:1343:        const index = try self.state.site(.{ .kind = .fact, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = info.bits, .operation = operation, .function = self.sourceFunction().name });
+src/core/emit_llvm.zig:1348:    pub fn site(self: *FunctionEmitter, kind: TrapKind, inst: ir.Inst, operation: []const u8) Error!u32 {
+src/core/emit_llvm.zig:1358:        return self.state.site(.{ .kind = effective, .location = self.state.options.locator.locate(self.state.options.locator.context, inst.span), .width = width, .operation = operation, .function = self.sourceFunction().name });
+src/core/emit_llvm.zig:1363:    pub fn trapIf(self: *FunctionEmitter, out: *Out, failed: []const u8, site_index: u32, left: []const u8, right: []const u8) Error!void {
+src/core/emit_llvm.zig:1372:    pub fn trapBegin(self: *FunctionEmitter, out: *Out, failed: []const u8, site_index: u32) Error!TrapBranch {
+src/core/emit_llvm.zig:1381:    pub fn trapEnd(self: *FunctionEmitter, out: *Out, branch: TrapBranch, detail: struct { left: []const u8, right: []const u8 }) Error!void {
+src/core/emit_llvm.zig:1387:    pub fn textScalars(self: *FunctionEmitter, out: *Out, receiver: ir.Ref) Error![]const u8 {
+src/core/emit_llvm.zig:1388:        const helper: ir.Function = .{ .name = flags.str_chars_symbol, .signature = .{ .params = &.{.str}, .ret = .u64, .linkage = .runtime_c } };
+src/core/emit_llvm.zig:1397:    pub fn widened(self: *FunctionEmitter, out: *Out, raw: ir.Ref) Error![]const u8 {
+src/core/emit_llvm.zig:1406:    fn instruction(self: *FunctionEmitter, out: *Out, ref: ir.Ref, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:1564:    fn trapTerminator(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:1571:            const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 64, .operation = "a stack list's length below its capacity", .function = self.sourceFunction().name });
+src/core/emit_llvm.zig:1576:            const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 32, .operation = "count == 1 before an in-place update", .function = self.sourceFunction().name });
+src/core/emit_llvm.zig:1589:            const index = try self.state.site(.{ .kind = .assertion, .location = location, .width = kind, .operation = message, .function = self.sourceFunction().name });
+src/core/emit_llvm.zig:1594:    fn arithmetic(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:1623:    fn division(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:1691:    fn floorAdjust(self: *FunctionEmitter, out: *Out, d: FloorOperands) !void {
+src/core/emit_llvm.zig:1714:    fn convert(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:1753:    fn floatToInt(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:1782:    fn collectionLength(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
+src/core/emit_llvm.zig:1788:    fn listGet(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:1799:    pub fn boundsCheck(self: *FunctionEmitter, out: *Out, inst: ir.Inst, list: []const u8, index: []const u8) Error!void {
+src/core/emit_llvm.zig:1827:    pub fn trapBounds(self: *FunctionEmitter, out: *Out, failed: []const u8, site_index: u32, bounds: TrapBounds) Error!void {
+src/core/emit_llvm.zig:1836:    pub fn countsFromEnd(self: *FunctionEmitter, index: ir.Ref) bool {
+src/core/emit_llvm.zig:1852:    pub fn originalIndex(self: *FunctionEmitter, out: *Out, index: []const u8, len: []const u8) Error![]const u8 {
+src/core/emit_llvm.zig:1862:    fn elementSlot(self: *FunctionEmitter, out: *Out, list: []const u8, index: []const u8, element: ir.Type) ![]const u8 {
+src/core/emit_llvm.zig:1873:    pub fn typeOf(self: *FunctionEmitter, raw: ir.Ref) ir.Type {
+src/core/emit_llvm.zig:1878:    fn offsetPointer(self: *FunctionEmitter, out: *Out, ptr: []const u8, offset: u32) ![]const u8 {
+src/core/emit_llvm.zig:1887:    pub fn stackSlot(self: *FunctionEmitter, bytes: u32) Error![]const u8 {
+src/core/emit_llvm.zig:1896:    pub fn loadValue(self: *FunctionEmitter, out: *Out, value_type: ir.Type, ptr: []const u8, result: []const u8) Error!void {
+src/core/emit_llvm.zig:1976:    pub fn storeValue(self: *FunctionEmitter, out: *Out, value_type: ir.Type, text: []const u8, ptr: []const u8) Error!void {
+src/core/emit_llvm.zig:2028:    fn copyBytes(self: *FunctionEmitter, out: *Out, dst: []const u8, src: []const u8, size: u32, overlap: bool) !void {
+src/core/emit_llvm.zig:2034:    pub fn storeOperand(self: *FunctionEmitter, out: *Out, value_type: ir.Type, raw: ir.Ref, dst: []const u8) Error!void {
+src/core/emit_llvm.zig:2042:    fn storeMake(self: *FunctionEmitter, out: *Out, inst: ir.Inst, dst: []const u8) Error!void {
+src/core/emit_llvm.zig:2063:    fn makeInMemory(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:2070:    fn recordGet(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:2081:    fn recordSet(self: *FunctionEmitter, out: *Out, name: []const u8, ref: ir.Ref, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:2099:    fn writableInPlace(self: *FunctionEmitter, old: ir.Ref, writer: ir.Ref) bool {
+src/core/emit_llvm.zig:2122:    fn recordMake(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:2138:    fn unionMake(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:2176:    fn unionTag(self: *FunctionEmitter, out: *Out, name: []const u8, raw: ir.Ref) !void {
+src/core/emit_llvm.zig:2193:    fn unionPayload(self: *FunctionEmitter, out: *Out, read: PayloadRead) Error!void {
+src/core/emit_llvm.zig:2219:    fn fillCapacity(self: *FunctionEmitter, out: *Out, bound: ir.Ref) ![]const u8 {
+src/core/emit_llvm.zig:2233:    fn listSet(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:2250:    fn listPop(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:2267:    fn listGetField(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:2292:    fn counted(self: *FunctionEmitter, out: *Out, mode: Counting, value_type: ir.Type, text: []const u8) Error!void {
+src/core/emit_llvm.zig:2342:    fn errTrace(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:2352:        const index = try self.state.site(.{ .kind = .trace, .location = location, .width = 0, .operation = action, .function = self.sourceFunction().name });
+src/core/emit_llvm.zig:2358:    fn caseName(self: *FunctionEmitter, raw: ir.Ref) []const u8 {
+src/core/emit_llvm.zig:2368:    fn functionScope(self: *FunctionEmitter) ![]const u8 {
+src/core/emit_llvm.zig:2377:    fn callLocation(self: *FunctionEmitter, span: u32) ![]const u8 {
+src/core/emit_llvm.zig:2384:    fn trapLocation(self: *FunctionEmitter, site_index: u32) ![]const u8 {
+src/core/emit_llvm.zig:2392:    fn sourceLocation(self: *FunctionEmitter, location: Location, origin: ?u32) Error!u32 {
+src/core/emit_llvm.zig:2403:    fn inlineLocation(self: *FunctionEmitter, id: u32) Error!u32 {
+src/core/emit_llvm.zig:2415:    fn stackList(self: *FunctionEmitter, out: *Out, name: []const u8, capacity: u64, element: ir.Type) !void {
+src/core/emit_llvm.zig:2436:    fn undefValue(self: *FunctionEmitter, value_type: ir.Type) ![]const u8 {
+src/core/emit_llvm.zig:2449:    fn freeUnique(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:2456:            const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 32, .operation = "count == 1 before freeing a unique block", .function = self.sourceFunction().name });
+src/core/emit_llvm.zig:2465:    fn attachLayout(self: *FunctionEmitter, out: *Out, block: []const u8, element: ir.Type) !void {
+src/core/emit_llvm.zig:2472:    fn enterIf(self: *FunctionEmitter, out: *Out, condition: []const u8) ![]const u8 {
+src/core/emit_llvm.zig:2480:    fn leaveIf(self: *FunctionEmitter, out: *Out, join: []const u8) !void {
+src/core/emit_llvm.zig:2489:    fn countBlock(self: *FunctionEmitter, out: *Out, mode: Counting, block: []const u8) !void {
+src/core/emit_llvm.zig:2521:    fn refOf(self: *FunctionEmitter, name: []const u8) ir.Ref {
+src/core/emit_llvm.zig:2527:    fn nonNegative(self: *FunctionEmitter, raw: ir.Ref) bool {
+src/core/emit_llvm.zig:2540:    fn fitsI32(self: *FunctionEmitter, raw: ir.Ref) bool {
+src/core/emit_llvm.zig:2550:    fn loadRange(self: *FunctionEmitter, name: []const u8, loaded: ir.Type) ![]const u8 {
+src/core/emit_llvm.zig:2564:    fn listPush(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:2589:    fn fillCounter(self: *FunctionEmitter, list: ir.Ref) ?ir.Ref {
+src/core/emit_llvm.zig:2599:    fn assertFillRoom(self: *FunctionEmitter, out: *Out, list: []const u8, len_at: []const u8, index: []const u8, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:2613:    pub fn functionPointer(self: *FunctionEmitter, index: u32) Error![]const u8 {
+src/core/emit_llvm.zig:2619:    pub fn unsupported(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
+src/core/emit_llvm.zig:2625:    pub fn call(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
+src/core/emit_llvm.zig:2700:    fn reportError(self: *FunctionEmitter, out: *Out, argument: ir.Ref) !void {
+src/core/emit_llvm.zig:2708:    fn print(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:2802:    fn function(self: *Debug, allocator: std.mem.Allocator, index: u32, f: *const ir.Function, at: Location) !u32 {
+src/core/emit_llvm.zig:2840:    \\define internal ptr @myl_core_list_new(i64 %cap, i64 %size) alwaysinline nounwind {
+src/core/emit_llvm.zig:2876:    \\define internal ptr @myl_core_list_reserve(ptr %list, i64 %size) alwaysinline nounwind {
+src/core/emit_llvm.zig:2890:    \\define internal ptr @myl_core_list_fill_reserve(ptr %list, i64 %size, i64 %index) alwaysinline nounwind {
+src/core/emit_llvm.zig:2900:    \\define internal void @myl_core_free(ptr %block) alwaysinline nounwind {
+//! Turn emitted LLVM units into an executable with the bundled clang (`zig cc`),
+//! through the core's own content-keyed stores (docs/design/new-core-s4.md §6):
+//! - the runtime (-O2, whatever the program's level) and the number-text object,
+//!   once per content, in the per-user directory `runtimeDirectory` names;
+//! - one object per unit in that directory's `units-v1` store (`unit_cache.zig`),
+//!   keyed by the unit's text, level, target, toolchain and runtime ABI. Misses
+//!   compile in parallel with `zig cc -c`; hits start no process;
+//! - each `--link` C source in the work directory's `foreign-v1` store, keyed by
+//!   its bytes and the bytes of every header its compiler depfile listed;
+//! - the linked program in the work directory's `programs-v1` store, keyed by
+//!   every object it links, so a build whose objects all match links nothing.
+//! Every `zig` process gets a fresh local cache inside this build's private
+//! staging directory, removed when the build ends: these stores are the cache,
+//! and Zig's own would only keep a second copy of every object and program.
+//! A minimal driver rather than the old core's `qbe_build_llvm_compile.zig`:
+//! that one is bound to the QBE manifest, fragment store and object cache.
+const std = @import("std");
+const target_policy = @import("target.zig");
+const target = target_policy.current;
+const number_runtime = @import("number_runtime.zig");
+const tool_identity = @import("tool_identity.zig");
+const emit_units = @import("emit_units.zig");
+const unit_cache = @import("unit_cache.zig");
+const Digest = unit_cache.Digest;
+
+/// The runtime C source, compiled into every program.
+pub const runtime_source = @embedFile("runtime/core_rt.c") ++ "\n" ++
+    @embedFile("runtime/core_dict.c") ++ "\n" ++
+    @embedFile("runtime/core_unicode_data.h") ++ "\n" ++
+    @embedFile("runtime/core_text.c") ++ "\n" ++
+    @embedFile("runtime/core_sort.c") ++ "\n" ++ @embedFile("runtime/core_number.c") ++ "\n" ++
+    @embedFile("runtime/core_io.c") ++ "\n" ++ @embedFile("runtime/core_host.c") ++ "\n" ++
+    @embedFile("runtime/core_bytes.c") ++ "\n" ++ @embedFile("runtime/core_values.c") ++ "\n" ++ @embedFile("runtime/core_test.c");
+
+/// One build: tools, directories, the program and how to optimize it.
+pub const Request = struct {
+    /// The `zig` executable whose `cc` compiles and links.
+    zig: []const u8,
+    /// The build's cache directory: foreign objects, linked programs and staging.
+    work: []const u8,
+    output: []const u8,
+    release: bool,
+    /// Extra C sources to compile and link (`--link`).
+    links: []const []const u8,
+    /// Independent LLVM inputs, in link order (`emit_units`, or `wholeUnit`).
+    units: []const emit_units.Unit = &.{},
+    /// `--verify-cache`: also recompile every unit the store served and require
+    /// the same object bytes.
+    verify: bool = false,
+};
+
+/// Why a native build failed; the tool's output was written to `log`.
+pub const Error = error{ ToolFailed, OutOfMemory, WriteFailed };
+
+/// What one build did, for `--cache-report` and the tests.
+pub const Counts = struct {
+    /// Distinct units linked.
+    units: u32 = 0,
+    /// Units whose verified object the store served.
+    reused: u32 = 0,
+    /// Units compiled by this build.
+    compiled: u32 = 0,
+    /// Served units recompiled by `--verify-cache` and found byte-identical.
+    verified: u32 = 0,
+    /// Every `zig` process this build started.
+    processes: u32 = 0,
+};
+
+/// The result of a successful `link`.
+pub const Outcome = struct {
+    counts: Counts = .{},
+    /// The program came from the program store: no tool linked it.
+    program_reused: bool = false,
+    /// The program store entry the output was copied from (proved toolchains only).
+    program: ?unit_cache.Found = null,
+    /// The `--link` sources and the headers their depfiles listed, with the bytes
+    /// the compiles read; null when a file changed while it was compiled, so no
+    /// later build may trust these digests.
+    foreign: ?[]const unit_cache.Dependency = &.{},
+    /// The toolchain identity the build ran under.
+    tool: tool_identity.Identity,
+};
+
+/// A whole-program LLVM text as the one unit of a build.
+pub fn wholeUnit(llvm: []const u8) emit_units.Unit {
+    return emit_units.unit("whole", "", .program, llvm);
+}
+
+const Guard = struct {
+    resources: tool_identity.Request,
+    identity: tool_identity.Identity,
+
+    /// Validate the captured tool before publishing a native object or accepting a link.
+    pub fn check(self: Guard, log: *std.ArrayList(u8)) Error!void {
+        const stable = tool_identity.unchanged(self.resources, self.identity) catch |err| changed: {
+            if (err == error.OutOfMemory) return error.OutOfMemory;
+            break :changed false;
+        };
+        if (!stable) {
+            try log.appendSlice(self.resources.arena, "error: guest toolchain changed during native compilation\n");
+            return error.ToolFailed;
+        }
+    }
+};
+
+/// The tools and accounting every native step of one build shares.
+const Native = struct {
+    arena: std.mem.Allocator,
+    io: std.Io,
+    environment: *const std.process.Environ.Map,
+    zig: []const u8,
+    log: *std.ArrayList(u8),
+    guard: Guard,
+    counts: *Counts,
+
+    fn resources(self: Native) unit_cache.Resources {
+        return .{ .arena = self.arena, .io = self.io, .environment = self.environment };
+    }
+};
+
+/// Where one build keeps what it caches: `shared` (per-user, content keys only)
+/// and `local` (the work directory), or both inside `staging` for an unproved tool.
+const Places = struct { shared: []const u8, local: []const u8, staging: []const u8, cacheable: bool };
+
+/// One object to link and the digest of its bytes (or of its store key, for the
+/// runtime objects, whose key covers their whole input).
+const Object = struct { path: []const u8, digest: Digest };
+
+/// Compile and link `request.units` into `request.output`; failures append the tool's stderr to `log`.
+pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8)) Error!Outcome {
+    const cwd = std.Io.Dir.cwd();
+    cwd.createDirPath(io, request.work) catch return error.WriteFailed;
+    var environment = environ.clone(allocator) catch return error.OutOfMemory;
+    defer environment.deinit();
+    const staging = try privateDirectory(allocator, io, request.work, "native-link");
+    defer removeDirectory(io, staging);
+    environment.put("ZIG_LOCAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ staging, "local" })) catch return error.OutOfMemory;
+    const resources: tool_identity.Request = .{ .arena = allocator, .io = io, .environment = &environment, .executable = request.zig, .cache = request.work };
+    const guest = tool_identity.capture(resources) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try log.print(allocator, "error: cannot run {s}: cannot identify guest toolchain: {s}\n", .{ request.zig, @errorName(err) });
+        return error.ToolFailed;
+    };
+    // Zig's global cache holds only its own libc and compiler-rt builds, which no
+    // program input reaches; a fresh one rebuilds them (about 6 s), so only an
+    // unproved tool gets one, and it never writes the shared builds.
+    if (!guest.cacheable) environment.put("ZIG_GLOBAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ staging, "global" })) catch return error.OutOfMemory;
+    var outcome: Outcome = .{ .tool = guest };
+    const native: Native = .{ .arena = allocator, .io = io, .environment = &environment, .zig = guest.path, .log = log, .guard = .{ .resources = resources, .identity = guest }, .counts = &outcome.counts };
+    // Content-keyed objects are shared, so a fresh work directory (a new worktree,
+    // a test's temporary directory) reuses them; an unproved tool keeps every
+    // object private to this build.
+    const places: Places = .{
+        .shared = if (guest.cacheable) try runtimeDirectory(allocator, io, environ, request.work) else staging,
+        .local = if (guest.cacheable) request.work else staging,
+        .staging = staging,
+        .cacheable = guest.cacheable,
+    };
+    var abi: Digest = undefined;
+    std.crypto.hash.Blake3.hash(runtime_source, &abi, .{});
+    const settings: unit_cache.Settings = .{ .tool = guest.digest, .cpu = guest.native_target, .release = request.release, .runtime = abi };
+    var objects: std.ArrayList(Object) = .empty;
+    try objects.append(allocator, try runtimeObject(native, places.shared, abi));
+    var needs: Dependencies = .{};
+    for (request.units) |unit| needs = .{ .number = needs.number or unit.number, .math = needs.math or unit.math };
+    try unitObjects(native, places, settings, request, &objects);
+    if (needs.number) try objects.append(allocator, .{ .path = try number_runtime.object(allocator, io, places.shared), .digest = number_runtime.digest() });
+    outcome.foreign = try foreignObjects(native, places, settings, request.links, &objects);
+    const sanitizer = linkSanitizer(request.release, request.links.len);
+    const program_key = programKey(settings, objects.items, needs.math, sanitizer);
+
+/// The returned value of a qualifying leaf, or null.
+fn leaf(callee: *const ir.Function) ?ir.Ref {
+    if (callee.signature.linkage != .internal or callee.blocks.items.len != 1 or callee.signature.ret == .void) return null;
+    const insts = callee.blocks.items[0].insts.items;
+    if (insts.len == 0) return null;
+    const last = callee.inst(insts[insts.len - 1]);
+    if (last.op != .ret or last.a == .none) return null;
+    for (insts[0 .. insts.len - 1]) |ref| switch (callee.inst(ref).op) {
+        .call, .call_indirect, .print, .phi, .jump, .branch, .ret, .@"unreachable", .err_trace => return null,
+        else => {},
+    };
+    return last.a;
+}
+
+/// Where one call is replaced.
+const Site = struct { block: *ir.Block, at: usize, call: ir.Ref, result: ir.Ref };
+
+/// Clone the callee's body into the caller before `site.at`; returns the number of instructions inserted.
+fn splice(arena: std.mem.Allocator, caller: *ir.Function, callee: *const ir.Function, site: Site, clone: *origins.Clone) Error!usize {
+    const arguments = caller.operands(caller.insts.items[site.call.index()].data);
+    const map = try arena.alloc(ir.Ref, callee.insts.items.len);
+    @memset(map, .none);
+    // Parameters become the arguments; block-less constants are cloned on demand.
+    for (callee.insts.items, 0..) |inst, i| {
+        map[i] = switch (inst.op) {
+            .param => arguments[@intCast(inst.data)],
+            .iconst, .fconst, .undef, .str_const, .func_ref => try append(arena, caller, inst),
+            else => .none,
+        };
+    }
+    var inserted: std.ArrayList(ir.Ref) = .empty;
+    const body = callee.blocks.items[0].insts.items;
+    for (body[0 .. body.len - 1]) |old| {
+        var inst = callee.inst(old);
+        inst.a = remap(callee, map, inst.a);
+        inst.b = remap(callee, map, inst.b);
+        if (inst.op.hasExtra()) {
+            // `record_make` and `list_set` carry operands in the callee's extra list.
+            const start: u32 = @intCast(caller.extra.items.len);
+            for (callee.operands(inst.data)) |operand| try caller.extra.append(arena, remap(callee, map, operand));
+            inst.data = (ir.ExtraSlice{ .start = start, .len = @intCast(caller.extra.items.len - start) }).pack();
+        }
+        const ref = try append(arena, caller, inst);
+        try clone.instruction(arena, 0, old, ref, true);
+        map[old.index()] = ref;
+        try inserted.append(arena, ref);
+    }
+    try site.block.insts.insertSlice(arena, site.at, inserted.items);
+    caller.insts.items[site.call.index()] = .{ .op = .copy, .ty = caller.insts.items[site.call.index()].ty, .a = remap(callee, map, site.result) };
+    return inserted.items.len;
+}
+
+fn remap(callee: *const ir.Function, map: []const ir.Ref, raw: ir.Ref) ir.Ref {
+    if (raw == .none) return .none;
+    return map[callee.resolve(raw).index()];
+}
+
+fn append(arena: std.mem.Allocator, function: *ir.Function, inst: ir.Inst) Error!ir.Ref {
+    const ref: ir.Ref = @fromBackingInt(@intCast(function.insts.items.len));
+    owned: u64 = 0,
+    /// Bit `i`: an extern-C `str` parameter takes a borrowed `(data, byte_length)`
+    /// span and admits an SSA `str_view`. Internal functions never use this ABI.
+    views: u64 = 0,
+};
+
+/// A function: its instructions, blocks, packed operand lists and loops.
+pub const Function = struct {
+    name: []const u8,
+    signature: Signature,
+    insts: std.ArrayList(Inst) = .empty,
+    blocks: std.ArrayList(Block) = .empty,
+    extra: std.ArrayList(Ref) = .empty,
+    loops: std.ArrayList(Loop) = .empty,
+    /// The declaration's span start, for traces.
+    span: u32 = 0,
+
+    /// The instruction defining `ref`.
+    pub fn inst(self: *const Function, ref: Ref) Inst {
+        return self.insts.items[ref.index()];
+    }
+
+    /// Follow forwarding copies to the value `ref` stands for.
+    pub fn resolve(self: *const Function, ref: Ref) Ref {
+        var current = ref;
+        while (current != .none and self.insts.items[current.index()].op == .copy) current = self.insts.items[current.index()].a;
+        return current;
+    }
+
+    /// The operands packed in `data` of an instruction with an `extra` list.
+    pub fn operands(self: *const Function, data: u64) []const Ref {
+        const slice = ExtraSlice.unpack(data);
+        return self.extra.items[slice.start..][0..slice.len];
+    }
+
+    /// Every value `inst` reads, in order: `a` and `b` where the operation reads
+    /// them as values (a call's `a` is its callee), then its `extra` list.
+    pub fn valueOperands(self: *const Function, instruction: Inst) Operands {
+        var out: Operands = .{};
+        switch (instruction.op) {
+            .phi, .call, .print, .record_make => {},
+            .jump, .@"unreachable" => return out,
+            else => for ([_]Ref{ instruction.a, instruction.b }) |operand| {
+                if (operand == .none) continue;
+                out.direct[out.direct_len] = operand;
+                out.direct_len += 1;
+src/core/build_number.zig:14:        if (context.typeOfRef(value) == .f64) return context.runtimeCall("myl_core_format_float", &.{ .f64, .u64 }, .str, &.{ value, spec }, span);
+src/core/build_number.zig:19:        return context.runtimeCall("myl_core_format_number", &.{ width, .u64 }, .str, &.{ bits, spec }, span);
+src/core/build_number.zig:32:    return context.runtimeCall(if (floating) "myl_core_parse_float_range" else "myl_core_parse_int_range", &.{ receiver_type, .i64, .i64 }, ty, &.{ receiver, start, last }, span);
+src/core/build_bytes.zig:42:    if (source == .bytes or source == .byte_buffer) return context.runtimeCall("myl_core_buffer_from_bytes", &.{source}, .byte_buffer, &.{operand}, span);
+src/core/build_bytes.zig:44:    const valid = try context.runtimeCall("myl_core_bytes_valid_list", &.{source}, .bool, &.{operand}, span);
+src/core/build_bytes.zig:46:    return context.runtimeCall("myl_core_buffer_from_list", &.{source}, .byte_buffer, &.{operand}, span);
+src/core/build_bytes.zig:52:    if (node.kind == .hex) return context.runtimeCall("myl_core_bytes_hex", &.{context.typeOfRef(receiver)}, .str, &.{receiver}, span);
+src/core/build_bytes.zig:53:    const valid = try context.runtimeCall("myl_core_from_hex_valid", &.{.str}, .bool, &.{receiver}, span);
+src/core/build_bytes.zig:61:    const value = try context.runtimeCall("myl_core_from_hex", &.{.str}, .bytes, &.{receiver}, span);
+src/core/build_bytes.zig:92:        .capacity => return context.runtimeCall("myl_core_buffer_capacity", &.{.byte_buffer}, ty, &.{try context.receiverOf(node.owner)}, span),
+src/core/build_bytes.zig:99:            const changed = try context.runtimeCall("myl_core_buffer_reverse", &.{.byte_buffer}, .byte_buffer, &.{receiver}, span);
+src/core/build_bytes.zig:129:    try context.writeOwner(node.owner, try handedOver(Context, context, "myl_core_buffer_push_checked", &.{ .byte_buffer, .i64 }, &.{ receiver, wide }, span), span);
+src/core/build_bytes.zig:150:    const valid = try context.runtimeCall("myl_core_buffer_range_valid", &.{ context.typeOfRef(source), .i64, .i64 }, .bool, &.{ source, start, end }, span);
+src/core/build_bytes.zig:152:    const octets = if (context.typeOfRef(source) == .str) try context.runtimeCall("myl_core_text_encode", &.{.str}, .bytes, &.{source}, span) else source;
+src/core/build_bytes.zig:154:    const updated = try handedOver(Context, context, "myl_core_buffer_append_checked", &.{ .byte_buffer, context.typeOfRef(octets), .i64, .i64 }, &.{ receiver, octets, start, end }, span);
+src/core/build_bytes.zig:171:    const valid = try context.runtimeCall("myl_core_buffer_reserve_valid", &.{ .byte_buffer, .i64 }, .bool, &.{ receiver, extra }, span);
+src/core/build_bytes.zig:177:    const changed = try context.runtimeCall("myl_core_buffer_reserved", &.{ .byte_buffer, .i64 }, .byte_buffer, &.{ receiver, extra }, span);
+src/core/build_text.zig:35:            const offset = try context.effectCall("myl_core_str_offset", &.{ .str, context.typeOfRef(index) }, .u64, &.{ receiver, index }, span);
+src/core/build_text.zig:38:        .encode => return context.runtimeCall("myl_core_text_encode", &.{.str}, .bytes, &.{receiver}, span),
+src/core/build_text.zig:45:            return context.runtimeCall(if (text) "myl_core_str_slice_step" else "myl_core_bytes_slice_step", &.{ receiver_type, .i64, .i64, .i64 }, receiver_type, &.{ receiver, start, end, step }, span);
+src/core/build_text.zig:50:            if (!text) return context.runtimeCall("myl_core_bytes_slice", &.{ receiver_type, .i64, .i64 }, .bytes, &.{ receiver, start, end }, span);
+src/core/build_text.zig:57:                return context.runtimeCall("myl_core_bytes_contains_value", &.{ receiver_type, .i64 }, .bool, &.{ receiver, value }, span);
+src/core/build_text.zig:60:                .find => if (text) "myl_core_str_find" else "myl_core_bytes_find",
+src/core/build_text.zig:61:                .contains => "myl_core_str_contains",
+src/core/build_text.zig:62:                .starts_with => "myl_core_str_starts",
+src/core/build_text.zig:63:                else => "myl_core_str_ends",
+src/core/build_text.zig:74:            return context.runtimeCall(if (node.kind == .join) "myl_core_str_join" else "myl_core_str_split", &.{ receiver_type, context.typeOfRef(argument) }, ty, &.{ receiver, argument }, span);
+src/core/build_text.zig:77:        .split_whitespace => return context.effectCall("myl_core_str_split_whitespace", &.{receiver_type}, ty, &.{receiver}, span),
+src/core/build_text.zig:78:        .to_list => return context.runtimeCall("myl_core_bytes_to_list", &.{receiver_type}, ty, &.{receiver}, span),
+src/core/build_text.zig:86:    const valid = try context.runtimeCall("myl_core_bytes_valid_list", &.{source}, .bool, &.{operand}, span);
+src/core/build_text.zig:88:    return context.runtimeCall("myl_core_bytes_from_list", &.{source}, .bytes, &.{operand}, span);
+src/core/build_text.zig:102:    return context.runtimeCall("myl_core_text_encode", &.{.str}, .bytes, &.{source}, span);
+src/core/build_text.zig:112:        try context.effectCall("myl_core_str_index_offset", &.{ .str, .i64 }, .u64, &.{ receiver, selected }, span)
+src/core/build_text.zig:114:        try context.effectCall("myl_core_bytes_index_offset", &.{ receiver_type, .i64 }, .u64, &.{ receiver, selected }, span);
+src/core/build_text_more.zig:28:        .upper, .lower => return b.runtimeCall("myl_core_text_case", &.{ receiver_type, .bool }, receiver_type, &.{ receiver, try b.constant(.bool, @intFromBool(node.kind == .upper)) }, span),
+src/core/build_text_more.zig:29:        .is_digit, .is_alpha, .is_space => return b.runtimeCall("myl_core_text_every", &.{ receiver_type, .i32 }, .bool, &.{ receiver, try b.constant(.i32, switch (node.kind) {
+src/core/build_text_more.zig:38:            return b.runtimeCall("myl_core_text_ord", &.{.str}, .i64, &.{receiver}, span);
+src/core/build_text_more.zig:40:        .text_repr => return b.runtimeCall("myl_core_text_repr", &.{ receiver_type, .bool }, .str, &.{ receiver, try b.constant(.bool, @intFromBool(receiver_type == .bytes)) }, span),
+src/core/build_text_more.zig:43:            return b.runtimeCall("myl_core_text_format", &.{ .str, b.typeOfRef(word) }, .str, &.{ receiver, word }, span);
+src/core/build_text_more.zig:45:        .splitlines => return b.runtimeCall("myl_core_text_splitlines", &.{receiver_type}, ty, &.{receiver}, span),
+src/core/build_text_more.zig:46:        .zfill => return b.runtimeCall("myl_core_text_zfill", &.{ receiver_type, .i64 }, receiver_type, &.{ receiver, try bound(Context, b, node.arguments[0], span) }, span),
+src/core/build_text_more.zig:52:            return b.runtimeCall("myl_core_text_replace", &.{ receiver_type, b.typeOfRef(needle), b.typeOfRef(insert) }, ty, &.{ receiver, needle, insert }, span);
+src/core/build_text_more.zig:56:            return b.runtimeCall("myl_core_bytes_find_any", &.{ receiver_type, b.typeOfRef(needle), .i64 }, .i64, &.{ receiver, needle, try bound(Context, b, node.arguments[1], span) }, span);
+src/core/build_text_more.zig:58:        .view => return b.runtimeCall("myl_core_bytes_slice", &.{ receiver_type, .i64, .i64 }, .bytes, &.{ receiver, try bound(Context, b, node.arguments[0], span), try bound(Context, b, node.arguments[1], span) }, span),
+src/core/build_text_more.zig:72:    const symbol = if (receiver_type == .str) "myl_core_text_search" else "myl_core_bytes_search";
+src/core/build_text_more.zig:81:    const symbol = if (receiver_type == .str) "myl_core_text_trim" else "myl_core_bytes_trim";
+src/core/build_text_more.zig:90:    const valid = try b.runtimeCall("myl_core_text_scalar_valid", &.{b.typeOfRef(code)}, .bool, &.{code}, span);
+src/core/build_text_more.zig:92:    return b.runtimeCall("myl_core_text_chr", &.{b.typeOfRef(code)}, .str, &.{code}, span);
+src/core/build_text_more.zig:105:    return b.runtimeCall("myl_core_text_bound", &.{.u64}, .i64, &.{input}, span);
+src/core/build_text_more.zig:110:    const count = try b.runtimeCall("myl_core_bytes_utf8_count_range", &.{ b.typeOfRef(input), .i64, .i64 }, .i64, &.{ input, try bound(Context, b, node.arguments[0], span), try bound(Context, b, node.arguments[1], span) }, span);
+src/core/build_text_more.zig:116:    const count = try b.runtimeCall("myl_core_bytes_utf8_count", &.{b.typeOfRef(receiver)}, .i64, &.{receiver}, span);
+src/core/build_text_more.zig:136:    const value = if (text) try b.runtimeCall("myl_core_bytes_decode_text", &.{b.typeOfRef(receiver)}, .str, &.{receiver}, span) else count;
+src/core/build_text_more.zig:140:    const message = try b.runtimeCall("myl_core_bytes_utf8_error", &.{}, .str, &.{}, span);
+    list_bounds,
+    float_conversion,
+    cast,
+    fact,
+    list_empty,
+    trace,
+    assertion,
+    missing_key = 9,
+    iteration_mutation = 10,
+    text_bounds = 11,
+    text_separator = 12,
+    text_step = 13,
+    byte_range = 14,
+    text_scalar = 15,
+    text_substring = 16,
+    invalid_shift = 17,
+    list_value = 18,
+    list_pop_index = 19,
+};
+
+/// `prefix` without the `.N` counters earlier `fresh` names appended: a block that
+/// continues after many checks is named from its base label, not from the chain of
+/// every label before it, which LLVM refuses past a length (NEW-CORE-S5-LABELS-1).
+fn freshBase(prefix: []const u8) []const u8 {
+    var base = prefix;
+    while (std.mem.lastIndexOfScalar(u8, base, '.')) |dot| {
+        const suffix = base[dot + 1 ..];
+        if (suffix.len == 0 or dot == 0) break;
+        for (suffix) |byte| if (!std.ascii.isDigit(byte)) return base;
+        base = base[0..dot];
+    }
+    return base;
+}
+
+const Site = struct { kind: TrapKind, location: Location, width: u16, operation: []const u8, function: []const u8 };
+
+/// The bit of a site's `width` that marks an unsigned overflow, division or cast, whose
+/// operands the runtime prints unsigned (`MYL_CORE_SITE_UNSIGNED` in `runtime/core_rt.c`).
+const unsigned_site: u16 = 0x100;
+
+/// `  %x = getelementptr inbounds i8, ptr p, i64 0`: a new name for the same block.
+        const configured = self.configuration orelse return;
+        if (session.single != null) return;
+        if (configured.policy) |file| {
+            var policy = language.import_policy.Policy.parse(allocator, file.bytes) catch |err| {
+                if (err == error.OutOfMemory) return error.OutOfMemory;
+                try report.print(allocator, "{s}: error[E_PROJECT_CONFIG]: invalid import policy: {s}\n", .{ file.path, @errorName(err) });
+                return error.SourceError;
+            };
+            defer policy.deinit();
+            var result = language.import_policy.evaluate(allocator, &session.project, policy) catch |err| {
+                if (err == error.OutOfMemory) return error.OutOfMemory;
+                try report.appendSlice(allocator, "error[E_PROJECT_CONFIG]: configured import policy requires a complete module graph\n");
+                return error.SourceError;
+            };
+            defer result.deinit();
+            if (result.denied != 0) {
+                try report.appendSlice(allocator, try language.import_policy.render(allocator, result, &session.project, policy));
+                return error.PolicyDenied;
+            }
+        }
+        if (configured.document.interface_files) {
+            const stale = language.api_files.staleDiagnostics(allocator, session.files.io, self.root, self.path, session.interfaceIndex()) catch |err| {
+                if (err == error.OutOfMemory) return error.OutOfMemory;
+                try report.print(allocator, "{s}: error[E_INTERFACE_FILE_STALE]: cannot validate generated interfaces: {s}\n", .{ self.path, @errorName(err) });
+                return error.SourceError;
+            };
+            if (stale) |text| {
+                try report.appendSlice(allocator, text);
+                return error.SourceError;
+            }
+        }
+    }
+};
+
+/// Resolve an entry and its nearest strict mylang.json before loading sources.
+pub fn resolve(allocator: std.mem.Allocator, io: std.Io, path: []const u8, report: *std.ArrayList(u8)) Error!Entry {
+    const absolute = std.Io.Dir.cwd().realPathFileAlloc(io, path, allocator) catch path;
+    const ordinary = frontend.entryOf(absolute);
+    var entry: Entry = .{ .path = absolute, .root = ordinary.root, .name = ordinary.module };

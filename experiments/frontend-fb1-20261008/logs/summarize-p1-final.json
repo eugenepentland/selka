@@ -1,0 +1,82 @@
+{
+  "admission_wait_seconds": 0.0,
+  "command": [
+    "python3",
+    "-"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1",
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "other_heavy_processes": [
+    " 279294 bash            /bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until ! pgrep -f '\"'\"'probe/probe.py'\"'\"' >/dev/null; do sleep 5; done; wc -l /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/.tmp/probe/smoke.log' < /dev/null && pwd -P >| /tmp/claude-7f36-cwd",
+    "1546746 bash            /bin/bash -c source /home/epentland/.claude/shell-snapshots/snapshot-bash-1791405948097-bez1hb.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'cd /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore && python3 - <<'\"'\"'EOF'\"'\"' p='\"'\"'test/core/rc_field_take.my'\"'\"' s=open(p).read() s=s.replace('\"'\"''\"'\"''\"'\"'# A copy of the field taken before the append'\"'\"''\"'\"''\"'\"','\"'\"''\"'\"''\"'\"'# A write through an index: a negative index'\"'\"'s branch puts the read and the write-back # in different blocks. def put(rt: mut Runtime, at: int, v: int):     rt.objects[at] = v   # A copy of the field taken before the append'\"'\"''\"'\"''\"'\"',1) s=s.replace('\"'\"''\"'\"''\"'\"'        last = allocate(mut rt, i)         i = i + 1'\"'\"''\"'\"''\"'\"','\"'\"''\"'\"''\"'\"'        last = allocate(mut rt, i)         put(mut rt, -1, i * 2)         i = i + 1'\"'\"''\"'\"''\"'\"',1) open(p,'\"'\"'w'\"'\"').write(s) p='\"'\"'src/core/own_test.zig'\"'\"' s=open(p).read() s=s.replace('\"'\"''\"'\"''\"'\"'    \\\\\\\\    rt.count = rt.count + 1     \\\\\\\\    return slot     \\\\\\\\     \\\\\\\\     \\\\\\\\def main(out: Stream) -> int:     \\\\\\\\    rt = Runtime(objects=[], count=0)     \\\\\\\\    for i in range(4):     \\\\\\\\        _ = allocate(mut rt, i)'\"'\"''\"'\"''\"'\"','\"'\"''\"'\"''\"'\"'    \\\\\\\\    rt.count = rt.count + 1     \\\\\\\\    return slot     \\\\\\\\     \\\\\\\\     \\\\\\\\def put(rt: mut Runtime, at: int, v: int):     \\\\\\\\    rt.objects[at] = v     \\\\\\\\     \\\\\\\\     \\\\\\\\def main(out: Stream) -> int:     \\\\\\\\    rt = Runtime(objects=[], count=0)     \\\\\\\\    for i in range(4):     \\\\\\\\        _ = allocate(mut rt, i)     \\\\\\\\        put(mut rt, -1, i)'\"'\"''\"'\"''\"'\"',1) old='\"'\"''\"'\"''\"'\"'    const debug = try support.ownedText(arena.allocator(), field_take);     const allocate = functionIr(debug, \"allocate\");     try std.testing.expect(contains(allocate, \"is_unique\"));     try std.testing.expectEqual(std.mem.count(u8, allocate, \"is_unique\"), std.mem.count(u8, allocate, \"list_copy\"));     try std.testing.expect(!contains(allocate, \"retain\"));'\"'\"''\"'\"''\"'\"' new='\"'\"''\"'\"''\"'\"'    // `rt.objects[at] = v` takes it too, though the index'\"'\"'s negative branch puts the read and     // the write-back in different blocks.     const debug = try support.ownedText(arena.allocator(), field_take);     for ([_][]const u8{ \"allocate\", \"put\" }) |name| {         const text = functionIr(debug, name);         try std.testing.expect(contains(text, \"is_unique\"));         try std.testing.expectEqual(std.mem.count(u8, text, \"is_unique\"), std.mem.count(u8, text, \"list_copy\"));         try std.testing.expect(!contains(text, \"retain\"));     }'\"'\"''\"'\"''\"'\"' assert old in s s=s.replace(old,new,1) open(p,'\"'\"'w'\"'\"').write(s) EOF S=/tmp/claude-1000/-home-epentland-ai-canopy-mylang/03fe2647-29f7-4cb8-b6b6-59b6334d6da0/scratchpad/fix; export TMPDIR=$S; for fl in \"\" \"--release\"; do zig-out/bin/mylang build test/core/rc_field_take.my -o $S/take$fl --cache-dir=$S/c5 $fl && MYL_CORE_LEAKCHECK=1 /usr/bin/time -f \"%e s\" $S/take$fl a b; $HOME/.cache/mylang/bench-newcore-5a6b501d/bin/mylang build test/core/rc_field_take.my -o $S/takeold$fl --cache-dir=$S/c6 $fl && /usr/bin/time -f \"unfixed %e s\" $S/takeold$fl a b; done 2>&1' && pwd -P >| /tmp/claude-5d1c-cwd"
+  ],
+  "process_affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "observed_process_affinities": [
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ]
+  ],
+  "elapsed_seconds": 0.052248,
+  "exit_code": 0
+}

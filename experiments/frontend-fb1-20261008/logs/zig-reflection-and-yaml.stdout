@@ -1,0 +1,98 @@
+src/project_syntax.zig:75:        const Slice = @FieldType(Collection, field);
+src/collection_lower.zig:150:        pub fn node(self: Self, ty: typed.Type, data: @FieldType(typed.Node, "data")) Error!typed.NodeId {
+src/collection_lower.zig:156:        pub fn stmt(self: Self, data: @FieldType(typed.Statement, "data")) Error!typed.StatementId {
+src/semantic_copy.zig:88:            .@"struct" => inline for (@typeInfo(T).@"struct".field_names, @typeInfo(T).@"struct".field_types) |field_name, Field| {
+src/semantic_copy.zig:189:            .@"struct" => inline for (@typeInfo(T).@"struct".field_names, @typeInfo(T).@"struct".field_types) |name, Field| try self.relocate(Field, &@field(value.*, name)),
+src/entry_adapter.zig:12:    fn node(self: *Builder, ty: typed.Type, data: @FieldType(typed.Node, "data")) !typed.NodeId {
+src/entry_adapter.zig:17:    fn statement(self: *Builder, data: @FieldType(typed.Statement, "data"), terminates: bool) !typed.StatementId {
+src/constant_values.zig:23:const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
+src/constant_values.zig:24:const Assignment = @FieldType(@FieldType(ast.Statement, "data"), "assignment");
+src/constant_values.zig:25:const Range = @FieldType(@FieldType(ast.Statement, "data"), "for_range");
+src/schema_graph.zig:233:fn identityKind(record: typed.Record) @FieldType(Definition, "kind") {
+src/nominal_catalog.zig:16:const Context = @FieldType(Store, "context");
+src/nominal_catalog.zig:17:const Identities = @FieldType(Store, "identities");
+src/call_evaluation.zig:8:const Output = @FieldType(@FieldType(typed.Node, "data"), "call");
+src/sema_loops.zig:29:const ForEach = @FieldType(@FieldType(ast.Statement, "data"), "for_each");
+src/sema_loops.zig:48:        pub fn statementForEach(self: *Checker, stmt: ast.Statement, each: ForEach) Error!@FieldType(typed.Statement, "data") {
+src/sema_loops.zig:53:        pub fn statementForRange(self: *Checker, stmt: ast.Statement, range: @FieldType(@FieldType(ast.Statement, "data"), "for_range")) Error!@FieldType(typed.Statement, "data") {
+src/sema_loops.zig:58:        pub fn statementLoop(self: *Checker, stmt: ast.Statement, loop: @FieldType(@FieldType(ast.Statement, "data"), "loop"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+src/sema_loops.zig:62:        pub fn statementLoopExit(self: *Checker, stmt: ast.Statement, continuing: bool, flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+src/sema_loops.zig:67:fn statementLoop(comptime Checker: type, self: *Checker, stmt: ast.Statement, loop: @FieldType(@FieldType(ast.Statement, "data"), "loop"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+src/sema_loops.zig:95:fn statementForEach(comptime Checker: type, self: *Checker, stmt: ast.Statement, each: ForEach) Error!@FieldType(typed.Statement, "data") {
+src/sema_loops.zig:195:fn finishWalk(comptime Checker: type, self: *Checker, walk: Walk, prepared: ?iteration_place.Source, setup: []const typed.StatementId) Error!@FieldType(typed.Statement, "data") {
+src/sema_loops.zig:353:fn statementForRange(comptime Checker: type, self: *Checker, stmt: ast.Statement, range: @FieldType(@FieldType(ast.Statement, "data"), "for_range")) Error!@FieldType(typed.Statement, "data") {
+src/sema_loops.zig:434:fn statementLoopExit(comptime Checker: type, self: *Checker, stmt: ast.Statement, continuing: bool, flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+src/sema_calls.zig:66:        pub fn embedBuiltin(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?embed.Kind {
+-rw-rw-r-- 1 epentland epentland 10466 Oct  8 08:22 /tmp/frontend-fb1-remarks.opt.yaml
+--- !Passed
+Pass:            loop-vectorize
+Name:            Vectorized
+DebugLoc:        { File: '/tmp/frontend-fb1-remarks.c', Line: 1, Column: 62 }
+Function:        f
+Args:
+  - String:          'vectorized '
+  - String:          ''
+  - String:          'loop (vectorization width: '
+  - VectorizationFactor: '8'
+  - String:          ', interleaved count: '
+  - InterleaveCount: '4'
+  - String:          ')'
+...
+--- !Missed
+Pass:            regalloc
+Name:            SpillReloadCopies
+DebugLoc:        { File: '/tmp/frontend-fb1-remarks.c', Line: 1, Column: 1 }
+Function:        f
+Args:
+  - NumVRCopies:     '3'
+  - String:          ' virtual registers copies '
+  - TotalCopiesCost: '6.054688e-01'
+  - String:          ' total copies cost '
+  - String:          generated in function
+...
+--- !Analysis
+Pass:            prologepilog
+Name:            StackSize
+DebugLoc:        { File: '/tmp/frontend-fb1-remarks.c', Line: 1, Column: 0 }
+Function:        f
+Args:
+  - NumStackBytes:   '8'
+  - String:          ' stack bytes in function '''
+  - Function:        f
+  - String:          ''''
+...
+--- !Analysis
+Pass:            asm-printer
+Name:            InstructionMix
+DebugLoc:        { File: '/tmp/frontend-fb1-remarks.c', Line: 0, Column: 0 }
+Function:        f
+Args:
+  - String:          'BasicBlock: '
+  - BasicBlock:      ''
+  - String:          "\n"
+  - String:          JCC_1
+  - String:          ': '
+{
+  "admission_wait_seconds": 170.528771,
+  "command": [
+    "zig",
+    "build",
+    "test-core",
+    "-Dtest-filter=cost "
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,

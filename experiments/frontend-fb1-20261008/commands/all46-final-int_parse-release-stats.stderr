@@ -1,0 +1,10 @@
+row_int_parse.my:36:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_int_parse.my:59:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+mylang-core: inlined 0 calls, unswitched 0 loops, versioned 0 loops, proved 7 checks, vectorized 0 loops
+mylang-core: ownership: 1 updates in place, 1 tested, 2 copied; 1 retains, 5 releases (0 pairs elided); 0 lists on the stack
+mylang-core: cost: 12 checks kept; 17 allocation sites (4 unresolved calls); 2 unknown loops
+mylang-core: LLVM vectorized unknown; 2 unknown loops; remarks available; 1 compiles in 72773773 ns

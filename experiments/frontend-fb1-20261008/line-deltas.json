@@ -1,0 +1,78 @@
+{
+  "base": "637a85d6",
+  "implementation": "061f46aba144c00bf2094fcdada9a2c682696105",
+  "files": [
+    {
+      "path": "SPEC.md",
+      "added": 2,
+      "deleted": 0
+    },
+    {
+      "path": "docs/performance.md",
+      "added": 5,
+      "deleted": 0
+    },
+    {
+      "path": "docs/tooling/cost.md",
+      "added": 80,
+      "deleted": 0
+    },
+    {
+      "path": "src/core/cli.zig",
+      "added": 3,
+      "deleted": 1
+    },
+    {
+      "path": "src/core/cost.zig",
+      "added": 182,
+      "deleted": 0
+    },
+    {
+      "path": "src/core/cost_command.zig",
+      "added": 107,
+      "deleted": 0
+    },
+    {
+      "path": "src/core/cost_remarks.zig",
+      "added": 33,
+      "deleted": 0
+    },
+    {
+      "path": "src/core/cost_test.zig",
+      "added": 278,
+      "deleted": 0
+    },
+    {
+      "path": "src/core/driver.zig",
+      "added": 88,
+      "deleted": 1
+    },
+    {
+      "path": "src/core/inline.zig",
+      "added": 12,
+      "deleted": 6
+    },
+    {
+      "path": "src/core/passes.zig",
+      "added": 42,
+      "deleted": 5
+    },
+    {
+      "path": "src/core/pipeline.zig",
+      "added": 32,
+      "deleted": 27
+    },
+    {
+      "path": "src/core/root_test.zig",
+      "added": 1,
+      "deleted": 0
+    },
+    {
+      "path": "src/features.json",
+      "added": 5,
+      "deleted": 0
+    }
+  ],
+  "added": 870,
+  "deleted": 40
+}

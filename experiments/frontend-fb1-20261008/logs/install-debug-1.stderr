@@ -1,0 +1,45 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 15s (all 3 build slot(s) busy)
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 5a6b501d672f884336f5749fd6a191daacaac09b: 10/505 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 13 finding(s), none in scope — report-only (--verbose for detail)
+guardian: run-all: 5/88 failed (dead-pub, type-size, test-no-conditional, line-length, error-path-test) — diff-scoped vs 5a6b501d672f884336f5749fd6a191daacaac09b, 10 file(s) in scope
+guardian: failures grouped by check (5):
+  dead-pub (1 finding)
+    - src/core/inline.zig: src/core/inline.zig::withParameters: unused public declaration
+      fix: remove, demote to private (drop `pub`), or reference from a test.
+  type-size (1 finding)
+    - src/core/cost.zig: pub const Counts (struct_) has 17 fields (cap 7)
+      fix: a new offender at 17 fields — reduce it below the cap, or accept: `guardian-check accept type-size .` (or `zig build guardian-accept -Dguardian-checks=type-size`)
+  test-no-conditional (1 finding)
+    - src/core/cost_test.zig:104: more than one top-level loop — a test may keep one; hoist the loop at line 104 into a named helper, or merge the loops into one table-driven loop
+      fix: one top-level loop is fine; merge multiple loops into one table-driven loop, split a branch into two independent tests, or hoist the computation into a helper. A multi-loop finding names the loop to hoist — the assertion-free one when there is one, otherwise the extra loop itself.
+  line-length (2 findings)
+    - src/core/cost.zig:173: line is 417 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+    - src/core/cost.zig:181: line is 280 chars (hard limit 240)
+  error-path-test (4 findings)
+    - src/core/driver.zig:208: new catch block — no test names enclosing fn `optimizationRemarks`
+      fix: add (or extend) a test that names the error identifier — `try testing.expectError(error.X, …)` is enough — in this same change.
+    - src/core/driver.zig:217: new catch block — no test names enclosing fn `optimizationRemarks`
+    - src/core/driver.zig:236: new catch block — no test names enclosing fn `optimizationRemarks`
+    - +1 more — use --verbose for full detail
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+install
++- install mylang
+   +- run ../guardian-zig/zig-out/bin/guardian-check failure
+error: process exited with code 1
+failed command: ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+
+Build Summary: 6/9 steps succeeded (1 failed)
+install transitive failure
++- install mylang transitive failure
+|  +- compile exe mylang debug native cached 8ms MaxRSS:41M
+|  |  +- run exe build-identity (build_identity) cached
+|  |  |  +- compile exe build-identity debug native cached 7ms MaxRSS:37M
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 7ms MaxRSS:38M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check failure
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 5ms
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+

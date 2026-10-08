@@ -1,0 +1,8 @@
+{
+  "source_commit": "061f46aba144c00bf2094fcdada9a2c682696105",
+  "compiler_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fb1/zig-out/bin/mylang",
+  "compiler_sha256": "5ddab7ce39d576615f55676886252e4dbfff863d0d253cc003886a769c7b1a55",
+  "build": "Debug (same verification as baseline)",
+  "ir_sha256": "7232a25ca00d51c16b3cd552ae86859769a3ffb48d7a4f20ed4323708b651d5d",
+  "ir_identical_to_plan_commit": true
+}
