@@ -1,0 +1,116 @@
+[
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 187,
+    "function": "block_alloc",
+    "source": "block->count = 1;"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 386,
+    "function": "retain_block",
+    "source": "if (block->count != MYL_SATURATED) ++block->count;"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 460,
+    "function": "myl_core_free_block",
+    "source": "if (!child || child->count == MYL_SATURATED) continue;"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 461,
+    "function": "myl_core_free_block",
+    "source": "if (child->count == 1) {"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 464,
+    "function": "myl_core_free_block",
+    "source": "} else --child->count;"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 474,
+    "function": "myl_core_release",
+    "source": "if (!block || block->count == MYL_SATURATED) return;"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 475,
+    "function": "myl_core_release",
+    "source": "if (block->count == 1) myl_core_free_block(block);"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 476,
+    "function": "myl_core_release",
+    "source": "else --block->count;"
+  },
+  {
+    "file": "src/core/runtime/core_dict.c",
+    "line": 208,
+    "function": "myl_core_dict_insert",
+    "source": "if (verify && (probe >= 0 || dict->count != 1)) abort();"
+  },
+  {
+    "file": "src/core/runtime/core_dict.c",
+    "line": 312,
+    "function": "myl_core_dict_copy",
+    "source": "if (child && child->count != MYL_SATURATED) ++child->count;"
+  },
+  {
+    "file": "src/core/runtime/core_dict.c",
+    "line": 341,
+    "function": "core_dict_free_pending",
+    "source": "if (!child || child->count == MYL_SATURATED) continue;"
+  },
+  {
+    "file": "src/core/runtime/core_dict.c",
+    "line": 342,
+    "function": "core_dict_free_pending",
+    "source": "if (child->count == 1) {"
+  },
+  {
+    "file": "src/core/runtime/core_dict.c",
+    "line": 345,
+    "function": "core_dict_free_pending",
+    "source": "} else --child->count;"
+  },
+  {
+    "file": "src/core/runtime/core_text.c",
+    "line": 67,
+    "function": "myl_core_str_hash",
+    "source": "if (text->count != MYL_SATURATED) {"
+  },
+  {
+    "file": "src/core/runtime/core_text.c",
+    "line": 102,
+    "function": "myl_core_str_chars",
+    "source": "if (text->count != MYL_SATURATED && scalars <= UINT32_MAX) {"
+  },
+  {
+    "file": "src/core/runtime/core_text.c",
+    "line": 129,
+    "function": "core_cursor_set",
+    "source": "if (text->count == MYL_SATURATED || text->len < 256 || text->len > UINT32_MAX || cursor.scalar > UINT32_MAX) return;"
+  },
+  {
+    "file": "src/core/runtime/core_text.c",
+    "line": 287,
+    "function": "core_text_append_bytes",
+    "source": "if (a->count != 1) myl_core_s2_unsupported(-1);"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 975,
+    "function": "core_io_retain",
+    "source": "static void core_io_retain(myl_block *block) { if(block&&block->count!=MYL_SATURATED)++block->count; }"
+  },
+  {
+    "file": "src/core/runtime/core_bytes.c",
+    "line": 121,
+    "function": "core_buffer_owned",
+    "source": "if (buffer->count == 1) return buffer;"
+  }
+]

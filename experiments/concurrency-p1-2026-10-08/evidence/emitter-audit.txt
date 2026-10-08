@@ -1,0 +1,12 @@
+src/core/verify_ir.zig:472:            .func_ref => if (self.compoundOf(inst.ty, .@"fn")) |sig| inst.data < self.module.functions.items.len and sameSignature(sig, self.module.functions.items[@intCast(inst.data)].signature) and sig.linkage == .internal else false,
+src/core/verify_ir.zig:473:            .call_indirect => if (self.compoundOf(s.a, .@"fn")) |sig| sig.linkage == .internal and inst.ty == sig.ret and self.typesMatch(s.extra, sig.params) else false,
+src/core/emit_llvm.zig:212:const count_load_line = "  {s} = load i32, ptr {s}, align 8, " ++ tbaa_count ++ ", " ++ count_range ++ "\n";
+src/core/emit_llvm.zig:954:            .func_ref => self.functionPointer(@intCast(inst.data)),
+src/core/emit_llvm.zig:994:        try out.print(self.a(), "define {s} fastcc {s} {s}(", .{ self.state.linkage(self.index), try self.state.returnType(f.signature, abi), try self.state.originalSymbol(self.index) });
+src/core/emit_llvm.zig:1820:    fn isUnique(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:1822:        try out.print(self.a(), count_load_line ++ "  {s} = icmp eq i32 {s}, 1\n", .{ count, try self.value(inst.a), name, count });
+src/core/emit_llvm.zig:2900:    fn freeUnique(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
+src/core/emit_llvm.zig:2906:            try out.print(self.a(), count_load_line ++ "  {s} = icmp ne i32 {s}, 1\n", .{ count, block, shared, count });
+src/core/emit_llvm.zig:2941:    fn countBlock(self: *FunctionEmitter, out: *Out, mode: Counting, block: []const u8, block_type: ir.Type) !void {
+src/core/emit_llvm.zig:2961:        try out.print(self.a(), count_load_line, .{ count, block });
+src/core/emit_llvm.zig:3158:    pub fn functionPointer(self: *FunctionEmitter, index: u32) Error![]const u8 {
