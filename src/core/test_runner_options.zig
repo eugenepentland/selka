@@ -66,10 +66,18 @@ pub const Options = struct {
     controls: Controls = .{},
 };
 
-/// Resolve one bounded worker width from --jobs, MYLANG_JOBS or available CPUs.
-pub fn width(controls: Controls, environment: *const std.process.Environ.Map, count: usize) usize {
-    const requested = controls.jobs orelse environmentJobs(environment) orelse (std.Thread.getCpuCount() catch 1);
-    return @min(@max(1, requested), @max(1, count));
+/// Resolve one bounded worker width: --jobs or MYLANG_JOBS when given, else the
+/// available CPUs capped by how many test ceilings (each plus the address-space
+/// headroom) `free` bytes hold, as the old runner sized it from `MemAvailable`
+/// (NEW-CORE-S5-FANOUT-1); never more than `count` and at least one.
+pub fn width(controls: Controls, environment: *const std.process.Environ.Map, count: usize, free: ?u64) usize {
+    return budget.workers(.{
+        .jobs = controls.jobs orelse environmentJobs(environment),
+        .programs = count,
+        .cores = std.Thread.getCpuCount() catch 1,
+        .free = free,
+        .ceiling = controls.ceilings.memory,
+    });
 }
 
 fn environmentJobs(environment: *const std.process.Environ.Map) ?usize {
@@ -83,8 +91,29 @@ test "worker settings honor explicit jobs before environment and bound empty or 
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
     defer environment.deinit();
     try environment.put("MYLANG_JOBS", "8");
-    try std.testing.expectEqual(@as(usize, 2), width(.{ .jobs = 2 }, &environment, 10));
-    try std.testing.expectEqual(@as(usize, 8), width(.{}, &environment, 10));
-    try std.testing.expectEqual(@as(usize, 3), width(.{}, &environment, 3));
-    try std.testing.expectEqual(@as(usize, 1), width(.{}, &environment, 0));
+    try std.testing.expectEqual(@as(usize, 2), width(.{ .jobs = 2 }, &environment, 10, null));
+    try std.testing.expectEqual(@as(usize, 8), width(.{}, &environment, 10, null));
+    try std.testing.expectEqual(@as(usize, 3), width(.{}, &environment, 3, null));
+    try std.testing.expectEqual(@as(usize, 1), width(.{}, &environment, 0, null));
+}
+
+// spec: NEW-CORE-S5-FANOUT-1
+test "without an explicit width, workers are capped by how many test ceilings free memory holds" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    const per_test = budget.test_default + budget.headroom;
+    const cores = std.Thread.getCpuCount() catch 1;
+    // Free memory for one 512 MiB test (plus headroom) runs one at a time; none still runs one.
+    try std.testing.expectEqual(@as(usize, 1), width(.{}, &environment, 64, per_test));
+    try std.testing.expectEqual(@as(usize, 1), width(.{}, &environment, 64, 0));
+    try std.testing.expectEqual(@min(cores, 2), width(.{}, &environment, 64, 2 * per_test + 1));
+    // A smaller per-test ceiling fits more tests in the same memory.
+    var small: Controls = .{};
+    small.ceilings.memory = 0;
+    try std.testing.expectEqual(@min(cores, 6), width(small, &environment, 64, 6 * budget.headroom));
+    // An unreadable MemAvailable leaves the CPU count; an explicit width is not capped.
+    try std.testing.expectEqual(@min(cores, 64), width(.{}, &environment, 64, null));
+    try std.testing.expectEqual(@as(usize, 5), width(.{ .jobs = 5 }, &environment, 64, 0));
+    try environment.put("MYLANG_JOBS", "4");
+    try std.testing.expectEqual(@as(usize, 4), width(.{}, &environment, 64, 0));
 }

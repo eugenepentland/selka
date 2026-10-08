@@ -683,7 +683,7 @@ const Work = struct {
 
 fn executeWorkers(init: std.process.Init, options: Options, program: typed.Program, executable: []const u8, chosen: []Selected, positions: []const usize) Error!void {
     const a = init.arena.allocator();
-    const width = @import("test_runner_options.zig").width(options.controls, init.environ_map, positions.len);
+    const width = @import("test_runner_options.zig").width(options.controls, init.environ_map, positions.len, @import("memory_budget").available(init.io));
     // The pinned Zig arena is thread-safe with Init's thread-safe backing.
     const resources: ExecutionResources = .{ .arena = a, .backing = init.gpa, .io = init.io };
     const work = try a.alloc(Work, positions.len);

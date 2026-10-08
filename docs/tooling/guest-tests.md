@@ -418,7 +418,8 @@ Each root runs as a child `mylang test ROOT --json` with the run's filter,
 budgets, seed, property runs, `--release`, `--verify-facts`/`--no-facts`,
 `--force`, `--affected --against REF` and `--link` inputs. Children share one
 worker budget (NEW-CORE-S4-TEST-1): `--jobs N`, else `MYLANG_JOBS`, else the CPU
-count. At most that many children run at once, in waves, and each child gets
+count capped by how many per-test memory ceilings `MemAvailable` holds
+(NEW-CORE-S5-FANOUT-1). At most that many children run at once, in waves, and each child gets
 the budget divided by the children running beside it for its own builds. They
 share the run's cache directory, so an unchanged program replays its results
 instead of rebuilding.

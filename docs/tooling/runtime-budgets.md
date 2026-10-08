@@ -184,10 +184,11 @@ memory budget exhausted; raise it with --max-memory=SIZE
 
 A directory run (`mylang test suite/`) runs each program's tests in its own
 processes, from one worker budget shared by the whole run: `--jobs N`, else
-`MYLANG_JOBS`, else the CPUs the process may use. It never starts more workers than
-there is work, and zero or non-numeric widths are rejected. Unlike the retired
-runner, the width is not derived from free memory: on a loaded machine, lower
-`--jobs` or the per-test `--max-memory`.
+`MYLANG_JOBS`, else the CPUs the process may use, capped by how many per-test byte
+ceilings (each plus the 256 MiB address-space headroom) the machine's `MemAvailable`
+holds, and at least one. It never starts more workers than there is work, and a zero
+or non-numeric `--jobs` is rejected. An explicit width is not capped by memory: on a
+loaded machine, leave it out, or lower it or the per-test `--max-memory`.
 
 ```console
 $ mylang test suite/ --jobs 4 --max-memory=256M
