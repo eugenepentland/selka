@@ -12,6 +12,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import resource
 import struct
 
 RECIPE_SHA = "38ccedbe6f3ccdf26e275bfcb8d4abd0b189430463e93f44f0213682e49f80ad"
@@ -61,6 +62,19 @@ def argument(argv, flag, default=None):
 def byte_count(value):
     scale = {"k": 1 << 10, "m": 1 << 20, "g": 1 << 30}
     return int(value[:-1]) * scale[value[-1].lower()] if value[-1:].lower() in scale else int(value)
+
+
+def launch_environment(context, inherited):
+    """Let the real CLI produce its host checkpoint; never inject a synthetic one."""
+    expected = context["environment"]
+    actual = keyed_environment(inherited)
+    assert "MYLANG_HOST_LIMIT_CHECKPOINT" not in actual, "inherited checkpoint requires a recipe extension"
+    assert all(name in expected and expected[name] == value for name, value in actual.items()), "unrecorded or differing inherited keyed environment"
+    assert resource.getrlimit(resource.RLIMIT_AS) == (-1, -1), "bounded launch requires a recipe extension"
+    host = byte_count(expected.get("MYLANG_HOST_MEMORY_LIMIT", "8589934592"))
+    assert host > 0
+    assert expected["MYLANG_HOST_LIMIT_CHECKPOINT"] == f"{host + (256 << 20)}:18446744073709551615", "host checkpoint disagrees with actual launch limit"
+    return {**inherited, **{name: value for name, value in expected.items() if name != "MYLANG_HOST_LIMIT_CHECKPOINT"}}
 
 
 def fields(argv, context, compiler_identity):

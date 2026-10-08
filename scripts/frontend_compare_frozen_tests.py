@@ -223,10 +223,7 @@ def main():
         settings_helper.validate_context(settings_context, Path(identity["oracle"]["path"]), compiler,
             frozen_compiler_source, compiler_source)
         assert digest(args.settings_hasher) == settings_context["hasher_sha256"], "settings witness hash mismatch"
-        inherited = settings_helper.keyed_environment(env)
-        assert all(name in settings_context["environment"] and settings_context["environment"][name] == value
-            for name, value in inherited.items()), "unrecorded or differing inherited keyed environment"
-        env.update(settings_context["environment"])
+        env = settings_helper.launch_environment(settings_context, env)
         write(output / "settings-context.json", {"path": str(args.settings_context.resolve()),
             "sha256": digest(args.settings_context), "context": settings_context})
     started = time.monotonic()
@@ -257,6 +254,7 @@ def main():
             "timeout": timeout, "timeout_seconds": 600, "cpu_affinity": sorted(os.sched_getaffinity(0)),
             "leak_environment": {"MYL_CORE_LEAKCHECK": "1"},
             "keyed_environment": settings_helper.keyed_environment(env) if settings_helper else None,
+            "expected_cli_added_keyed_environment": {"MYLANG_HOST_LIMIT_CHECKPOINT": settings_context["environment"]["MYLANG_HOST_LIMIT_CHECKPOINT"]} if settings_context else None,
             "other_build_heavy_processes": heavy,
             "process_sample": {"command": ["ps", "-eo", "pid,ppid,psr,etimes,args"],
                 "elapsed_seconds": sample_elapsed, "returncode": sample.returncode},

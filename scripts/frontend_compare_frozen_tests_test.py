@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import frontend_compare_frozen_tests as gate
 import frontend_compare_settings as settings
@@ -119,6 +120,19 @@ class ImmutableLoader(unittest.TestCase):
 
 
 class SettingsFingerprint(unittest.TestCase):
+    def test_real_cli_produces_checkpoint_and_unproved_limits_are_rejected(self):
+        context = {"environment": {"MYL_CORE_LEAKCHECK": "1", "MYLANG_TIMING_CPUS": "2,3,10,11",
+            "MYLANG_HOST_LIMIT_CHECKPOINT": "8858370048:18446744073709551615"}}
+        with patch.object(settings.resource, "getrlimit", return_value=(-1, -1)):
+            actual = settings.launch_environment(context, {"PATH": "/tools", "MYL_CORE_LEAKCHECK": "1"})
+            self.assertNotIn("MYLANG_HOST_LIMIT_CHECKPOINT", actual)
+            self.assertEqual(actual["MYLANG_TIMING_CPUS"], "2,3,10,11")
+            with self.assertRaisesRegex(AssertionError, "inherited checkpoint"):
+                settings.launch_environment(context, {"MYLANG_HOST_LIMIT_CHECKPOINT": "8858370048:18446744073709551615"})
+        with patch.object(settings.resource, "getrlimit", return_value=(1024, -1)):
+            with self.assertRaisesRegex(AssertionError, "bounded launch"):
+                settings.launch_environment(context, {})
+
     def test_only_a_recomputed_fingerprint_can_be_rekeyed(self):
         report = {"tests": [{"name": "test_value", "status": "passed", "source": "a" * 64,
             "contract": "contract", "provider": "provider", "reason": "", "at": ""}],
