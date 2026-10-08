@@ -40,7 +40,7 @@ def main():
     os.makedirs(work)
     subprocess.run([sys.executable, GEN, str(args.size), project], check=True)
     lines = sum(sum(1 for _ in open(p)) for p in glob.glob(os.path.join(project, "*.my")))
-    check = [args.core, "check", os.path.join(project, "main.my"), "--cache-dir", os.path.join(work, "cache")]
+    check = [args.core, "check", os.path.join(project, "main.my"), "--cache-dir=" + os.path.join(work, "cache")]
     result = {"lines": lines, "core": args.core, "cold_s": round(timed(check), 3)}
     result["unchanged_s"] = round(statistics.median(timed(check) for _ in range(3)), 4)
     edits = []
