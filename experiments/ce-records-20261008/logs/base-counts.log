@@ -1,0 +1,8 @@
+built lox
+built eda
+built parity
+built rows
+lox: 48 cells, 0 not identical or uncounted: []
+eda: 34 cells, 0 not identical or uncounted: []
+parity: 4 cells, 0 not identical or uncounted: []
+rows: 46 cells, 0 not identical or uncounted: []

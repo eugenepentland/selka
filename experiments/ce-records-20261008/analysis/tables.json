@@ -1,0 +1,323 @@
+{
+ "patterns": {
+  "base": {
+   "lox": {
+    "P8": 164082585712,
+    "P13": 751658625,
+    "P6": 19525416,
+    "P7": 101740203960,
+    "P2": 263094688160,
+    "P1": 562224778408,
+    "P5": 27473192176,
+    "P4": 40458612464,
+    "P3": 4673442272,
+    "P9": 112142085499,
+    "P14": 0
+   },
+   "eda": {
+    "P8": 9278336928,
+    "P3": 1745991224,
+    "P6": 1549068880,
+    "P1": 11481740792,
+    "P7": 8380819016,
+    "P11": 592104,
+    "P13": 1007471688,
+    "P2": 6852576720,
+    "P10": 4903960,
+    "P9": 302262840,
+    "P5": 38183880,
+    "P4": 38414856,
+    "P14": 48995942
+   },
+   "parity": {
+    "P3": 42000000896,
+    "P4": 21000000168,
+    "P14": 146905848,
+    "P13": 8003808
+   },
+   "rows": {
+    "P13": 17508992,
+    "P14": 468245711,
+    "P9": 26227200,
+    "P11": 148476,
+    "P1": 363026976
+   }
+  },
+  "step1": {
+   "lox": {
+    "P8": 164082585712,
+    "P13": 752643745,
+    "P6": 19525416,
+    "P7": 101740203960,
+    "P2": 76231050816,
+    "P1": 7046449536,
+    "P5": 27473192176,
+    "P4": 40458612464,
+    "P3": 4673442272,
+    "P9": 112142085499,
+    "P14": 0
+   },
+   "eda": {
+    "P8": 9278336928,
+    "P3": 1745991224,
+    "P6": 1549068880,
+    "P7": 8380819016,
+    "P11": 592645,
+    "P13": 1007471688,
+    "P2": 3989435880,
+    "P1": 3365060216,
+    "P10": 4903960,
+    "P9": 302262840,
+    "P5": 38183880,
+    "P4": 38414856,
+    "P14": 48996484
+   },
+   "parity": {
+    "P3": 42000000896,
+    "P4": 21000000168,
+    "P14": 146905848,
+    "P13": 8003808
+   }
+  },
+  "step2": {
+   "lox": {
+    "P13": 751691393,
+    "P6": 19525416,
+    "P7": 101740203960,
+    "P2": 122312338064,
+    "P8": 3299513040,
+    "P1": 35460168464,
+    "P5": 27473192176,
+    "P4": 27473193320,
+    "P3": 4673442272,
+    "P9": 112142085499,
+    "P14": 0
+   },
+   "eda": {
+    "P8": 7778496,
+    "P3": 1745991224,
+    "P6": 1549068880,
+    "P7": 8380819016,
+    "P11": 592645,
+    "P13": 1007471688,
+    "P1": 3899322128,
+    "P2": 3994743448,
+    "P10": 4903960,
+    "P9": 302262840,
+    "P5": 38183880,
+    "P4": 38183880,
+    "P14": 48996484
+   },
+   "parity": {
+    "P3": 42000000896,
+    "P4": 21000000168,
+    "P14": 146905848,
+    "P13": 8003808
+   }
+  },
+  "step3": {
+   "lox": {
+    "P13": 750806529,
+    "P6": 19525416,
+    "P7": 101740203960,
+    "P2": 104310634288,
+    "P8": 3299513040,
+    "P1": 35460168464,
+    "P5": 27473192176,
+    "P4": 27473193320,
+    "P3": 4673442272,
+    "P9": 112142085499,
+    "P14": 0
+   },
+   "eda": {
+    "P8": 7778496,
+    "P3": 1745991224,
+    "P6": 1549068880,
+    "P7": 8380819016,
+    "P11": 592645,
+    "P13": 1007471688,
+    "P1": 3899322128,
+    "P10": 4903960,
+    "P9": 302262840,
+    "P2": 3990063560,
+    "P5": 38183880,
+    "P4": 38183880,
+    "P14": 48996484
+   },
+   "parity": {
+    "P3": 42000000896,
+    "P4": 21000000168,
+    "P14": 146905848,
+    "P13": 8003808
+   }
+  },
+  "final": {
+   "lox": {
+    "P13": 751027233,
+    "P6": 19525416,
+    "P8": 3299513040,
+    "P7": 5336379592,
+    "P5": 27473192176,
+    "P4": 27473193320,
+    "P3": 4673442272,
+    "P1": 304920,
+    "P2": 7725263800,
+    "P9": 112142085499,
+    "P14": 0
+   },
+   "eda": {
+    "P8": 9453872,
+    "P3": 1745991224,
+    "P6": 1549068880,
+    "P7": 2113542896,
+    "P11": 592645,
+    "P13": 1007471688,
+    "P1": 3100744,
+    "P10": 4903960,
+    "P9": 302262840,
+    "P5": 38183880,
+    "P4": 38183880,
+    "P2": 1367312,
+    "P14": 48996484
+   },
+   "parity": {
+    "P3": 42000000896,
+    "P4": 21000000168,
+    "P14": 146905848,
+    "P13": 8003808
+   },
+   "rows": {
+    "P13": 17508992,
+    "P14": 468245711,
+    "P9": 26227200,
+    "P11": 148476,
+    "P1": 362938368
+   }
+  }
+ },
+ "highlights": {
+  "base": {
+   "lox_vm_fib_dispatches": 7627457,
+   "lox_vm_fib_bytes_per_dispatch": 6393.7610514225125,
+   "lox_vm_fib_record_bytes_per_dispatch": 5893.732148998021,
+   "lox_vm_run_fib_bytes": 44714690448,
+   "eda_rds3_flat_bytes": 3673563854,
+   "eda_rds3_flat_record_bytes": 2035326368,
+   "eda_sexpr_functions_bytes": {
+    "sexpr_tokenizer::advance": 13569568080,
+    "sexpr_parser::parse_list": 5475441544,
+    "sexpr_tokenizer::next": 4275883040,
+    "sexpr_parser::next_token": 3401270600,
+    "sexpr_tokenizer::skip_whitespace_and_comments": 2376595920,
+    "sexpr_tokenizer::next_in": 1645574352,
+    "sexpr_tokenizer::read_atom": 1267576744,
+    "sexpr_parser::parse_node": 1247202544,
+    "sexpr_tokenizer::read_string": 1161748376,
+    "sexpr_tokenizer::read_number": 906152160,
+    "sexpr_parser::parse_inner": 6807472,
+    "sexpr_tokenizer::is_scale_letter": 0,
+    "sexpr_tokenizer::is_unit_letter": 0,
+    "sexpr_tokenizer::is_unit_required_scale": 0
+   },
+   "rows_record_pass_bytes": 363026976
+  },
+  "step1": {
+   "lox_vm_fib_dispatches": 7627457,
+   "lox_vm_fib_bytes_per_dispatch": 1065.7422351905752,
+   "lox_vm_fib_record_bytes_per_dispatch": 565.7133327660845,
+   "lox_vm_run_fib_bytes": 5537534536,
+   "eda_rds3_flat_bytes": 3008936066,
+   "eda_rds3_flat_record_bytes": 1370698568,
+   "eda_sexpr_functions_bytes": {
+    "sexpr_tokenizer::advance": 5427827232,
+    "sexpr_parser::parse_list": 4956469160,
+    "sexpr_tokenizer::next": 4275883040,
+    "sexpr_parser::next_token": 3401270600,
+    "sexpr_tokenizer::skip_whitespace_and_comments": 1792868784,
+    "sexpr_tokenizer::next_in": 1645574352,
+    "sexpr_tokenizer::read_atom": 1267576744,
+    "sexpr_parser::parse_node": 1247202544,
+    "sexpr_tokenizer::read_number": 682034352,
+    "sexpr_tokenizer::read_string": 596475656,
+    "sexpr_parser::parse_inner": 5834976,
+    "sexpr_tokenizer::is_scale_letter": 0,
+    "sexpr_tokenizer::is_unit_letter": 0,
+    "sexpr_tokenizer::is_unit_required_scale": 0
+   },
+   "rows_record_pass_bytes": null
+  },
+  "step2": {
+   "lox_vm_fib_dispatches": 7627457,
+   "lox_vm_fib_bytes_per_dispatch": 806.3989505283347,
+   "lox_vm_fib_record_bytes_per_dispatch": 410.3709553524851,
+   "lox_vm_run_fib_bytes": 3890003944,
+   "eda_rds3_flat_bytes": 2537151594,
+   "eda_rds3_flat_record_bytes": 898934304,
+   "eda_sexpr_functions_bytes": {
+    "sexpr_tokenizer::advance": 5427827232,
+    "sexpr_tokenizer::next": 2526658160,
+    "sexpr_tokenizer::skip_whitespace_and_comments": 1792868784,
+    "sexpr_parser::parse_list": 1315904496,
+    "sexpr_tokenizer::read_atom": 1267576744,
+    "sexpr_parser::next_token": 1166149920,
+    "sexpr_tokenizer::next_in": 1074910088,
+    "sexpr_parser::parse_node": 803175968,
+    "sexpr_tokenizer::read_number": 682034352,
+    "sexpr_tokenizer::read_string": 596475656,
+    "sexpr_parser::parse_inner": 903032,
+    "sexpr_tokenizer::is_scale_letter": 0,
+    "sexpr_tokenizer::is_unit_letter": 0,
+    "sexpr_tokenizer::is_unit_required_scale": 0
+   },
+   "rows_record_pass_bytes": null
+  },
+  "step3": {
+   "lox_vm_fib_dispatches": 7627457,
+   "lox_vm_fib_bytes_per_dispatch": 806.395017369485,
+   "lox_vm_fib_record_bytes_per_dispatch": 410.3670221936354,
+   "lox_vm_run_fib_bytes": 3890003944,
+   "eda_rds3_flat_bytes": 2536746554,
+   "eda_rds3_flat_record_bytes": 898529264,
+   "eda_sexpr_functions_bytes": {
+    "sexpr_tokenizer::advance": 5427827232,
+    "sexpr_tokenizer::next": 2526658160,
+    "sexpr_tokenizer::skip_whitespace_and_comments": 1792868784,
+    "sexpr_parser::parse_list": 1315904496,
+    "sexpr_tokenizer::read_atom": 1267576744,
+    "sexpr_parser::next_token": 1166149920,
+    "sexpr_tokenizer::next_in": 1074910088,
+    "sexpr_parser::parse_node": 803175968,
+    "sexpr_tokenizer::read_number": 682034352,
+    "sexpr_tokenizer::read_string": 596475656,
+    "sexpr_parser::parse_inner": 903032,
+    "sexpr_tokenizer::is_scale_letter": 0,
+    "sexpr_tokenizer::is_unit_letter": 0,
+    "sexpr_tokenizer::is_unit_required_scale": 0
+   },
+   "rows_record_pass_bytes": null
+  },
+  "final": {
+   "lox_vm_fib_dispatches": 7627457,
+   "lox_vm_fib_bytes_per_dispatch": 448.03784118350325,
+   "lox_vm_fib_record_bytes_per_dispatch": 52.009846007653664,
+   "lox_vm_run_fib_bytes": 2908603768,
+   "eda_rds3_flat_bytes": 1752998122,
+   "eda_rds3_flat_record_bytes": 114780832,
+   "eda_sexpr_functions_bytes": {
+    "sexpr_tokenizer::next": 583074960,
+    "sexpr_tokenizer::next_in": 491835128,
+    "sexpr_parser::next_token": 485895800,
+    "sexpr_parser::parse_list": 476313632,
+    "sexpr_parser::parse_node": 283717336,
+    "sexpr_tokenizer::read_atom": 136953400,
+    "sexpr_tokenizer::read_number": 88148640,
+    "sexpr_tokenizer::read_string": 31433240,
+    "sexpr_parser::parse_inner": 416784,
+    "sexpr_tokenizer::is_scale_letter": 0,
+    "sexpr_tokenizer::is_unit_letter": 0,
+    "sexpr_tokenizer::is_unit_required_scale": 0
+   },
+   "rows_record_pass_bytes": 362938368
+  }
+ }
+}

@@ -1,0 +1,203 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 3 after 75s (all 3 build slot(s) busy)
+test-core
++- run test w
+guardian/test: 57 test(s) selected [shard 0/8 of 449]
+guardian/test: test wall 14.24s; slowest over 50ms:
+guardian/test:   2.60s  driver_cache_test.test.a --link build reuses its C object and program while the source and headers keep their bytes
+guardian/test:   2.57s  e2e_test.test.the S0 compute kernels give the old core's checksums at 4096 and 64 elements, debug and release
+guardian/test:   1.09s  runner_property_test.test.S3 runner generated records and recursive inputs pass with fresh capability state
+guardian/test:   0.94s  value_e2e_test.test.str == and != compare bytes, inside records, unions and lists, as the old core does
+guardian/test:   0.84s  value_e2e_test.test.== and != compare records, unions, Option and lists of scalars structurally
+guardian/test:   0.69s  value_e2e_test.test.fixed arrays of Stream, Host and Filesystem as locals, fields, payloads and mut parameters print and exit as the old core does
+guardian/test:   0.62s  emit_units_test.test.S4 unsafe leaf arithmetic retains its source callee and caller
+guardian/test:   0.59s  value_e2e_test.test.f-strings, str(x), concatenation and join build the old core's text, with nothing leaked
+guardian/test:   0.53s  dict_test.test.a probe scans an index-less table's cached hashes inline, and a table that lost an entry asks the runtime, as the old core answers
+guardian/test:   0.41s  cap_test.test.Core built-in Environment reads preserve explicit allowlists without restrict
+guardian/test: PASS — 57 passed
+guardian/test: RESULT {"passed":57,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/770a364d6a77a58cd6f196c3bc2ce04d/test --guardian-shard=0/8 --cache-dir=./.zig-cache --seed=0x55265a90 --listen=-
+
+test-core
++- run test w
+guardian/test: 56 test(s) selected [shard 5/8 of 449]
+guardian/test: test wall 15.32s; slowest over 50ms:
+guardian/test:   3.19s  cli_flags_test.test.report prints the cache report as one JSON line and says when a build replayed
+guardian/test:   3.15s  driver_cache_test.test.a cold build compiles the runtime without debug info, cache-line aligned, and links the prebuilt number object
+guardian/test:   1.46s  own_test.test.the allocator reuses a freed small block for its class, fills small lists to their class and keeps the live count exact
+guardian/test:   1.15s  value_e2e_test.test.xs.sort() and sorted(xs) of integers, floats and text give the old core's order: stable, NaN last, signed zeros tied, no leak
+guardian/test:   0.79s  value_e2e_test.test.records and unions over four words that hold lists print what the old core prints
+guardian/test:   0.68s  e2e_test.test.an overflow or bounds failure flushes stdout, reports like the old core and exits 1
+guardian/test:   0.66s  value_e2e_test.test.mut parameters of lists and records write their final values back to the caller as the old core does
+guardian/test:   0.52s  test_runner_project_test.test.native test step and wall bounds are honored while force bypasses reuse
+guardian/test:   0.52s  value_e2e_test.test.len of a string counts scalars, clear and copy keep value semantics, and keyword calls evaluate in source order
+guardian/test:   0.48s  tool_identity.test.closure approval refuses unknown static executables and unknown library contents
+guardian/test: PASS — 56 passed
+guardian/test: RESULT {"passed":56,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/770a364d6a77a58cd6f196c3bc2ce04d/test --guardian-shard=5/8 --cache-dir=./.zig-cache --seed=0x55265a90 --listen=-
+
+test-core
++- run test 55 pass, 393 skip, 1 fail (449 total)
+no_such_file_in_tests_lang (debug): mylang-core test did not finish cleanly:
+mylang test: cannot read '/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/tests/lang/no_such_file_in_tests_lang.my': no such file or directory
+
+guardian/test: test wall 17.23s; slowest over 50ms:
+guardian/test:   3.09s  frontend_test.test.frontend durable typed body reuse with fact summaries preserves trees after one edit
+guardian/test:   2.39s  test_runner_project_test.test.runSelected and expectedResult malformed typed cases fail individually and never become cached successes
+guardian/test:   1.74s  value_e2e_test.test.unit arguments, i16 and u8 ranges and float-to-int truncation print what the old core prints, and the last conversion traps
+guardian/test:   1.54s  dict_scalar_store_test.test.scalar dictionary stores preserve snapshots, indexed tombstones, bool, unit, narrow integers and float NaNs in every mode
+guardian/test:   0.95s  value_e2e_test.test.with arena() blocks, escape, break and continue out of them print what the old core prints
+guardian/test:   0.67s  value_emit_test.test.a record over four words is a pointer to a stack slot: never an LLVM aggregate, read in place and returned through sret
+guardian/test:   0.63s  fuse_text_scalar_test.test.scalar fusion emitter guards empty end and extreme manual width offsets in every native mode
+guardian/test:   0.63s  environment_names_test.test.Core Environment names come from grants rather than the linked provider context
+guardian/test:   0.55s  value_e2e_test.test.while True has no exit edge: only break and return leave it, and the function needs no return after it
+guardian/test:   0.49s  emit_units_test.test.S4 consuming CFG clones retain exact callee and original call frames
+guardian/test: FAIL — 1 failed of 56
+guardian/test: RESULT {"passed":55,"failed":1,"skipped":0}
+error: 'value_emit_test.test.a record over four words is a pointer to a stack slot: never an LLVM aggregate, read in place and returned through sret' failed:
+       guardian/test: 56 test(s) selected [shard 1/8 of 449]
+       expected 2, found 1
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x18c26c9 in expectEqualInner__anon_165497 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x28b7449 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/src/core/value_emit_test.zig:68:5: 0x28b74d4 in test.a record over four words is a pointer to a stack slot: never an LLVM aggregate, read in place and returned through sret (root_test.zig)
+           try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, widen, "@llvm.memcpy"));
+           ^
+failed command: ./.zig-cache/o/770a364d6a77a58cd6f196c3bc2ce04d/test --guardian-shard=1/8 --cache-dir=./.zig-cache --seed=0x55265a90 --listen=-
+
+test-core
++- run test w
+guardian/test: 56 test(s) selected [shard 3/8 of 449]
+no_such_row: the new core failed to build the row:
+mylang build: cannot read '/home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/test/core/row_no_such_row.my': no such file or directory
+
+guardian/test: SLOW  5.11s  s3_number_test.test.S3 numeric text and S4 nested values match at every core level
+guardian/test: test wall 20.76s; slowest over 50ms:
+guardian/test:   5.11s  s3_number_test.test.S3 numeric text and S4 nested values match at every core level
+guardian/test:   3.05s  frontend_test.test.frontend reuse still diagnoses a changed imported signature exactly as fresh checking
+guardian/test:   1.85s  value_e2e_test.test.unions, Option, Result with ?, enums and recursive boxed values print what the old core prints
+guardian/test:   1.84s  dict_test.test.dictionary and set fixtures preserve COW, order, tombstones, nested managed places and missing-key traps
+guardian/test:   1.46s  value_e2e_test.test.an assert whose message is a computed str prints it on its own stderr line, then traps R_ASSERT without a message
+guardian/test:   1.03s  e2e_test.test.the multi-kind compute program, dispatching on an invariant kind per element, matches the old core at debug and release
+guardian/test:   0.59s  e2e_test.test.the control-flow program prints and exits like the old core at debug and release
+guardian/test:   0.58s  value_e2e_test.test.appends and writes to elements of lists of lists and records print what the old core prints
+guardian/test:   0.57s  own_test.test.a field read after its record was consumed by an earlier update stays borrowed, so a snapshot keeps the old list
+guardian/test:   0.48s  own_test.test.a field read finished before the read that takes the field does not stop the take, and a read still in use does
+guardian/test: PASS — 56 passed
+guardian/test: RESULT {"passed":56,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/770a364d6a77a58cd6f196c3bc2ce04d/test --guardian-shard=3/8 --cache-dir=./.zig-cache --seed=0x55265a90 --listen=-
+
+test-core
++- run test w
+guardian/test: 56 test(s) selected [shard 6/8 of 449]
+guardian/test: SLOW  7.19s  value_e2e_test.test.the value fixtures end with no block live under MYL_CORE_LEAKCHECK=1, debug and release
+guardian/test: test wall 23.98s; slowest over 50ms:
+guardian/test:   7.19s  value_e2e_test.test.the value fixtures end with no block live under MYL_CORE_LEAKCHECK=1, debug and release
+guardian/test:   4.95s  own_test.test.every test/core program ends with no block live under MYL_CORE_LEAKCHECK=1, debug and release
+guardian/test:   3.25s  cli_flags_test.test.timings print the program's run time without changing its status, output or trap
+guardian/test:   1.65s  s3_none_keys_test.test.None dictionary keys preserve evaluation storage hashing mutation snapshots and exact missing-key traps
+guardian/test:   1.01s  value_e2e_test.test.whole mut collection and record rebinding writes the final value back while preserving source snapshots
+guardian/test:   0.75s  iteration_test.test.live iteration refreshes shared elements, appends, mut callees and record fields while root rebinding snapshots
+guardian/test:   0.58s  driver_cache_test.test.an unchanged release build starts no process, and a replay follows a reverted edit
+guardian/test:   0.48s  value_e2e_test.test.a write through a narrowed Option (xs.append, xs[i] = v after `is None` returns) reaches the Option the caller holds
+guardian/test:   0.48s  e2e_test.test.a negative index past the start traps with the index the program wrote, in debug and release
+guardian/test:   0.43s  value_e2e_test.test.len of a dictionary's keys or values view is an int, and a program may return it
+guardian/test: PASS — 56 passed
+guardian/test: RESULT {"passed":56,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/770a364d6a77a58cd6f196c3bc2ce04d/test --guardian-shard=6/8 --cache-dir=./.zig-cache --seed=0x55265a90 --listen=-
+
+test-core
++- run test w
+guardian/test: 56 test(s) selected [shard 2/8 of 449]
+guardian/test: SLOW  9.46s  runner_property_test.test.S3 runner retries a native signal or silent exit with old batch counts
+guardian/test: test wall 28.65s; slowest over 50ms:
+guardian/test:   9.46s  runner_property_test.test.S3 runner retries a native signal or silent exit with old batch counts
+guardian/test:   3.86s  rows_test.test.the S1 row programs that build give the original benchmarks' checksums, and the built count does not shrink
+guardian/test:   3.16s  value_e2e_test.test.pop of an empty list and a list_set past the end trap R_LIST_BOUNDS like the old core, with its pop and index details
+guardian/test:   3.05s  frontend_test.test.frontend validation stands in summaries without hydrating trees needed by later builds
+guardian/test:   1.64s  s3_values_test.test.S3 values preserve source shapes unit payloads marker data and ancestor supersession
+guardian/test:   0.85s  value_e2e_test.test.a failed assert traps R_ASSERT with its message at the condition, flushing the output before it, at every level
+guardian/test:   0.81s  text_test.test.remaining text methods preserve exact scalar and octet semantics with checked failures in every mode
+guardian/test:   0.70s  e2e_test.test.binary_search's widened intervals and length bounds hold at run time, and wrong widening or length rules are caught
+guardian/test:   0.65s  value_e2e_test.test.records: construction, nested field writes, narrow fields and enums print what the old core prints
+guardian/test:   0.52s  fuse_text_scalar_test.test.scalar fusion emitter guards empty end and extreme manual code offsets in every native mode
+guardian/test: PASS — 56 passed
+guardian/test: RESULT {"passed":56,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/770a364d6a77a58cd6f196c3bc2ce04d/test --guardian-shard=2/8 --cache-dir=./.zig-cache --seed=0x55265a90 --listen=-
+
+test-core
++- run test 55 pass, 393 skip, 1 fail (449 total)
+guardian/test: SLOW  16.91s  driver_native_cache_test.test.linkNative observes same-size foreign header edits with restored mtime in actual debug and release Core builds
+guardian/test: test wall 32.95s; slowest over 50ms:
+guardian/test:   16.91s  driver_native_cache_test.test.linkNative observes same-size foreign header edits with restored mtime in actual debug and release Core builds
+guardian/test:   3.46s  count_test.test.a counting build records copies, count updates, uniqueness tests and memory, and prints what an ordinary build prints
+guardian/test:   3.26s  driver_cache_test.test.an unchanged build replays, a lost record reuses every object and the program, and an edit compiles one unit
+guardian/test:   0.95s  value_e2e_test.test.a list a loop rewrites keeps the hull of what it was given and what is written: remainders and bounds are proven, a doubling loop still traps
+guardian/test:   0.95s  text_test.test.private split dictionary keys preserve whitespace, UTF8, source snapshots, insertion ownership and captured dictionaries
+guardian/test:   0.85s  own_test.test.the runtime frees a list-of-lists chain a million deep without recursion, copies retain children, and a saturated count never changes
+guardian/test:   0.80s  dict_test.test.unknown dictionary inputs settle through copy and updates before loop joins
+guardian/test:   0.71s  cli_flags_test.test.no-cache builds runs and tests through a private cache it removes and publishes nothing
+guardian/test:   0.71s  emit_llvm_test.test.unmanaged undef memory phis leave their undefined edge alone without copying from poison
+guardian/test:   0.57s  value_e2e_test.test.element writes, pop, writes through record fields and matches on union elements print what the old core prints
+guardian/test: FAIL — 1 failed of 56
+guardian/test: RESULT {"passed":55,"failed":1,"skipped":0}
+error: 'emit_llvm_test.test.unmanaged undef memory phis leave their undefined edge alone without copying from poison' failed:
+       guardian/test: 56 test(s) selected [shard 4/8 of 449]
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x145f079 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/claude-ce-records/src/core/emit_llvm_test.zig:113:5: 0x29b1842 in test.unmanaged undef memory phis leave their undefined edge alone without copying from poison (root_test.zig)
+           try std.testing.expect(std.mem.indexOf(u8, text, "call void @llvm.memmove.p0.p0.i64") != null);
+           ^
+failed command: ./.zig-cache/o/770a364d6a77a58cd6f196c3bc2ce04d/test --guardian-shard=4/8 --cache-dir=./.zig-cache --seed=0x55265a90 --listen=-
+
+test-core
++- run test w
+guardian/test: 56 test(s) selected [shard 7/8 of 449]
+guardian/test: SLOW  6.31s  driver_cache_test.test.verify-cache recompiles served units, damaged entries are rebuilt, and forged ones are refused
+guardian/test: SLOW  18.59s  conformance_test.test.the pinned S1 and Wave A conformance list passes at debug and release
+guardian/test: test wall 35.57s; slowest over 50ms:
+guardian/test:   18.59s  conformance_test.test.the pinned S1 and Wave A conformance list passes at debug and release
+guardian/test:   6.31s  driver_cache_test.test.verify-cache recompiles served units, damaged entries are rebuilt, and forged ones are refused
+guardian/test:   1.70s  s3_list_methods_test.test.list search splice and stepped slices preserve snapshots owned children and exact failures
+guardian/test:   1.05s  value_e2e_test.test.records and unions over four words, in loops, lists, boxes and calls, print what the old core prints
+guardian/test:   0.80s  fuse_text_scalar_test.test.scalar fusion native modes preserve Unicode bounds aliases escaping uses and exact failures
+guardian/test:   0.80s  value_e2e_test.test.a main that returns an Err reports it with the old core's error return trace: created, returned, propagated
+guardian/test:   0.79s  test_runner_project_test.test.a test's call depth is bounded by --max-frames, 1024 by default, on a stack mapped for the whole budget
+guardian/test:   0.57s  value_e2e_test.test.a read through a receiver captured before an argument wrote its place sees the receiver as it was
+guardian/test:   0.51s  text_test.test.text and bytes preserve Unicode scalars, empty pieces, shared appends and byte XOR at every core mode
+guardian/test:   0.49s  value_e2e_test.test.a list of None holds its length: append, write, read, pop, iteration, copies and equality match the old core
+guardian/test: PASS — 56 passed
+guardian/test: RESULT {"passed":56,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/770a364d6a77a58cd6f196c3bc2ce04d/test --guardian-shard=7/8 --cache-dir=./.zig-cache --seed=0x55265a90 --listen=-
+
+Build Summary: 12/15 steps succeeded (2 failed); 447/3592 tests passed (3143 skipped, 2 failed)
+test-core transitive failure
++- run test 57 pass, 392 skip (449 total) 14s MaxRSS:73M
+|  +- compile test debug native success 2s MaxRSS:422M
+|     +- run exe build-identity (build_identity) cached
+|     |  +- compile exe build-identity debug native cached 6ms MaxRSS:38M
+|     +- options success
+|     |  +- compile exe mylang debug native cached 7ms MaxRSS:41M
+|     |     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|     |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:39M
+|     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
++- run test 55 pass, 393 skip, 1 fail (449 total)
+|  +- compile test debug native (+3 more reused dependencies)
++- run test 56 pass, 393 skip (449 total) 28s MaxRSS:94M
+|  +- compile test debug native (+3 more reused dependencies)
++- run test 56 pass, 393 skip (449 total) 20s MaxRSS:96M
+|  +- compile test debug native (+3 more reused dependencies)
++- run test 55 pass, 393 skip, 1 fail (449 total)
+|  +- compile test debug native (+3 more reused dependencies)
++- run test 56 pass, 393 skip (449 total) 15s MaxRSS:193M
+|  +- compile test debug native (+3 more reused dependencies)
++- run test 56 pass, 393 skip (449 total) 24s MaxRSS:92M
+|  +- compile test debug native (+3 more reused dependencies)
++- run test 56 pass, 393 skip (449 total) 35s MaxRSS:157M
+   +- compile test debug native (+3 more reused dependencies)
+
