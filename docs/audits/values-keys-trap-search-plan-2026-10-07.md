@@ -98,7 +98,9 @@ retargeted exit.
 
 **After F4, after the user's go:** the V wave, on `codex/vk-tables`.
 
-**After VP3's data and the user's go:** O1, on `codex/vk-static-ownership`.
+**The CE wave (§4.5) runs now (2026-10-08).** Claude agents run it at the user's request:
+CE-A on `claude/ce-records` and CE-B on `claude/ce-lists`, integrated on
+`claude/copy-elim`. It replaces the O wave, which VP3's data ruled out.
 
 ## 1. Where it starts
 
@@ -178,7 +180,7 @@ The semantics are unchanged.
 | # | Decision | Decided by |
 |---|---|---|
 | **VK11** | Open files, sockets and directory handles become keys handed out by their capability (§3.9) | V2's inventory, after V1 |
-| **VK12** | Static ownership replaces one-count RC in the core | O1's numbers against the rule in §4.5, written before O1 runs |
+| **VK12** | Static ownership replaces one-count RC in the core | **Decided by VP3 (2026-10-08): no.** The rows net 0.47% (threshold 3%); EDA −15%; Lox ×4.9 instructions. The CE wave (§4.5) replaces the O wave. |
 | **VK13** | Shrink the path-sensitive `Result` rules (`E_RESULT_PATH`, `E_RESULT_OVERWRITE`, `E_RESULT_LOOP`, `E_RESULT_CONSUMED`) to one local rule, "a `Result` must be used" | Only if T3's failure injection is in place and the idiom suite shows friction from those rules |
 | **VK14** | Remove inline structural requirements too, beyond A15 | A typed count of their uses. Not in this plan's packages |
 | **VK15** | Merge `byte_buffer` into `bytes`, and drop B7's `byte_buffer` lint | Only if VK12 adopts static ownership, which makes `s += x` append in place |
@@ -434,6 +436,9 @@ run reports nothing. The setting is `"trap_coverage": "gate" | "report" | "off"`
   FB1's report and `dump-ir` confirm it on the migrated examples.
 
 ### 3.8 Static ownership (O wave, VK12)
+
+**Not adopted (VP3, 2026-10-08).** This section is kept as the design that was
+measured; §4.5 has the data and the CE wave that replaced it.
 
 The meaning is unchanged: value semantics. Only the implementation in the core changes:
 - **One owner per buffer.** It is freed at its last use, on each control-flow edge where it
@@ -725,43 +730,121 @@ implement §3.9.
 §3.10, with tests for the generated walk, the root check's error, and Lox's environments as
 the acceptance case.
 
-### 4.5 O wave: static ownership, decided by data (after S5 and VP3)
+### 4.5 CE wave: copy elimination (replaces the O wave, 2026-10-08)
 
-#### O1. Prototype behind `--ownership=static` (about 20–30 h)
+**VP3 decided VK12: static ownership is not prototyped.** By the rule the O wave carried:
+- the rows' geomean net saving is 0.47% (the threshold is 3%);
+- EDA loses 15% and Lox about 5× in instructions, because RC's shares of large records
+  would become copies.
+
+The O wave is dropped, and one-count RC stays the memory model. VP3 also found what the
+cost actually is: copying, at 2.4–7.5 bytes per instruction retired, not counting. The CE
+wave removes it.
+
+**Who and where.** Claude agents run the wave at the user's request (2026-10-08):
+- two lanes, each branched from `claude/copy-elim` (VP3's tip plus this plan change);
+- the coordinator integrates and gates them.
+
+Both lanes change `src/core/` only, never a front-end file, so they never touch the
+front-end waves' files.
+
+**Measurement.** VP3's counters (`--counters`, `mylang cost --counters`) and its tools in
+`experiments/vk-vp3-20261008/tools/`, run on VP3's programs at VP3's sizes. Each lane
+reports bytes moved per pattern, before (VP3's numbers) and after.
+
+#### CE-A. Records in the emitter (about 12–20 h)
+
+**Targets.** P1, P8, P2 and P7: 54% of bytes moved, 85% of Lox's and 88% of EDA's (VP3
+report).
+
+**What**, in this order, running the counters after each step:
+1. **P1, phi fills.** Coalesce memory-phi slots with incoming slots that die on the edge,
+   and give loop-carried memory records one home slot (`analyzeMemory`,
+   `fillMemoryPhis`).
+2. **P8, copies out of a containing record.** Read fields of memory records through a
+   pointer projection when the source outlives the use (`record_get`, `union_payload`, the
+   field loads in `countedMemory`).
+3. **P2, whole-record copies before a field store.** Update a memory record in place when
+   its old version has no later reader. This extends `writableInPlace` from "made in this
+   block" to liveness, including `mut` parameters and phis.
+4. **P7, `sret` returns and `mut` copy-in/copy-out.** Pass `mut` records larger than four
+   words by reference, and build returned records in the caller's destination.
+
+**Owns:** the memory-record paths of `src/core/emit_llvm.zig` (`analyzeMemory`,
+`fillMemoryPhis`, `countedMemory`, `writableInPlace`, record and union operations, calls,
+returns and parameter passing), and any liveness helper they need.
+
+**Exit:**
+- P1+P2+P7+P8 bytes moved down by at least 50% on Lox and on EDA, with actuals per pattern;
+- no other pattern up;
+- the CE gates below.
+
+#### CE-B. Lists, copy-on-write, slices and appends (about 10–16 h)
+
+**Targets:**
+- P3/P4/P5, whole-element list access: all of nbody, and the Lox VM frame;
+- P9, whole-list copy-on-write: Lox `instantiation`, which is quadratic;
+- the `for` loop over a slice: EDA `overlaps_of`, 38% of rds3+flat's bytes;
+- `str_build`'s out-of-line appends.
 
 **What:**
-- §3.8 in the core, behind a flag;
-- the header layout is unchanged in the prototype; header bytes saved are computed from
-  the allocation counts and reported separately;
-- the differential fuzz against one-count RC.
+1. **Field-level element access.**
+   - `xs[i].f` reads lower to `list_get_field`.
+   - `xs[i].f = v` stores the field in place after the uniqueness test.
+   - `xs[i] = v` releases the old element's fields in place and stores from `v`'s slot.
+2. **Copy-on-write narrowing in `own.zig`.**
+   - Promote only the element read, not the list read.
+   - End a write-back temporary (`__wb_N = it.rt … it.rt = __wb_N`) before the element
+     store, so the store finds the list unique.
+3. **Slices used only as a loop source.** Iterate the source list by index instead of
+   materializing the slice, and give a materialized slice its exact capacity. This is a
+   Core IR rewrite, not a front-end change.
+4. **Buffer appends.** An inline fast path for `append_range`, with the checked call as the
+   slow path.
 
-**Owns:** `src/core/` ownership and emission, and the runtime's count operations under the
-flag.
+**Owns:**
+- `src/core/own.zig`;
+- the Core IR rewrites for element access and slice loops;
+- the list operations' emitters in `emit_llvm.zig`: `list_get`, `list_set`,
+  `list_get_field`, `list_push`, and any new element-field store;
+- the runtime's buffer append.
 
-**Exit:** the comparison over the 46 rows, Lox and EDA:
-- instructions, cycles and peak RSS;
-- copies and bytes copied;
-- check and build time.
+**Exit:**
+- nbody P3+P4 bytes down at least 90%;
+- Lox `instantiation` linear in N on both engines, with P9 bytes down at least 90%;
+- EDA `overlaps_of` bytes down at least 90%;
+- no out-of-line append calls left in `str_build`'s hot loop;
+- the CE gates below.
 
-#### O2. Decision (VK12). Written now; the user may edit it before O1 starts.
+**A shared file.** Both lanes edit `emit_llvm.zig`, in different functions. A lane that has
+to change a function the other lane owns makes the smallest change it can and says so in
+its report. The coordinator resolves it at the merge.
 
-Adopt static ownership only if all of these hold:
-1. no wrong answer in the differential fuzz or the corpora;
-2. retired instructions, geomean over the 46 rows, at most 0.97× one-count RC;
-3. no row above 1.10×;
-4. median peak RSS at most RC's, with header savings counted;
-5. Lox and EDA benchmark wall time at most 1.00× RC, and both test suites green;
-6. check and build time within 5%.
+#### CE-X. Integration and measurement (coordinator; about 3–5 h)
 
-If it fails, keep one-count RC, and keep any O1 analysis that elides RC operations.
+- **Merges:** CE-B, then CE-A, into `claude/copy-elim`, qualifying after each.
+- **Counters** on all of VP3's programs: bytes moved per pattern, before and after.
+- **Wall time**, interleaved, on CPU 10 under its lock, medians of three runs, against the
+  VP3 base (`65a14aeb`) built the same way:
+  - Lox, both engines;
+  - EDA, all 34 designs;
+  - the 27 parity programs;
+  - the 46 rows.
+- **Exit:**
+  - every CE gate;
+  - no row slower than 1.03× the base beyond noise;
+  - a report with the before/after tables.
 
-#### O3. Adoption (only if O2 passes; about 15–25 h)
+#### CE gates
 
-- static ownership becomes the default;
-- the RC paths and the count word are deleted;
-- `W_HIDDEN_COPY` reports copies only;
-- VK15 is decided on its data;
-- tables are supported in the static mode.
+A wrong answer is never acceptable. Every lane and every merge passes:
+- `zig build` (Guardian), `zig build test --summary all` and `zig build fmt-check`;
+- conformance against the frozen S5 references in debug and release, with leak and fact
+  verification: 1518/0/0 (`experiments/new-core-s5-20261007/tools/`);
+- the frozen fuzz matrix, 9×50 per lane and per merge, and 9×200 at CE-X;
+- Lox conformance 974/974 and its tests; EDA 34/34 goldens and 310 tests; parity output
+  equal to `.expected`;
+- the same output with counting on and off.
 
 ### 4.6 C1. Trap containment design note (about 2–3 h; with D9 stage 5 planning)
 
@@ -784,7 +867,7 @@ The same mechanism serves tasks.
 | Amendments | AM1–AM3, applied to the front-end plan's F1 and F2 on 2026-10-07 | — | counted in the front-end plan: F1 17–24 h, F2 13–18 h |
 | T | T1, then T1-R (stop), then T2 and T3; T4 after V1 | the front-end F1 exit and the user's go | 26–40 h |
 | V | V1, then V2 (inventory and stop), V3, and V4 if needed; T4 | F4's exit and the user's go | 28–42 h, plus 6–10 h for V4 if VP1 calls for it |
-| O | O1, then O2 (stop), then O3 if it passes | S5, VP3, and the user's go | 35–55 h |
+| CE | CE-A and CE-B in parallel, then CE-X | VP3 (done 2026-10-08) and the user's go (given) | 25–41 h |
 | C | C1 | concurrency planning | 2–3 h |
 
 The T wave runs beside F2–F4 because it owns different files (the runner, the generator,
