@@ -1,6 +1,6 @@
 # Structured concurrency, phase 1: packages P1 and P2, 2026-10-08
 
-Status: **P1 is ready for Codex.** P2 is fully specified here, but it starts only after the front-end plan's F4 exit and the user's go (§6).
+Status: **P1 stopped during P1-0 under §9:** the emitted uniqueness count load needs an atomic-read change outside §5's emitter scope; see [the P1 report](../../experiments/concurrency-p1-2026-10-08/REPORT.md). P1 is not implemented or qualified. P2 is fully specified here, but it starts only after the front-end plan's F4 exit and the user's go (§6).
 - **Decisions:** C1–C7, accepted by the user on 2026-10-08 (§2).
 - **What it delivers:** CPU fork/join parallelism. `parallel.map` and task groups run on a work-stealing pool of OS threads. Only values that cross into a task get atomic counts.
 - **Size (estimates):** P1 about 25–40 h; P2 about 30–45 h. Each package ends with a stop for the user.
