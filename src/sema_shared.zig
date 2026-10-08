@@ -42,7 +42,6 @@ pub const eCellEquality = "E_CELL_EQUALITY";
 /// methods and the `is None` test report the same code.
 pub const eOptionTest = "E_OPTION_TEST";
 pub const bufferOperation = "buffer_operation";
-pub const eArenaBinding = "E_ARENA_BINDING";
 pub const eEnvironmentName = "E_ENVIRONMENT_NAME";
 pub const eWithResource = "E_WITH_RESOURCE";
 pub const lambda_context_code = "E_LAMBDA_CONTEXT";

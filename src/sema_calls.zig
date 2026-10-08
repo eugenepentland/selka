@@ -26,7 +26,6 @@ const typed = @import("typed.zig");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const Error = diagnostic.Error;
-const eArenaBinding = sema_shared.eArenaBinding;
 const prelude = @import("prelude.zig");
 const markerPositionDeclared = sema_shared.markerPositionDeclared;
 const eEnvironmentName = sema_shared.eEnvironmentName;
@@ -227,11 +226,6 @@ fn checkName(comptime Checker: type, self: *Checker, node: ast.Node, name: @Fiel
             return;
         }
     }
-    for (self.arenas.items) |scope| if (std.mem.eql(u8, scope.name, self.src.text(name))) return self.sink.fail(
-        eArenaBinding,
-        name,
-        "an arena binding is opaque; it cannot be stored, passed, returned or compared, and its only operation is `escape(value)`",
-    );
     if (self.active.get(self.src.text(name))) |bound| if (self.locals.items[@backingInt(bound)].ty.isFile()) return self.sink.fail(
         eWithResource,
         name,

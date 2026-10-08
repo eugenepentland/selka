@@ -190,12 +190,10 @@ fn repeatAssignment(comptime Checker: type, self: *Checker, slot: typed.LocalId,
     const b: collections.Builder(Checker) = .{ .checker = self, .span = a.op_span };
     const product = try b.node(target_type, (try repetition.build(Checker, self, a.op_span, .{ .sequence = try b.read(slot), .count = count, .count_first = false })).data);
     if (self.catalog.records[target_type.recordIndex()].collection.kind != .list) {
-        try self.requireArenaAssignment(slot, product);
         return .{ .assign = .{ .slot = slot, .value = product } };
     }
     const repeated = try b.local(target_type);
     const arguments = try self.allocator.dupe(typed.NodeId, &.{try b.read(repeated)});
-    try self.requireArenaOperation(slot, .extend, arguments);
     return .{ .block = try self.allocator.dupe(typed.StatementId, &.{
         try b.stmt(.{ .initialize = .{ .slot = repeated, .value = product } }),
         try b.stmt(.{ .discard = try b.operation(slot, .clear, &.{}) }),

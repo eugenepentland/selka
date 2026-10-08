@@ -357,9 +357,9 @@ rejecting oversized values without truncation.
 snapshots, explicit EOF, and actual write counts while retaining ownership.
 Operating-system adapters remain separate work.
 
-[Managed arenas](docs/arenas.md), which freed a phase of work's allocations in one
+[Managed arenas](docs/managed-memory.md#retired-arenas), which freed a phase of work's allocations in one
 step, were retired in S5: `with arena():` now runs as an ordinary block and warns
-`W_ARENA_RETIRED`.
+`W_ARENA_RETIRED`; `mylang fix` removes them.
 
 [Approximate discovery](docs/experiments/approximate-discovery.md) is available with
 `discover-duplicates --approximate`. It reports canonical edits between near matches

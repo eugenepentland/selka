@@ -137,7 +137,7 @@ fn edge(pc: usize, target: usize, entry: Entry) bool {
 }
 
 const t = @import("std").testing;
-// spec-case: RC-DICTIONARY-LOOP-1
+// spec: RC-DICTIONARY-LOOP-1
 test "RC dictionary loop rejects middle entry and stale enclosing iteration" {
     const entry: Entry = .{ .definition = 4, .head = 8, .back = 20 };
     const arms = [_]@import("bytecode.zig").SwitchArm{ .{ .target = 3, .slot = null }, .{ .target = 8, .slot = null } };

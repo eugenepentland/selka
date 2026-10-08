@@ -617,7 +617,7 @@ pub const Local = struct {
     origin: LocalOrigin = .local,
 };
 /// Compile-time ownership availability, definite-assignment, and arena confinement.
-pub const LocalOwnership = struct { transfer_span: ?Span = null, initialized: bool = false, arena_confined: bool = false, transfer_available: bool = false };
+pub const LocalOwnership = struct { transfer_span: ?Span = null, initialized: bool = false, transfer_available: bool = false };
 /// Static binding reads and writes used by quality diagnostics.
 pub const LocalUsage = struct {
     temporary: bool = false,

@@ -38,7 +38,7 @@ benchmark fine-grained work and large graphs before committing to this default.
 
 - [Python syntax](python-syntax.md) already gives ordinary functions, typed
   records, aliased mutable collections, and checked `Result` propagation.
-- [Managed arenas](arenas.md) give the intended progression: ordinary types
+- [Managed arenas](managed-memory.md#retired-arenas) (since retired) gave the intended progression: ordinary types
   first, explicit lifetime control when needed. Concurrency can use that pattern.
 - [Process workers](experiments/workers.md) already establish copied requests,
   isolated execution, bounded admission, cancellation, and scope cleanup. Their

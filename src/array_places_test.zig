@@ -176,13 +176,6 @@ test "a loop variable the body assigns is its own variable and is not proved non
 test "an element write needs a mutable binding and a writable place" {
     try reject(
         \\def main() -> int:
-        \\    words: [2]str = ["a", "b"]
-        \\    with arena() as scratch:
-        \\        words[0] = str(3) + "x"
-        \\    return 0
-    , "E_ARENA_ESCAPE", "outlives arena");
-    try reject(
-        \\def main() -> int:
         \\    text = "abc"
         \\    text[0] = "x"
         \\    return 0

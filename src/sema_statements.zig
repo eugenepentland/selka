@@ -96,15 +96,9 @@ fn statementWithScope(comptime Checker: type, self: *Checker, stmt: ast.Statemen
         if (!std.mem.eql(u8, name, "_")) for (self.arenas.items) |active| if (std.mem.eql(u8, active.name, name)) return self.sink.fail(eShadowing, declared, "arena name shadows an enclosing arena scope");
     }
     const watermark: typed.LocalId = @fromBackingInt(self.locals.items.len);
-    try self.arenas.append(self.allocator, .{ .name = name, .declaration = scope.name orelse stmt.span, .watermark = watermark });
+    try self.arenas.append(self.allocator, .{ .name = name, .watermark = watermark });
     defer _ = self.arenas.pop();
     const body = try statement(Checker, self, scope.body);
-    // A managed binding first assigned inside the arena lives in the released
-    // region. Function scoping keeps its name visible after the block, so confine
-    // it: reading it once the region is gone is E_ARENA_ESCAPE, not a dangling read.
-    for (self.locals.items[@backingInt(watermark)..]) |*local| {
-        if (try self.managedBearing(local.ty)) local.ownership.arena_confined = true;
-    }
     flow.terminates = body.terminates;
     return .{ .with_scope = .{ .slot = watermark, .resource = null, .body = body.id } };
 }
@@ -425,7 +419,6 @@ fn unitFallthrough(comptime Checker: type, self: *Checker, body: CheckedStatemen
 fn statementRet(comptime Checker: type, self: *Checker, stmt: ast.Statement, expr: @FieldType(@FieldType(ast.Statement, "data"), "ret"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
     const value = try self.expressionExpected(expr, self.return_type);
     try self.require(self.nodes.items[@backingInt(value)].ty, self.return_type, stmt.span);
-    try self.requireArenaReturn(value, stmt.span);
     try self.requireHandled(0, stmt.span);
     flow.terminates = true;
     if (self.contract.ensures.len != 0) return self.contractReturn(value, stmt.span);
@@ -490,7 +483,6 @@ fn statementAssignment(comptime Checker: type, self: *Checker, stmt: ast.Stateme
             const b: collections.Builder(Checker) = .{ .checker = self, .span = a.op_span };
             const arguments = try self.allocator.alloc(typed.NodeId, 1);
             arguments[0] = value;
-            try self.requireArenaOperation(slot, .extend, arguments);
             self.locals.items[@backingInt(slot)].usage.reads += 1;
             self.locals.items[@backingInt(slot)].usage.writes += 1;
             return .{ .block = try self.allocator.dupe(typed.StatementId, &.{try b.stmt(.{ .discard = try b.operation(slot, .extend, arguments) })}) };
@@ -501,7 +493,6 @@ fn statementAssignment(comptime Checker: type, self: *Checker, stmt: ast.Stateme
         value = try self.augmented(a.op, read, value, a.op_span);
     }
     try self.require(self.nodes.items[@backingInt(value)].ty, self.locals.items[@backingInt(slot)].ty, stmt.span);
-    try self.requireArenaAssignment(slot, value);
     if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
         if (self.pendingObligation(self.locals.items[@backingInt(slot)])) return self.sink.fail("E_RESULT_OVERWRITE", a.name, "assignment would overwrite an unhandled result-bearing value");
         self.locals.items[@backingInt(slot)].ownership.transfer_available = true;
@@ -511,10 +502,8 @@ fn statementAssignment(comptime Checker: type, self: *Checker, stmt: ast.Stateme
     // A plain reassignment re-homes the value, so its copy provenance follows
     // the new initializer; an indexed read still yields an element copy.
     if (a.op == .set) self.locals.items[@backingInt(slot)].origin = if (self.syntax.nodes.items[@backingInt(a.value)].data == .index) .collection_copy else .local;
-    // A reassignment definitely binds the name on this path and re-homes it out
-    // of any arena it was previously confined to.
+    // A reassignment definitely binds the name on this path.
     self.locals.items[@backingInt(slot)].ownership.initialized = true;
-    self.locals.items[@backingInt(slot)].ownership.arena_confined = false;
     self.option_facts.forget(@backingInt(slot));
     return .{ .assign = .{ .slot = slot, .value = value } };
 }

@@ -238,7 +238,6 @@ test {
     _ = @import("domains_test.zig");
     _ = @import("variants_test.zig");
     _ = @import("tables_test.zig");
-    _ = @import("arena_managed_test.zig");
     _ = @import("effects_test.zig");
     _ = @import("mutation.zig");
     _ = @import("input_manifest_test.zig");
@@ -277,7 +276,6 @@ test {
     _ = @import("incremental_test.zig");
     _ = @import("timings_test.zig");
     _ = @import("invalidation_test.zig");
-    _ = @import("managed_cell_test.zig");
     _ = @import("for_range_test.zig");
     _ = @import("type_aliases_test.zig");
     _ = @import("tuples_test.zig");
@@ -340,7 +338,6 @@ test {
     _ = @import("qbe_rc_index_update_test.zig");
     _ = @import("qbe_rc_dictionary_tail_test.zig");
     _ = @import("qbe_rc_dictionary_key_test.zig");
-    _ = @import("qbe_rc_dictionary_loop_test.zig");
     _ = @import("qbe_rc_empty_frame_test.zig");
     _ = @import("qbe_exit_skip_test.zig");
     _ = @import("qbe_rc_field_transfer_test.zig");
@@ -387,4 +384,5 @@ test {
     _ = @import("prelude_scalar_test.zig");
     _ = @import("dictionary_views_test.zig");
     _ = @import("sets_test.zig");
+    _ = @import("retired_features_test.zig");
 }

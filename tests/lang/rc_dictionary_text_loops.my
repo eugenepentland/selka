@@ -26,17 +26,11 @@ def exposed(seq: str) -> dict[str, int]:
             counts["bad"] = 1
     return counts
 
-# spec-case: RC-DICTIONARY-TEXT-LOOP-1
+# spec: RC-DICTIONARY-TEXT-LOOP-1
 public def test_owned_text_keys_preserve_growth_and_empty_loop() -> bool:
     empty = frequencies("", 1)
     counts = frequencies("abcabcabc", 2)
     return len(empty) == 0 and counts["ab"] == 3 and counts["bc"] == 3 and counts["ca"] == 2
-
-# spec-case: RC-DICTIONARY-TEXT-LOOP-1
-public def test_owned_text_keys_in_arena() -> bool:
-    with arena():
-        counts = frequencies("éaéaé", 2)
-        return counts["éa"] == 2 and counts["aé"] == 2
 
 # spec-case: RC-DICTIONARY-TEXT-LOOP-1
 public def test_published_dictionary_keeps_copy_on_write() -> bool:
