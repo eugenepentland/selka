@@ -29,6 +29,7 @@ comptime {
     _ = @import("value_e2e_test.zig");
     _ = @import("value_facts_test.zig");
     _ = @import("value_emit_test.zig");
+    _ = @import("ce_records_test.zig");
     _ = @import("test_runner_test.zig");
     _ = @import("project_entry.zig");
     _ = @import("test_runner_options.zig");

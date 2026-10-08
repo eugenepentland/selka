@@ -28,6 +28,7 @@ const emit_values = @import("emit_values.zig");
 const emit_constants = @import("emit_constants.zig");
 const emit_count = @import("emit_count.zig");
 const origins = @import("inline_origins.zig");
+const emit_homes = @import("emit_homes.zig");
 
 /// A source line and column for a span start.
 pub const Location = struct { line: u32, column: u32, path: []const u8 = "" };
@@ -341,11 +342,19 @@ const ModuleState = struct {
         const name = try self.originalSymbol(index);
         for (self.declared.items) |known| if (std.mem.eql(u8, known, name)) return;
         try self.declared.append(self.allocator, name);
-        const sret = self.module.passedInMemory(function.signature.ret);
-        try self.externs.print(self.allocator, "declare hidden fastcc {s} {s}(", .{ if (sret) "void" else try self.llvmType(function.signature.ret), name });
+        const abi = inOutAbi(self.module, function.signature);
+        const sret = returnsThroughSret(self.module, function.signature, abi);
+        try self.externs.print(self.allocator, "declare hidden fastcc {s} {s}(", .{ try self.returnType(function.signature, abi), name });
         if (sret) try self.externs.print(self.allocator, "ptr noalias sret({s}) align 8", .{try self.memoryType(function.signature.ret)});
         for (function.signature.params, 0..) |param, i| try self.externs.print(self.allocator, "{s}{s}", .{ if (i == 0 and !sret) "" else ", ", try self.llvmType(param) });
         try self.externs.appendSlice(self.allocator, ") nounwind\n");
+    }
+
+    /// The LLVM return type of an internal function: `void` when the result travels through
+    /// `sret` or is the final value of its one in-out parameter.
+    fn returnType(self: *ModuleState, signature: ir.Signature, abi: InOutAbi) ![]const u8 {
+        if (abi.whole or self.module.passedInMemory(signature.ret)) return "void";
+        return self.llvmType(signature.ret);
     }
 
     fn declareExtern(self: *ModuleState, index: u32) !void {
@@ -717,12 +726,10 @@ const VectorState = struct {
 };
 
 /// What the emitter knows about the values that live in memory (records and unions over four
-/// words, docs/design/new-core-s1.md §3): who uses each value, which constructions are stored
-/// straight into their consumer, which phis own a stack slot and how edges were split to fill them.
+/// words, docs/design/new-core-s1.md §3): which constructions are stored straight into their
+/// consumer, which home each value lives in (`emit_homes.zig`), how each call passes its in-out
+/// arguments, and how edges were split to fill phis.
 const MemoryState = struct {
-    /// Uses of each instruction's value, and the last instruction that used it.
-    uses: []u32 = &.{},
-    users: []ir.Ref = &.{},
     /// Per instruction: a `record_make` or `union_make` that is never materialized, because its
     /// only use stores it into its destination field by field.
     fused: []bool = &.{},
@@ -730,11 +737,69 @@ const MemoryState = struct {
     bound_lengths: []bool = &.{},
     /// Per block: the phis whose type lives in memory.
     phis: []const []const ir.Ref = &.{},
-    /// Every instruction that reads a value living in memory, by the value's instruction index.
-    readers: std.AutoHashMapUnmanaged(u32, std.ArrayList(ir.Ref)) = .empty,
     /// The label of the block that fills a memory phi on an edge `pred << 32 | block`, where the edge was split.
     edges: std.AutoHashMapUnmanaged(u64, []const u8) = .empty,
+    /// The home of every value in memory, and the views read where they lie.
+    homes: emit_homes.Plan = .{ .class = &.{}, .view = &.{}, .homes = &.{}, .view_offset = &.{} },
+    /// Per instruction: a call's in-out arguments (CE-A P7), empty for every other instruction.
+    calls: []const []const emit_homes.InOut = &.{},
+    /// Per instruction: an in-out call whose result record must also hold the final values
+    /// (something reads it other than one `record_get` per final value).
+    complete: []bool = &.{},
 };
+
+/// How a signature passes its `mut` parameters over four words (CE-A P7): by a pointer to the
+/// caller's memory, which the callee updates in place to the parameter's final value. The IR
+/// result still names that value (a `mut` parameter returns its final value, build.zig
+/// `returnType`), but no copy of it crosses the call: the caller reads it where it passed it.
+const InOutAbi = struct {
+    /// Bit `i`: parameter `i` is in-out.
+    params: u64 = 0,
+    /// The result is the one in-out parameter's final value: the function returns nothing.
+    whole: bool = false,
+    /// The result record's field that holds the first `mut` parameter's final value (0, or 1
+    /// after the declared result); the others follow in parameter order.
+    first: u32 = 0,
+
+    /// The result record's field holding parameter `param`'s final value.
+    fn field(self: InOutAbi, signature: ir.Signature, param: usize) u32 {
+        const below = signature.owned & ((@as(u64, 1) << @intCast(param)) - 1);
+        return self.first + @popCount(below);
+    }
+};
+
+/// The in-out ABI of an internal signature whose result follows the `mut` convention (the
+/// final value of each `mut` parameter, after the declared result unless that is `unit`);
+/// every other signature passes nothing in-out.
+fn inOutAbi(m: *const ir.Module, signature: ir.Signature) InOutAbi {
+    if (!emit_homes.steps.in_out or signature.linkage != .internal or signature.owned == 0) return .{};
+    if (signature.params.len > 63 or signature.owned >> @intCast(signature.params.len) != 0) return .{};
+    const muts: u32 = @popCount(signature.owned);
+    var abi: InOutAbi = .{};
+    if (muts == 1) {
+        const only: usize = @ctz(signature.owned);
+        if (signature.ret == signature.params[only]) {
+            if (!m.passedInMemory(signature.ret)) return .{};
+            return .{ .params = signature.owned, .whole = true };
+        }
+    }
+    if (m.kind(signature.ret) != .record) return .{};
+    const fields = m.compound(signature.ret).record;
+    if (fields.len != muts and fields.len != muts + 1) return .{};
+    if (fields.len == muts and muts < 2) return .{};
+    abi.first = @intCast(fields.len - muts);
+    for (signature.params, 0..) |param, i| {
+        if (signature.owned & (@as(u64, 1) << @intCast(i)) == 0) continue;
+        if (fields[abi.field(signature, i)] != param) return .{};
+        if (m.passedInMemory(param)) abi.params |= @as(u64, 1) << @intCast(i);
+    }
+    return abi;
+}
+
+/// Whether a value of `ty` travels through `sret` under `abi`.
+fn returnsThroughSret(m: *const ir.Module, signature: ir.Signature, abi: InOutAbi) bool {
+    return m.passedInMemory(signature.ret) and !abi.whole;
+}
 
 /// Which count update `counted` emits.
 const Counting = enum { retain, release };
@@ -899,15 +964,19 @@ const FunctionEmitter = struct {
         const m = self.state.module;
         self.state.allocas = .empty;
         // Records and unions over four words cross calls in memory: by a read-only
-        // pointer in, through `sret` out (docs/design/new-core-s1.md §3).
-        const sret = m.passedInMemory(f.signature.ret);
-        try out.print(self.a(), "define {s} fastcc {s} {s}(", .{ self.state.linkage(self.index), if (sret) "void" else try self.ty(f.signature.ret), try self.state.originalSymbol(self.index) });
+        // pointer in, through `sret` out (docs/design/new-core-s1.md §3); a `mut` one by a
+        // pointer the callee updates in place (`InOutAbi`).
+        const abi = inOutAbi(m, f.signature);
+        const sret = returnsThroughSret(m, f.signature, abi);
+        try out.print(self.a(), "define {s} fastcc {s} {s}(", .{ self.state.linkage(self.index), try self.state.returnType(f.signature, abi), try self.state.originalSymbol(self.index) });
         if (sret) try out.print(self.a(), "ptr noalias sret({s}) align 8 %ret", .{try self.state.memoryType(f.signature.ret)});
         var entry: Out = .empty;
         // A value over four words is used where the caller keeps it: the parameter is its pointer.
         for (f.signature.params, 0..) |param, i| {
             const separator = if (i == 0 and !sret) "" else ", ";
-            if (m.passedInMemory(param)) {
+            if (abi.params & (@as(u64, 1) << @intCast(i)) != 0) {
+                try out.print(self.a(), "{s}ptr noalias align 8 %p{d}", .{ separator, i });
+            } else if (m.passedInMemory(param)) {
                 try out.print(self.a(), "{s}ptr noalias readonly align 8 %p{d}", .{ separator, i });
             } else try out.print(self.a(), "{s}{s} %p{d}", .{ separator, try self.ty(param), i });
         }
@@ -958,7 +1027,7 @@ const FunctionEmitter = struct {
             for (block.insts.items) |ref| {
                 const inst = f.inst(ref);
                 if (inst.op != .phi) continue;
-                // A phi of a value in memory is its own stack slot, filled on each incoming edge.
+                // A phi of a value in memory lives in its home, filled on each incoming edge whose value lives elsewhere.
                 if (m.passedInMemory(inst.ty)) continue;
                 try out.print(self.a(), "  %v{d} = phi {s} ", .{ ref.index(), try self.ty(inst.ty) });
                 for (f.operands(inst.data), block.preds.items, 0..) |operand, pred, i| {
@@ -973,19 +1042,20 @@ const FunctionEmitter = struct {
         try out.appendSlice(self.a(), "}\n");
     }
 
-    /// Count uses, decide which constructions are stored straight into their consumer, and give
-    /// every phi of a value in memory its stack slot (defined in the entry block as `%vN`).
+    /// Count uses, decide which constructions are stored straight into their consumer, find each
+    /// call's in-out arguments, and give every value in memory its home (`emit_homes.zig`): an
+    /// entry-block slot, a parameter's memory or `%ret`, named in the entry block as `%vN`.
     fn analyzeMemory(self: *FunctionEmitter, entry: *Out) !void {
         _ = entry;
         const f = self.function;
         const m = self.state.module;
         const count = f.insts.items.len;
         const mem = &self.memory;
-        mem.uses = try self.a().alloc(u32, count);
-        mem.users = try self.a().alloc(ir.Ref, count);
+        const use_count = try self.a().alloc(u32, count);
+        const users = try self.a().alloc(ir.Ref, count);
         mem.fused = try self.a().alloc(bool, count);
-        @memset(mem.uses, 0);
-        @memset(mem.users, .none);
+        @memset(use_count, 0);
+        @memset(users, .none);
         @memset(mem.fused, false);
         const block_of = try self.a().alloc(u32, count);
         @memset(block_of, std.math.maxInt(u32));
@@ -1000,20 +1070,17 @@ const FunctionEmitter = struct {
                 const operands = f.valueOperands(inst);
                 for (0..operands.len()) |i| {
                     const used = f.resolve(operands.get(i));
-                    mem.uses[used.index()] += 1;
-                    mem.users[used.index()] = ref;
-                    if (m.passedInMemory(f.inst(used).ty)) {
-                        const list = try mem.readers.getOrPut(self.a(), @intCast(used.index()));
-                        if (!list.found_existing) list.value_ptr.* = .empty;
-                        try list.value_ptr.append(self.a(), ref);
-                    }
+                    use_count[used.index()] += 1;
+                    users[used.index()] = ref;
                 }
             }
             phis[b] = mine.items;
         }
         mem.phis = phis;
+        const abi = inOutAbi(m, f.signature);
         // A construction whose only use stores it (a push, a write, a return through `sret`, a box,
-        // or a field of a construction that is itself stored so) is never built on its own.
+        // or a field of a construction that is itself stored so or lives in memory) is never built
+        // on its own.
         for (f.blocks.items, 0..) |block, b| {
             var at = block.insts.items.len;
             while (at > 0) {
@@ -1021,93 +1088,246 @@ const FunctionEmitter = struct {
                 const ref = block.insts.items[at];
                 const inst = f.inst(ref);
                 if (inst.op != .record_make and inst.op != .union_make) continue;
-                if (mem.uses[ref.index()] != 1 or block_of[mem.users[ref.index()].index()] != b) continue;
+                if (use_count[ref.index()] != 1 or block_of[users[ref.index()].index()] != b) continue;
                 if (inst.op == .union_make and m.unionLayout(inst.ty).form == .niche) continue;
-                const user = mem.users[ref.index()];
+                const user = users[ref.index()];
                 const consumer = f.inst(user);
                 mem.fused[ref.index()] = switch (consumer.op) {
                     .list_push => f.resolve(consumer.b) == ref,
                     .list_set => f.resolve(f.operands(consumer.data)[0]) == ref,
-                    .ret => f.resolve(consumer.a) == ref and m.passedInMemory(f.signature.ret),
+                    .ret => f.resolve(consumer.a) == ref and returnsThroughSret(m, f.signature, abi),
                     .box_make => f.resolve(consumer.a) == ref,
-                    .record_make, .union_make => mem.fused[user.index()],
+                    // A field of a construction built in memory is stored straight into it too.
+                    .record_make, .union_make => mem.fused[user.index()] or (emit_homes.steps.views and m.passedInMemory(consumer.ty)),
                     else => false,
                 };
             }
         }
-        for (phis) |block_phis| for (block_phis) |phi| {
-            const slot = try self.stackSlot(m.size(f.inst(phi).ty));
-            try self.state.allocas.print(self.a(), "  %v{d} = getelementptr inbounds i8, ptr {s}, i64 0\n", .{ phi.index(), slot });
+        try self.inOutCalls();
+        mem.homes = try emit_homes.plan(self.a(), .{
+            .module = m,
+            .function = f,
+            .fused = mem.fused,
+            .in_out = abi.params,
+            .calls = mem.calls,
+            .ret_home = emit_homes.steps.in_out and abi.params == 0 and returnsThroughSret(m, f.signature, abi),
+        });
+        const plan = &mem.homes;
+        const names = try self.a().alloc([]const u8, plan.homes.len);
+        for (plan.homes, names) |home, *name| name.* = switch (home) {
+            .slot => |size| try self.stackSlot(size),
+            .param => |index| try std.fmt.allocPrint(self.a(), "%p{d}", .{index}),
+            .ret => "%ret",
+            .field => "",
         };
+        // A home inside another's field, once that other is named.
+        for (plan.homes, names) |home, *name| {
+            if (home != .field) continue;
+            name.* = try self.fresh("%home");
+            try self.state.allocas.print(self.a(), header_pointer_line, .{ name.*, names[home.field.class], home.field.offset });
+        }
+        for (plan.class, 0..) |class, index| {
+            if (class == emit_homes.none or f.insts.items[index].op == .param) continue;
+            try self.state.allocas.print(self.a(), "  %v{d} = getelementptr inbounds i8, ptr {s}, i64 0\n", .{ index, names[class] });
+        }
+    }
+
+    /// Each call's in-out arguments and the values that hold their final values: the call itself
+    /// when the result is that one value, else the one `record_get` of its field of the result
+    /// (`.none` when there is not exactly one, and then the result record is completed after the call).
+    fn inOutCalls(self: *FunctionEmitter) !void {
+        const f = self.function;
+        const m = self.state.module;
+        const count = f.insts.items.len;
+        const calls = try self.a().alloc([]const emit_homes.InOut, count);
+        @memset(calls, &.{});
+        self.memory.complete = try self.a().alloc(bool, count);
+        @memset(self.memory.complete, false);
+        self.memory.calls = calls;
+        var any = false;
+        for (f.blocks.items, 0..) |block, b| {
+            if (b != 0 and block.preds.items.len == 0) continue;
+            for (block.insts.items) |ref| {
+                const inst = f.inst(ref);
+                if (inst.op != .call and inst.op != .call_indirect) continue;
+                const signature = self.signatureOf(inst);
+                const abi = inOutAbi(m, signature);
+                if (abi.params == 0) continue;
+                var list: std.ArrayList(emit_homes.InOut) = .empty;
+                for (0..signature.params.len) |i| {
+                    if (abi.params & (@as(u64, 1) << @intCast(i)) == 0) continue;
+                    try list.append(self.a(), .{ .argument = @intCast(i), .final = if (abi.whole) ref else .none });
+                }
+                calls[ref.index()] = list.items;
+                any = true;
+            }
+        }
+        if (!any) return;
+        self.markWholeReaders();
+        for (calls, 0..) |in_outs, at| {
+            if (in_outs.len == 0 or in_outs[0].final != .none) continue;
+            calls[at] = try self.finalReads(@intCast(at), in_outs);
+        }
+    }
+
+    /// Mark each in-out call whose result record something other than a `record_get` reads.
+    fn markWholeReaders(self: *FunctionEmitter) void {
+        const f = self.function;
+        for (f.blocks.items, 0..) |block, b| {
+            if (b != 0 and block.preds.items.len == 0) continue;
+            for (block.insts.items) |ref| {
+                const inst = f.inst(ref);
+                if (inst.op == .copy or inst.op == .record_get) continue;
+                const operands = f.valueOperands(inst);
+                for (0..operands.len()) |i| {
+                    const used = f.resolve(operands.get(i));
+                    const in_outs = self.memory.calls[used.index()];
+                    if (in_outs.len != 0 and in_outs[0].final != used) self.memory.complete[used.index()] = true;
+                }
+            }
+        }
+    }
+
+    /// The in-out arguments of call `at` with their final values: the one `record_get` of each
+    /// one's field of the result, or `.none` (and the result completed) when there is not exactly one.
+    fn finalReads(self: *FunctionEmitter, at: u32, in_outs: []const emit_homes.InOut) ![]const emit_homes.InOut {
+        const f = self.function;
+        const signature = self.signatureOf(f.insts.items[at]);
+        const abi = inOutAbi(self.state.module, signature);
+        const finals = try self.a().dupe(emit_homes.InOut, in_outs);
+        for (finals) |*in_out| {
+            const field = abi.field(signature, in_out.argument);
+            var found: ir.Ref = .none;
+            var readers: u32 = 0;
+            for (f.blocks.items, 0..) |block, b| {
+                if (b != 0 and block.preds.items.len == 0) continue;
+                for (block.insts.items) |ref| {
+                    const inst = f.inst(ref);
+                    if (inst.op != .record_get or inst.data != field or f.resolve(inst.a).index() != at) continue;
+                    readers += 1;
+                    found = ref;
+                }
+            }
+            if (readers == 1) in_out.final = found else self.memory.complete[at] = true;
+        }
+        return finals;
+    }
+
+    /// The signature a direct or indirect call is made with.
+    fn signatureOf(self: *FunctionEmitter, inst: ir.Inst) ir.Signature {
+        const m = self.state.module;
+        if (inst.op == .call_indirect) return m.compound(self.typeOf(inst.a)).@"fn";
+        return m.functions.items[inst.a.index()].signature;
+    }
+
+    /// Whether `name` is the `%vN` of a value with a home: its bytes go there.
+    fn homedName(self: *FunctionEmitter, name: []const u8) bool {
+        if (name.len < 3 or !std.mem.startsWith(u8, name, "%v")) return false;
+        const index = std.fmt.parseInt(u32, name[2..], 10) catch return false;
+        const class = self.memory.homes.class;
+        return index < class.len and class[index] != emit_homes.none and self.function.insts.items[index].op != .param;
     }
 
     fn edgeKey(pred: usize, block: usize) u64 {
         return (@as(u64, pred) << 32) | block;
     }
 
-    /// On the edge from block `pred` into `target`, copy the incoming value of each phi that lives
-    /// in memory into the phi's own slot. With several such phis, an incoming value may be another
-    /// phi's slot, so all are copied out to temporaries first.
-    fn fillMemoryPhis(self: *FunctionEmitter, out: *Out, pred: usize, target: usize) !void {
+    /// One copy a set of simultaneous writes makes (phi fills on an edge, a return's final values).
+    const Move = struct { dst: []const u8, src: []const u8, size: u32, dst_class: u32, src_class: u32 };
+
+    /// The copies that fill the memory phis of `target` on the edge from `pred`: none for a phi
+    /// whose incoming value already lives in its home.
+    fn edgeMoves(self: *FunctionEmitter, pred: usize, target: usize) ![]const Move {
         const phis = self.memory.phis[target];
-        if (phis.len == 0) return;
+        if (phis.len == 0) return &.{};
         const f = self.function;
         const m = self.state.module;
+        const plan = &self.memory.homes;
         const position = for (f.blocks.items[target].preds.items, 0..) |candidate, i| {
             if (candidate.index() == pred) break i;
-        } else return;
-        var staged = false;
-        for (phis) |phi| {
-            const incoming = f.resolve(f.operands(f.inst(phi).data)[position]);
-            if (std.mem.indexOfScalar(ir.Ref, phis, incoming) != null) staged = true;
-        }
-        var copies: std.ArrayList(struct { phi: ir.Ref, from: []const u8 }) = .empty;
+        } else return &.{};
+        var moves: std.ArrayList(Move) = .empty;
         for (phis) |phi| {
             const incoming = f.resolve(f.operands(f.inst(phi).data)[position]);
             // Managed undef must initialize null block pointers before an empty release.
             // An unmanaged undef remains unspecified; copying its poison address is invalid.
             if (f.inst(incoming).op == .undef and !m.managed(f.inst(phi).ty)) continue;
-            const size = m.size(f.inst(phi).ty);
-            if (!staged) {
-                try self.copyBytes(out, try self.value(phi), try self.value(incoming), size, true);
-                continue;
-            }
-            const temporary = try self.stackSlot(size);
-            try self.copyBytes(out, temporary, try self.value(incoming), size, false);
-            try copies.append(self.a(), .{ .phi = phi, .from = temporary });
+            if (plan.holds(phi, 0, incoming)) continue;
+            const dst_class = plan.storage(plan.class[phi.index()]);
+            try moves.append(self.a(), .{ .dst = try self.value(phi), .src = try self.value(incoming), .size = m.size(f.inst(phi).ty), .dst_class = dst_class, .src_class = plan.storage(plan.rootClass(incoming)) });
         }
-        for (copies.items) |copy| try self.copyBytes(out, try self.value(copy.phi), copy.from, m.size(f.inst(copy.phi).ty), false);
+        return moves.items;
     }
 
-    /// `branch`: a successor with phis in memory gets a block of its own on the edge, which fills them.
+    /// Make simultaneous copies (a parallel copy): a copy that reads a home another one writes
+    /// goes first, and only a cycle of them goes through a temporary. A copy whose source lies in
+    /// its own destination's home (a part of it moved to the whole) may overlap it.
+    fn moveAll(self: *FunctionEmitter, out: *Out, all: []const Move) !void {
+        var pending: std.ArrayList(Move) = .empty;
+        for (all) |move| if (move.size != 0) try pending.append(self.a(), move);
+        while (pending.items.len != 0) {
+            const ready = for (pending.items, 0..) |move, i| {
+                const read = for (pending.items, 0..) |other, j| {
+                    if (i != j and other.src_class != emit_homes.none and other.src_class == move.dst_class) break true;
+                } else false;
+                if (!read) break i;
+            } else null;
+            if (ready) |i| {
+                const move = pending.orderedRemove(i);
+                try self.copyBytes(out, move.dst, move.src, move.size, move.src_class == move.dst_class);
+                continue;
+            }
+            const first = &pending.items[0];
+            const temporary = try self.stackSlot(first.size);
+            try self.copyBytes(out, temporary, first.src, first.size, false);
+            first.src = temporary;
+            first.src_class = emit_homes.none;
+        }
+    }
+
+    /// On the edge from block `pred` into `target`, copy the incoming value of each phi that lives
+    /// in memory into the phi's home, unless it already lives there.
+    fn fillMemoryPhis(self: *FunctionEmitter, out: *Out, pred: usize, target: usize) !void {
+        try self.moveAll(out, try self.edgeMoves(pred, target));
+    }
+
+    /// `branch`: a successor whose memory phis need a copy on this edge gets a block of its own there, which fills them.
     fn branchTo(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
         const targets = ir.unpackTargets(inst.data);
         const pred: usize = self.vectors.block;
         const sides = [2]usize{ targets.then.index(), targets.otherwise.index() };
         var labels: [2][]const u8 = undefined;
-        for (sides, &labels) |target, *label| {
-            label.* = if (self.memory.phis[target].len != 0) try self.fresh("edge") else try std.fmt.allocPrint(self.a(), "b{d}", .{target});
+        var moves: [2][]const Move = undefined;
+        for (sides, &labels, &moves) |target, *label, *side| {
+            side.* = try self.edgeMoves(pred, target);
+            label.* = if (side.len != 0) try self.fresh("edge") else try std.fmt.allocPrint(self.a(), "b{d}", .{target});
         }
         try out.print(self.a(), "  br i1 {s}, label %{s}, label %{s}\n", .{ try self.value(inst.a), labels[0], labels[1] });
-        for (sides, labels) |target, label| {
-            if (self.memory.phis[target].len == 0) continue;
+        for (sides, labels, moves) |target, label, side| {
+            if (side.len == 0) continue;
             try out.print(self.a(), "{s}:\n", .{label});
-            try self.fillMemoryPhis(out, pred, target);
+            try self.moveAll(out, side);
             try out.print(self.a(), "  br label %b{d}\n", .{target});
             try self.memory.edges.put(self.a(), edgeKey(pred, target), label);
         }
     }
 
     /// `retain` or `release` the blocks a record or union in memory references: each managed field,
-    /// or the payload of each managed case under its tag, loaded out of memory and counted as a value.
+    /// or the payload of each managed case under its tag, loaded out of memory and counted as a value
+    /// (a field or payload that is itself in memory is counted where it lies).
     fn countedMemory(self: *FunctionEmitter, out: *Out, mode: Counting, value_type: ir.Type, ptr: []const u8) Error!void {
         const m = self.state.module;
         if (!m.managed(value_type)) return;
         switch (m.compound(value_type)) {
             .record => |fields| for (fields, 0..) |field, i| {
                 if (!m.managed(field)) continue;
+                const at = try self.offsetPointer(out, ptr, m.fieldOffset(value_type, i));
+                if (emit_homes.steps.views and m.passedInMemory(field)) {
+                    try self.countedMemory(out, mode, field, at);
+                    continue;
+                }
                 const loaded = try self.fresh("%cm");
-                try self.loadValue(out, field, try self.offsetPointer(out, ptr, m.fieldOffset(value_type, i)), loaded);
+                try self.loadValue(out, field, at, loaded);
                 try self.countedValue(out, mode, field, loaded);
             },
             .@"union" => |cases| {
@@ -1119,15 +1339,25 @@ const FunctionEmitter = struct {
                     const here = try self.fresh("%cc");
                     try out.print(self.a(), "  {s} = icmp eq i8 {s}, {d}\n", .{ here, tag, k });
                     const join = try self.enterIf(out, here);
-                    const loaded = try self.fresh("%cp");
-                    try self.loadValue(out, case, try self.offsetPointer(out, ptr, 8), loaded);
-                    try self.countedValue(out, mode, case, loaded);
+                    const at = try self.offsetPointer(out, ptr, 8);
+                    if (emit_homes.steps.views and m.passedInMemory(case)) {
+                        try self.countedMemory(out, mode, case, at);
+                    } else {
+                        const loaded = try self.fresh("%cp");
+                        try self.loadValue(out, case, at, loaded);
+                        try self.countedValue(out, mode, case, loaded);
+                    }
                     try self.leaveIf(out, join);
                 }
             },
             .array => |array| for (0..array.n) |i| {
+                const at = try self.offsetPointer(out, ptr, @as(u32, @intCast(i)) * m.size(array.elem));
+                if (emit_homes.steps.views and m.passedInMemory(array.elem)) {
+                    try self.countedMemory(out, mode, array.elem, at);
+                    continue;
+                }
                 const loaded = try self.fresh("%cm");
-                try self.loadValue(out, array.elem, try self.offsetPointer(out, ptr, @as(u32, @intCast(i)) * m.size(array.elem)), loaded);
+                try self.loadValue(out, array.elem, at, loaded);
                 try self.countedValue(out, mode, array.elem, loaded);
             },
             .list, .box, .dict, .@"fn" => unreachable,
@@ -1533,9 +1763,9 @@ const FunctionEmitter = struct {
             },
             .union_make => if (!self.memory.fused[ref.index()]) try self.unionMake(out, name, inst),
             .union_tag => try self.unionTag(out, name, inst.a),
-            .union_payload => try self.unionPayload(out, .{ .result = name, .union_type = self.typeOf(inst.a), .value = try self.value(inst.a), .case = @intCast(inst.data) }),
+            .union_payload => if (!try self.viewOf(out, name, ref, 8)) try self.unionPayload(out, .{ .result = name, .union_type = self.typeOf(inst.a), .value = try self.value(inst.a), .case = @intCast(inst.data) }),
             .record_make => if (!self.memory.fused[ref.index()]) try self.recordMake(out, name, inst),
-            .record_get => try self.recordGet(out, name, inst),
+            .record_get => try self.recordGet(out, name, ref, inst),
             .record_set => try self.recordSet(out, name, ref, inst),
             .list_set => try self.listSet(out, name, inst),
             .list_pop => try self.listPop(out, name, inst),
@@ -1583,13 +1813,86 @@ const FunctionEmitter = struct {
         try emit_count.increment(self.a(), out, step);
     }
 
-    /// `ret`: a value over four words through `sret`; a counting build first makes the caller's record current again.
+    /// `ret`: a value over four words through `sret` (where it may already have been built), and
+    /// each in-out parameter's final value into its caller's memory; a counting build first makes
+    /// the caller's record current again.
     fn returnFrom(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
-        const sret = inst.a != .none and self.state.module.passedInMemory(self.function.signature.ret);
-        if (sret) try self.storeOperand(out, self.function.signature.ret, inst.a, "%ret");
+        const m = self.state.module;
+        const signature = self.function.signature;
+        const abi = inOutAbi(m, signature);
+        const sret = inst.a != .none and returnsThroughSret(m, signature, abi);
+        if (inst.a != .none and abi.whole) {
+            try self.moveAll(out, &.{try self.finalMove(out, @ctz(abi.params), inst.a)});
+        } else if (sret and abi.params != 0) {
+            try self.returnFinals(out, inst.a, abi);
+        } else if (sret and !self.builtInReturn(inst.a)) try self.storeOperand(out, signature.ret, inst.a, "%ret");
         if (self.count_fn != null) try out.appendSlice(self.a(), emit_count.epilogue);
-        if (inst.a == .none or sret) return out.appendSlice(self.a(), "  ret void\n");
+        if (inst.a == .none or sret or abi.whole) return out.appendSlice(self.a(), "  ret void\n");
         try out.print(self.a(), "  ret {s}\n", .{try self.typedValue(inst.a)});
+    }
+
+    /// Whether the returned value already lives in the caller's destination `%ret`.
+    fn builtInReturn(self: *FunctionEmitter, raw: ir.Ref) bool {
+        const plan = &self.memory.homes;
+        const class = plan.class[self.function.resolve(raw).index()];
+        return class != emit_homes.none and plan.homes[class] == .ret;
+    }
+
+    /// The copy of `raw`, in-out parameter `param`'s final value, into its caller's memory (empty
+    /// when it already lives there).
+    fn finalMove(self: *FunctionEmitter, out: *Out, param: usize, raw: ir.Ref) !Move {
+        const f = self.function;
+        const m = self.state.module;
+        const plan = &self.memory.homes;
+        const size = m.size(f.signature.params[param]);
+        const dst = try std.fmt.allocPrint(self.a(), "%p{d}", .{param});
+        const holder = for (f.insts.items, 0..) |inst, index| {
+            if (inst.op == .param and inst.data == param) break @as(ir.Ref, @fromBackingInt(@as(u32, @intCast(index))));
+        } else ir.Ref.none;
+        const value_ref = f.resolve(raw);
+        const empty: Move = .{ .dst = dst, .src = dst, .size = 0, .dst_class = emit_homes.none, .src_class = emit_homes.none };
+        if (holder != .none and plan.holds(holder, 0, value_ref)) return empty;
+        if (f.inst(value_ref).op == .undef and !m.managed(f.inst(value_ref).ty)) return empty;
+        var src = try self.value(value_ref);
+        if (self.memory.fused[value_ref.index()]) {
+            // A construction stored straight here: built in a slot of its own first, since its
+            // fields may read memory another final value is moved into.
+            src = try self.stackSlot(size);
+            try self.storeMake(out, f.inst(value_ref), src);
+        }
+        return .{ .dst = dst, .src = src, .size = size, .dst_class = if (holder == .none) emit_homes.none else plan.storage(plan.class[holder.index()]), .src_class = plan.storage(plan.rootClass(value_ref)) };
+    }
+
+    /// `ret` of a result record holding in-out final values: its other fields go to `%ret` first,
+    /// while every final value is still where it is, then each final value to its caller's memory.
+    fn returnFinals(self: *FunctionEmitter, out: *Out, raw: ir.Ref, abi: InOutAbi) !void {
+        const f = self.function;
+        const m = self.state.module;
+        const signature = f.signature;
+        const composite = f.resolve(raw);
+        var moves: std.ArrayList(Move) = .empty;
+        if (!self.memory.fused[composite.index()]) {
+            // A whole record: copied to `%ret`, and each final value from there.
+            try self.storeOperand(out, signature.ret, raw, "%ret");
+            for (signature.params, 0..) |param, i| {
+                if (abi.params & (@as(u64, 1) << @intCast(i)) == 0) continue;
+                const at = try self.offsetPointer(out, "%ret", m.fieldOffset(signature.ret, abi.field(signature, i)));
+                try self.copyBytes(out, try std.fmt.allocPrint(self.a(), "%p{d}", .{i}), at, m.size(param), false);
+            }
+            return;
+        }
+        const operands = f.operands(f.inst(composite).data);
+        for (m.compound(signature.ret).record, operands, 0..) |field_type, operand, k| {
+            const final = for (0..signature.params.len) |i| {
+                if (abi.params & (@as(u64, 1) << @intCast(i)) != 0 and abi.field(signature, i) == k) break true;
+            } else false;
+            if (!final) try self.storeOperand(out, field_type, operand, try self.offsetPointer(out, "%ret", m.fieldOffset(signature.ret, k)));
+        }
+        for (0..signature.params.len) |i| {
+            if (abi.params & (@as(u64, 1) << @intCast(i)) == 0) continue;
+            try moves.append(self.a(), try self.finalMove(out, i, operands[abi.field(signature, i)]));
+        }
+        try self.moveAll(out, moves.items);
     }
 
     fn trapTerminator(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
@@ -1928,7 +2231,8 @@ const FunctionEmitter = struct {
         const m = self.state.module;
         if (value_type == .void) return error.UnsupportedInstruction;
         if (m.passedInMemory(value_type)) {
-            // A value over four words is copied into a stack slot of its own: its SSA value is that slot.
+            // A value over four words is copied into its home, or into a stack slot of its own: its SSA value is that slot.
+            if (self.homedName(result)) return self.copyBytes(out, result, ptr, m.size(value_type), false);
             const slot = try self.stackSlot(m.size(value_type));
             try self.copyBytes(out, slot, ptr, m.size(value_type), false);
             try out.print(self.a(), identity_line, .{ result, slot });
@@ -2091,64 +2395,68 @@ const FunctionEmitter = struct {
         }
     }
 
-    /// A record or union over four words, built in a stack slot of its own.
-    fn makeInMemory(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
-        const slot = try self.stackSlot(self.state.module.size(inst.ty));
-        try self.storeMake(out, inst, slot);
-        try out.print(self.a(), identity_line, .{ name, slot });
+    /// Where a value over four words named `name` is built: its home, or a fresh stack slot
+    /// (`fresh`, which the caller then names `name`).
+    fn destination(self: *FunctionEmitter, name: []const u8, size: u32) !struct { ptr: []const u8, fresh: bool } {
+        if (self.homedName(name)) return .{ .ptr = name, .fresh = false };
+        return .{ .ptr = try self.stackSlot(size), .fresh = true };
     }
 
-    /// `record_get`: `extractvalue` from a record in registers, one load from a record in memory.
-    fn recordGet(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+    /// A record or union over four words, built in its home (or a stack slot of its own).
+    fn makeInMemory(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+        const into = try self.destination(name, self.state.module.size(inst.ty));
+        try self.storeMake(out, inst, into.ptr);
+        if (into.fresh) try out.print(self.a(), identity_line, .{ name, into.ptr });
+    }
+
+    /// A view (`emit_homes.zig`): the field or payload at `offset` inside its operand, named
+    /// where it lies with no copy. Returns false when `ref` is not a view.
+    fn viewOf(self: *FunctionEmitter, out: *Out, name: []const u8, ref: ir.Ref, offset: u32) !bool {
+        const plan = &self.memory.homes;
+        if (ref.index() >= plan.view.len or plan.view[ref.index()] == .none) return false;
+        try out.print(self.a(), header_pointer_line, .{ name, try self.value(plan.view[ref.index()]), offset });
+        return true;
+    }
+
+    /// Whether `ref` is the final value of an in-out argument read out of its call's result:
+    /// the call already wrote it into `ref`'s home.
+    fn writtenByCall(self: *FunctionEmitter, ref: ir.Ref, inst: ir.Inst) bool {
+        if (inst.op != .record_get) return false;
+        const maker = self.function.resolve(inst.a).index();
+        if (maker >= self.memory.calls.len) return false;
+        const in_outs = self.memory.calls[maker];
+        for (in_outs) |in_out| if (in_out.final == ref) return true;
+        return false;
+    }
+
+    /// `record_get`: `extractvalue` from a record in registers, one load from a record in memory;
+    /// a field over four words is a view of it, or was written by an in-out call.
+    fn recordGet(self: *FunctionEmitter, out: *Out, name: []const u8, ref: ir.Ref, inst: ir.Inst) !void {
         const m = self.state.module;
         const record_type = self.typeOf(inst.a);
         if (!m.passedInMemory(record_type)) return out.print(self.a(), "  {s} = extractvalue {s}, {d}\n", .{ name, try self.typedValue(inst.a), inst.data });
-        const at = try self.offsetPointer(out, try self.value(inst.a), m.fieldOffset(record_type, @intCast(inst.data)));
+        if (self.writtenByCall(ref, inst)) return;
+        const offset = m.fieldOffset(record_type, @intCast(inst.data));
+        if (try self.viewOf(out, name, ref, offset)) return;
+        const at = try self.offsetPointer(out, try self.value(inst.a), offset);
         try self.loadValue(out, inst.ty, at, name);
     }
 
-    /// `record_set`: `insertvalue` for a record in registers. A record in memory is copied into a
-    /// slot of its own and the field stored, or, when the old value's only use is this write and it
-    /// was made in this block, written where it is.
+    /// `record_set`: `insertvalue` for a record in registers. A record in memory is copied into
+    /// the new value's home and the field stored there; when the old value shares that home
+    /// (it has no later reader, `emit_homes.zig`) the field is written where it is.
     fn recordSet(self: *FunctionEmitter, out: *Out, name: []const u8, ref: ir.Ref, inst: ir.Inst) !void {
         const m = self.state.module;
         if (!m.passedInMemory(inst.ty)) return out.print(self.a(), "  {s} = insertvalue {s}, {s}, {d}\n", .{ name, try self.typedValue(inst.a), try self.typedValue(inst.b), inst.data });
         const old = self.function.resolve(inst.a);
-        var slot: []const u8 = try self.value(old);
-        if (!self.writableInPlace(old, ref)) {
-            slot = try self.stackSlot(m.size(inst.ty));
-            try self.copyBytes(out, slot, try self.value(old), m.size(inst.ty), false);
-        }
+        const into = try self.destination(name, m.size(inst.ty));
+        const plan = &self.memory.homes;
+        if (!plan.holds(ref, 0, old)) try self.copyBytes(out, into.ptr, try self.value(old), m.size(inst.ty), false);
         const field = m.compound(inst.ty).record[@intCast(inst.data)];
-        try self.storeOperand(out, field, inst.b, try self.offsetPointer(out, slot, m.fieldOffset(inst.ty, @intCast(inst.data))));
-        try out.print(self.a(), identity_line, .{ name, slot });
-    }
-
-    /// Whether the memory value `old` may be updated where `writer` (a `record_set` of it) runs: it
-    /// was made by an instruction of this block, so each run of the block makes it again (not a
-    /// parameter, nor a slot filled on an edge), and every other reader is in this block, runs before
-    /// the write and has finished with it by then (a load, a call, a copy into a container).
-    fn writableInPlace(self: *FunctionEmitter, old: ir.Ref, writer: ir.Ref) bool {
-        const f = self.function;
-        const inst = f.inst(old);
-        if (inst.op == .param or inst.op == .phi or inst.op.isConstant()) return false;
-        const block = f.blocks.items[self.vectors.block].insts.items;
-        const written = std.mem.indexOfScalar(ir.Ref, block, writer) orelse return false;
-        if (std.mem.indexOfScalar(ir.Ref, block, old) == null) return false;
-        const readers = self.memory.readers.get(@intCast(old.index())) orelse return false;
-        for (readers.items) |reader| {
-            if (reader == writer) continue;
-            const at = std.mem.indexOfScalar(ir.Ref, block, reader) orelse return false;
-            if (at >= written) return false;
-            switch (f.inst(reader).op) {
-                .record_get, .union_tag, .union_payload, .call, .list_push, .list_set, .box_make, .record_set => {},
-                .record_make, .union_make => if (self.memory.fused[reader.index()]) return false,
-                else => return false,
-            }
-            // A construction stored later would read the changed value.
-            if (self.memory.fused[reader.index()]) return false;
-        }
-        return true;
+        const offset = m.fieldOffset(inst.ty, @intCast(inst.data));
+        // A write-back of a value built in the field itself stores nothing.
+        if (!plan.holds(ref, offset, self.function.resolve(inst.b))) try self.storeOperand(out, field, inst.b, try self.offsetPointer(out, into.ptr, offset));
+        if (into.fresh) try out.print(self.a(), identity_line, .{ name, into.ptr });
     }
 
     fn recordMake(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
@@ -2639,6 +2947,12 @@ const FunctionEmitter = struct {
         return bytes;
     }
 
+    /// The value an `%vN` name stands for, or null for any other name.
+    fn refOfName(name: []const u8) ?ir.Ref {
+        if (name.len < 3 or !std.mem.startsWith(u8, name, "%v")) return null;
+        return @fromBackingInt(std.fmt.parseInt(u32, name[2..], 10) catch return null);
+    }
+
     /// The value an `%vN` name stands for.
     fn refOf(self: *FunctionEmitter, name: []const u8) ir.Ref {
         _ = self;
@@ -2763,10 +3077,13 @@ const FunctionEmitter = struct {
             return out.print(self.a(), same_pointer, .{ name, try self.value(source) });
         }
         const ret = signature.ret;
-        const sret = !external and m.passedInMemory(ret);
+        const abi: InOutAbi = if (external) .{} else inOutAbi(m, signature);
+        const sret = !external and returnsThroughSret(m, signature, abi);
         var arguments: Out = .empty;
         var first = true;
-        const result_slot = if (sret) try self.stackSlot(m.size(ret)) else "";
+        const result = if (sret) try self.destination(name, m.size(ret)) else null;
+        const result_slot = if (result) |into| into.ptr else "";
+        const places = try self.inOutPlaces(out, name, inst);
         if (sret) {
             try arguments.print(self.a(), "ptr sret({s}) align 8 {s}", .{ try self.state.memoryType(ret), result_slot });
             first = false;
@@ -2777,32 +3094,15 @@ const FunctionEmitter = struct {
             const separator = if (first) "" else ", ";
             first = false;
             if (external and i < 64 and signature.views & (@as(u64, 1) << @intCast(i)) != 0) {
-                const data = try self.fresh("%span");
-                const len = try self.fresh("%span");
-                const text = try self.value(argument);
-                if (self.typeOf(argument) == .str_view) {
-                    try out.print(self.a(), "  {s} = extractvalue {{ ptr, i64 }} {s}, 0\n  {s} = extractvalue {{ ptr, i64 }} {s}, 1\n", .{ data, text, len, text });
-                } else {
-                    const at = try self.fresh("%span");
-                    try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n  {s} = getelementptr inbounds i8, ptr {s}, i64 8\n  {s} = load i64, ptr {s}, align 8\n", .{ data, text, at, text, len, at });
-                }
-                try arguments.print(self.a(), "{s}ptr {s}, i64 {s}", .{ separator, data, len });
+                try arguments.print(self.a(), "{s}{s}", .{ separator, try self.spanArgument(out, argument) });
                 continue;
             }
             if (!external and m.passedInMemory(param)) {
-                try arguments.print(self.a(), "{s}ptr {s}", .{ separator, try self.value(argument) });
+                const in_out = abi.params & (@as(u64, 1) << @intCast(i)) != 0;
+                try arguments.print(self.a(), "{s}ptr {s}", .{ separator, if (in_out) places[i] else try self.value(argument) });
                 continue;
             }
-            const extension = if (c_function) c_abi.argumentExtension(param) else "";
-            if (extension.len != 0) {
-                try arguments.print(self.a(), "{s}{s} {s} {s}", .{ separator, try self.ty(self.typeOf(argument)), extension, try self.value(argument) });
-                continue;
-            }
-            if (c_function and c_abi.canonicalizesNan(param)) {
-                try arguments.print(self.a(), "{s}double {s}", .{ separator, try self.canonicalNan(out, argument) });
-                continue;
-            }
-            try arguments.print(self.a(), "{s}{s}", .{ separator, try self.typedValue(argument) });
+            try arguments.print(self.a(), "{s}{s}", .{ separator, try self.scalarArgument(out, argument, param, c_function) });
         }
         const target = if (inst.op == .call_indirect)
             try self.value(inst.a)
@@ -2810,12 +3110,77 @@ const FunctionEmitter = struct {
             try self.state.originalSymbol(@intCast(inst.a.index()));
         // A trap's DWARF caller chain must survive a call in return position.
         const tail = if (program and self.state.options.target.traps == .dwarf_lines) "notail " else "";
-        if (ret == .void or sret) {
+        if (ret == .void or sret or abi.whole) {
             try out.print(self.a(), "  {s}call {s}void {s}({s}){s}\n", .{ tail, if (program) "fastcc " else "", target, arguments.items, try self.callLocation(inst.span) });
-            if (sret) try out.print(self.a(), identity_line, .{ name, result_slot });
+            if (result != null and result.?.fresh) try out.print(self.a(), identity_line, .{ name, result_slot });
+            // The one in-out parameter's final value is the result: it is where it was passed.
+            if (abi.whole and !self.homedName(name)) try out.print(self.a(), identity_line, .{ name, places[@ctz(abi.params)] });
         } else {
             try out.print(self.a(), "  {s} = {s}call {s}{s} {s}({s}){s}\n", .{ name, tail, if (program) "fastcc " else "", try self.ty(ret), target, arguments.items, try self.callLocation(inst.span) });
         }
+        if (sret) try self.completeResult(out, name, signature, .{ .result = result_slot, .places = places });
+    }
+
+    /// A register argument: widened or sign-marked for a C function, its NaN made canonical.
+    fn scalarArgument(self: *FunctionEmitter, out: *Out, argument: ir.Ref, param: ir.Type, c_function: bool) ![]const u8 {
+        const extension = if (c_function) c_abi.argumentExtension(param) else "";
+        if (extension.len != 0) return std.fmt.allocPrint(self.a(), "{s} {s} {s}", .{ try self.ty(self.typeOf(argument)), extension, try self.value(argument) });
+        if (c_function and c_abi.canonicalizesNan(param)) return std.fmt.allocPrint(self.a(), "double {s}", .{try self.canonicalNan(out, argument)});
+        return self.typedValue(argument);
+    }
+
+    /// A borrowed `(data, byte_length)` span argument of an extern-C `str` parameter.
+    fn spanArgument(self: *FunctionEmitter, out: *Out, argument: ir.Ref) ![]const u8 {
+        const data = try self.fresh("%span");
+        const len = try self.fresh("%span");
+        const text = try self.value(argument);
+        if (self.typeOf(argument) == .str_view) {
+            try out.print(self.a(), "  {s} = extractvalue {{ ptr, i64 }} {s}, 0\n  {s} = extractvalue {{ ptr, i64 }} {s}, 1\n", .{ data, text, len, text });
+        } else {
+            const at = try self.fresh("%span");
+            try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n  {s} = getelementptr inbounds i8, ptr {s}, i64 8\n  {s} = load i64, ptr {s}, align 8\n", .{ data, text, at, text, len, at });
+        }
+        return std.fmt.allocPrint(self.a(), "ptr {s}, i64 {s}", .{ data, len });
+    }
+
+    /// Where an in-out call's result record and its in-out arguments are.
+    const CallPlaces = struct { result: []const u8, places: []const []const u8 };
+
+    /// A result record something reads whole gets its in-out final values too, after the call.
+    fn completeResult(self: *FunctionEmitter, out: *Out, name: []const u8, signature: ir.Signature, at: CallPlaces) !void {
+        const ref = refOfName(name) orelse return;
+        if (ref.index() >= self.memory.complete.len) return;
+        if (!self.memory.complete[ref.index()]) return;
+        const m = self.state.module;
+        const abi = inOutAbi(m, signature);
+        for (self.memory.calls[ref.index()]) |in_out| {
+            const field = abi.field(signature, in_out.argument);
+            const into = try self.offsetPointer(out, at.result, m.fieldOffset(signature.ret, field));
+            try self.copyBytes(out, into, at.places[in_out.argument], m.size(signature.params[in_out.argument]), false);
+        }
+    }
+
+    /// Per parameter of the call `name`, the memory its in-out argument is passed in: the home
+    /// of the parameter's final value, holding the argument (copied there unless it already lives
+    /// there), or a fresh slot holding a copy when nothing names the final value.
+    fn inOutPlaces(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) ![]const []const u8 {
+        const ref = refOfName(name) orelse return &.{};
+        if (ref.index() >= self.memory.calls.len or self.memory.calls[ref.index()].len == 0) return &.{};
+        const m = self.state.module;
+        const f = self.function;
+        const operands = f.operands(inst.data);
+        const places = try self.a().alloc([]const u8, operands.len);
+        for (self.memory.calls[ref.index()]) |in_out| {
+            const argument = f.resolve(operands[in_out.argument]);
+            const final = in_out.final;
+            const size = m.size(self.typeOf(argument));
+            const homed = final != .none and self.homedName(try self.value(final));
+            places[in_out.argument] = if (homed) try self.value(final) else try self.stackSlot(size);
+            if (homed and self.memory.homes.holds(final, 0, argument)) continue;
+            if (f.inst(argument).op == .undef and !m.managed(f.inst(argument).ty)) continue;
+            try self.copyBytes(out, places[in_out.argument], try self.value(argument), size, false);
+        }
+        return places;
     }
 
     /// The entry adapter's report of the `Err` `main` returned: the runtime writes `error: VALUE`

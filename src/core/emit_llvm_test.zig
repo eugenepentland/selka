@@ -110,7 +110,9 @@ test "unmanaged undef memory phis leave their undefined edge alone without copyi
     try std.testing.expect(std.mem.indexOf(u8, text, "ptr poison") == null);
     const entry = std.mem.indexOf(u8, text, "b0:\n") orelse return error.TestUnexpectedResult;
     try std.testing.expect(std.mem.startsWith(u8, text[entry..], "b0:\n  br label %b1\n"));
-    try std.testing.expect(std.mem.indexOf(u8, text, "call void @llvm.memmove.p0.p0.i64") != null);
+    // The latch's construction is built straight in the phi's home (NEW-CORE-CE-RECORDS-1): no copy.
+    try std.testing.expect(std.mem.indexOf(u8, text, "call void @llvm.memmove.p0.p0.i64") == null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "call void @llvm.memcpy.p0.p0.i64") == null);
 }
 
 // spec-case: NEW-CORE-LLVM-1

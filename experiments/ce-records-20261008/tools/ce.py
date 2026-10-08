@@ -1,0 +1,335 @@
+#!/usr/bin/env python3
+"""CE-A harness (adapted from VP3's tools/vp3.py): build ordinary and counting
+(`--counters`) binaries with one compiler, run VP3's cells, check that both builds
+print the same and that the outputs are right, and keep the counters JSON gzipped
+under raw/<tag>/.
+
+  ce.py --compiler PATH --tag TAG build GROUP     GROUP: lox, eda, parity, rows, all
+  ce.py --compiler PATH --tag TAG run GROUP
+  ce.py --tag TAG summary [--against TAG]          bytes moved per pattern and corpus
+
+Runs are pinned off the timing CPUs 2, 3, 10, 11. Counts only: no timing is taken.
+"""
+import argparse, collections, concurrent.futures, gzip, hashlib, importlib.util, json, os, pathlib, shutil, subprocess, sys
+
+ROOT = pathlib.Path(__file__).resolve().parents[3]
+AREA = pathlib.Path(__file__).resolve().parents[1]
+CACHE = ROOT / ".mylang-cache/ce"
+SLOT = ROOT / "scripts/build-slot.sh"
+CPUS = "0,1,4-9,12-19"
+LOX = ROOT / ".mylang-cache/lox"
+LOX_SRC = LOX / "ports/mylang"
+LOX_SCRIPTS = LOX / "bench"
+EDA = pathlib.Path("/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore")
+EDA_SRC = CACHE / "src/eda"
+VP3 = ROOT / "experiments/vk-vp3-20261008"
+PARITY = {"nbody": "suite/nbody", "str_build": "micro/str_build", "matmul": "suite/matmul", "knucleotide": "suite/knucleotide"}
+
+
+def env():
+    e = dict(os.environ)
+    e["TMPDIR"] = str(ROOT / ".tmp")
+    e["MYLANG_CORE_RUNTIME_CACHE"] = str(ROOT / ".mylang-cache/core-runtime")
+    return e
+
+
+def digest_bytes(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def digest(path):
+    return digest_bytes(pathlib.Path(path).read_bytes())
+
+
+def run(argv, cwd=ROOT, extra_env=None, slot=False, timeout=3600):
+    full = [str(SLOT), "build", *map(str, argv)] if slot else ["taskset", "-c", CPUS, *map(str, argv)]
+    e = env()
+    e.update(extra_env or {})
+    try:
+        done = subprocess.run(full, cwd=cwd, env=e, capture_output=True, timeout=timeout)
+        return done.returncode, done.stdout, done.stderr
+    except subprocess.TimeoutExpired as expired:
+        return "timeout", expired.stdout or b"", expired.stderr or b""
+
+
+class Lane:
+    def __init__(self, compiler, tag):
+        self.compiler = pathlib.Path(compiler).resolve() if compiler else None
+        self.tag = tag
+        self.bins = CACHE / "bin" / tag
+        self.raw = AREA / "raw" / tag
+        self.cache = CACHE / "cache" / tag
+
+    def build(self, label, source, output, cwd, counting, links=()):
+        argv = [self.compiler, "build", source, "-o", output, "--cache-dir", self.cache, "--release"]
+        if counting:
+            argv.append("--counters")
+        for link in links:
+            argv += ["--link", link]
+        status, _, err = run(argv, cwd=cwd, slot=True)
+        if status != 0:
+            raise SystemExit(f"build failed: {label}\n{err.decode(errors='replace')[-3000:]}")
+
+    def build_group(self, group):
+        self.bins.mkdir(parents=True, exist_ok=True)
+        kinds = (("plain", False), ("count", True))
+        if group == "lox":
+            for kind, counting in kinds:
+                self.build(f"lox-{kind}", LOX_SRC / "main.my", self.bins / f"lox-{kind}", LOX_SRC, counting)
+        elif group == "eda":
+            for kind, counting in kinds:
+                self.build(f"eda-{kind}", "src/main.my", self.bins / f"eda-{kind}", EDA_SRC, counting)
+        elif group == "parity":
+            for name, path in PARITY.items():
+                for kind, counting in kinds:
+                    self.build(f"parity-{name}-{kind}", ROOT / f"bench/parity/{path}.my", self.bins / f"parity-{name}-{kind}", ROOT, counting)
+        elif group == "rows":
+            clock = ROOT / "benchmarks/runtime/ports/native_clock.c"
+            jobs = []
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+                for name, path in row_sources().items():
+                    for kind, counting in kinds:
+                        jobs.append(pool.submit(self.build, f"row-{name}-{kind}", path, self.bins / f"row-{name}-{kind}", ROOT, counting, (clock,)))
+                for job in jobs:
+                    job.result()
+
+    def counted_run(self, label, args, cwd, timeout, normalize=lambda out: out, compare=None):
+        counts = CACHE / "counts" / self.tag / f"{label}.json"
+        counts.parent.mkdir(parents=True, exist_ok=True)
+        counts.unlink(missing_ok=True)
+        sc, oc, ec = run([self.bins / f"{label.split(':')[0]}-count", *args(True)], cwd=cwd, extra_env={"MYLANG_COUNTERS": str(counts)}, timeout=timeout)
+        sp, op, ep = run([self.bins / f"{label.split(':')[0]}-plain", *args(False)], cwd=cwd, timeout=timeout)
+        same = sc == sp and normalize(oc) == normalize(op) and ec == ep
+        detail = compare() if compare else {}
+        name = label.replace(":", "-")
+        if counts.exists():
+            self.raw.mkdir(parents=True, exist_ok=True)
+            with gzip.open(self.raw / f"{name}.json.gz", "wb", compresslevel=9) as f:
+                f.write(counts.read_bytes())
+        return {"label": name, "status": sc, "plain_status": sp, "same_output": same, "stdout_sha256": digest_bytes(op),
+                "stdout": op.decode(errors="replace")[:2000], "stderr": ep.decode(errors="replace")[-2000:], "counts": counts.exists(), **detail}
+
+
+def row_registry():
+    path = ROOT / "experiments/new-core-s4-20261006/integration/measure_all46.py"
+    spec = importlib.util.spec_from_file_location("ce_rows", path)
+    registry = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(registry)
+    assert len(registry.rows.UNITS) == 46
+    return registry.rows
+
+
+def row_sources():
+    rows = row_registry()
+    return {name: ROOT / "test/core" / (rows.stem(name) + ".my") for name in rows.UNITS}
+
+
+def vp3_cells(group):
+    """VP3's cells: the same scripts, sizes and arguments."""
+    return json.loads((VP3 / "results" / f"{group}.json").read_text())
+
+
+def lox_script(name, n):
+    text = (LOX_SCRIPTS / "scripts" / f"{name}.lox").read_text()
+    first, rest = text.split("\n", 1)
+    assert first.startswith("var N = "), first
+    directory = CACHE / "lox-scripts"
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f"{name}-{n}.lox"
+    path.write_text(f"var N = {n};\n{rest}")
+    return path
+
+
+def run_lox(lane):
+    results = {}
+    cells = [(v["engine"], v["script"], v["n"]) for v in vp3_cells("lox").values()]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+        jobs = []
+        for engine, name, n in cells:
+            script = lox_script(name, n)
+            label = f"lox:{engine}-{name}-{n}"
+            jobs.append((engine, name, n, pool.submit(lane.counted_run, label, lambda counting, engine=engine, script=script: [f"--engine={engine}", script], CACHE, 1800)))
+        for engine, name, n, job in jobs:
+            result = job.result()
+            result.update(engine=engine, script=name, n=n)
+            results[result["label"]] = result
+    return results
+
+
+def run_eda(lane):
+    cases = json.loads((EDA / "golden/manifest.json").read_text())["cases"]
+    outputs = CACHE / "eda-out" / lane.tag
+
+    def one(case):
+        def args(counting):
+            directory = outputs / ("count" if counting else "plain") / case["id"]
+            if directory.exists():
+                shutil.rmtree(directory)
+            directory.mkdir(parents=True)
+            return ["--model", f"golden/cases/{case['id']}/model.sexp", "--project-dir", f"golden/projects/{case['project']}", "--out-dir", directory, *case["flags"]]
+
+        def compare():
+            mismatched = []
+            for kind in ("count", "plain"):
+                directory = outputs / kind / case["id"]
+                produced = {str(p.relative_to(directory)): digest(p) for p in directory.rglob("*") if p.is_file()}
+                expected = {name: meta["sha256"] for name, meta in case["outputs"].items()}
+                if produced != expected:
+                    mismatched.append(kind)
+            return {"golden_mismatch": mismatched}
+
+        result = lane.counted_run(f"eda:{case['id']}", args, EDA, 900, compare=compare)
+        result["same_output"] = result["same_output"] and not result["golden_mismatch"]
+        return result
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+        return {r["label"]: r for r in pool.map(one, cases)}
+
+
+def run_parity(lane):
+    results = {}
+    for name, path in PARITY.items():
+        expected = (ROOT / f"bench/parity/{path}.expected").read_bytes()
+        result = lane.counted_run(f"parity-{name}", lambda counting: [], CACHE, 1800)
+        result["matches_expected"] = result["stdout_sha256"] == digest_bytes(expected)
+        result["same_output"] = result["same_output"] and result["matches_expected"]
+        results[result["label"]] = result
+    return results
+
+
+def run_rows(lane):
+    rows = row_registry()
+    cells = vp3_cells("rows")
+
+    def one(name):
+        cell = cells[f"row-{name}"]
+        args = [str(cell["size"]), str(cell["iterations"]), "7"]
+        return lane.counted_run(f"row-{name}", lambda counting: args, CACHE, 900, normalize=lambda text: text.split()[:1])
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+        return {r["label"]: r for r in pool.map(one, list(rows.UNITS))}
+
+
+# ---- summary -------------------------------------------------------------------------
+
+def pattern(site):
+    kind, detail = site["kind"], site["detail"]
+    if kind == "record_copy":
+        return {"jump": "P1", "branch": "P1", "record_set": "P2", "list_get": "P3", "list_set": "P4", "list_set.old": "P5", "list_push": "P6", "ret": "P7"}.get(detail, "P8")
+    return {"list_copy": "P9", "dict_copy": "P10", "text_copy": "P11", "buffer_copy": "P12", "list_push": "P13"}.get(kind)
+
+
+def load_counts(directory, label):
+    path = directory / f"{label}.json.gz"
+    return json.load(gzip.open(path)) if path.exists() else None
+
+
+def by_pattern(data):
+    """Bytes moved per pattern in one counters document (VP3's analyze.py rules)."""
+    out = collections.Counter()
+    for site in data["sites"]:
+        name = pattern(site)
+        if name is None:
+            continue
+        moved = site["extra"] if site["kind"] == "list_push" else site["bytes"]
+        if moved:
+            out[name] += moved
+    for row in data["functions"]:
+        out["P14"] += row["dict_grow_bytes"] + row["buffer_grow_bytes"] + row["text_grow_bytes"]
+    return out
+
+
+def corpus_of(label):
+    return label.split("-", 1)[0]
+
+
+def primary_labels():
+    """VP3's primary cells: the larger N of each Lox cell, every EDA, parity and row cell."""
+    labels = []
+    lox = vp3_cells("lox")
+    for label, v in lox.items():
+        if v["n"] == max(w["n"] for w in lox.values() if w["engine"] == v["engine"] and w["script"] == v["script"]):
+            labels.append(label)
+    for group in ("eda", "parity", "rows"):
+        labels += list(vp3_cells(group))
+    return labels
+
+
+def totals(directory):
+    corpora = collections.defaultdict(collections.Counter)
+    per_label = {}
+    for label in primary_labels():
+        data = load_counts(directory, label)
+        if data is None:
+            continue
+        moved = by_pattern(data)
+        per_label[label] = moved
+        corpora[{"row": "rows"}.get(corpus_of(label), corpus_of(label))].update(moved)
+    return corpora, per_label
+
+
+def human(value):
+    for unit, size in (("T", 1e12), ("G", 1e9), ("M", 1e6), ("k", 1e3)):
+        if abs(value) >= size:
+            return f"{value / size:.2f} {unit}"
+    return f"{value:.0f}"
+
+
+def summary(tag, against):
+    names = ["P1", "P2", "P7", "P8", "P3", "P4", "P5", "P6", "P9", "P13", "P14", "P10", "P11", "P12"]
+    raw = lambda name: VP3 / "raw" if name == "vp3" else AREA / "raw" / name
+    after, _ = totals(raw(tag))
+    before, _ = totals(raw(against)) if against else (None, None)
+    lines = [f"bytes moved per pattern: {tag}" + (f" against {against}" if against else "")]
+    for corpus in ("lox", "eda", "parity", "rows"):
+        if corpus not in after:
+            continue
+        lines.append(f"\n{corpus}: | pattern | before | after | change |")
+        target_b = target_a = 0
+        for name in names:
+            a = after[corpus].get(name, 0)
+            b = before[corpus].get(name, 0) if before else 0
+            if not a and not b:
+                continue
+            if name in ("P1", "P2", "P7", "P8"):
+                target_a += a
+                target_b += b
+            change = f"{100 * (a - b) / b:+.1f}%" if b else ("new" if a else "")
+            lines.append(f"| {name} | {human(b)} | {human(a)} | {change} |")
+        change = f"{100 * (target_a - target_b) / target_b:+.1f}%" if target_b else ""
+        lines.append(f"| P1+P2+P7+P8 | {human(target_b)} | {human(target_a)} | {change} |")
+        lines.append(f"| all | {human(sum(before[corpus].values())) if before else ''} | {human(sum(after[corpus].values()))} | |")
+    print("\n".join(lines))
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("command")
+    parser.add_argument("group", nargs="?")
+    parser.add_argument("--compiler")
+    parser.add_argument("--tag", required=True)
+    parser.add_argument("--against")
+    args = parser.parse_args()
+    lane = Lane(args.compiler, args.tag)
+    groups = ["lox", "eda", "parity", "rows"] if args.group == "all" else [args.group]
+    if args.command == "build":
+        for group in groups:
+            lane.build_group(group)
+            print(f"built {group}", flush=True)
+        return
+    if args.command == "run":
+        for group in groups:
+            results = {"lox": run_lox, "eda": run_eda, "parity": run_parity, "rows": run_rows}[group](lane)
+            directory = AREA / "results" / args.tag
+            directory.mkdir(parents=True, exist_ok=True)
+            (directory / f"{group}.json").write_text(json.dumps(results, indent=1) + "\n")
+            bad = [label for label, r in results.items() if not r["same_output"] or not r["counts"]]
+            print(f"{group}: {len(results)} cells, {len(bad)} not identical or uncounted: {bad}", flush=True)
+        return
+    if args.command == "summary":
+        return summary(args.tag, args.against)
+    raise SystemExit("unknown command")
+
+
+if __name__ == "__main__":
+    main()
