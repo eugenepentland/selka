@@ -1,0 +1,41 @@
+module main
+
+
+record Obj:
+    tag: int
+    items: list[int]
+
+
+record Runtime:
+    objects: list[Obj]
+    count: int
+
+
+def allocate(rt: mut Runtime, obj: Obj) -> int:
+    slot = len(rt.objects)
+    rt.objects.append(obj)
+    rt.count = rt.count + 1
+    return slot
+
+
+def set_slot(rt: mut Runtime, ref: int, index: int, item: int):
+    o = rt.objects[ref]
+    o.items[index] = item
+    rt.objects[ref] = o
+
+
+def main(args: list[str], out: Stream) -> int:
+    n = 0
+    match int(args[0]):
+        case Some(v):
+            n = v
+        case None:
+            n = 0
+    rt = Runtime(objects=[], count=0)
+    i = 0
+    while i < n:
+        r = allocate(mut rt, Obj(tag=i, items=[0, 0]))
+        set_slot(mut rt, r, 1, i)
+        i = i + 1
+    out.print(rt.count, len(rt.objects))
+    return 0

@@ -1,0 +1,28 @@
+{
+  "release": [
+    "{mylang}",
+    "build",
+    "main.my",
+    "--release",
+    "-o",
+    "{cache}/prime-hello",
+    "--cache-dir",
+    "{cache}/mylang"
+  ],
+  "debug": [
+    "{mylang}",
+    "build",
+    "main.my",
+    "-o",
+    "{cache}/prime-hello",
+    "--cache-dir",
+    "{cache}/mylang"
+  ],
+  "test": [
+    "{mylang}",
+    "test",
+    ".",
+    "--cache-dir",
+    "{cache}/test"
+  ]
+}

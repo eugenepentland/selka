@@ -1,0 +1,20 @@
+warm-up done, 34 cases x 5 binaries verified; loadavg (1.90087890625, 6.263671875, 8.0791015625)
+round 1/10 done, 34 cases x 5 binaries verified; loadavg (1.9892578125, 6.20947265625, 8.0517578125)
+round 2/10 done, 34 cases x 5 binaries verified; loadavg (1.990234375, 6.13916015625, 8.01904296875)
+round 3/10 done, 34 cases x 5 binaries verified; loadavg (2.0654296875, 6.01904296875, 7.95947265625)
+round 4/10 done, 34 cases x 5 binaries verified; loadavg (2.06005859375, 5.9521484375, 7.92724609375)
+round 5/10 done, 34 cases x 5 binaries verified; loadavg (2.05517578125, 5.88623046875, 7.89501953125)
+round 6/10 done, 34 cases x 5 binaries verified; loadavg (1.97265625, 5.7412109375, 7.826171875)
+round 7/10 done, 34 cases x 5 binaries verified; loadavg (1.97509765625, 5.6787109375, 7.79443359375)
+round 8/10 done, 34 cases x 5 binaries verified; loadavg (1.9775390625, 5.6171875, 7.76318359375)
+round 9/10 done, 34 cases x 5 binaries verified; loadavg (2.0615234375, 5.5146484375, 7.7060546875)
+round 10/10 done, 34 cases x 5 binaries verified; loadavg (2.05615234375, 5.4560546875, 7.67529296875)
+exact-RSS round done (/usr/bin/time -f %M)
+
+binary        total(med)  total(min)  peak RSS  geomean ratio vs ...
+zig-fast          0.814s      0.774s     80 MiB  zig-safe 0.918  rust 0.905  go 0.369  mylang 0.548
+zig-safe          0.889s      0.848s     80 MiB  zig-fast 1.089  rust 0.986  go 0.402  mylang 0.597
+rust              0.890s      0.841s     44 MiB  zig-fast 1.105  zig-safe 1.014  go 0.407  mylang 0.606
+go                2.185s      2.011s     70 MiB  zig-fast 2.713  zig-safe 2.490  rust 2.456  mylang 1.488
+mylang            1.593s      1.504s     53 MiB  zig-fast 1.823  zig-safe 1.674  rust 1.651  go 0.672
+wrote /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/experiments/bench-newcore-20261008/eda/results/runtime.json

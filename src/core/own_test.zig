@@ -660,6 +660,94 @@ test "a mut record's field updated on one arm of a branch, or by a byte_buffer a
     }
 }
 
+const field_take =
+    \\record Runtime:
+    \\    objects: list[int]
+    \\    count: int
+    \\
+    \\
+    \\def allocate(rt: mut Runtime, obj: int) -> int:
+    \\    slot = len(rt.objects)
+    \\    rt.objects.append(obj)
+    \\    rt.count = rt.count + 1
+    \\    return slot
+    \\
+    \\
+    \\def put(rt: mut Runtime, at: int, v: int):
+    \\    rt.objects[at] = v
+    \\
+    \\
+    \\record Marker:
+    \\    marks: list[bool]
+    \\
+    \\
+    \\record Heap:
+    \\    objects: list[int]
+    \\    marker: Marker
+    \\    free_slots: list[int]
+    \\
+    \\
+    \\def heap_allocate(h: mut Heap, obj: int) -> int:
+    \\    slot = len(h.objects)
+    \\    if len(h.free_slots) > 0:
+    \\        slot = h.free_slots.pop()
+    \\        h.objects[slot] = obj
+    \\    else:
+    \\        h.objects.append(obj)
+    \\        h.marker.marks.append(False)
+    \\    return slot
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    rt = Runtime(objects=[], count=0)
+    \\    for i in range(4):
+    \\        _ = allocate(mut rt, i)
+    \\        put(mut rt, -1, i)
+    \\    h = Heap(objects=[], marker=Marker(marks=[]), free_slots=[])
+    \\    for j in range(4):
+    \\        _ = heap_allocate(mut h, j)
+    \\    out.print(len(rt.objects))
+    \\    return 0
+    \\
+;
+
+/// A function whose list update took the list over: every copy is a count test's copy
+/// arm, and nothing is retained around it.
+fn expectTakenInPlace(text: []const u8) !void {
+    try std.testing.expect(contains(text, "is_unique"));
+    try std.testing.expectEqual(std.mem.count(u8, text, "is_unique"), std.mem.count(u8, text, "list_copy"));
+    try std.testing.expect(!contains(text, "retain"));
+}
+
+// spec: NEW-CORE-TAKE-READS-1
+test "a field read finished before the read that takes the field does not stop the take, and a read still in use does" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    // `len(rt.objects)` ahead of `rt.objects.append(x)`: the append takes the list from the
+    // record and updates it after a count test; its only copy is the test's copy arm.
+    // `rt.objects[at] = v` takes it too, though the index's negative branch puts the read and
+    // the write-back in different blocks.
+    const debug = try support.ownedText(arena.allocator(), field_take);
+    try expectTakenInPlace(functionIr(debug, "allocate"));
+    try expectTakenInPlace(functionIr(debug, "put"));
+    // Each arm's update takes its own field, and the nested `h.marker.marks` append takes
+    // `h.marker` (read twice in the source) and then its list.
+    try expectTakenInPlace(functionIr(debug, "heap_allocate"));
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
+    // 100,000 such appends, an element read ahead of an append, a copy of the field still
+    // read after the append (it keeps the old list), the heap's reuse-or-grow allocation,
+    // and a row read ahead of a write-back in another block and read again after it (it
+    // keeps its own count while the write replaces it in place), leak-free in debug and
+    // release.
+    for ([_][]const []const u8{ &.{}, &.{"--release"} }) |flags_| {
+        const ran = try leakChecked(arena.allocator(), root, "rc_field_take", flags_, &.{ "a", "b" });
+        try std.testing.expectEqualStrings("100000 100002 99999 199998 200005 100001 -1\n66667 66667 100000 3333266667 1 99999\n301 204 1 4 9\n", ran.stdout);
+        try std.testing.expectEqualStrings("", ran.stderr);
+    }
+}
+
 // spec-case: NEW-CORE-MUT-OWN-1
 test "mut appends, mut records and aliases match the old core, linear and leak-free, debug and release" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);

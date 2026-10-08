@@ -1,0 +1,17 @@
+test
++- run test w
+[W] export-kicad: unsafe footprint name '../../etc/passwd' sanitized to '______etc_passwd' (path-traversal guard)
+[W] export-kicad: unsafe footprint name 'a\b' sanitized to 'a_b' (path-traversal guard)
+[I] export-kicad-sch: fixture: 1/3 components drawn from vendor symbols (1 libraries indexed)
+[I] export-kicad-sch: fixture: 1/3 components drawn from vendor symbols (1 libraries indexed)
+[W] export-kicad-sch: net 'ORPHAN' references 'U9' which has no instance — pin not drawn
+[I] export-kicad-sch: stubs: 2 per-pin bypass-stub nets labelled as their base rail
+[I] export-kicad-sch: stubs: 2 per-pin bypass-stub nets labelled as their base rail
+[I] export-kicad-sch: stubs: 2 per-pin bypass-stub nets labelled as their base rail
+[W] export-kicad-sch: vendor symbol 'ACME-3' does not draw 1 pad(s) the design uses — adding them as unit 2
+[W] export-kicad-sch: vendor symbol 'DUP' draws pad 1 twice — synthesising a box instead
+[W] export-kicad-sch: vendor symbol 'TIGHT' has pins that collide on the connection grid — synthesising a box instead
+[W] export-kicad-sch: vendor symbol library junk.kicad_sym is unreadable (UnexpectedEof)
+failed command: /home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/zig/local/o/a64ad5ab10a266cd3e2dac73228c0e7a/test --cache-dir=/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/harness/.cache/zig/local --seed=0x7da0e974 --listen=-
+
+zig: test ok in 90.1s

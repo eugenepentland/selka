@@ -1,0 +1,29 @@
+module main
+
+
+record Runtime:
+    objects: list[int]
+    count: int
+
+
+def allocate(rt: mut Runtime, obj: int) -> int:
+    slot = len(rt.objects)
+    rt.objects.append(obj)
+    rt.count = rt.count + 1
+    return slot
+
+
+def main(args: list[str], out: Stream) -> int:
+    n = 0
+    match int(args[0]):
+        case Some(v):
+            n = v
+        case None:
+            n = 0
+    rt = Runtime(objects=[], count=0)
+    i = 0
+    while i < n:
+        _ = allocate(mut rt, i)
+        i = i + 1
+    out.print(rt.count, len(rt.objects))
+    return 0

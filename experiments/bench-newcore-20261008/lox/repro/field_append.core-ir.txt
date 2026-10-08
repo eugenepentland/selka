@@ -1,0 +1,61 @@
+fn main::main(list[str], cap) -> i64
+b0:
+  %5 = cmp.lt bool 0:i64, 0:i64
+  branch %5, b1, b2
+b1: ; preds b0
+  %7 = list_len u64 param0
+  %8 = convert.exact i64 %7
+  %9 = add.exact i64 %8, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %11 = phi i64 0:i64, %9
+  %13 = list_get.exact str param0, %11
+  %14 = str_parse_int option[i64] %13
+  %15 = union_tag u32 %14
+  %17 = cmp.eq bool %15, 1:u32
+  branch %17, b4, b5
+b3: ; preds b4 b6
+  %42 = phi i64 %19, 0:i64
+  %25 = list_new list[i64] 0:i64
+  %27 = record_make record{list[i64], i64} %25, 0:i64
+  jump b7
+b4: ; preds b2
+  %19 = union_payload i64 tag1 %14
+  jump b3
+b5: ; preds b2
+  jump b6
+b6: ; preds b5
+  jump b3
+b7: ; preds b3 b9
+  %30 = phi i64 0:i64, %39
+  %34 = phi record{list[i64], i64} %27, %37
+  %32 = cmp.lt bool %30, %42
+  branch %32, b8, b10
+b8: ; preds b7
+  %35 = call record{i64, record{list[i64], i64}} main::allocate(%34, %30)
+  %36 = record_get i64 %35, field0
+  %37 = record_get record{list[i64], i64} %35, field1
+  %39 = add.exact i64 %30, 1:i64
+  jump b9
+b9: ; preds b8
+  jump b7
+b10: ; preds b7
+  %46 = record_get i64 %34, field1
+  %47 = record_get list[i64] %34, field0
+  %48 = list_len u64 %47
+  %49 = convert.exact i64 %48
+  print param1, %46, %49
+  ret 0:i64
+fn main::allocate(record{list[i64], i64}, i64) -> record{i64, record{list[i64], i64}}
+b0:
+  %2 = record_get list[i64] param0, field0
+  %3 = list_len u64 %2
+  %4 = convert.exact i64 %3
+  %5 = record_get list[i64] param0, field0
+  %6 = list_push list[i64] %5, param1
+  %7 = record_set record{list[i64], i64} param0, field0, %6
+  %8 = record_get i64 %7, field1
+  %10 = add.exact i64 %8, 1:i64
+  %11 = record_set record{list[i64], i64} %7, field1, %10
+  %12 = record_make record{i64, record{list[i64], i64}} %4, %11
+  ret %12

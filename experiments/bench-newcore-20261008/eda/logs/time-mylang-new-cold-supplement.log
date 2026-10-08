@@ -1,0 +1,21 @@
+mylang-new: repetition 1/5
+  cold_build                  10.30s      295 MiB
+  clean_build                  0.82s      272 MiB
+mylang-new: repetition 2/5
+  cold_build                  10.03s      295 MiB
+  clean_build                  0.62s      272 MiB
+mylang-new: repetition 3/5
+  cold_build                   9.86s      294 MiB
+  clean_build                  1.49s      272 MiB
+mylang-new: repetition 4/5
+  cold_build                   9.17s      295 MiB
+  clean_build                  1.45s      272 MiB
+mylang-new: repetition 5/5
+  cold_build                   9.05s      295 MiB
+  clean_build                  1.37s      272 MiB
+
+mylang-new stage 1: median of 5
+  step                          wall   peak RSS
+  cold_build                   9.86s     295 MiB
+  clean_build                  1.37s     272 MiB
+wrote harness/results/time-stage1-mylang-new-20261008T082930.json

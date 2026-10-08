@@ -1,0 +1,34 @@
+ok  	eda-sch/board_layers	0.007s
+ok  	eda-sch/cmd/eda-sch	0.013s
+ok  	eda-sch/decouple_key	0.016s
+ok  	eda-sch/design_model	0.011s
+ok  	eda-sch/diagram	0.015s
+ok  	eda-sch/escape	0.015s
+ok  	eda-sch/eval	0.013s
+ok  	eda-sch/export_kicad	0.006s
+ok  	eda-sch/export_kicad_footprint	0.007s
+?   	eda-sch/export_kicad_model	[no test files]
+ok  	eda-sch/export_kicad_netlist	0.006s
+ok  	eda-sch/export_kicad_sch	0.051s
+ok  	eda-sch/flat_netlist	0.002s
+ok  	eda-sch/footprint_paste	0.003s
+ok  	eda-sch/infra	0.005s
+ok  	eda-sch/json_writer	0.002s
+ok  	eda-sch/kicad_pcb	0.002s
+ok  	eda-sch/kicad_sch	0.008s
+ok  	eda-sch/kicad_sym	0.007s
+ok  	eda-sch/lib_limits	0.007s
+ok  	eda-sch/net_name	0.002s
+ok  	eda-sch/numeric	0.004s
+?   	eda-sch/pad_neck_profile	[no test files]
+ok  	eda-sch/placement	0.009s
+ok  	eda-sch/poly_scanline	0.006s
+?   	eda-sch/render_block_types	[no test files]
+ok  	eda-sch/render_svg	0.005s
+ok  	eda-sch/sexpr	0.023s
+ok  	eda-sch/stdlib	0.006s
+ok  	eda-sch/support	0.007s
+?   	eda-sch/support/expect	[no test files]
+ok  	eda-sch/uuid	0.007s
+ok  	eda-sch/zipfile	0.005s
+go: test ok in 6.1s

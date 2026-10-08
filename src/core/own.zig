@@ -124,6 +124,7 @@ pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Funct
         if (flags.transferredRead(inst) and module.managed(inst.ty)) try marks.owned_get.put(arena, @intCast(index), {});
         if (flags.transferredSlot(f, inst)) try marks.taken.put(arena, @intCast(index), {});
     }
+    try mergeFieldReads(arena, f);
     try takeFields(arena, module, f, &marks);
     var phase_a = try Analysis.of(arena, module, f, &marks);
     try phase_a.analyze();
@@ -958,8 +959,33 @@ fn poppedRead(f: *const ir.Function, earlier: []const ir.Ref, list: ir.Ref) ?ir.
     return null;
 }
 
+/// One read of a record's field per block: a record value never changes, so a later
+/// identical `record_get` in the block becomes a `copy` of the first. A nested update
+/// `r.marker.marks.append(x)` reads `r.marker` twice, once to reach the list and once to
+/// write it back; merged, the read that takes `r.marker` over also holds the list it
+/// updates (NEW-CORE-TAKE-READS-1).
+fn mergeFieldReads(arena: std.mem.Allocator, f: *ir.Function) Error!void {
+    const Key = struct { record: u32, field: u64 };
+    var first: std.AutoHashMapUnmanaged(Key, ir.Ref) = .empty;
+    for (f.blocks.items) |block| {
+        first.clearRetainingCapacity();
+        for (block.insts.items) |ref| {
+            const inst = f.inst(ref);
+            if (inst.op != .record_get) continue;
+            const key: Key = .{ .record = @backingInt(f.resolve(inst.a)), .field = inst.data };
+            const entry = try first.getOrPut(arena, key);
+            if (!entry.found_existing) {
+                entry.value_ptr.* = ref;
+                continue;
+            }
+            f.insts.items[ref.index()] = .{ .op = .copy, .ty = inst.ty, .a = entry.value_ptr.*, .span = inst.span };
+        }
+    }
+}
+
 /// Reads that take a record's fields over instead of borrowing them, so an update of
-/// the field does not copy it (§6.4):
+/// the field does not copy it (§6.4). Every `record_set` that replaces a field of the
+/// record is considered:
 /// - `g = record_get(r, f)` and `record_set(r, f, v)` in one block, `g` first, where `r`
 ///   is owned and has no other use but reads of other fields: `g` owns the field (the
 ///   record's reference goes to it) and the set drops nothing. This is a `mut` record's
@@ -974,19 +1000,19 @@ fn takeFields(arena: std.mem.Allocator, module: *const ir.Module, f: *const ir.F
         if (!ownedRecord(f, record) and !marks.owned_get.contains(@intCast(i))) continue;
         const ref: ir.Ref = @fromBackingInt(@intCast(i));
         var reads_only = true;
-        var set: ?ir.Ref = null;
+        var sets: std.ArrayList(ir.Ref) = .empty;
         for (graph.uses[i].items) |user| {
             const inst = f.inst(user);
             if (inst.op == .record_get and f.resolve(inst.a) == ref) continue;
             const replaces = inst.op == .record_set and f.resolve(inst.a) == ref and f.resolve(inst.b) != ref;
             if (replaces) {
-                set = set orelse user;
+                try sets.append(arena, user);
             } else reads_only = false;
         }
         const ctx: Taking = .{ .arena = arena, .module = module, .f = f, .graph = graph, .marks = marks };
-        if (set) |update| {
-            try ctx.takeReplaced(ref, update);
-        } else if (reads_only) try ctx.empty(ref);
+        // Each set replaces its own field: arms of a branch may each update another one.
+        for (sets.items) |update| try ctx.takeReplaced(ref, update);
+        if (sets.items.len == 0 and reads_only) try ctx.empty(ref);
     }
 }
 
@@ -1028,27 +1054,26 @@ const Taking = struct {
     graph: UseGraph,
     marks: *Marks,
 
-    /// `g = record_get(r, f)` then `update = record_set(r, f, v)` in one block: `g` owns
-    /// the field when it is the only read of it there and nothing but reads of other
-    /// fields can use `r` after it.
+    /// `g = record_get(r, f)` then `update = record_set(r, f, v)`: `g` owns the field (the
+    /// record's reference goes to it, and the set drops nothing) when it is the last read
+    /// of the field ahead of the set on every path, every path from it reaches the set
+    /// (or a trap), every earlier read of the field is finished before it, and nothing but
+    /// reads of other fields can use `r` after it. The read and the set may sit in
+    /// different blocks: an index's negative-index branch splits `r.items[i] = v`
+    /// (NEW-CORE-TAKE-READS-1).
     fn takeReplaced(self: Taking, record: ir.Ref, update: ir.Ref) Error!void {
         const f = self.f;
         const field = f.inst(update).data;
         if (!self.module.managed(self.module.compound(f.inst(record).ty).record[@intCast(field)])) return;
-        const update_block = self.graph.block_of[update.index()];
-        var taker: ?ir.Ref = null;
-        var readers: u32 = 0;
-        for (f.blocks.items[update_block].insts.items) |user| {
-            if (user == update) break;
-            const inst = f.inst(user);
-            if (inst.op != .record_get or inst.data != field or f.resolve(inst.a) != record) continue;
-            taker = user;
-            readers += 1;
-        }
-        // An earlier read of the field would lose the record's reference under it.
-        const get = taker orelse return;
-        if (readers != 1) return;
         const def_block = if (f.inst(record).op == .param) 0 else self.graph.block_of[record.index()];
+        var reads: std.ArrayList(ir.Ref) = .empty;
+        for (self.graph.uses[record.index()].items) |user| {
+            const inst = f.inst(user);
+            if (inst.op == .record_get and inst.data == field and f.resolve(inst.a) == record) try addUnique(self.arena, &reads, user);
+        }
+        const get = for (reads.items) |candidate| {
+            if (try self.takes(candidate, update, reads.items, def_block)) break candidate;
+        } else return;
         for (self.graph.uses[record.index()].items) |user| {
             const inst = f.inst(user);
             if (user == get or user == update) continue;
@@ -1061,6 +1086,107 @@ const Taking = struct {
         }
         try self.marks.owned_get.put(self.arena, @backingInt(get), {});
         try self.marks.taken.put(self.arena, @backingInt(update), {});
+    }
+
+    /// Whether read `get` of the field `update` replaces can take it over: it runs ahead of
+    /// the set on every path, every path from it reaches the set or a trap, and every other
+    /// read of the field (`reads`), with the parts read out of it, is finished before it.
+    fn takes(self: Taking, get: ir.Ref, update: ir.Ref, reads: []const ir.Ref, def: u32) Error!bool {
+        const get_block = self.graph.block_of[get.index()];
+        const update_block = self.graph.block_of[update.index()];
+        if (get_block == no_block or update_block == no_block) return false;
+        if (get_block == update_block) {
+            const insts = self.f.blocks.items[get_block].insts.items;
+            if (std.mem.indexOfScalar(ir.Ref, insts, get).? > std.mem.indexOfScalar(ir.Ref, insts, update).?) return false;
+        } else {
+            if (!try self.dominates(get_block, update_block)) return false;
+            if (!try self.reachesOrTraps(get_block, update_block)) return false;
+        }
+        // An earlier read still in use would lose the record's reference under it once `get`
+        // takes the field; one whose uses all come before `get` (`len(r.items)` ahead of
+        // `r.items.append(x)`) is over by then.
+        for (reads) |other| {
+            if (other == get) continue;
+            if (!try self.clearOfWindow(other, get, update, def)) return false;
+        }
+        return true;
+    }
+
+    /// Whether `read`, and every managed part read out of it (which borrows from it in
+    /// turn), is used only before `get` or only after `update`: never while `get` holds the
+    /// field and the update may already have changed the list in place. A part still used
+    /// after `update` is safe: `update` consumes the record, its counted owner, so
+    /// phase B promotes the part to its own count when it is read.
+    fn clearOfWindow(self: Taking, read: ir.Ref, get: ir.Ref, update: ir.Ref, def: u32) Error!bool {
+        var pending: std.ArrayList(ir.Ref) = .empty;
+        try pending.append(self.arena, read);
+        if (try runsAfter(self.arena, self.f, self.graph.block_of, get, read, def)) return false;
+        while (pending.pop()) |value| {
+            for (self.graph.uses[value.index()].items) |user| {
+                if (self.graph.block_of[user.index()] == no_block) return false;
+                const later = try runsAfter(self.arena, self.f, self.graph.block_of, get, user, def);
+                if (later and !try self.onlyAfter(user, get, update)) return false;
+                const inst = self.f.inst(user);
+                if (readsPart(inst.op) and self.module.managed(inst.ty)) try addUnique(self.arena, &pending, user);
+            }
+        }
+        return true;
+    }
+
+    /// Whether `user`, which may run after `get`, runs only once `update` has: every path
+    /// from `get` to it passes `update`.
+    fn onlyAfter(self: Taking, user: ir.Ref, get: ir.Ref, update: ir.Ref) Error!bool {
+        const block_of = self.graph.block_of;
+        const at = block_of[user.index()];
+        const get_block = block_of[get.index()];
+        const update_block = block_of[update.index()];
+        if (at == update_block) {
+            const insts = self.f.blocks.items[at].insts.items;
+            return std.mem.indexOfScalar(ir.Ref, insts, user).? > std.mem.indexOfScalar(ir.Ref, insts, update).?;
+        }
+        if (at == get_block) return false;
+        // `get` runs ahead of `update` in their shared block, so leaving it passes `update`.
+        if (get_block == update_block) return true;
+        return !try blockReachable(self.arena, self.f, get_block, at, update_block);
+    }
+
+    /// Whether every path from the entry block to `target` passes block `through`.
+    fn dominates(self: Taking, through: u32, target: u32) Error!bool {
+        if (through == 0) return true;
+        const seen = try self.arena.alloc(bool, self.f.blocks.items.len);
+        @memset(seen, false);
+        var stack: std.ArrayList(u32) = .empty;
+        try stack.append(self.arena, 0);
+        seen[0] = true;
+        while (stack.pop()) |b| {
+            if (b == target) return false;
+            for (successors(self.f, b).slice()) |succ| {
+                if (succ == through or seen[succ]) continue;
+                seen[succ] = true;
+                try stack.append(self.arena, succ);
+            }
+        }
+        return true;
+    }
+
+    /// Whether every path leaving block `from` reaches block `target` or ends in a trap,
+    /// without coming back to `from` first.
+    fn reachesOrTraps(self: Taking, from: u32, target: u32) Error!bool {
+        const seen = try self.arena.alloc(bool, self.f.blocks.items.len);
+        @memset(seen, false);
+        var stack: std.ArrayList(u32) = .empty;
+        try stack.append(self.arena, from);
+        while (stack.pop()) |b| {
+            const next = successors(self.f, b);
+            if (next.len == 0 and !endsInTrap(self.f, b)) return false;
+            for (next.slice()) |succ| {
+                if (succ == from) return false;
+                if (succ == target or seen[succ]) continue;
+                seen[succ] = true;
+                try stack.append(self.arena, succ);
+            }
+        }
+        return true;
     }
 
     /// A record used only by reads in its own block, each block-holding field read once:
@@ -1090,6 +1216,14 @@ const Taking = struct {
         try self.marks.emptied.put(self.arena, @backingInt(record), {});
     }
 };
+
+/// Whether `op` reads a part of its first operand that borrows from it (§5).
+fn readsPart(op: ir.Op) bool {
+    return switch (op) {
+        .list_get, .list_get_field, .record_get, .union_payload, .box_get => true,
+        else => false,
+    };
+}
 
 /// Whether join `phi` can receive `record` on an edge taken after `get`: a phi reads each
 /// operand at the end of its predecessor, so only the edges carrying `record` from `get`'s
@@ -1551,6 +1685,12 @@ const Successors = struct {
         return self.buffer[0..self.len];
     }
 };
+
+/// Whether `block` ends in `unreachable` (a trap: the process ends there).
+fn endsInTrap(f: *const ir.Function, block: u32) bool {
+    const insts = f.blocks.items[block].insts.items;
+    return insts.len != 0 and f.inst(insts[insts.len - 1]).op == .@"unreachable";
+}
 
 // twin-drift-ok: facts.successorsOf keeps both targets of a branch as block ids;
 // this one works on u32 indices and lists a branch's single target once.
