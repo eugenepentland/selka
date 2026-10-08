@@ -244,20 +244,23 @@ test "nested resource wrappers release at scope exit and traps unwind every inst
     var box: Sandbox = undefined;
     try sandbox(&box);
     defer box.deinit();
-    var compilation = try language.Compilation.init(t.allocator, "wrappers.my", wrappers);
-    defer compilation.deinit();
     var options = box.options();
+    // The unbounded run first, then one run per budget, all of one build and run
+    // as one batch (NEW-CORE-S5-UNITS-BATCH-1).
+    var programs: native.Batch = .init(t.allocator);
+    defer programs.deinit();
+    try programs.add("wrappers.my", wrappers, options);
     // Every budget cuts the first pair at a different boundary; a leaked or
     // twice-released owner would abort instead of returning or trapping cleanly.
     // The exit status now carries the entry result, so a clean run is one that
     // either returned normally or trapped with a runtime `R_*` code.
     for (1..90) |budget| {
         options.max_steps = budget;
-        const outcome = try native.runWithOptions(&compilation, options);
-        try t.expect(!outcome.trapped() or std.mem.startsWith(u8, outcome.trap.code, "R_"));
+        try programs.again(0, options);
     }
-    options.max_steps = null;
-    try t.expectEqual(@as(i64, 1000), (try native.runWithOptions(&compilation, options)).value);
+    const runs = try programs.run();
+    try t.expectEqual(@as(i64, 1000), runs[0].value);
+    try native.expectEndedCleanly(runs[1..]);
 }
 
 test "resource acquisition identity and cleanup contracts survive exact duplicate discovery" {

@@ -90,6 +90,182 @@ pub fn runWithOptions(compilation: anytype, options: Options) Error!Run {
     return execute(session, try write(session, sources), options);
 }
 
+/// What a failed expectation of `Cases.check` or `expectEndedCleanly` returns, beside
+/// the errors of the runs themselves.
+pub const CheckError = Error || error{ TestUnexpectedResult, TestExpectedEqual };
+
+/// One run of a batch (`runAll`): a single-file compilation and the run's options.
+pub const Job = struct { compilation: *language.Compilation, options: Options = .{} };
+
+/// Build and run every job's program, `wiring.lanes()` at a time, and return the
+/// runs in job order (NEW-CORE-S5-UNITS-BATCH-1). Each compilation is checked and its
+/// sources written first, in job order, so a front-end error stops the batch before
+/// any program runs; the first job that fails afterwards decides the error.
+pub fn runAll(jobs: []const Job) Error![]Run {
+    const session = try wiring.acquire();
+    const a = session.allocator();
+    const trees = try a.alloc(Tree, jobs.len);
+    for (jobs, trees, 0..) |job, *tree, index| {
+        // A job that reruns an earlier job's compilation (another budget) shares its tree.
+        tree.* = for (jobs[0..index], trees[0..index]) |earlier, written| {
+            if (earlier.compilation == job.compilation) break written;
+        } else fresh: {
+            try job.compilation.check();
+            break :fresh try write(session, try singleSource(a, job.compilation.src));
+        };
+    }
+    var queue: Queue = .{ .session = session, .jobs = jobs, .trees = trees, .results = try a.alloc(Error!Run, jobs.len) };
+    const helpers = try a.alloc(std.Thread, @min(wiring.lanes(), jobs.len) -| 1);
+    var started: usize = 0;
+    for (helpers) |*helper| {
+        helper.* = std.Thread.spawn(.{}, Queue.drain, .{&queue}) catch break;
+        started += 1;
+    }
+    queue.drain();
+    for (helpers[0..started]) |helper| helper.join();
+    const runs = try a.alloc(Run, jobs.len);
+    for (queue.results, runs) |result, *outcome| outcome.* = try result;
+    return runs;
+}
+
+/// The jobs of one `runAll`, taken in order by however many threads drain it.
+const Queue = struct {
+    session: *wiring.Session,
+    jobs: []const Job,
+    trees: []const Tree,
+    results: []Error!Run,
+    next: std.atomic.Value(usize) = .init(0),
+
+    fn drain(self: *Queue) void {
+        while (true) {
+            const at = self.next.fetchAdd(1, .monotonic);
+            if (at >= self.jobs.len) return;
+            self.results[at] = execute(self.session, self.trees[at], self.jobs[at].options);
+        }
+    }
+};
+
+/// Single-file programs a test collects and then runs as one batch (`runAll`). The
+/// batch owns each program's source and compilation until `deinit`.
+pub const Batch = struct {
+    allocator: std.mem.Allocator,
+    sources: std.ArrayList([]const u8) = .empty,
+    compilations: std.ArrayList(*language.Compilation) = .empty,
+    jobs: std.ArrayList(Job) = .empty,
+
+    /// An empty batch whose programs live in `allocator`.
+    pub fn init(allocator: std.mem.Allocator) Batch {
+        return .{ .allocator = allocator };
+    }
+
+    /// Add the program `source`, named `path`, and one run of it under `options`.
+    pub fn add(self: *Batch, path: []const u8, source: []const u8, options: Options) std.mem.Allocator.Error!void {
+        const owned = try self.allocator.dupe(u8, source);
+        errdefer self.allocator.free(owned);
+        try self.sources.ensureUnusedCapacity(self.allocator, 1);
+        try self.compilations.ensureUnusedCapacity(self.allocator, 1);
+        const compilation = try self.allocator.create(language.Compilation);
+        errdefer self.allocator.destroy(compilation);
+        compilation.* = try language.Compilation.init(self.allocator, path, owned);
+        self.sources.appendAssumeCapacity(owned);
+        self.compilations.appendAssumeCapacity(compilation);
+        try self.again(self.compilations.items.len - 1, options);
+    }
+
+    /// One more run, under `options`, of the batch's `program`-th program (in `add` order).
+    pub fn again(self: *Batch, program: usize, options: Options) std.mem.Allocator.Error!void {
+        try self.jobs.append(self.allocator, .{ .compilation = self.compilations.items[program], .options = options });
+    }
+
+    /// Build and run every job, returning the runs in job order.
+    pub fn run(self: *Batch) Error![]Run {
+        return runAll(self.jobs.items);
+    }
+
+    /// Release every program and the batch's lists.
+    pub fn deinit(self: *Batch) void {
+        for (self.compilations.items) |compilation| {
+            compilation.deinit();
+            self.allocator.destroy(compilation);
+        }
+        for (self.sources.items) |source| self.allocator.free(source);
+        self.sources.deinit(self.allocator);
+        self.compilations.deinit(self.allocator);
+        self.jobs.deinit(self.allocator);
+    }
+};
+
+/// Programs a test collects with what each must do, return a value or trap with a
+/// code (on a given line, when one is named), then runs as one batch (`check`).
+pub const Cases = struct {
+    batch: Batch,
+    expected: std.ArrayList(Expected) = .empty,
+
+    /// What one program must do; `stdout`, when named, is all it prints and is owned.
+    pub const Expected = struct { value: i64 = 0, trap: ?[]const u8 = null, line: ?u64 = null, stdout: ?[]const u8 = null };
+
+    /// No cases yet; programs live in `allocator`.
+    pub fn init(allocator: std.mem.Allocator) Cases {
+        return .{ .batch = .init(allocator) };
+    }
+
+    /// The program `source`, named `path`, returns `value`.
+    pub fn returns(self: *Cases, path: []const u8, source: []const u8, value: i64) std.mem.Allocator.Error!void {
+        try self.expect(path, source, .{ .value = value });
+    }
+
+    /// The program `source`, named `path`, traps with `code`, on `line` when one is given.
+    pub fn traps(self: *Cases, path: []const u8, source: []const u8, code: []const u8, line: ?u64) std.mem.Allocator.Error!void {
+        try self.expect(path, source, .{ .trap = code, .line = line });
+    }
+
+    /// The program `source`, named `path`, returns normally having printed exactly `stdout`.
+    pub fn prints(self: *Cases, path: []const u8, source: []const u8, stdout: []const u8) std.mem.Allocator.Error!void {
+        const owned = try self.batch.allocator.dupe(u8, stdout);
+        errdefer self.batch.allocator.free(owned);
+        try self.expect(path, source, .{ .stdout = owned });
+    }
+
+    fn expect(self: *Cases, path: []const u8, source: []const u8, expected: Expected) std.mem.Allocator.Error!void {
+        try self.expected.ensureUnusedCapacity(self.batch.allocator, 1);
+        try self.batch.add(path, source, .{});
+        self.expected.appendAssumeCapacity(expected);
+    }
+
+    /// Run every program as one batch and compare each with what it must do; a
+    /// mismatch prints the program's source.
+    pub fn check(self: *Cases) CheckError!void {
+        const runs = try self.batch.run();
+        for (self.expected.items, runs, self.batch.sources.items) |expected, outcome, source| {
+            errdefer report("native_execute: this program did not do what its case expects:\n{s}\n", .{source});
+            const code = expected.trap orelse {
+                try std.testing.expect(!outcome.trapped());
+                const printed = expected.stdout orelse {
+                    try std.testing.expectEqual(expected.value, outcome.value);
+                    continue;
+                };
+                try std.testing.expectEqualStrings(printed, outcome.stdout);
+                continue;
+            };
+            try std.testing.expectEqualStrings(code, outcome.trap.code);
+            if (expected.line) |line| try std.testing.expectEqual(line, outcome.trap.line);
+        }
+    }
+
+    /// Release every program and expectation.
+    pub fn deinit(self: *Cases) void {
+        for (self.expected.items) |expected| if (expected.stdout) |printed| self.batch.allocator.free(printed);
+        self.expected.deinit(self.batch.allocator);
+        self.batch.deinit();
+    }
+};
+
+/// Every run returned or trapped with a runtime `R_*` code: none ended any other way,
+/// as an owner released twice would abort the process.
+pub fn expectEndedCleanly(runs: []const Run) CheckError!void {
+    for (runs) |outcome| try std.testing.expect(!outcome.trapped() or std.mem.startsWith(u8, outcome.trap.code, "R_"));
+}
+
 /// Build one checked single-file compilation into an executable with `mylang build`
 /// and return its path; an identical earlier build is reused. The program grants
 /// itself nothing beyond what a built executable grants.
@@ -444,6 +620,30 @@ test "native execution reports entry results, guest output and located traps" {
     try std.testing.expectEqual(trap_detail.Operation.div, failure.trap.detail.operation);
     try std.testing.expectEqual(@as(i64, 1), failure.trap.detail.values.left);
     try std.testing.expectEqual(@as(i64, 0), failure.trap.detail.values.right);
+}
+
+// spec: NEW-CORE-S5-UNITS-BATCH-1
+test "a batch runs its programs together and returns each run in job order" {
+    var batch: Batch = .init(std.testing.allocator);
+    defer batch.deinit();
+    try batch.add("first.my", "def main() -> i64:\n    return 1\n", .{});
+    try batch.add("second.my", "def main() -> i64:\n    return divtrunc(1, 0)\n", .{});
+    try batch.add("loop.my", "def main() -> i64:\n    while True:\n        pass\n    return 0\n", .{ .max_steps = 5 });
+    // A rerun under another budget shares the program's written tree.
+    try batch.again(2, .{ .max_steps = 9 });
+    const runs = try batch.run();
+    try std.testing.expectEqual(@as(usize, 4), runs.len);
+    try std.testing.expectEqual(@as(i64, 1), runs[0].value);
+    try std.testing.expectEqualStrings("R_DIVISION_BY_ZERO", runs[1].trap.code);
+    try std.testing.expectEqualStrings("second.my", runs[1].trap.path);
+    try std.testing.expectEqualStrings("R_STEP_LIMIT", runs[2].trap.code);
+    try std.testing.expectEqualStrings("R_STEP_LIMIT", runs[3].trap.code);
+    // A program the front end rejects stops its batch before anything runs.
+    var rejected: Batch = .init(std.testing.allocator);
+    defer rejected.deinit();
+    try rejected.add("fine.my", "def main() -> i64:\n    return 0\n", .{});
+    try rejected.add("bad.my", "def main() -> i64:\n    return missing\n", .{});
+    try std.testing.expectError(error.SourceError, rejected.run());
 }
 
 // spec-case: NEW-CORE-S5-UNITS-1

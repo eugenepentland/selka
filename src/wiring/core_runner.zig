@@ -48,6 +48,27 @@ pub const Session = struct {
 };
 
 var session: ?Session = null;
+/// How many guest runs one `native_execute.runAll` keeps going at once.
+var batch_lanes: usize = 1;
+
+/// The width of a batch of guest runs (NEW-CORE-S5-UNITS-BATCH-1), set when the
+/// session opens: `MYLANG_UNIT_JOBS`, else this process's share of at most eight
+/// CPUs among the `MYLANG_UNIT_SHARDS` shards the gate runs at once.
+pub fn lanes() usize {
+    return batch_lanes;
+}
+
+/// The batch width for an explicit `jobs` count, else `cpus` (at most eight) divided
+/// among `shards` concurrent test processes; never below one.
+fn lanesFor(jobs: ?[]const u8, shards: ?[]const u8, cpus: usize) usize {
+    if (positive(jobs)) |explicit| return explicit;
+    return @max(1, @min(cpus, 8) / (positive(shards) orelse 1));
+}
+
+fn positive(text: ?[]const u8) ?usize {
+    const value = std.fmt.parseInt(usize, text orelse return null, 10) catch return null;
+    return if (value == 0) null else value;
+}
 
 /// Open, or reuse, this process's runner session.
 pub fn acquire() Error!*Session {
@@ -70,6 +91,7 @@ pub fn acquire() Error!*Session {
     try base.put(zig_cache, try userCache(a, &process, zig_cache, "zig", cache));
     try base.put(runtime_cache, try userCache(a, &process, runtime_cache, "mylang/core-runtime", cache));
     if (process.get("TMPDIR")) |scratch| try base.put("TMPDIR", scratch);
+    batch_lanes = lanesFor(process.get("MYLANG_UNIT_JOBS"), process.get("MYLANG_UNIT_SHARDS"), std.Thread.getCpuCount() catch 1);
     session = .{ .arena = arena, .io = io, .compiler = compiler, .zig = zig, .cache = cache, .base = base };
     return &session.?;
 }
@@ -104,4 +126,15 @@ test "the runner session resolves the compiler and an absolute suite cache once"
     const moved = try first.environment(&given);
     try std.testing.expectEqualStrings(merged.get(zig_cache).?, moved.get(zig_cache).?);
     try std.testing.expectEqualStrings(merged.get(xdg_cache).?, moved.get(xdg_cache).?);
+}
+
+// spec-case: NEW-CORE-S5-UNITS-BATCH-1
+test "a batch runs on up to eight CPUs shared among the gate's shards, or on MYLANG_UNIT_JOBS" {
+    try std.testing.expectEqual(@as(usize, 8), lanesFor(null, null, 20));
+    try std.testing.expectEqual(@as(usize, 4), lanesFor(null, null, 4));
+    try std.testing.expectEqual(@as(usize, 1), lanesFor(null, "12", 20));
+    try std.testing.expectEqual(@as(usize, 2), lanesFor(null, "4", 16));
+    try std.testing.expectEqual(@as(usize, 3), lanesFor("3", "12", 20));
+    try std.testing.expectEqual(@as(usize, 8), lanesFor("0", "zero", 16));
+    try std.testing.expect(lanes() >= 1);
 }

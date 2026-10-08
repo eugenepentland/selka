@@ -78,6 +78,16 @@ documentation edit re-runs only the steps that read it.
 Write new language-behaviour tests on the mylang side from now on. The list
 below is the backlog of existing Zig tests that belong there too.
 
+A Zig test that still runs several guest programs collects them before running
+any. `native_execute.Cases` takes each program with what it must do (`returns`,
+`traps`, `prints`). `check` then builds and runs them all as one batch and
+compares each result. A loop over budgets uses `native_execute.Batch` with
+`again`. A batch runs on up to eight CPUs in a focused `test-units` run, and on
+one per shard in the gate. The converted tests of `integers_test.zig`,
+`prelude_builtins_test.zig`, `io_print_test.zig`, `float_operations_test.zig`
+and the three trap-at-every-step loops took 57.6 s cold one program at a time,
+and 16.2 s as batches.
+
 ## Converting a test
 
 The recipe lives in `tests/lang/README.md` under "Converting one Zig test".

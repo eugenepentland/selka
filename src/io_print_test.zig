@@ -8,20 +8,10 @@ const io_render = @import("io_render.zig");
 
 const module = "io-print.my";
 
-/// Execute one program natively and return everything it wrote to standard output.
-fn output(text: []const u8) ![]const u8 {
-    var compilation = try language.Compilation.init(t.allocator, module, text);
-    defer compilation.deinit();
-    const outcome = native.run(&compilation) catch |err| {
-        @import("diagnostics_test.zig").report(compilation.diagnostics.items);
-        return err;
-    };
-    try t.expectEqualStrings("", outcome.trap.code);
-    return outcome.stdout;
-}
-
-fn expectOutput(text: []const u8, expected: []const u8) !void {
-    try t.expectEqualStrings(expected, try output(text));
+/// The program `text` returns normally having printed exactly `expected` (run with
+/// the test's other programs).
+fn expectOutput(programs: *native.Cases, text: []const u8, expected: []const u8) !void {
+    try programs.prints(module, text, expected);
 }
 
 fn reject(text: []const u8, code: []const u8) !void {
@@ -33,50 +23,62 @@ fn reject(text: []const u8, code: []const u8) !void {
 
 // spec: IO-1
 test "IO-1 print renders scalars, text, bytes and containers with Python spellings" {
-    try expectOutput("def main(out: Stream) -> int:\n    out.print(42)\n    return 0\n", "42\n");
-    try expectOutput("def main(out: Stream) -> int:\n    out.print(1, 2, 3)\n    return 0\n", "1 2 3\n");
-    try expectOutput("def main(out: Stream) -> int:\n    out.print()\n    return 0\n", "\n");
-    try expectOutput("def main(out: Stream) -> int:\n    out.print(True, False, None)\n    return 0\n", "True False None\n");
-    try expectOutput("def main(out: Stream) -> int:\n    out.print(1.5)\n    out.print(3.0)\n    return 0\n", "1.5\n3.0\n");
-    try expectOutput("def main(out: Stream) -> int:\n    out.print(\"hi there\")\n    return 0\n", "hi there\n");
-    try expectOutput("def main(out: Stream) -> int:\n    out.print(b\"a\\n\\xff\")\n    return 0\n", "b'a\\n\\xff'\n");
-    try expectOutput("def main(out: Stream) -> int:\n    out.print([1, 2, 3])\n    return 0\n", "[1, 2, 3]\n");
-    try expectOutput("def main(out: Stream) -> int:\n    out.print([\"a\", \"b\"])\n    return 0\n", "['a', 'b']\n");
-    try expectOutput("def main(out: Stream) -> int:\n    counts = {\"a\": 1, \"b\": 2}\n    out.print(counts)\n    return 0\n", "{'a': 1, 'b': 2}\n");
+    var programs: native.Cases = .init(t.allocator);
+    defer programs.deinit();
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print(42)\n    return 0\n", "42\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print(1, 2, 3)\n    return 0\n", "1 2 3\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print()\n    return 0\n", "\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print(True, False, None)\n    return 0\n", "True False None\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print(1.5)\n    out.print(3.0)\n    return 0\n", "1.5\n3.0\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print(\"hi there\")\n    return 0\n", "hi there\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print(b\"a\\n\\xff\")\n    return 0\n", "b'a\\n\\xff'\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print([1, 2, 3])\n    return 0\n", "[1, 2, 3]\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print([\"a\", \"b\"])\n    return 0\n", "['a', 'b']\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    counts = {\"a\": 1, \"b\": 2}\n    out.print(counts)\n    return 0\n", "{'a': 1, 'b': 2}\n");
+    try programs.check();
 }
 
 // spec: IO-2
 test "IO-2 print renders records, enums, unions and checked results by name" {
+    var programs: native.Cases = .init(t.allocator);
+    defer programs.deinit();
     const record = "record Point:\n    x: int\n    y: int\n\ndef main(out: Stream) -> int:\n    out.print(Point(x=1, y=2))\n    return 0\n";
-    try expectOutput(record, "Point(x=1, y=2)\n");
+    try expectOutput(&programs, record, "Point(x=1, y=2)\n");
     const colours = "enum Colour:\n    red,\n    green\n\n\ndef main(out: Stream) -> int:\n    out.print(Colour.green)\n    return 0\n";
-    try expectOutput(colours, "Colour.green\n");
+    try expectOutput(&programs, colours, "Colour.green\n");
     const shape = "union Shape:\n    dot: i64,\n    gap\n\n\ndef main(out: Stream) -> int:\n    out.print(Shape.dot(7))\n    out.print(Shape.gap)\n    return 0\n";
-    try expectOutput(shape, "Shape.dot(7)\nShape.gap\n");
+    try expectOutput(&programs, shape, "Shape.dot(7)\nShape.gap\n");
     const checked = "def pick(n: int) -> Result[int, str]:\n    if n < 0:\n        return Err(\"negative\")\n    return Ok(n)\n\ndef main(out: Stream) -> int:\n    out.print(pick(3))\n    out.print(pick(-1))\n    return 0\n";
-    try expectOutput(checked, "Ok(3)\nErr('negative')\n");
+    try expectOutput(&programs, checked, "Ok(3)\nErr('negative')\n");
     const option = "def main(out: Stream) -> int:\n    found: Option[int] = Some(4)\n    missing: Option[int] = None\n    out.print(found, missing)\n    return 0\n";
-    try expectOutput(option, "Some(4) None\n");
+    try expectOutput(&programs, option, "Some(4) None\n");
+    try programs.check();
 }
 
 // spec: IO-3
 test "IO-3 print accepts sep and end keyword arguments and rejects other keywords" {
-    try expectOutput("def main(out: Stream) -> int:\n    out.print(1, 2, sep=\"-\")\n    return 0\n", "1-2\n");
-    try expectOutput("def main(out: Stream) -> int:\n    out.print(1, end=\"\")\n    out.print(2)\n    return 0\n", "12\n");
+    var programs: native.Cases = .init(t.allocator);
+    defer programs.deinit();
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print(1, 2, sep=\"-\")\n    return 0\n", "1-2\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print(1, end=\"\")\n    out.print(2)\n    return 0\n", "12\n");
     // The result line follows the guest's own bytes, so a run ends with a newline.
-    try expectOutput("def main(out: Stream) -> int:\n    out.print(1, 2, sep=\"\", end=\"!\")\n    out.print()\n    return 0\n", "12!\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print(1, 2, sep=\"\", end=\"!\")\n    out.print()\n    return 0\n", "12!\n");
     try reject("def main(out: Stream) -> int:\n    out.print(1, flush=True)\n    return 0\n", "E_IO_ARGUMENT");
     try reject("def main(out: Stream) -> int:\n    out.print(1, sep=\"-\", sep=\",\")\n    return 0\n", "E_IO_ARGUMENT");
     try reject("def main(out: Stream) -> int:\n    out.print(sep=\"-\", 1)\n    return 0\n", "E_CALL_ARGUMENT");
     try reject("def main(out: Stream) -> int:\n    out.print(1, sep=2)\n    return 0\n", "E_TYPE");
+    try programs.check();
 }
 
 // spec: IO-4
 test "IO-4 print contributes the output effect that noio withholds" {
+    var programs: native.Cases = .init(t.allocator);
+    defer programs.deinit();
     try reject("def main(out: Stream) -> int noio:\n    out.print(1)\n    return 0\n", "E_EFFECT_BOUND");
     try reject("def emit(out: Stream) -> None:\n    out.print(1)\n\ndef main(out: Stream) -> int noio:\n    emit(out)\n    return 0\n", "E_EFFECT_BOUND");
-    try expectOutput("def main(out: Stream) -> int effects(output):\n    out.print(1)\n    return 0\n", "1\n");
-    try expectOutput("def main(out: Stream) -> int noalloc:\n    out.print(1)\n    return 0\n", "1\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int effects(output):\n    out.print(1)\n    return 0\n", "1\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int noalloc:\n    out.print(1)\n    return 0\n", "1\n");
+    try programs.check();
 }
 
 // spec: IO-5
@@ -105,6 +107,8 @@ test "generic function bodies reject the reserved io builtins with a located dia
 
 // spec: IO-15
 test "IO-15 print and write work on a Stream held in a record field" {
+    var programs: native.Cases = .init(t.allocator);
+    defer programs.deinit();
     const source =
         \\record Sink:
         \\    stream: Stream
@@ -124,33 +128,37 @@ test "IO-15 print and write work on a Stream held in a record field" {
         \\    _ = pair.first.stream.write("x\n")
         \\    return emit(pair.first) - 6
     ;
-    try expectOutput(source, "x\nhello\nn 6\n");
+    try expectOutput(&programs, source, "x\nhello\nn 6\n");
     try reject("record Sink:\n    stream: Stream\n\ndef main(out: Stream) -> int:\n    sink = Sink(stream=out)\n    sink.stream.flush()\n    return 0\n", "E_COLLECTION_METHOD");
+    try programs.check();
 }
 
 test "QBE-BULK-TEXT-1 raw top-level text is encoded into the line buffer in one pass" {
+    var programs: native.Cases = .init(t.allocator);
+    defer programs.deinit();
     // Empty text writes nothing and still ends the line.
-    try expectOutput("def main(out: Stream) -> int:\n    out.print(\"\")\n    return 0\n", "\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print(\"\")\n    return 0\n", "\n");
     // ASCII past the buffer's first 64-byte capacity, so the reserve path runs.
     const long: [70]u8 = @splat('a');
-    try expectOutput("def main(out: Stream) -> int:\n    out.print(\"" ++ long ++ "\")\n    return 0\n", long ++ "\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print(\"" ++ long ++ "\")\n    return 0\n", long ++ "\n");
     // Two-, three- and four-byte scalars widen exactly as the per-scalar encoder
     // did, and a line that grows across several values keeps every byte.
     const wide = "h\u{00e9}\u{2192}\u{1F600}";
-    try expectOutput("def main(out: Stream) -> int:\n    out.print(\"h\\u00e9\\u2192\\U0001F600\")\n    return 0\n", wide ++ "\n");
-    try expectOutput("def main(out: Stream) -> int:\n    out.print(\"" ++ long ++ "\", \"h\\u00e9\\u2192\\U0001F600\", sep=\"\")\n    return 0\n", long ++ wide ++ "\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print(\"h\\u00e9\\u2192\\U0001F600\")\n    return 0\n", wide ++ "\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print(\"" ++ long ++ "\", \"h\\u00e9\\u2192\\U0001F600\", sep=\"\")\n    return 0\n", long ++ wide ++ "\n");
     // Top-level text is raw: quotes, backslashes, tabs, newlines and NUL scalars
     // reach the stream unchanged.
-    try expectOutput("def main(out: Stream) -> int:\n    out.print(\"a'b\\\\c\\td\\ne\\0f\")\n    return 0\n", "a'b\\c\td\ne\x00f\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print(\"a'b\\\\c\\td\\ne\\0f\")\n    return 0\n", "a'b\\c\td\ne\x00f\n");
     // Inside a container the same text is still repr-quoted and escaped.
-    try expectOutput("def main(out: Stream) -> int:\n    out.print([\"a'b\", \"c\\nd\"])\n    return 0\n", "['a\\'b', 'c\\nd']\n");
+    try expectOutput(&programs, "def main(out: Stream) -> int:\n    out.print([\"a'b\", \"c\\nd\"])\n    return 0\n", "['a\\'b', 'c\\nd']\n");
     // Text built at run time — joined, sliced and replaced, so heap strings
     // rather than literal images — takes the same path.
     const built = "def main(out: Stream) -> int:\n    text = \"-\".join([\"a\", \"b\", \"c\"])\n    out.print(text[1:4])\n    out.print(text.replace(\"-\", \"\\u00e9\"))\n    return 0\n";
-    try expectOutput(built, "-b-\na\u{00e9}b\u{00e9}c\n");
+    try expectOutput(&programs, built, "-b-\na\u{00e9}b\u{00e9}c\n");
     // `stream.write` is the other raw-text caller and returns the scalar count.
     const write = "def show(log: Stream) -> int:\n    return log.write(\"h\\u00e9\\u2192\\U0001F600\")\n\ndef main(out: Stream) -> int:\n    out.print(show(out))\n    return 0\n";
-    try expectOutput(write, wide ++ "4\n");
+    try expectOutput(&programs, write, wide ++ "4\n");
+    try programs.check();
 }
 
 /// Execute one program natively and return both standard streams. A guest that
@@ -293,7 +301,10 @@ test "STREAM-BYTES-2 a buffer write keeps the output effect of the bytes it writ
 
 // spec-case: VALUE-SEMANTICS-14
 test "VALUE-SEMANTICS-14 print renders a lent operand as it was before a later operand writes it" {
+    var programs: native.Cases = .init(t.allocator);
+    defer programs.deinit();
     const program = "def push(xs: mut list[int]) -> int:\n    xs.append(9)\n    return 1\n\ndef main(out: Stream) -> int:\n    zs = [1, 2, 3]\n    out.print(zs, push(mut zs), zs)\n    out.print(zs, zs.pop())\n    return 0\n";
     const expected = "[1, 2, 3] 1 [1, 2, 3, 9]\n[1, 2, 3, 9] 9\n";
-    try expectOutput(program, expected);
+    try expectOutput(&programs, program, expected);
+    try programs.check();
 }

@@ -160,6 +160,12 @@ fn withTools(step: *std.Build.Step.Run) void {
     for (args, prefix.items) |*arg, word| arg.* = .{ .bytes = b.graph.dupeString(word) };
     step.argv.insertSlice(arena, 0, args) catch @panic("out of memory");
 }
+/// Give the command `withTools` wraps the variable `assignment` (`NAME=VALUE`): it
+/// goes after `sh -c SCRIPT with-tools MYLANG_ZIG=PATH`, before the command itself.
+fn withVariable(step: *std.Build.Step.Run, assignment: []const u8) void {
+    const b = step.step.owner;
+    step.argv.insert(b.graph.arena, 5, .{ .bytes = b.graph.dupeString(assignment) }) catch @panic("out of memory");
+}
 /// The shell half of `withTools`: export Zig's global cache directory as the
 /// Zig toolchain would resolve it here and now, point `ZIG_LOCAL_CACHE_DIR` at
 /// a fresh directory under `$TMPDIR`, then run `env TOOL=PATH… CMD…`
@@ -269,6 +275,9 @@ fn shardRuns(b: *std.Build, compile: *std.Build.Step.Compile, shards: Shards) []
     for (steps, 0..) |*step, index| {
         const run = focused(b.addRunArtifact(compile), shards.bytes);
         guardian.announceShard(run, index, shards.count);
+        // The shards run at once, so each runs a test's batch of guest programs on
+        // its share of the CPUs (`src/wiring/core_runner.zig`).
+        withVariable(run, b.fmt("MYLANG_UNIT_SHARDS={d}", .{shards.count}));
         forwardFilters(b, run, shards.filters);
         if (shards.cache) cached(run, shards.inputs);
         step.* = &run.step;
