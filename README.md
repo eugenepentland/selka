@@ -41,7 +41,8 @@ without starting a process; `--release` builds the whole program as one optimize
 unit ([native builds](docs/tooling/native-build.md)). The front end reuses checked
 bodies, symbolic generic templates and concrete specializations across processes
 ([the caches guide](docs/tooling/caches.md)). `mylang run` is that build followed by
-running the result, and `mylang test` builds and runs each test as its own process.
+running the result, and `mylang test` builds a file's tests into one program and
+runs each test in its own forked trial.
 
 Memory is one-count reference counting with copy-on-write: lists, dictionaries,
 sets, strings and records are values, released when their last owner goes away.

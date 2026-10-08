@@ -19,7 +19,12 @@ pub const Outcome = struct { status: []const u8, actual: Value = .null, diagnost
 /// One bounded batch request.
 pub const BatchCall = struct { executor: *const Executor, function: Value, inputs: []const []const u64 };
 /// A completed prefix and the reason its process stopped before any remaining inputs.
-pub const BatchOutcome = struct { outcomes: []const Outcome, complete: bool, ending: []const u8 = "", timed_out: bool = false };
+/// `timed_out` is the whole process's limit; `alarm` is a trial's own wall-clock limit,
+/// which ends the process with `SIGALRM`.
+pub const BatchOutcome = struct { outcomes: []const Outcome, complete: bool, ending: []const u8 = "", timed_out: bool = false, alarm: bool = false };
+/// One trial of a request: the table row it calls, the test's signature for decoding
+/// its answer, and its encoded inputs. A request may mix rows (NEW-CORE-TEST-BATCH-1).
+pub const Trial = struct { row: usize, function: Value, words: []const u64 };
 /// One selected test's executable and isolated working files.
 pub const Executor = struct {
     context: Context,
@@ -46,6 +51,13 @@ pub const Executor = struct {
         return encoder.words.items;
     }
     fn batch(self: *const Executor, call: BatchCall, limits: Limits) Error!BatchOutcome {
+        const items = try self.context.arena.alloc(Trial, call.inputs.len);
+        for (items, call.inputs) |*item, words| item.* = .{ .row = self.table_index, .function = call.function, .words = words };
+        return self.trials(items, limits);
+    }
+    /// Run `trials` in order in one process of the executable, each in its own forked
+    /// trial; `limits` bounds the whole process. The answered prefix survives an early end.
+    pub fn trials(self: *const Executor, requested: []const Trial, limits: Limits) Error!BatchOutcome {
         const c = self.context;
         const a = c.arena;
         var nonce: [16]u8 = undefined;
@@ -54,16 +66,16 @@ pub const Executor = struct {
         const input = try std.fmt.allocPrint(a, "{s}.input", .{stem});
         const output = try std.fmt.allocPrint(a, "{s}.response", .{stem});
         var request: std.ArrayList(u8) = .empty;
-        try appendWord(a, &request, call.inputs.len);
-        for (call.inputs) |words| {
-            try appendWord(a, &request, words.len);
-            for (words) |word| try appendWord(a, &request, word);
+        try appendWord(a, &request, requested.len);
+        for (requested) |item| {
+            try appendWord(a, &request, item.row);
+            try appendWord(a, &request, item.words.len);
+            for (item.words) |word| try appendWord(a, &request, word);
         }
         std.Io.Dir.cwd().writeFile(c.io, .{ .sub_path = input, .data = request.items }) catch return error.WriteFailed;
-        const index = try std.fmt.allocPrint(a, "{d}", .{self.table_index});
         const timeout: std.Io.Timeout = .{ .duration = .{ .raw = .fromMilliseconds(limits.timeout_ms), .clock = .awake } };
-        const child = std.process.run(c.backing, c.io, .{ .argv = &.{ self.executable, index, input, output }, .timeout = timeout }) catch |err| {
-            return self.read(call.function, output, .{ .ending = @errorName(err), .timed_out = err == error.Timeout });
+        const child = std.process.run(c.backing, c.io, .{ .argv = &.{ self.executable, input, output }, .timeout = timeout }) catch |err| {
+            return self.read(requested, output, .{ .ending = @errorName(err), .timed_out = err == error.Timeout });
         };
         defer c.backing.free(child.stdout);
         defer c.backing.free(child.stderr);
@@ -72,24 +84,26 @@ pub const Executor = struct {
             .signal => try std.fmt.allocPrint(a, "NativeTestProcessFailed: {any}\n{s}", .{ child.term, child.stderr }),
             else => "abnormal termination",
         };
-        var result = try self.read(call.function, output, .{ .ending = ending });
-        if (std.mem.indexOf(u8, child.stderr, "myl-core leakcheck:") != null and call.inputs.len != 0) {
-            const count = @min(result.outcomes.len + 1, call.inputs.len);
+        const alarm = child.term == .signal and child.term.signal == .ALRM;
+        var result = try self.read(requested, output, .{ .ending = ending, .alarm = alarm });
+        if (std.mem.indexOf(u8, child.stderr, "myl-core leakcheck:") != null and requested.len != 0) {
+            const count = @min(result.outcomes.len + 1, requested.len);
             const outcomes = try a.alloc(Outcome, count);
             @memcpy(outcomes[0..@min(count, result.outcomes.len)], result.outcomes[0..@min(count, result.outcomes.len)]);
             outcomes[count - 1] = .{ .status = "failure", .diagnostics = try a.dupe(u8, child.stderr) };
             result.outcomes = outcomes;
         }
-        result.complete = result.outcomes.len == call.inputs.len and ending.len == 0;
+        result.complete = result.outcomes.len == requested.len and ending.len == 0;
         return result;
     }
-    const End = struct { ending: []const u8, timed_out: bool = false };
-    fn read(self: *const Executor, function: Value, output: []const u8, end: End) Error!BatchOutcome {
+    const End = struct { ending: []const u8, timed_out: bool = false, alarm: bool = false };
+    fn read(self: *const Executor, requested: []const Trial, output: []const u8, end: End) Error!BatchOutcome {
         const c = self.context;
         const bytes = std.Io.Dir.cwd().readFileAlloc(c.io, output, c.arena, .limited(64 << 20)) catch "";
         var reader: Reader = .{ .bytes = bytes };
         var outcomes: std.ArrayList(Outcome) = .empty;
-        while (reader.cursor < bytes.len) {
+        while (reader.cursor < bytes.len and outcomes.items.len < requested.len) {
+            const function = requested[outcomes.items.len].function;
             const status = reader.word() catch break;
             const encoded = reader.chunk() catch break;
             const stdout = reader.chunk() catch break;
@@ -115,7 +129,7 @@ pub const Executor = struct {
             }
             try outcomes.append(c.arena, outcome);
         }
-        return .{ .outcomes = outcomes.items, .complete = end.ending.len == 0, .ending = end.ending, .timed_out = end.timed_out };
+        return .{ .outcomes = outcomes.items, .complete = end.ending.len == 0, .ending = end.ending, .timed_out = end.timed_out, .alarm = end.alarm };
     }
 };
 /// Execute batches in source order; each request retains its own bounded process.
@@ -186,6 +200,24 @@ fn trapMessage(a: std.mem.Allocator, stderr: []const u8, fallback: []const u8) E
     const end = std.mem.indexOfScalarPos(u8, stderr, start, '\n') orelse stderr.len;
     const record = std.json.parseFromSliceLeaky(Value, a, stderr[start..end], .{}) catch return error.InvalidTestValue;
     return v.text(v.get(record, "operation"));
+}
+
+// spec-case: NEW-CORE-TEST-BATCH-1
+test "trials reports an executable that cannot start as an ending with no answers" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const context: Context = .{ .arena = a, .io = std.testing.io, .backing = std.testing.allocator };
+    const executor: Executor = .{ .context = context, .types = &.{}, .executable = try std.fs.path.join(a, &.{ root, "missing" }), .table_index = 0, .directory = root };
+    const requested: []const Trial = &.{ .{ .row = 0, .function = .null, .words = &.{} }, .{ .row = 1, .function = .null, .words = &.{} } };
+    const result = try executor.trials(requested, .{});
+    try std.testing.expectEqual(@as(usize, 0), result.outcomes.len);
+    try std.testing.expect(!result.complete);
+    try std.testing.expect(!result.timed_out and !result.alarm);
+    try std.testing.expect(result.ending.len != 0);
 }
 
 // spec-case: NEW-CORE-S3-RUNNER-1

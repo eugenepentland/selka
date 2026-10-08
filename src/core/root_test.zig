@@ -39,6 +39,7 @@ comptime {
     _ = @import("tool_discovery.zig");
     _ = @import("tool_ticket.zig");
     _ = @import("runner_property_test.zig");
+    _ = @import("runner_batch_test.zig");
     _ = @import("property_codec.zig");
     _ = @import("property_validate.zig");
     _ = @import("property_types.zig");
@@ -47,6 +48,7 @@ comptime {
     _ = @import("property_render.zig");
     _ = @import("property_ir.zig");
     _ = @import("test_runner_identity.zig");
+    _ = @import("test_runner_execute.zig");
     _ = @import("conformance_test.zig");
     _ = @import("rows_test.zig");
     _ = @import("own_test.zig");

@@ -2,8 +2,9 @@
 //!
 //! The file is checked with the old runner's stub `main` appended (so a library checks as a
 //! program), its tests are discovered by the old rule, and the supported ones are built into
-//! **one executable** whose entry dispatches on `argv[1]` (`test_runner_entry.zig`). Each test
-//! runs as its own process, so a trap or a hang ends one test, not the file.
+//! **one executable** whose entry serves a request naming each trial's table row
+//! (`test_runner_batch.zig`). Tests share its processes, each in its own forked trial, so
+//! a trap or a hang ends one test, not the file (`test_runner_execute.zig`).
 //!
 //! Grading is per test function. Before the real build every test is built *alone* from its
 //! own root (`build.buildRoots`), which follows exactly the functions that test can reach: a
@@ -25,7 +26,7 @@ const typed = @import("mylang").typed;
 const property = @import("test_runner_property.zig");
 const property_types = @import("property_types.zig");
 const property_schema = @import("property_schema.zig");
-const property_execute = @import("property_execute.zig");
+const run_tests = @import("test_runner_execute.zig");
 const batch_entry = @import("test_runner_batch.zig");
 const directory_runner = @import("test_runner_directory.zig");
 const receipt = @import("test_runner_receipt.zig");
@@ -47,14 +48,11 @@ pub const Error = property.Error;
 pub const Options = options_module.Options;
 const options_module = @import("test_runner_options.zig");
 
-/// One selected test and its place in the report. `ready` tests have no verdict yet:
-/// their `verdict` is filled in by building and running them.
-const Selected = struct { case: discover.Case, verdict: report.Verdict, ready: bool, identity: ?[32]u8 = null, settings: std.json.Value = .null };
-const case_expectation = "expected";
+const Selected = run_tests.Selected;
+const case_expectation = run_tests.expectation;
 /// A test's identity work: `scratch` is an arena it may leave allocations in, and
 /// `prebuilt` the test's reachable functions when `classify` already built them.
 const IdentityResources = struct { scratch: std.mem.Allocator, io: std.Io, prebuilt: ?@import("ir.zig").Module = null };
-const ExecutionResources = struct { arena: std.mem.Allocator, backing: std.mem.Allocator, io: std.Io };
 const SelectionContext = struct { receipt: receipt.Context, base: [32]u8 };
 
 /// Check, discover, build and run the tests of `options.path`, print the report, and return
@@ -818,7 +816,7 @@ fn execute(init: std.process.Init, requested: Options, checked: frontend.Checked
     std.Io.random(init.io, &nonce);
     options.build.output = try std.fmt.allocPrint(allocator, "{s}/tests/program-{s}", .{ requested.build.cache, std.fmt.bytesToHex(nonce, .lower) });
     std.Io.Dir.cwd().createDirPath(init.io, options.build.output) catch return error.WriteFailed;
-    defer removePrivate(init.io, options.build.output);
+    defer run_tests.removePrivate(init.io, options.build.output);
     var attempt = try buildExecutable(init, options, checked, chosen, live.items, "");
     if (attempt == .failed and live.items.len > 1) {
         // Find which tests the backend rejects by building each alone, then rebuild the rest.
@@ -838,60 +836,15 @@ fn execute(init: std.process.Init, requested: Options, checked: frontend.Checked
         .failed => |failure| for (live.items) |position| {
             chosen[position].verdict = .{ .name = chosen[position].case.name, .status = failure.status, .reason = failure.reason };
         },
-        .built => |executable| try executeWorkers(init, options, checked.program, executable, chosen, live.items),
+        .built => |executable| {
+            const width = options_module.width(options.controls, init.environ_map, live.items.len, @import("memory_budget").available(init.io));
+            // The pinned Zig arena is thread-safe with Init's thread-safe backing.
+            const resources: run_tests.Resources = .{ .arena = allocator, .backing = init.gpa, .io = init.io };
+            const workers: run_tests.Workers = .{ .width = width, .batch = if (run_tests.isolated(init.environ_map)) 1 else std.math.maxInt(usize) };
+            try run_tests.run(resources, options, .{ .path = executable, .program = checked.program }, chosen, live.items, workers);
+        },
     }
 }
-
-const Work = struct {
-    resources: ExecutionResources,
-    options: Options,
-    program: typed.Program,
-    executable: []const u8,
-    table_index: usize,
-    selected: *Selected,
-    failure: ?Error = null,
-
-    fn run(self: *Work) void {
-        self.selected.verdict = runSelected(self.resources, self.options, self.program, self.executable, self.table_index, self.selected.*) catch |err| {
-            self.failure = err;
-            return;
-        };
-    }
-};
-
-fn executeWorkers(init: std.process.Init, options: Options, program: typed.Program, executable: []const u8, chosen: []Selected, positions: []const usize) Error!void {
-    const a = init.arena.allocator();
-    const width = @import("test_runner_options.zig").width(options.controls, init.environ_map, positions.len, @import("memory_budget").available(init.io));
-    // The pinned Zig arena is thread-safe with Init's thread-safe backing.
-    const resources: ExecutionResources = .{ .arena = a, .backing = init.gpa, .io = init.io };
-    const work = try a.alloc(Work, positions.len);
-    for (positions, work, 0..) |position, *item, table_index| item.* = .{ .resources = resources, .options = options, .program = program, .executable = executable, .table_index = table_index, .selected = &chosen[position] };
-    var queue: WorkQueue = .{ .work = work };
-    // NEW-CORE-TEST-QUEUE-1: each thread takes the next test as soon as its last one ends.
-    const threads = try a.alloc(std.Thread, @max(1, @min(width, work.len)) - 1);
-    var started: usize = 0;
-    for (threads) |*thread| {
-        thread.* = std.Thread.spawn(.{}, WorkQueue.drain, .{&queue}) catch break;
-        started += 1;
-    }
-    queue.drain();
-    for (threads[0..started]) |thread| thread.join();
-    for (work) |item| if (item.failure) |err| return err;
-}
-
-/// The pending tests of one executable, taken in order by every worker thread.
-const WorkQueue = struct {
-    work: []Work,
-    next: std.atomic.Value(usize) = .init(0),
-
-    fn drain(self: *WorkQueue) void {
-        while (true) {
-            const position = self.next.fetchAdd(1, .monotonic);
-            if (position >= self.work.len) return;
-            self.work[position].run();
-        }
-    }
-};
 
 const Built = union(enum) { built: []const u8, failed: report.Verdict };
 
@@ -939,7 +892,7 @@ fn testTarget(allocator: std.mem.Allocator, options: Options, checked: frontend.
         .function = table_index,
         .streams = case.streams,
         .parameters = case.parameters,
-        .seed = entropySeed(options.seed, case.name),
+        .seed = run_tests.entropySeed(options.seed, case.name),
         .data = .{ .parameters = parameters, .result = typed.typeName(function.signature.return_type, checked.program.records) },
         .result = if (result) |shape| .{ .ok_tag = @intCast(shape.ok_tag), .error_tag = @intCast(shape.error_tag) } else null,
     };
@@ -962,14 +915,6 @@ fn firstLine(allocator: std.mem.Allocator, text: []const u8) std.mem.Allocator.E
     return allocator.dupe(u8, std.mem.sliceTo(std.mem.trim(u8, text, "\n"), '\n'));
 }
 
-/// Stable stand-in/property seed, identical to native_test_wire.entropySeed.
-fn entropySeed(explicit: ?u64, name: []const u8) u64 {
-    if (explicit) |seed| return seed;
-    var digest: [32]u8 = undefined;
-    std.crypto.hash.sha2.Sha256.hash(name, &digest, .{});
-    return std.mem.readInt(u64, digest[0..8], .little);
-}
-
 fn rootsFor(a: std.mem.Allocator, program: typed.Program, cases: []const discover.Case) Error![]const typed.FunctionId {
     var roots: std.ArrayList(typed.FunctionId) = .empty;
     for (cases) |case| try roots.append(a, case.function);
@@ -990,96 +935,6 @@ fn rootsFor(a: std.mem.Allocator, program: typed.Program, cases: []const discove
     return roots.toOwnedSlice(a);
 }
 
-fn functionValue(a: std.mem.Allocator, program: typed.Program, case: discover.Case) Error!std.json.Value {
-    const f = program.functions[@backingInt(case.function)];
-    var out: std.json.ObjectMap = .empty;
-    try out.put(a, "name", .{ .string = case.name });
-    try out.put(a, "result", .{ .string = typed.typeName(f.signature.return_type, program.records) });
-    var parameters: std.json.Array = .init(a);
-    for (f.scope.locals[0..f.signature.parameter_count]) |parameter| {
-        var item: std.json.ObjectMap = .empty;
-        try item.put(a, "name", .{ .string = parameter.name });
-        try item.put(a, "type", .{ .string = typed.typeName(parameter.ty, program.records) });
-        try item.put(a, "mode", .{ .string = "value" });
-        try parameters.append(.{ .object = item });
-    }
-    try out.put(a, "parameters", .{ .array = parameters });
-    return .{ .object = out };
-}
-
-fn runSelected(resources: ExecutionResources, options: Options, program: typed.Program, executable: []const u8, table_index: usize, selected: Selected) Error!report.Verdict {
-    const case = selected.case;
-    const a = resources.arena;
-    const function = try functionValue(a, program, case);
-    var nonce: [16]u8 = undefined;
-    std.Io.random(resources.io, &nonce);
-    const directory = try std.fmt.allocPrint(a, "{s}/tests/private-{s}", .{ options.build.cache, std.fmt.bytesToHex(nonce, .lower) });
-    std.Io.Dir.cwd().createDirPath(resources.io, directory) catch return error.WriteFailed;
-    defer removePrivate(resources.io, directory);
-    const context: property_execute.Context = .{ .arena = a, .backing = resources.backing, .io = resources.io };
-    const source_path = std.Io.Dir.cwd().realPathFileAlloc(resources.io, options.path, a) catch options.path;
-    const executor: property_execute.Executor = .{ .context = context, .types = try property_schema.definitions(a, program), .executable = executable, .table_index = table_index, .directory = directory, .source_path = source_path };
-    const arguments = v.get(selected.settings, "arguments");
-    const fixed = arguments == .object and arguments.object.count() != 0;
-    if (case.other_parameters != 0 and !fixed) {
-        const setup = try property.Property.bind(context, &executor, function, .{ .timeout_ms = options.controls.timeout_ms }, .{ .seed = entropySeed(options.seed, case.name), .runs = options.property_runs, .entry = options.path });
-        var bound = switch (setup) {
-            .invalid => |reason| return .{ .name = case.name, .status = .failed, .reason = reason },
-            .ready => |ready| ready,
-        };
-        var search: property.Search = .{};
-        const first = try bound.first(&search);
-        const answers = try property_execute.executeBatches(context, &.{first}, .{ .timeout_ms = options.controls.timeout_ms }, 1);
-        const verdict = try bound.finish(&search, answers[0]);
-        return .{ .name = case.name, .status = if (verdict.passed) .passed else .failed, .reason = verdict.reason, .property = verdict.evidence };
-    }
-    const words = if (fixed) executor.encode(function, arguments) catch |err| {
-        if (err == error.OutOfMemory) return error.OutOfMemory;
-        return .{ .name = case.name, .status = .failed, .reason = "invalid cases-file arguments" };
-    } else &.{};
-    const answered = try property_execute.executeBatches(context, &.{.{ .executor = &executor, .function = function, .inputs = &.{words} }}, .{ .timeout_ms = options.controls.timeout_ms }, 1);
-    if (answered[0].outcomes.len != 1) return .{ .name = case.name, .status = .failed, .reason = if (answered[0].timed_out) try std.fmt.allocPrint(a, "timed out after {d} ms", .{options.controls.timeout_ms}) else answered[0].ending };
-    const outcome = answered[0].outcomes[0];
-    const explicit = selected.settings == .object and selected.settings.object.contains(case_expectation);
-    const returned = std.mem.eql(u8, outcome.status, "value");
-    const matches = if (!returned) false else if (explicit) try expectedResult(a, program, case, v.get(selected.settings, case_expectation), outcome.actual) else truth(outcome.actual);
-    const passed = returned and matches;
-    if (explicit and !passed and std.mem.eql(u8, outcome.status, "value")) {
-        const expected_text = try std.json.Stringify.valueAlloc(a, v.get(selected.settings, case_expectation), .{});
-        const actual_text = if (outcome.actual == .string and integerResult(program, case)) outcome.actual.string else try std.json.Stringify.valueAlloc(a, outcome.actual, .{});
-        return .{ .name = case.name, .status = .failed, .reason = try std.fmt.allocPrint(a, "expected {s}, got {s}", .{ expected_text, actual_text }) };
-    }
-    return .{ .name = case.name, .status = if (passed) .passed else .failed, .reason = if (passed) "" else try ordinaryReason(a, outcome) };
-}
-
-/// NATIVE-TEST-8: whether `case` returns a plain integer, whose value a failed typed
-/// expectation quotes bare (`got 3`) rather than in the cases encoding (`got "3"`).
-fn integerResult(program: typed.Program, case: discover.Case) bool {
-    const name = typed.typeName(program.functions[@backingInt(case.function)].signature.return_type, program.records);
-    for ([_][]const u8{ "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64" }) |integer| if (std.mem.eql(u8, name, integer)) return true;
-    return false;
-}
-
-fn expectedResult(a: std.mem.Allocator, program: typed.Program, case: discover.Case, expected: std.json.Value, actual: std.json.Value) Error!bool {
-    const schema = try property_types.Schema.init(a, try property_schema.definitions(a, program));
-    const function = program.functions[@backingInt(case.function)];
-    const name = typed.typeName(function.signature.return_type, program.records);
-    const validation = @import("property_validate.zig");
-    validation.validate(schema, name, expected, 0) catch |err| {
-        if (err == error.OutOfMemory) return error.OutOfMemory;
-        return false;
-    };
-    validation.validate(schema, name, actual, 0) catch |err| {
-        if (err == error.OutOfMemory) return error.OutOfMemory;
-        return false;
-    };
-    return validation.equivalent(expected, actual);
-}
-fn truth(value: std.json.Value) bool {
-    if (value == .bool) return value.bool;
-    return std.mem.eql(u8, v.text(v.get(value, "case")), "ok") and v.get(value, "value") == .bool and v.get(value, "value").bool;
-}
-
 /// ERROR-TRACE-3: a header-less file is checked alone, so its functions carry bare
 /// names; the old runner checked it as the module its stem names, and its error
 /// traces and trap frames say `module::name`. Qualify the file's own functions so the
@@ -1093,42 +948,6 @@ fn qualifyHeaderless(allocator: std.mem.Allocator, module: *@import("ir.zig").Mo
         if (!std.ascii.isAlphabetic(function.name[0]) or std.mem.indexOf(u8, function.name, "::") != null) continue;
         function.name = try std.mem.concat(allocator, u8, &.{ prefix, function.name });
     }
-}
-
-/// Best-effort retirement only touches the selected test's owned directory.
-fn removePrivate(io: std.Io, directory: []const u8) void {
-    std.Io.Dir.cwd().deleteTree(io, directory) catch return;
-}
-
-// spec-case: NEW-CORE-S3-RUNNER-1
-test "removePrivate retires trial files and accepts an already absent directory" {
-    var temp = std.testing.tmpDir(.{});
-    defer temp.cleanup();
-    const a = std.testing.allocator;
-    const root = try temp.dir.realPathFileAlloc(std.testing.io, ".", a);
-    defer a.free(root);
-    const directory = try std.fs.path.join(a, &.{ root, "private" });
-    defer a.free(directory);
-    const file = try std.fs.path.join(a, &.{ directory, "trial.input" });
-    defer a.free(file);
-    const cwd = std.Io.Dir.cwd();
-    try cwd.createDirPath(std.testing.io, directory);
-    try cwd.writeFile(std.testing.io, .{ .sub_path = file, .data = "owned trial" });
-    removePrivate(std.testing.io, directory);
-    try std.testing.expectError(error.FileNotFound, cwd.openDir(std.testing.io, directory, .{}));
-    removePrivate(std.testing.io, directory);
-}
-fn ordinaryReason(a: std.mem.Allocator, outcome: property_execute.Outcome) Error![]const u8 {
-    var reason = outcome.diagnostics;
-    if (std.mem.eql(u8, outcome.status, "value")) {
-        const actual = outcome.actual;
-        const text = if (actual == .bool) (if (actual.bool) "true" else "false") else try std.json.Stringify.valueAlloc(a, actual, .{});
-        const expected = if (actual == .bool) "true" else "{\"case\":\"ok\",\"value\":true}";
-        reason = try std.fmt.allocPrint(a, "expected {s}, got {s}", .{ expected, text });
-        if (outcome.trace.len != 0) reason = try std.fmt.allocPrint(a, "{s}\n{s}", .{ reason, std.mem.trimEnd(u8, outcome.trace, "\n") });
-    }
-    if (outcome.output.len != 0) reason = try std.fmt.allocPrint(a, "{s}\n{s}", .{ reason, outcome.output });
-    return reason;
 }
 
 // spec-case: NEW-CORE-S4-TEST-3

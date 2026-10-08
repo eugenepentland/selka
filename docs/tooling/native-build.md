@@ -267,7 +267,7 @@ CPU's features.
   A fresh `MYLANG_CORE_RUNTIME_CACHE` pays this again.
 - **Checking dominates.** A large project's check is the front end's cost;
   `mylang check FILE.my --report` shows what it reused ([compiler caches](caches.md)).
-- **Tests are slow.** Each test is its own process; see
+- **Tests are slow.** Each test file builds its own program; see
   [guest tests](guest-tests.md#reusing-unaffected-results) for receipts and `--jobs`.
 
 ## Retired build controls

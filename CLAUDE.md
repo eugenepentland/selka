@@ -72,7 +72,7 @@ go on the reserved timing CPUs, never beside a gate.
   cover it and runs only those; `--dry-run` prints the selection. It says on every
   run that it is **not the gate**. Run it through the build slot.
 - `zig-out/bin/mylang test <entry.my|dir> --filter SUBSTRING` — guest (`.my`)
-  tests, each built by the new core and run as its own native process. A bare
+  tests, each built by the new core and run in its own forked trial. A bare
   substring matches anywhere in the qualified name; `*`, `?` or `[` make it a glob.
   A directory runs every entry under it in parallel (`--jobs N`, `MYLANG_JOBS`).
   Results are reused per test (receipts keyed by the test's Core IR), so an

@@ -3,6 +3,7 @@
  * trial boundary without skipping reference-count cleanup on a longjmp. */
 #include <sys/wait.h>
 #include <sys/resource.h>
+#include <sys/time.h>
 #include <signal.h>
 #include <errno.h>
 #include <ucontext.h>
@@ -15,9 +16,12 @@ static uint64_t core_test_trials;
 static uint64_t core_test_steps;
 static bool core_test_bounded;
 /* Compatible additive helpers; existing runtime signatures and layouts stay fixed. */
+/* A trial's wall-clock limit is exact to the millisecond: the trials of a batch
+ * (NEW-CORE-TEST-BATCH-1) are each held to `--timeout-ms`, as a test alone is. */
 void myl_core_test_limits(uint64_t steps, uint32_t timeout_ms) {
     core_test_steps=steps;core_test_bounded=steps!=0;
-    alarm((unsigned)((uint64_t)timeout_ms+999)/1000);
+    struct itimerval timer={{0,0},{(time_t)(timeout_ms/1000),(suseconds_t)(timeout_ms%1000)*1000}};
+    (void)setitimer(ITIMER_REAL,&timer,NULL);
 }
 void myl_core_test_tick(uint64_t cost) {
     if(!core_test_bounded)return;
@@ -401,6 +405,20 @@ void myl_core_test_trace(void){
     stream_flush(&streams[1]);int saved=dup(2);core_test_capture(".trace",2);
     trace_write();stream_flush(&streams[1]);if(dup2(saved,2)<0)_exit(70);close(saved);
 }
+/* The executable's dispatch table (NEW-CORE-TEST-BATCH-1): its entry registers every
+ * selected test's trial wrapper in table order before serving one request, and each
+ * trial of the request names the row it calls, so one process answers several tests. */
+static void (**core_test_table)(void);
+static uint64_t core_test_rows,core_test_capacity;
+void myl_core_test_register(void (*trial)(void)){
+    if(core_test_rows==core_test_capacity){
+        uint64_t capacity=core_test_capacity?core_test_capacity*2:64;
+        void (**grown)(void)=realloc(core_test_table,(size_t)capacity*sizeof *grown);
+        if(!grown)out_of_memory();
+        core_test_table=grown;core_test_capacity=capacity;
+    }
+    core_test_table[core_test_rows++]=trial;
+}
 bool myl_core_test_open(myl_block *input,myl_block *output){
     core_test_input=fopen((const char *)block_data(input),"rb");
     core_test_output=fopen((const char *)block_data(output),"wb");
@@ -409,8 +427,11 @@ bool myl_core_test_open(myl_block *input,myl_block *output){
     if(!core_test_input||!core_test_output||!core_test_path)return false;
     core_test_trials=core_test_word(core_test_input);return true;
 }
-int64_t myl_core_test_run(void (*trial)(void)){
+int64_t myl_core_test_run(void){
     for(uint64_t i=0;i<core_test_trials;++i){
+        uint64_t row=core_test_word(core_test_input);
+        if(row>=core_test_rows)_exit(70);
+        void (*trial)(void)=core_test_table[row];
         uint64_t words=core_test_word(core_test_input);long start=ftell(core_test_input);
         if(words>1000000||start<0)_exit(70);
         const char *suffixes[]={".out",".err",".trace"};

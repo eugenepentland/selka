@@ -3,7 +3,7 @@
 `mylang test` is the compiler's own runner for tests written in the language. It
 checks the project, finds the exported functions whose names begin with `test_`,
 builds them with the compiler's core (Core IR, LLVM, `zig cc`) and runs each one
-in its own process. Cases are configured with one JSON file rather than with a
+in its own forked trial. Cases are configured with one JSON file rather than with a
 framework inside the language, and the runner needs no Python. A run builds a
 debug program by default; `--release` builds the optimized one, as
 `mylang build --release` does, and both keep every overflow, cast and bounds
@@ -125,6 +125,23 @@ A test that reaches a construct the compiler's core does not build yet is
 reported as `unsupported NAME: E_CORE_UNSUPPORTED (REASON) at LINE:COLUMN` and
 left out of the executable; the summary line then ends with `, N unsupported`.
 It is neither a pass nor a failure.
+
+### Test processes
+
+A file's tests are built into one program, and its tests share that program's
+processes (NEW-CORE-TEST-BATCH-1): each worker takes the next run of pending
+tests, about the pending count over the worker count, and one process answers
+them in order. Every test still runs in its own forked trial, with fresh
+capability stand-ins, its own captured output and its own step, frame, memory
+and wall-clock budgets, so it gets the verdict it would get alone; launching one
+process per test cost about 10 ms each. A test that ends its process without
+answering keeps the verdicts of the tests before it. A timeout is that test's
+verdict (`timed out after N ms`); any other ending, such as a crash in an
+extern, runs the test again alone for a verdict of its own, and the tests after
+it continue in a new process. A property test keeps its own processes, as
+[batches and receipts](#batches-and-receipts) describes.
+`MYLANG_TEST_ISOLATE=1` gives every test its own process again, as the check
+batching is tested against.
 
 ## Capability parameters
 
@@ -601,7 +618,7 @@ the selected test's signature and every type it reaches; other modules' exports
 are not compared, so a provider may import fewer modules. A provider that
 changes them fails the run with `ProviderSignatureChanged`, or with the check
 error a caller now sees. Cases that name the same providers share one check and
-one build; each test still runs in its own process. A case's providers are part
+one build; each test still runs in its own trial. A case's providers are part
 of its receipt's identity, so changing an injected source runs the case again.
 
 ```console
