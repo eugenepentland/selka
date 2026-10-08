@@ -142,7 +142,8 @@ test "an unchanged build replays, a lost record reuses every object and the prog
 }
 
 // spec: NEW-CORE-S4-COLD-1
-test "a cold build compiles the runtime without debug info and links the prebuilt number object" {
+// spec: NEW-CORE-S5-RUNTIME-LAYOUT-1
+test "a cold build compiles the runtime without debug info, cache-line aligned, and links the prebuilt number object" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
@@ -164,23 +165,36 @@ test "a cold build compiles the runtime without debug info and links the prebuil
         if (!std.mem.startsWith(u8, entry.name, "core_rt-") or !std.mem.endsWith(u8, entry.name, ".o")) continue;
         const bytes = try store.readFileAlloc(io, entry.name, a, .limited(64 << 20));
         try std.testing.expect(!hasSection(bytes, ".debug_info"));
-        try std.testing.expect(hasSection(bytes, ".text"));
+        // Functions start on cache lines, and no 256 KiB static array moves the heap
+        // (the stream buffers are 128 KiB of it).
+        try std.testing.expect((section(bytes, ".text") orelse return error.TestNoText).alignment >= 64);
+        try std.testing.expect((section(bytes, ".bss") orelse Section{ .size = 0, .alignment = 0 }).size < 256 << 10);
         runtime_objects += 1;
     }
     try std.testing.expectEqual(@as(usize, 1), runtime_objects);
 }
 
-/// Whether the ELF64 relocatable object `bytes` has a section named `name`.
-fn hasSection(bytes: []const u8, name: []const u8) bool {
+/// A section of an ELF64 relocatable object: its size and alignment.
+const Section = struct { size: u64, alignment: u64 };
+
+/// The section of `bytes` named `name`, or null.
+fn section(bytes: []const u8, name: []const u8) ?Section {
     const offset = std.mem.readInt(u64, bytes[0x28..][0..8], .little);
     const count = std.mem.readInt(u16, bytes[0x3c..][0..2], .little);
     const names_index = std.mem.readInt(u16, bytes[0x3e..][0..2], .little);
     const names = std.mem.readInt(u64, bytes[offset + names_index * 64 + 0x18 ..][0..8], .little);
     for (0..count) |index| {
-        const start = names + std.mem.readInt(u32, bytes[offset + index * 64 ..][0..4], .little);
-        if (std.mem.eql(u8, std.mem.sliceTo(bytes[start..], 0), name)) return true;
+        const header = bytes[offset + index * 64 ..][0..64];
+        const start = names + std.mem.readInt(u32, header[0..4], .little);
+        if (!std.mem.eql(u8, std.mem.sliceTo(bytes[start..], 0), name)) continue;
+        return .{ .size = std.mem.readInt(u64, header[0x20..][0..8], .little), .alignment = std.mem.readInt(u64, header[0x30..][0..8], .little) };
     }
-    return false;
+    return null;
+}
+
+/// Whether the ELF64 relocatable object `bytes` has a section named `name`.
+fn hasSection(bytes: []const u8, name: []const u8) bool {
+    return section(bytes, name) != null;
 }
 
 fn expectNoStaging(project: Project) !void {

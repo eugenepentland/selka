@@ -525,7 +525,7 @@ fn runtimeObject(native: Native, directory: []const u8, abi: Digest) Error!Objec
     const io = native.io;
     var digest: Digest = undefined;
     var hash = std.crypto.hash.Blake3.init(.{});
-    hash.update("core-runtime-object-v3\x00-O2\x00-g0\x00-std=c11\x00");
+    hash.update("core-runtime-object-v4\x00-O2\x00-g0\x00-falign-functions=64\x00-std=c11\x00");
     hash.update(target_policy.native_link_target);
     hash.update("\x00");
     hash.update(&abi);
@@ -547,7 +547,7 @@ fn runtimeObject(native: Native, directory: []const u8, abi: Digest) Error!Objec
     var argv: std.ArrayList([]const u8) = .empty;
     // No debug info: the trap walker reads only `mylang-core` compile units, LLVM's
     // machine code does not depend on it, and it cost a cold build 0.46 s.
-    try argv.appendSlice(allocator, &.{ native.zig, "cc", "-c", "-O2", "-g0" });
+    try argv.appendSlice(allocator, &.{ native.zig, "cc", "-c", "-O2", "-g0", "-falign-functions=64" });
     try argv.appendSlice(allocator, &.{ "-target", target_policy.native_link_target });
     try argv.appendSlice(allocator, target.cpu_flags);
     try argv.appendSlice(allocator, &.{ "-std=c11", "-o", partial, source });
