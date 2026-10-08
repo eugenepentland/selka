@@ -305,6 +305,7 @@ const stores_expected =
     \\6 1 4 0 m!5 t3 m!!6 6m!! 0m 0m 0m
     \\3 1 4 0 3m 0m 0m 0m
     \\-2 0 4 0 deep:2666 2m 6c 6c 6c
+    \\6 f1u c1 f0w f0u c2
     \\
 ;
 
@@ -422,8 +423,9 @@ test "an element store a later store of the same element overwrites before anyth
     for (modes) |flags| {
         // Reads through callees (a trace, an error report that resets the count, an indirect
         // call), a list that grows or is replaced, calls that push frames, `continue`, early
-        // returns, counted fields and a store whose index runs past the list all print what
-        // the stores as written print, and free every block.
+        // returns, counted fields, union elements (a payload stored back, a case replaced)
+        // and a store whose index runs past the list all print what the stores as written
+        // print, and free every block.
         const ran = try fixture(a, root, flags, &.{});
         try std.testing.expectEqualStrings(fields_expected ++ takes_expected ++ stores_expected, ran.stdout);
         try std.testing.expectEqual(@as(u8, 0), ran.status);
