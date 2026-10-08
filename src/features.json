@@ -2,6 +2,11 @@
   "language_version": "0.1.0",
   "primary_backend": "llvm",
   "implemented": {
+    "cost-command": {
+      "kind": "tooling",
+      "summary": "`mylang cost ENTRY.my [FUNCTION] [--json]` reports per-function checks, ownership updates, dynamic allocation sites, RC operations, Core inlining and vector plans using the build stats counters. LLVM vectorization stays unknown without optimization remarks.",
+      "doc": "docs/tooling/cost.md#per-function-cost"
+    },
     "tuples": {
       "kind": "language",
       "summary": "`tuple[T1, ..., Tn]` (two to eight elements) is an immutable, fixed-arity anonymous record: it is built with `(a, b)` and the bare forms after `return`, taken apart only by destructuring (`x, y = value`, `for a, b in pairs`, `_` for a value not needed), compares structurally, prints as `(1, 'a')`, and is rejected when indexed, named by field, called as a method or measured with `len`.",

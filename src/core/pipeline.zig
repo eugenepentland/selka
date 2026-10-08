@@ -10,6 +10,8 @@ const emit_llvm = @import("emit_llvm.zig");
 const emit_units = @import("emit_units.zig");
 const driver = @import("driver.zig");
 const passes = @import("passes.zig");
+const cost = @import("cost.zig");
+const cost_remarks = @import("cost_remarks.zig");
 const verify_ir = @import("verify_ir.zig");
 const target_description = @import("target.zig");
 const build_replay = @import("build_replay.zig");
@@ -116,19 +118,7 @@ fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget:
         else => |other| return other,
     };
     if (budget) |installed| try run_budget.instrumentRun(allocator, &module, installed);
-    // A header-less file is checked alone; the old core shows its absolute path.
-    const absolute = std.Io.Dir.cwd().realPathFileAlloc(init.io, path, allocator) catch path;
-    const shown = if (session.single != null) absolute else shownPath(checked.src, checked.program);
-    const unit: Unit = .{
-        .src = checked.src,
-        .source_path = shown,
-        .main = .{
-            .parameters = try mainParameters(allocator, checked.program),
-            .result = mainResult(checked.program),
-            .capabilities = try mainCapabilities(allocator, checked.program),
-            .runtime_options = true,
-        },
-    };
+    const unit = try unitFor(allocator, checked, entry.path, session.single != null);
     const outcome = try linkEmitted(init, &module, unit, options, report);
     // A record that cannot be written costs the next build its replay, nothing more.
     if (replaying) build_replay.remember(context, sources, outcome.tool, .{ .program = outcome.program, .foreign = outcome.foreign }, report.items) catch |err| switch (err) {
@@ -141,6 +131,20 @@ fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget:
 
 /// Report the new core's refusal of a construct at `refusal`, as text or as a
 /// `diagnostic-v1` record.
+/// Entry metadata shared by ordinary builds and cost's identical LLVM emission.
+pub fn unitFor(a: std.mem.Allocator, checked: frontend.Checked, absolute: []const u8, single: bool) std.mem.Allocator.Error!Unit {
+    return .{
+        .src = checked.src,
+        .source_path = if (single) absolute else shownPath(checked.src, checked.program),
+        .main = .{
+            .parameters = try mainParameters(a, checked.program),
+            .result = mainResult(checked.program),
+            .capabilities = try mainCapabilities(a, checked.program),
+            .runtime_options = true,
+        },
+    };
+}
+
 fn refused(allocator: std.mem.Allocator, src: language.source.Source, refusal: build_ir.Refusal, diagnostics: Diagnostics, report: *std.ArrayList(u8)) Error!void {
     const message = try std.fmt.allocPrint(allocator, "the new core does not support {s} yet", .{refusal.reason});
     if (diagnostics == .json) {
@@ -216,7 +220,7 @@ fn linkEmitted(init: std.process.Init, module: *ir.Module, unit: Unit, options: 
     const allocator = init.arena.allocator();
     const emission = try emitted(allocator, module, unit, options, report);
     if (options.show.llvm) |where| std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = where, .data = emission.whole.? }) catch return error.WriteFailed;
-    const outcome = driver.link(allocator, init.io, init.environ_map, .{
+    var outcome = driver.link(allocator, init.io, init.environ_map, .{
         .zig = options.zig,
         .work = options.cache,
         .output = options.output,
@@ -225,11 +229,18 @@ fn linkEmitted(init: std.process.Init, module: *ir.Module, unit: Unit, options: 
         .units = emission.units,
         .verify = options.show.verify_cache,
     }, report) catch |err| return err;
+    if (emission.cost_report) |measured| {
+        var final = measured;
+        const remarks = try driver.optimizationRemarks(allocator, init.io, init.environ_map, .{ .zig = options.zig, .work = options.cache, .output = "", .release = options.release, .links = &.{}, .units = emission.units });
+        if (remarks.yaml) |yaml| cost_remarks.apply(&final, yaml);
+        try cost.llvmStats(allocator, report, final.totals, remarks);
+        outcome.counts.processes += remarks.processes;
+    }
     return outcome;
 }
 
 /// Arena-owned native units and optional compatibility LLVM from one pass run.
-pub const Emission = struct { units: []const emit_units.Unit, whole: ?[]const u8 = null };
+pub const Emission = struct { units: []const emit_units.Unit, whole: ?[]const u8 = null, cost_report: ?cost.Report = null };
 
 /// Run the same passes and emission used for linking, without invoking a tool.
 /// Test receipts hash this exact reachable program.
@@ -246,16 +257,10 @@ pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, opt
         .sabotage_widening => .sabotage_widening,
         .sabotage_length => .sabotage_length,
     };
-    var result = if (options.release) try passes.run(allocator, module, mode) else passes.Result{ .known = &.{}, .plans = &.{} };
-    if (!options.release) result.own = try passes.ownership(allocator, module);
+    var result = if (options.release) try passes.run(allocator, module, mode) else try passes.debug(allocator, module);
     if (verify_ir.enabled) try verify_ir.check(allocator, module, result.plans, report);
-    if (options.show.stats) {
-        const format = "mylang-core: inlined {d} calls, unswitched {d} loops, versioned {d} loops, proved {d} checks, vectorized {d} loops\n";
-        try report.print(allocator, format, .{ result.counts.inlined, result.counts.unswitched, result.counts.versioned, result.counts.proven, result.counts.vectorized });
-        const counting = "mylang-core: ownership: {d} updates in place, {d} tested, {d} copied; {d} retains, {d} releases ({d} pairs elided); {d} lists on the stack\n";
-        const o = result.own;
-        try report.print(allocator, counting, .{ o.in_place, o.tested, o.copied, o.retains, o.releases, o.elided, o.promoted });
-    }
+    const measured = if (options.show.stats) try cost.measure(allocator, module, &result, null) else null;
+    if (measured) |snapshot| try cost.stats(allocator, report, snapshot.totals);
     const emission: emit_llvm.Options = .{
         .locator = locator(&unit.src),
         .source_path = unit.source_path,
@@ -274,13 +279,13 @@ pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, opt
             return error.Unsupported;
         },
     };
-    if (options.show.llvm == null) return .{ .units = units };
-    if (options.release) return .{ .units = units, .whole = units[0].llvm };
+    if (options.show.llvm == null) return .{ .units = units, .cost_report = measured };
+    if (options.release) return .{ .units = units, .whole = units[0].llvm, .cost_report = measured };
     const whole = emit_llvm.emitModule(allocator, module, emission) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.Unsupported,
     };
-    return .{ .units = units, .whole = whole };
+    return .{ .units = units, .whole = whole, .cost_report = measured };
 }
 
 /// How emission finds a span's file, line and column in the merged source `src`.

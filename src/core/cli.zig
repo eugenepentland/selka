@@ -9,10 +9,11 @@ const core_main = @import("main.zig");
 const cli_args = @import("cli_args.zig");
 const cli_run = @import("cli_run.zig");
 const pipeline = @import("pipeline.zig");
+const cost_command = @import("cost_command.zig");
 
 /// What stops a command before it has a status: memory, an unwritable stream, or a
 /// test the runner cannot encode.
-pub const Error = core_main.Error;
+pub const Error = core_main.Error || cost_command.Error;
 
 /// A retired command or flag and the one-line reason the CLI gives.
 const Retirement = struct { name: []const u8, message: []const u8 };
@@ -94,6 +95,7 @@ pub fn dispatch(init: std.process.Init, args: []const []const u8) Error!?u8 {
         if (retiredFlag(rest)) |retired| break :status try refuse(init, command, retired.message);
         if (std.mem.eql(u8, command, "build")) break :status if (developerBuild(rest)) try core_main.buildCommand(init, rest) else try buildCommand(init, rest);
         if (std.mem.eql(u8, command, "run") or std.mem.eql(u8, command, "run-project")) break :status try cli_run.runCommand(init, command, rest);
+        if (std.mem.eql(u8, command, "cost")) break :status try cost_command.run(init, rest);
         if (std.mem.eql(u8, command, "test")) break :status try testCommand(init, rest);
         for ([_][]const u8{ "dump-ir", "dump-typed", "coverage" }) |name| if (std.mem.eql(u8, command, name)) break :status try core_main.developer(init, args);
         return null;

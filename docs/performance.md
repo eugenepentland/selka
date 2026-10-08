@@ -264,6 +264,11 @@ mylang-core: inlined 1 calls, unswitched 0 loops, versioned 0 loops, proved 10 c
 mylang-core: ownership: 7 updates in place, 1 tested, 0 copied; 0 retains, 2 releases (0 pairs elided); 0 lists on the stack
 ```
 
+[`mylang cost ENTRY.my [FUNCTION]`](tooling/cost.md) shows these counts per function,
+plus kept checks and possible allocation sites. `--json` writes `cost-v1`; its
+unfiltered totals match a release build's `--stats`. LLVM vectorization stays
+unknown without optimization remarks and is separate from Core vector plans.
+
 `mylang dump-ir prog.my --facts` prints the Core IR with the fact pass applied, so a
 check that survived (`.exact`) can be traced to the value the pass could not bound.
 
