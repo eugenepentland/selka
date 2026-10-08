@@ -1,97 +1,110 @@
-# Lox benchmark on the new core, 2026-10-08: stopped at the correctness check
+# Lox benchmark on the new core, 2026-10-08
 
-No runtime, compile-ladder or unit-test numbers were taken. The new-core build of the Lox port prints correct output, but its run time grows **quadratically** with the Lox heap. So it cannot finish at the timed sizes:
-- `binary_trees` on the tree engine at N=10 was still running after more than 10 minutes. Zig ReleaseFast takes 0.16 s.
-- `zoo_batch` on the tree engine did not finish within 600 s even at the smoke size N=2. Zig takes 0.03 s.
+## Summary
 
-## Cause: a list append through a field of a `mut` record parameter copies the list
+The first attempt stopped at the correctness check. A new-core defect made the interpreter quadratic in the size of the Lox heap: appending to or writing a list field of a `mut` record copied the whole list. Three compiler commits on `claude/bench-newcore` fix it (NEW-CORE-TAKE-READS-1):
 
-**Profile.** A `perf` profile of `binary_trees` on the tree engine at N=4 puts about 87% of samples in list copying and freeing (`probe/perf-newcore-binary_trees-tree-n4.txt`):
+| commit | what it fixes |
+|---|---|
+| `fc62d626` | A field read earlier in the same function no longer stops the take, and the read and the write-back may sit in different blocks, as an index's negative-index branch puts them. |
+| `63fd137e` | Every field a record's write-backs replace can be taken, not just the first, and repeated reads of one field in one block are merged, which covers nested `h.marker.marks.append(x)`. |
+| `9c24997e` | A part of an earlier read may still be used after the write-back, because it holds its own count (promotion). |
 
-| symbol | share |
-|---|---:|
-| `reference_at` (under `myl_core_free_block`) | 28.2% |
-| `myl_core_list_copy` | 26.9% |
-| `myl_core_free_block` | 18.1% |
-| libc memcpy | 14.3% |
+**Qualification of the three commits:**
+- full gate: 88/88;
+- conformance against the frozen old-core answers: 1,518/0/0 at debug and release, with leak and verify (`../fix/qualify-take/`);
+- frozen fuzz: 9 kinds × 50, all pass.
 
-**Where the copies come from.** They are called from `heap::allocate`, `heap::set_env_slot`, `interpreter::set` and `interpreter::enter_function`. All four write into `rt.objects`, a `list[Obj]` field of the `mut Runtime` parameter.
+With the fix, all 26 script × engine cells print the expected output. 20 of them finish at the benchmark's sizes; 6 still run for more than 150 s and are left out of the timed run (below).
 
-**Minimal repros** (`repro/`, new core, `--release`):
+## Runtime: 20 cells, new core `9c24997e`, 3 rounds on CPU 10
 
-| repro | N=10,000 | N=40,000 | N=80,000 |
-|---|---:|---:|---:|
-| `field_append.my`: `rt.objects.append(i)`, `rt: mut Runtime`, `objects: list[int]` | 0.01 s | 1.35 s | 6.7 s |
-| `lox_shape.my`: as above with `list[Obj]` plus a slot write-back | 0.76 s | 19.4 s | |
-| `lox_shape.my`, append only | 0.56 s | 10.8 s | |
-| `param_append.my`: `xs.append(i)`, `xs: mut list[int]` | 0.00 s | 0.00 s | |
+| | mylang ÷ Zig ReleaseFast | mylang ÷ Rust | mylang ÷ Go | Zig ReleaseSafe ÷ Zig ReleaseFast |
+|---|---:|---:|---:|---:|
+| tree engine (10 scripts) | **6.08×** | **4.59×** | 4.78× | 1.60× |
+| VM engine (10 scripts) | **28.4×** | **19.5×** | 20.4× | 1.43× |
+| peak RSS (20 cells) | 3.1× | 1.2× | | |
 
-- **The old core is linear** on the same program: `lox_shape.my` takes 0.02 s at N=40,000.
-- **A new-core debug build is just as slow**, so this is not an optimizer artifact.
-- **The Core IR** (`repro/field_append.core-ir.txt`) shows why. `main::allocate` reads the list with `record_get list[i64] param0, field0` and runs `list_push` while `param0` still holds the list. The list is therefore shared at the push, and the push copies it.
+Per-script ratios are in `results/runtime-summary.md`. Spread across rounds is a median of 3–4% per cell. There were no quiet-waits, and load fell from 4.6 to 0.9.
 
-The parity suite's nbody regression (1.99× → 8.97× Zig, with 315 `memcpy` call sites in `advance`) looks like the same family: a write through a field of a record held in a list or a `mut` parameter.
+**Earlier runs, for comparison.** They used the old core and a different mylang port, so they are not like-for-like:
 
-## Correctness at the smoke size
+| run | tree ÷ Rust | VM ÷ Rust |
+|---|---:|---:|
+| 2026-09-23: old core, class-based port | 5.7× | 6.6× |
+| 2026-10-03: old core, optimized class-based port | 4.24× | 2.78× |
+| 2026-10-08: new core, value-semantics port | 4.59× | 19.5× |
 
-- **Output:** every new-core run that finished printed exactly the oracle output.
-- **Allocation and GC counts:** its `[stats]` counts matched the old core, Zig and Rust on all 26 script×engine cells.
-- **One timeout:** the exception is `zoo_batch` on the tree engine, which hit the 600 s timeout.
+**Why the VM engine is slow.** The VM is uniformly 20–30× slower than Zig on every script, and a profile puts 95% of the time in `vm::run` itself, with no list copies. The value-semantics port writes the whole call frame back into `rt.frames` on every instruction (`rt.frames[rt.frame_count - 1] = frame`). A `CallFrame` holds the function record and two lists, so each write-back is a full record store with count updates on its lists. The class-based ports needed no write-back. The parity suite's nbody (an element-field store per field update) is in the same family.
 
-## The port is slow on the old core too
+**Cells left out** (each ran longer than 150 s at its timed size):
+- binary_trees, tree and VM;
+- trees, tree and VM;
+- instantiation, VM;
+- method_call, tree.
 
-The value-semantics port that S4 migrated to, the only one the new core accepts, is already very slow on the old core:
-- the tree engine runs `properties`, `method_call` and `zoo_batch` at roughly 8,000–10,000× Zig at the smoke size;
-- `binary_trees` on the tree engine takes 52 s at N=8, against Zig's 0.03 s.
+Two causes are known:
+- **instantiation VM:** `call_value` matches on `rt.objects[ref]` and uses the class after `heap.allocate(mut rt, ...)`. The ownership pass then promotes the whole `rt.objects` list read, not only the class value. The list is shared during the allocation, so each instantiation copies it.
+- **binary_trees and method_call on the tree engine** were already very slow on the old core with this port (52 s and 142 s at small sizes). That points to the port as well as the compiler.
 
-The 2026-09-23 class-based port ran the tree suite at 7.5× Zig, but the new core rejects it (`heap.my:20:14: error[E_VALUE_CLASS]`). The S4 migration was qualified on conformance, unit tests and build times, never on interpreter run time. So the port needs a runtime review as well as the compiler fix.
+## Compile ladder: medians of 3
 
-Smoke-size wall seconds, measured on a loaded machine with runs in parallel. These are not timing quality; read the new/old columns.
+| port:profile | cold | cold, primed | no-op | hub comment | leaf body | hub body | hub interface |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| mylang:release | 9.45 s | 3.88 s | 0.01 s | 0.12 s | 0.12 s | 0.12 s | 0.12 s |
+| mylang:debug | 5.62 s | 0.37 s | 0.01 s | 0.11 s | 0.13 s | 0.11 s | 0.11 s |
+| zig:release | 74.03 s | 12.99 s | 0.02 s | 12.30 s | 12.28 s | 12.34 s | 12.47 s |
+| zig:debug | 59.06 s | 0.88 s | 0.02 s | 0.29 s | 0.33 s | 0.29 s | 0.29 s |
+| rust:release | 0.66 s | 0.66 s | 0.02 s | 0.64 s | 0.64 s | 0.62 s | 0.64 s |
+| rust:debug | 0.48 s | 0.48 s | 0.02 s | 0.17 s | 0.16 s | 0.16 s | 0.16 s |
+| go:release | 2.17 s | 0.40 s | 0.10 s | 0.18 s | 0.18 s | 0.17 s | 0.18 s |
+| go:debug | 1.68 s | 0.31 s | 0.10 s | 0.18 s | 0.17 s | 0.20 s | 0.18 s |
 
-| script | VM: new core | VM: old core | VM new/old | tree: new core | tree: old core | tree new/old |
-|---|---:|---:|---:|---:|---:|---:|
-| binary_trees | 30.7 | 0.07 | 446× | 255.8 | 9.87 | 26× |
-| closures | 1.53 | 0.02 | 72× | 9.52 | 8.35 | 1.1× |
-| equality | 1.82 | 0.04 | 49× | 1.48 | 0.02 | 93× |
-| fib | 0.37 | 0.01 | 40× | 0.91 | 0.41 | 2.2× |
-| instantiation | 126.9 | 0.07 | 1,947× | 372.3 | 0.06 | 6,012× |
-| invocation | 1.13 | 0.05 | 23× | 340.9 | 0.11 | 3,102× |
-| method_call | 6.79 | 0.14 | 49× | 471.6 | 142.1 | 3.3× |
-| properties | 2.87 | 0.13 | 22× | 310.1 | 76.0 | 4.1× |
-| string_equality | 3.95 | 0.19 | 20× | 6.13 | 0.05 | 118× |
-| strings | 0.33 | 0.01 | 27× | 0.46 | 0.01 | 52× |
-| trees | 0.26 | 0.01 | 30× | 1.15 | 0.36 | 3.2× |
-| zoo | 0.59 | 0.02 | 29× | 12.97 | 7.62 | 1.7× |
-| zoo_batch | 8.39 | 0.37 | 23× | >600 (timeout) | 302.0 | >2× |
+**The harness's four edits do not change the program's code.**
+- The four edits are:
+  - a comment;
+  - two behaviour-neutral rewrites;
+  - an unused new function.
+- On the new core, content-keyed units and program replay serve them in about 0.12 s, even for a release build.
+- A release edit that does change code recompiles the whole program. At 48k lines that took 51 s in S5's dev-loop measurement.
 
-The old core in this table is `$HOME/.cache/mylang/s4-wave0-20261006/mylang-s4-pin/bin/mylang` (a16a324e), the pin the S4 port was qualified with.
+**Against 2026-09-23 (old core):**
+- release rebuild after an edit: 4.6–5.0 s → 0.12 s;
+- debug rebuild after an edit: 0.52–0.57 s → 0.11–0.13 s;
+- cold primed debug build: 14.4 s → 0.37 s.
 
-## What was checked
+## Unit tests (63 per port)
 
-- **Copy:** the benchmark tree was copied from `mylang-worktrees/codex-s4-lox-value-semantics/benchmarks/lox` (Codex's worktree, unmodified).
-- **Unchanged since 2026-09-23** (byte-identical to `bench/lox-20260922`):
-  - the harness, `bench/` and `SPEC.md`;
-  - the corpus and `harness/prime/{go,zig}`;
-  - the Zig, Rust and Go ports.
-- **Changed:** only `ports/mylang/` differs, from the S4 value-semantics migration.
-- **`bench.json` for the new core** (`bench.json`, `bench.json.diff`, `prime-mylang.json`):
-  - `release` = `mylang build main.my --release -o {cache}/lox-release --cache-dir {cache}/mylang`, and `debug` is the same without `--release`.
-  - The output moved because `build` does not create the parent directory of `-o`.
-- **Edit anchors:** all four exist exactly once in every port.
-- **Builds:** every profile of every language builds.
+| port | cold | cold, primed | cached | forced | after the hub-body edit |
+|---|---:|---:|---:|---:|---:|
+| mylang | 7.40 s | 1.34 s | 0.08 s | 0.77 s | 0.44 s |
+| zig | 59.99 s | 0.97 s | 0.03 s | 0.06 s | 0.37 s |
+| rust | 0.63 s | 0.63 s | 0.03 s | – | 0.19 s |
+| go | 3.15 s | 0.73 s | 0.06 s | 0.18 s | 0.17 s |
 
-## Next
+Against 2026-09-23 (old core), cold primed went from 11.35 s to 1.34 s, and after the hub-body edit from 0.35 s to 0.44 s.
 
-1. **Fix the compiler**: an append or element write through a field of a `mut` record parameter, or of a record held in a list, must not copy the list. Then rerun the four repros and the parity suite's nbody.
-2. **Review the port's runtime**, which is also super-linear on the old core.
-3. **Then run stage B**: `RUN_STAGE_B=1 ./run.sh` (runtime on CPU 10 under `cpu10.lock`, 5 rounds; compile ladder and tests under `bench-compile.lock`).
+## Protocol
+
+- **Compiler:** `~/.cache/mylang/bench-newcore-9c24997e/bin/mylang`, a ReleaseFast build of branch `claude/bench-newcore` at `9c24997e` (main 5a6b501d plus the three fix commits).
+- **Toolchains** (the same as 2026-09-23): zig 0.17.0-dev.1683+5ceec001b, rustc/cargo 1.98.1, go 1.27.0.
+- **Benchmark tree:** copied from `mylang-worktrees/codex-s4-lox-value-semantics/benchmarks/lox`. The harness, sizes, scripts, expected outputs and the Zig, Rust and Go ports are byte-identical to `bench/lox-20260922`; only `ports/mylang/` differs (the S4 value-semantics port).
+- **mylang `bench.json`:**
+  - `release` = `mylang build main.my --release -o {cache}/lox-release --cache-dir {cache}/mylang`;
+  - `debug` = the same without `--release`;
+  - the old `release-qbe` and `release-safe` profiles are dropped.
+- **Runtime:** `measure.py runtime --ports mylang,zig,rust,go --profiles release,zig:release-safe --rounds 3 --cpu 10`.
+  - It ran under `flock cpu10.lock`, 09:39–09:56 UTC.
+  - Deviation: `LOX_SKIP` (`measure.py.diff`) leaves out the six cells above. The 2026-09-23 run used CPU 11 and 4 rounds.
+- **Compile ladder and tests:** `measure.py compile` and `measure.py tests`, 3 rounds on CPUs 0–1, 4–9 and 12–19.
+  - Both ran under `flock bench-compile.lock` through a build slot, 09:56–10:51 UTC, with load about 1.
+- **Feasibility pass** (`feasible.py`): every cell at its timed size, one run each, 150 s timeout, on a loaded machine. It found the six cells that do not finish.
 
 ## Files
 
-- `bench.json`, `bench.json.diff`, `prime-mylang.json`
-- `run.sh`: stage A was done; stage B is gated.
-- `summarize.py`: produces the per-script ratios and geomeans; checked against the 2026-09-23 JSON.
-- `probe/`: `probe.py`, `smoke.json`, the perf profile.
-- `repro/`: `field_append.my`, `lox_shape.my`, `param_append.my`, `field_append.core-ir.txt`.
-
-The run was made by a benchmark agent. The coordinator wrote this file from the report the agent returned as text.
+- **Reports and summaries:**
+  - `results/runtime-summary.md`: the per-script tables;
+  - `results/*/runtime.md`, `compile.md`, `tests.md`: the harness's own tables.
+- **Raw data:** `results/*/*.json.gz`.
+- **Run scripts:** `stageB.sh` and `stageB.log` (the run); `run.sh` (the first attempt); `feasible.py`; `measure.py.diff`; `bench.json`, `bench.json.diff`, `prime-mylang.json`.
+- **First attempt's diagnosis:** `probe/` and `repro/`.

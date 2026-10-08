@@ -1,0 +1,13 @@
+source_commit=9c24997e9dd005230987bceedee3b11acaf8bf84
+$ /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/experiments/new-core-s5-20261007/tools/fuzz_frozen.py --kind number --references /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz --cases 50 --seed 3308 --old /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/experiments/new-core-s5-20261007/tools/frozen-old-core --new /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/fixq/mylang-fix --evidence /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/experiments/bench-newcore-20261008/fix/fuzz50/number --cache-root /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/s5/fuzz/20261008T093326Z-4a066fabf7f7/number --harness /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/experiments/new-core-s2-20261005/wave-b/s2-t2/fuzz_number.py
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: all 3 build slot(s) busy; waiting (120s so far)
+build-slot: all 3 build slot(s) busy; waiting (180s so far)
+build-slot: build slot 3 after 190s (all 3 build slot(s) busy)
+qualification progress: number: seen=25 elapsed=17.21s
+qualification progress: number: seen=50 elapsed=33.97s
+records,unions,propagate,mut,alias cases=50 old_rejected=0 refused=0 compared=750 mismatch=0 fact=0 traps=0 caught=0
+qualification {"kind": "number", "qualified": true, "accepted": 50, "native_comparisons": 750, "elapsed_seconds": 34.63914854894392}
+
+exit=0

@@ -1,0 +1,65 @@
+runtime start 09:39:25 load 4.61 5.22 4.54
+    Finished `release` profile [optimized] target(s) in 0.01s
+round 1/3 done, load (3.259765625, 2.9482421875, 3.6533203125)
+round 2/3 done, load (1.02490234375, 1.712890625, 2.88134765625)
+round 3/3 done, load (0.92138671875, 1.216796875, 2.2880859375)
+| script/engine | mylang:release | zig:release | zig:release-safe | rust:release | go:release |
+|---|---|---|---|---|---|
+| closures/vm | 17952 ms (23.48x) | 765 ms (1.00x) | 1128 ms (1.47x) | 962 ms (1.26x) | 968 ms (1.27x) |
+| closures/tree | 841 ms (5.08x) | 166 ms (1.00x) | 278 ms (1.68x) | 242 ms (1.46x) | 215 ms (1.30x) |
+| equality/vm | 22847 ms (24.70x) | 925 ms (1.00x) | 992 ms (1.07x) | 1064 ms (1.15x) | 1106 ms (1.20x) |
+| equality/tree | 968 ms (5.89x) | 193 ms (1.17x) | 225 ms (1.37x) | 199 ms (1.21x) | 164 ms (1.00x) |
+| fib/vm | 19459 ms (31.15x) | 625 ms (1.00x) | 785 ms (1.26x) | 837 ms (1.34x) | 723 ms (1.16x) |
+| fib/tree | 445 ms (4.50x) | 99 ms (1.00x) | 163 ms (1.65x) | 139 ms (1.41x) | 114 ms (1.16x) |
+| instantiation/tree | 7148 ms (58.49x) | 122 ms (1.00x) | 226 ms (1.85x) | 134 ms (1.10x) | 182 ms (1.49x) |
+| invocation/vm | 25514 ms (33.06x) | 772 ms (1.00x) | 1320 ms (1.71x) | 1436 ms (1.86x) | 1238 ms (1.60x) |
+| invocation/tree | 1518 ms (3.65x) | 416 ms (1.00x) | 745 ms (1.79x) | 443 ms (1.07x) | 582 ms (1.40x) |
+| method_call/vm | 23190 ms (25.90x) | 895 ms (1.00x) | 1194 ms (1.33x) | 1265 ms (1.41x) | 1165 ms (1.30x) |
+| properties/vm | 19913 ms (25.16x) | 792 ms (1.00x) | 1211 ms (1.53x) | 1380 ms (1.74x) | 1161 ms (1.47x) |
+| properties/tree | 1254 ms (3.79x) | 331 ms (1.00x) | 561 ms (1.69x) | 383 ms (1.16x) | 444 ms (1.34x) |
+| string_equality/vm | 25843 ms (53.25x) | 485 ms (1.00x) | 610 ms (1.26x) | 802 ms (1.65x) | 997 ms (2.05x) |
+| string_equality/tree | 1279 ms (8.99x) | 142 ms (1.00x) | 182 ms (1.28x) | 366 ms (2.57x) | 164 ms (1.15x) |
+| strings/vm | 10502 ms (20.27x) | 518 ms (1.00x) | 983 ms (1.90x) | 548 ms (1.06x) | 642 ms (1.24x) |
+| strings/tree | 377 ms (4.39x) | 86 ms (1.00x) | 149 ms (1.73x) | 119 ms (1.38x) | 109 ms (1.27x) |
+| zoo/vm | 24440 ms (27.67x) | 883 ms (1.00x) | 1320 ms (1.49x) | 1489 ms (1.69x) | 1255 ms (1.42x) |
+| zoo/tree | 1499 ms (4.26x) | 352 ms (1.00x) | 594 ms (1.68x) | 448 ms (1.27x) | 511 ms (1.45x) |
+| zoo_batch/vm | 21425 ms (28.91x) | 741 ms (1.00x) | 1090 ms (1.47x) | 1219 ms (1.64x) | 1035 ms (1.40x) |
+| zoo_batch/tree | 1314 ms (4.43x) | 296 ms (1.00x) | 498 ms (1.68x) | 376 ms (1.27x) | 433 ms (1.46x) |
+
+0 failed runs; results in /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/results/20261008T093926Z-runtime
+runtime=0
+compile start 09:56:29 load 0.92 1.22 2.29
+mylang:release: cold=9.45s, cold_primed=3.88s, noop=0.01s, hub_comment=0.12s, leaf_body=0.12s, hub_body=0.12s, hub_interface=0.12s
+mylang:debug: cold=5.62s, cold_primed=0.37s, noop=0.01s, hub_comment=0.11s, leaf_body=0.13s, hub_body=0.11s, hub_interface=0.11s
+zig:release: cold=74.03s, cold_primed=12.99s, noop=0.02s, hub_comment=12.30s, leaf_body=12.28s, hub_body=12.34s, hub_interface=12.47s
+zig:debug: cold=59.06s, cold_primed=0.88s, noop=0.02s, hub_comment=0.29s, leaf_body=0.33s, hub_body=0.29s, hub_interface=0.29s
+rust:release: cold=0.66s, cold_primed=0.66s, noop=0.02s, hub_comment=0.64s, leaf_body=0.64s, hub_body=0.62s, hub_interface=0.64s
+rust:debug: cold=0.48s, cold_primed=0.48s, noop=0.02s, hub_comment=0.17s, leaf_body=0.16s, hub_body=0.16s, hub_interface=0.16s
+go:release: cold=2.17s, cold_primed=0.40s, noop=0.10s, hub_comment=0.18s, leaf_body=0.18s, hub_body=0.17s, hub_interface=0.18s
+go:debug: cold=1.68s, cold_primed=0.31s, noop=0.10s, hub_comment=0.18s, leaf_body=0.17s, hub_body=0.20s, hub_interface=0.18s
+| port:profile | cold | cold_primed | noop | hub_comment | leaf_body | hub_body | hub_interface |
+|---|---|---|---|---|---|---|---|
+| mylang:release | 9.45 s | 3.88 s | 0.01 s | 0.12 s | 0.12 s | 0.12 s | 0.12 s |
+| mylang:debug | 5.62 s | 0.37 s | 0.01 s | 0.11 s | 0.13 s | 0.11 s | 0.11 s |
+| zig:release | 74.03 s | 12.99 s | 0.02 s | 12.30 s | 12.28 s | 12.34 s | 12.47 s |
+| zig:debug | 59.06 s | 0.88 s | 0.02 s | 0.29 s | 0.33 s | 0.29 s | 0.29 s |
+| rust:release | 0.66 s | 0.66 s | 0.02 s | 0.64 s | 0.64 s | 0.62 s | 0.64 s |
+| rust:debug | 0.48 s | 0.48 s | 0.02 s | 0.17 s | 0.16 s | 0.16 s | 0.16 s |
+| go:release | 2.17 s | 0.40 s | 0.10 s | 0.18 s | 0.18 s | 0.17 s | 0.18 s |
+| go:debug | 1.68 s | 0.31 s | 0.10 s | 0.18 s | 0.17 s | 0.20 s | 0.18 s |
+
+results in /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/results/20261008T095629Z-compile
+compile=0
+| port | cold | cold_primed | cached | forced | after_hub_body |
+|---|---|---|---|---|---|
+| mylang | 7.40 s | 1.34 s | 0.08 s | 0.77 s | 0.44 s |
+| zig | 59.99 s | 0.97 s | 0.03 s | 0.06 s | 0.37 s |
+| rust | 0.63 s | 0.63 s | 0.03 s | - | 0.19 s |
+| go | 3.15 s | 0.73 s | 0.06 s | 0.18 s | 0.17 s |
+
+results in /home/epentland/ai/canopy/mylang-worktrees/claude-bench-newcore/.mylang-cache/bench/lox/results/20261008T103909Z-tests
+tests=0
+done 10:51:19
+20261008T103909Z-tests
+20261008T095629Z-compile
+20261008T093926Z-runtime
