@@ -4,6 +4,7 @@ comptime {
     _ = @import("frontend_test.zig");
     _ = @import("cli.zig");
     _ = @import("cost_test.zig");
+    _ = @import("count_test.zig");
     _ = @import("cli_args.zig");
     _ = @import("trap_contract.zig");
     _ = @import("cli_flags_test.zig");

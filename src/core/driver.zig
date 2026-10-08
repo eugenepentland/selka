@@ -21,6 +21,7 @@ const number_runtime = @import("number_runtime.zig");
 const tool_identity = @import("tool_identity.zig");
 const emit_units = @import("emit_units.zig");
 const unit_cache = @import("unit_cache.zig");
+const count_runtime = @import("count_runtime.zig");
 const Digest = unit_cache.Digest;
 
 /// The runtime C source, compiled into every program.
@@ -156,13 +157,12 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
         .staging = staging,
         .cacheable = guest.cacheable,
     };
-    var abi: Digest = undefined;
-    std.crypto.hash.Blake3.hash(runtime_source, &abi, .{});
-    const settings: unit_cache.Settings = .{ .tool = guest.digest, .cpu = guest.native_target, .release = request.release, .runtime = abi };
-    var objects: std.ArrayList(Object) = .empty;
-    try objects.append(allocator, try runtimeObject(native, places.shared, abi));
     var needs: Dependencies = .{};
-    for (request.units) |unit| needs = .{ .number = needs.number or unit.number, .math = needs.math or unit.math };
+    for (request.units) |unit| needs = .{ .number = needs.number or unit.number, .math = needs.math or unit.math, .counting = needs.counting or unit.counting };
+    const runtime = try runtimeFor(allocator, needs.counting, log);
+    const settings: unit_cache.Settings = .{ .tool = guest.digest, .cpu = guest.native_target, .release = request.release, .runtime = runtime.abi };
+    var objects: std.ArrayList(Object) = .empty;
+    try objects.append(allocator, try runtimeObject(native, places.shared, runtime));
     try unitObjects(native, places, settings, request, &objects);
     if (needs.number) try objects.append(allocator, .{ .path = try number_runtime.object(allocator, io, places.shared), .digest = number_runtime.digest() });
     outcome.foreign = try foreignObjects(native, places, settings, request.links, &objects);
@@ -195,7 +195,24 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     return outcome;
 }
 
-const Dependencies = struct { number: bool = false, math: bool = false };
+const Dependencies = struct { number: bool = false, math: bool = false, counting: bool = false };
+
+/// The runtime source a build compiles and its digest: the ordinary runtime, or for a
+/// unit emitted with `--counters` the counting runtime (`count_runtime.zig`).
+const Runtime = struct { source: []const u8, abi: Digest };
+
+fn runtimeFor(allocator: std.mem.Allocator, counting: bool, log: *std.ArrayList(u8)) Error!Runtime {
+    const source = if (!counting) runtime_source else count_runtime.source(allocator, runtime_source) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.AnchorMissing => {
+            try log.appendSlice(allocator, "error: the counting runtime no longer matches the runtime source\n");
+            return error.ToolFailed;
+        },
+    };
+    var abi: Digest = undefined;
+    std.crypto.hash.Blake3.hash(source, &abi, .{});
+    return .{ .source = source, .abi = abi };
+}
 
 /// Optional LLVM optimization records from a separate compile of the exact units.
 /// Failure or a tool that accepts the flags but writes no YAML leaves it unknown.
@@ -576,7 +593,7 @@ fn privateDirectory(allocator: std.mem.Allocator, io: std.Io, work: []const u8, 
 }
 
 /// The runtime object for this runtime source, compiled on first use.
-fn runtimeObject(native: Native, directory: []const u8, abi: Digest) Error!Object {
+fn runtimeObject(native: Native, directory: []const u8, runtime: Runtime) Error!Object {
     const allocator = native.arena;
     const io = native.io;
     var digest: Digest = undefined;
@@ -584,7 +601,7 @@ fn runtimeObject(native: Native, directory: []const u8, abi: Digest) Error!Objec
     hash.update("core-runtime-object-v4\x00-O2\x00-g0\x00-falign-functions=64\x00-std=c11\x00");
     hash.update(target_policy.native_link_target);
     hash.update("\x00");
-    hash.update(&abi);
+    hash.update(&runtime.abi);
     hash.update(&native.guard.identity.digest);
     hash.final(&digest);
     const stem = try std.fmt.allocPrint(allocator, "core_rt-{x}", .{digest});
@@ -596,7 +613,7 @@ fn runtimeObject(native: Native, directory: []const u8, abi: Digest) Error!Objec
     std.Io.random(io, &nonce);
     const staging = try std.fmt.allocPrint(allocator, "{s}.{x}.partial", .{ source, nonce });
     defer removeFile(io, staging);
-    cwd.writeFile(io, .{ .sub_path = staging, .data = runtime_source }) catch return error.WriteFailed;
+    cwd.writeFile(io, .{ .sub_path = staging, .data = runtime.source }) catch return error.WriteFailed;
     cwd.rename(staging, cwd, source, io) catch return error.WriteFailed;
     const partial = try std.fmt.allocPrint(allocator, "{s}.{x}.partial", .{ object, nonce });
     defer removeFile(io, partial);

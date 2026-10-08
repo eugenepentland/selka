@@ -2,6 +2,11 @@
   "language_version": "0.1.0",
   "primary_backend": "llvm",
   "implemented": {
+    "run-time-counters": {
+      "kind": "tooling",
+      "summary": "`--counters` on `mylang build`, `build --run` and `run` makes a counting build: the program writes `mylang-counters-v1` JSON at exit (to `MYLANG_COUNTERS`, else `mylang-counters.json`) with count updates, uniqueness tests, copies by kind with bytes, list pushes, allocations, frees, growth and peak live bytes, per emitted function and per source site. Without the flag the executable is unchanged.",
+      "doc": "docs/tooling/counters.md#run-time-counters"
+    },
     "cost-command": {
       "kind": "tooling",
       "summary": "`mylang cost ENTRY.my [FUNCTION] [--json]` reports per-function checks, ownership updates, dynamic allocation sites, RC operations, Core inlining and vector plans using the build stats counters. LLVM vectorization stays unknown without optimization remarks.",

@@ -48,8 +48,8 @@ pub fn settings(context: Context, inputs: *std.ArrayList(Dependency)) Error!Dige
     field(&hash, try std.json.Stringify.valueAlloc(a, .{
         .release = context.options.build.release,
         .facts = context.options.build.facts,
-        .vectors = context.options.build.show.generic_vectors,
-        .frames = context.options.build.show.trap_frames,
+        .vectors = context.options.build.show.codegen.generic_vectors,
+        .frames = context.options.build.show.codegen.trap_frames,
         .seed = context.options.seed,
         .runs = context.options.property_runs,
         .timeout = context.options.controls.timeout_ms,

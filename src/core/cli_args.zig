@@ -183,6 +183,9 @@ const Parser = struct {
             build.show.verify_cache = true;
         } else if (eql(arg, "--stats")) {
             build.show.stats = true;
+        } else if (eql(arg, "--counters")) {
+            if (build.show.codegen.counters) return self.usage();
+            build.show.codegen.counters = true;
         } else if (eql(arg, "--no-facts")) {
             build.facts = .off;
         } else if (eql(arg, "--verify-facts")) {

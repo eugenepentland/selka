@@ -17,7 +17,8 @@ mylang cost program.my --verify-facts
 ```
 
 The counts describe static sites, not executions, bytes, timings or instruction
-counts. They belong to the physical emitted body: costs introduced by inlining
+counts; a counting build (`--counters`, [run-time counters](counters.md)) records
+executions and bytes. They belong to the physical emitted body: costs introduced by inlining
 are attributed to the caller. Internal callees have separate rows, so allocation
 counts do not double-count a call and its callee. Unreachable blocks proved by
 release facts contribute no kept checks or allocation sites.

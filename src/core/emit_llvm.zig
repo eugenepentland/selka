@@ -26,6 +26,7 @@ const internal_linkage = "internal";
 const emit_cap = @import("emit_cap.zig");
 const emit_values = @import("emit_values.zig");
 const emit_constants = @import("emit_constants.zig");
+const emit_count = @import("emit_count.zig");
 const origins = @import("inline_origins.zig");
 
 /// A source line and column for a span start.
@@ -61,6 +62,10 @@ pub const Options = struct {
     verify: bool = false,
     /// The target description (`target.zig`): vector width and available intrinsics.
     target: @import("target.zig").Target = @import("target.zig").current,
+    /// A counting build (`--counters`, `emit_count.zig`): every function and counted
+    /// site gets a record, and the program writes the counts at exit. Off, nothing
+    /// in the emitted text changes.
+    counters: bool = false,
 };
 
 /// `main` as the C entry calls it.
@@ -246,6 +251,7 @@ fn render(allocator: std.mem.Allocator, module: *const ir.Module, options: Optio
     try state.emitPrelude(&out, body.items);
     try out.appendSlice(allocator, body.items);
     try state.emitSites(&out);
+    if (options.counters) try state.count.render(allocator, &out);
     try state.emitStrings(&out);
     try out.appendSlice(allocator, metadata);
     try out.appendSlice(allocator, tbaa_metadata);
@@ -305,6 +311,8 @@ const ModuleState = struct {
     debug: Debug = .{},
     /// Selection and first-use numbering local to this LLVM module.
     local: Local = .{},
+    /// Counter sites and function records of a counting build (`emit_count.zig`).
+    count: emit_count.Table = .{},
 
     fn contains(self: *ModuleState, index: u32) bool {
         const selected = self.local.selection orelse return true;
@@ -508,7 +516,8 @@ const ModuleState = struct {
             \\declare void @myl_core_main_error_str(ptr) nounwind cold
             \\
         );
-        try fastPaths(self.allocator, out, runtime_fast_paths, body, self.layouts.text.items);
+        if (self.options.counters) try out.appendSlice(self.allocator, emit_count.declarations);
+        try fastPaths(self.allocator, out, if (self.options.counters) emit_count.fast_paths else runtime_fast_paths, body, self.layouts.text.items);
         try out.appendSlice(self.allocator, self.externs.items);
         var number: Out = .empty;
         try emit_number.prelude(self.allocator, &number);
@@ -753,6 +762,12 @@ const FunctionEmitter = struct {
     /// Emitting a release of a value that may be `undef` (`own.empty_release`): every
     /// block pointer is tested for null first.
     may_be_empty: bool = false,
+    /// A counting build's record of this function (`emit_count.Table.function`), or null.
+    count_fn: ?u32 = null,
+    /// The instruction being emitted: counter sites take its span and operation.
+    current: ir.Ref = .none,
+    /// A counter site detail that names a step of the operation (`list_set.old`), or null.
+    count_detail: ?[]const u8 = null,
 
     const SourceScope = struct {
         definition: u32 = 0,
@@ -898,6 +913,7 @@ const FunctionEmitter = struct {
         }
         try self.analyzeMemory(&entry);
         try self.collectBoundLengths();
+        if (self.state.options.counters) self.count_fn = try self.state.count.function(self.a(), f.name);
         // `uwtable`: a trap walks the stack through `.eh_frame`, which needs every frame's CFI.
         try out.print(self.a(), ") nounwind uwtable{s} {{\n", .{try self.functionScope()});
         const bodies = try self.a().alloc(Out, f.blocks.items.len);
@@ -923,6 +939,7 @@ const FunctionEmitter = struct {
                 const inst = f.inst(ref);
                 if (inst.op == .phi or inst.op == .copy) continue;
                 self.selectInstruction(@intCast(b), ref);
+                self.current = ref;
                 try self.instruction(&bodies[b], ref, inst);
                 if (inst.op != .param and inst.op != .str_const) try self.captureBoundLength(&bodies[b], ref);
                 // A construction stored straight into its consumer never exists as a value to assert about.
@@ -933,6 +950,7 @@ const FunctionEmitter = struct {
         try out.appendSlice(self.a(), "entry:\n  %slot = alloca i64, align 8\n");
         try out.appendSlice(self.a(), self.state.allocas.items);
         try out.appendSlice(self.a(), entry.items);
+        if (self.count_fn) |record| try emit_count.prologue(self.a(), out, record);
         try out.appendSlice(self.a(), "  br label %b0\n");
         for (f.blocks.items, 0..) |block, b| {
             if (b != 0 and block.preds.items.len == 0) continue;
@@ -1405,6 +1423,7 @@ const FunctionEmitter = struct {
 
     fn instruction(self: *FunctionEmitter, out: *Out, ref: ir.Ref, inst: ir.Inst) !void {
         const name = try std.fmt.allocPrint(self.a(), "%v{d}", .{ref.index()});
+        if (self.count_fn != null) try self.countBefore(out, inst);
         switch (inst.op) {
             .param, .iconst, .fconst, .undef, .str_const, .func_ref, .copy, .phi => {},
             .dict_new, .dict_len, .dict_find, .dict_entry_key, .dict_entry_value, .dict_set_value => try emit_dict.instruction(@TypeOf(self), self, out, name, inst),
@@ -1538,10 +1557,7 @@ const FunctionEmitter = struct {
                     try self.countedMemory(out, mode, self.typeOf(inst.a), try self.value(inst.a));
                 } else try self.counted(out, mode, self.typeOf(inst.a), try self.value(inst.a));
             },
-            .is_unique => {
-                const count = try self.fresh("%rc");
-                try out.print(self.a(), count_load_line ++ "  {s} = icmp eq i32 {s}, 1\n", .{ count, try self.value(inst.a), name, count });
-            },
+            .is_unique => try self.isUnique(out, name, inst),
             .err_trace => try self.errTrace(out, inst),
             .call => try self.call(out, name, inst),
             .print => try self.print(out, inst),
@@ -1551,14 +1567,29 @@ const FunctionEmitter = struct {
                 try out.print(self.a(), "  br label %b{d}\n", .{inst.data});
             },
             .branch => try self.branchTo(out, inst),
-            .ret => if (inst.a == .none) {
-                try out.appendSlice(self.a(), "  ret void\n");
-            } else if (self.state.module.passedInMemory(self.function.signature.ret)) {
-                try self.storeOperand(out, self.function.signature.ret, inst.a, "%ret");
-                try out.appendSlice(self.a(), "  ret void\n");
-            } else try out.print(self.a(), "  ret {s}\n", .{try self.typedValue(inst.a)}),
+            .ret => try self.returnFrom(out, inst),
             .@"unreachable" => try self.trapTerminator(out, inst),
         }
+    }
+
+    /// `is_unique`: the block's count is 1. A counting build counts the test and its unique outcomes.
+    fn isUnique(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+        const count = try self.fresh("%rc");
+        try out.print(self.a(), count_load_line ++ "  {s} = icmp eq i32 {s}, 1\n", .{ count, try self.value(inst.a), name, count });
+        const record = try self.countSite(out, .unique_test, "") orelse return;
+        const unique = try self.fresh("%cnt");
+        try out.print(self.a(), "  {s} = zext i1 {s} to i64\n", .{ unique, name });
+        const step: emit_count.Increment = .{ .record = record, .offset = emit_count.site_extra, .amount = unique, .loaded = try self.fresh("%cnt"), .sum = try self.fresh("%cnt") };
+        try emit_count.increment(self.a(), out, step);
+    }
+
+    /// `ret`: a value over four words through `sret`; a counting build first makes the caller's record current again.
+    fn returnFrom(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
+        const sret = inst.a != .none and self.state.module.passedInMemory(self.function.signature.ret);
+        if (sret) try self.storeOperand(out, self.function.signature.ret, inst.a, "%ret");
+        if (self.count_fn != null) try out.appendSlice(self.a(), emit_count.epilogue);
+        if (inst.a == .none or sret) return out.appendSlice(self.a(), "  ret void\n");
+        try out.print(self.a(), "  ret {s}\n", .{try self.typedValue(inst.a)});
     }
 
     fn trapTerminator(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
@@ -2026,6 +2057,7 @@ const FunctionEmitter = struct {
 
     /// Copy `size` bytes from `src` to `dst`; `overlap` when they may be the same slot.
     fn copyBytes(self: *FunctionEmitter, out: *Out, dst: []const u8, src: []const u8, size: u32, overlap: bool) !void {
+        if (self.count_fn != null) _ = try self.countSite(out, .record_copy, try std.fmt.allocPrint(self.a(), "{d}", .{size}));
         try out.print(self.a(), "  call void @llvm.mem{s}.p0.p0.i64(ptr {s}, ptr {s}, i64 {d}, i1 false)\n", .{ if (overlap) "move" else "cpy", dst, src, size });
     }
 
@@ -2239,7 +2271,10 @@ const FunctionEmitter = struct {
         const slot = try self.elementSlot(out, list, index, element);
         const managed = m.managed(element) and !flags.transferredSlot(self.function, inst);
         const old = if (managed) try self.fresh("%old") else "";
+        // A counting build names the copy of the old element made to release it.
+        self.count_detail = if (self.count_fn != null) "list_set.old" else null;
         if (managed) try self.loadValue(out, element, slot, old);
+        self.count_detail = null;
         try self.storeOperand(out, element, self.function.operands(inst.data)[0], slot);
         if (managed) try self.countedValue(out, .release, element, old);
         try out.print(self.a(), identity_line, .{ name, list });
@@ -2448,6 +2483,7 @@ const FunctionEmitter = struct {
     /// (verify builds first assert the count is 1 and trap `R_CORE_FACT`).
     fn freeUnique(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
         const block = try self.value(inst.a);
+        _ = try self.countSite(out, .release_unique, "");
         if (self.state.options.verify) {
             const count = try self.fresh("%uc");
             const shared = try self.fresh("%us");
@@ -2497,6 +2533,7 @@ const FunctionEmitter = struct {
             try self.countBlock(out, mode, block);
             return self.leaveIf(out, join);
         }
+        _ = try self.countSite(out, if (mode == .retain) .retain else .release, "");
         const count = try self.fresh("%rc");
         const saturated = try self.fresh("%rs");
         const update = try self.fresh(if (mode == .retain) "rc.inc" else "rc.dec");
@@ -2515,6 +2552,66 @@ const FunctionEmitter = struct {
             try out.print(self.a(), "{s}:\n  call void @myl_core_free(ptr {s})\n  br label %{s}\n{s}:\n", .{ free, block, done, done });
         }
         self.label = done;
+    }
+
+    /// In a counting build, a new counter site of `kind` at the instruction being
+    /// emitted: `c0` counts its executions and, unless `bytes` is empty, `c1` adds
+    /// `bytes` each time. Returns the site's symbol, or null outside a counting build.
+    fn countSite(self: *FunctionEmitter, out: *Out, kind: emit_count.Kind, bytes: []const u8) Error!?[]const u8 {
+        const record = try self.newCountSite(kind) orelse return null;
+        try emit_count.increment(self.a(), out, .{ .record = record, .offset = emit_count.site_count, .amount = "1", .loaded = try self.fresh("%cnt"), .sum = try self.fresh("%cnt") });
+        if (bytes.len != 0) try emit_count.increment(self.a(), out, .{ .record = record, .offset = emit_count.site_bytes, .amount = bytes, .loaded = try self.fresh("%cnt"), .sum = try self.fresh("%cnt") });
+        return record;
+    }
+
+    fn newCountSite(self: *FunctionEmitter, kind: emit_count.Kind) Error!?[]const u8 {
+        const record = self.count_fn orelse return null;
+        const inst: ?ir.Inst = if (self.current == .none) null else self.function.inst(self.current);
+        // Releases at a function's end carry no span of their own: they belong to the function.
+        const span = if (inst != null and inst.?.span != 0) inst.?.span else self.function.span;
+        const location = self.state.options.locator.locate(self.state.options.locator.context, span);
+        const index = try self.state.count.add(self.a(), .{
+            .function = record,
+            .origin = self.sourceFunction().name,
+            .path = if (location.path.len != 0) location.path else self.state.options.source_path,
+            .line = location.line,
+            .column = location.column,
+            .kind = kind,
+            .detail = self.count_detail orelse if (inst) |known| @tagName(known.op) else "function",
+        });
+        const name = try std.fmt.allocPrint(self.a(), "@myl.cs.{d}", .{index});
+        return name;
+    }
+
+    /// The counter sites an instruction gets before its own code in a counting build:
+    /// the site a runtime copy credits (`myl_count_copy_site`), a push's element bytes,
+    /// and a whole small aggregate read from or written into a list.
+    fn countBefore(self: *FunctionEmitter, out: *Out, inst: ir.Inst) Error!void {
+        const m = self.state.module;
+        const copied: ?emit_count.Kind = switch (inst.op) {
+            .list_copy => .list_copy,
+            .dict_copy => .dict_copy,
+            .buffer_copy => .buffer_copy,
+            .str_from_view => .text_copy,
+            else => null,
+        };
+        if (copied) |kind| {
+            const record = (try self.newCountSite(kind)).?;
+            try out.print(self.a(), "  store ptr {s}, ptr @myl_count_copy_site, align 8\n", .{record});
+            return;
+        }
+        const element: ir.Type = switch (inst.op) {
+            .list_push, .list_set => m.compound(inst.ty).list,
+            .list_get => inst.ty,
+            else => return,
+        };
+        const bytes = try std.fmt.allocPrint(self.a(), "{d}", .{self.state.stride(element)});
+        if (inst.op == .list_push) {
+            _ = try self.countSite(out, .list_push, bytes);
+            return;
+        }
+        const aggregate = element.isCompound() and !m.isBlock(element) and !m.passedInMemory(element) and m.kind(element) != .@"fn";
+        if (aggregate) _ = try self.countSite(out, if (inst.op == .list_get) .element_load else .element_store, bytes);
     }
 
     /// The value an `%vN` name stands for.

@@ -41,12 +41,9 @@ pub const Show = struct {
     llvm: ?[]const u8 = null,
     /// Print what the release passes did (`--stats`) to the report.
     stats: bool = false,
-    /// Emit only generic LLVM vector code, no x86 intrinsics (`--generic-vectors`): the
-    /// portable fallback a target without AVX2 would get, testable on this one.
-    generic_vectors: bool = false,
-    /// How trap reports find their caller frames (`--trap-frames=dwarf|labels|none`;
-    /// default: the target's).
-    trap_frames: ?target_description.Traps = null,
+    /// What the emitted code itself does beyond the program: vector lowering, trap
+    /// frames and run-time counters.
+    codegen: Codegen = .{},
     /// `--verify-cache`: recompile every unit the object store served and require
     /// identical object bytes; such a build never replays.
     verify_cache: bool = false,
@@ -57,6 +54,20 @@ pub const Show = struct {
     /// (`mylang-core`), or every diagnostic, warnings included, as the `mylang` CLI
     /// prints them in `text` or `json` (`--diagnostics=json`, NEW-CORE-S5-CLI-1).
     diagnostics: Diagnostics = .errors,
+};
+
+/// Code-generation choices that change the executable without changing the program.
+pub const Codegen = struct {
+    /// Emit only generic LLVM vector code, no x86 intrinsics (`--generic-vectors`): the
+    /// portable fallback a target without AVX2 would get, testable on this one.
+    generic_vectors: bool = false,
+    /// How trap reports find their caller frames (`--trap-frames=dwarf|labels|none`;
+    /// default: the target's).
+    trap_frames: ?target_description.Traps = null,
+    /// A counting build (`--counters`, NEW-CORE-COUNTERS-1): the program records its
+    /// count updates, uniqueness tests, copies and memory traffic and writes them as
+    /// JSON at exit (`emit_count.zig`, `runtime/core_count.c`).
+    counters: bool = false,
 };
 
 /// What `Show.diagnostics` selects.
@@ -165,8 +176,9 @@ fn flags(init: std.process.Init, options: Options, budget: ?run_budget.RunBudget
         .release = options.release,
         .facts = options.facts,
         .stats = options.show.stats,
-        .vectors = options.show.generic_vectors,
-        .frames = options.show.trap_frames,
+        .vectors = options.show.codegen.generic_vectors,
+        .frames = options.show.codegen.trap_frames,
+        .counters = options.show.codegen.counters,
         .links = links,
         .diagnostics = options.show.diagnostics,
         .run = budget,
@@ -268,6 +280,7 @@ pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, opt
         .analysis = .{ .facts = result.known, .vectors = result.plans, .provenance = &result.provenance },
         .verify = verify and options.release,
         .target = targetFor(options.show),
+        .counters = options.show.codegen.counters,
     };
     // S4-1a: a release build is one unit, so LLVM optimizes across every module
     // boundary; a debug build is one unit per module, so an edit recompiles one unit.
@@ -317,8 +330,8 @@ fn mainParameters(allocator: std.mem.Allocator, program: language.typed.Program)
 /// The target description a build uses: the generic vector fallback when asked for,
 /// and the trap-frame mechanism `--trap-frames` picks.
 fn targetFor(show: Show) target_description.Target {
-    var target = if (show.generic_vectors) target_description.generic_256 else target_description.current;
-    if (show.trap_frames) |frames| target.traps = frames;
+    var target = if (show.codegen.generic_vectors) target_description.generic_256 else target_description.current;
+    if (show.codegen.trap_frames) |frames| target.traps = frames;
     return target;
 }
 
