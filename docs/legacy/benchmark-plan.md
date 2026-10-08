@@ -1,5 +1,9 @@
 # Integrated benchmarks and reviewed performance baselines
 
+> **Removed 2026-10 (new core S5-D6).** `mylang test --bench*` and
+> `mylang bench-promote` were dropped with the old test runner and are refused. This
+> plan is kept as a record.
+
 Status: partially implemented September 16, 2026. Guest benchmark discovery,
 sampling, candidate reports, baseline/policy comparison and reviewed promotion
 ship in `mylang test` and `mylang bench-promote`; a blocking CI performance

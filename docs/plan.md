@@ -1,5 +1,11 @@
 # Language design and implementation plan
 
+> **Record.** Written while QBE was the back end. Stage S5 of the new compiler core
+> (2026-10) replaced it, with the bytecode IR, the tracing collector, two-count
+> reference counting, arenas and host functions; the current pipeline is in
+> [native builds](tooling/native-build.md) and the new core's design in
+> [`design/`](design/).
+
 The proposed [development velocity implementation plan](audits/development-velocity-implementation-plan-2026-09-15.md)
 turns the 15 September comparison audit into agent-sized work packages for mutation
 contracts, public effects, formatting, diagnostics, incremental compilation and

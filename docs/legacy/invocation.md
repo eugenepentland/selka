@@ -1,5 +1,9 @@
 # Invoking an exported function
 
+> **Removed 2026-10 (new core S5-D5).** `mylang invoke` and its
+> `native-invocation-v1` envelope were retired with host functions; the command is
+> refused with status 2. This page is kept as a record.
+
 `mylang invoke` calls one exported function of a checked program through the same
 native runtime the guest tests use, without editing the program first. The three
 questions it answers are: *what does this export accept and return* (`--describe`),

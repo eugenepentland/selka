@@ -1,5 +1,11 @@
 # Performance roadmap: the next changes, in order
 
+> **Record (2026-09).** This roadmap measured and planned the QBE and LLVM-adapter
+> back end that stage S5 of the new compiler core retired in 2026-10. The new core's
+> performance work is recorded under [`design/`](design/) and
+> `experiments/new-core-*`; [performance](performance.md) describes the current
+> compiler.
+
 Where mylang stands against Zig and Rust after the 21 September 2026 audit and
 the three fixes it led to, and what to change next to reach parity. Every item
 carries the measurement that ranks it; the numbers come from

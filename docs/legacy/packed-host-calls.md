@@ -1,5 +1,9 @@
 # Packed host calls
 
+> **Removed 2026-10 (new core S5-D5).** Host providers, `host def` and their
+> packed-call ABI were retired; `extern def` with `--link FILE.c` is the remaining C
+> interop ([direct C imports](../c-ffi.md)). This page is kept as a record.
+
 Native provider ABI 7 offers `MylangHostBinding.invoke_packed` for copied integer
 scalars, fixed arrays of `u8`, and whole immutable `bytes` payloads. A provider
 can use it to transfer a byte block, or a whole document, without representing

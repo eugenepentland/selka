@@ -1,15 +1,13 @@
-# Managed application collections
+# Managed collections
 
-Ordinary dynamic lists use managed storage. The default runtime reclaims it by
-reference counting with copy-on-write; the tracing collector (`--gc-runtime`)
-remains available with the same collection API and value semantics. There are no allocator
-parameters, no move operations and no collection borrow scopes: managed memory is
-the only way application code allocates. [Managed arenas](arenas.md) are the one
-escape hatch, and they change *when* managed objects are freed rather than how
-they are written.
+Lists, dictionaries, sets, strings and byte buffers live in managed storage. There
+are no allocator parameters, no free operations and no borrow scopes: managed memory
+is the only way application code allocates. The runtime reference-counts each
+object once and copies on write, so an object is released the moment its last owner
+goes away, and collections are values: assigning one, passing it or storing it
+behaves as a copy.
 
 ```mylang
-# doc: value-semantics
 # doc: expect 1
 # doc: expect 2
 def main(out: Stream) -> int:
@@ -25,17 +23,18 @@ A list assignment or function argument transfers a value. The implementation
 may share backing storage until a write, but writing `alias` leaves `values`
 unchanged. Appending grows capacity automatically. Reading returns a value
 snapshot, never an interior pointer into growable storage. Use a `mut`
-parameter with a marked call when a helper must change its caller's value.
+parameter with a marked call when a helper must change its caller's value
+([value semantics](value-semantics.md)).
 
 Use `list[Node]` for application collections and `nodes: list[Node] = []`
 for an empty list. Read with `nodes[index]`, write with `nodes[index] = value`,
-append with `nodes.append(value)`, and count with `len(nodes)`. These operations
-currently use a named local or parameter as their receiver. An empty literal needs
-an expected list type from an annotation, return type, or parameter.
+append with `nodes.append(value)`, and count with `len(nodes)`. An empty literal
+needs an expected list type from an annotation, return type, or parameter.
 
 Capacity is a reserve hint, not a fixed limit. Mutations return `None`. Invalid
-indices trap with `R_LIST_BOUNDS`. Allocation failure terminates the execution
-with cleanup, rather than returning a recoverable collection result. Keep
+indices trap with `R_LIST_BOUNDS`. Allocation failure ends the program with
+status 1 (`R_MEMORY_BUDGET` under a byte ceiling, `fatal: out of memory` without
+one) rather than returning a recoverable collection result. Keep
 application cardinality checks where input limits are part of its contract.
 
 List elements can be ordinary copyable values, records, and other managed lists.
@@ -48,105 +47,61 @@ record Node:
     children: list[Node]
 ```
 
-`record` and its mutable managed fields are values. The builtin `Cell` and
-legacy `class` are rejected; replace identity-bearing
-graphs with records plus stable ids in a pool or object table. Capturing closures
-remain absent. Byte literals and the managed
+`record` and its mutable managed fields are values. The builtin `Cell` and `class`
+are rejected; replace identity-bearing graphs with records plus stable ids in a pool
+or object table. Capturing closures remain absent. Byte literals and the managed
 [`bytes`](bytes.md) type keep their documented behavior. Owned resources, provider
-capabilities, and must-handle results cannot be hidden inside copyable
-lists. There are no interior pointers into managed storage. Host invocation, JSON encoding
-of managed graphs, and QBE native emission reject unsupported managed boundaries;
-ordinary scalar host calls from managed applications still work.
+capabilities, and must-handle results cannot be hidden inside copyable lists. There
+are no interior pointers into managed storage.
 
-## Runtime selection
+## Releasing memory
 
-Reference counting is the default runtime. A command that names no runtime
-builds and runs with it; choose another on commands that check, build or execute
-a program:
+A managed object is released when its last owner goes away: a local at the end of
+its last use, a temporary right after the expression that made it, a list element
+when its list is released. The compiler places every count and release
+([ownership](tooling/ownership.md)); the program never says anything. Because values
+are independent, assignments and container stores cannot build a cycle, so nothing
+needs tracing, and identity-bearing graphs use pool handles.
 
-| Option | Runtime |
-| --- | --- |
-| (none), `--rc-runtime` | Reference counting with copy-on-write; the default |
-| `--rc-runtime=stats` | The same RC runtime with ownership-operation counters |
-| `--rc-runtime=sites` | The counted RC runtime, with every count charged to the call site that caused it ([ownership sites](tooling/ownership.md#ownership-sites)) |
-| `--gc-runtime` | The tracing collector: the opt-out from reference counting |
+```mylang
+# doc: expect 1225
+def batch(size: int) -> int:
+    scratch: list[str] = []
+    for index in range(size):
+        scratch.append(f"item {index}")
+    return len(scratch)
 
-`MYLANG_RUNTIME=gc-v1` (or `rc-v5`, `rc-v5-counting`, `rc-v5-sites`) selects a
-runtime for a whole shell session or CI job; an explicit flag outranks it.
+def main() -> int:
+    kept: list[int] = []
+    for step in range(50):
+        kept.append(batch(step))
+    total = 0
+    for value in kept:
+        total += value
+    return total
+```
 
-For example, `mylang run-project examples/gc-default/main.my --print-result`
-prints `142` under RC, and adding `--gc-runtime` prints the same under the
-collector. `mylang test tests/lang --rc-runtime=stats` exercises the language
-tests with counted RC. Either backend supports the same selectors; add
-`--release` for LLVM O3 with full LTO. The uninstrumented default is the one to
-measure for production performance.
-
-`--gc-stress` stresses the tracing collector, so it needs GC: on `run`,
-`run-project`, `test`, `build --run` and `invoke` it selects `--gc-runtime`
-when no runtime flag is given, and naming it together with an `--rc-runtime`
-flag is a usage error. A program built for RC refuses `--gc-stress` in
-`MYLANG_OPTIONS` with exit status 2 and a message naming `--gc-runtime`, rather
-than running without the stress it asked for.
-
-RC keeps managed objects alive while an owner or a compiler-maintained lifetime
-hold still needs them. Releasing the last such reference retires the object and
-releases its child references. The runtime does not trace cycles. Ordinary value
-programs use independent values and pool ids for graphs. Dictionary projections
-are ephemeral; stored snapshots use explicit `list(...)` materialization. View
-types cannot appear in parameter, return, field or element annotations. These rules are checked
-by the value model, independently of the runtime selector.
-
-Arenas remain available with RC: the same `with arena()` syntax groups managed
-allocations for bulk release, with the existing escape checks and copy rules.
-RC does not introduce allocator parameters, explicit free operations or new
-ownership syntax. Memory limits and trap cleanup apply to both runtimes.
-
-`--legacy-sharing` uses tracing GC. Combining it with an explicit RC selector is
-a usage error; the RC default and an inherited RC selection are normalized to GC
-for legacy code.
-Runtime selection is a build property, so changing a running binary's environment
-cannot turn a GC binary into an RC binary. See
-[native runtime contracts](tooling/native-build.md#runtime-contracts) for artifact
-and cache compatibility.
-
-## Collection and allocation contracts
-
-With the default RC runtime, a managed object is released when its last owner
-goes away, so memory returns as soon as a value is dead rather than at a later
-collection. With the GC runtime, each execution owns a single-threaded, nonmoving tracing
-heap. The compiler registers typed roots for live locals, operands and
-intermediate values. Collection follows these roots and managed edges to keep
-reachable objects; unreachable objects, including cycles in legacy programs,
-can be reclaimed. Minor collections also account for edges from older objects
-into younger storage.
-
-Automatic collection runs at managed allocation safepoints according to byte
-thresholds and memory-budget pressure. Budget pressure requests a full collection
-before an allocation is refused. Collection timing is an implementation detail,
-not a guest-visible reclamation guarantee. Both runtimes enforce the documented
-[execution memory ceilings](tooling/runtime-budgets.md).
+Every `scratch` list and every interpolated string in that program is released when
+`batch` returns. Dictionary views are ephemeral; stored snapshots use explicit
+`list(...)` materialization, and view types cannot appear in parameter, return,
+field or element annotations.
 
 Managed construction and append carry the transitive `managed_allocation` effect.
-`noalloc` excludes it, meaning "performs no managed allocation". It does not
-promise zero host allocation for value representation or runtime bookkeeping.
-Reads and fixed-slot writes are permitted under that bound. Inside a
-[`with arena() as name:`](arenas.md) block the same managed allocation happens; only
-its release point moves. Managed mutation is not a promise of purity or exclusive
-access.
+`noalloc` excludes it, meaning "performs no managed allocation". It does not promise
+zero allocation for runtime bookkeeping. Reads and fixed-slot writes are permitted
+under that bound. Managed mutation is not a promise of purity or exclusive access.
+Every process that runs a program under `mylang run` or `mylang test` has a byte
+ceiling ([guest memory ceilings](tooling/runtime-budgets.md#guest-memory-ceilings)).
 
-`mylang run-project examples/gc-default/main.my --gc-stress --print-result`
-runs under the collector (`--gc-stress` selects it) and collects at every
-managed construction/append safepoint. It should print `142`. Stress mode is a
-rooting correctness check, not a performance mode. See the
-[schematic instructions](../experiments/schematic/README.md) for the real migrated
-application and normal/stress SVG comparison.
+`with arena():` blocks, which once released a phase's objects in bulk, were retired:
+the block still runs as an ordinary block and warns `W_ARENA_RETIRED`, and
+`mylang fix` removes it ([arenas](arenas.md)). The tracing collector and its
+`--gc-runtime` and `--gc-stress` switches were retired with it.
 
 ## Managed lists
 
 `list[T]` is the growable sequence application code reaches for. Its storage is
-managed by the selected runtime, so there is no allocator argument to thread and
-no free to
-write. Assignment and argument passing preserve the value independently, with
+managed, so there is no allocator argument to thread and no free to write. Assignment and argument passing preserve the value independently, with
 copy-on-write backing where possible. Elements must be
 copyable storable values — scalars, records, strings, byte strings and other
 managed collections — which keeps owned resources, provider capabilities and
@@ -154,7 +109,6 @@ unchecked results out of copyable storage. Reading an element yields a
 snapshot of that value, never an interior pointer into growable storage.
 
 ```mylang
-# doc: value-semantics
 # doc: expect 42
 def widen(target: mut list[int]) -> None:
     target.append(2)
@@ -392,8 +346,7 @@ before the container, and each is evaluated exactly once. `==` and `!=` compare
 contents rather than identities, recursing through nested lists, dictionaries,
 plain records, fixed arrays, unions, `Result` and `Option` values; dictionary
 equality ignores insertion order. A type that reaches a callback or resource
-has no equality and is rejected with `E_TYPE`. Legacy `class` identity and
-builtin `Cell` are available only in compatibility mode. There is
+has no equality and is rejected with `E_TYPE`. There is
 no identity comparison operator, so two separately built lists holding equal
 elements are equal.
 
@@ -429,7 +382,6 @@ Aggregates compare the same way. Records, fixed arrays, unions, `Result` and
 `Option` compare structurally. Use a pool handle when identity must be compared:
 
 ```mylang
-# doc: value-semantics
 # doc: expect 42
 record Point:
     x: int
@@ -510,83 +462,3 @@ def main() -> int:
         return 4
     return doubled[0] + large[0] + widths[0] + widths[1]
 ```
-
-## The tracing collector
-
-With `--gc-runtime`, the opt-out from the default reference counting, each
-execution owns one single-threaded, nonmoving tracing
-heap, so a live managed object's address does not move during collection.
-Collection runs at managed allocation safepoints according to allocation pressure
-and the execution memory budget. Nothing in the surface language frees an object:
-[`with arena() as name:`](arenas.md) changes only *when* a region's objects are
-released, not how they are written. `mylang run --gc-stress` selects the
-collector and collects at every safepoint, which is a rooting correctness check
-rather than a performance mode.
-
-```mylang
-# doc: gc-runtime
-# doc: expect 1225
-def batch(size: int) -> int:
-    scratch: list[str] = []
-    for index in range(size):
-        scratch.append(f"item {index}")
-    return len(scratch)
-
-def main() -> int:
-    kept: list[int] = []
-    for step in range(50):
-        kept.append(batch(step))
-    total = 0
-    for value in kept:
-        total += value
-    return total
-```
-
-Every `scratch` list and every interpolated string in that program is unreachable
-as soon as `batch` returns, and the collector reclaims them during a later
-allocation without the program saying anything. Under the default RC runtime the
-same program releases each of them at that return instead.
-
-## Reclaiming cycles
-
-Ordinary value programs cannot construct a mutable cycle through assignments
-or container stores. Identity-bearing graphs use explicit pool handles. The
-tracing collector still handles cycles made by programs run with
-`--legacy-sharing` during the migration release.
-
-The tracing collector starts from registered live roots and follows managed
-edges, then reclaims unreachable objects. Edges within an unreachable cycle do
-not make it reachable from a root, so the collector can reclaim the whole cycle.
-In compatibility mode, records can hold collections whose shared references form
-such a cycle. This legacy behavior requires GC; the RC runtime relies on the
-ordinary value model's cycle restrictions instead.
-
-```mylang
-# doc: legacy-sharing
-# doc: expect 42
-record Node:
-    name: str
-    peers: list[Node]
-
-def linked() -> int:
-    left = Node(name="left", peers=[])
-    right = Node(name="right", peers=[])
-    left.peers.append(right)
-    right.peers.append(left)
-    hop = left.peers[0]
-    back = hop.peers[0]
-    if back.name != "left":
-        return 0
-    return len(hop.peers) + len(left.peers)
-
-def main() -> int:
-    total = 0
-    for step in range(20):
-        total += linked()
-    return total + 2
-```
-
-In compatibility mode, `left.peers` reaches `right.peers` and back again, so neither list can be freed by
-dropping a count to zero; each round of the loop leaves a whole cycle unreachable
-and the tracing pass collects it. The same program under `--gc-stress`, which
-collects at every safepoint, returns the same answer.
