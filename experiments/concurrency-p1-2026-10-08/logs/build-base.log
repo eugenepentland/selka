@@ -1,0 +1,8 @@
+build.zig:3:26: error: no module named 'guardian' available within module '@build'
+const guardian = @import("guardian");
+                         ^~~~~~~~~~
+referenced by:
+    build: build.zig:525:24
+    runPackageScript [inlined]: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Build.zig:2392:50
+    main: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/compiler/configurer.zig:134:29
+    4 reference(s) hidden; use '-freference-trace=7' to see all references

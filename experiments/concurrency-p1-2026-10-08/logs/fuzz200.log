@@ -1,0 +1,11 @@
+evidence=/home/epentland/ai/canopy/mylang-concurrency-p1/experiments/concurrency-p1-2026-10-08/fuzz200
+source_commit=07b0b3dc3ed783f8191354666e8fcc0f041df4aa
+s0: PASS; 94.7210184300784s
+number: PASS; 121.22082571312785s
+rc: PASS; 62.766157605918124s
+s1: PASS; 109.90960164694116s
+rebinding: PASS; 99.57703625620343s
+iteration: PASS; 154.31981399701908s
+text: PASS; 96.98179309209809s
+dict: PASS; 225.2225625659339s
+functions: PASS; 83.88063346687704s

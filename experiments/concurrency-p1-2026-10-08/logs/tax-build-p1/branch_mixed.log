@@ -1,0 +1,5 @@
+["/home/epentland/.cache/mylang/conc-p1-p1-1/bin/mylang", "build", "/home/epentland/ai/canopy/mylang-concurrency-p1/test/core/branch_mixed.my", "--release", "-o", "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/tax-rows/p1/branch_mixed", "--cache-dir", "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/tax-rows/p1/cache", "--link", "/home/epentland/ai/canopy/mylang-concurrency-p1/benchmarks/runtime/ports/native_clock.c"]
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 20s (all 3 build slot(s) busy)
+
+exit=0

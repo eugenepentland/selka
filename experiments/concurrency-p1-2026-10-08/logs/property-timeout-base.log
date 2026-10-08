@@ -1,0 +1,8 @@
+failed main::test_finishes: falsified after 1 passing run (seed 9559909422248133688)
+  input (not shrunk: it ran out of time, and so could every candidate):
+    n = 140737488355327
+  original input (run 2):
+    n = 140737488355327
+  reason: the input ran past --timeout-ms 1000
+  reproduce: mylang test .tmp/property-timeout/main.my --filter 'main::test_finishes' --seed 9559909422248133688
+0 passed, 0 cached, 1 failed, 0 skipped

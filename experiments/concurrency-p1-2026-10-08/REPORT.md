@@ -1,68 +1,77 @@
-# P1 report — stopped at the §9 scope boundary
+# P1 report — stopped at the P1-1 early tax gate
 
-2026-10-08. **P1 is not implemented or qualified.** The P1-0 audit found a
-necessary emitter change outside §5's explicit ownership list. Work stopped
-before P1-1, as §9 requires: “A needed change elsewhere is a stop and a report.”
-The retained changes are this report, the plan's Status line, and isolated audit
-tools/evidence. No compiler or runtime source was changed.
+2026-10-08. **P1-1 is implemented; package P1 is not complete or qualified.**
+The original early tax run passed the corpus geomean limit (0.998711×) but
+failed the per-row limit: four of 92 row/size cells exceeded 1.03×, with
+`json_transform/4096` at 1.040006×. Per §5 P1-1, implementation stopped before
+P1-2. The required plain-load diagnostic is reported below; it does not replace
+the original gate. TLS, the share walk, scheduler, task ABI bridge, internal
+TSan build switch and P1-5 end-to-end suite remain unimplemented.
 
 ## 1. Branch, commits and what was built
 
-- Branch: `codex/concurrency-p1`, created from `claude/concurrency-plan` at
-  `c6606353b067b43636a78a27d77da8dac3fd7a4c`.
-- Worktree: `/home/epentland/ai/canopy/mylang-concurrency-p1`.
-- Launch `main`: `1edeef830913cf3557aed75417cc9adcd9fd3155`, an ancestor of the
-  plan branch. `main` had not moved at the final audit check, so there was
-  nothing to merge. No merge into `main`, push, or Claude-worktree edit occurred.
-- Evidence commit: `4673418f136da26db0287858c984065f9a96c14f`
-  (`audit: inventory P1 runtime and reproduce shared uniqueness race`).
-  The following report commit records this stop and the plan Status update.
-- Built with pinned Zig `0.17.0-dev.1683+5ceec001b`: two small LLVM/C TSan
-  executables and an object containing the current runtime plus counting
-  declarations/definitions for inventory validation. Every explicit compilation
-  used `scripts/build-slot.sh build`; temporary files and caches were on disk
-  under the Codex worktree and the shared Zig global cache.
+| Item | Commit / status |
+|---|---|
+| Branch and worktree | `codex/concurrency-p1`, `/home/epentland/ai/canopy/mylang-concurrency-p1` |
+| Original P1-0 inventory and report | `4673418f1`, `0034715e0`, retained by revision 1 |
+| Requested fast-forward | `a633dbd5d5a3436ecb37e8d321db52b919baeca3` (`claude/concurrency-plan`) |
+| CE2 integration on `main` | `12bf3f60b6fce5d11a8a9d04367c19002b66558e` |
+| Real merge into P1, before implementation | `54eda9012525b7f3c15ef247a4a4082210578ece`; parents `a633dbd5d`, `12bf3f60b` |
+| P1-1 implementation | `07b0b3dc3ed783f8191354666e8fcc0f041df4aa` |
+| Comparison baseline | The merged resume base `54eda9012`, so CE2 changes do not contaminate the P1 tax comparison |
 
-### Required scope change: shared count readers
+No merge into `main`, push, or Claude-worktree modification was performed.
+The final evidence/report commit follows the implementation commit. The pinned
+toolchain is Zig `0.17.0-dev.1683+5ceec001b`.
 
-`src/core/emit_llvm.zig:212` defines `count_load_line` as an ordinary LLVM
-`load i32`. `isUnique` at line 1822 uses it to read the count before comparing
-with 1. A parent can perform this test after submission while a worker retains
-or releases the same shared block. Atomic writes in the proposed slow helpers
-do not make that ordinary read atomic. The unchanged comparison is correct;
-the load feeding it is not safe under the proposed concurrency.
+Implemented under `[SHARED-COUNTS-1]`:
 
-The experiment extracts the current instruction shape and metadata, pairs it
-with a worker doing relaxed atomic increments and release atomic decrements,
-and keeps two owners alive for the entire run. There is no reclamation race.
+- The plain/shared/immortal encoding, inline emitted thresholds, cold retain
+  and release helpers, and common runtime count/uniqueness/cache helpers.
+- LLVM `unordered` count loads with the original TBAA and `[1, 0)` range.
+  Uniqueness comparisons stay `count == 1`; the free-list declaration is still
+  an ordinary global. C count reads use relaxed atomics.
+- All inventoried direct runtime RC sites and generated counting-runtime
+  anchors moved to helpers. Child releases still use an iterative free walk.
+  Shared text cannot acquire a lazy cache through these sites.
+- Shared-retain/shared-release counters and reserved share-walk counter slots;
+  share marks/bytes remain zero until P1-3. Counting state is not yet TLS.
+- Boundary, immortal-constant, concurrent saturation, eight-thread count and
+  100,000-level destruction tests; emitted-path checks; a typed source guard.
+  The guard renames `myl_block.count` and only sanctioned access sites, then
+  asks the C compiler to reject an unsanctioned access through an alias. It
+  checks ordinary and generated counting sources without banning other
+  structures' `count` fields. The existing RC emission test's load expectation
+  was updated with the shared load template.
 
-| Reader | Repetitions | Result |
-|---|---:|---|
-| Current ordinary load + `icmp eq ..., 1` | 1 | TSan data race, exit 66; atomic worker write conflicts with `p1_is_unique`'s read |
-| Same load changed to `load atomic ... monotonic` | 100 | All exit 0, no TSan reports; every run prints `unique=0 count=80000002` |
+**Atomic implementation decision:** shared increments and decrements both use
+compare-exchange loops, with relaxed retain, release decrement and an acquire
+fence for the last owner. A sentinel check followed by unconditional
+fetch-add/sub can race another thread's saturation, wrapping or decrementing
+immortality. The CAS loops keep the immortal sentinel sticky; the contention
+and near-saturation tests cover this decision. No plain-path atomic RMW was
+added.
 
-Evidence: [race log](evidence/count-reader-plain-000.log),
-[per-run results](evidence/count-reader.json),
-[ordinary LLVM](evidence/count-reader-plain.ll),
-[atomic LLVM](evidence/count-reader-atomic.ll).
-This is a minimal two-thread probe, **not** P1-5's eight-thread suite, and it
-does not establish the correctness of an unimplemented scheduler.
+ReleaseFast compiler installs and SHA-256/source hashes are in
+[evidence/p1-1-builds.json](evidence/p1-1-builds.json). The P1 compiler was
+installed from the implementation sources before the commit; subsequent edits
+before that commit affected tests only. The Debug compiler was qualified at
+`07b0b3dc3`. All guest timing binaries use `--release`.
 
-The smallest proposed scope extension is permission to change the common
-`count_load_line` template (and its comment) to an atomic monotonic load,
-covering `isUnique`, `countBlock` and `freeUnique`'s verification read. The
-`count == 1` comparison and `[1, 0)` range remain unchanged. Plain count
-**updates** can remain ordinary stores before publication. This extension
-has not been applied. Its performance must be included in P1-1's early tax
-measurement; no assumption about a zero performance cost substitutes for it.
+The plain-load diagnostic was built from an isolated source archive of
+`07b0b3dc3` with only [plain-loads.patch.gz](evidence/plain-loads.patch.gz): the emitted
+count load and C `count_load` return become plain reads. The encoding and
+slow helpers remain identical. This is a single-thread diagnostic, not a safe
+alternative for shared values; the branch retains the approved atomic reads.
 
-§5 permits only `countBlock`, allocation/free text, the free-list declaration
-and `sanitize_thread` in this emitter. Changing the common template affects
-the explicitly excluded uniqueness path. Keeping it unchanged would leave
-the demonstrated race; hiding the change inside an allowed function would
-evade that scope boundary.
+## 2. Accepted P1-0 inventory and ABI findings
 
-## 2. P1-0 inventory and ABI findings
+The following inventory is preserved from P1-0 at its original source lines.
+Revision 1 §4.7 accepts it as the §4.3 design. Its table entries describe the
+required final treatment, not completed P1 work. P1-1 implements the count
+sites; the other treatments remain pending. R1 chooses unordered reads,
+R2–R3 settle caches and fatal paths, R4–R5 settle the bridge and sites, and
+R6–R8 settle allocator registration, providers and the source guard.
 
 The Clang AST inventory contains **103 named C declarations: 97 definitions
 and 6 extern declarations**, including function-local statics and the counting
@@ -228,7 +237,7 @@ fields, capability provider/parent/scope, resource authority, and provider
 its retained owner is represented by ownership operations. New task result
 and environment ownership still need the scheduler implementation/tests.
 
-### ABI feasibility: not yet confirmed end to end
+### ABI feasibility: historical finding, design decided by R4/R5
 
 `test_builder.helper` declares `.runtime_c` helpers; `Builder.call` accepts
 typed operands. Boxes and function values both emit as pointers. A generated
@@ -236,7 +245,7 @@ thunk can unbox arguments with `box_get`, call its target, then create an owned
 result with **`box_make`** (the actual operation name, rather than `box_new`).
 These building blocks do not suggest an `ir.zig` representation change.
 
-There are two details for the resumed P1-0/P2-0 ABI check:
+P1-0 identified two details subsequently decided by revision 1 R4/R5:
 
 1. `func_ref` resolves directly to the generated function symbol.
    `emitFunction` defines it with LLVM **`fastcc`**, and the verifier requires
@@ -253,74 +262,371 @@ There are two details for the resumed P1-0/P2-0 ABI check:
    a runtime-owned site representation), rather than treating a managed box
    header as the raw `myl_core_site *` payload address.
 
-No hand-built Core program was executed against a task ABI: the runtime does
-not exist, and the scope stop was reached first. Thus P1-0's executable ABI
-confirmation remains open.
+P1-0 did not execute a hand-built task program before its original scope stop.
+Revision 1 prescribes the bridge and return-address sites; their implementation
+and end-to-end confirmation remain pending after this P1-1 tax stop.
 
 ## 3. Correctness gates
 
-| Check | Status |
+| Check | Result |
 |---|---|
-| Current runtime + counting declarations/definitions compile | PASS, pinned `zig cc`, exit 0. This validates the inventory translation unit, not concurrency. |
-| Ordinary uniqueness-load TSan probe | Expected race reproduced, exit 66. |
-| Atomic uniqueness-load TSan control | PASS, 100/100 runs, no reports. |
-| Guardian commit gate for evidence commit | PASS, 88 checks. Existing file-size/function-length/line-length/ABI-layout findings were report-only. |
-| Python tool syntax and evidence JSON | Validated. |
-| `git diff --check` | PASS before evidence commit; checked again for report closeout. |
-| `zig build test --summary all`; `zig build fmt-check` | NOT RUN: stopped before compiler/runtime changes. The commit's static Guardian gate is not the full gate. |
-| `qualify_merge.py`: test-core and 1518/0/0 in both modes | NOT RUN. |
-| Frozen fuzz 9×50, then 9×200 | NOT RUN. |
-| Lox conformance, EDA goldens and 310 tests, parity expected outputs | NOT RUN; no external benchmark worktrees were needed before this stop. |
-| Counting/ordinary output equality | NOT RUN. |
-| P1-4 C scheduler unit/stress tests and 10⁶ submits | NOT IMPLEMENTED / NOT RUN. |
-| P1-5 hand-built IR at 1, 2, 8 threads and TSan 100×8 | NOT IMPLEMENTED / NOT RUN. The small load probe does not substitute for this gate. |
+| `zig build test --summary all` | PASS, 88/88 steps; [retry log](logs/p1-1-gate-retry.log) |
+| `zig build fmt-check` | PASS, exit 0 after the full gate |
+| `qualify_merge.py`, 64 Core shards | PASS, 505 tests; 32.68 s |
+| Frozen full conformance with verification/leak checks | Debug 1518 matching / 0 mismatching / 0 unsupported; Release 1518/0/0; 23.16 s |
+| Frozen fuzz 9×50 | PASS, all nine kinds, 450 accepted cases; [matrix](evidence/fuzz50.json), [full evidence archive](fuzz50.tar.gz) |
+| Frozen fuzz 9×200 | PASS, all nine kinds, 1,800 accepted cases; [matrix](evidence/fuzz200.json), [full evidence archive](fuzz200.tar.gz) |
+| Compiler/source identity during fuzz | Both matrices confirm unchanged source and oracle hashes |
+| New shared-count tests | PASS, boundary/encoding, emitted paths and typed source guard; included in the full/Core gates |
+| Current C count harness under TSan | PASS, one run with 8 workers, 0 reports, `shared counts ok`; [manifest](evidence/counts-tsan.json), [log](logs/counts-tsan-run.log) |
+| P1-0/R1 atomic-load probes | Historical evidence retained: monotonic and unordered each 100/100 without reports; ordinary load reproduced a race |
+| Timing checksum agreement | All arms agree in every measured startup and timed sample |
+| Counting output correctness | Existing counting tests pass in the full/Core gates; CE-X's complete ordinary/counting corpus comparison was not run |
+| Guardian whole-tree implementation commit gate | PASS, all 88 checks; no waiver or snapshot relaxation |
+| Lox conformance, EDA goldens/310 tests, parity expected outputs | NOT RUN: first-corpus early tax stop |
+| Remaining EDA/Lox/parity tax corpora, TLS comparison | NOT RUN: first-corpus early tax stop, before P1-2 |
+| P1-4 scheduler stress / 10⁶ submits | NOT IMPLEMENTED / NOT RUN |
+| P1-5 generated thunks at 1/2/8 threads and 100 TSan repetitions | NOT IMPLEMENTED / NOT RUN; the C count harness is not a substitute |
 
-Guardian was exercised by the commit hook; the required feedback entry is
-appended and committed separately in `guardian-zig` at closeout.
+[Qualification summary](qualify/summary.json) and
+[full conformance log](qualify/full-conformance.log) retain the commands and
+results. The first full gate had two failures: an existing RC test expected
+`load i32`, and the property-test timeout case failed its “not shrunk” text
+assertion. The RC expectation was updated. The timeout test passed unchanged
+on the complete retry (2.41 s versus 218.17 s initially); a standalone baseline
+probe also produced the expected timeout. Its initial failure remains an
+unexplained transient, not a claimed fixed runtime defect. Both full logs and
+[the baseline probe](logs/property-timeout-base.log) are retained.
 
-## 4. Tax and TLS-model comparison
+The first baseline archive build could not resolve the relative Guardian
+dependency; linking the scratch sibling path to the existing Guardian checkout
+resolved it. [The retry](logs/build-base-retry.log) completed successfully.
 
-**Not measured.** No candidate compiler/runtime implementation was produced.
-There are no base/package wall times, per-row medians, corpus geomeans or
-measurement-load samples to report. The 46 CE-X rows, EDA, both Lox engines
-and parity remain unmeasured. Initial-exec/local-exec TLS comparison was not
-started. No performance gate is claimed passed or failed.
+Every build used `scripts/build-slot.sh`, with disk-backed temporary and cache
+paths. The full gate and fuzz matrix did not overlap. Timing waited for this
+lane's build/gate work to finish. Qualification's exclusive install waited
+159.224 s for another lane before its measured 0.86 s build; no other lane's
+process was stopped. [Build-speed notes](evidence/build-speed.json) record the
+row-sweep admission costs. Guardian usage feedback is appended and committed
+separately in `guardian-zig` at closeout.
 
-On resumption, include atomic count **reads** in P1-1's candidate before
-measuring the early tax with the free-list declaration still plain. Apply the
-exact ≤1.010 corpus-geomean and ≤1.03 row-median stop thresholds; only then
-proceed to TLS and the remaining package steps.
+## 4. Single-threaded tax and TLS comparison
 
-## 5. Surprises and next-phase information
+The early gate compares the merged resume base against P1-1, with TLS still
+plain. The CE-X row registry supplies all 46 programs, both sizes, iterations
+and checksums. Each of three batches uses three one-iteration startup samples
+and seven shuffled, interleaved rounds on CPU 10 under
+`/run/user/1000/mylang-slots/cpu10.lock`. Wall time is the row's native
+`CLOCK_MONOTONIC` measurement, with startup subtraction as in CE-X's cycle
+normalization. Cycles and Python/perf process wall time are also retained as
+diagnostics; perf-launch overhead is not allowed to dilute a short kernel's
+tax. The protocol was fixed before timing.
 
-- The plan explicitly makes the share walk's reads atomic but does not cover
-  the existing generated uniqueness load. This is the demonstrated stop.
-- The inventory is larger than process-wide scalar globals: text caches,
-  provider state, all-thread allocator leak accounting and counting-record
-  slots must also be considered. A TLS free-list declaration alone is not
-  sufficient for correct cross-thread destruction/reporting.
-- The proposed C callback ABI needs the calling-convention/site checks above.
-- Clang produced a complete AST, but the pinned `zig cc` wrapper returned
-  `FileNotFound` after the AST-only action (there is no object to collect).
-  [inventory.json](evidence/inventory.json) and
-  [inventory-ast.log](evidence/inventory-ast.log) retain that status. A separate
-  actual object compilation passed. The tool accepts only this specific
-  wrapper error and requires valid complete AST JSON.
-- Tracked report/tools/evidence are well below the 10 MB package cap. ASTs,
-  objects, executable probes and caches remain untracked scratch on disk.
-- P2 and phase 2 were not started. No user-facing parallel surface or feature
-  claim was added. P1 requires a revised scope before implementation resumes.
+See [timing protocol](evidence/timing-protocol.json),
+[original raw samples](results/tax-rows.json.gz) and
+[diagnostic raw samples](results/tax-rows-plain.json.gz), including binary
+hashes and per-sample load. All corpora after the 46 rows are unmeasured because
+this first corpus triggered the stop. The own EDA worktree is
+`/home/epentland/ai/canopy/eda-bench-wt/codex-concurrency-p1` at `d45e0cd472d1`;
+the prepared Lox copy is this worktree's `.mylang-cache/lox`. Neither is used to
+claim external correctness or timing results.
+
+### Original gate (binding stop)
+
+Wall times are native CLOCK_MONOTONIC kernel times, with the median
+one-iteration startup subtracted. Each time below is the median of
+the three batch medians; each ratio is the median of the three
+within-batch ratios. Consequently ratios need not equal the ratio
+of the two displayed times.
+
+| corpus / arm | cells | wall geomean vs base | cells >1.03 | verdict |
+|---|---:|---:|---:|---|
+| 46 rows / p1 | 92 | 0.998711 | 4 | FAIL |
+
+CPU 10 under cpu10.lock. One-minute load across timed samples: 1.53–3.19.
+
+| row | size | base ms | p1 ms | p1/base |
+|---|---:|---:|---:|---:|
+| record_reads | 4096 | 15.3431 | 15.3746 | 1.00142 |
+| record_reads | 64 | 15.3048 | 15.3605 | 1.00364 |
+| tagged_stack | 4096 | 29.3186 | 29.3703 | 1.00039 |
+| tagged_stack | 64 | 29.4234 | 29.2754 | 0.99872 |
+| mutate_unique | 4096 | 12.8734 | 12.8292 | 0.99656 |
+| mutate_unique | 64 | 12.8941 | 12.8753 | 1.00230 |
+| mutate_shared | 4096 | 0.2599 | 0.2556 | 0.97011 |
+| mutate_shared | 64 | 0.2439 | 0.2474 | 1.01722 |
+| record_construct | 4096 | 22.8154 | 23.0578 | 1.01062 |
+| record_construct | 64 | 22.9941 | 22.9480 | 0.99726 |
+| record_update | 4096 | 22.9662 | 23.2056 | 1.00326 |
+| record_update | 64 | 23.7573 | 23.7521 | 0.99978 |
+| option_handle | 4096 | 7.6091 | 7.6152 | 1.00380 |
+| option_handle | 64 | 8.6347 | 8.6426 | 1.01429 |
+| result_propagate | 4096 | 14.4260 | 14.5644 | 1.00721 |
+| result_propagate | 64 | 13.7788 | 13.8417 | 0.99432 |
+| list_scan | 4096 | 15.1744 | 15.0631 | 0.99549 |
+| list_scan | 64 | 15.7072 | 15.4564 | 0.98403 |
+| list_append | 4096 | 24.1508 | 24.6696 | 1.02148 |
+| list_append | 64 | 24.9831 | 25.6212 | 1.02554 |
+| list_filter | 4096 | 28.6299 | 28.8245 | 1.00788 |
+| list_filter | 64 | 33.7592 | 33.5647 | 0.99424 |
+| alloc_short | 4096 | 4.5067 | 4.5814 | 1.00204 |
+| alloc_short | 64 | 4.6257 | 4.6343 | 1.00122 |
+| alloc_retained | 4096 | 32.1438 | 31.9296 | 0.99171 |
+| alloc_retained | 64 | 32.3954 | 32.5044 | 1.00341 |
+| mutate_nested | 4096 | 4.7404 | 4.6492 | 0.99940 |
+| mutate_nested | 64 | 5.6017 | 5.6107 | 0.99851 |
+| bytes_scan | 4096 | 0.1969 | 0.1974 | 1.01915 |
+| bytes_scan | 64 | 0.9118 | 0.9362 | 1.03434 |
+| string_equal | 4096 | 2.3710 | 2.3567 | 0.99400 |
+| string_equal | 64 | 0.6950 | 0.6833 | 0.96872 |
+| string_search | 4096 | 4.0992 | 4.1030 | 1.00229 |
+| string_search | 64 | 0.6413 | 0.6632 | 1.03401 |
+| string_split | 4096 | 24.0596 | 23.7869 | 0.98866 |
+| string_split | 64 | 25.6321 | 25.7190 | 1.00339 |
+| string_join | 4096 | 4.3135 | 4.2550 | 0.99061 |
+| string_join | 64 | 5.0222 | 5.1264 | 1.00698 |
+| dict_lookup | 4096 | 57.8025 | 57.6759 | 0.99876 |
+| dict_lookup | 64 | 56.6232 | 56.8577 | 1.00443 |
+| dict_lookup_str | 4096 | 88.3080 | 84.8793 | 0.96271 |
+| dict_lookup_str | 64 | 74.8585 | 73.8888 | 0.98705 |
+| dict_update | 4096 | 228.8548 | 225.1271 | 0.98637 |
+| dict_update | 64 | 175.4902 | 177.3997 | 1.00036 |
+| dict_update_str | 4096 | 303.8593 | 308.8104 | 1.01629 |
+| dict_update_str | 64 | 232.5027 | 235.1244 | 1.01128 |
+| set_dedup | 4096 | 94.8390 | 94.8225 | 1.00406 |
+| set_dedup | 64 | 111.2336 | 110.0485 | 0.98935 |
+| int_parse | 4096 | 25.4366 | 26.1010 | 1.02876 |
+| int_parse | 64 | 24.3168 | 24.1252 | 0.99212 |
+| int_format | 4096 | 63.7959 | 63.3788 | 0.99550 |
+| int_format | 64 | 58.7727 | 58.2485 | 0.99108 |
+| call_indirect | 4096 | 1.1752 | 1.1613 | 0.99694 |
+| call_indirect | 64 | 1.1732 | 1.2080 | 1.00683 |
+| sort_int | 4096 | 16.7936 | 16.8407 | 1.00276 |
+| sort_int | 64 | 3.5796 | 3.5398 | 0.99082 |
+| sort_records | 4096 | 11.7794 | 11.7469 | 0.99718 |
+| sort_records | 64 | 15.3891 | 14.7682 | 0.95966 |
+| int_math | 4096 | 1.3705 | 1.3870 | 1.00653 |
+| int_math | 64 | 1.8661 | 1.8438 | 0.99400 |
+| float_math | 4096 | 5.7500 | 5.8200 | 1.00178 |
+| float_math | 64 | 6.2957 | 6.3226 | 1.00021 |
+| call_direct | 4096 | 1.2051 | 1.1834 | 1.00947 |
+| call_direct | 64 | 1.2270 | 1.2161 | 0.99796 |
+| branch_predictable | 4096 | 1.5476 | 1.5470 | 0.99342 |
+| branch_predictable | 64 | 1.8774 | 1.8834 | 1.00190 |
+| branch_mixed | 4096 | 1.5467 | 1.5289 | 0.98924 |
+| branch_mixed | 64 | 1.8862 | 1.8902 | 0.99736 |
+| binary_search | 4096 | 11.7774 | 11.1965 | 0.95275 |
+| binary_search | 64 | 6.8839 | 6.8204 | 0.99816 |
+| word_count | 4096 | 13.3966 | 12.9090 | 0.96230 |
+| word_count | 64 | 17.9932 | 17.9283 | 0.99023 |
+| csv_aggregate | 4096 | 44.1378 | 44.1674 | 1.00067 |
+| csv_aggregate | 64 | 40.5859 | 41.1675 | 1.01273 |
+| json_transform | 4096 | 51.5794 | 53.6428 | 1.04001 |
+| json_transform | 64 | 53.6671 | 55.4151 | 1.03265 |
+| packet_decode | 4096 | 5.8236 | 5.6596 | 0.97631 |
+| packet_decode | 64 | 5.6247 | 5.5327 | 0.99312 |
+| lox_eval | 4096 | 8.0783 | 8.1261 | 0.99820 |
+| lox_eval | 64 | 8.1371 | 8.1830 | 1.00044 |
+| tree_build_walk | 4096 | 18.6150 | 17.8077 | 0.96210 |
+| tree_build_walk | 64 | 13.7837 | 12.9511 | 0.95502 |
+| record_pass | 4096 | 10.8854 | 10.9605 | 0.99659 |
+| record_pass | 64 | 13.3038 | 13.1020 | 1.00302 |
+| grid_dp | 4096 | 21.4872 | 21.5960 | 1.00437 |
+| grid_dp | 64 | 17.7335 | 17.6621 | 0.99597 |
+| union_find | 4096 | 29.4788 | 29.4495 | 0.99901 |
+| union_find | 64 | 16.5631 | 16.5765 | 1.01305 |
+| float_format | 4096 | 10.7724 | 10.8736 | 1.00940 |
+| float_format | 64 | 12.1163 | 12.1258 | 0.99893 |
+| buffer_write | 4096 | 12.6719 | 12.7230 | 1.00235 |
+| buffer_write | 64 | 14.3582 | 14.2679 | 0.99371 |
+
+### Required plain-load diagnostic
+
+This is a fresh three-arm, three-batch comparison with the same protocol and
+prebuilt baseline/P1 binaries. The original failed gate remains binding.
+
+| comparison | geomean | cells over 1.03 | worst cell |
+|---|---:|---:|---|
+| p1 / base | 0.998008 | 2 | `json_transform/4096` 1.039446× |
+| plain / base | 0.999325 | 3 | `binary_search/4096` 1.052164× |
+
+With plain reads, `json_transform/4096` is still 1.031421×; `mutate_shared/64`
+and `binary_search/4096` also exceed the row limit. The unordered repeat's two
+JSON cells remain over the limit. The original small byte/string-search misses
+do not recur in the unordered repeat, which shows why all batches and both
+runs are retained. Plain reads improve this JSON cell in the diagnostic
+(1.039446× to 1.031421×), but do not make the encoding pass. This experiment
+separates builds with and without atomic read semantics; code-layout effects
+mean their differences are not a universal additive “atomic instruction tax.”
+
+No initial-exec/local-exec comparison was made: that is P1-2, beyond the stop.
+EDA, Lox and parity remain unmeasured. The following table gives all diagnostic
+row medians as well as the corpus summary.
+
+Wall times are native CLOCK_MONOTONIC kernel times, with the median
+one-iteration startup subtracted. Each time below is the median of
+the three batch medians; each ratio is the median of the three
+within-batch ratios. Consequently ratios need not equal the ratio
+of the two displayed times.
+
+| corpus / arm | cells | wall geomean vs base | cells >1.03 | verdict |
+|---|---:|---:|---:|---|
+| 46 rows / p1 | 92 | 0.998008 | 2 | FAIL |
+| 46 rows / plain | 92 | 0.999325 | 3 | FAIL |
+
+CPU 10 under cpu10.lock. One-minute load across timed samples: 0.99–1.38.
+
+| row | size | base ms | p1 ms | plain ms | p1/base | plain/base |
+|---|---:|---:|---:|---:|---:|---:|
+| record_reads | 4096 | 15.3572 | 15.3579 | 15.3448 | 1.00005 | 0.99766 |
+| record_reads | 64 | 15.2361 | 15.2773 | 15.2714 | 1.00182 | 1.00164 |
+| tagged_stack | 4096 | 29.5100 | 29.3910 | 29.7065 | 0.99803 | 1.00045 |
+| tagged_stack | 64 | 29.2797 | 29.2602 | 29.2209 | 0.99933 | 0.99927 |
+| mutate_unique | 4096 | 12.8116 | 12.8297 | 12.8327 | 0.99914 | 1.00165 |
+| mutate_unique | 64 | 12.7993 | 12.8144 | 12.8180 | 1.00118 | 1.00146 |
+| mutate_shared | 4096 | 0.2538 | 0.2536 | 0.2476 | 1.00144 | 0.97562 |
+| mutate_shared | 64 | 0.2336 | 0.2405 | 0.2394 | 1.02190 | 1.04887 |
+| record_construct | 4096 | 22.8288 | 22.7489 | 22.8688 | 1.00200 | 1.00175 |
+| record_construct | 64 | 22.8252 | 22.7750 | 22.6938 | 0.99558 | 0.99634 |
+| record_update | 4096 | 22.5803 | 22.5812 | 22.5903 | 1.00197 | 0.99966 |
+| record_update | 64 | 23.5260 | 23.5193 | 23.5012 | 0.99971 | 0.99895 |
+| option_handle | 4096 | 7.4609 | 7.4304 | 7.5582 | 0.99989 | 1.00937 |
+| option_handle | 64 | 8.6886 | 8.7127 | 9.1482 | 1.00278 | 1.02233 |
+| result_propagate | 4096 | 14.3158 | 14.2557 | 14.3962 | 0.99440 | 0.99329 |
+| result_propagate | 64 | 13.6073 | 13.4928 | 13.5773 | 0.99158 | 1.00076 |
+| list_scan | 4096 | 15.0919 | 14.9967 | 15.0284 | 0.99452 | 0.99579 |
+| list_scan | 64 | 15.3315 | 15.0650 | 15.0596 | 0.98222 | 0.97535 |
+| list_append | 4096 | 23.6761 | 24.1743 | 24.5058 | 1.02104 | 1.02000 |
+| list_append | 64 | 24.7671 | 25.2548 | 25.2198 | 1.02121 | 1.01259 |
+| list_filter | 4096 | 28.4751 | 28.7034 | 28.7396 | 1.00479 | 1.00929 |
+| list_filter | 64 | 33.3860 | 33.1977 | 33.1209 | 0.99566 | 0.99206 |
+| alloc_short | 4096 | 4.4805 | 4.5124 | 4.4613 | 1.00711 | 0.99884 |
+| alloc_short | 64 | 4.5698 | 4.5801 | 4.5018 | 1.00245 | 0.99365 |
+| alloc_retained | 4096 | 31.7726 | 31.3620 | 31.0180 | 0.98973 | 0.97625 |
+| alloc_retained | 64 | 32.2727 | 32.2839 | 32.5037 | 1.00542 | 1.00175 |
+| mutate_nested | 4096 | 4.6899 | 4.6226 | 4.6256 | 0.98565 | 0.99679 |
+| mutate_nested | 64 | 5.5645 | 5.5446 | 5.5721 | 0.99629 | 1.00136 |
+| bytes_scan | 4096 | 0.1978 | 0.1990 | 0.1993 | 1.00851 | 1.00752 |
+| bytes_scan | 64 | 0.9105 | 0.9195 | 0.9224 | 1.00897 | 1.00907 |
+| string_equal | 4096 | 2.3275 | 2.3422 | 2.3432 | 1.00316 | 1.01191 |
+| string_equal | 64 | 0.6996 | 0.6816 | 0.6949 | 0.97614 | 0.97953 |
+| string_search | 4096 | 4.0780 | 4.0796 | 4.0723 | 1.00229 | 1.00134 |
+| string_search | 64 | 0.6411 | 0.6569 | 0.6354 | 1.02466 | 0.98868 |
+| string_split | 4096 | 23.7637 | 23.5881 | 23.4912 | 0.99243 | 0.99165 |
+| string_split | 64 | 25.3448 | 25.5082 | 25.3773 | 1.00323 | 1.00128 |
+| string_join | 4096 | 4.2645 | 4.2649 | 4.2083 | 1.00010 | 0.99533 |
+| string_join | 64 | 5.0289 | 5.1176 | 5.0417 | 1.01625 | 1.00117 |
+| dict_lookup | 4096 | 57.1483 | 57.5280 | 57.2611 | 0.99667 | 0.99753 |
+| dict_lookup | 64 | 56.4308 | 56.6477 | 56.5032 | 1.00434 | 1.00352 |
+| dict_lookup_str | 4096 | 87.8588 | 84.1314 | 84.3173 | 0.95757 | 0.95804 |
+| dict_lookup_str | 64 | 74.1491 | 73.1232 | 73.2050 | 0.98617 | 0.98727 |
+| dict_update | 4096 | 227.5582 | 223.7155 | 224.2488 | 0.98568 | 0.98546 |
+| dict_update | 64 | 172.5030 | 172.2616 | 173.2704 | 0.99166 | 0.98794 |
+| dict_update_str | 4096 | 302.2579 | 308.4339 | 308.0452 | 1.02046 | 1.01918 |
+| dict_update_str | 64 | 230.0825 | 233.1112 | 233.0661 | 1.01156 | 1.02166 |
+| set_dedup | 4096 | 94.0158 | 94.4518 | 94.6772 | 1.00323 | 1.00584 |
+| set_dedup | 64 | 110.1884 | 108.7890 | 109.4691 | 0.98906 | 0.99471 |
+| int_parse | 4096 | 25.0849 | 25.7596 | 25.4586 | 1.02689 | 1.01619 |
+| int_parse | 64 | 23.6937 | 23.6982 | 23.6676 | 0.99880 | 0.99890 |
+| int_format | 4096 | 63.5779 | 63.3581 | 63.2388 | 0.99660 | 0.99766 |
+| int_format | 64 | 58.4454 | 57.9046 | 58.0461 | 0.99258 | 0.99242 |
+| call_indirect | 4096 | 1.1609 | 1.1704 | 1.1596 | 1.00418 | 0.99719 |
+| call_indirect | 64 | 1.1994 | 1.1939 | 1.1929 | 0.99742 | 0.99484 |
+| sort_int | 4096 | 16.7671 | 16.7931 | 17.0819 | 1.00155 | 1.01921 |
+| sort_int | 64 | 3.6370 | 3.6811 | 3.6284 | 0.99144 | 0.98771 |
+| sort_records | 4096 | 11.7021 | 11.6708 | 11.7542 | 0.99465 | 1.00177 |
+| sort_records | 64 | 15.3226 | 14.5933 | 14.9007 | 0.95138 | 0.97360 |
+| int_math | 4096 | 1.3566 | 1.3673 | 1.3725 | 1.01154 | 1.01009 |
+| int_math | 64 | 1.8404 | 1.8494 | 1.8581 | 1.00602 | 1.00963 |
+| float_math | 4096 | 5.6898 | 5.7660 | 5.7221 | 1.00617 | 1.00161 |
+| float_math | 64 | 6.2087 | 6.2831 | 6.2943 | 1.00456 | 1.01378 |
+| call_direct | 4096 | 1.1551 | 1.1510 | 1.1575 | 0.99861 | 1.00754 |
+| call_direct | 64 | 1.2001 | 1.2036 | 1.2112 | 1.00141 | 0.99989 |
+| branch_predictable | 4096 | 1.5140 | 1.5065 | 1.5071 | 0.99505 | 0.99103 |
+| branch_predictable | 64 | 1.8774 | 1.8522 | 1.8546 | 0.98460 | 0.99319 |
+| branch_mixed | 4096 | 1.5144 | 1.5145 | 1.5213 | 0.99581 | 1.00465 |
+| branch_mixed | 64 | 1.8550 | 1.8441 | 1.8560 | 0.99410 | 1.00037 |
+| binary_search | 4096 | 11.7528 | 11.1390 | 12.3659 | 0.94778 | 1.05216 |
+| binary_search | 64 | 6.8010 | 6.7752 | 6.6668 | 0.99408 | 0.98436 |
+| word_count | 4096 | 13.3146 | 12.9130 | 13.1353 | 0.96756 | 0.98905 |
+| word_count | 64 | 17.9406 | 17.5357 | 17.8149 | 0.98672 | 0.99294 |
+| csv_aggregate | 4096 | 42.9372 | 43.0755 | 43.3966 | 0.99563 | 1.00958 |
+| csv_aggregate | 64 | 39.6432 | 40.0005 | 40.3727 | 1.00044 | 1.01820 |
+| json_transform | 4096 | 50.1055 | 51.9504 | 51.6514 | 1.03945 | 1.03142 |
+| json_transform | 64 | 51.7691 | 53.4349 | 52.8123 | 1.03218 | 1.02535 |
+| packet_decode | 4096 | 5.6570 | 5.5600 | 5.4996 | 1.01178 | 0.97918 |
+| packet_decode | 64 | 5.4960 | 5.4427 | 5.3393 | 0.99031 | 0.98998 |
+| lox_eval | 4096 | 8.0027 | 8.0117 | 7.9916 | 0.99705 | 0.99087 |
+| lox_eval | 64 | 8.1253 | 8.1160 | 8.1101 | 0.99962 | 1.00126 |
+| tree_build_walk | 4096 | 18.1011 | 17.3659 | 17.1118 | 0.95747 | 0.94535 |
+| tree_build_walk | 64 | 13.3127 | 12.7087 | 12.6660 | 0.95359 | 0.94833 |
+| record_pass | 4096 | 10.7942 | 10.7246 | 10.7070 | 0.99824 | 0.99908 |
+| record_pass | 64 | 12.8806 | 12.8699 | 12.8870 | 1.00422 | 1.00592 |
+| grid_dp | 4096 | 21.2411 | 21.2709 | 21.3185 | 1.00140 | 1.00660 |
+| grid_dp | 64 | 17.3884 | 17.2774 | 17.7583 | 1.00164 | 1.01716 |
+| union_find | 4096 | 29.0391 | 29.0184 | 29.1645 | 0.99929 | 1.00179 |
+| union_find | 64 | 16.2874 | 16.3860 | 16.5586 | 1.00356 | 1.00821 |
+| float_format | 4096 | 10.7138 | 10.7178 | 10.5777 | 1.00138 | 0.98477 |
+| float_format | 64 | 12.0709 | 12.0242 | 11.9246 | 0.99243 | 0.99009 |
+| buffer_write | 4096 | 11.9105 | 11.9232 | 11.9114 | 1.00024 | 1.00007 |
+| buffer_write | 64 | 13.4728 | 13.4378 | 13.3871 | 0.99909 | 0.99558 |
+
+## 5. Surprises and information for a later phase
+
+- The corpus geomean passes while local regressions breach the required row
+  limit. Aggregate “zero tax” is insufficient under this plan's acceptance
+  rule. Preserve the original result rather than replacing it with a
+  diagnostic repeat.
+- `json_transform/4096` exceeded 1.03 in all three original batches:
+  1.0400, 1.0388 and 1.0446. Its small-size cell also exceeded 1.03 in
+  all three. `bytes_scan/64` was noisier (1.0491, 1.0343, 0.9964).
+- `json::read_value` grew from 7,068 bytes in the baseline to 8,160 with P1,
+  and remains 8,155 bytes with plain reads. The encoding/dispatch changes
+  materially alter code size/layout even when both load forms lower to normal
+  machine loads. [Symbol sizes](evidence/json-symbols.json) and the three
+  `json-read-value-*.asm` files are retained. This is an investigation lead,
+  not proof that code size alone explains the measured difference.
+- Preserve sticky saturation when revisiting the slow helpers: blind atomic
+  increments/decrements after a sentinel check are not sufficient.
+- The revision-1 choices on the thread-local allocator registry, cache policy,
+  bounded fatal path, provider operations, thunk bridge and source sites remain
+  prerequisites for the rest of P1. They were not implemented or disproved by
+  this count-only stage. A plain-load performance control cannot replace the
+  approved atomic reads in a concurrent runtime.
+- The accepted historical AST inventory is retained. Its pinned `zig cc`
+  AST-only wrapper returned `FileNotFound` after producing the complete AST;
+  the separate object compile passed. That historical tooling quirk is not a
+  current compilation failure.
+
+P1-2 and later steps, P2 and phase 2 were not started. No user-facing parallel
+surface was added. Text logs and disassembly have trailing whitespace normalized for review;
+[raw-text.tar.gz](raw-text.tar.gz) retains their exact original bytes.
+Evidence archives contain the full fuzz commands, sources
+and outcomes; compiled executables, source archives, caches and redundant
+uncompressed evidence remain outside the package directory. The retained
+package evidence is below 10 MB.
 
 ## Reproduction
 
-From the P1 worktree root:
+Use the committed `07b0b3dc3` sources for P1-1 and `54eda9012` for the merged
+baseline. Build ReleaseFast compiler installs through `scripts/build-slot.sh`
+with separate on-disk caches, then build the row arms:
 
 ```sh
-python3 experiments/concurrency-p1-2026-10-08/tools/inventory.py
-python3 experiments/concurrency-p1-2026-10-08/tools/count-reader.py
+python3 experiments/concurrency-p1-2026-10-08/tools/tax_rows.py build --compiler BASE_COMPILER --tag base
+python3 experiments/concurrency-p1-2026-10-08/tools/tax_rows.py build --compiler P1_COMPILER --tag p1
+python3 experiments/concurrency-p1-2026-10-08/tools/tax_rows.py measure --tags base,p1 --output NEW_EVIDENCE.json
 ```
 
-The scripts set on-disk temporary/cache paths and acquire build slots for
-their compilations. The race probe's ordinary-load run is expected to fail
-under TSan; the script itself succeeds only when that race is reproduced and
-all 100 atomic-load controls succeed.
+For the diagnostic, decompress and apply `evidence/plain-loads.patch.gz` to a separate P1-1 source
+archive, install that ReleaseFast compiler, build `--tag plain`, then measure
+`--tags base,p1,plain`. `tax_rows.py` wraps guest builds with the shared build
+slot and takes CPU 10's lock for timing. Set TMPDIR and Zig caches to disk paths
+as in the retained build/gate logs; wait for this lane's gates and builds before
+timing. Render either raw JSON/gzip file using `tools/tax_table.py`.
+
+The qualification and fuzz archives retain exact commands. Their `--evidence`
+arguments must name new directories on reproduction. P1-0's inventory and
+count-reader scripts describe their historical source snapshot; reproduce
+those original probes at the P1-0 commit, not by assuming their old plain-load
+assertion still describes P1-1.

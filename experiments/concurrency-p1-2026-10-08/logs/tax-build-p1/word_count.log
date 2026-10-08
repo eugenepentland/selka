@@ -1,0 +1,9 @@
+["/home/epentland/.cache/mylang/conc-p1-p1-1/bin/mylang", "build", "/home/epentland/ai/canopy/mylang-concurrency-p1/test/core/row_word_count.my", "--release", "-o", "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/tax-rows/p1/word_count", "--cache-dir", "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/tax-rows/p1/cache", "--link", "/home/epentland/ai/canopy/mylang-concurrency-p1/benchmarks/runtime/ports/native_clock.c"]
+row_word_count.my:40:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_word_count.my:53:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+
+exit=0

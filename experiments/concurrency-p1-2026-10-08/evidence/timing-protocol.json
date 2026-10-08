@@ -1,0 +1,28 @@
+{
+  "harness_sha256": "45df0b6ae138d6ec883478b81967c5d4c7ca22f9773887f3e0f47db9a11b7b76",
+  "cpu_model": "12th Gen Intel(R) Core(TM) i7-12700H",
+  "kernel": "7.0.0-31-generic",
+  "python": "3.14.4",
+  "perf": "perf version 7.0.14",
+  "cpu": 10,
+  "lock": "/run/user/1000/mylang-slots/cpu10.lock",
+  "governor": "powersave",
+  "method": "CE-X registry; 46 rows at 4096 and 64; 3 batches, each 3 startup samples then 7 shuffled/interleaved rounds; seeds 7. Gate on CLOCK_MONOTONIC kernel wall with startup median subtracted, rather than CE-X cycles. Cycles and process/perf-launch wall are secondary diagnostics. All arm checksums must agree.",
+  "gate_limits": {
+    "corpus_geomean": 1.01,
+    "row_median": 1.03
+  },
+  "guest_build": [
+    "build",
+    "SOURCE",
+    "--release",
+    "-o",
+    "BINARY",
+    "--cache-dir",
+    "CACHE",
+    "--link",
+    "benchmarks/runtime/ports/native_clock.c"
+  ],
+  "TLS": "unchanged, ordinary free-list global",
+  "note": "The protocol was fixed before the first timed sample. Diagnostic repeats do not replace the failed original gate."
+}

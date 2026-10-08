@@ -1,0 +1,34 @@
+test-core
++- run test
+   +- compile test debug native 2 errors
+src/core/shared_counts_test.zig:82:15: error: expected type 'error{OutOfMemory,TestExpectedEqual,TestUnexpectedResult}!void', found 'error{OutOfMemory,Unexpected}'
+    var env = try std.testing.environ.createMap(a);
+              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/core/shared_counts_test.zig:82:15: note: 'error.Unexpected' not a member of destination error set
+src/core/shared_counts_test.zig:76:42: note: function return type declared here
+fn runHarness(a: std.mem.Allocator) Error!void {
+                                    ~~~~~^~~~~
+referenced by:
+    test.shared counts saturate permanently, update atomically and free shared children iteratively: src/core/shared_counts_test.zig:99:19
+    comptime: src/core/root_test.zig:4:17
+src/core/shared_counts_test.zig:171:15: error: expected type 'error{OutOfMemory,TestExpectedEqual,TestUnexpectedResult}!bool', found 'error{OutOfMemory,Unexpected}'
+    var env = try std.testing.environ.createMap(a);
+              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/core/shared_counts_test.zig:171:15: note: 'error.Unexpected' not a member of destination error set
+src/core/shared_counts_test.zig:166:60: note: function return type declared here
+fn compiles(a: std.mem.Allocator, source: []const u8) Error!bool {
+                                                      ~~~~~^~~~~
+error: 2 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test -ODebug --dep mylang --dep core_tool_platform --dep build_identity --dep memory_budget --dep core_test_options --dep core_number_text_object -Mroot=src/core/root_test.zig -ODebug --dep memory_budget -Mmylang=src/compiler.zig -Mcore_tool_platform=src/config_core_tool_platform.zig -ODebug -Mbuild_identity=.zig-cache/o/d916a3d210bf575f8a8a6a695a219a8a/build_identity/identity.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig -Mcore_test_options=.zig-cache/o/3f4b5615ba0f11233c8ccf49385c9dae/options.zig -Mcore_number_text_object=.zig-cache/o/613a15d57de9e110f222ab5a539d578c/core_number_text.o --test-filter "shared count" --test-runner ../guardian-zig/src/test_runner.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name test --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 5/8 steps succeeded (1 failed)
+test-core transitive failure
++- run test transitive failure
+   +- compile test debug native 2 errors
+      +- run exe build-identity (build_identity) success 41ms
+      |  +- compile exe build-identity debug native success 294ms MaxRSS:144M
+      +- options success
+      |  +- compile exe mylang debug native success 3s MaxRSS:506M
+      |     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+      |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 success 1s MaxRSS:147M
+      +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)

@@ -1,0 +1,11 @@
+["/home/epentland/.cache/mylang/conc-p1-plain-07b0b3dc3/bin/mylang", "build", "/home/epentland/ai/canopy/mylang-concurrency-p1/test/core/row_packet_decode.my", "--release", "-o", "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/tax-rows/plain/packet_decode", "--cache-dir", "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/tax-rows/plain/cache", "--link", "/home/epentland/ai/canopy/mylang-concurrency-p1/benchmarks/runtime/ports/native_clock.c"]
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 5s (all 3 build slot(s) busy)
+row_packet_decode.my:69:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          phase = batch % 17
+          ^
+row_packet_decode.my:72:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              x = values[j]
+              ^
+
+exit=0

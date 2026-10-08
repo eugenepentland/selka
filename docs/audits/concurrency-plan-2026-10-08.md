@@ -1,6 +1,6 @@
 # Structured concurrency, phase 1: packages P1 and P2, 2026-10-08
 
-Status: **P1 is ready to resume (revision 1, 2026-10-08).** P1-0 stopped correctly at the §9 scope boundary; see [the P1 report](../../experiments/concurrency-p1-2026-10-08/REPORT.md). §4.7 records the decisions on its findings and extends §5's ownership; P1-0's inventory is accepted as the design for §4.3. P2 is fully specified here, but it starts only after the front-end plan's F4 exit and the user's go (§6).
+Status: **P1 stopped at P1-1's early tax gate (2026-10-08).** Revision 1 was read and `codex/concurrency-p1` fast-forwarded to `a633dbd5d`; CE2 `main` was merged with a real merge commit. P1-1 is implemented at `07b0b3dc3`. The 46-row corpus geomean passes (0.998711×), but four row/size medians exceed 1.03×; the required plain-load diagnostic also fails. See [the P1 report](../../experiments/concurrency-p1-2026-10-08/REPORT.md). P1-2 and later steps remain unimplemented; no P2 work has started.
 - **Decisions:** C1–C7, accepted by the user on 2026-10-08 (§2).
 - **What it delivers:** CPU fork/join parallelism. `parallel.map` and task groups run on a work-stealing pool of OS threads. Only values that cross into a task get atomic counts.
 - **Size (estimates):** P1 about 25–40 h; P2 about 30–45 h. Each package ends with a stop for the user.
