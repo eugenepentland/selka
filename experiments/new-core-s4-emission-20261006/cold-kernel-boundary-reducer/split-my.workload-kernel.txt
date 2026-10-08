@@ -1,0 +1,644 @@
+
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/paired-combined-01/split-word_count:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000001033180 <my.workload::kernel>:
+ 1033180:	push   %rbp
+ 1033181:	push   %r15
+ 1033183:	push   %r14
+ 1033185:	push   %r13
+ 1033187:	push   %r12
+ 1033189:	push   %rbx
+ 103318a:	sub    $0x98,%rsp
+ 1033191:	mov    %rcx,0x38(%rsp)
+ 1033196:	mov    %rsi,0x70(%rsp)
+ 103319b:	mov    %rdx,0x68(%rsp)
+ 10331a0:	xor    %eax,%eax
+ 10331a2:	test   %rdx,%rdx
+ 10331a5:	jle    1033bab <my.workload::kernel+0xa2b>
+ 10331ab:	xor    %ebx,%ebx
+ 10331ad:	nopl   (%rax)
+ 10331b0:	mov    %rax,0x80(%rsp)
+ 10331b8:	mov    0x38(%rsp),%rsi
+ 10331bd:	add    %rbx,%rsi
+ 10331c0:	jo     1033c3f <my.workload::kernel+0xabf>
+ 10331c6:	mov    0x70(%rsp),%rax
+ 10331cb:	mov    0x8(%rax),%rax
+ 10331cf:	and    $0x1,%esi
+ 10331d2:	mov    0x8(%rax),%rdx
+ 10331d6:	cmp    %rdx,%rsi
+ 10331d9:	jae    1033c53 <my.workload::kernel+0xad3>
+ 10331df:	mov    0x20(%rax,%rsi,8),%r15
+ 10331e4:	xor    %edi,%edi
+ 10331e6:	lea    0x2b7b(%rip),%rsi        # 1035d68 <core_io_file_error.verbs+0x378>
+ 10331ed:	call   100f730 <myl_core_dict_new>
+ 10331f2:	mov    %rax,%r14
+ 10331f5:	mov    0x8(%r15),%rsi
+ 10331f9:	mov    %r15,0x20(%rsp)
+ 10331fe:	lea    0x20(%r15),%rdi
+ 1033202:	mov    $0x0,%r15d
+ 1033208:	test   %rsi,%rsi
+ 103320b:	mov    %rbx,0x78(%rsp)
+ 1033210:	jle    1033260 <my.workload::kernel+0xe0>
+ 1033212:	xor    %r15d,%r15d
+ 1033215:	jmp    103324c <my.workload::kernel+0xcc>
+ 1033217:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033226:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033235:	data16 cs nopw 0x0(%rax,%rax,1)
+ 1033240:	inc    %r15
+ 1033243:	cmp    %r15,%rsi
+ 1033246:	je     1033690 <my.workload::kernel+0x510>
+ 103324c:	movzbl (%rdi,%r15,1),%eax
+ 1033251:	lea    -0x9(%rax),%ecx
+ 1033254:	cmp    $0x5,%ecx
+ 1033257:	jb     1033240 <my.workload::kernel+0xc0>
+ 1033259:	cmp    $0x20,%eax
+ 103325c:	je     1033240 <my.workload::kernel+0xc0>
+ 103325e:	xchg   %ax,%ax
+ 1033260:	cmp    %rsi,%r15
+ 1033263:	jge    1033690 <my.workload::kernel+0x510>
+ 1033269:	mov    %rsi,%rax
+ 103326c:	mov    %r15,%rbx
+ 103326f:	mov    %rsi,0x40(%rsp)
+ 1033274:	mov    %rdi,0x18(%rsp)
+ 1033279:	jmp    103328f <my.workload::kernel+0x10f>
+ 103327b:	nopl   0x0(%rax,%rax,1)
+ 1033280:	mov    %rax,%rbx
+ 1033283:	mov    %rbx,%r15
+ 1033286:	cmp    %rsi,%rbx
+ 1033289:	jge    1033690 <my.workload::kernel+0x510>
+ 103328f:	test   %r15,%r15
+ 1033292:	js     10332e6 <my.workload::kernel+0x166>
+ 1033294:	mov    %r15,%rbx
+ 1033297:	cmp    %rax,%r15
+ 103329a:	jge    10332e6 <my.workload::kernel+0x166>
+ 103329c:	mov    %r15,%rbx
+ 103329f:	jmp    10332cc <my.workload::kernel+0x14c>
+ 10332a1:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10332b0:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10332bf:	nop
+ 10332c0:	inc    %rbx
+ 10332c3:	cmp    %rbx,%rax
+ 10332c6:	je     1033675 <my.workload::kernel+0x4f5>
+ 10332cc:	movzbl (%rdi,%rbx,1),%ecx
+ 10332d0:	cmp    $0x20,%rcx
+ 10332d4:	ja     10332c0 <my.workload::kernel+0x140>
+ 10332d6:	movabs $0x100003e00,%rdx
+ 10332e0:	bt     %rcx,%rdx
+ 10332e4:	jae    10332c0 <my.workload::kernel+0x140>
+ 10332e6:	test   %r15,%r15
+ 10332e9:	js     1033bfa <my.workload::kernel+0xa7a>
+ 10332ef:	mov    %rbx,%rdx
+ 10332f2:	sub    %r15,%rdx
+ 10332f5:	jo     1033c0b <my.workload::kernel+0xa8b>
+ 10332fb:	js     1033c1d <my.workload::kernel+0xa9d>
+ 1033301:	add    %rdi,%r15
+ 1033304:	mov    0x18(%r14),%r13
+ 1033308:	mov    0x8(%r13),%rax
+ 103330c:	or     0x18(%r13),%rax
+ 1033310:	mov    %r14,(%rsp)
+ 1033314:	mov    %rdx,0x10(%rsp)
+ 1033319:	jne    10333f0 <my.workload::kernel+0x270>
+ 103331f:	mov    %r15,%rdi
+ 1033322:	mov    %rdx,%rsi
+ 1033325:	call   1010a20 <myl_core_span_hash>
+ 103332a:	mov    0x10(%rsp),%rdx
+ 103332f:	mov    0x20(%r13),%r12
+ 1033333:	test   %r12,%r12
+ 1033336:	je     1033408 <my.workload::kernel+0x288>
+ 103333c:	mov    %eax,%eax
+ 103333e:	movabs $0x9e3779b97f4a7c15,%rcx
+ 1033348:	imul   %rcx,%rax
+ 103334c:	mov    %rax,%rsi
+ 103334f:	shr    $0x20,%rsi
+ 1033353:	xor    %rax,%rsi
+ 1033356:	mov    0x10(%r13),%r14
+ 103335a:	mov    (%rsp),%rax
+ 103335e:	lea    0x20(%rax),%rbp
+ 1033362:	xor    %r13d,%r13d
+ 1033365:	mov    %rsi,0x8(%rsp)
+ 103336a:	jmp    103338c <my.workload::kernel+0x20c>
+ 103336c:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 103337b:	nopl   0x0(%rax,%rax,1)
+ 1033380:	inc    %r13
+ 1033383:	add    $0x10,%rbp
+ 1033387:	cmp    %r13,%r12
+ 103338a:	je     1033408 <my.workload::kernel+0x288>
+ 103338c:	cmp    %rsi,(%r14,%r13,8)
+ 1033390:	jne    1033380 <my.workload::kernel+0x200>
+ 1033392:	mov    0x0(%rbp),%rdi
+ 1033396:	cmp    %rdx,0x8(%rdi)
+ 103339a:	jne    1033380 <my.workload::kernel+0x200>
+ 103339c:	add    $0x20,%rdi
+ 10333a0:	mov    %r15,%rsi
+ 10333a3:	call   1034630 <bcmp@plt>
+ 10333a8:	mov    0x8(%rsp),%rsi
+ 10333ad:	mov    0x10(%rsp),%rdx
+ 10333b2:	test   %eax,%eax
+ 10333b4:	jne    1033380 <my.workload::kernel+0x200>
+ 10333b6:	cs nopw 0x0(%rax,%rax,1)
+ 10333c0:	test   %r13,%r13
+ 10333c3:	js     1033408 <my.workload::kernel+0x288>
+ 10333c5:	shl    $0x4,%r13
+ 10333c9:	mov    (%rsp),%r14
+ 10333cd:	mov    0x28(%r14,%r13,1),%rsi
+ 10333d2:	mov    %rsi,%rax
+ 10333d5:	inc    %rax
+ 10333d8:	jo     1033c2e <my.workload::kernel+0xaae>
+ 10333de:	mov    %rax,0x28(%r14,%r13,1)
+ 10333e3:	jmp    103357a <my.workload::kernel+0x3fa>
+ 10333e8:	nopl   0x0(%rax,%rax,1)
+ 10333f0:	mov    %r14,%rdi
+ 10333f3:	mov    %r15,%rsi
+ 10333f6:	call   1010680 <myl_core_dict_find_span>
+ 10333fb:	mov    0x10(%rsp),%rdx
+ 1033400:	mov    %rax,%r13
+ 1033403:	test   %r13,%r13
+ 1033406:	jns    10333c5 <my.workload::kernel+0x245>
+ 1033408:	mov    %r15,%rdi
+ 103340b:	mov    %rdx,%rsi
+ 103340e:	call   1011330 <myl_core_ir_str_from_view>
+ 1033413:	mov    %rax,0x30(%rsp)
+ 1033418:	testb  $0x2,0x5(%rax)
+ 103341c:	mov    %rax,0x10(%rsp)
+ 1033421:	jne    1033430 <my.workload::kernel+0x2b0>
+ 1033423:	mov    %rax,%rdi
+ 1033426:	call   1010b30 <myl_core_str_hash>
+ 103342b:	jmp    1033433 <my.workload::kernel+0x2b3>
+ 103342d:	nopl   (%rax)
+ 1033430:	mov    0x18(%rax),%eax
+ 1033433:	mov    (%rsp),%rsi
+ 1033437:	mov    %eax,%eax
+ 1033439:	movabs $0x9e3779b97f4a7c15,%rcx
+ 1033443:	imul   %rcx,%rax
+ 1033447:	mov    %rax,%r14
+ 103344a:	shr    $0x20,%r14
+ 103344e:	xor    %rax,%r14
+ 1033451:	mov    0x18(%rsi),%rcx
+ 1033455:	mov    0x8(%rcx),%rax
+ 1033459:	test   %rax,%rax
+ 103345c:	je     1033520 <my.workload::kernel+0x3a0>
+ 1033462:	mov    (%rax),%ecx
+ 1033464:	tzcnt  %ecx,%esi
+ 1033468:	neg    %sil
+ 103346b:	shrx   %rsi,%r14,%r13
+ 1033470:	lea    -0x1(%rcx),%r15d
+ 1033474:	vmovdqu 0x10(%rax,%r13,1),%xmm1
+ 103347b:	mov    %r14,0x8(%rsp)
+ 1033480:	mov    %r14d,%edx
+ 1033483:	and    $0x7f,%dl
+ 1033486:	vmovd  %edx,%xmm0
+ 103348a:	vpbroadcastb %xmm0,%xmm0
+ 103348f:	vmovdqa %xmm1,0x50(%rsp)
+ 1033495:	vpcmpeqb %xmm0,%xmm1,%xmm0
+ 1033499:	vpmovmskb %xmm0,%edx
+ 103349d:	test   %edx,%edx
+ 103349f:	je     10334f3 <my.workload::kernel+0x373>
+ 10334a1:	add    $0x1e,%ecx
+ 10334a4:	and    $0xfffffff0,%ecx
+ 10334a7:	lea    (%rax,%rcx,1),%r14
+ 10334ab:	add    $0x10,%r14
+ 10334af:	movzwl %dx,%ebp
+ 10334b2:	data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10334c0:	tzcnt  %ebp,%eax
+ 10334c4:	add    %r13d,%eax
+ 10334c7:	and    %r15d,%eax
+ 10334ca:	mov    (%r14,%rax,4),%r12d
+ 10334ce:	mov    %r12,%rax
+ 10334d1:	shl    $0x4,%rax
+ 10334d5:	mov    (%rsp),%rcx
+ 10334d9:	mov    0x20(%rcx,%rax,1),%rdi
+ 10334de:	mov    0x30(%rsp),%rsi
+ 10334e3:	call   1010c90 <myl_core_str_eq>
+ 10334e8:	test   %al,%al
+ 10334ea:	jne    103353f <my.workload::kernel+0x3bf>
+ 10334ec:	blsr   %ebp,%ebp
+ 10334f1:	jne    10334c0 <my.workload::kernel+0x340>
+ 10334f3:	vmovdqa 0x50(%rsp),%xmm0
+ 10334f9:	vpcmpeqb -0x2fce1(%rip),%xmm0,%xmm0        # 1003820 <core_io_raw_layout+0x2a0>
+ 1033501:	vpmovmskb %xmm0,%eax
+ 1033505:	test   %eax,%eax
+ 1033507:	mov    0x8(%rsp),%r14
+ 103350c:	je     103352b <my.workload::kernel+0x3ab>
+ 103350e:	tzcnt  %eax,%r12d
+ 1033513:	add    %r13d,%r12d
+ 1033516:	and    %r15d,%r12d
+ 1033519:	not    %r12
+ 103351c:	jmp    103353f <my.workload::kernel+0x3bf>
+ 103351e:	xchg   %ax,%ax
+ 1033520:	cmpq   $0x0,0x18(%rcx)
+ 1033525:	je     10335e2 <my.workload::kernel+0x462>
+ 103352b:	mov    (%rsp),%rdi
+ 103352f:	lea    0x30(%rsp),%rsi
+ 1033534:	mov    %r14,%rdx
+ 1033537:	call   100f3c0 <myl_core_dict_find>
+ 103353c:	mov    %rax,%r12
+ 103353f:	mov    0x10(%rsp),%rax
+ 1033544:	mov    %rax,0x90(%rsp)
+ 103354c:	movq   $0x1,0x88(%rsp)
+ 1033558:	mov    (%rsp),%rdi
+ 103355c:	mov    %r12,%rsi
+ 103355f:	lea    0x90(%rsp),%rdx
+ 1033567:	lea    0x88(%rsp),%rcx
+ 103356f:	xor    %r8d,%r8d
+ 1033572:	call   100f920 <myl_core_dict_insert>
+ 1033577:	mov    %rax,%r14
+ 103357a:	mov    0x40(%rsp),%rsi
+ 103357f:	mov    0x18(%rsp),%rdi
+ 1033584:	mov    0x20(%rsp),%rax
+ 1033589:	mov    0x8(%rax),%rax
+ 103358d:	test   %rbx,%rbx
+ 1033590:	js     1033283 <my.workload::kernel+0x103>
+ 1033596:	cmp    %rax,%rbx
+ 1033599:	jl     10335cc <my.workload::kernel+0x44c>
+ 103359b:	jmp    1033283 <my.workload::kernel+0x103>
+ 10335a0:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10335af:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10335be:	xchg   %ax,%ax
+ 10335c0:	inc    %rbx
+ 10335c3:	cmp    %rbx,%rax
+ 10335c6:	je     1033280 <my.workload::kernel+0x100>
+ 10335cc:	movzbl (%rdi,%rbx,1),%ecx
+ 10335d0:	lea    -0x9(%rcx),%edx
+ 10335d3:	cmp    $0x5,%edx
+ 10335d6:	jb     10335c0 <my.workload::kernel+0x440>
+ 10335d8:	cmp    $0x20,%ecx
+ 10335db:	je     10335c0 <my.workload::kernel+0x440>
+ 10335dd:	jmp    1033283 <my.workload::kernel+0x103>
+ 10335e2:	mov    0x20(%rcx),%rsi
+ 10335e6:	mov    $0xffffffffffffffff,%r12
+ 10335ed:	test   %rsi,%rsi
+ 10335f0:	je     103353f <my.workload::kernel+0x3bf>
+ 10335f6:	mov    0x10(%rcx),%r15
+ 10335fa:	mov    (%rsp),%rax
+ 10335fe:	lea    0x20(%rax),%r13
+ 1033602:	xor    %ebp,%ebp
+ 1033604:	mov    %rsi,0x8(%rsp)
+ 1033609:	jmp    1033650 <my.workload::kernel+0x4d0>
+ 103360b:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 103361a:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033629:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033638:	nopl   0x0(%rax,%rax,1)
+ 1033640:	inc    %rbp
+ 1033643:	add    $0x10,%r13
+ 1033647:	cmp    %rbp,%rsi
+ 103364a:	je     103353f <my.workload::kernel+0x3bf>
+ 1033650:	cmp    %r14,(%r15,%rbp,8)
+ 1033654:	jne    1033640 <my.workload::kernel+0x4c0>
+ 1033656:	mov    0x0(%r13),%rdi
+ 103365a:	mov    0x30(%rsp),%rsi
+ 103365f:	call   1010c90 <myl_core_str_eq>
+ 1033664:	mov    0x8(%rsp),%rsi
+ 1033669:	test   %al,%al
+ 103366b:	je     1033640 <my.workload::kernel+0x4c0>
+ 103366d:	mov    %rbp,%r12
+ 1033670:	jmp    103353f <my.workload::kernel+0x3bf>
+ 1033675:	mov    %rax,%rbx
+ 1033678:	test   %r15,%r15
+ 103367b:	jns    10332ef <my.workload::kernel+0x16f>
+ 1033681:	jmp    1033bfa <my.workload::kernel+0xa7a>
+ 1033686:	cs nopw 0x0(%rax,%rax,1)
+ 1033690:	mov    0x8(%r14),%rax
+ 1033694:	mov    %rax,0x18(%rsp)
+ 1033699:	test   %rax,%rax
+ 103369c:	je     1033b00 <my.workload::kernel+0x980>
+ 10336a2:	lea    0x20(%r14),%rax
+ 10336a6:	mov    %rax,0x50(%rsp)
+ 10336ab:	xor    %eax,%eax
+ 10336ad:	xor    %esi,%esi
+ 10336af:	movabs $0x10000000000,%rbx
+ 10336b9:	mov    %r14,(%rsp)
+ 10336bd:	nopl   (%rax)
+ 10336c0:	mov    %rax,0x8(%rsp)
+ 10336c5:	mov    %r14,%rdi
+ 10336c8:	mov    %rsi,0x20(%rsp)
+ 10336cd:	call   1010270 <myl_core_dict_ordinal>
+ 10336d2:	shl    $0x4,%rax
+ 10336d6:	mov    0x20(%r14,%rax,1),%rdi
+ 10336db:	mov    0x8(%rdi),%rax
+ 10336df:	mov    %rax,%rcx
+ 10336e2:	sar    $0x3f,%rcx
+ 10336e6:	andn   %rax,%rcx,%rcx
+ 10336eb:	mov    %rax,%rbp
+ 10336ee:	movabs $0x7fffffffffffffe0,%rdx
+ 10336f8:	and    %rdx,%rcx
+ 10336fb:	vpxor  %xmm2,%xmm2,%xmm2
+ 10336ff:	je     1033774 <my.workload::kernel+0x5f4>
+ 1033705:	xor    %edx,%edx
+ 1033707:	mov    %rax,%rbp
+ 103370a:	nopw   0x0(%rax,%rax,1)
+ 1033710:	mov    %rdx,%r8
+ 1033713:	lea    (%rdx,%rbx,1),%rsi
+ 1033717:	cmp    %rcx,%rsi
+ 103371a:	mov    %rcx,%rdx
+ 103371d:	cmovb  %rsi,%rdx
+ 1033721:	vpxor  %xmm0,%xmm0,%xmm0
+ 1033725:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033734:	data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033740:	vpsadbw 0x20(%rdi,%r8,1),%ymm2,%ymm1
+ 1033747:	vpaddq %ymm0,%ymm1,%ymm0
+ 103374b:	add    $0x20,%r8
+ 103374f:	cmp    %rdx,%r8
+ 1033752:	jb     1033740 <my.workload::kernel+0x5c0>
+ 1033754:	vextracti128 $0x1,%ymm0,%xmm1
+ 103375a:	vpaddq %xmm1,%xmm0,%xmm0
+ 103375e:	vpshufd $0xee,%xmm0,%xmm1
+ 1033763:	vpaddq %xmm1,%xmm0,%xmm0
+ 1033767:	vmovq  %xmm0,%r8
+ 103376c:	add    %r8,%rbp
+ 103376f:	cmp    %rcx,%rsi
+ 1033772:	jb     1033710 <my.workload::kernel+0x590>
+ 1033774:	mov    %rax,%rdx
+ 1033777:	sub    %rcx,%rdx
+ 103377a:	jbe    1033910 <my.workload::kernel+0x790>
+ 1033780:	cmp    $0x4,%rdx
+ 1033784:	jae    1033790 <my.workload::kernel+0x610>
+ 1033786:	mov    %rcx,%rdx
+ 1033789:	jmp    1033900 <my.workload::kernel+0x780>
+ 103378e:	xchg   %ax,%ax
+ 1033790:	cmp    $0x10,%rdx
+ 1033794:	jae    103379d <my.workload::kernel+0x61d>
+ 1033796:	xor    %esi,%esi
+ 1033798:	jmp    103386c <my.workload::kernel+0x6ec>
+ 103379d:	mov    %eax,%r8d
+ 10337a0:	and    $0xf,%r8d
+ 10337a4:	mov    %rdx,%rsi
+ 10337a7:	sub    %r8,%rsi
+ 10337aa:	vmovq  %rbp,%xmm0
+ 10337af:	mov    %rax,%r9
+ 10337b2:	and    $0xfffffffffffffff0,%r9
+ 10337b6:	vpxor  %xmm1,%xmm1,%xmm1
+ 10337ba:	mov    %rcx,%r10
+ 10337bd:	vpxor  %xmm2,%xmm2,%xmm2
+ 10337c1:	vpxor  %xmm3,%xmm3,%xmm3
+ 10337c5:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10337d4:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10337e3:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10337f2:	data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033800:	vpmovzxbq 0x20(%rdi,%r10,1),%ymm4
+ 1033807:	vpaddq %ymm4,%ymm0,%ymm0
+ 103380b:	vpmovzxbq 0x24(%rdi,%r10,1),%ymm4
+ 1033812:	vpaddq %ymm4,%ymm1,%ymm1
+ 1033816:	vpmovzxbq 0x28(%rdi,%r10,1),%ymm4
+ 103381d:	vpaddq %ymm4,%ymm2,%ymm2
+ 1033821:	vpmovzxbq 0x2c(%rdi,%r10,1),%ymm4
+ 1033828:	vpaddq %ymm4,%ymm3,%ymm3
+ 103382c:	add    $0x10,%r10
+ 1033830:	cmp    %r10,%r9
+ 1033833:	jne    1033800 <my.workload::kernel+0x680>
+ 1033835:	vpaddq %ymm0,%ymm1,%ymm0
+ 1033839:	vpaddq %ymm0,%ymm2,%ymm0
+ 103383d:	vpaddq %ymm0,%ymm3,%ymm0
+ 1033841:	vextracti128 $0x1,%ymm0,%xmm1
+ 1033847:	vpaddq %xmm1,%xmm0,%xmm0
+ 103384b:	vpshufd $0xee,%xmm0,%xmm1
+ 1033850:	vpaddq %xmm1,%xmm0,%xmm0
+ 1033854:	vmovq  %xmm0,%rbp
+ 1033859:	test   %r8,%r8
+ 103385c:	je     1033910 <my.workload::kernel+0x790>
+ 1033862:	cmp    $0x4,%r8d
+ 1033866:	jb     1033aef <my.workload::kernel+0x96f>
+ 103386c:	mov    %eax,%r8d
+ 103386f:	and    $0x3,%r8d
+ 1033873:	sub    %r8,%rdx
+ 1033876:	add    %rcx,%rdx
+ 1033879:	vmovq  %rbp,%xmm0
+ 103387e:	add    %rcx,%rsi
+ 1033881:	mov    %rax,%rcx
+ 1033884:	and    $0xfffffffffffffffc,%rcx
+ 1033888:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033897:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10338a6:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10338b5:	data16 cs nopw 0x0(%rax,%rax,1)
+ 10338c0:	vpmovzxbq 0x20(%rdi,%rsi,1),%ymm1
+ 10338c7:	vpaddq %ymm1,%ymm0,%ymm0
+ 10338cb:	add    $0x4,%rsi
+ 10338cf:	cmp    %rsi,%rcx
+ 10338d2:	jne    10338c0 <my.workload::kernel+0x740>
+ 10338d4:	vextracti128 $0x1,%ymm0,%xmm1
+ 10338da:	vpaddq %xmm1,%xmm0,%xmm0
+ 10338de:	vpshufd $0xee,%xmm0,%xmm1
+ 10338e3:	vpaddq %xmm1,%xmm0,%xmm0
+ 10338e7:	vmovq  %xmm0,%rbp
+ 10338ec:	test   %r8,%r8
+ 10338ef:	je     1033910 <my.workload::kernel+0x790>
+ 10338f1:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033900:	movzbl 0x20(%rdi,%rdx,1),%ecx
+ 1033905:	add    %rcx,%rbp
+ 1033908:	inc    %rdx
+ 103390b:	cmp    %rax,%rdx
+ 103390e:	jb     1033900 <my.workload::kernel+0x780>
+ 1033910:	mov    %rdi,0x28(%rsp)
+ 1033915:	testb  $0x2,0x5(%rdi)
+ 1033919:	jne    1033930 <my.workload::kernel+0x7b0>
+ 103391b:	vzeroupper
+ 103391e:	call   1010b30 <myl_core_str_hash>
+ 1033923:	jmp    1033933 <my.workload::kernel+0x7b3>
+ 1033925:	data16 cs nopw 0x0(%rax,%rax,1)
+ 1033930:	mov    0x18(%rdi),%eax
+ 1033933:	mov    %eax,%eax
+ 1033935:	movabs $0x9e3779b97f4a7c15,%rcx
+ 103393f:	imul   %rcx,%rax
+ 1033943:	mov    %rax,%r12
+ 1033946:	shr    $0x20,%r12
+ 103394a:	xor    %rax,%r12
+ 103394d:	mov    0x18(%r14),%rcx
+ 1033951:	mov    0x8(%rcx),%rax
+ 1033955:	test   %rax,%rax
+ 1033958:	je     1033a10 <my.workload::kernel+0x890>
+ 103395e:	mov    (%rax),%ecx
+ 1033960:	tzcnt  %ecx,%edx
+ 1033964:	neg    %dl
+ 1033966:	shrx   %rdx,%r12,%rdx
+ 103396b:	mov    %rdx,0x10(%rsp)
+ 1033970:	vmovdqu 0x10(%rax,%rdx,1),%xmm1
+ 1033976:	mov    %r12d,%edx
+ 1033979:	and    $0x7f,%dl
+ 103397c:	vmovd  %edx,%xmm0
+ 1033980:	vpbroadcastb %xmm0,%xmm0
+ 1033985:	vmovdqa %xmm1,0x40(%rsp)
+ 103398b:	vpcmpeqb %xmm0,%xmm1,%xmm0
+ 103398f:	vpmovmskb %xmm0,%edx
+ 1033993:	test   %edx,%edx
+ 1033995:	je     10339f4 <my.workload::kernel+0x874>
+ 1033997:	lea    -0x1(%rcx),%r14d
+ 103399b:	add    $0x1e,%ecx
+ 103399e:	and    $0xfffffff0,%ecx
+ 10339a1:	lea    (%rax,%rcx,1),%r15
+ 10339a5:	add    $0x10,%r15
+ 10339a9:	movzwl %dx,%ebx
+ 10339ac:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10339bb:	nopl   0x0(%rax,%rax,1)
+ 10339c0:	tzcnt  %ebx,%eax
+ 10339c4:	add    0x10(%rsp),%eax
+ 10339c8:	and    %r14d,%eax
+ 10339cb:	mov    (%r15,%rax,4),%r13d
+ 10339cf:	shl    $0x4,%r13
+ 10339d3:	mov    (%rsp),%rax
+ 10339d7:	mov    0x20(%rax,%r13,1),%rdi
+ 10339dc:	mov    0x28(%rsp),%rsi
+ 10339e1:	vzeroupper
+ 10339e4:	call   1010c90 <myl_core_str_eq>
+ 10339e9:	test   %al,%al
+ 10339eb:	jne    1033a3b <my.workload::kernel+0x8bb>
+ 10339ed:	blsr   %ebx,%ebx
+ 10339f2:	jne    10339c0 <my.workload::kernel+0x840>
+ 10339f4:	vmovdqa 0x40(%rsp),%xmm0
+ 10339fa:	vpcmpeqb -0x301e2(%rip),%xmm0,%xmm0        # 1003820 <core_io_raw_layout+0x2a0>
+ 1033a02:	vpmovmskb %xmm0,%eax
+ 1033a06:	test   %eax,%eax
+ 1033a08:	je     1033a17 <my.workload::kernel+0x897>
+ 1033a0a:	jmp    1033bbd <my.workload::kernel+0xa3d>
+ 1033a0f:	nop
+ 1033a10:	cmpq   $0x0,0x18(%rcx)
+ 1033a15:	je     1033a91 <my.workload::kernel+0x911>
+ 1033a17:	mov    (%rsp),%rdi
+ 1033a1b:	lea    0x28(%rsp),%rsi
+ 1033a20:	mov    %r12,%rdx
+ 1033a23:	vzeroupper
+ 1033a26:	call   100f3c0 <myl_core_dict_find>
+ 1033a2b:	mov    %rax,%r13
+ 1033a2e:	test   %r13,%r13
+ 1033a31:	js     1033bbd <my.workload::kernel+0xa3d>
+ 1033a37:	shl    $0x4,%r13
+ 1033a3b:	mov    (%rsp),%r14
+ 1033a3f:	mov    0x28(%r14,%r13,1),%rdx
+ 1033a44:	mov    %rbp,%rsi
+ 1033a47:	imul   %rdx,%rsi
+ 1033a4b:	jo     1033bdc <my.workload::kernel+0xa5c>
+ 1033a51:	mov    %rsi,%rax
+ 1033a54:	imul   %rdx,%rax
+ 1033a58:	jo     1033bd0 <my.workload::kernel+0xa50>
+ 1033a5e:	mov    0x8(%rsp),%rsi
+ 1033a63:	mov    %rsi,%r12
+ 1033a66:	add    %rax,%r12
+ 1033a69:	jo     1033beb <my.workload::kernel+0xa6b>
+ 1033a6f:	mov    0x20(%rsp),%rsi
+ 1033a74:	inc    %rsi
+ 1033a77:	mov    %r12,%rax
+ 1033a7a:	cmp    0x18(%rsp),%rsi
+ 1033a7f:	movabs $0x10000000000,%rbx
+ 1033a89:	jne    10336c0 <my.workload::kernel+0x540>
+ 1033a8f:	jmp    1033b03 <my.workload::kernel+0x983>
+ 1033a91:	mov    0x20(%rcx),%rbx
+ 1033a95:	test   %rbx,%rbx
+ 1033a98:	je     1033bbd <my.workload::kernel+0xa3d>
+ 1033a9e:	mov    0x10(%rcx),%r14
+ 1033aa2:	mov    0x50(%rsp),%r15
+ 1033aa7:	xor    %r13d,%r13d
+ 1033aaa:	jmp    1033ad0 <my.workload::kernel+0x950>
+ 1033aac:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033abb:	nopl   0x0(%rax,%rax,1)
+ 1033ac0:	inc    %r13
+ 1033ac3:	add    $0x10,%r15
+ 1033ac7:	cmp    %r13,%rbx
+ 1033aca:	je     1033bbd <my.workload::kernel+0xa3d>
+ 1033ad0:	cmp    %r12,(%r14,%r13,8)
+ 1033ad4:	jne    1033ac0 <my.workload::kernel+0x940>
+ 1033ad6:	mov    (%r15),%rdi
+ 1033ad9:	mov    0x28(%rsp),%rsi
+ 1033ade:	vzeroupper
+ 1033ae1:	call   1010c90 <myl_core_str_eq>
+ 1033ae6:	test   %al,%al
+ 1033ae8:	je     1033ac0 <my.workload::kernel+0x940>
+ 1033aea:	jmp    1033a2e <my.workload::kernel+0x8ae>
+ 1033aef:	add    %rsi,%rcx
+ 1033af2:	jmp    1033786 <my.workload::kernel+0x606>
+ 1033af7:	nopw   0x0(%rax,%rax,1)
+ 1033b00:	xor    %r12d,%r12d
+ 1033b03:	mov    (%r14),%eax
+ 1033b06:	cmp    $0xffffffff,%eax
+ 1033b09:	mov    0x78(%rsp),%rbx
+ 1033b0e:	je     1033b43 <my.workload::kernel+0x9c3>
+ 1033b10:	dec    %eax
+ 1033b12:	je     1033b20 <my.workload::kernel+0x9a0>
+ 1033b14:	mov    %eax,(%r14)
+ 1033b17:	jmp    1033b43 <my.workload::kernel+0x9c3>
+ 1033b19:	nopl   0x0(%rax)
+ 1033b20:	movzbl 0x7(%r14),%eax
+ 1033b25:	test   %rax,%rax
+ 1033b28:	je     1033ba1 <my.workload::kernel+0xa21>
+ 1033b2a:	cmpq   $0x0,0x18(%r14)
+ 1033b2f:	jne    1033ba1 <my.workload::kernel+0xa21>
+ 1033b31:	lea    0x261e8(%rip),%rdx        # 1059d20 <myl_core_free_lists>
+ 1033b38:	mov    (%rdx,%rax,8),%rcx
+ 1033b3c:	mov    %rcx,(%r14)
+ 1033b3f:	mov    %r14,(%rdx,%rax,8)
+ 1033b43:	mov    0x80(%rsp),%rsi
+ 1033b4b:	mov    %rsi,%rcx
+ 1033b4e:	add    %r12,%rcx
+ 1033b51:	jo     1033c5f <my.workload::kernel+0xadf>
+ 1033b57:	mov    %rcx,%rax
+ 1033b5a:	movabs $0x89705f3112a28fe5,%rdx
+ 1033b64:	imul   %rdx
+ 1033b67:	add    %rcx,%rdx
+ 1033b6a:	mov    %rdx,%rax
+ 1033b6d:	shr    $0x3f,%rax
+ 1033b71:	sar    $0x1d,%rdx
+ 1033b75:	add    %rax,%rdx
+ 1033b78:	imul   $0x3b9aca07,%rdx,%rax
+ 1033b7f:	sub    %rax,%rcx
+ 1033b82:	mov    %rcx,%rax
+ 1033b85:	sar    $0x3f,%rax
+ 1033b89:	and    $0x3b9aca07,%eax
+ 1033b8e:	add    %rcx,%rax
+ 1033b91:	inc    %rbx
+ 1033b94:	cmp    0x68(%rsp),%rbx
+ 1033b99:	jne    10331b0 <my.workload::kernel+0x30>
+ 1033b9f:	jmp    1033bab <my.workload::kernel+0xa2b>
+ 1033ba1:	mov    %r14,%rdi
+ 1033ba4:	call   1032690 <myl_core_free_block>
+ 1033ba9:	jmp    1033b43 <my.workload::kernel+0x9c3>
+ 1033bab:	add    $0x98,%rsp
+ 1033bb2:	pop    %rbx
+ 1033bb3:	pop    %r12
+ 1033bb5:	pop    %r13
+ 1033bb7:	pop    %r14
+ 1033bb9:	pop    %r15
+ 1033bbb:	pop    %rbp
+ 1033bbc:	ret
+ 1033bbd:	lea    0x211c(%rip),%rdi        # 1035ce0 <core_io_file_error.verbs+0x2f0>
+ 1033bc4:	xor    %esi,%esi
+ 1033bc6:	xor    %edx,%edx
+ 1033bc8:	vzeroupper
+ 1033bcb:	call   1009a80 <myl_core_trap>
+ 1033bd0:	lea    0x2139(%rip),%rdi        # 1035d10 <core_io_file_error.verbs+0x320>
+ 1033bd7:	call   1009a80 <myl_core_trap>
+ 1033bdc:	lea    0x20cd(%rip),%rdi        # 1035cb0 <core_io_file_error.verbs+0x2c0>
+ 1033be3:	mov    %rbp,%rsi
+ 1033be6:	call   1009a80 <myl_core_trap>
+ 1033beb:	lea    0x214e(%rip),%rdi        # 1035d40 <core_io_file_error.verbs+0x350>
+ 1033bf2:	mov    %rax,%rdx
+ 1033bf5:	call   1009a80 <myl_core_trap>
+ 1033bfa:	lea    0x1fef(%rip),%rdi        # 1035bf0 <core_io_file_error.verbs+0x200>
+ 1033c01:	mov    %r15,%rsi
+ 1033c04:	xor    %edx,%edx
+ 1033c06:	call   1009a80 <myl_core_trap>
+ 1033c0b:	lea    0x200e(%rip),%rdi        # 1035c20 <core_io_file_error.verbs+0x230>
+ 1033c12:	mov    %rbx,%rsi
+ 1033c15:	mov    %r15,%rdx
+ 1033c18:	call   1009a80 <myl_core_trap>
+ 1033c1d:	lea    0x202c(%rip),%rdi        # 1035c50 <core_io_file_error.verbs+0x260>
+ 1033c24:	mov    %rdx,%rsi
+ 1033c27:	xor    %edx,%edx
+ 1033c29:	call   1009a80 <myl_core_trap>
+ 1033c2e:	lea    0x204b(%rip),%rdi        # 1035c80 <core_io_file_error.verbs+0x290>
+ 1033c35:	mov    $0x1,%edx
+ 1033c3a:	call   1009a80 <myl_core_trap>
+ 1033c3f:	lea    0x1f1a(%rip),%rdi        # 1035b60 <core_io_file_error.verbs+0x170>
+ 1033c46:	mov    0x38(%rsp),%rsi
+ 1033c4b:	mov    %rbx,%rdx
+ 1033c4e:	call   1009a80 <myl_core_trap>
+ 1033c53:	lea    0x1f36(%rip),%rdi        # 1035b90 <core_io_file_error.verbs+0x1a0>
+ 1033c5a:	call   1009a80 <myl_core_trap>
+ 1033c5f:	lea    0x1f5a(%rip),%rdi        # 1035bc0 <core_io_file_error.verbs+0x1d0>
+ 1033c66:	mov    %r12,%rdx
+ 1033c69:	call   1009a80 <myl_core_trap>
+
+Disassembly of section .init:
+
+Disassembly of section .fini:
+
+Disassembly of section .plt:

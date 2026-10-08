@@ -1,0 +1,16 @@
+usage: project_matrix.py [-h] --old OLD --core CORE --evidence EVIDENCE
+                         --cache CACHE [--cases CASES] [--seed SEED]
+
+Strict generated project/test comparisons, plus traced unchanged receipts. Run
+under core-qualification.lock, after the frozen source's full old gate.
+Retains every source, command and output; a mismatch stops before any
+correction.
+
+options:
+  -h, --help           show this help message and exit
+  --old OLD
+  --core CORE
+  --evidence EVIDENCE
+  --cache CACHE
+  --cases CASES
+  --seed SEED

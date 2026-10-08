@@ -1,0 +1,14 @@
+[
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-entry-import-01/cache/packet_decode/program-47233f2f8fb813ff/entry.ll",
+    "sha256": "27a035c9bfd9f576a374178e94daf99de4d6783312d0b1fe8e05ecf08c6586a0"
+  },
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-entry-import-01/cache/packet_decode/program-47233f2f8fb813ff/module-2ba6fe24c624a8200217cbaaa38092ee7becce804e727d55a01781aa0d2b482a.ll",
+    "sha256": "dca60ead98cd933d02d58d0d905e917253ccbd289bc83cd60fdb145c3867b757"
+  },
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-entry-import-01/cache/packet_decode/program-47233f2f8fb813ff/module-819b813edb0e06e8dfdd7ff60e54b591b15e01e8a00977de40701a326bcc3d4d.ll",
+    "sha256": "03853f307a2bd2c2a323b0dd6d9ce5804ea447242169531eac11d7d8ac038c50"
+  }
+]

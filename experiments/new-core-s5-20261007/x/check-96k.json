@@ -1,0 +1,21 @@
+{
+ "lines": 96197,
+ "core": "/home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/.mylang-cache/s5/rf2/bin/mylang",
+ "cold_s": 0.559,
+ "unchanged_s": 0.0247,
+ "edits": [
+  {
+   "module": 1200,
+   "s": 0.233
+  },
+  {
+   "module": 1201,
+   "s": 0.225
+  },
+  {
+   "module": 1202,
+   "s": 0.229
+  }
+ ],
+ "edit_median_s": 0.229
+}

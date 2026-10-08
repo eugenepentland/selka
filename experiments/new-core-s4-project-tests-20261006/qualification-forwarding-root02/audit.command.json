@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "taskset",
+    "-c",
+    "0,1,4-9,12-19",
+    "python3",
+    "experiments/new-core-s4-project-tests-20261006/qualification-forwarding-root02/audit.py"
+  ],
+  "status": 0,
+  "wall_s": 0.06913145794533193
+}

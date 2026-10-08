@@ -1,7 +1,6 @@
 module iteration_identity
 
 
-# spec-case: COW-ITERATION-IDENTITY-1
 public def test_nonstructural_dictionary_writes_remain_visible() -> bool:
     values = {1: 10, 2: 20}
     total = 0
@@ -11,7 +10,6 @@ public def test_nonstructural_dictionary_writes_remain_visible() -> bool:
     return total == 32 and values == {1: 11, 2: 21}
 
 
-# spec-case: COW-ITERATION-IDENTITY-1
 public def test_list_iteration_observes_later_element_writes() -> bool:
     values = [1, 2]
     total = 0
@@ -21,7 +19,6 @@ public def test_list_iteration_observes_later_element_writes() -> bool:
     return total == 10 and values == [1, 9]
 
 
-# spec-case: COW-ITERATION-IDENTITY-1
 public def test_rebinding_source_preserves_original_iteration_storage() -> bool:
     values = [1, 2]
     total = 0
@@ -35,7 +32,6 @@ public def test_rebinding_source_preserves_original_iteration_storage() -> bool:
     return total == 6 and values == [7] and mapping == {7: 70}
 
 
-# spec-case: COW-ITERATION-IDENTITY-1
 public def test_named_snapshot_remains_independent_of_iteration_writes() -> bool:
     values = [1, 2]
     snapshot = values
@@ -43,10 +39,9 @@ public def test_named_snapshot_remains_independent_of_iteration_writes() -> bool
     for value in values:
         values[1] = 9
         total += value
-    return total == 3 and values == [1, 9] and snapshot == [1, 2]
+    return total == 10 and values == [1, 9] and snapshot == [1, 2]
 
 
-# spec-case: COW-ITERATION-IDENTITY-1
 public def test_fresh_managed_sources_survive_without_an_owner_local() -> bool:
     total = 0
     for value in [2, 3]:
@@ -62,28 +57,14 @@ public def test_fresh_managed_sources_survive_without_an_owner_local() -> bool:
     return total == 189
 
 
-# spec-case: COW-ITERATION-IDENTITY-1
-public def test_arena_iteration_and_nested_sources_keep_balanced_holds() -> bool:
-    total = 0
-    with arena():
-        rows = [[1, 2], [3, 4]]
-        for row in rows:
-            for value in row:
-                total += value
-        mapping = {1: "a", 2: "bc"}
-        for value in mapping.values():
-            total += len(value)
-    return total == 13
-
-
-# spec-case: COW-ITERATION-IDENTITY-1
-public def test_fixed_array_iteration_keeps_its_value_copy() -> bool:
+public def test_fixed_array_iteration_reads_the_place_and_preserves_a_copy() -> bool:
     values: [2]int = [1, 2]
+    snapshot = values
     total = 0
     for value in values:
         total += value
         values[1] = 9
-    return total == 3 and values[1] == 9
+    return total == 10 and values[1] == 9 and snapshot == [1, 2]
 
 
 record Runtime:
@@ -100,7 +81,7 @@ def bump(rt: mut Runtime, at: int) -> None:
 
 
 # spec: RC-ITERATION-HOLD-TRANSFER-1
-public def test_write_back_through_a_field_preserves_iteration_snapshot() -> bool:
+public def test_write_back_through_a_field_preserves_live_iteration() -> bool:
     it = Interp(rt=Runtime(objects=[1, 2, 3]))
     seen: list[int] = []
     at = 0
@@ -110,8 +91,7 @@ public def test_write_back_through_a_field_preserves_iteration_snapshot() -> boo
         bump(mut wb, at + 1)
         it.rt = wb
         at += 1
-    return seen == [1, 2, 3] and it.rt.objects == [1, 12, 13]
-
+    return seen == [1, 12, 13] and it.rt.objects == [1, 12, 13]
 
 
 record Source:
@@ -137,12 +117,11 @@ public def test_last_field_transfer_preserves_live_iteration() -> bool:
 
 def main() -> int:
     assert test_nonstructural_dictionary_writes_remain_visible()
-    assert test_write_back_through_a_field_preserves_iteration_snapshot()
+    assert test_write_back_through_a_field_preserves_live_iteration()
     assert test_last_field_transfer_preserves_live_iteration()
     assert test_list_iteration_observes_later_element_writes()
     assert test_rebinding_source_preserves_original_iteration_storage()
     assert test_named_snapshot_remains_independent_of_iteration_writes()
     assert test_fresh_managed_sources_survive_without_an_owner_local()
-    assert test_arena_iteration_and_nested_sources_keep_balanced_holds()
-    assert test_fixed_array_iteration_keeps_its_value_copy()
+    assert test_fixed_array_iteration_reads_the_place_and_preserves_a_copy()
     return 0

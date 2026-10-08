@@ -1,0 +1,52 @@
+test-core
++- run test
+   +- compile test debug native 1 errors
+src/core/s3_values_test.zig:52:51: error: missing struct field: locator
+    const llvm = try emit.emitModule(a, &module, .{ .main = .{ .parameters = &.{} } });
+                                                 ~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/core/s3_values_test.zig:52:51: note: missing struct field: source_path
+src/core/emit_llvm.zig:38:21: note: struct declared here
+pub const Options = struct {
+                    ^~~~~~
+referenced by:
+    comptime: src/core/root_test.zig:38:17
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test -ODebug --dep mylang --dep core_test_options -Mroot=src/core/root_test.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -Mcore_test_options=.zig-cache/o/9ebcdb8d35628ec1cb798399ed8fb06d/options.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --test-runner ../guardian-zig/src/test_runner.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name test --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 2/20 steps succeeded (1 failed)
+test-core transitive failure
++- run test transitive failure
+|  +- compile test debug native 1 errors
+|     +- options success
+|        +- compile exe mylang-core debug native cached 7ms MaxRSS:38M
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+|  +- compile test debug native (+1 more reused dependencies)
++- run test transitive failure
+   +- compile test debug native (+1 more reused dependencies)
+

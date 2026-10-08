@@ -1,0 +1,4 @@
+src/core/test_runner_receipt.zig
+ror: expected statement, found ';'
+    };
+     ^

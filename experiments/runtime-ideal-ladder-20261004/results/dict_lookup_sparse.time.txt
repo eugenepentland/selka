@@ -1,0 +1,15 @@
+== dict_lookup_sparse small: size=64 iterations=40000 checksum=599651826
+version                                           ns/iter   ns/unit   x rust x fastest
+v20 today model, sparse keys from file              569.7     8.902    1.000     1.000
+v21 + immutable dict (no hint), sparse              340.1     5.313    0.597     0.597
+v22 + typed, probe inlined, sparse                  321.8     5.028    0.565     0.565
+v30 inline slots + Fibonacci hash, sparse           152.1     2.377    0.267     0.267
+v31 AVX2 4-slot buckets, sparse                     187.0     2.921    0.328     0.328
+== dict_lookup_sparse large: size=4096 iterations=1500 checksum=651579958
+version                                           ns/iter   ns/unit   x rust x fastest
+v20 today model, sparse keys from file            75561.6    18.448    1.000     1.000
+v21 + immutable dict (no hint), sparse            42352.7    10.340    0.561     0.561
+v22 + typed, probe inlined, sparse                57572.3    14.056    0.762     0.762
+v30 inline slots + Fibonacci hash, sparse         23011.7     5.618    0.305     0.305
+v31 AVX2 4-slot buckets, sparse                   13826.3     3.376    0.183     0.183
+wrote /home/epentland/ai/canopy/mylang-worktrees/claude-ideal-ladder-20261004/experiments/runtime-ideal-ladder-20261004/results/dict_lookup_sparse.json

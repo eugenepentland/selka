@@ -1,0 +1,93 @@
+module text_0158
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+def score(text: str) -> int:
+    value = len(text)
+    for octet in text.encode():
+        value += octet ^ 7
+    return value
+
+def main(args: list[str], out: Stream) -> int:
+    seed = number(args[0])
+    original = "\na\n||é|ΩBééB🙂\naBBé\taB\té\r é|Ω"
+    changed = original
+    for j in range(seed % 7):
+        if j % 3 == 0:
+            alias = changed
+            changed += alias
+        else:
+            changed += "é🙂a"
+    rebuilt = ""
+    for ch in changed:
+        rebuilt += ch
+    fused = "\0é€🙂" + changed
+    fused_rebuilt = ""
+    selected = ""
+    matches = 0
+    for ch in fused:
+        if ch == "é":
+            matches += 1
+            fused_rebuilt += ch
+            selected += ch
+        elif ch != "€":
+            fused_rebuilt += ch
+            selected += "."
+        else:
+            fused_rebuilt += ch
+            selected += ch
+    saved = fused_rebuilt
+    fused_rebuilt += "é"
+    sliced = changed[-3:-25]
+    parts = changed.split("|")
+    value = score(original) + score(changed) + score(rebuilt) + score(sliced) + score("::".join(parts))
+    value += score(fused_rebuilt) + score(selected) + score(saved) + matches
+    value += changed.find("a") + len(parts)
+    value += changed.count("a", -3, -25) + changed.rfind("a", -3, -25)
+    value += score(changed.upper()) + score(changed.lower()) + score(changed.strip())
+    value += score(changed.strip("éΩ🙂aB")) + score(changed.lstrip("éΩ🙂aB")) + score(changed.rstrip("éΩ🙂aB"))
+    value += score(changed.replace("é", "🙂x")) + score(repr(changed)) + score(repr(changed.encode()))
+    value += score(changed[::-1]) + score(changed[-3:-25:3])
+    value += score("|".join(changed.splitlines()))
+    value += score(chr(ord("🙂"))) + score(changed.zfill(40))
+    value += score(f"{changed:*>20.7}")
+    if changed.isdigit() or changed.isalpha() or changed.isspace():
+        value += 17
+    if changed.startswith("a", -3, -25) or changed.endswith("a", -3, -25):
+        value += 31
+    if changed.find("a") >= 0:
+        value += changed.index("a") + changed.rindex("a")
+    raw = changed.encode()
+    value += raw.count(b"a", -3, -25) + raw.rfind(b"a", -3, -25)
+    value += raw.find_any(b"|aB", -3) + len(raw.strip()) + len(raw.view(-3, -25))
+    match raw.decode():
+        case Ok(text):
+            value += score(text)
+        case Err(text):
+            value -= score(text)
+    match raw.scalar_count():
+        case Ok(count):
+            value += count
+        case Err(text):
+            value -= score(text)
+    match raw.scalar_count_range(-3, -25):
+        case Ok(count):
+            value += count
+        case Err(text):
+            value += score(text)
+    match b"a\xffz".scalar_count():
+        case Ok(count):
+            value -= count
+        case Err(text):
+            value += score(text)
+    reversed_parts = parts
+    reversed_parts.extend(parts)
+    reversed_parts.reverse()
+    value += score("/".join(reversed_parts))
+    out.print(value)
+    return 0

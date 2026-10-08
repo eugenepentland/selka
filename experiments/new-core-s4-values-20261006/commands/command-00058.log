@@ -1,0 +1,12 @@
+$ git commit -m 'core: implement S4 nested COW, numeric appends and mut loop inlining'
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+[codex/new-core-s4-values d5d4cbb40] core: implement S4 nested COW, numeric appends and mut loop inlining
+ 21 files changed, 629 insertions(+), 40 deletions(-)
+ create mode 100644 src/core/inline_cfg.zig
+ create mode 100644 test/core/v_buffer_format.my
+ create mode 100644 test/core/v_dynamic_repeat.my
+ create mode 100644 test/core/v_inline_loops.my
+ create mode 100644 test/core/v_nested_places.my
+
+exit=0
+elapsed_seconds=0.435006

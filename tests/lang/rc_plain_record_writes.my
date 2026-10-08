@@ -16,7 +16,8 @@ def observe_then_change(state: mut State) -> int:
 
 
 def from_callback(state: mut State):
-    state.count = observe_then_change(mut state)
+    next_count = observe_then_change(mut state)
+    state.count = next_count
 
 
 def toggled(state: mut State):
@@ -32,7 +33,6 @@ def loop(state: mut State, times: int):
         i += 1
 
 
-# spec-case: RC-PLAIN-RECORD-WRITE-1
 public def test_saved_record_and_child_snapshots_survive_scalar_publication() -> bool:
     state = State([7], 3, True)
     saved = state
@@ -43,30 +43,17 @@ public def test_saved_record_and_child_snapshots_survive_scalar_publication() ->
     return state.count == 9 and saved.count == 3 and saved.values == [7] and children == [7]
 
 
-# spec-case: RC-PLAIN-RECORD-WRITE-1
 public def test_rhs_observation_and_mutation_complete_before_final_store() -> bool:
     state = State([1], 5, True)
     from_callback(mut state)
     return state.count == 7 and state.values == [1, 5]
 
 
-# spec-case: RC-PLAIN-RECORD-WRITE-1
 public def test_loop_reuse_and_boolean_width_preserve_siblings() -> bool:
     state = State([2, 4], 0, True)
     loop(mut state, 50)
     toggled(mut state)
     return state.count == 50 and not state.ready and state.values == [2, 4]
-
-
-# spec-case: RC-PLAIN-RECORD-WRITE-1
-public def test_arena_caller_and_heap_child_keep_their_lifetimes() -> bool:
-    children = [11]
-    answer = 0
-    with arena():
-        state = State(children, 4, True)
-        loop(mut state, 3)
-        answer = state.count
-    return answer == 7 and children == [11]
 
 
 def count_for_append(state: mut State) -> int:
@@ -79,35 +66,22 @@ def with_snapshot(state: mut State, snapshot: State) -> bool:
     return snapshot.count + 1 == state.count
 
 
-# spec-case: RC-PLAIN-RECORD-WRITE-1
 public def test_same_call_snapshot_and_pinned_parent_keep_distinct_scalar_bits() -> bool:
     state = State([5], 2, True)
     first = with_snapshot(mut state, state)
     states = [state]
     saved = states
-    state.values.append(count_for_append(mut state))
+    mutation_result_88 = count_for_append(mut state)
+    state.values.append(mutation_result_88)
     changed = states[0]
     add(mut changed, 4)
     states[0] = changed
     return first and state.count == 4 and state.values == [5, 4] and states[0].count == 7 and saved[0].count == 3
 
 
-# spec-case: RC-PLAIN-RECORD-WRITE-1
-public def test_arena_owned_children_keep_real_snapshot_marks() -> bool:
-    with arena():
-        state = State([12], 8, True)
-        saved = state
-        add(mut state, 3)
-        toggled(mut state)
-        state.values.append(14)
-        return state.count == 11 and not state.ready and saved.count == 8 and saved.ready and saved.values == [12] and state.values == [12, 14]
-
-
 def main(out: Stream) -> int:
     out.print(test_saved_record_and_child_snapshots_survive_scalar_publication())
     out.print(test_rhs_observation_and_mutation_complete_before_final_store())
     out.print(test_loop_reuse_and_boolean_width_preserve_siblings())
-    out.print(test_arena_caller_and_heap_child_keep_their_lifetimes())
     out.print(test_same_call_snapshot_and_pinned_parent_keep_distinct_scalar_bits())
-    out.print(test_arena_owned_children_keep_real_snapshot_marks())
     return 0

@@ -1,0 +1,6 @@
+Current thread 0x00007becae19a200 [python3] (most recent call first):
+  File "/usr/lib/python3.14/selectors.py", line 398 in select
+  File "/usr/lib/python3.14/subprocess.py", line 2153 in _communicate
+  File "/usr/lib/python3.14/subprocess.py", line 1221 in communicate
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification_support.py", line 208 in run
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-orphan-timeout-red-01/runner.py", line 19 in <module>

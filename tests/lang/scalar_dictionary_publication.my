@@ -1,0 +1,67 @@
+module scalar_dictionary_publication
+
+
+record PlainKey:
+    high: u64
+    low: i16
+
+
+public def test_scalar_updates_keep_deletion_history_and_snapshot_values() -> bool:
+    mapping: dict[int, int] = {}
+    for i in range(128):
+        mapping[i * 257 - 10000] = i + 3
+    snapshot = mapping
+    for i in range(128):
+        key = i * 257 - 10000
+        if i % 2 == 0:
+            if mapping.pop(key) != i + 3:
+                return False
+        else:
+            mapping[key] = mapping.get(key, 17) + 9
+    for i in range(128, 256):
+        mapping[i * 257 - 10000] = i + 3
+    for i in range(256):
+        key = i * 257 - 10000
+        if i < 128 and snapshot.get(key, -1) != i + 3:
+            return False
+        expected = i + 3
+        if i < 128:
+            expected = -1 if i % 2 == 0 else i + 12
+        if mapping.get(key, -1) != expected:
+            return False
+    return len(mapping) == 192 and len(snapshot) == 128
+
+
+public def test_payload_free_sets_keep_order_and_plain_structural_keys() -> bool:
+    members: set[u8] = set()
+    for i in range(1000):
+        members.add(u8(i % 17))
+    before = members
+    members.remove(u8(3))
+    members.add(u8(255))
+    order = list(members)
+    if len(order) != 17 or order[-1] != u8(255) or u8(3) not in before:
+        return False
+    if u8(3) in members or u8(255) in before:
+        return False
+    points: set[PlainKey] = set()
+    for i in range(100):
+        points.add(PlainKey(high=u64(i % 9), low=i16(i % 5)))
+    return len(points) == 45 and PlainKey(high=u64(8), low=i16(4)) in points
+
+
+public def test_equal_texts_and_views_keep_owned_keys_across_growth() -> bool:
+    mapping: dict[str, int] = {}
+    for i in range(96):
+        container = "prefix:" + str(i) + ":suffix"
+        key = container[7:len(container) - 7]
+        mapping[key] = i
+        if str(i) not in mapping or mapping.get(str(i), -1) != i:
+            return False
+    for i in range(96):
+        key = str(i)
+        mapping[key] = mapping.get("" + key, -1) + 100
+    for i in range(96):
+        if mapping[str(i)] != i + 100:
+            return False
+    return len(mapping) == 96

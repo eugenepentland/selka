@@ -1,4 +1,3 @@
-# spec: RC-TEMPORARY-EDGE-1
 public def test_nested_write_releases_only_finished_read_temporaries() -> bool:
     rows = [[1, 2], [3, 4]]
     snapshot = rows
@@ -7,7 +6,6 @@ public def test_nested_write_releases_only_finished_read_temporaries() -> bool:
     return rows == [[1, 122], [3, 4]] and snapshot == [[1, 2], [3, 4]]
 
 
-# spec-case: RC-TEMPORARY-EDGE-1
 public def test_derived_value_survives_finished_parent_temporary() -> bool:
     rows = [[[1]], [[2]]]
     selected = rows[0][0]
@@ -21,7 +19,6 @@ def save(rows: list[list[int]], saved: mut list[list[list[int]]]) -> int:
     return 9
 
 
-# spec-case: RC-TEMPORARY-EDGE-1
 public def test_pending_receiver_holds_survive_temporary_releases() -> bool:
     rows = [[1]]
     saved: list[list[list[int]]] = []
@@ -29,7 +26,6 @@ public def test_pending_receiver_holds_survive_temporary_releases() -> bool:
     return rows == [[1, 9]] and saved == [[[1]]]
 
 
-# spec-case: RC-TEMPORARY-EDGE-1
 public def test_zero_iteration_and_branch_paths_keep_snapshot_owners() -> bool:
     rows = [[1]]
     snapshot = rows
@@ -53,7 +49,6 @@ def main() -> int:
     return 0
 
 
-# spec-case: RC-TEMPORARY-EDGE-1
 public def test_sorted_empty_receiver_survives_its_mutation_scope() -> bool:
     source: list[i32] = []
     ordered = sorted(source)
@@ -61,7 +56,6 @@ public def test_sorted_empty_receiver_survives_its_mutation_scope() -> bool:
     return ordered == [7i32] and source == []
 
 
-# spec-case: RC-TEMPORARY-EDGE-1
 public def test_sorted_text_receiver_survives_its_mutation_scope() -> bool:
     source = ["pear", "Apple", "apple", "pear"]
     ordered = sorted(source)
@@ -70,7 +64,6 @@ public def test_sorted_text_receiver_survives_its_mutation_scope() -> bool:
     return ordered == ["Apple", "apple", "pear", "pear", "plum"] and source == []
 
 
-# spec-case: RC-TEMPORARY-EDGE-1
 public def test_sorted_method_result_keeps_its_physical_anchor() -> bool:
     source = "pear,Apple,apple,pear"
     ordered = sorted(source.split(",").copy())

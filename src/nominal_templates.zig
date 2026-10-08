@@ -265,19 +265,25 @@ pub const Index = struct {
         if (self.names.get(text)) |id| {
             if (self.declarations.items[id].builtin_name != null) {
                 if (ctx.names == null or !try ctx.names.?.topLevel(span)) {
-                    try self.rejectRetiredCell(id, span);
+                    try self.rejectRetiredType(id, span);
                     return id;
                 }
             }
         }
         const key = if (ctx.names) |names| try names.reference(span, .type, null, null, ctx.sink) else text;
         const id = self.names.get(key) orelse return ctx.sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
-        try self.rejectRetiredCell(id, span);
+        try self.rejectRetiredType(id, span);
         return id;
     }
-    fn rejectRetiredCell(self: *Index, id: usize, span: Span) Error!void {
-        if (!value_semantics.enabled()) return;
+    fn rejectRetiredType(self: *Index, id: usize, span: Span) Error!void {
         const builtin = self.declarations.items[id].builtin_name orelse return;
+        // D2: explicit view types would make storage/call boundaries possible.
+        // Inferred immediate projections instantiate the prelude internally.
+        inline for (.{ "DictKeys", "DictValues", "DictItems" }) |view| if (std.mem.eql(u8, builtin, view)) return self.context.sink.fail(
+            "E_VIEW_STORED",
+            span,
+            "dictionary views cannot appear in type declarations or annotations; use list snapshots instead",
+        );
         if (std.mem.eql(u8, builtin, "Cell")) return self.context.sink.fail(
             "E_VALUE_CELL",
             span,
@@ -625,7 +631,7 @@ pub fn depends(value: Expression) bool {
 pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!Index {
     var index: Index = .{ .context = .{ .allocator = allocator, .src = src, .sink = sink, .names = module_names } };
     for (program.types.records) |declaration| {
-        if (declaration.managed and value_semantics.enabled()) return sink.fail(
+        if (declaration.managed) return sink.fail(
             "E_VALUE_CLASS",
             declaration.name,
             "class is shared mutable state under value semantics; use a record or recursive union for values, or a pool handle for identity",

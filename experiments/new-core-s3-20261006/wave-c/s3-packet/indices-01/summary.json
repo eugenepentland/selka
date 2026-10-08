@@ -1,0 +1,314 @@
+{
+  "qualified": false,
+  "binaries": {
+    "old-debug": "690daaa0c9529a556066602495c82c387d03fa12256e7474105b502f136bf950",
+    "old-release": "0dd4e85f8946ed87def8bc556059b097bd7c4e11fe3c1a93aa779e60f9fed27e",
+    "debug": "2c9aaa1b3381dc1b3c3368961e2c6a742b9e4e45061b5fc97928a0539ff7c4c5",
+    "release": "ae7798f8942d68151d2f6070b1a6324aa7b3f5e6e315fa98152d0776ac681ce3",
+    "verify": "596d0e7200360c3fa5e8b716ddedc9141dd1850746b93267e152eea226db2209"
+  },
+  "comparisons": 54,
+  "mismatches": [
+    {
+      "receiver": "bytes",
+      "index": "-4",
+      "mode": "debug",
+      "old": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/old-debug",
+          "-4",
+          "bytes"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12: error[R_LIST_BOUNDS]: native execution failed (index -4, length 3)\n  in indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:13:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-4,\"length\":3}\n"
+      },
+      "new": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/debug",
+          "-4",
+          "bytes"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12: error[R_LIST_BOUNDS]: native execution failed (index -1, length 3)\n  in indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:13:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-1,\"length\":3}\n"
+      }
+    },
+    {
+      "receiver": "bytes",
+      "index": "-4",
+      "mode": "release",
+      "old": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/old-release",
+          "-4",
+          "bytes"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12: error[R_LIST_BOUNDS]: native execution failed (index -4, length 3)\n  in indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:13:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-4,\"length\":3}\n"
+      },
+      "new": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/release",
+          "-4",
+          "bytes"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12: error[R_LIST_BOUNDS]: native execution failed (index -1, length 3)\n  in indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:13:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-1,\"length\":3}\n"
+      }
+    },
+    {
+      "receiver": "bytes",
+      "index": "-4",
+      "mode": "verify",
+      "old": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/old-release",
+          "-4",
+          "bytes"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12: error[R_LIST_BOUNDS]: native execution failed (index -4, length 3)\n  in indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:13:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-4,\"length\":3}\n"
+      },
+      "new": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/verify",
+          "-4",
+          "bytes"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12: error[R_LIST_BOUNDS]: native execution failed (index -1, length 3)\n  in indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:13:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-1,\"length\":3}\n"
+      }
+    },
+    {
+      "receiver": "bytes",
+      "index": "-9223372036854775808",
+      "mode": "debug",
+      "old": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/old-debug",
+          "-9223372036854775808",
+          "bytes"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12: error[R_LIST_BOUNDS]: native execution failed (index -9223372036854775808, length 3)\n  in indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:13:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-9223372036854775808,\"length\":3}\n"
+      },
+      "new": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/debug",
+          "-9223372036854775808",
+          "bytes"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12: error[R_LIST_BOUNDS]: native execution failed (index -9223372036854775805, length 3)\n  in indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:13:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-9223372036854775805,\"length\":3}\n"
+      }
+    },
+    {
+      "receiver": "bytes",
+      "index": "-9223372036854775808",
+      "mode": "release",
+      "old": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/old-release",
+          "-9223372036854775808",
+          "bytes"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12: error[R_LIST_BOUNDS]: native execution failed (index -9223372036854775808, length 3)\n  in indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:13:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-9223372036854775808,\"length\":3}\n"
+      },
+      "new": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/release",
+          "-9223372036854775808",
+          "bytes"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12: error[R_LIST_BOUNDS]: native execution failed (index -9223372036854775805, length 3)\n  in indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:13:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-9223372036854775805,\"length\":3}\n"
+      }
+    },
+    {
+      "receiver": "bytes",
+      "index": "-9223372036854775808",
+      "mode": "verify",
+      "old": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/old-release",
+          "-9223372036854775808",
+          "bytes"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12: error[R_LIST_BOUNDS]: native execution failed (index -9223372036854775808, length 3)\n  in indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:13:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-9223372036854775808,\"length\":3}\n"
+      },
+      "new": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/verify",
+          "-9223372036854775808",
+          "bytes"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12: error[R_LIST_BOUNDS]: native execution failed (index -9223372036854775805, length 3)\n  in indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:2:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:13:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-9223372036854775805,\"length\":3}\n"
+      }
+    },
+    {
+      "receiver": "buffer",
+      "index": "-4",
+      "mode": "debug",
+      "old": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/old-debug",
+          "-4",
+          "buffer"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index -4, length 3)\n  in mutable_indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:15:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-4,\"length\":3}\n"
+      },
+      "new": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/debug",
+          "-4",
+          "buffer"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index -1, length 3)\n  in mutable_indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:15:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-1,\"length\":3}\n"
+      }
+    },
+    {
+      "receiver": "buffer",
+      "index": "-4",
+      "mode": "release",
+      "old": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/old-release",
+          "-4",
+          "buffer"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index -4, length 3)\n  in mutable_indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:15:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-4,\"length\":3}\n"
+      },
+      "new": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/release",
+          "-4",
+          "buffer"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index -1, length 3)\n  in mutable_indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:15:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-1,\"length\":3}\n"
+      }
+    },
+    {
+      "receiver": "buffer",
+      "index": "-4",
+      "mode": "verify",
+      "old": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/old-release",
+          "-4",
+          "buffer"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index -4, length 3)\n  in mutable_indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:15:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-4,\"length\":3}\n"
+      },
+      "new": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/verify",
+          "-4",
+          "buffer"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index -1, length 3)\n  in mutable_indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:15:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-1,\"length\":3}\n"
+      }
+    },
+    {
+      "receiver": "buffer",
+      "index": "-9223372036854775808",
+      "mode": "debug",
+      "old": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/old-debug",
+          "-9223372036854775808",
+          "buffer"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index -9223372036854775808, length 3)\n  in mutable_indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:15:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-9223372036854775808,\"length\":3}\n"
+      },
+      "new": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/debug",
+          "-9223372036854775808",
+          "buffer"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index -9223372036854775805, length 3)\n  in mutable_indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:15:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-9223372036854775805,\"length\":3}\n"
+      }
+    },
+    {
+      "receiver": "buffer",
+      "index": "-9223372036854775808",
+      "mode": "release",
+      "old": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/old-release",
+          "-9223372036854775808",
+          "buffer"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index -9223372036854775808, length 3)\n  in mutable_indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:15:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-9223372036854775808,\"length\":3}\n"
+      },
+      "new": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/release",
+          "-9223372036854775808",
+          "buffer"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index -9223372036854775805, length 3)\n  in mutable_indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:15:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-9223372036854775805,\"length\":3}\n"
+      }
+    },
+    {
+      "receiver": "buffer",
+      "index": "-9223372036854775808",
+      "mode": "verify",
+      "old": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/old-release",
+          "-9223372036854775808",
+          "buffer"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index -9223372036854775808, length 3)\n  in mutable_indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:15:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-9223372036854775808,\"length\":3}\n"
+      },
+      "new": {
+        "command": [
+          ".mylang-cache/s3-packet/indices-01/verify",
+          "-9223372036854775808",
+          "buffer"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12: error[R_LIST_BOUNDS]: native execution failed (index -9223372036854775805, length 3)\n  in mutable_indexed at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:4:12\n  in main at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/.mylang-cache/s3-packet/indices-01/index.my:15:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-9223372036854775805,\"length\":3}\n"
+      }
+    }
+  ],
+  "error": null
+}

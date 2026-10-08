@@ -97,7 +97,6 @@ def last_with(pins: list[Pin], net_id: int) -> Pin:
     return result
 
 
-# spec-case: RC-ELEMENT-BORROW-3
 public def test_borrowed_entry_returns_an_owning_element_read_in_place() -> bool:
     pins = sample()
     found = find(pins, 3)
@@ -107,7 +106,6 @@ public def test_borrowed_entry_returns_an_owning_element_read_in_place() -> bool
     return found.net.source == b"GND" and found.part == 3 and missing.net_id == -1 and find(pins, 9).net.source == b"LATE"
 
 
-# spec-case: RC-ELEMENT-BORROW-3
 public def test_owned_result_keeps_fields_of_elements_read_in_place() -> bool:
     pins = sample()
     spans = matching(pins, b"GND")
@@ -116,13 +114,11 @@ public def test_owned_result_keeps_fields_of_elements_read_in_place() -> bool:
     return len(spans) == 4 and spans[0].source == b"GND" and spans[1].start == 1 and spans[3].end == 3
 
 
-# spec-case: RC-ELEMENT-BORROW-3
 public def test_nested_element_reads_through_a_captured_parameter() -> bool:
     counts = groups(sample())
     return counts == [11, 22, 3, 22]
 
 
-# spec-case: RC-ELEMENT-BORROW-3
 public def test_a_reassigned_element_local_returns_its_latest_element() -> bool:
     pins = sample()
     chosen = last_with(pins, 2)
@@ -160,21 +156,18 @@ def iterated(pins: list[Pin]) -> int:
     return total
 
 
-# spec-case: RC-ELEMENT-BORROW-3
 public def test_mut_list_element_read_keeps_its_snapshot() -> bool:
     pins = sample()
     result = rename(mut pins)
     return result == 3 and pins[0].part == 50 and pins[0].net.source == b"RENAMED"
 
 
-# spec-case: RC-ELEMENT-BORROW-3
 public def test_read_only_and_mut_views_of_one_list_stay_distinct() -> bool:
     pins = sample()
     result = swap_first(pins, mut pins)
     return result == 3 and pins[0].part == 99 and len(pins) == 5
 
 
-# spec-case: RC-ELEMENT-BORROW-3
 public def test_local_list_and_iteration_elements_keep_their_copies() -> bool:
     return local_list(8) == 1370 and iterated(sample()) == 12
 
@@ -197,7 +190,6 @@ def matching_parts(pins: list[Pin], net: Span) -> list[int]:
     return out
 
 
-# spec-case: RC-READONLY-ANCHOR-2
 public def test_inlined_arguments_read_out_of_elements_compare_in_place() -> bool:
     pins = sample()
     pins.append(pin(7, b"GN", False, 4))

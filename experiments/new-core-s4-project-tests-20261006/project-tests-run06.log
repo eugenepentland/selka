@@ -1,0 +1,43 @@
+test-core
++- run test 21 pass, 1 crash (22 total)
+guardian/test: 22 test(s) selected
+guardian/test: test wall 0.00s
+guardian/test: PASS — 0 passed
+guardian/test: RESULT {"passed":0,"failed":0,"skipped":0}
+error: 'test_runner.test.programIdentity propagates allocation failure instead of inventing a reusable success' terminated with signal ABRT with stderr:
+       guardian/test: 22 test(s) selected
+       guardian/test: SLOW  9.73s  test_runner_project_test.test.directory receipts account for orphan libraries and rerun only the edited reachable program
+       thread 1537904 panic: index out of bounds: index 0, len 0
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/core/test_runner.zig:199:47: 0x205c7bd in programIdentity (root_test.zig)
+           const function = checked.program.functions[@backingInt(case.function)];
+                                                     ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/core/test_runner.zig:630:67: 0x205bdea in test.programIdentity propagates allocation failure instead of inventing a reusable success (root_test.zig)
+           try std.testing.expectError(error.OutOfMemory, programIdentity(resources, .{ .path = "empty.my", .build = .{ .zig = "zig" } }, checked, case, @splat(0)));
+                                                                         ^
+       /home/epentland/ai/canopy/mylang-worktrees/guardian-zig/src/test_runner.zig:685:39: 0x13a9073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/ai/canopy/mylang-worktrees/guardian-zig/src/test_runner.zig:610:42: 0x13a98c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/ai/canopy/mylang-worktrees/guardian-zig/src/test_runner.zig:306:39: 0x13a9f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x13a67ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x13a61d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+failed command: ./.zig-cache/o/61ea7f9f1b13817048122db2e8f83e6d/test --cache-dir=./.zig-cache --seed=0xee52fe3b --listen=-
+
+Build Summary: 5/7 steps succeeded (1 failed); 21/22 tests passed (1 crashed)
+test-core transitive failure
++- run test 21 pass, 1 crash (22 total)
+   +- compile test debug native success 2s MaxRSS:362M
+      +- run exe qbe-build-assets (qbe_build_assets) success 82ms
+      |  +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:38M
+      +- options success
+         +- compile exe mylang-core debug native success 3s MaxRSS:367M
+            +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

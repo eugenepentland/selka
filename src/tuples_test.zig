@@ -341,15 +341,15 @@ test "a module program keeps its tuple type spellings" {
 }
 
 // spec-case: TUPLE-5
-test "the host boundary rejects a tuple signature" {
+test "the extern boundary rejects a tuple signature" {
     try rejects(
-        \\host def measure(host: Host, pair: tuple[int, str]) -> i64 effects(host)
+        \\extern def measure(host: Host, pair: tuple[int, str]) -> i64 effects(host)
         \\
         \\
         \\def main() -> int:
         \\    return 0
         \\
-    , "E_HOST_SIGNATURE");
+    , "E_EXTERN_SIGNATURE");
 }
 
 // spec: TUPLE-8

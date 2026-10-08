@@ -1,0 +1,86 @@
+module rc_view_receivers
+
+
+public def test_unshared_mapping_write_preserves_live_identity() -> bool:
+    mapping = {1: 7}
+    view = mapping.values()
+    view.mapping[1] = 9
+    return list(view) == [9] and mapping[1] == 9
+
+
+public def test_shared_mapping_write_replaces_only_held_edge() -> bool:
+    mapping = {1: 7}
+    snapshot = mapping
+    view = mapping.values()
+    view.mapping[1] = 9
+    return list(view) == [9] and mapping[1] == 7 and snapshot[1] == 7
+
+
+def only_view() -> DictValues[int, int]:
+    mapping = {1: 7}
+    return mapping.values()
+
+
+public def test_held_only_mapping_remains_mutable() -> bool:
+    view = only_view()
+    view.mapping[1] = 9
+    view.mapping[2] = 11
+    return list(view) == [9, 11]
+
+
+record Holder:
+    view: DictValues[int, int]
+
+
+public def test_nested_view_field_detaches_without_releasing_snapshot() -> bool:
+    mapping = {1: 7}
+    snapshot = mapping
+    holder = Holder(mapping.values())
+    holder.view.mapping.clear()
+    return len(holder.view) == 0 and mapping[1] == 7 and snapshot[1] == 7
+
+
+def capture_mapping(mapping: dict[int, list[int]], saved: mut list[dict[int, list[int]]]) -> int:
+    saved.append(mapping)
+    return 9
+
+
+public def test_pending_nested_mapping_receiver_pins_snapshot_path() -> bool:
+    mapping = {1: [7]}
+    view = mapping.values()
+    saved: list[dict[int, list[int]]] = []
+    view.mapping[1].append(capture_mapping(mapping, mut saved))
+    return list(view) == [[7, 9]] and mapping[1] == [7, 9] and saved[0][1] == [7]
+
+
+def replace_mapping(view: mut DictValues[int, list[int]]) -> int:
+    view.mapping = {2: [8]}
+    return 9
+
+
+public def test_explicit_row_snapshot_survives_view_rebinding() -> bool:
+    mapping = {1: [7]}
+    view = mapping.values()
+    selected_row = view.mapping[1]
+    value = replace_mapping(mut view)
+    selected_row.append(value)
+    return list(view) == [[8]] and mapping[1] == [7] and selected_row == [7, 9]
+
+
+public def test_list_of_views_preserves_ordinary_mapping_snapshots() -> bool:
+    mapping = {1: 7}
+    snapshot = mapping
+    views = [mapping.values()]
+    views[0].mapping[1] = 9
+    return list(views[0]) == [9] and mapping[1] == 7 and snapshot[1] == 7
+
+
+def main() -> int:
+    assert test_unshared_mapping_write_preserves_live_identity()
+    assert test_shared_mapping_write_replaces_only_held_edge()
+    assert test_held_only_mapping_remains_mutable()
+    assert test_nested_view_field_detaches_without_releasing_snapshot()
+    assert test_pending_nested_mapping_receiver_pins_snapshot_path()
+    assert test_explicit_row_snapshot_survives_view_rebinding()
+    assert test_list_of_views_preserves_ordinary_mapping_snapshots()
+    return 0

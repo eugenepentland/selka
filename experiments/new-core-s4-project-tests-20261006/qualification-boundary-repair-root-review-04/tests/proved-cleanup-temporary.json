@@ -1,0 +1,18 @@
+[
+  {
+    "root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/cleanup-temporary/tmpvekq224y",
+    "created_by": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification_selftest.py",
+      "line": 392,
+      "operation": "TemporaryDirectory"
+    },
+    "cleanup_by": {
+      "operation": "TemporaryDirectory.cleanup"
+    },
+    "sources": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/cleanup-temporary/tmpvekq224y/case.my"
+    ],
+    "inputs_verified_before_cleanup": true,
+    "cleanup_complete": true
+  }
+]

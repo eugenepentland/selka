@@ -142,7 +142,7 @@ mylang rejects by design, such as exceptions and closures, are tagged
 
 ### Lane E: gates
 
-Never optimized, always required: `zig build test`, `test-qbe`, `test-qbe-build`,
+Never optimized, always required: `zig build test`,
 `fmt-check`, Guardian, doc-coverage, doctest, golden parity, the idiom suite's
 CPython agreement for every probe that agreed before the change, and C2 = 0.
 

@@ -1,0 +1,21 @@
+fn myl_core_ir_span_materialize(str) -> str extern
+fn main(cap) -> i64
+b0:
+  %2 = str_char str str0, 1:u64
+  %4 = str_char str str0, 3:u64
+  %7 = str_view_of str_view %2, 0:u64, 2:u64
+  %9 = list_new list[str] 1:u64
+  %16 = is_unique bool %9
+  branch %16, b1, b2
+b1: ; preds b0
+  retain %2
+  %10 = list_push list[str] %9, %2
+  release %10
+  %11 = call str myl_core_ir_span_materialize(%7)
+  release %2
+  print param0, %11, %4
+  release %4
+  release %11
+  ret 0:i64
+b2: ; preds b0
+  unreachable

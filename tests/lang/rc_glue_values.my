@@ -66,7 +66,6 @@ def grid(seed: int) -> Grid:
     return Grid([[seed], [seed, seed], [seed, seed, seed]], b"grid")
 
 
-# spec-case: RC-GLUE-1
 public def test_wide_records_copy_and_release_every_edge() -> bool:
     kept = wide(0)
     index = 0
@@ -80,7 +79,6 @@ public def test_wide_records_copy_and_release_every_edge() -> bool:
     return total(kept) == 7 * 7 + 42 and kept.a[0] == 7
 
 
-# spec-case: RC-GLUE-1
 public def test_fixed_arrays_of_lists_keep_independent_rows() -> bool:
     first = grid(1)
     second = first
@@ -93,7 +91,6 @@ public def test_fixed_arrays_of_lists_keep_independent_rows() -> bool:
     return sum == 1 + 2 + 3 + 1 + 1 + 3 and first.rows[1][1] == 1 and second.rows[1][0] == 5
 
 
-# spec-case: RC-GLUE-1
 public def test_variant_arms_move_through_lists() -> bool:
     pieces: list[Piece] = []
     index = 0
@@ -113,7 +110,6 @@ public def test_variant_arms_move_through_lists() -> bool:
     return sum == 20 * 3 + 19 * 2 + 20 * (7 + 42)
 
 
-# spec-case: RC-GLUE-1
 public def test_list_appends_of_own_elements_and_plain_records() -> bool:
     rows: list[list[int]] = [[1], [2]]
     index = 0
@@ -129,7 +125,6 @@ public def test_list_appends_of_own_elements_and_plain_records() -> bool:
     return len(rows) == 42 and rows[41][0] == 2 and len(rows[40]) == 1 and len(rows[0]) == 2 and points[99].y == 100
 
 
-# spec-case: RC-GLUE-1
 public def test_list_element_replacement_releases_the_old_value() -> bool:
     values: list[Wide] = [wide(0), wide(1)]
     saved = values[0]
@@ -140,17 +135,6 @@ public def test_list_element_replacement_releases_the_old_value() -> bool:
     return total(values[0]) == 7 * 48 + 42 and total(values[1]) == 7 * 49 + 42 and saved.a[0] == 0
 
 
-# spec-case: RC-GLUE-1
-public def test_arena_values_escape_through_glue() -> bool:
-    kept: list[int] = []
-    with arena() as scratch:
-        local = wide(3)
-        copy = local
-        kept = scratch.escape(copy.a)
-    return kept[0] == 3
-
-
-# spec-case: RC-ACQUIRE-COPY-1
 public def test_repeated_variant_edges_retain_an_independent_snapshot() -> bool:
     row = [17]
     pair = Aliased(row, row)

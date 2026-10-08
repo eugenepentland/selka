@@ -1,0 +1,22 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T10:48:34.494001+00:00",
+  "source_revision": "df09fb4bcb57a58080543cda693554906d90105e",
+  "source_bindings": 11,
+  "log_bindings": 3,
+  "focused_tests": 58,
+  "counts": {
+    "bounded_pairs": 38,
+    "append_pairs": 11,
+    "successes": 42,
+    "failures": 7,
+    "llvm_policy_via_qbe": 11
+  },
+  "readiness_sha256": "5d1a23155f48b1cf2997c172c8dd6db3e96ceb770eeb58480b1b526bd36f254e",
+  "script_sha256": "12f2c44e9920e75f5e0c6484bf9e519c685e228e89c90ef598a291300dbf4f46",
+  "limitations": [
+    "Saved exact native outcomes; no new executions or timing.",
+    "Eleven pairs use LLVM scalar-policy IL executed by QBE; actual LLVM proof remains separately attributed to the parent candidate.",
+    "Memory refusal checked for the explicit 400000-element fixture, not a general allocation model."
+  ]
+}

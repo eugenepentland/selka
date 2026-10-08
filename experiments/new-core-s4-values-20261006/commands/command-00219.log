@@ -1,0 +1,16 @@
+$ git commit -m 'test(core): qualify real S4-V rebuild and pin comparison binary'
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10371 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s4-values 20be5945d] test(core): qualify real S4-V rebuild and pin comparison binary
+ 6 files changed, 460 insertions(+), 3 deletions(-)
+ create mode 100644 experiments/new-core-s4-values-20261006/final-rebuild-v1.json
+ create mode 100644 experiments/new-core-s4-values-20261006/rebuild-binary-difference-v2.json
+ create mode 100644 experiments/new-core-s4-values-20261006/rebuild-binary-difference.json
+ create mode 100644 experiments/new-core-s4-values-20261006/rebuild-restore.json
+
+exit=0
+elapsed_seconds=3.297524

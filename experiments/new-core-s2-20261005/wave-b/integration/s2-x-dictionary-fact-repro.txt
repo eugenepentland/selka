@@ -1,0 +1,3 @@
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/tests/lang/dictionary_hashing.my:309:19: error[R_CORE_FACT]: native execution failed (range [0, 0]: value 27, other 0)
+  in dictionary_hashing::test_text_keys_count_the_same_through_one_key_object_or_many at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/tests/lang/dictionary_hashing.my:309:19
+native_exit=1

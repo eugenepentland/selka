@@ -1,0 +1,247 @@
+{
+  "schema": "mylang-goal110-sort-screen-evidence-v1",
+  "status": "rejected_for_integration",
+  "source_revision": "2a49da2960ad76471cbf2764c068d724cb9c5121",
+  "coordinator_decision": "No material LLVM record-sort gain; recorded QBE record-sort and control regressions. Preserve source/evidence; no normal confirmations.",
+  "six_arm_screen": {
+    "status": "subset",
+    "rounds": 5,
+    "warmups": 1,
+    "measured_samples": 240,
+    "qualification_cells": 720,
+    "started_utc": "2026-10-04T02:32:53.027434+00:00",
+    "finished_utc": "2026-10-04T02:34:05.365105+00:00"
+  },
+  "paired_screen": {
+    "rounds": 5,
+    "warmups": 1,
+    "measured_samples": 160,
+    "warmup_samples": 32,
+    "started_utc": "2026-10-04T02:35:45.255299+00:00",
+    "finished_utc": "2026-10-04T02:36:05.990490+00:00",
+    "rows": [
+      {
+        "case": "sort_records",
+        "profile": "small",
+        "after_before_ratios": {
+          "llvm": 1.0573388113684772,
+          "qbe": 1.0824941267492307
+        },
+        "paired_bootstrap_95": {
+          "llvm": [
+            0.9885949982865488,
+            1.1536041477173438
+          ],
+          "qbe": [
+            1.0793923125520337,
+            1.0932599134866863
+          ]
+        }
+      },
+      {
+        "case": "sort_records",
+        "profile": "large",
+        "after_before_ratios": {
+          "llvm": 1.0149906198591296,
+          "qbe": 1.023352693446888
+        },
+        "paired_bootstrap_95": {
+          "llvm": [
+            0.9523999255567203,
+            1.0786097164230581
+          ],
+          "qbe": [
+            1.0206911895397384,
+            1.0289349028916588
+          ]
+        }
+      },
+      {
+        "case": "sort_int",
+        "profile": "small",
+        "after_before_ratios": {
+          "llvm": 1.0165792752253557,
+          "qbe": 0.9750736453112497
+        },
+        "paired_bootstrap_95": {
+          "llvm": [
+            1.0149598567837075,
+            1.0236858002242348
+          ],
+          "qbe": [
+            0.9722812386195449,
+            0.9789613248230463
+          ]
+        }
+      },
+      {
+        "case": "sort_int",
+        "profile": "large",
+        "after_before_ratios": {
+          "llvm": 0.9993819120446812,
+          "qbe": 0.9920382007006763
+        },
+        "paired_bootstrap_95": {
+          "llvm": [
+            0.9955118794301776,
+            1.0109077914094506
+          ],
+          "qbe": [
+            0.9813170089481725,
+            0.9978374259622719
+          ]
+        }
+      },
+      {
+        "case": "mutate_nested",
+        "profile": "small",
+        "after_before_ratios": {
+          "llvm": 0.9983596583428401,
+          "qbe": 0.9915917240844732
+        },
+        "paired_bootstrap_95": {
+          "llvm": [
+            0.992567865316871,
+            1.0142507319230523
+          ],
+          "qbe": [
+            0.9720074024198406,
+            0.997408854851297
+          ]
+        }
+      },
+      {
+        "case": "mutate_nested",
+        "profile": "large",
+        "after_before_ratios": {
+          "llvm": 0.988833858744815,
+          "qbe": 1.0249221522793277
+        },
+        "paired_bootstrap_95": {
+          "llvm": [
+            0.9804527111372555,
+            0.9973860915158523
+          ],
+          "qbe": [
+            1.0088948312281785,
+            1.0400184478767622
+          ]
+        }
+      },
+      {
+        "case": "list_append",
+        "profile": "small",
+        "after_before_ratios": {
+          "llvm": 1.061404376569712,
+          "qbe": 0.9838090133590619
+        },
+        "paired_bootstrap_95": {
+          "llvm": [
+            1.0581883270152603,
+            1.074685468754393
+          ],
+          "qbe": [
+            0.9804990655394294,
+            0.9853514882393636
+          ]
+        }
+      },
+      {
+        "case": "list_append",
+        "profile": "large",
+        "after_before_ratios": {
+          "llvm": 0.9890029539817746,
+          "qbe": 0.9965885992323965
+        },
+        "paired_bootstrap_95": {
+          "llvm": [
+            0.9798285472698981,
+            0.9920082548290574
+          ],
+          "qbe": [
+            0.9885775975795653,
+            1.0001211593717296
+          ]
+        }
+      }
+    ]
+  },
+  "evidence": {
+    "sort-screen.json.gz": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-permutation-20261004/.mylang-cache/goal110-sort-review/sort-screen.json",
+      "raw_sha256": "ac038f3e88b41a5fa4bd0ca98395d497353c1a3ca454b0aa256033d67b8e87db",
+      "archive_sha256": "108c7e3877e02394534870bd1b789a20de2b85e024fe3f53cfeba5b4aa774eaa",
+      "raw_bytes": 2263866,
+      "archive_bytes": 558637
+    },
+    "sort-screen.log.gz": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-permutation-20261004/.mylang-cache/goal110-sort-review/sort-screen.log",
+      "raw_sha256": "72729aa71fdea54cabd91f9ffe8dbabfaab6d687617abb91c3b35f77208d3e21",
+      "archive_sha256": "19a44137823070ee88e1032385bdfba22107473ec460453776929869d6f40b72",
+      "raw_bytes": 1694,
+      "archive_bytes": 584
+    },
+    "sort-before-after.json.gz": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-permutation-20261004/.mylang-cache/goal110-sort-review/sort-before-after.json",
+      "raw_sha256": "5526831ed9f52bf5c8a010ce5eb0b98e2cfb0b1d44adebd8601bef671519fc4c",
+      "archive_sha256": "b79f9c43360c205e954db4c89ad152a50136eda57ae0c2634ce20c5da0bfe0b8",
+      "raw_bytes": 1684523,
+      "archive_bytes": 522887
+    },
+    "sort-before-after.log.gz": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-permutation-20261004/.mylang-cache/goal110-sort-review/sort-before-after.log",
+      "raw_sha256": "0fab2812562262a50378c8ee0e92aaa97733111c4068734b3bbf348caeab172d",
+      "archive_sha256": "50cb86ad5d1f70c06b8168f2280f629dab5a00ae9fc43907646b55f7ee0d237b",
+      "raw_bytes": 720,
+      "archive_bytes": 386
+    },
+    "sort-screen-verify.log.gz": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-permutation-20261004/.mylang-cache/goal110-sort-review/sort-screen-verify.log",
+      "raw_sha256": "2960857497b1b352dd8c69926d4c92c15e62e852f8c211a49ff261e698e825fb",
+      "archive_sha256": "ea7b8190706507dcc33c348eb3654d0987fc6c72f779ea2d5f710cc600502bd8",
+      "raw_bytes": 61,
+      "archive_bytes": 79
+    },
+    "sort-before-after-verify.log.gz": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-permutation-20261004/.mylang-cache/goal110-sort-review/sort-before-after-verify.log",
+      "raw_sha256": "6385227583b0ff2deca8745c87ec0eca235995691be78306e93ed75a6d8dbfbb",
+      "archive_sha256": "32c367000ba259b0c7a832250c4d7da2c7eede4f9700de04e11ed3bb57529523",
+      "raw_bytes": 35,
+      "archive_bytes": 53
+    },
+    "sort-screen-initial-missing-reuse-options.log.gz": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-permutation-20261004/.mylang-cache/goal110-sort-review/sort-screen-initial-missing-reuse-options.log",
+      "raw_sha256": "657f47f697795123798767f67ca1a853c1609b929ae0923a0ff2195a26cb7edd",
+      "archive_sha256": "e1ea43b4837ce6b6b63e2a8ab3e76702cda0d2ef714550cab2e207837926be90",
+      "raw_bytes": 100,
+      "archive_bytes": 105
+    },
+    "sort-screen-focused-verify.log.gz": {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-permutation-20261004/.mylang-cache/goal110-sort-review/sort-screen-focused-verify.log",
+      "raw_sha256": "6629fac8203d9ee5388405fa9fd80f2056623edbb1821c73121e45333cf76ee7",
+      "archive_sha256": "1e748bfb3ace009815fe3c8b9b3538db53b2bcde83898f0c0ab0caead22c0360",
+      "raw_bytes": 76,
+      "archive_bytes": 92
+    }
+  },
+  "limitations": [
+    "Exploratory five-round screen: not a normal acceptance or independent confirmation session.",
+    "Both hosts are Debug; all guests retain ordinary ReleaseFast backend policy.",
+    "Paired intervals resample identical round indexes, without multiple-comparison correction.",
+    "The LLVM record-sort intervals include 1; the exact effect is uncertain, and no improvement is established.",
+    "Control paths have changed measured levels without source changes; code layout and residual run variability are possible, unproven causes.",
+    "This rejected candidate does not update accepted dashboard rows or establish any required goal cell."
+  ],
+  "replay": {
+    "six_arm_screen": {
+      "status": "passed",
+      "mode": "--focused --check-artifacts",
+      "log": "sort-screen-focused-verify.log.gz"
+    },
+    "paired_screen": {
+      "status": "passed",
+      "plans": 8,
+      "log": "sort-before-after-verify.log.gz"
+    }
+  }
+}

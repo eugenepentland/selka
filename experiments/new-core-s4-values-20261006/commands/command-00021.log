@@ -1,0 +1,6 @@
+$ scripts/build-slot.sh build zig build core
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 10s (all 3 build slot(s) busy)
+
+exit=0
+elapsed_seconds=15.238399

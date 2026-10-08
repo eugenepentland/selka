@@ -1,0 +1,23 @@
+[
+  "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "build-exe",
+  "-ODebug",
+  "--dep",
+  "mylang",
+  "-Mroot=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/loop-shape-tool-01/core/diagnostic.zig",
+  "-ODebug",
+  "--dep",
+  "runtime_contract",
+  "-Mmylang=src/compiler.zig",
+  "-ODebug",
+  "-Mruntime_contract=src/runtime_contract.zig",
+  "--cache-dir",
+  ".zig-cache",
+  "--global-cache-dir",
+  "/home/epentland/.cache/zig",
+  "--name",
+  "loop-shape-tool",
+  "--zig-lib-dir",
+  "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/",
+  "-femit-bin=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/loop-shape-tool-01/diagnostic"
+]

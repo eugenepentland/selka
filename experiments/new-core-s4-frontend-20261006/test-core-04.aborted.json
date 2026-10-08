@@ -1,0 +1,17 @@
+{
+  "qualified": false,
+  "reason": "Canceled after full-old-02 detected legacy facts-only typed-body reuse instrumentation regression; Core opt-in fix pending",
+  "task_owned_pids": [
+    1328364,
+    1487754,
+    1487812,
+    1487814,
+    1487815,
+    1487870,
+    1490626,
+    1491386,
+    1491387,
+    1491585,
+    1491601
+  ]
+}

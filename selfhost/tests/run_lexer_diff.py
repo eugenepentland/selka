@@ -147,11 +147,10 @@ def build_program(output: Path, program: str = PROGRAM) -> int:
     """Build ``program`` once into ``output``; 0 on success, 2 with a message.
 
     The selfhost programs open with a module header, so the build needs
-    ``--project``: a module entry is a project entry. ``--backend qbe`` is
-    explicit: a component iteration must not depend on the host's default
-    backend or its LLVM toolchain.
+    ``--project``: a module entry is a project entry. The compiler has one
+    back end, so the build names none.
     """
-    command = [str(compiler()), "build", program, "--project", "--backend", "qbe", "-o", str(output), "--cache-dir", str(output.parent / "objects")]
+    command = [str(compiler()), "build", program, "--project", "-o", str(output), "--cache-dir", str(output.parent / "objects")]
     result = subprocess.run(
         command,
         cwd=str(ROOT),

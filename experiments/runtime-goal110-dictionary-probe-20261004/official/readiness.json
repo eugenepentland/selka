@@ -1,0 +1,333 @@
+{
+  "schema": "mylang-dictionary-probe-debug-readiness-v1",
+  "source_revision": "64fb7e62732db9cea46414248fd59ba362e31b56",
+  "base_revision": "eaf4cda8f5c758cadafaadfa5e328c0fba252ac6",
+  "status": "correctness_and_static_complete",
+  "timing": false,
+  "counts": {
+    "edge_qualifications": 720,
+    "nearby_holdouts": 516,
+    "sanitized_native_suites": 4,
+    "new_state_transition_cases": 8
+  },
+  "receipt_bindings": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/compiler-receipt.json",
+      "sha256": "48bd5a7bf4e76995b7a5e4a2126f6c8b069bd54929dc1f700212fc3fadf414ab"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/manifest.json",
+      "sha256": "f43a2e015585f9af90ee130df579f486d05e9afdd5d0380019cf6e45ef91f44e"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/qualification.json",
+      "sha256": "f3876cb8822c741c868ffe6c3d9c9a52dca0daea498a79ef7e6f6a4d2e5f050c"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/holdouts.json",
+      "sha256": "ce543ef2110cbce679fb76fc67e9cb359fcd6ab723c493954910dceee54d2856"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/static/receipt.json",
+      "sha256": "b3f85a1ddbeb88fb3e80f06c5f24d19df4985e925958805431a550537e993191"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/native-proof/receipt.json",
+      "sha256": "108d79a74ce172bccc0e64489288319d294b0817b8b0e12b8a13a7623788f05f"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/final-native-source-binding.json",
+      "sha256": "01c1dee71b3fda62c63659796b64b250a3797f5dd87c6c8d4f183cd15cb676f8"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/guardian-01.log",
+      "sha256": "c346e743246aed15f3c4d5732729550ac468a5e749fc922e2fe26035916a40a3"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/guardian-01.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/guardian-02.log",
+      "sha256": "35c599d45383d1d47327ef69ffc8ffcf040b4d0f56dd9f1aaeb8408bf5a008ca"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/guardian-02.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/compiler-driver.log",
+      "sha256": "e28b7d09ba821cf1e2d6dafc274c592a58da40f1b75e8e611907b3276a020cf9"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/compiler-driver.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/guest-build.log",
+      "sha256": "45b25674f9497f6d6b9cbc583db55099fb289fd5c7c20e69cf0808bbad23aa97"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/guest-build.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/qualification.log",
+      "sha256": "c909e29626eeb3da072360d05424ea37b8e42122977fa88b1b78f438d97ccf24"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/qualification.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/holdouts.log",
+      "sha256": "eb66e9fc422e3bdd9ea3b208eafd19a7b76a31a9901b96a3b302202d5b03f32c"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/holdouts.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/native-proof-02.log",
+      "sha256": "c5f8f1321aa701eeebc91b9691afd1129f855ed2b2520725087c12a5a109d4b4"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/native-proof-02.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/static-01.log",
+      "sha256": "e449fbddc3cfda70bed17d25da11d747c54c1d489a676af998032d8a862ec31f"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/static-01.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/static-02.log",
+      "sha256": "0cf9bb103b680b61519c5c2dfb8d8ed9d10ad08d315f035c32458e239a8a80b2"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/logs/static-02.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    }
+  ],
+  "guest_artifacts": [
+    {
+      "name": "legacy/my-llvm",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/legacy-my-llvm",
+      "sha256": "3cd6dd1c1cf7edba0b4f6f6ed3ae6622caf24656f602fd74db04d07c9a2e5f1e",
+      "backend_metadata": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/legacy-my-llvm.qbe-manifest.json",
+        "sha256": "b2f2e1540b42fca43ee7886805d15967e3e3d4af33858b5a211b4d34a2a0a95e",
+        "backend": "llvm",
+        "optimization": "3",
+        "lto": true,
+        "thin_lto": false
+      }
+    },
+    {
+      "name": "legacy/my-qbe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/legacy-my-qbe",
+      "sha256": "836fe9a7cbbcc0ec3447e2c8c8cab433fb9652d4021012c2e0be0d8f2a7e0c72",
+      "backend_metadata": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/legacy-my-qbe.qbe-manifest.json",
+        "sha256": "704492ad901fdf030944435b2bc6ad8b9fe0fa5b46ba4b024a77e39c238d93ed",
+        "backend": "qbe",
+        "optimization": "default",
+        "lto": false,
+        "thin_lto": false
+      }
+    },
+    {
+      "name": "legacy/rust",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/legacy-rust",
+      "sha256": "cc6488c8f54e33c93e483b78db70d21ef88309bbb38856394a5e94abde17099f"
+    },
+    {
+      "name": "legacy/go",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/legacy-go",
+      "sha256": "2e8d267a37dd077ba5993c00658197c739750cdde576a3c2b98261c9f133bd17"
+    },
+    {
+      "name": "legacy/zig-safe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/legacy-zig-safe",
+      "sha256": "ed51d49b2018d1543fff0e80b7d23cb8b941e232fd93033cfc7f4b0175b8b4cd"
+    },
+    {
+      "name": "legacy/zig-fast",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/legacy-zig-fast",
+      "sha256": "5ec59c0266719ed9b4d926a243432a903e66f672034227f3653ca11c41bc81bb"
+    },
+    {
+      "name": "compute/my-llvm",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/compute-my-llvm",
+      "sha256": "c7bb244df9d3dcd8eb746f0e9b75c8be75817a5948a92f507d601856270148cf",
+      "backend_metadata": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/compute-my-llvm.qbe-manifest.json",
+        "sha256": "71a00e2ee411caf95812efde8d7c3f996c5caa1150d6a94580f1ca499e368d3e",
+        "backend": "llvm",
+        "optimization": "3",
+        "lto": true,
+        "thin_lto": false
+      }
+    },
+    {
+      "name": "compute/my-qbe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/compute-my-qbe",
+      "sha256": "77c18facc0525b21205afaafc6f6fc2826c2665231248b438514f1ed25ec55a7",
+      "backend_metadata": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/compute-my-qbe.qbe-manifest.json",
+        "sha256": "1f0c16590f503239b27644aca1d4553530a1e25f6c039db33155ed553bca6282",
+        "backend": "qbe",
+        "optimization": "default",
+        "lto": false,
+        "thin_lto": false
+      }
+    },
+    {
+      "name": "compute/rust",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/compute-rust",
+      "sha256": "342de880685aeee869ada3a39ad109b59795221d944b5e0b2089a7eaebc83655"
+    },
+    {
+      "name": "compute/go",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/compute-go",
+      "sha256": "9d7e9f9c912eb8f93f2c610023ddad89a52a473f90d569d038947edacbd48b68"
+    },
+    {
+      "name": "compute/zig-safe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/compute-zig-safe",
+      "sha256": "807a12c75a50a9e59590e710a84ed874132e3d2e273b83a23475b04f1c8eec2a"
+    },
+    {
+      "name": "compute/zig-fast",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/compute-zig-fast",
+      "sha256": "eef38971a3afb65f80d611a6d1ab23cec85d5fbac71841d35538e4823dd28928"
+    },
+    {
+      "name": "collections/my-llvm",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-llvm",
+      "sha256": "f7eb192750c0ea4712378679db79c11b9c8398b64ab14ccad72458f2373f6b1c",
+      "backend_metadata": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-llvm.qbe-manifest.json",
+        "sha256": "a52edb5a3967cd0237962ec3fb6c5caa388212f475577c254a0a2e85b1263e5a",
+        "backend": "llvm",
+        "optimization": "3",
+        "lto": true,
+        "thin_lto": false
+      }
+    },
+    {
+      "name": "collections/my-qbe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-qbe",
+      "sha256": "1339a449342c115104eea6e85d76b7917278a50bb3e9927bedb70c0afb1b6993",
+      "backend_metadata": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-qbe.qbe-manifest.json",
+        "sha256": "4ffdb996c72f1e7bd1461dfc29f98131e4e0afa395307d8cb474d3a0e6fe51fa",
+        "backend": "qbe",
+        "optimization": "default",
+        "lto": false,
+        "thin_lto": false
+      }
+    },
+    {
+      "name": "collections/rust",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-rust",
+      "sha256": "4b7ee53e36cbc6eefaf6bf2b559906eecf348a18ee2fc5acc90b3aceb9d93d21"
+    },
+    {
+      "name": "collections/go",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-go",
+      "sha256": "039eca570573f3fa304e3ec5e3df2976a9256e1ee7af43a9192a58bdd9917da6"
+    },
+    {
+      "name": "collections/zig-safe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-zig-safe",
+      "sha256": "77f77faf4a8a3f4f5956b81efc737f598933ff48cd0938f6df3a8d005a2e096b"
+    },
+    {
+      "name": "collections/zig-fast",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-zig-fast",
+      "sha256": "ab34bafd6a39d4a6fefe32ab4720c6fa6b0c3b322072b9bac55ca1620b095d0b"
+    },
+    {
+      "name": "text/my-llvm",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/text-my-llvm",
+      "sha256": "2234260c6f2b00d47d5824f2260bc97e2770e15887ed94ee8176a857978e7a85",
+      "backend_metadata": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/text-my-llvm.qbe-manifest.json",
+        "sha256": "5959493542ba0abcad20ebabc3ea48eaa171a93811e7573fcdfd030f96f64d5e",
+        "backend": "llvm",
+        "optimization": "3",
+        "lto": true,
+        "thin_lto": false
+      }
+    },
+    {
+      "name": "text/my-qbe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/text-my-qbe",
+      "sha256": "2ad9c8708472d03a9686e091aed7467cd9e3466b3ec9c668a2a21602955c9e30",
+      "backend_metadata": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/text-my-qbe.qbe-manifest.json",
+        "sha256": "569fe48abc977eb4ae50efe60ccd090549a3fb7d333eab6333ecf4e043cfd8b8",
+        "backend": "qbe",
+        "optimization": "default",
+        "lto": false,
+        "thin_lto": false
+      }
+    },
+    {
+      "name": "text/rust",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/text-rust",
+      "sha256": "230ff4317181142193c29c7ee5f260fa6866d527fb59caf512aefe33c1a0b7d4"
+    },
+    {
+      "name": "text/go",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/text-go",
+      "sha256": "afb67832762f3925b772321b0a0ee58101305268d7935eec0669e7c49e9c38d3"
+    },
+    {
+      "name": "text/zig-safe",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/text-zig-safe",
+      "sha256": "6ae0410adb082a0a657a5b23ddc24751a9cfbe31763f082b84f7376a01835649"
+    },
+    {
+      "name": "text/zig-fast",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/text-zig-fast",
+      "sha256": "aee37be81b0094356f1f4323d6979530082101a1adf368d8792118b5a1447e6f"
+    }
+  ],
+  "control_manifest": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/manifest.json",
+    "sha256": "e02fd8476ee7b36d04e74a46287dcdbcc0fade79156f40b4e0de2d9e6674a171"
+  },
+  "proposed_screen_cases": [
+    "dict_lookup",
+    "dict_lookup_str",
+    "dict_update",
+    "dict_update_str",
+    "set_dedup",
+    "mutate_nested",
+    "string_search"
+  ],
+  "screen_scope": "Both sizes; six-arm5r1w then matched14/eaf-equivalent pairs5r1w; exploratory only. Debug candidate host generates ordinary ReleaseFast guests, LLVM O3/full LTO.",
+  "static_proof": {
+    "frontend_collections_il_identical": true,
+    "read_walk_bytes": [
+      695,
+      663
+    ],
+    "contains_walk_bytes": [
+      653,
+      621
+    ],
+    "redundant_found_stores_removed": 3,
+    "zero_vector_setup_removed": true,
+    "stable_controls_retained": [
+      "mutate_nested",
+      "string_search"
+    ]
+  },
+  "finished_utc": "2026-10-04T10:26:41.358999+00:00"
+}

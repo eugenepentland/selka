@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "source_revision": "27de73d302d23a9efaf811d541f1cb723323c434",
+  "reviewed_utc": "2026-10-04T08:11:06.619251+00:00",
+  "actual_llvm_pairs": 9,
+  "executions": 18,
+  "successes": 5,
+  "failures": 4,
+  "report": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/actual-llvm-semantics.json",
+  "report_sha256": "4b4abd7aa40002ae0cf58446252ba1777c262ae91471309f19e54d409a965cc3",
+  "script_sha256": "10a57d7b31386ecdfdc3de6d497f499601fae70a253abe2667bd0995d7e3a975",
+  "limits": [
+    "Saved full-process replay; no new executions.",
+    "Successful values, trap codes, prior output and statuses independently expected; full trap detail and frames match the accounted control.",
+    "Memory refusal expectation checks the explicit 1 MiB fixture, not a general allocation-budget model."
+  ]
+}

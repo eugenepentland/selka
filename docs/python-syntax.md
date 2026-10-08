@@ -2,8 +2,8 @@
 
 This is the language guide. There is one syntax: `def`, `record`, indentation and
 `#` comments. The compiler checks types before execution and manages ordinary
-lists, strings and dictionaries by reference counting (`--gc-runtime` selects a
-tracing collector instead). There are no allocator arguments
+lists, strings and dictionaries by reference counting with copy-on-write; there is
+no garbage collector to tune. There are no allocator arguments
 or ownership annotations in ordinary data code.
 
 A file that opens with `module NAME` is a project entry. `mylang run` loads its
@@ -42,9 +42,9 @@ def main() -> int:
 ```
 
 Save it as `main.my` too; `check` type-checks either file without building. The
-[schematic application](../src/schematic/guest/main.my) is a larger example; its
-[instructions](../experiments/schematic/README.md) describe rendering and GC
-stress testing.
+[named-constraints project](../examples/named-constraints/main.my) is a larger
+example: several modules, a generic contract and a test entry
+(`fake_tests.my`).
 
 Write `def`, `record`, four-space indentation, `#` comments, `True`, `False`,
 `None`, and `and`/`or`/`not`. A statement ends at its newline; a `;` separates two
@@ -181,9 +181,13 @@ Dictionaries preserve insertion order and take any
 tuple, record, union, enum or `Option` built from those. Their values
 have a single inferred or annotated type. Updates through an alias are shared.
 Use `counts[key]`, `counts[key] = value`, `counts.get(key, fallback)`,
-`counts.keys()`, `counts.values()` and `counts.items()`. These return live typed
-views; `list(view)` creates an explicit snapshot. Items yield records with `key`
-and `value` fields and also support `for key, value in view`.
+`counts.keys()`, `counts.values()` and `counts.items()`. These return ephemeral typed
+views for direct loops and immediate `len`, `in`, `list`, `set` and `sorted`.
+Use `kept = list(counts.values())` to store an independent snapshot; storing
+a view itself is `E_VIEW_STORED`. View types are also rejected in parameter,
+return, field and collection element annotations, including unused generic
+declarations; use a list type for a snapshot. Items yield records with `key` and `value`
+fields and support `for key, value in counts.items()`.
 `key in counts`, `value in items`, and `substring in text` support `not in` too.
 Iterating a dictionary visits keys in insertion order; changing its size during
 iteration traps. The [word-count example](../examples/python-word-count/main.my)
@@ -267,7 +271,36 @@ def main() -> int:
 `for index in range(end)` / `range(start, end)` / `range(start, end, step)` support
 `break` and `continue`. A [stepped range](range-iteration.md#stepped-ranges) counts
 down for a negative step.
-List iteration fixes its initial bound and rejects length changes through aliases.
+Iteration over a place reads its current value on every step. Element writes and
+`mut` callee updates stay visible even when another variable holds a copy. A live
+list accepts growth; a decrease from its last observed length traps
+`R_LIST_ITERATION_MUTATION`. Dictionary and set length changes, and length changes
+to an indexed ancestor such as `rows` in `for value in rows[0]`, also trap.
+Indices are evaluated once at entry. Direct assignment to the root variable in
+the loop body selects an independent entry snapshot. A callee's `mut` write-back
+remains live, including replacement of the collection with another value.
+Fixed-array places also see later element writes; their terminal length is fixed.
+Comprehensions and generator expressions follow the same source rule, including
+writes by their produced expressions and filters. Immutable string/bytes fields
+see same-length replacements; terminal length changes and changes to their
+indexed managed ancestors trap. String length counts Unicode scalars.
+Copies made before any loop remain independent. Non-place sources retain their
+entry value.
+
+```mylang
+def main() -> int:
+    items = [1, 2]
+    saved = items
+    total = 0
+    for value in items:
+        total += value
+        items[1] = 9
+        if value == 9:
+            items.append(3)
+    assert total == 13
+    assert saved == [1, 2]
+    return 0
+```
 
 Classes declare **value records**, with annotated fields and named construction:
 `Node(value=42, children=[])`. They have no inheritance, methods, or implicit
@@ -369,7 +402,7 @@ compatible `Result`. `Option[T]` represents an optional value: construct it with
 Prelude `list`, `Result`, and `Option` have one identity across every module;
 ordinary procedures use `None`.
 
-Generic functions and classes use square brackets, for example
+Generic functions and records use square brackets, for example
 `def identity[T](value: T) -> T:`. Calls infer type arguments when possible, and
 `identity[int](2)` supplies them explicitly.
 Unconstrained parameters default to copyable values. Additional operations on an
@@ -414,7 +447,7 @@ class Point:
         self.x = x
 ```
 
-There are no methods on `class` or `record`; write a top-level function that
+There are no methods on records (and no `class`); write a top-level function that
 takes the record as its first parameter, `def norm1(p: Point) -> int:`, and call
 it as `norm1(p)`.
 
@@ -528,14 +561,13 @@ also builds native children, but reports the test runner's aggregate status rath
 than treating a test function's value as a process exit status. Guest tests
 receive no ambient capabilities.
 
-Capability denial currently has two diagnostic renderings: `run` catches a
-missing restricted grant before execution, while `build --run` and installed
-executables report the native runtime's `CapabilityUnavailable` failure. They
-all deny the capability and exit 2; unifying the stderr wording is pending.
+A missing grant under `--restrict` is caught before `main` runs, with the same
+message from `run`, `build --run` and a built executable: it names the `--allow-*`
+flag to pass, and the process exits 2.
 
-`with` is one statement form with two resource kinds. Wrap a phase of work in
-`with arena() as scratch:` to free everything it allocates in one step and copy
-the result out with `scratch.escape(value)`; see [managed arenas](arenas.md).
+`with` opens a file and closes it when the block ends; see
+[files](io.md#files). `with arena():` is retired: it runs as an ordinary block and
+warns `W_ARENA_RETIRED`; remove the `with arena():` line and dedent its body.
 
 Ten modules ship inside the compiler and are imported by name: `math`, `strings`,
 `sort`, `path`, `hex`, `base64`, `json`, `pool`, `random` and `time`. They are
@@ -558,13 +590,13 @@ In particular:
   afterward.
 - Integers have fixed width, conditions require booleans, and records are values.
   Records, fixed arrays, unions, `Result` and `Option` compare structurally with
-  `==`/`!=`; a `class` compares by reference identity.
+  `==`/`!=`. There are no reference types: `class` is rejected.
 - Binary64 arithmetic follows IEEE behavior, including infinities/NaNs on floating
   division by zero. It does not raise Python exceptions.
 - Lists are homogeneous; `range` takes one to three arguments and slices have no
-  step. Changing a list's length during iteration traps.
-- GC roots and collection transport across host/JSON boundaries are not
-  implemented.
+  step. A live list place accepts growth and traps a decrease from the last
+  observed length; indexed ancestors, dictionaries and sets retain exact length
+  checks.
 - Formatting validates source and rewrites it into the one canonical layout;
   `fmt --check` is nonzero when the input bytes differ from that layout.
 

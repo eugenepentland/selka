@@ -1,0 +1,4 @@
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+[codex/new-core-s3-packet-performance 1c3e53fd4] core: forward proven byte indices into vector planning
+ 5 files changed, 185 insertions(+), 21 deletions(-)
+ create mode 100644 src/core/byte_index.zig

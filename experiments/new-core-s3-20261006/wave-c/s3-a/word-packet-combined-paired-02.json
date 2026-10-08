@@ -1,0 +1,3795 @@
+{
+  "valid": true,
+  "cpu": 10,
+  "rounds": 7,
+  "rows": {
+    "word_count": {
+      "suite": "text",
+      "unit": "element",
+      "reference_name": "word_count",
+      "sizes": {
+        "4096": {
+          "iterations": 400,
+          "checksum": 19267570,
+          "configurations": {
+            "old core --release": {
+              "cycles_per_unit": 291.6911254882813,
+              "startup": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "724998053 317288\n",
+                  "stderr": "2296420,,cpu_core/cycles/u,873769,100.00,,\n",
+                  "checksum": 724998053,
+                  "elapsed_ns": 317288,
+                  "cycles": 2296420
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "724998053 323143\n",
+                  "stderr": "2232584,,cpu_core/cycles/u,806220,100.00,,\n",
+                  "checksum": 724998053,
+                  "elapsed_ns": 323143,
+                  "cycles": 2232584
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "724998053 308897\n",
+                  "stderr": "2269159,,cpu_core/cycles/u,828395,100.00,,\n",
+                  "checksum": 724998053,
+                  "elapsed_ns": 308897,
+                  "cycles": 2269159
+                }
+              ],
+              "runs": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 111740297\n",
+                  "stderr": "479355005,,cpu_core/cycles/u,112225884,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 111740297,
+                  "cycles": 479355005
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 112108945\n",
+                  "stderr": "480393382,,cpu_core/cycles/u,112647447,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 112108945,
+                  "cycles": 480393382
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 112847402\n",
+                  "stderr": "481130677,,cpu_core/cycles/u,113311447,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 112847402,
+                  "cycles": 481130677
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 112587669\n",
+                  "stderr": "481601917,,cpu_core/cycles/u,113065372,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 112587669,
+                  "cycles": 481601917
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 112346641\n",
+                  "stderr": "479815292,,cpu_core/cycles/u,112857483,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 112346641,
+                  "cycles": 479815292
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 112059009\n",
+                  "stderr": "480175899,,cpu_core/cycles/u,112598376,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 112059009,
+                  "cycles": 480175899
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 112043866\n",
+                  "stderr": "479570773,,cpu_core/cycles/u,112517388,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 112043866,
+                  "cycles": 479570773
+                }
+              ]
+            },
+            "new core release": {
+              "cycles_per_unit": 43.020667724609375,
+              "startup": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "724998053 37907\n",
+                  "stderr": "968776,,cpu_core/cycles/u,444113,100.00,,\n",
+                  "checksum": 724998053,
+                  "elapsed_ns": 37907,
+                  "cycles": 968776
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "724998053 37573\n",
+                  "stderr": "953237,,cpu_core/cycles/u,425115,100.00,,\n",
+                  "checksum": 724998053,
+                  "elapsed_ns": 37573,
+                  "cycles": 953237
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "724998053 38043\n",
+                  "stderr": "925701,,cpu_core/cycles/u,406516,100.00,,\n",
+                  "checksum": 724998053,
+                  "elapsed_ns": 38043,
+                  "cycles": 925701
+                }
+              ],
+              "runs": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 15610802\n",
+                  "stderr": "71438299,,cpu_core/cycles/u,15956975,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 15610802,
+                  "cycles": 71438299
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 15752587\n",
+                  "stderr": "71987616,,cpu_core/cycles/u,16146764,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 15752587,
+                  "cycles": 71987616
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 15550313\n",
+                  "stderr": "71120416,,cpu_core/cycles/u,15942577,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 15550313,
+                  "cycles": 71120416
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 15662206\n",
+                  "stderr": "71720023,,cpu_core/cycles/u,16061600,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 15662206,
+                  "cycles": 71720023
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 15110341\n",
+                  "stderr": "68473573,,cpu_core/cycles/u,15506257,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 15110341,
+                  "cycles": 68473573
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 15746294\n",
+                  "stderr": "71604573,,cpu_core/cycles/u,16142451,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 15746294,
+                  "cycles": 71604573
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 15115154\n",
+                  "stderr": "69247815,,cpu_core/cycles/u,15488360,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 15115154,
+                  "cycles": 69247815
+                }
+              ]
+            },
+            "Rust": {
+              "cycles_per_unit": 59.33884460449219,
+              "startup": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "724998053 63758\n",
+                  "stderr": "1270694,,cpu_core/cycles/u,493250,100.00,,\n",
+                  "checksum": 724998053,
+                  "elapsed_ns": 63758,
+                  "cycles": 1270694
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "724998053 63485\n",
+                  "stderr": "1262319,,cpu_core/cycles/u,494047,100.00,,\n",
+                  "checksum": 724998053,
+                  "elapsed_ns": 63485,
+                  "cycles": 1262319
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "724998053 64249\n",
+                  "stderr": "1273321,,cpu_core/cycles/u,495300,100.00,,\n",
+                  "checksum": 724998053,
+                  "elapsed_ns": 64249,
+                  "cycles": 1273321
+                }
+              ],
+              "runs": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 21640344\n",
+                  "stderr": "98423424,,cpu_core/cycles/u,22096306,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 21640344,
+                  "cycles": 98423424
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 22275216\n",
+                  "stderr": "98184132,,cpu_core/cycles/u,22726726,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 22275216,
+                  "cycles": 98184132
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 22250512\n",
+                  "stderr": "98584398,,cpu_core/cycles/u,22703796,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 22250512,
+                  "cycles": 98584398
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 22384204\n",
+                  "stderr": "98491457,,cpu_core/cycles/u,22839275,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 22384204,
+                  "cycles": 98491457
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 22467106\n",
+                  "stderr": "98679170,,cpu_core/cycles/u,22946795,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 22467106,
+                  "cycles": 98679170
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 22269658\n",
+                  "stderr": "98748081,,cpu_core/cycles/u,22721874,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 22269658,
+                  "cycles": 98748081
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 21967249\n",
+                  "stderr": "98140205,,cpu_core/cycles/u,22417407,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 21967249,
+                  "cycles": 98140205
+                }
+              ]
+            },
+            "Zig ReleaseSafe": {
+              "cycles_per_unit": 47.24907531738281,
+              "startup": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "724998053 50728\n",
+                  "stderr": "710288,,cpu_core/cycles/u,360533,100.00,,\n",
+                  "checksum": 724998053,
+                  "elapsed_ns": 50728,
+                  "cycles": 710288
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "724998053 49726\n",
+                  "stderr": "693528,,cpu_core/cycles/u,354460,100.00,,\n",
+                  "checksum": 724998053,
+                  "elapsed_ns": 49726,
+                  "cycles": 693528
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "724998053 50214\n",
+                  "stderr": "693654,,cpu_core/cycles/u,381960,100.00,,\n",
+                  "checksum": 724998053,
+                  "elapsed_ns": 50214,
+                  "cycles": 693654
+                }
+              ],
+              "runs": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 17740117\n",
+                  "stderr": "78677608,,cpu_core/cycles/u,18066433,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 17740117,
+                  "cycles": 78677608
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 17435984\n",
+                  "stderr": "77041287,,cpu_core/cycles/u,17742129,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 17435984,
+                  "cycles": 77041287
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 17832484\n",
+                  "stderr": "78015635,,cpu_core/cycles/u,18170643,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 17832484,
+                  "cycles": 78015635
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 17420401\n",
+                  "stderr": "78648970,,cpu_core/cycles/u,17738760,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 17420401,
+                  "cycles": 78648970
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 17856506\n",
+                  "stderr": "77433623,,cpu_core/cycles/u,18175448,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 17856506,
+                  "cycles": 77433623
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 17431784\n",
+                  "stderr": "78658132,,cpu_core/cycles/u,17737619,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 17431784,
+                  "cycles": 78658132
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "19267570 17711607\n",
+                  "stderr": "78106539,,cpu_core/cycles/u,18003805,100.00,,\n",
+                  "checksum": 19267570,
+                  "elapsed_ns": 17711607,
+                  "cycles": 78106539
+                }
+              ]
+            }
+          },
+          "new_over_old": 0.14748706410794707,
+          "new_over_zig": 0.9105081408605299,
+          "new_over_rust": 0.725000090772791,
+          "within_old_limit": true,
+          "within_zig_limit": true,
+          "within_both_limits": true
+        },
+        "64": {
+          "iterations": 25000,
+          "checksum": 894524930,
+          "configurations": {
+            "old core --release": {
+              "cycles_per_unit": 376.6676875,
+              "startup": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "435052 20471\n",
+                  "stderr": "547139,,cpu_core/cycles/u,355241,100.00,,\n",
+                  "checksum": 435052,
+                  "elapsed_ns": 20471,
+                  "cycles": 547139
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "435052 20049\n",
+                  "stderr": "527347,,cpu_core/cycles/u,348776,100.00,,\n",
+                  "checksum": 435052,
+                  "elapsed_ns": 20049,
+                  "cycles": 527347
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "435052 20266\n",
+                  "stderr": "523066,,cpu_core/cycles/u,340125,100.00,,\n",
+                  "checksum": 435052,
+                  "elapsed_ns": 20266,
+                  "cycles": 523066
+                }
+              ],
+              "runs": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 144147658\n",
+                  "stderr": "616786270,,cpu_core/cycles/u,144527581,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 144147658,
+                  "cycles": 616786270
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 140712804\n",
+                  "stderr": "602786318,,cpu_core/cycles/u,141011020,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 140712804,
+                  "cycles": 602786318
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 141070680\n",
+                  "stderr": "603195647,,cpu_core/cycles/u,141423413,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 141070680,
+                  "cycles": 603195647
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 140296318\n",
+                  "stderr": "601369799,,cpu_core/cycles/u,140615589,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 140296318,
+                  "cycles": 601369799
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 141308243\n",
+                  "stderr": "601289132,,cpu_core/cycles/u,141606595,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 141308243,
+                  "cycles": 601289132
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 141903186\n",
+                  "stderr": "606386698,,cpu_core/cycles/u,142193937,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 141903186,
+                  "cycles": 606386698
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_old",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 141388829\n",
+                  "stderr": "604917063,,cpu_core/cycles/u,141681434,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 141388829,
+                  "cycles": 604917063
+                }
+              ]
+            },
+            "new core release": {
+              "cycles_per_unit": 56.2507325,
+              "startup": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "435052 3397\n",
+                  "stderr": "340692,,cpu_core/cycles/u,217497,100.00,,\n",
+                  "checksum": 435052,
+                  "elapsed_ns": 3397,
+                  "cycles": 340692
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "435052 3199\n",
+                  "stderr": "339483,,cpu_core/cycles/u,240488,100.00,,\n",
+                  "checksum": 435052,
+                  "elapsed_ns": 3199,
+                  "cycles": 339483
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "435052 3168\n",
+                  "stderr": "337344,,cpu_core/cycles/u,239527,100.00,,\n",
+                  "checksum": 435052,
+                  "elapsed_ns": 3168,
+                  "cycles": 337344
+                }
+              ],
+              "runs": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 21137332\n",
+                  "stderr": "91132350,,cpu_core/cycles/u,21368140,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 21137332,
+                  "cycles": 91132350
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 19866135\n",
+                  "stderr": "90016321,,cpu_core/cycles/u,20082824,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 19866135,
+                  "cycles": 90016321
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 19999232\n",
+                  "stderr": "90515919,,cpu_core/cycles/u,20206325,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 19999232,
+                  "cycles": 90515919
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 20125978\n",
+                  "stderr": "89401517,,cpu_core/cycles/u,20362353,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 20125978,
+                  "cycles": 89401517
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 19875357\n",
+                  "stderr": "89591616,,cpu_core/cycles/u,20118484,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 19875357,
+                  "cycles": 89591616
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 20271495\n",
+                  "stderr": "91363828,,cpu_core/cycles/u,20501202,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 20271495,
+                  "cycles": 91363828
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_word_count_new",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 20173986\n",
+                  "stderr": "90340655,,cpu_core/cycles/u,20383692,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 20173986,
+                  "cycles": 90340655
+                }
+              ]
+            },
+            "Rust": {
+              "cycles_per_unit": 66.15613,
+              "startup": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "435052 10170\n",
+                  "stderr": "474341,,cpu_core/cycles/u,327173,100.00,,\n",
+                  "checksum": 435052,
+                  "elapsed_ns": 10170,
+                  "cycles": 474341
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "435052 10696\n",
+                  "stderr": "474614,,cpu_core/cycles/u,305504,100.00,,\n",
+                  "checksum": 435052,
+                  "elapsed_ns": 10696,
+                  "cycles": 474614
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "435052 10312\n",
+                  "stderr": "473890,,cpu_core/cycles/u,328682,100.00,,\n",
+                  "checksum": 435052,
+                  "elapsed_ns": 10312,
+                  "cycles": 473890
+                }
+              ],
+              "runs": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 23605203\n",
+                  "stderr": "105763699,,cpu_core/cycles/u,23913954,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 23605203,
+                  "cycles": 105763699
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 24441577\n",
+                  "stderr": "106532916,,cpu_core/cycles/u,24692268,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 24441577,
+                  "cycles": 106532916
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 24208937\n",
+                  "stderr": "106375826,,cpu_core/cycles/u,24506510,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 24208937,
+                  "cycles": 106375826
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 24370315\n",
+                  "stderr": "106192798,,cpu_core/cycles/u,24685850,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 24370315,
+                  "cycles": 106192798
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 24208828\n",
+                  "stderr": "106324149,,cpu_core/cycles/u,24509438,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 24208828,
+                  "cycles": 106324149
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 24308859\n",
+                  "stderr": "106393262,,cpu_core/cycles/u,24591004,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 24308859,
+                  "cycles": 106393262
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-rust",
+                    "word_count",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 24389756\n",
+                  "stderr": "106177238,,cpu_core/cycles/u,24719654,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 24389756,
+                  "cycles": 106177238
+                }
+              ]
+            },
+            "Zig ReleaseSafe": {
+              "cycles_per_unit": 50.9551625,
+              "startup": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "435052 6039\n",
+                  "stderr": "390496,,cpu_core/cycles/u,310471,100.00,,\n",
+                  "checksum": 435052,
+                  "elapsed_ns": 6039,
+                  "cycles": 390496
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "435052 5551\n",
+                  "stderr": "390289,,cpu_core/cycles/u,272804,100.00,,\n",
+                  "checksum": 435052,
+                  "elapsed_ns": 5551,
+                  "cycles": 390289
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "435052 5095\n",
+                  "stderr": "380021,,cpu_core/cycles/u,261892,100.00,,\n",
+                  "checksum": 435052,
+                  "elapsed_ns": 5095,
+                  "cycles": 380021
+                }
+              ],
+              "runs": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 18610175\n",
+                  "stderr": "81500715,,cpu_core/cycles/u,18871620,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 18610175,
+                  "cycles": 81500715
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 18545285\n",
+                  "stderr": "81101750,,cpu_core/cycles/u,18874022,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 18545285,
+                  "cycles": 81101750
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 18840498\n",
+                  "stderr": "82644419,,cpu_core/cycles/u,19124535,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 18840498,
+                  "cycles": 82644419
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 18844788\n",
+                  "stderr": "82322455,,cpu_core/cycles/u,19085840,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 18844788,
+                  "cycles": 82322455
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 18024313\n",
+                  "stderr": "80848000,,cpu_core/cycles/u,18319956,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 18024313,
+                  "cycles": 80848000
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 18753633\n",
+                  "stderr": "81918549,,cpu_core/cycles/u,19029937,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 18753633,
+                  "cycles": 81918549
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/text-zig-safe",
+                    "word_count",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "894524930 18757019\n",
+                  "stderr": "82102878,,cpu_core/cycles/u,19014626,100.00,,\n",
+                  "checksum": 894524930,
+                  "elapsed_ns": 18757019,
+                  "cycles": 82102878
+                }
+              ]
+            }
+          },
+          "new_over_old": 0.149337823144174,
+          "new_over_zig": 1.103926074222607,
+          "new_over_rust": 0.8502724161767019,
+          "within_old_limit": true,
+          "within_zig_limit": false,
+          "within_both_limits": false
+        }
+      }
+    },
+    "packet_decode": {
+      "suite": "compute",
+      "unit": "element",
+      "reference_name": "packet_decode",
+      "sizes": {
+        "4096": {
+          "iterations": 400,
+          "checksum": 635993509,
+          "configurations": {
+            "old core --release": {
+              "cycles_per_unit": 16.673963623046873,
+              "startup": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "34089984 18556\n",
+                  "stderr": "2425888,,cpu_core/cycles/u,884753,100.00,,\n",
+                  "checksum": 34089984,
+                  "elapsed_ns": 18556,
+                  "cycles": 2425888
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "34089984 16418\n",
+                  "stderr": "2424057,,cpu_core/cycles/u,875125,100.00,,\n",
+                  "checksum": 34089984,
+                  "elapsed_ns": 16418,
+                  "cycles": 2424057
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "34089984 18324\n",
+                  "stderr": "2404244,,cpu_core/cycles/u,867068,100.00,,\n",
+                  "checksum": 34089984,
+                  "elapsed_ns": 18324,
+                  "cycles": 2404244
+                }
+              ],
+              "runs": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 5902352\n",
+                  "stderr": "28928639,,cpu_core/cycles/u,6771743,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 5902352,
+                  "cycles": 28928639
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 6333001\n",
+                  "stderr": "31077456,,cpu_core/cycles/u,7185356,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 6333001,
+                  "cycles": 31077456
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 5812531\n",
+                  "stderr": "28959191,,cpu_core/cycles/u,6687813,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 5812531,
+                  "cycles": 28959191
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 6167899\n",
+                  "stderr": "30157821,,cpu_core/cycles/u,7029946,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 6167899,
+                  "cycles": 30157821
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 6156945\n",
+                  "stderr": "30252108,,cpu_core/cycles/u,7080165,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 6156945,
+                  "cycles": 30252108
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 6032751\n",
+                  "stderr": "29742679,,cpu_core/cycles/u,6907084,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 6032751,
+                  "cycles": 29742679
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 5872114\n",
+                  "stderr": "29006993,,cpu_core/cycles/u,6760892,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 5872114,
+                  "cycles": 29006993
+                }
+              ]
+            },
+            "new core release": {
+              "cycles_per_unit": 16.373317260742187,
+              "startup": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "34089984 38959\n",
+                  "stderr": "964574,,cpu_core/cycles/u,404350,100.00,,\n",
+                  "checksum": 34089984,
+                  "elapsed_ns": 38959,
+                  "cycles": 964574
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "34089984 37060\n",
+                  "stderr": "946766,,cpu_core/cycles/u,401016,100.00,,\n",
+                  "checksum": 34089984,
+                  "elapsed_ns": 37060,
+                  "cycles": 946766
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "34089984 38891\n",
+                  "stderr": "961973,,cpu_core/cycles/u,413012,100.00,,\n",
+                  "checksum": 34089984,
+                  "elapsed_ns": 38891,
+                  "cycles": 961973
+                }
+              ],
+              "runs": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 5977263\n",
+                  "stderr": "27898954,,cpu_core/cycles/u,6343029,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 5977263,
+                  "cycles": 27898954
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 5730664\n",
+                  "stderr": "26859318,,cpu_core/cycles/u,6093887,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 5730664,
+                  "cycles": 26859318
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 6190866\n",
+                  "stderr": "28917073,,cpu_core/cycles/u,6586907,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 6190866,
+                  "cycles": 28917073
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 5781927\n",
+                  "stderr": "26971492,,cpu_core/cycles/u,6172381,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 5781927,
+                  "cycles": 26971492
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 5929257\n",
+                  "stderr": "27226038,,cpu_core/cycles/u,6269945,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 5929257,
+                  "cycles": 27226038
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 6052585\n",
+                  "stderr": "28332809,,cpu_core/cycles/u,6414279,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 6052585,
+                  "cycles": 28332809
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 5961454\n",
+                  "stderr": "27788016,,cpu_core/cycles/u,6334835,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 5961454,
+                  "cycles": 27788016
+                }
+              ]
+            },
+            "Rust": {
+              "cycles_per_unit": 11.279864501953124,
+              "startup": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "34089984 11956\n",
+                  "stderr": "1040962,,cpu_core/cycles/u,513523,100.00,,\n",
+                  "checksum": 34089984,
+                  "elapsed_ns": 11956,
+                  "cycles": 1040962
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "34089984 10622\n",
+                  "stderr": "1037641,,cpu_core/cycles/u,489982,100.00,,\n",
+                  "checksum": 34089984,
+                  "elapsed_ns": 10622,
+                  "cycles": 1037641
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "34089984 10991\n",
+                  "stderr": "1024382,,cpu_core/cycles/u,529866,100.00,,\n",
+                  "checksum": 34089984,
+                  "elapsed_ns": 10991,
+                  "cycles": 1024382
+                }
+              ],
+              "runs": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 4086633\n",
+                  "stderr": "19603282,,cpu_core/cycles/u,4588806,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 4086633,
+                  "cycles": 19603282
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 4101002\n",
+                  "stderr": "19528983,,cpu_core/cycles/u,4601000,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 4101002,
+                  "cycles": 19528983
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 4034549\n",
+                  "stderr": "19223832,,cpu_core/cycles/u,4508769,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 4034549,
+                  "cycles": 19223832
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 4071808\n",
+                  "stderr": "19518571,,cpu_core/cycles/u,4547961,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 4071808,
+                  "cycles": 19518571
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 4096937\n",
+                  "stderr": "19506356,,cpu_core/cycles/u,4568242,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 4096937,
+                  "cycles": 19506356
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 4130335\n",
+                  "stderr": "19540378,,cpu_core/cycles/u,4652018,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 4130335,
+                  "cycles": 19540378
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 4072246\n",
+                  "stderr": "19434600,,cpu_core/cycles/u,4546090,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 4072246,
+                  "cycles": 19434600
+                }
+              ]
+            },
+            "Zig ReleaseSafe": {
+              "cycles_per_unit": 19.14692626953125,
+              "startup": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "34089984 18131\n",
+                  "stderr": "849943,,cpu_core/cycles/u,439955,100.00,,\n",
+                  "checksum": 34089984,
+                  "elapsed_ns": 18131,
+                  "cycles": 849943
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "34089984 17300\n",
+                  "stderr": "854856,,cpu_core/cycles/u,471050,100.00,,\n",
+                  "checksum": 34089984,
+                  "elapsed_ns": 17300,
+                  "cycles": 854856
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "4096",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "34089984 17515\n",
+                  "stderr": "850651,,cpu_core/cycles/u,461873,100.00,,\n",
+                  "checksum": 34089984,
+                  "elapsed_ns": 17515,
+                  "cycles": 850651
+                }
+              ],
+              "runs": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 6839343\n",
+                  "stderr": "31825604,,cpu_core/cycles/u,7263158,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 6839343,
+                  "cycles": 31825604
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 7106681\n",
+                  "stderr": "32931821,,cpu_core/cycles/u,7550864,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 7106681,
+                  "cycles": 32931821
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 6907898\n",
+                  "stderr": "32095511,,cpu_core/cycles/u,7310811,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 6907898,
+                  "cycles": 32095511
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 7090531\n",
+                  "stderr": "32863737,,cpu_core/cycles/u,7497105,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 7090531,
+                  "cycles": 32863737
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 6860841\n",
+                  "stderr": "31928076,,cpu_core/cycles/u,7292253,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 6860841,
+                  "cycles": 31928076
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 6925174\n",
+                  "stderr": "32247172,,cpu_core/cycles/u,7368313,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 6925174,
+                  "cycles": 32247172
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "4096",
+                    "400",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "635993509 6970082\n",
+                  "stderr": "32220975,,cpu_core/cycles/u,7382216,100.00,,\n",
+                  "checksum": 635993509,
+                  "elapsed_ns": 6970082,
+                  "cycles": 32220975
+                }
+              ]
+            }
+          },
+          "new_over_old": 0.9819691124976949,
+          "new_over_zig": 0.855140769346214,
+          "new_over_rust": 1.4515526545471467,
+          "within_old_limit": true,
+          "within_zig_limit": true,
+          "within_both_limits": true
+        },
+        "64": {
+          "iterations": 25000,
+          "checksum": 105199993,
+          "configurations": {
+            "old core --release": {
+              "cycles_per_unit": 15.069995,
+              "startup": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "44208 562\n",
+                  "stderr": "486196,,cpu_core/cycles/u,295567,100.00,,\n",
+                  "checksum": 44208,
+                  "elapsed_ns": 562,
+                  "cycles": 486196
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "44208 508\n",
+                  "stderr": "484381,,cpu_core/cycles/u,294301,100.00,,\n",
+                  "checksum": 44208,
+                  "elapsed_ns": 508,
+                  "cycles": 484381
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "44208 621\n",
+                  "stderr": "475012,,cpu_core/cycles/u,305432,100.00,,\n",
+                  "checksum": 44208,
+                  "elapsed_ns": 621,
+                  "cycles": 475012
+                }
+              ],
+              "runs": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 5300094\n",
+                  "stderr": "24589994,,cpu_core/cycles/u,5592084,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 5300094,
+                  "cycles": 24589994
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 5345996\n",
+                  "stderr": "24610812,,cpu_core/cycles/u,5638232,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 5345996,
+                  "cycles": 24610812
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 5360935\n",
+                  "stderr": "24596373,,cpu_core/cycles/u,5679222,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 5360935,
+                  "cycles": 24596373
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 5303446\n",
+                  "stderr": "24594828,,cpu_core/cycles/u,5620627,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 5303446,
+                  "cycles": 24594828
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 5328840\n",
+                  "stderr": "24607642,,cpu_core/cycles/u,5668884,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 5328840,
+                  "cycles": 24607642
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 5312296\n",
+                  "stderr": "24601704,,cpu_core/cycles/u,5608233,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 5312296,
+                  "cycles": 24601704
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_old",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 5338734\n",
+                  "stderr": "24590852,,cpu_core/cycles/u,5632478,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 5338734,
+                  "cycles": 24590852
+                }
+              ]
+            },
+            "new core release": {
+              "cycles_per_unit": 16.68189375,
+              "startup": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "44208 1233\n",
+                  "stderr": "320844,,cpu_core/cycles/u,204137,100.00,,\n",
+                  "checksum": 44208,
+                  "elapsed_ns": 1233,
+                  "cycles": 320844
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "44208 1411\n",
+                  "stderr": "320143,,cpu_core/cycles/u,209096,100.00,,\n",
+                  "checksum": 44208,
+                  "elapsed_ns": 1411,
+                  "cycles": 320143
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "44208 1248\n",
+                  "stderr": "324021,,cpu_core/cycles/u,208991,100.00,,\n",
+                  "checksum": 44208,
+                  "elapsed_ns": 1248,
+                  "cycles": 324021
+                }
+              ],
+              "runs": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 5918441\n",
+                  "stderr": "27262091,,cpu_core/cycles/u,6128900,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 5918441,
+                  "cycles": 27262091
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 5889096\n",
+                  "stderr": "26899738,,cpu_core/cycles/u,6131682,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 5889096,
+                  "cycles": 26899738
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 5916990\n",
+                  "stderr": "27236709,,cpu_core/cycles/u,6126208,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 5916990,
+                  "cycles": 27236709
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 5588960\n",
+                  "stderr": "25600105,,cpu_core/cycles/u,5800673,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 5588960,
+                  "cycles": 25600105
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 5884101\n",
+                  "stderr": "27011874,,cpu_core/cycles/u,6102868,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 5884101,
+                  "cycles": 27011874
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 5640437\n",
+                  "stderr": "25908683,,cpu_core/cycles/u,5887468,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 5640437,
+                  "cycles": 25908683
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/all40-combined-final-01/row_packet_decode_new",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 5917325\n",
+                  "stderr": "27266638,,cpu_core/cycles/u,6132112,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 5917325,
+                  "cycles": 27266638
+                }
+              ]
+            },
+            "Rust": {
+              "cycles_per_unit": 10.67125625,
+              "startup": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "44208 444\n",
+                  "stderr": "540709,,cpu_core/cycles/u,315319,100.00,,\n",
+                  "checksum": 44208,
+                  "elapsed_ns": 444,
+                  "cycles": 540709
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "44208 542\n",
+                  "stderr": "427109,,cpu_core/cycles/u,343283,100.00,,\n",
+                  "checksum": 44208,
+                  "elapsed_ns": 542,
+                  "cycles": 427109
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "44208 423\n",
+                  "stderr": "436147,,cpu_core/cycles/u,324638,100.00,,\n",
+                  "checksum": 44208,
+                  "elapsed_ns": 423,
+                  "cycles": 436147
+                }
+              ],
+              "runs": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 3788303\n",
+                  "stderr": "17734092,,cpu_core/cycles/u,4108625,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 3788303,
+                  "cycles": 17734092
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 3846091\n",
+                  "stderr": "17594446,,cpu_core/cycles/u,4143981,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 3846091,
+                  "cycles": 17594446
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 3744654\n",
+                  "stderr": "17483726,,cpu_core/cycles/u,4055015,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 3744654,
+                  "cycles": 17483726
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 3971122\n",
+                  "stderr": "17807223,,cpu_core/cycles/u,4308968,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 3971122,
+                  "cycles": 17807223
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 3752823\n",
+                  "stderr": "17510157,,cpu_core/cycles/u,4052691,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 3752823,
+                  "cycles": 17510157
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 3740816\n",
+                  "stderr": "17451049,,cpu_core/cycles/u,4028796,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 3740816,
+                  "cycles": 17451049
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-rust",
+                    "packet_decode",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 3736127\n",
+                  "stderr": "17414874,,cpu_core/cycles/u,4012296,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 3736127,
+                  "cycles": 17414874
+                }
+              ]
+            },
+            "Zig ReleaseSafe": {
+              "cycles_per_unit": 19.36778625,
+              "startup": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "44208 645\n",
+                  "stderr": "379651,,cpu_core/cycles/u,262771,100.00,,\n",
+                  "checksum": 44208,
+                  "elapsed_ns": 645,
+                  "cycles": 379651
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "44208 580\n",
+                  "stderr": "374422,,cpu_core/cycles/u,261646,100.00,,\n",
+                  "checksum": 44208,
+                  "elapsed_ns": 580,
+                  "cycles": 374422
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "64",
+                    "1",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "44208 575\n",
+                  "stderr": "375553,,cpu_core/cycles/u,266923,100.00,,\n",
+                  "checksum": 44208,
+                  "elapsed_ns": 575,
+                  "cycles": 375553
+                }
+              ],
+              "runs": [
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 6859468\n",
+                  "stderr": "31504578,,cpu_core/cycles/u,7114300,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 6859468,
+                  "cycles": 31504578
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 6855560\n",
+                  "stderr": "31610523,,cpu_core/cycles/u,7149318,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 6855560,
+                  "cycles": 31610523
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 6876244\n",
+                  "stderr": "31337931,,cpu_core/cycles/u,7128499,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 6876244,
+                  "cycles": 31337931
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 6936570\n",
+                  "stderr": "31364011,,cpu_core/cycles/u,7238673,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 6936570,
+                  "cycles": 31364011
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 6773113\n",
+                  "stderr": "31053983,,cpu_core/cycles/u,7033393,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 6773113,
+                  "cycles": 31053983
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 6790348\n",
+                  "stderr": "31344256,,cpu_core/cycles/u,7088841,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 6790348,
+                  "cycles": 31344256
+                },
+                {
+                  "command": [
+                    "taskset",
+                    "-c",
+                    "10",
+                    "perf",
+                    "stat",
+                    "-x,",
+                    "-e",
+                    "cpu_core/cycles/u",
+                    "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin/compute-zig-safe",
+                    "packet_decode",
+                    "64",
+                    "25000",
+                    "7"
+                  ],
+                  "status": 0,
+                  "stdout": "105199993 6917081\n",
+                  "stderr": "31832999,,cpu_core/cycles/u,7177056,100.00,,\n",
+                  "checksum": 105199993,
+                  "elapsed_ns": 6917081,
+                  "cycles": 31832999
+                }
+              ]
+            }
+          },
+          "new_over_old": 1.1069608019113477,
+          "new_over_zig": 0.8613216572441261,
+          "new_over_rust": 1.5632549119978258,
+          "within_old_limit": false,
+          "within_zig_limit": true,
+          "within_both_limits": false
+        }
+      }
+    }
+  },
+  "error": null,
+  "speed_gate_misses": [
+    "word_count/64",
+    "packet_decode/64"
+  ],
+  "old_gate_misses": [
+    "packet_decode/64"
+  ],
+  "zig_gate_misses": [
+    "word_count/64"
+  ],
+  "all_within_old_limit": false,
+  "all_within_zig_limit": false,
+  "all_within_both_limits": false
+}

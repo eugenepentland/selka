@@ -122,19 +122,27 @@ test "checked float conversion truncates before exact half-open range checks" {
     try t.expectError(error.FloatConversion, floats.toInteger(.u64, @bitCast(@as(f64, 18446744073709551616.0))));
 }
 
-fn conversionTrap(target: []const u8, value: []const u8) !void {
+/// Add the program converting `value` to `target`, which must trap at the conversion.
+fn conversionTrap(programs: *native.Batch, target: []const u8, value: []const u8) !void {
     const text = try std.fmt.allocPrint(t.allocator, "def main() -> int:\n    value = {s}\n    _ = {s}(value)\n    return 0\n", .{ value, target });
     defer t.allocator.free(text);
-    var compilation = try language.Compilation.init(t.allocator, "float-cast.my", text);
-    defer compilation.deinit();
-    const result = try native.run(&compilation);
-    try t.expect(result.trapped());
-    try t.expectEqualStrings("R_FLOAT_CONVERSION", result.trap.code);
-    try t.expectEqual(@as(u64, 3), result.trap.line);
+    try programs.add("float-cast.my", text, .{});
+}
+
+/// Run every conversion program as one batch: each traps with `R_FLOAT_CONVERSION`
+/// on its third line.
+fn expectConversionTraps(programs: *native.Batch) !void {
+    for (try programs.run()) |result| {
+        try t.expect(result.trapped());
+        try t.expectEqualStrings("R_FLOAT_CONVERSION", result.trap.code);
+        try t.expectEqual(@as(u64, 3), result.trap.line);
+    }
 }
 
 // spec-case: FLOAT-INTEGER-CAST-1
 test "every fixed-width float conversion traps for NaN infinities and range violations" {
+    var programs: native.Batch = .init(t.allocator);
+    defer programs.deinit();
     for ([_]struct { target: []const u8, lower: []const u8, upper: []const u8 }{
         .{ .target = "i8", .lower = "-129.0", .upper = "128.0" },
         .{ .target = "i16", .lower = "-32769.0", .upper = "32768.0" },
@@ -146,10 +154,11 @@ test "every fixed-width float conversion traps for NaN infinities and range viol
         .{ .target = "u64", .lower = "-1.0", .upper = "18446744073709551616.0" },
         .{ .target = "int", .lower = "-9223372036854777856.0", .upper = "9223372036854775808.0" },
     }) |row| {
-        try conversionTrap(row.target, "0.0 / 0.0");
-        try conversionTrap(row.target, "1.0 / 0.0");
-        try conversionTrap(row.target, "-1.0 / 0.0");
-        try conversionTrap(row.target, row.lower);
-        try conversionTrap(row.target, row.upper);
+        try conversionTrap(&programs, row.target, "0.0 / 0.0");
+        try conversionTrap(&programs, row.target, "1.0 / 0.0");
+        try conversionTrap(&programs, row.target, "-1.0 / 0.0");
+        try conversionTrap(&programs, row.target, row.lower);
+        try conversionTrap(&programs, row.target, row.upper);
     }
+    try expectConversionTraps(&programs);
 }

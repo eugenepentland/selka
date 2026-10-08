@@ -1,0 +1,21 @@
+== string_split perf: size=4096 iterations=600; per unit = element
+version                                          cyc/iter   instr/iter  cyc/unit instr/unit brmiss/u   sfwd/u
+v1: today: owned pieces, encode copies, RC drain     578412.7    2710818.9   141.214    661.821   0.0441   0.0001
+v2: + no RC/malloc: region allocation (L3)       193034.4     784616.4    47.128    191.557   0.0176  -0.0000
+v3: + borrowed encode (no copy)                  152494.5     642076.4    37.230    156.757   0.0183   0.0000
+v4: + pieces as views (no copy, no per-piece alloc)     140955.1     507318.3    34.413    123.857   0.0280   0.0000
+v5: + fuse split into score (no parts list)      116974.9     427033.9    28.558    104.256   0.0177  -0.0000
+v9: + byte-level fusion, per-part sums kept       35514.7     234105.1     8.671     57.155   0.0004   0.0000
+v6: + split-fold identity (no per-part work), scalar      28572.0     144961.7     6.976     35.391   0.0003   0.0000
+v7: hand AVX2 scan (psadbw + cmpeq/popcnt)         2174.0      10640.5     0.531      2.598   0.0002   0.0000
+v8: WORK ELIM: memoize the two documents             19.1         23.1     0.005      0.006   0.0000   0.0000
+v30 holdout: documents from file, v5             120188.2     429198.6    29.343    104.785   0.0394   0.0000
+v31 holdout: documents from file, hand AVX2        2239.2      10640.5     0.547      2.598   0.0002   0.0002
+v20 holdout reference: today, file               579881.8    2709994.5   141.573    661.620   0.0358   0.0000
+v5 baseline x86-64                               116974.5     427033.9    28.558    104.256   0.0174  -0.0000
+v9 baseline x86-64                                42494.8     234105.0    10.375     57.155   0.0005  -0.0000
+v6 baseline x86-64                                41606.0     197787.3    10.158     48.288   0.0003   0.0000
+B0 rust                                          113417.9     631695.7    27.690    154.223   0.0038   0.0002
+B0 zig-safe                                      272312.6    1087715.0    66.483    265.555   0.0077   0.4999
+B0 zig-fast                                      254315.5     980680.8    62.089    239.424   0.0071   0.5003
+B0 my-llvm                                       832937.5    4710954.5   203.354   1150.135   0.0065   0.0001

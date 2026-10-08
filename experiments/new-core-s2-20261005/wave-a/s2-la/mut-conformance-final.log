@@ -1,0 +1,22 @@
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+mut_rebinding                4 |             3     0     1 |             3     0     1
+mut_rebind_caller           27 |            10     0    17 |            10     0    17
+mut_argument_places         14 |             1     0    13 |             1     0    13
+rc_mut_uniqueness            2 |             2     0     0 |             2     0     0
+--------------------------------------------------------------------------------------
+TOTAL                       47
+  debug    matching 16, mismatching 0, unsupported 31 (of 47 tests; 16 supported)
+  release  matching 16, mismatching 0, unsupported 31 (of 47 tests; 16 supported)
+
+blocking features of the unsupported tests (tests / files):
+    19 /  3  dict type
+     5 /  1  function_value
+     4 /  1  interior mut argument ancestor changed during later argument evaluation
+     2 /  1  set type
+     1 /  1  fixed array type
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+  mut_rebinding                    1 of   4: dict type x1
+  mut_rebind_caller               17 of  27: dict type x6, function_value x5, interior mut argument ancestor changed during later argument evaluation x4, set type x2
+  mut_argument_places             13 of  14: dict type x12, fixed array type x1

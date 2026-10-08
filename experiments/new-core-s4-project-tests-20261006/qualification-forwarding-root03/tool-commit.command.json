@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "taskset",
+    "-c",
+    "0-9",
+    "git",
+    "commit",
+    "-m",
+    "evidence: preserve explicit Core executable in conformance forwarding"
+  ],
+  "status": 0,
+  "wall_s": 2.13704040995799
+}

@@ -21,7 +21,7 @@ const codec = @import("persist_codec.zig");
 const semantic_key = @import("semantic_key.zig");
 
 /// Payload version; bump for any layout or meaning change so old payloads miss.
-pub const format_version = "check-summaries-v4";
+pub const format_version = "check-summaries-v7";
 
 /// One stored diagnostic without related notes, its span relative to the start
 /// of its function's declaration region.
@@ -45,12 +45,10 @@ pub const Region = struct { len: u32, digest: [32]u8, names: []const semantic_ke
 /// mutation summary without its witness spans, which only locate diagnostics.
 pub const Fact = struct {
     graph_mask: effect_set.Mask = 0,
-    mutates: u16 = 0,
+    mutates: origins.Mask = 0,
     mutates_unknown: bool = false,
     return_origin: origins.Origin = .{},
-    borrow_origin: origins.Origin = .{},
-    writes: bool = false,
-    external: bool = false,
+    inferred: struct { writes: bool = false, external: bool = false } = .{},
 };
 
 /// What one checked body reached besides its own declaration: the functions
@@ -155,9 +153,7 @@ pub fn fromFact(fact: origins.Fact) Fact {
         .mutates = fact.summary.mutates,
         .mutates_unknown = fact.summary.mutates_unknown,
         .return_origin = fact.summary.return_origin,
-        .borrow_origin = fact.summary.borrow_origin,
-        .writes = fact.summary.writes,
-        .external = fact.summary.external,
+        .inferred = .{ .writes = fact.summary.writes, .external = fact.summary.external },
     };
 }
 
@@ -165,11 +161,10 @@ pub fn fromFact(fact: origins.Fact) Fact {
 pub fn toFact(fact: Fact) origins.Fact {
     return .{ .graph_mask = fact.graph_mask, .summary = .{
         .return_origin = fact.return_origin,
-        .borrow_origin = fact.borrow_origin,
         .mutates = fact.mutates,
         .mutates_unknown = fact.mutates_unknown,
-        .writes = fact.writes,
-        .external = fact.external,
+        .writes = fact.inferred.writes,
+        .external = fact.inferred.external,
     } };
 }
 

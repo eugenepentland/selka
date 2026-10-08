@@ -1,0 +1,297 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T12:20:46.838082+00:00",
+  "session": "b7eff65d-5de2-436a-9a95-56a29c1e1354",
+  "outcomes": 336,
+  "rows": [
+    {
+      "case": "dict_lookup",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.8006028810692714,
+          "paired_95": [
+            0.799684041328617,
+            0.8070969748148986
+          ]
+        },
+        "qbe": {
+          "ratio": 0.9256652597299905,
+          "paired_95": [
+            0.902653291004617,
+            0.9273548009341326
+          ]
+        }
+      }
+    },
+    {
+      "case": "dict_lookup",
+      "profile": "large",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.7919614846300242,
+          "paired_95": [
+            0.7860221170766811,
+            0.807178932103861
+          ]
+        },
+        "qbe": {
+          "ratio": 0.9011922656578555,
+          "paired_95": [
+            0.8996857766011143,
+            0.9046059679665401
+          ]
+        }
+      }
+    },
+    {
+      "case": "dict_lookup_str",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "ratio": 1.048384419755532,
+          "paired_95": [
+            1.0354827923341001,
+            1.053085502042521
+          ]
+        },
+        "qbe": {
+          "ratio": 1.0032343728121262,
+          "paired_95": [
+            1.0025281129079664,
+            1.0932129460743105
+          ]
+        }
+      }
+    },
+    {
+      "case": "dict_lookup_str",
+      "profile": "large",
+      "comparisons": {
+        "llvm": {
+          "ratio": 1.0046088109550884,
+          "paired_95": [
+            0.9974015676502319,
+            1.0127012857406918
+          ]
+        },
+        "qbe": {
+          "ratio": 0.9895437901112517,
+          "paired_95": [
+            0.9801490132306065,
+            0.9952965038526586
+          ]
+        }
+      }
+    },
+    {
+      "case": "dict_update",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.9655910288036217,
+          "paired_95": [
+            0.9624744587904316,
+            0.9685283082078829
+          ]
+        },
+        "qbe": {
+          "ratio": 1.0087534948132701,
+          "paired_95": [
+            1.0074162305857242,
+            1.0099583283820408
+          ]
+        }
+      }
+    },
+    {
+      "case": "dict_update",
+      "profile": "large",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.9890636384706086,
+          "paired_95": [
+            0.9836575060126811,
+            0.9933732705470929
+          ]
+        },
+        "qbe": {
+          "ratio": 0.9955515269829849,
+          "paired_95": [
+            0.9947390133151685,
+            1.0019466073295173
+          ]
+        }
+      }
+    },
+    {
+      "case": "dict_update_str",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.9689513820476415,
+          "paired_95": [
+            0.9578139058087947,
+            0.9812630209168802
+          ]
+        },
+        "qbe": {
+          "ratio": 0.9856029386619436,
+          "paired_95": [
+            0.9782423234708979,
+            0.9913393608366703
+          ]
+        }
+      }
+    },
+    {
+      "case": "dict_update_str",
+      "profile": "large",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.9894571278335246,
+          "paired_95": [
+            0.9860610425018727,
+            0.9953349017877676
+          ]
+        },
+        "qbe": {
+          "ratio": 0.9924127765550228,
+          "paired_95": [
+            0.9880557430890605,
+            1.004574232037613
+          ]
+        }
+      }
+    },
+    {
+      "case": "set_dedup",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "ratio": 1.0030204420505167,
+          "paired_95": [
+            0.9899349705102194,
+            1.0053240246318953
+          ]
+        },
+        "qbe": {
+          "ratio": 0.9893910227122321,
+          "paired_95": [
+            0.9877919041661343,
+            1.0058704628971336
+          ]
+        }
+      }
+    },
+    {
+      "case": "set_dedup",
+      "profile": "large",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.9827019309661271,
+          "paired_95": [
+            0.9810599277407833,
+            0.9899342880597289
+          ]
+        },
+        "qbe": {
+          "ratio": 0.9935250040538368,
+          "paired_95": [
+            0.9911820371124963,
+            1.0037761344962388
+          ]
+        }
+      }
+    },
+    {
+      "case": "mutate_nested",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.9938995511696483,
+          "paired_95": [
+            0.9914949661997683,
+            1.0015856936643721
+          ]
+        },
+        "qbe": {
+          "ratio": 1.0136547866210637,
+          "paired_95": [
+            1.0063381515330971,
+            1.0177608405060226
+          ]
+        }
+      }
+    },
+    {
+      "case": "mutate_nested",
+      "profile": "large",
+      "comparisons": {
+        "llvm": {
+          "ratio": 1.0197911595643925,
+          "paired_95": [
+            1.015515328173121,
+            1.0342803971383145
+          ]
+        },
+        "qbe": {
+          "ratio": 1.0504521514356737,
+          "paired_95": [
+            1.0340928566893381,
+            1.0648847154773706
+          ]
+        }
+      }
+    },
+    {
+      "case": "string_search",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.9936215659178647,
+          "paired_95": [
+            0.9854393047270835,
+            1.0064941070894178
+          ]
+        },
+        "qbe": {
+          "ratio": 0.9997061345005976,
+          "paired_95": [
+            0.9945157605889148,
+            1.003594105200199
+          ]
+        }
+      }
+    },
+    {
+      "case": "string_search",
+      "profile": "large",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.9923086005376021,
+          "paired_95": [
+            0.980021095549514,
+            1.0042511233975044
+          ]
+        },
+        "qbe": {
+          "ratio": 0.9999250471923168,
+          "paired_95": [
+            0.986957058530314,
+            1.0064715123771864
+          ]
+        }
+      }
+    }
+  ],
+  "raw_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/paired-screen.json",
+  "raw_sha256": "a04de13920bf70d93f376849346ab4d1d1ed6b58b243c80821bd2dc6b05f5ae9",
+  "script_sha256": "ddfa3f0b071e3099041715b460115652d200df542e8c3a0c3c49c545a7b6eacb",
+  "bootstrap_helper_sha256": "ca202996170e072e7b95ebf3b20896142ec794d14e336c958af277037a7d7123",
+  "limitations": [
+    "Saved parsed timing outcomes; no new guest executions.",
+    "Intervals recomputed with the established helper; no simultaneous coverage claim.",
+    "Exploratory comparison; no goal confirmation."
+  ]
+}

@@ -1,0 +1,23 @@
+test-units
++- run test 12 pass, 1 fail (13 total)
+guardian/test: test wall 0.87s; slowest over 50ms:
+guardian/test:   0.87s  qbe_loop_unswitch_test.test.invariant loop cost selection keeps cheapest copies and the excluded-value fallback
+guardian/test: FAIL — 1 failed of 13
+guardian/test: RESULT {"passed":12,"failed":1,"skipped":0}
+error: 'qbe_loop_unswitch_test.test.invariant loop cost selection keeps cheapest copies and the excluded-value fallback' failed:
+       guardian/test: 13 test(s) selected by filter: "invariant loop cost" — 1 match by name, 12 unnamed test block(s) run regardless
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x149fed9 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/src/qbe_loop_unswitch_test.zig:354:5: 0x14a2bdc in partialOutcomes (root_test.zig)
+           try t.expect(selected > 0 and selected < 3);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/src/qbe_loop_unswitch_test.zig:322:5: 0x14a4f9a in test.invariant loop cost selection keeps cheapest copies and the excluded-value fallback (root_test.zig)
+           try partialOutcomes();
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.task-tmp/zig-local/o/e3e4f0a0e3b55295e9c7533335333bd2/test "--guardian-filter=invariant loop cost" --cache-dir=./.task-tmp/zig-local --seed=0x8d36d318 --listen=-
+
+Build Summary: 8/10 steps succeeded (1 failed); 12/13 tests passed (1 failed)
+test-units transitive failure
++- run test 12 pass, 1 fail (13 total)
+

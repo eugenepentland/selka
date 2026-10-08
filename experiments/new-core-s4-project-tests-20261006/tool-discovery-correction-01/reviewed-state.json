@@ -1,0 +1,1532 @@
+{
+  "state": "f0254ed3a07d64de97aedce8ad2a873db1c09c32575981cc01aea162aad4ec8c",
+  "scope": "Post-probe reviewed discovery-state content/type/alias/member descriptors; no host mutations.",
+  "entries": [
+    {
+      "role": "content",
+      "path": "/etc/SuSE-release",
+      "absent": true
+    },
+    {
+      "role": "content",
+      "path": "/etc/debian_version",
+      "mode": 33188,
+      "kind": "file",
+      "resolved": "/etc/debian_version",
+      "sha256": "3c84b36be589a13576e4d54126a87ca950fe4b01716c42ef4ceb462e7445401c"
+    },
+    {
+      "role": "predicate",
+      "path": "/etc/env.d/gcc",
+      "absent": true
+    },
+    {
+      "role": "content",
+      "path": "/etc/gentoo-release",
+      "absent": true
+    },
+    {
+      "role": "content",
+      "path": "/etc/lsb-release",
+      "mode": 33188,
+      "kind": "file",
+      "resolved": "/etc/lsb-release",
+      "sha256": "ad1a36830722124b3ef37cc4106080422527cd98c583e43872fac4a5d4b4985f"
+    },
+    {
+      "role": "content",
+      "path": "/etc/os-release",
+      "mode": 33188,
+      "kind": "file",
+      "resolved": "/usr/lib/os-release",
+      "sha256": "fb8b42d368e509d8b012d009dd626d0a1f860cccc105e8806da5c2ab9e59a237"
+    },
+    {
+      "role": "content",
+      "path": "/etc/redhat-release",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/home/epentland/zig-toolchains",
+      "mode": 16893,
+      "kind": "directory",
+      "resolved": "/home/epentland/zig-toolchains"
+    },
+    {
+      "role": "predicate",
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b",
+      "mode": 16877,
+      "kind": "directory",
+      "resolved": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b"
+    },
+    {
+      "role": "predicate",
+      "path": "/home/epentland/zig-toolchains/lib",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/home/epentland/zig-toolchains/lib/gcc",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/i386-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/i386-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/i386-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/i386-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/i586-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/i586-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/i686-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/i686-montavista-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/i686-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/i686-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/x86_64-amazon-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/x86_64-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/x86_64-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/x86_64-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/x86_64-manbo-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/x86_64-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/x86_64-pc-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/x86_64-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/x86_64-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/x86_64-slackware-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/x86_64-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/x86_64-unknown-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/x86_64-unknown-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc-cross/x86_64-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/i386-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/i386-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/i386-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/i386-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/i586-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/i586-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/i686-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/i686-montavista-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/i686-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/i686-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/x86_64-amazon-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/x86_64-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/x86_64-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/x86_64-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/x86_64-manbo-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/x86_64-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/x86_64-pc-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/x86_64-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/x86_64-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/x86_64-slackware-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/x86_64-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/x86_64-unknown-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/x86_64-unknown-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib/gcc/x86_64-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/home/epentland/zig-toolchains/lib32",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc-cross",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc-cross/i386-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc-cross/i386-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc-cross/i386-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc-cross/i386-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc-cross/i586-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc-cross/i586-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc-cross/i686-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc-cross/i686-montavista-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc-cross/i686-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc-cross/i686-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc-cross/x86_64-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc-cross/x86_64-pc-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc/i386-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc/i386-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc/i386-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc/i386-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc/i586-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc/i586-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc/i686-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc/i686-montavista-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc/i686-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc/i686-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc/x86_64-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib32/gcc/x86_64-pc-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/home/epentland/zig-toolchains/lib64",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc-cross",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc-cross/x86_64-amazon-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc-cross/x86_64-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc-cross/x86_64-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc-cross/x86_64-manbo-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc-cross/x86_64-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc-cross/x86_64-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc-cross/x86_64-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc-cross/x86_64-slackware-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc-cross/x86_64-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc-cross/x86_64-unknown-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc-cross/x86_64-unknown-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc-cross/x86_64-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc/x86_64-amazon-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc/x86_64-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc/x86_64-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc/x86_64-manbo-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc/x86_64-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc/x86_64-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc/x86_64-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc/x86_64-slackware-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc/x86_64-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc/x86_64-unknown-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc/x86_64-unknown-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/lib64/gcc/x86_64-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/home/epentland/zig-toolchains/libx32",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc-cross",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc-cross/i386-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc-cross/i386-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc-cross/i386-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc-cross/i386-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc-cross/i586-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc-cross/i586-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc-cross/i686-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc-cross/i686-montavista-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc-cross/i686-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc-cross/i686-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc-cross/x86_64-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc-cross/x86_64-pc-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc/i386-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc/i386-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc/i386-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc/i386-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc/i586-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc/i586-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc/i686-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc/i686-montavista-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc/i686-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc/i686-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc/x86_64-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/home/epentland/zig-toolchains/libx32/gcc/x86_64-pc-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/lib",
+      "mode": 16877,
+      "kind": "directory",
+      "resolved": "/usr/lib"
+    },
+    {
+      "role": "predicate",
+      "path": "/lib/x86_64-linux-gnu",
+      "mode": 16877,
+      "kind": "directory",
+      "resolved": "/usr/lib/x86_64-linux-gnu"
+    },
+    {
+      "role": "predicate",
+      "path": "/lib64",
+      "mode": 16877,
+      "kind": "directory",
+      "resolved": "/usr/lib64"
+    },
+    {
+      "role": "predicate",
+      "path": "/opt/rh",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/usr",
+      "mode": 16877,
+      "kind": "directory",
+      "resolved": "/usr"
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/include/c++/15",
+      "mode": 16877,
+      "kind": "directory",
+      "resolved": "/usr/include/c++/15"
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/include/x86_64-linux-gnu/c++/15",
+      "mode": 16877,
+      "kind": "directory",
+      "resolved": "/usr/include/x86_64-linux-gnu/c++/15"
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/lib",
+      "mode": 16877,
+      "kind": "directory",
+      "resolved": "/usr/lib"
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/lib/gcc",
+      "mode": 16877,
+      "kind": "directory",
+      "resolved": "/usr/lib/gcc"
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/lib/gcc-cross",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/i386-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/i386-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/i386-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/i386-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/i586-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/i586-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/i686-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/i686-montavista-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/i686-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/i686-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/x86_64-amazon-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/x86_64-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/x86_64-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/x86_64-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/x86_64-manbo-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/x86_64-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/x86_64-pc-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/x86_64-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/x86_64-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/x86_64-slackware-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/x86_64-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/x86_64-unknown-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/x86_64-unknown-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc-cross/x86_64-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/i386-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/i386-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/i386-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/i386-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/i586-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/i586-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/i686-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/i686-montavista-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/i686-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/i686-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/x86_64-amazon-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu",
+      "mode": 16877,
+      "kind": "directory",
+      "resolved": "/usr/lib/gcc/x86_64-linux-gnu",
+      "members": [
+        "15"
+      ]
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/15",
+      "mode": 16877,
+      "kind": "directory",
+      "resolved": "/usr/lib/gcc/x86_64-linux-gnu/15"
+    },
+    {
+      "role": "content",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/15/32/crtbegin.o",
+      "absent": true
+    },
+    {
+      "role": "content",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/15/64/crtbegin.o",
+      "absent": true
+    },
+    {
+      "role": "content",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/15/crtbegin.o",
+      "mode": 33188,
+      "kind": "file",
+      "resolved": "/usr/lib/gcc/x86_64-linux-gnu/15/crtbegin.o",
+      "sha256": "f179b9f114a7421f32f0de4a3e1a25790469047b34a621c5b9af652f14b04014"
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/15/include/c++",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/15/include/g++-v15",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/15/include/g++-v15.-1",
+      "absent": true
+    },
+    {
+      "role": "content",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/15/sparcv8plus/crtbegin.o",
+      "absent": true
+    },
+    {
+      "role": "content",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/15/x32/crtbegin.o",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/lib64",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/x86_64-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/x86_64-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/x86_64-manbo-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/x86_64-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/x86_64-pc-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/x86_64-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/x86_64-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/x86_64-slackware-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/x86_64-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/x86_64-unknown-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/x86_64-unknown-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib/gcc/x86_64-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "content",
+      "path": "/usr/lib/os-release",
+      "mode": 33188,
+      "kind": "file",
+      "resolved": "/usr/lib/os-release",
+      "sha256": "fb8b42d368e509d8b012d009dd626d0a1f860cccc105e8806da5c2ab9e59a237"
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/lib/x86_64-linux-gnu",
+      "mode": 16877,
+      "kind": "directory",
+      "resolved": "/usr/lib/x86_64-linux-gnu"
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/lib32",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/lib32/gcc",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/lib32/gcc-cross",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc-cross/i386-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc-cross/i386-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc-cross/i386-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc-cross/i386-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc-cross/i586-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc-cross/i586-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc-cross/i686-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc-cross/i686-montavista-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc-cross/i686-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc-cross/i686-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc-cross/x86_64-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc-cross/x86_64-pc-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc/i386-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc/i386-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc/i386-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc/i386-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc/i586-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc/i586-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc/i686-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc/i686-montavista-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc/i686-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc/i686-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc/x86_64-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib32/gcc/x86_64-pc-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/lib64",
+      "mode": 16877,
+      "kind": "directory",
+      "resolved": "/usr/lib64"
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/lib64/gcc",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/lib64/gcc-cross",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc-cross/x86_64-amazon-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc-cross/x86_64-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc-cross/x86_64-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc-cross/x86_64-manbo-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc-cross/x86_64-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc-cross/x86_64-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc-cross/x86_64-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc-cross/x86_64-slackware-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc-cross/x86_64-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc-cross/x86_64-unknown-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc-cross/x86_64-unknown-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc-cross/x86_64-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc/x86_64-amazon-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc/x86_64-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc/x86_64-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc/x86_64-manbo-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc/x86_64-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc/x86_64-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc/x86_64-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc/x86_64-slackware-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc/x86_64-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc/x86_64-unknown-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc/x86_64-unknown-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/lib64/gcc/x86_64-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/libx32",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/libx32/gcc",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/libx32/gcc-cross",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc-cross/i386-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc-cross/i386-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc-cross/i386-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc-cross/i386-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc-cross/i586-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc-cross/i586-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc-cross/i686-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc-cross/i686-montavista-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc-cross/i686-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc-cross/i686-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc-cross/x86_64-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc-cross/x86_64-pc-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc/i386-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc/i386-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc/i386-redhat-linux6E",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc/i386-unknown-linux5.10.0-gnu2.31.0",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc/i586-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc/i586-suse-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc/i686-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc/i686-montavista-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc/i686-pc-linux-gnu",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc/i686-redhat-linux",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc/x86_64-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "membership",
+      "path": "/usr/libx32/gcc/x86_64-pc-linux-gnux32",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/x86_64-linux-gnu/bin",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/x86_64-linux-gnu/include/c++/15",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/x86_64-linux-gnu/lib",
+      "absent": true
+    },
+    {
+      "role": "predicate",
+      "path": "/usr/x86_64-linux-gnu/lib64",
+      "absent": true
+    }
+  ]
+}

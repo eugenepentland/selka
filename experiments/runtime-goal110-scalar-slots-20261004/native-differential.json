@@ -1,0 +1,140 @@
+{
+  "kind": "untimed-actual-LLVM-O3-fullLTO-default-legacy-oracle-differential",
+  "source_revision_at_execution": "957f97c6d9906ef11cf344ce055dada8be8446ea",
+  "production_source_sha256": {
+    "src/qbe_build_llvm_slots.zig": "647be5ff62d050c1bdff015840eafa07c58ba58e2259403f9809f634b300287d",
+    "src/qbe_build_llvm_emit.zig": "da148991e29756e74b24cbd96805c39e9fc9113b26538f65aa998b61de0b119f",
+    "src/qbe_build_llvm_lower.zig": "769d77c7d311bb980c305bf2f01e60b2b3df24d32dc5d55c261210d5f8ef7869"
+  },
+  "production_sources_uncommitted_at_execution": true,
+  "zig": {
+    "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "bytes": 183954208,
+    "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+  },
+  "command": [
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "cc",
+    "-O3",
+    "-flto",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-0-default.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-0-legacy.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-1-default.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-1-legacy.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-2-default.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-2-legacy.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-3-default.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-3-legacy.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-4-default.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-4-legacy.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-5-default.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-5-legacy.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/native-driver.c",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/scalar-slots-native-differential"
+  ],
+  "compile_exit": 0,
+  "inputs": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-0-default.ll",
+      "bytes": 2190,
+      "sha256": "de0ad3f6d8398831122ef03b1f5ebcc8009a7af3d734c0276d4ed813cdc6b60e"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-0-legacy.ll",
+      "bytes": 2842,
+      "sha256": "71e844c81e0a2d73d7041680216558347be95f05c820cd695375627e1822fb11"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-1-default.ll",
+      "bytes": 2731,
+      "sha256": "5a8a57c77c7344f9c2d75c73e3a75a015928c1014e8ed7951b77e0bc6d8608b0"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-1-legacy.ll",
+      "bytes": 3383,
+      "sha256": "1070b06356b639c298ca6b953b0a56cde47f058593cc8630f69f9ced10ff352f"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-2-default.ll",
+      "bytes": 1188,
+      "sha256": "f5d3ee4b5d5c054ae3a463791f02e0702bcf8a233ec9a4ec92c8746b9436e2a6"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-2-legacy.ll",
+      "bytes": 1187,
+      "sha256": "f33fc04aaca9b28558aab9ce30b718950d5ce3c0d0774a736229cdfcf799e1dd"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-3-default.ll",
+      "bytes": 1407,
+      "sha256": "b5f46f1d60ab98a5cf6b771e57241552467ce5ea976117cfadf09cd6a51c8b2f"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-3-legacy.ll",
+      "bytes": 1406,
+      "sha256": "2dc268d0761d184fee85893750a8ffdc0a29816b0b5ec37c775ecec84642c30d"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-4-default.ll",
+      "bytes": 1707,
+      "sha256": "0dee5a5f42730dfc162c694f54f9f00272a73df0cf62bd0db20d4147fb9c2b5d"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-4-legacy.ll",
+      "bytes": 2288,
+      "sha256": "dbee06fb01f1116582d8059a98cffa2e9d745fbcbdadcd08349782ad8c57e433"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-5-default.ll",
+      "bytes": 1686,
+      "sha256": "78c5ecb028e06c63c2c941c3b832c65c5cc56849ab90fa96f1c1cf175c863d01"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/slot-5-legacy.ll",
+      "bytes": 1685,
+      "sha256": "14b8395551ab793b1e38f890f8237d1ad3c87430ac723ce12174311412a05099"
+    }
+  ],
+  "driver": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/native-driver.c",
+    "bytes": 2447,
+    "sha256": "ee52039aa070c38cbddb958c22cc50d024dee4af09ae18a8d5d61e61400d43d6"
+  },
+  "binary": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/scalar-slots-native-differential",
+    "bytes": 13440,
+    "sha256": "00bf72a28ce82bb93fc1e450866d4ee7cb7c0b3d493acc85388c45bd6df0fdf1"
+  },
+  "execution_exit": 0,
+  "stdout": "630 default/legacy/oracle comparisons; 1260 native function executions passed\n",
+  "stderr": "",
+  "cases": [
+    "entry-loop slots",
+    "repeated nonentry allocation",
+    "callee escape",
+    "arithmetic alias",
+    "independent allocation identity",
+    "conditional non-dominating multidef allocation"
+  ],
+  "counts": [
+    -3,
+    0,
+    1,
+    2,
+    7,
+    16,
+    129
+  ],
+  "seeds": [
+    -9223372036854775808,
+    -17,
+    0,
+    1,
+    9223372036854775807
+  ],
+  "repeated_calls": 3,
+  "comparisons": 630,
+  "function_executions": 1260,
+  "limits": "Low-level wrapped QBE arithmetic differential; full language trap/accounting holdouts run separately. Not runtime timing."
+}

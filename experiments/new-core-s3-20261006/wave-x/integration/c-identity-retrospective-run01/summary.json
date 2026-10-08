@@ -1,0 +1,3076 @@
+{
+  "schema": "s3-predecessor-function-identity-retrospective-v1",
+  "scope": "Only predecessor C/M/runner 9637eb9a1 -> S2 92590700 function/site identity",
+  "baseline_source_commit": "92590700cb0bf5e4dc19cc1f0c836c3a41693f64",
+  "predecessor_source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+  "proof_script_sha256": "88099a4d5c002a8892555b06af3feae45ed8ca4399f213279b5341785fa9565e",
+  "provenance_manifest_sha256": "77854ceeed1d1f2932fe3a6131bfba07bb80a68328d190ea99b1d043e250b8a0",
+  "complete_modules": 35,
+  "actual_definitions": 343,
+  "exact_timer_guard_pairs": 70,
+  "exact_native_entry_grants": 35,
+  "complete_semantic_site_tables_checked": 35,
+  "residual_function_count": 0,
+  "qualified_within_function_and_site_scope": true,
+  "full_module_identity_qualified": false,
+  "outside_function_scope": "Not qualified: declarations, globals, attributes, and other module-level content remain in complete raw LLVM and diffs without equivalence claims.",
+  "final_s3_x_qualified": false,
+  "limitations": [
+    "Static retained-input proof only; no builds, compiler tests, runtime tests, performance, or final S3-X gates run.",
+    "Historical SHA receipt pins complete inputs; this does not independently rebuild source commits.",
+    "Only instruction-defined SSA alpha-renaming and semantic site/debug ID resolution accompany the exact 70 guard-pair and 35 entry-grant removals.",
+    "Every header is parsed separately with dotted/quoted names and duplicate rejection; no helper-body overwrite or wholesale function removal."
+  ],
+  "rows": [
+    {
+      "row": "binary_search",
+      "before_sha256": "fd4556723090b084cbd99760cfafa55b97fbc1198be65329b26f27a84d38c9de",
+      "after_sha256": "29eab26eac11be3957a737eef0e3056dc9411c70f5a156a2ce672eec28293627",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 9,
+      "definitions_after": 9,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.binary_search::main\"",
+        "\"my.binary_search::parse_number\"",
+        "\"my.binary_search::search\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.binary_search::main\"",
+        "\"my.binary_search::parse_number\"",
+        "\"my.binary_search::search\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.binary_search::main\"": [
+          {
+            "site": 27,
+            "block": "b37",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 27)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000034\n",
+            "semantic_site": [
+              7,
+              37,
+              13,
+              64,
+              "effect\\00",
+              "binary_search::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              37,
+              13,
+              "binary_search::main"
+            ]
+          },
+          {
+            "site": 28,
+            "block": "b41.126",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 28)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000036\n",
+            "semantic_site": [
+              7,
+              46,
+              15,
+              64,
+              "effect\\00",
+              "binary_search::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              46,
+              15,
+              "binary_search::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 36,
+      "predecessor_site_count": 38,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/binary_search.diff",
+      "raw_module_diff_sha256": "58e278c7f3d931602a962ea1529c09b2a1cef1fd941d91418504dc466f335e5c",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "f0fc12994e9aed7de25fc9ef25ed3330d810b3aae0a50c771b0cdf71a12085e9",
+        "after_sha256": "25f098f48a06ba6a282a94a3d4a88bb3442105b033276946c6e1c3496499ad35",
+        "before_bytes": 14368,
+        "after_bytes": 15283
+      }
+    },
+    {
+      "row": "branch_mixed",
+      "before_sha256": "4fc6664c48901089057ab2589df7d828f0760613c5e68c4267d0c0ba5f0bcd94",
+      "after_sha256": "a6b8c7ec884637a55b2ee25309775655216fd3c68996c26e6843dd86b1f1f7b1",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 8,
+      "definitions_after": 8,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.branch_mixed::main\"",
+        "\"my.branch_mixed::parse_number\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.branch_mixed::main\"",
+        "\"my.branch_mixed::parse_number\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.branch_mixed::main\"": [
+          {
+            "site": 27,
+            "block": "b37",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 27)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000034\n",
+            "semantic_site": [
+              7,
+              23,
+              13,
+              64,
+              "effect\\00",
+              "branch_mixed::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              23,
+              13,
+              "branch_mixed::main"
+            ]
+          },
+          {
+            "site": 30,
+            "block": "b43",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 30)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000038\n",
+            "semantic_site": [
+              7,
+              36,
+              15,
+              64,
+              "effect\\00",
+              "branch_mixed::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              36,
+              15,
+              "branch_mixed::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 34,
+      "predecessor_site_count": 36,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/branch_mixed.diff",
+      "raw_module_diff_sha256": "a945881eaa39586a5aee73f67201aa29fb8e6865c38341bc9becdf79e6bde076",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "86cf618f315f3113ac7d3538a3a26afb58efd8eafb9be1bad1e174442eaf041e",
+        "after_sha256": "80d6a523c48e21e7cdb4ef3ec8b703cd96994349c61ea84a1165aa9f0a38ca1c",
+        "before_bytes": 13573,
+        "after_bytes": 14486
+      }
+    },
+    {
+      "row": "branch_predictable",
+      "before_sha256": "5eeadcdb50118d6863691bad7e2194ef9741618caf069402bbeb34faf91d6fad",
+      "after_sha256": "eacd66257fdf69288fd05eeb04afe7d84f67cafdf26f8dda155a35e42424801a",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 8,
+      "definitions_after": 8,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.branch_predictable::main\"",
+        "\"my.branch_predictable::parse_number\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.branch_predictable::main\"",
+        "\"my.branch_predictable::parse_number\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.branch_predictable::main\"": [
+          {
+            "site": 27,
+            "block": "b37",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 27)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000034\n",
+            "semantic_site": [
+              7,
+              23,
+              13,
+              64,
+              "effect\\00",
+              "branch_predictable::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              23,
+              13,
+              "branch_predictable::main"
+            ]
+          },
+          {
+            "site": 28,
+            "block": "b41",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 28)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000036\n",
+            "semantic_site": [
+              7,
+              36,
+              15,
+              64,
+              "effect\\00",
+              "branch_predictable::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              36,
+              15,
+              "branch_predictable::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 32,
+      "predecessor_site_count": 34,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/branch_predictable.diff",
+      "raw_module_diff_sha256": "cbc0c4208cb867a3ad1d9b2b660d0eb479a7e66d1df7ef913888dd6e5737ebaa",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "da9f7aca18c5a9dd3ad0885238c78ee49a44b501fed15f1809510b478548ffda",
+        "after_sha256": "3e71b9531755c9d238f8b214c8c9cb635abf25f70e41cec62d4556f17f2083ea",
+        "before_bytes": 13251,
+        "after_bytes": 14176
+      }
+    },
+    {
+      "row": "call_direct",
+      "before_sha256": "58c2870c2e102a09a4922fa55654726420a1fe2bf8f742464fcd43dfe921445d",
+      "after_sha256": "2dc4bb302ab5604158d226b197075fe3362ef72ba16b0d7885cd7c9148bafa9d",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 9,
+      "definitions_after": 9,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.call_direct::main\"",
+        "\"my.call_direct::parse_number\"",
+        "\"my.call_direct::affine_a\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.call_direct::main\"",
+        "\"my.call_direct::parse_number\"",
+        "\"my.call_direct::affine_a\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.call_direct::main\"": [
+          {
+            "site": 19,
+            "block": "b25",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 19)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000026\n",
+            "semantic_site": [
+              7,
+              26,
+              13,
+              64,
+              "effect\\00",
+              "call_direct::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              26,
+              13,
+              "call_direct::main"
+            ]
+          },
+          {
+            "site": 20,
+            "block": "b29",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 20)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000028\n",
+            "semantic_site": [
+              7,
+              35,
+              15,
+              64,
+              "effect\\00",
+              "call_direct::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              35,
+              15,
+              "call_direct::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 24,
+      "predecessor_site_count": 26,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/call_direct.diff",
+      "raw_module_diff_sha256": "9ae4279249f2ff80c39b574f6b69c834d18c37ffcdb47e1fcf32d38757d9a246",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "5bcbe6ffcfc69727f51f13186b84c2dcba3cc2e306e7888f9728c3f79670bc81",
+        "after_sha256": "54b3ccbf427b990cc7b3792f72f78bada8ec91ac5e03d0eb5d11265c2eaf7cb1",
+        "before_bytes": 11199,
+        "after_bytes": 12110
+      }
+    },
+    {
+      "row": "float_math",
+      "before_sha256": "871699a0e23132c6983d243fd993470e7edc82fdb1bf26cc210e81927e5b6336",
+      "after_sha256": "3c86a72eaddff01aca9589aba0b4d5d09d6581f6d06863d92c6dbb5c41b545ce",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 8,
+      "definitions_after": 8,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.float_math::main\"",
+        "\"my.float_math::parse_number\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.float_math::main\"",
+        "\"my.float_math::parse_number\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.float_math::main\"": [
+          {
+            "site": 19,
+            "block": "b25",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 19)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000026\n",
+            "semantic_site": [
+              7,
+              22,
+              13,
+              64,
+              "effect\\00",
+              "float_math::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              22,
+              13,
+              "float_math::main"
+            ]
+          },
+          {
+            "site": 20,
+            "block": "b29",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 20)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000028\n",
+            "semantic_site": [
+              7,
+              33,
+              15,
+              64,
+              "effect\\00",
+              "float_math::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              33,
+              15,
+              "float_math::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 26,
+      "predecessor_site_count": 28,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/float_math.diff",
+      "raw_module_diff_sha256": "f2a91bc1532d43c184ab53ebe40fe3944299c270d00f77ac91fffc368a662c3d",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "469b41f5ce85fbaced334584644113ff98f082d1e34afc5536f6b68ec290f260",
+        "after_sha256": "1fa2ad1dd10cec99d8dcb7aaee805f5536d1100670be3f5907382ccda9b664e6",
+        "before_bytes": 11487,
+        "after_bytes": 12396
+      }
+    },
+    {
+      "row": "int_math",
+      "before_sha256": "0a144e3fdbf23583ab3b5b62b45341c46b44bfb5db67665361dbb2ed97ed467b",
+      "after_sha256": "f521925ae8caa357954cbd18c597ff5d06388c8a73d6d9ece12147b7cb22a2a5",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 8,
+      "definitions_after": 8,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.int_math::main\"",
+        "\"my.int_math::parse_number\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.int_math::main\"",
+        "\"my.int_math::parse_number\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.int_math::main\"": [
+          {
+            "site": 19,
+            "block": "b25",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 19)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000026\n",
+            "semantic_site": [
+              7,
+              22,
+              13,
+              64,
+              "effect\\00",
+              "int_math::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              22,
+              13,
+              "int_math::main"
+            ]
+          },
+          {
+            "site": 20,
+            "block": "b29",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 20)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000028\n",
+            "semantic_site": [
+              7,
+              31,
+              15,
+              64,
+              "effect\\00",
+              "int_math::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              31,
+              15,
+              "int_math::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 22,
+      "predecessor_site_count": 24,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/int_math.diff",
+      "raw_module_diff_sha256": "143aca773201122e24abe9ecebf93034bbf82ce41e2239a486e079d093a749f5",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "6cb529fa0dae56423dcd2ee00e961d97030df2e97878b4afc5a691830bd1067b",
+        "after_sha256": "3c6cbd64ebea5cbae2c22885ae22aefded8e3ebff46da2b176ca7fcf04a54399",
+        "before_bytes": 10407,
+        "after_bytes": 11312
+      }
+    },
+    {
+      "row": "row_alloc_retained",
+      "before_sha256": "f73ab99cc87884242d0999eb0d4af7426376f48c91260e68571d96ed7a8e8357",
+      "after_sha256": "9ebb58d8547985177f7935373221c87a6f61cbbd2e2635bb02d3140740d0596c",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 9,
+      "definitions_after": 9,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_alloc_retained::main\"",
+        "\"my.row_alloc_retained::parse_number\"",
+        "\"my.row_alloc_retained::batch_result\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_alloc_retained::main\"",
+        "\"my.row_alloc_retained::parse_number\"",
+        "\"my.row_alloc_retained::batch_result\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_alloc_retained::main\"": [
+          {
+            "site": 9,
+            "block": "b10",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 9)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000016\n",
+            "semantic_site": [
+              7,
+              39,
+              13,
+              64,
+              "effect\\00",
+              "row_alloc_retained::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              39,
+              13,
+              "row_alloc_retained::main"
+            ]
+          },
+          {
+            "site": 10,
+            "block": "b17",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 10)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000019\n",
+            "semantic_site": [
+              7,
+              45,
+              15,
+              64,
+              "effect\\00",
+              "row_alloc_retained::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              45,
+              15,
+              "row_alloc_retained::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 25,
+      "predecessor_site_count": 27,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_alloc_retained.diff",
+      "raw_module_diff_sha256": "98aff9513749719a06536629e7183054bb507bd5bf7abb6ff59d67c107dfa8ab",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "4092148ec70e3856b5de13ba017dcf69e5121007685d1b29273a1808e68c20a8",
+        "after_sha256": "dccb19ee23dee4d6e79d7a0d89f79f8ed758c64f4138e6cc51835a131977c247",
+        "before_bytes": 11888,
+        "after_bytes": 12813
+      }
+    },
+    {
+      "row": "row_alloc_short",
+      "before_sha256": "3d092cf6088ab866f67a3f56c0153e8d77c4af3fe404b4506a8aeb90f3a5030b",
+      "after_sha256": "5371094b7e8efe92b1e56a7fd4494b626d3da1add3169061cf4855b863331932",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 9,
+      "definitions_after": 9,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_alloc_short::main\"",
+        "\"my.row_alloc_short::parse_number\"",
+        "\"my.row_alloc_short::batch_result\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_alloc_short::main\"",
+        "\"my.row_alloc_short::parse_number\"",
+        "\"my.row_alloc_short::batch_result\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_alloc_short::main\"": [
+          {
+            "site": 9,
+            "block": "b10",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 9)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000016\n",
+            "semantic_site": [
+              7,
+              38,
+              13,
+              64,
+              "effect\\00",
+              "row_alloc_short::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              38,
+              13,
+              "row_alloc_short::main"
+            ]
+          },
+          {
+            "site": 10,
+            "block": "b17",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 10)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000019\n",
+            "semantic_site": [
+              7,
+              44,
+              15,
+              64,
+              "effect\\00",
+              "row_alloc_short::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              44,
+              15,
+              "row_alloc_short::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 24,
+      "predecessor_site_count": 26,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_alloc_short.diff",
+      "raw_module_diff_sha256": "10c48dfee2d92f949890d8447a7b89874a8994a4db935f1f7592aa565c78ee41",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "3e8d69c368772f87c5cbd69b12ca3eeee3ced842fde2910ec64c5bcc118aa4e6",
+        "after_sha256": "b766a145e9377087915ccad1a86e17e650f1b72c646416dc6ce062436e436a97",
+        "before_bytes": 11449,
+        "after_bytes": 12368
+      }
+    },
+    {
+      "row": "row_bytes_scan",
+      "before_sha256": "857f8c4572a897f4256a13397e408f944bf2b02df0673fc8ce7e205bb0334551",
+      "after_sha256": "c518a073fcf33ee334093bdf07ef5392a16a0a7d91b1f81db7f1e4ace4a50bfe",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 11,
+      "definitions_after": 11,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_bytes_scan::main\"",
+        "\"my.row_bytes_scan::number\"",
+        "\"my.row_bytes_scan::inputs\"",
+        "\"my.row_bytes_scan::kernel\"",
+        "\"my.row_bytes_scan::bytes_job\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_bytes_scan::main\"",
+        "\"my.row_bytes_scan::number\"",
+        "\"my.row_bytes_scan::inputs\"",
+        "\"my.row_bytes_scan::kernel\"",
+        "\"my.row_bytes_scan::bytes_job\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_bytes_scan::main\"": [
+          {
+            "site": 9,
+            "block": "b10",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 9)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000017\n",
+            "semantic_site": [
+              7,
+              63,
+              13,
+              64,
+              "effect\\00",
+              "row_bytes_scan::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              63,
+              13,
+              "row_bytes_scan::main"
+            ]
+          },
+          {
+            "site": 10,
+            "block": "b10.52.62.72.82.92",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 10)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000020\n",
+            "semantic_site": [
+              7,
+              65,
+              15,
+              64,
+              "effect\\00",
+              "row_bytes_scan::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              65,
+              15,
+              "row_bytes_scan::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 23,
+      "predecessor_site_count": 25,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_bytes_scan.diff",
+      "raw_module_diff_sha256": "81b04d129d593d32bcbe43f5daf5d16f2e9606d61c150213b01fd3fdcdd60bde",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "f4230625f90359a26b56cce26e7f8970e4f8e1876340f6441cbc228b4f851655",
+        "after_sha256": "35e501b2a4c2556a09bdbe8759522f231320759f777e6f78b3a537d0caa4db2a",
+        "before_bytes": 12322,
+        "after_bytes": 13239
+      }
+    },
+    {
+      "row": "row_call_indirect",
+      "before_sha256": "c83820df245badcbbd4089eb9503d133fbf8d5d018fc1335e2ac6c912d88c97c",
+      "after_sha256": "1defba76b3545a58a28a637e38ae1fc3c4ab8e7fba0215e5711bcbdf0f6be429",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 10,
+      "definitions_after": 10,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_call_indirect::main\"",
+        "\"my.row_call_indirect::parse_number\"",
+        "\"my.row_call_indirect::affine_a\"",
+        "\"my.row_call_indirect::affine_b\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_call_indirect::main\"",
+        "\"my.row_call_indirect::parse_number\"",
+        "\"my.row_call_indirect::affine_a\"",
+        "\"my.row_call_indirect::affine_b\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_call_indirect::main\"": [
+          {
+            "site": 19,
+            "block": "b27",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 19)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000026\n",
+            "semantic_site": [
+              7,
+              31,
+              13,
+              64,
+              "effect\\00",
+              "row_call_indirect::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              31,
+              13,
+              "row_call_indirect::main"
+            ]
+          },
+          {
+            "site": 20,
+            "block": "b32",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 20)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000028\n",
+            "semantic_site": [
+              7,
+              40,
+              15,
+              64,
+              "effect\\00",
+              "row_call_indirect::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              40,
+              15,
+              "row_call_indirect::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 32,
+      "predecessor_site_count": 34,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_call_indirect.diff",
+      "raw_module_diff_sha256": "e9780a6ed398567ef6b7166b6c37025ecd578536f1f01d5d4a88b7f867d99d14",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "da024c54388cb265d0bd035b81425fddc0c8cddd374290b711a9fa3b246bd2f5",
+        "after_sha256": "c79961f9000a8a0446a6cac3549c8562879e57c0b2c2d4797c5ca691bc03b1f4",
+        "before_bytes": 13676,
+        "after_bytes": 14599
+      }
+    },
+    {
+      "row": "row_dict_lookup",
+      "before_sha256": "1d46101b9d68a6bc7b8c6df6d189f5778f8e7eff2d9f28f07f672558262b21a8",
+      "after_sha256": "39a77aa6fd87d286f4bc11f63ab19db84771e3f162edf49301aa4daa1a3b3e46",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 12,
+      "definitions_after": 12,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_dict_lookup::main\"",
+        "\"my.row_dict_lookup::parse_number\"",
+        "\"my.row_dict_lookup::batch_result\"",
+        "main",
+        "myl.dict.17.find",
+        "myl.dict.18.hash",
+        "myl.dict.18.find"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_dict_lookup::main\"",
+        "\"my.row_dict_lookup::parse_number\"",
+        "\"my.row_dict_lookup::batch_result\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_dict_lookup::main\"": [
+          {
+            "site": 19,
+            "block": "b29",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 19)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000026\n",
+            "semantic_site": [
+              7,
+              35,
+              13,
+              64,
+              "effect\\00",
+              "row_dict_lookup::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              35,
+              13,
+              "row_dict_lookup::main"
+            ]
+          },
+          {
+            "site": 22,
+            "block": "b38.110.118.126.134",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 22)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000031\n",
+            "semantic_site": [
+              7,
+              41,
+              15,
+              64,
+              "effect\\00",
+              "row_dict_lookup::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              41,
+              15,
+              "row_dict_lookup::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 29,
+      "predecessor_site_count": 31,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_dict_lookup.diff",
+      "raw_module_diff_sha256": "3583b714c0c38e3e3506bba6a343a070f0d9c1aca24376606821fc0ce3410cb1",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "4b73524b5b06158f13bfc968dfca6f351ab91d74d6692283fdb986ebbdbb6479",
+        "after_sha256": "5a54d5af8eef004e758024a8ffd4b6cabfa191cd5ace68a2d6e1f71686becdc6",
+        "before_bytes": 13271,
+        "after_bytes": 14190
+      }
+    },
+    {
+      "row": "row_dict_lookup_str",
+      "before_sha256": "e951b746b04b55f50796a2548076253cdbd231a1ded8395a14ad81794a402e5a",
+      "after_sha256": "6230533a1f02392ea19092e860f6d3e7244833ee87e8b657ace1a5a62c115874",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 12,
+      "definitions_after": 12,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_dict_lookup_str::main\"",
+        "\"my.row_dict_lookup_str::parse_number\"",
+        "\"my.row_dict_lookup_str::batch_result\"",
+        "main",
+        "myl.dict.17.find",
+        "myl.dict.18.hash",
+        "myl.dict.18.find"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_dict_lookup_str::main\"",
+        "\"my.row_dict_lookup_str::parse_number\"",
+        "\"my.row_dict_lookup_str::batch_result\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_dict_lookup_str::main\"": [
+          {
+            "site": 27,
+            "block": "b41",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 27)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000035\n",
+            "semantic_site": [
+              7,
+              36,
+              13,
+              64,
+              "effect\\00",
+              "row_dict_lookup_str::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              36,
+              13,
+              "row_dict_lookup_str::main"
+            ]
+          },
+          {
+            "site": 33,
+            "block": "b52.163.171.179.187",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 33)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000043\n",
+            "semantic_site": [
+              7,
+              42,
+              15,
+              64,
+              "effect\\00",
+              "row_dict_lookup_str::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              42,
+              15,
+              "row_dict_lookup_str::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 43,
+      "predecessor_site_count": 45,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_dict_lookup_str.diff",
+      "raw_module_diff_sha256": "92a925a4ed9d5207b8e6d1443d901d249e63b3c3b220a98d32e6bb6eda51510c",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "1007078c3a49cd41e34ef9a074ca3a94e7466987d9e724110b38facbd9cd8a05",
+        "after_sha256": "0a31782100936eb9f1fed50343f85fa8ab59aee809b3feddfd4ef7c9754c1245",
+        "before_bytes": 17181,
+        "after_bytes": 18108
+      }
+    },
+    {
+      "row": "row_dict_update",
+      "before_sha256": "76f805036ac41a71bb102c9d1f3f2a8039bf6e9ff67d793c4994db8c8b115e07",
+      "after_sha256": "20aa2d76e4efa6048ccd9adfa4efc48f9e2750c0a56c0a8f28f755e43a5ca128",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 12,
+      "definitions_after": 12,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_dict_update::main\"",
+        "\"my.row_dict_update::parse_number\"",
+        "\"my.row_dict_update::batch_result\"",
+        "main",
+        "myl.dict.17.find",
+        "myl.dict.18.hash",
+        "myl.dict.18.find"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_dict_update::main\"",
+        "\"my.row_dict_update::parse_number\"",
+        "\"my.row_dict_update::batch_result\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_dict_update::main\"": [
+          {
+            "site": 19,
+            "block": "b25",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 19)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000026\n",
+            "semantic_site": [
+              7,
+              38,
+              13,
+              64,
+              "effect\\00",
+              "row_dict_update::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              38,
+              13,
+              "row_dict_update::main"
+            ]
+          },
+          {
+            "site": 20,
+            "block": "b29.93.101.109.117",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 20)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000029\n",
+            "semantic_site": [
+              7,
+              44,
+              15,
+              64,
+              "effect\\00",
+              "row_dict_update::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              44,
+              15,
+              "row_dict_update::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 35,
+      "predecessor_site_count": 37,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_dict_update.diff",
+      "raw_module_diff_sha256": "084212ce6f095ab8dcc6c6b09288e7a3a66fb5b2a06717df2d1fb13bf54d52e6",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "dcb1a5e1f1a01bb85a9d6f1853ed411e059f7e15c4a59cab8b40506d966e867b",
+        "after_sha256": "ff721241f311608fdb7993ef7420a5e751fbdd3e3df0bb5db0b226df14e0ae36",
+        "before_bytes": 15030,
+        "after_bytes": 15949
+      }
+    },
+    {
+      "row": "row_dict_update_str",
+      "before_sha256": "7030ae53440ae14857c0bd4ea36e8aea2c303673d2d6d70ebd2299b42c65f051",
+      "after_sha256": "bae11084341e13e231fa1f9ed6f89fa69e75a6bb89af694fdb95fe7087fabc6b",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 12,
+      "definitions_after": 12,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_dict_update_str::main\"",
+        "\"my.row_dict_update_str::parse_number\"",
+        "\"my.row_dict_update_str::batch_result\"",
+        "main",
+        "myl.dict.17.find",
+        "myl.dict.18.hash",
+        "myl.dict.18.find"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_dict_update_str::main\"",
+        "\"my.row_dict_update_str::parse_number\"",
+        "\"my.row_dict_update_str::batch_result\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_dict_update_str::main\"": [
+          {
+            "site": 27,
+            "block": "b37",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 27)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000035\n",
+            "semantic_site": [
+              7,
+              40,
+              13,
+              64,
+              "effect\\00",
+              "row_dict_update_str::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              40,
+              13,
+              "row_dict_update_str::main"
+            ]
+          },
+          {
+            "site": 28,
+            "block": "b41.128.136.144.152",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 28)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000038\n",
+            "semantic_site": [
+              7,
+              46,
+              15,
+              64,
+              "effect\\00",
+              "row_dict_update_str::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              46,
+              15,
+              "row_dict_update_str::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 56,
+      "predecessor_site_count": 58,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_dict_update_str.diff",
+      "raw_module_diff_sha256": "56bc3d158b9ad6ec4995000cf91b5ede66776fbd50f2fc6410022c18af10638a",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "6532e2099313f8ba6e60211188d9896aa4cc3d69642d54bc17698d3be0ee3c78",
+        "after_sha256": "091f6b54b974ccc8fea73dc83080e3334ed3c7f90a03e4f13c019a460729f088",
+        "before_bytes": 20695,
+        "after_bytes": 21622
+      }
+    },
+    {
+      "row": "row_int_format",
+      "before_sha256": "5df21e9e999dc17948bcff40b82559131c575c15b84741f11298c1461ddb70dd",
+      "after_sha256": "9ae1caa80cdbaa9a1bcd3f3a4a96d5d70f9962886a2dbef12d838bf2b3ddb470",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 11,
+      "definitions_after": 11,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_int_format::main\"",
+        "\"my.row_int_format::number\"",
+        "\"my.row_int_format::inputs\"",
+        "\"my.row_int_format::kernel\"",
+        "\"my.row_int_format::score\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_int_format::main\"",
+        "\"my.row_int_format::number\"",
+        "\"my.row_int_format::inputs\"",
+        "\"my.row_int_format::kernel\"",
+        "\"my.row_int_format::score\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_int_format::main\"": [
+          {
+            "site": 9,
+            "block": "b10",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 9)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000017\n",
+            "semantic_site": [
+              7,
+              66,
+              13,
+              64,
+              "effect\\00",
+              "row_int_format::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              66,
+              13,
+              "row_int_format::main"
+            ]
+          },
+          {
+            "site": 10,
+            "block": "b10.52.62.72.82.92",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 10)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000020\n",
+            "semantic_site": [
+              7,
+              68,
+              15,
+              64,
+              "effect\\00",
+              "row_int_format::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              68,
+              15,
+              "row_int_format::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 16,
+      "predecessor_site_count": 18,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_int_format.diff",
+      "raw_module_diff_sha256": "aaacaeeef3a3cdcf0aa6e96369f4e24a0d3f7e89d9b9592e62dccb35e18e8493",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "2cdb2554479018e7c854bf95602a35236f39a084c495e892e529b54eedb55171",
+        "after_sha256": "c2252fc72a736bd6d60a58c2fb087b2d038b183e56f1eff0ced0d27082b1dbbf",
+        "before_bytes": 10398,
+        "after_bytes": 11315
+      }
+    },
+    {
+      "row": "row_int_parse",
+      "before_sha256": "10db6d78ac0e4e0d6aec445df0aaf7e1036b66b7fad623376ed15d1c701661f8",
+      "after_sha256": "c77494702efaae76a1bc4d5d5f50899810b2334bfd49edadf9dc85ba3a055d07",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 11,
+      "definitions_after": 11,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_int_parse::main\"",
+        "\"my.row_int_parse::number\"",
+        "\"my.row_int_parse::inputs\"",
+        "\"my.row_int_parse::kernel\"",
+        "\"my.row_int_parse::parse_job\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_int_parse::main\"",
+        "\"my.row_int_parse::number\"",
+        "\"my.row_int_parse::inputs\"",
+        "\"my.row_int_parse::kernel\"",
+        "\"my.row_int_parse::parse_job\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_int_parse::main\"": [
+          {
+            "site": 9,
+            "block": "b10",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 9)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000017\n",
+            "semantic_site": [
+              7,
+              78,
+              13,
+              64,
+              "effect\\00",
+              "row_int_parse::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              78,
+              13,
+              "row_int_parse::main"
+            ]
+          },
+          {
+            "site": 10,
+            "block": "b10.52.62.72.82.92",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 10)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000020\n",
+            "semantic_site": [
+              7,
+              80,
+              15,
+              64,
+              "effect\\00",
+              "row_int_parse::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              80,
+              15,
+              "row_int_parse::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 16,
+      "predecessor_site_count": 18,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_int_parse.diff",
+      "raw_module_diff_sha256": "a6c3b5f6304faeeec288647c534c7545df63c8b183c7beb1e03e14ccd5d3e93e",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "dec5406f9918122a1e5df1f57fb85478ef70a6f6661e230fc66264ffec982c24",
+        "after_sha256": "9dc568a12ac9a3f58b88e2ff0a9a3e55cceefd02f93d12510cf17e2e3daee743",
+        "before_bytes": 11182,
+        "after_bytes": 12097
+      }
+    },
+    {
+      "row": "row_list_append",
+      "before_sha256": "4b4b905984abcadbc48bd4eae97b17cb04648f4df6a257043d22bfc7a53dcd46",
+      "after_sha256": "73680cc014e430d9a3e81902fdd9db345437cb91e8eb33d8b2c3a118f2bc4185",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 10,
+      "definitions_after": 10,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_list_append::main\"",
+        "\"my.row_list_append::parse_number\"",
+        "\"my.row_list_append::batch_result\"",
+        "\"my.row_list_append::fold\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_list_append::main\"",
+        "\"my.row_list_append::parse_number\"",
+        "\"my.row_list_append::batch_result\"",
+        "\"my.row_list_append::fold\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_list_append::main\"": [
+          {
+            "site": 9,
+            "block": "b10",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 9)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000016\n",
+            "semantic_site": [
+              7,
+              42,
+              13,
+              64,
+              "effect\\00",
+              "row_list_append::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              42,
+              13,
+              "row_list_append::main"
+            ]
+          },
+          {
+            "site": 10,
+            "block": "b17",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 10)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000019\n",
+            "semantic_site": [
+              7,
+              48,
+              15,
+              64,
+              "effect\\00",
+              "row_list_append::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              48,
+              15,
+              "row_list_append::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 18,
+      "predecessor_site_count": 20,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_list_append.diff",
+      "raw_module_diff_sha256": "9cf9fd4334f56aadc871c263ce8d2207fc7c8b0eed7871f7effb1dd3e5826446",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "359b481c2ad64fae7afc150f47a4e478a0dc6ab872eecb61fef8dab5495e85a3",
+        "after_sha256": "fd7703fb0709ee7c96385357c9d380b89774e3d9d2437f0b9b8849957af636a2",
+        "before_bytes": 10098,
+        "after_bytes": 11017
+      }
+    },
+    {
+      "row": "row_list_filter",
+      "before_sha256": "269e5423e7831b2198fcb80065879e5994b37269a7dda90b9d62233d6bd08245",
+      "after_sha256": "6ec559e000e084f01f31f25841fe653bfa9eddd5952adcc00a291176305fbec5",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 10,
+      "definitions_after": 10,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_list_filter::main\"",
+        "\"my.row_list_filter::parse_number\"",
+        "\"my.row_list_filter::batch_result\"",
+        "\"my.row_list_filter::fold\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_list_filter::main\"",
+        "\"my.row_list_filter::parse_number\"",
+        "\"my.row_list_filter::batch_result\"",
+        "\"my.row_list_filter::fold\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_list_filter::main\"": [
+          {
+            "site": 9,
+            "block": "b10",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 9)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000016\n",
+            "semantic_site": [
+              7,
+              41,
+              13,
+              64,
+              "effect\\00",
+              "row_list_filter::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              41,
+              13,
+              "row_list_filter::main"
+            ]
+          },
+          {
+            "site": 10,
+            "block": "b17",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 10)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000019\n",
+            "semantic_site": [
+              7,
+              47,
+              15,
+              64,
+              "effect\\00",
+              "row_list_filter::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              47,
+              15,
+              "row_list_filter::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 27,
+      "predecessor_site_count": 29,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_list_filter.diff",
+      "raw_module_diff_sha256": "444f357555c767cc87381c617baab94d05c2724f7611d41acb4d3c1cf83d3d81",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "c75ef887aed58ed839278ffb55cfd7365637d381bb4ffd347d4c03881725498e",
+        "after_sha256": "c88fc758d5607611bcb9c8c096cf1bc3735102969b1bd287def2c8b6a2a3534a",
+        "before_bytes": 12504,
+        "after_bytes": 13423
+      }
+    },
+    {
+      "row": "row_list_scan",
+      "before_sha256": "e9fca47c4ac62cee18ca21ea9d191af9fae3bcf80cf025da0ab598898ac1a426",
+      "after_sha256": "2ae96a037cf2d86eb061e1e9b4071293db875af109a61d012ce3dfeb1e0f6b53",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 9,
+      "definitions_after": 9,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_list_scan::main\"",
+        "\"my.row_list_scan::parse_number\"",
+        "\"my.row_list_scan::batch_result\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_list_scan::main\"",
+        "\"my.row_list_scan::parse_number\"",
+        "\"my.row_list_scan::batch_result\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_list_scan::main\"": [
+          {
+            "site": 19,
+            "block": "b25",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 19)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000026\n",
+            "semantic_site": [
+              7,
+              36,
+              13,
+              64,
+              "effect\\00",
+              "row_list_scan::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              36,
+              13,
+              "row_list_scan::main"
+            ]
+          },
+          {
+            "site": 20,
+            "block": "b29.92",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 20)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000029\n",
+            "semantic_site": [
+              7,
+              42,
+              15,
+              64,
+              "effect\\00",
+              "row_list_scan::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              42,
+              15,
+              "row_list_scan::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 22,
+      "predecessor_site_count": 24,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_list_scan.diff",
+      "raw_module_diff_sha256": "3ca0d48c68ad7809c38cf234c6230711071c9cc7bd5a2c7f38687c0f4983a96f",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "fde98425983b87a5b162f9b321c952dbfbab635ef8f46144c54b20b7a2bdc055",
+        "after_sha256": "e4d74a4488fb0073652cb58848bd854386bf5f698facfd7526a9a0a4174639c5",
+        "before_bytes": 10789,
+        "after_bytes": 11704
+      }
+    },
+    {
+      "row": "row_mutate_nested",
+      "before_sha256": "640d2c5f918d84ab5be95c203fa95aa3ff8894d44b99c9c120da604585aeb3ce",
+      "after_sha256": "160c17df0625f4b1227a9c96f5f2fb0c9dc1c35dd0ed9f67f26ab10d39d5d780",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 9,
+      "definitions_after": 9,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_mutate_nested::main\"",
+        "\"my.row_mutate_nested::parse_number\"",
+        "\"my.row_mutate_nested::batch_result\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_mutate_nested::main\"",
+        "\"my.row_mutate_nested::parse_number\"",
+        "\"my.row_mutate_nested::batch_result\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_mutate_nested::main\"": [
+          {
+            "site": 17,
+            "block": "b25",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 17)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000024\n",
+            "semantic_site": [
+              7,
+              36,
+              13,
+              64,
+              "effect\\00",
+              "row_mutate_nested::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              36,
+              13,
+              "row_mutate_nested::main"
+            ]
+          },
+          {
+            "site": 29,
+            "block": "b41",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 29)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000038\n",
+            "semantic_site": [
+              7,
+              42,
+              15,
+              64,
+              "effect\\00",
+              "row_mutate_nested::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              42,
+              15,
+              "row_mutate_nested::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 56,
+      "predecessor_site_count": 58,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_mutate_nested.diff",
+      "raw_module_diff_sha256": "7685e5107e14ef5c1d9a11814967ab925f1dbc454cb89eaf6af001b5007a6409",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "575f1f770c0486736c8fa23996c14bb5fda21fc9da277aaa02fc1710ce30c6b8",
+        "after_sha256": "30bc4eec402d08464757704d835577c9f2358124ba9acac3c4a41fceb20a39ea",
+        "before_bytes": 19951,
+        "after_bytes": 20874
+      }
+    },
+    {
+      "row": "row_mutate_shared",
+      "before_sha256": "5b9e4083e9d83041e6695a3d9d01bb4ab3700aa15ffd6252d19405f10fdfaa6a",
+      "after_sha256": "7b7984a9014cf7e039c219d612c33783cb1ab8d7ba9fc4df5750d13bf8fc09b9",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 8,
+      "definitions_after": 8,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_mutate_shared::main\"",
+        "\"my.row_mutate_shared::parse_number\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_mutate_shared::main\"",
+        "\"my.row_mutate_shared::parse_number\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_mutate_shared::main\"": [
+          {
+            "site": 19,
+            "block": "b25",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 19)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000026\n",
+            "semantic_site": [
+              7,
+              28,
+              13,
+              64,
+              "effect\\00",
+              "row_mutate_shared::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              28,
+              13,
+              "row_mutate_shared::main"
+            ]
+          },
+          {
+            "site": 22,
+            "block": "b29",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 22)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000030\n",
+            "semantic_site": [
+              7,
+              35,
+              15,
+              64,
+              "effect\\00",
+              "row_mutate_shared::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              35,
+              15,
+              "row_mutate_shared::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 33,
+      "predecessor_site_count": 35,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_mutate_shared.diff",
+      "raw_module_diff_sha256": "e043c1e3bc190844cdb314dc2f50d88bab9d648c6d5229262ca0c576db46cc38",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "a37ec3027ff10cc7bbf2b92296f8a1e83ddf3b02082f4d21a53211d7abce68be",
+        "after_sha256": "235a9eb302d7bee5a93030f17fa0afcac65fe972a53bc481817b2995384ff167",
+        "before_bytes": 13558,
+        "after_bytes": 14481
+      }
+    },
+    {
+      "row": "row_mutate_unique",
+      "before_sha256": "0d9498f6858a63d73cef518de9d60873b6888916be1b9d564500806fda6aff16",
+      "after_sha256": "c2f1fa5a413fc8a9e5e90b35b2f7cdb42404f461eb8d66dbe596e5d6965b19bc",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 8,
+      "definitions_after": 8,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_mutate_unique::main\"",
+        "\"my.row_mutate_unique::parse_number\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_mutate_unique::main\"",
+        "\"my.row_mutate_unique::parse_number\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_mutate_unique::main\"": [
+          {
+            "site": 19,
+            "block": "b25",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 19)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000026\n",
+            "semantic_site": [
+              7,
+              28,
+              13,
+              64,
+              "effect\\00",
+              "row_mutate_unique::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              28,
+              13,
+              "row_mutate_unique::main"
+            ]
+          },
+          {
+            "site": 22,
+            "block": "b29",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 22)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000030\n",
+            "semantic_site": [
+              7,
+              33,
+              15,
+              64,
+              "effect\\00",
+              "row_mutate_unique::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              33,
+              15,
+              "row_mutate_unique::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 31,
+      "predecessor_site_count": 33,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_mutate_unique.diff",
+      "raw_module_diff_sha256": "6a71df0af5a2a87a59e16519094a6bebe0f93df75be1774c6a40dd3b25dee9b4",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "8481bfdb78b13321f9ddb89c90550720e4293281a6756805c37b12607296514c",
+        "after_sha256": "c1cd5544198347d4b63507c50fd42d1fd52b937bf3a7d853328c09eab4572263",
+        "before_bytes": 13013,
+        "after_bytes": 13936
+      }
+    },
+    {
+      "row": "row_option_handle",
+      "before_sha256": "97d1124856a8bce2be1f48e063fab88f635cc78f6c679bfe80d15e3a38c77390",
+      "after_sha256": "2062f09c2d3d301c9449f54c5482890274998629b5c76ec1433d464629fff449",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 9,
+      "definitions_after": 9,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_option_handle::main\"",
+        "\"my.row_option_handle::parse_number\"",
+        "\"my.row_option_handle::optional\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_option_handle::main\"",
+        "\"my.row_option_handle::parse_number\"",
+        "\"my.row_option_handle::optional\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_option_handle::main\"": [
+          {
+            "site": 19,
+            "block": "b25",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 19)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000026\n",
+            "semantic_site": [
+              7,
+              34,
+              13,
+              64,
+              "effect\\00",
+              "row_option_handle::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              34,
+              13,
+              "row_option_handle::main"
+            ]
+          },
+          {
+            "site": 20,
+            "block": "b29",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 20)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000028\n",
+            "semantic_site": [
+              7,
+              48,
+              15,
+              64,
+              "effect\\00",
+              "row_option_handle::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              48,
+              15,
+              "row_option_handle::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 26,
+      "predecessor_site_count": 28,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_option_handle.diff",
+      "raw_module_diff_sha256": "f7406607d7f5ca323a8e0efd5c0e513f043d7d15e892d2f60414072417d2ee38",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "17f1fa440d69447a37f9f5df31648c8a01562d6b7ebe4d16073d358ff92f6dca",
+        "after_sha256": "a599e759708686fd38d6aa45521e8141f8591c9923784573192f082f9030d9a2",
+        "before_bytes": 11939,
+        "after_bytes": 12862
+      }
+    },
+    {
+      "row": "row_record_construct",
+      "before_sha256": "90166046d12d14fcd2f5ba820ae64cc5f262fb61e4e154d6ec7537f99f7350ad",
+      "after_sha256": "4036fec07493e838443700457ae8b671adc70e86ede7e9d311617bd180f78ca8",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 9,
+      "definitions_after": 9,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_record_construct::main\"",
+        "\"my.row_record_construct::parse_number\"",
+        "\"my.row_record_construct::score\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_record_construct::main\"",
+        "\"my.row_record_construct::parse_number\"",
+        "\"my.row_record_construct::score\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_record_construct::main\"": [
+          {
+            "site": 19,
+            "block": "b25",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 19)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000026\n",
+            "semantic_site": [
+              7,
+              38,
+              13,
+              64,
+              "effect\\00",
+              "row_record_construct::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              38,
+              13,
+              "row_record_construct::main"
+            ]
+          },
+          {
+            "site": 20,
+            "block": "b29",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 20)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000028\n",
+            "semantic_site": [
+              7,
+              49,
+              15,
+              64,
+              "effect\\00",
+              "row_record_construct::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              49,
+              15,
+              "row_record_construct::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 26,
+      "predecessor_site_count": 28,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_record_construct.diff",
+      "raw_module_diff_sha256": "d19d3ce5f599ef2e032c015bfdbd2121a46ca3c77528c03c576df7e8b783117f",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "98ede859027afcae0ca602c5597d8965f4c3c911afce685f72c21b01e4b0f43f",
+        "after_sha256": "444e70c77f2cf071ef12258cb516e2c3fd5d0288c22227bc3a432ab50a6ed0eb",
+        "before_bytes": 11968,
+        "after_bytes": 12897
+      }
+    },
+    {
+      "row": "row_record_reads",
+      "before_sha256": "83db0d386b3e8673e272a882724db5adc611eac75f3b3bc5042fe9627b00600d",
+      "after_sha256": "8b5e4673043717ebc67421f6e4c17a16f8e0de8aa46ee0eea1c3cf1e6139299c",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 9,
+      "definitions_after": 9,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_record_reads::main\"",
+        "\"my.row_record_reads::parse_number\"",
+        "\"my.row_record_reads::read_item\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_record_reads::main\"",
+        "\"my.row_record_reads::parse_number\"",
+        "\"my.row_record_reads::read_item\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_record_reads::main\"": [
+          {
+            "site": 20,
+            "block": "b17",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 20)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000027\n",
+            "semantic_site": [
+              7,
+              41,
+              13,
+              64,
+              "effect\\00",
+              "row_record_reads::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              41,
+              13,
+              "row_record_reads::main"
+            ]
+          },
+          {
+            "site": 21,
+            "block": "b21",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 21)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000029\n",
+            "semantic_site": [
+              7,
+              47,
+              15,
+              64,
+              "effect\\00",
+              "row_record_reads::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              47,
+              15,
+              "row_record_reads::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 30,
+      "predecessor_site_count": 32,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_record_reads.diff",
+      "raw_module_diff_sha256": "3e361ec1519f4c7ed64c938e8833465d851070418273df3d29c2dc55847cdcf8",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "a526063f65d03c23c9f6e429964048622585a8e289c2108b279fe2e916164add",
+        "after_sha256": "bf85b962d8ea2fe83990b1311e2863ed6ff0e8f388910a2a19253b999c455f13",
+        "before_bytes": 13044,
+        "after_bytes": 13965
+      }
+    },
+    {
+      "row": "row_record_update",
+      "before_sha256": "404670cccfe82776975a2abd878d516e03398fae4fb0f99f878729e25c9e77f5",
+      "after_sha256": "8b4c1d9096ef634459d54a6687c5b4908ffe197f4bc7d849f470e6b5cc80d7a0",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 9,
+      "definitions_after": 9,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_record_update::main\"",
+        "\"my.row_record_update::parse_number\"",
+        "\"my.row_record_update::score\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_record_update::main\"",
+        "\"my.row_record_update::parse_number\"",
+        "\"my.row_record_update::score\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_record_update::main\"": [
+          {
+            "site": 20,
+            "block": "b29",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 20)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000027\n",
+            "semantic_site": [
+              7,
+              39,
+              13,
+              64,
+              "effect\\00",
+              "row_record_update::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              39,
+              13,
+              "row_record_update::main"
+            ]
+          },
+          {
+            "site": 21,
+            "block": "b33",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 21)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000029\n",
+            "semantic_site": [
+              7,
+              53,
+              15,
+              64,
+              "effect\\00",
+              "row_record_update::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              53,
+              15,
+              "row_record_update::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 36,
+      "predecessor_site_count": 38,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_record_update.diff",
+      "raw_module_diff_sha256": "62a8320d6d05e7a71798c7786f22f0630617c66745dffe23cd27e95a5a9a507a",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "b5d9b31a8fc9d79f96f8f8407bda936dfd9d93620c8ea794dd8a7503ce33b287",
+        "after_sha256": "5f0f685490b345fc89bfbc3c6e127a093c43c8bd48dfe422eec1b1059b03abdb",
+        "before_bytes": 14488,
+        "after_bytes": 15411
+      }
+    },
+    {
+      "row": "row_result_propagate",
+      "before_sha256": "fead3484502404c7a2077cb95c7fbbff6955b5a811ec84c2c7199e80d36cf8f7",
+      "after_sha256": "c61a363c50e359055ca881069f5b1d8a9c6cedafa14c2321e33de67d7712f3b8",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 10,
+      "definitions_after": 10,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_result_propagate::main\"",
+        "\"my.row_result_propagate::parse_number\"",
+        "\"my.row_result_propagate::forwarded\"",
+        "\"my.row_result_propagate::checked\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_result_propagate::main\"",
+        "\"my.row_result_propagate::parse_number\"",
+        "\"my.row_result_propagate::forwarded\"",
+        "\"my.row_result_propagate::checked\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_result_propagate::main\"": [
+          {
+            "site": 19,
+            "block": "b25",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 19)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000026\n",
+            "semantic_site": [
+              7,
+              39,
+              13,
+              64,
+              "effect\\00",
+              "row_result_propagate::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              39,
+              13,
+              "row_result_propagate::main"
+            ]
+          },
+          {
+            "site": 20,
+            "block": "b29",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 20)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000028\n",
+            "semantic_site": [
+              7,
+              53,
+              15,
+              64,
+              "effect\\00",
+              "row_result_propagate::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              53,
+              15,
+              "row_result_propagate::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 30,
+      "predecessor_site_count": 32,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_result_propagate.diff",
+      "raw_module_diff_sha256": "615432405602d4efb5a7bc82e776ef02ba409dca7d5c29e6c128b81e08d6fb45",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "1662b03846bbd59b3fafb2ea3c8ac746ba7ee40d387bf87b2dc75a5bccc4e2f7",
+        "after_sha256": "d328a5de03179f77b0bfd517cf22596488182f73488e22b09335cf36f0f8da7b",
+        "before_bytes": 13268,
+        "after_bytes": 14197
+      }
+    },
+    {
+      "row": "row_set_dedup",
+      "before_sha256": "7af59486b2e3e782f8aeaf227db519b8077c8ae5dac7bad85e4a66bff9afa02b",
+      "after_sha256": "a6373e1ca6342453b95bce50f201b982c22963692da4963ca1de98a322ec75ac",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 13,
+      "definitions_after": 13,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_set_dedup::main\"",
+        "\"my.row_set_dedup::parse_number\"",
+        "\"my.row_set_dedup::batch_result\"",
+        "main",
+        "myl.dict.17.find",
+        "myl.dict.18.hash",
+        "myl.dict.18.find",
+        "myl.dict.20.find"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_set_dedup::main\"",
+        "\"my.row_set_dedup::parse_number\"",
+        "\"my.row_set_dedup::batch_result\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_set_dedup::main\"": [
+          {
+            "site": 19,
+            "block": "b25",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 19)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000026\n",
+            "semantic_site": [
+              7,
+              36,
+              13,
+              64,
+              "effect\\00",
+              "row_set_dedup::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              36,
+              13,
+              "row_set_dedup::main"
+            ]
+          },
+          {
+            "site": 20,
+            "block": "b29.93.101.109.117",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 20)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000029\n",
+            "semantic_site": [
+              7,
+              42,
+              15,
+              64,
+              "effect\\00",
+              "row_set_dedup::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              42,
+              15,
+              "row_set_dedup::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 26,
+      "predecessor_site_count": 28,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_set_dedup.diff",
+      "raw_module_diff_sha256": "319e6e7f681199d5704984e7a77b63afdffa9706abbd43614a7c39324c40e291",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "c6369f1c96bf93a190760652d0a639a105eee481cc1514e9ed6da8da33ca5993",
+        "after_sha256": "7eff116e68050561c89380fd747088cfbdd74febfa2f72afd8cd8263005ec811",
+        "before_bytes": 12772,
+        "after_bytes": 13687
+      }
+    },
+    {
+      "row": "row_sort_int",
+      "before_sha256": "973f31d4a480ec4e96cfd66faee76777888b0bec403c5f3bca000196c33e5a71",
+      "after_sha256": "20e0d448d771018db93f03ef4f314d4e2fb00125cd9913902432f48ce09218de",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 8,
+      "definitions_after": 8,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_sort_int::main\"",
+        "\"my.row_sort_int::parse_number\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_sort_int::main\"",
+        "\"my.row_sort_int::parse_number\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_sort_int::main\"": [
+          {
+            "site": 9,
+            "block": "b10",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 9)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000016\n",
+            "semantic_site": [
+              7,
+              22,
+              13,
+              64,
+              "effect\\00",
+              "row_sort_int::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              22,
+              13,
+              "row_sort_int::main"
+            ]
+          },
+          {
+            "site": 10,
+            "block": "b17",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 10)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000018\n",
+            "semantic_site": [
+              7,
+              30,
+              15,
+              64,
+              "effect\\00",
+              "row_sort_int::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              30,
+              15,
+              "row_sort_int::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 27,
+      "predecessor_site_count": 29,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_sort_int.diff",
+      "raw_module_diff_sha256": "ba9e904068f2e4e657879cf8b4b0b09a2e12abc2123af2d65da094ec45950a27",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "d17829e08d8b5e8460d9ae7d4789ad2498639163b576ca6f64c3b3d05b9d0e30",
+        "after_sha256": "2d8948b7ee191c5575c4bb5cc5abeba82fd97c4c1bf7afbae486f54add7db655",
+        "before_bytes": 11749,
+        "after_bytes": 12662
+      }
+    },
+    {
+      "row": "row_sort_records",
+      "before_sha256": "e045c2c59bb6c698c76bfcfa2c72561154ede2836a1c7e3ae1c7c2cb576c86e2",
+      "after_sha256": "14d1fa578afebc8032e2eb32217470b1d04731fc429666fdf67d147db0543509",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 9,
+      "definitions_after": 9,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_sort_records::main\"",
+        "\"my.row_sort_records::parse_number\"",
+        "\"my.row_sort_records::row_key\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_sort_records::main\"",
+        "\"my.row_sort_records::parse_number\"",
+        "\"my.row_sort_records::row_key\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_sort_records::main\"": [
+          {
+            "site": 9,
+            "block": "b10",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 9)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000016\n",
+            "semantic_site": [
+              7,
+              32,
+              13,
+              64,
+              "effect\\00",
+              "row_sort_records::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              32,
+              13,
+              "row_sort_records::main"
+            ]
+          },
+          {
+            "site": 10,
+            "block": "b17",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 10)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000018\n",
+            "semantic_site": [
+              7,
+              43,
+              15,
+              64,
+              "effect\\00",
+              "row_sort_records::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              43,
+              15,
+              "row_sort_records::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 25,
+      "predecessor_site_count": 27,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_sort_records.diff",
+      "raw_module_diff_sha256": "ccd69ade05b56c553b507b2c385a380ccd25b8f7c328b34d241d59f9313b47ca",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "c905bb1242810746aab2a0d5cc88646b7fb9db578e35452fd339862f9aec2d4f",
+        "after_sha256": "6bd8b3eee30d549730aeda1acb2ffb36688b3dc7b4b52c55a2011e5903120911",
+        "before_bytes": 11701,
+        "after_bytes": 12622
+      }
+    },
+    {
+      "row": "row_string_equal",
+      "before_sha256": "039e079a54f4377e8e3c9820ae227c7467ab07e3d86ae140b2f580181a1072f6",
+      "after_sha256": "3e531d3b62118cf5870e9406b7f1df11614bacfa1f6ddb4bb3c97454101cf300",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 11,
+      "definitions_after": 11,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_string_equal::main\"",
+        "\"my.row_string_equal::number\"",
+        "\"my.row_string_equal::inputs\"",
+        "\"my.row_string_equal::kernel\"",
+        "\"my.row_string_equal::repeated\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_string_equal::main\"",
+        "\"my.row_string_equal::number\"",
+        "\"my.row_string_equal::inputs\"",
+        "\"my.row_string_equal::kernel\"",
+        "\"my.row_string_equal::repeated\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_string_equal::main\"": [
+          {
+            "site": 9,
+            "block": "b10",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 9)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000017\n",
+            "semantic_site": [
+              7,
+              59,
+              13,
+              64,
+              "effect\\00",
+              "row_string_equal::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              59,
+              13,
+              "row_string_equal::main"
+            ]
+          },
+          {
+            "site": 10,
+            "block": "b10.52.62.72.82.92",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 10)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000020\n",
+            "semantic_site": [
+              7,
+              61,
+              15,
+              64,
+              "effect\\00",
+              "row_string_equal::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              61,
+              15,
+              "row_string_equal::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 19,
+      "predecessor_site_count": 21,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_string_equal.diff",
+      "raw_module_diff_sha256": "b7b997afd78efd32f1bd8f3456537a8af15d07bb2b70a28d0aedef9d7d6c2e51",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "6b0f2b9b8481df5dbb9f8743ef3d7ab4484f75ba225d3eb814e55ea184621d68",
+        "after_sha256": "3c283061685d92af712d28d7b323f04da7e77e639f2c723b72694a9646d0bed9",
+        "before_bytes": 13451,
+        "after_bytes": 14372
+      }
+    },
+    {
+      "row": "row_string_join",
+      "before_sha256": "9a7c813e2961338a39c3baa5cfd4bdb44d31629f72120b801e52a31ecd644426",
+      "after_sha256": "705ae3a2e499007af39ce3dd09f584e47328f057858291b3c891e6248a63c00a",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 11,
+      "definitions_after": 11,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_string_join::main\"",
+        "\"my.row_string_join::number\"",
+        "\"my.row_string_join::inputs\"",
+        "\"my.row_string_join::kernel\"",
+        "\"my.row_string_join::score\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_string_join::main\"",
+        "\"my.row_string_join::number\"",
+        "\"my.row_string_join::inputs\"",
+        "\"my.row_string_join::kernel\"",
+        "\"my.row_string_join::score\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_string_join::main\"": [
+          {
+            "site": 9,
+            "block": "b10",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 9)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000017\n",
+            "semantic_site": [
+              7,
+              66,
+              13,
+              64,
+              "effect\\00",
+              "row_string_join::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              66,
+              13,
+              "row_string_join::main"
+            ]
+          },
+          {
+            "site": 10,
+            "block": "b10.52.62.72.82.92",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 10)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000020\n",
+            "semantic_site": [
+              7,
+              68,
+              15,
+              64,
+              "effect\\00",
+              "row_string_join::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              68,
+              15,
+              "row_string_join::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 23,
+      "predecessor_site_count": 25,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_string_join.diff",
+      "raw_module_diff_sha256": "c17310a336b40640bcf6baeef4ab418750e30de23e4fff9e3f3a6e06a78ef44b",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "d2aacbaf57e2a34b957305e51a7b0ac4899800b7d221fab62384a3a31c9c202b",
+        "after_sha256": "86b9b32ecb0ac3d7a05324b709df2018f77a4ab7635bac96b556165636a025be",
+        "before_bytes": 13815,
+        "after_bytes": 14734
+      }
+    },
+    {
+      "row": "row_string_search",
+      "before_sha256": "246b04597b72e7d484432b6c695d58cea7f1eb918f578117664d457a60dfe847",
+      "after_sha256": "6c06efd5afce420b4500c6e2c97112564d80a8e0f3918739af5f113841264ad7",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 11,
+      "definitions_after": 11,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_string_search::main\"",
+        "\"my.row_string_search::number\"",
+        "\"my.row_string_search::inputs\"",
+        "\"my.row_string_search::kernel\"",
+        "\"my.row_string_search::repeated\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_string_search::main\"",
+        "\"my.row_string_search::number\"",
+        "\"my.row_string_search::inputs\"",
+        "\"my.row_string_search::kernel\"",
+        "\"my.row_string_search::repeated\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_string_search::main\"": [
+          {
+            "site": 9,
+            "block": "b10",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 9)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000017\n",
+            "semantic_site": [
+              7,
+              59,
+              13,
+              64,
+              "effect\\00",
+              "row_string_search::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              59,
+              13,
+              "row_string_search::main"
+            ]
+          },
+          {
+            "site": 10,
+            "block": "b10.52.62.72.82.92",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 10)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000020\n",
+            "semantic_site": [
+              7,
+              61,
+              15,
+              64,
+              "effect\\00",
+              "row_string_search::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              61,
+              15,
+              "row_string_search::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 29,
+      "predecessor_site_count": 31,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_string_search.diff",
+      "raw_module_diff_sha256": "407841b87ffa75d2f333d628d4f18975462ae6f921664f3d8f2f728fbf3a9357",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "40cded3f4bafb901763e5002fdbe6f927de22a0e056a13af17e1d07319edf1b6",
+        "after_sha256": "387ac519fc7d4938652c032ed9af921dfdd570b15e6204ff842dd794d97708cd",
+        "before_bytes": 15189,
+        "after_bytes": 16112
+      }
+    },
+    {
+      "row": "row_string_split",
+      "before_sha256": "cbe08eb6006ec62acfc7f1f257fed9da47c16c2680e0a5b6d9b153a6f6e7fbef",
+      "after_sha256": "63d618dc026ae84c69788105a75998648a218beb7c260d75ff89bd1f7b244b3d",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 12,
+      "definitions_after": 12,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_string_split::main\"",
+        "\"my.row_string_split::number\"",
+        "\"my.row_string_split::inputs\"",
+        "\"my.row_string_split::kernel\"",
+        "\"my.row_string_split::split_job\"",
+        "\"my.row_string_split::score\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_string_split::main\"",
+        "\"my.row_string_split::number\"",
+        "\"my.row_string_split::inputs\"",
+        "\"my.row_string_split::kernel\"",
+        "\"my.row_string_split::split_job\"",
+        "\"my.row_string_split::score\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_string_split::main\"": [
+          {
+            "site": 9,
+            "block": "b10",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 9)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000017\n",
+            "semantic_site": [
+              7,
+              73,
+              13,
+              64,
+              "effect\\00",
+              "row_string_split::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              73,
+              13,
+              "row_string_split::main"
+            ]
+          },
+          {
+            "site": 10,
+            "block": "b10.52.62.72.82.92",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 10)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000020\n",
+            "semantic_site": [
+              7,
+              75,
+              15,
+              64,
+              "effect\\00",
+              "row_string_split::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              75,
+              15,
+              "row_string_split::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 29,
+      "predecessor_site_count": 31,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_string_split.diff",
+      "raw_module_diff_sha256": "b8c5d9f556a4ac9d8cd464c9e532d4161872ec7193c61189486a2d325212d83b",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "b7a9627683543900f4225277749dd8143c5f52e732510cf26a8fe9578aa3cf97",
+        "after_sha256": "d0edee961a5e373e4c1a149027a852d81f5ce63ec7b724ac5a107f9fde0c1b64",
+        "before_bytes": 15737,
+        "after_bytes": 16658
+      }
+    },
+    {
+      "row": "row_tagged_stack",
+      "before_sha256": "4424a8d477e2a4132d8a50890e46dfc3e3dcf6e73bb49a3cb9e881756dd4c97e",
+      "after_sha256": "25a5d35b907b1abda2f6a46557709212f94cdd912c68bfe5a33e5fa36aa48c95",
+      "complete_input_sha_matches_historical_receipt": true,
+      "definitions_before": 9,
+      "definitions_after": 9,
+      "definition_names": [
+        "myl_core_list_new",
+        "myl_core_list_reserve",
+        "myl_core_free",
+        "myl_core_digits8",
+        "myl_core_parse_int_inline",
+        "\"my.row_tagged_stack::main\"",
+        "\"my.row_tagged_stack::parse_number\"",
+        "\"my.row_tagged_stack::as_integer\"",
+        "main"
+      ],
+      "raw_changed_functions": [
+        "\"my.row_tagged_stack::main\"",
+        "\"my.row_tagged_stack::parse_number\"",
+        "\"my.row_tagged_stack::as_integer\"",
+        "main"
+      ],
+      "timer_guard_pairs": 2,
+      "authority_boundaries": {
+        "\"my.row_tagged_stack::main\"": [
+          {
+            "site": 18,
+            "block": "b25",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 18)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000025\n",
+            "semantic_site": [
+              7,
+              43,
+              13,
+              64,
+              "effect\\00",
+              "row_tagged_stack::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              43,
+              13,
+              "row_tagged_stack::main"
+            ]
+          },
+          {
+            "site": 19,
+            "block": "b29",
+            "in_cfg_cycle": false,
+            "timer_adjacency": "immediately before native timer call",
+            "exact_removed_text": "  call void @myl_core_io_at(i32 19)\n  call void @myl_core_host_check(i64 %p1), !dbg !1000027\n",
+            "semantic_site": [
+              7,
+              75,
+              15,
+              64,
+              "effect\\00",
+              "row_tagged_stack::main\\00"
+            ],
+            "semantic_debug": [
+              "location",
+              75,
+              15,
+              "row_tagged_stack::main"
+            ]
+          }
+        ]
+      },
+      "entry_grants": 1,
+      "complete_semantic_site_table_equal_after_two_guard_sites": true,
+      "baseline_site_count": 87,
+      "predecessor_site_count": 89,
+      "residual_functions": [],
+      "raw_module_diff": "raw-diffs/row_tagged_stack.diff",
+      "raw_module_diff_sha256": "c399a80082ac1f074d670793440f91436f403a999f5ca3c14e42f65fc3cdaf1a",
+      "outside_function_scope": {
+        "status": "not_qualified",
+        "before_sha256": "2ac1fce8142924075dc8f72143005d071c309c8b26b5bfbf48713b1e92cd08fe",
+        "after_sha256": "f64019539b36842cae10a81f7ce124ad097c409c7bbcd0761b787e82b97654cb",
+        "before_bytes": 27859,
+        "after_bytes": 28780
+      }
+    }
+  ]
+}

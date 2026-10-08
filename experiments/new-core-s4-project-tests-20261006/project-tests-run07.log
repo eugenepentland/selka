@@ -1,0 +1,50 @@
+test-core
++- run test 20 pass, 1 fail (21 total)
+guardian/test: SLOW  6.55s  test_runner_project_test.test.provider edits and explicit expectations invalidate successful test receipts
+guardian/test: SLOW  5.28s  test_runner_project_test.test.provider-only imports and embedded assets participate in receipt invalidation
+guardian/test: SLOW  5.06s  test_runner_project_test.test.cases require canonical discovered names and never ignore an expectation
+guardian/test: SLOW  6.62s  test_runner_project_test.test.nested standalone test entries use the configured project import root
+guardian/test: SLOW  5.55s  test_runner_project_test.test.reserved embedded module names cannot account for an untested disk source
+guardian/test: test wall 63.98s; slowest over 50ms:
+guardian/test:   8.06s  test_runner_project_test.test.directory receipts account for orphan libraries and rerun only the edited reachable program
+guardian/test:   6.62s  test_runner_project_test.test.nested standalone test entries use the configured project import root
+guardian/test:   6.55s  test_runner_project_test.test.provider edits and explicit expectations invalidate successful test receipts
+guardian/test:   5.55s  test_runner_project_test.test.reserved embedded module names cannot account for an untested disk source
+guardian/test:   5.28s  test_runner_project_test.test.provider-only imports and embedded assets participate in receipt invalidation
+guardian/test:   5.06s  test_runner_project_test.test.cases require canonical discovered names and never ignore an expectation
+guardian/test:   4.96s  test_runner_project_test.test.copied migrated propagation project retains all nine passing tests
+guardian/test:   4.69s  test_runner_project_test.test.warm project tests revalidate import policy and required generated interfaces
+guardian/test:   4.61s  test_runner_project_test.test.providers preserve exported record layouts behind unchanged function signatures
+guardian/test:   4.40s  test_runner_project_test.test.embedded bytes and stricter project budgets invalidate unchanged test manifests
+guardian/test: FAIL — 1 failed of 21
+guardian/test: RESULT {"passed":20,"failed":1,"skipped":0}
+error: 'test_runner_project_test.test.directory receipts account for orphan libraries and rerun only the edited reachable program' failed:
+       guardian/test: 21 test(s) selected
+       unexpected project test result: 
+       {"version":"native-tests-v1","tests":[{"name":"app::test_constant","status":"passed","reason":"","at":""},{"name":"app::test_dependency","status":"passed","reason":"","at":""},{"name":"app::test_property","status":"passed","reason":"","at":"","property":{"seed":5917040058889844288,"counts":{"runs":5,"passed":5,"discarded":0,"processes":1,"shrinks":0,"attempts":0},"failure":null}},{"name":"orphan::test_orphan","status":"failed","reason":"build error (WriteFailed): ","at":""}],"passed":3,"failed":1,"skipped":0,"cached":0,"unsupported":0,"sources":["/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.zig-cache/tmp/SXmTVG_133B-yUj0/app.my","/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.zig-cache/tmp/SXmTVG_133B-yUj0/dep.my","/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.zig-cache/tmp/SXmTVG_133B-yUj0/orphan.my"]}
+       expected 0, found 1
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x14112d4 in expectEqualInner__anon_43357 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x1411531 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/core/test_runner_project_test.zig:79:5: 0x141158a in expectStatus (root_test.zig)
+           try std.testing.expectEqual(status, found.status);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/core/test_runner_project_test.zig:94:5: 0x2416f18 in test.directory receipts account for orphan libraries and rerun only the edited reachable program (root_test.zig)
+           try expectStatus(context, cold, 0);
+           ^
+       guardian/test: SLOW  8.06s  test_runner_project_test.test.directory receipts account for orphan libraries and rerun only the edited reachable program
+failed command: ./.zig-cache/o/815990f39b8a930df325a9c844546ff9/test --cache-dir=./.zig-cache --seed=0xda0d1a85 --listen=-
+
+Build Summary: 5/7 steps succeeded (1 failed); 20/21 tests passed (1 failed)
+test-core transitive failure
++- run test 20 pass, 1 fail (21 total)
+   +- compile test debug native success 9s MaxRSS:364M
+      +- run exe qbe-build-assets (qbe_build_assets) success 493ms
+      |  +- compile exe qbe-build-assets debug native cached 26ms MaxRSS:38M
+      +- options success
+         +- compile exe mylang-core debug native success 10s MaxRSS:362M
+            +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

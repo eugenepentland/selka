@@ -1,0 +1,13 @@
+{
+  "command": [
+    "git",
+    "commit",
+    "-q",
+    "-m",
+    "test(core): inspect nested length functions independent of order"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2233975,
+  "status": 0,
+  "elapsed_seconds": 0.1633858059067279
+}

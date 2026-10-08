@@ -1,0 +1,9 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10342 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s4-frontend 1ea31e32f] S4-F: measure a real uncontended source-identical core rebuild
+ 1 file changed, 62 insertions(+)
+ create mode 100644 experiments/new-core-s4-frontend-20261006/rebuild.py

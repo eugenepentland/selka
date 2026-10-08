@@ -1,0 +1,7 @@
+{
+  "src/core/tool_identity.zig": "e55f9e9b03db3739f17acba3e0e08c20d512c4128ae0627f34be8812110f80d0",
+  "src/core/tool_discovery.zig": "e9a4805871087a05e958bc03745ea32d3d58e43a8ba5cbb1e07cf94ec3b9b8cb",
+  "src/config_core_tool_platform.zig": "d7afd49d7542aa6b18fdc8141589dfeb81a4f4dee63764297b270757f391a661",
+  "src/core/root_test.zig": "f215d730c098f5e4440b1ed6977148b23b93f63613ae321dc000f8480d722ffc",
+  "src/core/ir.zig": "7232a25ca00d51c16b3cd552ae86859769a3ffb48d7a4f20ed4323708b651d5d"
+}

@@ -1,0 +1,77 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: all 3 build slot(s) busy; waiting (121s so far)
+build-slot: all 3 build slot(s) busy; waiting (181s so far)
+build-slot: all 3 build slot(s) busy; waiting (241s so far)
+build-slot: all 3 build slot(s) busy; waiting (301s so far)
+build-slot: build slot 2 after 341s (all 3 build slot(s) busy)
+row_bytes_scan.my:35:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_bytes_scan.my:44:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+row_string_equal.my:30:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_string_equal.my:40:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+row_string_search.my:30:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_string_search.my:40:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+row_string_split.my:43:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_string_split.my:54:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+row_string_join.my:36:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_string_join.my:47:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+
+### bytes_scan (cycles per element, median of 5 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 0.085 | 0.245 | same |
+| new core release | 1.237 | 1.453 | same |
+| Rust | 1.136 | 1.201 | same |
+| Zig ReleaseSafe | 1.376 | 1.749 | same |
+
+### string_equal (cycles per iteration, median of 5 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 53.675 | 16.773 | same |
+| new core release | 135.442 | 15.188 | same |
+| Rust | 134.979 | 12.711 | same |
+| Zig ReleaseSafe | 277.803 | 16.907 | same |
+
+### string_search (cycles per iteration, median of 5 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 421.549 | 80.507 | same |
+| new core release | 23327.493 | 423.329 | same |
+| Rust | 5591.114 | 179.743 | same |
+| Zig ReleaseSafe | 12941.034 | 385.371 | same |
+
+### string_split (cycles per element, median of 5 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 202.572 | 211.294 | same |
+| new core release | 71.330 | 74.881 | same |
+| Rust | 28.445 | 35.683 | same |
+| Zig ReleaseSafe | 65.554 | 69.152 | same |
+
+### string_join (cycles per element, median of 5 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 6.122 | 10.044 | same |
+| new core release | 23.831 | 23.227 | same |
+| Rust | 13.957 | 14.567 | same |
+| Zig ReleaseSafe | 18.100 | 20.350 | same |

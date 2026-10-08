@@ -1,0 +1,21 @@
+median of 7 interleaved rounds, CPU 10 (compute_s0, --multi)
+| kernel | build | 4096 cycles | misses/1000 | 64 cycles | misses/1000 | checksum |
+|---|---|---:|---:|---:|---:|---|
+| integer_math | before | 0.358 | 0.2 | 0.547 | 0.0 | same |
+| integer_math | after | 0.358 | 0.2 | 0.546 | -0.0 | same |
+| integer_math | after/before | 1.000 | | 0.997 | | |
+| float_math | before | 1.584 | 0.2 | 1.802 | 0.0 | same |
+| float_math | after | 1.591 | 0.2 | 1.806 | 0.0 | same |
+| float_math | after/before | 1.004 | | 1.002 | | |
+| call_direct | before | 0.303 | 0.2 | 0.378 | 0.0 | same |
+| call_direct | after | 0.301 | 0.2 | 0.374 | -0.0 | same |
+| call_direct | after/before | 0.995 | | 0.990 | | |
+| branch_predictable | before | 0.394 | 0.2 | 0.526 | 0.0 | same |
+| branch_predictable | after | 0.397 | 0.2 | 0.528 | -0.0 | same |
+| branch_predictable | after/before | 1.006 | | 1.004 | | |
+| branch_mixed | before | 0.396 | 0.2 | 0.526 | 0.0 | same |
+| branch_mixed | after | 0.396 | 0.2 | 0.524 | 0.0 | same |
+| branch_mixed | after/before | 1.001 | | 0.997 | | |
+| binary_search | before | 91.655 | 1345.5 | 31.463 | 16.6 | same |
+| binary_search | after | 31.898 | 103.5 | 18.548 | 11.6 | same |
+| binary_search | after/before | 0.348 | | 0.590 | | |

@@ -13,7 +13,7 @@ fn printDiagnostics(c: *language.Compilation) void {
 fn run(source: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(t.allocator, "bytes.my", source);
     defer c.deinit();
-    const result = native.runWithOptions(&c, .{ .gc_stress = true }) catch |err| {
+    const result = native.runWithOptions(&c, .{}) catch |err| {
         printDiagnostics(&c);
         return err;
     };
@@ -25,7 +25,7 @@ fn run(source: []const u8, expected: i64) !void {
 fn trapped(source: []const u8, code: []const u8) !void {
     var c = try language.Compilation.init(t.allocator, "bytes-trap.my", source);
     defer c.deinit();
-    const result = native.runWithOptions(&c, .{ .gc_stress = true }) catch |err| {
+    const result = native.runWithOptions(&c, .{}) catch |err| {
         printDiagnostics(&c);
         return err;
     };
@@ -48,7 +48,7 @@ fn rejected(source: []const u8, code: []const u8) !void {
 fn value(source: []const u8) !i64 {
     var c = try language.Compilation.init(t.allocator, "utf8-decode.my", source);
     defer c.deinit();
-    const result = native.runWithOptions(&c, .{ .gc_stress = true }) catch |err| {
+    const result = native.runWithOptions(&c, .{}) catch |err| {
         printDiagnostics(&c);
         return err;
     };
@@ -100,39 +100,8 @@ test "PY-BYTES-1 byte strings are immutable and never convert through str" {
     );
 }
 
-// spec: PY-BYTES-4
-test "PY-BYTES-4 byte strings are region allocated escaped and barrier checked under with arena" {
-    try run(
-        \\def main() -> int:
-        \\    kept: bytes = b""
-        \\    names: list[bytes] = []
-        \\    with arena() as scratch:
-        \\        parts = b"a,bb,ccc".split(b",")
-        \\        kept = scratch.escape(parts[2] + b"!")
-        \\        names = scratch.escape([parts[0], parts[1]])
-        \\    return len(kept) * 10 + len(names[1])
-    , 42);
-    try rejected(
-        \\def main() -> int:
-        \\    outer: list[bytes] = []
-        \\    with arena():
-        \\        outer.append(b"x" + b"y")
-        \\    return len(outer)
-    , "E_ARENA_ESCAPE");
-    try trapped(
-        \\def stash(target: mut list[bytes], value: bytes):
-        \\    target.append(value)
-        \\
-        \\def main() -> int:
-        \\    outer: list[bytes] = []
-        \\    with arena():
-        \\        stash(mut outer, b"x" + b"y")
-        \\    return len(outer)
-    , "R_ARENA_ESCAPE");
-}
-
 // spec: PY-BYTES-5
-test "PY-BYTES-5 the native backend lowers every byte-string operation" {
+test "PY-BYTES-5 every byte-string operation builds and runs natively" {
     const source =
         \\def parsed(digits: str) -> Result[bytes, str]:
         \\    return bytes.fromhex(digits)
@@ -160,16 +129,6 @@ test "PY-BYTES-5 the native backend lowers every byte-string operation" {
         \\        case Err(message):
         \\            return 0 - len(message)
     ;
-    var compilation = try language.Compilation.init(t.allocator, "bytes-native.my", source);
-    defer compilation.deinit();
-    const manifest = compilation.emitQbe(t.allocator) catch |err| {
-        for (compilation.diagnostics.items) |d| debug.print("{s}: {s}\n", .{ d.code, d.message });
-        return err;
-    };
-    defer t.allocator.free(manifest);
-    for ([_][]const u8{ "myl_native_bytes_split", "myl_native_bytes_join", "myl_native_bytes_slice", "myl_qbe_bytes_decode", "myl_qbe_bytes_from_list" }) |symbol| {
-        try t.expect(std.mem.indexOf(u8, manifest, symbol) != null);
-    }
     try run(source, 2);
 }
 

@@ -1,0 +1,77 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T11:59:47.903322+00:00",
+  "source_revision": "5818cee8e679c1f30fd5966963210511fcf69919",
+  "checks": {
+    "qualification.json": 720,
+    "holdouts.json": 516
+  },
+  "text_checks": 200,
+  "runtime_images": [
+    [
+      "compute",
+      "llvm",
+      false
+    ],
+    [
+      "compute",
+      "qbe",
+      true
+    ],
+    [
+      "collections",
+      "llvm",
+      false
+    ],
+    [
+      "collections",
+      "qbe",
+      true
+    ],
+    [
+      "text",
+      "llvm",
+      false
+    ],
+    [
+      "text",
+      "qbe",
+      true
+    ],
+    [
+      "legacy",
+      "llvm",
+      false
+    ],
+    [
+      "legacy",
+      "qbe",
+      true
+    ]
+  ],
+  "llvm_text_sizes": {
+    "compute": [
+      169506,
+      169586
+    ],
+    "collections": [
+      295074,
+      295602
+    ],
+    "text": [
+      437314,
+      438530
+    ],
+    "legacy": [
+      161234,
+      161346
+    ]
+  },
+  "manifest_sha256": "42e7aad349a6808081eae30078b4add9c6289c2ad74574e9acfe4f6e2da73a64",
+  "commands_sha256": "f25358e9b3508dcd8f7b927dfed1ca8d77e9bf61e6cdaecc5da96e8397d60fc2",
+  "script_sha256": "fd4db69820b6516c78881f12b86182dd32094695da0f5231babf3fd8a7679059",
+  "limitations": [
+    "Saved outcomes and static images; no new timing or target confirmation.",
+    "Static review verifies section size/image identity and bound metadata; machine backedge classification remains the code-proof helper analysis."
+  ]
+}

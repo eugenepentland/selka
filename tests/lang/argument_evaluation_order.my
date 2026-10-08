@@ -36,21 +36,18 @@ def moved_corner(shape: mut Shape) -> int:
     return weigh(shape.corner.a, move(mut shape))
 
 
-# spec: QBE-AGGREF-10
 public def test_a_field_argument_keeps_its_value_across_a_later_mut_call() -> bool:
     shape = Shape(Pair(Point(1, 2), Point(3, 4), [1]), 0)
     first = weigh(shape.corner.a, move(mut shape))
     return first == 1025 and shape.corner.a.x == 100 and shape.count == 50
 
 
-# spec-case: QBE-AGGREF-10
 public def test_a_nested_record_argument_keeps_its_value_across_a_later_mut_call() -> bool:
     shape = Shape(Pair(Point(1, 2), Point(3, 4), [1]), 0)
     seen = span(shape.corner, move(mut shape))
     return seen == 10405 and shape.corner.b.y == 7
 
 
-# spec-case: QBE-AGGREF-10
 public def test_a_mut_parameter_field_argument_keeps_its_value() -> bool:
     shape = Shape(Pair(Point(1, 2), Point(3, 4), [1]), 0)
     seen = moved_corner(mut shape)

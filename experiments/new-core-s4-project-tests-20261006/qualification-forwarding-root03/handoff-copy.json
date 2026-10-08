@@ -1,0 +1,41 @@
+{
+  "source": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-forwarding-audit-01",
+  "copied": "experiments/new-core-s4-project-tests-20261006/qualification-forwarding-audit-01",
+  "files": [
+    {
+      "path": "REVIEW.md",
+      "size": 2658,
+      "sha256": "fa2cc747e43e88e4d96321c4eb6b908f2fd63a4322799c965eb141a4da5186d8"
+    },
+    {
+      "path": "audit-02.log",
+      "size": 7010,
+      "sha256": "d1786d9ec5cbc4ddceca766715c431eb6bc77bd704cb613acb19ce6fbffd416c"
+    },
+    {
+      "path": "audit.log",
+      "size": 1032,
+      "sha256": "c4496f52f92621504d303cbf903e28b19f1c955e8431e88697b79e05ab738358"
+    },
+    {
+      "path": "audit.py",
+      "size": 5900,
+      "sha256": "ab86a6440a55020ec5c07b24321f60adafc3064ffd382344edabd8ef17035d19"
+    },
+    {
+      "path": "audit_source01.py",
+      "size": 5579,
+      "sha256": "34eb5b35d4f1a5caeb826573ad8971bd2ec9117c15810264368e28abed9b7a54"
+    },
+    {
+      "path": "manifest.json",
+      "size": 1135,
+      "sha256": "941d33a7cde30585ddae992953dde12e41a14814c91c76ad2140fe251309d7ba"
+    },
+    {
+      "path": "summary.json",
+      "size": 7010,
+      "sha256": "d1786d9ec5cbc4ddceca766715c431eb6bc77bd704cb613acb19ce6fbffd416c"
+    }
+  ]
+}

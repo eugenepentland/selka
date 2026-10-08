@@ -1,0 +1,47 @@
+def closed(value: int, index: int) -> int:
+    values = [value, value + 1, value + 2]
+    alias = values
+    return alias[index] + values[1] + alias[-1] + len(values)
+
+
+def same_class(value: int) -> int:
+    values = [value, value, value, value, value, value, value, value, value, value]
+    return values[-1] + len(values)
+
+
+def octets(value: u8, index: int) -> u8:
+    values = [value, value]
+    return values[index]
+
+
+def narrow(value: i16) -> i16:
+    values = [value, value]
+    return values[-1]
+
+
+def flags(value: bool, index: int) -> bool:
+    values = [value, not value]
+    return values[index]
+
+
+def units(value: None) -> int:
+    values = [value, value]
+    return len(values)
+
+
+def main() -> int:
+    assert closed(12, 0) == 42
+    assert closed(13, -3) == 45
+    for i in range(20):
+        assert closed(i, 0) == i * 3 + 6
+    assert same_class(12) == 22
+    assert same_class(13) == 23
+    assert octets(u8(255), 1) == u8(255)
+    assert octets(u8(254), -2) == u8(254)
+    assert narrow(i16(-32768)) == i16(-32768)
+    assert narrow(i16(32767)) == i16(32767)
+    assert flags(True, 0)
+    assert flags(False, -1)
+    assert units(None) == 2
+    assert units(None) == 2
+    return 0

@@ -1,0 +1,7 @@
+Build Summary: 5/5 steps succeeded; 25/25 tests passed
+test-core success
++- run test 25 pass (25 total) 19s MaxRSS:132M
+   +- compile test debug native success 520ms MaxRSS:200M
+      +- options success
+         +- compile exe mylang-core debug native success 1s MaxRSS:323M
+

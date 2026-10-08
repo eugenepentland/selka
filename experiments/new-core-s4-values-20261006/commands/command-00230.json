@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "import json,pathlib; p=pathlib.Path(\"experiments/new-core-s4-values-20261006/final-all46-v2.json\"); d=json.loads(p.read_text()); print(\"top\",list(d)); print(\"row\",list(d[\"rows\"][\"grid_dp\"])); print(\"size\",list(d[\"rows\"][\"grid_dp\"][\"sizes\"][\"64\"])); print(\"freeze\",pathlib.Path(\"experiments/new-core-s4-values-20261006/final-frozen-source-v3.json\").read_text()); print(\"cache dirs\",[str(x) for x in pathlib.Path(\".mylang-cache/s4-v/final-all46-v2\").iterdir() if x.is_dir()])"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3209824,
+  "status": 0,
+  "elapsed_seconds": 0.03756644297391176
+}

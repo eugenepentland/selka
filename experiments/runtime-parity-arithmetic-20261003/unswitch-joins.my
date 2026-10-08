@@ -1,0 +1,36 @@
+# Standalone form 0 of the joined-producer matrix. The runner derives one
+# ordinary main per form by replacing the marked condition, keeping its shape.
+# 0: kind == 2 or kind == 3
+# 1: kind == 2 and kind != 3
+# 2: (kind == 2 or kind == 3) and i < seed
+# 3: i < seed and (kind == 2 or kind == 3)
+# 4: (kind == 2 if i < seed else kind == 3)
+# 5: kind == 2 or 1 // (seed - i) > 0
+# 6: (seed if i < 1 else kind) == 2
+# 7: i < seed or kind == 2
+
+
+def parsed(args: list[str], index: int) -> int:
+    match int(args[index]):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+def main(args: list[str], out: Stream) -> int:
+    kind = parsed(args, 0)
+    count = parsed(args, 1)
+    seed = parsed(args, 2)
+    total = 0
+    for i in range(count):
+        if kind == 2:
+            total += 1
+        out.print(i)
+        # JOIN_CONDITION: one producer boundary changes between forms.
+        if kind == 2 or kind == 3:
+            total += 3
+        else:
+            total += 7
+    out.print(total)
+    return total

@@ -19,12 +19,13 @@ Run the whole suite through the build:
 $ zig build test-lang
 ```
 
-or directly, which is what `test-lang` runs — once under the default
-reference-counting runtime and once under the tracing collector with stress:
+or directly, which is what `test-lang` runs — once as debug builds and once as
+release builds with the optimizer's facts verified and the runtime's leak check
+on:
 
 ```console
 $ zig-out/bin/mylang test tests/lang --cache-dir .mylang-cache/lang-tests
-$ zig-out/bin/mylang test tests/lang --gc-runtime --cache-dir .mylang-cache/lang-tests-gc --gc-stress
+$ MYL_CORE_LEAKCHECK=1 zig-out/bin/mylang test tests/lang --release --verify-facts --cache-dir .mylang-cache/lang-tests-release
 ```
 
 The directory runner selects every program, fans the programs out across the
@@ -33,11 +34,11 @@ unchanged rerun executes only the tests whose receipts the runner could not
 adopt and costs a fraction of the first run:
 
 ```console
-$ zig-out/bin/mylang test tests/lang --cache-dir /tmp/lang-cache --gc-stress
+$ zig-out/bin/mylang test tests/lang --cache-dir /tmp/lang-cache
 passed python_collections::test_inferred_literal_indexing_negative_indices_and_append
 ...
 171 passed, 0 cached, 0 failed, 0 skipped across 30 programs
-$ zig-out/bin/mylang test tests/lang/python_values.my --cache-dir /tmp/lang-cache --gc-stress
+$ zig-out/bin/mylang test tests/lang/python_values.my --cache-dir /tmp/lang-cache
 cached python_values::test_python_values_unicode_slicing_clamps_endpoints_and_returns_independent_text
 ...
 0 passed, 7 cached, 0 failed, 0 skipped
@@ -47,12 +48,9 @@ A test whose receipt the runner cannot adopt (for example one that mutates a
 record field) is re-executed and reported as `passed` instead of `cached`, so
 the `passed`/`cached` split is the honest per-test signal.
 
-`--gc-stress` is the run-wide form of the `--gc-stress` argument the Zig root's
-`native_execute` tests pass to a guest: every collected test runs with the
-runtime's stress collector. Without it the migrated tests would lose that
-coverage, so the build step's collector lane always passes it. Only the tracing
-collector has anything to stress, so `--gc-stress` selects `--gc-runtime` on its
-own; the default lane covers reference counting.
+The tracing collector and its `--gc-runtime`/`--gc-stress` lane were retired
+in S5 (memory is one-count reference counting); the release lane with
+`MYL_CORE_LEAKCHECK=1` is what checks that every test frees what it allocates.
 
 ## The `migrated/` programs
 

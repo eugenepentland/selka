@@ -1,0 +1,35 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: gate slot 1 after 60s (all 1 gate slot(s) busy)
+build original-text: pass (16.305s)
+build original-compute: pass (2.690s)
+build original-collections: pass (9.058s)
+build original-text-new-debug: pass (3.708s)
+build original-text-new-release: pass (0.907s)
+build original-text-new-verify: pass (1.038s)
+unchanged text entry: import strings and import json match old with strict leaks in all three modes
+build word_count-old: pass (2.636s)
+build word_count-debug: pass (0.073s)
+build word_count-release: pass (0.147s)
+build word_count-verify: pass (0.181s)
+word_count: original/split old and debug/release/verify agree; strict leak/status/stdout checks pass
+build csv_aggregate-old: pass (3.198s)
+build csv_aggregate-debug: pass (0.094s)
+build csv_aggregate-release: pass (0.301s)
+build csv_aggregate-verify: pass (0.354s)
+csv_aggregate: original/split old and debug/release/verify agree; strict leak/status/stdout checks pass
+build json_transform-old: pass (7.507s)
+build json_transform-debug: pass (0.185s)
+build json_transform-release: pass (0.554s)
+build json_transform-verify: pass (0.604s)
+json_transform: original/split old and debug/release/verify agree; strict leak/status/stdout checks pass
+build packet_decode-old: pass (1.707s)
+build packet_decode-debug: pass (0.099s)
+build packet_decode-release: pass (0.122s)
+build packet_decode-verify: pass (0.156s)
+packet_decode: original/split old and debug/release/verify agree; strict leak/status/stdout checks pass
+build lox_eval-old: pass (2.045s)
+build lox_eval-debug: pass (0.081s)
+build lox_eval-release: pass (0.146s)
+build lox_eval-verify: pass (0.201s)
+lox_eval: original/split old and debug/release/verify agree; strict leak/status/stdout checks pass
+qualified 5 apps; 137 native executions

@@ -1,0 +1,2 @@
+qualification progress: s1: seen=25 elapsed=263.04s
+qualification progress: s1: seen=50 elapsed=528.27s

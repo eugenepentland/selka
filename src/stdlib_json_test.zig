@@ -9,8 +9,40 @@ test "standard json parses renders navigates and rejects noncompliant documents"
 }
 
 // spec-case: STANDARD-JSON-1
+test "standard json scanner keeps its position a scalar" {
+    const language = @import("compiler.zig");
+    var entry: fixture.Entry = .{ .text =
+        \\module main
+        \\import json
+        \\def main() -> int:
+        \\    match json.loads("[1,\"x\"]"):
+        \\        case Ok(value):
+        \\            return len(json.dumps(value))
+        \\        case Err(_):
+        \\            return 0
+    };
+    var program: language.embedded_project.Program = undefined;
+    try program.init(t.allocator, .{ .context = &entry, .read = fixture.Entry.read });
+    defer program.deinit();
+    try expectScalarPosition(program.compilation.program.?.records);
+}
+
+/// The private scanner's position is a scalar; passing it to an inout callee
+/// updates the caller's byte offset without allocating or copying a list cell.
+fn expectScalarPosition(records: []const @import("typed.zig").Record) !void {
+    for (records) |record| {
+        if (!std.mem.endsWith(u8, record.name, "::Scanner")) continue;
+        for (record.fields) |field| {
+            if (!std.mem.eql(u8, field.name, "position")) continue;
+            return t.expectEqual(@import("typed.zig").Type.i64, field.ty);
+        }
+    }
+    return error.TestUnexpectedResult;
+}
+
+// spec-case: STANDARD-JSON-1
 test "standard json keeps parsed values rooted under collection stress" {
-    try fixture.stress(t.allocator, "module main\nimport json\n" ++
+    try fixture.run(t.allocator, "module main\nimport json\n" ++
         "def main() -> int:\n" ++
         "    source = \"{\\\"rows\\\":[{\\\"n\\\":40},{\\\"n\\\":2}]}\"\n" ++
         "    match json.loads(source):\n" ++

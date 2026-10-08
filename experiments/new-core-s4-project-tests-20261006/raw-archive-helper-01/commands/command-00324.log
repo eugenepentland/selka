@@ -1,0 +1,13 @@
+$ env PYTHONDONTWRITEBYTECODE=1 python3 -c 'import ast,hashlib,json; from pathlib import Path; p=Path("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006"); names=["archive_raw_processes.py","archive_raw_processes_test.py","conformance_checked.py","project_matrix.py","fuzz_matrix.py","qualification_support.py","qualification_selftest.py"]; data={}; [(ast.parse((p/n).read_bytes(),filename=n), data.update({n:hashlib.sha256((p/n).read_bytes()).hexdigest()})) for n in names]; print(json.dumps(data,indent=2))'
+{
+  "archive_raw_processes.py": "9aaffe8ab9acb9d066ab6cf67c0f21b1771d900bc6797c83834788362f9efd87",
+  "archive_raw_processes_test.py": "a2a8ac6d4e78afcb337165de72d74166d42fbfe155b5c2e4ec65916353a8d741",
+  "conformance_checked.py": "67a69be4c0e3c7f96b8350de8b211ab2528bc2b6e859836ff014320ff54cd70d",
+  "project_matrix.py": "c47fcf0efd23eec1cb2f693afa5c012a02dae6d1a2cc1d1e80f48e0c91ac2b1a",
+  "fuzz_matrix.py": "2d3bdf4cfdb1845f1e61d4ed0d8e12e877fde7b1ae408d0789776559efadcf58",
+  "qualification_support.py": "6f78a8ff7627b38c89aa4b5bd9e461aa1cdac214d78ab53297b3192da873f49f",
+  "qualification_selftest.py": "c772c5a047fe44458bc6468710e353fa6b3e5b043c8b3bea2bf78dea72c66ac2"
+}
+
+exit=0
+elapsed_seconds=0.035888

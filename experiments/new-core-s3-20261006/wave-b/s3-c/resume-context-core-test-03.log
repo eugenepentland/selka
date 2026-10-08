@@ -1,0 +1,43 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: all 1 gate slot(s) busy; waiting (120s so far)
+build-slot: all 1 gate slot(s) busy; waiting (180s so far)
+build-slot: all 1 gate slot(s) busy; waiting (240s so far)
+build-slot: all 1 gate slot(s) busy; waiting (301s so far)
+build-slot: all 1 gate slot(s) busy; waiting (361s so far)
+build-slot: all 1 gate slot(s) busy; waiting (421s so far)
+build-slot: all 1 gate slot(s) busy; waiting (481s so far)
+build-slot: all 1 gate slot(s) busy; waiting (541s so far)
+build-slot: all 1 gate slot(s) busy; waiting (601s so far)
+build-slot: all 1 gate slot(s) busy; waiting (661s so far)
+build-slot: all 1 gate slot(s) busy; waiting (721s so far)
+build-slot: all 1 gate slot(s) busy; waiting (782s so far)
+build-slot: all 1 gate slot(s) busy; waiting (842s so far)
+build-slot: all 1 gate slot(s) busy; waiting (902s so far)
+build-slot: all 1 gate slot(s) busy; waiting (962s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1022s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1082s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1142s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1202s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1263s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1323s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1383s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1443s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1503s so far)
+build-slot: gate slot 1 after 1553s (all 1 gate slot(s) busy)
+test-core
++- run test w
+guardian/test: 1 test(s) selected
+guardian/test: test wall 2.92s; slowest over 50ms:
+guardian/test:   2.92s  cap_test.test.Core built-in Environment reads preserve explicit allowlists without restrict
+guardian/test: PASS — 1 passed
+guardian/test: RESULT {"passed":1,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/7dba70b5c46dc2c50aee745bef0076af/test --cache-dir=./.zig-cache --seed=0x904f7244 --listen=-
+
+Build Summary: 5/5 steps succeeded; 1/1 tests passed
+test-core success
++- run test 1 pass (1 total) 2s MaxRSS:238M
+   +- compile test debug native success 281ms MaxRSS:173M
+      +- options success
+         +- compile exe mylang-core debug native success 1s MaxRSS:341M
+

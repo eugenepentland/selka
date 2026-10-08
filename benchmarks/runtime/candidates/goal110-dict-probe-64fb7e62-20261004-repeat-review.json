@@ -1,0 +1,177 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T10:48:35.820957+00:00",
+  "session": "b7da64b9-de9d-4d3d-8e23-f03eb229deb7",
+  "outcomes": 576,
+  "rows": [
+    {
+      "case": "dict_lookup",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.9652772535084858,
+          "paired_95": [
+            0.9615211134060784,
+            0.969026017998552
+          ]
+        },
+        "qbe": {
+          "ratio": 0.9942909932790279,
+          "paired_95": [
+            0.9920574636591706,
+            0.9978534386753661
+          ]
+        }
+      }
+    },
+    {
+      "case": "dict_lookup_str",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.9821678646864761,
+          "paired_95": [
+            0.9755243056669326,
+            0.9856817725076761
+          ]
+        },
+        "qbe": {
+          "ratio": 0.9898268086477239,
+          "paired_95": [
+            0.9888042050138947,
+            0.9908568693685095
+          ]
+        }
+      }
+    },
+    {
+      "case": "dict_lookup_str",
+      "profile": "large",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.9862165009922145,
+          "paired_95": [
+            0.9822686947281846,
+            0.9925073760763904
+          ]
+        },
+        "qbe": {
+          "ratio": 0.9975903253736718,
+          "paired_95": [
+            0.9922173116550282,
+            1.0007892679122756
+          ]
+        }
+      }
+    },
+    {
+      "case": "dict_update",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.9917372800874411,
+          "paired_95": [
+            0.9883074951371382,
+            0.9949040681996945
+          ]
+        },
+        "qbe": {
+          "ratio": 1.005022226620633,
+          "paired_95": [
+            1.0029089874026869,
+            1.007703388315925
+          ]
+        }
+      }
+    },
+    {
+      "case": "dict_update",
+      "profile": "large",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.9937856921162855,
+          "paired_95": [
+            0.9911614387618848,
+            0.9951750807421696
+          ]
+        },
+        "qbe": {
+          "ratio": 1.0036390802799997,
+          "paired_95": [
+            1.0010440889327972,
+            1.0069817920275492
+          ]
+        }
+      }
+    },
+    {
+      "case": "dict_update_str",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "ratio": 1.0140055674214346,
+          "paired_95": [
+            1.009822087028542,
+            1.0165817915855482
+          ]
+        },
+        "qbe": {
+          "ratio": 1.01333111573751,
+          "paired_95": [
+            1.0068716036260028,
+            1.0211475453555798
+          ]
+        }
+      }
+    },
+    {
+      "case": "dict_update_str",
+      "profile": "large",
+      "comparisons": {
+        "llvm": {
+          "ratio": 1.0091621963877095,
+          "paired_95": [
+            1.0040499282223119,
+            1.0131883397809005
+          ]
+        },
+        "qbe": {
+          "ratio": 0.9939567640985203,
+          "paired_95": [
+            0.9900778775191571,
+            0.9964235841823741
+          ]
+        }
+      }
+    },
+    {
+      "case": "set_dedup",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "ratio": 0.9938815042072422,
+          "paired_95": [
+            0.9902756808534732,
+            0.9953529140896953
+          ]
+        },
+        "qbe": {
+          "ratio": 1.01624171625768,
+          "paired_95": [
+            1.0124394879373848,
+            1.0195649827665907
+          ]
+        }
+      }
+    }
+  ],
+  "raw_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/paired-repeat.json",
+  "raw_sha256": "669be8e204a1b4afb1071028ea5b68a120086393e0c9aa83fb84aa3cf68455f8",
+  "script_sha256": "e5f9f82f738904f014af8f9e1686409e7189ecd4339caf05bc0b4f8603ee106c",
+  "bootstrap_helper_sha256": "ca202996170e072e7b95ebf3b20896142ec794d14e336c958af277037a7d7123",
+  "limitations": [
+    "Saved parsed timing outcomes; no new guest executions.",
+    "Intervals recomputed with the established helper; no simultaneous coverage claim.",
+    "Exploratory comparison; no goal confirmation."
+  ]
+}

@@ -1,0 +1,14 @@
+source_commit=d4994214579adb8d1897a40fc65de1462b000939
+$ /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py --kind s1 --cases 200 --seed 3302 --old /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang --new /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang-core --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/matrix-final-run02/s1 --cache-root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T201856Z-a00f722632af/s1
+qualification progress: s1: seen=25 elapsed=84.03s
+qualification progress: s1: seen=50 elapsed=168.41s
+qualification progress: s1: seen=75 elapsed=249.83s
+qualification progress: s1: seen=100 elapsed=336.34s
+qualification progress: s1: seen=125 elapsed=422.81s
+qualification progress: s1: seen=150 elapsed=507.91s
+qualification progress: s1: seen=175 elapsed=593.49s
+qualification progress: s1: seen=200 elapsed=678.71s
+records,unions,propagate,mut,alias cases=200 old_rejected=0 refused=0 compared=3000 mismatch=0 fact=0 traps=227 caught=0
+qualification {"kind": "s1", "qualified": true, "accepted": 200, "native_comparisons": 3000, "elapsed_seconds": 682.7216178730596}
+
+exit=0

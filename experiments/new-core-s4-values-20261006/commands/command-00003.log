@@ -1,0 +1,8 @@
+$ scripts/build-slot.sh build zig-out/bin/mylang-core test test/core/v_nested_places.my --verify --cache-dir .mylang-cache/s4-v/focused-nested
+usage: mylang-core build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR]
+       mylang-core coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
+       mylang-core dump-typed FILE.my [FUNCTION]
+       mylang-core dump-ir FILE.my [--facts]   (--facts: after the release passes, with intervals)
+
+exit=2
+elapsed_seconds=0.041757

@@ -21,24 +21,14 @@ def real_iterator() -> int:
     assert saved == data
     return hits
 
-# spec-case: QBE-LOOP-VERSION-1
 public def test_isolated_words_cover_zero_both_branches_and_outer_reentry() -> bool:
     return scan(0, 4) == 0 and scan(1, 3) == 3 and scan(64, 3) == 12
 
-# spec-case: QBE-LOOP-VERSION-1
 public def test_isolated_words_keep_real_iterator_tokens_and_snapshots() -> bool:
     return real_iterator() == 10
-
-# spec-case: QBE-LOOP-VERSION-1
-public def test_isolated_words_keep_inherited_arena_lifetime() -> bool:
-    with arena():
-        assert scan(64, 3) == 12
-        assert real_iterator() == 10
-    return scan(16, 2) == 4
 
 def main(out: Stream) -> int:
     assert test_isolated_words_cover_zero_both_branches_and_outer_reentry()
     assert test_isolated_words_keep_real_iterator_tokens_and_snapshots()
-    assert test_isolated_words_keep_inherited_arena_lifetime()
     out.print(scan(64, 3))
     return 0

@@ -1,0 +1,14 @@
+complete accepted matrix passes
+zero comparisons rejected
+native crash rejected and source retained
+leak rejected and source retained
+facts rejected and source retained
+unexpected native exit rejected and source retained
+native timeout rejected and source retained
+compile timeout rejected and source retained
+launch failure rejected and source retained
+compiler crash rejected and source retained
+unsupported refusal counted separately and incomplete matrix rejected
+language trap retained for ordinary differential comparison
+old rejection classified and source retained
+PASS: no compiler or guest executed

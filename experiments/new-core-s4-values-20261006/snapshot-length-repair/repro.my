@@ -1,0 +1,16 @@
+module repro
+
+def snapshots(size: int) -> bool:
+    items: list[int] = []
+    children: list[list[int]] = []
+    for index in range(size):
+        children.append(items)
+        items.append(index)
+    return len(children[0]) == 0 and len(children[size - 1]) == size - 1
+
+# spec-case: NEW-CORE-NESTED-LENGTH-S4-1
+public def test_growing_children_keep_captured_lengths() -> bool:
+    return snapshots(3)
+
+def main() -> int:
+    return 0

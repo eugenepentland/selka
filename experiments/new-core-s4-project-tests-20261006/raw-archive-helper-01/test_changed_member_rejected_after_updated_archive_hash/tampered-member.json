@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/archive_raw_processes.py",
+    "verify",
+    "--archive",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/raw-archive-selftest-01/test_changed_member_rejected_after_updated_archive_hash/tampered-member.tar.gz",
+    "--index",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/raw-archive-selftest-01/test_changed_member_rejected_after_updated_archive_hash/tampered-member.index.json"
+  ],
+  "status": 1,
+  "tool_sha256": "9aaffe8ab9acb9d066ab6cf67c0f21b1771d900bc6797c83834788362f9efd87"
+}

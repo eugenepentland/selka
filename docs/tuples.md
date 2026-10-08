@@ -73,9 +73,8 @@ def main() -> int:
 This returns `3142`: the array swap puts `3` first, the list swap turns `[4, 1]` into
 `[1, 4]`, the two fields take those values, and `values[-3]` is the untouched `2`.
 
-A tuple holding a managed value is itself managed-bearing, so a `list` inside a tuple
-confines the tuple to an arena block exactly as the list alone would, and `escape`
-copies the whole tuple out:
+A tuple holding a managed value is a value like the list it holds: copying the
+tuple and changing the copy's list leaves the original's list unchanged.
 
 ```mylang
 # doc: expect 117
@@ -85,19 +84,19 @@ def pair_with(value: int) -> tuple[int, list[int]]:
     return 1, seen
 
 def main() -> int:
-    kept: tuple[int, list[int]] = (0, [])
-    with arena() as scratch:
-        kept = scratch.escape(pair_with(7))
-    number, values = kept
-    return number * 100 + len(values) * 10 + values[0]
+    kept = pair_with(7)
+    copy = kept
+    number, values = copy
+    values.append(8)
+    _, original = kept
+    return number * 100 + len(original) * 10 + original[0]
 ```
 
-This returns `117`: `kept` holds the escaped tuple, its list still has one element, and
-that element is `7`.
+This returns `117`: appending to the list taken from `copy` leaves `kept`'s list with
+one element, and that element is `7`.
 
-Two things a tuple deliberately is not. It is not a dictionary key — keys are still
-`int` and `str` only — and it is not ordinary data at the host or JSON boundary, where a
-signature or codec naming a tuple is rejected like any other managed graph. `DictItem`,
+A tuple of hashable values is a hashable dictionary key and set element
+([hashable keys](sets.md#hashable-keys)). `DictItem`,
 `zip` and `enumerate` are unchanged: `for key, value in mapping.items()` still
 destructures the `DictItem` record, and `for a, b in zip(xs, ys)` still walks the two
 sources directly rather than building tuples.

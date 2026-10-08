@@ -1,0 +1,35 @@
+{
+  "source_commit": "7c0c5899f25da94e0956ee637b6e1a91e2c3825b",
+  "command": [
+    "zig",
+    "build",
+    "core",
+    "--summary",
+    "all"
+  ],
+  "seconds": 0.037282466888427734,
+  "exit": 1,
+  "source_identical_rebuild": true,
+  "compile_artifact": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.zig-cache/o/b26e1d411e177a7ff54002bc183f70a8/mylang-core",
+  "original_sha256": "b1166c3c2bf1fb2cf3f359bb4c0bfd32d6de8acc47b5503d92826a6d9fd4076f",
+  "rebuilt_sha256": null,
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "qualified": false
+}

@@ -1,0 +1,47 @@
+artifact_source_commit=090dabd5a6932a7c3beaec68248f9a35d4c637d7
+native_source=b70a6a3f
+started=2026-10-06T00:41:21.018794+00:00
+environment=TMPDIR=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/all35/tmp ZIG_LOCAL_CACHE_DIR=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.zig-cache ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache
+command=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/scripts/build-slot.sh build -- python3 /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-b/integration/audit_all35.py --bin /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/all35 --json /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-b/integration/count-audit.json
+| row | clock scope | timed inner loops | inner count stores | parent-exclusive count stores | timed nonloop count stores | pre-timing loops | pre-timing loop count stores | unknown/callee loops | timed opaque call sites |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| record_reads | resolved_normal_completion | 1 | 0 | 0 | 0 | 1 | 1 | 0 | 2 |
+| tagged_stack | resolved_normal_completion | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 4 |
+| mutate_unique | resolved_normal_completion | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
+| mutate_shared | resolved_normal_completion | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 3 |
+| record_construct | resolved_normal_completion | 3 | 0 | 0 | 0 | 1 | 0 | 0 | 2 |
+| record_update | resolved_normal_completion | 1 | 0 | 0 | 0 | 2 | 0 | 0 | 4 |
+| option_handle | resolved_normal_completion | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 2 |
+| result_propagate | resolved_normal_completion | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 4 |
+| list_scan | resolved_normal_completion | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 2 |
+| list_append | resolved_normal_completion | 2 | 0 | 2 | 0 | 0 | 0 | 0 | 6 |
+| list_filter | resolved_normal_completion | 3 | 0 | 3 | 0 | 0 | 0 | 0 | 13 |
+| alloc_short | resolved_normal_completion | 1 | unknown | unknown | unknown | 0 | unknown | 0 | 0 |
+alloc_short: no myl.count metadata survives; zero tagged sites is not a proof about untagged stores or opaque callees.
+| alloc_retained | resolved_normal_completion | 2 | 1 | 1 | 0 | 0 | 0 | 0 | 13 |
+| mutate_nested | resolved_normal_completion | 1 | 2 | 0 | 0 | 1 | 1 | 0 | 6 |
+| bytes_scan | resolved_normal_completion | 1 | 0 | 0 | 5 | 1 | 0 | 0 | 10 |
+| string_equal | resolved_normal_completion | 1 | 0 | 0 | 5 | 0 | 0 | 6 | 11 |
+| string_search | resolved_normal_completion | 1 | 0 | 0 | 5 | 0 | 0 | 1 | 11 |
+| string_split | resolved_normal_completion | 4 | 0 | 1 | 5 | 0 | 0 | 1 | 15 |
+| string_join | resolved_normal_completion | 4 | 0 | 1 | 5 | 0 | 0 | 1 | 15 |
+| dict_lookup | resolved_normal_completion | 1 | 0 | 0 | 4 | 3 | 0 | 0 | 9 |
+| dict_lookup_str | resolved_normal_completion | 1 | 0 | 0 | 4 | 4 | 1 | 0 | 11 |
+| dict_update | resolved_normal_completion | 3 | 0 | 1 | 4 | 1 | 0 | 0 | 19 |
+| dict_update_str | resolved_normal_completion | 5 | 0 | 2 | 4 | 2 | 0 | 0 | 30 |
+| set_dedup | resolved_normal_completion | 2 | 0 | 1 | 4 | 1 | 0 | 0 | 14 |
+| int_parse | resolved_normal_completion | 1 | 0 | 0 | 4 | 1 | 5 | 0 | 9 |
+| int_format | resolved_normal_completion | 4 | 0 | 1 | 4 | 1 | 0 | 0 | 11 |
+| call_indirect | resolved_normal_completion | 6 | 0 | 0 | 0 | 1 | 0 | 0 | 2 |
+| sort_int | resolved_normal_completion | 2 | 0 | 1 | 0 | 0 | 0 | 0 | 8 |
+| sort_records | resolved_normal_completion | 3 | 0 | 5 | 0 | 0 | 0 | 0 | 16 |
+| int_math | resolved_normal_completion | 2 | 0 | 0 | 0 | 1 | 0 | 0 | 2 |
+| float_math | resolved_normal_completion | 4 | 0 | 0 | 0 | 1 | 0 | 0 | 2 |
+| call_direct | resolved_normal_completion | 3 | 0 | 0 | 0 | 1 | 0 | 0 | 2 |
+| branch_predictable | resolved_normal_completion | 3 | 0 | 0 | 0 | 2 | 0 | 0 | 4 |
+| branch_mixed | resolved_normal_completion | 3 | 0 | 0 | 0 | 2 | 0 | 0 | 4 |
+| binary_search | resolved_normal_completion | 1 | 0 | 0 | 1 | 2 | 0 | 0 | 4 |
+
+Scope: static caller-visible tagged count stores between the two clocks, on paths reaching the stop call. Pre-timing loops are setup/input construction; callee/runtime bodies and untagged header stores remain unknown. A count=1 initialization/release store and a saturated header check are separate JSON metrics. Full loop and assembly detail, parent-exclusive blocks, interval positions, abort paths and opaque call classes are retained.
+finished=2026-10-06T00:41:26.469910+00:00
+status=0

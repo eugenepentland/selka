@@ -1,0 +1,90 @@
+{
+  "archive_sha256": "beabb31503094f49ff0c75205562574cf0031fbc397016094856d13d2f1242dc",
+  "directories": {
+    ".": [
+      66309,
+      118531897,
+      16893,
+      4096,
+      1791345739891626294,
+      1791345739891626294,
+      3
+    ],
+    "nested": [
+      66309,
+      118531898,
+      16893,
+      4096,
+      1791345739892647069,
+      1791345739892647069,
+      3
+    ],
+    "nested/empty-dir": [
+      66309,
+      118531899,
+      16893,
+      4096,
+      1791345739891331906,
+      1791345739891331906,
+      2
+    ]
+  },
+  "file_count": 4,
+  "files": {
+    "00001.stderr": {
+      "fingerprint": [
+        66309,
+        118531901,
+        33204,
+        0,
+        1791345739891626294,
+        1791345739891626294,
+        1
+      ],
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "00001.stdout": {
+      "fingerprint": [
+        66309,
+        118531900,
+        33204,
+        21,
+        1791345739891626294,
+        1791345739891626294,
+        1
+      ],
+      "sha256": "5785a59345acc4c2ee10a0f4f254312644f2f9bb52c729874c82933a3e8cd6c4",
+      "size": 21
+    },
+    "nested/00002.stderr": {
+      "fingerprint": [
+        66309,
+        118531903,
+        33204,
+        17,
+        1791345739893854625,
+        1791345739893854625,
+        1
+      ],
+      "sha256": "d04a075a76b562390b7d918a32bdc4667d928210424687289d386137ce7200aa",
+      "size": 17
+    },
+    "nested/00002.stdout": {
+      "fingerprint": [
+        66309,
+        118531902,
+        33204,
+        2097408,
+        1791345739891652994,
+        1791345739891652994,
+        1
+      ],
+      "sha256": "ad4707187ce2c9c3d16909bd20eb1c440fa9d2717bff5b836db2d32f997da4d2",
+      "size": 2097408
+    }
+  },
+  "format": "mylang-s4-raw-process-archive-v1",
+  "raw_directory": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/raw-archive-selftest-01/test_unsafe_duplicate_missing_and_link_members_rejected/processes",
+  "total_bytes": 2097446
+}

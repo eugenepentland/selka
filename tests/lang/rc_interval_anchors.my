@@ -71,7 +71,6 @@ def unique_parts(count: int) -> list[Pin]:
     return out
 
 
-# spec-case: RC-INTERVAL-ANCHOR-2
 public def test_a_mut_list_is_read_in_place_between_its_writes() -> bool:
     pins = [pin(0, b"VCC"), pin(1, b"GND"), pin(2, b"VCC"), pin(3, b"SDA"), pin(4, b"GND")]
     before = pins
@@ -80,7 +79,6 @@ public def test_a_mut_list_is_read_in_place_between_its_writes() -> bool:
     return ids == [0, 1, 0, 3, 1] and pins[4].display.source == b"GND?" and before[4].net_id == -1 and before[4].display.source == b"GND!"
 
 
-# spec-case: RC-INTERVAL-ANCHOR-2
 public def test_a_local_list_is_read_in_place_between_appends() -> bool:
     out = unique_parts(11)
     return len(out) == 4 and out[3].part == 3 and out[0].net.source == b"n"
@@ -151,12 +149,10 @@ def last_capture(count: int) -> bool:
     return values[len(values) - 1].part == 1 and values[0].part == 0
 
 
-# spec-case: RC-INTERVAL-ANCHOR-2
 public def test_a_list_handed_to_a_new_owner_keeps_earlier_reads() -> bool:
     return handed() == 112 and last_capture(40)
 
 
-# spec-case: RC-INTERVAL-ANCHOR-2
 public def test_values_live_across_a_write_keep_their_copy() -> bool:
     pins = [pin(3, b"abc"), pin(4, b"de")]
     first = stale(mut pins)
@@ -167,7 +163,6 @@ public def test_values_live_across_a_write_keep_their_copy() -> bool:
     return first == 303 and pins[0].part == 90 and second == 874 and order == 270
 
 
-# spec-case: RC-INTERVAL-ANCHOR-2
 public def test_local_lists_written_or_returned_keep_owners() -> bool:
     kept = returned(3)
     return grown(3) == 567 and kept.part == 2 and kept.net.source == b"value"

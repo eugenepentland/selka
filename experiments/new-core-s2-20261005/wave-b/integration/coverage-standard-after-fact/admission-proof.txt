@@ -1,0 +1,20 @@
+{
+  "function_occurrences_compared": 4253,
+  "qualified_name_functions": 3627,
+  "accepted": 3185,
+  "frontend_rejections_compared": 11,
+  "checks_before": {
+    "proven": 4757,
+    "exact": 3764,
+    "qualified_function_names": 3017
+  },
+  "checks_final": {
+    "proven": 4757,
+    "exact": 3764,
+    "qualified_function_names": 3017
+  }
+}
+PASS: every admission/refusal/frontend diagnostic agrees; original loop table remains valid; all refusal reasons retained.
+command=python3 experiments/new-core-s2-20261005/wave-b/integration/coverage-standard-after-fact/compare_admissions.py
+source_commit=996d9baad0e00ef98b4d3e7b59dc3616809fa013
+exit=0

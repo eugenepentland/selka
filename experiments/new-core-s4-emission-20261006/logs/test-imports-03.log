@@ -1,0 +1,27 @@
+test-core
++- run test w
+guardian/test: 13 test(s) selected
+guardian/test: SLOW  7.03s  emit_units_test.test.S4 an inlined cross-module Result origin retains its source function
+guardian/test: SLOW  14.22s  emit_units_test.test.S4 Result origins distinguish specializations sharing one declaration and body span
+guardian/test: SLOW  5.21s  emit_units_test.test.S4 a float renderer outside entry carries the formatter link dependency on its helper unit
+guardian/test: test wall 47.70s; slowest over 50ms:
+guardian/test:   14.22s  emit_units_test.test.S4 Result origins distinguish specializations sharing one declaration and body span
+guardian/test:   7.03s  emit_units_test.test.S4 an inlined cross-module Result origin retains its source function
+guardian/test:   5.21s  emit_units_test.test.S4 a float renderer outside entry carries the formatter link dependency on its helper unit
+guardian/test:   4.07s  emit_units_test.test.S4 imported aggregate bodies close rendering dependencies and export excluded private callees
+guardian/test:   3.80s  emit_units_test.test.S4 a release tail-position cross-unit trap retains its caller frame
+guardian/test:   3.59s  emit_units_test.test.S4 native cross-unit traps carry their source path and callers through all compile units
+guardian/test:   3.42s  emit_units_test.test.S4 identical record renderers in separate modules share one native helper unit
+guardian/test:   3.18s  emit_units_test.test.S4 direct and indirect cross-unit fastcc calls preserve the aggregate sret ABI
+guardian/test:   3.05s  emit_units_test.test.S4 an imported Result origin retains its callee path and function inside a counted loop
+guardian/test: PASS — 13 passed
+guardian/test: RESULT {"passed":13,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/b0cd2ee162637862b592da3b5eee52b3/test --cache-dir=./.zig-cache --seed=0xaa01d605 --listen=-
+
+Build Summary: 5/5 steps succeeded; 13/13 tests passed
+test-core success
++- run test 13 pass (13 total) 47s MaxRSS:258M
+   +- compile test debug native success 2s MaxRSS:347M
+      +- options success
+         +- compile exe mylang-core debug native success 2s MaxRSS:346M
+

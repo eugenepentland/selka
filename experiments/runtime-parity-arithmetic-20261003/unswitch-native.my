@@ -1,0 +1,24 @@
+def parsed(args: list[str], index: int) -> int:
+    match int(args[index]):
+        case Some(value):
+            return value
+        case None:
+            return 0
+def main(args: list[str], out: Stream) -> int:
+    kind = parsed(args, 0)
+    count = parsed(args, 1)
+    total = parsed(args, 2)
+    raw = [1, 2, 3]
+    for i in range(count):
+        out.print(i)
+        if kind == 0:
+            total += raw[i]
+        elif kind == 1:
+            raw.append(i)
+            total += i
+        elif kind == 2:
+            total += 1 // (i - 2)
+        else:
+            total -= raw[i]
+    out.print(len(raw))
+    return total

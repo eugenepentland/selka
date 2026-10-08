@@ -1,0 +1,9 @@
+$ .mylang-cache/s3/oracle/mylang build /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/test/core/row_packet_decode.my -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_packet_decode_old --release --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/cache/old --link /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/benchmarks/runtime/ports/native_clock.c
+row_packet_decode.my:69:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          phase = batch % 17
+          ^
+row_packet_decode.my:72:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              x = values[j]
+              ^
+
+exit=0

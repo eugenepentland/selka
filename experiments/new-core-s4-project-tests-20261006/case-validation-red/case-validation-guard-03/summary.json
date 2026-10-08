@@ -1,0 +1,318 @@
+{
+  "source": "25d9e95317bbf674ba948d6f4ad3081e0ea7faf2",
+  "scope": "isolated native case reducers; no source correction",
+  "tools": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/oracles/pre-v-run15/mylang-core": "2b79fc47b1c5c882d8fcc1c2b0b6fb0b909746b6f7752b4176f18ceac34328e0",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-integration/.mylang-cache/s3/oracle/mylang": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/qbe": "f485cd7750ac153feed0be6ee14f4ca525ef5f50a61c44519a05813d3f5e461d",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+  },
+  "environment": {
+    "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "MYLANG_QBE": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/qbe",
+    "XDG_CACHE_HOME": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/xdg",
+    "MYLANG_FRONTEND_CACHE": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/frontend",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/zig-global",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/zig-local",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/tmp"
+  },
+  "cases": [
+    {
+      "name": "nonobject-arguments",
+      "source": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments/app.my",
+      "source_sha256": "19688ffb7b8be3d86c14001d61286b2df51ec1bcef57446c51052d8f8a2b3746",
+      "cases": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments/explicit.json",
+      "cases_sha256": "be940b775668b73ca65c42075ad408804f8ff1ecefaa43c0af58a9ca41ce730d",
+      "commands": [
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/oracles/pre-v-run15/mylang-core",
+            "test",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments/app.my",
+            "--cases",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments/explicit.json",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments/core-cache",
+            "--json",
+            "--jobs",
+            "1",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+          ],
+          "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments",
+          "compiler_sha256": "2b79fc47b1c5c882d8fcc1c2b0b6fb0b909746b6f7752b4176f18ceac34328e0",
+          "status": 1,
+          "seconds": 38.79781903093681,
+          "stdout": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments/core-cold.stdout",
+          "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments/core-cold.stderr",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "42f86fd65568c07e2d0b64a1d0be8cf9d6be327f0086012543446c71cb56babc"
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/oracles/pre-v-run15/mylang-core",
+            "test",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments/app.my",
+            "--cases",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments/explicit.json",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments/core-cache",
+            "--json",
+            "--jobs",
+            "1",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+          ],
+          "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments",
+          "compiler_sha256": "2b79fc47b1c5c882d8fcc1c2b0b6fb0b909746b6f7752b4176f18ceac34328e0",
+          "status": 1,
+          "seconds": 1.009099337970838,
+          "stdout": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments/core-warm.stdout",
+          "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments/core-warm.stderr",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "42f86fd65568c07e2d0b64a1d0be8cf9d6be327f0086012543446c71cb56babc"
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-integration/.mylang-cache/s3/oracle/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments/app.my",
+            "--cases",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments/explicit.json",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments/old-cache",
+            "--json",
+            "--jobs",
+            "1",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+          ],
+          "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments",
+          "compiler_sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+          "status": 2,
+          "seconds": 0.17853777506388724,
+          "stdout": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments/old-cold.stdout",
+          "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/nonobject-arguments/old-cold.stderr",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "3194192950101f92c0dc2ca6b0f7ea6fa915b354ec10ff00d1f3d4a9956badeb"
+        }
+      ]
+    },
+    {
+      "name": "missing-fixed-arguments",
+      "source": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/app.my",
+      "source_sha256": "6bbcacec696efe70d952ca01c5b1451b74b2898bcc1ca19e203bf8d79daa95fe",
+      "cases": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/explicit.json",
+      "cases_sha256": "2f6f7db8a9c4b85065b4609863b6f6266f80428e02ac85a47abb157239e38a7a",
+      "commands": [
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/oracles/pre-v-run15/mylang-core",
+            "test",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/app.my",
+            "--cases",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/explicit.json",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/core-cache",
+            "--json",
+            "--jobs",
+            "1",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+          ],
+          "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments",
+          "compiler_sha256": "2b79fc47b1c5c882d8fcc1c2b0b6fb0b909746b6f7752b4176f18ceac34328e0",
+          "status": 0,
+          "seconds": 16.337623005034402,
+          "stdout": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/core-cold.stdout",
+          "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/core-cold.stderr",
+          "stdout_sha256": "75a0d2b5eb9cc95438e4cb105d4380f9b55b042c032dadaab1059c6f729e9ec5",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "report": {
+            "version": "native-tests-v1",
+            "tests": [
+              {
+                "name": "app::test_argument",
+                "status": "passed",
+                "reason": "",
+                "at": "",
+                "property": {
+                  "seed": 12055007245103195833,
+                  "counts": {
+                    "runs": 100,
+                    "passed": 100,
+                    "discarded": 0,
+                    "processes": 1,
+                    "shrinks": 0,
+                    "attempts": 0
+                  },
+                  "failure": null
+                }
+              },
+              {
+                "name": "app::test_z_survivor",
+                "status": "passed",
+                "reason": "",
+                "at": ""
+              }
+            ],
+            "passed": 2,
+            "failed": 0,
+            "skipped": 0,
+            "cached": 0,
+            "unsupported": 0,
+            "sources": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/app.my"
+            ]
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/oracles/pre-v-run15/mylang-core",
+            "test",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/app.my",
+            "--cases",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/explicit.json",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/core-cache",
+            "--json",
+            "--jobs",
+            "1",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+          ],
+          "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments",
+          "compiler_sha256": "2b79fc47b1c5c882d8fcc1c2b0b6fb0b909746b6f7752b4176f18ceac34328e0",
+          "status": 0,
+          "seconds": 0.5212488388642669,
+          "stdout": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/core-warm.stdout",
+          "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/core-warm.stderr",
+          "stdout_sha256": "4ae842a558042ee6fcaf01d81744fbdad7a2e96979f53bbde99ff40d2d31673f",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "report": {
+            "version": "native-tests-v1",
+            "tests": [
+              {
+                "name": "app::test_argument",
+                "status": "cached",
+                "reason": "",
+                "at": "",
+                "property": {
+                  "seed": 12055007245103195833,
+                  "counts": {
+                    "runs": 100,
+                    "passed": 100,
+                    "discarded": 0,
+                    "processes": 1,
+                    "shrinks": 0,
+                    "attempts": 0
+                  },
+                  "failure": null
+                }
+              },
+              {
+                "name": "app::test_z_survivor",
+                "status": "cached",
+                "reason": "",
+                "at": ""
+              }
+            ],
+            "passed": 0,
+            "failed": 0,
+            "skipped": 0,
+            "cached": 2,
+            "unsupported": 0,
+            "sources": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/app.my"
+            ]
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-integration/.mylang-cache/s3/oracle/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/app.my",
+            "--cases",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/explicit.json",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/old-cache",
+            "--json",
+            "--jobs",
+            "1",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+          ],
+          "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments",
+          "compiler_sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+          "status": 0,
+          "seconds": 3.28491526003927,
+          "stdout": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/old-cold.stdout",
+          "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/old-cold.stderr",
+          "stdout_sha256": "f62c5e6dbbc972353e07ec64647e8f65454451f3ef840862f4a8bf44c4ebd5d8",
+          "stderr_sha256": "b2d6ac4b52161c4499b651a2010b7d0c40147bd80f7d4541d09f8df5f310432a",
+          "report": {
+            "version": "native-tests-v1",
+            "tests": [
+              {
+                "name": "app::test_argument",
+                "status": "passed",
+                "actual": true,
+                "expected": true,
+                "reason": "",
+                "key": "ab3512e2c159b2a683e86e7daa06632b03bd8d0a3fd261d1439cd736be38253a",
+                "dependencies": [
+                  "myl_f_b9e6222138fd4ba710ce1d04edb0698de50b5bd0778381ef73baa374b7e93217"
+                ],
+                "cacheable": true,
+                "reasons": [],
+                "steps": 0,
+                "contract": "ec07a8e84c265c732b35da7115cd0a690fbbc6a2d1d7a6a6dab3a804f46bf126",
+                "provider": "",
+                "source": "490c8d7b0839272e02121496c01840a4f11f078a3c84bc434409ce8d91ef478d",
+                "property": {
+                  "seed": 12055007245103195833,
+                  "counts": {
+                    "runs": 100,
+                    "passed": 100,
+                    "discarded": 0,
+                    "processes": 1,
+                    "shrinks": 0,
+                    "attempts": 0
+                  },
+                  "failure": null
+                }
+              },
+              {
+                "name": "app::test_z_survivor",
+                "status": "passed",
+                "actual": true,
+                "expected": true,
+                "reason": "",
+                "key": "d3d142feea7220cd3cd7580a820b06ffea3d6be31f88b4e0cd4e3d99c111b9b9",
+                "dependencies": [
+                  "myl_f_485e2c37e57fba5d83acbdf05749c2f06546e7bf7eb16044ab632f3347372345"
+                ],
+                "cacheable": true,
+                "reasons": [],
+                "steps": 2,
+                "contract": "ec07a8e84c265c732b35da7115cd0a690fbbc6a2d1d7a6a6dab3a804f46bf126",
+                "provider": "",
+                "source": "490c8d7b0839272e02121496c01840a4f11f078a3c84bc434409ce8d91ef478d"
+              }
+            ],
+            "passed": 2,
+            "failed": 0,
+            "skipped": 0,
+            "cached": 0,
+            "executed": 2,
+            "modules": [
+              "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/m-review-25d9/case-validation-red-03/missing-fixed-arguments/app.my"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "complete": true,
+  "all_tools_unchanged": true
+}

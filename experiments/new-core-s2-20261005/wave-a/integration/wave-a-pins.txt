@@ -1,0 +1,29 @@
+$ scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/wave-a/pins-seconds.txt python3 experiments/new-core-s1-20261005/conformance.py mut_rebinding mut_rebind_caller mut_rebind_modules live_place_iteration --modes debug,release --jobs 4 --why --pin /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/wave-a/wave-a.pins
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+mut_rebinding                4 |             3     0     1 |             3     0     1
+mut_rebind_caller           27 |            10     0    17 |            10     0    17
+mut_rebind_modules           2 |             0     0     2 |             0     0     2
+live_place_iteration        37 |             3     0    34 |             3     0    34
+--------------------------------------------------------------------------------------
+TOTAL                       70
+  debug    matching 16, mismatching 0, unsupported 54 (of 70 tests; 16 supported)
+  release  matching 16, mismatching 0, unsupported 54 (of 70 tests; 16 supported)
+
+blocking features of the unsupported tests (tests / files):
+    19 /  1  write to a list while it is iterated (live-place iteration)
+     9 /  4  dict type
+     7 /  1  fixed array type
+     6 /  2  function_value
+     4 /  1  interior mut argument ancestor changed during later argument evaluation
+     4 /  1  string index
+     3 /  2  set type
+     2 /  1  bytes type
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+  mut_rebinding                    1 of   4: dict type x1
+  mut_rebind_caller               17 of  27: dict type x6, function_value x5, interior mut argument ancestor changed during later argument evaluation x4, set type x2
+  mut_rebind_modules               2 of   2: function_value x1, dict type x1
+  live_place_iteration            34 of  37: write to a list while it is iterated (live-place iteration) x19, fixed array type x7, string index x4, bytes type x2, dict type x1, set type x1
+
+exit=0 command=7.67s wall_including_admission=7.71s

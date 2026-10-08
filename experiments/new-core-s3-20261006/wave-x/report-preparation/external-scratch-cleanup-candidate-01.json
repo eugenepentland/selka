@@ -1,0 +1,233 @@
+{
+  "inventory_only": true,
+  "deletion_performed": false,
+  "native_jobs_run": false,
+  "observed_utc": "2026-10-06T19:28:05.281432+00:00",
+  "source_commit": "5ee5b8d2e1d1c697a98dfa590cbeda704ed7ae55",
+  "scope": "S3 command logs/receipts and creator code under this integration; exact-path lstat only. No outside directory listing, broad discovery, cache pruning, native build, gate or commit.",
+  "owned_outside_worktree_parents": [
+    {
+      "parent": "/var/tmp/mylang-a-old-preflight-oktp5c3j",
+      "kind": "private temporary incremental-test inputs and compiler caches",
+      "provenance": {
+        "owner": "S3-A application agent",
+        "creator": "tempfile.mkdtemp(prefix=\"mylang-a-old-preflight-\", dir=\"/var/tmp\") in the explicitly authorized focused scratch preflight",
+        "source": "203c0ca6100344304cbd9fd20d22cc7f9448a145",
+        "receipts": [
+          {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-c/s3-a/incremental-scratch-preflight-03/summary.json"
+          },
+          {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-c/s3-a/incremental-scratch-preflight-03/incremental-120.log",
+            "line": 1
+          },
+          {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-c/s3-a/incremental-scratch-preflight-03/incremental-project-60.log",
+            "line": 1
+          }
+        ]
+      },
+      "state": "completed",
+      "complete": true,
+      "stat": {
+        "exists": true,
+        "uid": 1000,
+        "gid": 1000,
+        "mode": "0o700",
+        "directory": true,
+        "symlink": false
+      },
+      "cleanup_eligible_after_handoff": true,
+      "cleanup_condition": "Both exact incremental preflights are complete; retain their logs/summary in the worktree. No remaining qualification uses this scratch.",
+      "retained_evidence": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-c/s3-a/incremental-scratch-preflight-03",
+      "evidence_or_inputs_that_must_remain_in_external_parent": false
+    },
+    {
+      "parent": "/var/tmp/mylang-old-gate-old-gate-combined-final-03-pjjj4ulj",
+      "tmpdir": "/var/tmp/mylang-old-gate-old-gate-combined-final-03-pjjj4ulj/tmp",
+      "kind": "private full old-gate temporary inputs and local child caches",
+      "provenance": {
+        "owner": "S3-A application agent",
+        "creator": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s2-20261005/wave-b/integration/full_old_gate.py:131 tempfile.mkdtemp(prefix=\"mylang-old-gate-<evidence.name>-\", dir=\"/var/tmp\")",
+        "tool_commit": "2213bcc00b75538d2c19017c9bc57e7e39e62952",
+        "tool_sha256": "afcee4dfe599aecf719588c2c220f33a28cd807bc110cef0fb65307e3494e3d9",
+        "source": "203c0ca6100344304cbd9fd20d22cc7f9448a145",
+        "receipts": [
+          {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-c/s3-a/old-gate-combined-final-03/test.log",
+            "line": 4
+          },
+          {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-c/s3-a/old-gate-combined-final-03/test-qbe.log",
+            "line": 4
+          },
+          {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-c/s3-a/old-gate-combined-final-03/test-qbe-build.log",
+            "line": 4
+          },
+          {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-c/s3-a/old-gate-combined-final-03/fmt-check.log",
+            "line": 4
+          },
+          {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-c/s3-a/old-gate-combined-final-03/summary.json"
+          }
+        ]
+      },
+      "state": "completed",
+      "complete": true,
+      "stat": {
+        "exists": true,
+        "uid": 1000,
+        "gid": 1000,
+        "mode": "0o700",
+        "directory": true,
+        "symlink": false
+      },
+      "cleanup_eligible_after_handoff": true,
+      "cleanup_condition": "All four old-gate steps completed; preserve their exact commands, statuses, summaries and failed-run history under experiments. A has handed off and has no active jobs using this parent.",
+      "retained_evidence": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-c/s3-a/old-gate-combined-final-03",
+      "evidence_or_inputs_that_must_remain_in_external_parent": false
+    },
+    {
+      "parent": "/var/tmp/mylang-old-gate-final-old-run01-0gu79pro",
+      "tmpdir": "/var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp",
+      "kind": "private final integrated old-gate temporary inputs and local child caches",
+      "provenance": {
+        "owner": "S3-X coordinator",
+        "creator": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s2-20261005/wave-b/integration/full_old_gate.py:131 tempfile.mkdtemp(prefix=\"mylang-old-gate-<evidence.name>-\", dir=\"/var/tmp\")",
+        "tool_commit": "2213bcc00b75538d2c19017c9bc57e7e39e62952",
+        "tool_sha256": "afcee4dfe599aecf719588c2c220f33a28cd807bc110cef0fb65307e3494e3d9",
+        "source": "5ee5b8d2e1d1c697a98dfa590cbeda704ed7ae55",
+        "receipts": [
+          {
+            "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/final-old-run01/test.log",
+            "line": 4
+          }
+        ],
+        "completion_receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/final-old-run01/summary.json"
+      },
+      "state": "active; full old gate still waiting/running",
+      "complete": false,
+      "stat": {
+        "exists": true,
+        "uid": 1000,
+        "gid": 1000,
+        "mode": "0o700",
+        "directory": true,
+        "symlink": false
+      },
+      "cleanup_eligible_after_handoff": false,
+      "cleanup_condition": "Do not remove while any final-old-run01 step is active. Recheck its completed summary and all four steps after the coordinator finishes the final gate and has retained the evidence.",
+      "retained_evidence": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/final-old-run01",
+      "evidence_or_inputs_that_must_remain_in_external_parent": false
+    }
+  ],
+  "shared_or_unproven_paths_excluded": [
+    {
+      "path": "/tmp/coverage-entries",
+      "stat": {
+        "exists": true,
+        "uid": 1000,
+        "gid": 1000,
+        "mode": "0o775",
+        "directory": true,
+        "symlink": false
+      },
+      "creator": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s0-20261005/coverage.py:60-62 with_entry(..., TMPDIR default /tmp)",
+      "provenance": [
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-coverage-01/corpus-3.txt",
+          "line": 732
+        }
+      ],
+      "cleanup_eligible": false,
+      "reason": "Fixed nonunique input snapshot location reused by the generic coverage tool; present but exclusive S3 ownership is not established. Preserve the historical coverage diagnostics; no cleanup candidate inferred."
+    },
+    {
+      "path": "/tmp/coverage-examples",
+      "stat": {
+        "exists": true,
+        "uid": 1000,
+        "gid": 1000,
+        "mode": "0o775",
+        "directory": true,
+        "symlink": false
+      },
+      "creator": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s0-20261005/coverage.py:60 with_entry(..., TMPDIR default /tmp)",
+      "provenance": [
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-coverage-01/summary.json",
+          "line": 15
+        }
+      ],
+      "cleanup_eligible": false,
+      "reason": "Fixed nonunique input snapshot location reused by the generic coverage tool; present but exclusive S3 ownership is not established."
+    },
+    {
+      "path": "/tmp/.pending",
+      "stat": {
+        "exists": true,
+        "uid": 1000,
+        "gid": 1000,
+        "mode": "0o775",
+        "directory": true,
+        "symlink": false
+      },
+      "cleanup_eligible": false,
+      "reason": "Shared generic staging root. The two precise historical runner leaf parents below are absent; never delete the whole staging root."
+    },
+    {
+      "path": "/home/epentland/ai/canopy/.zig-global-cache",
+      "cleanup_eligible": false,
+      "reason": "Protected shared global cache; not inventoried or touched."
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003",
+      "cleanup_eligible": false,
+      "reason": "Protected Rust/Zig baseline; not inventoried or touched."
+    },
+    {
+      "path": "/home/epentland/.cache/mylang/s4-wave0-20261006/cpu10.lock",
+      "cleanup_eligible": false,
+      "reason": "Independent-task shared CPU lock; never a cleanup candidate."
+    },
+    {
+      "path": "/run/user/1000/mylang-s2-cpu10.lock",
+      "cleanup_eligible": false,
+      "reason": "Required shared CPU lock; never a cleanup candidate."
+    }
+  ],
+  "absent_exact_historical_temporary_paths": [
+    {
+      "parent": "/tmp/.pending/f72248a2736d120ee698be333c875855/.pending/78d93eb0affe340fbbaa75168656ee66",
+      "stat": {
+        "exists": false
+      },
+      "action": "none; already absent",
+      "provenance": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-b/s3-runner/final-01-comparison.json",
+        "line": 44
+      }
+    },
+    {
+      "parent": "/tmp/.pending/aaa3f279ad03fc950ddee3535358d00d/.pending/2529a0f1da65d59af7af47ec44f17c92",
+      "stat": {
+        "exists": false
+      },
+      "action": "none; already absent",
+      "provenance": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-b/s3-runner/final-01-comparison.json",
+        "line": 133
+      }
+    }
+  ],
+  "automatic_or_in_worktree_scratch": {
+    "fixtures": "S3-C owner/grants fixtures use tempfile.TemporaryDirectory (qualify_fixtures.py:91,108). No concrete surviving outside parent is recorded; do not discover by prefix.",
+    "fuzz": "S3 fuzz path strings containing /tmp/core-fuzz or /tmp/fuzz-text were checked: recorded actual absolute parents are inside their owning worktree .mylang-cache/.../tmp, not top-level /tmp. TemporaryDirectory/defer cleanup is separate.",
+    "native_zig": "Build driver uses mktemp child caches plus a watcher that removes them after the parent exits. Placeholder ${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX is not an actual owned outside path.",
+    "final_coverage": "S3-X asset-preserving coverage scratch is created inside its retained experiments evidence directory; it is a source/asset snapshot and must stay with evidence.",
+    "old_failed_runs": "A old01 .zig-cache and old02 .mylang-cache scratch parents are inside its worktree, outside this inventory."
+  },
+  "retention_rule": "Keep all experiments logs/receipts, generated fuzz sources, original/split source fixtures, complete before/after LLVM/raw diffs and final coverage asset snapshots. Only the explicitly owned external temporary/cache parents above may become cleanup candidates once completed; this inventory performs no deletion."
+}

@@ -22,14 +22,12 @@ def rewrite_next(node: Node) -> Node:
     return Node(node.number, Some(rewritten))
 
 
-# spec-case: QBE-PURE-BOX-READ-1
 public def test_pure_box_projection_retains_private_value_updates() -> bool:
     original = Node(1, Some(Node(2, Some(Node(3, None)))))
     changed = rewrite_next(original)
     return total(original) == 6 and total(changed) == 13
 
 
-# spec-case: QBE-PURE-BOX-READ-1
 public def test_pure_box_read_remains_live_across_other_allocations() -> bool:
     original = Node(1, Some(Node(2, None)))
     copied = original

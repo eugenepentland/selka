@@ -1,0 +1,9 @@
+{
+  "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-final-checker/mylang",
+  "sha256": "5f9fd4599bb8de25c7db51de8191e5724026a5dcc49603dfd7221d41a0c6e460",
+  "compiler_mode": "Debug",
+  "source_commit": "8923ce3f19ea08afaa373e13ca54f2f19a945372",
+  "shared_checker_sha256": "6139f41ddc628a6d26427d76fa8f238779126a7c1baffb0e33428de2aae57e2f",
+  "build_log": "commands/command-00128.log",
+  "core_sha256": "3c86ebb5ac9db377a2a2b7ae0cffd48cce09bee554aabfec856c9c5a2a6fc2bc"
+}

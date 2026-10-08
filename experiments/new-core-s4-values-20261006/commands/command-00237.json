@@ -1,0 +1,10 @@
+{
+  "command": [
+    "python3",
+    "experiments/new-core-s4-values-20261006/archive_performance_v2.py"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3220348,
+  "status": 1,
+  "elapsed_seconds": 0.6277896349783987
+}

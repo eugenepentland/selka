@@ -1,0 +1,84 @@
+{
+  "schema": "mylang-dictionary-probe-timing-driver-v1",
+  "driver_session_id": "1391c32f-f025-435b-80a8-8e2fda34c447",
+  "phase": "measurements",
+  "started_utc": "2026-10-04T10:29:26.679481+00:00",
+  "commands": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/timing-commands.json",
+    "sha256": "ec09a8d2ba0abcf6e5aa67ee3032828df250e953d8a4993e13cef7cae442f005"
+  },
+  "script": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/execute-commands.py",
+    "sha256": "d6350583f6bb7128d53e288ed99298c94bac994f631a9315543a3bfc78e656c1"
+  },
+  "runs": [
+    {
+      "command": [
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/screen.py",
+        "--mylang",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/zig-out/bin/mylang",
+        "--zig",
+        "/home/epentland/.local/bin/zig",
+        "--candidate-id",
+        "dictionary-probe-64fb7e62-debug",
+        "--compiler-receipt",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/compiler-receipt.json",
+        "--reuse-reference-manifest",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/manifest.json",
+        "--expected-reference-manifest-sha256",
+        "e02fd8476ee7b36d04e74a46287dcdbcc0fade79156f40b4e0de2d9e6674a171",
+        "--work",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner",
+        "--output",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/screen-raw.json",
+        "--skip-build",
+        "--rounds",
+        "5",
+        "--warmups",
+        "1",
+        "--cpu",
+        "2",
+        "--only",
+        "dict_lookup",
+        "dict_lookup_str",
+        "dict_update",
+        "dict_update_str",
+        "set_dedup",
+        "mutate_nested",
+        "string_search"
+      ],
+      "started_utc": "2026-10-04T10:29:26.679553+00:00",
+      "log": ".mylang-cache/goal110-dict-probe-debug/command-0.log",
+      "status": 0,
+      "finished_utc": "2026-10-04T10:31:17.171286+00:00",
+      "log_sha256": "05585851acd7223c8c72d5d9e9036dc244ea324627c7642e25884b8ea64d8d6c"
+    },
+    {
+      "command": [
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/time-paired.py",
+        "--plans",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/screen-raw.json",
+        "--before-manifest",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/manifest.json",
+        "--after-manifest",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/manifest.json",
+        "--rounds",
+        "5",
+        "--warmups",
+        "1",
+        "--cpu",
+        "2",
+        "--output",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/paired-screen.json"
+      ],
+      "started_utc": "2026-10-04T10:31:17.171478+00:00",
+      "log": ".mylang-cache/goal110-dict-probe-debug/command-1.log",
+      "status": 0,
+      "finished_utc": "2026-10-04T10:32:12.307658+00:00",
+      "log_sha256": "be3684697f9cb1d468091167290c805a20b4875a9b4bdc9939205f68c711e3a3"
+    }
+  ],
+  "finished_utc": "2026-10-04T10:32:12.307742+00:00"
+}

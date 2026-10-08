@@ -2,8 +2,8 @@
 
 A contract states what a function expects, what it promises, and what stays
 true of a type. mylang writes contracts as attributes on the declaration and
-checks them in every build: Debug and ReleaseFast, QBE and `--release` (LLVM),
-`mylang run` and `mylang test`. No mode removes them.
+checks them in every build: debug and `--release`, `mylang run` and
+`mylang test`. No mode removes them.
 
 | clause | attaches to | checked | sees | trap |
 |---|---|---|---|---|
@@ -66,7 +66,6 @@ rejected with `E_CONTRACT_OLD_SHARED`; capture a scalar such as `old(len(xs))`
 or an explicit copy there.
 
 ```mylang
-# doc: value-semantics
 # doc: expect 2
 @ensures(len(items) == len(old(items)) + 1)
 def add(items: mut list[int], value: int):

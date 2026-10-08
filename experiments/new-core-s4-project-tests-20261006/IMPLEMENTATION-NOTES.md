@@ -1,0 +1,230 @@
+# S4-M implementation and qualification state
+
+The corrected pre-V production checkpoint is `8cd19b82d`, after the managed
+undef-phi, typed-case, canonical-integer and native-cache repairs below. Qualification
+tool hardening is still in progress. Its preceding unwind-dependency checkpoint
+is `25d9e9531`; its initial production checkpoint is `7bc4a745f`, based on S4-F corrected
+production checkpoint `7877aa5d369f57aeb8fb850e8198c08c520b3a51`. Final combined
+package qualification is still pending. Negative runs remain evidence, never
+successful gate receipts.
+
+Project entries use strict shared configuration and policy/interface handling,
+separate import and embedded-asset roots, and explicit refusals for unsupported
+legacy sharing or configured frame/memory bounds. Source budgets and configured
+step limits are enforced before execution.
+
+Directory discovery inventories every source, follows actual project closures,
+and includes mains, standalone test entries and orphan libraries. Every declaring
+source must appear in a checked child inventory. One bounded worker budget covers
+directory and trial workers. Inputs are inventoried and hashed again after workers
+finish, so edits, additions and deletions cannot publish successful receipts.
+The parent snapshot also covers imports outside the selected directory, distinct
+provider closures, embedded assets, configuration/policy bytes, cases and required
+API presence or absence, and each entry's resolved project location. The original
+external dependency race accepts a stale cached child; corrected-run02 rejects
+that exact race with SourceChanged after the cached child finished. Its installed
+run12 compiler SHA256 is
+`ae95edc2e2d473fe052810345335e3558ad553b325bd0394af48c39ceafcaf98`.
+
+Provider fixtures use exact existing dependency paths and canonical discovered
+test names. Replacements preserve both exported layouts and types reachable from
+private test roots through the existing checked native-facts schema API; this API
+reads checked facts and never invokes old lowering or the native driver. Provider
+imports and embedded assets are included in dependency capture. Explicit arguments,
+expectations, reasoned skips and invalid inputs are checked rather than ignored.
+
+Successful result receipts include actual reachable LLVM, schema/adapters, limits,
+seed/runs, compiler/runtime identity, configuration/policy/cases and environment.
+Manifests only replay unchanged dependency bytes. Force/leak/fact verification
+executes trials. Native external links and mutable loader environment bypass reuse
+until a complete dependency proof exists. The shared tool helper captures complete
+guest Zig content, the adjacent library and explicit library override, and native
+CPU identity. Scripts and tools with an unproved dependency closure bypass reuse.
+Its checksummed content memo still rechecks file generations, including ctime.
+
+A directory parent lends this identity to the same compiler's children through
+invocation-owned stdin files. Children verify parent provenance, executable
+generation and CPU before read-only manifest replay. A miss discards the ticket
+and establishes a full local identity before checking, building or publication.
+The parent rechecks all tool generations after children and refuses the aggregate
+on any change. The private hint is omitted from receipt keys and removed from
+native guest environments. Local warm replay first buffers an untrusted candidate,
+validates the complete tool generation, then revalidates dependencies before
+accepting the buffered success. The static-delegate counterexample demonstrates
+that ELF structural checks cannot prove a tool's dependency closure. Eligibility
+now requires the reviewed executable and complete normalized library content;
+unknown tools execute without persistent reuse. Native compilation explicitly
+uses the bundled `x86_64-linux-gnu.2.31` headers and link inputs. The reviewed
+default loader, libc, libm, libgcc, libpthread and loader-cache content also enter the captured tool
+generation; unsupported runtime or environment closures bypass reuse. No system
+input was modified. The inventory, generation, approval and CPU-policy domains
+are v2 except inventory hints, now v3. The v3 hint key also includes every
+expected runtime descriptor, so an older inventory cannot omit a newly reviewed
+dependency. The opaque content-memo codec remains v1.
+
+Execution outputs use invocation-owned directories and stable semantic helper
+names. Focused run07 exposed the inherited fixed runtime-object partial race when
+two directory children compile a cold runtime. The reduced fixture and scheduling
+barrier precede backporting E's owned atomic publication helper. The original
+focused receipt remains red. Focused run08 passed 22 tests and run09 passed 27;
+the barrier reducer passed with run09's actual test artifact in corrected-run04.
+Corrected-run03 used a stale installed binary and is retained as an unqualified
+failed attempt. Focused run12 passes all 42 selected tests; its unfiltered preflight
+also instantiates every test body successfully.
+Final pre-V focused run14 passes all 48 project/helper tests in 125.64 seconds,
+with zero failures or skips. The separate Guard/native-number run14 passes 6
+tests in 94.62 seconds. Refreshed unfiltered preflight14 instantiates every test
+body in 1.925 seconds using the actual named-module build recipe. These are
+focused/preflight checks, not the full core or rebuild qualification gates.
+
+The retained tool-publication-reduced-run02 observes both runtime and numeric
+objects left published under a captured tool key after a private library input
+changed during compilation and the command refused with SourceChanged. Both
+native reducers precede the new per-object publication guards. Each object is
+staged privately, validates the captured tool before its rename, and leaves no
+partial on failure; numeric staging now also uses an invocation-owned random
+nonce. Runtime object identity is full BLAKE3 with domain v2, and numeric objects
+use the number-tool-v2 namespace, so earlier unsafe keys cannot be reused. The
+final link guard remains. Fresh corrected-run03 copies the complete reviewed
+library into an owned fixture, changes an input during each real compilation,
+and observes refusal with no shared runtime or numeric object published under
+the previous key (71.34 and 78.82 seconds). Its installed compiler SHA256 is
+`67ad628f8743dd803c81bbd071f5c3e7816ff2977ad44bb10c52bb4e36672906`;
+the retained production source hashes match initial checkpoint `7bc4a745f`. Earlier
+negative receipts remain untouched.
+
+Read-only bundled-target C and actual Core debug/release/numeric probes reveal
+glibc's dynamically loaded `libgcc_s.so.1` unwinder; the C debug probe also loads
+`libpthread.so.0`. Both exact files and their already captured ELF dependencies
+are now reviewed inputs. The corrected helper passes 20 focused checks and all
+88 Guardian checks, and its production probe inventories 20,907 inputs with
+stable strict/candidate identities. Fresh installed Core SHA256 is
+`2b79fc47b1c5c882d8fcc1c2b0b6fb0b909746b6f7752b4176f18ceac34328e0`.
+The actual CLI smoke passes three directory tests cold and reuses all three
+warm; strace observes only the parent and its two Core workers. Smoke elapsed
+times include slot admission and are not qualification measurements.
+
+Pre-V full-core run15 is a retained failed checkpoint, not qualification:
+330/331 actual tests pass, with 20,853 shard skips; command wall is 440.616
+seconds and the longest shard is 249.42 seconds. It ran beside other admitted
+builds and exceeds the five-minute command target. The sole behavior failure is
+the existing zero-trip list/record undef-phi fixture: expected exit zero, observed
+232. Independent raw native diagnosis precedes any production correction. Final
+combined qualification must resolve both this failure and the elapsed-time gate.
+
+The native undef-phi reduction reproduces the record failure under the explicit
+bundled GNU 2.31 target: the unmodified LLVM exits 232, while initializing the
+managed undef incoming slot makes the same native fixture exit zero. Its list
+control passes. The correction in `ebb4cf2826` initializes only managed memory
+phis; unmanaged undef storage keeps its existing behavior. The fresh combined
+nine-file snapshot passes the three focused ownership/emission tests and all 88
+Guardian checks. Every source hash matches before and after the run; frozen IR
+is unchanged. Native diagnosis, both negative receipts, the native LLVM repair
+proof and the positive focused receipt remain retained. Full core elapsed time
+and final combined package qualification remain pending.
+
+Seven independent typed-case reducers on immutable compiler `2b79fc47` precede
+the correction in `68ff263b5`. They demonstrate invalid arguments, integer
+overflow, wrong JSON types, malformed dictionary members and scalar spelling
+normalization either becoming cached successes or aborting the selection. The
+corrected runner validates every typed value and exact argument names/counts
+before native transport. Expected-result comparison preserves scalar kinds and
+string bytes, ignoring only object order; allocation failure propagates. Invalid
+typed values fail their individual test and never publish successful receipts.
+The final focused run passes five tests in 40.294 command seconds: typed shape
+and comparison checks, explicit allocation failure, generated-shape transport
+round trips, and eight native invalid cases run both cold and warm with an
+independent surviving test. Its emitted compiler is `c6944963`; the installed
+compiler was unchanged. Source hashes match the same nine-file snapshot used by
+the ownership focus, and the production commit passes all 88 Guardian checks.
+These focused checks do not replace the final S4-M package gates.
+
+Independent comparison against the old native wire grammar then reduces four
+remaining argument spelling failures on immutable focused compiler `c6944963`:
+`00`, `+0`, `-0` and `1_0` are accepted and cached by Core, while the old runner
+refuses them with InvalidTestValue. Thirty native probes retain both cold/warm
+Core and old outputs for these integers and six float controls. All float
+spellings agree, so their grammar is unchanged. Correction `0ebc9c8f0` applies
+the old integer grammar before conversion: bounded decimal text, ASCII digits,
+optional minus and canonical zero. The fresh five-test focus passes all twelve
+invalid native fixtures cold and warm with their independent survivor, generated
+round trips, unit shape/comparison checks and allocation failure. It takes
+56.481 command seconds; emitted compiler SHA256 is `591886dc`, and all nine
+source hashes match before and after. Whole-tree Guardian passes 88/88. Earlier
+focused successes remain historical; final combined package gates are pending.
+
+The actual linked-header reducer then exposes an inherited native-cache defect
+on protected compiler `591886dc`: both builds succeed, but changing a C header
+from VALUE 7 to VALUE 8 with restored mtime leaves the guest returning 7. The
+exact LLVM and executable bytes are unchanged despite changed header content and
+ctime. Separate fresh-local and fresh-local/global controls return 8 before any
+production correction. In `8cd19b82d`, external links and unproved tools receive
+fresh invocation-owned native caches for the final compilation/link action.
+The captured Guard environment and closed runtime/numeric object keys remain
+unchanged. Two focused tests pass in 34.98 seconds, exercising actual debug and
+release header edits plus unproved-tool reuse, failure cleanup and caller
+environment preservation. Corrected Debug compiler SHA256 `d6e4220a` returns 8
+against the retained original stale caches; the original stale object remains
+unchanged and private link directories are removed. Eight source/input hashes
+are stable and all 88 Guardian checks pass. The curated native RED, controls,
+corrected replay and focused receipts are retained under
+`driver-native-cache-20261007/`. Installed Core remains the earlier `2b79fc47`;
+these are focused checks, not final combined qualification.
+
+Copied propagation fixtures are byte-identical to tests/lang, which was not edited.
+The focused CLI cases cover directory/orphan accounting, changed dependency versus
+unaffected receipts, provider-only imports and embeds, provider public/private type
+layouts, budgets, step/timeout bounds, import policy, stale generated interfaces,
+nested entries and reserved embedded-module names. Failure-path unit tests cover
+allocation failure, damaged receipts/manifests and source mutation.
+
+After source freeze: full old gate, core64 under300 seconds, conformance with
+retired arenas only and forced leak/verify execution, inherited strict50 kinds plus
+50 generated project/provider comparisons and traced zero-child warm runs,
+uncontended rebuild, all46 after qualified V, and both port inventories. Port
+capability-field and assert-message repairs belong to S4-P after C and M merge.
+
+## Qualification harness correction, 2026-10-07
+
+The compiler production checkpoint remains `8cd19b82d`; tool-only correction
+`07cca6157` now requires exact conformance selection/counts, distinct immutable
+oracles and forced native execution, snapshots each generated project/provider
+input phase, and compares both concurrent providers against old. Every command
+has its own subreaper supervisor: reduced exited-parent orphan hangs are fixed
+without killing concurrent commands, and raw partial bytes remain retained.
+Root independently verified the frozen five tool source bodies and reran 11/11
+local selftests in 1.778 seconds. This is tool validation, not a full compiler
+qualification; final M still waits for qualified combined E/V, all package
+gates, and a fresh full core command under 300 seconds.
+
+Final X will use 200 cases for each of all nine inherited fuzz kinds (1,800
+accepted programs and 25,800 native comparisons), and 200 generated project
+cases as the module/provider supplement. Package M keeps its required 50
+project cases. This coordinator choice extends the final every-kind bar to
+S4's added project generator; it changes no compiler acceptance rule.
+
+Large raw process receipts will be retained in verified lossless archives with
+readable member hashes before evidence commits; originals remain untouched.
+No full old gate or fuzz matrix overlaps the other, and no later compiler may
+claim qualification from these local tool checks or earlier-source receipts.
+
+## Additive native-tool discovery correction, 2026-10-07
+
+The retained production-helper closure failure from F's `8d7952f86` is repaired
+by preserving all existing full executable/library/runtime guards and adding
+296 reviewed discovery selection paths. Inventory hints, approval, content and
+generation namespaces change versions. Unknown sibling resources, distro
+contents, aliases or GCC membership refuse persistent reuse. Only proved
+directory existence predicates ignore membership timestamps; consumed files
+and enumerated directories retain their guards. The new discovery roles handle
+`NotDir` beneath a guarded regular-file ancestor, while legacy content errors
+remain unchanged.
+
+Frozen source23 passes 27 focused tests, all 88 Guardian checks, and fresh
+replay28's three actual native scenarios. Initially absent sibling resources
+invalidate reuse; preexisting sibling directories and regular-file parents
+still build and run through the private fallback. Root independently verifies
+all 126 handoff files, five frozen source hashes, the actual Core/probe binaries,
+six native objects and both fallback guests. Historical discovery and `NotDir`
+failures and the invalid `export def` evidence fixture remain retained. This
+qualifies the correction's focused behavior, not final M or Wave A integration.

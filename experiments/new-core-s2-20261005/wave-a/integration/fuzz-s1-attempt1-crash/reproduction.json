@@ -1,0 +1,216 @@
+{
+  "source": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/fuzz-s1/failures/records_unions_propagate_mut_alias67-5676f097b6ec.my",
+  "source_sha256": "5676f097b6ecd6d1ce753f480a312c4852ac21257455638a6fd6b27dc4c519e6",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "results": [
+    {
+      "variant": "baseline",
+      "mode": "debug",
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/baseline/mylang-core",
+      "compiler_sha256": "32517a0b9fa88477156e9d9e95d0accef8aeb1c683c3476dbb3fcb0f5751b9d9",
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/baseline/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/fuzz-s1/failures/records_unions_propagate_mut_alias67-5676f097b6ec.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/baseline/debug",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/baseline/frontend/debug",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/fuzz-s1-crash/baseline-debug.ll"
+      ],
+      "build_exit": 0,
+      "build_seconds": 1.8436709970701486,
+      "build_stdout": "",
+      "build_stderr": "",
+      "run_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/baseline/debug",
+        "37",
+        "4",
+        "999983"
+      ],
+      "exit": 2,
+      "stdout": "16 681250 794681 1 999983 1 33 999903 2\n",
+      "stderr": "",
+      "run_seconds": 0.0023957279045134783
+    },
+    {
+      "variant": "baseline",
+      "mode": "release",
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/baseline/mylang-core",
+      "compiler_sha256": "32517a0b9fa88477156e9d9e95d0accef8aeb1c683c3476dbb3fcb0f5751b9d9",
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/baseline/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/fuzz-s1/failures/records_unions_propagate_mut_alias67-5676f097b6ec.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/baseline/release",
+        "--release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/baseline/frontend/release",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/fuzz-s1-crash/baseline-release.ll"
+      ],
+      "build_exit": 0,
+      "build_seconds": 1.8400714071467519,
+      "build_stdout": "",
+      "build_stderr": "",
+      "run_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/baseline/release",
+        "37",
+        "4",
+        "999983"
+      ],
+      "exit": -11,
+      "stdout": "16 681250 794681 1 999983 1 33 999903 2\n",
+      "stderr": "",
+      "run_seconds": 1.1770620520692319
+    },
+    {
+      "variant": "baseline",
+      "mode": "verify",
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/baseline/mylang-core",
+      "compiler_sha256": "32517a0b9fa88477156e9d9e95d0accef8aeb1c683c3476dbb3fcb0f5751b9d9",
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/baseline/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/fuzz-s1/failures/records_unions_propagate_mut_alias67-5676f097b6ec.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/baseline/verify",
+        "--release",
+        "--verify-facts",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/baseline/frontend/verify",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/fuzz-s1-crash/baseline-verify.ll"
+      ],
+      "build_exit": 0,
+      "build_seconds": 1.429419414140284,
+      "build_stdout": "",
+      "build_stderr": "",
+      "run_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/baseline/verify",
+        "37",
+        "4",
+        "999983"
+      ],
+      "exit": -11,
+      "stdout": "16 681250 794681 1 999983 1 33 999903 2\n",
+      "stderr": "",
+      "run_seconds": 1.13130823103711
+    },
+    {
+      "variant": "current",
+      "mode": "debug",
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/mylang-core",
+      "compiler_sha256": "8ec6a4620f89aa6e7612d789ea4e06a6ca3143bf222ed8ee469cc6c728b5439a",
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/fuzz-s1/failures/records_unions_propagate_mut_alias67-5676f097b6ec.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/current/debug",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/current/frontend/debug",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/fuzz-s1-crash/current-debug.ll"
+      ],
+      "build_exit": 0,
+      "build_seconds": 1.8205099739134312,
+      "build_stdout": "",
+      "build_stderr": "",
+      "run_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/current/debug",
+        "37",
+        "4",
+        "999983"
+      ],
+      "exit": 2,
+      "stdout": "16 681250 794681 1 999983 1 33 999903 2\n",
+      "stderr": "",
+      "run_seconds": 0.0010801961179822683
+    },
+    {
+      "variant": "current",
+      "mode": "release",
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/mylang-core",
+      "compiler_sha256": "8ec6a4620f89aa6e7612d789ea4e06a6ca3143bf222ed8ee469cc6c728b5439a",
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/fuzz-s1/failures/records_unions_propagate_mut_alias67-5676f097b6ec.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/current/release",
+        "--release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/current/frontend/release",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/fuzz-s1-crash/current-release.ll"
+      ],
+      "build_exit": 0,
+      "build_seconds": 1.505817448021844,
+      "build_stdout": "",
+      "build_stderr": "",
+      "run_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/current/release",
+        "37",
+        "4",
+        "999983"
+      ],
+      "exit": -11,
+      "stdout": "16 681250 794681 1 999983 1 33 999903 2\n",
+      "stderr": "",
+      "run_seconds": 1.1462486789096147
+    },
+    {
+      "variant": "current",
+      "mode": "verify",
+      "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/mylang-core",
+      "compiler_sha256": "8ec6a4620f89aa6e7612d789ea4e06a6ca3143bf222ed8ee469cc6c728b5439a",
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/fuzz-s1/failures/records_unions_propagate_mut_alias67-5676f097b6ec.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/current/verify",
+        "--release",
+        "--verify-facts",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/current/frontend/verify",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/fuzz-s1-crash/current-verify.ll"
+      ],
+      "build_exit": 0,
+      "build_seconds": 1.6570594951044768,
+      "build_stdout": "",
+      "build_stderr": "",
+      "run_command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/case67-repro/current/verify",
+        "37",
+        "4",
+        "999983"
+      ],
+      "exit": -11,
+      "stdout": "16 681250 794681 1 999983 1 33 999903 2\n",
+      "stderr": "",
+      "run_seconds": 1.1193977128714323
+    }
+  ]
+}

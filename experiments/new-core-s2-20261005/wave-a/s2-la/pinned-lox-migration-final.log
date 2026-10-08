@@ -1,0 +1,8 @@
+status 0
+fixed heap.my: 34 edits (E_MUTATION_MARKER)
+fixed heap_test.my: 29 edits (E_MUTATION_MARKER)
+fixed lox_strings.my: 4 edits (E_MUTATION_MARKER)
+fixed lox_strings_test.my: 3 edits (E_MUTATION_MARKER)
+fixed table.my: 3 edits (E_MUTATION_MARKER)
+fixed table_test.my: 18 edits (E_MUTATION_MARKER)
+fix: 91 edits in 6 files over 3 rounds

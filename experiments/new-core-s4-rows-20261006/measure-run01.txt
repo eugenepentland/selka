@@ -1,0 +1,67 @@
+
+### tree_build_walk (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 |
+|---|---:|---:|
+| old core --release | 291.307 | 293.339 |
+| new core release | 67.825 | 66.811 |
+| Rust | 92.344 | 88.947 |
+| Zig ReleaseSafe | 98.236 | 97.744 |
+| new over zig | 0.690 | 0.684 |
+| new over rust | 0.734 | 0.751 |
+| new over old | 0.233 | 0.228 |
+
+### record_pass (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 |
+|---|---:|---:|
+| old core --release | 23.839 | 24.833 |
+| new core release | 12.133 | 13.229 |
+| Rust | 11.543 | 12.150 |
+| Zig ReleaseSafe | 17.754 | 18.770 |
+| new over zig | 0.683 | 0.705 |
+| new over rust | 1.051 | 1.089 |
+| new over old | 0.509 | 0.533 |
+
+### grid_dp (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 |
+|---|---:|---:|
+| old core --release | 21.289 | 70.293 |
+| new core release | 51.745 | 55.824 |
+| Rust | 12.740 | 15.095 |
+| Zig ReleaseSafe | 14.965 | 16.117 |
+| new over zig | 3.458 | 3.464 |
+| new over rust | 4.062 | 3.698 |
+| new over old | 2.431 | 0.794 |
+
+### union_find (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 |
+|---|---:|---:|
+| old core --release | 82.339 | 72.091 |
+| new core release | 86.176 | 63.961 |
+| Rust | 41.927 | 25.638 |
+| Zig ReleaseSafe | 41.848 | 28.480 |
+| new over zig | 2.059 | 2.246 |
+| new over rust | 2.055 | 2.495 |
+| new over old | 1.047 | 0.887 |
+
+### float_format (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 |
+|---|---:|---:|
+| old core --release | 484.134 | 480.735 |
+| new core release | 278.268 | 275.432 |
+| Rust | 373.425 | 346.970 |
+| Zig ReleaseSafe | 379.028 | 369.499 |
+| new over zig | 0.734 | 0.745 |
+| new over rust | 0.745 | 0.794 |
+| new over old | 0.575 | 0.573 |
+
+### buffer_write (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 |
+|---|---:|---:|
+| old core --release | 143.927 | 132.662 |
+| new core release | 149.088 | 135.231 |
+| Rust | 146.908 | 139.217 |
+| Zig ReleaseSafe | 167.203 | 155.034 |
+| new over zig | 0.892 | 0.872 |
+| new over rust | 1.015 | 0.971 |
+| new over old | 1.036 | 1.019 |
+exit 0

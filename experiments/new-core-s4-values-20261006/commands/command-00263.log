@@ -1,0 +1,10 @@
+$ rg --files experiments/new-core-s4-values-20261006/final-core-conformance-v7
+experiments/new-core-s4-values-20261006/final-core-conformance-v7/test-core.log
+experiments/new-core-s4-values-20261006/final-core-conformance-v7/summary.json
+experiments/new-core-s4-values-20261006/final-core-conformance-v7/core-component.json
+experiments/new-core-s4-values-20261006/final-core-conformance-v7/full-conformance.log
+experiments/new-core-s4-values-20261006/final-core-conformance-v7/full-conformance.seconds
+experiments/new-core-s4-values-20261006/final-core-conformance-v7/test-core.seconds
+
+exit=0
+elapsed_seconds=0.005242

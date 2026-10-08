@@ -1,0 +1,39 @@
+$ git commit -m 'test(core): qualify corrected S4-V native value fixtures'
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10371 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s4-values cf344ec1f] test(core): qualify corrected S4-V native value fixtures
+ 27 files changed, 514 insertions(+)
+ create mode 100644 experiments/new-core-s4-values-20261006/final-frozen-source-v3.json
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0001.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0002.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0003.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0004.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0005.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0006.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0007.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0008.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0009.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0010.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0011.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0012.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0013.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0014.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0015.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0016.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0017.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0018.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0019.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0020.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0021.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0022.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0023.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0024.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/command-0025.log
+ create mode 100644 experiments/new-core-s4-values-20261006/supplement-v6/summary.json
+
+exit=0
+elapsed_seconds=2.173353

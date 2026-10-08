@@ -1,0 +1,23 @@
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+live_place_iteration        22 |             3     0    19 |             3     0    19
+iteration_identity           8 |             1     0     7 |             1     0     7
+array_places                22 |             0     0    22 |             0     0    22
+array_negative_index        20 |             1     0    19 |             1     0    19
+--------------------------------------------------------------------------------------
+TOTAL                       72
+  debug    matching 5, mismatching 0, unsupported 67 (of 72 tests; 5 supported)
+  release  matching 5, mismatching 0, unsupported 67 (of 72 tests; 5 supported)
+
+blocking features of the unsupported tests (tests / files):
+    46 /  4  fixed array type
+    14 /  2  write to a list while it is iterated (live-place iteration)
+     5 /  3  dict type
+     1 /  1  bytes type
+     1 /  1  string index
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+  live_place_iteration            19 of  22: write to a list while it is iterated (live-place iteration) x11, fixed array type x5, bytes type x1, dict type x1, string index x1
+  iteration_identity               7 of   8: dict type x3, write to a list while it is iterated (live-place iteration) x3, fixed array type x1
+  array_places                    22 of  22: fixed array type x22
+  array_negative_index            19 of  20: fixed array type x18, dict type x1

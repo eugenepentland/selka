@@ -1,0 +1,16 @@
+test-core
++- run test w
+guardian/test: 4 test(s) selected
+guardian/test: test wall 2.95s; slowest over 50ms:
+guardian/test:   2.95s  fuse_text_scalar_test.test.scalar fusion native modes preserve Unicode bounds aliases escaping uses and exact failures
+guardian/test: PASS — 4 passed
+guardian/test: RESULT {"passed":4,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/0cf402b941d45c655741d85bd6e095f8/test --cache-dir=./.zig-cache --seed=0xee0a5bad --listen=-
+
+Build Summary: 5/5 steps succeeded; 4/4 tests passed
+test-core success
++- run test 4 pass (4 total) 2s MaxRSS:239M
+   +- compile test debug native success 1s MaxRSS:295M
+      +- options success
+         +- compile exe mylang-core debug native cached 6ms MaxRSS:38M
+

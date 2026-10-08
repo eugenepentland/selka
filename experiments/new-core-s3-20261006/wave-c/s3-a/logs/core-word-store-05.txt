@@ -1,0 +1,8 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: gate slot 1 after 5s (all 1 gate slot(s) busy)
+core-exclusive: all 3 build slots held; other-build wait=0.000s; gate wrapper excludes gate execution
+Build Summary: 3/3 steps succeeded
+core success
++- install mylang-core success
+   +- compile exe mylang-core debug native cached 7ms MaxRSS:38M
+

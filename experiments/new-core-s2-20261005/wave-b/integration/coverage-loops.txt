@@ -1,0 +1,100 @@
+source_commit=090dabd5
+compiler_source_commit=b70a6a3f
+$ env TMPDIR=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/tmp ZIG_LOCAL_CACHE_DIR=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/zig ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache nice -n 10 taskset -c 0,1,4,5,6,7,8,9,12,13,14,15,16,17,18,19 /usr/bin/time -f 'exit=%x elapsed=%e rss_kib=%M' python3 experiments/new-core-s2-20261005/wave-b/integration/coverage_loops.py --before /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-b/baseline/mylang-core --after /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/mylang-core --scratch /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops --json /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-b/integration/coverage-loops.json
+examples: legacy name-deduplicated functions {'functions': 207, 'before_accepted': 157, 'after_accepted': 181}; 336 per-file function instances, 45 checked loop instances; before {'functions': 249, 'loops': 29}; after {'functions': 292, 'loops': 40}
+bench/parity: legacy name-deduplicated functions {'functions': 123, 'before_accepted': 74, 'after_accepted': 93}; 203 per-file function instances, 220 checked loop instances; before {'functions': 119, 'loops': 87}; after {'functions': 147, 'loops': 133}
+tests/lang: legacy name-deduplicated functions {'functions': 3156, 'before_accepted': 2044, 'after_accepted': 2800}; 3564 per-file function instances, 1181 checked loop instances; before {'functions': 2333, 'loops': 484}; after {'functions': 3134, 'loops': 1005}
+benchmarks/runtime: legacy name-deduplicated functions {'functions': 141, 'before_accepted': 54, 'after_accepted': 111}; 147 per-file function instances, 93 checked loop instances; before {'functions': 55, 'loops': 7}; after {'functions': 114, 'loops': 82}
+
+| first refusal | before functions | before loops | after functions | after loops |
+|---|---:|---:|---:|---:|
+| (accepted) | 2756 | 607 | 3687 | 1260 |
+| capability type | 97 | 0 | 104 | 3 |
+| byte_buffer type | 0 | 0 | 81 | 42 |
+| aggregate storage of live dictionary views | 0 | 0 | 29 | 28 |
+| shift_right | 24 | 33 | 26 | 46 |
+| f64_sqrt | 22 | 25 | 22 | 25 |
+| text of a non-integer value | 9 | 2 | 18 | 28 |
+| count | 8 | 1 | 13 | 3 |
+| operator on an aggregate value | 12 | 6 | 13 | 6 |
+| equality of a recursive value | 10 | 2 | 11 | 2 |
+| replace | 8 | 1 | 10 | 10 |
+| shift_left | 10 | 9 | 10 | 9 |
+| extend | 7 | 10 | 9 | 10 |
+| find_any | 0 | 0 | 9 | 4 |
+| view | 0 | 0 | 9 | 1 |
+| decode | 0 | 0 | 8 | 1 |
+| interior mut argument ancestor changed during later argument evaluation | 4 | 0 | 8 | 0 |
+| resource type | 8 | 0 | 8 | 0 |
+| strip | 7 | 0 | 8 | 0 |
+| host function | 7 | 1 | 7 | 1 |
+| live dictionary view of an interior place | 0 | 0 | 7 | 8 |
+| ordinary dictionary snapshot combined with a live view | 0 | 0 | 7 | 6 |
+| f64_cos | 6 | 0 | 6 | 0 |
+| f64_sin | 6 | 0 | 6 | 0 |
+| lower | 6 | 0 | 6 | 0 |
+| number_format | 6 | 0 | 6 | 0 |
+| parse_float | 5 | 0 | 6 | 2 |
+| parse_int_range | 0 | 0 | 6 | 0 |
+| extern | 5 | 0 | 5 | 0 |
+| live dictionary view with unproved source identity | 0 | 0 | 5 | 8 |
+| text_repr | 1 | 0 | 5 | 1 |
+| upper | 5 | 2 | 5 | 2 |
+| contains | 3 | 0 | 4 | 0 |
+| escaping live dictionary view | 0 | 0 | 4 | 4 |
+| is_alpha | 4 | 0 | 4 | 0 |
+| is_digit | 4 | 0 | 4 | 0 |
+| is_space | 4 | 0 | 4 | 0 |
+| lstrip | 4 | 0 | 4 | 0 |
+| reverse | 2 | 0 | 4 | 2 |
+| rstrip | 4 | 0 | 4 | 0 |
+| text_chr | 1 | 1 | 4 | 10 |
+| array | 2 | 0 | 3 | 0 |
+| f64_to_u64 | 3 | 0 | 3 | 0 |
+| find_range | 2 | 0 | 3 | 1 |
+| index_of | 3 | 0 | 3 | 0 |
+| rfind_range | 0 | 0 | 3 | 0 |
+| text_ord | 1 | 0 | 3 | 4 |
+| aggregate or captured dictionary alias combined with a live view | 0 | 0 | 2 | 3 |
+| dictionary key type | 0 | 0 | 2 | 0 |
+| f64_floor | 2 | 0 | 2 | 0 |
+| find_start | 2 | 0 | 2 | 0 |
+| float_round | 2 | 0 | 2 | 0 |
+| hex | 0 | 0 | 2 | 2 |
+| keyword call with a mut argument that is not a local | 0 | 0 | 2 | 0 |
+| list storage of live dictionary views | 0 | 0 | 2 | 4 |
+| mut live dictionary view argument | 0 | 0 | 2 | 2 |
+| rebinding a live dictionary view | 0 | 0 | 2 | 1 |
+| strip_chars | 1 | 0 | 2 | 0 |
+| f64_from_u64 | 1 | 0 | 1 | 0 |
+| f64_trunc | 1 | 0 | 1 | 0 |
+| file handle type | 1 | 0 | 1 | 0 |
+| from_hex | 0 | 0 | 1 | 0 |
+| parse_int receiver | 0 | 0 | 1 | 0 |
+| pop_at | 1 | 0 | 1 | 0 |
+| print options | 1 | 0 | 1 | 0 |
+| record field type | 0 | 0 | 1 | 0 |
+| rfind | 1 | 0 | 1 | 0 |
+| saturating_add | 1 | 0 | 1 | 0 |
+| scalar_count | 0 | 0 | 1 | 0 |
+| slice_step | 1 | 0 | 1 | 0 |
+| splitlines | 1 | 0 | 1 | 0 |
+| text_format | 1 | 0 | 1 | 0 |
+| bytes type | 354 | 171 | 0 | 0 |
+| dict type | 378 | 358 | 0 | 0 |
+| ends_with | 4 | 0 | 0 | 0 |
+| find | 6 | 0 | 0 | 0 |
+| fixed array type | 166 | 60 | 0 | 0 |
+| function value type | 57 | 13 | 0 | 0 |
+| function_value | 38 | 48 | 0 | 0 |
+| index | 23 | 18 | 0 | 0 |
+| set type | 34 | 76 | 0 | 0 |
+| slice | 32 | 23 | 0 | 0 |
+| sort_keyed | 3 | 6 | 0 | 0 |
+| split | 17 | 15 | 0 | 0 |
+| split_whitespace | 1 | 0 | 0 | 0 |
+| starts_with | 4 | 0 | 0 | 0 |
+| string index | 18 | 23 | 0 | 0 |
+| text_tail | 6 | 1 | 0 | 0 |
+| write to a list while it is iterated (live-place iteration) | 26 | 27 | 0 | 0 |
+exit=0 elapsed=312.48 rss_kib=38856

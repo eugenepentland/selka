@@ -1,0 +1,8 @@
+source_commit=b42e0e6b5175375d7b62e698c68138b855290196
+$ /home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 /home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/experiments/new-core-s5-20261007/tools/fuzz_frozen.py --kind rc --references /home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz --cases 50 --seed 3303 --old /home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/experiments/new-core-s5-20261007/tools/frozen-old-core --new /home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/.mylang-cache/s5/oracle/mylang-b42e0e6b --evidence /home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/experiments/new-core-s5-20261007/b3/fuzz50-b3merge-01/rc --cache-root /home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/.mylang-cache/s5/fuzz/20261008T012641Z-c9f8f7f66916/rc
+qualification progress: rc: seen=25 elapsed=10.64s
+qualification progress: rc: seen=50 elapsed=21.56s
+cases=50 refused=0 rejected=0 compared=450 mismatch=0
+qualification {"kind": "rc", "qualified": true, "accepted": 50, "native_comparisons": 450, "elapsed_seconds": 22.034419715870172}
+
+exit=0

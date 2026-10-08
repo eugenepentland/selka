@@ -1,0 +1,83 @@
+{
+  "kind": "untimed-bulk-codegen-diagnostic",
+  "compiler_sha256": "06edb34674150b7a07d73b637d95b4c59eb52aa90fd75771d3d1f72989c4765a",
+  "cases": {
+    "add_octets": {
+      "ssa_sha256": "79d61b3eba931db098cdc6d9e3aa7c9dd6c75049f497ec55c4b2820da161abd3",
+      "asm_sha256": "ef9eb10b392fff2ec64c7287ca209aeb197fd7b2beee35ecbbc679d83992ce2a",
+      "bulk_calls": 1,
+      "ssa_bytes": 12979
+    },
+    "xor_octets": {
+      "ssa_sha256": "c67025dd386a5c23ecebd05204993abe9a9423041c5ba1a27681cc6400453a5a",
+      "asm_sha256": "ad1bc7d569d232d70bf1d96847b1c309c31f89bd464c7d8afdcd409223af6b5b",
+      "bulk_calls": 1,
+      "ssa_bytes": 13041
+    },
+    "indexed_octets": {
+      "ssa_sha256": "30d6d0ed208e1301132903a62429f0f14dbb347ef40876f554bc59b655251308",
+      "asm_sha256": "80bbd118a37f8b06671cbc4d363ced8c657ef14282291f1a20c663d35d85c9be",
+      "bulk_calls": 0,
+      "ssa_bytes": 4076
+    }
+  },
+  "native_oracle": {
+    "qbe": {
+      "executable_sha256": "b6b46da9ec7dfd8d27436034907c37e6382c012e70ffa63b96cb66fd72ea6b0a",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "flags": [
+        "--qbe",
+        "zig-out/focus/qbe",
+        "--keep-symbols"
+      ]
+    },
+    "llvm": {
+      "executable_sha256": "d95c7fcf145b254551e992a972729b0f426da5db31a7e54aa2d2c9221f8c093c",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "",
+      "flags": [
+        "--release",
+        "--keep-symbols"
+      ]
+    }
+  },
+  "guard_page_oracle": {
+    "cases_per_path": 266752,
+    "checksum_per_path": 17702663040,
+    "paths": [
+      "SSE2",
+      "portable (-U__SSE2__)"
+    ],
+    "flags": [
+      "cc",
+      "-std=c11",
+      "-O3",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fsanitize=undefined",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-Isrc",
+      "-Wl,--gc-sections"
+    ]
+  },
+  "artifacts": {
+    "native_bytes-sum-xor-qbe.asm": "01abe2e672f2de21ff2672a1b75d42e81fc17bfcd74c49f66bd240b28f9c4a3b",
+    "native_bytes-sum-xor.asm": "50224a998fef4ad0e33cad91e97a63fe30a7a7b2a3ba8e306c1bf13610fd15d9",
+    "native_bytes-sum-xor-baseline.asm": "dcb11f176ac2baf6ce93e166435ccab6e846b7516fe56b3fb68ccb80dc6a7c83",
+    "reduce-bulk-llvm.asm": "1859e900fab60f88a8ccdceba4221aa1a17ac72c4e614016954a2f5089404702",
+    "main-bulk-llvm.asm": "3a6c6a955473cd4757a97216512686a45bf205a7b0a29a6e196ad5b934f7b635",
+    "byte-reduction-guard.c": "be90801a97e129eecad77ee3ad09a3c57120f25c6f946ba596be22a6169819c2",
+    "byte-reduction-native.my": "f0022b6f184303631fde5626690e354df430062a2de6cb1e20ffbc017dcdfbf9"
+  },
+  "runtime_assembly": {
+    "qbe": "actual QBE executable runtime, -O2 native C",
+    "llvm": "actual LLVM executable, --release (-O3 full LTO); helper inlined into reduce",
+    "baseline": "zig cc -O2 -mcpu=x86_64 (baseline SSE2)",
+    "object": "zig cc -O3 (host CPU)"
+  }
+}

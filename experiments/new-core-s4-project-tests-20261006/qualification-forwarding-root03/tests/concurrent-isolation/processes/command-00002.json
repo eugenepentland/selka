@@ -1,0 +1,35 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-forwarding-root03/tests/concurrent-isolation/original-command.py"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-forwarding-root03/tests",
+  "status": 0,
+  "timed_out": true,
+  "timeout": 0.3,
+  "seconds": 0.35796526400372386,
+  "supervisor": [
+    "/usr/bin/python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification_support.py",
+    "--supervise",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-forwarding-root03/tests/concurrent-isolation/processes/command-00002.job.json"
+  ],
+  "supervisor_status": 0,
+  "supervisor_result": {
+    "status": 0,
+    "timed_out": true,
+    "error": null,
+    "seconds": 0.3066891029011458,
+    "supervisor": 3662795,
+    "remaining_children": []
+  },
+  "environment": {},
+  "stdout": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-forwarding-root03/tests/concurrent-isolation/processes/command-00002.stdout",
+    "sha256": "467d0035dba8c87ec6e0bf9d8f0dca8870120db5eaffc573ca8b742229d5cec4"
+  },
+  "stderr": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-forwarding-root03/tests/concurrent-isolation/processes/command-00002.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

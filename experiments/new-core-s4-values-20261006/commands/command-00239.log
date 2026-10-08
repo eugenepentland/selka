@@ -1,0 +1,6 @@
+$ python3 experiments/new-core-s4-values-20261006/archive_performance_v2.py
+{"row_count": 46, "max_new_over_old": 1.0626983729315382, "max_new_over_zig": 1.0906088277820876, "misses": []}
+archived 156 source/log files and 118 binary hashes
+
+exit=0
+elapsed_seconds=0.915093

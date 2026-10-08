@@ -1,0 +1,23 @@
+module v_units
+
+
+def counts(value: None, n: int) -> int:
+    values = [value, value]
+    for i in range(n):
+        values.append(value)
+    values[1] = value
+    seen = 0
+    for item in values:
+        seen += 1
+    first = values[0]
+    last = values.pop()
+    copy = values
+    copy.append(value)
+    return len(values) * 100 + len(copy) * 10 + seen + (1 if values == copy else 0)
+
+
+def main(out: Stream) -> int:
+    out.print(counts(None, 3), counts(None, 0))
+    empty: list[None] = []
+    out.print(len(empty), empty == [])
+    return 0

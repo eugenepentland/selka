@@ -1,0 +1,27 @@
+{
+  "source_commit": "996d9baad0e00ef98b4d3e7b59dc3616809fa013",
+  "compiler_repair_commit": "0c6029d7",
+  "qualified": true,
+  "command_log": "s2-x-leak-verify-after-fact.txt",
+  "exit": 0,
+  "seconds": 49.99,
+  "rss_kib": 325508,
+  "wall_including_admission_seconds": 50.03,
+  "leakcheck": true,
+  "verify_facts": true,
+  "strict_compiler_status_and_json_checks": true,
+  "modes": {
+    "debug": {
+      "matching": 1224,
+      "mismatching": 0,
+      "unsupported": 316,
+      "tests": 1540
+    },
+    "release": {
+      "matching": 1224,
+      "mismatching": 0,
+      "unsupported": 316,
+      "tests": 1540
+    }
+  }
+}

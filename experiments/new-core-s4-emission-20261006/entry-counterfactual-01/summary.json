@@ -1,0 +1,1606 @@
+{
+  "production_change": false,
+  "inputs": [
+    {
+      "path": "experiments/new-core-s4-emission-20261006/paired-budget64-01/cache/lox_eval/program-a122bfa24fd88887/entry.ll",
+      "sha256": "eea80df9afc8936ec147b215c04a62d8ac51b431c511494edc3b22eb2a1e6fd2"
+    },
+    {
+      "path": "experiments/new-core-s4-emission-20261006/paired-budget64-01/cache/lox_eval/program-a122bfa24fd88887/module-2ba6fe24c624a8200217cbaaa38092ee7becce804e727d55a01781aa0d2b482a.ll",
+      "sha256": "d6c1213d6f605cf3bdce8bbbce3beb8b23ddfde57e0c6c443b2228bffde33d71"
+    },
+    {
+      "path": "experiments/new-core-s4-emission-20261006/paired-budget64-01/cache/lox_eval/program-a122bfa24fd88887/module-819b813edb0e06e8dfdd7ff60e54b591b15e01e8a00977de40701a326bcc3d4d.ll",
+      "sha256": "530ce3283187943fec9762404a3f45a662b6b3576fb14675f0a750cce5096c09"
+    }
+  ],
+  "runtime": {
+    "path": "experiments/new-core-s4-emission-20261006/paired-budget64-01/cache/lox_eval/core_rt-a5b0556a3a4eebfb.o",
+    "sha256": "6e12d646594a2f5b75a3fedd26d66c2c67d293d5d1afba211ccf7d948ce46d66"
+  },
+  "arms": {
+    "baseline": {
+      "argv": [
+        "zig",
+        "cc",
+        "-O3",
+        "-march=native",
+        "-mllvm",
+        "-x86-experimental-pref-innermost-loop-alignment=6",
+        "-Wno-override-module",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/entry.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/module-2ba6fe24c624a8200217cbaaa38092ee7becce804e727d55a01781aa0d2b482a.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/module-819b813edb0e06e8dfdd7ff60e54b591b15e01e8a00977de40701a326bcc3d4d.ll",
+        "experiments/new-core-s4-emission-20261006/paired-budget64-01/cache/lox_eval/core_rt-a5b0556a3a4eebfb.o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/benchmarks/runtime/ports/native_clock.c"
+      ],
+      "replacements": 0,
+      "inputs": [
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/entry.ll",
+          "sha256": "eea80df9afc8936ec147b215c04a62d8ac51b431c511494edc3b22eb2a1e6fd2"
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/module-2ba6fe24c624a8200217cbaaa38092ee7becce804e727d55a01781aa0d2b482a.ll",
+          "sha256": "d6c1213d6f605cf3bdce8bbbce3beb8b23ddfde57e0c6c443b2228bffde33d71"
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/module-819b813edb0e06e8dfdd7ff60e54b591b15e01e8a00977de40701a326bcc3d4d.ll",
+          "sha256": "530ce3283187943fec9762404a3f45a662b6b3576fb14675f0a750cce5096c09"
+        }
+      ],
+      "binary": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+        "sha256": "88c8e735b52c5a2d703973f7832bedb2ec540aff6bc818432288f48b84a223f3"
+      }
+    },
+    "stdout_constant": {
+      "argv": [
+        "zig",
+        "cc",
+        "-O3",
+        "-march=native",
+        "-mllvm",
+        "-x86-experimental-pref-innermost-loop-alignment=6",
+        "-Wno-override-module",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/entry.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/module-2ba6fe24c624a8200217cbaaa38092ee7becce804e727d55a01781aa0d2b482a.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/module-819b813edb0e06e8dfdd7ff60e54b591b15e01e8a00977de40701a326bcc3d4d.ll",
+        "experiments/new-core-s4-emission-20261006/paired-budget64-01/cache/lox_eval/core_rt-a5b0556a3a4eebfb.o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/benchmarks/runtime/ports/native_clock.c"
+      ],
+      "replacements": 4,
+      "inputs": [
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/entry.ll",
+          "sha256": "eea80df9afc8936ec147b215c04a62d8ac51b431c511494edc3b22eb2a1e6fd2"
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/module-2ba6fe24c624a8200217cbaaa38092ee7becce804e727d55a01781aa0d2b482a.ll",
+          "sha256": "d6c1213d6f605cf3bdce8bbbce3beb8b23ddfde57e0c6c443b2228bffde33d71"
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/module-819b813edb0e06e8dfdd7ff60e54b591b15e01e8a00977de40701a326bcc3d4d.ll",
+          "sha256": "a421d5a9cd50ad702c352ab8128f3b0410684ae85c30e92015698f32ad7d1dbf"
+        }
+      ],
+      "binary": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+        "sha256": "01cccb307a6b7815bbc13e7ebfc20dcaf4cf0402129e3ea2445069733cb143b9"
+      }
+    }
+  },
+  "measurement": {
+    "unit": "element",
+    "binaries": {
+      "whole": {
+        "path": ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+        "sha256": "f90a14e95e5eb4c6a1dfd1df93d46a0f99758e5658717d964a433025dacfb4ff"
+      },
+      "baseline": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+        "sha256": "88c8e735b52c5a2d703973f7832bedb2ec540aff6bc818432288f48b84a223f3"
+      },
+      "stdout_constant": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+        "sha256": "01cccb307a6b7815bbc13e7ebfc20dcaf4cf0402129e3ea2445069733cb143b9"
+      }
+    },
+    "sizes": {
+      "4096": {
+        "iterations": 40,
+        "checksum": 19955744,
+        "startup": {
+          "whole": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "295073 206032\n",
+              "stderr": "1199879,,cpu_core/cycles/u,454209,100.00,,\n",
+              "checksum": 295073,
+              "elapsed_ns": 206032,
+              "cycles": 1199879
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "295073 194575\n",
+              "stderr": "1177427,,cpu_core/cycles/u,390845,100.00,,\n",
+              "checksum": 295073,
+              "elapsed_ns": 194575,
+              "cycles": 1177427
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "295073 201779\n",
+              "stderr": "1178543,,cpu_core/cycles/u,402342,100.00,,\n",
+              "checksum": 295073,
+              "elapsed_ns": 201779,
+              "cycles": 1178543
+            }
+          ],
+          "baseline": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "295073 193869\n",
+              "stderr": "1302038,,cpu_core/cycles/u,430963,100.00,,\n",
+              "checksum": 295073,
+              "elapsed_ns": 193869,
+              "cycles": 1302038
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "295073 198447\n",
+              "stderr": "1181439,,cpu_core/cycles/u,421109,100.00,,\n",
+              "checksum": 295073,
+              "elapsed_ns": 198447,
+              "cycles": 1181439
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "295073 199172\n",
+              "stderr": "1188586,,cpu_core/cycles/u,406102,100.00,,\n",
+              "checksum": 295073,
+              "elapsed_ns": 199172,
+              "cycles": 1188586
+            }
+          ],
+          "stdout_constant": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "295073 199059\n",
+              "stderr": "1179910,,cpu_core/cycles/u,414436,100.00,,\n",
+              "checksum": 295073,
+              "elapsed_ns": 199059,
+              "cycles": 1179910
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "295073 198471\n",
+              "stderr": "1191370,,cpu_core/cycles/u,406396,100.00,,\n",
+              "checksum": 295073,
+              "elapsed_ns": 198471,
+              "cycles": 1191370
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "295073 197813\n",
+              "stderr": "1211673,,cpu_core/cycles/u,410467,100.00,,\n",
+              "checksum": 295073,
+              "elapsed_ns": 197813,
+              "cycles": 1211673
+            }
+          ]
+        },
+        "runs": {
+          "whole": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7671244\n",
+              "stderr": "35082058,,cpu_core/cycles/u,7916789,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7671244,
+              "cycles": 35082058
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7769063\n",
+              "stderr": "35044766,,cpu_core/cycles/u,8009299,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7769063,
+              "cycles": 35044766
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7715473\n",
+              "stderr": "34922615,,cpu_core/cycles/u,7918433,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7715473,
+              "cycles": 34922615
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7849852\n",
+              "stderr": "34979615,,cpu_core/cycles/u,8089501,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7849852,
+              "cycles": 34979615
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7897917\n",
+              "stderr": "34963313,,cpu_core/cycles/u,8094346,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7897917,
+              "cycles": 34963313
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7834267\n",
+              "stderr": "34920672,,cpu_core/cycles/u,8040046,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7834267,
+              "cycles": 34920672
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7897547\n",
+              "stderr": "34930756,,cpu_core/cycles/u,8098342,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7897547,
+              "cycles": 34930756
+            }
+          ],
+          "baseline": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7677037\n",
+              "stderr": "34984518,,cpu_core/cycles/u,7892720,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7677037,
+              "cycles": 34984518
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7709782\n",
+              "stderr": "35050720,,cpu_core/cycles/u,7946297,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7709782,
+              "cycles": 35050720
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7782608\n",
+              "stderr": "34970369,,cpu_core/cycles/u,8019257,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7782608,
+              "cycles": 34970369
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7771964\n",
+              "stderr": "34958417,,cpu_core/cycles/u,8006461,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7771964,
+              "cycles": 34958417
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7784047\n",
+              "stderr": "34968790,,cpu_core/cycles/u,7987377,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7784047,
+              "cycles": 34968790
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7991037\n",
+              "stderr": "34978352,,cpu_core/cycles/u,8196344,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7991037,
+              "cycles": 34978352
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7820684\n",
+              "stderr": "34964326,,cpu_core/cycles/u,8015554,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7820684,
+              "cycles": 34964326
+            }
+          ],
+          "stdout_constant": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7727447\n",
+              "stderr": "34988885,,cpu_core/cycles/u,7932599,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7727447,
+              "cycles": 34988885
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7696076\n",
+              "stderr": "35140869,,cpu_core/cycles/u,7909378,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7696076,
+              "cycles": 35140869
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7740423\n",
+              "stderr": "35035680,,cpu_core/cycles/u,7981318,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7740423,
+              "cycles": 35035680
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7744551\n",
+              "stderr": "35081539,,cpu_core/cycles/u,8016022,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7744551,
+              "cycles": 35081539
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7708028\n",
+              "stderr": "34915203,,cpu_core/cycles/u,7915666,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7708028,
+              "cycles": 34915203
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 8152169\n",
+              "stderr": "34871513,,cpu_core/cycles/u,8380965,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 8152169,
+              "cycles": 34871513
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "4096",
+                "40",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "19955744 7839766\n",
+              "stderr": "35034698,,cpu_core/cycles/u,8041101,100.00,,\n",
+              "checksum": 19955744,
+              "elapsed_ns": 7839766,
+              "cycles": 35034698
+            }
+          ]
+        },
+        "cycles_per_unit": {
+          "whole": [
+            206.93063354492188,
+            206.70302124023436,
+            205.957470703125,
+            206.30537109375,
+            206.20587158203125,
+            205.94561157226562,
+            206.0071594238281
+          ],
+          "baseline": [
+            206.2739990234375,
+            206.67806396484374,
+            206.18764038085936,
+            206.11469116210938,
+            206.1780029296875,
+            206.23636474609376,
+            206.1507568359375
+          ],
+          "stdout_constant": [
+            206.28366088867188,
+            207.21129760742187,
+            206.56927490234375,
+            206.84917602539062,
+            205.8339416503906,
+            205.56727905273436,
+            206.56328125
+          ]
+        },
+        "comparisons": {
+          "baseline": {
+            "over_whole": 0.9999115873809411,
+            "paired_ratios": [
+              0.9968267891987012,
+              0.9998792602292851,
+              1.0011175592560375,
+              0.9990757393729998,
+              0.9998648503452887,
+              1.0014117959183904,
+              1.000697050590431
+            ],
+            "paired_median_bootstrap95": [
+              0.9990757393729998,
+              1.0011175592560375
+            ],
+            "within_noise": true
+          },
+          "stdout_constant": {
+            "over_whole": 1.001733266202493,
+            "paired_ratios": [
+              0.9968734805225948,
+              1.002458969221339,
+              1.0029705365730608,
+              1.00263592231631,
+              0.9981963174531009,
+              0.9981629493503507,
+              1.0026995266947385
+            ],
+            "paired_median_bootstrap95": [
+              0.9981629493503507,
+              1.0026995266947385
+            ],
+            "within_noise": true
+          }
+        }
+      },
+      "64": {
+        "iterations": 2500,
+        "checksum": 250256292,
+        "startup": {
+          "whole": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "791409 4182\n",
+              "stderr": "333881,,cpu_core/cycles/u,216614,100.00,,\n",
+              "checksum": 791409,
+              "elapsed_ns": 4182,
+              "cycles": 333881
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "791409 4189\n",
+              "stderr": "328237,,cpu_core/cycles/u,204731,100.00,,\n",
+              "checksum": 791409,
+              "elapsed_ns": 4189,
+              "cycles": 328237
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "791409 4057\n",
+              "stderr": "331086,,cpu_core/cycles/u,238987,100.00,,\n",
+              "checksum": 791409,
+              "elapsed_ns": 4057,
+              "cycles": 331086
+            }
+          ],
+          "baseline": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "791409 4621\n",
+              "stderr": "335367,,cpu_core/cycles/u,222677,100.00,,\n",
+              "checksum": 791409,
+              "elapsed_ns": 4621,
+              "cycles": 335367
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "791409 4288\n",
+              "stderr": "329311,,cpu_core/cycles/u,241402,100.00,,\n",
+              "checksum": 791409,
+              "elapsed_ns": 4288,
+              "cycles": 329311
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "791409 4088\n",
+              "stderr": "348425,,cpu_core/cycles/u,229710,100.00,,\n",
+              "checksum": 791409,
+              "elapsed_ns": 4088,
+              "cycles": 348425
+            }
+          ],
+          "stdout_constant": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "791409 4235\n",
+              "stderr": "358230,,cpu_core/cycles/u,258592,100.00,,\n",
+              "checksum": 791409,
+              "elapsed_ns": 4235,
+              "cycles": 358230
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "791409 4364\n",
+              "stderr": "332091,,cpu_core/cycles/u,220525,100.00,,\n",
+              "checksum": 791409,
+              "elapsed_ns": 4364,
+              "cycles": 332091
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "791409 4302\n",
+              "stderr": "346446,,cpu_core/cycles/u,218181,100.00,,\n",
+              "checksum": 791409,
+              "elapsed_ns": 4302,
+              "cycles": 346446
+            }
+          ]
+        },
+        "runs": {
+          "whole": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7781809\n",
+              "stderr": "34595313,,cpu_core/cycles/u,7997981,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7781809,
+              "cycles": 34595313
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7712008\n",
+              "stderr": "34598785,,cpu_core/cycles/u,7926898,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7712008,
+              "cycles": 34598785
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7678856\n",
+              "stderr": "34649267,,cpu_core/cycles/u,7917380,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7678856,
+              "cycles": 34649267
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 8143865\n",
+              "stderr": "34706527,,cpu_core/cycles/u,8370807,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 8143865,
+              "cycles": 34706527
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7771672\n",
+              "stderr": "34545808,,cpu_core/cycles/u,7983807,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7771672,
+              "cycles": 34545808
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7754881\n",
+              "stderr": "34564835,,cpu_core/cycles/u,7955790,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7754881,
+              "cycles": 34564835
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7615740\n",
+              "stderr": "34636547,,cpu_core/cycles/u,7839941,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7615740,
+              "cycles": 34636547
+            }
+          ],
+          "baseline": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7689176\n",
+              "stderr": "34625200,,cpu_core/cycles/u,7892347,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7689176,
+              "cycles": 34625200
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7873406\n",
+              "stderr": "34568478,,cpu_core/cycles/u,8077520,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7873406,
+              "cycles": 34568478
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7693680\n",
+              "stderr": "34558723,,cpu_core/cycles/u,7905475,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7693680,
+              "cycles": 34558723
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7622647\n",
+              "stderr": "34610756,,cpu_core/cycles/u,7835158,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7622647,
+              "cycles": 34610756
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7752911\n",
+              "stderr": "34637321,,cpu_core/cycles/u,7955872,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7752911,
+              "cycles": 34637321
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7848532\n",
+              "stderr": "34731926,,cpu_core/cycles/u,8014721,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7848532,
+              "cycles": 34731926
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/baseline/program",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7751683\n",
+              "stderr": "34648639,,cpu_core/cycles/u,8018695,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7751683,
+              "cycles": 34648639
+            }
+          ],
+          "stdout_constant": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7757849\n",
+              "stderr": "34716277,,cpu_core/cycles/u,7955051,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7757849,
+              "cycles": 34716277
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7787785\n",
+              "stderr": "34749075,,cpu_core/cycles/u,7987602,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7787785,
+              "cycles": 34749075
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7900554\n",
+              "stderr": "34602313,,cpu_core/cycles/u,8156186,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7900554,
+              "cycles": 34602313
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7822601\n",
+              "stderr": "34758217,,cpu_core/cycles/u,8063458,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7822601,
+              "cycles": 34758217
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7751223\n",
+              "stderr": "34659242,,cpu_core/cycles/u,7949672,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7751223,
+              "cycles": 34659242
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7662928\n",
+              "stderr": "34760511,,cpu_core/cycles/u,7959378,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7662928,
+              "cycles": 34760511
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-counterfactual-01/stdout_constant/program",
+                "64",
+                "2500",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "250256292 7736856\n",
+              "stderr": "34608639,,cpu_core/cycles/u,7937693,100.00,,\n",
+              "checksum": 250256292,
+              "elapsed_ns": 7736856,
+              "cycles": 34608639
+            }
+          ]
+        },
+        "cycles_per_unit": {
+          "whole": [
+            214.15141875,
+            214.17311875,
+            214.48863125,
+            214.84650625,
+            213.8420125,
+            213.96093125,
+            214.40913125
+          ],
+          "baseline": [
+            214.31145625,
+            213.95694375,
+            213.895975,
+            214.22118125,
+            214.3872125,
+            214.97849375,
+            214.45795
+          ],
+          "stdout_constant": [
+            214.81144375,
+            215.01643125,
+            214.09916875,
+            215.07356875,
+            214.454975,
+            215.08790625,
+            214.13870625
+          ]
+        },
+        "comparisons": {
+          "baseline": {
+            "over_whole": 1.0006459143930266,
+            "paired_ratios": [
+              1.0007473100151945,
+              0.9989906529761453,
+              0.997236887351343,
+              0.997089433703556,
+              1.0025495457773996,
+              1.0047558331984032,
+              1.0002276896964015
+            ],
+            "paired_median_bootstrap95": [
+              0.997236887351343,
+              1.0025495457773996
+            ],
+            "within_noise": true
+          },
+          "stdout_constant": {
+            "over_whole": 1.0029804160471936,
+            "paired_ratios": [
+              1.0030820482248146,
+              1.003937527290642,
+              0.9981842277712796,
+              1.0010568591687303,
+              1.0028664269141219,
+              1.0052671999201723,
+              0.9987387430823332
+            ],
+            "paired_median_bootstrap95": [
+              0.9987387430823332,
+              1.003937527290642
+            ],
+            "within_noise": true
+          }
+        }
+      }
+    }
+  }
+}

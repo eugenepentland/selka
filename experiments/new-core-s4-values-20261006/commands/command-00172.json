@@ -1,0 +1,12 @@
+{
+  "command": [
+    "git",
+    "commit",
+    "-m",
+    "evidence: retain S4-V counted fill red and green regression"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2622181,
+  "status": 0,
+  "elapsed_seconds": 2.0927976961247623
+}

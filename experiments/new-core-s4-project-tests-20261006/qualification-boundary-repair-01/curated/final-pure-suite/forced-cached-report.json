@@ -1,0 +1,14 @@
+{
+  "version": "native-tests-v1",
+  "tests": [
+    {
+      "name": "app::test_dependency",
+      "status": "cached"
+    }
+  ],
+  "passed": 0,
+  "cached": 1,
+  "failed": 0,
+  "skipped": 0,
+  "unsupported": 0
+}

@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/screen.py", line 34, in <module>
+    expanded.execute(a)
+    ~~~~~~~~~~~~~~~~^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/expanded/run.py", line 284, in execute
+    logs = build(args, binaries, identity)
+  File "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/expanded/run.py", line 173, in build
+    common.verify_identity(saved['identity'], identity)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/benchmarks/runtime/runner.py", line 54, in verify_identity
+    raise RuntimeError('stale or incompatible build manifest; rebuild without --skip-build')
+RuntimeError: stale or incompatible build manifest; rebuild without --skip-build

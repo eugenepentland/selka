@@ -1,0 +1,652 @@
+{
+  "scope": "Top-level source test declarations; mirrors conformance file and *arena* filters",
+  "s4_files": [
+    "migrated/propagation"
+  ],
+  "arena_files": [
+    "arena_class_escape",
+    "arena_managed",
+    "arena_regions",
+    "arena_scopes",
+    "rc_arena_values"
+  ],
+  "tests": [
+    {
+      "file": "tests/lang/arena_class_escape.my",
+      "test": "test_escape_copies_a_record_and_the_values_it_reaches",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_class_escape.my",
+      "test": "test_escape_copies_a_finite_recursive_record",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_class_escape.my",
+      "test": "test_escape_copies_records_inside_lists_and_lists_inside_records",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_class_escape.my",
+      "test": "test_escape_keeps_an_older_value_independent",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_class_escape.my",
+      "test": "test_an_escaped_record_keeps_a_young_value_stored_after_promotion",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_class_escape.my",
+      "test": "test_escape_into_an_enclosing_arena_copies_the_record_there",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_class_escape.my",
+      "test": "test_escape_copies_a_record_with_no_fields",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_managed.my",
+      "test": "test_nested_arenas_redirect_helper_allocation_and_release_each_scope_in_bulk",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_managed.my",
+      "test": "test_an_anonymous_arena_scope_still_bulk_releases_its_allocations",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_managed.my",
+      "test": "test_escape_copies_a_shared_subgraph_once_into_the_enclosing_region",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_managed.my",
+      "test": "test_escape_preserves_nested_record_children",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_managed.my",
+      "test": "test_an_escaped_copy_may_be_returned_from_the_outermost_arena_scope",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_managed.my",
+      "test": "test_escape_keeps_an_independent_outer_region_snapshot",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_managed.my",
+      "test": "test_result_propagation_out_of_an_arena_releases_its_storage_in_bulk",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_managed.my",
+      "test": "test_break_and_continue_out_of_an_arena_close_the_scope_exactly_once",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_managed.my",
+      "test": "test_stress_collection_inside_an_arena_preserves_its_values_until_bulk_release",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_regions.my",
+      "test": "test_arena_values_fill_an_arena_list_spanning_many_chunks",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_regions.my",
+      "test": "test_collected_values_store_into_arena_lists_and_dictionaries",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_regions.my",
+      "test": "test_a_younger_arena_container_accepts_values_of_the_older_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_regions.my",
+      "test": "test_records_holding_arena_text_store_into_an_arena_list",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_regions.my",
+      "test": "test_escape_copies_a_list_that_spans_many_chunks",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_scopes.my",
+      "test": "test_a_loop_of_arena_scopes_folds_every_batch_correctly",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_scopes.my",
+      "test": "test_nested_arena_scopes_reuse_chunks_without_disturbing_the_outer_one",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_scopes.my",
+      "test": "test_an_escaped_list_survives_the_scopes_that_reuse_its_chunk",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/arena_scopes.my",
+      "test": "test_a_reused_chunk_hands_out_no_bytes_of_the_previous_scope",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/closed_record_inout.my",
+      "test": "test_closed_carrier_works_in_owned_arena_storage",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/constant_list_image.my",
+      "test": "test_constant_list_image_arena_escape",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/constant_list_image.my",
+      "test": "test_immortal_list_elements_survive_arena_escape_and_reads",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/dictionary_hash_index.my",
+      "test": "test_a_dictionary_built_and_read_inside_an_arena_escapes_intact",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/dictionary_hashing.my",
+      "test": "test_an_integer_keyed_dictionary_escapes_an_arena_with_a_working_index",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/dictionary_views.my",
+      "test": "test_views_work_inside_arena_and_snapshots_stay_independent",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/discard_names.my",
+      "test": "test_nested_arena_scopes_may_both_bind_the_discard_name",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/element_access.my",
+      "test": "test_element_write_inside_an_arena_scope",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/gc_arena_root_lifetimes.my",
+      "test": "test_arena_keeps_named_values_without_retaining_old_receiver_temporaries",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/gc_arena_root_lifetimes.my",
+      "test": "test_an_iteration_receiver_used_after_arena_close_stays_live",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/gc_footprint.my",
+      "test": "test_inner_arenas_open_and_close_under_a_large_outer_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/gc_generations.my",
+      "test": "test_class_bodies_bumped_out_of_nested_arenas_keep_their_fields",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/iteration_identity.my",
+      "test": "test_arena_iteration_and_nested_sources_keep_balanced_holds",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/migrated/propagation.my",
+      "test": "test_nested_results_can_be_propagated_repeatedly_1",
+      "reason": "S4: imports propagation_case_1 through propagation_case_9, user modules"
+    },
+    {
+      "file": "tests/lang/migrated/propagation.my",
+      "test": "test_nested_results_can_be_propagated_repeatedly_2",
+      "reason": "S4: imports propagation_case_1 through propagation_case_9, user modules"
+    },
+    {
+      "file": "tests/lang/migrated/propagation.my",
+      "test": "test_nested_results_can_be_propagated_repeatedly_3",
+      "reason": "S4: imports propagation_case_1 through propagation_case_9, user modules"
+    },
+    {
+      "file": "tests/lang/migrated/propagation.my",
+      "test": "test_option_propagation_unwraps_some_and_forwards_1",
+      "reason": "S4: imports propagation_case_1 through propagation_case_9, user modules"
+    },
+    {
+      "file": "tests/lang/migrated/propagation.my",
+      "test": "test_option_propagation_unwraps_some_and_forwards_2",
+      "reason": "S4: imports propagation_case_1 through propagation_case_9, user modules"
+    },
+    {
+      "file": "tests/lang/migrated/propagation.my",
+      "test": "test_try_unwraps_success_and_remaps_errors_betwee_1",
+      "reason": "S4: imports propagation_case_1 through propagation_case_9, user modules"
+    },
+    {
+      "file": "tests/lang/migrated/propagation.my",
+      "test": "test_try_unwraps_success_and_remaps_errors_betwee_2",
+      "reason": "S4: imports propagation_case_1 through propagation_case_9, user modules"
+    },
+    {
+      "file": "tests/lang/migrated/propagation.my",
+      "test": "test_try_wraps_a_mismatched_error_into_the_matchi_1",
+      "reason": "S4: imports propagation_case_1 through propagation_case_9, user modules"
+    },
+    {
+      "file": "tests/lang/migrated/propagation.my",
+      "test": "test_try_wraps_a_mismatched_error_into_the_matchi_2",
+      "reason": "S4: imports propagation_case_1 through propagation_case_9, user modules"
+    },
+    {
+      "file": "tests/lang/mut_argument_places.my",
+      "test": "test_heap_mut_argument_retains_its_region_inside_an_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/operand_snapshots.my",
+      "test": "test_call_inside_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/positive_list_index.my",
+      "test": "test_plain_variant_read_and_arena_owned_receiver",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_aggregate_values.my",
+      "test": "test_constructor_publication_keeps_pinned_copies_through_arena_escape",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_append_loops.my",
+      "test": "test_fresh_receiver_inherits_callers_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_arena_values.my",
+      "test": "test_an_inner_binding_releases_its_older_heap_owner",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_arena_values.my",
+      "test": "test_inline_owners_close_before_nested_chunks_are_reused",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_arena_values.my",
+      "test": "test_break_and_continue_drop_inner_heap_aliases",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_arena_values.my",
+      "test": "test_escape_return_preserves_shared_children_and_source_owners",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_arena_values.my",
+      "test": "test_result_propagation_releases_nested_arena_frame_owners",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_arena_values.my",
+      "test": "test_heap_receivers_grow_through_helpers_inside_an_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_arena_values.my",
+      "test": "test_outer_arena_receivers_survive_inner_detachment_and_growth",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_arena_values.my",
+      "test": "test_inline_field_detachment_preserves_its_older_allocation",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_borrowed_calls.my",
+      "test": "test_composed_result_escapes_caller_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_borrowed_loops.my",
+      "test": "test_return_bits_outlive_arena_and_parent_replacement",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_borrowed_readonly_entries.my",
+      "test": "test_immortal_fallback_and_borrowed_result_keep_caller_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_box_writeback.my",
+      "test": "test_arena_option_mapping_write_updates_the_owner_after_a_snapshot",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_box_writeback.my",
+      "test": "test_reboxed_heap_owner_survives_an_inner_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_byte_loop_versions.my",
+      "test": "test_arena_byte_anchor_and_nested_loop_reentry",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_caller_field_reads.my",
+      "test": "test_heap_and_parent_arena_authority_survives_forwarding",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_compact_journal.my",
+      "test": "test_plain_local_gaps_preserve_nested_arena_cleanup_boundaries",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_dictionary_keys.my",
+      "test": "test_inherited_arena_owners_remain_live",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_dictionary_loops.my",
+      "test": "test_inherited_arena_keeps_original_region_and_growth",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_dictionary_tails.my",
+      "test": "test_arena_growth_and_heap_root_inside_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_dictionary_text_loops.my",
+      "test": "test_owned_text_keys_in_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_empty_frames.my",
+      "test": "test_inherited_arena_preserves_older_receiver_and_snapshot",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_empty_frames.my",
+      "test": "test_arena_owned_caller_keeps_pin_until_plain_loop_returns",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_field_transfers.my",
+      "test": "test_closed_field_works_inside_caller_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_fresh_constructors.my",
+      "test": "test_inherited_arena_region_can_escape_the_complete_result",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_fresh_loop_roots.my",
+      "test": "test_inherited_arena_and_escaped_result_keep_region_rules",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_fresh_returns.my",
+      "test": "test_recursive_return_preserves_the_callers_inherited_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_fresh_spans.my",
+      "test": "test_nested_parent_arena_keeps_every_completed_child_alive",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_glue_values.my",
+      "test": "test_arena_values_escape_through_glue",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_inert_receivers.my",
+      "test": "test_nested_plain_record_writes_preserve_arena_values",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_inert_returns.my",
+      "test": "test_null_result_inside_an_arena_keeps_outer_values_alive",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_loop_guard_context.my",
+      "test": "test_adjacent_loops_keep_inherited_arena_cleanup",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_loop_operand_isolation.my",
+      "test": "test_isolated_words_keep_inherited_arena_lifetime",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_named_record_writes.my",
+      "test": "test_named_home_in_caller_arena_preserves_heap_children",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_named_record_writes.my",
+      "test": "test_named_loop_in_caller_arena_balances_children",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_named_record_writes.my",
+      "test": "test_inner_arena_cleanup_requires_new_named_definition",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_nested_read_loans.my",
+      "test": "test_nested_reads_inside_arena_escape_only_scalars",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_nonheld_captures.my",
+      "test": "test_parameter_snapshot_and_arena_cleanup",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_plain_aggregates.my",
+      "test": "test_older_receiver_accepts_plain_values_from_inner_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_plain_appends.my",
+      "test": "test_older_receiver_keeps_backing_alive_after_arena_growth",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_plain_appends.my",
+      "test": "test_arena_local_room_and_growth_share_the_same_lifetime",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_plain_appends.my",
+      "test": "test_plain_tail_removal_preserves_aliases_and_arena_results",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_plain_field_loans.my",
+      "test": "test_caller_arena_keeps_the_root_until_field_read",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_plain_record_writes.my",
+      "test": "test_arena_caller_and_heap_child_keep_their_lifetimes",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_plain_record_writes.my",
+      "test": "test_arena_owned_children_keep_real_snapshot_marks",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_plain_replacements.my",
+      "test": "test_nested_plain_arrays_replace_inside_an_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_read_list_versions.my",
+      "test": "test_parent_and_nested_arenas_keep_held_storage",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_read_loans.my",
+      "test": "test_scalar_reads_inside_an_arena_escape_only_their_result",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_read_loans.my",
+      "test": "test_plain_record_reads_preserve_arena_and_pending_write_semantics",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_readonly_bytes.my",
+      "test": "test_readonly_octets_keep_caller_arena_storage_live",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_readonly_calls.my",
+      "test": "test_composed_reader_accepts_inherited_arena_values",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_readonly_managed_calls.my",
+      "test": "test_borrowed_results_stay_inside_caller_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_record_field_reads.my",
+      "test": "test_parent_and_nested_arenas_keep_roots",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_scalar_loops.my",
+      "test": "test_inherited_arena_survives_numeric_activation",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_scalar_replacements.my",
+      "test": "test_scalar_updates_inside_an_arena_preserve_an_older_receiver",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_scope_inline.my",
+      "test": "test_arena_receiver_uses_the_same_nested_scope_contract",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_semantic_publication.my",
+      "test": "test_arena_setdefault_read_does_not_share_the_selected_mapping",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_semantic_publication.my",
+      "test": "test_fresh_dictionary_insertion_keeps_its_child_live_in_an_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_semantic_publication.my",
+      "test": "test_arena_field_capture_preserves_its_loan_during_replacement",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_site_eliminations.my",
+      "test": "test_relocated_loans_inside_arenas",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_site_eliminations.my",
+      "test": "test_field_receivers_inside_arenas",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_site_eliminations.my",
+      "test": "test_nested_field_copies_inside_arenas",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_site_eliminations.my",
+      "test": "test_readonly_reads_inside_arenas",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_site_eliminations.my",
+      "test": "test_mut_root_list_reads_inside_arenas",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_variant_reads.my",
+      "test": "test_arena_match_keeps_heap_children_during_arm_growth",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_variant_reads.my",
+      "test": "test_arena_children_preserve_an_independent_snapshot",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/rc_writeback_moves.my",
+      "test": "test_repeated_moves_inside_arena",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/record_field_snapshots.my",
+      "test": "test_arena_record_field_mutation_preserves_snapshot",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/record_field_snapshots.my",
+      "test": "test_nested_arena_field_mut_argument_preserves_snapshot",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/recursive_values.my",
+      "test": "test_arena_escape_copies_the_boxes",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/root_liveness.my",
+      "test": "test_an_arena_scope_closes_over_locals_it_scans",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/sets.my",
+      "test": "test_a_set_built_inside_an_arena_escapes_with_its_elements",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/text_literal_index.my",
+      "test": "test_literal_indexed_views_and_arena_escape",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/text_views.my",
+      "test": "test_pieces_in_arenas_read_and_escape",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/text_views.my",
+      "test": "test_streaming_arena_tails_escape_as_independent_text",
+      "reason": "N6: retired arena test"
+    },
+    {
+      "file": "tests/lang/tuples.my",
+      "test": "test_a_tuple_carrying_a_managed_element_escapes_an_arena",
+      "reason": "N6: retired arena test"
+    }
+  ],
+  "s4_tests": 9,
+  "arena_tests": 118
+}

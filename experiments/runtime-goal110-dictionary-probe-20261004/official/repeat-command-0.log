@@ -1,0 +1,17 @@
+dict_lookup small guest samples complete
+dict_lookup_str small guest samples complete
+dict_lookup_str large guest samples complete
+dict_update small guest samples complete
+dict_update large guest samples complete
+dict_update_str small guest samples complete
+dict_update_str large guest samples complete
+set_dedup small guest samples complete
+All paired guest timing ended; bootstrap begins
+dict_lookup small {'llvm': {'candidate_to_before': 0.9652772535084858, 'paired_bootstrap_95_interval': [0.9615211134060784, 0.969026017998552]}, 'qbe': {'candidate_to_before': 0.9942909932790279, 'paired_bootstrap_95_interval': [0.9920574636591706, 0.9978534386753661]}}
+dict_lookup_str small {'llvm': {'candidate_to_before': 0.9821678646864761, 'paired_bootstrap_95_interval': [0.9755243056669326, 0.9856817725076761]}, 'qbe': {'candidate_to_before': 0.9898268086477239, 'paired_bootstrap_95_interval': [0.9888042050138947, 0.9908568693685095]}}
+dict_lookup_str large {'llvm': {'candidate_to_before': 0.9862165009922145, 'paired_bootstrap_95_interval': [0.9822686947281846, 0.9925073760763904]}, 'qbe': {'candidate_to_before': 0.9975903253736718, 'paired_bootstrap_95_interval': [0.9922173116550282, 1.0007892679122756]}}
+dict_update small {'llvm': {'candidate_to_before': 0.9917372800874411, 'paired_bootstrap_95_interval': [0.9883074951371382, 0.9949040681996945]}, 'qbe': {'candidate_to_before': 1.005022226620633, 'paired_bootstrap_95_interval': [1.0029089874026869, 1.007703388315925]}}
+dict_update large {'llvm': {'candidate_to_before': 0.9937856921162855, 'paired_bootstrap_95_interval': [0.9911614387618848, 0.9951750807421696]}, 'qbe': {'candidate_to_before': 1.0036390802799997, 'paired_bootstrap_95_interval': [1.0010440889327972, 1.0069817920275492]}}
+dict_update_str small {'llvm': {'candidate_to_before': 1.0140055674214346, 'paired_bootstrap_95_interval': [1.009822087028542, 1.0165817915855482]}, 'qbe': {'candidate_to_before': 1.01333111573751, 'paired_bootstrap_95_interval': [1.0068716036260028, 1.0211475453555798]}}
+dict_update_str large {'llvm': {'candidate_to_before': 1.0091621963877095, 'paired_bootstrap_95_interval': [1.0040499282223119, 1.0131883397809005]}, 'qbe': {'candidate_to_before': 0.9939567640985203, 'paired_bootstrap_95_interval': [0.9900778775191571, 0.9964235841823741]}}
+set_dedup small {'llvm': {'candidate_to_before': 0.9938815042072422, 'paired_bootstrap_95_interval': [0.9902756808534732, 0.9953529140896953]}, 'qbe': {'candidate_to_before': 1.01624171625768, 'paired_bootstrap_95_interval': [1.0124394879373848, 1.0195649827665907]}}

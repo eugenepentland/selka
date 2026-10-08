@@ -51,12 +51,6 @@ def inherited_work() -> bool:
         counts[key] = counts.get(key, 0) + 1
     return counts["inner"] == 40 and counts["second"] == 40
 
-def test_inherited_arena_owners_remain_live() -> bool:
-    with arena():
-        assert inherited_work()
-    assert inherited_work()
-    return True
-
 def change_key(keys: mut list[str]) -> int:
     keys[0] = "after"
     return 13

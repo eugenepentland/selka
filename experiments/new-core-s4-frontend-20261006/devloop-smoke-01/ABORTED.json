@@ -1,0 +1,5 @@
+{
+  "qualified": false,
+  "reason": "Optional pre-C smoke canceled while waiting CPU10 to release its build slot for required F/M correction regressions; defer smoke until S4-C",
+  "pid": 1413491
+}

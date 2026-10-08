@@ -1,0 +1,28 @@
+{
+  "command": [
+    "env",
+    "MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/qbe",
+    "MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "scripts/build-slot.sh",
+    "build",
+    "flock",
+    "/run/user/1000/mylang-slots/cpu10.lock",
+    "python3",
+    "experiments/new-core-s4-20261006/integration/measure_all46.py",
+    "--build",
+    "--bin",
+    ".mylang-cache/s4-v/final-all46-v2",
+    "--mylang",
+    ".mylang-cache/s3/oracle/mylang",
+    "--core",
+    ".mylang-cache/s4-v/immutable-3c86c/mylang-core",
+    "--rounds",
+    "7",
+    "--json",
+    "experiments/new-core-s4-values-20261006/final-all46-v2.json"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2827374,
+  "status": 0,
+  "elapsed_seconds": 937.3495862560812
+}

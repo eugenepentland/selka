@@ -1,0 +1,290 @@
+{
+  "scope": "Retained actual native discovery and unchanged-helper RED; conservative proposal only, no production repair or gate qualification.",
+  "files": [
+    {
+      "path": "Distro.cpp.txt",
+      "size": 9152,
+      "sha256": "c6708ffd483dbc43de4f9f40428e30737fc2fbdfbcc034360164f03546242f5e"
+    },
+    {
+      "path": "GUARD_CORRECTION_PROPOSAL.md",
+      "size": 14623,
+      "sha256": "4932b43beaaf56bf27705a5113580582ebaf2b9316e9cdf8dc7d5b012da98f1b"
+    },
+    {
+      "path": "Gnu.cpp.txt",
+      "size": 140988,
+      "sha256": "f84df2336067b4101fc2303e8d675b14e751706c40cb3a6e3663c271a4c08284"
+    },
+    {
+      "path": "Linux.cpp.txt",
+      "size": 36115,
+      "sha256": "fd4cce5a4c1051748b8363d61edad3c03005e4dc39440ec8c296cb0692765157"
+    },
+    {
+      "path": "README.md",
+      "size": 3573,
+      "sha256": "83f8e288b92668eba1064000d8785d5e83d48839bf2489cdd55cba68e2c0fdc9"
+    },
+    {
+      "path": "SanitizerArgs.cpp.txt",
+      "size": 76498,
+      "sha256": "1065d01750c781d6a9fb0af696f2ae67434ab14abf2af04fb521a66f61b8d112"
+    },
+    {
+      "path": "ToolChain.cpp.txt",
+      "size": 67162,
+      "sha256": "6ac623254103f55f2635ad509ad784dddd637afb0cb64941c42038147ce55d48"
+    },
+    {
+      "path": "app.my",
+      "size": 43,
+      "sha256": "0946d83fd6c3b101b55f9f421d47ef169105e621678475ba9ed5aa44486515a4"
+    },
+    {
+      "path": "build.json",
+      "size": 1199,
+      "sha256": "076cda5fa86ac02e57133ef5e4178ff594aae68d33e1a9447a8f9d75a3529999"
+    },
+    {
+      "path": "build.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "classify-05.log",
+      "size": 1124,
+      "sha256": "e0e54e60f9466dd6d6f08be0a054d470a51acbcaa9e7545849389ecc23a6b79c"
+    },
+    {
+      "path": "classify-06.log",
+      "size": 1480,
+      "sha256": "95b8d6d39aca0bd5a6e90df5dd933df5173b01acde9b105ff786d5a1553a90d4"
+    },
+    {
+      "path": "classify_guards.py",
+      "size": 5895,
+      "sha256": "a0cda0f29ad429428871a74ea2bf4b370e0574f17160d0d468c8cf6b1515fac7"
+    },
+    {
+      "path": "command-01.log",
+      "size": 38,
+      "sha256": "69c5c6037acf0b244cb8af001c0f7a93a97dc51021caba500519630e4b9e089e"
+    },
+    {
+      "path": "command-04.log",
+      "size": 53,
+      "sha256": "88e4b20de3c4a66a8c944a77e1d07ea122734898b22c9d45c94b0aed5ff8d7ca"
+    },
+    {
+      "path": "extract-02.log",
+      "size": 323,
+      "sha256": "d9dad1f1ebd4778ca9cb332e10f7ef91e2dacfdbc9caee745c8ab8cce57d1946"
+    },
+    {
+      "path": "extract-03.log",
+      "size": 288,
+      "sha256": "fce7dcb1d4064709b6a37f19399b396d42fcecf1499920d7d74453954b882e30"
+    },
+    {
+      "path": "extract_native.py",
+      "size": 2461,
+      "sha256": "0c9ab4da0ba2292009fdbfeec98ecdeaa85ce910863db1d0af8fb193d2374d47"
+    },
+    {
+      "path": "generated-staging-provenance.json",
+      "size": 17288,
+      "sha256": "0b8157818aafb57d0bab7b028f7057c0e701a15015ae288158f6d97633c94b97"
+    },
+    {
+      "path": "guard-compile.json",
+      "size": 962,
+      "sha256": "e511ce5ac4b7106933ab255c4cc7ecefed17700d0a9c3a3404a004cb6313cec9"
+    },
+    {
+      "path": "guard-compile.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "guard-compile.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "guard-current.json",
+      "size": 875,
+      "sha256": "3c35bda967ceddf019c93f0b58c1cb7e27ba959565b6a15c4424afbbb08235da"
+    },
+    {
+      "path": "guard-current.stderr",
+      "size": 393,
+      "sha256": "42c878d8557d82d5eb71cffe800d21bc53a38b6699b3f8ee8a5327941e47ced2"
+    },
+    {
+      "path": "guard-current.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "guard-native-after.json",
+      "size": 1288,
+      "sha256": "a50c7a9a4956ccf8df2d25714ebd2b72eff441a2b967ddd327711918168acfad"
+    },
+    {
+      "path": "guard-native-after.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "guard-native-after.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "guard-native-after.strace",
+      "size": 97396,
+      "sha256": "4ba8bf3c6c52b3edddb2ab20504969e73066d98ea68dc03694555f58cfcfb432"
+    },
+    {
+      "path": "guard-red-summary.json",
+      "size": 1714,
+      "sha256": "68617f76f8c845ba916e01544b004f14e62dad3e06c8be62f67312cebcbd3fcf"
+    },
+    {
+      "path": "guard_probe.zig",
+      "size": 1380,
+      "sha256": "c110bb02492bceb733fc8d1facf017f90660de7d5cc519d6ded2c4e68d4e89f8"
+    },
+    {
+      "path": "guard_reducer.py",
+      "size": 4110,
+      "sha256": "a7861d570699f8d980ccaa47fd65c0e5c6ad0828e52add0c0afe1df75e6187a9"
+    },
+    {
+      "path": "guardian-evidence-07.log",
+      "size": 405,
+      "sha256": "3111270cb0cd20e32cb450e2debe17074109c456c7cfa9ec6bcf8d8f3213b1b5"
+    },
+    {
+      "path": "initial-path-guards.json",
+      "size": 19210,
+      "sha256": "ec36b1a3c03a4c53452fa2849967da96d48d2d8ce938a4ae05628587798c8abf"
+    },
+    {
+      "path": "invocation.json",
+      "size": 1863,
+      "sha256": "20e9f613d69950dbefd4c63c4699453bce4e04153694da003898733c341c786b"
+    },
+    {
+      "path": "native.json",
+      "size": 197,
+      "sha256": "28bd8530b53c4bb2ba5b3a0218a556e5b931ee60ac9020d79171a04e5a17419b"
+    },
+    {
+      "path": "native.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "native.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "path-guard-summary.json",
+      "size": 7787,
+      "sha256": "b5d663be285d0d0411b642fb2a0732e4e0b92451715657447e8dd32eff4b2778"
+    },
+    {
+      "path": "probe_m.py",
+      "size": 3813,
+      "sha256": "b1e65950ff2695d144c8331610181acb201f90e9b756b8c70a18e94addf2cf6d"
+    },
+    {
+      "path": "program-link-accesses.json",
+      "size": 5681926,
+      "sha256": "79ae7bb1a6ad63ea69d2b4196cdaa44c745803a13d24504ae23214f760c884d2"
+    },
+    {
+      "path": "program-link-path-guards.json",
+      "size": 1504075,
+      "sha256": "fa5f4d6f6eed4fa927e6e117ea7c9953f64df3a96f9d82a52e4f3267a3a4f5a7"
+    },
+    {
+      "path": "program-link-summary.json",
+      "size": 203350,
+      "sha256": "6207bb9028283fd6c4ca819b0b95165e6f219880a00d4b2df41758491f541946"
+    },
+    {
+      "path": "program-link-unguarded-snapshots.json",
+      "size": 13446,
+      "sha256": "c96211d3e20feb07daa95b91c8989fc500217cb0c18025c54ead70127df5b457"
+    },
+    {
+      "path": "program-link.json",
+      "size": 4029,
+      "sha256": "47863aadb4261cfe41de5b8e78d912b0c62775d8b5b6e348e436f5562270456d"
+    },
+    {
+      "path": "program-link.strace",
+      "size": 9612247,
+      "sha256": "0815a494afc5088dc7704be631d6104e30e470e00efd0d97d88db9f0825e80af"
+    },
+    {
+      "path": "program.ll",
+      "size": 13408,
+      "sha256": "1bece9ee6162873fe1ba1be4c741ab20e9d99a8893fe2a0e1634b4478793b74c"
+    },
+    {
+      "path": "runtime-c-accesses.json",
+      "size": 385818,
+      "sha256": "071274811cff2f9b85fb721d36b74e99dceaa283c1bb6c88d3ac2c8bb2a12f31"
+    },
+    {
+      "path": "runtime-c-path-guards.json",
+      "size": 258637,
+      "sha256": "16d77245d43cf3ce250f79a077908a8c1643ea313bfc230497fe8bc3ff7f5558"
+    },
+    {
+      "path": "runtime-c-summary.json",
+      "size": 55420,
+      "sha256": "34a7c9c071a7383a86367e1f4fbda2590fddd66168b54a2b5629eec9353d7dcc"
+    },
+    {
+      "path": "runtime-c-unguarded-snapshots.json",
+      "size": 13281,
+      "sha256": "e9d579729e1a2565ca3b5974244ccf9c5530cf2354418246701a5b917b4bbe08"
+    },
+    {
+      "path": "runtime-c.json",
+      "size": 1354,
+      "sha256": "e31e0f6a1ad2fe019f16d37f36b8dcd73563e496247c2f1a1bb301d7cde91a6a"
+    },
+    {
+      "path": "runtime-c.strace",
+      "size": 1162513,
+      "sha256": "8c475367079247caeea332f62bfdc45d84747823d06390ec25fb3c26b9fd35c5"
+    },
+    {
+      "path": "source-freeze.json",
+      "size": 1303,
+      "sha256": "550cf5bee7fe2d3190192fe668228686268200fb07c69952a59c0a63c80ae006"
+    },
+    {
+      "path": "summary.json",
+      "size": 2189,
+      "sha256": "18aafe4ffd65b18748771bcc41e39694d25c649fb476de0a5d725a8304763f82"
+    },
+    {
+      "path": "upstream-source-manifest.json",
+      "size": 1902,
+      "sha256": "e7ab3781f169798eae082bde63f2bbeb264cc5b1d6379e486b4f03175e293957"
+    }
+  ]
+}

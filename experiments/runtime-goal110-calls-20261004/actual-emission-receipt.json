@@ -1,0 +1,27 @@
+{
+  "kind": "actual-frozen-compute-frontend-fragment",
+  "source_revision": "5dc31c3af5114938fe1c92fc72941efd0b3074c3",
+  "source": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/benchmarks/runtime/expanded/compute/main.my",
+  "source_sha256": "d0abe8dea7693c5c0c17f871d631264721f47b8c4cd35f76f865ef68499a02e9",
+  "manifest_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-guests/mycache/modules/74fc2df6dc7428f30776e8e89cd69a574cdd0093442c5c31e73ca5f7df2057fd/out/main.manifest.json",
+  "manifest_sha256": "e5f04afa7d0f67226dc648bf2b928419e16149cc061bbbce8398ad1e40958c96",
+  "main_il_digest": "1e01ea0bb85bfadba4d66cb53a1869bf4b56bbff6e477e3e25810c12d213b441",
+  "main_il_sha256": "ceadd07c490199dac9492fba6888cb44d2c2d3f7730e54d61b776d1e017c1a18",
+  "main_il_bytes": 693099,
+  "markers": [
+    " # QBE-LOOP-UNSWITCH-1 553 literals=10 source-literals=11 copied-bytes=182385"
+  ],
+  "guards": [
+    " %usflag553_0 =l ceql %usk553, 0",
+    " %usflag553_1 =l ceql %usk553, 1",
+    " %usflag553_6 =l ceql %usk553, 7",
+    " %usflag553_5 =l ceql %usk553, 6",
+    " %usflag553_7 =l ceql %usk553, 8",
+    " %usflag553_3 =l ceql %usk553, 4",
+    " %usflag553_9 =l ceql %usk553, 10",
+    " %usflag553_8 =l ceql %usk553, 9",
+    " %usflag553_10 =l ceql %usk553, 11",
+    " %usflag553_4 =l ceql %usk553, 5"
+  ],
+  "guest_receipt": "guest-build-qualification.json"
+}

@@ -1,0 +1,34 @@
+# Adjacent scalar-list uniqueness capture
+
+Candidate `97f6686ea44455c36cbd374f72ea98a9174f9a70` preserves the checked named-root producer and omits its immediately adjacent duplicate receiver check only after the existing empty, inert, nonheld capture proof plus explicit quiet-site checks. The receiver copy publishes no owner/hold and cleanup performs no physical action. Named-root owning-role emission is a no-op; the first check writes the same shape flag the second would write. Physical hoists that suppress the first emitted check refuse this optimization. Other roots/descriptors, alternate entries, aliases, effects, managed elements, rebinding, speculative emission, arenas, counting/site instrumentation and collector mode keep their original path.
+
+The independent test-only argv correction is `61e9bd6f`: native options require `--` before guest arguments. Corrected dispatch and eight Boolean-join differential forms pass, and the new three-element fold independently asserts successful value/status/stdout. Earlier unit helpers could compare equal usage failures; this correction does not invalidate the independently oracle-checked, direct-argv 432-execution join driver or benchmark qualifications/timings. The coordinator archived that retrospective distinction separately.
+
+Final causal source `d4c28bdace208ee284fe22cc63f074b183990967` includes accepted readiness `7e7773e43c934e67e32db3205a9f867049f9b46a`, the uniqueness candidate and the test correction, above sorting `63df6b6c`. Its matched control is the already accepted, production-equivalent Debug source `63842d3c32ab3079d878cff89224478543f9b7f3`. Both compiler receipts bind unchanged tracked compiler inputs and installed assets. Guests use ReleaseFast; LLVM uses O3/full LTO and the normal target policy. Reference executables reuse the verified RF730 manifest; no benchmark/reference source or executable is changed.
+
+Final-source focused tests passed 24/24; affected readiness tests passed 14/14. Seven native policies (ordinary RC LLVM/QBE with and without accounting, counted/site RC LLVM, stressed collector LLVM) passed 872 paired comparisons / 1744 executions, including 644 successes, 224 bounds/overflow failures and four explicit step/frame refusals. Every pair compares process status and full output/error streams, including structured failure provenance. Successful cases have independent value/status/stdout oracles; failure cases have exact error-code assertions and the prior `41` output. A held-element mutation returns 33 and counted/site policies require a real positive hold count. The first paired run also passed, but its unused failure labels were inaccurate; `native-differential-first.py` and its original report are preserved. The final driver corrects those labels and actively asserts the exact trap code, using the same cached guests. All 240 untimed MyLang benchmark/oracle checks passed, and all 24 official artifacts were verified.
+
+`static/static-code.json` and its read-only objdump captures establish two fewer guarded uniqueness helper call sites in the legacy entry, 18 to 16 on both backends. LLVM entry size falls 16,041 to 15,796 bytes; QBE falls 50,516 to 50,148 bytes. These are static call-site counts, not a claim that both helpers execute on every iteration. The first check and original failures remain. Other entry sizes are unchanged; text entry/.text bytes match exactly. Compute/collections .text shrink outside their unchanged-size entries, so unchanged entry size alone is not claimed as instruction identity. Earlier exploratory 63/5a diagnostic snapshots are separate from the final d4/638 proof.
+
+The first exploratory screen ran all six arms on `mutate_unique`, `mutate_shared`, `record_reads`, `tagged_stack`, both sizes, five rounds and one warmup. It preserves 240 measured samples, 48 warmups and 720 oracle qualifications. The subsequent same-session d4/638 pairs reuse only the fresh calibrated plans and preserve 160 measured samples plus 32 warmups. No builds/tests/gates or other timing jobs overlapped. Full per-sample cgroup/frequency counters are in the paired receipts.
+
+| Case | LLVM after/before, small | LLVM after/before, large | QBE after/before, small | QBE after/before, large |
+| --- | ---: | ---: | ---: | ---: |
+| Unique mutation | 0.95408 | 0.97523 | 0.99570 | 0.99504 |
+| Shared mutation | 0.98794 | 0.99466 | 0.99498 | 1.00117 |
+| Record reads | 1.00176 | 0.99564 | 0.99909 | 1.09353 |
+| Tagged stack | 1.00141 | 0.99896 | 0.99805 | 0.99974 |
+
+The independent 15-round/three-warmup repeat reuses the unchanged binaries and exact plans for unique mutation at both sizes and large record reads. Session `1d0a24f3-7fd0-4028-998b-9f949ae053b9` ran 2026-10-04 05:47:52.449298–05:48:18.502042 UTC and passed all 180 measured/36 warmup outcomes and final artifact checks.
+
+| Case | LLVM before → after ns/op | LLVM ratio, exploratory 95% interval | QBE ratio, exploratory 95% interval |
+| --- | --- | --- | --- |
+| Unique small | 4.3943692 → 4.2026203 | 0.95636 [0.95423, 0.96166] | 0.99471 [0.98778, 0.99981] |
+| Unique large | 4.4349865 → 4.2308631 | 0.95397 [0.94590, 0.96075] | 0.99569 [0.99405, 0.99896] |
+| Record large | 5.6572724 → 5.6309359 | 0.99534 [0.97388, 1.02136] | 1.02502 [0.95752, 1.09906] |
+
+The first large-record QBE slowdown did not repeat at the same size; uncertainty remains. Intervals are exploratory and uncorrected for selection/multiple comparisons. The LLVM unique gain repeats, but the first-screen LLVM/current-fastest competitor ratios remain 1.444/1.455 for unique mutation, 11.088/3.466 for shared mutation, 1.410/1.446 for record reads and 2.929/2.923 for tagged stack. This archive does not establish the <=1.10 goal or acceptance of an integrated ReleaseFast host revision. The coordinator owns adoption and final gates/confirmation.
+
+Failed Guardian commit logs and exact run/observation IDs are retained in `unique-capture-guardian-findings.json`. `test-no-conditional` caused fixture/helper regrouping, `repeated-string-literal` centralized the bytecode import, `change-classification` prompted the independent positive argv oracle, and `spec` corrected the duplicate new tag to the existing spec-case form. Final source/test commits and official compiler gate passed all 88 checks. Focused runner logs contain the known trailing `failed command` listener diagnostic despite PASS and process exit zero; saved `.exit` files explicitly distinguish that diagnostic from failures. No gate was loosened. Mandatory feedback is consolidated by the coordinator in guardian-zig; this branch does not edit the shared feedback file.
+
+The archive receipt pins local artifact paths/hashes and every preserved file. Compressed reports preserve the original JSON bytes exactly. Executables/caches remain at their pinned paths and are not committed. Local receipts are not independent reproducible-build attestations.

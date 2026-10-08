@@ -130,9 +130,6 @@ test "generic diagnostics name concrete types independently of discovery order" 
             try t.expectEqualSlices(@import("typed.zig").Type, &.{.i64}, function.type_arguments);
         }
         try t.expect(found);
-        const dump = try compilation.dump(t.allocator);
-        defer t.allocator.free(dump);
-        try t.expect(std.mem.indexOf(u8, dump, "id[i64]") != null);
     }
 }
 test "generic diagnostics retain instantiated names in runtime traces" {

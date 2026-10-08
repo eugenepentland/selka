@@ -1,0 +1,24 @@
+
+### call_indirect (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 5.020 | 5.094 | same |
+| new core release | 0.301 | 0.313 | same |
+| Rust | 7.204 | 7.690 | same |
+| Zig ReleaseSafe | 9.015 | 9.507 | same |
+
+### sort_int (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 45.508 | 11.758 | same |
+| new core release | 46.803 | 9.660 | same |
+| Rust | 69.993 | 15.419 | same |
+| Zig ReleaseSafe | 67.530 | 17.651 | same |
+
+### sort_records (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 54.504 | 66.574 | same |
+| new core release | 51.036 | 62.088 | same |
+| Rust | 40.674 | 44.851 | same |
+| Zig ReleaseSafe | 117.748 | 50.780 | same |

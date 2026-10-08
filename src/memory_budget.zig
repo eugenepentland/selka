@@ -20,7 +20,7 @@ pub const test_default: u64 = 512 << 20;
 pub const run_default: u64 = 4 << 30;
 /// Ceiling the compiler installs on itself, so a compiler defect fails loudly
 /// instead of swapping. A cold native build of one program peaks near 75 MiB
-/// resident and the `zig cc` and QBE children it spawns inherit this and finish.
+/// resident and the `zig cc` children it spawns inherit this and finish.
 pub const host_default: u64 = 8 << 30;
 /// Address space a guest needs beyond its managed byte budget: program text,
 /// the C library's arenas and the harness that loads it. Mirrors
@@ -98,9 +98,9 @@ pub fn guardHost(environ: *std.process.Environ.Map) bool {
 }
 
 /// Native stack the runtime maps for each frame a `--max-frames` budget allows.
-/// It mirrors `FRAME_STACK_BYTES` in `qbe_stack.c`; a test keeps them in step.
+/// It mirrors `CORE_TEST_FRAME_STACK` in `src/core/runtime/core_test.c`; a test keeps them in step.
 pub const frame_stack_bytes: u64 = 32768;
-/// Stack mapped beyond the per-frame share, mirroring `STACK_SLACK` in `qbe_stack.c`.
+/// Stack mapped beyond the per-frame share, mirroring `CORE_TEST_STACK_SLACK` in `core_test.c`.
 pub const stack_slack: u64 = 8 << 20;
 /// Address space a guest needs besides its stack: program text, the C library's
 /// arenas and the harness. Generous on purpose, so a budget refused here is one

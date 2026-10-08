@@ -1,0 +1,16 @@
+test-core
++- run test w
+guardian/test: 2 test(s) selected
+guardian/test: test wall 2.89s; slowest over 50ms:
+guardian/test:   2.89s  inline_origins_test.test.unswitched consuming loops and ownership keep every copied read in its exact callee
+guardian/test: PASS — 2 passed
+guardian/test: RESULT {"passed":2,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/78e8bb569f859989c62161cfb62ed8f2/test --cache-dir=./.zig-cache --seed=0xd7d6e207 --listen=-
+
+Build Summary: 5/5 steps succeeded; 2/2 tests passed
+test-core success
++- run test 2 pass (2 total) 2s MaxRSS:251M
+   +- compile test debug native success 1s MaxRSS:343M
+      +- options cached
+         +- compile exe mylang-core debug native cached 7ms MaxRSS:41M
+

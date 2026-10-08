@@ -253,7 +253,7 @@ fn moduleScenario(allocator: std.mem.Allocator) !void {
         try t.expectEqualStrings("[2]T", merged.src.text(application.arguments[0]));
         try t.expectEqual(@as(usize, iteration * 2), cache.statistics.hits);
         var compilation = try language.project_compile.Compilation.init(&index);
-        try compilation.emit();
+        try compilation.check();
         try t.expectEqual(@as(i64, 0), (try native.run(&compilation)).value);
     }
 }

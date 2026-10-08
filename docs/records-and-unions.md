@@ -40,47 +40,23 @@ def main() -> int:
 ```
 
 This returns `14`. `shift` reassigns its own parameter, so `origin.x` is still `1`
-afterwards and only `moved.x` is `11`. Records with only scalar fields carry no
-collected reference, which is what lets them leave an arena block freely; see
-[managed arenas](arenas.md) for that rule and [managed memory](managed-memory.md) for
-how managed fields are copied.
+afterwards and only `moved.x` is `11`. A record that holds a list, dictionary or
+string is a value too; see [value semantics](value-semantics.md) for how its
+managed fields are shared until a write.
 
 A rule every value of a record must satisfy is written as an invariant above it,
 such as `@invariant(self.low <= self.high)`. It is checked at every
 construction, `replace(...)` and field write, and a violation traps
 `R_INVARIANT`; see [contracts](contracts.md#invariants).
 
-## Managed class records
-
-For one migration release, `--legacy-sharing` accepts `class` as a managed
-reference record. Assignment and calls then share its identity:
-
-```mylang
-# doc: legacy-sharing
-# doc: expect 8
-class Counter:
-    n: int
-
-def bump(counter: mut Counter):
-    counter.n = counter.n + 1
-
-def main() -> int:
-    a = Counter(n=1)
-    b = a
-    b.n = 7
-    bump(mut a)
-    return a.n
-```
-
 ## Identity and recursive records
 
 Use a recursive record or union for a finite tree. Use a stable handle in
-`pool.Pool[T]` for a graph whose nodes need identity. A `class` declaration is
-rejected with `E_VALUE_CLASS` under value semantics; compatibility mode accepts
-the former shared-reference spelling for one migration release.
+`pool.Pool[T]` for a graph whose nodes need identity. There are no shared
+reference records: a `class` declaration is rejected with `E_VALUE_CLASS` and
+builtin `Cell` with `E_VALUE_CELL`.
 
 ```mylang
-# doc: value-semantics
 # doc: expect 2
 record Counter:
     n: int
@@ -373,8 +349,8 @@ def main() -> int:
 This returns `42`; the `number` case ends the recursion. `record Loop: next: Loop`
 still gets `E_RECURSIVE_RECORD`, because it has no finite value. Recursion through
 `list[...]` or `dict[...]` already has indirection and needs no box. Nested
-recursive values compare, hash, print, cross typed JSON boundaries and escape
-arenas as values. Printing stops with `...` at the renderer's depth cap.
+recursive values compare, hash, print and cross typed JSON boundaries as values.
+Printing stops with `...` at the renderer's depth cap.
 
 A recursive box cannot own a resource, an unhandled result or a capability.
 This includes builtin `File` and `TextFile` fields, even when construction would
@@ -390,15 +366,10 @@ def main() -> int:
     return 0
 ```
 
-Under the default value model, copying a recursive value carries its immutable
-box pointers without walking their bodies. Reading through a box makes a private
-shallow snapshot and shares its immediate mutable children; a nested write
-detaches each box it crosses. Box hops alone do not consume the copy-on-write
-depth budget, so even a long chain with collections can be copied and traversed
-without a depth trap. Inline record, array and variant descriptor walks still
-stop after 1,024 edges with `R_COW_DEPTH` rather than leaving a mutable child
-unshared. A million-node scalar-only chain can still be copied and have its
-outer fields changed independently.
+Copying a recursive value shares its boxes by reference count without walking
+their bodies, and a nested write copies only the boxes along the path it writes.
+A million-node chain whose nodes each hold a list can be copied and have its outer
+fields and lists changed independently.
 
 ## Fixed arrays and enum tables
 
@@ -559,5 +530,5 @@ writes reads the elements where they are.
 - [Contracts](contracts.md#invariants) — an `@invariant` a record checks at every construction, `replace` and field write
 - [Results and options](results-and-options.md) — `Result`, `Option` and their contextual constructors
 - [Python-style application code](python-syntax.md) — the surrounding syntax
-- [Managed memory](managed-memory.md) — how managed fields are copied
+- [Value semantics](value-semantics.md) — how managed fields are shared and copied
 - [Match expressions](match-expressions.md) — producing a value from a match

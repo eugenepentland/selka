@@ -1,0 +1,47 @@
+# Pre-S5 arena code: `mylang fix` deletes every `with arena():` line, dedents
+# the block's body and rewrites each `name.escape(value)` to `value`.
+record Reading:
+    sensor: int
+    samples: list[int]
+
+
+def collect(sensors: int) -> list[Reading]:
+    readings: list[Reading] = []
+    for sensor in range(sensors):
+        with arena() as scratch:  # one region per sensor
+            samples: list[int] = []
+            for index in range(3):
+                samples.append(sensor * 3 + index)
+
+            # kept: a copy survives the region
+            readings.append(scratch.escape(Reading(sensor=sensor, samples=samples)))
+    return readings
+
+
+def loudest(readings: list[Reading]) -> int:
+    with arena():
+        best = 0
+# a comment at the left margin stays where it is
+        for reading in readings:
+            total = 0
+            for sample in reading.samples:
+                total = total + sample
+            if total > best:
+                best = total
+        return best
+
+
+def nested() -> int:
+    kept = "z"
+    with arena() as outer:
+        with arena() as inner:
+            joined = "-".join(["a", str(2)])
+            kept = outer.escape(joined + "!")
+            size = len(inner.escape(joined))
+        # after the inner block
+    return len(kept) + size
+
+
+def main() -> int:
+    readings = collect(4)
+    return len(readings) + loudest(readings) + nested()

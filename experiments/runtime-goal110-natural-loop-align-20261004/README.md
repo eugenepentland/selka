@@ -1,0 +1,25 @@
+# General natural-loop alignment and final floor-result ranges (5818cee8)
+
+**Unintegrated.** Independent timing repeats LLVM direct-call costs of 10.2% and 11.1%. Small equality improves 9.6%, search stays within 1%, small sort improves 8%, and unique mutation improves about 17%, but these gains do not justify silently losing the direct-call controls. Small equality remains open: the six-arm screen reports 3.63635 ns versus the current winner's 2.89799 ns, or 1.25479. These are Debug compiler hosts emitting ordinary frozen ReleaseFast LLVM O3/full-LTO and QBE guests, not normal goal confirmations.
+
+Exact source `5818cee8e679c1f30fd5966963210511fcf69919` starts from integrated `1a3980631e79bc65f048acd063d7250800f01901`. The reviewed positive final floor-result annotation preserves integrated bounded-bias lowering's early return. A general LLVM policy marks reachable natural backedges using bounded dominators and requests 32-byte alignment; shared/multiple latches use one self-referential LoopID. Ambiguous, invalid, unreachable and irreducible cases decline hints. Analysis refuses above 8,192 blocks or 1,048,576 charged work units. No benchmark names, fixed loop-body sizes, ISA overrides, runtime padding, branch/accounting/frame changes or QBE hints are introduced. Metadata requests at most 31 padding bytes per honored machine header; LLVM may transform or clone loops.
+
+`evidence.json` binds deterministic gzip copies, raw hashes and helper hashes. Live ELFs remain in immutable worktrees and are bound by receipts/manifests; executables are not stored in Git. Structured initial and repeat commands, drivers, PIDs, UTC phase boundaries, real outer statuses, before/after guest hashes, host snapshots, complete paired/native streams and all failed focused/source-gate attempts are retained. The six-arm runner keeps its normal parsed checksum/clock protocol rather than full streams. Source-only `PRIVATE_SLOT_DESIGN.md` proposes a separate successor; no private-slot implementation is part of this candidate.
+
+Validation passed 46 focused units (including historical LLVM golden IR, multiple latches, fallthrough, nested/ambiguous loops, metadata ID/frame interactions and resource refusal), all 88 whole-tree Guardian checks, official Debug host/24 RF guests, 2,763 native pairs across seven runtime policies (5,526 executions), 200 ordinary text oracle records, 720 edge qualifications and 516 holdouts. Root independently replayed native and text/qualification/code bindings. Four QBE runtime images match the control exactly under allocated-section/program-header/entry/LOAD comparison; full-file hashes differ through nonallocated metadata. All four LLVM images change.
+
+Initial timing covers 12 text rows with six arms/5 rounds/1 warmup, then 12 matched text rows and 28 matched sentinels across all groups (960 paired outcomes). The independent unchanged-artifact repeat covers seven rows/15 rounds/3 warmups (504 outcomes). All timing phases exit 0. `analyze-pairs.py` replays every paired status/stream/clock, plan, randomized order and median, then uses the existing 2,000 paired round-index bootstrap seeded `case/profile/backend`. Pointwise intervals exclude multiple-comparison, selection and systematic host uncertainty.
+
+| LLVM repeat | Before ns/op | After ns/op | Ratio | Paired 95% |
+|---|---:|---:|---:|---|
+| Equality small | 3.88772 | 3.51335 | 0.90371 | [0.89861, 0.90884] |
+| Search large | 82.46988 | 83.05620 | 1.00711 | [1.00246, 1.00987] |
+| Sort small | 210.15878 | 193.39806 | 0.92025 | [0.91834, 0.92217] |
+| Direct call small | 74.22801 | 81.82233 | 1.10231 | [1.09522, 1.10706] |
+| Direct call large | 4168.56440 | 4632.12191 | 1.11120 | [1.10406, 1.11658] |
+| Unique mutation small | 3.93642 | 3.26619 | 0.82974 | [0.82897, 0.83286] |
+| Unique mutation large | 3.96147 | 3.27384 | 0.82642 | [0.78352, 0.83423] |
+
+`direct-code.py` binds the actual kind-6 dispatch-table target and complete caller diff. The affine helper remains instruction-identical and inlined. The per-element success path changes from 27 instructions/8 branches to 29/9: a new jump to shared accumulation plus an extra context stack reload. Checked affine arithmetic remains; registers and stack assignments change despite the same 0x2e8 frame. No NOP executes in this selected element path. Thus this is not an instruction-identical placement comparison, and no unique alignment/placement cause is claimed. Machine backward targets are not reconstructed dominance proofs.
+
+Linked LLVM text growth is compute +80 B, collections +528 B, text +1,216 B, legacy +112 B. Detailed function/header/NOP data and raw disassembly are retained. Initial API mismatches and a Guardian test-helper `try`-in-return rejection were corrected without weakening rules. Final focused logs preserve a misleading trailing "failed command" line despite exit 0 and 46 passed tests. Initial failure logs lack a separate independently captured outer-status receipt; successful final and timing statuses are explicitly bound. No full repository test-suite run or official ReleaseFast compiler-host build is claimed.

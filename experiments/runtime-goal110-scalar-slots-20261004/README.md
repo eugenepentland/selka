@@ -1,0 +1,19 @@
+# Deferred LLVM scalar pointer experiment
+
+Source `a29aa6a9` starts from accepted join `957f97c6`, without rejected loop-copy candidates. It is unintegrated and deferred: optimized compute machine code is unchanged. No runtime timing was performed.
+
+The strict proof keeps the LLVM pointer for single-definition constant eight-byte `alloc8`/`alloc16` cells with an `l` result in a non-reentered first block. It admits only later direct word loads/stores; copies, escapes, reassignment, unsupported accesses and non-entry allocation retain the ordinary lowering. Allocation placement and language checks/accounting are unchanged. The historical byte-shape option is internal to exact retired-adapter replay.
+
+The initial gate failed `spec` (four duplicate defining annotations) and `type-size` (Facts/Options exceeded seven fields). Grouping related facts/options and using spec references resolved both without changing limits. Final-source checks passed 34 LLVM tests, 13 retired-corpus tests and 630 native default/legacy/oracle comparisons across 1,260 calls, all actual exits 0. Guardian passed 88/88. The earlier pre-grouping source/results remain separately bound and preserved. Native arithmetic fixtures use wrapped low-level QBE arithmetic; they do not claim full-language trap/accounting coverage. Listener failed-command diagnostics after successful tests are preserved.
+
+The official Debug compiler receipt binds a29 source and installed assets. LLVM O3/full-LTO and QBE ReleaseFast compute guests passed 216 untimed checksum cases. Actual strict admission after sticky rewriting was 93/173 allocations. Scratch s0/s1/s2 refused due copied/mixed-width/cross-block/renderer uses; bounded same-block word-only alias inspection found no additional candidates. Both entire .text sections and entry instruction streams were unchanged from the verified Debug 5a control. Further holdouts/timing were skipped after the static no-profit result. The separate hybrid experiment also produces unchanged code.
+
+## Objcopy incident and recovery
+
+My inspection mistakenly called `objcopy --dump-section .text=FILE INPUT` without an output ELF. GNU objcopy 2.46 rewrote both control compute files and both a29 files in place at 03:44:39 UTC. Whole hashes no longer match original receipts; no compute timing used those mutated controls. Exact affected paths/hashes/stat/inodes are in objcopy-incident.json; compressed affected files and a pristine disposable reproduction are preserved. All captured .text bytes remain identical. The disposable reproduction preserved every SHF_ALLOC section and every program header; PT_LOAD differences were only ELF-header offsets 40/62 (section-table offset/string-table index).
+
+The OLD `goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/bin/compute-my-{llvm,qbe}` paths and old a29 guest paths are retired for fresh identity checks. No old artifact or receipt was restored or retroactively rewritten.
+
+Recovery used the unchanged verified Debug 5a host/source and the official expanded build-only runner with hash-verified external RF730 references, into NEW `goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner` paths. All 24 live artifacts verified; all 16 external whole hashes match original references. Recovered compute artifacts preserve every allocated section and program header. Private link metadata makes MyLang whole hashes differ from the original 5a manifest; the new source-bound manifest supports future control use. Recovery verification and compressed old/new manifests bind this proof. No timing occurred during recovery.
+
+archive-index.json binds 96 deterministic gzip artifacts: original/current LLVM inputs, disassemblies, captured sections, incident ELFs and control/recovery manifests. a29-production-source/ preserves committed source; final-source receipts remain separate from pre-grouping evidence.

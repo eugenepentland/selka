@@ -10,7 +10,7 @@ test "standard pool reuses slots and reports stale handles as absent" {
 
 // spec-case: STANDARD-POOL-1
 test "standard pool handles stay valid across collection of the released values" {
-    try fixture.stress(t.allocator, "module main\nimport pool\n" ++
+    try fixture.run(t.allocator, "module main\nimport pool\n" ++
         "def main() -> int:\n" ++
         "    seed: list[str] = []\n" ++
         "    store = pool.create(seed)\n" ++

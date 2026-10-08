@@ -1,0 +1,10 @@
+{
+  "command_receipt": "commands/command-00098.json",
+  "raw_stdout_receipt": "commands/command-00098.stdout",
+  "status": "interrupted before completion receipt",
+  "qualified": false,
+  "bytes": 159,
+  "sha256": "386e9e140d0a939945c4101759436fb78d83cdad0d5e5e1649152de3ca9c835e",
+  "related_evidence": "final-core-conformance-v3",
+  "note": "Retained unfinished command staging from infrastructure interruption; no successful gate claimed."
+}

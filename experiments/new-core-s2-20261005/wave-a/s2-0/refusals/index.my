@@ -1,0 +1,4 @@
+def main() -> int:
+    s = "abc"
+    ch = s[0]
+    return len(ch)

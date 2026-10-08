@@ -1,0 +1,3 @@
+cold_cfg/debug: exact old/split/whole diagnostics; unique real definitions
+cold_cfg/release: exact old/split/whole diagnostics; unique real definitions
+cold_cfg/verify: exact old/split/whole diagnostics; unique real definitions

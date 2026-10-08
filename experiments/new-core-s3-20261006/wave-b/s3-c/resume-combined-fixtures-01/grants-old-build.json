@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/d2-oracle/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/test/core/c_grants.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/resume-combined-fixtures-01/grants-old",
+    "--qbe",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/d2-oracle/qbe",
+    "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/resume-combined-fixtures-01/old-cache"
+  ],
+  "status": 0,
+  "stdout": "",
+  "stderr": "@stdlib/random.my:96:84: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                     ^\n"
+}

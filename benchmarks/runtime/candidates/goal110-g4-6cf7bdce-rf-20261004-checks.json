@@ -1,0 +1,69 @@
+{
+  "schema": "mylang-runtime-goal110-checks-v1",
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T06:56:46.175254+00:00",
+  "execution_identity_sha256": "30aa59264a699dcabf430dbe8a681040bbd3c039789b76702adb6a08e5e2c2a3",
+  "coverage": [
+    "string_join",
+    "bytes_scan",
+    "string_search",
+    "string_equal",
+    "sort_int",
+    "mutate_nested"
+  ],
+  "checks": [
+    {
+      "name": "fresh G4 session A qualification",
+      "kind": "qualification",
+      "status": "pass",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-g4-rf-20261004/confirmation-a.json.gz",
+      "sha256": "59a3c2fca026eea61d816a942d8584e503d22ef9061c95149329e42a7c111fee"
+    },
+    {
+      "name": "fresh G4 session B qualification",
+      "kind": "qualification",
+      "status": "pass",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-g4-rf-20261004/confirmation-b.json.gz",
+      "sha256": "ebdba0642cd8f252745fc3a8a8c7886db4aaa9f348b00d5eddce8d6f5f046a50"
+    },
+    {
+      "name": "fresh RF nearby-input holdouts, 516 outcomes",
+      "kind": "holdout",
+      "status": "pass",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-g4-rf-20261004/holdouts.json.gz",
+      "sha256": "f55b13961f6db7cdec2793e70876272e045d6ce49362dc39e5fd35c89f1fbd37"
+    },
+    {
+      "name": "RF text oracles, recorded refusals and artifact identities",
+      "kind": "holdout",
+      "status": "pass",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-g4-rf-20261004/text-checks.json.gz",
+      "sha256": "2bdedf1bef1249578c0f34034454c1c0dcfd411f327000205ffe84e01948781d"
+    },
+    {
+      "name": "final-source focused append, mutation, readiness and producer-join checks",
+      "kind": "holdout",
+      "status": "pass",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-g4-rf-20261004/integrated-semantics.json.gz",
+      "sha256": "c66579ff97cd44ad8a0b0ba0f4e4d98c7029530e26d638b1abc2a3e53b73d75f"
+    },
+    {
+      "name": "source-matched reused optimized C sanitizer suites, 114 source bindings",
+      "kind": "holdout",
+      "status": "pass",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-g4-rf-20261004/native-reuse.json.gz",
+      "sha256": "0ddeeff6ef7d3770a2a78c9d1770f6e7602286a15f196ef8528a66cf7da79404"
+    }
+  ],
+  "review_receipt": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/benchmarks/runtime/candidates/goal110-g4-6cf7bdce-rf-20261004-correctness-review.json",
+    "sha256": "e620a47ddb390f8d2772cfb254c2eda99ba3bdeda0f06d9a9024139f2f2a0e21"
+  },
+  "limitations": [
+    "Saved evidence replay and current file identities; no new guest executions.",
+    "Text helper asserted exit/output protocol, but saved rows retain checksums or refusal codes rather than full process streams.",
+    "Focused tests use Debug test tools on the final source; RF installed runtime artifacts were separately revalidated.",
+    "Five optimized C sanitizer suites are source-matched reused checks from448, not new executions on RF guest artifacts.",
+    "No fresh full repository correctness gate or full-suite timing claimed."
+  ]
+}

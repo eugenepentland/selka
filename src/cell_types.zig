@@ -10,15 +10,11 @@ pub fn constructor(src: @import("source.zig").Source, catalog: @import("type_cat
     const index = catalog.templates.store.?.index;
     const id = index.names.get("Cell") orelse return null;
     if (index.declarations.items[id].builtin_name == null) return null;
-    if (@import("value_semantics.zig").enabled()) return sink.fail(
+    return sink.fail(
         "E_VALUE_CELL",
         call.name,
         "builtin Cell is shared mutable state under value semantics; use a value record with `mut` and store-back, or a pool handle for identity",
     );
-    if (call.arguments.len != 1) return sink.fail("E_ARITY", call.name, "Cell requires exactly one value argument");
-    if (call.argument_names.len != 1 or call.argument_names[0] == null or !std.mem.eql(u8, src.text(call.argument_names[0].?), "value"))
-        return sink.fail("E_UNKNOWN_FIELD", call.name, "construct Cell with value=initial");
-    return id;
 }
 
 /// Validate Cell contents through records, variants and collection elements.

@@ -29,6 +29,12 @@ pub const Store = struct {
     pub fn runtime(self: Store, id: layouts.Id) ?typed.Type {
         return if (@backingInt(id) < self.identities.items.items.len) self.identities.items.items[@backingInt(id)].ty else null;
     }
+    /// The runtime type of `id` when it already has one and the graph gained no node
+    /// since the last catalog completion, so completing again would change nothing.
+    pub fn settled(self: Store, id: layouts.Id) ?typed.Type {
+        if (self.graph.nodes.items.len != self.identities.items.items.len) return null;
+        return self.runtime(id);
+    }
     /// Intern a runtime argument, including numeric arrays created by function specialization.
     pub fn typeArgument(self: *Store, records: []const typed.Record, ty: typed.Type, span: source.Span, depth: usize) Error!layouts.Id {
         if (self.semantic(ty)) |id| return id;

@@ -1,0 +1,16 @@
+test-core
++- run test w
+guardian/test: 4 test(s) selected
+guardian/test: test wall 2.79s; slowest over 50ms:
+guardian/test:   2.79s  byte_index_test.test.bytes and buffers normalize negative and extreme signed indices before their located bounds trap in every mode
+guardian/test: PASS — 4 passed
+guardian/test: RESULT {"passed":4,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/20b220a865e538a7953d2e76128770f3/test --cache-dir=./.zig-cache --seed=0x9dc71b67 --listen=-
+
+Build Summary: 5/5 steps succeeded; 4/4 tests passed
+test-core success
++- run test 4 pass (4 total) 2s MaxRSS:232M
+   +- compile test debug native success 1s MaxRSS:312M
+      +- options success
+         +- compile exe mylang-core debug native success 1s MaxRSS:345M
+

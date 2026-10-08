@@ -83,6 +83,8 @@ fn statementWithFile(comptime Checker: type, self: *Checker, stmt: ast.Statement
 }
 fn statementWithScope(comptime Checker: type, self: *Checker, stmt: ast.Statement, scope: @FieldType(@FieldType(ast.Statement, "data"), "with_scope"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
     if (scope.resource != null) return statementWithFile(Checker, self, stmt, scope, flow);
+    // NEW-CORE-S5-ARENA-1: the new core runs an arena block as an ordinary block
+    // (S5-D3); `arena_fix.warn` reports it after the bodies are checked.
     var name: []const u8 = "";
     if (scope.name) |declared| {
         name = self.src.text(declared);
@@ -90,15 +92,9 @@ fn statementWithScope(comptime Checker: type, self: *Checker, stmt: ast.Statemen
         if (!std.mem.eql(u8, name, "_")) for (self.arenas.items) |active| if (std.mem.eql(u8, active.name, name)) return self.sink.fail(eShadowing, declared, "arena name shadows an enclosing arena scope");
     }
     const watermark: typed.LocalId = @fromBackingInt(self.locals.items.len);
-    try self.arenas.append(self.allocator, .{ .name = name, .declaration = scope.name orelse stmt.span, .watermark = watermark });
+    try self.arenas.append(self.allocator, .{ .name = name });
     defer _ = self.arenas.pop();
     const body = try statement(Checker, self, scope.body);
-    // A managed binding first assigned inside the arena lives in the released
-    // region. Function scoping keeps its name visible after the block, so confine
-    // it: reading it once the region is gone is E_ARENA_ESCAPE, not a dangling read.
-    for (self.locals.items[@backingInt(watermark)..]) |*local| {
-        if (try self.managedBearing(local.ty)) local.ownership.arena_confined = true;
-    }
     flow.terminates = body.terminates;
     return .{ .with_scope = .{ .slot = watermark, .resource = null, .body = body.id } };
 }
@@ -120,14 +116,7 @@ fn statementBlock(comptime Checker: type, self: *Checker, stmt: ast.Statement, c
         try checked.append(self.allocator, result.id);
     }
     flow.looping = looping;
-    if (!flow.terminates) {
-        try self.requireHandled(first_local, stmt.span);
-        var owned: std.ArrayList(typed.LocalId) = .empty;
-        for (self.locals.items[first_local..], first_local..) |local, index| {
-            if (typed.moveOnly(local.ty, self.catalog.records)) try owned.append(self.allocator, @fromBackingInt(index));
-        }
-        flow.owned_cleanup = try owned.toOwnedSlice(self.allocator);
-    }
+    if (!flow.terminates) try self.requireHandled(first_local, stmt.span);
     return .{ .block = try checked.toOwnedSlice(self.allocator) };
 }
 fn patternTag(comptime Checker: type, self: *Checker, value_type: typed.Type, type_span: source.Span, name: source.Span) Error!usize {
@@ -272,20 +261,6 @@ fn bindFieldedPayload(comptime Checker: type, self: *Checker, case_schema: typed
     }
     return .{ .slot = slot, .prologue = try prologue.toOwnedSlice(self.allocator), .names = try names.toOwnedSlice(self.allocator), .fielded = true };
 }
-fn armCleanup(comptime Checker: type, self: *Checker, bindings: ArmBindings, payload: ?typed.Type, first_local: usize) Error![]const typed.LocalId {
-    var cleanup: std.ArrayList(typed.LocalId) = .empty;
-    if (bindings.fielded) {
-        // A managed payload keeps its trace slot cleared; a move-only payload
-        // is owned by the per-field bindings instead, so it is never dropped
-        // twice.
-        if (bindings.slot) |hidden| if (!typed.moveOnly(payload.?, self.catalog.records) and try self.managedBearing(payload.?)) try cleanup.append(self.allocator, hidden);
-        for (self.locals.items[first_local..], first_local..) |local, index| {
-            if (bindings.slot != null and @as(usize, @backingInt(bindings.slot.?)) == index) continue;
-            if (try self.needsLocalCleanup(local.ty)) try cleanup.append(self.allocator, @fromBackingInt(index));
-        }
-    } else if (bindings.slot) |payload_slot| if (try self.needsLocalCleanup(payload.?)) try cleanup.append(self.allocator, payload_slot);
-    return cleanup.toOwnedSlice(self.allocator);
-}
 fn statementMatch(comptime Checker: type, self: *Checker, stmt: ast.Statement, match: @FieldType(@FieldType(ast.Statement, "data"), "match"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
     for (match.arms) |arm| try self.invalidateOptions(arm.body);
     const match_facts = try self.option_facts.snapshot(self.allocator);
@@ -329,15 +304,13 @@ fn statementMatch(comptime Checker: type, self: *Checker, stmt: ast.Statement, m
         };
         var body = try statement(Checker, self, arm.body);
         // The field-projection prologue must run on every path into the arm,
-        // including one whose body returns immediately; cleanup is only needed
-        // when the body can fall through.
-        const cleanup: []const typed.LocalId = if (body.terminates) &.{} else try armCleanup(Checker, self, arm_bindings, case_schema.payload, first_local);
-        if (arm_bindings.prologue.len != 0 or cleanup.len != 0) {
+        // including one whose body returns immediately.
+        if (arm_bindings.prologue.len != 0) {
             const children = try self.allocator.alloc(typed.StatementId, arm_bindings.prologue.len + 1);
             @memcpy(children[0..arm_bindings.prologue.len], arm_bindings.prologue);
             children[arm_bindings.prologue.len] = body.id;
             body.id = @fromBackingInt(self.statements.items.len);
-            try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = body.terminates, .owned_cleanup = cleanup, .data = .{ .block = children } });
+            try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = body.terminates, .data = .{ .block = children } });
         }
         if (!body.terminates) {
             try self.mergeMatchInit(&continuation_init);
@@ -419,7 +392,6 @@ fn unitFallthrough(comptime Checker: type, self: *Checker, body: CheckedStatemen
 fn statementRet(comptime Checker: type, self: *Checker, stmt: ast.Statement, expr: @FieldType(@FieldType(ast.Statement, "data"), "ret"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
     const value = try self.expressionExpected(expr, self.return_type);
     try self.require(self.nodes.items[@backingInt(value)].ty, self.return_type, stmt.span);
-    try self.requireArenaReturn(value, stmt.span);
     try self.requireHandled(0, stmt.span);
     flow.terminates = true;
     if (self.contract.ensures.len != 0) return self.contractReturn(value, stmt.span);
@@ -484,7 +456,6 @@ fn statementAssignment(comptime Checker: type, self: *Checker, stmt: ast.Stateme
             const b: collections.Builder(Checker) = .{ .checker = self, .span = a.op_span };
             const arguments = try self.allocator.alloc(typed.NodeId, 1);
             arguments[0] = value;
-            try self.requireArenaOperation(slot, .extend, arguments);
             self.locals.items[@backingInt(slot)].usage.reads += 1;
             self.locals.items[@backingInt(slot)].usage.writes += 1;
             return .{ .block = try self.allocator.dupe(typed.StatementId, &.{try b.stmt(.{ .discard = try b.operation(slot, .extend, arguments) })}) };
@@ -495,7 +466,6 @@ fn statementAssignment(comptime Checker: type, self: *Checker, stmt: ast.Stateme
         value = try self.augmented(a.op, read, value, a.op_span);
     }
     try self.require(self.nodes.items[@backingInt(value)].ty, self.locals.items[@backingInt(slot)].ty, stmt.span);
-    try self.requireArenaAssignment(slot, value);
     if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
         if (self.pendingObligation(self.locals.items[@backingInt(slot)])) return self.sink.fail("E_RESULT_OVERWRITE", a.name, "assignment would overwrite an unhandled result-bearing value");
         self.locals.items[@backingInt(slot)].ownership.transfer_available = true;
@@ -505,10 +475,8 @@ fn statementAssignment(comptime Checker: type, self: *Checker, stmt: ast.Stateme
     // A plain reassignment re-homes the value, so its copy provenance follows
     // the new initializer; an indexed read still yields an element copy.
     if (a.op == .set) self.locals.items[@backingInt(slot)].origin = if (self.syntax.nodes.items[@backingInt(a.value)].data == .index) .collection_copy else .local;
-    // A reassignment definitely binds the name on this path and re-homes it out
-    // of any arena it was previously confined to.
+    // A reassignment definitely binds the name on this path.
     self.locals.items[@backingInt(slot)].ownership.initialized = true;
-    self.locals.items[@backingInt(slot)].ownership.arena_confined = false;
     self.option_facts.forget(@backingInt(slot));
     return .{ .assign = .{ .slot = slot, .value = value } };
 }
@@ -532,8 +500,9 @@ fn statement(comptime Checker: type, self: *Checker, statement_id: ast.Statement
         .assignment => |a| try statementAssignment(Checker, self, stmt, a, &flow),
         .gather_step => |step| try self.statementGatherStep(stmt, step),
     };
+    try @import("mut_exclusive.zig").checkReceivers(Checker, self, stmt);
     const result: typed.StatementId = @fromBackingInt(self.statements.items.len);
-    try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = flow.terminates, .owned_cleanup = flow.owned_cleanup, .data = data });
+    try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = flow.terminates, .data = data });
     return .{ .id = result, .terminates = flow.terminates, .looping = flow.looping };
 }
 

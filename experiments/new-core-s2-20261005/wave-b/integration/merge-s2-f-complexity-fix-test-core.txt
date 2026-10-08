@@ -1,0 +1,23 @@
+tested_resolved_merge_tree=170728379f30c1082c9e46471971beace08667ef
+merge_package=e8424a599 (S2-F); coordinator sortKeyed extraction preserves behavior
+source_commit=b13460ae336b154078b09746b5ec043589b71e3a
+$ scripts/build-slot.sh gate -- bash -c '"$@"; result=$?; exit "$result"' -- scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-b/merge-s2-f-complexity-fix/test-core-seconds.txt zig build test-core --summary all
+test-core
++- run test w
+no_such_file_in_tests_lang (debug): mylang-core test did not finish cleanly:
+error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/tests/lang/no_such_file_in_tests_lang.my: FileNotFound
+
+no_such_row: the new core failed to build the row:
+error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/test/core/row_no_such_row.my: FileNotFound
+
+failed command: ./.zig-cache/o/aa55d31e94194df49259a4a4aeed0c02/test --cache-dir=./.zig-cache --seed=0x21f730d --listen=-
+
+Build Summary: 5/5 steps succeeded; 193/193 tests passed
+test-core success
++- run test 193 pass (193 total) 3m MaxRSS:201M
+   +- compile test debug native success 1s MaxRSS:331M
+      +- options success
+         +- compile exe mylang-core debug native cached 9ms MaxRSS:41M
+
+
+exit=0 command_seconds=215.87 wall_including_admission=224.58

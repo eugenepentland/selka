@@ -1,0 +1,59 @@
+  %v54 = call i64 @myl_core_bytes_find_any(ptr %v14, ptr %v49, i64 %v53), !dbg !1000032
+  %h.133 = getelementptr inbounds i8, ptr %v14, i64 8
+  %v55 = load i64, ptr %h.133, align 8, !tbaa !5
+  %rh.134 = icmp ugt i64 %v55, 140737488355328
+  br i1 %rh.134, label %trap.135, label %b5.100.105.108.113.118.122.127.132.136, !prof !0
+trap.135:
+  call void @myl_core_trap(i32 17, i64 %v55, i64 0), !dbg !1000033
+  unreachable
+b5.100.105.108.113.118.122.127.132.136:
+  %bh.137 = getelementptr inbounds i8, ptr %v14, i64 8
+  %bl.138 = load i64, ptr %bh.137, align 8
+  %bf.139 = icmp ugt i64 %v55, %bl.138
+  br i1 %bf.139, label %trap.140, label %b5.100.105.108.113.118.122.127.132.136.141, !prof !0
+trap.140:
+  call void @myl_core_trap(i32 18, i64 %v55, i64 %bl.138), !dbg !1000034
+  unreachable
+b5.100.105.108.113.118.122.127.132.136.141:
+  %rc.142 = load i32, ptr %v14, align 8, !tbaa !3, !range !8
+  %rs.143 = icmp eq i32 %rc.142, -1
+  br i1 %rs.143, label %b5.100.105.108.113.118.122.127.132.136.141.145, label %rc.dec.144
+rc.dec.144:
+  %rn.146 = sub nuw i32 %rc.142, 1
+  %rz.147 = icmp eq i32 %rn.146, 0
+  br i1 %rz.147, label %rc.free.149, label %rc.keep.148
+rc.keep.148:
+  store i32 %rn.146, ptr %v14, align 8, !tbaa !3
+  br label %b5.100.105.108.113.118.122.127.132.136.141.145
+rc.free.149:
+  call void @myl_core_free(ptr %v14)
+  br label %b5.100.105.108.113.118.122.127.132.136.141.145
+b5.100.105.108.113.118.122.127.132.136.141.145:
+  %hi.150 = icmp ugt i64 %v55, 9223372036854775807
+  br i1 %hi.150, label %trap.151, label %b5.100.105.108.113.118.122.127.132.136.141.145.152, !prof !0
+trap.151:
+  call void @myl_core_trap(i32 19, i64 %v55, i64 0), !dbg !1000035
+  unreachable
+b5.100.105.108.113.118.122.127.132.136.141.145.152:
+  %v56 = add i64 %v55, 0
+  %rl.153 = icmp slt i64 %v56, 0
+  %rh.154 = icmp sgt i64 %v56, 140737488355328
+  %rx.155 = or i1 %rl.153, %rh.154
+  br i1 %rx.155, label %trap.156, label %b5.100.105.108.113.118.122.127.132.136.141.145.152.157, !prof !0
+trap.156:
+  call void @myl_core_trap(i32 20, i64 %v56, i64 0), !dbg !1000036
+  unreachable
+b5.100.105.108.113.118.122.127.132.136.141.145.152.157:
+  %bh.158 = getelementptr inbounds i8, ptr %v14, i64 8
+  %bl.159 = load i64, ptr %bh.158, align 8
+  %bf.160 = icmp sgt i64 %v56, %bl.159
+  br i1 %bf.160, label %trap.161, label %b5.100.105.108.113.118.122.127.132.136.141.145.152.157.162, !prof !0
+trap.161:
+  call void @myl_core_trap(i32 21, i64 %v56, i64 %bl.159), !dbg !1000037
+  unreachable
+b5.100.105.108.113.118.122.127.132.136.141.145.152.157.162:
+  %p.163 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v56, i64 5)
+  %v58 = extractvalue { i64, i1 } %p.163, 0
+  %o.164 = extractvalue { i64, i1 } %p.163, 1
+  br i1 %o.164, label %trap.165, label %b5.100.105.108.113.118.122.127.132.136.141.145.152.157.162.166, !prof !0
+trap.165:

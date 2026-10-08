@@ -1,0 +1,4 @@
+argv: scripts/build-slot.sh build zig fmt src/core/emit_llvm.zig src/core/emit_llvm_test.zig src/core/own_test.zig
+status:0
+stdout:empty
+stderr:empty

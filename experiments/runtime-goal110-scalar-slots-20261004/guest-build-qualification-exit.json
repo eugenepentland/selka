@@ -1,0 +1,7 @@
+{
+  "command": [
+    "python3",
+    "experiments/runtime-goal110-scalar-slots-20261004/build-and-check.py"
+  ],
+  "exit_status": 0
+}

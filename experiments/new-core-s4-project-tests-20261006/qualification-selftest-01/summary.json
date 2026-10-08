@@ -1,0 +1,29 @@
+{
+  "sources": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification_selftest.py",
+      "sha256": "2a17afeaa100288040ceba9e522cbcfebf82c4e8cd9d651903064582500f4645"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/conformance_checked.py",
+      "sha256": "21422a74fbf45d51827d448189708185e5ed26d4c96818819c1dccd033f145e7"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/project_matrix.py",
+      "sha256": "f6d3a1cd0fff800e7d0ecf742f48e2d0704e256d3d8402ec666ac1482858a32a"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification_support.py",
+      "sha256": "bb15eff4c2bb4467e8c20070a5b30eb1e0e803b15802de64f3559e862eb3e998"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/fuzz_matrix.py",
+      "sha256": "a62d0b90bc9f3caa439b4514ec509ba4967d7bae9ef42e7d6f00d74c8ef3e1c8"
+    }
+  ],
+  "source_unchanged": true,
+  "tests": 7,
+  "failures": 1,
+  "errors": 0,
+  "qualified": false
+}

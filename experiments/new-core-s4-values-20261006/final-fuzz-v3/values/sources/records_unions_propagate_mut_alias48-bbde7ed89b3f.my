@@ -1,0 +1,64 @@
+def changed(w: int, n: int) -> int:
+    grid = [[j for j in range(w)] for i in range(n)]
+    saved = grid
+    child = grid[0]
+    _ = child.pop()
+    _ = grid[n - 1].pop()
+    grid[0].append(-87)
+    total = 0
+    for j in range(w):
+        total += saved[n - 1][j]
+    return total + sum(grid[0]) + sum(grid[n - 1]) + sum(child)
+
+
+def walk(xs: mut list[int], n: int) -> int:
+    if n == 0:
+        xs[0] = -87
+        return xs[0]
+    while n > 0:
+        xs[0] += n
+        n -= 1
+    return xs[0]
+
+
+def after_fill(w: int) -> int:
+    xs = [j for j in range(w)]
+    xs.append(-87)
+    return sum(xs) + len(xs)
+
+
+def growing(w: int) -> int:
+    xs: list[int] = []
+    children: list[list[int]] = []
+    saved: list[int] = []
+    for j in range(w):
+        saved = xs
+        children.append(xs)
+        xs.append(j)
+    held = [saved]
+    return len(children[0]) + len(children[w - 1]) + len(held[0])
+
+
+def main(args: list[str], out: Stream) -> int:
+    width = 2 + (len(args[0]) % 3 if len(args) > 0 else 0)
+    row = [0] * width
+    repeated = [row] * 2
+    saved = repeated
+    saved_row = row
+    repeated[1][width - 1] = -87
+    unique = [[j for j in range(width)] for i in range(2)]
+    unique[1][width - 1] += -87
+    cube = [[row], [row]]
+    cube_saved = cube
+    cube[1][0][0] = -86
+    values = [0] * width
+    values_saved = values
+    result = walk(mut values, len(args))
+    bytes_out = byte_buffer([])
+    bytes_saved = bytes_out
+    _ = bytes_out.append_int(-161599828908381547)
+    _ = bytes_out.append_float(1.5)
+    text = str(-161599828908381547) + str(1.5)
+    spelling = bytes(bytes_out) == text.encode()
+    out.print(sum(repeated[1]), sum(saved[1]), sum(saved_row), sum(unique[1]), cube[1][0][0], cube_saved[1][0][0], result, values_saved[0], spelling, len(bytes(bytes_saved)), changed(width, 2), after_fill(width), growing(width))
+    return 0

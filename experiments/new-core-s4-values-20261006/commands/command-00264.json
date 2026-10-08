@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "import pathlib,json; e=pathlib.Path(\"experiments/new-core-s4-values-20261006\"); d=json.loads((e/\"final-core-conformance-v7/summary.json\").read_text()); print(d[\"results\"][1]); print(pathlib.Path(d[\"results\"][1][\"log\"]).read_text()[-1600:])"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3253988,
+  "status": 0,
+  "elapsed_seconds": 0.025862873066216707
+}

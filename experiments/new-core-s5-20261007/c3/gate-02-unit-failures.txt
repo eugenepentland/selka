@@ -1,0 +1,31 @@
+fix_cli_test.test.CLI test renders a test entry that does not compile as diagnostic-v1 JSON
+fix_cli_test.test.CLI warm imported direct and callback ABIs follow producer rebinding changes
+invoke_test.test.a list round-trips through invoke at every shape the codec carries
+invoke_test.test.a nested record argument executes through the copied-value adapter
+invoke_test.test.an export that calls another function is lowered with its call closure
+invoke_test.test.an undersized codec result buffer reports OutputTooSmall, not WireLimit
+invoke_test.test.a record holding a text or a list composes with Option and Result
+invoke_test.test.a text argument and result round-trip through invoke with an embedded NUL preserved
+invoke_test.test.invariant boundary validates nested records through ordinary and codec wire entries
+native_variant_policy.test.NATIVE-SCALAR-BACKEND-1 alternating emission partitions lean replay and selective units
+native_variant_policy.test.RC-NATIVE-VARIANT-BACKEND-1 selective emission carries policy and rejects malformed internal flags
+native_variant_policy.test.RC-NATIVE-VARIANT-BACKEND-1 selective emission retains original counting and check defaults
+qbe_build_test.test.a batched build and an unbatched build of one program behave identically
+qbe_build_test.test.a default build shares its runtime tree under XDG while an explicit cache-dir stays hermetic
+qbe_build_test.test.a prebuilt runtime installed beside the compiler links directly, and damage falls back to source
+qbe_build_test.test.native RC argv owner balances borrowed entry returns capability refusal and traps
+qbe_build_test.test.native RC closed field owner balances storeback snapshot traps and arena refusal
+qbe_build_test.test.native RC record field transfers balance owned and caller traps, arenas and budgets
+qbe_build_test.test.native RC sites build attributes every counted event to a source site
+qbe_build_test.test.optional registration images link and run through direct and frame-map full and ThinLTO
+qbe_build_test.test.RC field inout unaccounted native owner and hold balances survive traps arenas and budgets
+qbe_environment_names_test.test.QBE Environment names come from grants rather than the linked provider context
+rc_teardown_test.test.RC-EXIT-SCOPES-1 early returns from open receiver scopes, loops and arenas balance
+rc_teardown_test.test.RC-EXIT-SKIP-1 a file the entry returns from inside is complete at exit and matches every runtime
+rc_teardown_test.test.RC-EXIT-SKIP-1 an entry that closed its file before returning keeps the file and balances when counted
+rc_teardown_test.test.RC-EXIT-SKIP-1 the function behind the synthesized entry wrapper keeps its file and matches every runtime
+rc_teardown_test.test.RC-STATIC-DROPS-1 conditionally initialized locals drop exactly once on every exit
+rc_teardown_test.test.RC-TRAP-TEARDOWN-1 a trap closes inline resources held in stack slots once, like the collector
+rc_teardown_test.test.RC-TRAP-TEARDOWN-1 a trap deep in recursion holding open files matches the collector
+rc_teardown_test.test.RC-TRAP-TEARDOWN-1 a trap inside an arena discards its regions and balances
+rc_teardown_test.test.RC-TRAP-TEARDOWN-1 a trap with open receiver scopes and pins abandons them and balances

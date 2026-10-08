@@ -1,0 +1,4 @@
+module leaf
+public def origin(x: int) -> int:
+    assert x == 0, "leaf check"
+    return x

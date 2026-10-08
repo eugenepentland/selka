@@ -1,0 +1,17 @@
+test-core
++- run test w
+guardian/test: 4 test(s) selected
+guardian/test: SLOW  37.68s  emit_units_test.test.S4 unsafe leaf arithmetic retains its source callee and caller
+guardian/test: test wall 37.69s; slowest over 50ms:
+guardian/test:   37.68s  emit_units_test.test.S4 unsafe leaf arithmetic retains its source callee and caller
+guardian/test: PASS — 4 passed
+guardian/test: RESULT {"passed":4,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/de45d86a2a94e05eff6399266c6f4f25/test --cache-dir=./.zig-cache --seed=0xdcf8ca55 --listen=-
+
+Build Summary: 5/5 steps succeeded; 4/4 tests passed
+test-core success
++- run test 4 pass (4 total) 37s MaxRSS:250M
+   +- compile test debug native success 2s MaxRSS:360M
+      +- options success
+         +- compile exe mylang-core debug native success 2s MaxRSS:347M
+

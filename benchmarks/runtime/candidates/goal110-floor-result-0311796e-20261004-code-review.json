@@ -1,0 +1,35 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T09:48:08.795025+00:00",
+  "code_proof_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-floor-result-range-20261004/.mylang-cache/goal110-floor-result-range-diagnostic/code-proof/code-proof.json",
+  "code_proof_sha256": "8a6c846150927431215d8124358700f461df76809997624baeda454020931111",
+  "artifact_bindings": 85,
+  "unique_files": 53,
+  "live_read_only_disassembly_replays": 4,
+  "checksum_arithmetic_instructions": {
+    "before": 17,
+    "after": 11
+  },
+  "checksum_address_ranges_inclusive": {
+    "before": [
+      "0x104f1a0",
+      "0x104f1d8"
+    ],
+    "after": [
+      "0x104f190",
+      "0x104f1b3"
+    ]
+  },
+  "kernel_entry_address_unchanged": "0x104e7d0",
+  "kernel_bytes": {
+    "before": 14135,
+    "after": 14103
+  },
+  "after_text_markers": 19,
+  "after_text_assumptions": 19,
+  "recursive_signed_correction_retained": true,
+  "limitations": [
+    "Read-only static and current artifact review; no timing or performance claim.",
+    "Final runner text ELF must match the diagnostic artifact; agent reports exact match, root will verify with manifest."
+  ]
+}

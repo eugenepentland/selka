@@ -1,0 +1,44 @@
+{
+  "qualified": true,
+  "source": "2880b5001d843ce7b277ab3c13f1190efccb5d69",
+  "foundation": "0a5dd8794faaf330ab411900d1eaf4e2a00ba0e8",
+  "prototype": "b0756eea14c747ec58cbaf88f6307c6d978ae5e9",
+  "compiler_sha256": "7377793a8e0dec21b0e42b0d1bec6b1552f640b527407328ce6966d3e748f205",
+  "old_sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+  "qbe_sha256": "b6139650a99b39131cd791fa1fdc84c09472dc303930bbadd3f8a5348487af4c",
+  "core64": {
+    "verdicts": 64,
+    "unique_passed": 273,
+    "failed": 0,
+    "suite_seconds": 142.65,
+    "maximum_shard_seconds": 82.81,
+    "peak_kib": 245092,
+    "reported_max_shard_mib": 250
+  },
+  "core32": {
+    "passed": 273,
+    "suite_seconds": 164.45,
+    "maximum_shard_seconds": 104.32,
+    "timing_qualified": false
+  },
+  "rebuild_seconds": 2.39,
+  "strict_conformance": {
+    "debug_matching": 1518,
+    "release_matching": 1518,
+    "mismatches": 0,
+    "unsupported": 0
+  },
+  "fuzz": {
+    "accepted": 50,
+    "compared": 750,
+    "seed": 737,
+    "qualified": true,
+    "elapsed_seconds": 300.902674106881
+  },
+  "profile": {
+    "samples": 9504,
+    "lost": 0,
+    "main_percent": 94.42,
+    "origin_trace_percent": 5.53
+  }
+}

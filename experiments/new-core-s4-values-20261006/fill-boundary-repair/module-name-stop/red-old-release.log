@@ -1,0 +1,4 @@
+$ /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-final-checker/mylang test /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/fill-boundary-repair/repro.my --json --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/fill-boundary-red/old-release --release
+stdout=''
+stderr="repro.my:1:8: error[E_MODULE_NAME]: declared `module fill_boundary_repro`, but this file is `repro.my`, so its module name is `repro`: a module's name is its path from the project root without `.my`; write `module repro`\n  module fill_boundary_repro\n         ^\n"
+exit=1

@@ -7,7 +7,6 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
-const io_render = @import("io_render.zig");
 
 fn execute(source: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(t.allocator, "format.my", source);
@@ -107,35 +106,7 @@ test "a native build spells an interpolated aggregate exactly as print writes it
 }
 
 // spec-case: PY-FSTRING-1
-test "an aggregate hole renders through the renderers print itself calls" {
-    var c = try language.Compilation.init(t.allocator, "format.my", rendered_holes);
-    defer c.deinit();
-    const manifest = try c.emitQbe(t.allocator);
-    defer t.allocator.free(manifest);
-    try t.expect(std.mem.indexOf(u8, manifest, "myl_qbe_text_render") != null);
-    try t.expect(std.mem.indexOf(u8, manifest, "myl_print_list") != null);
-    try t.expect(std.mem.indexOf(u8, manifest, "myl_print_dictionary") != null);
-    try t.expect(std.mem.indexOf(u8, manifest, "myl_print_variant") != null);
-}
-
-// spec-case: PY-FSTRING-1
-test "an f-string joins rendered pieces once without prefix concatenations" {
-    var c = try language.Compilation.init(t.allocator, "format.my",
-        \\def main() -> int:
-        \\    x = 20
-        \\    y = 22
-        \\    text = f"x={x}; y={y}!"
-        \\    return len(text)
-    );
-    defer c.deinit();
-    const manifest = try c.emitQbe(t.allocator);
-    defer t.allocator.free(manifest);
-    try t.expectEqual(@as(usize, 1), std.mem.count(u8, manifest, "myl_native_text_join"));
-    try t.expectEqual(@as(usize, 0), std.mem.count(u8, manifest, "myl_native_text_concat"));
-}
-
-// spec-case: PY-FSTRING-1
-test "a single f-string piece needs no joining or intermediate list" {
+test "a single f-string piece checks under noalloc" {
     var c = try language.Compilation.init(t.allocator, "format.my",
         \\def identity(value: str) -> str noalloc:
         \\    return f"{value}"
@@ -145,10 +116,8 @@ test "a single f-string piece needs no joining or intermediate list" {
         \\    return len(generic(identity("hello"), 1)) + len(f"")
     );
     defer c.deinit();
-    const manifest = try c.emitQbe(t.allocator);
-    defer t.allocator.free(manifest);
-    try t.expectEqual(@as(usize, 0), std.mem.count(u8, manifest, "myl_native_text_join"));
-    try t.expectEqual(@as(usize, 0), std.mem.count(u8, manifest, "myl_native_list_new"));
+    try c.check();
+    try t.expect(c.program != null);
 }
 
 // spec-case: PY-FSTRING-1
@@ -190,12 +159,6 @@ test "a failing later f-string hole writes none of the unfinished result" {
     const outcome = try native.run(&c);
     try t.expect(outcome.trap.code.len != 0);
     try t.expectEqualStrings("", outcome.stdout);
-}
-
-// spec-case: PY-FSTRING-2
-test "renderAlloc releases its partial buffer when the allocator fails" {
-    var failing = t.FailingAllocator.init(t.allocator, .{ .fail_index = 0 });
-    try t.expectError(error.OutOfMemory, io_render.renderAlloc(failing.allocator(), &.{}, .{ .i64 = 42 }));
 }
 
 /// Format one already-canonical source twice and require the bytes back

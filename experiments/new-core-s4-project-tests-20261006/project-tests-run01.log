@@ -1,0 +1,43 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (61s so far)
+build-slot: build slot 2 after 81s (all 3 build slot(s) busy)
+test-core
++- run test 7 pass, 1 fail (8 total)
+guardian/test: test wall 53.50s; slowest over 50ms:
+guardian/test:   19.09s  test_runner_project_test.test.embedded bytes and stricter project budgets invalidate unchanged test manifests
+guardian/test:   17.40s  test_runner_project_test.test.provider edits and explicit expectations invalidate successful test receipts
+guardian/test:   16.06s  test_runner_project_test.test.directory receipts account for orphan libraries and rerun only the edited reachable program
+guardian/test:   0.93s  test_runner_project_test.test.native test step and wall bounds are honored while force bypasses reuse
+guardian/test: FAIL — 1 failed of 8
+guardian/test: RESULT {"passed":7,"failed":1,"skipped":0}
+error: 'test_runner_project_test.test.native test step and wall bounds are honored while force bypasses reuse' failed:
+       guardian/test: 8 test(s) selected
+       guardian/test: SLOW  16.06s  test_runner_project_test.test.directory receipts account for orphan libraries and rerun only the edited reachable program
+       guardian/test: SLOW  17.40s  test_runner_project_test.test.provider edits and explicit expectations invalidate successful test receipts
+       guardian/test: SLOW  19.09s  test_runner_project_test.test.embedded bytes and stricter project budgets invalidate unchanged test manifests
+       unexpected project test result: 
+       expected 0, found 1
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x128d2d4 in expectEqualInner__anon_43338 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x128d422 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/core/test_runner_project_test.zig:60:5: 0x128d47b in expectStatus (root_test.zig)
+           try std.testing.expectEqual(status, found.status);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/core/test_runner_project_test.zig:155:5: 0x128e028 in test.native test step and wall bounds are honored while force bypasses reuse (root_test.zig)
+           try expectStatus(try context.run("loop.my", &.{ "--max-steps", "100000" }), 0);
+           ^
+failed command: ./.zig-cache/o/2a380b662d4a680f39481f70de6b5102/test --cache-dir=./.zig-cache --seed=0x458d818c --listen=-
+
+Build Summary: 5/7 steps succeeded (1 failed); 7/8 tests passed (1 failed)
+test-core transitive failure
++- run test 7 pass, 1 fail (8 total)
+   +- compile test debug native success 1s MaxRSS:186M
+      +- run exe qbe-build-assets (qbe_build_assets) success 317ms
+      |  +- compile exe qbe-build-assets debug native cached 31ms MaxRSS:38M
+      +- options success
+         +- compile exe mylang-core debug native success 12s MaxRSS:352M
+            +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

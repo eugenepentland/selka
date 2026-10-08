@@ -1,0 +1,240 @@
+{
+  "source_commit": "52a9e1ef8ca00775a5d4ac1e24b6f920eacf9766",
+  "root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers",
+  "core_shards": 16,
+  "results": [
+    {
+      "label": "core-build",
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-a/exclusive_core.py",
+        "--",
+        "/usr/bin/time",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-a/integration/s3-t2-qualified-16/core-build-seconds.txt",
+        "zig",
+        "build",
+        "core",
+        "--summary",
+        "all"
+      ],
+      "exit": 0,
+      "command_seconds": 0.01,
+      "wall_seconds": 245.4746146579273,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-a/integration/s3-t2-qualified-16/core-build.txt",
+      "build_validation": {
+        "build_summaries": [
+          "3/3 steps succeeded"
+        ],
+        "maxrss": [
+          {
+            "line": "   +- compile exe mylang-core debug native cached 7ms MaxRSS:38M",
+            "display": "38M",
+            "bytes": 39845888.0,
+            "test_run": false
+          }
+        ],
+        "rss_overrun_notices": [],
+        "reported_admission_seconds": {
+          "gate": 130,
+          "build": 0
+        },
+        "errors": []
+      }
+    },
+    {
+      "label": "test-core",
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "/usr/bin/time",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-a/integration/s3-t2-qualified-16/test-core-seconds.txt",
+        "zig",
+        "build",
+        "test-core",
+        "-Dcore-shards=16",
+        "--summary",
+        "all"
+      ],
+      "exit": 0,
+      "command_seconds": 67.45,
+      "wall_seconds": 72.49439351586625,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-a/integration/s3-t2-qualified-16/test-core.txt",
+      "build_validation": {
+        "build_summaries": [
+          "20/20 steps succeeded; 226/3616 tests passed (3390 skipped)"
+        ],
+        "maxrss": [
+          {
+            "line": "+- run test 15 pass, 211 skip (226 total) 42s MaxRSS:204M",
+            "display": "204M",
+            "bytes": 213909504.0,
+            "test_run": true
+          },
+          {
+            "line": "|  +- compile test debug native success 1s MaxRSS:336M",
+            "display": "336M",
+            "bytes": 352321536.0,
+            "test_run": false
+          },
+          {
+            "line": "|        +- compile exe mylang-core debug native cached 7ms MaxRSS:38M",
+            "display": "38M",
+            "bytes": 39845888.0,
+            "test_run": false
+          },
+          {
+            "line": "+- run test 15 pass, 211 skip (226 total) 45s MaxRSS:203M",
+            "display": "203M",
+            "bytes": 212860928.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 14 pass, 212 skip (226 total) 39s MaxRSS:204M",
+            "display": "204M",
+            "bytes": 213909504.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 14 pass, 212 skip (226 total) 43s MaxRSS:204M",
+            "display": "204M",
+            "bytes": 213909504.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 14 pass, 212 skip (226 total) 52s MaxRSS:202M",
+            "display": "202M",
+            "bytes": 211812352.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 14 pass, 212 skip (226 total) 42s MaxRSS:202M",
+            "display": "202M",
+            "bytes": 211812352.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 14 pass, 212 skip (226 total) 39s MaxRSS:205M",
+            "display": "205M",
+            "bytes": 214958080.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 14 pass, 212 skip (226 total) 19s MaxRSS:202M",
+            "display": "202M",
+            "bytes": 211812352.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 14 pass, 212 skip (226 total) 47s MaxRSS:203M",
+            "display": "203M",
+            "bytes": 212860928.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 14 pass, 212 skip (226 total) 1m MaxRSS:202M",
+            "display": "202M",
+            "bytes": 211812352.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 14 pass, 212 skip (226 total) 36s MaxRSS:204M",
+            "display": "204M",
+            "bytes": 213909504.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 14 pass, 212 skip (226 total) 40s MaxRSS:201M",
+            "display": "201M",
+            "bytes": 210763776.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 14 pass, 212 skip (226 total) 47s MaxRSS:204M",
+            "display": "204M",
+            "bytes": 213909504.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 14 pass, 212 skip (226 total) 55s MaxRSS:201M",
+            "display": "201M",
+            "bytes": 210763776.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 14 pass, 212 skip (226 total) 47s MaxRSS:204M",
+            "display": "204M",
+            "bytes": 213909504.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 14 pass, 212 skip (226 total) 37s MaxRSS:207M",
+            "display": "207M",
+            "bytes": 217055232.0,
+            "test_run": true
+          }
+        ],
+        "rss_overrun_notices": [],
+        "reported_admission_seconds": {
+          "gate": 0,
+          "build": 0
+        },
+        "errors": []
+      }
+    },
+    {
+      "label": "conformance",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "/usr/bin/time",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-a/integration/s3-t2-qualified-16/conformance-seconds.txt",
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s2-20261005/wave-b/integration/conformance_checked.py",
+        "--set",
+        "all",
+        "--jobs",
+        "4",
+        "--why",
+        "--mylang",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/d2-oracle/mylang",
+        "--core",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/zig-out/bin/mylang-core",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.zig-cache/s3-wave-a/s3-t2-qualified-16/conformance"
+      ],
+      "exit": 0,
+      "command_seconds": 155.94,
+      "wall_seconds": 155.98467614804395,
+      "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-a/integration/s3-t2-qualified-16/conformance.txt"
+    }
+  ],
+  "qualified": true
+}

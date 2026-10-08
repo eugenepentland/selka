@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "source_revision": "073e450bf4ceaf1295d930434d19c2ea0f21ef21",
+  "reviewed_utc": "2026-10-04T07:00:01.898678+00:00",
+  "exact_native_pairs": 32,
+  "successful_pairs": 27,
+  "failure_pairs": 5,
+  "log": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-review/unit-final-pinned.log",
+  "log_sha256": "438f92d88245f23d038c708ebeaf26dce6c4ac806a95906687556c3e48ef0cb2",
+  "script_sha256": "d9fdbb0e2bb33ba945843aa72f82a00b8819e74e1a89d17ed315a29ef7013860",
+  "limit": "Saved complete outcome replay; no new guest execution. Memory refusal oracle checks code while exact provenance/streams match the accounted control."
+}

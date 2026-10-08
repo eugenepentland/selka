@@ -1,0 +1,229 @@
+
+@fi55
+ %v3087 =l loadl %l17
+ storel %v3087, %s0
+ %v3088 =l loadl %l18
+ storel %v3088, %s1
+ %v3089 =l loadl %s1
+ %v3090 =l loadl %s0
+ %v3091 =l csltl %v3090, %v3089
+ storel %v3091, %s0
+ %v3092 =l loadl %s0
+ jnz %v3092, @next3093, @i75
+@next3093
+ %v3093 =l loadl %l3
+ storel %v3093, %s0
+ %v3094 =l loadl %l2
+ storel %v3094, %s1
+ %v3095 =l loadl %s1
+ %v3096 =l loadl %s0
+ %v3097 =l add %v3096, %v3095
+ storel %v3097, %s0
+ %v3098 =l loadl %l17
+ storel %v3098, %s1
+ storel 13, %s2
+ %v3099 =l loadl %s2
+ %v3100 =l loadl %s1
+ %v3101 =l mul %v3100, %v3099
+ storel %v3101, %s1
+ %v3102 =l loadl %s1
+ %v3103 =l loadl %s0
+ %v3104 =l add %v3103, %v3102
+ storel %v3104, %s0
+ storel 1009, %s1
+ %v3105 =l loadl %s1
+ %v3106 =l loadl %s0
+ %v3108 =l sar %v3106, 63
+ %v3109 =l xor %v3106, %v3108
+ %v3110 =l sub %v3109, %v3108
+ %v3111 =l umulh %v3110, 9360488568621695171
+ %v3112 =l shr %v3111, 9
+ %v3113 =l xor %v3112, %v3108
+ %v3114 =l sub %v3113, %v3108
+ %v3115 =l mul %v3114, %v3105
+ %v3116 =l sub %v3106, %v3115
+ %v3117 =l cnel %v3116, 0
+ %v3118 =l and %v3117, %v3108
+ %v3119 =l neg %v3118
+ %v3120 =l and %v3105, %v3119
+ %v3107 =l add %v3116, %v3120
+ storel %v3107, %s0
+ %v3121 =l loadl %l16
+ # myl-obj %v3121
+ %v3123 =l copy %s0
+ %v3124 =l loadl %v3123
+ %v3125 =l mul %v3083, 8
+ %v3126 =l add %v3081, %v3125
+ storel %v3124, %v3126
+ # myl-obj %v3121
+ %v3127 =l add %v3121, 16
+ %v3083 =l add %v3083, 1
+ storel %v3083, %v3121
+ %v3084 =l add %v3084, 1
+ storel %v3084, %v3127
+ storel 0, %s0
+ %v3128 =l loadl %l17
+ storel %v3128, %s0
+ storel 1, %s1
+ %v3129 =l loadl %s1
+ %v3130 =l loadl %s0
+ %v3131 =l add %v3130, %v3129
+ storel %v3131, %s0
+ %v3132 =l loadl %s0
+ storel %v3132, %l17
+ jmp @fi55
+ # RC-LOOP-OPERANDS-END 55 74
+@oi55
+ %v3133 =l loadl %l17
+ storel %v3133, %s0
+ %v3134 =l loadl %l18
+ storel %v3134, %s1
+ %v3135 =l loadl %s1
+ %v3136 =l loadl %s0
+ %v3137 =l csltl %v3136, %v3135
+ storel %v3137, %s0
+ %v3138 =l loadl %s0
+ jnz %v3138, @next3139, @i75
+@next3139
+ %v3139 =l loadl %l3
+ storel %v3139, %s0
+ %v3140 =l loadl %l2
+ storel %v3140, %s1
+ %v3141 =l loadl %s1
+ %v3142 =l loadl %s0
+ %v3143 =l add %v3142, %v3141
+ %v3145 =l xor %v3142, %v3143
+ %v3146 =l xor %v3141, %v3143
+ %v3147 =l and %v3145, %v3146
+ %v3144 =l csltl %v3147, 0
+ jnz %v3144, @overflow3143, @checked3143
+@overflow3143
+ dbgloc 62
+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v3142, l %v3141, l 64)
+ hlt
+@checked3143
+ storel %v3143, %s0
+ %v3148 =l loadl %l17
+ storel %v3148, %s1
+ storel 13, %s2
+ %v3149 =l loadl %s2
+ %v3150 =l loadl %s1
+ %v3151 =l mul %v3150, %v3149
+ %v3152 =l umulh %v3150, %v3149
+ %v3153 =l csltl %v3150, 0
+ %v3154 =l csltl %v3149, 0
+ %v3155 =l neg %v3153
+ %v3156 =l neg %v3154
+ %v3157 =l and %v3149, %v3155
+ %v3158 =l and %v3150, %v3156
+ %v3159 =l sub %v3152, %v3157
+ %v3159 =l sub %v3159, %v3158
+ %v3160 =l sar %v3151, 63
+ %v3161 =l cnel %v3159, %v3160
+ jnz %v3161, @overflow3151, @checked3151
+@overflow3151
+ dbgloc 65
+ call $myl_qbe_fail_overflow_op(l %ctx, l 2, l %v3150, l %v3149, l 64)
+ hlt
+@checked3151
+ storel %v3151, %s1
+ %v3162 =l loadl %s1
+ %v3163 =l loadl %s0
+ %v3164 =l add %v3163, %v3162
+ %v3166 =l xor %v3163, %v3164
+ %v3167 =l xor %v3162, %v3164
+ %v3168 =l and %v3166, %v3167
+ %v3165 =l csltl %v3168, 0
+ jnz %v3165, @overflow3164, @checked3164
+@overflow3164
+ dbgloc 66
+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v3163, l %v3162, l 64)
+ hlt
+@checked3164
+ storel %v3164, %s0
+ storel 1009, %s1
+ %v3169 =l loadl %s1
+ %v3170 =l loadl %s0
+ %v3172 =l sar %v3170, 63
+ %v3173 =l xor %v3170, %v3172
+ %v3174 =l sub %v3173, %v3172
+ %v3175 =l umulh %v3174, 9360488568621695171
+ %v3176 =l shr %v3175, 9
+ %v3177 =l xor %v3176, %v3172
+ %v3178 =l sub %v3177, %v3172
+ %v3179 =l mul %v3178, %v3169
+ %v3180 =l sub %v3170, %v3179
+ %v3181 =l cnel %v3180, 0
+ %v3182 =l and %v3181, %v3172
+ %v3183 =l neg %v3182
+ %v3184 =l and %v3169, %v3183
+ %v3171 =l add %v3180, %v3184
+ storel %v3171, %s0
+ %v3185 =l loadl %l16
+ # myl-obj %v3185
+ %v3187 =l copy %s0
+ %v3188 =l loadl %v3187
+ # myl-obj %v3185
+ %v3190 =l add %v3185, 0
+ %v3191 =l loadl %v3190
+ %v3192 =l add %v3185, 8
+ %v3193 =l loadl %v3192
+ %v3194 =l add %v3185, 16
+ %v3195 =l loadl %v3194
+ %v3196 =w cultl %v3191, %v3193
+ jnz %v3196, @rcappend_check3189, @rcappend_slow3189
+@rcappend_check3189
+ %v3197 =w loaduw %rcappend0
+ jnz %v3197, @rcappend_fast3189, @rcappend_query3189
+@rcappend_query3189
+ dbgloc 69
+ %v3198 =w call $myl_rc_list_plain_ready(l %heap, l %v3185)
+ storew %v3198, %rcappend0
+ jnz %v3198, @rcappend_fast3189, @rcappend_slow3189
+@rcappend_slow3189
+ storew 0, %rcappend0
+ %v3199 =l loadl %v3187
+ storel %v3199, %rcarg
+ %v3200 =l copy %rcarg
+ dbgloc 69
+ %v3186 =w call $myl_rc_list_append(l %heap, l %v3185, l %v3200)
+ jnz %v3186, @success3201, @failed3201
+@failed3201
+ dbgloc 69
+ call $myl_qbe_fail_allocation(l %ctx)
+ hlt
+@success3201
+ jmp @rcappend_done3189
+@rcappend_fast3189
+ %v3202 =l add %v3185, 32
+ %v3203 =l loadl %v3202
+ # myl-elem %v3203 8v
+ %v3204 =l mul %v3191, 8
+ %v3205 =l add %v3203, %v3204
+ storel %v3188, %v3205
+ %v3206 =l add %v3185, 0
+ %v3207 =l add %v3191, 1
+ storel %v3207, %v3206
+ %v3208 =l add %v3185, 16
+ %v3209 =l add %v3195, 1
+ storel %v3209, %v3208
+@rcappend_done3189
+ storel 0, %s0
+ %v3210 =l loadl %l17
+ storel %v3210, %s0
+ storel 1, %s1
+ %v3211 =l loadl %s1
+ %v3212 =l loadl %s0
+ %v3213 =l add %v3212, %v3211
+ # myl-affine %v3213
+ %v3214 =l csgtl %v3212, 9223372036854775806
+ jnz %v3214, @overflow3213, @checked3213
+@overflow3213
+ dbgloc 73
+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v3212, l %v3211, l 64)
+ hlt
+@checked3213
+ storel %v3213, %s0
+ %v3215 =l loadl %s0
+ storel %v3215, %l17
+ jmp @oi55

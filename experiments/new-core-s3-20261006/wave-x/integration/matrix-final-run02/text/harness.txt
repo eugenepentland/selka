@@ -1,0 +1,2 @@
+qualification progress: text: seen=25 elapsed=112.95s
+qualification progress: text: seen=50 elapsed=221.92s

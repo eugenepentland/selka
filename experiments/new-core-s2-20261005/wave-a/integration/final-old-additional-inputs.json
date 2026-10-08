@@ -1,0 +1,8 @@
+{
+  "frozen_utc": "2026-10-05T16:44:58.626308+00:00",
+  "source_fixture_spec_sha256": "56f2d5d0480fe754f6e97bebd965f8fefb3e8edfea30978f9e2257f721ec2bac",
+  "additional_inputs": {
+    "experiments/new-core-s2-20261005/wave-a/s2-lb/mut_callee_rebinding.my": "4eb6ecd43aa1811d1792533b6e4d55be6ae589943f5fa8e361709bcefa27b853",
+    "test/core/conformance.pins": "4427c28063906f89a05eb663a3c179cb3c77c0f4e4d1406cfd8ad85e49ff67ec"
+  }
+}

@@ -58,7 +58,6 @@ def total(rt: Rt) -> int:
     return sum
 
 
-# spec-case: RC-CLOSED-FIELD-TRANSFER-2
 public def test_owned_local_writeback_loop_appends_in_place() -> bool:
     it = fresh()
     i = 0
@@ -293,18 +292,6 @@ public def test_owned_list_field_writeback() -> bool:
         bag.items = items
         bag.size += 1
     return len(bag.items) == 100 and bag.size == 100 and bag.items[99] == 99 and saved.items == []
-
-
-public def test_repeated_moves_inside_arena() -> bool:
-    with arena():
-        it = fresh()
-        saved = it
-        for i in range(10):
-            wb = it.rt
-            push(mut wb, i)
-            it.rt = wb
-        ok = len(it.rt.objects) == 10 and saved.rt.objects == []
-    return ok
 
 
 def checked_push(rt: mut Rt, value: int) -> Result[int, str]:

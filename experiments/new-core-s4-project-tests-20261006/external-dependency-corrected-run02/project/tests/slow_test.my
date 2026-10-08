@@ -1,0 +1,4 @@
+module tests.slow_test
+
+public def test_slow_changed() -> bool:
+    return True

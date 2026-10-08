@@ -1,9 +1,9 @@
-//! Host I/O and process policy stay outside the compiler and VM.
-const lowering_phase = "bytecode_lowering";
+//! The `mylang` command line. Commands that build, run or test code go to the
+//! new core (`mylang_core`, `src/core/cli.zig`); this file owns the front-end
+//! commands: checking, formatting, linting, navigation and project reports.
 const inputs_prefix = "--inputs=";
 const policy_prefix = "--policy=";
 const cache_directory_prefix = "--cache-dir=";
-const select_file_prefix = "--select-file=";
 /// `lint --profile=NAME` prefix.
 const lint_profile_prefix = "--profile=";
 /// `lint --against=REF` prefix.
@@ -28,10 +28,6 @@ const context_against_flag = "--against";
 const index_module_flag = "--module";
 /// `index-project --kind KIND` / `--kind=KIND`.
 const index_kind_flag = "--kind";
-/// Wall-clock ceiling forwarded to the guest runtime, which parses the same flag.
-const timeout_prefix = "--timeout=";
-const frames_prefix = "--max-frames=";
-const steps_prefix = "--max-steps=";
 /// Shared internal session failure name for an over-long request line.
 const request_too_long = "RequestTooLong";
 /// Phase label and default cache-directory leaf, shared so the literal is not
@@ -41,17 +37,11 @@ const frontend_label = "frontend";
 const config_error_format = "{s}:{d}:{d}: error[E_PROJECT_CONFIG]: {s}\n";
 const std = @import("std");
 const language = @import("mylang");
-const NativeVariants = @import("runtime_contract").native_variants.Policy;
-/// Canonical project loader exposed to native-test snapshot identity.
-pub const snapshot_project = language.project;
-/// Compile-time file embedding exposed to native-test snapshot capture.
-pub const snapshot_embed = language.embed;
-/// The compiler's language module, for the per-module build `mylang test` runs through.
+/// The compiler's language module, for command files the unit root also compiles.
 pub const compiler_language = language;
 const invalidation = @import("invalidation.zig");
 const diagnostic_output = language.diagnostic_output;
 const Reporting = struct {
-    print_result: bool = false,
     timings: bool = false,
     timings_json: bool = false,
     /// `--report` asks one-shot commands for an actual-work/reuse receipt.
@@ -74,8 +64,8 @@ const everyday_help =
     \\  mylang check FILE.my              type-check without building
     \\  mylang fix FILE.my [--check]     apply safe diagnostic repairs
     \\  mylang run FILE.my [-- ARGS...]   build natively and run; arguments after --
-    \\  mylang build FILE.my -o OUT       native executable, built by QBE in about a second
-    \\  mylang build FILE.my -o OUT --release   optimized (LLVM -O3 + LTO), for shipping or timing
+    \\  mylang build FILE.my -o OUT       native executable, a debug build one unit per module
+    \\  mylang build FILE.my -o OUT --release   optimized whole-program LLVM build, for shipping or timing
     \\  mylang test FILE.my|DIR           run the public test_* functions
     \\  mylang fmt FILE.my [--check]      canonical formatting
     \\  mylang docs [TOPIC]               the user guides built into this compiler
@@ -91,73 +81,32 @@ const everyday_help =
     \\  mylang test ENTRY.my --affected --against REF   only the tests an edit since REF can reach
     \\
 ;
-/// What a rejected `run` or `run-project` command line prints: the options those
-/// two commands take, with each budget in both spellings, instead of the `test`
-/// usage the general text opens with.
-const run_usage =
-    \\usage: mylang run <file.my> [options] [-- ARGS...]
-    \\       mylang run-project <entry.my> [options] [-- ARGS...]
-    \\  builds the program natively and runs it; every value after -- is a guest argument
-    \\  budgets (each takes --flag N or --flag=N; N is a positive integer):
-    \\    --max-steps N      instruction ceiling (default: unbounded)
-    \\    --max-frames N     call-depth ceiling (default: unbounded); each frame reserves 32 KiB of --max-memory
-    \\    --timeout N        elapsed-time cap in seconds
-    \\    --max-memory SIZE  guest byte ceiling, K/M/G suffixes (default 4G; MYLANG_MEMORY_LIMIT names the same)
-    \\  output: --print-result --timings[=json] --report --diagnostics=text|json
-    \\  build: --release --qbe=PATH --zig=PATH --cache-dir=DIR --no-cache --gc-stress
-    \\  authority: --restrict --allow-read=DIR --allow-write=DIR --allow-endpoint=IP:PORT --allow-clock
-    \\             --allow-random[=SEED] --allow-env[=NAME,...] --allow-host --allow-all
-    \\  `mylang --help` lists every command
-    \\
-;
-/// The usage a rejected command line prints: the running commands' own text,
-/// the general text for everything else.
-fn usageFor(command: []const u8) []const u8 {
-    if (std.mem.eql(u8, command, "run") or std.mem.eql(u8, command, "run-project")) return run_usage;
-    return usage;
-}
-const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--json] [--force]\n" ++
-    "       mylang test <entry.my|directory> --bench GLOB [--bench-output FILE] [--bench-baseline FILE] [--bench-policy FILE]\n" ++
-    "       mylang bench-promote --candidate FILE --approver NAME --reason TEXT [--baseline FILE] [--output FILE] [--revision REV]\n" ++
-    "       mylang invoke <entry.my> --function 'module::name' (--describe | --input=FILE) [--format=json]\n" ++
-    "       mylang build <file.my> (-o <output> | --run) [--help]\n" ++
+/// Every command and option, after `everyday_help`, and what a malformed front-end
+/// command line prints. `build`, `run`, `run-project`, `test`, `dump-ir`,
+/// `dump-typed` and `coverage` print their own usage (`src/core/cli.zig`).
+const usage = "usage: mylang build <file.my> (-o <output> | --run [-- ARGS...]) [--release] [--link FILE.c]... (native build; `mylang build` prints the options)\n" ++
+    "       mylang run <file.my> [options] [-- ARGS...] | run-project <entry.my> [options] [-- ARGS...] (build and run; `mylang run` prints the options)\n" ++
+    "       mylang test <entry.my|directory> [--filter GLOB] [--json] [--release] [--affected --against REF] (run the public test_* functions)\n" ++
+    "       mylang dump-ir <file.my> [--facts] | dump-typed <file.my> [FUNCTION] | coverage <file.my>... (developer views of the new core)\n" ++
+    "       mylang fix [--check] <entry.my|directory> (apply every structured diagnostic repair)\n" ++
     "       mylang doc-coverage [<repo-root>] (every implemented feature and standard export needs a documented example)\n       mylang " ++
     "doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose] (run every fenced documentation example)\n       mylang " ++
     "reference --query TERM [--format=text|json] (compiler-derived facts from this executable)\n       mylang " ++
     "docs [TOPIC] (list the user guides built into this executable, or print one)\n       mylang " ++
     "packages lock CONFIG.json --output LOCK.json | build ENTRY.my --lock LOCK.json [--command C] [--receipt FILE] (offline locked local packages)\n       mylang " ++
-    "invoke <entry.my> --function='module::name' (--describe | --input=FILE) (call one exported function natively)\n       mylang " ++
     "dump-tokens <file.my> (stage-0 `tokens-v1` JSON on stdout; lexical failures exit 1)\n       mylang " ++
     "interfaces emit|check|oracle <entry.my> | show <module.myi> (per-module interface artifacts; `mylang interfaces` prints the options)\n       mylang " ++
-    "compile-module <entry.my> --module=NAME ... | link-modules <entry.my> --units=DIR -o OUT (per-module build; `mylang compile-module` prints the options)\n       mylang " ++
-    "<schema-project|input-module|check|run|dump-bytecode|di" ++
+    "<schema-project|input-module|check|di" ++
     "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
-    "t-module|fmt-project|emit-qbe|emit-project-qbe|list-modules|list-interfaces|list-" ++
+    "t-module|fmt-project|list-modules|list-interfaces|list-" ++
     "declarations|check" ++
-    "-project|check-module|run-project|check-policy> <file.my>\n  schema-project: --schema-report (include " ++
+    "-project|check-module|check-policy> <file.my>\n  schema-project: --schema-report (include " ++
     "checked source and compiler identities)\n  " ++
-    "check: type-check a program; a file that declares no main is checked as a library, like check-module\n  " ++
+    "check: type-check a program; a file that declares no main is checked as a library, like check-module; " ++
+    "a file that opens with a module header or an import/export directive checks its reachable module graph\n  " ++
     "check-module: type-check a library module and its imports without an executable main\n  " ++
     "input-module: reads a typed JSON manifest and writes generated " ++
-    "module source\n  run: builds the program natively and runs it; it loads the reachable module graph when the entry " ++
-    "file opens with a module header or an import/export directive, including a headerless script that imports embedded " ++
-    "standard modules, and stays single-unit otherwise; " ++
-    "run-project is the explicit project-entry alias\n  run/run-project: unbounded in instructions and frames by default; " ++
-    "--max-steps=N and --max-frames=N impose a ceiling and --timeout=SECONDS caps elapsed time; " ++
-    "--max-memory=BYTES --gc-stress --print-result --cache-dir=DIR --qbe=PATH --zig=PATH " ++
-    "(native objects default to .mylang-cache/qbe, shared with build); the build is QBE unless " ++
-    "--release asks for LLVM -O3 with LTO\n  " ++
-    "run/run-project: --max-memory takes K/M/G suffixes and caps the guest process's address space; " ++
-    "MYLANG_MEMORY_LIMIT names the same ceiling and MYLANG_HOST_MEMORY_LIMIT replaces the " ++
-    "compiler's own 8G ceiling (0 removes it)\n  " ++
-    "run/run-project authority: every capability is granted by default; --restrict denies them " ++
-    "and enables --allow-read=DIR --allow-write=DIR --allow-endpoint=IP:PORT (repeatable) " ++
-    "--allow-clock --allow-random[=SEED] " ++
-    "--allow-env[=NAME,...] --allow-host --allow-all. An endpoint grant is a literal numeric address, " ++
-    "never a DNS name. Under --restrict an entry point requesting an ungranted " ++
-    "capability exits 2 before execution; --allow-random=SEED pins the seed in either mode\n  " ++
-    "run/run-project: -- ends compiler options; every later value is a guest argument\n  " ++
-    "run: --timings (native execution nanoseconds on stderr; excludes compilation and linking)\n  " ++
+    "module source\n  " ++
     "schema-project: --inputs=manifest.json (repeat for up to 16 modules)\n  " ++
     "discover-duplicates/discover-project-duplicates: --min-nodes=N " ++
     "--population=production|tests|generated|reference|intentional --timings --approximate " ++
@@ -178,20 +127,27 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "--kind=function|type|constraint|field|case|parameter|local select navigation-v1 records (navigation-selection-v1); " ++
     "--full prints the complete navigation-v1 document\n  project-dependencies: checked module graph and hashes; --inputs supported\n" ++
     "  one-shot commands: --timings=json (phase-timings-v1 JSON Lines on stderr)\n" ++
-    "  build: --timings=json records the frontend, codegen, link and native phases it already measures for --report\n" ++
     "    --report prints work-report-v1 actual work/reuse plus a frontend-cache-v1 comparison receipt on stderr; --timings=json also adds them; --cache-dir=DIR selects their root; --no-cache disables reuse\n" ++
-    "    --explain-invalidation prints an invalidation-report-v1 comparison on stderr for project-dependencies, check-project, run-project and module-syntax run; --no-cache explains against no baseline\n" ++
+    "    --explain-invalidation prints an invalidation-report-v1 comparison on stderr for project-dependencies and check-project; --no-cache explains against no baseline\n" ++
     "  all commands: --diagnostics=text|json (stderr JSON Lines; stdout unchanged)\n" ++
     "  check-session: persistent check/clear/quit lines on stdin; JSON status on stdout; --inputs supported\n";
 
 /// Byte ceilings for guest execution, shared by every command that runs one.
 const budget = @import("memory_budget");
 
+/// Start the process as Zig would, without a stack trace per allocation
+/// (`wiring/process_start.zig`, MYLANG-START-1), and run the command line.
+pub fn main(minimal: std.process.Init.Minimal) void {
+    process_start.run(minimal, dispatchCommandLine);
+}
+
+const process_start = @import("wiring/process_start.zig");
+
 /// Dispatch compiler commands, reporting usage/source/IO failures through process exit status.
 /// The compiler bounds its own address space first, so a compiler defect fails
-/// loudly instead of taking the machine into swap, and the `zig cc` and QBE
-/// children a native build spawns inherit that ceiling and still finish.
-pub fn main(init: std.process.Init) void {
+/// loudly instead of taking the machine into swap, and the `zig cc` children a
+/// native build spawns inherit that ceiling and still finish.
+fn dispatchCommandLine(init: std.process.Init) void {
     _ = budget.guardHost(init.environ_map);
     const status = dispatch(init) catch |err| status: {
         var buffer: [256]u8 = undefined;
@@ -202,13 +158,8 @@ pub fn main(init: std.process.Init) void {
     if (status != 0) std.process.exit(status);
 }
 
-const grants = @import("cli_grants.zig");
-const project_config = @import("project_config.zig");
-const module_build = @import("module_build.zig");
+const project_config = @import("mylang").project_config;
 const module_syntax = @import("module_syntax.zig");
-const native_run = @import("native_run.zig");
-const native_build = @import("qbe_build.zig");
-const native_options = @import("qbe_build_options.zig");
 const input_probe = @import("input_probe.zig");
 /// Per-stage observations collected when an invalidation explanation ran.
 const StageTally = struct { hits: usize = 0, misses: usize = 0, skipped: usize = 0 };
@@ -241,15 +192,14 @@ fn recordBypass(init: Context, reason: []const u8, count: usize) void {
     if (init.observation) |observation| observation.work.addBypass(reason, count);
 }
 
-/// Stages a command actually runs. Lowering/emission/linking only happen for
-/// commands that produce or execute a native artifact.
-fn executedStages(command: Command) [std.meta.tags(invalidation.Stage).len]bool {
+/// Stages a front-end command actually runs: everything up to checking. The
+/// lowering, emission and link stages belong to `mylang build` and `run`, which
+/// the new core answers, so these commands always report them skipped.
+fn executedStages() [std.meta.tags(invalidation.Stage).len]bool {
     var out: [std.meta.tags(invalidation.Stage).len]bool = @splat(true);
-    const lowers = command == .run or command == .@"run-project" or command == .@"emit-project-qbe";
-    const links = command == .run or command == .@"run-project";
-    out[@backingInt(invalidation.Stage.lower_function)] = lowers;
-    out[@backingInt(invalidation.Stage.emit_fragment)] = lowers;
-    out[@backingInt(invalidation.Stage.link)] = links;
+    out[@backingInt(invalidation.Stage.lower_function)] = false;
+    out[@backingInt(invalidation.Stage.emit_fragment)] = false;
+    out[@backingInt(invalidation.Stage.link)] = false;
     return out;
 }
 const Context = struct {
@@ -274,115 +224,11 @@ const Context = struct {
     }
 };
 
-/// Run one native build. `--timings=json` is an observation request the driver
-/// answers with its measured phase durations, so this command records them
-/// through the same `phase-timings-v1` writer `run` and `run-project` use and
-/// the JSON Lines shape cannot drift between commands. A build that named no
-/// such request takes the driver path unchanged and records nothing.
-fn buildCommand(process: std.process.Init, args: []const []const u8) !u8 {
-    const asked = native_options.timingsJson(args);
-    var timings = language.timings.Profile.init(process.io, asked, .compiler);
-    var phases: native_build.PhaseTimings = .{};
-    // MODULE-SCHEDULE-3: a project executable builds module by module; what
-    // that path does not handle goes to the whole-program build.
-    const outcome = try module_build.build(process.gpa, .{ .io = process.io, .environ = process.environ_map, .args = args, .phases = if (asked) &phases else null, .identity = &build_identity });
-    const status = switch (outcome) {
-        .status => |done| done,
-        .fallback => try native_build.runMeasured(process, args, if (asked) &phases else null),
-    };
-    addBuildPhases(&timings, phases);
-    try timings.report(status);
-    return status;
-}
-
-/// MODULE-CHECK-1: `mylang check` of a project entry, with no option but
-/// `--cache-dir`, checks it module by module; null hands it to the
-/// whole-program check (any other option, a friction log, or whatever the
-/// per-module check does not handle).
-fn checkModules(process: std.process.Init, args: []const []const u8) !?u8 {
-    var entry: ?[]const u8 = null;
-    var cache: ?[]const u8 = null;
-    for (args) |arg| {
-        if (std.mem.startsWith(u8, arg, cache_directory_prefix) and arg.len > cache_directory_prefix.len and cache == null) {
-            cache = arg[cache_directory_prefix.len..];
-        } else if (std.mem.startsWith(u8, arg, "-") or entry != null) return null else entry = arg;
-    }
-    const source = entry orelse return null;
-    if (process.environ_map.get("MYLANG_FRICTION_LOG") != null) return null;
-    // MODULE-CHECK-2: the detached seeder builds module records and reports
-    // nothing, whatever the per-module check could not do.
-    const seed = if (process.environ_map.get("MYLANG_CHECK_SEED")) |value| std.mem.eql(u8, value, "1") else false;
-    const outcome = try module_build.check(process.gpa, .{
-        .io = process.io,
-        .environ = process.environ_map,
-        .source = source,
-        .cache = cache orelse process.environ_map.get("MYLANG_FRONTEND_CACHE") orelse ".mylang-cache",
-        .identity = &build_identity,
-        .seed = seed,
-    });
-    if (seed) return 0;
-    return switch (outcome) {
-        .status => |status| status,
-        .fallback => null,
-    };
-}
-
-fn checkModuleDispatch(process: std.process.Init, args: []const []const u8) !?u8 {
-    if (args.len < 2 or !std.mem.eql(u8, args[1], "check")) return null;
-    return checkModules(process, args[2..]);
-}
-
-/// Record each phase a native build actually measured. A phase that never ran
-/// stays absent rather than reporting a zero it did not observe.
-fn addBuildPhases(timings: *language.timings.Profile, phases: native_build.PhaseTimings) void {
-    const names = [_][]const u8{ "frontend", "codegen", "link", "native" };
-    const seconds = [_]?f64{ phases.frontend, phases.codegen, phases.link, phases.native };
-    for (names, seconds) |name, measured| {
-        if (measured) |value| timings.add(name, @intFromFloat(@max(0, value) * std.time.ns_per_s), false);
-    }
-}
-fn settleModes(process: std.process.Init) !@import("main_runtime_mode.zig").Settled {
-    // VALUE-SEMANTICS-1: settle the switch before any command runs; a
-    // command it turned on restarts with the switch in its environment.
-    const settled = switch (try @import("main_value_semantics.zig").settle(process, try process.minimal.args.toSlice(process.arena.allocator()))) {
-        .run => |switched| switched,
-        .status => |status| return .{ .status = status },
-    };
-    if (settled.enabled) build_identity = valueSemanticsIdentity(base_identity);
-    // COW-STATS-1: build and frontend children inherit this selector, with
-    // their cached work partitioned from ordinary value-semantics builds.
-    const cow_counting = settled.enabled and language.value_semantics.environmentEnables(process.environ_map.get(language.value_semantics.counting_variable));
-    language.value_semantics.setCounting(cow_counting);
-    if (cow_counting) build_identity = cowCountingIdentity(build_identity);
-    const args = switch (try @import("main_runtime_mode.zig").settle(process, settled.args, settled.enabled)) {
-        .run => |normalized| normalized,
-        .status => |status| return .{ .status = status },
-    };
-    build_identity = runtimeIdentity(build_identity);
-    return .{ .run = args };
-}
-fn moduleCommand(process: std.process.Init, args: []const [:0]const u8) !?u8 {
-    if (args.len < 2) return null;
-    if (std.mem.eql(u8, args[1], "interfaces")) {
-        const status = try @import("module_interface_command.zig").run(process, args[2..]);
-        return status;
-    }
-    if (std.mem.eql(u8, args[1], "compile-module")) {
-        const status = try @import("module_compile_command.zig").compileModule(process, args[2..], &build_identity);
-        return status;
-    }
-    if (std.mem.eql(u8, args[1], "link-modules")) {
-        const status = try @import("module_compile_command.zig").linkModules(process, args[2..]);
-        return status;
-    }
-    return null;
-}
-
 fn dispatch(process: std.process.Init) !u8 {
-    const args = switch (try settleModes(process)) {
-        .run => |normalized| normalized,
-        .status => |status| return status,
-    };
+    const args = try process.minimal.args.toSlice(process.arena.allocator());
+    // Building, running and testing go to the new core, which also refuses the
+    // retired commands and flags by name.
+    if (try @import("mylang_core").dispatch(process, args)) |status| return status;
     if (args.len == 2 and std.mem.eql(u8, args[1], "--features")) {
         try featureReport(process);
         return 0;
@@ -393,58 +239,33 @@ fn dispatch(process: std.process.Init) !u8 {
         try std.Io.File.stdout().writeStreamingAll(process.io, everyday_help ++ "\nEvery command and option:\n" ++ usage);
         return 0;
     }
-    if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return buildCommand(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "fix")) return @import("fix_command.zig").run(process, args[2..]);
-    if (try checkModuleDispatch(process, args)) |status| return status;
-    if (args.len >= 2 and std.mem.eql(u8, args[1], "emit-runtime")) return @import("qbe_build.zig").emitRuntime(process, args[2..]);
-    if (args.len >= 2 and std.mem.eql(u8, args[1], "test")) return @import("native_test_command.zig").run(process, args[2..]) catch |err| switch (err) {
-        // `run` already rendered the child compiler's located diagnostic; exit 1
-        // rather than wrapping it in the generic "host failure" line.
-        error.SourceRejected => 1,
-        else => |problem| return problem,
-    };
-    if (args.len >= 2 and std.mem.eql(u8, args[1], "invoke")) return @import("invoke_command.zig").run(process, args[2..]) catch |err| switch (err) {
-        // `run` already published a `native-invocation-v1` refusal when it could;
-        // a check that failed before that still rendered its own diagnostic.
-        error.SourceRejected => 1,
-        else => |problem| return problem,
-    };
-    if (args.len >= 2 and std.mem.eql(u8, args[1], "bench-promote")) return @import("native_bench_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doc-coverage")) return @import("doc_coverage_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doctest")) return @import("doctest_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "reference")) return @import("reference_command.zig").run(@import("mylang"), process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "docs")) return @import("docs_command.zig").run(process, args[2..]);
-    if (try moduleCommand(process, args)) |status| return status;
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "interfaces")) return @import("module_interface_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "packages")) {
         const identity = std.fmt.bytesToHex(build_identity, .lower);
         return @import("packages_command.zig").run(process, args[2..], &identity);
     }
-    if (args.len >= 2 and std.mem.eql(u8, args[1], "invoke")) return @import("invoke_command.zig").run(process, args[2..]);
     // The `&` marker experiment is gone: `mut` is the spelling on both sides of a
     // call and the rule is always on, so the flag names no mode left to select.
-    // RELEASE-CHECKED-1: the unchecked build policy is gone; say why rather
-    // than dumping the usage an unknown flag gets.
-    if (args.len >= 2 and (std.mem.eql(u8, args[1], "run") or std.mem.eql(u8, args[1], "run-project")) and native_options.uncheckedRequested(args[2..])) {
-        const message = try std.mem.concat(process.arena.allocator(), u8, &.{ "mylang ", args[1], ": ", native_options.unchecked_removed });
-        try std.Io.File.stderr().writeStreamingAll(process.io, message);
-        return 2;
-    }
     if (mutationMarkersFlag(args[1..])) {
         try std.Io.File.stderr().writeStreamingAll(process.io, "mylang: --mutation-markers was removed; mark each written parameter `name: mut T` and each argument bound to one `mut value`\n");
         return 2;
     }
-    // The C backend is gone. Answer its command names with a migration that
-    // points at the QBE replacements rather than a bare usage dump.
+    // The C backend is gone. Answer its command names with what replaces them
+    // rather than a bare usage dump.
     if (args.len >= 2 and (std.mem.eql(u8, args[1], "emit-c") or std.mem.eql(u8, args[1], "emit-project-c"))) {
-        const replacement = if (std.mem.eql(u8, args[1], "emit-c")) "emit-qbe" else "emit-project-qbe";
         var buffer: [192]u8 = undefined;
-        const message = try std.fmt.bufPrint(&buffer, "mylang: {s} was removed with the C backend; use {s} instead\n", .{ args[1], replacement });
+        const message = try std.fmt.bufPrint(&buffer, "mylang: {s} was removed with the C backend; use `mylang build FILE.my -o OUT --emit-llvm PATH`\n", .{args[1]});
         try std.Io.File.stderr().writeStreamingAll(process.io, message);
         return 2;
     }
     const parsed = parseArgs(process.arena.allocator(), args[1..]) catch |err| switch (err) {
         error.Usage => {
-            try std.Io.File.stderr().writeStreamingAll(process.io, usageFor(if (args.len >= 2) args[1] else ""));
+            try std.Io.File.stderr().writeStreamingAll(process.io, usage);
             return 2;
         },
         error.OutOfMemory => return error.OutOfMemory,
@@ -467,8 +288,7 @@ fn dispatch(process: std.process.Init) !u8 {
     try timings.report(status);
     return status;
 }
-fn run(init: Context, unconfigured: Parsed) !u8 {
-    const parsed = try withConfiguredRunLimits(init, unconfigured);
+fn run(init: Context, parsed: Parsed) !u8 {
     if (parsed.command == .@"check-session") return checkSession(init, parsed);
     // A missing, unreadable or directory entry is refused by name before any
     // cache opens, so it leaves no cache directory behind and prints no trace.
@@ -477,7 +297,6 @@ fn run(init: Context, unconfigured: Parsed) !u8 {
         try init.text(refusal);
         return input_probe.refused_status;
     }
-    if (try frameBudgetRefused(init, parsed)) |status| return status;
     // One optional record per command, built before any work so the wall time it
     // carries covers the whole command. `init` returns null unless the flag or
     // `MYLANG_FRICTION_LOG` asked for a log, so an ordinary run pays one check.
@@ -487,7 +306,7 @@ fn run(init: Context, unconfigured: Parsed) !u8 {
     defer if (friction) |recorder| recorder.deinit();
     var frontend_cache = openFrontendCache(init, parsed);
     var semantic_store = openSemanticStore(init, parsed);
-    var observation: RunObservation = .{ .executed = executedStages(parsed.command) };
+    var observation: RunObservation = .{ .executed = executedStages() };
     observation.work.command = @tagName(parsed.command);
     var command_init = init;
     command_init.observation = &observation;
@@ -513,66 +332,6 @@ fn run(init: Context, unconfigured: Parsed) !u8 {
     if (semantic_store) |*store| store.deinit();
     if (friction) |recorder| recorder.finish(status, frictionElapsedNs(friction_start, init.io));
     return status;
-}
-
-/// Fill in the execution budgets the project's `mylang.json` sets under
-/// `limits.run` wherever the command line and, for the memory ceiling,
-/// `MYLANG_MEMORY_LIMIT` gave none. The configured options join the ones the
-/// command line forwards to the guest, ahead of the `--` delimiter, so both
-/// sources are checked and applied by the same code. A missing or unreadable
-/// configuration changes nothing here: the check that owns configuration errors
-/// reports them.
-fn withConfiguredRunLimits(init: Context, parsed: Parsed) !Parsed {
-    if (parsed.command != .run and parsed.command != .@"run-project") return parsed;
-    const path = (project_config.discover(init.gpa, init.io, parsed.path) catch return parsed) orelse return parsed;
-    defer init.gpa.free(path);
-    var failure: project_config.Failure = .{};
-    var config = project_config.load(init.gpa, init.io, path, &failure) catch return parsed;
-    defer config.deinit();
-    const configured = config.document.limits.run;
-    var effective = parsed;
-    const arena = init.arena.allocator();
-    var runtime: std.ArrayList([]const u8) = .empty;
-    const delimiter = for (parsed.runtime, 0..) |option, index| {
-        if (std.mem.eql(u8, option, "--")) break index;
-    } else parsed.runtime.len;
-    try runtime.appendSlice(arena, parsed.runtime[0..delimiter]);
-    if (configured.max_steps) |steps| if (!forwardedOption(parsed.runtime[0..delimiter], steps_prefix)) try runtime.append(arena, try std.fmt.allocPrint(arena, "{s}{d}", .{ steps_prefix, steps }));
-    if (configured.max_frames) |frames| if (!forwardedOption(parsed.runtime[0..delimiter], frames_prefix)) try runtime.append(arena, try std.fmt.allocPrint(arena, "{s}{d}", .{ frames_prefix, frames }));
-    try runtime.appendSlice(arena, parsed.runtime[delimiter..]);
-    effective.runtime = runtime.items;
-    const from_environment = if (init.environ.get(budget.variable)) |text| text.len != 0 else false;
-    if (parsed.max_memory == null and !from_environment) effective.max_memory = configured.max_memory;
-    return effective;
-}
-
-/// Whether the forwarded options already carry one with this prefix.
-fn forwardedOption(options: []const []const u8, prefix: []const u8) bool {
-    for (options) |option| if (std.mem.startsWith(u8, option, prefix)) return true;
-    return false;
-}
-
-/// The `--max-frames` a run command forwards to its guest, or null without one.
-fn requestedFrames(runtime: []const []const u8) ?u64 {
-    for (runtime) |option| {
-        if (std.mem.eql(u8, option, "--")) return null;
-        if (std.mem.startsWith(u8, option, frames_prefix)) return positive(option[frames_prefix.len..]) catch null;
-    }
-    return null;
-}
-
-/// Refuse a `--max-frames` the guest's memory ceiling cannot back, before any
-/// build starts: the runtime maps 32 KiB of stack per frame inside the ceiling,
-/// so an oversized budget would otherwise die with a bare `OutOfMemory`. Null
-/// means the budget fits, or the command runs no guest.
-fn frameBudgetRefused(init: Context, parsed: Parsed) !?u8 {
-    if (parsed.command != .run and parsed.command != .@"run-project") return null;
-    const frames = requestedFrames(parsed.runtime) orelse return null;
-    const memory = budget.resolve(parsed.max_memory, init.environ, budget.variable, budget.run_default) catch return null;
-    const refusal = try budget.frameRefusal(init.gpa, init.environ, @tagName(parsed.command), "a guest", frames, memory) orelse return null;
-    defer init.gpa.free(refusal);
-    try init.text(refusal);
-    return input_probe.refused_status;
 }
 
 /// Start this command's friction record, or return null when no log was asked
@@ -640,7 +399,6 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"list-interfaces",
         .@"check-project",
         .@"check-module",
-        .@"run-project",
         .@"check-policy",
         .lint,
         .@"tests-for",
@@ -650,9 +408,6 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"discover-project-duplicates",
         .@"report-project-quality",
         .@"fmt-project",
-        .@"emit-project-qbe",
-        .@"native-test-graph",
-        .@"native-test-compile",
         => return listModules(init, parsed),
         else => {},
     }
@@ -666,24 +421,19 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     // loading imports, parsing, checking or lowering. It is the reference for
     // the differential self-host lexer.
     if (parsed.command == .@"dump-tokens") return dumpTokens(init, parsed, bytes);
-    // `run` and `check` accept a project entry: a file that opens with a module
-    // header (or a module-only import/export) loads its reachable graph exactly as
-    // `run-project`/`check-project` does. A plain single-file program skips this
-    // and keeps the original one-unit path byte-for-byte.
-    if (parsed.command == .run and module_syntax.usesModuleSyntax(bytes)) return runProjectModules(init, parsed);
+    // `check` accepts a project entry: a file that opens with a module header
+    // (or a module-only import/export) loads its reachable graph exactly as
+    // `check-project` does. A plain single-file program skips this and keeps the
+    // original one-unit path byte-for-byte.
     if (parsed.command == .check and module_syntax.usesModuleSyntax(bytes)) {
         var project = parsed;
         project.command = .@"check-project";
-        project.library_fallback = parsed.explain_ownership == null;
+        project.library_fallback = true;
         return listModules(init, project);
     }
     // A single-unit program has no import edges, but a configured project still
     // owns the same required configuration contract; validate it before checking.
     const unit_deny_warnings = validateUnitConfiguredPolicy(init, parsed) catch |err| return policyFailureStatus(err);
-    if (parsed.command == .run and parsed.reporting.explain_invalidation) {
-        try std.Io.File.stderr().writeStreamingAll(init.io, usage);
-        return 2;
-    }
     if (parsed.command == .@"input-module") {
         var manifest = (try parseInputManifest(init, parsed.path, bytes)) orelse return 2;
         defer manifest.deinit();
@@ -766,7 +516,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     recordUnitTypedNodes(init, &compilation);
     init.timings.end();
     const check_ns = if (parsed.reporting.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
-    if (parsed.command != .@"emit-qbe") try report(init, &compilation);
+    try report(init, &compilation);
     if (unit_deny_warnings and deniesOneShotWarnings(parsed.command) and hasWarning(compilation.diagnostics.items)) return 1;
     switch (parsed.command) {
         .@"index-project",
@@ -779,14 +529,10 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"fmt-module",
         .@"fmt-project",
         .@"list-declarations",
-        .@"emit-project-qbe",
-        .@"native-test-graph",
-        .@"native-test-compile",
         .@"list-modules",
         .@"list-interfaces",
         .@"check-project",
         .@"check-module",
-        .@"run-project",
         .@"check-policy",
         .lint,
         .@"tests-for",
@@ -796,20 +542,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"discover-project-duplicates",
         .@"report-project-quality",
         => unreachable,
-        .@"emit-qbe" => {
-            const generated = emitMeasuredNative(init, &compilation, parsed.emissionPolicy()) catch |err| switch (err) {
-                error.SourceError => {
-                    try report(init, &compilation);
-                    return 1;
-                },
-                else => return err,
-            };
-            init.timings.end();
-            defer allocator.free(generated);
-            try report(init, &compilation);
-            try std.Io.File.stdout().writeStreamingAll(init.io, generated);
-        },
-        .check => return explainOwnership(init, &compilation, parsed.explain_ownership),
+        .check => {},
         .@"report-quality" => {
             var analysis = try language.quality.analyze(allocator, compilation.program.?, compilation.src, parsed.quality);
             defer analysis.deinit();
@@ -843,15 +576,6 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
                 try init.text(counts);
             }
         },
-        .@"dump-bytecode" => {
-            init.timings.begin("bytecode_dump_inclusive", true);
-            const text = try compilation.dump(allocator);
-            if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
-            init.timings.end();
-            defer allocator.free(text);
-            try std.Io.File.stdout().writeStreamingAll(init.io, text);
-        },
-        .run => return executeRun(init, &compilation, parsed),
     }
     return 0;
 }
@@ -876,131 +600,13 @@ fn recordUnitTypedNodes(init: Context, compilation: *const language.Compilation)
 }
 
 /// Check one parsed single-unit program. `check` of a unit with no `main` is a
-/// library check (`CHECK-LIBRARY-2`): the bodies, effects and boundaries `check-module`
-/// verifies, with no executable program retained. `--explain-ownership` needs a
-/// lowered program, so it keeps the entry-point requirement, and a declared `main`
-/// of any signature is always checked as an entry point.
+/// library check (`CHECK-LIBRARY-2`): the bodies, effects and boundaries
+/// `check-module` verifies, with no executable program retained. A declared
+/// `main` of any signature is always checked as an entry point.
 fn checkUnit(parsed: Parsed, compilation: *language.Compilation, semantic: *language.semantic_cache.Cache) language.diagnostic.Error!void {
-    const as_library = parsed.command == .check and parsed.explain_ownership == null and !compilation.declaresMain();
+    const as_library = parsed.command == .check and !compilation.declaresMain();
     if (as_library) return compilation.checkLibrary();
     return compilation.checkWithCache(semantic);
-}
-
-/// Write the ownership analysis of a checked program to `path` as JSON Lines
-/// (`OWNERSHIP-EXPLAIN-1`); without a path, `check` has nothing more to do.
-fn explainOwnership(init: Context, compilation: *language.Compilation, path: ?[]const u8) !u8 {
-    const destination = path orelse return 0;
-    const text = compilation.explainOwnership(init.gpa) catch |err| switch (err) {
-        error.SourceError => {
-            try report(init, compilation);
-            return 1;
-        },
-        else => return err,
-    };
-    defer init.gpa.free(text);
-    std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = destination, .data = text }) catch return 2;
-    return 0;
-}
-
-/// Report the flag that would grant an entry point the authority it asked for.
-/// Only `--restrict` can withhold one, so the message names the active mode.
-/// MODULE-SCHEDULE-3: `run` of a project builds it module by module and
-/// runs the executable; null when the whole-program path must run it: a
-/// restricted grant set, a report, timings, an invalidation explanation,
-/// generated inputs, JSON diagnostics or no cache.
-fn runModules(init: Context, parsed: Parsed) !?u8 {
-    const reporting = parsed.reporting;
-    if (reporting.explain_invalidation or reporting.timings or reporting.timings_json or reporting.report) return null;
-    if (parsed.grants.flags.restricted or parsed.input_count != 0 or parsed.no_cache) return null;
-    if (init.diagnostics != .text or init.friction != null) return null;
-    var settings = parsed.native;
-    settings.source = parsed.path;
-    settings.project = true;
-    settings.run = true;
-    settings.arguments = parsed.runtime;
-    settings.max_memory = parsed.max_memory;
-    const policy = parsed.runPolicy(true);
-    const outcome = try module_build.buildForRun(init.gpa, .{
-        .io = init.io,
-        .environ = init.environ,
-        .settings = settings,
-        .switches = .{ .drop_debug = false, .step_checks = policy.step_checks, .frame_checks = policy.frame_checks },
-        .identity = &build_identity,
-    });
-    const path = switch (outcome) {
-        .executable => |built| built,
-        .status => |status| return status,
-        .fallback => return null,
-    };
-    defer init.gpa.free(path);
-    const status = try native_run.executeBuilt(init.gpa, .{ .io = init.io, .environ = init.environ, .manifest = "", .settings = settings, .diagnostics = .text }, path);
-    return status;
-}
-
-fn runProjectModules(init: Context, parsed: Parsed) !u8 {
-    if (try runModules(init, parsed)) |status| return status;
-    const status = try listModules(init, parsed);
-    return status;
-}
-
-fn reportUngranted(init: Context, flag: []const u8) !u8 {
-    const message = try std.fmt.allocPrint(
-        init.gpa,
-        "mylang: --restrict is active and this command line did not grant a capability the entry point requests; pass {s}, or drop --restrict to grant every capability\n",
-        .{flag},
-    );
-    defer init.gpa.free(message);
-    try init.text(message);
-    return 2;
-}
-
-/// Build the checked program with the native backend and run it, passing its
-/// standard output and error through and adopting its exit status.
-fn executeRun(init: Context, compilation: *language.Compilation, parsed: Parsed) !u8 {
-    compilation.emit() catch |err| switch (err) {
-        error.SourceError => {
-            try report(init, compilation);
-            return 1;
-        },
-        else => return err,
-    };
-    if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
-    if (grants.ungranted(compilation.code.?, parsed.grants)) |flag| return reportUngranted(init, flag);
-    const manifest = emitMeasuredNative(init, compilation, parsed.runPolicy(parsed.saw_frames)) catch |err| switch (err) {
-        error.SourceError => {
-            try report(init, compilation);
-            return 1;
-        },
-        else => return err,
-    };
-    defer init.gpa.free(manifest);
-    return runNative(init, parsed, manifest);
-}
-
-/// Publish the emitted units as an executable, run it, and report execution timing.
-fn runNative(init: Context, parsed: Parsed, manifest: []const u8) !u8 {
-    init.timings.begin("native_execution", false);
-    const start = std.Io.Timestamp.now(init.io, .awake);
-    // `native_run` publishes or reuses the executable and executes it. The
-    // conservative count here never claims link reuse: object-level reuse inside
-    // the native build is D1's receipt, not this report's measurement.
-    setWork(init, .links, 1, 0);
-    var settings = parsed.native;
-    settings.arguments = parsed.runtime;
-    settings.max_memory = parsed.max_memory;
-    const status = try native_run.execute(init.gpa, .{
-        .io = init.io,
-        .environ = init.environ,
-        .manifest = manifest,
-        .settings = settings,
-        .diagnostics = if (init.diagnostics == .json) .json else .text,
-    });
-    init.timings.end();
-    if (!parsed.reporting.timings) return status;
-    const elapsed = start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds;
-    var buffer: [96]u8 = undefined;
-    try init.text(try std.fmt.bufPrint(&buffer, "timings: native_ns={d}\n", .{elapsed}));
-    return status;
 }
 
 fn report(init: Context, compilation: *const language.Compilation) !void {
@@ -1043,9 +649,6 @@ const Command = enum {
     @"check-session",
     @"schema-project",
     @"input-module",
-    @"emit-project-qbe",
-    @"native-test-graph",
-    @"native-test-compile",
     @"fmt-project",
     @"fmt-module",
     @"report-project-quality",
@@ -1058,15 +661,11 @@ const Command = enum {
     context,
     @"check-project",
     @"check-module",
-    @"run-project",
     @"list-interfaces",
     @"list-modules",
-    @"emit-qbe",
     @"list-declarations",
     fmt,
     check,
-    run,
-    @"dump-bytecode",
     @"dump-tokens",
     @"discover-duplicates",
     @"report-quality",
@@ -1127,9 +726,6 @@ const Parsed = struct {
     quality: language.quality.Options,
     command: Command,
     path: []const u8,
-    grants: grants.Config,
-    native: native_options.Options,
-    runtime: []const []const u8,
     discovery: language.duplicates.Options,
     reporting: Reporting,
     /// `lint` switches; ignored by every other command.
@@ -1144,31 +740,6 @@ const Parsed = struct {
     api_against: ?[]const u8,
     api_write: ?[]const u8,
     api_json: bool,
-    max_memory: ?u64,
-    /// Internal selective native emission input; one qualified function per line.
-    select_file: ?[]const u8,
-    /// Internal `--emission-report=FILE` on `emit-project-qbe`: write every
-    /// function's emission facts and unit keys there (MODULE-COMPILE-1).
-    emission_report: ?[]const u8 = null,
-    /// Internal `--drop-debug`: a ReleaseFast build omits `debug` lines.
-    drop_debug: bool,
-    /// Internal `--drop-step-checks`: this build carries no instruction ceiling.
-    drop_step_checks: bool,
-    /// Internal `--drop-frame-checks`: this build carries no call-depth ceiling.
-    drop_frame_checks: bool,
-    native_variants: NativeVariants = .original,
-    /// Internal `--lean-manifest`: name each unit's stored text by digest and
-    /// path instead of inlining it, and replay an unchanged project's manifest.
-    lean_manifest: bool = false,
-    /// Internal `--lean-manifest=executable`: the lean manifest of an
-    /// executable, without the facts only a library build reads.
-    executable_manifest: bool = false,
-    /// True when the command was asked for a runtime instruction ceiling, so the
-    /// program it compiles must carry the accounting that enforces it.
-    saw_steps: bool,
-    /// True when the command was asked for a runtime frame ceiling, so the program
-    /// it compiles must carry the depth accounting that enforces it.
-    saw_frames: bool,
     /// `--no-cache` disables all persistent frontend reuse for this command.
     no_cache: bool,
     /// `--cache-dir` selects the cache root; null uses the default location.
@@ -1182,38 +753,10 @@ const Parsed = struct {
     /// `--friction-log=PATH` as typed, or null when the flag was not passed.
     /// `MYLANG_FRICTION_LOG` names the same destination when the flag is absent.
     friction_path: ?[]const u8 = null,
-    /// Hidden `check --explain-ownership=PATH`: the JSON Lines report of the
-    /// ownership analysis (`OWNERSHIP-EXPLAIN-1`).
-    explain_ownership: ?[]const u8 = null,
     /// Set on the `check-project` a `mylang check` of a module entry becomes: an
     /// entry that declares no `main` is then checked as a library (`CHECK-LIBRARY-2`)
     /// instead of failing `E_MAIN`. A plain `check-project` keeps requiring `main`.
     library_fallback: bool = false,
-
-    /// The policy the `emit-qbe`/`emit-project-qbe` switches spell out. Each
-    /// `--drop-…` names one thing the emitted units stop carrying, so a command
-    /// that passes none emits the fully checked, fully accounted program.
-    fn emissionPolicy(self: *const Parsed) language.native_interface.Policy {
-        return .{
-            .drop_debug = self.drop_debug,
-            .step_checks = !self.drop_step_checks,
-            .frame_checks = !self.drop_frame_checks,
-            .cow = if (language.value_semantics.counting()) .counting else .off,
-            .native_variants = self.native_variants,
-        };
-    }
-
-    /// The policy `run`/`run-project` build under. Step accounting is emitted
-    /// only where a ceiling was asked for. `frames` is the caller's own default
-    /// for depth accounting — the single-file path emits it only under a
-    /// ceiling, a project keeps it.
-    fn runPolicy(self: *const Parsed, frames: bool) language.native_interface.Policy {
-        return .{
-            .step_checks = self.saw_steps,
-            .frame_checks = frames,
-            .cow = if (language.value_semantics.counting()) .counting else .off,
-        };
-    }
 };
 /// Whether any argument names the retired `--mutation-markers` switch. Every
 /// command rejects it before its own parser sees it, because no command selects
@@ -1229,23 +772,13 @@ fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Pa
     var index: usize = 1;
     while (index < args.len) : (index += 1) {
         const arg = args[index];
-        if (parser.after_delimiter) {
-            try parser.appendRuntime(arg);
-            continue;
-        }
-        if (std.mem.eql(u8, arg, "--")) {
-            if (!parser.executes()) return error.Usage;
-            try parser.appendRuntime("--");
-            parser.after_delimiter = true;
-            continue;
-        }
         if (std.mem.startsWith(u8, arg, "--diagnostics=")) {
             if (parser.reporting.diagnostics != null) return error.Usage;
             parser.reporting.diagnostics = std.meta.stringToEnum(diagnostic_output.Format, arg["--diagnostics=".len..]) orelse return error.Usage;
             continue;
         }
         if (try parseSwitchFlag(arg, &parser)) continue;
-        if (try parseDestinationFlag(arg, &parser)) continue;
+        if (try parseFrictionFlag(arg, &parser)) continue;
         if (std.mem.eql(u8, arg, "--report")) {
             if (parser.reporting.report) return error.Usage;
             parser.reporting.report = true;
@@ -1254,7 +787,7 @@ fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Pa
         if (std.mem.eql(u8, arg, "--explain-invalidation")) {
             if (parser.reporting.explain_invalidation) return error.Usage;
             switch (command) {
-                .@"project-dependencies", .@"check-project", .@"run-project", .run => {},
+                .@"project-dependencies", .@"check-project" => {},
                 else => return error.Usage,
             }
             parser.reporting.explain_invalidation = true;
@@ -1263,9 +796,7 @@ fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Pa
         if (try parser.cacheDirectoryOption(arg)) continue;
         if (try parser.surfaceOption(arg)) continue;
         if (try parser.qualityOption(arg)) continue;
-        if (try parser.grantOption(arg)) continue;
-        if (try parser.executionOption(arg)) continue;
-        if (try parser.leanManifestOption(arg)) continue;
+        if (try parser.checkOption(arg)) continue;
         // `context` and `index-project` also accept their `--flag value`
         // spelling, which consumes the next argument; every other flag keeps
         // the `--flag=value` form.
@@ -1293,15 +824,7 @@ const ArgumentParser = struct {
     write: bool = false,
     path: ?[]const u8 = null,
     policy: ?[]const u8 = null,
-    grants: grants.Config = .{},
-    native: native_options.Options = .{ .source = "", .run = true },
     allocator: std.mem.Allocator,
-    runtime: std.ArrayList([]const u8) = .empty,
-    after_delimiter: bool = false,
-    saw_steps: bool = false,
-    saw_frames: bool = false,
-    gc_stress: bool = false,
-    max_memory: ?u64 = null,
     discovery: language.duplicates.Options = .{},
     reporting: Reporting = .{},
     lint: language.lint.Options = .{},
@@ -1319,29 +842,15 @@ const ArgumentParser = struct {
     api_json: bool = false,
     no_cache: bool = false,
     friction_path: ?[]const u8 = null,
-    /// Hidden `check --explain-ownership=PATH`: the JSON Lines report of the
-    /// ownership analysis (`OWNERSHIP-EXPLAIN-1`).
-    explain_ownership: ?[]const u8 = null,
     cache_dir: ?[]const u8 = null,
-    select_file: ?[]const u8 = null,
-    emission_report: ?[]const u8 = null,
-    drop_debug: bool = false,
-    drop_step_checks: bool = false,
-    drop_frame_checks: bool = false,
-    native_variants: NativeVariants = .original,
-    saw_native_variants: bool = false,
-    lean_manifest: bool = false,
-    executable_manifest: bool = false,
     saw_min: bool = false,
     saw_population: bool = false,
     saw_work: bool = false,
-    /// `--cache-dir` is shared by every frontend-caching command; the executing
-    /// commands additionally hand the same directory to the native object cache.
+    /// `--cache-dir` is shared by every frontend-caching command.
     fn cacheDirectoryOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
         if (!std.mem.startsWith(u8, arg, cache_directory_prefix)) return false;
         if (self.cache_dir != null or arg.len == cache_directory_prefix.len) return error.Usage;
         self.cache_dir = arg[cache_directory_prefix.len..];
-        if (self.executes()) self.native.cache = self.cache_dir.?;
         return true;
     }
 
@@ -1417,138 +926,11 @@ const ArgumentParser = struct {
             else => false,
         };
     }
-    /// Authority options apply only to the commands that execute a program.
-    fn grantOption(self: *ArgumentParser, arg: []const u8) ArgError!bool {
-        if (!std.mem.startsWith(u8, arg, "--allow-") and !std.mem.eql(u8, arg, grants.restrict_flag)) return false;
-        if (self.command != .run and self.command != .@"run-project") return error.Usage;
-        if (!try self.grants.parse(arg)) return error.Usage;
-        try self.forward(arg);
-        return true;
-    }
-    /// Keep one option for the built program, which parses grants and budgets itself.
-    fn forward(self: *ArgumentParser, arg: []const u8) ArgError!void {
-        return self.appendRuntime(arg);
-    }
-    /// Whether an option with this prefix was already forwarded before the `--`
-    /// guest delimiter, so a repeat cannot silently override the first value.
-    fn forwarded(self: *const ArgumentParser, prefix: []const u8) bool {
-        for (self.runtime.items) |existing| {
-            if (std.mem.eql(u8, existing, "--")) break;
-            if (std.mem.startsWith(u8, existing, prefix)) return true;
-        }
-        return false;
-    }
-    /// Append one raw child argument, including the `--` guest delimiter.
-    fn appendRuntime(self: *ArgumentParser, arg: []const u8) ArgError!void {
-        try self.runtime.append(self.allocator, arg);
-    }
-    fn executes(self: *const ArgumentParser) bool {
-        return self.command == .run or self.command == .@"run-project";
-    }
-    /// Read one non-empty `--flag=value` that only an executing command accepts.
-    fn value(self: *const ArgumentParser, arg: []const u8, flag: []const u8) error{Usage}![]const u8 {
-        if (!self.executes() or arg.len == flag.len) return error.Usage;
-        return arg[flag.len..];
-    }
-    fn executionOption(self: *ArgumentParser, arg: []const u8) ArgError!bool {
-        if (std.mem.eql(u8, arg, "--check")) {
-            if (!self.checks() or self.format_check) return error.Usage;
-            self.format_check = true;
-        } else if (std.mem.eql(u8, arg, "--gc-stress")) {
-            if (!self.executes() or self.gc_stress) return error.Usage;
-            self.gc_stress = true;
-            try self.forward(arg);
-        } else if (std.mem.startsWith(u8, arg, steps_prefix)) {
-            if (!self.executes() or self.saw_steps) return error.Usage;
-            self.saw_steps = true;
-            _ = try positive(arg[steps_prefix.len..]);
-            try self.forward(arg);
-        } else if (std.mem.startsWith(u8, arg, frames_prefix)) {
-            if (!self.executes() or self.saw_frames) return error.Usage;
-            self.saw_frames = true;
-            _ = try positive(arg[frames_prefix.len..]);
-            try self.forward(arg);
-        } else if (std.mem.startsWith(u8, arg, timeout_prefix)) {
-            if (!self.executes() or self.forwarded(timeout_prefix)) return error.Usage;
-            _ = try positive(arg[timeout_prefix.len..]);
-            try self.forward(arg);
-        } else if (std.mem.startsWith(u8, arg, "--max-memory=")) {
-            if (!self.executes() or self.max_memory != null) return error.Usage;
-            self.max_memory = budget.parse(arg["--max-memory=".len..]) catch return error.Usage;
-        } else if (std.mem.eql(u8, arg, "--print-result")) {
-            if (!self.executes() or self.reporting.print_result) return error.Usage;
-            self.reporting.print_result = true;
-            try self.forward(arg);
-        } else if (try self.codegenOption(arg)) {
-            return true;
-        } else if (std.mem.startsWith(u8, arg, "--zig=")) {
-            self.native.zig = try self.value(arg, "--zig=");
-        } else if (std.mem.startsWith(u8, arg, select_file_prefix)) {
-            if (self.command != .@"emit-project-qbe" or self.select_file != null or arg.len == select_file_prefix.len) return error.Usage;
-            self.select_file = arg[select_file_prefix.len..];
-        } else if (try self.nativeVariantsOption(arg)) {
-            return true;
-        } else if (std.mem.eql(u8, arg, "--drop-debug")) {
-            if ((self.command != .@"emit-qbe" and self.command != .@"emit-project-qbe") or self.drop_debug) return error.Usage;
-            self.drop_debug = true;
-        } else if (std.mem.eql(u8, arg, "--drop-step-checks")) {
-            if ((self.command != .@"emit-qbe" and self.command != .@"emit-project-qbe") or self.drop_step_checks) return error.Usage;
-            self.drop_step_checks = true;
-        } else if (std.mem.eql(u8, arg, "--drop-frame-checks")) {
-            if ((self.command != .@"emit-qbe" and self.command != .@"emit-project-qbe") or self.drop_frame_checks) return error.Usage;
-            self.drop_frame_checks = true;
-        } else return false;
-        return true;
-    }
-
-    /// Select a checked implementation only for explicit frontend emissions.
-    fn nativeVariantsOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
-        const prefix = "--native-variants=";
-        if (!std.mem.startsWith(u8, arg, prefix)) return false;
-        if (self.command != .@"emit-qbe" and self.command != .@"emit-project-qbe" and self.command != .@"native-test-compile") return error.Usage;
-        if (self.saw_native_variants) return error.Usage;
-        self.native_variants = NativeVariants.parse(arg[prefix.len..]) orelse return error.Usage;
-        self.saw_native_variants = true;
-        return true;
-    }
-
-    /// Internal `--lean-manifest` on `emit-project-qbe`: the native build driver
-    /// reads unit texts from the fragment store instead of the manifest
-    /// (`QBE-FRAGMENT-REUSE-1`).
-    /// `--lean-manifest=executable` is the same for an executable build, whose
-    /// manifest leaves out the export, schema, wire, codec and test-dependency
-    /// facts only a library build reads (`EMIT-META-1`).
-    fn leanManifestOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
-        if (try self.emissionReportOption(arg)) return true;
-        const executable = std.mem.eql(u8, arg, "--lean-manifest=executable");
-        if (!executable and !std.mem.eql(u8, arg, "--lean-manifest")) return false;
-        if (self.command != .@"emit-project-qbe" or self.lean_manifest) return error.Usage;
-        self.lean_manifest = true;
-        self.executable_manifest = executable;
-        return true;
-    }
-
-    /// Internal `--emission-report=FILE` on `emit-project-qbe`: the whole
-    /// program's per-function emission facts and unit keys (MODULE-COMPILE-1).
-    fn emissionReportOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
-        if (!std.mem.startsWith(u8, arg, "--emission-report=")) return false;
-        if (self.command != .@"emit-project-qbe" or self.emission_report != null) return error.Usage;
-        self.emission_report = arg["--emission-report=".len..];
-        return true;
-    }
-
-    /// The code generator a `run` builds with: QBE unless `--release` names the
-    /// LLVM O3 build with LTO (`run` is already ReleaseFast), or `--qbe=PATH`
-    /// names another QBE. The two contradict each other in either order.
-    fn codegenOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
-        if (std.mem.eql(u8, arg, native_options.release_flag)) {
-            if (!self.executes() or self.native.codegen != .auto) return error.Usage;
-            self.native.codegen = native_options.release_codegen;
-            return true;
-        }
-        if (!std.mem.startsWith(u8, arg, "--qbe=")) return false;
-        if (self.native.codegen == .llvm) return error.Usage;
-        self.native.codegen = .{ .qbe = try self.value(arg, "--qbe=") };
+    /// `--check` on the commands that compare rather than write.
+    fn checkOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (!std.mem.eql(u8, arg, "--check")) return false;
+        if (!self.checks() or self.format_check) return error.Usage;
+        self.format_check = true;
         return true;
     }
 
@@ -1577,7 +959,7 @@ const ArgumentParser = struct {
             if (self.command == .@"check-session" or self.reporting.timings or self.reporting.timings_json) return error.Usage;
             self.reporting.timings_json = true;
         } else if (std.mem.eql(u8, arg, "--timings")) {
-            const supported = self.command == .run or self.command == .@"discover-duplicates" or self.command == .@"discover-project-duplicates";
+            const supported = self.command == .@"discover-duplicates" or self.command == .@"discover-project-duplicates";
             if (!supported or self.reporting.timings or self.reporting.timings_json) return error.Usage;
             self.reporting.timings = true;
         } else return false;
@@ -1720,27 +1102,8 @@ const ArgumentParser = struct {
     /// A `context` or `index-project` switch written with a space instead of
     /// `=`, which takes the next argument.
     fn separateValue(self: *ArgumentParser, args: []const []const u8, index: *usize) ArgError!bool {
-        if (try self.budgetSeparateValue(args, index)) return true;
         if (try self.indexSeparateValue(args, index)) return true;
         return self.contextSeparateValue(args, index);
-    }
-
-    /// The execution budgets written with a space, `--max-frames 2000000`, as
-    /// `mylang test` takes them. The value is joined back into the `=` spelling
-    /// and checked exactly as that spelling is, so both forms accept and reject
-    /// the same values.
-    fn budgetSeparateValue(self: *ArgumentParser, args: []const []const u8, index: *usize) ArgError!bool {
-        if (!self.executes()) return false;
-        inline for (.{ "--max-steps", "--max-frames", "--timeout", "--max-memory" }) |flag| {
-            if (std.mem.eql(u8, args[index.*], flag)) {
-                if (index.* + 1 >= args.len) return error.Usage;
-                index.* += 1;
-                const joined = try std.mem.concat(self.allocator, u8, &.{ flag, "=", args[index.*] });
-                const accepted = try self.executionOption(joined);
-                return accepted;
-            }
-        }
-        return false;
     }
 
     /// The `index-project` filters written with a space instead of `=`, which
@@ -1778,9 +1141,6 @@ const ArgumentParser = struct {
             .quality = self.quality,
             .command = self.command,
             .path = self.path orelse return error.Usage,
-            .grants = self.grants,
-            .native = self.native,
-            .runtime = self.runtime.items,
             .discovery = self.discovery,
             .reporting = self.reporting,
             .lint = self.lint,
@@ -1795,21 +1155,9 @@ const ArgumentParser = struct {
             .api_against = self.api_against,
             .api_write = self.api_write,
             .api_json = self.api_json,
-            .max_memory = self.max_memory,
             .no_cache = self.no_cache,
             .cache_dir = self.cache_dir,
-            .select_file = self.select_file,
-            .emission_report = self.emission_report,
-            .drop_debug = self.drop_debug,
-            .drop_step_checks = self.drop_step_checks,
-            .drop_frame_checks = self.drop_frame_checks,
-            .native_variants = self.native_variants,
-            .lean_manifest = self.lean_manifest,
-            .executable_manifest = self.executable_manifest,
-            .saw_steps = self.saw_steps,
-            .saw_frames = self.saw_frames,
             .friction_path = self.friction_path,
-            .explain_ownership = self.explain_ownership,
         };
     }
 };
@@ -1835,26 +1183,6 @@ fn parseFrictionFlag(arg: []const u8, parser: *ArgumentParser) ArgError!bool {
     parser.friction_path = destination_path;
     return true;
 }
-
-/// Consume a flag that names a file this command writes beside its ordinary
-/// output: `--friction-log=PATH`, or `check`'s `--explain-ownership=PATH`.
-fn parseDestinationFlag(arg: []const u8, parser: *ArgumentParser) ArgError!bool {
-    if (try parseFrictionFlag(arg, parser)) return true;
-    return parseExplainFlag(arg, parser);
-}
-
-/// Consume the hidden `--explain-ownership=PATH` of `check`
-/// (`OWNERSHIP-EXPLAIN-1`). A repeat, an empty path or another command is a
-/// usage error; an argument that is not this flag is left for the caller.
-fn parseExplainFlag(arg: []const u8, parser: *ArgumentParser) ArgError!bool {
-    if (!std.mem.startsWith(u8, arg, explain_ownership_prefix)) return false;
-    const destination_path = arg[explain_ownership_prefix.len..];
-    if (parser.explain_ownership != null or destination_path.len == 0 or parser.command != .check) return error.Usage;
-    parser.explain_ownership = destination_path;
-    return true;
-}
-
-const explain_ownership_prefix = "--explain-ownership=";
 
 fn positive(digits: []const u8) error{Usage}!u64 {
     if (digits.len == 0) return error.Usage;
@@ -2020,7 +1348,7 @@ fn configWarningsDeny(init: Context, config: *const project_config.Config) !bool
 
 /// Commands whose inner loop a `warnings: "deny"` project makes rejecting.
 fn deniesOneShotWarnings(command: Command) bool {
-    return command == .check or command == .run;
+    return command == .check;
 }
 
 /// Finish a `check-project` run: refuse an opted-in `warnings: "deny"` project
@@ -2037,24 +1365,6 @@ fn finishCheckProject(
     if (try projectWarningsDenied(init, compilation, configured)) return 1;
     try rememberFrontendVerdict(init, .@"check-project", project, compilation, frontend);
     return rememberCheck(verdict, project, compilation);
-}
-
-/// Record the `check-project` verdict for a project the internal
-/// `native-test-compile` session has just checked. The session's check is the
-/// one `check-project` makes, so the next unchanged `mylang test` validates by
-/// replaying this verdict instead of re-checking every body. A project whose
-/// warnings its configuration denies records nothing, so that validity check
-/// still runs and still rejects it.
-fn rememberSessionVerdict(
-    init: Context,
-    project: *language.project.Project,
-    compilation: *language.project_compile.Compilation,
-    stores: Replayed,
-    configured: *const ConfiguredPolicy,
-) !void {
-    if (try projectWarningsDenied(init, compilation, configured)) return;
-    try rememberFrontendVerdict(init, .@"check-project", project, compilation, stores.frontend);
-    _ = try rememberCheck(stores.verdict, project, compilation);
 }
 
 /// Whether an opted-in `warnings: "deny"` project makes this checked program
@@ -2521,21 +1831,6 @@ fn entryLocation(init: Context, path: []const u8) !EntryLocation {
     return .{ .root = std.fs.path.dirname(path) orelse ".", .name = basename[0 .. basename.len - 3] };
 }
 
-/// The stages a receipt pass actually executes. Selective emission lowers only
-/// its closure, while an ordinary project run defers lowering until after its
-/// manifest-cache lookup. Invalidation explanation still requests the complete
-/// fragment receipt it compares.
-fn receiptStages(parsed: Parsed, executed: [std.meta.tags(invalidation.Stage).len]bool) [std.meta.tags(invalidation.Stage).len]bool {
-    var stages = executed;
-    const project_run = parsed.command == .run or parsed.command == .@"run-project";
-    const deferred_project_run = project_run and !parsed.reporting.explain_invalidation;
-    if ((parsed.command == .@"emit-project-qbe" and parsed.select_file != null) or deferred_project_run) {
-        stages[@backingInt(invalidation.Stage.lower_function)] = false;
-        stages[@backingInt(invalidation.Stage.emit_fragment)] = false;
-    }
-    return stages;
-}
-
 /// How long a project request's loaded graph must outlive the request itself.
 const Lifetime = enum {
     /// A one-shot command: the process exits right after, so an optimized
@@ -2570,11 +1865,11 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     // replayed. A project without `mylang.json` keeps its previous behavior.
     var configured = loadConfiguredPolicy(init, parsed, &project, frontend, verdict) catch |err| return policyFailureStatus(err);
     defer configured.deinit();
-    try foldInterfaceFiles(init, &configured, &project, files.root, .{ .verdict = verdict, .frontend = frontend, .policy = null });
-    try foldEmbeds(&configured, &project, .{ .verdict = verdict, .frontend = frontend, .policy = null });
+    try foldInterfaceFiles(init, &configured, &project, files.root, .{ .verdict = verdict, .frontend = frontend });
+    try foldEmbeds(&configured, &project, .{ .verdict = verdict, .frontend = frontend });
     const policy_receipt = try configuredPolicyReceipt(init.arena.allocator(), &configured);
     if (try surfaceProject(init, &project, parsed)) |status| return status;
-    if (try replayStoredVerdict(init, parsed, &project, .{ .verdict = verdict, .frontend = frontend, .policy = configured.identity })) return 0;
+    if (try replayStoredVerdict(init, parsed, &project, .{ .verdict = verdict, .frontend = frontend })) return 0;
     // `list-interfaces` is the declaration/interface gate: it parses every module
     // and checks exported signatures without checking bodies. `--contracts`
     // publishes those declared contracts for provider validation.
@@ -2584,8 +1879,6 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         init.timings.begin("source_merge", false);
         var compilation = try language.project_compile.Compilation.init(&index);
         init.timings.end();
-        var fragment_store: language.qbe_fragments.Store = undefined;
-        compilation.reuse = try openFragments(init, parsed, &fragment_store);
         if (try earlyProjectCheck(init, parsed, &compilation, functions, &files, &configured)) |status| return status;
         const semantic_before = if (functions) |f| f.statistics else null;
         // `check` needs no checked trees: unchanged bodies are stood in by the
@@ -2610,35 +1903,14 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         if (try checkedCommand(init, parsed, &compilation, unchecked_reason, &files, &configured)) |status| return status;
         init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
         recordTypedNodes(init, &compilation);
-        releaseCheckedSyntax(parsed, &compilation, unchecked_reason == null);
-        // The internal native-test compile session keeps this one checked
-        // compilation alive and serves facts plus selective lowering from it, so
-        // a provider graph is never checked again just to emit its closure.
         switch (parsed.command) {
             .lint => return lintProject(init, parsed, &compilation, &configured),
             // `tests-for` also answers a project that did not check, from its syntax.
             .@"tests-for" => return testsFor(init, parsed, &compilation),
             .@"api-diff" => return apiDiff(init, parsed, &compilation),
-            .@"native-test-compile" => {
-                try rememberSessionVerdict(init, &project, &compilation, .{ .verdict = verdict, .frontend = frontend, .policy = configured.identity }, &configured);
-                return nativeTestCompileSession(init, &compilation, parsed.native_variants);
-            },
             else => {},
         }
-        const executed = executedStages(parsed.command);
-        // A selective `emit-project-qbe --select-file` lowers only its closure in
-        // the emission helper; the whole-project receipt pass must not lower first.
-        const receipt_stages = receiptStages(parsed, executed);
-        // A command that lowers must do so before the receipt is built: emitted
-        // fragments are real inputs to the lower/emit/link explanation, not an
-        // empty table that can only compare equal.
-        if (!try lowerForReceipt(init, &compilation, receipt_stages, parsed.drop_debug)) {
-            try reportProject(init, &compilation);
-            if (parsed.reporting.explain_invalidation) {
-                try reportFailedInvalidation(init, parsed, &compilation, files.inputs);
-            }
-            return 1;
-        }
+        const executed = executedStages();
         // One receipt serves both the invalidation comparison and, for
         // `project-dependencies`, the normal stdout payload.
         var dependency_receipt: ?[]u8 = null;
@@ -2647,23 +1919,13 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
             dependency_receipt = try dependencyReport(init, &compilation, files.inputs, policy_receipt);
         }
         if (parsed.reporting.explain_invalidation) try reportInvalidation(init, parsed, dependency_receipt.?, executed, true);
-        const requested_output = emitRequestedOutput(init, &compilation, parsed, .{ .project = &project, .policy = configured.identity }) catch |err| switch (err) {
-            error.SourceError => return 1,
-            else => return err,
-        };
-        if (requested_output) |output| break :result output;
+        if (try requestedOutput(init, &compilation, parsed)) |output| break :result output;
         try reportProject(init, &compilation);
         if (parsed.command == .@"project-dependencies") break :result try init.gpa.dupe(u8, dependency_receipt.?);
-        if (parsed.command == .@"check-project") return finishRequestedProjectCheck(init, parsed, .{
-            .project = &project,
-            .compilation = &compilation,
-            .verdict = verdict,
-            .frontend = frontend,
-            .configured = &configured,
-        });
+        if (parsed.command == .@"check-project") return finishCheckProject(init, &project, &compilation, verdict, frontend, &configured);
         if (parsed.command == .@"discover-project-duplicates") return discoverProject(init, parsed, &project, &compilation, frontend_start);
         if (parsed.command == .@"check-policy") return checkProjectPolicy(init, parsed, &project);
-        return runProjectProgram(init, &compilation, parsed, &configured);
+        unreachable;
     } else try project.render(init.gpa);
     defer init.gpa.free(output);
     try std.Io.File.stdout().writeStreamingAll(init.io, output);
@@ -2694,58 +1956,13 @@ fn checkLibraryProject(init: Context, parsed: Parsed, compilation: *language.pro
     return if (try projectWarningsDenied(init, compilation, configured)) 1 else 0;
 }
 
-const RequestedProjectCheck = struct {
-    project: *language.project.Project,
-    compilation: *language.project_compile.Compilation,
-    verdict: ?*language.check_cache.Cache,
-    frontend: ?*language.frontend_cache.Cache,
-    configured: *const ConfiguredPolicy,
-};
-
-fn finishRequestedProjectCheck(init: Context, parsed: Parsed, request: RequestedProjectCheck) !u8 {
-    if (parsed.explain_ownership) |destination| {
-        const explained = try explainProjectOwnership(init, request.compilation, destination);
-        if (explained != 0) return explained;
-    }
-    return finishCheckProject(init, request.project, request.compilation, request.verdict, request.frontend, request.configured);
-}
-
-fn explainProjectOwnership(init: Context, compilation: *language.project_compile.Compilation, destination: []const u8) !u8 {
-    const ownership = compilation.explainOwnership(init.gpa) catch |err| switch (err) {
-        error.SourceError => return 1,
-        else => return err,
-    };
-    defer init.gpa.free(ownership);
-    std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = destination, .data = ownership }) catch return 2;
-    return 0;
-}
-
-/// SYNTAX-RELEASE-1: release the merged syntax of a checked program when this
-/// command's remaining work is lowering and emission alone: a whole-program
-/// `emit-project-qbe`, the build frontend. An invalidation explanation and a
-/// selective (test) emission read more of the checked compilation.
-fn releaseCheckedSyntax(parsed: Parsed, compilation: *language.project_compile.Compilation, checked: bool) void {
-    const releases = parsed.command == .@"emit-project-qbe" and parsed.select_file == null and !parsed.reporting.explain_invalidation;
-    if (checked and releases) compilation.releaseSyntax();
-}
-
-/// Attach the entry's stored check summaries to a `check-project` request, or
-/// to a command that lowers the whole checked program. An invalidation
-/// explanation compares complete receipts and uses none, and so does every
-/// command that inspects the checked program some other way.
+/// Attach the entry's stored check summaries to a `check-project` request, which
+/// stands them in for unchanged bodies. An invalidation explanation compares
+/// complete receipts and uses none, and so does every command that inspects the
+/// checked program some other way.
 fn openSummaries(init: Context, parsed: Parsed, project: *const language.project.Project, functions: ?*language.semantic_cache.Cache, request: *language.semantic_summary.Request) !void {
     if (parsed.reporting.explain_invalidation) return;
-    if (parsed.explain_ownership != null) request.facts_only = true;
-    // `check` stands summaries in for whole bodies; a command that lowers the
-    // program checks every body and stands them in only for pass facts. The
-    // `native-test-compile` session is one: its facts and its selective
-    // lowering both read the checked tree (NATIVE-TEST-SUMMARY-1).
-    switch (parsed.command) {
-        .@"check-project" => {},
-        .@"emit-project-qbe", .run, .@"run-project", .@"native-test-compile" => request.facts_only = true,
-        else => return,
-    }
-    if (parsed.select_file != null) return;
+    if (parsed.command != .@"check-project") return;
     const cache = parsed.frontend orelse return;
     const semantic = functions orelse return;
     init.timings.begin("summary_load", false);
@@ -2800,185 +2017,11 @@ fn recordCheckWork(init: Context, functions: ?*language.semantic_cache.Cache, be
     }
 }
 
-/// Record lowered functions from the retained bytecode program. Lowering is a
-/// whole-program step that runs at most once, so the count replaces earlier
-/// values rather than accumulating.
-fn recordLoweredCount(init: Context, functions: usize) void {
-    setWork(init, .lowered_functions, functions, 0);
-}
-
-/// A refused final flush cannot be reported once the guest program has ended.
-fn flushOutput(stdout: *std.Io.File.Writer) void {
-    stdout.interface.flush() catch |err| switch (err) {
-        error.WriteFailed => return,
-    };
-}
-
-/// Build the checked project with the native backend and run its entry point.
-fn runProjectProgram(init: Context, compilation: *language.project_compile.Compilation, parsed: Parsed, configured: *const ConfiguredPolicy) !u8 {
-    if (grants.ungranted(compilation.program.?, parsed.grants)) |flag| return reportUngranted(init, flag);
-    if (try projectWarningsDenied(init, compilation, configured)) return 1;
-    const sources = try init.gpa.alloc(native_run.manifest_cache.Source, compilation.src.origins.len);
-    defer init.gpa.free(sources);
-    for (compilation.src.origins, sources) |origin, *source| source.* = .{ .path = origin.original.path, .bytes = origin.original.bytes };
-    const identity: native_run.manifest_cache.Identity = .{
-        .sources = sources,
-        .policy = if (configured.identity) |*value| value else null,
-        .step_checks = parsed.saw_steps,
-        .frame_checks = true,
-    };
-    if (!parsed.no_cache) {
-        if (try native_run.manifest_cache.load(init.gpa, init.io, init.environ, parsed.native, identity)) |entry| {
-            defer init.gpa.free(entry.manifest);
-            // `--explain-invalidation` deliberately lowered above to construct
-            // its complete fragment receipt. Preserve that observed work while
-            // still recording that QBE emission itself was reused.
-            if (compilation.code == null) setWork(init, .lowered_functions, 0, entry.fragments);
-            setWork(init, .emitted_fragments, 0, entry.fragments);
-            return runNative(init, parsed, entry.manifest);
-        }
-    }
-    const manifest = emitMeasuredNative(init, compilation, parsed.runPolicy(true)) catch |err| switch (err) {
-        error.SourceError => {
-            try reportProject(init, compilation);
-            return 1;
-        },
-        else => return err,
-    };
-    defer init.gpa.free(manifest);
-    // FRAGMENT-SWEEP-1: the texts this manifest names are in a flushed pack.
-    if (compilation.reuse) |reuse| reuse.store.sweep();
-    if (!parsed.no_cache) native_run.manifest_cache.store(init.gpa, init.io, init.environ, parsed.native, identity, manifest) catch return runNative(init, parsed, manifest);
-    return runNative(init, parsed, manifest);
-}
-
-fn emitProjectNative(init: Context, compilation: *language.project_compile.Compilation, select_file: ?[]const u8, policy: language.native_interface.Policy) !?[]u8 {
-    const generated = (if (select_file) |path| emitMeasuredSelectedNative(init, compilation, path, policy.native_variants) else emitMeasuredNative(init, compilation, policy)) catch |err| switch (err) {
-        error.SourceError => {
-            try reportProject(init, compilation);
-            return null;
-        },
-        else => return err,
-    };
-    errdefer init.gpa.free(generated);
-    try reportProject(init, compilation);
-    return generated;
-}
-
-/// `native-test-graph` is an internal checked-facts producer. It emits no
-/// lowering/emission receipt because no QBE work occurred, and stdout stays a
-/// pure graph payload for the native-test parent.
-fn emitNativeTestFacts(init: Context, compilation: *language.project_compile.Compilation, scope: language.project_compile.FactsScope) ![]u8 {
-    init.timings.begin(frontend_label, false);
-    const facts = compilation.emitNativeTestFactsScoped(init.gpa, scope) catch |err| switch (err) {
-        error.SourceError => {
-            try reportProject(init, compilation);
-            return error.SourceError;
-        },
-        else => return err,
-    };
-    init.timings.end();
-    return facts;
-}
-
-/// Internal checked-compilation session. It keeps the one compilation already
-/// checked by `listModulesWithCache` and serves facts plus selective lowering
-/// requests from it, so a native-test provider graph is checked exactly once.
-/// Requests are one line each: `facts <out>`, `lower <select> <out>`, `quit`.
-fn nativeTestCompileSession(init: Context, compilation: *language.project_compile.Compilation, native_variants: NativeVariants) !u8 {
-    var buffer: [8192]u8 = undefined;
-    var input = std.Io.File.stdin().readerStreaming(init.io, &buffer);
-    while (true) {
-        const raw = input.interface.takeDelimiter('\n') catch |err| switch (err) {
-            error.StreamTooLong => return nativeTestCompileReply(init, "invalid", 2, request_too_long, 0, 0),
-            else => return err,
-        } orelse return 0;
-        const line = std.mem.trim(u8, raw, " \t\r");
-        if (std.mem.eql(u8, line, "quit")) return nativeTestCompileReply(init, "quit", 0, null, 0, 0);
-        if (std.mem.startsWith(u8, line, "facts ")) {
-            const path = std.mem.trim(u8, line["facts ".len..], " \t");
-            if (path.len == 0) return nativeTestCompileReply(init, "facts", 2, "MissingOutput", 0, 0);
-            // The session serves `mylang test`, which plans only the tests and
-            // benchmarks it discovered, so its facts cover just their closure.
-            const facts = emitNativeTestFacts(init, compilation, .closure) catch |err| switch (err) {
-                error.SourceError => return nativeTestCompileReply(init, "facts", 1, "SourceError", 0, 0),
-                else => return err,
-            };
-            defer init.gpa.free(facts);
-            try std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = path, .data = facts });
-            _ = try nativeTestCompileReply(init, "facts", 0, null, 0, 0);
-            continue;
-        }
-        if (std.mem.startsWith(u8, line, "lower")) {
-            var fields = std.mem.splitScalar(u8, line, '\t');
-            _ = fields.next();
-            const select = std.mem.trim(u8, fields.next() orelse "", " \t");
-            const output = std.mem.trim(u8, fields.next() orelse "", " \t");
-            if (select.len == 0 or output.len == 0) return nativeTestCompileReply(init, "lower", 2, "MissingSelection", 0, 0);
-            const names = selectionNames(init, select) catch |err| switch (err) {
-                error.OutOfMemory => return err,
-                else => return nativeTestCompileReply(init, "lower", 1, "SelectionReadFailed", 0, 0),
-            };
-            defer {
-                for (names) |name| init.gpa.free(name);
-                init.gpa.free(names);
-            }
-            init.timings.begin(lowering_phase, false);
-            var stats: language.project_compile.Compilation.SelectedStats = .{};
-            const before = emissionCounts(compilation.reuse);
-            const manifest = compilation.emitQbeSelectedWithOptions(init.gpa, names, &stats, .{ .native_variants = native_variants }) catch |err| switch (err) {
-                error.SourceError => return nativeTestCompileReply(init, "lower", 1, "SourceError", 0, 0),
-                else => return err,
-            };
-            defer init.gpa.free(manifest);
-            recordLoweredCount(init, stats.lowered_functions);
-            recordEmission(init, compilation.reuse, before, stats.emitted_fragments);
-            init.timings.end();
-            try std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = output, .data = manifest });
-            _ = try nativeTestCompileReply(init, "lower", 0, null, stats.lowered_functions, stats.emitted_fragments);
-            continue;
-        }
-        return nativeTestCompileReply(init, "invalid", 2, "UnknownSessionCommand", 0, 0);
-    }
-}
-
-/// One `native-test-compile-v1` reply line. The checked payload itself is
-/// written to the request's output path so the session stream stays line-sized.
-fn nativeTestCompileReply(init: Context, action: []const u8, status: u8, failure: ?[]const u8, lowered: usize, emitted: usize) !u8 {
-    const text = try std.json.Stringify.valueAlloc(init.gpa, .{
-        .version = "native-test-compile-v1",
-        .action = action,
-        .status = status,
-        .failure = failure,
-        .lowered_functions = lowered,
-        .emitted_fragments = emitted,
-    }, .{});
-    defer init.gpa.free(text);
-    try std.Io.File.stdout().writeStreamingAll(init.io, text);
-    try std.Io.File.stdout().writeStreamingAll(init.io, "\n");
-    return status;
-}
-
-/// The loaded project and policy identity a whole-project emission is
-/// remembered under (`EMIT-REPLAY-1`).
-const ReplaySite = struct { project: *const language.project.Project, policy: ?[64]u8 };
-
-fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Compilation, parsed: Parsed, site: ReplaySite) !?[]u8 {
+/// The stdout document a project report command renders from the checked
+/// program: `schema-project` and `report-project-quality`. Null for every other
+/// command.
+fn requestedOutput(init: Context, compilation: *language.project_compile.Compilation, parsed: Parsed) !?[]u8 {
     return switch (parsed.command) {
-        .@"native-test-graph" => try emitNativeTestFacts(init, compilation, .all),
-        .@"emit-project-qbe" => blk: {
-            var emitted: language.qbe_fragments.Report = .{ .arena = init.arena.allocator() };
-            if (parsed.emission_report != null) if (compilation.reuse) |*reuse| {
-                reuse.report = &emitted;
-            };
-            const manifest = (try emitProjectNative(init, compilation, parsed.select_file, parsed.emissionPolicy())) orelse return error.SourceError;
-            if (parsed.emission_report) |path| try writeEmissionReport(init, compilation, emitted, path);
-            try rememberManifest(init, parsed, site, compilation, manifest);
-            // FRAGMENT-SWEEP-1: every text this manifest names is in a flushed
-            // pack and the replay, so an occasional sweep can go now.
-            if (compilation.reuse) |reuse| reuse.store.sweep();
-            break :blk manifest;
-        },
         .@"schema-project" => blk: {
             try reportProject(init, compilation);
             break :blk if (parsed.schema_report)
@@ -2996,25 +2039,6 @@ fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Com
         },
         else => null,
     };
-}
-
-/// MODULE-COMPILE-1: `emit-project-qbe --emission-report=FILE` writes what
-/// the whole-program emission computed about every function (the facts a
-/// module interface carries and each unit's keys) and every module's imports,
-/// the reference a per-module build is compared with.
-fn writeEmissionReport(init: Context, compilation: *const language.project_compile.Compilation, emitted: language.qbe_fragments.Report, path: []const u8) !void {
-    const a = init.arena.allocator();
-    const loaded = compilation.index.project.modules.items;
-    const Module = struct { name: []const u8, imports: []const []const u8 };
-    const modules = try a.alloc(Module, loaded.len);
-    for (loaded, modules) |module, *row| {
-        const imports = try a.alloc([]const u8, module.imports.len);
-        for (module.imports, imports) |imported, *name| name.* = loaded[imported.target].name;
-        row.* = .{ .name = module.name, .imports = imports };
-    }
-    const text = try std.json.Stringify.valueAlloc(a, .{ .version = "emission-report-v1", .arenas = emitted.arenas, .modules = modules, .functions = emitted.functions }, .{});
-    defer a.free(text);
-    std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = path, .data = text }) catch return error.WriteFailed;
 }
 
 fn partialNavigation(init: Context, project: *language.project.Project, parsed: Parsed, files: ?*ModuleFiles) !u8 {
@@ -3243,8 +2267,7 @@ fn enforceInterfaceFiles(init: Context, parsed: Parsed, configured: *const Confi
 /// `interface_files` gate applies to it.
 fn enforcesInterfaceFiles(parsed: Parsed) bool {
     return switch (parsed.command) {
-        .@"check-project", .@"check-module", .@"run-project", .run => true,
-        .@"emit-project-qbe" => parsed.select_file == null,
+        .@"check-project", .@"check-module" => true,
         else => false,
     };
 }
@@ -3292,21 +2315,17 @@ fn rememberCheck(verdict: ?*language.check_cache.Cache, project: *const language
     return 0;
 }
 
-/// Replay an in-process or persistent stored verdict before any semantic work.
-/// A requested explanation must compare receipts, so it never replays a stored
-/// verdict before the checked compilation produces one.
-/// The stores an unchanged project's answer may be replayed from, and the
-/// configured policy identity that answer was produced under.
+/// The stores an unchanged project's verdict may be replayed from.
 const Replayed = struct {
     verdict: ?*language.check_cache.Cache,
     frontend: ?*language.frontend_cache.Cache,
-    policy: ?[64]u8,
 };
 
+/// Replay an in-process or persistent stored verdict before any semantic work.
+/// A requested explanation must compare receipts, so it never replays a stored
+/// verdict before the checked compilation produces one.
 fn replayStoredVerdict(init: Context, parsed: Parsed, project: *const language.project.Project, stores: Replayed) !bool {
-    if (parsed.explain_ownership != null) return false;
     if (try replayCheck(init, parsed.command, project, stores.verdict)) return true;
-    if (try replayManifest(init, parsed, project, stores.policy)) return true;
     if (parsed.reporting.explain_invalidation) return false;
     return replayFrontendVerdict(init, parsed.command, project, stores.frontend);
 }
@@ -3380,35 +2399,10 @@ fn compilerIdentity(io: std.Io) !language.source_receipt.Identity {
     const builtin = @import("builtin");
     return .{ .compiler_sha256 = build_identity, .zig_version = builtin.zig_version_string, .architecture = @tagName(builtin.cpu.arch), .os = @tagName(builtin.os.tag), .abi = @tagName(builtin.abi), .optimize = @tagName(builtin.mode) };
 }
-/// The identity every compiler cache is keyed by: the compiler's own, or under
-/// value semantics (`VALUE-SEMANTICS-1`) a digest of it, so no frontend,
-/// semantic, fragment or receipt cache entry is shared between the two modes.
-/// `dispatch` sets it once, before any command reads it.
-var build_identity: [32]u8 = base_identity;
-/// The cache identity under value semantics: a digest of the build's own.
-fn valueSemanticsIdentity(base: [32]u8) [32]u8 {
-    var digest: [32]u8 = undefined;
-    std.crypto.hash.sha2.Sha256.hash(&(base ++ "value-semantics".*), &digest, .{});
-    return digest;
-}
-/// A counting build cannot reuse an ordinary value-semantics cache entry.
-fn cowCountingIdentity(base: [32]u8) [32]u8 {
-    var digest: [32]u8 = undefined;
-    std.crypto.hash.sha2.Sha256.hash(&(base ++ "cow-counting".*), &digest, .{});
-    return digest;
-}
-/// Partition every frontend cache by the normalized native ownership contract.
-fn runtimeIdentity(base: [32]u8) [32]u8 {
-    var hash = std.crypto.hash.sha2.Sha256.init(.{});
-    hash.update(&base);
-    hash.update(language.runtime_mode.identity());
-    var digest: [32]u8 = undefined;
-    hash.final(&digest);
-    return digest;
-}
-/// The identity of this compiler build itself.
-const base_identity: [32]u8 = identity: {
-    const text = @import("qbe_build_assets").compiler_identity;
+/// The identity every compiler cache and receipt is keyed by: the compiler
+/// build's own (`build_identity.zig`), decoded from hexadecimal.
+const build_identity: [32]u8 = identity: {
+    const text = @import("build_identity").compiler_identity;
     var decoded: [32]u8 = undefined;
     for (&decoded, 0..) |*byte, index| byte.* = nibble(text[index * 2]) << 4 | nibble(text[index * 2 + 1]);
     break :identity decoded;
@@ -3576,24 +2570,6 @@ fn dependencyReport(init: Context, compilation: *language.project_compile.Compil
     return language.dependency_report.render(init.gpa, compilation, try compilerIdentity(init.io), manifests, policy);
 }
 
-/// Lower a project before its receipt is built when the command will emit, so
-/// the receipt's fragment table is populated with real inputs. Returns false
-/// when lowering reported a source error; the caller reports diagnostics.
-/// The lowering is the one the emission then uses, so it honours the
-/// emitter's `--drop-debug` (a ReleaseFast project build drops its `debug`
-/// lines, DEBUG-LINE-1); `run` and `run-project` never set it.
-fn lowerForReceipt(init: Context, compilation: *language.project_compile.Compilation, executed: [std.meta.tags(invalidation.Stage).len]bool, drop_debug: bool) !bool {
-    if (!executed[@backingInt(invalidation.Stage.lower_function)]) return true;
-    init.timings.begin(lowering_phase, false);
-    defer init.timings.end();
-    compilation.emitWithOptions(drop_debug) catch |err| switch (err) {
-        error.SourceError => return false,
-        else => return err,
-    };
-    if (compilation.code != null) recordLoweredCount(init, compilation.loweredCount());
-    return true;
-}
-
 /// Explain a rejected edit against the previous baseline without publishing a
 /// successful verdict. A project that failed to load has no receipt to compare,
 /// so the explanation is simply omitted rather than fabricated.
@@ -3605,7 +2581,7 @@ fn reportFailedInvalidation(init: Context, parsed: Parsed, compilation: *languag
         else => return,
     };
     defer init.gpa.free(current);
-    try reportInvalidation(init, parsed, current, executedStages(parsed.command), false);
+    try reportInvalidation(init, parsed, current, executedStages(), false);
 }
 
 fn checkImportedInputs(init: Context, inputs: []const GeneratedInput, project: *const language.project.Project) !bool {
@@ -3644,147 +2620,13 @@ fn frontendRoot(init: Context, parsed: Parsed) ?[]const u8 {
 /// disables reuse, never failing the command.
 fn openFrontendCache(init: Context, parsed: Parsed) ?language.frontend_cache.Cache {
     const root = frontendRoot(init, parsed) orelse return null;
-    // `&build_identity` points at the process-lifetime global, so the cache's
+    // `&build_identity` points at a process-lifetime constant, so the cache's
     // borrowed identity outlives this frame; a local copy would dangle.
     var cache = language.frontend_cache.Cache.init(init.gpa, init.io, root, &build_identity);
     // A joined path is freshly allocated and released by deinit; the default
     // constant is static storage and must not be freed.
     cache.root_owned = root.ptr != language.frontend_cache.default_directory.ptr;
     return cache;
-}
-
-/// The absolute fragment-store root beside the frontend cache, created on
-/// demand, or null under `--no-cache` or when it cannot be created.
-fn fragmentsRoot(init: Context, parsed: Parsed) !?[]const u8 {
-    const a = init.arena.allocator();
-    const base = frontendRoot(init, parsed) orelse return null;
-    // A joined root is freshly allocated; the default constant is static storage.
-    defer if (base.ptr != language.frontend_cache.default_directory.ptr) init.gpa.free(base);
-    const relative = try std.fs.path.join(a, &.{ base, "fragments" });
-    std.Io.Dir.cwd().createDirPath(init.io, relative) catch return null;
-    return std.Io.Dir.cwd().realPathFileAlloc(init.io, relative, a) catch null;
-}
-
-/// EMIT-REPLAY-1: where one whole-project lean emission is remembered and the
-/// inputs it must match. The slot is the entry path, the emission switches and
-/// the diagnostic format its warnings are rendered in, so each configuration
-/// keeps only its latest emission; the key adds the configured policy and every
-/// loaded module's name, path and bytes. The compiler identity partitions the
-/// store both are looked up in.
-fn manifestReplayTicket(parsed: Parsed, diagnostics: diagnostic_output.Format, project: *const language.project.Project, policy: ?[64]u8) language.qbe_fragments.Ticket {
-    // BLAKE3, like every fragment-store digest: std's SHA-256 is two orders
-    // of magnitude slower on this toolchain (`qbe_fragments.zig`).
-    var slot = std.crypto.hash.Blake3.init(.{});
-    slot.update("emit-project-qbe-replay-v2");
-    replayFrame(&slot, parsed.path);
-    const switches = [_]bool{ parsed.drop_debug, parsed.drop_step_checks, parsed.drop_frame_checks, parsed.lean_manifest, parsed.executable_manifest };
-    for (switches) |value| slot.update(&.{@intFromBool(value)});
-    // VALUE-SEMANTICS-1: value semantics changes every lowered body.
-    if (language.value_semantics.enabled()) slot.update("value-semantics");
-    if (language.value_semantics.counting()) slot.update("cow-counting");
-    replayFrame(&slot, language.runtime_mode.identity());
-    if (parsed.native_variants != .original) replayFrame(&slot, parsed.native_variants.identity());
-    slot.update(&.{@backingInt(diagnostics)});
-    var key = slot;
-    if (policy) |identity| {
-        key.update("policy");
-        key.update(&identity);
-    } else key.update("no-policy");
-    for (project.modules.items) |module| {
-        for ([_][]const u8{ module.name, module.src.path, module.src.bytes }) |part| replayFrame(&key, part);
-    }
-    var ticket: language.qbe_fragments.Ticket = undefined;
-    slot.final(&ticket.slot);
-    key.final(&ticket.key);
-    return ticket;
-}
-
-/// Length-prefix one replay input so adjacent inputs cannot run together.
-fn replayFrame(hash: *std.crypto.hash.Blake3, part: []const u8) void {
-    var length: [8]u8 = undefined;
-    std.mem.writeInt(u64, &length, part.len, .little);
-    hash.update(&length);
-    hash.update(part);
-}
-
-/// Whether this command may replay or remember a whole lean emission.
-fn replaysManifest(parsed: Parsed) bool {
-    return parsed.command == .@"emit-project-qbe" and parsed.lean_manifest and parsed.select_file == null and !parsed.reporting.explain_invalidation and parsed.emission_report == null;
-}
-
-/// Replay an unchanged project's last lean emission: its warnings to stderr and
-/// its manifest to stdout, with nothing checked, lowered or emitted.
-fn replayManifest(init: Context, parsed: Parsed, project: *const language.project.Project, policy: ?[64]u8) !bool {
-    if (!replaysManifest(parsed)) return false;
-    const root = (try fragmentsRoot(init, parsed)) orelse return false;
-    const ticket = manifestReplayTicket(parsed, init.diagnostics, project, policy);
-    const place: language.qbe_fragments.Place = .{ .root = root, .identity = &build_identity };
-    const answer = (try language.qbe_fragments.Replay.load(init.arena.allocator(), init.io, place, ticket)) orelse return false;
-    try std.Io.File.stderr().writeStreamingAll(init.io, answer.warnings);
-    try std.Io.File.stdout().writeStreamingAll(init.io, answer.manifest);
-    if (init.observation) |observation| {
-        observation.executed = @splat(false);
-        observation.executed[@backingInt(invalidation.Stage.load_source)] = true;
-        for (std.meta.tags(invalidation.WorkStage)) |stage| observation.work.skip(stage);
-    }
-    return true;
-}
-
-/// Remember one successful whole-project lean emission for `replayManifest`.
-fn rememberManifest(init: Context, parsed: Parsed, site: ReplaySite, compilation: *const language.project_compile.Compilation, manifest: []const u8) !void {
-    if (!replaysManifest(parsed)) return;
-    const reuse = compilation.reuse orelse return;
-    const root = (try fragmentsRoot(init, parsed)) orelse return;
-    var writer: std.Io.Writer.Allocating = .init(init.gpa);
-    defer writer.deinit();
-    for (compilation.diagnostics.items.items) |problem| {
-        const rendered = try diagnostic_output.render(init.gpa, problem, compilation.src, init.diagnostics);
-        defer init.gpa.free(rendered);
-        writer.writer.writeAll(rendered) catch return error.OutOfMemory;
-    }
-    const units = try reuse.store.texts(init.arena.allocator());
-    const ticket = manifestReplayTicket(parsed, init.diagnostics, site.project, site.policy);
-    const place: language.qbe_fragments.Place = .{ .root = root, .identity = &build_identity };
-    language.qbe_fragments.Replay.remember(init.arena.allocator(), init.io, place, ticket, .{ .warnings = writer.written(), .manifest = manifest }, units);
-}
-
-/// Whether an emission hands the native build each unit's stored text by
-/// digest and path instead of the text itself: always for `run`, `run-project`
-/// and the native-test session, whose manifests only this compiler's build
-/// driver reads, and for `emit-project-qbe` when the driver asked for it.
-fn leanEmission(parsed: Parsed) bool {
-    return parsed.lean_manifest or parsed.command == .run or parsed.command == .@"run-project" or parsed.command == .@"native-test-compile";
-}
-
-/// Whether an emission is for an executable's native build, which reads no
-/// export, schema, wire, codec or test-dependency facts: `run`,
-/// `run-project`, and `emit-project-qbe --lean-manifest=executable`.
-fn executableEmission(parsed: Parsed) bool {
-    return parsed.executable_manifest or parsed.command == .run or parsed.command == .@"run-project";
-}
-
-/// Whether a command lowers the checked project to QBE units.
-fn emitsNative(command: Command) bool {
-    return switch (command) {
-        .@"emit-project-qbe", .run, .@"run-project", .@"native-test-compile" => true,
-        else => false,
-    };
-}
-
-/// Open the per-function fragment store beside the frontend cache
-/// (`QBE-FRAGMENT-REUSE-1`), or return null under `--no-cache` or when the
-/// directory cannot be created. Its root is absolute because a lean manifest
-/// hands stored paths to another process. A selective (test) emission keeps its
-/// own pack, so it never crowds out a whole-program build's entries.
-fn openFragments(init: Context, parsed: Parsed, storage: *language.qbe_fragments.Store) !?language.qbe_fragments.Reuse {
-    if (!emitsNative(parsed.command)) return null;
-    const a = init.arena.allocator();
-    const root = (try fragmentsRoot(init, parsed)) orelse return null;
-    const entry = std.Io.Dir.cwd().realPathFileAlloc(init.io, parsed.path, a) catch parsed.path;
-    const selective = parsed.select_file != null or parsed.command == .@"native-test-compile";
-    const label = try std.fmt.allocPrint(a, "{s}\x00{s}", .{ entry, if (selective) "selected" else "whole" });
-    storage.* = try language.qbe_fragments.Store.open(a, init.io, root, &build_identity, label);
-    return .{ .store = storage, .lean = leanEmission(parsed), .executable = executableEmission(parsed) };
 }
 
 /// Resolve the baseline file for invalidation observations.  The path is
@@ -4064,7 +2906,7 @@ fn sessionCheck(init: Context, parsed: Parsed, cache: *SessionCache) !void {
     request_init.arena = &arena;
     var request = parsed;
     request.command = .@"check-project";
-    var observation: RunObservation = .{ .executed = executedStages(request.command) };
+    var observation: RunObservation = .{ .executed = executedStages() };
     observation.work.command = @tagName(request.command);
     request_init.observation = &observation;
     const before = cache.syntax.statistics;
@@ -4208,88 +3050,4 @@ fn featureReport(init: std.process.Init) !void {
     defer init.gpa.free(text);
     try std.Io.File.stdout().writeStreamingAll(init.io, text);
     try std.Io.File.stdout().writeStreamingAll(init.io, "\n");
-}
-
-fn emitMeasuredNative(init: Context, compilation: anytype, policy: language.native_interface.Policy) ![]u8 {
-    init.timings.begin(lowering_phase, false);
-    try compilation.emitWithOptions(policy.drop_debug);
-    if (compilation.code != null) recordLoweredCount(init, if (@hasDecl(@TypeOf(compilation.*), "loweredCount")) compilation.loweredCount() else compilation.code.?.functions.len);
-    init.timings.begin("native_emission", false);
-    // A single-file compilation has no fragment store.
-    const reuse: ?language.qbe_fragments.Reuse = if (@hasField(@TypeOf(compilation.*), "reuse")) compilation.reuse else null;
-    const before = emissionCounts(reuse);
-    const generated = try compilation.emitQbeWithOptions(init.gpa, policy);
-    // `qbe-units-v1` emits one independently linkable fragment per lowered
-    // function, so the fragment count is observed at the emission site: a unit
-    // answered from the fragment store is reused, not emitted.
-    if (compilation.code) |code| recordEmission(init, reuse, before, code.functions.len);
-    // EMIT-STANDIN-1: an executable's emission may lower more functions than
-    // it started with; the count is what it lowered in the end.
-    if (reuse) |configured| if (configured.standins != null) {
-        recordLoweredCount(init, configured.store.statistics.standin.lowered - before.?.standin.lowered);
-    };
-    init.timings.end();
-    return generated;
-}
-
-/// The fragment store's unit counters before one emission, or null without a store.
-fn emissionCounts(reuse: ?language.qbe_fragments.Reuse) ?language.qbe_fragments.Statistics {
-    const configured = reuse orelse return null;
-    return configured.store.statistics;
-}
-
-/// Record one emission's fragments (`QBE-FRAGMENT-REUSE-1`): with a fragment
-/// store, the units it emitted fresh and the units it answered from the store;
-/// without one, every one of the `total` units as emitted.
-fn recordEmission(init: Context, reuse: ?language.qbe_fragments.Reuse, before: ?language.qbe_fragments.Statistics, total: usize) void {
-    const configured = reuse orelse return setWork(init, .emitted_fragments, total, 0);
-    const prior = before orelse language.qbe_fragments.Statistics{};
-    const after = configured.store.statistics;
-    // A unit an executable's emission took from its function's record without
-    // lowering the function (EMIT-STANDIN-1) is reused as well.
-    setWork(init, .emitted_fragments, after.misses - prior.misses, (after.hits - prior.hits) + (after.standin.reused - prior.standin.reused));
-}
-
-/// Lower and emit only functions named in `select_file`. The file contains one
-/// qualified function name per line and is produced by the native-test planner's
-/// closure, so the whole-project emission path is never entered for an affected
-/// selection.
-fn emitMeasuredSelectedNative(init: Context, compilation: *language.project_compile.Compilation, select_file: []const u8, native_variants: NativeVariants) ![]u8 {
-    const names = try selectionNames(init, select_file);
-    defer {
-        for (names) |name| init.gpa.free(name);
-        init.gpa.free(names);
-    }
-    init.timings.begin(lowering_phase, false);
-    var stats: language.project_compile.Compilation.SelectedStats = .{};
-    const before = emissionCounts(compilation.reuse);
-    const generated = try compilation.emitQbeSelectedWithOptions(init.gpa, names, &stats, .{ .native_variants = native_variants });
-    recordLoweredCount(init, stats.lowered_functions);
-    recordEmission(init, compilation.reuse, before, stats.emitted_fragments);
-    init.timings.end();
-    return generated;
-}
-
-fn selectionNames(init: Context, path: []const u8) ![]const []const u8 {
-    const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, path, init.gpa, .limited(16 * 1024 * 1024));
-    defer init.gpa.free(bytes);
-    var names: std.ArrayList([]const u8) = .empty;
-    // UNTESTED-ERROR: cleanup on a failed read/append is covered by generic allocator-failure tests; a deterministic partial-read hook does not exist here.
-    errdefer {
-        for (names.items) |name| init.gpa.free(name);
-        names.deinit(init.gpa);
-    }
-    var lines = std.mem.splitScalar(u8, bytes, '\n');
-    while (lines.next()) |raw| {
-        const line = std.mem.trim(u8, raw, " \t\r");
-        if (line.len == 0) continue;
-        var duplicate = false;
-        for (names.items) |existing| if (std.mem.eql(u8, existing, line)) {
-            duplicate = true;
-            break;
-        };
-        if (duplicate) continue;
-        try names.append(init.gpa, try init.gpa.dupe(u8, line));
-    }
-    return names.toOwnedSlice(init.gpa);
 }

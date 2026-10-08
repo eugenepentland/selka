@@ -12,7 +12,6 @@
 #include <unistd.h>
 
 typedef struct { void *left, *right; } Pair;
-typedef struct { void *owner, *held; } Tokens;
 typedef struct { uint32_t tag, pad; Pair pair; } Choice;
 static myl_rc_object *header(void *p) { return (myl_rc_object *)p - 1; }
 static void self_copy_rejected(myl_native_heap *heap, Pair *value, int loan) {
@@ -93,26 +92,6 @@ int main(void) {
     self_copy_rejected(&heap, &input, 1);
     assert(PAIR_SYMBOL_rcg_take(&heap, &input, &input, 0));
     assert(input.left == leaf && input.right == leaf && header(leaf)->owners == 1);
-
-    /* One payload can occur as both tokens. Physical retain preserves the
-     * edge kinds while a loan acquires H on both occurrences. */
-    Tokens tokens = {leaf, leaf}, acquired = {0};
-    header(leaf)->holds = 1;
-    assert(TOKENS_SYMBOL_rcg_retain(&heap, &acquired, &tokens, 0));
-    assert(acquired.owner == leaf && acquired.held == leaf);
-    assert(header(leaf)->owners == 2 && header(leaf)->holds == 2);
-    TOKENS_SYMBOL_rcg_drop(&heap, &acquired);
-    assert(header(leaf)->owners == 1 && header(leaf)->holds == 1);
-    assert(TOKENS_SYMBOL_rcg_loan(&heap, &acquired, &tokens));
-    assert(header(leaf)->owners == 1 && header(leaf)->holds == 3);
-    TOKENS_SYMBOL_rcg_unloan(&heap, &acquired);
-    assert(header(leaf)->owners == 1 && header(leaf)->holds == 1);
-    header(leaf)->holds = MYL_RC_COUNT_MAX;
-    assert(!TOKENS_SYMBOL_rcg_retain(&heap, &acquired, &tokens, 0));
-    assert(!acquired.owner && !acquired.held && header(leaf)->owners == 1);
-    assert(header(leaf)->holds == MYL_RC_COUNT_MAX && header(leaf)->common.mark == mark);
-    assert(myl_rc_take_failure(&heap) == MYL_RC_COUNT_LIMIT);
-    header(leaf)->holds = 0;
 
     /* An inactive arm's raw payload cannot be read as pointers, even while
      * the output copies those uninterpreted bytes verbatim. */

@@ -1,26 +1,27 @@
-//! Build a checked compilation with the native backend and run it in a child process.
+//! Build a checked compilation with the new core and run it in a child process
+//! (NEW-CORE-S5-UNITS-1).
 //!
-//! Unit tests execute guest programs the way `mylang run` does: one
-//! content-addressed native build, then one process. Executables are cached by
-//! manifest identity in the session's executable generation — one directory per
-//! compiler build under the cache the build script supplies, swept when the
-//! compiler or its runtime changes — so a program whose emitted units are unchanged is
-//! spawned rather than rebuilt and a rebuilt compiler leaves no stale programs
-//! behind. The toolchain and the cache itself come from the process wiring,
-//! resolved once.
+//! Unit tests execute guest programs the way a user does: `mylang run`. The unit
+//! test root compiles the front end as a file of its own module, so it cannot
+//! import the core; it drives the `mylang` executable the build names instead.
+//! A compilation's sources (one file, or a project's modules and the files they
+//! embed) are written once into a content-addressed directory under the suite
+//! cache, so an unchanged program replays its last identical build. The run's
+//! diagnostics come back as `diagnostic-v1` records: the build's own lines end at
+//! the cache report, and a trap's record is turned back into the text the runtime
+//! printed, machine record included, so a test sees what the old adapter showed.
 const std = @import("std");
-const fs = @import("qbe_build_io.zig");
-const cache_api = @import("qbe_build_cache.zig");
-const native_build = @import("qbe_build.zig");
-const wiring = @import("wiring/native_session.zig");
 const budget = @import("memory_budget");
 const language = @import("compiler.zig");
+const project_compile = @import("project_compile.zig");
 const trap_detail = @import("native_trap_detail.zig");
+const wiring = @import("wiring/core_runner.zig");
 
-/// Native build, tool and child-process failures a guest execution can report.
-pub const Error = wiring.Error || language.EmitNativeError ||
-    @import("project_compile.zig").EmitNativeError || std.process.RunError ||
-    error{UnreadableNativeResult};
+/// Checking, host and child-process failures a guest execution can report.
+/// `NewCoreBuildFailed` means `mylang` refused or could not build a program the
+/// front end accepted; its report is printed to the test's stderr.
+pub const Error = project_compile.CheckError || std.process.RunError ||
+    error{ UnreadableNativeResult, NewCoreBuildFailed, NativeHostFailed };
 
 /// One native stack frame the runtime reported beneath a trap.
 pub const Frame = struct { function: []const u8, path: []const u8, line: u64, column: u64 };
@@ -58,173 +59,468 @@ pub const Run = struct {
     }
 };
 
-/// Execution budgets, collection stress, and the working directory for one run.
+/// Execution budgets, grants and arguments, and the working directory for one run.
 pub const Options = struct {
     max_steps: ?u64 = null,
     max_frames: ?u64 = null,
-    gc_stress: bool = false,
-    /// Capability grants and any other switches the native runtime accepts,
-    /// which travel in `MYLANG_OPTIONS`; values after a `--` are the program's.
+    /// Capability grants and the other `mylang run` options (`--timeout=N`), then,
+    /// after a `--`, the program's own arguments.
     arguments: []const []const u8 = &.{},
     directory: ?[]const u8 = null,
-    /// Replaces the inherited environment, which `Environment` capabilities read.
+    /// The guest's environment, which `Environment` capabilities read; by default
+    /// the guest sees only what the compiler needs.
     environment: ?*const std.process.Environ.Map = null,
-    /// The guest's address-space ceiling; the per-test default bounds every run.
+    /// The guest's byte ceiling; the per-test default bounds every run.
     max_memory: ?u64 = null,
 };
 
-/// Build one checked compilation natively and run it once with the runtime's
-/// defaults, which impose no instruction or frame ceiling.
-/// The argument is a single-file or a project compilation; both emit QBE units.
+/// Build one checked compilation and run it once with the defaults: no step or
+/// frame ceiling, the per-test byte ceiling. The argument is a single-file
+/// (`compiler.Compilation`) or a project (`project_compile.Compilation`) compilation.
 pub fn run(compilation: anytype) Error!Run {
     return runWithOptions(compilation, .{});
 }
 
-/// Build one checked compilation natively and run it once under explicit options.
+/// Build one checked compilation and run it once under explicit options.
 pub fn runWithOptions(compilation: anytype, options: Options) Error!Run {
-    const saved = stressRuntime(options);
-    defer language.runtime_mode.set(saved);
+    try compilation.check();
     const session = try wiring.acquire();
-    var scratch = std.heap.ArenaAllocator.init(session.allocator());
-    defer scratch.deinit();
-    const manifest = try compilation.emitQbe(scratch.allocator());
-    return spawn(try program(session, manifest), options);
+    const a = session.allocator();
+    const sources = if (@TypeOf(compilation.*) == project_compile.Compilation) try projectSources(a, compilation.index.project.modules.items) else try singleSource(a, compilation.src);
+    return execute(session, try write(session, sources), options);
 }
 
-/// Build one single-file compilation under the protocol a published executable
-/// and an unbounded `mylang run` use — no step or frame accounting, value
-/// guards on — and run it once. That is the protocol loop versioning
-/// (`QBE-LOOP-VERSION-1`) lowers under, so a test can compare it with `run`.
-pub fn runUnaccounted(compilation: *language.Compilation, options: Options) Error!Run {
-    const saved = stressRuntime(options);
-    defer language.runtime_mode.set(saved);
+/// What a failed expectation of `Cases.check` or `expectEndedCleanly` returns, beside
+/// the errors of the runs themselves.
+pub const CheckError = Error || error{ TestUnexpectedResult, TestExpectedEqual };
+
+/// One run of a batch (`runAll`): a single-file compilation and the run's options.
+pub const Job = struct { compilation: *language.Compilation, options: Options = .{} };
+
+/// Build and run every job's program, `wiring.lanes()` at a time, and return the
+/// runs in job order (NEW-CORE-S5-UNITS-BATCH-1). Each compilation is checked and its
+/// sources written first, in job order, so a front-end error stops the batch before
+/// any program runs; the first job that fails afterwards decides the error.
+pub fn runAll(jobs: []const Job) Error![]Run {
     const session = try wiring.acquire();
-    var scratch = std.heap.ArenaAllocator.init(session.allocator());
-    defer scratch.deinit();
-    const manifest = try compilation.emitQbeWithOptions(scratch.allocator(), .{ .step_checks = false, .frame_checks = false });
-    return spawn(try program(session, manifest), options);
+    const a = session.allocator();
+    const trees = try a.alloc(Tree, jobs.len);
+    for (jobs, trees, 0..) |job, *tree, index| {
+        // A job that reruns an earlier job's compilation (another budget) shares its tree.
+        tree.* = for (jobs[0..index], trees[0..index]) |earlier, written| {
+            if (earlier.compilation == job.compilation) break written;
+        } else fresh: {
+            try job.compilation.check();
+            break :fresh try write(session, try singleSource(a, job.compilation.src));
+        };
+    }
+    var queue: Queue = .{ .session = session, .jobs = jobs, .trees = trees, .results = try a.alloc(Error!Run, jobs.len) };
+    const helpers = try a.alloc(std.Thread, @min(wiring.lanes(), jobs.len) -| 1);
+    var started: usize = 0;
+    for (helpers) |*helper| {
+        helper.* = std.Thread.spawn(.{}, Queue.drain, .{&queue}) catch break;
+        started += 1;
+    }
+    queue.drain();
+    for (helpers[0..started]) |helper| helper.join();
+    const runs = try a.alloc(Run, jobs.len);
+    for (queue.results, runs) |result, *outcome| outcome.* = try result;
+    return runs;
 }
 
-/// Build one single-file compilation under an explicit emission policy — the
-/// unaccounted protocol `runUnaccounted` uses plus whatever `policy` adds, such
-/// as copy-on-write value semantics (`COW-UNIQUE-1`) — and run it once.
-pub fn runWithPolicy(compilation: *language.Compilation, policy: @import("native_interface.zig").Policy, options: Options) Error!Run {
-    const saved = stressRuntime(options);
-    defer language.runtime_mode.set(saved);
+/// The jobs of one `runAll`, taken in order by however many threads drain it.
+const Queue = struct {
+    session: *wiring.Session,
+    jobs: []const Job,
+    trees: []const Tree,
+    results: []Error!Run,
+    next: std.atomic.Value(usize) = .init(0),
+
+    fn drain(self: *Queue) void {
+        while (true) {
+            const at = self.next.fetchAdd(1, .monotonic);
+            if (at >= self.jobs.len) return;
+            self.results[at] = execute(self.session, self.trees[at], self.jobs[at].options);
+        }
+    }
+};
+
+/// Single-file programs a test collects and then runs as one batch (`runAll`). The
+/// batch owns each program's source and compilation until `deinit`.
+pub const Batch = struct {
+    allocator: std.mem.Allocator,
+    sources: std.ArrayList([]const u8) = .empty,
+    compilations: std.ArrayList(*language.Compilation) = .empty,
+    jobs: std.ArrayList(Job) = .empty,
+
+    /// An empty batch whose programs live in `allocator`.
+    pub fn init(allocator: std.mem.Allocator) Batch {
+        return .{ .allocator = allocator };
+    }
+
+    /// Add the program `source`, named `path`, and one run of it under `options`.
+    pub fn add(self: *Batch, path: []const u8, source: []const u8, options: Options) std.mem.Allocator.Error!void {
+        const owned = try self.allocator.dupe(u8, source);
+        errdefer self.allocator.free(owned);
+        try self.sources.ensureUnusedCapacity(self.allocator, 1);
+        try self.compilations.ensureUnusedCapacity(self.allocator, 1);
+        const compilation = try self.allocator.create(language.Compilation);
+        errdefer self.allocator.destroy(compilation);
+        compilation.* = try language.Compilation.init(self.allocator, path, owned);
+        self.sources.appendAssumeCapacity(owned);
+        self.compilations.appendAssumeCapacity(compilation);
+        try self.again(self.compilations.items.len - 1, options);
+    }
+
+    /// One more run, under `options`, of the batch's `program`-th program (in `add` order).
+    pub fn again(self: *Batch, program: usize, options: Options) std.mem.Allocator.Error!void {
+        try self.jobs.append(self.allocator, .{ .compilation = self.compilations.items[program], .options = options });
+    }
+
+    /// Build and run every job, returning the runs in job order.
+    pub fn run(self: *Batch) Error![]Run {
+        return runAll(self.jobs.items);
+    }
+
+    /// Release every program and the batch's lists.
+    pub fn deinit(self: *Batch) void {
+        for (self.compilations.items) |compilation| {
+            compilation.deinit();
+            self.allocator.destroy(compilation);
+        }
+        for (self.sources.items) |source| self.allocator.free(source);
+        self.sources.deinit(self.allocator);
+        self.compilations.deinit(self.allocator);
+        self.jobs.deinit(self.allocator);
+    }
+};
+
+/// Programs a test collects with what each must do, return a value or trap with a
+/// code (on a given line, when one is named), then runs as one batch (`check`).
+pub const Cases = struct {
+    batch: Batch,
+    expected: std.ArrayList(Expected) = .empty,
+
+    /// What one program must do; `stdout`, when named, is all it prints and is owned.
+    pub const Expected = struct { value: i64 = 0, trap: ?[]const u8 = null, line: ?u64 = null, stdout: ?[]const u8 = null };
+
+    /// No cases yet; programs live in `allocator`.
+    pub fn init(allocator: std.mem.Allocator) Cases {
+        return .{ .batch = .init(allocator) };
+    }
+
+    /// The program `source`, named `path`, returns `value`.
+    pub fn returns(self: *Cases, path: []const u8, source: []const u8, value: i64) std.mem.Allocator.Error!void {
+        try self.expect(path, source, .{ .value = value });
+    }
+
+    /// The program `source`, named `path`, traps with `code`, on `line` when one is given.
+    pub fn traps(self: *Cases, path: []const u8, source: []const u8, code: []const u8, line: ?u64) std.mem.Allocator.Error!void {
+        try self.expect(path, source, .{ .trap = code, .line = line });
+    }
+
+    /// The program `source`, named `path`, returns normally having printed exactly `stdout`.
+    pub fn prints(self: *Cases, path: []const u8, source: []const u8, stdout: []const u8) std.mem.Allocator.Error!void {
+        const owned = try self.batch.allocator.dupe(u8, stdout);
+        errdefer self.batch.allocator.free(owned);
+        try self.expect(path, source, .{ .stdout = owned });
+    }
+
+    fn expect(self: *Cases, path: []const u8, source: []const u8, expected: Expected) std.mem.Allocator.Error!void {
+        try self.expected.ensureUnusedCapacity(self.batch.allocator, 1);
+        try self.batch.add(path, source, .{});
+        self.expected.appendAssumeCapacity(expected);
+    }
+
+    /// Run every program as one batch and compare each with what it must do; a
+    /// mismatch prints the program's source.
+    pub fn check(self: *Cases) CheckError!void {
+        const runs = try self.batch.run();
+        for (self.expected.items, runs, self.batch.sources.items) |expected, outcome, source| {
+            errdefer report("native_execute: this program did not do what its case expects:\n{s}\n", .{source});
+            const code = expected.trap orelse {
+                try std.testing.expect(!outcome.trapped());
+                const printed = expected.stdout orelse {
+                    try std.testing.expectEqual(expected.value, outcome.value);
+                    continue;
+                };
+                try std.testing.expectEqualStrings(printed, outcome.stdout);
+                continue;
+            };
+            try std.testing.expectEqualStrings(code, outcome.trap.code);
+            if (expected.line) |line| try std.testing.expectEqual(line, outcome.trap.line);
+        }
+    }
+
+    /// Release every program and expectation.
+    pub fn deinit(self: *Cases) void {
+        for (self.expected.items) |expected| if (expected.stdout) |printed| self.batch.allocator.free(printed);
+        self.expected.deinit(self.batch.allocator);
+        self.batch.deinit();
+    }
+};
+
+/// Every run returned or trapped with a runtime `R_*` code: none ended any other way,
+/// as an owner released twice would abort the process.
+pub fn expectEndedCleanly(runs: []const Run) CheckError!void {
+    for (runs) |outcome| try std.testing.expect(!outcome.trapped() or std.mem.startsWith(u8, outcome.trap.code, "R_"));
+}
+
+/// Build one checked single-file compilation into an executable with `mylang build`
+/// and return its path; an identical earlier build is reused. The program grants
+/// itself nothing beyond what a built executable grants.
+pub fn executable(compilation: *language.Compilation) Error![]const u8 {
+    try compilation.check();
     const session = try wiring.acquire();
-    var scratch = std.heap.ArenaAllocator.init(session.allocator());
-    defer scratch.deinit();
-    const manifest = try compilation.emitQbeWithOptions(scratch.allocator(), policy);
-    return spawn(try program(session, manifest), options);
+    const a = session.allocator();
+    const tree = try write(session, try singleSource(a, compilation.src));
+    const directory = try std.fs.path.join(a, &.{ session.cache, "exe" });
+    std.Io.Dir.cwd().createDirPath(session.io, directory) catch |err| return host(err);
+    const output = try std.fs.path.join(a, &.{ directory, tree.identity });
+    const argv: []const []const u8 = &.{ session.compiler, "build", tree.entry, "-o", output, try flag(a, "--zig=", session.zig), try flag(a, cache_option, try buildCache(session)), "--diagnostics=json" };
+    const outcome = std.process.run(a, session.io, .{ .argv = argv, .environ_map = try session.environment(null), .stdout_limit = .limited(1 << 20), .stderr_limit = .limited(4 << 20) }) catch |err| return host(err);
+    if (outcome.term != .exited or outcome.term.exited != 0) return refused(argv, outcome.stderr);
+    return output;
 }
 
-/// Collector stress needs the collector: a stressed run is emitted, built and
-/// linked under GC, the way `--gc-stress` selects it on the command line
-/// (`RC-DEFAULT-1`). Returns the selection to restore afterwards.
-fn stressRuntime(options: Options) language.runtime_mode.Selection {
-    const saved = language.runtime_mode.get();
-    if (options.gc_stress) language.runtime_mode.set(.gc);
-    return saved;
+/// `mylang`'s cache option, spelled with its value.
+const cache_option = "--cache-dir=";
+
+/// The new core's build cache inside the suite cache.
+fn buildCache(session: *wiring.Session) Error![]const u8 {
+    return std.fs.path.join(session.allocator(), &.{ session.cache, "build" });
 }
 
-/// Publish one emitted manifest as an executable, reusing an identical earlier build.
-pub fn program(session: *wiring.Session, manifest: []const u8) Error![]const u8 {
-    var scratch = std.heap.ArenaAllocator.init(session.allocator());
-    defer scratch.deinit();
-    const work = scratch.allocator();
-    const identity = try fs.hash(work, try std.mem.concat(work, u8, &.{ session.toolchain.environment, manifest }));
-    const path = try std.fmt.allocPrint(session.allocator(), "{s}/{s}", .{ session.toolchain.executables, identity });
-    if (std.Io.Dir.cwd().access(session.io, path, .{ .execute = true })) |_| return path else |_| {}
-    try link(session, manifest, path);
-    return path;
+fn flag(a: std.mem.Allocator, comptime name: []const u8, value: []const u8) Error![]const u8 {
+    return std.mem.concat(a, u8, &.{ name, value });
 }
 
-fn link(session: *wiring.Session, manifest: []const u8, output: []const u8) Error!void {
-    var context = try fs.Context.init(session.allocator(), session.io, &session.environ);
-    defer context.deinit();
-    const temporary = try context.temporary(session.toolchain.directory);
-    defer context.remove(temporary);
-    // The session's environment names no local cache, so its tools would keep
-    // theirs in the project's `.zig-cache`; this build's scratch holds it, as
-    // `prepare` arranges for every other build (NATIVE-ZIG-CACHE-3).
-    context.zig_cache = try std.fs.path.join(context.allocator, &.{ temporary, "zig-local" });
-    const cache: cache_api.Cache = .{
-        .context = context,
-        .directory = session.toolchain.directory,
-        .temporary = temporary,
-        .assets = session.toolchain.assets,
-        .environment = session.toolchain.environment,
-        .zig = session.toolchain.zig,
-        .mode = "Debug",
-        .codegen = .{ .tool = session.toolchain.qbe },
+/// Failure detail goes to the test's stderr.
+const report = std.debug.print;
+
+fn host(err: anyerror) Error {
+    report("native_execute: host failure: {s}\n", .{@errorName(err)});
+    return error.NativeHostFailed;
+}
+
+fn refused(argv: []const []const u8, text: []const u8) Error {
+    report("native_execute: `mylang {s}` refused a program the front end accepted:\n{s}\n", .{ argv[1], text });
+    return error.NewCoreBuildFailed;
+}
+
+/// One source file of a compilation, at its path relative to the project root.
+const File = struct { path: []const u8, bytes: []const u8 };
+
+/// A compilation's files and the one `mylang` is given.
+const Sources = struct { entry: []const u8, files: []const File };
+
+/// A compilation written out: its entry file, the prefix its diagnostics carry
+/// that the compilation's own paths do not, and the content identity of its files.
+const Tree = struct { entry: []const u8, prefix: []const u8, identity: []const u8 };
+
+fn singleSource(a: std.mem.Allocator, src: language.source.Source) Error!Sources {
+    var files: std.ArrayList(File) = .empty;
+    try collect(a, &files, src);
+    return .{ .entry = src.path, .files = files.items };
+}
+
+/// A project's own modules (the first is its entry); standard modules are the core's.
+fn projectSources(a: std.mem.Allocator, modules: []const language.project.Module) Error!Sources {
+    var files: std.ArrayList(File) = .empty;
+    for (modules) |module| {
+        if (std.mem.startsWith(u8, module.src.path, "@stdlib/")) continue;
+        try collect(a, &files, module.src);
+    }
+    return .{ .entry = modules[0].src.path, .files = files.items };
+}
+
+/// Add one module's source, and every file it embeds, relative to its directory. A
+/// path that leaves the directory it is written under cannot be written.
+fn collect(a: std.mem.Allocator, files: *std.ArrayList(File), src: language.source.Source) Error!void {
+    const relative = std.mem.trimStart(u8, src.path, "/");
+    try files.append(a, .{ .path = relative, .bytes = src.bytes });
+    const directory = std.fs.path.dirname(relative) orelse "";
+    for (src.embeds) |embedded| {
+        if (embedded.status != .ok) continue;
+        try files.append(a, .{ .path = try std.fs.path.join(a, &.{ directory, embedded.path }), .bytes = embedded.contents });
+    }
+    for (files.items) |file| {
+        var parts = std.mem.splitScalar(u8, file.path, '/');
+        while (parts.next()) |part| if (std.mem.eql(u8, part, "..")) return host(error.PathLeavesTree);
+    }
+}
+
+/// Write `sources` under `cache/src/IDENTITY`, unless an earlier run already did.
+fn write(session: *wiring.Session, sources: Sources) Error!Tree {
+    const a = session.allocator();
+    var hash = std.crypto.hash.Blake3.init(.{});
+    for (sources.files) |file| {
+        hash.update(file.path);
+        hash.update(&.{0});
+        hash.update(std.mem.asBytes(&file.bytes.len));
+        hash.update(file.bytes);
+    }
+    var digest: [16]u8 = undefined;
+    hash.final(&digest);
+    const identity = try a.dupe(u8, &std.fmt.bytesToHex(digest, .lower));
+    const root = try std.fs.path.join(a, &.{ session.cache, "src", identity });
+    const absolute = std.fs.path.isAbsolute(sources.entry);
+    const tree: Tree = .{
+        .entry = try std.mem.concat(a, u8, &.{ root, if (absolute) "" else "/", sources.entry }),
+        .prefix = if (absolute) root else try std.mem.concat(a, u8, &.{ root, "/" }),
+        .identity = identity,
     };
-    const document = try std.json.parseFromSlice(std.json.Value, context.allocator, manifest, .{ .allocate = .alloc_always });
-    _ = try native_build.assemble(cache, wiring.settings(), document.value, output);
+    const cwd = std.Io.Dir.cwd();
+    if (cwd.access(session.io, tree.entry, .{})) |_| return tree else |_| {}
+    // Stage the files beside the tree and rename it into place, so a concurrent
+    // shard never sees half a tree; the loser of a race discards its copy.
+    session.staged += 1;
+    const staging = try std.fmt.allocPrint(a, "{s}/src/.staging-{d}-{d}", .{ session.cache, std.os.linux.getpid(), session.staged });
+    for (sources.files) |file| {
+        const path = try std.fs.path.join(a, &.{ staging, file.path });
+        if (std.fs.path.dirname(path)) |parent| cwd.createDirPath(session.io, parent) catch |err| return host(err);
+        cwd.writeFile(session.io, .{ .sub_path = path, .data = file.bytes }) catch |err| return host(err);
+    }
+    cwd.rename(staging, cwd, root, session.io) catch {
+        cwd.deleteTree(session.io, staging) catch |err| return host(err);
+        cwd.access(session.io, tree.entry, .{}) catch |err| return host(err);
+    };
+    return tree;
 }
 
-fn spawn(executable: []const u8, options: Options) Error!Run {
-    const session = try wiring.acquire();
-    const allocator = session.allocator();
-    const tail = native_build.runtime_options.split(options.arguments);
-    var runtime: std.ArrayList([]const u8) = .empty;
-    try runtime.append(allocator, "--print-result");
-    if (options.max_steps) |steps| try runtime.append(allocator, try std.fmt.allocPrint(allocator, "--max-steps={d}", .{steps}));
-    if (options.max_frames) |frames| try runtime.append(allocator, try std.fmt.allocPrint(allocator, "--max-frames={d}", .{frames}));
-    if (options.gc_stress) try runtime.append(allocator, "--gc-stress");
-    try runtime.appendSlice(allocator, tail.options);
+/// The record line `--cache-report` adds after a build, which ends the build's output.
+const cache_line = "{\"version\":\"diagnostic-v1\",\"kind\":\"message\",\"message\":\"mylang-core: cache: ";
+
+fn execute(session: *wiring.Session, tree: Tree, options: Options) Error!Run {
+    const a = session.allocator();
+    const tail = split(options.arguments);
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.append(allocator, executable);
-    try argv.appendSlice(allocator, tail.program);
-    const environment = try bounded(session, options);
-    try native_build.runtime_options.apply(allocator, environment, runtime.items);
-    const outcome = try std.process.run(allocator, session.io, .{
+    try argv.appendSlice(a, &.{ session.compiler, "run", tree.entry, try flag(a, "--zig=", session.zig), try flag(a, cache_option, try buildCache(session)), "--diagnostics=json", "--cache-report" });
+    if (!contains(tail.options, "--print-result")) try argv.append(a, "--print-result");
+    try argv.append(a, try std.fmt.allocPrint(a, "--max-memory={d}", .{options.max_memory orelse budget.test_default}));
+    if (options.max_steps) |steps| try argv.append(a, try std.fmt.allocPrint(a, "--max-steps={d}", .{steps}));
+    if (options.max_frames) |frames| try argv.append(a, try std.fmt.allocPrint(a, "--max-frames={d}", .{frames}));
+    try argv.appendSlice(a, tail.options);
+    try argv.append(a, "--");
+    try argv.appendSlice(a, tail.program);
+    const outcome = try std.process.run(a, session.io, .{
         .argv = argv.items,
         .cwd = if (options.directory) |directory| .{ .path = directory } else .inherit,
-        .environ_map = environment,
+        .environ_map = try session.environment(options.environment),
         .stdout_limit = .limited(64 * 1024 * 1024),
         .stderr_limit = .limited(4 * 1024 * 1024),
     });
-    const status = fs.exitCode(outcome.term);
-    // The exit status is now the entry's own result, so it cannot mark a trap; a
-    // native runtime failure instead writes a diagnostic to stderr (and a crash
-    // ends the process by signal). A clean return leaves stderr empty and appends
-    // its `--print-result` line to stdout, which `divide` reads.
-    // COW-STATS-1: the counting protocol reports one machine-readable line on
-    // stderr after a successful return. It is a measurement, not a trap.
-    if (outcome.term == .exited and std.mem.startsWith(u8, outcome.stderr, "cow-stats {") and
-        std.mem.count(u8, outcome.stderr, "\n") == 1 and std.mem.endsWith(u8, outcome.stderr, "}\n"))
-    {
-        const reported = try divide(outcome.stdout);
-        return .{ .value = reported.value, .stdout = reported.output, .stderr = outcome.stderr, .status = status };
-    }
-    if (outcome.term != .exited or outcome.stderr.len != 0) {
-        const trap = parse(allocator, outcome.stderr) catch Trap{ .code = "" };
+    const program = afterBuild(outcome.stderr) orelse return refused(argv.items, outcome.stderr);
+    const stderr = try std.mem.replaceOwned(u8, a, try restore(a, program), tree.prefix, "");
+    const status: u8 = switch (outcome.term) {
+        .exited => |code| code,
+        .signal => |signal| @intCast(@min(255, 128 + @as(u32, @backingInt(signal)))),
+        else => 2,
+    };
+    return adopt(a, outcome, stderr, status);
+}
+
+/// Read the run the way the old adapter did: a clean return leaves stderr empty and
+/// appends its `--print-result` line to stdout; a trap writes its text to stderr.
+fn adopt(a: std.mem.Allocator, outcome: std.process.RunResult, stderr: []const u8, status: u8) Error!Run {
+    if (outcome.term != .exited or stderr.len != 0) {
+        const trap = parse(a, stderr) catch Trap{ .code = "" };
         // The machine record is transport, not a diagnostic: keep `stderr` as the
         // human text the caller saw before structured traps existed.
-        const cleaned = trap_detail.strip(allocator, outcome.stderr) catch outcome.stderr;
+        const cleaned = trap_detail.strip(a, stderr) catch stderr;
         // ERROR-TRACE-2: a `main` that returned an `Err` reported it on stderr
         // and still returned, so its result line follows its output.
-        const returned_err = std.mem.startsWith(u8, outcome.stderr, "error: ") and std.mem.indexOf(u8, outcome.stderr, diagnostic_marker) == null;
+        const returned_err = std.mem.startsWith(u8, stderr, "error: ") and std.mem.indexOf(u8, stderr, diagnostic_marker) == null;
         if (outcome.term == .exited and returned_err) {
             if (divide(outcome.stdout)) |reported| return .{ .value = reported.value, .stdout = reported.output, .stderr = cleaned, .status = status } else |_| {}
         }
+        if (trap.code.len != 0 or outcome.term != .exited) return .{ .trap = trap, .stdout = outcome.stdout, .stderr = cleaned, .status = status, .failed = true };
+        // A program that wrote to stderr and returned normally is not a trap.
+        if (divide(outcome.stdout)) |reported| return .{ .value = reported.value, .stdout = reported.output, .stderr = cleaned, .status = status } else |_| {}
         return .{ .trap = trap, .stdout = outcome.stdout, .stderr = cleaned, .status = status, .failed = true };
     }
     const reported = try divide(outcome.stdout);
-    return .{ .value = reported.value, .stdout = reported.output, .stderr = outcome.stderr, .status = status };
+    return .{ .value = reported.value, .stdout = reported.output, .stderr = stderr, .status = status };
 }
 
-/// Every test guest runs under a byte ceiling, so a program that allocates without
-/// bound traps with `R_MEMORY_BUDGET` instead of exhausting the machine. A test that
-/// supplies its own environment keeps it, with the ceiling added.
-fn bounded(session: *wiring.Session, options: Options) Error!*std.process.Environ.Map {
-    const allocator = session.allocator();
-    const map = try allocator.create(std.process.Environ.Map);
-    map.* = try (options.environment orelse &session.environ).clone(allocator);
-    const limit = options.max_memory orelse budget.test_default;
-    try map.put(budget.variable, try std.fmt.allocPrint(allocator, "{d}", .{limit}));
-    try budget.guestEnvironment(allocator, map);
-    return map;
+/// The program's standard error: what follows the build's cache report, or null
+/// when the build stopped before it (a refusal or a usage error).
+fn afterBuild(stderr: []const u8) ?[]const u8 {
+    var start: usize = 0;
+    while (start < stderr.len) {
+        const end = if (std.mem.indexOfScalarPos(u8, stderr, start, '\n')) |index| index + 1 else stderr.len;
+        if (std.mem.startsWith(u8, stderr[start..end], cache_line)) return stderr[end..];
+        start = end;
+    }
+    return null;
+}
+
+/// The runtime's own text for a program's standard error, from `--diagnostics=json`:
+/// the trap record, the last line when there is one, becomes the located line, the
+/// `in` frames and the machine record the runtime printed.
+fn restore(a: std.mem.Allocator, text: []const u8) Error![]const u8 {
+    const body = std.mem.trimEnd(u8, text, "\n");
+    const start = if (std.mem.lastIndexOfScalar(u8, body, '\n')) |index| index + 1 else 0;
+    const last = body[start..];
+    if (!std.mem.startsWith(u8, last, "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\"")) return text;
+    const parsed = std.json.parseFromSliceLeaky(std.json.Value, a, last, .{}) catch return text;
+    const diagnostic = field(parsed, "diagnostic") orelse return text;
+    const code = string(field(diagnostic, "code")) orelse return text;
+    const message = string(field(diagnostic, "message")) orelse "";
+    var out: std.Io.Writer.Allocating = .init(a);
+    const w = &out.writer;
+    w.writeAll(text[0..start]) catch return error.OutOfMemory;
+    const location = field(diagnostic, "location");
+    const path = string(field(location orelse .null, "path")) orelse "";
+    if (path.len == 0) {
+        // A budget trap has no location; its advice line was the record's message.
+        w.print("error[{s}]: native execution failed\n{s}\n", .{ code, message }) catch return error.OutOfMemory;
+    } else {
+        const at = startOf(location.?);
+        w.print("{s}:{d}:{d}: error[{s}]: {s}\n", .{ path, at.line, at.column, code, message }) catch return error.OutOfMemory;
+    }
+    const stack = field(diagnostic, "stack") orelse .null;
+    if (field(stack, "frames")) |frames| if (frames == .array) for (frames.array.items) |frame| {
+        const where = field(frame, "location") orelse continue;
+        const at = startOf(where);
+        w.print("  in {s} at {s}:{d}:{d}\n", .{ string(field(frame, "function")) orelse "", string(field(where, "path")) orelse "", at.line, at.column }) catch return error.OutOfMemory;
+    };
+    if (field(diagnostic, "trap_detail")) |detail| {
+        const record = std.json.Stringify.valueAlloc(a, detail, .{}) catch return error.OutOfMemory;
+        w.print("{s}{s}\n", .{ trap_detail.marker, record }) catch return error.OutOfMemory;
+    }
+    return out.written();
+}
+
+fn field(value: std.json.Value, name: []const u8) ?std.json.Value {
+    if (value != .object) return null;
+    return value.object.get(name);
+}
+
+fn string(value: ?std.json.Value) ?[]const u8 {
+    const present = value orelse return null;
+    return if (present == .string) present.string else null;
+}
+
+fn startOf(location: std.json.Value) struct { line: i64, column: i64 } {
+    const start = field(location, "start") orelse return .{ .line = 0, .column = 0 };
+    const line = field(start, "line") orelse std.json.Value{ .integer = 0 };
+    const column = field(start, "column") orelse std.json.Value{ .integer = 0 };
+    return .{ .line = if (line == .integer) line.integer else 0, .column = if (column == .integer) column.integer else 0 };
+}
+
+/// The options before a `--` and the program's arguments after it; with no `--`,
+/// every value is an option.
+fn split(arguments: []const []const u8) struct { options: []const []const u8, program: []const []const u8 } {
+    for (arguments, 0..) |argument, index| {
+        if (std.mem.eql(u8, argument, "--")) return .{ .options = arguments[0..index], .program = arguments[index + 1 ..] };
+    }
+    return .{ .options = arguments, .program = &.{} };
+}
+
+fn contains(items: []const []const u8, wanted: []const u8) bool {
+    for (items) |item| if (std.mem.eql(u8, item, wanted)) return true;
+    return false;
 }
 
 /// Separate the guest's own output from the entry result line `--print-result` appends.
@@ -244,29 +540,46 @@ fn parse(allocator: std.mem.Allocator, text: []const u8) Error!Trap {
     var lines = std.mem.splitScalar(u8, text, '\n');
     while (lines.next()) |line| {
         if (std.mem.startsWith(u8, line, "  in ")) {
-            const split = std.mem.lastIndexOf(u8, line, " at ") orelse continue;
-            const place = position(line[split + 4 ..]) orelse continue;
-            try frames.append(allocator, .{ .function = line[5..split], .path = place.path, .line = place.line, .column = place.column });
+            const split_at = std.mem.lastIndexOf(u8, line, " at ") orelse continue;
+            const place = position(line[split_at + 4 ..]) orelse continue;
+            try frames.append(allocator, .{ .function = line[5..split_at], .path = place.path, .line = place.line, .column = place.column });
             continue;
         }
         // A failure-path assert message may precede the located diagnostic on
         // stderr, so find the diagnostic line instead of taking the first one.
-        if (diagnostic.len == 0 and (std.mem.indexOf(u8, line, diagnostic_marker) != null or std.mem.startsWith(u8, line, "mylang: --restrict is active"))) diagnostic = line;
+        if (diagnostic.len == 0 and (std.mem.indexOf(u8, line, diagnostic_marker) != null or std.mem.startsWith(u8, line, budget_marker) or std.mem.startsWith(u8, line, "mylang: --restrict is active"))) diagnostic = line;
     }
     const first = if (diagnostic.len == 0) std.mem.sliceTo(text, '\n') else diagnostic;
     if (std.mem.startsWith(u8, first, "mylang: --restrict is active")) return .{ .code = "CapabilityUnavailable", .frames = frames.items, .detail = detail };
+    if (std.mem.startsWith(u8, first, budget_marker)) {
+        const close = std.mem.indexOfScalar(u8, first, ']') orelse return error.UnreadableNativeResult;
+        return .{ .code = first[budget_marker.len..close], .frames = frames.items, .detail = detail };
+    }
     if (std.mem.indexOf(u8, first, diagnostic_marker)) |marker| {
-        const rest = first[marker + 8 ..];
+        const rest = first[marker + diagnostic_marker.len ..];
         const close = std.mem.indexOfScalar(u8, rest, ']') orelse return error.UnreadableNativeResult;
         const place = position(first[0..marker]) orelse return error.UnreadableNativeResult;
         return .{ .code = rest[0..close], .path = place.path, .line = place.line, .column = place.column, .frames = frames.items, .detail = detail };
     }
-    const colon = std.mem.indexOfScalar(u8, first, ':') orelse return error.UnreadableNativeResult;
-    return .{ .code = first[0..colon], .frames = frames.items, .detail = detail };
+    // A budget without a location (`R_TIMEOUT: ...`) names its code before a colon.
+    const colon = std.mem.indexOfScalar(u8, first, ':') orelse 0;
+    return .{ .code = if (isCode(first[0..colon])) first[0..colon] else "", .frames = frames.items, .detail = detail };
+}
+
+/// Whether `text` spells a runtime code: upper-case letters, digits and underscores.
+fn isCode(text: []const u8) bool {
+    if (text.len == 0) return false;
+    for (text) |byte| {
+        const allowed = std.ascii.isUpper(byte) or std.ascii.isDigit(byte) or byte == '_';
+        if (!allowed) return false;
+    }
+    return true;
 }
 
 /// What separates a located diagnostic's position from its bracketed code.
 const diagnostic_marker = ": error[";
+/// How a trap without a location (a budget) begins.
+const budget_marker = "error[";
 
 /// Split a trailing `path:line:column` locator, which paths may themselves contain colons.
 fn position(text: []const u8) ?struct { path: []const u8, line: u64, column: u64 } {
@@ -277,122 +590,7 @@ fn position(text: []const u8) ?struct { path: []const u8, line: u64, column: u64
     return .{ .path = text[0..previous], .line = line, .column = column };
 }
 
-/// The name of every section header in an ELF64 image, read through its section
-/// name string table, so a test can tell a stripped binary from a debug section
-/// name the runtime happens to carry as text in its read-only data.
-fn sectionNames(allocator: std.mem.Allocator, bytes: []const u8) ![]const []const u8 {
-    const header = std.mem.bytesToValue(std.elf.Elf64_Ehdr, bytes[0..@sizeOf(std.elf.Elf64_Ehdr)]);
-    const table = sectionHeader(bytes, header, header.e_shstrndx);
-    var names: std.ArrayList([]const u8) = .empty;
-    for (0..header.e_shnum) |index| {
-        const section = sectionHeader(bytes, header, @intCast(index));
-        const start: usize = @intCast(table.sh_offset + section.sh_name);
-        const rest = bytes[start..];
-        try names.append(allocator, rest[0..std.mem.indexOfScalar(u8, rest, 0).?]);
-    }
-    return names.items;
-}
-fn sectionHeader(bytes: []const u8, header: std.elf.Elf64_Ehdr, index: u16) std.elf.Elf64_Shdr {
-    const offset: usize = @intCast(header.e_shoff + @as(u64, index) * header.e_shentsize);
-    return std.mem.bytesToValue(std.elf.Elf64_Shdr, bytes[offset..][0..@sizeOf(std.elf.Elf64_Shdr)]);
-}
-fn hasSection(names: []const []const u8, prefix: []const u8) bool {
-    for (names) |name| if (std.mem.startsWith(u8, name, prefix)) return true;
-    return false;
-}
-/// Whether `trace` holds at least one line and every line names a `zig-local`
-/// directory inside `directory`.
-fn scratchCaches(trace: []const u8, directory: []const u8) bool {
-    if (trace.len == 0 or trace[trace.len - 1] != '\n') return false;
-    var lines = std.mem.splitScalar(u8, trace[0 .. trace.len - 1], '\n');
-    while (lines.next()) |line| {
-        if (!std.mem.startsWith(u8, line, directory) or !std.mem.endsWith(u8, line, "/zig-local")) return false;
-    }
-    return true;
-}
-
-// spec: NATIVE-ZIG-CACHE-3
-test "an in-process guest build hands its tools a local cache inside its own scratch" {
-    var compilation = try language.Compilation.init(std.testing.allocator, "scratch.my",
-        \\def main() -> i64:
-        \\    return 5
-    );
-    defer compilation.deinit();
-    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
-    defer arena.deinit();
-    const a = arena.allocator();
-    const manifest = try compilation.emitQbe(a);
-    var temporary = std.testing.tmpDir(.{});
-    defer temporary.cleanup();
-    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
-    const trace = try std.fs.path.join(a, &.{ root, "trace" });
-    const session = try wiring.acquire();
-    // A stand-in for `zig` that records the local cache each compiler run was
-    // handed and fails it, so the build stops at its first C unit. The batch
-    // assembler, `zig clang -cc1as`, runs Zig's bundled clang alone and never
-    // opens a Zig cache, so it goes to the real tool and the build reaches one.
-    const zig = try std.fs.path.join(a, &.{ root, "zig" });
-    const script = "#!/bin/sh\n[ \"$1\" = clang ] && exec '{s}' \"$@\"\nprintf '%s\\n' \"$ZIG_LOCAL_CACHE_DIR\" >> '{s}'\nexit 1\n";
-    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "zig", .data = try std.fmt.allocPrint(a, script, .{ session.toolchain.zig, trace }) });
-    try std.Io.Dir.cwd().setFilePermissions(std.testing.io, zig, .executable_file, .{});
-    // The session's own toolchain and environment, which names no local
-    // cache, over an empty object directory, so the build must compile.
-    var traced: wiring.Session = .{ .arena = std.heap.ArenaAllocator.init(std.testing.allocator), .io = session.io, .environ = try session.environ.clone(a), .toolchain = session.toolchain };
-    defer traced.arena.deinit();
-    traced.toolchain.zig = zig;
-    traced.toolchain.directory = try std.fs.path.join(a, &.{ root, "objects" });
-    try std.testing.expectEqual(@as(?[]const u8, null), traced.environ.get("ZIG_LOCAL_CACHE_DIR"));
-    try std.testing.expectError(error.NativeToolFailed, link(&traced, manifest, try std.fs.path.join(a, &.{ root, "program" })));
-    const recorded = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, trace, a, .limited(1 << 16));
-    try std.testing.expect(scratchCaches(recorded, traced.toolchain.directory));
-    // The build removed that cache with the rest of its scratch, though it failed.
-    try std.testing.expectError(error.FileNotFound, std.Io.Dir.cwd().access(std.testing.io, std.mem.sliceTo(recorded, '\n'), .{}));
-}
-
-// spec: QBE-STRIP-1
-test "a published native executable carries neither debug information nor a symbol table" {
-    var compilation = try language.Compilation.init(std.testing.allocator, "lean.my",
-        \\def main() -> i64:
-        \\    return 3
-    );
-    defer compilation.deinit();
-    const session = try wiring.acquire();
-    var scratch = std.heap.ArenaAllocator.init(session.allocator());
-    defer scratch.deinit();
-    const manifest = try compilation.emitQbe(scratch.allocator());
-    const path = try program(session, manifest);
-    try std.testing.expect(std.mem.startsWith(u8, path, session.toolchain.executables));
-    const bytes = try std.Io.Dir.cwd().readFileAlloc(session.io, path, scratch.allocator(), .unlimited);
-    const names = try sectionNames(scratch.allocator(), bytes);
-    try std.testing.expect(hasSection(names, ".text"));
-    try std.testing.expect(!hasSection(names, ".debug_"));
-    try std.testing.expect(!hasSection(names, ".symtab"));
-    // Stripping changes nothing the program does: it still runs and returns its value.
-    const outcome = try spawn(path, .{});
-    try std.testing.expectEqual(@as(i64, 3), outcome.value);
-    try std.testing.expect(!outcome.trapped());
-}
-
-// spec-case: RC-DEFAULT-1
-test "an unstressed guest runs under the RC default and a stressed one under GC" {
-    const saved = language.runtime_mode.get();
-    defer language.runtime_mode.set(saved);
-    language.runtime_mode.set(language.runtime_mode.Selection.rc);
-    var compilation = try language.Compilation.init(std.testing.allocator, "stress.my",
-        \\def main() -> i64:
-        \\    xs = [1, 2, 3]
-        \\    ys = xs
-        \\    ys.append(4)
-        \\    return len(xs) * 10 + len(ys)
-    );
-    defer compilation.deinit();
-    const counted = try runWithOptions(&compilation, .{});
-    try std.testing.expectEqual(@as(i64, 34), counted.value);
-    const stressed = try runWithOptions(&compilation, .{ .gc_stress = true });
-    try std.testing.expectEqual(@as(i64, 34), stressed.value);
-    try std.testing.expectEqual(language.runtime_mode.Selection.rc, language.runtime_mode.get());
-}
-
+// spec: NEW-CORE-S5-UNITS-1
 test "native execution reports entry results, guest output and located traps" {
     const source =
         \\def main(out: Stream) -> i64:
@@ -415,6 +613,8 @@ test "native execution reports entry results, guest output and located traps" {
     const failure = try run(&trapped);
     try std.testing.expectEqualStrings("R_DIVISION_BY_ZERO", failure.trap.code);
     try std.testing.expect(failure.trapped());
+    // The trap names the compilation's own path, not the directory it was built in.
+    try std.testing.expectEqualStrings("trap.my", failure.trap.path);
     try std.testing.expectEqual(@as(u64, 2), failure.trap.line);
     try std.testing.expectEqual(@as(u8, 1), failure.status);
     try std.testing.expectEqual(trap_detail.Operation.div, failure.trap.detail.operation);
@@ -422,8 +622,71 @@ test "native execution reports entry results, guest output and located traps" {
     try std.testing.expectEqual(@as(i64, 0), failure.trap.detail.values.right);
 }
 
-/// An out-of-range write of a record element, whose in-place lowering
-/// (QBE-LISTSET-1) raises the bounds trap the runtime helper used to raise.
+// spec: NEW-CORE-S5-UNITS-BATCH-1
+test "a batch runs its programs together and returns each run in job order" {
+    var batch: Batch = .init(std.testing.allocator);
+    defer batch.deinit();
+    try batch.add("first.my", "def main() -> i64:\n    return 1\n", .{});
+    try batch.add("second.my", "def main() -> i64:\n    return divtrunc(1, 0)\n", .{});
+    try batch.add("loop.my", "def main() -> i64:\n    while True:\n        pass\n    return 0\n", .{ .max_steps = 5 });
+    // A rerun under another budget shares the program's written tree.
+    try batch.again(2, .{ .max_steps = 9 });
+    const runs = try batch.run();
+    try std.testing.expectEqual(@as(usize, 4), runs.len);
+    try std.testing.expectEqual(@as(i64, 1), runs[0].value);
+    try std.testing.expectEqualStrings("R_DIVISION_BY_ZERO", runs[1].trap.code);
+    try std.testing.expectEqualStrings("second.my", runs[1].trap.path);
+    try std.testing.expectEqualStrings("R_STEP_LIMIT", runs[2].trap.code);
+    try std.testing.expectEqualStrings("R_STEP_LIMIT", runs[3].trap.code);
+    // A program the front end rejects stops its batch before anything runs.
+    var rejected: Batch = .init(std.testing.allocator);
+    defer rejected.deinit();
+    try rejected.add("fine.my", "def main() -> i64:\n    return 0\n", .{});
+    try rejected.add("bad.my", "def main() -> i64:\n    return missing\n", .{});
+    try std.testing.expectError(error.SourceError, rejected.run());
+}
+
+// spec-case: NEW-CORE-S5-UNITS-1
+test "native execution separates the build's warnings from the program's standard error" {
+    var compilation = try language.Compilation.init(std.testing.allocator, "warned.my",
+        \\def main(err: Stream) -> i64:
+        \\    x = 1
+        \\    with arena():
+        \\        x = 2
+        \\    err.print("to err")
+        \\    return x
+    );
+    defer compilation.deinit();
+    const outcome = try run(&compilation);
+    try std.testing.expect(!outcome.trapped());
+    try std.testing.expectEqual(@as(i64, 2), outcome.value);
+    try std.testing.expectEqualStrings("to err\n", outcome.stderr);
+}
+
+// spec-case: NEW-CORE-S5-UNITS-1
+test "a program only trusted source may spell is refused by mylang, and a path that leaves its tree is not written" {
+    var trusted = try language.Compilation.initTrusted(std.testing.allocator, "trusted.my",
+        \\result Time:
+        \\    ok: i64,
+        \\    err: i64
+        \\
+        \\
+        \\def main(c: Clock) -> i64:
+        \\    match clock_now[Time](c):
+        \\        case Time.ok(now):
+        \\            return 0 if now > 0 else 1
+        \\        case Time.err(e):
+        \\            return e
+    );
+    defer trusted.deinit();
+    // The front end accepts a compiler-owned source; `mylang` builds user source only.
+    try std.testing.expectError(error.NewCoreBuildFailed, run(&trusted));
+    var escaping = try language.Compilation.init(std.testing.allocator, "../escape.my", "def main() -> i64:\n    return 0\n");
+    defer escaping.deinit();
+    try std.testing.expectError(error.NativeHostFailed, run(&escaping));
+}
+
+/// An out-of-range write of a record element.
 const record_element_write =
     \\record Row:
     \\    name: str
@@ -450,8 +713,6 @@ test "native execution reports original bounds indexes for read write pop array 
         .{ .source = "def main() -> i64:\n    xs = [1]\n    return xs[14]\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = 14, .length = 1, .text = "(index 14, length 1)" },
         .{ .source = "def main() -> i64:\n    xs = [1, 2]\n    return xs[-5]\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -5, .length = 2, .text = "(index -5, length 2)" },
         .{ .source = "def main() -> i64:\n    xs = [1, 2]\n    xs[-5] = 9\n    return 0\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -5, .length = 2, .text = "(index -5, length 2)" },
-        // QBE-LISTSET-1: the in-place element write raises the same trap the
-        // `myl_native_list_set` call used to, with the caller's own index.
         .{ .source = "def main() -> i64:\n    xs = [1, 2]\n    xs[14] = 9\n    return 0\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = 14, .length = 2, .text = "(index 14, length 2)" },
         .{ .source = record_element_write, .code = "R_LIST_BOUNDS", .operation = .index, .index = 3, .length = 1, .text = "(index 3, length 1)" },
         .{ .source = "def main() -> i64:\n    xs: list[i64] = []\n    return xs.pop()\n", .code = "R_LIST_BOUNDS", .operation = .pop, .index = null, .length = 0, .text = "(length 0)" },

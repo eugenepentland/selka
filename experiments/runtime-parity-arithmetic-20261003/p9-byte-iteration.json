@@ -1,0 +1,51 @@
+{
+  "kind": "untimed-codegen-diagnostic",
+  "source_sha256": "49529c61640370c112c738f8bb8cfff98dc1e959769480b3a7eeda18e3c94657",
+  "qbe_sha256": "05030fa66864f44f28754425d644e46155c95bc5442fc2de705a85eee1443945",
+  "cases": {
+    "add_octets": {
+      "before": {
+        "ssa_sha256": "1712af4639b8256151b0165d038a0242d4cc1603528f2e8a282997341418940d",
+        "asm_sha256": "ce8e89ebb4401289968c511c6c6c892f7ce66f4651ab858606f5454654d1ab42",
+        "ssa_bytes": 11026,
+        "assembly_instructions": 166
+      },
+      "scalar-after": {
+        "ssa_sha256": "9e108ebdd5eaf44f7debbd67a827c22e22d2bd2a8c8f3c7953e593a224c9c706",
+        "asm_sha256": "dbabd7bbe20b6997c5c79a5ba978538bbcbcf772d937cfd555a05ee92f4e38c4",
+        "ssa_bytes": 13303,
+        "assembly_instructions": 202
+      }
+    },
+    "xor_octets": {
+      "before": {
+        "ssa_sha256": "1e447f95bc814a985b28e8ebc57b2c2c6d22cccac7c2a10624ed2a845e17f442",
+        "asm_sha256": "b36220563b21b6c7bc5a20d7bafc9e8badd27c535eae6a95c33823a49c2f0193",
+        "ssa_bytes": 11209,
+        "assembly_instructions": 183,
+        "steady_loop_instructions": 25
+      },
+      "scalar-after": {
+        "ssa_sha256": "2850a0dcd26779cd74953dc6dce132cbf374641cd57eb52267267dfbd8538c0a",
+        "asm_sha256": "44d09182241ffee86bf423bf845b9532fa70355a6a452588658afd9a97d9364f",
+        "ssa_bytes": 13741,
+        "assembly_instructions": 224,
+        "steady_loop_instructions": 15
+      }
+    },
+    "indexed_octets": {
+      "before": {
+        "ssa_sha256": "30d6d0ed208e1301132903a62429f0f14dbb347ef40876f554bc59b655251308",
+        "asm_sha256": "80bbd118a37f8b06671cbc4d363ced8c657ef14282291f1a20c663d35d85c9be",
+        "ssa_bytes": 4076,
+        "assembly_instructions": 97
+      },
+      "scalar-after": {
+        "ssa_sha256": "30d6d0ed208e1301132903a62429f0f14dbb347ef40876f554bc59b655251308",
+        "asm_sha256": "80bbd118a37f8b06671cbc4d363ced8c657ef14282291f1a20c663d35d85c9be",
+        "ssa_bytes": 4076,
+        "assembly_instructions": 97
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/fuzz-split-50-01/release",
+    "1"
+  ],
+  "status": 0,
+  "stdout": "20278\n",
+  "stderr": ""
+}

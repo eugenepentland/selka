@@ -74,5 +74,7 @@ def clear_pending_rows(rows: mut list[list[int]]) -> int:
 
 public def test_clearing_parent_keeps_captured_receiver_alive() -> bool:
     rows = [[1]]
-    rows[0].append(clear_pending_rows(mut rows))
-    return len(rows) == 0
+    selected_row = rows[0]
+    value = clear_pending_rows(mut rows)
+    selected_row.append(value)
+    return len(rows) == 0 and selected_row == [1, 7]

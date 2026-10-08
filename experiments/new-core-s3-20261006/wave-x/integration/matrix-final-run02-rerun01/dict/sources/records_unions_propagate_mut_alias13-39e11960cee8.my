@@ -1,0 +1,86 @@
+def number(text: str, fallback: int) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return fallback
+
+
+def fold(d: dict[int, int]) -> int:
+    total = 0
+    for key, value in d.items():
+        total = (total * 31 + key * 7 + value) % 1000003
+    return total
+
+
+def change(d: mut dict[int, int], key: int, value: int):
+    d[key] = d.get(key, 0) + value
+
+
+def rebind(d: mut dict[int, int], other: dict[int, int], choose: bool):
+    if choose:
+        d = other
+    d[71] = 4
+
+
+def main(args: list[str], out: Stream) -> int:
+    n = number(args[0], 3)
+    rounds = number(args[1], 2)
+    seed = number(args[2], 7)
+    if n < 1 or n > 100 or rounds < 0 or rounds > 5:
+        return 3
+    d: dict[int, int] = {}
+    for j in range(n):
+        d[j] = (seed + j * 13) % 1009
+    saved = d
+    d[0] = 91
+    deleted = d.pop(0, 19)
+    d[0] = deleted + 1
+    acc = fold(saved)
+    change(mut d, n + 2, 31)
+    rebind(mut d, saved, seed % 3 == 0)
+    other = d
+    acc = (acc + d.setdefault(18, 43)) % 1000003
+    d[5] = d.get(5, 17) + 65
+    acc = (acc + d.setdefault(15, 82)) % 1000003
+    for key in d:
+        acc = (acc + key + d[key]) % 1000003
+    d[22] = d.get(22, 17) + 61
+    acc = (acc + d.setdefault(5, 40)) % 1000003
+    d[21] = d.get(21, 17) + 29
+    acc = (acc + d.setdefault(14, 93)) % 1000003
+    acc = (acc + d.pop(4, 94)) % 1000003
+    text: dict[str, int] = {}
+    members: set[int] = set()
+    managed: dict[int, list[int]] = {}
+    for j in range(n):
+        name = "prefix-" + str(j % 19)
+        text[name] = text.get(name, 0) + j
+        members.add(j % 17)
+        managed[j] = [j, seed % 97]
+    text_saved = text
+    text["prefix-0"] = 71
+    members_saved = members
+    members.discard(0)
+    members.add(n + 71)
+    acc = (acc + members.pop()) % 1000003
+    managed_saved = managed
+    managed[0].append(91)
+    acc = (acc + len(managed[0]) + len(managed_saved[0])) % 1000003
+    for text_key, text_value in text.items():
+        acc = (acc + len(text_key) * 13 + text_value + text_saved.get(text_key, 17)) % 1000003
+    for member in members_saved:
+        acc = (acc * 7 + member) % 1000003
+    for key, value in d.items():
+        acc = (acc + value) % 1000003
+        d[71] = 19
+    observed = {1: 3}
+    live = list(observed.values())
+    frozen = list(live)
+    observed[1] = 7
+    observed[2] = 9
+    for current_value in live:
+        acc = (acc + current_value) % 1000003
+    acc = (acc + frozen[0]) % 1000003
+    out.print(acc, fold(d), fold(saved), fold(other))
+    return acc % 7

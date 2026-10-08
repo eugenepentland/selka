@@ -1,0 +1,31 @@
+{
+  "kind": "pinned-paired-artifacts",
+  "host_mode": "Debug",
+  "guest_mode": "ReleaseFast",
+  "records": [
+    {
+      "arm": "before",
+      "backend": "llvm",
+      "binary": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-debug/runner/bin/compute-my-llvm",
+      "binary_sha256": "366d46cc759592fd6d21f23e5a786d98516c29492b9c55a0c766f126c705f8b3"
+    },
+    {
+      "arm": "before",
+      "backend": "qbe",
+      "binary": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-debug/runner/bin/compute-my-qbe",
+      "binary_sha256": "55b1e7e03a3510d4c6cff20cec59e5fd33b1888538644c82db5c2dba9d44b4fc"
+    },
+    {
+      "arm": "candidate",
+      "backend": "llvm",
+      "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-d14e26f4-guests/compute-my-llvm",
+      "binary_sha256": "6689fee1d324c068941fe51a3536b2d3e566c14955fb20d3824b8b7f904ff0b0"
+    },
+    {
+      "arm": "candidate",
+      "backend": "qbe",
+      "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-d14e26f4-guests/compute-my-qbe",
+      "binary_sha256": "0c5df76fb27cfa7478f9c52a0d7b74aefd72faa923defee17c7f80e5adca830b"
+    }
+  ]
+}

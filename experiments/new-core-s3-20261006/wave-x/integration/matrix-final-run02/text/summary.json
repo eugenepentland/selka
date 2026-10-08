@@ -1,0 +1,75 @@
+{
+  "kind": "text",
+  "cases_requested": 200,
+  "seed": 3307,
+  "cases_seen": 65,
+  "accepted": 64,
+  "old_rejected": 0,
+  "core_refused": 0,
+  "core_build_failed": 0,
+  "comparisons_expected": 3000,
+  "native_runs": 1280,
+  "harness": {},
+  "harness_status": 1,
+  "complete": false,
+  "qualified": false,
+  "error": "QualificationFailure: compile_timeout: ['/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang', 'build', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T201856Z-a00f722632af/text/sources/text_0064.my', '-o', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T201856Z-a00f722632af/text/tmp/fuzz-text.64rbzgrm/old', '--release', '--cache-dir', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T201856Z-a00f722632af/text/tmp/fuzz-text.64rbzgrm/old-cache']; retained source: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/matrix-final-run02/text/failures/text_0064-c2d838fd479c.my",
+  "failures": [
+    {
+      "kind": "compile_timeout",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T201856Z-a00f722632af/text/sources/text_0064.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T201856Z-a00f722632af/text/tmp/fuzz-text.64rbzgrm/old",
+        "--release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T201856Z-a00f722632af/text/tmp/fuzz-text.64rbzgrm/old-cache"
+      ],
+      "timeout": 60,
+      "stdout_b64": "",
+      "stderr_b64": "",
+      "retained_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/matrix-final-run02/text/failures/text_0064-c2d838fd479c.my"
+    }
+  ],
+  "elapsed_seconds": 543.3025790839456,
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T201856Z-a00f722632af/text",
+  "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T201856Z-a00f722632af/text/tmp",
+  "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/matrix-final-run02/text/sources",
+  "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T201856Z-a00f722632af/text/zig",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang-core",
+      "sha256": "09f90c02e19b649407af4f1017b148449d7c175f8ceee5b8a5cc6a484250e5f0"
+    }
+  },
+  "oracle_unchanged": true,
+  "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-c/s3-char/fuzz_char.py",
+  "harness_sha256": "83d322042b9d2a32c2898a5eb018cf30f4bdd7e5a3bc799e7bc8e9d51cd60959",
+  "native_comparisons": 960,
+  "native_complete": false,
+  "command_count": 1536
+}

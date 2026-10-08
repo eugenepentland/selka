@@ -1,0 +1,22 @@
+== json_parse perf: size=256 iterations=400; per unit = element
+version                                          cyc/iter   instr/iter  cyc/unit instr/unit brmiss/u   sfwd/u
+v1: today model: memory scanner, Results in memory, RC tree, per-string buffers     754013.6    2930415.2  2945.366  11446.934   2.5992  10.4338
+v2: + register scanner, unboxed Results (same tree, same allocations)     589000.0    2861534.3  2300.781  11177.868   1.9798  12.7135
+v3: + bump region, no RC/drain                   280033.2    1014563.1  1093.880   3963.137   1.2827  18.3998
+v4: + borrowed document, string views, in-place literals     295443.1     731733.3  1154.075   2858.333   0.5149   9.6988
+v5: + single-pass integers                       216604.4     778081.8   846.111   3039.382   0.4772  10.1379
+v6: + flat objects (no hash dictionaries)        211099.1     577849.7   824.606   2257.226   0.6357   9.4379
+v7: + schema-directed: rows straight from the bytes     114211.0     529585.5   446.137   2068.693   0.5390   1.3760
+v8: + demand-driven string decoding              108053.4     476358.6   422.084   1860.776   0.2764   1.6395
+v9: + AVX2 string scan, SWAR integers             97935.7     412746.0   382.561   1612.289   0.0791   1.6918
+v1 (whole job)                                   730957.4    2887239.7  2855.302  11278.280   2.6231  10.0885
+v7 (whole job)                                   120274.1     504575.2   469.821   1970.997   0.5404   1.4728
+v9 (whole job)                                   110582.9     436204.7   431.965   1703.925   0.0796   1.6892
+v30 holdout: pretty/reordered/escaped doc, typed parser     111284.9     489676.9   434.707   1912.800   0.5492   1.4523
+v31 holdout: pretty/reordered/escaped doc, AVX2 parser      97156.3     414380.0   379.517   1618.672   0.0824   1.6897
+v20 holdout reference: today model on that doc     750926.1    2921552.0  2933.305  11412.312   2.7118  10.1554
+v8 baseline x86-64                               111645.6     515174.3   436.116   2012.400   0.2861   1.6570
+B0 rust                                          454405.7    1930877.0  1775.022   7542.488   4.4798  25.4246
+B0 zig-safe                                      766189.2    3133988.8  2992.926  12242.144   4.1411  31.1414
+B0 zig-fast                                      582983.0    2122776.8  2277.277   8292.097   3.1583  36.5182
+B0 my-llvm                                      3498474.2   13094283.6 13665.915  51149.545   4.3598  75.1086

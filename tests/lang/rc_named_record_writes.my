@@ -37,12 +37,10 @@ def rhs(state: mut State) -> int:
     return state.count + 3
 
 
-# spec-case: RC-NAMED-RECORD-WRITE-1
 public def test_named_loop_keeps_three_child_owners() -> bool:
     return counted(100) == 124
 
 
-# spec-case: RC-NAMED-RECORD-WRITE-1
 public def test_named_rebinding_and_forwarded_mut_return_keep_ownership() -> bool:
     state = State([7], [8], [9], 0)
     saved = forward(mut state)
@@ -54,7 +52,6 @@ public def test_named_rebinding_and_forwarded_mut_return_keep_ownership() -> boo
     return saved.count == 0 and saved.values == [7] and state.count == 9 and state.code == [21]
 
 
-# spec-case: RC-NAMED-RECORD-WRITE-1
 public def test_record_and_list_snapshots_survive_named_scalar_write() -> bool:
     state = State([7], [8], [9], 2)
     saved = state
@@ -65,49 +62,19 @@ public def test_record_and_list_snapshots_survive_named_scalar_write() -> bool:
     return saved.count == 2 and saved.values == [7] and children == [7] and state.count == 8 and state.values == [7, 15]
 
 
-# spec-case: RC-NAMED-RECORD-WRITE-1
 public def test_complete_rhs_rebinding_precedes_named_scalar_commit() -> bool:
     state = State([7], [8], [9], 2)
     saved = state
-    state.count = rhs(mut state)
+    next_count = rhs(mut state)
+    state.count = next_count
     return state.count == 43 and state.values == [11] and state.links == [13] and saved.count == 2 and saved.code == [8]
 
 
-# spec-case: RC-NAMED-RECORD-WRITE-1
-public def test_named_home_in_caller_arena_preserves_heap_children() -> bool:
-    children = [31]
-    answer = False
-    with arena():
-        state = State(children, [32], [33], 4)
-        saved = state
-        state.count = state.count + 2
-        append_child(mut state)
-        state.count = state.count + 3
-        answer = saved.count == 4 and saved.values == [31] and state.values == [31, 15] and state.count == 9
-    return answer and children == [31]
-
-
-# spec-case: RC-NAMED-RECORD-WRITE-1
-public def test_named_loop_in_caller_arena_balances_children() -> bool:
-    with arena():
-        return counted(17) == 41
-
-
-# spec-case: RC-NAMED-RECORD-WRITE-1
-public def test_inner_arena_cleanup_requires_new_named_definition() -> bool:
-    with arena():
-        state = State([7], [8], [9], 0)
-        state.count = state.count + 1
-    state = State([17], [18], [19], 4)
-    state.count = state.count + 2
-    return state.count == 6 and state.values == [17]
-
-
-# spec-case: RC-NAMED-RECORD-WRITE-1
 public def test_published_record_snapshot_keeps_original_scalar_bits() -> bool:
     state = State([7], [8], [9], 0)
     published = [state]
-    state.count = rhs(mut state)
+    next_count = rhs(mut state)
+    state.count = next_count
     state.count = state.count + 1
     return published[0].count == 0 and published[0].values == [7] and state.count == 44 and state.values == [11]
 
@@ -117,8 +84,5 @@ def main(out: Stream) -> int:
     out.print(test_named_rebinding_and_forwarded_mut_return_keep_ownership())
     out.print(test_record_and_list_snapshots_survive_named_scalar_write())
     out.print(test_complete_rhs_rebinding_precedes_named_scalar_commit())
-    out.print(test_named_home_in_caller_arena_preserves_heap_children())
-    out.print(test_named_loop_in_caller_arena_balances_children())
-    out.print(test_inner_arena_cleanup_requires_new_named_definition())
     out.print(test_published_record_snapshot_keeps_original_scalar_bits())
     return 0

@@ -1,0 +1,86 @@
+## examples: 93 files (7 not checkable alone), 207 functions, 59 accepted (29%)
+  front end: 4 x error[E_MODULE_NAME]: declared `module shop.money`, but this
+  front end: 1 x error[E_MODULE_NAME]: declared `module config.values`, but t
+  front end: 1 x error[E_MODULE_NAME]: declared `module shop.billing`, but th
+     42  record type
+     33  domain type
+     17  Result type
+     11  fixed array type
+     10  capability type
+      6  union type
+      4  enum type
+      3  host function
+      3  resource type
+      3  binary operand type
+      3  bytes type
+      2  length
+## bench/parity: 45 files (0 not checkable alone), 123 functions, 39 accepted (32%)
+     23  record type
+     13  Result type
+      5  dict type
+      5  mut parameter
+      4  bytes type
+      3  union type
+      3  sort
+      3  length
+      2  join
+      2  index
+      2  string index
+      2  shift_left
+## tests/lang: 200 files (4 not checkable alone), 3038 functions, 896 accepted (29%)
+  front end: 2 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/lines.t
+  front end: 1 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/nul.bin
+  front end: 1 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/support
+    653  record type
+    206  record
+    201  dict type
+    167  mut parameter
+    122  bytes type
+    103  fixed array type
+     97  union type
+     92  Result type
+     91  with scope
+     37  write
+     36  assertion
+     36  binary operand type
+## benchmarks/runtime: 3 files (0 not checkable alone), 141 functions, 36 accepted (26%)
+     24  union type
+     23  record type
+     16  Result type
+     13  bytes type
+      4  dict type
+      3  length
+      2  string index
+      1  extern
+      1  contains
+      1  cast target
+      1  split
+      1  is_digit
+## lox port: 26 files (26 not checkable alone), 0 functions, 0 accepted (0%)
+  front end: 24 x error[E_VALUE_CLASS]: class is shared mutable state under va
+  front end: 2 x error[E_MAIN]: the program requires an entry point: def main
+## all corpora: 3509 functions, 1030 accepted (29%)
+    741  record type
+    211  dict type
+    206  record
+    174  mut parameter
+    142  bytes type
+    138  Result type
+    130  union type
+    114  fixed array type
+     91  with scope
+     41  binary operand type
+     39  domain type
+     38  write
+     37  length
+     37  function value type
+     37  assertion
+     33  capability type
+     25  set type
+     18  sort
+     14  join
+     13  cast target
+     13  function_value
+      9  slice
+      8  call evaluation body
+      7  field

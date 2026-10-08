@@ -1,0 +1,2 @@
+result_propagate 4096 {'actual': 1.3804022934729527, 'assembly_baseline': 1.3875120373033754, 'partial_nop': 1.0214308011930027, 'full_eax': 1.0117439502567545}
+result_propagate 64 {'actual': 1.006124636297811, 'assembly_baseline': 1.005653518663511, 'partial_nop': 1.0146643281056968, 'full_eax': 1.0058292086974043}

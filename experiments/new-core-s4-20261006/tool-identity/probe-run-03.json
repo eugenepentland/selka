@@ -1,0 +1,37 @@
+{
+  "mode": "ReleaseFast",
+  "cpu": 10,
+  "probe_sha256": "10f2c9e9f2a5104bc7ec474fbb8f9d0dfdbaf3b633d74daf7888a06b3eb64ca1",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "runs": [
+    {
+      "label": "parent-plus-final-1",
+      "seconds": 0.08874596212990582,
+      "exit": 0,
+      "stdout": "{\"inputs\":20900,\"memo_hit\":true,\"cacheable\":true,\"digest\":\"c94b766e030d0946cb0f37ca7a7e7c5821adf924c9ee6e68ef05b9d7c4e6cfc6\",\"generation\":\"9a05384452b1cf9657d946050a9efbf40560569a2c13d670b233912e75561a75\"}\n",
+      "stderr": ""
+    },
+    {
+      "label": "parent-plus-final-2",
+      "seconds": 0.08650466101244092,
+      "exit": 0,
+      "stdout": "{\"inputs\":20900,\"memo_hit\":true,\"cacheable\":true,\"digest\":\"c94b766e030d0946cb0f37ca7a7e7c5821adf924c9ee6e68ef05b9d7c4e6cfc6\",\"generation\":\"9a05384452b1cf9657d946050a9efbf40560569a2c13d670b233912e75561a75\"}\n",
+      "stderr": ""
+    },
+    {
+      "label": "parent-plus-final-3",
+      "seconds": 0.08666675793938339,
+      "exit": 0,
+      "stdout": "{\"inputs\":20900,\"memo_hit\":true,\"cacheable\":true,\"digest\":\"c94b766e030d0946cb0f37ca7a7e7c5821adf924c9ee6e68ef05b9d7c4e6cfc6\",\"generation\":\"9a05384452b1cf9657d946050a9efbf40560569a2c13d670b233912e75561a75\"}\n",
+      "stderr": ""
+    },
+    {
+      "label": "strict-capture",
+      "seconds": 0.07820600597187877,
+      "exit": 0,
+      "stdout": "{\"inputs\":20900,\"memo_hit\":true,\"cacheable\":true,\"digest\":\"c94b766e030d0946cb0f37ca7a7e7c5821adf924c9ee6e68ef05b9d7c4e6cfc6\",\"generation\":\"9a05384452b1cf9657d946050a9efbf40560569a2c13d670b233912e75561a75\"}\n",
+      "stderr": ""
+    }
+  ],
+  "isolated_build_slots": false
+}

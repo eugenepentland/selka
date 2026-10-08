@@ -1,0 +1,17 @@
+test-core
++- run test
+   +- compile test debug native 1 errors
+src/core/byte_index_test.zig:242:9: error: local variable is never mutated
+    var result = try support.runPasses(a, &module, .verify);
+        ^~~~~~
+src/core/byte_index_test.zig:242:9: note: consider using 'const'
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test -ODebug --dep mylang --dep core_test_options -Mroot=src/core/root_test.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -Mcore_test_options=.zig-cache/o/51ea3d3423a0f46d499800b169ab461a/options.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --test-filter "byte index" --test-filter "signed indices" --test-filter "byte adapter" --test-filter "counted byte" --test-runner ../guardian-zig/src/test_runner.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name test --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 2/5 steps succeeded (1 failed)
+test-core transitive failure
++- run test transitive failure
+   +- compile test debug native 1 errors
+      +- options success
+         +- compile exe mylang-core debug native success 1s MaxRSS:347M
+

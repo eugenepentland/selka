@@ -1,0 +1,74 @@
+[
+  {
+    "mode": "old-rc",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "zig-out/bin/mylang",
+      "test",
+      "tests/lang/mut_rebind_modules.my",
+      "--json",
+      "--force",
+      "--no-cache",
+      "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/module-header-fix/old-rc"
+    ]
+  },
+  {
+    "mode": "old-gc-stress",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "zig-out/bin/mylang",
+      "test",
+      "tests/lang/mut_rebind_modules.my",
+      "--json",
+      "--force",
+      "--no-cache",
+      "--gc-stress",
+      "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/module-header-fix/old-gc-stress"
+    ]
+  },
+  {
+    "mode": "old-release",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "zig-out/bin/mylang",
+      "test",
+      "tests/lang/mut_rebind_modules.my",
+      "--json",
+      "--force",
+      "--no-cache",
+      "--release",
+      "--cache-dir=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/module-header-fix/old-release"
+    ]
+  },
+  {
+    "mode": "core-debug",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "zig-out/bin/mylang-core",
+      "test",
+      "tests/lang/mut_rebind_modules.my",
+      "--json",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/module-header-fix/core-debug"
+    ]
+  },
+  {
+    "mode": "core-release-verified",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "zig-out/bin/mylang-core",
+      "test",
+      "tests/lang/mut_rebind_modules.my",
+      "--json",
+      "--release",
+      "--verify-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/module-header-fix/core-release-verified"
+    ]
+  }
+]

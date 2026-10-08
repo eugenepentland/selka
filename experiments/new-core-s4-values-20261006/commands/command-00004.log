@@ -1,0 +1,6 @@
+$ scripts/build-slot.sh build zig-out/bin/mylang-core test test/core/v_nested_places.my --release --verify-facts --cache-dir .mylang-cache/s4-v/focused-nested-v1
+passed v_nested_places::test_nested_unique_and_shared_paths
+1 passed, 0 cached, 0 failed, 0 skipped
+
+exit=0
+elapsed_seconds=7.148165

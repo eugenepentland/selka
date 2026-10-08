@@ -1,0 +1,28 @@
+test-core
++- run test 0 pass, 1 fail (1 total)
+h specializations sharing one declaration and body span
+guardian/test: test wall 17.99s; slowest over 50ms:
+guardian/test:   17.99s  emit_units_test.test.S4 Result origins distinguish specializations sharing one declaration and body span
+guardian/test: FAIL — 1 failed of 1
+guardian/test: RESULT {"passed":0,"failed":1,"skipped":0}
+error: 'emit_units_test.test.S4 Result origins distinguish specializations sharing one declaration and body span' failed:
+       guardian/test: 1 test(s) selected
+       specialization origin expected leaf::origin[i64]: error: leaf failure
+         leaf.my:3:12  app::main  Err(...) created
+         app.my:5:19   app::main  ? propagated
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x133d4d9 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/core/emit_units_test.zig:171:13: 0x133dab6 in test.S4 Result origins distinguish specializations sharing one declaration and body span (root_test.zig)
+                   try std.testing.expect(std.mem.indexOf(u8, result.stderr, function) != null);
+                   ^
+       guardian/test: SLOW  17.99s  emit_units_test.test.S4 Result origins distinguis
+failed command: ./.zig-cache/o/c9198bf5f27592e5ef9784e6c4b5d990/test --cache-dir=./.zig-cache --seed=0xe39db2bf --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 0/1 tests passed (1 failed)
+test-core transitive failure
++- run test 0 pass, 1 fail (1 total)
+   +- compile test debug native success 3s MaxRSS:335M
+      +- options cached
+         +- compile exe mylang-core debug native cached 10ms MaxRSS:38M
+

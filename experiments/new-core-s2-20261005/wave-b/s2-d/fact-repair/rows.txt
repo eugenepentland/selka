@@ -1,0 +1,14 @@
+source_base=090dabd5a6932a7c3beaec68248f9a35d4c637d7
+$ scripts/build-slot.sh build -- /usr/bin/time -f '%e %M %x' -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/.mylang-cache/wave-b/s2-d/fact-repair/rows-time.txt python3 experiments/new-core-s2-20261005/wave-b/s2-d/inspect_fact_repair.py --rows
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 30s (all 3 build slot(s) busy)
+row_dict_lookup all function definitions identical to090
+row_dict_lookup_str all function definitions identical to090
+row_dict_update all function definitions identical to090
+row_dict_update_str all function definitions identical to090
+row_set_dedup all function definitions identical to090
+Rows requiring measurement: none:all five emitted row definitions unchanged
+
+exit=0 time_rss_exit=2.60 197760 0 wall_including_admission=32.72
+qualified_source_commit=0c6029d7
+tested_source_tree=69bd18dfbbf741cfb5cee7af40e11d4540278643

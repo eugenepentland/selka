@@ -1,0 +1,12 @@
+--- qualified-C
++++ combined-A
+@@ -36,7 +36,8 @@
+ declare void @myl_core_print_sep(i64) nounwind
+ declare void @myl_core_print_end(i64) nounwind
+ declare ptr @myl_core_box_new(i64) nounwind
+-declare void @myl_core_err_trace(i32, i32) nounwind cold
++declare preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32) nounwind cold
++declare preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32) nounwind cold
+ declare void @myl_core_assert_fail(i32) noreturn nounwind cold
+ declare void @llvm.memcpy.p0.p0.i64(ptr noalias nocapture writeonly, ptr noalias nocapture readonly, i64, i1 immarg)
+ declare void @llvm.memmove.p0.p0.i64(ptr nocapture writeonly, ptr nocapture readonly, i64, i1 immarg)

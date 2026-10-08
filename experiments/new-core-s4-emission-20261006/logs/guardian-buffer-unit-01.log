@@ -1,0 +1,15 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10476 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 2/88 failed (spec, test-no-conditional)
+guardian: failures grouped by check (2):
+  spec (3 findings)
+    - duplicate tag: id:new-core-buffer-s4-1
+    - in: src/core/emit_units_test.zig
+    - in: src/core/s3_number_test.zig
+  test-no-conditional (1 finding)
+    - src/core/emit_units_test.zig:152: more than one top-level loop — a test may keep one; the loop at line 139 asserts nothing, so hoist that one into a named helper
+      fix: one top-level loop is fine; merge multiple loops into one table-driven loop, split a branch into two independent tests, or hoist the computation into a helper. A multi-loop finding names the loop to hoist — the assertion-free one when there is one, otherwise the extra loop itself.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

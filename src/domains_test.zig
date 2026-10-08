@@ -261,8 +261,7 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, allocation_source);
     defer compilation.deinit();
     try testing.expectEqual(@as(i64, 3), (try native.run(&compilation)).value);
-    const dump = try compilation.dump(allocator);
-    defer allocator.free(dump);
+    try compilation.check();
     var discovery = try language.duplicates.discover(allocator, compilation.program.?, .{});
     defer discovery.deinit();
 }
@@ -315,55 +314,6 @@ test "duplicate discovery preserves domain ownership visibility and qualified ca
     try testing.expectEqual(@as(usize, 2), members.len);
     try testing.expectEqualStrings("none.a", compilation.program.?.functions[@backingInt(members[0])].name);
     try testing.expectEqualStrings("none.b", compilation.program.?.functions[@backingInt(members[1])].name);
-}
-
-test "domain bytecode rejects unowned representation access and private calls" {
-    const bc = language.bytecode;
-    const typed = @import("typed.zig");
-    const span: language.source.Span = .{ .start = 0, .end = 1 };
-    const ty: typed.Type = @fromBackingInt(typed.Type.record_base);
-    const schema: typed.Record = .{
-        .id = ty,
-        .name = "D",
-        .declaration = span,
-        .fields = &.{},
-        .shape = .{
-            .domain = .i64,
-        },
-    };
-    const Op = @FieldType(bc.Instruction, "op");
-    for ([_]Op{ .{ .wrap_domain = ty }, .{ .unwrap_domain = ty }, .{ .make_record = .{ .ty = ty, .fields = 1 } } }) |op| {
-        const instructions = [_]bc.Instruction{ .{ .span = span, .op = .{ .push_i64 = 1 } }, .{ .span = span, .op = op }, .{ .span = span, .op = .ret } };
-        const program: bc.Program = .{ .records = &.{schema}, .functions = &.{.{
-            .id = @fromBackingInt(0),
-            .name = "main",
-            .scope = .{
-                .instructions = &instructions,
-            },
-        }} };
-        try testing.expectError(error.InternalError, bc.validate(testing.allocator, program));
-    }
-    const program: bc.Program = .{ .records = &.{schema}, .functions = &.{
-        .{
-            .id = @fromBackingInt(0),
-            .name = "main",
-            .scope = .{
-                .instructions = &.{ .{ .span = span, .op = .{ .call = @fromBackingInt(1) } }, .{ .span = span, .op = .ret } },
-            },
-        },
-        .{
-            .id = @fromBackingInt(1),
-            .policy = .{
-                .owner = ty,
-                .restricted = true,
-            },
-            .name = "D.private",
-            .scope = .{
-                .instructions = &.{ .{ .span = span, .op = .{ .push_i64 = 1 } }, .{ .span = span, .op = .ret } },
-            },
-        },
-    } };
-    try testing.expectError(error.InternalError, bc.validate(testing.allocator, program));
 }
 
 // spec: CORE-7

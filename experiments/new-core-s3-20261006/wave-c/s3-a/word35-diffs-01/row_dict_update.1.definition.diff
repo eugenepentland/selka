@@ -1,0 +1,473 @@
+--- qualified-C
++++ word-scalar-store
+@@ -7,264 +7,268 @@
+   %SSA4 = alloca [8 x i8], align 8
+   %SSA5 = alloca [8 x i8], align 8
+   %SSA6 = alloca [8 x i8], align 8
+-  %SSA7 = alloca [8 x i8], align 8
+-  %SSA8 = alloca [8 x i8], align 8
+   br label %b0
+ b0:
+-  %SSA9 = call ptr @myl_core_dict_new(i64 0, ptr @myl.dict.17)
++  %SSA7 = call ptr @myl_core_dict_new(i64 0, ptr @myl.dict.17)
+   br label %b1
+ b1:
+-  %SSA10 = phi i64 [ 0, %b0 ], [ %SSA11, %b3 ]
+-  %SSA12 = phi ptr [ %SSA9, %b0 ], [ %SSA13, %b3 ]
+-  %SSA14 = icmp slt i64 %SSA10, %p0
+-  br i1 %SSA14, label %b2, label %b4
++  %SSA8 = phi i64 [ 0, %b0 ], [ %SSA9, %b3 ]
++  %SSA10 = phi ptr [ %SSA7, %b0 ], [ %SSA11, %b3 ]
++  %SSA12 = icmp slt i64 %SSA8, %p0
++  br i1 %SSA12, label %b2, label %b4
+ b2:
+   br i1 false, label %b5, label %b6
+ b3:
+-  %SSA11 = add nuw nsw i64 %SSA10, 1
++  %SSA9 = add nuw nsw i64 %SSA8, 1
+   br label %b1
+ b4:
+-  %SSA15 = call { i64, i1 } @llvm.smul.with.overflow.i64(i64 %p0, i64 2)
+-  %SSA16 = extractvalue { i64, i1 } %SSA15, 0
+-  %SSA17 = extractvalue { i64, i1 } %SSA15, 1
+-  br i1 %SSA17, label %trap.3, label %b4.4, !prof !0
++  %SSA13 = call { i64, i1 } @llvm.smul.with.overflow.i64(i64 %p0, i64 2)
++  %SSA14 = extractvalue { i64, i1 } %SSA13, 0
++  %SSA15 = extractvalue { i64, i1 } %SSA13, 1
++  br i1 %SSA15, label %trap.3, label %b4.4, !prof !0
+ trap.3:
+   call void @myl_core_trap(i32 SITE(0, 10, 25, 64, 'mul\\00', 'row_dict_update::batch_result\\00'), i64 %p0, i64 2), !dbg ('location', 10, 25, 'row_dict_update::batch_result')
+   unreachable
+ b4.4:
+   br label %b10
+ b5:
+-  %SSA18 = getelementptr inbounds i8, ptr %p3, i64 8
+-  %SSA19 = load i64, ptr %SSA18, align 8, !tbaa !5
+-  %SSA20 = icmp ugt i64 %SSA19, 9223372036854775807
+-  br i1 %SSA20, label %trap.7, label %b5.8, !prof !0
++  %SSA16 = getelementptr inbounds i8, ptr %p3, i64 8
++  %SSA17 = load i64, ptr %SSA16, align 8, !tbaa !5
++  %SSA18 = icmp ugt i64 %SSA17, 9223372036854775807
++  br i1 %SSA18, label %trap.7, label %b5.8, !prof !0
+ trap.7:
+-  call void @myl_core_trap(i32 SITE(4, 9, 22, 64, 'cast\\00', 'row_dict_update::batch_result\\00'), i64 %SSA19, i64 0), !dbg ('location', 9, 22, 'row_dict_update::batch_result')
++  call void @myl_core_trap(i32 SITE(4, 9, 22, 64, 'cast\\00', 'row_dict_update::batch_result\\00'), i64 %SSA17, i64 0), !dbg ('location', 9, 22, 'row_dict_update::batch_result')
+   unreachable
+ b5.8:
+-  %SSA21 = add i64 %SSA19, 0
+-  %SSA22 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %SSA21, i64 %SSA10)
+-  %SSA23 = extractvalue { i64, i1 } %SSA22, 0
+-  %SSA24 = extractvalue { i64, i1 } %SSA22, 1
+-  br i1 %SSA24, label %trap.11, label %b5.8.12, !prof !0
++  %SSA19 = add i64 %SSA17, 0
++  %SSA20 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %SSA19, i64 %SSA8)
++  %SSA21 = extractvalue { i64, i1 } %SSA20, 0
++  %SSA22 = extractvalue { i64, i1 } %SSA20, 1
++  br i1 %SSA22, label %trap.11, label %b5.8.12, !prof !0
+ trap.11:
+-  call void @myl_core_trap(i32 SITE(0, 9, 22, 64, 'add\\00', 'row_dict_update::batch_result\\00'), i64 %SSA21, i64 %SSA10), !dbg ('location', 9, 22, 'row_dict_update::batch_result')
++  call void @myl_core_trap(i32 SITE(0, 9, 22, 64, 'add\\00', 'row_dict_update::batch_result\\00'), i64 %SSA19, i64 %SSA8), !dbg ('location', 9, 22, 'row_dict_update::batch_result')
+   unreachable
+ b5.8.12:
+   br label %b6
+ b6:
+-  %SSA25 = phi i64 [ %SSA10, %b2 ], [ %SSA23, %b5.8.12 ]
+-  %SSA26 = getelementptr inbounds i8, ptr %p3, i64 8
+-  %SSA27 = load i64, ptr %SSA26, align 8, !tbaa !5
+-  %SSA28 = icmp uge i64 %SSA25, %SSA27
+-  br i1 %SSA28, label %trap.16, label %b6.17, !prof !0
++  %SSA23 = phi i64 [ %SSA8, %b2 ], [ %SSA21, %b5.8.12 ]
++  %SSA24 = getelementptr inbounds i8, ptr %p3, i64 8
++  %SSA25 = load i64, ptr %SSA24, align 8, !tbaa !5
++  %SSA26 = icmp uge i64 %SSA23, %SSA25
++  br i1 %SSA26, label %trap.16, label %b6.17, !prof !0
+ trap.16:
+-  call void @myl_core_trap(i32 SITE(2, 9, 22, 64, 'index\\00', 'row_dict_update::batch_result\\00'), i64 %SSA25, i64 %SSA27), !dbg ('location', 9, 22, 'row_dict_update::batch_result')
++  call void @myl_core_trap(i32 SITE(2, 9, 22, 64, 'index\\00', 'row_dict_update::batch_result\\00'), i64 %SSA23, i64 %SSA25), !dbg ('location', 9, 22, 'row_dict_update::batch_result')
+   unreachable
+ b6.17:
+-  %SSA29 = getelementptr inbounds i8, ptr %p3, i64 32
+-  %SSA30 = getelementptr inbounds i64, ptr %SSA29, i64 %SSA25
+-  %SSA31 = load i64, ptr %SSA30, align 8, !tbaa !7
+-  store i64 %SSA10, ptr %SSA1, align 8, !tbaa !7
+-  %SSA32 = mul i64 %SSA10, -7046029254386353131
+-  %SSA33 = lshr i64 %SSA32, 32
+-  %SSA34 = xor i64 %SSA32, %SSA33
+-  %SSA35 = call i64 @myl.dict.17.find(ptr %SSA12, ptr %SSA1, i64 %SSA34)
+-  %SSA36 = icmp sge i64 %SSA35, 0
+-  br i1 %SSA36, label %b7, label %b8
++  %SSA27 = getelementptr inbounds i8, ptr %p3, i64 32
++  %SSA28 = getelementptr inbounds i64, ptr %SSA27, i64 %SSA23
++  %SSA29 = load i64, ptr %SSA28, align 8, !tbaa !7
++  store i64 %SSA8, ptr %SSA1, align 8, !tbaa !7
++  %SSA30 = mul i64 %SSA8, -7046029254386353131
++  %SSA31 = lshr i64 %SSA30, 32
++  %SSA32 = xor i64 %SSA30, %SSA31
++  %SSA33 = call i64 @myl.dict.17.find(ptr %SSA10, ptr %SSA1, i64 %SSA32)
++  %SSA34 = icmp sge i64 %SSA33, 0
++  br i1 %SSA34, label %b7, label %b8
+ b7:
+-  store i64 %SSA31, ptr %SSA2, align 8, !tbaa !7
+-  %SSA37 = call ptr @myl_core_dict_set(ptr %SSA12, i64 %SSA35, ptr %SSA2)
++  %SSA35 = mul i64 %SSA33, 16
++  %SSA36 = add i64 %SSA35, 40
++  %SSA37 = getelementptr inbounds i8, ptr %SSA10, i64 %SSA36
++  store i64 %SSA29, ptr %SSA37, align 8, !tbaa !7
++  %SSA38 = getelementptr inbounds i8, ptr %SSA10, i64 0
+   br label %b9
+ b8:
+-  store i64 %SSA10, ptr %SSA3, align 8, !tbaa !7
+-  store i64 %SSA31, ptr %SSA4, align 8, !tbaa !7
+-  %SSA38 = call ptr @myl_core_dict_insert(ptr %SSA12, i64 %SSA35, ptr %SSA3, ptr %SSA4, i1 false)
++  store i64 %SSA8, ptr %SSA2, align 8, !tbaa !7
++  store i64 %SSA29, ptr %SSA3, align 8, !tbaa !7
++  %SSA39 = call ptr @myl_core_dict_insert(ptr %SSA10, i64 %SSA33, ptr %SSA2, ptr %SSA3, i1 false)
+   br label %b9
+ b9:
+-  %SSA13 = phi ptr [ %SSA37, %b7 ], [ %SSA38, %b8 ]
++  %SSA11 = phi ptr [ %SSA38, %b7 ], [ %SSA39, %b8 ]
+   br label %b3
+ b10:
+-  %SSA39 = phi i64 [ 0, %b4.4 ], [ %SSA40, %b12 ]
+-  %SSA41 = phi ptr [ %SSA12, %b4.4 ], [ %SSA42, %b12 ]
+-  %SSA43 = icmp slt i64 %SSA39, %SSA16
+-  br i1 %SSA43, label %b11, label %b13
++  %SSA40 = phi i64 [ 0, %b4.4 ], [ %SSA41, %b12 ]
++  %SSA42 = phi ptr [ %SSA10, %b4.4 ], [ %SSA43, %b12 ]
++  %SSA44 = icmp slt i64 %SSA40, %SSA14
++  br i1 %SSA44, label %b11, label %b13
+ b11:
+-  %SSA44 = call { i64, i1 } @llvm.smul.with.overflow.i64(i64 %SSA39, i64 17)
+-  %SSA45 = extractvalue { i64, i1 } %SSA44, 0
+-  %SSA46 = extractvalue { i64, i1 } %SSA44, 1
+-  br i1 %SSA46, label %trap.29, label %b11.30, !prof !0
+-trap.29:
+-  call void @myl_core_trap(i32 SITE(0, 11, 25, 64, 'mul\\00', 'row_dict_update::batch_result\\00'), i64 %SSA39, i64 17), !dbg ('location', 11, 25, 'row_dict_update::batch_result')
+-  unreachable
+-b11.30:
+-  %SSA47 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %p2, i64 %SSA45)
+-  %SSA48 = extractvalue { i64, i1 } %SSA47, 0
+-  %SSA49 = extractvalue { i64, i1 } %SSA47, 1
+-  br i1 %SSA49, label %trap.33, label %b11.30.34, !prof !0
+-trap.33:
+-  call void @myl_core_trap(i32 SITE(0, 11, 21, 64, 'add\\00', 'row_dict_update::batch_result\\00'), i64 %p2, i64 %SSA45), !dbg ('location', 11, 21, 'row_dict_update::batch_result')
+-  unreachable
+-b11.30.34:
+-  %SSA50 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %SSA48, i64 %p1)
+-  %SSA51 = extractvalue { i64, i1 } %SSA50, 0
+-  %SSA52 = extractvalue { i64, i1 } %SSA50, 1
+-  br i1 %SSA52, label %trap.37, label %b11.30.34.38, !prof !0
+-trap.37:
+-  call void @myl_core_trap(i32 SITE(0, 11, 30, 64, 'add\\00', 'row_dict_update::batch_result\\00'), i64 %SSA48, i64 %p1), !dbg ('location', 11, 30, 'row_dict_update::batch_result')
+-  unreachable
+-b11.30.34.38:
+-  %SSA53 = call { i64, i1 } @llvm.smul.with.overflow.i64(i64 %p0, i64 2)
+-  %SSA54 = extractvalue { i64, i1 } %SSA53, 0
+-  %SSA55 = extractvalue { i64, i1 } %SSA53, 1
+-  br i1 %SSA55, label %trap.41, label %b11.30.34.38.42, !prof !0
+-trap.41:
++  %SSA45 = call { i64, i1 } @llvm.smul.with.overflow.i64(i64 %SSA40, i64 17)
++  %SSA46 = extractvalue { i64, i1 } %SSA45, 0
++  %SSA47 = extractvalue { i64, i1 } %SSA45, 1
++  br i1 %SSA47, label %trap.31, label %b11.32, !prof !0
++trap.31:
++  call void @myl_core_trap(i32 SITE(0, 11, 25, 64, 'mul\\00', 'row_dict_update::batch_result\\00'), i64 %SSA40, i64 17), !dbg ('location', 11, 25, 'row_dict_update::batch_result')
++  unreachable
++b11.32:
++  %SSA48 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %p2, i64 %SSA46)
++  %SSA49 = extractvalue { i64, i1 } %SSA48, 0
++  %SSA50 = extractvalue { i64, i1 } %SSA48, 1
++  br i1 %SSA50, label %trap.35, label %b11.32.36, !prof !0
++trap.35:
++  call void @myl_core_trap(i32 SITE(0, 11, 21, 64, 'add\\00', 'row_dict_update::batch_result\\00'), i64 %p2, i64 %SSA46), !dbg ('location', 11, 21, 'row_dict_update::batch_result')
++  unreachable
++b11.32.36:
++  %SSA51 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %SSA49, i64 %p1)
++  %SSA52 = extractvalue { i64, i1 } %SSA51, 0
++  %SSA53 = extractvalue { i64, i1 } %SSA51, 1
++  br i1 %SSA53, label %trap.39, label %b11.32.36.40, !prof !0
++trap.39:
++  call void @myl_core_trap(i32 SITE(0, 11, 30, 64, 'add\\00', 'row_dict_update::batch_result\\00'), i64 %SSA49, i64 %p1), !dbg ('location', 11, 30, 'row_dict_update::batch_result')
++  unreachable
++b11.32.36.40:
++  %SSA54 = call { i64, i1 } @llvm.smul.with.overflow.i64(i64 %p0, i64 2)
++  %SSA55 = extractvalue { i64, i1 } %SSA54, 0
++  %SSA56 = extractvalue { i64, i1 } %SSA54, 1
++  br i1 %SSA56, label %trap.43, label %b11.32.36.40.44, !prof !0
++trap.43:
+   call void @myl_core_trap(i32 SITE(0, 11, 47, 64, 'mul\\00', 'row_dict_update::batch_result\\00'), i64 %p0, i64 2), !dbg ('location', 11, 47, 'row_dict_update::batch_result')
+   unreachable
+-b11.30.34.38.42:
+-  %SSA56 = icmp eq i64 %SSA54, 0
+-  br i1 %SSA56, label %trap.44, label %b11.30.34.38.42.45, !prof !0
+-trap.44:
+-  call void @myl_core_trap(i32 SITE(1, 11, 39, 64, 'floor_rem\\00', 'row_dict_update::batch_result\\00'), i64 %SSA51, i64 %SSA54), !dbg ('location', 11, 39, 'row_dict_update::batch_result')
+-  unreachable
+-b11.30.34.38.42.45:
+-  %SSA57 = icmp eq i64 %SSA54, -1
+-  %SSA58 = select i1 %SSA57, i64 1, i64 %SSA54
+-  %SSA59 = sdiv i64 %SSA51, %SSA58
+-  %SSA60 = srem i64 %SSA51, %SSA58
+-  %SSA61 = icmp ne i64 %SSA60, 0
+-  %SSA62 = xor i64 %SSA60, %SSA54
+-  %SSA63 = icmp slt i64 %SSA62, 0
+-  %SSA64 = and i1 %SSA61, %SSA63
+-  %SSA65 = select i1 %SSA64, i64 %SSA54, i64 0
+-  %SSA66 = add i64 %SSA60, %SSA65
+-  store i64 %SSA66, ptr %SSA5, align 8, !tbaa !7
+-  %SSA67 = mul i64 %SSA66, -7046029254386353131
+-  %SSA68 = lshr i64 %SSA67, 32
+-  %SSA69 = xor i64 %SSA67, %SSA68
+-  %SSA70 = call i64 @myl.dict.17.find(ptr %SSA41, ptr %SSA5, i64 %SSA69)
+-  %SSA71 = icmp sge i64 %SSA70, 0
+-  br i1 %SSA71, label %b14, label %b15
++b11.32.36.40.44:
++  %SSA57 = icmp eq i64 %SSA55, 0
++  br i1 %SSA57, label %trap.46, label %b11.32.36.40.44.47, !prof !0
++trap.46:
++  call void @myl_core_trap(i32 SITE(1, 11, 39, 64, 'floor_rem\\00', 'row_dict_update::batch_result\\00'), i64 %SSA52, i64 %SSA55), !dbg ('location', 11, 39, 'row_dict_update::batch_result')
++  unreachable
++b11.32.36.40.44.47:
++  %SSA58 = icmp eq i64 %SSA55, -1
++  %SSA59 = select i1 %SSA58, i64 1, i64 %SSA55
++  %SSA60 = sdiv i64 %SSA52, %SSA59
++  %SSA61 = srem i64 %SSA52, %SSA59
++  %SSA62 = icmp ne i64 %SSA61, 0
++  %SSA63 = xor i64 %SSA61, %SSA55
++  %SSA64 = icmp slt i64 %SSA63, 0
++  %SSA65 = and i1 %SSA62, %SSA64
++  %SSA66 = select i1 %SSA65, i64 %SSA55, i64 0
++  %SSA67 = add i64 %SSA61, %SSA66
++  store i64 %SSA67, ptr %SSA4, align 8, !tbaa !7
++  %SSA68 = mul i64 %SSA67, -7046029254386353131
++  %SSA69 = lshr i64 %SSA68, 32
++  %SSA70 = xor i64 %SSA68, %SSA69
++  %SSA71 = call i64 @myl.dict.17.find(ptr %SSA42, ptr %SSA4, i64 %SSA70)
++  %SSA72 = icmp sge i64 %SSA71, 0
++  br i1 %SSA72, label %b14, label %b15
+ b12:
+-  %SSA40 = add nuw nsw i64 %SSA39, 1
++  %SSA41 = add nuw nsw i64 %SSA40, 1
+   br label %b10
+ b13:
+-  %SSA72 = insertvalue { ptr } poison, ptr %SSA41, 0
+-  %SSA73 = extractvalue { ptr } %SSA72, 0
+-  %SSA74 = getelementptr inbounds i8, ptr %SSA73, i64 8
+-  %SSA75 = load i64, ptr %SSA74, align 8, !tbaa !5
+-  %SSA76 = add i64 %SSA75, 0
++  %SSA73 = insertvalue { ptr } poison, ptr %SSA42, 0
++  %SSA74 = extractvalue { ptr } %SSA73, 0
++  %SSA75 = getelementptr inbounds i8, ptr %SSA74, i64 8
++  %SSA76 = load i64, ptr %SSA75, align 8, !tbaa !5
++  %SSA77 = add i64 %SSA76, 0
+   br label %b20
+ b14:
+-  %SSA77 = mul i64 %SSA70, 16
+-  %SSA78 = add i64 %SSA77, 40
+-  %SSA79 = getelementptr inbounds i8, ptr %SSA41, i64 %SSA78
+-  %SSA80 = load i64, ptr %SSA79, align 8, !tbaa !7
++  %SSA78 = mul i64 %SSA71, 16
++  %SSA79 = add i64 %SSA78, 40
++  %SSA80 = getelementptr inbounds i8, ptr %SSA42, i64 %SSA79
++  %SSA81 = load i64, ptr %SSA80, align 8, !tbaa !7
+   br label %b16
+ b15:
+   br label %b16
+ b16:
+-  %SSA81 = phi i64 [ %SSA80, %b14 ], [ 17, %b15 ]
+-  %SSA82 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %SSA81, i64 %SSA39)
+-  %SSA83 = extractvalue { i64, i1 } %SSA82, 0
+-  %SSA84 = extractvalue { i64, i1 } %SSA82, 1
+-  br i1 %SSA84, label %trap.65, label %b16.66, !prof !0
+-trap.65:
+-  call void @myl_core_trap(i32 SITE(0, 12, 46, 64, 'add\\00', 'row_dict_update::batch_result\\00'), i64 %SSA81, i64 %SSA39), !dbg ('location', 12, 46, 'row_dict_update::batch_result')
+-  unreachable
+-b16.66:
+-  %SSA85 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %SSA83, i64 %p1)
+-  %SSA86 = extractvalue { i64, i1 } %SSA85, 0
+-  %SSA87 = extractvalue { i64, i1 } %SSA85, 1
+-  br i1 %SSA87, label %trap.69, label %b16.66.70, !prof !0
+-trap.69:
+-  call void @myl_core_trap(i32 SITE(0, 12, 50, 64, 'add\\00', 'row_dict_update::batch_result\\00'), i64 %SSA83, i64 %p1), !dbg ('location', 12, 50, 'row_dict_update::batch_result')
+-  unreachable
+-b16.66.70:
+-  %SSA88 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %SSA86, i64 1)
+-  %SSA89 = extractvalue { i64, i1 } %SSA88, 0
+-  %SSA90 = extractvalue { i64, i1 } %SSA88, 1
+-  br i1 %SSA90, label %trap.73, label %b16.66.70.74, !prof !0
+-trap.73:
+-  call void @myl_core_trap(i32 SITE(0, 12, 58, 64, 'add\\00', 'row_dict_update::batch_result\\00'), i64 %SSA86, i64 1), !dbg ('location', 12, 58, 'row_dict_update::batch_result')
+-  unreachable
+-b16.66.70.74:
+-  %SSA91 = sdiv i64 %SSA89, 1000003
+-  %SSA92 = srem i64 %SSA89, 1000003
+-  %SSA93 = icmp ne i64 %SSA92, 0
+-  %SSA94 = xor i64 %SSA92, 1000003
+-  %SSA95 = icmp slt i64 %SSA94, 0
+-  %SSA96 = and i1 %SSA93, %SSA95
+-  %SSA97 = select i1 %SSA96, i64 1000003, i64 0
+-  %SSA98 = add i64 %SSA92, %SSA97
+-  %SSA99 = icmp sge i64 %SSA70, 0
+-  br i1 %SSA99, label %b17, label %b18
++  %SSA82 = phi i64 [ %SSA81, %b14 ], [ 17, %b15 ]
++  %SSA83 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %SSA82, i64 %SSA40)
++  %SSA84 = extractvalue { i64, i1 } %SSA83, 0
++  %SSA85 = extractvalue { i64, i1 } %SSA83, 1
++  br i1 %SSA85, label %trap.67, label %b16.68, !prof !0
++trap.67:
++  call void @myl_core_trap(i32 SITE(0, 12, 46, 64, 'add\\00', 'row_dict_update::batch_result\\00'), i64 %SSA82, i64 %SSA40), !dbg ('location', 12, 46, 'row_dict_update::batch_result')
++  unreachable
++b16.68:
++  %SSA86 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %SSA84, i64 %p1)
++  %SSA87 = extractvalue { i64, i1 } %SSA86, 0
++  %SSA88 = extractvalue { i64, i1 } %SSA86, 1
++  br i1 %SSA88, label %trap.71, label %b16.68.72, !prof !0
++trap.71:
++  call void @myl_core_trap(i32 SITE(0, 12, 50, 64, 'add\\00', 'row_dict_update::batch_result\\00'), i64 %SSA84, i64 %p1), !dbg ('location', 12, 50, 'row_dict_update::batch_result')
++  unreachable
++b16.68.72:
++  %SSA89 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %SSA87, i64 1)
++  %SSA90 = extractvalue { i64, i1 } %SSA89, 0
++  %SSA91 = extractvalue { i64, i1 } %SSA89, 1
++  br i1 %SSA91, label %trap.75, label %b16.68.72.76, !prof !0
++trap.75:
++  call void @myl_core_trap(i32 SITE(0, 12, 58, 64, 'add\\00', 'row_dict_update::batch_result\\00'), i64 %SSA87, i64 1), !dbg ('location', 12, 58, 'row_dict_update::batch_result')
++  unreachable
++b16.68.72.76:
++  %SSA92 = sdiv i64 %SSA90, 1000003
++  %SSA93 = srem i64 %SSA90, 1000003
++  %SSA94 = icmp ne i64 %SSA93, 0
++  %SSA95 = xor i64 %SSA93, 1000003
++  %SSA96 = icmp slt i64 %SSA95, 0
++  %SSA97 = and i1 %SSA94, %SSA96
++  %SSA98 = select i1 %SSA97, i64 1000003, i64 0
++  %SSA99 = add i64 %SSA93, %SSA98
++  %SSA100 = icmp sge i64 %SSA71, 0
++  br i1 %SSA100, label %b17, label %b18
+ b17:
+-  store i64 %SSA98, ptr %SSA6, align 8, !tbaa !7
+-  %SSA100 = call ptr @myl_core_dict_set(ptr %SSA41, i64 %SSA70, ptr %SSA6)
++  %SSA101 = mul i64 %SSA71, 16
++  %SSA102 = add i64 %SSA101, 40
++  %SSA103 = getelementptr inbounds i8, ptr %SSA42, i64 %SSA102
++  store i64 %SSA99, ptr %SSA103, align 8, !tbaa !7
++  %SSA104 = getelementptr inbounds i8, ptr %SSA42, i64 0
+   br label %b19
+ b18:
+-  store i64 %SSA66, ptr %SSA7, align 8, !tbaa !7
+-  store i64 %SSA98, ptr %SSA8, align 8, !tbaa !7
+-  %SSA101 = call ptr @myl_core_dict_insert(ptr %SSA41, i64 %SSA70, ptr %SSA7, ptr %SSA8, i1 false)
++  store i64 %SSA67, ptr %SSA5, align 8, !tbaa !7
++  store i64 %SSA99, ptr %SSA6, align 8, !tbaa !7
++  %SSA105 = call ptr @myl_core_dict_insert(ptr %SSA42, i64 %SSA71, ptr %SSA5, ptr %SSA6, i1 false)
+   br label %b19
+ b19:
+-  %SSA42 = phi ptr [ %SSA100, %b17 ], [ %SSA101, %b18 ]
++  %SSA43 = phi ptr [ %SSA104, %b17 ], [ %SSA105, %b18 ]
+   br label %b12
+ b20:
+-  %SSA102 = phi i64 [ 0, %b13 ], [ %SSA103, %b22 ]
+-  %SSA104 = phi i64 [ 0, %b13 ], [ %SSA105, %b22 ]
+-  %SSA106 = icmp ult i64 %SSA102, %SSA76
+-  br i1 %SSA106, label %b21, label %b23
++  %SSA106 = phi i64 [ 0, %b13 ], [ %SSA107, %b22 ]
++  %SSA108 = phi i64 [ 0, %b13 ], [ %SSA109, %b22 ]
++  %SSA110 = icmp ult i64 %SSA106, %SSA77
++  br i1 %SSA110, label %b21, label %b23
+ b21:
+-  %SSA107 = call i64 @myl_core_dict_ordinal(ptr %SSA73, i64 %SSA102), !dbg ('location', 13, 5, 'row_dict_update::batch_result')
+-  %SSA108 = mul i64 %SSA107, 16
+-  %SSA109 = add i64 %SSA108, 32
+-  %SSA110 = getelementptr inbounds i8, ptr %SSA73, i64 %SSA109
+-  %SSA111 = load i64, ptr %SSA110, align 8, !tbaa !7
+-  %SSA112 = call i64 @myl_core_dict_ordinal(ptr %SSA73, i64 %SSA102), !dbg ('location', 13, 5, 'row_dict_update::batch_result')
+-  %SSA113 = mul i64 %SSA112, 16
+-  %SSA114 = add i64 %SSA113, 40
+-  %SSA115 = getelementptr inbounds i8, ptr %SSA73, i64 %SSA114
+-  %SSA116 = load i64, ptr %SSA115, align 8, !tbaa !7
+-  %SSA117 = insertvalue { i64, i64 } poison, i64 %SSA111, 0
+-  %SSA118 = insertvalue { i64, i64 } %SSA117, i64 %SSA116, 1
+-  %SSA119 = extractvalue { i64, i64 } %SSA118, 0
+-  %SSA120 = extractvalue { i64, i64 } %SSA118, 1
+-  %SSA121 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %SSA119, i64 %SSA120)
+-  %SSA122 = extractvalue { i64, i1 } %SSA121, 0
+-  %SSA123 = extractvalue { i64, i1 } %SSA121, 1
+-  br i1 %SSA123, label %trap.94, label %b21.95, !prof !0
+-trap.94:
+-  call void @myl_core_trap(i32 SITE(0, 14, 29, 64, 'add\\00', 'row_dict_update::batch_result\\00'), i64 %SSA119, i64 %SSA120), !dbg ('location', 14, 29, 'row_dict_update::batch_result')
+-  unreachable
+-b21.95:
+-  %SSA124 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %SSA104, i64 %SSA122)
+-  %SSA105 = extractvalue { i64, i1 } %SSA124, 0
+-  %SSA125 = extractvalue { i64, i1 } %SSA124, 1
+-  br i1 %SSA125, label %trap.98, label %b21.95.99, !prof !0
++  %SSA111 = call i64 @myl_core_dict_ordinal(ptr %SSA74, i64 %SSA106), !dbg ('location', 13, 5, 'row_dict_update::batch_result')
++  %SSA112 = mul i64 %SSA111, 16
++  %SSA113 = add i64 %SSA112, 32
++  %SSA114 = getelementptr inbounds i8, ptr %SSA74, i64 %SSA113
++  %SSA115 = load i64, ptr %SSA114, align 8, !tbaa !7
++  %SSA116 = call i64 @myl_core_dict_ordinal(ptr %SSA74, i64 %SSA106), !dbg ('location', 13, 5, 'row_dict_update::batch_result')
++  %SSA117 = mul i64 %SSA116, 16
++  %SSA118 = add i64 %SSA117, 40
++  %SSA119 = getelementptr inbounds i8, ptr %SSA74, i64 %SSA118
++  %SSA120 = load i64, ptr %SSA119, align 8, !tbaa !7
++  %SSA121 = insertvalue { i64, i64 } poison, i64 %SSA115, 0
++  %SSA122 = insertvalue { i64, i64 } %SSA121, i64 %SSA120, 1
++  %SSA123 = extractvalue { i64, i64 } %SSA122, 0
++  %SSA124 = extractvalue { i64, i64 } %SSA122, 1
++  %SSA125 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %SSA123, i64 %SSA124)
++  %SSA126 = extractvalue { i64, i1 } %SSA125, 0
++  %SSA127 = extractvalue { i64, i1 } %SSA125, 1
++  br i1 %SSA127, label %trap.98, label %b21.99, !prof !0
+ trap.98:
+-  call void @myl_core_trap(i32 SITE(0, 14, 15, 64, 'add\\00', 'row_dict_update::batch_result\\00'), i64 %SSA104, i64 %SSA122), !dbg ('location', 14, 15, 'row_dict_update::batch_result')
+-  unreachable
+-b21.95.99:
++  call void @myl_core_trap(i32 SITE(0, 14, 29, 64, 'add\\00', 'row_dict_update::batch_result\\00'), i64 %SSA123, i64 %SSA124), !dbg ('location', 14, 29, 'row_dict_update::batch_result')
++  unreachable
++b21.99:
++  %SSA128 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %SSA108, i64 %SSA126)
++  %SSA109 = extractvalue { i64, i1 } %SSA128, 0
++  %SSA129 = extractvalue { i64, i1 } %SSA128, 1
++  br i1 %SSA129, label %trap.102, label %b21.99.103, !prof !0
++trap.102:
++  call void @myl_core_trap(i32 SITE(0, 14, 15, 64, 'add\\00', 'row_dict_update::batch_result\\00'), i64 %SSA108, i64 %SSA126), !dbg ('location', 14, 15, 'row_dict_update::batch_result')
++  unreachable
++b21.99.103:
+   br label %b22
+ b22:
+-  %SSA103 = add nuw nsw i64 %SSA102, 1
++  %SSA107 = add nuw nsw i64 %SSA106, 1
+   br label %b20
+ b23:
+-  %SSA126 = load i32, ptr %SSA73, align 8, !tbaa !3, !range !8
+-  %SSA127 = icmp eq i32 %SSA126, -1
+-  br i1 %SSA127, label %b23.103, label %rc.dec.102
+-rc.dec.102:
+-  %SSA128 = sub nuw i32 %SSA126, 1
+-  %SSA129 = icmp eq i32 %SSA128, 0
+-  br i1 %SSA129, label %rc.free.107, label %rc.keep.106
+-rc.keep.106:
+-  store i32 %SSA128, ptr %SSA73, align 8, !tbaa !3
+-  br label %b23.103
+-rc.free.107:
+-  call void @myl_core_free(ptr %SSA73)
+-  br label %b23.103
+-b23.103:
+-  ret i64 %SSA104
++  %SSA130 = load i32, ptr %SSA74, align 8, !tbaa !3, !range !8
++  %SSA131 = icmp eq i32 %SSA130, -1
++  br i1 %SSA131, label %b23.107, label %rc.dec.106
++rc.dec.106:
++  %SSA132 = sub nuw i32 %SSA130, 1
++  %SSA133 = icmp eq i32 %SSA132, 0
++  br i1 %SSA133, label %rc.free.111, label %rc.keep.110
++rc.keep.110:
++  store i32 %SSA132, ptr %SSA74, align 8, !tbaa !3
++  br label %b23.107
++rc.free.111:
++  call void @myl_core_free(ptr %SSA74)
++  br label %b23.107
++b23.107:
++  ret i64 %SSA108
+ }

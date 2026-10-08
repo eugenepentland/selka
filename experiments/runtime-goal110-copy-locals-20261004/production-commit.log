@@ -1,0 +1,11 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 20 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 25 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 8627 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (function-size)
+guardian: failures grouped by check (1):
+  function-size (1 finding)
+    - src/qbe_loop_unswitch_text.zig:236: fn copied has 7 runtime params (+0 comptime; runtime limit: 6)
+      fix: bundle related runtime parameters into a struct; comptime specialization inputs are excluded.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

@@ -1,0 +1,346 @@
+ok collect	proven=2 exact=2 stack=0
+ok loudest	proven=6 exact=2 stack=0
+ok main	proven=2 exact=2 stack=1
+ok main	proven=2 exact=0 stack=0
+ok sum	proven=1 exact=2 stack=0
+ok main	proven=0 exact=2 stack=0
+refused capability type	delegate
+refused capability type	main
+ok main::test_scale	proven=0 exact=0 stack=0
+ok main::bench_sum	proven=1 exact=1 stack=0
+ok main::sum_values	proven=3 exact=1 stack=0
+ok main::bench_list_sum	proven=1 exact=0 stack=0
+ok main::main	proven=0 exact=0 stack=0
+refused capability type	main::trace_requested
+refused capability type	main::main
+refused string index	summary::line_count
+ok summary::render	proven=0 exact=1 stack=0
+refused capability type	<entry>
+refused string index	summary::line_count
+ok summary::render	proven=0 exact=1 stack=0
+ok summary::main	proven=0 exact=0 stack=0
+refused extern	abs
+refused extern	floor
+ok main	proven=0 exact=0 stack=0
+ok build	proven=0 exact=1 stack=0
+ok apply	proven=0 exact=0 stack=0
+ok identity	proven=0 exact=0 stack=0
+ok main	proven=0 exact=3 stack=0
+ok collatz_steps	proven=2 exact=3 stack=0
+ok main	proven=0 exact=0 stack=0
+refused host function	io::length
+refused host function	io::byte
+refused host function	io::put
+ok io::main	proven=0 exact=0 stack=0
+refused host function	main::main
+refused host function	io::length
+refused host function	io::byte
+refused host function	io::put
+ok combine	proven=0 exact=1 stack=0
+ok to_view	proven=0 exact=0 stack=0
+ok main	proven=0 exact=0 stack=0
+frontend /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/.mylang-cache/s2-f/tmp/coverage-examples/catalog.my	money.my:1:8: error[E_MODULE_NAME]: declared `module shop.money`, but this file is `money.my`, so its module name is `money`: a module's name is its path from the project root without `.my`; write `module money`
+ok delivery::fee	proven=1 exact=0 stack=0
+ok delivery::main	proven=0 exact=0 stack=0
+ok handling::fee	proven=1 exact=0 stack=0
+ok handling::main	proven=0 exact=0 stack=0
+ok inputs::bytes	proven=0 exact=0 stack=0
+ok inputs::size	proven=0 exact=0 stack=0
+ok inputs::main	proven=0 exact=0 stack=0
+ok main::main	proven=0 exact=0 stack=0
+ok inputs::books	proven=0 exact=0 stack=0
+ok inputs::cables	proven=0 exact=0 stack=0
+ok inputs::adapters	proven=0 exact=0 stack=0
+ok pricing::receipt	proven=0 exact=0 stack=0
+ok pricing::calculate	proven=1 exact=19 stack=0
+ok money::Cents.make	proven=0 exact=1 stack=0
+ok money::Cents.number	proven=0 exact=0 stack=0
+ok money::Cents.add	proven=0 exact=1 stack=0
+ok quantity::Count.parse	proven=1 exact=0 stack=0
+ok quantity::Count.number	proven=0 exact=0 stack=0
+ok catalog::price	proven=0 exact=1 stack=0
+ok delivery::fee	proven=1 exact=0 stack=0
+ok packaging::fee	proven=1 exact=0 stack=0
+ok handling::fee	proven=1 exact=0 stack=0
+frontend /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/.mylang-cache/s2-f/tmp/coverage-examples/money.my	money.my:1:8: error[E_MODULE_NAME]: declared `module shop.money`, but this file is `money.my`, so its module name is `money`: a module's name is its path from the project root without `.my`; write `module money`
+ok packaging::fee	proven=1 exact=0 stack=0
+ok packaging::main	proven=0 exact=0 stack=0
+frontend /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/.mylang-cache/s2-f/tmp/coverage-examples/pricing.my	money.my:1:8: error[E_MODULE_NAME]: declared `module shop.money`, but this file is `money.my`, so its module name is `money`: a module's name is its path from the project root without `.my`; write `module money`
+ok quantity::Count.parse	proven=1 exact=0 stack=0
+ok quantity::Count.number	proven=0 exact=0 stack=0
+ok quantity::main	proven=0 exact=0 stack=0
+ok decoder::checksum	proven=4 exact=1 stack=0
+ok decoder::decode	proven=6 exact=9 stack=0
+ok decoder::main	proven=0 exact=0 stack=0
+ok model::error_code	proven=0 exact=1 stack=0
+ok model::main	proven=0 exact=0 stack=0
+ok inputs::bytes	proven=0 exact=0 stack=0
+ok inputs::size	proven=0 exact=0 stack=0
+ok inputs::main	proven=0 exact=0 stack=0
+ok main::main	proven=2 exact=0 stack=0
+ok inputs::bytes	proven=0 exact=0 stack=0
+ok inputs::size	proven=0 exact=0 stack=0
+ok decoder::checksum	proven=4 exact=1 stack=0
+ok decoder::decode	proven=6 exact=9 stack=0
+ok model::error_code	proven=0 exact=1 stack=0
+ok model::error_code	proven=0 exact=1 stack=0
+ok model::main	proven=0 exact=0 stack=0
+ok data::Positive.raw	proven=0 exact=0 stack=0
+ok data::Positive.from_wire	proven=0 exact=0 stack=0
+ok data::Positive.to_wire	proven=0 exact=0 stack=0
+ok data::main	proven=0 exact=0 stack=0
+ok main::main	proven=0 exact=0 stack=0
+ok data::Positive.raw	proven=0 exact=0 stack=0
+ok data::Positive.from_wire	proven=0 exact=0 stack=0
+ok data::Positive.to_wire	proven=0 exact=0 stack=0
+ok Millimeters.raw	proven=0 exact=0 stack=0
+ok Millimeters.from	proven=0 exact=0 stack=0
+ok Millimeters.number	proven=0 exact=0 stack=0
+ok Millimeters.add	proven=0 exact=1 stack=0
+ok Seconds.from	proven=0 exact=0 stack=0
+ok Seconds.number	proven=0 exact=0 stack=0
+ok main	proven=1 exact=0 stack=0
+ok sum_to	proven=1 exact=1 stack=0
+ok legacy_sum	proven=1 exact=1 stack=0
+ok inclusive_sum	proven=0 exact=2 stack=0
+ok main	proven=0 exact=2 stack=0
+refused capability type	lookup
+refused capability type	main
+refused capability type	main::sample
+refused capability type	main::main
+ok random::to_word	proven=5 exact=0 stack=0
+ok random::from_word	proven=0 exact=0 stack=0
+ok random::seeded	proven=0 exact=0 stack=0
+refused capability type	random::from_entropy
+refused capability type	random::seeded_entropy
+refused shift_right	random::next_word
+refused shift_right	random::random
+ok random::span	proven=6 exact=2 stack=0
+ok random::below	proven=0 exact=2 stack=0
+ok random::offset	proven=3 exact=6 stack=0
+ok random::randint	proven=0 exact=1 stack=0
+ok time::limit	proven=0 exact=0 stack=0
+ok time::nanoseconds	proven=0 exact=0 stack=0
+ok time::microseconds	proven=0 exact=0 stack=0
+ok time::milliseconds	proven=0 exact=0 stack=0
+ok time::seconds	proven=0 exact=0 stack=0
+ok time::scaled	proven=0 exact=3 stack=0
+ok time::sum	proven=1 exact=4 stack=0
+ok time::difference	proven=1 exact=2 stack=0
+ok time::compare	proven=1 exact=0 stack=0
+ok time::to_seconds	proven=0 exact=0 stack=0
+ok time::to_milliseconds	proven=2 exact=5 stack=0
+refused capability type	time::now
+refused capability type	time::simulated_clock
+refused capability type	time::advance
+ok time::from_unix_nanoseconds	proven=0 exact=0 stack=0
+ok time::after	proven=1 exact=4 stack=0
+ok time::elapsed	proven=0 exact=2 stack=0
+ok time::expired	proven=0 exact=0 stack=0
+ok factorial	proven=1 exact=1 stack=0
+ok main	proven=0 exact=0 stack=0
+ok main::add_pin	proven=0 exact=0 stack=0
+ok main::main	proven=3 exact=3 stack=0
+ok main::checked_count	proven=0 exact=0 stack=0
+ok main::make_pins	proven=1 exact=0 stack=0
+ok main::total	proven=1 exact=0 stack=0
+ok main::main	proven=0 exact=1 stack=0
+ok gcd	proven=0 exact=1 stack=0
+ok main	proven=0 exact=0 stack=0
+ok main	proven=0 exact=1 stack=0
+ok ComponentId.make	proven=0 exact=0 stack=0
+ok NetId.make	proven=0 exact=0 stack=0
+ok main	proven=2 exact=0 stack=0
+ok pair[ComponentId]	proven=0 exact=0 stack=0
+ok pair[NetId]	proven=0 exact=0 stack=0
+ok contains[ComponentId]	proven=1 exact=1 stack=0
+ok contains[NetId]	proven=1 exact=1 stack=0
+ok main	proven=0 exact=0 stack=0
+ok total[bool]	proven=0 exact=4 stack=0
+ok make[u8]	proven=1 exact=0 stack=0
+refused capability type	main
+refused resource type	handle[bool]
+refused resource type	drop[bool]
+refused resource type	fields[bool]
+refused resource type	forward[bool]
+ok main	proven=0 exact=3 stack=0
+ok number[bool]	proven=0 exact=1 stack=0
+ok increment[u8]	proven=0 exact=1 stack=0
+ok count[u8]	proven=1 exact=0 stack=0
+ok main	proven=0 exact=9 stack=0
+ok change[u8]	proven=0 exact=1 stack=0
+ok put[u8]	proven=0 exact=1 stack=0
+ok main	proven=0 exact=2 stack=0
+ok score[bool]	proven=0 exact=0 stack=0
+ok make[u8]	proven=0 exact=0 stack=0
+ok scalar[i64]	proven=0 exact=0 stack=0
+ok table[u16]	proven=0 exact=0 stack=0
+ok main	proven=0 exact=1 stack=0
+ok sum[u8]	proven=2 exact=2 stack=0
+ok sum[i64]	proven=0 exact=2 stack=0
+ok identity[bool]	proven=0 exact=0 stack=0
+ok main::main	proven=0 exact=0 stack=0
+ok amount::total	proven=0 exact=0 stack=0
+ok amount::main	proven=0 exact=0 stack=0
+ok main::main	proven=0 exact=0 stack=0
+ok amount::total	proven=0 exact=0 stack=0
+frontend /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/.mylang-cache/s2-f/tmp/coverage-examples/values.my	values.my:2:8: error[E_MODULE_NAME]: declared `module config.values`, but this file is `values.my`, so its module name is `values`: a module's name is its path from the project root without `.my`; write `module values`
+ok main::main	proven=0 exact=0 stack=0
+ok config.values::batch_size	proven=0 exact=0 stack=0
+ok config.values::enabled	proven=0 exact=0 stack=0
+ok widen	proven=0 exact=0 stack=0
+ok main	proven=2 exact=1 stack=0
+ok main::configured_limit	proven=0 exact=0 stack=0
+ok main::main	proven=0 exact=0 stack=0
+ok main::main	proven=0 exact=1 stack=0
+ok shop.billing::TAX_PERCENT	proven=0 exact=0 stack=0
+ok shop.billing::total	proven=3 exact=5 stack=0
+ok shop.billing::charge	proven=0 exact=0 stack=0
+ok shop.money::Cents.raw	proven=0 exact=0 stack=0
+ok shop.money::Cents.of	proven=0 exact=0 stack=0
+ok shop.money::Cents.value	proven=0 exact=0 stack=0
+frontend /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/.mylang-cache/s2-f/tmp/coverage-examples/billing.my	billing.my:1:8: error[E_MODULE_NAME]: declared `module shop.billing`, but this file is `billing.my`, so its module name is `billing`: a module's name is its path from the project root without `.my`; write `module billing`
+frontend /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/.mylang-cache/s2-f/tmp/coverage-examples/money.my	money.my:1:8: error[E_MODULE_NAME]: declared `module shop.money`, but this file is `money.my`, so its module name is `money`: a module's name is its path from the project root without `.my`; write `module money`
+refused text_chr	report::render
+ok report::digit_counts	proven=5 exact=2 stack=0
+ok report::headline	proven=2 exact=2 stack=0
+ok report::main	proven=0 exact=0 stack=0
+ok reading_validator::validate	proven=0 exact=3 stack=0
+ok reading_validator::main	proven=0 exact=1 stack=0
+ok text_report::summarize	proven=4 exact=3 stack=0
+ok text_report::join	proven=4 exact=0 stack=0
+ok text_report::widths	proven=3 exact=1 stack=0
+ok text_report::bracket_all	proven=0 exact=0 stack=0
+ok text_report::main	proven=0 exact=0 stack=0
+ok main	proven=1 exact=0 stack=0
+ok left::price	proven=0 exact=2 stack=0
+ok left::main	proven=0 exact=0 stack=0
+ok main::main	proven=0 exact=1 stack=0
+ok left::price	proven=0 exact=2 stack=0
+ok right::quote	proven=0 exact=2 stack=0
+ok right::alternate	proven=0 exact=2 stack=0
+ok right::quote	proven=0 exact=2 stack=0
+ok right::alternate	proven=0 exact=2 stack=0
+ok right::main	proven=0 exact=0 stack=0
+ok domain_main::main	proven=0 exact=0 stack=0
+ok shared.units::Distance.raw	proven=0 exact=0 stack=0
+ok shared.units::Distance.make	proven=0 exact=0 stack=0
+ok shared.units::Distance.number	proven=0 exact=0 stack=0
+ok main::main	proven=0 exact=0 stack=0
+ok shared.units::Distance.raw	proven=0 exact=0 stack=0
+ok shared.units::Distance.make	proven=0 exact=0 stack=0
+ok shared.units::Distance.number	proven=0 exact=0 stack=0
+frontend /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/.mylang-cache/s2-f/tmp/coverage-examples/units.my	units.my:1:8: error[E_MODULE_NAME]: declared `module shared.units`, but this file is `units.my`, so its module name is `units`: a module's name is its path from the project root without `.my`; write `module units`
+ok checkout::main	proven=0 exact=0 stack=0
+ok contracts::main	proven=0 exact=0 stack=0
+ok contracts::main	proven=0 exact=0 stack=0
+ok fake_tests::main	proven=0 exact=0 stack=0
+ok fake_tests::test_checkout	proven=0 exact=0 stack=0
+ok fakes::FixedPrices.make	proven=0 exact=0 stack=0
+ok fakes::FixedPrices.price	proven=0 exact=0 stack=0
+ok checkout::total[fakes::FixedPrices]	proven=0 exact=1 stack=0
+ok fakes::FixedPrices.make	proven=0 exact=0 stack=0
+ok fakes::FixedPrices.price	proven=0 exact=0 stack=0
+ok fakes::main	proven=0 exact=0 stack=0
+ok main::main	proven=0 exact=0 stack=0
+ok production::DiscountPrices.make	proven=0 exact=0 stack=0
+ok production::DiscountPrices.price	proven=0 exact=1 stack=0
+ok checkout::total[production::DiscountPrices]	proven=0 exact=1 stack=0
+ok production::DiscountPrices.make	proven=0 exact=0 stack=0
+ok production::DiscountPrices.price	proven=0 exact=1 stack=0
+ok production::main	proven=0 exact=0 stack=0
+ok contracts::main	proven=0 exact=0 stack=0
+ok toggle	proven=0 exact=0 stack=0
+ok main	proven=0 exact=0 stack=0
+ok divide	proven=0 exact=1 stack=0
+ok calculate	proven=0 exact=1 stack=0
+ok handle	proven=0 exact=0 stack=0
+ok main	proven=0 exact=1 stack=0
+ok add	proven=0 exact=1 stack=0
+ok main	proven=0 exact=1 stack=0
+ok main	proven=0 exact=0 stack=0
+ok extract[i64]	proven=0 exact=0 stack=0
+ok pack[i64]	proven=0 exact=0 stack=0
+ok choose[i64]	proven=0 exact=0 stack=0
+ok slot[i64]	proven=0 exact=0 stack=0
+ok main	proven=0 exact=1 stack=0
+ok divide	proven=0 exact=1 stack=0
+ok calculate	proven=0 exact=1 stack=0
+ok handle	proven=0 exact=0 stack=0
+ok main	proven=0 exact=1 stack=0
+refused bytes type	main::checksum
+refused bytes type	main::split_records
+refused bytes type	main::report
+refused bytes type	main::main
+refused dict type	main::histogram
+refused dict type	main::main
+ok move	proven=0 exact=1 stack=0
+ok main	proven=0 exact=2 stack=0
+refused capability type	work
+refused capability type	main
+refused resource type	retry
+refused capability type	main
+ok divide	proven=0 exact=1 stack=0
+ok value_or_zero	proven=0 exact=0 stack=0
+ok main	proven=0 exact=1 stack=0
+ok main::main	proven=0 exact=0 stack=0
+ok message::main	proven=0 exact=0 stack=0
+ok main::streams	proven=0 exact=0 stack=0
+ok main::bounds	proven=3 exact=0 stack=0
+ok main::limits	proven=2 exact=0 stack=0
+ok main::main	proven=3 exact=0 stack=1
+ok random::to_word	proven=5 exact=0 stack=0
+ok random::from_word	proven=0 exact=0 stack=0
+ok random::seeded	proven=0 exact=0 stack=0
+refused capability type	random::from_entropy
+refused capability type	random::seeded_entropy
+refused shift_right	random::next_word
+refused shift_right	random::random
+ok random::span	proven=6 exact=2 stack=0
+ok random::below	proven=0 exact=2 stack=0
+ok random::offset	proven=3 exact=6 stack=0
+ok random::randint	proven=0 exact=1 stack=0
+ok time::limit	proven=0 exact=0 stack=0
+ok time::nanoseconds	proven=0 exact=0 stack=0
+ok time::microseconds	proven=0 exact=0 stack=0
+ok time::milliseconds	proven=0 exact=0 stack=0
+ok time::seconds	proven=0 exact=0 stack=0
+ok time::scaled	proven=0 exact=3 stack=0
+ok time::sum	proven=1 exact=4 stack=0
+ok time::difference	proven=1 exact=2 stack=0
+ok time::compare	proven=1 exact=0 stack=0
+ok time::to_seconds	proven=0 exact=0 stack=0
+ok time::to_milliseconds	proven=2 exact=5 stack=0
+refused capability type	time::now
+refused capability type	time::simulated_clock
+refused capability type	time::advance
+ok time::from_unix_nanoseconds	proven=0 exact=0 stack=0
+ok time::after	proven=1 exact=4 stack=0
+ok time::elapsed	proven=0 exact=2 stack=0
+ok time::expired	proven=0 exact=0 stack=0
+ok Counter.make	proven=0 exact=0 stack=0
+ok Counter.score	proven=0 exact=0 stack=0
+ok main	proven=0 exact=2 stack=0
+ok value[Reading]	proven=0 exact=0 stack=0
+ok forward[TaggedReading]	proven=0 exact=0 stack=0
+ok score[Counter]	proven=0 exact=0 stack=0
+ok value[TaggedReading]	proven=0 exact=0 stack=0
+ok sum_to	proven=1 exact=1 stack=0
+ok main	proven=0 exact=0 stack=0
+ok main	proven=2 exact=0 stack=0
+ok response_codes	proven=0 exact=0 stack=0
+ok main	proven=2 exact=4 stack=0
+ok main::square	proven=0 exact=1 stack=0
+ok main::sum	proven=0 exact=1 stack=0
+ok main::test_square	proven=0 exact=0 stack=0
+ok main::test_sum	proven=0 exact=0 stack=0
+ok main::main	proven=0 exact=0 stack=0
+ok set	proven=2 exact=1 stack=0
+ok countdown	proven=0 exact=1 stack=0
+ok apply	proven=0 exact=0 stack=0
+ok main	proven=0 exact=1 stack=0
+ok score	proven=0 exact=2 stack=0
+ok color_score	proven=0 exact=0 stack=0
+ok main	proven=0 exact=6 stack=0
+ok main::analyze	proven=1 exact=4 stack=0
+ok main::main	proven=0 exact=0 stack=0

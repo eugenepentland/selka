@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/split-qualification-01/old"
+  ],
+  "status": 0,
+  "stdout": "0 5 2 1 1\n13 2 9 2\n3 1 1 1\n4 2 2 1 2\n2 2 1\n",
+  "stderr": "",
+  "seconds": 0.0016867450904101133
+}

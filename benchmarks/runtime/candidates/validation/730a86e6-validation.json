@@ -1,0 +1,62 @@
+{
+  "source_revision": "730a86e62b47c922dc1411d24b5868c3bd2132f3",
+  "host_mode": "Debug",
+  "started_utc": "2026-10-03T23:17:41.852707+00:00",
+  "worktree": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-final-validation-20261003",
+  "binary_sha256": {
+    "zig-out/bin/mylang": "883dbcab355cd319d4de290e589c7754a4bd2f6687e062d0bb42f336d1b81847",
+    "zig-out/bin/qbe": "e07f2050198a17fd9de859d987702ec2e89edf090837232e2f0bf2437e06f1e4"
+  },
+  "source_dirty": "",
+  "full_gate": "zig build test -Doptimize=Debug -Dcompiler-only=true -Dtest-shards=4 -j2 --summary all",
+  "llvm_corpus": {
+    "version": "native-tests-v1",
+    "passed": 1579,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0,
+    "executed": 1579,
+    "programs": 239,
+    "dropped": 0,
+    "unloaded": 0
+  },
+  "schema": "runtime-parity-validation-v1",
+  "status": "passed",
+  "full_gate_runs": [
+    {
+      "command": "zig build test -Doptimize=Debug -Dcompiler-only=true -Dtest-shards=4 -j2 --summary all",
+      "exit_status": 0,
+      "summary": "Build Summary: 97/97 steps succeeded; 2903/10842 tests passed (7939 skipped)",
+      "memory_diagnostics": [
+        "error: memory usage peaked at 2.34GB (2337439744 bytes), exceeding the declared upper bound of 2.15GB (2147483648 bytes)"
+      ],
+      "log": "730a86e6-full-gate-shards4.log.gz",
+      "log_uncompressed_sha256": "696160742a3fbb5042154f626e44daec1d2db90427fbb05218923b6d96cdc72d"
+    },
+    {
+      "command": "zig build test -Doptimize=Debug -Dcompiler-only=true -Dtest-shards=12 -j2 --summary all",
+      "exit_status": 0,
+      "summary": "Build Summary: 109/109 steps succeeded; 2857/32388 tests passed (29531 skipped)",
+      "memory_diagnostics": [],
+      "log": "730a86e6-full-gate-shards12.log.gz",
+      "log_uncompressed_sha256": "45cfb7f2f2cdfb2e022dc54d85f5e764ceaca23dbd1159c7e606bec200cfd31e"
+    }
+  ],
+  "rc_guest_cases": 1579,
+  "gc_stress_guest_cases": 1579,
+  "native_boundary_cases_agree": 68,
+  "doctest": {
+    "run": 228,
+    "checked": 57,
+    "skipped": 11,
+    "failed": 0
+  },
+  "module_oracle_differences": [],
+  "llvm_json_uncompressed_sha256": "219073ce34390119edd9efe90864b6a6695ed4374790fc593e05bf85e1cb250e",
+  "limitations": [
+    "Four-shard gate exited successfully despite a Zig memory-ceiling diagnostic (2337439744 > 2147483648 bytes). The same source passed with the repository default of 12 shards and no memory overrun, without raising limits.",
+    "The second gate reuses successful unchanged steps and native verdicts; the first run and fresh LLVM corpus retain uncached guest coverage.",
+    "Host test skip totals include shard partition exclusions, not missing coverage. Counts from repeated gates must not be added as independent tests.",
+    "Validation uses a Debug host; final performance and benchmark qualifications use the separately receipted ReleaseFast host at the same production source."
+  ]
+}

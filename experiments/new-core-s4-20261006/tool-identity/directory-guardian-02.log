@@ -1,0 +1,10 @@
+guardian: run-all: whole-tree run — --full was requested
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 29 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (line-length)
+guardian: failures grouped by check (1):
+  line-length (1 finding)
+    - src/core/test_runner_directory.zig:556: line is 243 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

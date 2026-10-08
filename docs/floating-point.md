@@ -103,16 +103,14 @@ leave the value sees the canonical quiet NaN `0x7ff8000000000000`:
 - text: `str`, `print`, f-strings and `byte_buffer.append_float` spell every NaN
   `nan`, never `-nan`;
 - a float argument passed to an `extern def` crosses as the canonical pattern, so
-  `copysign(1.0, -(0.0 / 0.0))` in C answers `1.0`, and a float copied to a
-  `host def` callback, at any depth inside a record, array or variant, carries
-  the canonical pattern in its node's bits;
+  `copysign(1.0, -(0.0 / 0.0))` in C answers `1.0`;
 - equality of lists, records, fixed arrays and options compares floats
   numerically, and sorting orders every NaN after the ordered values whatever its
   sign.
 
 No guest spelling reads a float's representation: `float` is a private builtin
 domain and the raw `f64_*` spellings are removed. Dictionary keys are integers or
-`str`, and the wire, codec, typed-JSON and `invoke` boundaries reject `float`, so
+`str`, and the wire, codec and typed-JSON boundaries reject `float`, so
 no hash or encoding sees a float's bits either. Canonicalizing at these points
 instead of after every operation keeps float loops free of a compare, branch and
 call per operation, and results stay identical across machines, because a NaN is

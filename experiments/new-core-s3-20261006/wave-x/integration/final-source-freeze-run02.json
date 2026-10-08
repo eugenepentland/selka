@@ -1,0 +1,35 @@
+{
+ "recorded_utc": "2026-10-06T20:18:06.515551+00:00",
+ "qualified_source_commit": "d4994214579adb8d1897a40fc65de1462b000939",
+ "repair_commit": "53bbfb5379957a4e17170d837fade52e12d84586",
+ "previous_source": "5ee5b8d2e1d1c697a98dfa590cbeda704ed7ae55",
+ "source_difference_from_previous": [
+  "src/core/own.zig              |  4 ++++",
+  " src/core/own_test.zig         | 41 +++++++++++++++++++++++++++++++++--------",
+  " test/core/rc_promote_order.my | 40 ++++++++++++++++++++++++++++++++++++++++",
+  " 3 files changed, 77 insertions(+), 8 deletions(-)"
+ ],
+ "ir_zig_difference_from_s3_0": "",
+ "tests_lang_difference": "",
+ "own_zig_note": "own.zig changed by the NEW-CORE-RC-13 repair (liveAfter definition guard); the plan freezes only ir.zig",
+ "protected_refs": {
+  "main": "df55c52d7b4d319c02dfac66d7222701151825aa",
+  "codex/new-core-s2-integration": "92590700cb0bf5e4dc19cc1f0c836c3a41693f64"
+ },
+ "oracles": {
+  "old": {
+   "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang",
+   "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+  },
+  "qbe": {
+   "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/qbe",
+   "sha256": "b6139650a99b39131cd791fa1fdc84c09472dc303930bbadd3f8a5348487af4c"
+  },
+  "new": {
+   "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang-core",
+   "sha256": "09f90c02e19b649407af4f1017b148449d7c175f8ceee5b8a5cc6a484250e5f0"
+  }
+ },
+ "merge_qualification": "final-merge-run02/summary.json",
+ "freeze_rule": "No tracked source edits and no oracle replacement until the run02 matrix, old gate, conformance, split sweep, timing, count audit and coverage finish."
+}

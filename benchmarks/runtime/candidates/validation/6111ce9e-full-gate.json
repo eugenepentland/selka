@@ -1,0 +1,38 @@
+{
+  "schema": "runtime-parity-validation-v1",
+  "source_revision": "6111ce9e9bb1f43be1476105b99b5f85cc916377",
+  "source_clean": true,
+  "command": [
+    "scripts/build-slot.sh",
+    "gate",
+    "zig",
+    "build",
+    "test",
+    "-Doptimize=Debug",
+    "-Dcompiler-only=true",
+    "-Dtest-shards=4",
+    "-j2",
+    "--summary",
+    "all"
+  ],
+  "exit_status": 0,
+  "build_steps_succeeded": 97,
+  "build_steps_total": 97,
+  "zig_tests_passed": 2883,
+  "zig_shard_skips": 7887,
+  "rc_guest_cases": 1576,
+  "gc_stress_guest_cases": 1576,
+  "native_boundary_cases_agree": 68,
+  "doctest_run": 228,
+  "doctest_checked": 57,
+  "doctest_skipped": 11,
+  "doctest_failed": 0,
+  "log_sha256": "1258be71ccc68b02881a5841c4dd915174b6c588590e6cf66f854477007ad5ef",
+  "compiler_sha256": "c8ba9ff0c9b136a4cb92f223591c93f012c64cc47243e6734b8d088376538a62",
+  "qbe_sha256": "7bd59ee4fd3c0b6b669e9cfbc56875be0c62576379f89cab1d39fd2782b8e992",
+  "limits": [
+    "The large skipped total includes cases assigned to other test shards; guest corpus reported zero skipped.",
+    "This source predates compact checked multiplication, byte reduction, P7 and later loop work.",
+    "Zig printed failed command for successful stderr-producing steps too; process exit and final build summary are authoritative."
+  ]
+}

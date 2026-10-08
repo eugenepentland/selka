@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/tool-discovery-root-review-30/verify_handoff.py", line 79, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/tool-discovery-root-review-30/verify_handoff.py", line 48, in main
+    assert sha(Path(argv[argv.index("-o") + 1])) == expected_object
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

@@ -1,0 +1,16 @@
+before legacy/my-llvm entry bytes 16041 uniqueness calls 18
+before legacy/my-qbe entry bytes 50516 uniqueness calls 18
+before compute/my-llvm entry bytes 20286 uniqueness calls -
+before compute/my-qbe entry bytes 43823 uniqueness calls -
+before collections/my-llvm entry bytes 36497 uniqueness calls -
+before collections/my-qbe entry bytes 79608 uniqueness calls -
+before text/my-llvm entry bytes 5219 uniqueness calls -
+before text/my-qbe entry bytes 9045 uniqueness calls -
+after legacy/my-llvm entry bytes 15796 uniqueness calls 16
+after legacy/my-qbe entry bytes 50148 uniqueness calls 16
+after compute/my-llvm entry bytes 20286 uniqueness calls -
+after compute/my-qbe entry bytes 43823 uniqueness calls -
+after collections/my-llvm entry bytes 36497 uniqueness calls -
+after collections/my-qbe entry bytes 79608 uniqueness calls -
+after text/my-llvm entry bytes 5219 uniqueness calls -
+after text/my-qbe entry bytes 9045 uniqueness calls -

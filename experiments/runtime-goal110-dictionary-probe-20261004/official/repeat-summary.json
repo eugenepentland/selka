@@ -1,0 +1,439 @@
+{
+  "schema": "mylang-dictionary-probe-repeat-summary-v1",
+  "source_revision": "64fb7e62732db9cea46414248fd59ba362e31b56",
+  "status": "exploratory",
+  "recommendation": "Retain repeated ordinary-found publication benefits with small string-update and QBE set costs recorded; no dictionary target closes. Coordinator owns adoption.",
+  "measurement_session_id": "b7da64b9-de9d-4d3d-8e23-f03eb229deb7",
+  "started_utc": "2026-10-04T10:45:33.088679+00:00",
+  "finished_utc": "2026-10-04T10:47:27.459712+00:00",
+  "rows": [
+    {
+      "plan": {
+        "case": "dict_lookup",
+        "size": 64,
+        "profile": "small",
+        "seed": 42,
+        "group": "collections",
+        "family": "dict",
+        "level": "micro",
+        "unit": "one complete SIZE-element dataset operation",
+        "iterations": 216787,
+        "expected": 250042546,
+        "calibration": {
+          "fastest_ns": 50909732,
+          "slowest_ns": 135157245,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "target",
+          "limited": false,
+          "target_reached": true,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "binary_paths": {
+        "before-llvm": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/bin/collections-my-llvm",
+        "before-qbe": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/bin/collections-my-qbe",
+        "candidate-llvm": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-llvm",
+        "candidate-qbe": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-qbe"
+      },
+      "medians_ns_per_iteration": {
+        "before-llvm": 433.57422723687307,
+        "before-qbe": 626.964204495657,
+        "candidate-llvm": 418.51933925927295,
+        "candidate-qbe": 623.3848616383824
+      },
+      "comparisons": {
+        "llvm": {
+          "candidate_to_before": 0.9652772535084858,
+          "paired_bootstrap_95_interval": [
+            0.9615211134060784,
+            0.969026017998552
+          ]
+        },
+        "qbe": {
+          "candidate_to_before": 0.9942909932790279,
+          "paired_bootstrap_95_interval": [
+            0.9920574636591706,
+            0.9978534386753661
+          ]
+        }
+      }
+    },
+    {
+      "plan": {
+        "case": "dict_lookup_str",
+        "size": 64,
+        "profile": "small",
+        "seed": 42,
+        "group": "collections",
+        "family": "dict",
+        "level": "micro",
+        "unit": "one complete SIZE-element dataset operation",
+        "iterations": 141476,
+        "expected": 120996730,
+        "calibration": {
+          "fastest_ns": 52336843,
+          "slowest_ns": 115670966,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "target",
+          "limited": false,
+          "target_reached": true,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "binary_paths": {
+        "before-llvm": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/bin/collections-my-llvm",
+        "before-qbe": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/bin/collections-my-qbe",
+        "candidate-llvm": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-llvm",
+        "candidate-qbe": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-qbe"
+      },
+      "medians_ns_per_iteration": {
+        "before-llvm": 520.9862096751392,
+        "before-qbe": 816.9087053634539,
+        "candidate-llvm": 511.6959130877322,
+        "candidate-qbe": 808.5981367864514
+      },
+      "comparisons": {
+        "llvm": {
+          "candidate_to_before": 0.9821678646864761,
+          "paired_bootstrap_95_interval": [
+            0.9755243056669326,
+            0.9856817725076761
+          ]
+        },
+        "qbe": {
+          "candidate_to_before": 0.9898268086477239,
+          "paired_bootstrap_95_interval": [
+            0.9888042050138947,
+            0.9908568693685095
+          ]
+        }
+      }
+    },
+    {
+      "plan": {
+        "case": "dict_lookup_str",
+        "size": 4096,
+        "profile": "large",
+        "seed": 42,
+        "group": "collections",
+        "family": "dict",
+        "level": "micro",
+        "unit": "one complete SIZE-element dataset operation",
+        "iterations": 1291,
+        "expected": 425316468,
+        "calibration": {
+          "fastest_ns": 50019741,
+          "slowest_ns": 108789640,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "target",
+          "limited": false,
+          "target_reached": true,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "binary_paths": {
+        "before-llvm": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/bin/collections-my-llvm",
+        "before-qbe": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/bin/collections-my-qbe",
+        "candidate-llvm": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-llvm",
+        "candidate-qbe": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-qbe"
+      },
+      "medians_ns_per_iteration": {
+        "before-llvm": 64090.76839659179,
+        "before-qbe": 84910.75058094501,
+        "candidate-llvm": 63207.373353989155,
+        "candidate-qbe": 84706.14329976762
+      },
+      "comparisons": {
+        "llvm": {
+          "candidate_to_before": 0.9862165009922145,
+          "paired_bootstrap_95_interval": [
+            0.9822686947281846,
+            0.9925073760763904
+          ]
+        },
+        "qbe": {
+          "candidate_to_before": 0.9975903253736718,
+          "paired_bootstrap_95_interval": [
+            0.9922173116550282,
+            1.0007892679122756
+          ]
+        }
+      }
+    },
+    {
+      "plan": {
+        "case": "dict_update",
+        "size": 64,
+        "profile": "small",
+        "seed": 42,
+        "group": "collections",
+        "family": "dict",
+        "level": "micro",
+        "unit": "one complete SIZE-element dataset operation",
+        "iterations": 21079,
+        "expected": 412793237,
+        "calibration": {
+          "fastest_ns": 50124387,
+          "slowest_ns": 318339690,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "target",
+          "limited": false,
+          "target_reached": true,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "binary_paths": {
+        "before-llvm": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/bin/collections-my-llvm",
+        "before-qbe": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/bin/collections-my-qbe",
+        "candidate-llvm": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-llvm",
+        "candidate-qbe": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-qbe"
+      },
+      "medians_ns_per_iteration": {
+        "before-llvm": 11397.045685279189,
+        "before-qbe": 15126.07059158404,
+        "candidate-llvm": 11302.875088951088,
+        "candidate-qbe": 15202.037145974668
+      },
+      "comparisons": {
+        "llvm": {
+          "candidate_to_before": 0.9917372800874411,
+          "paired_bootstrap_95_interval": [
+            0.9883074951371382,
+            0.9949040681996945
+          ]
+        },
+        "qbe": {
+          "candidate_to_before": 1.005022226620633,
+          "paired_bootstrap_95_interval": [
+            1.0029089874026869,
+            1.007703388315925
+          ]
+        }
+      }
+    },
+    {
+      "plan": {
+        "case": "dict_update",
+        "size": 4096,
+        "profile": "large",
+        "seed": 42,
+        "group": "collections",
+        "family": "dict",
+        "level": "micro",
+        "unit": "one complete SIZE-element dataset operation",
+        "iterations": 121,
+        "expected": 437292434,
+        "calibration": {
+          "fastest_ns": 49408956,
+          "slowest_ns": 136677673,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "slowest_arm_budget",
+          "limited": true,
+          "target_reached": false,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "binary_paths": {
+        "before-llvm": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/bin/collections-my-llvm",
+        "before-qbe": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/bin/collections-my-qbe",
+        "candidate-llvm": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-llvm",
+        "candidate-qbe": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-qbe"
+      },
+      "medians_ns_per_iteration": {
+        "before-llvm": 902516.0165289256,
+        "before-qbe": 1132081.520661157,
+        "candidate-llvm": 896907.5041322313,
+        "candidate-qbe": 1136201.256198347
+      },
+      "comparisons": {
+        "llvm": {
+          "candidate_to_before": 0.9937856921162855,
+          "paired_bootstrap_95_interval": [
+            0.9911614387618848,
+            0.9951750807421696
+          ]
+        },
+        "qbe": {
+          "candidate_to_before": 1.0036390802799997,
+          "paired_bootstrap_95_interval": [
+            1.0010440889327972,
+            1.0069817920275492
+          ]
+        }
+      }
+    },
+    {
+      "plan": {
+        "case": "dict_update_str",
+        "size": 64,
+        "profile": "small",
+        "seed": 42,
+        "group": "collections",
+        "family": "dict",
+        "level": "micro",
+        "unit": "one complete SIZE-element dataset operation",
+        "iterations": 10881,
+        "expected": 81188072,
+        "calibration": {
+          "fastest_ns": 50493553,
+          "slowest_ns": 189580311,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "target",
+          "limited": false,
+          "target_reached": true,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "binary_paths": {
+        "before-llvm": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/bin/collections-my-llvm",
+        "before-qbe": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/bin/collections-my-qbe",
+        "candidate-llvm": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-llvm",
+        "candidate-qbe": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-qbe"
+      },
+      "medians_ns_per_iteration": {
+        "before-llvm": 13685.079955886407,
+        "before-qbe": 17354.57513096223,
+        "candidate-llvm": 13876.747265876298,
+        "candidate-qbe": 17585.9309806084
+      },
+      "comparisons": {
+        "llvm": {
+          "candidate_to_before": 1.0140055674214346,
+          "paired_bootstrap_95_interval": [
+            1.009822087028542,
+            1.0165817915855482
+          ]
+        },
+        "qbe": {
+          "candidate_to_before": 1.01333111573751,
+          "paired_bootstrap_95_interval": [
+            1.0068716036260028,
+            1.0211475453555798
+          ]
+        }
+      }
+    },
+    {
+      "plan": {
+        "case": "dict_update_str",
+        "size": 4096,
+        "profile": "large",
+        "seed": 42,
+        "group": "collections",
+        "family": "dict",
+        "level": "micro",
+        "unit": "one complete SIZE-element dataset operation",
+        "iterations": 76,
+        "expected": 285448085,
+        "calibration": {
+          "fastest_ns": 49782098,
+          "slowest_ns": 97157941,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "slowest_arm_budget",
+          "limited": true,
+          "target_reached": false,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "binary_paths": {
+        "before-llvm": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/bin/collections-my-llvm",
+        "before-qbe": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/bin/collections-my-qbe",
+        "candidate-llvm": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-llvm",
+        "candidate-qbe": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-qbe"
+      },
+      "medians_ns_per_iteration": {
+        "before-llvm": 1098259.9868421052,
+        "before-qbe": 1296233.9210526317,
+        "candidate-llvm": 1108322.4605263157,
+        "candidate-qbe": 1288400.4736842106
+      },
+      "comparisons": {
+        "llvm": {
+          "candidate_to_before": 1.0091621963877095,
+          "paired_bootstrap_95_interval": [
+            1.0040499282223119,
+            1.0131883397809005
+          ]
+        },
+        "qbe": {
+          "candidate_to_before": 0.9939567640985203,
+          "paired_bootstrap_95_interval": [
+            0.9900778775191571,
+            0.9964235841823741
+          ]
+        }
+      }
+    },
+    {
+      "plan": {
+        "case": "set_dedup",
+        "size": 64,
+        "profile": "small",
+        "seed": 42,
+        "group": "collections",
+        "family": "set",
+        "level": "micro",
+        "unit": "one complete SIZE-element dataset operation",
+        "iterations": 184419,
+        "expected": 22130280,
+        "calibration": {
+          "fastest_ns": 51472826,
+          "slowest_ns": 658909175,
+          "target_ns": 50000000,
+          "slowest_cap_ns": 1000000000,
+          "iteration_cap": 10000000,
+          "reason": "target",
+          "limited": false,
+          "target_reached": true,
+          "slowest_budget_exceeded": false
+        }
+      },
+      "binary_paths": {
+        "before-llvm": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/bin/collections-my-llvm",
+        "before-qbe": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/bin/collections-my-qbe",
+        "candidate-llvm": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-llvm",
+        "candidate-qbe": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/bin/collections-my-qbe"
+      },
+      "medians_ns_per_iteration": {
+        "before-llvm": 2792.65553440806,
+        "before-qbe": 3585.787359220037,
+        "candidate-llvm": 2775.568683270162,
+        "candidate-qbe": 3644.026700068865
+      },
+      "comparisons": {
+        "llvm": {
+          "candidate_to_before": 0.9938815042072422,
+          "paired_bootstrap_95_interval": [
+            0.9902756808534732,
+            0.9953529140896953
+          ]
+        },
+        "qbe": {
+          "candidate_to_before": 1.01624171625768,
+          "paired_bootstrap_95_interval": [
+            1.0124394879373848,
+            1.0195649827665907
+          ]
+        }
+      }
+    }
+  ],
+  "raw_binding": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/paired-repeat.json",
+    "sha256": "669be8e204a1b4afb1071028ea5b68a120086393e0c9aa83fb84aa3cf68455f8"
+  }
+}

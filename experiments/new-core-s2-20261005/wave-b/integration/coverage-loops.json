@@ -1,0 +1,1665 @@
+{
+  "command": "experiments/new-core-s2-20261005/wave-b/integration/coverage_loops.py --before /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-b/baseline/mylang-core --after /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/mylang-core --scratch /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops --json /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-b/integration/coverage-loops.json",
+  "source_commit": "090dabd5a6932a7c3beaec68248f9a35d4c637d7",
+  "before_source_commit": "72eaae74",
+  "loop_definition": "Loops are per-file typed loop instances inside independently accepted functions. Loops in\nrefused functions are attributed to that function's first refusal, even when the\nrefusal occurs outside the loop; this is not a standalone loop-fragment checker.\nThe typed frontend is unchanged in Wave B, so one dump supplies counts for both\ncompiler versions. Every child status is checked and missing function names fail.\n",
+  "corpora": {
+    "examples": {
+      "files": 93,
+      "frontend_before": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/catalog.my\tmoney.my:1:8: error[E_MODULE_NAME]: declared `module shop.money`, but this file is `money.my`, so its module name is `money`: a module's name is its path from the project root without `.my`; write `module money`",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/money.my\tmoney.my:1:8: error[E_MODULE_NAME]: declared `module shop.money`, but this file is `money.my`, so its module name is `money`: a module's name is its path from the project root without `.my`; write `module money`",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/pricing.my\tmoney.my:1:8: error[E_MODULE_NAME]: declared `module shop.money`, but this file is `money.my`, so its module name is `money`: a module's name is its path from the project root without `.my`; write `module money`",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/values.my\tvalues.my:2:8: error[E_MODULE_NAME]: declared `module config.values`, but this file is `values.my`, so its module name is `values`: a module's name is its path from the project root without `.my`; write `module values`",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/billing.my\tbilling.my:1:8: error[E_MODULE_NAME]: declared `module shop.billing`, but this file is `billing.my`, so its module name is `billing`: a module's name is its path from the project root without `.my`; write `module billing`",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/money.my\tmoney.my:1:8: error[E_MODULE_NAME]: declared `module shop.money`, but this file is `money.my`, so its module name is `money`: a module's name is its path from the project root without `.my`; write `module money`",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/units.my\tunits.my:1:8: error[E_MODULE_NAME]: declared `module shared.units`, but this file is `units.my`, so its module name is `units`: a module's name is its path from the project root without `.my`; write `module units`"
+      ],
+      "frontend_after": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/catalog.my\tmoney.my:1:8: error[E_MODULE_NAME]: declared `module shop.money`, but this file is `money.my`, so its module name is `money`: a module's name is its path from the project root without `.my`; write `module money`",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/money.my\tmoney.my:1:8: error[E_MODULE_NAME]: declared `module shop.money`, but this file is `money.my`, so its module name is `money`: a module's name is its path from the project root without `.my`; write `module money`",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/pricing.my\tmoney.my:1:8: error[E_MODULE_NAME]: declared `module shop.money`, but this file is `money.my`, so its module name is `money`: a module's name is its path from the project root without `.my`; write `module money`",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/values.my\tvalues.my:2:8: error[E_MODULE_NAME]: declared `module config.values`, but this file is `values.my`, so its module name is `values`: a module's name is its path from the project root without `.my`; write `module values`",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/billing.my\tbilling.my:1:8: error[E_MODULE_NAME]: declared `module shop.billing`, but this file is `billing.my`, so its module name is `billing`: a module's name is its path from the project root without `.my`; write `module billing`",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/money.my\tmoney.my:1:8: error[E_MODULE_NAME]: declared `module shop.money`, but this file is `money.my`, so its module name is `money`: a module's name is its path from the project root without `.my`; write `module money`",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/units.my\tunits.my:1:8: error[E_MODULE_NAME]: declared `module shared.units`, but this file is `units.my`, so its module name is `units`: a module's name is its path from the project root without `.my`; write `module units`"
+      ],
+      "typed_rejected": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/catalog.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/money.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/pricing.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/values.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/billing.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/money.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/examples/units.my"
+      ],
+      "legacy_name_deduplicated": {
+        "functions": 207,
+        "before_accepted": 157,
+        "after_accepted": 181
+      },
+      "before": {
+        "(accepted)": {
+          "functions": 249,
+          "loops": 29
+        },
+        "fixed array type": {
+          "functions": 31,
+          "loops": 7
+        },
+        "capability type": {
+          "functions": 23,
+          "loops": 0
+        },
+        "string index": {
+          "functions": 2,
+          "loops": 2
+        },
+        "extern": {
+          "functions": 2,
+          "loops": 0
+        },
+        "function value type": {
+          "functions": 5,
+          "loops": 0
+        },
+        "host function": {
+          "functions": 7,
+          "loops": 1
+        },
+        "shift_right": {
+          "functions": 4,
+          "loops": 0
+        },
+        "resource type": {
+          "functions": 5,
+          "loops": 0
+        },
+        "index": {
+          "functions": 1,
+          "loops": 0
+        },
+        "text_chr": {
+          "functions": 1,
+          "loops": 1
+        },
+        "bytes type": {
+          "functions": 4,
+          "loops": 4
+        },
+        "dict type": {
+          "functions": 2,
+          "loops": 1
+        }
+      },
+      "after": {
+        "(accepted)": {
+          "functions": 292,
+          "loops": 40
+        },
+        "capability type": {
+          "functions": 23,
+          "loops": 0
+        },
+        "extern": {
+          "functions": 2,
+          "loops": 0
+        },
+        "host function": {
+          "functions": 7,
+          "loops": 1
+        },
+        "shift_right": {
+          "functions": 4,
+          "loops": 0
+        },
+        "resource type": {
+          "functions": 5,
+          "loops": 0
+        },
+        "text_chr": {
+          "functions": 1,
+          "loops": 1
+        },
+        "decode": {
+          "functions": 1,
+          "loops": 1
+        },
+        "hex": {
+          "functions": 1,
+          "loops": 2
+        }
+      }
+    },
+    "bench/parity": {
+      "files": 45,
+      "frontend_before": [],
+      "frontend_after": [],
+      "typed_rejected": [],
+      "legacy_name_deduplicated": {
+        "functions": 123,
+        "before_accepted": 74,
+        "after_accepted": 93
+      },
+      "before": {
+        "slice": {
+          "functions": 5,
+          "loops": 7
+        },
+        "count": {
+          "functions": 2,
+          "loops": 1
+        },
+        "replace": {
+          "functions": 2,
+          "loops": 1
+        },
+        "split": {
+          "functions": 3,
+          "loops": 6
+        },
+        "(accepted)": {
+          "functions": 119,
+          "loops": 87
+        },
+        "bytes type": {
+          "functions": 9,
+          "loops": 14
+        },
+        "dict type": {
+          "functions": 10,
+          "loops": 27
+        },
+        "f64_sqrt": {
+          "functions": 13,
+          "loops": 25
+        },
+        "shift_left": {
+          "functions": 9,
+          "loops": 9
+        },
+        "shift_right": {
+          "functions": 6,
+          "loops": 22
+        },
+        "fixed array type": {
+          "functions": 2,
+          "loops": 13
+        },
+        "index": {
+          "functions": 4,
+          "loops": 4
+        },
+        "string index": {
+          "functions": 3,
+          "loops": 3
+        },
+        "operator on an aggregate value": {
+          "functions": 1,
+          "loops": 0
+        },
+        "function value type": {
+          "functions": 1,
+          "loops": 1
+        },
+        "is_digit": {
+          "functions": 1,
+          "loops": 0
+        },
+        "is_alpha": {
+          "functions": 1,
+          "loops": 0
+        },
+        "is_space": {
+          "functions": 1,
+          "loops": 0
+        },
+        "starts_with": {
+          "functions": 1,
+          "loops": 0
+        },
+        "ends_with": {
+          "functions": 1,
+          "loops": 0
+        },
+        "find": {
+          "functions": 1,
+          "loops": 0
+        },
+        "lstrip": {
+          "functions": 1,
+          "loops": 0
+        },
+        "rstrip": {
+          "functions": 1,
+          "loops": 0
+        },
+        "strip": {
+          "functions": 1,
+          "loops": 0
+        },
+        "upper": {
+          "functions": 1,
+          "loops": 0
+        },
+        "lower": {
+          "functions": 1,
+          "loops": 0
+        },
+        "parse_float": {
+          "functions": 1,
+          "loops": 0
+        },
+        "f64_sin": {
+          "functions": 1,
+          "loops": 0
+        },
+        "f64_cos": {
+          "functions": 1,
+          "loops": 0
+        }
+      },
+      "after": {
+        "(accepted)": {
+          "functions": 147,
+          "loops": 133
+        },
+        "count": {
+          "functions": 2,
+          "loops": 1
+        },
+        "replace": {
+          "functions": 3,
+          "loops": 3
+        },
+        "byte_buffer type": {
+          "functions": 5,
+          "loops": 11
+        },
+        "f64_sqrt": {
+          "functions": 13,
+          "loops": 25
+        },
+        "shift_left": {
+          "functions": 9,
+          "loops": 9
+        },
+        "shift_right": {
+          "functions": 8,
+          "loops": 35
+        },
+        "reverse": {
+          "functions": 1,
+          "loops": 1
+        },
+        "operator on an aggregate value": {
+          "functions": 1,
+          "loops": 0
+        },
+        "is_digit": {
+          "functions": 1,
+          "loops": 0
+        },
+        "is_alpha": {
+          "functions": 1,
+          "loops": 0
+        },
+        "is_space": {
+          "functions": 1,
+          "loops": 0
+        },
+        "lstrip": {
+          "functions": 1,
+          "loops": 0
+        },
+        "rstrip": {
+          "functions": 1,
+          "loops": 0
+        },
+        "strip": {
+          "functions": 1,
+          "loops": 0
+        },
+        "upper": {
+          "functions": 1,
+          "loops": 0
+        },
+        "lower": {
+          "functions": 1,
+          "loops": 0
+        },
+        "parse_float": {
+          "functions": 1,
+          "loops": 0
+        },
+        "decode": {
+          "functions": 1,
+          "loops": 0
+        },
+        "f64_sin": {
+          "functions": 1,
+          "loops": 0
+        },
+        "f64_cos": {
+          "functions": 1,
+          "loops": 0
+        },
+        "find_any": {
+          "functions": 2,
+          "loops": 2
+        }
+      }
+    },
+    "tests/lang": {
+      "files": 205,
+      "frontend_before": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/lang/constant_methods.my\tconstant_methods.my:11:34: error[E_EMBED_MISSING]: cannot embed \"embed_fixtures/lines.txt\": no such file; the path is relative to the directory of the source file that embeds it",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/lang/constant_methods_support.my\tconstant_methods_support.my:8:41: error[E_EMBED_MISSING]: cannot embed \"embed_fixtures/lines.txt\": no such file; the path is relative to the directory of the source file that embeds it",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/lang/embed.my\tembed.my:5:32: error[E_EMBED_MISSING]: cannot embed \"embed_fixtures/nul.bin\": no such file; the path is relative to the directory of the source file that embeds it",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/lang/embed_support.my\tembed_support.my:4:43: error[E_EMBED_MISSING]: cannot embed \"embed_fixtures/support.txt\": no such file; the path is relative to the directory of the source file that embeds it"
+      ],
+      "frontend_after": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/lang/constant_methods.my\tconstant_methods.my:11:34: error[E_EMBED_MISSING]: cannot embed \"embed_fixtures/lines.txt\": no such file; the path is relative to the directory of the source file that embeds it",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/lang/constant_methods_support.my\tconstant_methods_support.my:8:41: error[E_EMBED_MISSING]: cannot embed \"embed_fixtures/lines.txt\": no such file; the path is relative to the directory of the source file that embeds it",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/lang/embed.my\tembed.my:5:32: error[E_EMBED_MISSING]: cannot embed \"embed_fixtures/nul.bin\": no such file; the path is relative to the directory of the source file that embeds it",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/lang/embed_support.my\tembed_support.my:4:43: error[E_EMBED_MISSING]: cannot embed \"embed_fixtures/support.txt\": no such file; the path is relative to the directory of the source file that embeds it"
+      ],
+      "typed_rejected": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/lang/constant_methods.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/lang/constant_methods_support.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/lang/embed.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/lang/embed_support.my"
+      ],
+      "legacy_name_deduplicated": {
+        "functions": 3156,
+        "before_accepted": 2044,
+        "after_accepted": 2800
+      },
+      "before": {
+        "(accepted)": {
+          "functions": 2333,
+          "loops": 484
+        },
+        "fixed array type": {
+          "functions": 133,
+          "loops": 40
+        },
+        "dict type": {
+          "functions": 340,
+          "loops": 292
+        },
+        "bytes type": {
+          "functions": 304,
+          "loops": 112
+        },
+        "function value type": {
+          "functions": 51,
+          "loops": 12
+        },
+        "operator on an aggregate value": {
+          "functions": 11,
+          "loops": 6
+        },
+        "function_value": {
+          "functions": 38,
+          "loops": 48
+        },
+        "capability type": {
+          "functions": 74,
+          "loops": 0
+        },
+        "resource type": {
+          "functions": 3,
+          "loops": 0
+        },
+        "shift_right": {
+          "functions": 14,
+          "loops": 11
+        },
+        "saturating_add": {
+          "functions": 1,
+          "loops": 0
+        },
+        "array": {
+          "functions": 2,
+          "loops": 0
+        },
+        "slice": {
+          "functions": 25,
+          "loops": 15
+        },
+        "print options": {
+          "functions": 1,
+          "loops": 0
+        },
+        "set type": {
+          "functions": 34,
+          "loops": 76
+        },
+        "index": {
+          "functions": 17,
+          "loops": 13
+        },
+        "extend": {
+          "functions": 7,
+          "loops": 10
+        },
+        "f64_sqrt": {
+          "functions": 8,
+          "loops": 0
+        },
+        "f64_to_u64": {
+          "functions": 3,
+          "loops": 0
+        },
+        "text of a non-integer value": {
+          "functions": 9,
+          "loops": 2
+        },
+        "number_format": {
+          "functions": 6,
+          "loops": 0
+        },
+        "text_format": {
+          "functions": 1,
+          "loops": 0
+        },
+        "float_round": {
+          "functions": 2,
+          "loops": 0
+        },
+        "sort_keyed": {
+          "functions": 3,
+          "loops": 6
+        },
+        "upper": {
+          "functions": 3,
+          "loops": 2
+        },
+        "f64_from_u64": {
+          "functions": 1,
+          "loops": 0
+        },
+        "write to a list while it is iterated (live-place iteration)": {
+          "functions": 26,
+          "loops": 27
+        },
+        "lower": {
+          "functions": 4,
+          "loops": 0
+        },
+        "text_tail": {
+          "functions": 6,
+          "loops": 1
+        },
+        "string index": {
+          "functions": 10,
+          "loops": 15
+        },
+        "f64_sin": {
+          "functions": 4,
+          "loops": 0
+        },
+        "f64_cos": {
+          "functions": 4,
+          "loops": 0
+        },
+        "interior mut argument ancestor changed during later argument evaluation": {
+          "functions": 4,
+          "loops": 0
+        },
+        "index_of": {
+          "functions": 3,
+          "loops": 0
+        },
+        "contains": {
+          "functions": 2,
+          "loops": 0
+        },
+        "parse_float": {
+          "functions": 3,
+          "loops": 0
+        },
+        "equality of a recursive value": {
+          "functions": 10,
+          "loops": 2
+        },
+        "reverse": {
+          "functions": 2,
+          "loops": 0
+        },
+        "slice_step": {
+          "functions": 1,
+          "loops": 0
+        },
+        "f64_floor": {
+          "functions": 2,
+          "loops": 0
+        },
+        "split_whitespace": {
+          "functions": 1,
+          "loops": 0
+        },
+        "split": {
+          "functions": 12,
+          "loops": 7
+        },
+        "text_ord": {
+          "functions": 1,
+          "loops": 0
+        },
+        "strip": {
+          "functions": 5,
+          "loops": 0
+        },
+        "replace": {
+          "functions": 5,
+          "loops": 0
+        },
+        "splitlines": {
+          "functions": 1,
+          "loops": 0
+        },
+        "strip_chars": {
+          "functions": 1,
+          "loops": 0
+        },
+        "find_start": {
+          "functions": 2,
+          "loops": 0
+        },
+        "find_range": {
+          "functions": 2,
+          "loops": 0
+        },
+        "rfind": {
+          "functions": 1,
+          "loops": 0
+        },
+        "text_repr": {
+          "functions": 1,
+          "loops": 0
+        },
+        "pop_at": {
+          "functions": 1,
+          "loops": 0
+        },
+        "file handle type": {
+          "functions": 1,
+          "loops": 0
+        },
+        "f64_trunc": {
+          "functions": 1,
+          "loops": 0
+        },
+        "shift_left": {
+          "functions": 1,
+          "loops": 0
+        },
+        "is_digit": {
+          "functions": 2,
+          "loops": 0
+        },
+        "is_alpha": {
+          "functions": 2,
+          "loops": 0
+        },
+        "is_space": {
+          "functions": 2,
+          "loops": 0
+        },
+        "starts_with": {
+          "functions": 2,
+          "loops": 0
+        },
+        "ends_with": {
+          "functions": 2,
+          "loops": 0
+        },
+        "find": {
+          "functions": 4,
+          "loops": 0
+        },
+        "count": {
+          "functions": 5,
+          "loops": 0
+        },
+        "lstrip": {
+          "functions": 2,
+          "loops": 0
+        },
+        "rstrip": {
+          "functions": 2,
+          "loops": 0
+        }
+      },
+      "after": {
+        "(accepted)": {
+          "functions": 3134,
+          "loops": 1005
+        },
+        "byte_buffer type": {
+          "functions": 64,
+          "loops": 27
+        },
+        "parse_int_range": {
+          "functions": 5,
+          "loops": 0
+        },
+        "view": {
+          "functions": 9,
+          "loops": 1
+        },
+        "scalar_count": {
+          "functions": 1,
+          "loops": 0
+        },
+        "parse_int receiver": {
+          "functions": 1,
+          "loops": 0
+        },
+        "operator on an aggregate value": {
+          "functions": 12,
+          "loops": 6
+        },
+        "capability type": {
+          "functions": 81,
+          "loops": 3
+        },
+        "resource type": {
+          "functions": 3,
+          "loops": 0
+        },
+        "shift_right": {
+          "functions": 14,
+          "loops": 11
+        },
+        "saturating_add": {
+          "functions": 1,
+          "loops": 0
+        },
+        "array": {
+          "functions": 3,
+          "loops": 0
+        },
+        "print options": {
+          "functions": 1,
+          "loops": 0
+        },
+        "text_chr": {
+          "functions": 3,
+          "loops": 9
+        },
+        "text of a non-integer value": {
+          "functions": 18,
+          "loops": 28
+        },
+        "aggregate or captured dictionary alias combined with a live view": {
+          "functions": 2,
+          "loops": 3
+        },
+        "escaping live dictionary view": {
+          "functions": 4,
+          "loops": 4
+        },
+        "live dictionary view with unproved source identity": {
+          "functions": 5,
+          "loops": 8
+        },
+        "extend": {
+          "functions": 9,
+          "loops": 10
+        },
+        "f64_sqrt": {
+          "functions": 8,
+          "loops": 0
+        },
+        "f64_to_u64": {
+          "functions": 3,
+          "loops": 0
+        },
+        "contains": {
+          "functions": 3,
+          "loops": 0
+        },
+        "number_format": {
+          "functions": 6,
+          "loops": 0
+        },
+        "text_format": {
+          "functions": 1,
+          "loops": 0
+        },
+        "float_round": {
+          "functions": 2,
+          "loops": 0
+        },
+        "upper": {
+          "functions": 3,
+          "loops": 2
+        },
+        "f64_from_u64": {
+          "functions": 1,
+          "loops": 0
+        },
+        "lower": {
+          "functions": 4,
+          "loops": 0
+        },
+        "aggregate storage of live dictionary views": {
+          "functions": 29,
+          "loops": 28
+        },
+        "ordinary dictionary snapshot combined with a live view": {
+          "functions": 7,
+          "loops": 6
+        },
+        "mut live dictionary view argument": {
+          "functions": 2,
+          "loops": 2
+        },
+        "f64_sin": {
+          "functions": 4,
+          "loops": 0
+        },
+        "f64_cos": {
+          "functions": 4,
+          "loops": 0
+        },
+        "interior mut argument ancestor changed during later argument evaluation": {
+          "functions": 8,
+          "loops": 0
+        },
+        "keyword call with a mut argument that is not a local": {
+          "functions": 2,
+          "loops": 0
+        },
+        "live dictionary view of an interior place": {
+          "functions": 7,
+          "loops": 8
+        },
+        "index_of": {
+          "functions": 3,
+          "loops": 0
+        },
+        "parse_float": {
+          "functions": 4,
+          "loops": 2
+        },
+        "equality of a recursive value": {
+          "functions": 11,
+          "loops": 2
+        },
+        "reverse": {
+          "functions": 3,
+          "loops": 1
+        },
+        "decode": {
+          "functions": 5,
+          "loops": 0
+        },
+        "from_hex": {
+          "functions": 1,
+          "loops": 0
+        },
+        "find_any": {
+          "functions": 7,
+          "loops": 2
+        },
+        "hex": {
+          "functions": 1,
+          "loops": 0
+        },
+        "slice_step": {
+          "functions": 1,
+          "loops": 0
+        },
+        "f64_floor": {
+          "functions": 2,
+          "loops": 0
+        },
+        "text_ord": {
+          "functions": 3,
+          "loops": 4
+        },
+        "strip": {
+          "functions": 6,
+          "loops": 0
+        },
+        "replace": {
+          "functions": 5,
+          "loops": 0
+        },
+        "splitlines": {
+          "functions": 1,
+          "loops": 0
+        },
+        "strip_chars": {
+          "functions": 2,
+          "loops": 0
+        },
+        "find_start": {
+          "functions": 2,
+          "loops": 0
+        },
+        "find_range": {
+          "functions": 3,
+          "loops": 1
+        },
+        "rfind": {
+          "functions": 1,
+          "loops": 0
+        },
+        "rfind_range": {
+          "functions": 3,
+          "loops": 0
+        },
+        "text_repr": {
+          "functions": 5,
+          "loops": 1
+        },
+        "pop_at": {
+          "functions": 1,
+          "loops": 0
+        },
+        "rebinding a live dictionary view": {
+          "functions": 2,
+          "loops": 1
+        },
+        "list storage of live dictionary views": {
+          "functions": 2,
+          "loops": 4
+        },
+        "file handle type": {
+          "functions": 1,
+          "loops": 0
+        },
+        "record field type": {
+          "functions": 1,
+          "loops": 0
+        },
+        "dictionary key type": {
+          "functions": 2,
+          "loops": 0
+        },
+        "f64_trunc": {
+          "functions": 1,
+          "loops": 0
+        },
+        "shift_left": {
+          "functions": 1,
+          "loops": 0
+        },
+        "is_digit": {
+          "functions": 2,
+          "loops": 0
+        },
+        "is_alpha": {
+          "functions": 2,
+          "loops": 0
+        },
+        "is_space": {
+          "functions": 2,
+          "loops": 0
+        },
+        "count": {
+          "functions": 10,
+          "loops": 2
+        },
+        "lstrip": {
+          "functions": 2,
+          "loops": 0
+        },
+        "rstrip": {
+          "functions": 2,
+          "loops": 0
+        }
+      }
+    },
+    "benchmarks/runtime": {
+      "files": 3,
+      "frontend_before": [],
+      "frontend_after": [],
+      "typed_rejected": [],
+      "legacy_name_deduplicated": {
+        "functions": 141,
+        "before_accepted": 54,
+        "after_accepted": 111
+      },
+      "before": {
+        "extern": {
+          "functions": 3,
+          "loops": 0
+        },
+        "(accepted)": {
+          "functions": 55,
+          "loops": 7
+        },
+        "dict type": {
+          "functions": 26,
+          "loops": 38
+        },
+        "bytes type": {
+          "functions": 37,
+          "loops": 41
+        },
+        "string index": {
+          "functions": 3,
+          "loops": 3
+        },
+        "split": {
+          "functions": 2,
+          "loops": 2
+        },
+        "contains": {
+          "functions": 1,
+          "loops": 0
+        },
+        "is_digit": {
+          "functions": 1,
+          "loops": 0
+        },
+        "is_alpha": {
+          "functions": 1,
+          "loops": 0
+        },
+        "is_space": {
+          "functions": 1,
+          "loops": 0
+        },
+        "starts_with": {
+          "functions": 1,
+          "loops": 0
+        },
+        "ends_with": {
+          "functions": 1,
+          "loops": 0
+        },
+        "find": {
+          "functions": 1,
+          "loops": 0
+        },
+        "count": {
+          "functions": 1,
+          "loops": 0
+        },
+        "lstrip": {
+          "functions": 1,
+          "loops": 0
+        },
+        "rstrip": {
+          "functions": 1,
+          "loops": 0
+        },
+        "strip": {
+          "functions": 1,
+          "loops": 0
+        },
+        "slice": {
+          "functions": 2,
+          "loops": 1
+        },
+        "upper": {
+          "functions": 1,
+          "loops": 0
+        },
+        "lower": {
+          "functions": 1,
+          "loops": 0
+        },
+        "replace": {
+          "functions": 1,
+          "loops": 0
+        },
+        "parse_float": {
+          "functions": 1,
+          "loops": 0
+        },
+        "index": {
+          "functions": 1,
+          "loops": 1
+        },
+        "f64_sqrt": {
+          "functions": 1,
+          "loops": 0
+        },
+        "f64_sin": {
+          "functions": 1,
+          "loops": 0
+        },
+        "f64_cos": {
+          "functions": 1,
+          "loops": 0
+        }
+      },
+      "after": {
+        "extern": {
+          "functions": 3,
+          "loops": 0
+        },
+        "(accepted)": {
+          "functions": 114,
+          "loops": 82
+        },
+        "replace": {
+          "functions": 2,
+          "loops": 7
+        },
+        "contains": {
+          "functions": 1,
+          "loops": 0
+        },
+        "is_digit": {
+          "functions": 1,
+          "loops": 0
+        },
+        "is_alpha": {
+          "functions": 1,
+          "loops": 0
+        },
+        "is_space": {
+          "functions": 1,
+          "loops": 0
+        },
+        "count": {
+          "functions": 1,
+          "loops": 0
+        },
+        "lstrip": {
+          "functions": 1,
+          "loops": 0
+        },
+        "rstrip": {
+          "functions": 1,
+          "loops": 0
+        },
+        "strip": {
+          "functions": 1,
+          "loops": 0
+        },
+        "upper": {
+          "functions": 1,
+          "loops": 0
+        },
+        "lower": {
+          "functions": 1,
+          "loops": 0
+        },
+        "parse_float": {
+          "functions": 1,
+          "loops": 0
+        },
+        "decode": {
+          "functions": 1,
+          "loops": 0
+        },
+        "f64_sqrt": {
+          "functions": 1,
+          "loops": 0
+        },
+        "f64_sin": {
+          "functions": 1,
+          "loops": 0
+        },
+        "f64_cos": {
+          "functions": 1,
+          "loops": 0
+        },
+        "byte_buffer type": {
+          "functions": 12,
+          "loops": 4
+        },
+        "parse_int_range": {
+          "functions": 1,
+          "loops": 0
+        }
+      }
+    }
+  },
+  "totals": {
+    "(accepted)": {
+      "before_functions": 2756,
+      "before_loops": 607,
+      "after_functions": 3687,
+      "after_loops": 1260
+    },
+    "capability type": {
+      "before_functions": 97,
+      "before_loops": 0,
+      "after_functions": 104,
+      "after_loops": 3
+    },
+    "byte_buffer type": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 81,
+      "after_loops": 42
+    },
+    "aggregate storage of live dictionary views": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 29,
+      "after_loops": 28
+    },
+    "shift_right": {
+      "before_functions": 24,
+      "before_loops": 33,
+      "after_functions": 26,
+      "after_loops": 46
+    },
+    "f64_sqrt": {
+      "before_functions": 22,
+      "before_loops": 25,
+      "after_functions": 22,
+      "after_loops": 25
+    },
+    "text of a non-integer value": {
+      "before_functions": 9,
+      "before_loops": 2,
+      "after_functions": 18,
+      "after_loops": 28
+    },
+    "count": {
+      "before_functions": 8,
+      "before_loops": 1,
+      "after_functions": 13,
+      "after_loops": 3
+    },
+    "operator on an aggregate value": {
+      "before_functions": 12,
+      "before_loops": 6,
+      "after_functions": 13,
+      "after_loops": 6
+    },
+    "equality of a recursive value": {
+      "before_functions": 10,
+      "before_loops": 2,
+      "after_functions": 11,
+      "after_loops": 2
+    },
+    "replace": {
+      "before_functions": 8,
+      "before_loops": 1,
+      "after_functions": 10,
+      "after_loops": 10
+    },
+    "shift_left": {
+      "before_functions": 10,
+      "before_loops": 9,
+      "after_functions": 10,
+      "after_loops": 9
+    },
+    "extend": {
+      "before_functions": 7,
+      "before_loops": 10,
+      "after_functions": 9,
+      "after_loops": 10
+    },
+    "find_any": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 9,
+      "after_loops": 4
+    },
+    "view": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 9,
+      "after_loops": 1
+    },
+    "decode": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 8,
+      "after_loops": 1
+    },
+    "interior mut argument ancestor changed during later argument evaluation": {
+      "before_functions": 4,
+      "before_loops": 0,
+      "after_functions": 8,
+      "after_loops": 0
+    },
+    "resource type": {
+      "before_functions": 8,
+      "before_loops": 0,
+      "after_functions": 8,
+      "after_loops": 0
+    },
+    "strip": {
+      "before_functions": 7,
+      "before_loops": 0,
+      "after_functions": 8,
+      "after_loops": 0
+    },
+    "host function": {
+      "before_functions": 7,
+      "before_loops": 1,
+      "after_functions": 7,
+      "after_loops": 1
+    },
+    "live dictionary view of an interior place": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 7,
+      "after_loops": 8
+    },
+    "ordinary dictionary snapshot combined with a live view": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 7,
+      "after_loops": 6
+    },
+    "f64_cos": {
+      "before_functions": 6,
+      "before_loops": 0,
+      "after_functions": 6,
+      "after_loops": 0
+    },
+    "f64_sin": {
+      "before_functions": 6,
+      "before_loops": 0,
+      "after_functions": 6,
+      "after_loops": 0
+    },
+    "lower": {
+      "before_functions": 6,
+      "before_loops": 0,
+      "after_functions": 6,
+      "after_loops": 0
+    },
+    "number_format": {
+      "before_functions": 6,
+      "before_loops": 0,
+      "after_functions": 6,
+      "after_loops": 0
+    },
+    "parse_float": {
+      "before_functions": 5,
+      "before_loops": 0,
+      "after_functions": 6,
+      "after_loops": 2
+    },
+    "parse_int_range": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 6,
+      "after_loops": 0
+    },
+    "extern": {
+      "before_functions": 5,
+      "before_loops": 0,
+      "after_functions": 5,
+      "after_loops": 0
+    },
+    "live dictionary view with unproved source identity": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 5,
+      "after_loops": 8
+    },
+    "text_repr": {
+      "before_functions": 1,
+      "before_loops": 0,
+      "after_functions": 5,
+      "after_loops": 1
+    },
+    "upper": {
+      "before_functions": 5,
+      "before_loops": 2,
+      "after_functions": 5,
+      "after_loops": 2
+    },
+    "contains": {
+      "before_functions": 3,
+      "before_loops": 0,
+      "after_functions": 4,
+      "after_loops": 0
+    },
+    "escaping live dictionary view": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 4,
+      "after_loops": 4
+    },
+    "is_alpha": {
+      "before_functions": 4,
+      "before_loops": 0,
+      "after_functions": 4,
+      "after_loops": 0
+    },
+    "is_digit": {
+      "before_functions": 4,
+      "before_loops": 0,
+      "after_functions": 4,
+      "after_loops": 0
+    },
+    "is_space": {
+      "before_functions": 4,
+      "before_loops": 0,
+      "after_functions": 4,
+      "after_loops": 0
+    },
+    "lstrip": {
+      "before_functions": 4,
+      "before_loops": 0,
+      "after_functions": 4,
+      "after_loops": 0
+    },
+    "reverse": {
+      "before_functions": 2,
+      "before_loops": 0,
+      "after_functions": 4,
+      "after_loops": 2
+    },
+    "rstrip": {
+      "before_functions": 4,
+      "before_loops": 0,
+      "after_functions": 4,
+      "after_loops": 0
+    },
+    "text_chr": {
+      "before_functions": 1,
+      "before_loops": 1,
+      "after_functions": 4,
+      "after_loops": 10
+    },
+    "array": {
+      "before_functions": 2,
+      "before_loops": 0,
+      "after_functions": 3,
+      "after_loops": 0
+    },
+    "f64_to_u64": {
+      "before_functions": 3,
+      "before_loops": 0,
+      "after_functions": 3,
+      "after_loops": 0
+    },
+    "find_range": {
+      "before_functions": 2,
+      "before_loops": 0,
+      "after_functions": 3,
+      "after_loops": 1
+    },
+    "index_of": {
+      "before_functions": 3,
+      "before_loops": 0,
+      "after_functions": 3,
+      "after_loops": 0
+    },
+    "rfind_range": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 3,
+      "after_loops": 0
+    },
+    "text_ord": {
+      "before_functions": 1,
+      "before_loops": 0,
+      "after_functions": 3,
+      "after_loops": 4
+    },
+    "aggregate or captured dictionary alias combined with a live view": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 2,
+      "after_loops": 3
+    },
+    "dictionary key type": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 2,
+      "after_loops": 0
+    },
+    "f64_floor": {
+      "before_functions": 2,
+      "before_loops": 0,
+      "after_functions": 2,
+      "after_loops": 0
+    },
+    "find_start": {
+      "before_functions": 2,
+      "before_loops": 0,
+      "after_functions": 2,
+      "after_loops": 0
+    },
+    "float_round": {
+      "before_functions": 2,
+      "before_loops": 0,
+      "after_functions": 2,
+      "after_loops": 0
+    },
+    "hex": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 2,
+      "after_loops": 2
+    },
+    "keyword call with a mut argument that is not a local": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 2,
+      "after_loops": 0
+    },
+    "list storage of live dictionary views": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 2,
+      "after_loops": 4
+    },
+    "mut live dictionary view argument": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 2,
+      "after_loops": 2
+    },
+    "rebinding a live dictionary view": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 2,
+      "after_loops": 1
+    },
+    "strip_chars": {
+      "before_functions": 1,
+      "before_loops": 0,
+      "after_functions": 2,
+      "after_loops": 0
+    },
+    "f64_from_u64": {
+      "before_functions": 1,
+      "before_loops": 0,
+      "after_functions": 1,
+      "after_loops": 0
+    },
+    "f64_trunc": {
+      "before_functions": 1,
+      "before_loops": 0,
+      "after_functions": 1,
+      "after_loops": 0
+    },
+    "file handle type": {
+      "before_functions": 1,
+      "before_loops": 0,
+      "after_functions": 1,
+      "after_loops": 0
+    },
+    "from_hex": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 1,
+      "after_loops": 0
+    },
+    "parse_int receiver": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 1,
+      "after_loops": 0
+    },
+    "pop_at": {
+      "before_functions": 1,
+      "before_loops": 0,
+      "after_functions": 1,
+      "after_loops": 0
+    },
+    "print options": {
+      "before_functions": 1,
+      "before_loops": 0,
+      "after_functions": 1,
+      "after_loops": 0
+    },
+    "record field type": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 1,
+      "after_loops": 0
+    },
+    "rfind": {
+      "before_functions": 1,
+      "before_loops": 0,
+      "after_functions": 1,
+      "after_loops": 0
+    },
+    "saturating_add": {
+      "before_functions": 1,
+      "before_loops": 0,
+      "after_functions": 1,
+      "after_loops": 0
+    },
+    "scalar_count": {
+      "before_functions": 0,
+      "before_loops": 0,
+      "after_functions": 1,
+      "after_loops": 0
+    },
+    "slice_step": {
+      "before_functions": 1,
+      "before_loops": 0,
+      "after_functions": 1,
+      "after_loops": 0
+    },
+    "splitlines": {
+      "before_functions": 1,
+      "before_loops": 0,
+      "after_functions": 1,
+      "after_loops": 0
+    },
+    "text_format": {
+      "before_functions": 1,
+      "before_loops": 0,
+      "after_functions": 1,
+      "after_loops": 0
+    },
+    "bytes type": {
+      "before_functions": 354,
+      "before_loops": 171,
+      "after_functions": 0,
+      "after_loops": 0
+    },
+    "dict type": {
+      "before_functions": 378,
+      "before_loops": 358,
+      "after_functions": 0,
+      "after_loops": 0
+    },
+    "ends_with": {
+      "before_functions": 4,
+      "before_loops": 0,
+      "after_functions": 0,
+      "after_loops": 0
+    },
+    "find": {
+      "before_functions": 6,
+      "before_loops": 0,
+      "after_functions": 0,
+      "after_loops": 0
+    },
+    "fixed array type": {
+      "before_functions": 166,
+      "before_loops": 60,
+      "after_functions": 0,
+      "after_loops": 0
+    },
+    "function value type": {
+      "before_functions": 57,
+      "before_loops": 13,
+      "after_functions": 0,
+      "after_loops": 0
+    },
+    "function_value": {
+      "before_functions": 38,
+      "before_loops": 48,
+      "after_functions": 0,
+      "after_loops": 0
+    },
+    "index": {
+      "before_functions": 23,
+      "before_loops": 18,
+      "after_functions": 0,
+      "after_loops": 0
+    },
+    "set type": {
+      "before_functions": 34,
+      "before_loops": 76,
+      "after_functions": 0,
+      "after_loops": 0
+    },
+    "slice": {
+      "before_functions": 32,
+      "before_loops": 23,
+      "after_functions": 0,
+      "after_loops": 0
+    },
+    "sort_keyed": {
+      "before_functions": 3,
+      "before_loops": 6,
+      "after_functions": 0,
+      "after_loops": 0
+    },
+    "split": {
+      "before_functions": 17,
+      "before_loops": 15,
+      "after_functions": 0,
+      "after_loops": 0
+    },
+    "split_whitespace": {
+      "before_functions": 1,
+      "before_loops": 0,
+      "after_functions": 0,
+      "after_loops": 0
+    },
+    "starts_with": {
+      "before_functions": 4,
+      "before_loops": 0,
+      "after_functions": 0,
+      "after_loops": 0
+    },
+    "string index": {
+      "before_functions": 18,
+      "before_loops": 23,
+      "after_functions": 0,
+      "after_loops": 0
+    },
+    "text_tail": {
+      "before_functions": 6,
+      "before_loops": 1,
+      "after_functions": 0,
+      "after_loops": 0
+    },
+    "write to a list while it is iterated (live-place iteration)": {
+      "before_functions": 26,
+      "before_loops": 27,
+      "after_functions": 0,
+      "after_loops": 0
+    }
+  },
+  "compiler_source_commit": "b70a6a3f",
+  "execution_command": "env TMPDIR=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/tmp ZIG_LOCAL_CACHE_DIR=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops/zig ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache nice -n 10 taskset -c 0,1,4,5,6,7,8,9,12,13,14,15,16,17,18,19 /usr/bin/time -f 'exit=%x elapsed=%e rss_kib=%M' python3 experiments/new-core-s2-20261005/wave-b/integration/coverage_loops.py --before /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-b/baseline/mylang-core --after /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/mylang-core --scratch /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-loops --json /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-b/integration/coverage-loops.json",
+  "qualification": {
+    "exit": 0,
+    "command_seconds": 312.48,
+    "rss_kib": 38856,
+    "legacy_totals_cross_checked_with_standard": true,
+    "function_instances": 4250,
+    "checked_loop_instances": 1539
+  }
+}

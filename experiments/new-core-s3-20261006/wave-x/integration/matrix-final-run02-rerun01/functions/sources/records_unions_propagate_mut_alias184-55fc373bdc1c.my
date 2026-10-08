@@ -1,0 +1,59 @@
+def first(x: int) -> int:
+    return x * 4 + -4
+
+
+def second(x: int) -> int:
+    return x * 5 - -4
+
+
+def invoke(f: def(int) -> int, x: int) -> int:
+    return f(x)
+
+
+record Row:
+    key: int
+    ordinal: int
+    text: str
+
+
+def row_key(row: Row) -> int:
+    return row.key
+
+
+def replace(xs: mut [2]str, text: str):
+    xs[-1] = text
+
+
+def rewrite_last(xs: mut list[str], text: str):
+    xs[-1] = text
+
+
+def rewrite_first(xs: mut list[str], text: str):
+    xs[0] = text
+
+
+def main(args: list[str], out: Stream) -> int:
+    seed = len(args[0]) if len(args) > 0 else 3
+    f = first if seed % 2 == 0 else second
+    fixed: [1]int = [-5]
+    saved = fixed
+    fixed[-1] = invoke(f, seed)
+    words: [2]str = [str(seed), str(seed + 1)]
+    words_saved = words
+    replace(mut words, "gamma" + str(seed))
+    listed = [words[0], words[1]]
+    listed_saved = listed
+    rewrite = rewrite_last if seed % 2 == 0 else rewrite_first
+    rewrite(mut listed, "delta" + str(seed))
+    rows: list[Row] = []
+    for i in range(1):
+        rows.append(Row(key=fixed[i] % 4, ordinal=i, text=words[i % 2]))
+    snapshot = rows
+    rows.sort(key=lambda row: row.text, reverse=True)
+    plain = [saved[i] for i in range(1)]
+    plain.sort()
+    total = 0
+    for i in range(1):
+        total += rows[i].ordinal * (i + 1) + plain[i] + snapshot[i].key + fixed[i]
+    out.print(total, words_saved[-1], words[-1], listed_saved[-1], listed[-1])
+    return 0

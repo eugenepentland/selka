@@ -1,0 +1,17 @@
+{
+  "reviewed_utc": "2026-10-04T05:34:38.145555+00:00",
+  "status": "passed",
+  "kind": "independent saved-outcome and live-identity replay; no new executions or timing",
+  "manifest": "/home/epentland/ai/canopy/mylang-worktrees/goal110-collections-hot-20261004/.mylang-cache/goal110-append-range-debug/runner/manifest.json",
+  "manifest_sha256": "9726b7b3dbd48a5b3c4399f6a1990276f3615b56b2c18787213fa175ccb49f63",
+  "source_revision": "6910e08351a50ce8524a5e37d3f6c23feb4d3383",
+  "source_bindings": 2617,
+  "asset_bindings": 15,
+  "guest_bindings": 24,
+  "frozen_reference_bindings": 16,
+  "qualification_cells": 720,
+  "native_exact_pairs": 11,
+  "qualification_sha256": "0f9a8584a14fe88af129c4e3eace7429b9984e00fa781af9cbd4761c013a81a0",
+  "native_outcomes_sha256": "f2ef9c1848763bde22fa944f9b7a9b48cbd9a9e1f86479334bea3e6ee981120f",
+  "script_sha256": "08d2aac66662c41b640ac8f6c10c15e3433e1ba50060fada212581468c66c3f0"
+}

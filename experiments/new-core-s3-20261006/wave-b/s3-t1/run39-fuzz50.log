@@ -1,0 +1,4 @@
+qualification progress: text: seen=25 elapsed=112.26s
+qualification progress: text: seen=50 elapsed=215.79s
+cases=50 compared=750 mismatch=0 fact=0 old_rejected=0 new_refused=0
+qualification {"kind": "text", "qualified": true, "accepted": 50, "old_rejected": 0, "core_refused": 0, "core_build_failed": 0, "elapsed_seconds": 219.31371882907115}

@@ -1,0 +1,164 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T12:43:24.811666+00:00",
+  "sessions": [
+    {
+      "session_id": "05f3f588-b660-49bb-b359-cf50326e2653",
+      "guest_finished_utc": "2026-10-04T12:39:10.603017+00:00",
+      "raw_sha256": "13823095d918a1eb357f9670e0c02de71a9a84a0b2cb1ec002a6a7f3c057fd51"
+    },
+    {
+      "session_id": "caa3eee1-17a6-41ae-b587-73ffedd1ea1b",
+      "guest_finished_utc": "2026-10-04T12:40:53.399968+00:00",
+      "raw_sha256": "dc418aa52097877d36e21d101a284f53c3fee5bffcbe011926c18a636c0c6740"
+    }
+  ],
+  "rows": [
+    {
+      "case": "string_equal",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "after_before": 0.9037050046671349,
+          "paired_95": [
+            0.8986121844804885,
+            0.9088443446669512
+          ]
+        },
+        "qbe": {
+          "after_before": 0.9999016519711824,
+          "paired_95": [
+            0.9981211491287413,
+            1.0006355374449953
+          ]
+        }
+      }
+    },
+    {
+      "case": "string_search",
+      "profile": "large",
+      "comparisons": {
+        "llvm": {
+          "after_before": 1.0071095775076855,
+          "paired_95": [
+            1.0024624134131388,
+            1.009874185958355
+          ]
+        },
+        "qbe": {
+          "after_before": 1.0010573275290588,
+          "paired_95": [
+            0.998452826598529,
+            1.0031046049817411
+          ]
+        }
+      }
+    },
+    {
+      "case": "sort_int",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "after_before": 0.9202473511590115,
+          "paired_95": [
+            0.9183425463010658,
+            0.9221744497887764
+          ]
+        },
+        "qbe": {
+          "after_before": 1.0016817926509167,
+          "paired_95": [
+            0.9956668150311198,
+            1.0048434383839253
+          ]
+        }
+      }
+    },
+    {
+      "case": "call_direct",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "after_before": 1.1023107891333677,
+          "paired_95": [
+            1.0952172542790084,
+            1.1070606300459256
+          ]
+        },
+        "qbe": {
+          "after_before": 0.9997826622162735,
+          "paired_95": [
+            0.9986342855902092,
+            1.002217062609193
+          ]
+        }
+      }
+    },
+    {
+      "case": "call_direct",
+      "profile": "large",
+      "comparisons": {
+        "llvm": {
+          "after_before": 1.1112031537201001,
+          "paired_95": [
+            1.1040583386292018,
+            1.1165846023387693
+          ]
+        },
+        "qbe": {
+          "after_before": 0.9993690196319384,
+          "paired_95": [
+            0.9982403236206925,
+            1.0010045894000419
+          ]
+        }
+      }
+    },
+    {
+      "case": "mutate_unique",
+      "profile": "small",
+      "comparisons": {
+        "llvm": {
+          "after_before": 0.8297361577867345,
+          "paired_95": [
+            0.8289670443044065,
+            0.8328600582946523
+          ]
+        },
+        "qbe": {
+          "after_before": 0.9994536874022781,
+          "paired_95": [
+            0.9972207211507604,
+            1.0015755500957975
+          ]
+        }
+      }
+    },
+    {
+      "case": "mutate_unique",
+      "profile": "large",
+      "comparisons": {
+        "llvm": {
+          "after_before": 0.8264209080759967,
+          "paired_95": [
+            0.7835224253660671,
+            0.8342291103443517
+          ]
+        },
+        "qbe": {
+          "after_before": 0.9999094425881142,
+          "paired_95": [
+            0.9980614248107441,
+            1.0029836005301742
+          ]
+        }
+      }
+    }
+  ],
+  "outcomes": 504,
+  "script_sha256": "6f525cc0c78509c405996dbf37d7be4fe86e82b93774ac27949749c586eb46ae",
+  "limitations": [
+    "Saved complete process streams and live artifacts; no new execution.",
+    "Paired intervals use the established bootstrap helper; no simultaneous guarantee or goal confirmation."
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "kind": "historical scalar endpoint/memcmp diagnostic context; not a matched comparison to bounded LLVM candidate",
+  "archive": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-text-20261004/equality-medium-distributions.json.gz",
+  "archive_sha256": "0a508667f47efd4bcbaba2e6be662d7d023b1d0407c867622301441f932994af",
+  "compiler_policy": "cc -O3 default portable target; no LTO; identical flags/harness for both arms",
+  "started_utc": "2026-10-04T01:37:05.303554+00:00",
+  "finished_utc": "2026-10-04T01:38:50.717985+00:00",
+  "rows": [
+    {
+      "length": 64,
+      "distribution": "equal",
+      "views": false,
+      "unicode": false,
+      "medians_ns_per_call": {
+        "before": 2.8554956,
+        "after": 3.3502671
+      },
+      "after_before_ratio": 1.1732699220408536
+    },
+    {
+      "length": 64,
+      "distribution": "equal",
+      "views": true,
+      "unicode": false,
+      "medians_ns_per_call": {
+        "before": 3.7421426245671703,
+        "after": 5.51595474935494
+      },
+      "after_before_ratio": 1.4740097593134722
+    },
+    {
+      "length": 64,
+      "distribution": "equal",
+      "views": false,
+      "unicode": true,
+      "medians_ns_per_call": {
+        "before": 2.9258836,
+        "after": 3.4801581
+      },
+      "after_before_ratio": 1.1894383289888908
+    },
+    {
+      "length": 64,
+      "distribution": "equal",
+      "views": true,
+      "unicode": true,
+      "medians_ns_per_call": {
+        "before": 3.665688624817836,
+        "after": 5.394250323831865
+      },
+      "after_before_ratio": 1.4715516989935087
+    },
+    {
+      "length": 64,
+      "distribution": "middle",
+      "views": false,
+      "unicode": false,
+      "medians_ns_per_call": {
+        "before": 3.333085867897868,
+        "after": 3.422735852518073
+      },
+      "after_before_ratio": 1.0268969922088285
+    },
+    {
+      "length": 64,
+      "distribution": "middle",
+      "views": true,
+      "unicode": false,
+      "medians_ns_per_call": {
+        "before": 4.2158125299346985,
+        "after": 5.339232454347087
+      },
+      "after_before_ratio": 1.2664776757589338
+    },
+    {
+      "length": 64,
+      "distribution": "middle",
+      "views": false,
+      "unicode": true,
+      "medians_ns_per_call": {
+        "before": 3.4343081,
+        "after": 3.336254
+      },
+      "after_before_ratio": 0.9714486594839874
+    },
+    {
+      "length": 64,
+      "distribution": "middle",
+      "views": true,
+      "unicode": true,
+      "medians_ns_per_call": {
+        "before": 4.156795454020691,
+        "after": 5.421930510000839
+      },
+      "after_before_ratio": 1.3043534544757156
+    }
+  ],
+  "limitation": "Earlier portable GCC/noLTO helper differs from current LLVM/defaultnative/fullLTO. Compare direction of general-distribution outcomes, not absolute costs or causal before/after."
+}

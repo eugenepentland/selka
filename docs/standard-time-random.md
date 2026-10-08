@@ -57,8 +57,7 @@ reproducible simulation and tests; it is not a cryptographic generator.
 
 A `Random` is a value record. Copying it snapshots its current position: each
 copy produces the same remaining sequence, and advancing one leaves the other
-unchanged. Pass `mut generator` to advance the caller's stream. Under
-`--legacy-sharing`, copies share the state list and advance one shared stream.
+unchanged. Pass `mut generator` to advance the caller's stream.
 
 `randint(generator, low, high)` samples the inclusive range uniformly. It computes
 the width without overflowing either bound, so `randint(generator, -2^63, 2^63-1)`

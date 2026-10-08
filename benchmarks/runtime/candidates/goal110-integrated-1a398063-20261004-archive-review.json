@@ -1,0 +1,16 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T11:56:17.435825+00:00",
+  "archive_commit": "0a64082265ceaef41ee46629330d4da9169bfe2e",
+  "tracked_files": 63,
+  "raw_gzip_live_bindings": 54,
+  "archive_index_sha256": "ff6ceaff0576d38e3059b6f051324eff4221317935e825a65be7db8ea731ebbd",
+  "limitations": [
+    "Saved outcomes/archive/live artifact checks; no new timing or target confirmation."
+  ],
+  "integration_checkout_verifier": {
+    "command": "taskset -c 4 python3 experiments/runtime-goal110-integrated-20261004/verify-archive.py --live",
+    "actual_exit_status": 0,
+    "output": "PASS 54 archives,2625 pinned source blobs,4 batches,49 native pairs,840 six-arm samples,672 paired executions,720 qualifications,516 holdouts,5 equal/3 different runtime images\n"
+  }
+}

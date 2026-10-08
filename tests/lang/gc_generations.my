@@ -55,14 +55,12 @@ def last_value(node: Node) -> int:
             return -1
 
 
-# spec: GC-GENERATIONS-1
 public def test_a_long_lived_chain_survives_many_minor_collections() -> bool:
     old = chain(200)
     rounds = churn(2500)
     return length(old) == 201 and old.value == 200 and rounds == 2500
 
 
-# spec-case: QBE-GEN-BARRIER-1
 public def test_an_old_class_body_keeps_a_young_object_stored_into_it() -> bool:
     old = chain(50)
     _ = churn(1200)
@@ -71,7 +69,6 @@ public def test_an_old_class_body_keeps_a_young_object_stored_into_it() -> bool:
     return last_value(old) == 77 and length(old) == 2
 
 
-# spec-case: QBE-GEN-BARRIER-1
 public def test_a_young_chain_hung_on_an_old_body_survives_intact() -> bool:
     old = chain(10)
     _ = churn(1200)
@@ -80,7 +77,6 @@ public def test_a_young_chain_hung_on_an_old_body_survives_intact() -> bool:
     return length(old) == 32 and last_value(old) == 30
 
 
-# spec-case: GC-GENERATIONS-1
 public def test_an_old_list_keeps_young_objects_appended_and_stored() -> bool:
     nodes: list[Node] = []
     for i in range(20):
@@ -117,7 +113,6 @@ def value_sum(nodes: list[Node]) -> int:
 # its mark in its header; it is rescanned by every minor collection like any
 # other old storage. (Oversized one-slot storage is covered by the runtime's C
 # tests, which can afford a list that large.)
-# spec-case: GC-GENERATIONS-1
 public def test_an_old_large_list_keeps_young_objects_stored_into_it() -> bool:
     large = filled(2000)
     _ = churn(1200)
@@ -128,22 +123,6 @@ public def test_an_old_large_list_keeps_young_objects_stored_into_it() -> bool:
     return value_sum(large) == 2000 * 1999 // 2 + 286 * 1000000 + 5 and len(large) == 2001
 
 
-# spec-case: QBE-INLINE-ALLOC-1
-public def test_class_bodies_bumped_out_of_nested_arenas_keep_their_fields() -> bool:
-    outer_total = 0
-    inner_total = 0
-    kept = chain(5)
-    for round in range(200):
-        with arena():
-            outer = chain(40)
-            with arena():
-                inner = chain(25)
-                inner_total += length(inner) + last_value(inner)
-            outer_total += length(outer) + outer.value
-    return outer_total == 200 * (41 + 40) and inner_total == 200 * (26 + 24) and length(kept) == 6
-
-
-# spec-case: QBE-INLINE-ALLOC-1
 public def test_inline_constructed_bodies_start_zeroed_and_hold_their_fields() -> bool:
     total = 0
     for i in range(30000):

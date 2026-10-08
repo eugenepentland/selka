@@ -5,12 +5,12 @@ def replace_list(items: mut list[int], other: list[int]) -> list[int]:
     return items
 
 
-# spec-case: COW-MUT-REBIND-1
+# spec-case: MUT-REBIND-CALLER-1
 public def test_rebound_mut_list_does_not_mutate_its_readonly_source() -> bool:
     items = [1]
     source = [2]
     changed = replace_list(mut items, source)
-    return changed == [9, 7] and source == [2] and items == [1]
+    return changed == [9, 7] and source == [2] and items == [9, 7]
 
 
 def replace_rows(items: mut list[list[int]], other: list[list[int]]) -> list[list[int]]:
@@ -20,13 +20,13 @@ def replace_rows(items: mut list[list[int]], other: list[list[int]]) -> list[lis
     return items
 
 
-# spec-case: COW-MUT-REBIND-1
+# spec-case: MUT-REBIND-CALLER-1
 public def test_rebound_nested_list_keeps_parent_and_child_snapshots() -> bool:
     items = [[1]]
     row = [2]
     source = [row, row]
     changed = replace_rows(mut items, source)
-    return changed == [[4], [5]] and source == [[2], [2]] and row == [2] and items == [[1]]
+    return changed == [[4], [5]] and source == [[2], [2]] and row == [2] and items == [[4], [5]]
 
 
 def replace_mapping(items: mut dict[int, list[int]], other: dict[int, list[int]]) -> dict[int, list[int]]:
@@ -36,12 +36,12 @@ def replace_mapping(items: mut dict[int, list[int]], other: dict[int, list[int]]
     return items
 
 
-# spec-case: COW-MUT-REBIND-1
+# spec-case: MUT-REBIND-CALLER-1
 public def test_rebound_dictionary_keeps_nested_source_values_independent() -> bool:
     items = {0: [1]}
     source = {1: [2]}
     changed = replace_mapping(mut items, source)
-    return changed == {1: [2, 7], 2: [9]} and source == {1: [2]} and items == {0: [1]}
+    return changed == {1: [2, 7], 2: [9]} and source == {1: [2]} and items == {1: [2, 7], 2: [9]}
 
 
 def conditional(items: mut list[int], other: list[int], use_other: bool) -> list[int]:
@@ -51,7 +51,7 @@ def conditional(items: mut list[int], other: list[int], use_other: bool) -> list
     return items
 
 
-# spec-case: COW-MUT-REBIND-1
+# spec-case: MUT-REBIND-CALLER-1
 public def test_original_mut_payload_still_updates_when_the_rebind_branch_is_skipped() -> bool:
     original = [1]
     source = [2]

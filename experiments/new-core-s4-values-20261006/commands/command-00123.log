@@ -1,0 +1,5 @@
+$ scripts/build-slot.sh build zig fmt src/core/value_facts_test.zig src/core/s3_number_test.zig
+src/core/value_facts_test.zig
+
+exit=0
+elapsed_seconds=0.049489

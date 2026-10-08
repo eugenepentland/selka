@@ -1,0 +1,9 @@
+$ env PYTHONDONTWRITEBYTECODE=1 python3 -c 'from pathlib import Path; import importlib.util,subprocess,json; w=Path("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests"); imp=lambda name,p:importlib.util.spec_from_file_location(name,p); spec=imp("projectaudit",w/"experiments/new-core-s4-project-tests-20261006/project_matrix.py"); m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m); empty={"version":"native-tests-v1","tests":[],"passed":0,"failed":0,"cached":0,"skipped":0,"unsupported":0}; r=m.reports; print("empty-valid",dict(r.validate_report(empty,3,allow_cached=False))); cspec=imp("sweepaudit",w/"experiments/new-core-s1-20261005/conformance.py"); c=importlib.util.module_from_spec(cspec); cspec.loader.exec_module(c); comp=c.compare("empty.my",empty,{"debug":empty,"release":empty},False); print("empty-comparison",comp); cached={"version":"native-tests-v1","tests":[{"name":"app::test_constant","status":"cached"}],"passed":0,"failed":0,"cached":1,"skipped":0,"unsupported":0}; done=subprocess.CompletedProcess(["Core","test","app.my","--force"],0,json.dumps(cached),""); print("forced-cached-normalized",m.verdicts(done)[0]); [(print(p.name, "tool-identity-fields",any(key in p.read_text() for key in ("MYLANG_ZIG","MYLANG_QBE","tool_sha","tools_sha")))) for p in (w/"experiments/new-core-s4-project-tests-20261006").glob("*matrix.py")]'
+empty-valid {}
+empty-comparison {'file': 'empty', 'tests': 0, 'modes': {'debug': {'match': 0, 'mismatch': 0, 'unsupported': 0, 'names': 0}, 'release': {'match': 0, 'mismatch': 0, 'unsupported': 0, 'names': 0}}, 'problems': [], 'reasons': Counter(), 'unsupported': {}, 'pass': [], 'known_fail': []}
+forced-cached-normalized [('app::test_constant', 'passed')]
+fuzz_matrix.py tool-identity-fields False
+project_matrix.py tool-identity-fields False
+
+exit=0
+elapsed_seconds=0.050463

@@ -1,0 +1,23 @@
+test-core
++- run test
+   +- compile test debug native 1 errors
+src/core/fuse_text_scalar_test.zig:158:36: error: expected type 'i64', found 'u64'
+        const at = try h.int(.u64, offset);
+                                   ^~~~~~
+src/core/fuse_text_scalar_test.zig:158:36: note: signed 64-bit int cannot represent all possible unsigned 64-bit values
+src/core/test_support.zig:142:49: note: parameter type declared here
+    pub fn int(self: *Hand, ty: ir.Type, value: i64) Error!ir.Ref {
+                                                ^~~
+referenced by:
+    test.scalar fusion emitter guards manual width and code reads before ASCII and retains Unicode and invalid offset fallback: src/core/fuse_text_scalar_test.zig:186:40
+    comptime: src/core/root_test.zig:42:17
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test -ODebug --dep mylang --dep core_test_options -Mroot=src/core/root_test.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -Mcore_test_options=.zig-cache/o/fdb686dfe5f813580b904bd3d26bef03/options.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --test-filter "scalar fusion" --test-runner ../guardian-zig/src/test_runner.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name test --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 2/5 steps succeeded (1 failed)
+test-core transitive failure
++- run test transitive failure
+   +- compile test debug native 1 errors
+      +- options success
+         +- compile exe mylang-core debug native cached 11ms MaxRSS:38M
+

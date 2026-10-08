@@ -1,0 +1,17 @@
+test-core
++- run test w
+guardian/test: 1 test(s) selected
+guardian/test: SLOW  10.41s  environment_names_test.test.Core Environment names come from grants rather than the linked provider context
+guardian/test: test wall 10.41s; slowest over 50ms:
+guardian/test:   10.41s  environment_names_test.test.Core Environment names come from grants rather than the linked provider context
+guardian/test: PASS — 1 passed
+guardian/test: RESULT {"passed":1,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/dbd4a93a6aa5d12f233c3ccc7bb1677e/test --cache-dir=./.zig-cache --seed=0x827c1f8f --listen=-
+
+Build Summary: 5/5 steps succeeded; 1/1 tests passed
+test-core success
++- run test 1 pass (1 total) 10s MaxRSS:230M
+   +- compile test debug native success 261ms MaxRSS:174M
+      +- options success
+         +- compile exe mylang-core debug native cached 6ms MaxRSS:38M
+

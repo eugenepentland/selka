@@ -1,0 +1,13 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T09:42:13.139959+00:00",
+  "report": "/home/epentland/ai/canopy/mylang-worktrees/goal110-floor-result-range-20261004/.mylang-cache/goal110-floor-result-range-diagnostic/text/text-checks.json",
+  "report_sha256": "b68c2aed722f50b2bfbe71f440be8623fea1c4cd83ebe5f240f1ad3cb7f0c5b7",
+  "helper_sha256": "9db273b19b4afd54ae414359a28e5ee05c7d863cc5ddd79722e82f3c6f0d180a",
+  "ordinary_oracle_records": 200,
+  "live_guest_bindings": 2,
+  "limitations": [
+    "Saved ordinary checksum/clock-protocol replay; no new timing.",
+    "Diagnostic LLVM text guests; final screen artifacts must match or be revalidated."
+  ]
+}

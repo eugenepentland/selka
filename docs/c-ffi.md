@@ -1,7 +1,8 @@
 # Direct C imports
 
-QBE native builds support direct calls to fixed-arity C functions. No provider
-registration or copied-node adapter is needed:
+An `extern def` calls a fixed-arity C function with scalar arguments directly from a
+native build. No adapter or registration is needed; the C code is compiled with the
+program through `--link`:
 
 ```mylang
 # doc: check
@@ -20,8 +21,8 @@ def main(host: Host) -> i64:
 mylang build main.my --run
 ```
 
-The build driver already links libc and libm. On the supported Linux x86-64
-target, the mappings are:
+The build links libc and libm. On the supported Linux x86-64 target, the mappings
+are:
 
 | Language | C |
 |---|---|
@@ -31,55 +32,78 @@ target, the mappings are:
 | `float` | `double` |
 | `unit` result | `void` result |
 
-Use `i32` for C `int` on this target. `unit` parameters are rejected; an empty
-parameter list represents a C function taking no arguments. Foreign floating
-NaNs are canonicalized according to the language's ordinary float semantics.
+Use `i32` for C `int` on this target. `unit` parameters are rejected; a declaration
+whose only parameter is `host` calls a C function taking no arguments.
 
 The declaration name is the C symbol. In a module, `math::floor` still links to
 `floor`. Imports of the same C symbol must agree on the signature. Aliased symbol
 names and automatic C header imports are not implemented. Runtime names starting
 with `myl_` or `mylang_` are reserved.
 
+## The host parameter
+
+Every `extern def` takes `host: Host` as its first parameter and declares
+`effects(host)`, and may declare more effects; omitting either is
+`E_HOST_CAPABILITY` or `E_HOST_EFFECTS`. The checker verifies the `host` argument at
+each call, and the C ABI drops it before the foreign call, so the C function sees
+only the remaining arguments. The effects propagate through callers and keep the
+call out of compile-time evaluation. `main` receives `host` like any capability:
+`mylang run` grants it, and under `--restrict` it needs `--allow-host`:
+
+```console
+$ mylang run main.my --link helpers.c --restrict
+mylang: --restrict is active and this command line did not grant a capability the entry point requests; pass --allow-host, or drop --restrict to grant every capability
+$ mylang run main.my --link helpers.c --restrict --allow-host
+```
+
+Arguments follow the SysV x86-64 C calling convention exactly as a C caller passes
+them: an `i8` or `i16` argument is sign-extended and a `u8`, `u16` or `bool`
+argument zero-extended to the full register, so a C callee that reads the widened
+register sees the value. Wider integers, `float` and results pass unchanged.
+
+A `float` argument that is any NaN reaches C as the canonical quiet NaN
+(`0x7ff8000000000000`), so foreign code that reads a double's sign or payload
+(`copysign`, `signbit`, a byte copy) sees one value; a NaN a foreign function returns
+enters the program unchanged, like any produced NaN
+([NaN payloads](floating-point.md#nan-payloads)).
+
 ## Linking your code
 
-Both `build` and `test` accept these repeatable flags:
+`build`, `build --run`, `run` and `test` accept repeatable `--link FILE.c`:
 
 ```sh
 mylang build main.my --run --link helpers.c
-mylang build main.my -o app --link helpers.o --link libhelpers.a
-mylang build main.my -o app --library-path ./lib --link-library helpers
+mylang build main.my -o app --link helpers.c --link vendor/crc.c
 mylang test main.my --link helpers.c
 ```
 
-`--link` accepts C source, object files, archives, or shared libraries. Paths are
-relative to the invocation directory. Link inputs retain their command-line
-order and follow generated guest objects. Shared libraries must also be
-available to the system loader at runtime; `--library-path` controls link-time
-search and does not install libraries or add an rpath.
+Each `--link` names a C source, relative to the invocation directory; it is compiled
+with the build's toolchain (`zig cc -c`, at the build's optimization level and CPU)
+and linked after the program's objects, in command-line order. Object files,
+archives, shared libraries and library search paths are not link inputs:
+`--link-library` and `--library-path` were retired with host functions.
 
-Native function objects remain cached. Every build links again, so changed
-external objects and C source are observed. A native test that transitively calls
-an extern function always executes; its result is never reused as a cached pass.
-Unaffected pure tests can retain their results.
+The compiled object is cached in the build's `foreign-v1` store and reused only
+while the source and every header its compiler depfile listed keep their bytes; a
+file that changes while it compiles pins nothing. A build that replays its last
+identical build rechecks the same files ([native builds](tooling/native-build.md#the-caches)).
+A test run with `--link` never reuses a recorded result.
 
 ## Boundary contract
 
-Every declaration requires `effects(host)` and may declare additional effects.
-These effects propagate through callers and prohibit compile-time execution.
-Direct imports work with QBE executable and shared-library builds.
+C code is trusted native code. The handwritten declaration must match the actual C
+prototype; a linker cannot verify C types. Foreign calls bypass capability grants
+other than `host`, and step and frame budgets do not count time spent inside them;
+`--timeout` and a test's `--timeout-ms` still apply.
 
-C code is trusted native code. The handwritten declaration must match the actual
-C prototype; a linker cannot verify C types. Foreign calls bypass provider grants
-and cooperative host-call budgets, and cannot be interrupted by guest instruction
-budgets. Native test process timeouts still apply.
+A test cannot call an `extern def`: no test is ever handed a `Host`.
 
-This implementation covers scalar calls. Raw pointers, C strings, struct/union
-passing, variadic functions, C callbacks, and automatic binding generation remain
-future work. Use the existing registered host adapter API for copied structured
-data and explicit resource contracts.
+This covers scalar calls. Aggregate parameters and results (records, arrays, unions,
+`str`, collections, capabilities) and `mut` parameters are rejected by the checker
+(`E_EXTERN_SIGNATURE`, `E_MUTATION_MARKER`); raw pointers, C strings, variadic
+functions, C callbacks and automatic binding generation remain future work.
 
-Run the focused compiler and native acceptance suite with:
-
-```sh
-zig build test-c-ffi -Doptimize=ReleaseFast -Dqbe=/path/to/qbe
-```
+`host def` declarations, registered host adapters, `--library`, `--provider` and
+the host applications built on them were retired in S5 (2026-10); `extern def` with
+`--link` is the C interop that remains. A `host def` is refused at check time with
+`E_HOST_RETIRED`: declare the function `extern def` and link its C implementation.

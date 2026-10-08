@@ -1,0 +1,344 @@
+Build Summary: 69/88 steps succeeded (16 failed); 3217/36928 tests passed (33550 skipped, 154 failed, 7 crashed)
+test transitive failure
++- run ../guardian-zig/zig-out/bin/guardian-check success 3s
+|  +- guardian-selfcheck success
+|     +- run ../guardian-zig/zig-out/bin/guardian-check success 6ms
++- run test cached
+|  +- compile test debug native cached 6ms MaxRSS:41M
+|  +- install success
+|  |  +- install mylang cached
+|  |  |  +- compile exe mylang debug native cached 10ms MaxRSS:39M
+|  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) cached
+|  |  |  |  |  +- compile exe qbe-build-assets debug native cached 6ms MaxRSS:41M
+|  |  |  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:42M
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check success 3s
+|  |  |     +- guardian-selfcheck (+1 more reused dependencies)
+|  |  +- install qbe cached
+|  |  |  +- compile exe qbe fast native cached 14ms MaxRSS:41M
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  +- hash declared test inputs success 482ms
+|  +- record the test environment success 4ms
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 228 pass, 2408 skip, 3 fail (2639 total)
+|  +- compile test debug native cached 18ms MaxRSS:42M
+|  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  +- options cached
+|  |     +- compile exe qbe fast native (reused)
+|  +- install generated to qbe cached
+|  |  +- compile exe qbe fast native (reused)
+|  +- install generated to mylang cached
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 216 pass, 2420 skip, 3 fail (2639 total)
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install generated to qbe (+1 more reused dependencies)
+|  +- install generated to mylang (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 216 pass, 2420 skip, 3 fail (2639 total)
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install generated to qbe (+1 more reused dependencies)
+|  +- install generated to mylang (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 217 pass, 2420 skip, 1 fail, 1 crash (2639 total); 1 leaks
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install generated to qbe (+1 more reused dependencies)
+|  +- install generated to mylang (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 219 pass, 2420 skip (2639 total) 1m MaxRSS:956M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install generated to qbe (+1 more reused dependencies)
+|  +- install generated to mylang (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 217 pass, 2420 skip, 2 fail (2639 total)
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install generated to qbe (+1 more reused dependencies)
+|  +- install generated to mylang (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 217 pass, 2420 skip, 2 fail (2639 total)
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install generated to qbe (+1 more reused dependencies)
+|  +- install generated to mylang (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 218 pass, 2420 skip, 1 fail (2639 total)
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install generated to qbe (+1 more reused dependencies)
+|  +- install generated to mylang (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 219 pass, 2420 skip (2639 total) 1m MaxRSS:791M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install generated to qbe (+1 more reused dependencies)
+|  +- install generated to mylang (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 219 pass, 2420 skip (2639 total) 1m MaxRSS:553M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install generated to qbe (+1 more reused dependencies)
+|  +- install generated to mylang (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 219 pass, 2420 skip (2639 total) 55s MaxRSS:537M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install generated to qbe (+1 more reused dependencies)
+|  +- install generated to mylang (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 217 pass, 2421 skip, 1 fail (2639 total)
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install generated to qbe (+1 more reused dependencies)
+|  +- install generated to mylang (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 32 pass, 269 skip, 24 fail, 1 crash (326 total)
+|  +- compile test debug native cached 4ms MaxRSS:42M
+|  |  +- options cached
+|  |     +- compile exe mylang debug native (+2 more reused dependencies)
+|  |     +- compile exe qbe fast native (reused)
+|  +- install generated to qbe (+1 more reused dependencies)
+|  +- install generated to mylang (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 32 pass, 272 skip, 21 fail, 1 crash (326 total)
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- install generated to qbe (+1 more reused dependencies)
+|  +- install generated to mylang (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 30 pass, 272 skip, 23 fail, 1 crash (326 total)
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- install generated to qbe (+1 more reused dependencies)
+|  +- install generated to mylang (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 25 pass, 272 skip, 28 fail, 1 crash (326 total)
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- install generated to qbe (+1 more reused dependencies)
+|  +- install generated to mylang (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 28 pass, 272 skip, 25 fail, 1 crash (326 total)
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- install generated to qbe (+1 more reused dependencies)
+|  +- install generated to mylang (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 35 pass, 273 skip, 17 fail, 1 crash (326 total)
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- install generated to qbe (+1 more reused dependencies)
+|  +- install generated to mylang (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe qbe fast native (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- test-idioms transitive failure
+|  +- python3 tests/idiom_probes.py --self-test cached
+|  |  +- install (+3 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- compile exe qbe fast native (reused)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- python3 tests/idiom_probes.py --compiler failure
+|     +- install (+3 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- compile exe qbe fast native (reused)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- test-incremental success
+|  +- python3 tests/incremental_diff.py cached
+|  |  +- install (+3 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- compile exe qbe fast native (reused)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- python3 tests/incremental_diff.py --project tests/fixtures/module_projects cached
+|     +- install (+3 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- compile exe qbe fast native (reused)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- test-interfaces success
+|  +- python3 tests/interface_diff.py cached
+|  |  +- install (+3 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- compile exe qbe fast native (reused)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- python3 tests/interface_diff.py --project tests/fixtures/interfaces_generic cached
+|  |  +- install (+3 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- compile exe qbe fast native (reused)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- python3 tests/interface_oracle.py success 15s
+|     +- install (+3 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- compile exe qbe fast native (reused)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- test-agent-usefulness success
+|  +- python3 tests/parser_hints.py cached
+|  |  +- install (+3 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- compile exe qbe fast native (reused)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- python3 tests/parser_hints.py --compiler cached
+|  |  +- install (+3 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- compile exe qbe fast native (reused)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- python3 tests/test_friction_harvest.py cached
+|     +- install (+3 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- compile exe qbe fast native (reused)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- test-cache-isolation transitive failure
+|  +- python3 tests/tooling_cache_isolation.py --compiler failure
+|     +- install (+3 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- compile exe qbe fast native (reused)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- test-selfhost-numeric success
+|  +- python3 selfhost/tests/run_lexer_diff.py --compiler cached
+|     +- install (+3 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- compile exe qbe fast native (reused)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- test-spec-merge success
+|  +- run python3 success 3s
+|     +- install (+3 more reused dependencies)
++- test-runtime-identity success
+|  +- run python3 cached
+|     +- install (+3 more reused dependencies)
+|     +- record the test environment (reused)
++- test-affected-selection success
+|  +- python3 tests/test_affected_tests.py cached
+|     +- install (+3 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- compile exe qbe fast native (reused)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- test-inputs-coverage success
+|  +- python3 tests/test_inputs_coverage.py --self-test cached
+|  |  +- install (+3 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- compile exe qbe fast native (reused)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- python3 tests/input_manifest.py --self-test cached
+|  |  +- install (+3 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- compile exe qbe fast native (reused)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- python3 tests/test_inputs_coverage.py cached
+|     +- install (+3 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- compile exe qbe fast native (reused)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- run exe mylang success 272ms
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- install (+3 more reused dependencies)
++- run exe mylang success 293ms
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- install (+3 more reused dependencies)
++- mylang test tests/lang success 5s
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- install (+3 more reused dependencies)
++- mylang test tests/lang --release --verify-facts (leak check) success 23s
+|  +- install (+3 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- mylang test tests/value_semantics success 759ms
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- install (+3 more reused dependencies)
++- mylang test tests/value_semantics --release --verify-facts (leak check) success 2s
+|  +- install (+3 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- test-core success
+|  +- run test 52 pass, 361 skip (413 total) 10s MaxRSS:98M
+|  |  +- compile test debug native cached 8ms MaxRSS:42M
+|  |     +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |     +- options cached
+|  |     |  +- compile exe mylang-core debug native cached 9ms MaxRSS:38M
+|  |     |     +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |     |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+|  |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+|  +- run test 52 pass, 361 skip (413 total) 15s MaxRSS:197M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  +- run test 52 pass, 361 skip (413 total) 12s MaxRSS:196M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  +- run test 52 pass, 361 skip (413 total) 23s MaxRSS:74M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  +- run test 52 pass, 361 skip (413 total) 31s MaxRSS:74M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  +- run test 51 pass, 362 skip (413 total) 12s MaxRSS:75M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  +- run test 51 pass, 362 skip (413 total) 51s MaxRSS:493M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  +- run test 51 pass, 362 skip (413 total) 46s MaxRSS:154M
+|     +- compile test debug native (+3 more reused dependencies)
++- mylang doctest . cached
+   +- install (+3 more reused dependencies)
+   +- hash declared test inputs (reused)
+   +- record the test environment (reused)
+   +- compile exe qbe fast native (reused)
+   +- compile exe mylang debug native (+2 more reused dependencies)
+   +- compile exe mylang debug native (+2 more reused dependencies)
+

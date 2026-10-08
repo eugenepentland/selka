@@ -1,0 +1,8 @@
+
+### sort_records (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 54.488 | 66.591 | same |
+| new core release | 31.086 | 39.806 | same |
+| Rust | 41.029 | 45.204 | same |
+| Zig ReleaseSafe | 117.620 | 51.026 | same |

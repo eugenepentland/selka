@@ -46,17 +46,24 @@ fn integerOf(comptime Point: type, points: []const Point) ?i64 {
     const body = trimmed(Point, points);
     var at: usize = 0;
     const negative = signed(Point, body, &at);
-    const found = run(Point, body, &at) orelse return null;
-    if (at != body.len) return null;
-    var magnitude: u64 = 0;
-    for (body[found.start..found.end]) |stored| {
-        const character = @as(u32, stored);
-        if (character == '_') continue;
-        magnitude = std.math.mul(u64, magnitude, 10) catch return null;
-        magnitude = std.math.add(u64, magnitude, character - '0') catch return null;
-    }
+    if (at == body.len) return null;
     const bound: u64 = @as(u64, std.math.maxInt(i64)) + @intFromBool(negative);
-    if (magnitude > bound) return null;
+    var magnitude: u64 = 0;
+    while (at < body.len) {
+        const character = @as(u32, body[at]);
+        if (!decimal(character)) return null;
+        const digit = character - '0';
+        // Validate and accumulate in one pass. The last allowed digit differs
+        // only for the signed minimum; the guard proves the following multiply
+        // and add cannot overflow even in checked builds.
+        if (magnitude > bound / 10 or (magnitude == bound / 10 and digit > bound % 10)) return null;
+        magnitude = magnitude * 10 + digit;
+        at += 1;
+        if (at < body.len and @as(u32, body[at]) == '_') {
+            at += 1;
+            if (at == body.len) return null;
+        }
+    }
     if (!negative) return @intCast(magnitude);
     if (magnitude == bound) return std.math.minInt(i64);
     return -@as(i64, @intCast(magnitude));

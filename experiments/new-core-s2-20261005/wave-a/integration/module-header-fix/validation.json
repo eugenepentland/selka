@@ -1,0 +1,111 @@
+{
+  "utc": "2026-10-05T16:24:57.239269+00:00",
+  "fixture": "tests/lang/mut_rebind_modules.my",
+  "change": "Added explicit module mut_rebind_modules header only",
+  "fixture_sha256": "9425a4e92b77be33715a811bdf7550748e8efaae22467011f3706c2eebb1a6d7",
+  "cases": [
+    {
+      "mode": "old-rc",
+      "exit": 0,
+      "passed": 2,
+      "failed": 0,
+      "cached": 0,
+      "executed": 2,
+      "unsupported": 0,
+      "tests": [
+        {
+          "name": "mut_rebind_modules::test_imported_function_values_and_direct_calls_share_their_mut_abi",
+          "status": "passed"
+        },
+        {
+          "name": "mut_rebind_modules::test_imported_mut_collection_rebinding_preserves_source_snapshots",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "mode": "old-gc-stress",
+      "exit": 0,
+      "passed": 2,
+      "failed": 0,
+      "cached": 0,
+      "executed": 2,
+      "unsupported": 0,
+      "tests": [
+        {
+          "name": "mut_rebind_modules::test_imported_function_values_and_direct_calls_share_their_mut_abi",
+          "status": "passed"
+        },
+        {
+          "name": "mut_rebind_modules::test_imported_mut_collection_rebinding_preserves_source_snapshots",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "mode": "old-release",
+      "exit": 0,
+      "passed": 2,
+      "failed": 0,
+      "cached": 0,
+      "executed": 2,
+      "unsupported": 0,
+      "tests": [
+        {
+          "name": "mut_rebind_modules::test_imported_function_values_and_direct_calls_share_their_mut_abi",
+          "status": "passed"
+        },
+        {
+          "name": "mut_rebind_modules::test_imported_mut_collection_rebinding_preserves_source_snapshots",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "mode": "core-debug",
+      "exit": 0,
+      "passed": 0,
+      "failed": 0,
+      "cached": 0,
+      "executed": 0,
+      "unsupported": 2,
+      "tests": [
+        {
+          "name": "mut_rebind_modules::test_imported_function_values_and_direct_calls_share_their_mut_abi",
+          "status": "unsupported",
+          "reason": "function_value",
+          "at": "23:14"
+        },
+        {
+          "name": "mut_rebind_modules::test_imported_mut_collection_rebinding_preserves_source_snapshots",
+          "status": "unsupported",
+          "reason": "dict type",
+          "at": "10:15"
+        }
+      ]
+    },
+    {
+      "mode": "core-release-verified",
+      "exit": 0,
+      "passed": 0,
+      "failed": 0,
+      "cached": 0,
+      "executed": 0,
+      "unsupported": 2,
+      "tests": [
+        {
+          "name": "mut_rebind_modules::test_imported_function_values_and_direct_calls_share_their_mut_abi",
+          "status": "unsupported",
+          "reason": "function_value",
+          "at": "23:14"
+        },
+        {
+          "name": "mut_rebind_modules::test_imported_mut_collection_rebinding_preserves_source_snapshots",
+          "status": "unsupported",
+          "reason": "dict type",
+          "at": "10:15"
+        }
+      ]
+    }
+  ]
+}

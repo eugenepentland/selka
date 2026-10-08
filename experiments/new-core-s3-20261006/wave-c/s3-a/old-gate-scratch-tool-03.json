@@ -1,0 +1,13 @@
+{
+  "source": "203c0ca6100344304cbd9fd20d22cc7f9448a145",
+  "tool_commit": "2213bcc00b75538d2c19017c9bc57e7e39e62952",
+  "tool": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s2-20261005/wave-b/integration/full_old_gate.py",
+  "tool_sha256": "afcee4dfe599aecf719588c2c220f33a28cd807bc110cef0fb65307e3494e3d9",
+  "fix": "Unique private /var/tmp scratch, avoiding both .zig-cache and .mylang-cache ancestors",
+  "focused_preflight": "incremental-scratch-preflight-03/summary.json",
+  "failed_receipts": [
+    "old-gate-combined-final-01/summary.json",
+    "old-gate-combined-final-02/summary.json"
+  ],
+  "fresh_receipt": "old-gate-combined-final-03/summary.json"
+}

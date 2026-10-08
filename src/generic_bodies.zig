@@ -87,6 +87,7 @@ const Checker = struct {
     field_arena: std.heap.ArenaAllocator,
     src: source.Source,
     program: ast.Program,
+    view_consumers: dictionary_views.Consumers,
     catalog: Catalog,
     cleanup_masks: []const effect_set.Mask,
     effect_masks: []effect_set.Mask,
@@ -1283,7 +1284,7 @@ const Checker = struct {
         try self.compatible(try self.expressionExpected(invocation.arguments[0], element), element, span);
         return expected;
     }
-    fn cellConstructor(self: *Checker, invocation: Call, span: source.Span) Error!?Symbolic {
+    fn cellConstructor(self: *Checker, invocation: Call) Error!?Symbolic {
         if (invocation.owner != null or invocation.type_arguments.len != 0) return null;
         const name = self.src.text(invocation.name);
         if (!std.mem.eql(u8, name, "Cell")) return null;
@@ -1293,36 +1294,11 @@ const Checker = struct {
         const declaration = store.index.names.get("Cell") orelse return null;
         const builtin = store.index.declarations.items[declaration].builtin_name orelse return null;
         if (!std.mem.eql(u8, builtin, "Cell")) return null;
-        if (@import("value_semantics.zig").enabled()) return self.sink.fail(
+        return self.sink.fail(
             "E_VALUE_CELL",
             invocation.name,
             "builtin Cell is shared mutable state under value semantics; use a value record with `mut` and store-back, or a pool handle for identity",
         );
-        if (invocation.arguments.len != 1) return self.sink.fail("E_ARITY", span, "Cell requires one value argument");
-        const keyword = if (invocation.argument_names.len == 0) null else invocation.argument_names[0];
-        if (keyword == null or !std.mem.eql(u8, self.src.text(keyword.?), "value"))
-            return self.sink.fail("E_UNKNOWN_FIELD", invocation.name, "construct Cell with value=initial");
-        var expected_element: ?Symbolic = null;
-        var result: ?Symbolic = null;
-        if (self.expected_types.get(span)) |expected| {
-            if (self.shapes().isCell(expected)) {
-                const schema = try self.shapes().schema(expected, span);
-                if (schema.kind != .record) return error.InternalError;
-                for (schema.fields) |field| {
-                    if (!std.mem.eql(u8, field.name, "value")) continue;
-                    expected_element = field.ty orelse return error.InternalError;
-                    result = expected;
-                    break;
-                }
-                if (result == null) return error.InternalError;
-            }
-        }
-        const value = if (expected_element) |element| try self.expressionExpected(invocation.arguments[0], element) else try self.expression(invocation.arguments[0]);
-        if (expected_element) |element| try self.compatible(value, element, span);
-        if (try self.requiresHandling(value)) return self.sink.fail("E_CELL_ELEMENT", span, "Cell contents must be copyable, storable values without Result, Option, resources, capabilities, or result obligations");
-        try self.supports(value, .storable, span);
-        self.seedEffect(.managed_allocation);
-        return result orelse try self.shapes().nominal(declaration, &.{value});
     }
     fn numericLiteral(self: *Checker, span: source.Span, minimum: bool) Error!Symbolic {
         const expected = self.expected_types.get(span);
@@ -1484,7 +1460,7 @@ const Checker = struct {
         if (try self.managedMethod(input_call, span)) |value| return value;
         if (try self.constantMethod(input_call, span)) |value| return value;
         if (try self.sortedCall(input_call, span)) |value| return value;
-        if (try self.cellConstructor(input_call, span)) |value| return value;
+        if (try self.cellConstructor(input_call)) |value| return value;
         if (try self.contextualResult(input_call, span)) |value| return value;
         if (try self.contextualOption(input_call, span)) |value| return value;
         if (try self.scalarConstructor(input_call, span)) |value| return value;
@@ -1776,6 +1752,7 @@ const Checker = struct {
         defer self.expression_depth -= 1;
         errdefer self.temporary_results = before;
         const result = try self.expressionValue(id);
+        if (dictionary_views.symbolicKind(self.catalog, result)) |kind| try dictionary_views.validateKind(Checker, self, id, kind);
         self.temporary_results = before;
         if (self.expression_depth > 1 and (try self.requiresHandling(result))) self.temporary_results += 1;
         return result;
@@ -2747,7 +2724,11 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
 /// retained direct results, and (MODULE-INTERFACE-1) for a module checked
 /// against imported interfaces, the transitive effect mask the interface
 /// declares for a function whose body the program does not have, by function.
-pub const Reuse = struct { symbolic: ?*generic_cache.Session = null, declared: []const ?effect_set.Mask = &.{} };
+pub const Reuse = struct { symbolic: ?*generic_cache.Session = null, declared: []const ?effect_set.Mask = &.{}, view_consumers: ?dictionary_views.Consumers = null };
+
+fn deinitOwnedConsumers(allocator: std.mem.Allocator, reuse: Reuse, consumers: dictionary_views.Consumers) void {
+    if (reuse.view_consumers == null) consumers.deinit(allocator);
+}
 /// Check symbolic bodies, reusing unchanged direct results from `symbolic`.
 /// The whole-graph `effects.checkAbstract` pass always runs from the combined
 /// fresh and replayed masks, so a changed callee body is re-derived even when a
@@ -2761,6 +2742,8 @@ pub fn checkWithCatalogCached(allocator: std.mem.Allocator, src: source.Source, 
         break;
     };
     if (!has_work) return;
+    const view_consumers = reuse_with.view_consumers orelse try dictionary_views.Consumers.init(allocator, src, program);
+    defer deinitOwnedConsumers(allocator, reuse_with, view_consumers);
     const cleanup_masks = try effects.cleanupMasks(allocator, catalog.records);
     defer allocator.free(cleanup_masks);
     const effect_masks = try allocator.alloc(effect_set.Mask, program.functions.len);
@@ -2817,6 +2800,7 @@ pub fn checkWithCatalogCached(allocator: std.mem.Allocator, src: source.Source, 
             .field_arena = std.heap.ArenaAllocator.init(allocator),
             .src = src,
             .program = program,
+            .view_consumers = view_consumers,
             .catalog = catalog,
             .cleanup_masks = cleanup_masks,
             .effect_masks = effect_masks,
@@ -2890,6 +2874,7 @@ pub fn checkWithCatalogCached(allocator: std.mem.Allocator, src: source.Source, 
             .field_arena = std.heap.ArenaAllocator.init(allocator),
             .src = src,
             .program = program,
+            .view_consumers = view_consumers,
             .catalog = catalog,
             .cleanup_masks = cleanup_masks,
             .effect_masks = effect_masks,

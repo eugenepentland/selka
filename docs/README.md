@@ -35,7 +35,6 @@ $ mylang reference --query E_MODULE_NAME   # one feature or error code, from the
 | `modules` | [modules, imports and exports](modules.md) |
 | `memory` | [managed collections](managed-memory.md) |
 | `sets` | [sets and hashable keys](sets.md) |
-| `arenas` | [managed arenas](arenas.md) |
 | `stdlib` | [the standard library](standard-library.md) |
 | `tests` | [guest tests](tooling/guest-tests.md) |
 | `build` | [native builds](tooling/native-build.md) |
@@ -60,9 +59,9 @@ $ mylang reference --query E_MODULE_NAME   # one feature or error code, from the
 - Values: [results and options](results-and-options.md), [text](text.md),
   [bytes](bytes.md), [integer operations](integer-operations.md),
   [floating point](floating-point.md), [typed JSON](typed-json.md).
-- Memory: [managed collections](managed-memory.md), [arenas](arenas.md).
+- Memory: [managed collections](managed-memory.md) and [value semantics](value-semantics.md).
 - The outside world: [I/O](io.md), [capabilities and effects](effects.md),
-  [bulk byte I/O](byte-io-bulk.md), [time and randomness](standard-time-random.md),
+  [time and randomness](standard-time-random.md),
   [direct C imports](c-ffi.md).
 - Larger programs: [modules](modules.md), [local packages](tooling/packages.md),
   [the standard library](standard-library.md), [typed holes](typed-holes.md),
@@ -72,12 +71,12 @@ $ mylang reference --query E_MODULE_NAME   # one feature or error code, from the
 
 ## Building, testing and tools
 
-- [Native builds](tooling/native-build.md): QBE by default, `--release` for the
-  optimized LLVM build, caches and `--report`. [Performance](performance.md)
-  says when and how to measure.
-- [Guest tests](tooling/guest-tests.md) and
-  [benchmarks with reviewed baselines](tooling/benchmark-plan.md);
-  [runtime budgets](tooling/runtime-budgets.md) (memory, steps, time).
+- [Native builds](tooling/native-build.md): debug builds one LLVM unit per module,
+  `--release` for the optimized whole-program build, the caches, `--report` and
+  `--verify-cache`. [Performance](performance.md) says when and how to measure.
+- [Guest tests](tooling/guest-tests.md);
+  [runtime budgets](tooling/runtime-budgets.md) (memory, steps, time);
+  [ownership](tooling/ownership.md) (`--stats`).
 - Working in a large project: [source navigation](tooling/navigation.md)
   (`index-project`, `tests-for`), [focused declaration context](tooling/agent-context.md)
   (`context --symbol` / `--at`), [agent-facing inspection](tooling/agent-tools.md)
@@ -86,16 +85,18 @@ $ mylang reference --query E_MODULE_NAME   # one feature or error code, from the
   [linting](tooling/lint.md), [import policy](tooling/import-policy.md).
 - Compiler behaviour: [caches](tooling/caches.md), [phase timings](tooling/timings.md),
   [work and reuse reports](tooling/work-report.md), [module interfaces](tooling/module-interfaces.md).
-- Embedding and hosts: [calling one export](tooling/invoke.md),
-  [invocation](tooling/invocation.md), [packed host calls](tooling/packed-host-calls.md),
-  [the byte runner](tooling/byte-runner.md).
+- C interop: [direct C imports](c-ffi.md) (`extern def` with `--link FILE.c`).
+  Host functions, `mylang invoke` and the host applications were retired; their
+  pages are in [`legacy/`](legacy/README.md).
 
 ## Compiler records
 
 Pages about developing the compiler, kept here for its maintainers. They are
 dated records and plans, not descriptions of the language you can rely on:
 
-- Plans and status: [design and implementation plan](plan.md),
+- Plans and status (written before the new compiler core replaced the QBE back
+  end in 2026-10; [`design/`](design/) holds the new core's design records):
+  [design and implementation plan](plan.md),
   [progress](progress.md), [performance roadmap](performance-roadmap.md),
   [the velocity loop](velocity-loop.md), [bootstrap subset](bootstrap-v1.md).
 - Proposals and handoffs: [concurrency proposal](concurrency-proposal.md),

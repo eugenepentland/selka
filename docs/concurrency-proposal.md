@@ -38,7 +38,7 @@ benchmark fine-grained work and large graphs before committing to this default.
 
 - [Python syntax](python-syntax.md) already gives ordinary functions, typed
   records, aliased mutable collections, and checked `Result` propagation.
-- [Managed arenas](arenas.md) give the intended progression: ordinary types
+- [Managed arenas](managed-memory.md#retired-arenas) (since retired) gave the intended progression: ordinary types
   first, explicit lifetime control when needed. Concurrency can use that pattern.
 - [Process workers](experiments/workers.md) already establish copied requests,
   isolated execution, bounded admission, cancellation, and scope cleanup. Their
@@ -53,9 +53,9 @@ benchmark fine-grained work and large graphs before committing to this default.
   declarations. Today that effect does not exist. `nogc` and `noalloc` must not
   accidentally acquire a non-suspension guarantee.
 
-Some reference pages retain historical backend restrictions despite newer native
-managed lowering in `src/qbe_managed.zig`. Backend support must be checked against
-implementation and acceptance tests, not inferred from one older document.
+The QBE back end and its managed lowering were retired in October 2026 (S5); the
+new compiler core lowers through Core IR and LLVM. Backend support must be checked
+against implementation and acceptance tests, not inferred from one older document.
 
 ## The easy path
 

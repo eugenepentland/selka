@@ -1,0 +1,136 @@
+module rc_semantic_history
+
+record History:
+    live: DictValues[int, int]
+    snapshot: dict[int, int]
+
+
+record Envelope:
+    value: History
+
+
+union Chain:
+    empty,
+    link(value: History, rest: Chain)
+
+
+public def test_snapshot_then_owner_mutation_preserves_the_view_of_the_shared_original() -> bool:
+    mapping = {1: 7}
+    live = mapping.values()
+    result = History(live, live.mapping)
+    result.snapshot[1] = 11
+    mapping[1] = 13
+    return list(result.live) == [7] and result.snapshot[1] == 11 and mapping[1] == 13
+
+
+public def test_owner_then_snapshot_mutation_preserves_the_same_original_view() -> bool:
+    mapping = {1: 7}
+    live = mapping.values()
+    result = History(live, live.mapping)
+    mapping[1] = 13
+    result.snapshot[1] = 11
+    return list(result.live) == [7] and result.snapshot[1] == 11 and mapping[1] == 13
+
+
+public def test_sharing_before_view_creation_still_affects_the_next_owner_mutation() -> bool:
+    mapping = {1: 7}
+    snapshot = mapping
+    snapshot[1] = 11
+    live = mapping.values()
+    mapping[1] = 13
+    return list(live) == [7] and snapshot[1] == 11 and mapping[1] == 13
+
+
+public def test_view_created_after_both_detaches_follows_the_new_owner() -> bool:
+    mapping = {1: 7}
+    snapshot = mapping
+    snapshot[1] = 11
+    mapping[1] = 13
+    live = mapping.values()
+    mapping[1] = 17
+    return list(live) == [17] and snapshot[1] == 11 and mapping[1] == 17
+
+
+public def test_copying_only_whole_views_keeps_the_mapping_live() -> bool:
+    mapping = {1: 7}
+    live = mapping.values()
+    sibling = live
+    mapping[1] = 13
+    return list(live) == [13] and list(sibling) == [13]
+
+
+public def test_nested_record_keeps_the_original_view_after_both_writes() -> bool:
+    mapping = {1: 7}
+    live = mapping.values()
+    result = Envelope(History(live, live.mapping))
+    result.value.snapshot[1] = 11
+    mapping[1] = 13
+    return list(result.value.live) == [7] and result.value.snapshot[1] == 11 and mapping[1] == 13
+
+
+public def test_fixed_array_keeps_the_original_view_after_both_writes() -> bool:
+    mapping = {1: 7}
+    live = mapping.values()
+    results: [1]History = [History(live, live.mapping)]
+    results[0].snapshot[1] = 11
+    mapping[1] = 13
+    return list(results[0].live) == [7] and results[0].snapshot[1] == 11 and mapping[1] == 13
+
+
+public def test_list_element_keeps_the_original_view_after_both_writes() -> bool:
+    mapping = {1: 7}
+    live = mapping.values()
+    results = [History(live, live.mapping)]
+    results[0].snapshot[1] = 11
+    mapping[1] = 13
+    return list(results[0].live) == [7] and results[0].snapshot[1] == 11 and mapping[1] == 13
+
+
+public def test_boxed_variant_materialization_keeps_the_original_view() -> bool:
+    mapping = {1: 7}
+    live = mapping.values()
+    chain = Chain.link(History(live, live.mapping), Chain.empty)
+    match chain:
+        case Chain.link(item, _):
+            result = item
+            result.snapshot[1] = 11
+            mapping[1] = 13
+            return list(result.live) == [7] and result.snapshot[1] == 11 and mapping[1] == 13
+        case Chain.empty:
+            return False
+
+
+public def test_heap_read_only_projection_does_not_detach_a_live_mapping() -> bool:
+    mapping = {1: 7}
+    live = mapping.values()
+    size = len(live.mapping)
+    mapping[1] = 13
+    return size == 1 and list(live) == [13]
+
+
+public def test_arena_read_only_projection_does_not_detach_a_live_mapping() -> bool:
+    with arena():
+        mapping = {1: 7}
+        live = mapping.values()
+        size = len(live.mapping)
+        mapping[1] = 13
+        return size == 1 and list(live) == [13]
+
+
+public def test_arena_snapshot_then_owner_mutation_keeps_the_shared_original() -> bool:
+    with arena():
+        mapping = {1: 7}
+        live = mapping.values()
+        result = History(live, live.mapping)
+        result.snapshot[1] = 11
+        mapping[1] = 13
+        return list(result.live) == [7] and result.snapshot[1] == 11 and mapping[1] == 13
+
+
+public def test_arena_append_of_a_fresh_mapping_does_not_create_a_semantic_snapshot() -> bool:
+    with arena():
+        rows: list[dict[int, int]] = []
+        rows.append({1: 7})
+        live = rows[0].values()
+        rows[0][1] = 13
+        return list(live) == [13] and rows[0][1] == 13

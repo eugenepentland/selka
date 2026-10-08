@@ -1,0 +1,18 @@
+{
+  "recorded_utc": "2026-10-06T19:48:22.864990+00:00",
+  "source_commit": "5ee5b8d2e1d1c697a98dfa590cbeda704ed7ae55",
+  "paths_removed": [
+    "/var/tmp/mylang-a-old-preflight-oktp5c3j",
+    "/var/tmp/mylang-old-gate-final-old-run01-0gu79pro",
+    "/var/tmp/mylang-old-gate-old-gate-combined-final-03-pjjj4ulj"
+  ],
+  "all_paths_absent_after": true,
+  "selection": "Exact three mode0700 uid1000 task-created parents from external-scratch-cleanup-candidate-01.json; final old group absent per cancellation receipt.",
+  "retained_internal_evidence": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-c/s3-a/incremental-scratch-preflight-03",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-c/s3-a/old-gate-combined-final-03",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/final-old-run01"
+  ],
+  "runtime_baseline_touched": false,
+  "shared_global_cache_touched": false
+}

@@ -1,0 +1,51 @@
+test-core
++- run test 188 pass, 1 fail (189 total)
+error: 'own_test.test.encode borrows its text without counting, and escaping bytes retain that source' failed:
+       no_such_file_in_tests_lang (debug): mylang-core test did not finish cleanly:
+       error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/tests/lang/no_such_file_in_tests_lang.my: FileNotFound
+       
+       no_such_row: the new core failed to build the row:
+       error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/test/core/row_no_such_row.my: FileNotFound
+       
+       internal error[E_CORE_INVALID_IR]: invalid Core IR in main b0 %9: print does not match its signature
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/src/core/verify_ir.zig:163:9: 0x13987a1 in fail__anon_45448 (root_test.zig)
+               return error.InvalidIr;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/src/core/verify_ir.zig:419:18: 0x139812b in signature (root_test.zig)
+               if (!ok) return self.fail(b, ref, "{s} does not match its signature", .{@tagName(inst.op)});
+                        ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/src/core/verify_ir.zig:176:17: 0x1394fdf in run (root_test.zig)
+                       try self.signature(b, ref, inst);
+                       ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/src/core/verify_ir.zig:100:5: 0x1393950 in verifyFunction (root_test.zig)
+           try v.run();
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/src/core/verify_ir.zig:92:9: 0x139320a in verifyModule (root_test.zig)
+               try verifyFunction(arena, module, f, failure);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/src/core/verify_ir.zig:54:5: 0x137a27c in reported (root_test.zig)
+           return err;
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/src/core/verify_ir.zig:46:55: 0x1378d3d in check (root_test.zig)
+           verifyModule(arena, module, &failure) catch |err| return reported(arena, err, failure, report);
+                                                             ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/src/core/test_support.zig:36:9: 0x13780b3 in verified (root_test.zig)
+               return err;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/src/core/test_support.zig:225:27: 0x1e2a9e7 in runOwned (root_test.zig)
+           if (options.check_ir) try verified(arena, module, &.{});
+                                 ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/src/core/own_test.zig:819:19: 0x201201a in test.encode borrows its text without counting, and escaping bytes retain that source (root_test.zig)
+           const first = try support.runOwned(arena.allocator(), &borrowed, .{ .release = true, .verify = true });
+                         ^
+failed command: ./.zig-cache/o/0b6177726af340aad64547856c62af97/test --cache-dir=./.zig-cache --seed=0xb9cb1102 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 188/189 tests passed (1 failed)
+test-core transitive failure
++- run test 188 pass, 1 fail (189 total)
+   +- compile test debug native cached 5ms MaxRSS:38M
+      +- options cached
+         +- compile exe mylang-core debug native cached 7ms MaxRSS:38M
+
+Command exited with non-zero status 1
+command_seconds=174.61

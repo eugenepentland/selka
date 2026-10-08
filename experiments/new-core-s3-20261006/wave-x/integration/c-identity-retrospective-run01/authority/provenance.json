@@ -1,0 +1,194 @@
+{
+  "scope": "Retrospective predecessor C/M/runner 9637eb9a1 -> S2 92590700 identity; not final S3-X qualification",
+  "baseline_source_commit": "92590700cb0bf5e4dc19cc1f0c836c3a41693f64",
+  "predecessor_source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+  "historical_receipt": "authority/historical-identity-summary.json",
+  "historical_receipt_sha256": "d2fe4f52003cb075a3a61d1e6af4022111a6fa9028552872ba6b9224044c5d1d",
+  "source_contract": "authority/c-source-contract.json",
+  "source_contract_sha256": "5a6fde586cf5f3b84d8cc2f362e594efe3c92da2b99be7ae6ad8af96c072ac07",
+  "capture_date_utc": "2026-10-06",
+  "capture_method": "Copied retained complete LLVM bytes; every input hash matched the historical C qualification receipt. No compiler or baseline rebuild.",
+  "original_input_locations": {
+    "before": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/baseline",
+    "after": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/identity"
+  },
+  "reproduction_requires_original_input_locations": false,
+  "outside_function_module_content": "Not qualified. Complete module inputs and full raw diffs are retained; function/site proof does not normalize or discard this content to claim full-module identity.",
+  "rows": [
+    {
+      "row": "binary_search",
+      "before_sha256": "fd4556723090b084cbd99760cfafa55b97fbc1198be65329b26f27a84d38c9de",
+      "after_sha256": "29eab26eac11be3957a737eef0e3056dc9411c70f5a156a2ce672eec28293627"
+    },
+    {
+      "row": "branch_mixed",
+      "before_sha256": "4fc6664c48901089057ab2589df7d828f0760613c5e68c4267d0c0ba5f0bcd94",
+      "after_sha256": "a6b8c7ec884637a55b2ee25309775655216fd3c68996c26e6843dd86b1f1f7b1"
+    },
+    {
+      "row": "branch_predictable",
+      "before_sha256": "5eeadcdb50118d6863691bad7e2194ef9741618caf069402bbeb34faf91d6fad",
+      "after_sha256": "eacd66257fdf69288fd05eeb04afe7d84f67cafdf26f8dda155a35e42424801a"
+    },
+    {
+      "row": "call_direct",
+      "before_sha256": "58c2870c2e102a09a4922fa55654726420a1fe2bf8f742464fcd43dfe921445d",
+      "after_sha256": "2dc4bb302ab5604158d226b197075fe3362ef72ba16b0d7885cd7c9148bafa9d"
+    },
+    {
+      "row": "float_math",
+      "before_sha256": "871699a0e23132c6983d243fd993470e7edc82fdb1bf26cc210e81927e5b6336",
+      "after_sha256": "3c86a72eaddff01aca9589aba0b4d5d09d6581f6d06863d92c6dbb5c41b545ce"
+    },
+    {
+      "row": "int_math",
+      "before_sha256": "0a144e3fdbf23583ab3b5b62b45341c46b44bfb5db67665361dbb2ed97ed467b",
+      "after_sha256": "f521925ae8caa357954cbd18c597ff5d06388c8a73d6d9ece12147b7cb22a2a5"
+    },
+    {
+      "row": "row_alloc_retained",
+      "before_sha256": "f73ab99cc87884242d0999eb0d4af7426376f48c91260e68571d96ed7a8e8357",
+      "after_sha256": "9ebb58d8547985177f7935373221c87a6f61cbbd2e2635bb02d3140740d0596c"
+    },
+    {
+      "row": "row_alloc_short",
+      "before_sha256": "3d092cf6088ab866f67a3f56c0153e8d77c4af3fe404b4506a8aeb90f3a5030b",
+      "after_sha256": "5371094b7e8efe92b1e56a7fd4494b626d3da1add3169061cf4855b863331932"
+    },
+    {
+      "row": "row_bytes_scan",
+      "before_sha256": "857f8c4572a897f4256a13397e408f944bf2b02df0673fc8ce7e205bb0334551",
+      "after_sha256": "c518a073fcf33ee334093bdf07ef5392a16a0a7d91b1f81db7f1e4ace4a50bfe"
+    },
+    {
+      "row": "row_call_indirect",
+      "before_sha256": "c83820df245badcbbd4089eb9503d133fbf8d5d018fc1335e2ac6c912d88c97c",
+      "after_sha256": "1defba76b3545a58a28a637e38ae1fc3c4ab8e7fba0215e5711bcbdf0f6be429"
+    },
+    {
+      "row": "row_dict_lookup",
+      "before_sha256": "1d46101b9d68a6bc7b8c6df6d189f5778f8e7eff2d9f28f07f672558262b21a8",
+      "after_sha256": "39a77aa6fd87d286f4bc11f63ab19db84771e3f162edf49301aa4daa1a3b3e46"
+    },
+    {
+      "row": "row_dict_lookup_str",
+      "before_sha256": "e951b746b04b55f50796a2548076253cdbd231a1ded8395a14ad81794a402e5a",
+      "after_sha256": "6230533a1f02392ea19092e860f6d3e7244833ee87e8b657ace1a5a62c115874"
+    },
+    {
+      "row": "row_dict_update",
+      "before_sha256": "76f805036ac41a71bb102c9d1f3f2a8039bf6e9ff67d793c4994db8c8b115e07",
+      "after_sha256": "20aa2d76e4efa6048ccd9adfa4efc48f9e2750c0a56c0a8f28f755e43a5ca128"
+    },
+    {
+      "row": "row_dict_update_str",
+      "before_sha256": "7030ae53440ae14857c0bd4ea36e8aea2c303673d2d6d70ebd2299b42c65f051",
+      "after_sha256": "bae11084341e13e231fa1f9ed6f89fa69e75a6bb89af694fdb95fe7087fabc6b"
+    },
+    {
+      "row": "row_int_format",
+      "before_sha256": "5df21e9e999dc17948bcff40b82559131c575c15b84741f11298c1461ddb70dd",
+      "after_sha256": "9ae1caa80cdbaa9a1bcd3f3a4a96d5d70f9962886a2dbef12d838bf2b3ddb470"
+    },
+    {
+      "row": "row_int_parse",
+      "before_sha256": "10db6d78ac0e4e0d6aec445df0aaf7e1036b66b7fad623376ed15d1c701661f8",
+      "after_sha256": "c77494702efaae76a1bc4d5d5f50899810b2334bfd49edadf9dc85ba3a055d07"
+    },
+    {
+      "row": "row_list_append",
+      "before_sha256": "4b4b905984abcadbc48bd4eae97b17cb04648f4df6a257043d22bfc7a53dcd46",
+      "after_sha256": "73680cc014e430d9a3e81902fdd9db345437cb91e8eb33d8b2c3a118f2bc4185"
+    },
+    {
+      "row": "row_list_filter",
+      "before_sha256": "269e5423e7831b2198fcb80065879e5994b37269a7dda90b9d62233d6bd08245",
+      "after_sha256": "6ec559e000e084f01f31f25841fe653bfa9eddd5952adcc00a291176305fbec5"
+    },
+    {
+      "row": "row_list_scan",
+      "before_sha256": "e9fca47c4ac62cee18ca21ea9d191af9fae3bcf80cf025da0ab598898ac1a426",
+      "after_sha256": "2ae96a037cf2d86eb061e1e9b4071293db875af109a61d012ce3dfeb1e0f6b53"
+    },
+    {
+      "row": "row_mutate_nested",
+      "before_sha256": "640d2c5f918d84ab5be95c203fa95aa3ff8894d44b99c9c120da604585aeb3ce",
+      "after_sha256": "160c17df0625f4b1227a9c96f5f2fb0c9dc1c35dd0ed9f67f26ab10d39d5d780"
+    },
+    {
+      "row": "row_mutate_shared",
+      "before_sha256": "5b9e4083e9d83041e6695a3d9d01bb4ab3700aa15ffd6252d19405f10fdfaa6a",
+      "after_sha256": "7b7984a9014cf7e039c219d612c33783cb1ab8d7ba9fc4df5750d13bf8fc09b9"
+    },
+    {
+      "row": "row_mutate_unique",
+      "before_sha256": "0d9498f6858a63d73cef518de9d60873b6888916be1b9d564500806fda6aff16",
+      "after_sha256": "c2f1fa5a413fc8a9e5e90b35b2f7cdb42404f461eb8d66dbe596e5d6965b19bc"
+    },
+    {
+      "row": "row_option_handle",
+      "before_sha256": "97d1124856a8bce2be1f48e063fab88f635cc78f6c679bfe80d15e3a38c77390",
+      "after_sha256": "2062f09c2d3d301c9449f54c5482890274998629b5c76ec1433d464629fff449"
+    },
+    {
+      "row": "row_record_construct",
+      "before_sha256": "90166046d12d14fcd2f5ba820ae64cc5f262fb61e4e154d6ec7537f99f7350ad",
+      "after_sha256": "4036fec07493e838443700457ae8b671adc70e86ede7e9d311617bd180f78ca8"
+    },
+    {
+      "row": "row_record_reads",
+      "before_sha256": "83db0d386b3e8673e272a882724db5adc611eac75f3b3bc5042fe9627b00600d",
+      "after_sha256": "8b5e4673043717ebc67421f6e4c17a16f8e0de8aa46ee0eea1c3cf1e6139299c"
+    },
+    {
+      "row": "row_record_update",
+      "before_sha256": "404670cccfe82776975a2abd878d516e03398fae4fb0f99f878729e25c9e77f5",
+      "after_sha256": "8b4c1d9096ef634459d54a6687c5b4908ffe197f4bc7d849f470e6b5cc80d7a0"
+    },
+    {
+      "row": "row_result_propagate",
+      "before_sha256": "fead3484502404c7a2077cb95c7fbbff6955b5a811ec84c2c7199e80d36cf8f7",
+      "after_sha256": "c61a363c50e359055ca881069f5b1d8a9c6cedafa14c2321e33de67d7712f3b8"
+    },
+    {
+      "row": "row_set_dedup",
+      "before_sha256": "7af59486b2e3e782f8aeaf227db519b8077c8ae5dac7bad85e4a66bff9afa02b",
+      "after_sha256": "a6373e1ca6342453b95bce50f201b982c22963692da4963ca1de98a322ec75ac"
+    },
+    {
+      "row": "row_sort_int",
+      "before_sha256": "973f31d4a480ec4e96cfd66faee76777888b0bec403c5f3bca000196c33e5a71",
+      "after_sha256": "20e0d448d771018db93f03ef4f314d4e2fb00125cd9913902432f48ce09218de"
+    },
+    {
+      "row": "row_sort_records",
+      "before_sha256": "e045c2c59bb6c698c76bfcfa2c72561154ede2836a1c7e3ae1c7c2cb576c86e2",
+      "after_sha256": "14d1fa578afebc8032e2eb32217470b1d04731fc429666fdf67d147db0543509"
+    },
+    {
+      "row": "row_string_equal",
+      "before_sha256": "039e079a54f4377e8e3c9820ae227c7467ab07e3d86ae140b2f580181a1072f6",
+      "after_sha256": "3e531d3b62118cf5870e9406b7f1df11614bacfa1f6ddb4bb3c97454101cf300"
+    },
+    {
+      "row": "row_string_join",
+      "before_sha256": "9a7c813e2961338a39c3baa5cfd4bdb44d31629f72120b801e52a31ecd644426",
+      "after_sha256": "705ae3a2e499007af39ce3dd09f584e47328f057858291b3c891e6248a63c00a"
+    },
+    {
+      "row": "row_string_search",
+      "before_sha256": "246b04597b72e7d484432b6c695d58cea7f1eb918f578117664d457a60dfe847",
+      "after_sha256": "6c06efd5afce420b4500c6e2c97112564d80a8e0f3918739af5f113841264ad7"
+    },
+    {
+      "row": "row_string_split",
+      "before_sha256": "cbe08eb6006ec62acfc7f1f257fed9da47c16c2680e0a5b6d9b153a6f6e7fbef",
+      "after_sha256": "63d618dc026ae84c69788105a75998648a218beb7c260d75ff89bd1f7b244b3d"
+    },
+    {
+      "row": "row_tagged_stack",
+      "before_sha256": "4424a8d477e2a4132d8a50890e46dfc3e3dcf6e73bb49a3cb9e881756dd4c97e",
+      "after_sha256": "25a5d35b907b1abda2f6a46557709212f94cdd912c68bfe5a33e5fa36aa48c95"
+    }
+  ]
+}

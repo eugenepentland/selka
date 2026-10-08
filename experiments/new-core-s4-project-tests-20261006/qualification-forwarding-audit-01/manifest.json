@@ -1,0 +1,40 @@
+{
+  "version": "s4-parser-forwarding-evidence-v1",
+  "files": [
+    {
+      "path": "REVIEW.md",
+      "bytes": 2658,
+      "sha256": "fa2cc747e43e88e4d96321c4eb6b908f2fd63a4322799c965eb141a4da5186d8"
+    },
+    {
+      "path": "audit-02.log",
+      "bytes": 7010,
+      "sha256": "d1786d9ec5cbc4ddceca766715c431eb6bc77bd704cb613acb19ce6fbffd416c"
+    },
+    {
+      "path": "audit.log",
+      "bytes": 1032,
+      "sha256": "c4496f52f92621504d303cbf903e28b19f1c955e8431e88697b79e05ab738358"
+    },
+    {
+      "path": "audit.py",
+      "bytes": 5900,
+      "sha256": "ab86a6440a55020ec5c07b24321f60adafc3064ffd382344edabd8ef17035d19"
+    },
+    {
+      "path": "audit_source01.py",
+      "bytes": 5579,
+      "sha256": "34eb5b35d4f1a5caeb826573ad8971bd2ec9117c15810264368e28abed9b7a54"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 7010,
+      "sha256": "d1786d9ec5cbc4ddceca766715c431eb6bc77bd704cb613acb19ce6fbffd416c"
+    }
+  ],
+  "count": 6,
+  "total_bytes": 29189,
+  "summary_sha256": "d1786d9ec5cbc4ddceca766715c431eb6bc77bd704cb613acb19ce6fbffd416c",
+  "source_unchanged": true,
+  "native_or_compiler_actions": 0
+}

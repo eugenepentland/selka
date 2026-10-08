@@ -1,0 +1,31 @@
+$ flock /run/user/1000/mylang-s2-cpu10.lock scripts/build-slot.sh build -- python3 experiments/new-core-s2-20261005/wave-b/s2-t2/measure_number.py --build --bin /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-numbers/.mylang-cache/wave-b/s2-t2/rows --rounds 7 --cpu 10
+row_int_parse.my:36:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_int_parse.my:59:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+row_int_format.my:36:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def inputs(kind: str, size: int, seed: int) -> Inputs:
+             ^
+row_int_format.my:47:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+             ^
+
+### int_parse (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 46.038 | 41.441 | same |
+| new core release | 36.535 | 34.867 | same |
+| Rust | 21.946 | 19.207 | same |
+| Zig ReleaseSafe | 28.703 | 24.349 | same |
+
+### int_format (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 220.059 | 216.038 | same |
+| new core release | 68.750 | 63.172 | same |
+| Rust | 63.690 | 60.684 | same |
+| Zig ReleaseSafe | 214.471 | 197.441 | same |
+
+exit=0 wall_including_admission=26.49s

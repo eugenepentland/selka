@@ -1,0 +1,137 @@
+$ python3 -c 'from pathlib import Path; import json,subprocess,tempfile,hashlib; old=Path(".mylang-cache/s4-v/immutable-3c86c/mylang-core"); new=Path("zig-out/bin/mylang-core"); p=Path("experiments/new-core-s4-values-20261006/rebuild-binary-difference.json"); report={"old_sha256":hashlib.sha256(old.read_bytes()).hexdigest(),"new_sha256":hashlib.sha256(new.read_bytes()).hexdigest(),"sections":{}};
+with tempfile.TemporaryDirectory(dir=".mylang-cache/s4-v") as tmp:
+ for name in (".text",".rodata",".data",".data.rel.ro",".debug_info",".debug_line",".debug_abbrev",".debug_str"):
+  pair=[]
+  for i,exe in enumerate((old,new)):
+   out=Path(tmp)/(str(i)+name); cmd=["objcopy","--dump-section",name+"="+str(out),str(exe)]; done=subprocess.run(cmd,capture_output=True,text=True); pair.append({"status":done.returncode,"stderr":done.stderr,"size":out.stat().st_size if out.exists() else None,"sha256":hashlib.sha256(out.read_bytes()).hexdigest() if out.exists() else None})
+  report["sections"][name]={"old":pair[0],"new":pair[1],"equal":pair[0]["sha256"]==pair[1]["sha256"]}
+p.write_text(json.dumps(report,indent=2)+"\n"); print(json.dumps(report,indent=2))'
+{
+  "old_sha256": "db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1",
+  "new_sha256": "47948b7a3b1f0d59077edbb7f3a6a474e2887cfdf45b1fdbde05496ca8c8c30c",
+  "sections": {
+    ".text": {
+      "old": {
+        "status": 1,
+        "stderr": "objcopy: unable to copy file '.mylang-cache/s4-v/immutable-3c86c/mylang-core'; reason: Permission denied\n",
+        "size": 19015674,
+        "sha256": "98107cac4a0e878b458bda159e4cff508e1114f53b0d972c222abf3d614df2c6"
+      },
+      "new": {
+        "status": 0,
+        "stderr": "",
+        "size": 19015674,
+        "sha256": "c6ecbb023d17faf1844b1aca43a540f210b646a11a641a9b49f6d38a5c693b8f"
+      },
+      "equal": false
+    },
+    ".rodata": {
+      "old": {
+        "status": 1,
+        "stderr": "objcopy: unable to copy file '.mylang-cache/s4-v/immutable-3c86c/mylang-core'; reason: Permission denied\n",
+        "size": 47312,
+        "sha256": "4f2bdcc001031c52e0e596ad1c38514c7c3606ba71cd4792994cbc75ba4ef9dc"
+      },
+      "new": {
+        "status": 0,
+        "stderr": "",
+        "size": 47312,
+        "sha256": "a907a454272b889e069b145a6978dc628af010aae98d89b376bc760de225e141"
+      },
+      "equal": false
+    },
+    ".data": {
+      "old": {
+        "status": 1,
+        "stderr": "objcopy: unable to copy file '.mylang-cache/s4-v/immutable-3c86c/mylang-core'; reason: Permission denied\n",
+        "size": 53304,
+        "sha256": "75c6d21e9cde57b718ae586075bb0fb83b29c770d92e8a3041aef047dd2f3f04"
+      },
+      "new": {
+        "status": 0,
+        "stderr": "",
+        "size": 53304,
+        "sha256": "75c6d21e9cde57b718ae586075bb0fb83b29c770d92e8a3041aef047dd2f3f04"
+      },
+      "equal": true
+    },
+    ".data.rel.ro": {
+      "old": {
+        "status": 1,
+        "stderr": "objcopy: unable to copy file '.mylang-cache/s4-v/immutable-3c86c/mylang-core'; reason: Permission denied\n",
+        "size": 1210288,
+        "sha256": "2f2a29202bf0805f96a3850afb5a1d30207fb549b6dc01247a950c86176597ff"
+      },
+      "new": {
+        "status": 0,
+        "stderr": "",
+        "size": 1210288,
+        "sha256": "313fd2c91891a3391f0523e692dc5b71379f54713f2d2f5f9ae1bb6d7f57e2ab"
+      },
+      "equal": false
+    },
+    ".debug_info": {
+      "old": {
+        "status": 1,
+        "stderr": "objcopy: unable to copy file '.mylang-cache/s4-v/immutable-3c86c/mylang-core'; reason: Permission denied\n",
+        "size": 13317140,
+        "sha256": "e6ada18d8dea37af93f9a28ec1c49cb55f0a65be9162069a33a48bf1896237bf"
+      },
+      "new": {
+        "status": 0,
+        "stderr": "",
+        "size": 13307000,
+        "sha256": "55b8e398116ed14c3a140beb6644adaeb0cf7e334ee22142e096fd7d4a4fcc1e"
+      },
+      "equal": false
+    },
+    ".debug_line": {
+      "old": {
+        "status": 1,
+        "stderr": "objcopy: unable to copy file '.mylang-cache/s4-v/immutable-3c86c/mylang-core'; reason: Permission denied\n",
+        "size": 3432113,
+        "sha256": "d94f3721998aab63b47a7b73936642e1c241ee5ac61993bf0f99e3e1da382130"
+      },
+      "new": {
+        "status": 0,
+        "stderr": "",
+        "size": 3432113,
+        "sha256": "9519889d25c7ab9c5ef4f1d5e7b92fb654626d574f90857210c3d87030220e43"
+      },
+      "equal": false
+    },
+    ".debug_abbrev": {
+      "old": {
+        "status": 1,
+        "stderr": "objcopy: unable to copy file '.mylang-cache/s4-v/immutable-3c86c/mylang-core'; reason: Permission denied\n",
+        "size": 2595,
+        "sha256": "a671e3dcd0295b2e6073b18fd827fa366ac2f29b6131a001c0d622f6235088c3"
+      },
+      "new": {
+        "status": 0,
+        "stderr": "",
+        "size": 2595,
+        "sha256": "6baeabc9b84c2909617e798a68a5b3fc2dd5bb5a173ff0cb3bf2eed053617635"
+      },
+      "equal": false
+    },
+    ".debug_str": {
+      "old": {
+        "status": 1,
+        "stderr": "objcopy: unable to copy file '.mylang-cache/s4-v/immutable-3c86c/mylang-core'; reason: Permission denied\n",
+        "size": 1564339,
+        "sha256": "cca0c7f95d698de83d7e5d589deb163e5cdc56976f75b3c1a617633f681f602c"
+      },
+      "new": {
+        "status": 0,
+        "stderr": "",
+        "size": 1560114,
+        "sha256": "076b7e2139331d08a443a83c60984124dc68c623dfad97e0789cdc3708ab6433"
+      },
+      "equal": false
+    }
+  }
+}
+
+exit=0
+elapsed_seconds=4.607516

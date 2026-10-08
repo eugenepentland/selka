@@ -1,0 +1,122 @@
+{
+ "lox build cold": {
+  "old": 7.65688649402,
+  "runs": [
+   6.7975,
+   6.69,
+   6.7078
+  ],
+  "median": 6.7078,
+  "ratio": 0.876
+ },
+ "lox build unchanged": {
+  "old": 0.006813724059611559,
+  "runs": [
+   0.0019,
+   0.0019,
+   0.0019
+  ],
+  "median": 0.0019,
+  "ratio": 0.277
+ },
+ "lox build one-function-edit": {
+  "old": 0.19524815189652145,
+  "runs": [
+   0.141,
+   0.1381,
+   0.14
+  ],
+  "median": 0.14,
+  "ratio": 0.717
+ },
+ "lox tests cold": {
+  "old": 21.995987034169957,
+  "runs": [
+   4.4665,
+   4.4406,
+   4.4889
+  ],
+  "median": 4.4665,
+  "ratio": 0.203
+ },
+ "lox tests unchanged": {
+  "old": 0.1451174351386726,
+  "runs": [
+   0.0619,
+   0.0633,
+   0.0634
+  ],
+  "median": 0.0633,
+  "ratio": 0.436
+ },
+ "lox tests one-function-edit": {
+  "old": 0.6480660962406546,
+  "runs": [
+   0.6155,
+   0.6125,
+   0.62
+  ],
+  "median": 0.6155,
+  "ratio": 0.95
+ },
+ "eda build cold": {
+  "old": 81.1429,
+  "runs": [
+   6.7956,
+   6.7858,
+   6.8451
+  ],
+  "median": 6.7956,
+  "ratio": 0.084
+ },
+ "eda build unchanged": {
+  "old": 0.0165,
+  "runs": [
+   0.0029,
+   0.0028,
+   0.0029
+  ],
+  "median": 0.0029,
+  "ratio": 0.174
+ },
+ "eda build one-function-edit": {
+  "old": 1.1516,
+  "runs": [
+   0.6165,
+   0.6208,
+   0.6243
+  ],
+  "median": 0.6208,
+  "ratio": 0.539
+ },
+ "eda test cold": {
+  "old": 234.5436,
+  "runs": [
+   25.6182,
+   25.5299,
+   25.7078
+  ],
+  "median": 25.6182,
+  "ratio": 0.109
+ },
+ "eda test unchanged": {
+  "old": 1.6549,
+  "runs": [
+   0.3155,
+   0.3133,
+   0.3157
+  ],
+  "median": 0.3155,
+  "ratio": 0.191
+ },
+ "eda test one-function-edit": {
+  "old": 1.6658,
+  "runs": [
+   0.5207,
+   0.5255,
+   0.5263
+  ],
+  "median": 0.5255,
+  "ratio": 0.315
+ }
+}

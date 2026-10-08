@@ -1,0 +1,11 @@
+def main() -> int:
+    rows = [[1, 2]]
+    total = 0
+    for row in rows:
+        saved = row
+        for value in row:
+            total += value
+            row[1] = 9
+        assert saved == [1, 2]
+    assert rows == [[1, 2]]
+    return total

@@ -1,0 +1,4 @@
+module leaf
+public def origin(xs: mut list[int], x: int) -> int:
+    xs.append(2)
+    return xs[x]

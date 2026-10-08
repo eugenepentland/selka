@@ -1,0 +1,12 @@
+{
+  "command": [
+    "git",
+    "add",
+    "experiments/new-core-s4-values-20261006/provenance_integration_blocker.json",
+    "experiments/new-core-s4-values-20261006/provenance-reference-receipts"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3242919,
+  "status": 0,
+  "elapsed_seconds": 0.07881338708102703
+}

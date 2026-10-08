@@ -28,6 +28,7 @@ The diagnostics that carry a fix today:
 | Code | Edit |
 | --- | --- |
 | `E_MUTATION_MARKER` | insert `mut ` before an argument bound to a `mut` parameter; delete a `mut` the callee does not declare; insert `mut ` before the type of each parameter the body writes; delete a `mut` the body never writes or that marks a type with nothing to write |
+| `E_MUTATION_OVERLAP` | move a single unconditional mut call out of a simple receiver update into a fresh result local, then substitute that local |
 | `E_MODULE_NAME` | replace the declared module name with the one the file's path gives it |
 | `E_REMOVED_SPELLING` | rename `push`→`append`, `List`→`list`, `filesystem_cap` and the other `*_cap` names→their capability types, `f64_sqrt`/`floor`/`ceil`/`trunc`/`abs`→the float builtin; `&value` in an argument→`mut value`; a declaration's `mutates(a, b)` clause→`mut` on `a` and `b` |
 | `E_EXPLICIT_DISCARD_REQUIRED` | insert `_ = ` before a standalone value that is not a result |
@@ -35,7 +36,7 @@ The diagnostics that carry a fix today:
 | `W_UNUSED_IMPORT` | delete the import's line when it holds only that import |
 
 A repair that needs judgement carries no fix: discarding a `Result` would drop
-its error, an overlapping writable argument (`E_MUTATION_OVERLAP`) needs a
+its error, two overlapping writable arguments (`E_MUTATION_OVERLAP`) need a
 snapshot or a split call, and a `mut` on a literal needs a local first.
 
 A missing or superfluous call-site `mut` marker does not stop its function's
@@ -94,13 +95,14 @@ mylang fix app/main.my --diagnostics=json
 — a library module, a `*_test.my` file or any headerless file — is checked as a
 library (`CHECK-LIBRARY-2`), so its real diagnostics come back located in the
 file as written instead of one `E_MAIN`, and `mylang fix DIR` can check every
-file it visits. `mylang test --diagnostics=json` reports a test entry that does
-not compile the same way `check --diagnostics=json` does, `fix` fields included.
+file it visits. To get a test entry's diagnostics as `diagnostic-v1` JSON
+lines, `fix` fields included, run `mylang check --diagnostics=json` on it:
+`mylang test` prints a test entry that does not compile as text and exits 1,
+and its `--diagnostics` flag was dropped (S5-D6).
 
 ```bash
 mylang check parser.my          # a library module: its own diagnostics, no E_MAIN
 mylang check parser_test.my --diagnostics=json
-mylang test parser_test.my --diagnostics=json
 ```
 
 ## Migrating across a breaking change
@@ -116,3 +118,12 @@ written before the markers were required reads; the test copies them, runs
 `mylang fix` on the directory, and requires all 91 markers restored, every entry checking clean, and a second `mylang fix --check`
 finding nothing. The per-change scripts under `scripts/` (such as
 `migrate_mut_arguments.py`) are superseded by the fixes the compiler carries.
+
+A retired feature migrates the same way. `with arena():` blocks were retired in
+S5 and warn `W_ARENA_RETIRED`; the warning carries the edit that deletes the
+`with` line, dedents the block's body and rewrites `name.escape(value)` to
+`value`, so `mylang fix` turns pre-S5 arena code into a clean check
+(`NEW-CORE-S5-ARENA-3`, corpus `test/fixtures/fix-migration/arenas.my`). Where the
+edit is not certain (tab indentation, a triple-quoted string in the body, a
+header that shares its line with code) the warning carries no fix and the block
+is left for a hand edit.

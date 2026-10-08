@@ -1,0 +1,21 @@
+test-core
++- run test w
+guardian/test: 6 test(s) selected
+guardian/test: SLOW  5.31s  emit_units_test.test.S4 release loop imports include the bounded entry consumed closure and stable ripple
+guardian/test: test wall 16.86s; slowest over 50ms:
+guardian/test:   5.31s  emit_units_test.test.S4 release loop imports include the bounded entry consumed closure and stable ripple
+guardian/test:   3.52s  emit_units_test.test.S4 imported aggregate bodies close rendering dependencies and export excluded private callees
+guardian/test:   2.68s  emit_units_test.test.S4 entry imports refuse non-loop entries and over-budget loop dispatch
+guardian/test:   2.67s  emit_units_test.test.S4 private entry bodies keep addressed and recursive callees at their real symbols
+guardian/test:   2.65s  emit_units_test.test.S4 an imported Result origin retains its callee path and function inside a counted loop
+guardian/test: PASS — 6 passed
+guardian/test: RESULT {"passed":6,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/c1ec35c0b6a345f9b06cb6ac278fff1d/test --cache-dir=./.zig-cache --seed=0xf4388dff --listen=-
+
+Build Summary: 5/5 steps succeeded; 6/6 tests passed
+test-core success
++- run test 6 pass (6 total) 16s MaxRSS:252M
+   +- compile test debug native success 1s MaxRSS:347M
+      +- options success
+         +- compile exe mylang-core debug native success 1s MaxRSS:355M
+

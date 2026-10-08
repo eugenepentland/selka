@@ -1,0 +1,93 @@
+[
+  {
+    "file": "dependency-c-resume-combined-qualification.json",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-qualification.json",
+    "sha256": "4f287a3a1659eef43ed06bfc6a0cc0ae4e88c861df2ffb066e7ab72ce2fa55b3",
+    "source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+    "evidence_commit": "6bac5b165b1f526127c93dcc1dbd157b0ed6334d"
+  },
+  {
+    "file": "dependency-c-resume-combined-source-contract.json",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-source-contract.json",
+    "sha256": "5a6fde586cf5f3b84d8cc2f362e594efe3c92da2b99be7ae6ad8af96c072ac07",
+    "source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+    "evidence_commit": "6bac5b165b1f526127c93dcc1dbd157b0ed6334d"
+  },
+  {
+    "file": "dependency-c-resume-combined-core-exclusive-01.log",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-core-exclusive-01.log",
+    "sha256": "12aba98a3bb5bb5bf819d703073de4ab2b059def1eb60830fad14dd8d8aa29d1",
+    "source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+    "evidence_commit": "6bac5b165b1f526127c93dcc1dbd157b0ed6334d"
+  },
+  {
+    "file": "dependency-c-resume-combined-core-exclusive-01.time",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-core-exclusive-01.time",
+    "sha256": "9bf0758bf1e04852bde0c186b0dcca754fed09349e8d30fe5d9dd8da08eaf92a",
+    "source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+    "evidence_commit": "6bac5b165b1f526127c93dcc1dbd157b0ed6334d"
+  },
+  {
+    "file": "dependency-c-resume-combined-test-core32-01.log",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-test-core32-01.log",
+    "sha256": "f2a0b548dab6da65a299444ff26586fab55d18394b5feb734a2288e55cabf116",
+    "source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+    "evidence_commit": "6bac5b165b1f526127c93dcc1dbd157b0ed6334d"
+  },
+  {
+    "file": "dependency-c-resume-combined-test-core32-01.time",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-test-core32-01.time",
+    "sha256": "05b1681e54a38d01e29c9b38f090a35f81834194492883a7ccd8c1defc47a3c3",
+    "source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+    "evidence_commit": "6bac5b165b1f526127c93dcc1dbd157b0ed6334d"
+  },
+  {
+    "file": "dependency-c-resume-combined-conformance-01.log",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-conformance-01.log",
+    "sha256": "53d2fb905a19668464065b62ee3164d90a0259c251eacaf7c293cc4b31c2e17c",
+    "source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+    "evidence_commit": "6bac5b165b1f526127c93dcc1dbd157b0ed6334d"
+  },
+  {
+    "file": "dependency-c-resume-context-corrected-oracle.json",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/experiments/new-core-s3-20261006/wave-b/s3-c/resume-context-corrected-oracle.json",
+    "sha256": "c47616a8fa55b01c337ef9890cda337c06b4373f265315ccaf66d6a53a7802ce",
+    "source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+    "evidence_commit": "6bac5b165b1f526127c93dcc1dbd157b0ed6334d"
+  },
+  {
+    "file": "dependency-c-resume-combined-fixtures-01-summary.json",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-fixtures-01/summary.json",
+    "sha256": "55f65a4f69855af4ba567a70dbf096900e0a3679b05bed1ee2b4da4040845f04",
+    "source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+    "evidence_commit": "6bac5b165b1f526127c93dcc1dbd157b0ed6334d"
+  },
+  {
+    "file": "dependency-c-resume-combined-identity-audit-01-summary.json",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-identity-audit-01/summary.json",
+    "sha256": "d2fe4f52003cb075a3a61d1e6af4022111a6fa9028552872ba6b9224044c5d1d",
+    "source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+    "evidence_commit": "6bac5b165b1f526127c93dcc1dbd157b0ed6334d"
+  },
+  {
+    "file": "dependency-c-resume-combined-coverage-01-summary.json",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/experiments/new-core-s3-20261006/wave-b/s3-c/resume-combined-coverage-01/summary.json",
+    "sha256": "dfa64022b76ac9ef4f411697aa9f8de4837a36cd83664b4c7c81a15ed0cde20c",
+    "source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+    "evidence_commit": "6bac5b165b1f526127c93dcc1dbd157b0ed6334d"
+  },
+  {
+    "file": "dependency-runner-final-03-comparison.json",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/experiments/new-core-s3-20261006/wave-b/s3-runner/final-03-comparison.json",
+    "sha256": "dad6195e367ed5970f718439b08005b6e88da1855e6dddf87565412df25c5ded",
+    "source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+    "evidence_commit": "6bac5b165b1f526127c93dcc1dbd157b0ed6334d"
+  },
+  {
+    "file": "dependency-runner-final-03-commands.json",
+    "original_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/experiments/new-core-s3-20261006/wave-b/s3-runner/final-03-commands.json",
+    "sha256": "6f47c3db2dc95fed0c23f3b00bb2dd149e37ec520d767cc695b0a86b652d9b97",
+    "source_commit": "9637eb9a1aa4af8ee0ecd88838ceed09b228d812",
+    "evidence_commit": "6bac5b165b1f526127c93dcc1dbd157b0ed6334d"
+  }
+]

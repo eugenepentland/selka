@@ -1,0 +1,4 @@
+$ python3 -c 'from pathlib import Path; source=Path("experiments/new-core-s4-values-20261006/fill-boundary-repair/check.py"); target=Path("experiments/new-core-s4-values-20261006/snapshot-length-repair/check.py"); s=source.read_text().replace("counted fill\x27s post-loop append regression", "growing child snapshot length regression").replace("immutable-final-checker/mylang", "immutable-a2da/mylang").replace("fill-boundary-repair", "snapshot-length-repair"); target.write_text(s)'
+
+exit=0
+elapsed_seconds=0.021965

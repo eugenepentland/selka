@@ -3,29 +3,6 @@ const builtin = @import("builtin");
 const guardian = @import("guardian");
 /// The repository files each cached test step reads while it runs.
 const test_inputs = @import("build_test_inputs.zig");
-/// QBE release vendored under `vendor/qbe`; `.qbeversion` must agree with it.
-const vendored_qbe = "1.3";
-/// Translation units of the vendored QBE release, matching its own `Makefile`.
-const qbe_sources = [_][]const u8{
-    "main.c",       "util.c",       "parse.c",      "abi.c",          "cfg.c",
-    "mem.c",        "ssa.c",        "alias.c",      "load.c",         "copy.c",
-    "fold.c",       "gvn.c",        "gcm.c",        "simpl.c",        "ifopt.c",
-    "live.c",       "spill.c",      "rega.c",       "emit.c",         "amd64/targ.c",
-    "amd64/sysv.c", "amd64/isel.c", "amd64/emit.c", "amd64/winabi.c", "arm64/targ.c",
-    "arm64/abi.c",  "arm64/isel.c", "arm64/emit.c", "rv64/targ.c",    "rv64/abi.c",
-    "rv64/isel.c",  "rv64/emit.c",
-};
-/// Compile the vendored QBE release with the pinned Zig C compiler so a native
-/// build needs no separately installed assembler and no Python installer.
-fn vendoredQbe(b: *std.Build, target: std.Build.ResolvedTarget) *std.Build.Step.Compile {
-    if (!std.mem.eql(u8, std.mem.trim(u8, @embedFile(".qbeversion"), " \t\r\n"), vendored_qbe))
-        @panic("re-vendor vendor/qbe (see vendor/README.md) when changing .qbeversion");
-    const module = b.createModule(.{ .target = target, .optimize = .ReleaseFast, .link_libc = true });
-    module.addIncludePath(b.path("vendor/qbe"));
-    module.addCSourceFiles(.{ .root = b.path("vendor/qbe"), .files = &qbe_sources, .flags = &.{ "-std=c99", "-fno-sanitize=undefined" } });
-    return b.addExecutable(.{ .max_rss = rss.compile, .name = "qbe", .root_module = module });
-}
-
 /// One mebibyte, the unit the resident-memory ceilings below are written in.
 const mib: u64 = 1 << 20;
 /// Resident-memory ceilings declared on the steps this build runs. The build
@@ -36,12 +13,10 @@ const mib: u64 = 1 << 20;
 /// children one driver runs at once rather than the largest single process
 /// `/usr/bin/time -v` sees. Observed figures are recorded beside each ceiling.
 const rss = struct {
-    /// Zig test binaries, which also spawn the compiler. Observed: the schematic root 48M, the CLI root 31M, byte I/O 11M,
-    /// the focused native-test root 13M. The unit root additionally builds and
-    /// runs every guest program its suites execute. It links libc dynamically so
-    /// the invoke tests can `dlopen` a shared object built against it, which
-    /// costs real memory over the statically linked allocator: the whole root now
-    /// peaks near 2.2G where it used to peak near 1.1G.
+    /// Zig test binaries, which also spawn the compiler. Observed: the CLI root
+    /// 31M. The unit root additionally builds and runs every guest program its
+    /// suites execute; the whole root peaked near 2.2G while it still linked libc
+    /// for the retired `invoke` tests.
     const suite: u64 = 2560 * mib;
     /// One shard of the unit root. A shard builds and runs only its slice of
     /// the guest programs, so its peak sits well under the whole root's 2.2G.
@@ -52,25 +27,25 @@ const rss = struct {
     /// shard the declarations alone passed a 30G machine's budget, so the build
     /// runner held the last shards back for most of a minute. The module-era
     /// semantic-cache shard later passed 199 tests with a 1.31G process peak
-    /// (2026-09-30); 2G admits that observed work while keeping it bounded.
-    const shard_unit: u64 = 2048 * mib;
+    /// (2026-09-30); 2G admitted that work. After S2 Wave A's tests the
+    /// shard holding `semantic_cache_test` and the old back end's RC tests
+    /// peaked at 2.18G running alone (2,281,596 kB, 2026-10-05, 218 tests), so
+    /// 2.5G keeps a measured ceiling with headroom.
+    const shard_unit: u64 = 2560 * mib;
     /// One shard of the CLI root, which builds far fewer guests. Observed on a
     /// clean cache: 103M-141M for the test process, up to 1.22G for a moment
     /// across its tree; the ceiling is a concurrency budget.
     const shard_cli: u64 = 768 * mib;
-    /// The host applications' test roots (board, byte I/O, schematic) and the
-    /// directory run of `tests/guest`. Observed on a clean cache (2026-09-23):
-    /// the schematic root's process tree 1.24G, `tests/guest` 1.33G, the board
-    /// and byte I/O roots under 50M.
-    const host_suite: u64 = 1536 * mib;
+    /// The directory run of `tests/guest`. Observed on a clean cache
+    /// (2026-09-23): `tests/guest` 1.33G.
+    const guest_suite: u64 = 1536 * mib;
     /// Drivers that run the compiler a few programs at a time. Observed on a
-    /// clean cache: the idiom probes 0.69G, parser hints 0.47G, the C runtime
-    /// suites (every suite compiling at once) 0.55G.
+    /// clean cache: the idiom probes 0.69G, parser hints 0.47G.
     const driver: u64 = 1024 * mib;
-    /// Drivers that compile and link many native programs at once, the QBE
-    /// parity and boundary drivers. Observed: the boundary matrix 1.29G-1.45G.
+    /// Drivers that compile and link many native programs at once: the parity
+    /// benchmark. Observed (the retired boundary matrix): 1.29G-1.45G.
     const parity: u64 = 2048 * mib;
-    /// Checks that run Python or a small C harness but no compiler: the
+    /// Checks that run Python but no compiler: the
     /// self-tests, the friction harvest, the SPEC merge driver, the inner-loop
     /// checks. Observed: under 60M each. Declaring a driver's 1G for each of
     /// them only kept the build runner from starting test shards it had room for.
@@ -97,27 +72,16 @@ const rss = struct {
     /// Matches the 4 GiB ceiling `mylang run` gives a guest.
     const guest: u64 = 4096 * mib;
 };
-/// The native tools every guest-running driver needs, and the install step that
-/// produces them, filled in once at the top of `build`. A driver invokes an
-/// uninstalled compiler whose directory holds no tools, so it names them through
-/// the environment the compiler reads.
-var tool_qbe: []const u8 = "";
+/// The pinned Zig a guest build drives (`zig cc`), and the install step every
+/// bounded driver waits on, filled in once at the top of `build`. A driver
+/// invokes an uninstalled compiler, so it names the toolchain through
+/// `MYLANG_ZIG`, which the compiler reads when neither `--zig` nor `ZIG` names one.
 var tool_zig: []const u8 = "";
 var install_all: ?*std.Build.Step = null;
-/// The tools a focused test needs on disk (`MYLANG_QBE`, and the compiler the
-/// unit root resolves beside it), installed to a private prefix. These installs
-/// are deliberately not attached to the default install step: Guardian reorders
-/// every artifact install attached there to run after its gate, which would drag
-/// Guardian back into the focused graph.
-var tool_qbe_focus: []const u8 = "";
-var install_qbe_focus: ?*std.Build.Step = null;
-/// The focused prefix pairs the compiler with `qbe`, because tests in the unit
-/// root resolve `mylang` from the directory `MYLANG_QBE` names.
-var install_exe_focus: ?*std.Build.Step = null;
-/// The emitted `qbe` and compiler binaries. The environment names the tools by
-/// an installed path whose bytes the cache key cannot see, so every cached
-/// step that runs them declares their contents as inputs.
-var tool_inputs: [2]?std.Build.LazyPath = .{ null, null };
+/// The emitted compiler binary. The cached steps that run it name it through an
+/// installed path whose bytes the cache key cannot see, so each declares its
+/// contents as an input.
+var tool_inputs: [1]?std.Build.LazyPath = .{null};
 /// `-Dtest-rerun`: run every cached test step even when none of its inputs
 /// changed, to see full selected-test counts or to rule out a stale verdict.
 var test_rerun = false;
@@ -184,20 +148,23 @@ fn cached(run: *std.Build.Step.Run, list: []const u8) void {
 /// it explicitly: a test that redirects `HOME` for a child compiler would
 /// otherwise send its `zig cc` invocations to an empty cache. The command also
 /// gets a Zig local cache of its own for as long as it runs (see
-/// `tools_script`). `env` then adds the tool paths, which depend only on this
+/// `tools_script`). `env` then adds `MYLANG_ZIG`, which depends only on this
 /// build's configuration.
-fn withTools(step: *std.Build.Step.Run, qbe: []const u8) void {
+fn withTools(step: *std.Build.Step.Run) void {
     const b = step.step.owner;
     var prefix: std.ArrayList([]const u8) = .empty;
     prefix.appendSlice(b.allocator, &.{ "sh", "-c", tools_script, "with-tools" }) catch @panic("out of memory");
-    if (qbe.len != 0) {
-        prefix.append(b.allocator, b.fmt("MYLANG_QBE={s}", .{qbe})) catch @panic("out of memory");
-        prefix.append(b.allocator, b.fmt("MYLANG_ZIG={s}", .{tool_zig})) catch @panic("out of memory");
-    }
+    prefix.append(b.allocator, b.fmt("MYLANG_ZIG={s}", .{tool_zig})) catch @panic("out of memory");
     const arena = b.graph.arena;
     const args = arena.alloc(std.Build.Step.Run.Arg, prefix.items.len) catch @panic("out of memory");
     for (args, prefix.items) |*arg, word| arg.* = .{ .bytes = b.graph.dupeString(word) };
     step.argv.insertSlice(arena, 0, args) catch @panic("out of memory");
+}
+/// Give the command `withTools` wraps the variable `assignment` (`NAME=VALUE`): it
+/// goes after `sh -c SCRIPT with-tools MYLANG_ZIG=PATH`, before the command itself.
+fn withVariable(step: *std.Build.Step.Run, assignment: []const u8) void {
+    const b = step.step.owner;
+    step.argv.insert(b.graph.arena, 5, .{ .bytes = b.graph.dupeString(assignment) }) catch @panic("out of memory");
 }
 /// The shell half of `withTools`: export Zig's global cache directory as the
 /// Zig toolchain would resolve it here and now, point `ZIG_LOCAL_CACHE_DIR` at
@@ -253,31 +220,23 @@ fn driver(b: *std.Build, name: []const u8, bytes: u64, list: []const u8) *std.Bu
     cached(run, list);
     return run;
 }
-/// Declare a step's resident-memory ceiling, and give it the native tools a guest
-/// build needs; harmless on steps that build no guest.
+/// Declare a step's resident-memory ceiling, give it the toolchain a guest build
+/// needs (harmless on steps that build no guest), and run it after the install.
 fn bounded(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
     step.step.max_rss = bytes;
-    withTools(step, tool_qbe);
-    if (tool_qbe.len != 0) {
-        if (install_all) |install| step.step.dependOn(install);
-    }
+    withTools(step);
+    if (install_all) |install| step.step.dependOn(install);
     return step;
 }
-/// A focused test step: bound it, name the native tools, and depend only on the
-/// unattached `qbe` and compiler copies, not on the whole installation. The
-/// compiler under test builds guests from its embedded runtime assets, so a
-/// focused test needs neither the runtime archive, the host applications nor
-/// Guardian.
+/// A focused test step: bound it and name the toolchain, without the install
+/// graph. The test binary names the compiler it runs through a build option, so
+/// a focused test waits only on that compile, never on Guardian.
 fn focused(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
     step.step.max_rss = bytes;
-    withTools(step, tool_qbe_focus);
+    withTools(step);
     // A test command must execute and report its selection; otherwise a warm
     // cache reuses the previous verdict and hides the selected-test count.
     step.has_side_effects = true;
-    if (tool_qbe_focus.len != 0) {
-        if (install_qbe_focus) |qbe| step.step.dependOn(qbe);
-        if (install_exe_focus) |compiler| step.step.dependOn(compiler);
-    }
     return step;
 }
 /// Forward the compiler-applied `-Dtest-filter` values to the Guardian runner.
@@ -316,6 +275,9 @@ fn shardRuns(b: *std.Build, compile: *std.Build.Step.Compile, shards: Shards) []
     for (steps, 0..) |*step, index| {
         const run = focused(b.addRunArtifact(compile), shards.bytes);
         guardian.announceShard(run, index, shards.count);
+        // The shards run at once, so each runs a test's batch of guest programs on
+        // its share of the CPUs (`src/wiring/core_runner.zig`).
+        withVariable(run, b.fmt("MYLANG_UNIT_SHARDS={d}", .{shards.count}));
         forwardFilters(b, run, shards.filters);
         if (shards.cache) cached(run, shards.inputs);
         step.* = &run.step;
@@ -381,26 +343,89 @@ fn addParityBench(b: *std.Build) void {
     b.step("bench-parity", "Time mylang against Zig and Rust on the parity suite and check ratio thresholds (opt-in)").dependOn(&bench.step);
 }
 
-/// `zig build test-rc-fuzz [-Dfuzz-seeds=N] [-Dfuzz-start=N]` runs the
-/// differential fuzzer in `experiments/rc-fuzz` with the installed compiler: one
-/// generated program per seed, under the default reference-counting runtime and
-/// its counted and `--release` modes against `--gc-runtime`, failing on any RC
-/// divergence (`--gc-stress` findings are reported only). Opt-in like
-/// `bench-parity`: `zig build test` never runs it (RC-DEFAULT-1). Arguments after
-/// `--` reach the harness (`--jobs N`, `--gen gen2.py`, `--no-stress`).
-fn addRcFuzz(b: *std.Build) void {
-    const seeds = b.option(u32, "fuzz-seeds", "test-rc-fuzz: how many seeds to generate and compare (default 200)") orelse 200;
-    const start = b.option(u32, "fuzz-start", "test-rc-fuzz: the first seed (default 1)") orelse 1;
-    const fuzz = b.addSystemCommand(&.{ "python3", "experiments/rc-fuzz/run.py", "--compiler" });
-    fuzz.setCwd(b.path("."));
-    fuzz.addFileArg(.{ .relative = .{ .base = .install_bin, .sub_path = "mylang" } });
-    fuzz.addArgs(&.{ "--start", b.fmt("{d}", .{start}), "--count", b.fmt("{d}", .{seeds}) });
-    fuzz.addPassthruArgs();
-    fuzz.has_side_effects = true;
-    fuzz.step.max_rss = rss.suite;
-    fuzz.step.dependOn(b.getInstallStep());
-    withTools(fuzz, tool_qbe);
-    b.step("test-rc-fuzz", "Differential-fuzz the default RC runtime against --gc-runtime (opt-in, not part of test)").dependOn(&fuzz.step);
+/// What the new core's steps build on: the shared front end module and the
+/// `mylang` executable whose commands the core provides.
+const CoreInputs = struct {
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+    front_end: *std.Build.Module,
+    compiler: *std.Build.Step.Compile,
+    filters: []const []const u8,
+    /// Guardian's test runner, which can run one shard of the root (`--guardian-shard`).
+    test_runner: std.Build.Step.Compile.TestRunner,
+    /// Generated identity over every production compiler and runtime source.
+    identity: *std.Build.Module,
+};
+
+/// The new compiler core (docs/design/new-core-ir.md), which `mylang` runs for
+/// every command that builds, runs or tests code (S5-D8: one binary):
+/// - `src/core/cli.zig` becomes the `mylang_core` module of the `mylang`
+///   executable;
+/// - `zig build test-core` runs the core's unit tests and its end-to-end slice,
+///   which drive that `mylang`, split into `-Dcore-shards=N` concurrent shards of
+///   one test binary (default 8; a `-Dtest-filter` run is one process); it returns
+///   that step, which `zig build test` depends on.
+fn addCore(b: *std.Build, inputs: CoreInputs) *std.Build.Step {
+    const platform = b.createModule(.{ .root_source_file = b.path("src/config_core_tool_platform.zig") });
+    // The test runner's frame and byte ceilings share the run budget rules.
+    const budget = b.modules.get("memory_budget") orelse @panic("memory_budget module");
+    const options = b.addOptions();
+    options.addOptionPath("core_path", inputs.compiler.getEmittedBin());
+    // The differential mode compared the slice with the retired old back end.
+    options.addOption(bool, "differential", false);
+    options.addOption([]const u8, "old_path", "");
+    options.addOptionPath("clock_path", b.path("benchmarks/runtime/ports/native_clock.c"));
+    const root = std.Io.Dir.cwd().realPathFileAlloc(b.graph.io, ".", b.allocator) catch @panic("build root");
+    options.addOption([]const u8, "fixtures", b.pathJoin(&.{ root, "test", "core" }));
+    options.addOption([]const u8, "lang_tests", b.pathJoin(&.{ root, "tests", "lang" }));
+    const unit = b.addTest(.{ .max_rss = rss.compile, .filters = inputs.filters, .test_runner = inputs.test_runner, .root_module = b.createModule(.{
+        .root_source_file = b.path("src/core/root_test.zig"),
+        .target = inputs.target,
+        .optimize = inputs.optimize,
+        .imports = &.{.{ .name = "mylang", .module = inputs.front_end }},
+    }) });
+    unit.root_module.addImport("core_tool_platform", platform);
+    unit.root_module.addImport("build_identity", inputs.identity);
+    unit.root_module.addImport("memory_budget", budget);
+    unit.root_module.addOptions("core_test_options", options);
+    // The number-text helper's target and CPU are fixed (`-mcpu baseline`), so it is
+    // compiled once here and embedded, rather than by `zig build-obj` on a guest
+    // machine's first build that prints a number (NEW-CORE-S3-NUMBER-1).
+    const number_text = b.addObject(.{ .name = "core_number_text", .max_rss = rss.compile, .root_module = b.createModule(.{
+        .root_source_file = b.path("src/core/runtime/core_number_text.zig"),
+        .target = b.resolveTargetQuery(std.Target.Query.parse(.{ .arch_os_abi = "x86_64-linux-gnu.2.31", .cpu_features = "baseline" }) catch @panic("number-text target")),
+        .optimize = .ReleaseFast,
+        .pic = true,
+        .stack_check = false,
+        .stack_protector = false,
+        .link_libc = true,
+    }) });
+    // `mylang` runs the new core for every command that builds, runs or tests
+    // code. Its commands live in `src/core/cli.zig`, a module of its own; the core
+    // reaches the front end only as `mylang`.
+    const cli = b.createModule(.{
+        .root_source_file = b.path("src/core/cli.zig"),
+        .target = inputs.target,
+        .optimize = inputs.optimize,
+        .imports = &.{ .{ .name = "mylang", .module = inputs.front_end }, .{ .name = "core_tool_platform", .module = platform }, .{ .name = "build_identity", .module = inputs.identity }, .{ .name = "memory_budget", .module = budget } },
+    });
+    inputs.compiler.root_module.addImport("mylang_core", cli);
+    for ([_]*std.Build.Module{ unit.root_module, cli }) |module| {
+        module.addAnonymousImport("core_number_text_object", .{ .root_source_file = number_text.getEmittedBin() });
+    }
+    const step = b.step("test-core", "Run the new core's unit tests and its end-to-end slice");
+    // Most of the root's time is end-to-end builds of guest programs, so shards
+    // of the one binary run concurrently; each test uses its own temporary tree.
+    const requested = b.option(usize, "core-shards", "test-core: concurrent shards of the core test root (default 8)") orelse 8;
+    const shards = if (inputs.filters.len == 0) @max(1, requested) else 1;
+    for (0..shards) |index| {
+        const run = b.addRunArtifact(unit);
+        run.step.max_rss = rss.driver;
+        run.has_side_effects = true;
+        if (shards > 1) guardian.announceShard(run, index, shards);
+        step.dependOn(&run.step);
+    }
+    return step;
 }
 
 pub fn build(b: *std.Build) void {
@@ -442,16 +467,10 @@ pub fn build(b: *std.Build) void {
     // half the shards; a wider fan-out oversubscribes the core budget and made
     // the whole gate slower even though it shortened the slowest CLI shard.
     const cli_shards = if (test_filters.len == 0) @max(1, requested_shards / 2) else 1;
-    // The guest-running hosts live under src/<host>/, so they cannot reach
-    // src/memory_budget.zig by path; they import it as a module instead. The
-    // compiler itself reaches the same file directly from its own root module.
+    // The compiler and the new core's test runner import the byte ceilings as a
+    // module, so the file has one owner and its own test root.
     const budget = b.addModule("memory_budget", .{
         .root_source_file = b.path("src/memory_budget.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-    const runtime_contract = b.addModule("runtime_contract", .{
-        .root_source_file = b.path("src/runtime_contract.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -460,7 +479,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    core.addImport("runtime_contract", runtime_contract);
+    core.addImport("memory_budget", budget);
     const exe = b.addExecutable(.{
         .max_rss = if (optimize == .fast) rss.compiler_fast else rss.compile,
         .name = "mylang",
@@ -471,85 +490,29 @@ pub fn build(b: *std.Build) void {
             .imports = &.{ .{ .name = "mylang", .module = core }, .{ .name = "memory_budget", .module = budget } },
         }),
     });
-    // Snapshot identity needs the actual application/test root rather than the
-    // generated Zig or Guardian test-runner root exposed by `@import("root")`.
-    exe.root_module.addImport("runtime_contract", runtime_contract);
-    exe.root_module.addImport("native_test_root", exe.root_module);
+    // A command file that the unit root also compiles reaches the front end
+    // through its root's `compiler_language`, never by a second module path.
+    exe.root_module.addImport("compiler_root", exe.root_module);
     addUserDocs(b, exe.root_module);
-    const build_assets = @import("build_qbe_assets.zig").module(b, target, optimize, .{ .compile = rss.compile, .run = rss.driver });
-    exe.root_module.addImport("qbe_build_assets", build_assets);
+    const identity = @import("build_identity.zig").module(b, target, optimize, .{ .compile = rss.compile, .run = rss.driver });
+    exe.root_module.addImport("build_identity", identity);
     const install_exe = b.addInstallArtifact(exe, .{});
     b.getInstallStep().dependOn(&install_exe.step);
-    // Installed beside `mylang`, where the native build driver looks for it before `PATH`.
-    const qbe_exe = vendoredQbe(b, target);
-    tool_inputs = .{ qbe_exe.getEmittedBin(), exe.getEmittedBin() };
+    tool_inputs = .{exe.getEmittedBin()};
     addInputManifests(b);
     addEnvironmentManifest(b);
-    const install_qbe_step = b.addInstallArtifact(qbe_exe, .{});
-    b.getInstallStep().dependOn(&install_qbe_step.step);
-    // Guest-running drivers invoke an uninstalled compiler with no tools beside it
-    // and none on `PATH`; name the vendored tools for them through the environment.
-    // The build runs with the project root as its working directory, and the
-    // install step (an added dependency) puts `qbe` at this path before any driver.
-    const root = std.Io.Dir.cwd().realPathFileAlloc(b.graph.io, ".", b.allocator) catch @panic("build root");
-    tool_qbe = b.pathJoin(&.{ root, "zig-out", "bin", "qbe" });
+    // Guest-running drivers invoke an uninstalled compiler with no toolchain
+    // beside it; name this build's Zig for them through the environment.
     tool_zig = b.graph.zig_exe;
-    // Focused tests need `qbe` on disk but must stay off the gated install graph.
-    // A separate, unattached copy of the same binaries gives them a stable path
-    // without pulling in Guardian or the other installed artifacts. It is a file
+    // The compiler `scripts/affected_tests.py` runs guest tests and doctests with:
+    // an unattached copy, so the inner loop never waits on Guardian. It is a file
     // copy, not a second artifact install: a run step names an artifact by the
     // path its install left, so two installs of one artifact would make that
     // path (and every cache key holding it) depend on which install ran last.
-    const focus_qbe_step = b.addInstallFileWithDir(qbe_exe.getEmittedBin(), .{ .custom = "focus" }, "qbe");
     const focus_exe_step = b.addInstallFileWithDir(exe.getEmittedBin(), .{ .custom = "focus" }, "mylang");
-    tool_qbe_focus = b.pathJoin(&.{ root, "zig-out", "focus", "qbe" });
-    install_qbe_focus = &focus_qbe_step.step;
-    install_exe_focus = &focus_exe_step.step;
-    // The compiler `scripts/affected_tests.py` runs guest tests and doctests with:
-    // the same unattached copies, so the inner loop never waits on Guardian or
-    // on the host applications `zig build` installs.
-    const affected_compiler = b.step("affected-compiler", "Install only mylang and qbe to zig-out/focus, for scripts/affected_tests.py");
+    const affected_compiler = b.step("affected-compiler", "Install only mylang to zig-out/focus, for scripts/affected_tests.py");
     affected_compiler.dependOn(&focus_exe_step.step);
-    affected_compiler.dependOn(&focus_qbe_step.step);
-    // Prebuild the runtime archive (and text-formatter object) for each optimize
-    // mode with the freshly built compiler and install them beside it under
-    // `lib/mylang-runtime`, so a cold `mylang build` links a matching prebuilt
-    // archive instead of compiling the runtime from source on its first run.
-    const prebuild = b.addRunArtifact(exe);
-    // Name the compiler by its installed path every time, rather than by
-    // whichever path exists when this step happens to start, so an unchanged
-    // rerun reuses the prebuilt runtime instead of re-emitting it.
-    prebuild.step.dependOn(&install_exe.step);
-    prebuild.step.max_rss = rss.parity;
-    prebuild.addArgs(&.{ "emit-runtime", "--zig", b.graph.zig_exe, "--qbe" });
-    prebuild.addFileArg(qbe_exe.getEmittedBin());
-    prebuild.addArg("--out");
-    const runtime_out = prebuild.addOutputDirectoryArg("mylang-runtime");
-    prebuild.addArg("--work");
-    _ = prebuild.addOutputDirectoryArg("work");
-    const install_runtime = b.addInstallDirectory(.{ .source_dir = runtime_out, .install_dir = .lib, .install_subdir = "mylang-runtime" });
-    b.getInstallStep().dependOn(&install_runtime.step);
     install_all = b.getInstallStep();
-    // Host applications build their own guests natively, so they carry the same
-    // native build driver the compiler does rather than shelling out to it.
-    const native_build = b.createModule(.{ .root_source_file = b.path("src/qbe_build.zig"), .target = target, .optimize = optimize });
-    native_build.addImport("runtime_contract", runtime_contract);
-    native_build.addImport("qbe_build_assets", build_assets);
-    native_build.addImport("memory_budget", budget);
-    // A host application links guest executables, so it falls back to the tools
-    // this build produced when neither a flag, the environment, nor `PATH` names one.
-    const host_tools = b.addOptions();
-    host_tools.addOptionPath("qbe", qbe_exe.getEmittedBin());
-    host_tools.addOption([]const u8, "zig", b.graph.zig_exe);
-    const host_native = b.createModule(.{ .root_source_file = b.path("src/host_native.zig"), .target = target, .optimize = optimize });
-    host_native.addImport("qbe_build", native_build);
-    host_native.addImport("memory_budget", budget);
-    host_native.addImport("host_tools", host_tools.createModule());
-    const host_imports: []const std.Build.Module.Import = &.{
-        .{ .name = "mylang", .module = core },
-        .{ .name = "host_native", .module = host_native },
-        .{ .name = "memory_budget", .module = budget },
-    };
     const guardian_dep = b.dependency("guardian", .{ .target = target, .optimize = optimize });
     const guardian_exe = guardian_dep.artifact("guardian-check");
     const run = bounded(b.addRunArtifact(exe), rss.guest);
@@ -565,110 +528,25 @@ pub fn build(b: *std.Build) void {
             .root_source_file = b.path("src/root_test.zig"),
             .target = target,
             .optimize = optimize,
-            // The invoke tests `dlopen` a shared object that `mylang build --library`
-            // linked against the system libc. Without this the test binary is
-            // statically linked and carries no libc of its own, so the loaded object
-            // brings up a second, independent glibc whose global state disagrees with
-            // the process it was loaded into: the first call through the loaded codec
-            // entry then faults inside glibc at a varying address. Linking the tests
-            // the way the loaded object expects turns that boundary into an ordinary
-            // dynamic call.
-            .link_libc = true,
         }),
     });
-    unit.link_gc_sections = true;
-    unit.root_module.addIncludePath(b.path("src"));
-    unit.root_module.addCSourceFiles(.{
-        .root = b.path("."),
-        .files = &.{ "src/native_regions.c", "tests/native_rc_arena_test.c", "tests/native_rc_hold_test.c", "tests/native_rc_fast_test.c", "tests/native_rc_image_test.c", "tests/native_rc_loan_test.c", "tests/native_rc_history_test.c", "tests/native_rc_stats_test.c", "tests/native_rc_contract_test.c", "tests/native_rc_collections_test.c", "tests/native_rc_registered_release_test.c", "tests/native_rc_codecs_test.c", "tests/native_rc_host_test.c", "src/native_print.c", "src/qbe_runtime.c", "src/native_cow.c", "src/native_rc.c", "src/native_rc_stats.c", "src/native_rc_shapes.c", "src/native_rc_walk.c", "src/native_rc_scope.c", "src/native_rc_transfer.c", "src/native_rc_alloc.c", "src/native_rc_values.c", "src/native_heap.c", "src/native_arena.c", "src/native_collections.c", "src/native_text.c", "src/native_search.c", "src/native_trim.c", "src/native_repr.c", "src/native_text_methods.c", "src/native_dictionary.c", "src/native_equal.c", "src/native_bytes.c" },
-        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG", "-DMYL_RC_CONTRACT_LIBRARY", "-DMYL_NATIVE_RC_COUNTING=1", "-DMYL_RC_STATS_LIBRARY", "-DMYL_RC_COLLECTIONS_LIBRARY", "-DMYL_RC_CODECS_LIBRARY", "-DMYL_RC_HOST_LIBRARY", "-ffunction-sections", "-fdata-sections" },
-    });
-    unit.root_module.addCSourceFiles(.{
-        .root = b.path("."),
-        .files = &.{ "tests/native_file_cleanup_test.c", "src/qbe_files.c", "src/qbe_resources.c", "src/qbe_stand_ins.c" },
-        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG", "-DMYL_FILE_CLEANUP_LIBRARY", "-ffunction-sections", "-fdata-sections" },
-    });
-    unit.root_module.addCSourceFiles(.{
-        .root = b.path("."),
-        .files = &.{ "tests/qbe_runtime_rc_test.c", "tests/native_argv_test.c", "src/qbe_runtime_rc.c" },
-        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG", "-DMYL_NATIVE_RC=1", "-DMYL_NATIVE_ARGV_LIBRARY", "-DMYL_RC_CONTRACT_LIBRARY", "-DMYL_NATIVE_RC_COUNTING=1", "-DMYL_RC_STATS_LIBRARY", "-ffunction-sections", "-fdata-sections" },
-    });
-    unit.root_module.addImport("runtime_contract", runtime_contract);
-    unit.root_module.addImport("native_test_root", unit.root_module);
-    unit.root_module.addImport("qbe_build_assets", build_assets);
+    unit.root_module.addImport("build_identity", identity);
     unit.root_module.addImport("memory_budget", budget);
+    unit.root_module.addImport("compiler_root", unit.root_module);
     addUserDocs(b, unit.root_module);
-    // Unit tests execute guest programs natively, so they need the same tools and
-    // one shared object cache that `mylang build` uses.
+    // Unit tests build and run guest programs with `mylang`, which the root cannot
+    // import (NEW-CORE-S5-UNITS-1), through one shared cache.
     const native_test_options = b.addOptions();
-    native_test_options.addOptionPath("qbe_path", qbe_exe.getEmittedBin());
     native_test_options.addOption([]const u8, "zig_path", b.graph.zig_exe);
     native_test_options.addOption([]const u8, "cache_directory", ".mylang-cache/unit-tests");
+    native_test_options.addOptionPath("compiler_path", exe.getEmittedBin());
     unit.root_module.addOptions("native_test_options", native_test_options);
-    const board_module = b.createModule(.{
-        .root_source_file = b.path("src/board_trial/runner.zig"),
-        .target = target,
-        .optimize = optimize,
-        .imports = host_imports,
-    });
-    // `-Dcompiler-only` installs the compiler, QBE and the prebuilt runtime but
-    // not the three application runners. Each runner links its own copy of the
-    // whole compiler, so a ReleaseFast install otherwise optimizes that code four
-    // times; a compiler built only to measure guest programs needs none of them.
-    // The application tests under `tests/application_comparison` and
-    // `tests/development_velocity` read the runners from `zig-out/bin`, so they
-    // need the default install.
-    const compiler_only = b.option(bool, "compiler-only", "Install only mylang, qbe and the runtime, not board-trial, schematic-svg or mylang-io (for measurement installs)") orelse false;
-    const board_runner = b.addExecutable(.{ .max_rss = rss.compile, .name = "board-trial", .root_module = board_module });
-    if (!compiler_only) b.installArtifact(board_runner);
-    const schematic_runner = b.addExecutable(.{ .max_rss = rss.compile, .name = "schematic-svg", .root_module = b.createModule(.{
-        .root_source_file = b.path("src/schematic/runner.zig"),
-        .target = target,
-        .optimize = optimize,
-        .imports = host_imports,
-    }) });
-    if (!compiler_only) b.installArtifact(schematic_runner);
-    const byte_io_runner = b.addExecutable(.{ .max_rss = rss.compile, .name = "mylang-io", .root_module = b.createModule(.{
-        .root_source_file = b.path("src/byte_io/runner.zig"),
-        .target = target,
-        .optimize = optimize,
-        .imports = host_imports,
-    }) });
-    if (!compiler_only) b.installArtifact(byte_io_runner);
-    const byte_io_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
-        .root_source_file = b.path("src/byte_io/tests.zig"),
-        .target = target,
-        .optimize = optimize,
-        .imports = host_imports,
-    }) });
-    guardian.enableTestDiagnostics(byte_io_unit.root_module);
+    const core_tests = addCore(b, .{ .target = target, .optimize = optimize, .front_end = core, .compiler = exe, .filters = test_filters, .test_runner = guardian.testRunner(guardian_dep), .identity = identity });
+    _ = b.option(bool, "compiler-only", "Accepted for older scripts: the default install is already only mylang");
     guardian.addAllChecks(b, guardian_exe, b.getInstallStep(), .{});
     boundedChecks(b.getInstallStep());
-    const board_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
-        .root_source_file = b.path("src/board_trial/tests.zig"),
-        .target = target,
-        .optimize = optimize,
-        .imports = host_imports,
-    }) });
-    guardian.enableTestDiagnostics(board_unit.root_module);
-    const schematic_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
-        .root_source_file = b.path("src/schematic/tests.zig"),
-        .target = target,
-        .optimize = optimize,
-        .imports = host_imports,
-    }) });
-    // The schematic tests drive the host application, which builds its guest with
-    // a real frontend; a Zig test binary is not one, so it names the installed
-    // compiler explicitly rather than recursing into itself.
-    const schematic_options = b.addOptions();
-    schematic_options.addOptionPath("compiler_path", exe.getEmittedBin());
-    schematic_unit.root_module.addOptions("schematic_test_options", schematic_options);
-    guardian.enableTestDiagnostics(schematic_unit.root_module);
     const options = b.addOptions();
     options.addOptionPath("compiler_path", exe.getEmittedBin());
-    options.addOptionPath("arena_example_path", b.path("examples/arena-managed/main.my"));
-    // `run` builds natively, so the CLI fixtures name the tools this build made.
-    options.addOptionPath("qbe_path", qbe_exe.getEmittedBin());
     options.addOption([]const u8, "zig_path", b.graph.zig_exe);
     const integration = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .filters = test_filters, .root_module = b.createModule(.{
         .root_source_file = b.path("test/integration.zig"),
@@ -676,19 +554,15 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     }) });
     integration.root_module.addOptions("test_options", options);
-    integration.root_module.addImport("runtime_contract", runtime_contract);
     guardian.enableTestDiagnostics(unit.root_module);
     guardian.enableTestDiagnostics(integration.root_module);
     const compile_tests = b.step("test-compile", "Compile every Zig test without running the suite");
     compile_tests.dependOn(&unit.step);
-    compile_tests.dependOn(&board_unit.step);
-    compile_tests.dependOn(&schematic_unit.step);
-    compile_tests.dependOn(&byte_io_unit.step);
     compile_tests.dependOn(&integration.step);
     const run_integration = focused(b.addRunArtifact(integration), rss.suite);
     forwardFilters(b, run_integration, test_filters);
-    const test_step = b.step("test", "Run interpreter, checker, CLI, and tooling regression tests");
-    b.step("test-interpreter", "Run the default interpreter acceptance suite").dependOn(test_step);
+    const test_step = b.step("test", "Run the compiler, new-core, CLI, guest-language and tooling regression tests");
+    b.step("test-interpreter", "Alias of test, kept for older scripts").dependOn(test_step);
     guardian.addAllChecks(b, guardian_exe, test_step, .{});
     boundedChecks(test_step);
     // Named modules' inline tests are excluded from importing roots by Zig.
@@ -725,43 +599,12 @@ pub fn build(b: *std.Build) void {
     const cli_sharded = b.step("test-cli-sharded", "Run test/integration.zig split into -Dtest-shards/2 processes, honouring -Dtest-filter");
     dependOnAll(units_sharded, shardRuns(b, unit, .{ .count = requested_shards, .bytes = rss.shard_unit, .inputs = "", .whole = run_unit, .filters = test_filters, .cache = false }));
     dependOnAll(cli_sharded, shardRuns(b, integration, .{ .count = @max(1, requested_shards / 2), .bytes = rss.shard_cli, .inputs = "", .whole = run_integration, .filters = test_filters, .cache = false }));
-    const byte_io_step = b.step("test-byte-io", "Verify raw guest stdin/stdout and host bounds");
-    const run_byte_io_unit = bounded(b.addRunArtifact(byte_io_unit), rss.host_suite);
-    cached(run_byte_io_unit, "byte_io");
-    byte_io_step.dependOn(&run_byte_io_unit.step);
-    test_step.dependOn(&run_byte_io_unit.step);
-    guardian.addAllChecks(b, guardian_exe, byte_io_step, .{});
-    boundedChecks(byte_io_step);
     dependOnAll(test_step, cli_runs);
-    const run_board_unit = bounded(b.addRunArtifact(board_unit), rss.host_suite);
-    cached(run_board_unit, "board");
-    test_step.dependOn(&run_board_unit.step);
-    const schematic_step = b.step("test-schematic", "Verify guest SVG generation against Netlisp connectivity and source mutations");
-    const run_schematic_unit = bounded(b.addRunArtifact(schematic_unit), rss.host_suite);
-    cached(run_schematic_unit, "schematic");
     const audit_runtime = b.step("test-runtime-audit", "Run every Zig test root for isolated runtime probes");
     guardian.addAllChecks(b, guardian_exe, audit_runtime, .{});
     boundedChecks(audit_runtime);
     dependOnAll(audit_runtime, unit_runs);
     dependOnAll(audit_runtime, cli_runs);
-    audit_runtime.dependOn(&run_board_unit.step);
-    audit_runtime.dependOn(&run_byte_io_unit.step);
-    audit_runtime.dependOn(&run_schematic_unit.step);
-    schematic_step.dependOn(&run_schematic_unit.step);
-    test_step.dependOn(&run_schematic_unit.step);
-    guardian.addAllChecks(b, guardian_exe, schematic_step, .{});
-    boundedChecks(schematic_step);
-    const board_step = b.step("test-board-trial", "Verify the bounded board-validation trial against its independent oracle");
-    board_step.dependOn(&run_board_unit.step);
-    const disk_step = b.step("test-disk-projects", "Verify guest edits using unchanged host binaries and no build tools on PATH");
-    disk_step.dependOn(&run_schematic_unit.step);
-    disk_step.dependOn(&run_board_unit.step);
-    guardian.addAllChecks(b, guardian_exe, disk_step, .{});
-    boundedChecks(disk_step);
-    const dev_step = b.step("test-dev-reload", "Verify persistent VM generations and snapshot preview reloads");
-    dev_step.dependOn(&run_schematic_unit.step);
-    guardian.addAllChecks(b, guardian_exe, dev_step, .{});
-    boundedChecks(dev_step);
     const intent_step = b.step("test-intent", "Verify requirement links, revisions and source-pinned evidence");
     guardian.addAllChecks(b, guardian_exe, intent_step, .{});
     boundedChecks(intent_step);
@@ -771,272 +614,10 @@ pub fn build(b: *std.Build) void {
     const repair_step = b.step("test-repair-study", "Verify repair-study fixtures and retained evidence");
     guardian.addAllChecks(b, guardian_exe, repair_step, .{});
     boundedChecks(repair_step);
-    const qbe_step = b.step("test-qbe", "Run QBE native compilation, runtime, and object-cache acceptance");
-    const native_heap_module = b.createModule(.{
-        .target = target,
-        .optimize = optimize,
-        .link_libc = true,
-    });
-    native_heap_module.addIncludePath(b.path("src"));
-    native_heap_module.addCSourceFiles(.{
-        .root = b.path("."),
-        .files = &.{
-            "tests/native_heap_test.c",
-            "src/native_heap.c",
-            "src/native_rc.c",
-            "src/native_rc_stats.c",
-            "src/native_rc_shapes.c",
-            "src/native_rc_walk.c",
-            "src/native_rc_scope.c",
-            "src/native_rc_transfer.c",
-            "src/native_rc_alloc.c",
-            "src/native_rc_values.c",
-
-            "src/native_arena.c",
-            // Structural equality looks dictionary keys up through the table.
-            "src/native_dictionary.c",
-            "src/native_equal.c",
-            "src/native_text.c",
-            "src/native_search.c",
-            "src/native_trim.c",
-            "src/native_repr.c",
-            "src/native_collections.c",
-            "src/native_bytes.c",
-        },
-        // Keep the harness's C assertions active under every optimize mode.
-        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG" },
-    });
-    const native_heap_test = b.addExecutable(.{
-        .max_rss = rss.compile,
-        .name = "native-heap-test",
-        .root_module = native_heap_module,
-    });
-    const run_native_heap_test = b.addRunArtifact(native_heap_test);
-    run_native_heap_test.step.max_rss = rss.script;
-    // The harness binary is its only input, so a checked run is cached on it.
-    run_native_heap_test.expectExitCode(0);
-    const native_heap_step = b.step("test-native-heap", "Verify native collector trace, cycle, budget, and equality paths");
-    const native_arena_module = b.createModule(.{
-        .target = target,
-        .optimize = optimize,
-        .link_libc = true,
-    });
-    native_arena_module.addIncludePath(b.path("src"));
-    native_arena_module.addCSourceFiles(.{
-        .root = b.path("."),
-        .files = &.{
-            "tests/native_arena_chunks_test.c",
-            "src/native_heap.c",
-            "src/native_rc.c",
-            "src/native_rc_stats.c",
-            "src/native_rc_shapes.c",
-            "src/native_rc_walk.c",
-            "src/native_rc_scope.c",
-            "src/native_rc_transfer.c",
-            "src/native_rc_alloc.c",
-            "src/native_rc_values.c",
-
-            "src/native_arena.c",
-            "src/native_collections.c",
-            "src/native_text.c",
-            "src/native_search.c",
-            "src/native_trim.c",
-            "src/native_repr.c",
-            "src/native_dictionary.c",
-            "src/native_equal.c",
-            "src/native_bytes.c",
-            "src/native_regions.c",
-        },
-        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG" },
-    });
-    const native_arena_test = b.addExecutable(.{
-        .max_rss = rss.compile,
-        .name = "native-arena-chunks-test",
-        .root_module = native_arena_module,
-    });
-    const run_native_arena_test = b.addRunArtifact(native_arena_test);
-    run_native_arena_test.step.max_rss = rss.script;
-    run_native_arena_test.expectExitCode(0);
-    // COW-UNIQUE-1: copy on write over the collector, under collection stress.
-    const native_cow_module = b.createModule(.{
-        .target = target,
-        .optimize = optimize,
-        .link_libc = true,
-    });
-    native_cow_module.addIncludePath(b.path("src"));
-    native_cow_module.addCSourceFiles(.{
-        .root = b.path("."),
-        .files = &.{
-            "tests/native_cow_test.c",
-            "src/native_cow.c",
-            "src/native_heap.c",
-            "src/native_rc.c",
-            "src/native_rc_stats.c",
-            "src/native_rc_shapes.c",
-            "src/native_rc_walk.c",
-            "src/native_rc_scope.c",
-            "src/native_rc_transfer.c",
-            "src/native_rc_alloc.c",
-            "src/native_rc_values.c",
-
-            "src/native_arena.c",
-            "src/native_collections.c",
-            "src/native_text.c",
-            "src/native_search.c",
-            "src/native_trim.c",
-            "src/native_repr.c",
-            "src/native_dictionary.c",
-            "src/native_equal.c",
-            "src/native_bytes.c",
-            "src/native_regions.c",
-        },
-        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG" },
-    });
-    const native_cow_test = b.addExecutable(.{
-        .max_rss = rss.compile,
-        .name = "native-cow-test",
-        .root_module = native_cow_module,
-    });
-    const run_native_cow_test = b.addRunArtifact(native_cow_test);
-    run_native_cow_test.step.max_rss = rss.script;
-    run_native_cow_test.expectExitCode(0);
-    native_heap_step.dependOn(&run_native_cow_test.step);
-    compile_tests.dependOn(&native_cow_test.step);
-    test_step.dependOn(&run_native_cow_test.step);
-    qbe_step.dependOn(&run_native_cow_test.step);
-    native_heap_step.dependOn(&run_native_arena_test.step);
-    native_heap_step.dependOn(&run_native_heap_test.step);
-    guardian.addAllChecks(b, guardian_exe, native_heap_step, .{});
-    boundedChecks(native_heap_step);
-    compile_tests.dependOn(&native_heap_test.step);
-    compile_tests.dependOn(&native_arena_test.step);
-    test_step.dependOn(&run_native_heap_test.step);
-    test_step.dependOn(&run_native_arena_test.step);
-    qbe_step.dependOn(&run_native_heap_test.step);
-    qbe_step.dependOn(&run_native_arena_test.step);
-    // ERROR-TRACE-6: the trace recorders keep the registers their convention promises.
-    const error_trace_abi_module = b.createModule(.{
-        .target = target,
-        .optimize = optimize,
-        .link_libc = true,
-    });
-    error_trace_abi_module.addIncludePath(b.path("src"));
-    error_trace_abi_module.addCSourceFiles(.{
-        .root = b.path("."),
-        .files = &.{
-            "tests/error_trace_abi_test.c",
-            "src/qbe_runtime.c",
-            "src/qbe_stack.c",
-            "src/native_cow.c",
-            "src/native_heap.c",
-            "src/native_rc.c",
-            "src/native_rc_stats.c",
-            "src/native_rc_shapes.c",
-            "src/native_rc_walk.c",
-            "src/native_rc_scope.c",
-            "src/native_rc_transfer.c",
-            "src/native_rc_alloc.c",
-            "src/native_rc_values.c",
-
-            "src/native_arena.c",
-            "src/native_collections.c",
-            "src/native_text.c",
-            "src/native_search.c",
-            "src/native_trim.c",
-            "src/native_repr.c",
-            "src/native_dictionary.c",
-            "src/native_equal.c",
-            "src/native_bytes.c",
-            "src/native_regions.c",
-        },
-        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG" },
-    });
-    const error_trace_abi_test = b.addExecutable(.{
-        .max_rss = rss.compile,
-        .name = "error-trace-abi-test",
-        .root_module = error_trace_abi_module,
-    });
-    const run_error_trace_abi_test = b.addRunArtifact(error_trace_abi_test);
-    run_error_trace_abi_test.step.max_rss = rss.script;
-    run_error_trace_abi_test.expectExitCode(0);
-    const error_trace_abi_step = b.step("test-error-trace-abi", "Verify the error trace recorders keep the registers their calling conventions promise");
-    error_trace_abi_step.dependOn(&run_error_trace_abi_test.step);
-    compile_tests.dependOn(&error_trace_abi_test.step);
-    test_step.dependOn(&run_error_trace_abi_test.step);
-    qbe_step.dependOn(&run_error_trace_abi_test.step);
-    const native_test_step = b.step("test-native-tests", "Verify native guest test discovery, execution, fixtures, and affected-test reuse");
-    const native_test_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
-        .root_source_file = b.path("src/native_test_cli_test.zig"),
-        .target = target,
-        .optimize = optimize,
-    }) });
-    native_test_unit.root_module.addImport("runtime_contract", runtime_contract);
-    native_test_unit.root_module.addImport("native_test_root", native_test_unit.root_module);
-    native_test_unit.root_module.addImport("qbe_build_assets", build_assets);
-    native_test_unit.root_module.addImport("memory_budget", budget);
-    guardian.enableTestDiagnostics(native_test_unit.root_module);
-    const run_native_test_unit = bounded(b.addRunArtifact(native_test_unit), rss.suite);
-    cached(run_native_test_unit, "native_roots");
-    native_test_step.dependOn(&run_native_test_unit.step);
-    compile_tests.dependOn(&native_test_unit.step);
-    guardian.addAllChecks(b, guardian_exe, native_test_step, .{});
-    boundedChecks(native_test_step);
-    qbe_step.dependOn(native_test_step);
-    const ffi_step = b.step("test-c-ffi", "Verify direct C scalar imports and native library linking");
-    const ffi_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
-        .root_source_file = b.path("src/c_abi_test.zig"),
-        .target = target,
-        .optimize = optimize,
-    }) });
-    ffi_unit.root_module.addImport("runtime_contract", runtime_contract);
-    guardian.enableTestDiagnostics(ffi_unit.root_module);
-    const run_ffi_unit = bounded(b.addRunArtifact(ffi_unit), rss.suite);
-    cached(run_ffi_unit, "native_roots");
-    ffi_step.dependOn(&run_ffi_unit.step);
-    compile_tests.dependOn(&ffi_unit.step);
-    guardian.addAllChecks(b, guardian_exe, ffi_step, .{});
-    boundedChecks(ffi_step);
-    qbe_step.dependOn(ffi_step);
-    const qbe_build_step = b.step("test-qbe-build", "Verify native builds without Python and native adapter generation");
-    qbe_step.dependOn(qbe_build_step);
-    const host_native_unit = b.addTest(.{
-        .max_rss = rss.compile,
-        .test_runner = guardian.testRunner(guardian_dep),
-        .root_module = host_native,
-    });
-    guardian.enableTestDiagnostics(host_native_unit.root_module);
-    const run_host_native_unit = bounded(b.addRunArtifact(host_native_unit), rss.suite);
-    cached(run_host_native_unit, "native_roots");
-    qbe_build_step.dependOn(&run_host_native_unit.step);
-    compile_tests.dependOn(&host_native_unit.step);
-    const qbe_build_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
-        .root_source_file = b.path("src/qbe_build_test.zig"),
-        .target = target,
-        .optimize = optimize,
-    }) });
-    qbe_build_unit.root_module.addImport("runtime_contract", runtime_contract);
-    qbe_build_unit.root_module.addImport("qbe_build_assets", build_assets);
-    qbe_build_unit.root_module.addImport("memory_budget", budget);
-    guardian.enableTestDiagnostics(qbe_build_unit.root_module);
-    const run_qbe_build_unit = bounded(b.addRunArtifact(qbe_build_unit), rss.suite);
-    cached(run_qbe_build_unit, "native_roots");
-    qbe_build_step.dependOn(&run_qbe_build_unit.step);
-    compile_tests.dependOn(&qbe_build_unit.step);
-    const host_bridge_module = b.createModule(.{ .target = target, .optimize = optimize, .link_libc = true });
-    host_bridge_module.addIncludePath(b.path("src"));
-    host_bridge_module.addCSourceFile(.{
-        .file = b.path("tests/qbe_host_bridge.c"),
-        .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG" },
-    });
-    const host_bridge_test = b.addExecutable(.{ .name = "host-bridge-test", .root_module = host_bridge_module, .max_rss = rss.compile });
-    const run_host_bridge_test = bounded(b.addRunArtifact(host_bridge_test), rss.suite);
-    // The bridge harness binary is its only input, so a checked run is cached on it.
-    run_host_bridge_test.expectExitCode(0);
-    qbe_build_step.dependOn(&run_host_bridge_test.step);
-    compile_tests.dependOn(&host_bridge_test.step);
-    guardian.addAllChecks(b, guardian_exe, qbe_build_step, .{});
-    boundedChecks(qbe_build_step);
-    const golden_step = b.step("test-golden", "Replay the checked-in native golden corpora with no Python oracle");
+    // The checked-in golden corpora `tests/goldens/qbe_*.json` hold the old core's
+    // answers (expected stdout, exit status and trap per case), frozen when the old
+    // back end was retired; the replay runs each case through this `mylang run`.
+    const golden_step = b.step("test-golden", "Replay the checked-in golden corpora through mylang run with no Python oracle");
     const golden_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .filters = test_filters, .root_module = b.createModule(.{
         .root_source_file = b.path("test/golden_parity.zig"),
         .target = target,
@@ -1050,9 +631,7 @@ pub fn build(b: *std.Build) void {
     forwardFilters(b, run_golden, test_filters);
     run_golden.setCwd(b.path("."));
     golden_step.dependOn(&run_golden.step);
-    qbe_step.dependOn(golden_step);
-    guardian.addAllChecks(b, guardian_exe, qbe_step, .{});
-    boundedChecks(qbe_step);
+    test_step.dependOn(golden_step);
     const agent_tools = b.step("test-agent-tools", "Verify compact feedback, byte-contract fixtures, and compiler-pinned references");
     guardian.addAllChecks(b, guardian_exe, agent_tools, .{});
     boundedChecks(agent_tools);
@@ -1072,8 +651,8 @@ pub fn build(b: *std.Build) void {
     incremental_run.addArgs(&.{ "python3", "tests/incremental_diff.py", "--steps", "120" });
     incremental_run.addArtifactArg(exe);
     incremental_step.dependOn(&incremental_run.step);
-    // MODULE-CHECK-1: the same walk over a project whose modules sit in
-    // subdirectories under a `mylang.json`, where `check` is per module.
+    // The same walk over a project whose modules sit in subdirectories under a
+    // `mylang.json`.
     const incremental_projects = driver(b, "python3 tests/incremental_diff.py --project tests/fixtures/module_projects", rss.driver, "incremental");
     incremental_projects.addArgs(&.{ "python3", "tests/incremental_diff.py", "--steps", "60", "--project", "tests/fixtures/module_projects" });
     incremental_projects.addArtifactArg(exe);
@@ -1098,59 +677,6 @@ pub fn build(b: *std.Build) void {
     oracle_run.addArgs(&.{ "tests/lang", "tests/fixtures/interfaces/main.my", "tests/fixtures/interfaces_generic/main.my", "tests/fixtures/incremental/main.my" });
     interfaces_step.dependOn(&oracle_run.step);
     test_step.dependOn(interfaces_step);
-    // MODULE-COMPILE-1..3: every module of `tests/lang` and the fixtures,
-    // compiled on its own from its imports' interfaces, emits the whole
-    // program's units key for key (Debug, and ReleaseFast switches) and links
-    // into the whole program's executable; the default build of each program
-    // (module by module, MODULE-SCHEDULE-1..4) makes the `--whole-program`
-    // build's executable and an unchanged rebuild compiles nothing; and an
-    // incremental default build after seeded edits builds what a clean
-    // whole-program build builds.
-    const module_compile_step = b.step("test-module-compile", "Per-module compilation and the default per-module build against the whole-program build, and its build differential");
-    const module_programs = [_][]const u8{ "tests/fixtures/interfaces/main.my", "tests/fixtures/interfaces_generic/main.my", "tests/fixtures/incremental/main.my", "tests/fixtures/module_compile/main.my", "tests/fixtures/module_projects/main.my" };
-    const module_oracle = driver(b, "python3 tests/module_compile_oracle.py", rss.driver, "module_compile");
-    module_oracle.addArgs(&.{ "python3", "tests/module_compile_oracle.py" });
-    module_oracle.addArtifactArg(exe);
-    module_oracle.addArg("tests/lang");
-    module_oracle.addArgs(&module_programs);
-    module_compile_step.dependOn(&module_oracle.step);
-    const module_release = driver(b, "python3 tests/module_compile_oracle.py --release", rss.driver, "module_compile");
-    module_release.addArgs(&.{ "python3", "tests/module_compile_oracle.py", "--release" });
-    module_release.addArtifactArg(exe);
-    module_release.addArgs(&module_programs);
-    module_compile_step.dependOn(&module_release.step);
-    const module_build = driver(b, "python3 tests/module_build_oracle.py", rss.driver, "module_compile");
-    module_build.addArgs(&.{ "python3", "tests/module_build_oracle.py" });
-    module_build.addArtifactArg(exe);
-    module_build.addArg("tests/lang");
-    module_build.addArgs(&module_programs);
-    module_compile_step.dependOn(&module_build.step);
-    // MODULE-CHECK-1: the default `check` (module by module) of the same
-    // programs against the whole-program check.
-    const module_check = driver(b, "python3 tests/module_check_oracle.py", rss.driver, "module_compile");
-    module_check.addArgs(&.{ "python3", "tests/module_check_oracle.py" });
-    module_check.addArtifactArg(exe);
-    module_check.addArg("tests/lang");
-    module_check.addArgs(&module_programs);
-    module_compile_step.dependOn(&module_check.step);
-    // MODULE-TEST-1: the default `test` (module by module) of the same
-    // programs against `test --whole-program`.
-    const module_tests = driver(b, "python3 tests/module_test_oracle.py", rss.driver, "module_compile");
-    module_tests.addArgs(&.{ "python3", "tests/module_test_oracle.py" });
-    module_tests.addArtifactArg(exe);
-    module_tests.addArg("tests/lang");
-    module_tests.addArgs(&module_programs);
-    module_compile_step.dependOn(&module_tests.step);
-    const module_diff = driver(b, "python3 tests/module_build_diff.py", rss.driver, "module_compile");
-    module_diff.addArgs(&.{ "python3", "tests/module_build_diff.py", "--steps", "20" });
-    module_diff.addArtifactArg(exe);
-    module_compile_step.dependOn(&module_diff.step);
-    // MODULE-PROJECT-1: the same differential over a project with a `mylang.json`.
-    const project_diff = driver(b, "python3 tests/module_build_diff.py --project tests/fixtures/module_projects", rss.driver, "module_compile");
-    project_diff.addArgs(&.{ "python3", "tests/module_build_diff.py", "--project", "tests/fixtures/module_projects", "--steps", "12" });
-    project_diff.addArtifactArg(exe);
-    module_compile_step.dependOn(&project_diff.step);
-    test_step.dependOn(module_compile_step);
     // The repair-round packages ship two Python drivers beside their Zig tests:
     // the parser-hint/classifier agreement (static, then end to end against this
     // compiler) and the friction harvest over its replay fixture. Registering
@@ -1186,47 +712,18 @@ pub fn build(b: *std.Build) void {
     spec_merge_run.setCwd(b.path("."));
     spec_merge_step.dependOn(&spec_merge_run.step);
     test_step.dependOn(spec_merge_step);
-    // The bundled runtime's `content_hash` comes from a make-phase run of
-    // `build_qbe_assets.zig`. This driver runs that file on throwaway trees that
-    // share one Zig cache, the way a stale hash once reached an installed compiler.
-    const identity_step = b.step("test-runtime-identity", "Verify the bundled runtime's identity follows its bytes across trees and edits");
+    // The compiler's `compiler_identity` comes from a make-phase run of
+    // `build_identity.zig`. This driver runs that file on throwaway trees that
+    // share one Zig cache, the way a stale digest once reached an installed compiler.
+    const identity_step = b.step("test-compiler-identity", "Verify the compiler identity follows its sources across trees and edits");
     const identity_run = bounded(b.addSystemCommand(&.{"python3"}), rss.driver);
-    identity_run.addFileArg(b.path("tests/runtime_identity_cache.py"));
+    identity_run.addFileArg(b.path("tests/compiler_identity_cache.py"));
     identity_run.addArgs(&.{ "--zig", b.graph.zig_exe });
-    identity_run.addFileInput(b.path("build_qbe_assets.zig"));
+    identity_run.addFileInput(b.path("build_identity.zig"));
     identity_run.addFileInput(environment_manifest.?);
     identity_run.expectExitCode(0);
     identity_step.dependOn(&identity_run.step);
     test_step.dependOn(identity_step);
-    // The boundary matrix runs every carried shape through both native backends
-    // and requires one answer, so a shape that satisfies its contract on QBE and
-    // not on LLVM fails here instead of on whichever backend nobody ran.
-    const boundary_step = b.step("test-native-boundary", "Verify every carried boundary shape agrees across the QBE and LLVM backends");
-    const boundary_self = driver(b, "python3 tests/native_boundary_matrix.py --self-test", rss.script, "boundary_self");
-    boundary_self.addArgs(&.{ "python3", "tests/native_boundary_matrix.py", "--self-test" });
-    boundary_step.dependOn(&boundary_self.step);
-    const boundary_run = driver(b, "python3 tests/native_boundary_matrix.py --compiler", rss.parity, "boundary");
-    boundary_run.addArgs(&.{ "python3", "tests/native_boundary_matrix.py", "--compiler" });
-    boundary_run.addArtifactArg(exe);
-    boundary_step.dependOn(&boundary_run.step);
-    test_step.dependOn(boundary_step);
-    // The LLVM adapter's unit tests pin its IL parsing, overflow-intrinsic
-    // rewrites, frame map and declaration attributes. Nothing else fails if the
-    // adapter silently stops matching a shape, so they run in the gate.
-    const adapter_step = b.step("test-llvm-adapter", "Run the LLVM adapter's unit tests");
-    const adapter_run = driver(b, "python3 -m unittest test_adapter", rss.driver, "adapter");
-    adapter_run.addArgs(&.{ "python3", "-m", "unittest", "test_adapter" });
-    adapter_run.setCwd(b.path("experiments/llvm-backend"));
-    adapter_step.dependOn(&adapter_run.step);
-    test_step.dependOn(adapter_step);
-    // The C runtime's own suites (heap, collections, text, dictionary, regions,
-    // print, text views) under UBSan. Two of them broke silently in merges when
-    // only lanes ran them by hand, so they run in the gate.
-    const native_memory_step = b.step("test-native-memory", "Run the C runtime suites under UBSan");
-    const native_memory_run = driver(b, "python3 scripts/test_native_memory.py", rss.driver, "native_memory");
-    native_memory_run.addArgs(&.{ "python3", "scripts/test_native_memory.py" });
-    native_memory_step.dependOn(&native_memory_run.step);
-    test_step.dependOn(native_memory_step);
     // The inner loop's own machinery: the change-to-test mapping behind
     // `scripts/affected_tests.py`, and the check that every repository file a
     // cached test root names is one of its declared inputs.
@@ -1253,7 +750,7 @@ pub fn build(b: *std.Build) void {
     b.step("test-doc-coverage", "Require a documented example for every feature and standard export").dependOn(&doc_coverage.step);
     test_step.dependOn(&doc_coverage.step);
     const guest_step = b.step("test-guest", "Run the guest-behavior tests written in the language");
-    const guest_tests = bounded(b.addRunArtifact(exe), rss.host_suite);
+    const guest_tests = bounded(b.addRunArtifact(exe), rss.guest_suite);
     guest_tests.addArgs(&.{ "test", "tests/guest", "--cache-dir", ".mylang-cache/guest-tests" });
     guest_tests.setCwd(b.path("."));
     guest_tests.has_side_effects = true;
@@ -1261,56 +758,45 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&guest_tests.step);
     guardian.addAllChecks(b, guardian_exe, guest_step, .{});
     boundedChecks(guest_step);
-    const lang_step = b.step("test-lang", "Run the unit root's migrated language-level guest tests under RC and under stressed GC");
-    // RC-DEFAULT-1: the suite runs once under the default reference-counting
-    // runtime and once under the `--gc-runtime` opt-out, where the collector
-    // stress the Zig root's `native_execute` tests ask for is a run-wide flag,
-    // so every migrated program keeps that coverage too.
-    const lang_tests = bounded(b.addRunArtifact(exe), rss.suite);
-    lang_tests.addArgs(&.{ "test", "tests/lang", "--cache-dir", ".mylang-cache/lang-tests" });
-    lang_tests.setCwd(b.path("."));
-    lang_tests.has_side_effects = true;
-    lang_step.dependOn(&lang_tests.step);
-    test_step.dependOn(&lang_tests.step);
-    const lang_gc_step = b.step("test-lang-gc", "Run the language-level guest tests under the tracing collector with --gc-stress");
-    const lang_gc_tests = bounded(b.addRunArtifact(exe), rss.suite);
-    lang_gc_tests.addArgs(&.{ "test", "tests/lang", "--gc-runtime", "--cache-dir", ".mylang-cache/lang-tests-gc", "--gc-stress" });
-    lang_gc_tests.setCwd(b.path("."));
-    lang_gc_tests.has_side_effects = true;
-    lang_gc_step.dependOn(&lang_gc_tests.step);
-    lang_step.dependOn(&lang_gc_tests.step);
-    test_step.dependOn(&lang_gc_tests.step);
+    const lang_step = b.step("test-lang", "Run tests/lang, tests/value_semantics and tests/ported through mylang test, at debug and at release with the leak and fact checks");
+    // S5-C: the language-level guest tests run on the new core in both of its
+    // modes: the debug build, and the release build with its facts asserted
+    // (`--verify-facts`) and the runtime's leak check on (`MYL_CORE_LEAKCHECK=1`:
+    // a test that ends with blocks live fails). The retired runtime switches went
+    // with their steps (S5-D4): `test-lang-gc` (`--gc-runtime --gc-stress`),
+    // `test-value-semantics` and `test-legacy-sharing`. Value semantics is the
+    // default, so `tests/value_semantics` runs here without its switch.
+    const LangSuite = struct { dir: []const u8, cache: []const u8 };
+    for ([_]LangSuite{
+        .{ .dir = "tests/lang", .cache = ".mylang-cache/lang-tests" },
+        .{ .dir = "tests/value_semantics", .cache = ".mylang-cache/value-semantics-tests" },
+        // Tests ported from the retired back end's Zig tests (S5-D1); outside
+        // tests/lang, whose files the S5 conformance sweep compares with the
+        // frozen old-core references.
+        .{ .dir = "tests/ported", .cache = ".mylang-cache/ported-tests" },
+    }) |suite| {
+        const debug = bounded(b.addRunArtifact(exe), rss.suite);
+        debug.setName(b.fmt("mylang test {s}", .{suite.dir}));
+        debug.addArgs(&.{ "test", suite.dir, "--cache-dir", suite.cache });
+        debug.setCwd(b.path("."));
+        debug.has_side_effects = true;
+        lang_step.dependOn(&debug.step);
+        test_step.dependOn(&debug.step);
+        // The variable reaches the test children through `env`, since a Run step
+        // may not carry an environment map of its own (`requireLiveEnvironment`).
+        const release = bounded(b.addSystemCommand(&.{ "env", "MYL_CORE_LEAKCHECK=1" }), rss.suite);
+        release.setName(b.fmt("mylang test {s} --release --verify-facts (leak check)", .{suite.dir}));
+        release.addArtifactArg(exe);
+        release.addArgs(&.{ "test", suite.dir, "--release", "--verify-facts", "--cache-dir", b.fmt("{s}-release", .{suite.cache}) });
+        release.setCwd(b.path("."));
+        release.has_side_effects = true;
+        lang_step.dependOn(&release.step);
+        test_step.dependOn(&release.step);
+    }
     guardian.addAllChecks(b, guardian_exe, lang_step, .{});
     boundedChecks(lang_step);
-    guardian.addAllChecks(b, guardian_exe, lang_gc_step, .{});
-    boundedChecks(lang_gc_step);
-    const legacy_step = b.step("test-legacy-sharing", "Run migration-window sharing tests under --legacy-sharing");
-    const legacy_tests = bounded(b.addRunArtifact(exe), rss.suite);
-    legacy_tests.addArgs(&.{ "test", "tests/legacy", "--legacy-sharing", "--cache-dir", ".mylang-cache/legacy-tests", "--gc-stress" });
-    legacy_tests.setCwd(b.path("."));
-    legacy_tests.has_side_effects = true;
-    legacy_step.dependOn(&legacy_tests.step);
-    test_step.dependOn(&legacy_tests.step);
-    guardian.addAllChecks(b, guardian_exe, legacy_step, .{});
-    boundedChecks(legacy_step);
-    // VALUE-SEMANTICS-1: the guest tests that assert value semantics run
-    // with the switch on, under the default RC runtime and, like `test-lang`,
-    // under the stressed collector (RC-DEFAULT-1).
-    const values_step = b.step("test-value-semantics", "Run the value-semantics guest tests under --value-semantics");
-    const value_tests = bounded(b.addRunArtifact(exe), rss.suite);
-    value_tests.addArgs(&.{ "test", "tests/value_semantics", "--value-semantics", "--cache-dir", ".mylang-cache/value-semantics-tests" });
-    value_tests.setCwd(b.path("."));
-    value_tests.has_side_effects = true;
-    values_step.dependOn(&value_tests.step);
-    test_step.dependOn(&value_tests.step);
-    const value_gc_tests = bounded(b.addRunArtifact(exe), rss.suite);
-    value_gc_tests.addArgs(&.{ "test", "tests/value_semantics", "--value-semantics", "--gc-runtime", "--cache-dir", ".mylang-cache/value-semantics-tests-gc", "--gc-stress" });
-    value_gc_tests.setCwd(b.path("."));
-    value_gc_tests.has_side_effects = true;
-    values_step.dependOn(&value_gc_tests.step);
-    test_step.dependOn(&value_gc_tests.step);
-    guardian.addAllChecks(b, guardian_exe, values_step, .{});
-    boundedChecks(values_step);
+    // S5-C: the new core's own unit tests and end-to-end slice join the gate.
+    test_step.dependOn(core_tests);
     const doctest_step = b.step("test-docs", "Execute every fenced documentation example");
     // The doctest fans its units out across a worker pool, so it is bounded like a suite.
     const doctest_run = driver(b, "mylang doctest .", rss.suite, "doctest");
@@ -1321,8 +807,7 @@ pub fn build(b: *std.Build) void {
     guardian.addAllChecks(b, guardian_exe, doctest_step, .{});
     boundedChecks(doctest_step);
     addParityBench(b);
-    addRcFuzz(b);
-    const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("src"), b.path("tests"), b.path("test") }, .check = true });
+    const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("build_identity.zig"), b.path("build_test_inputs.zig"), b.path("src"), b.path("tests"), b.path("test") }, .check = true });
     b.step("fmt-check", "Check canonical Zig formatting").dependOn(&fmt.step);
     requireLiveEnvironment(b);
 }

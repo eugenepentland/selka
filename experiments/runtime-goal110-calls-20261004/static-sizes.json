@@ -1,0 +1,65 @@
+{
+  "kind": "whole-entry-static-cost-not-executed-kernel-cost",
+  "records": [
+    {
+      "backend": "llvm",
+      "arm": "before",
+      "binary": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/compute-my-llvm",
+      "binary_sha256": "366d46cc759592fd6d21f23e5a786d98516c29492b9c55a0c766f126c705f8b3",
+      "entry_symbol": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "entry_address": 16948288,
+      "entry_bytes": 20050,
+      "whole_text_bytes": 169554,
+      "static_instructions": 4148,
+      "frame_allocations": [
+        "1029c4a:\t48 81 ec d8 02 00 00 \tsub    $0x2d8,%rsp"
+      ],
+      "instructions_referencing_rsp_or_rbp": 1079
+    },
+    {
+      "backend": "llvm",
+      "arm": "candidate",
+      "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-guests/compute-my-llvm",
+      "binary_sha256": "5a009d03802013ca9df044e60f895da6400f71d54b76dd8cc4c6a1c546390d61",
+      "entry_symbol": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "entry_address": 16949232,
+      "entry_bytes": 25575,
+      "whole_text_bytes": 175074,
+      "static_instructions": 5339,
+      "frame_allocations": [
+        "1029ffa:\t48 81 ec 28 03 00 00 \tsub    $0x328,%rsp"
+      ],
+      "instructions_referencing_rsp_or_rbp": 1386
+    },
+    {
+      "backend": "qbe",
+      "arm": "before",
+      "binary": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/compute-my-qbe",
+      "binary_sha256": "a170973d4d4661cf496b82943cd366db597c1ef6e94d518a8805c9fbf8eb708c",
+      "entry_symbol": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "entry_address": 16868544,
+      "entry_bytes": 43823,
+      "whole_text_bytes": 204125,
+      "static_instructions": 9429,
+      "frame_allocations": [
+        "10164c8:\t48 81 ec 98 0b 00 00 \tsub    $0xb98,%rsp"
+      ],
+      "instructions_referencing_rsp_or_rbp": 2369
+    },
+    {
+      "backend": "qbe",
+      "arm": "candidate",
+      "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-5dc31c3a-guests/compute-my-qbe",
+      "binary_sha256": "551b08d670b40c8d75215a31dbb0500ed2322b5ddc83248374f11389c0508ab2",
+      "entry_symbol": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "entry_address": 16870016,
+      "entry_bytes": 53270,
+      "whole_text_bytes": 213581,
+      "static_instructions": 11621,
+      "frame_allocations": [
+        "1016a88:\t48 81 ec 18 0a 00 00 \tsub    $0xa18,%rsp"
+      ],
+      "instructions_referencing_rsp_or_rbp": 2581
+    }
+  ]
+}

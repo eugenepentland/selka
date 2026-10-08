@@ -1,0 +1,53 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 135/809 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 10 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 5/88 failed (formatting, spec, nesting-depth, line-length, repeated-string-literal) — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 135 file(s) in scope
+guardian: failures grouped by check (5):
+  formatting (3 findings)
+    - src/mut_exclusive.zig:319: non-conforming formatting (first difference on this line)
+      fix: zig fmt src/mut_exclusive.zig
+    - src/core/build.zig:682: non-conforming formatting (first difference on this line)
+      fix: zig fmt src/core/build.zig
+    - src/mut_abi.zig:13: non-conforming formatting (first difference on this line)
+      fix: zig fmt src/mut_abi.zig
+  spec (7 findings)
+    - unlinked tag: MUT-OVERLAP-RECEIVER-1 in src/mut_exclusive_test.zig
+    - unlinked tag: MUT-OVERLAP-RECEIVER-1 in src/mut_exclusive_test.zig
+    - unlinked tag: MUT-REBIND-CALLER-1 in tests/lang/mut_rebinding.my
+    - +4 more — use --verbose for full detail
+  nesting-depth (1 finding)
+    - src/mut_abi.zig:26: fn collect reaches nesting depth 6 (cap 5)
+      fix: extract nested blocks into helper fns, invert conditions to early-return, or raise [nesting_depth] max_depth.
+  line-length (1 finding)
+    - src/mut_exclusive_test.zig:278: line is 307 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+  repeated-string-literal (1 finding)
+    - src/lower.zig: string literal mut_abi.zig appears 4 times (lines 91, 582, 828, 856) — extract a const
+      fix: extract the literal/const into a shared file-scope const and import it.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+install
++- install qbe
+   +- run ../guardian-zig/zig-out/bin/guardian-check failure
+error: process exited with code 1
+failed command: ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+
+Build Summary: 6/12 steps succeeded (1 failed)
+install transitive failure
++- install mylang transitive failure
+|  +- compile exe mylang debug native cached 8ms MaxRSS:41M
+|  |  +- run exe qbe-build-assets (qbe_build_assets) cached
+|  |     +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:37M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check failure
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
++- install qbe transitive failure
+|  +- compile exe qbe fast native cached 15ms MaxRSS:36M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install generated/ transitive failure
+|  +- run exe mylang (mylang-runtime) transitive failure
+|     +- compile exe mylang debug native (+1 more reused dependencies)
+|     +- install mylang (+2 more reused dependencies)
+|     +- compile exe qbe fast native (reused)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)

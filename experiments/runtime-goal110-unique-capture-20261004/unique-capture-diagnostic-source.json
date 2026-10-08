@@ -1,0 +1,11 @@
+{
+  "kind": "preproduction-uncommitted-unique-capture-static-diagnostic",
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/zig-out/focus/mylang",
+  "compiler_sha256": "de66963808d4b98e8378e3a845fef4c7792c4c78444dce46be52b23f63a48429",
+  "source_hashes": {
+    "src/qbe_rc_unique_capture.zig": "58fbfb323adeaa1ae94888172d48346d75255ef9767a165cc9c7cc03b109e761",
+    "src/qbe_rc_locals.zig": "aef8ac527866daa190a5c8ee769960c2184bee88f7293ae0b4128ec4872ea67e",
+    "src/qbe_rc_unique_capture_test.zig": "9de95ad33e7ab5a849174da64c0e7dd86e41987b619a70c612c4ddac1e8d2a74",
+    "SPEC.md": "05826cc62123df3520b6337ec4a123ac0e4cf320bbde15c8a193f60aa259babf"
+  }
+}

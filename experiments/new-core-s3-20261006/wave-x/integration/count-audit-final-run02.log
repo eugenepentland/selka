@@ -1,0 +1,49 @@
+| row | clock scope | timed inner loops | inner count stores | parent-exclusive count stores | timed nonloop count stores | pre-timing loops | pre-timing loop count stores | unknown/callee loops | timed opaque call sites |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| record_reads | resolved_normal_completion | 1 | 0 | 0 | 0 | 1 | 1 | 0 | 3 |
+| tagged_stack | resolved_normal_completion | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 5 |
+| mutate_unique | resolved_normal_completion | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 2 |
+| mutate_shared | resolved_normal_completion | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 4 |
+| record_construct | resolved_normal_completion | 3 | 0 | 0 | 0 | 1 | 0 | 0 | 3 |
+| record_update | resolved_normal_completion | 1 | 0 | 0 | 0 | 2 | 0 | 0 | 4 |
+| option_handle | resolved_normal_completion | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 3 |
+| result_propagate | resolved_normal_completion | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 5 |
+| list_scan | resolved_normal_completion | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 3 |
+| list_append | resolved_normal_completion | 2 | 0 | 2 | 0 | 0 | 0 | 0 | 5 |
+| list_filter | resolved_normal_completion | 3 | 0 | 3 | 0 | 0 | 0 | 0 | 8 |
+| alloc_short | resolved_normal_completion | 1 | unknown | unknown | unknown | 0 | unknown | 0 | 2 |
+alloc_short: no myl.count metadata survives; zero tagged sites is not a proof about untagged stores or opaque callees.
+| alloc_retained | resolved_normal_completion | 2 | 1 | 1 | 0 | 0 | 0 | 0 | 10 |
+| mutate_nested | resolved_normal_completion | 1 | 2 | 0 | 0 | 1 | 1 | 0 | 6 |
+| bytes_scan | resolved_normal_completion | 4 | 0 | 0 | 5 | 1 | 0 | 0 | 7 |
+| string_equal | resolved_normal_completion | 1 | 0 | 0 | 5 | 0 | 0 | 6 | 8 |
+| string_search | resolved_normal_completion | 1 | 0 | 0 | 5 | 0 | 0 | 1 | 8 |
+| string_split | resolved_normal_completion | 4 | 0 | 1 | 5 | 0 | 0 | 1 | 10 |
+| string_join | resolved_normal_completion | 4 | 0 | 1 | 5 | 0 | 0 | 1 | 10 |
+| dict_lookup | resolved_normal_completion | 2 | 0 | 0 | 4 | 4 | 0 | 0 | 7 |
+| dict_lookup_str | resolved_normal_completion | 2 | 0 | 0 | 4 | 5 | 1 | 0 | 10 |
+| dict_update | resolved_normal_completion | 5 | 0 | 1 | 4 | 1 | 0 | 0 | 14 |
+| dict_update_str | resolved_normal_completion | 10 | 0 | 2 | 4 | 2 | 0 | 0 | 30 |
+| set_dedup | resolved_normal_completion | 3 | 0 | 1 | 4 | 1 | 0 | 0 | 11 |
+| int_parse | resolved_normal_completion | 1 | 0 | 0 | 4 | 1 | 5 | 0 | 7 |
+| int_format | resolved_normal_completion | 4 | 0 | 1 | 4 | 1 | 0 | 0 | 8 |
+| call_indirect | resolved_normal_completion | 6 | 0 | 0 | 0 | 1 | 0 | 0 | 3 |
+| sort_int | resolved_normal_completion | 2 | 0 | 1 | 0 | 0 | 0 | 0 | 6 |
+| sort_records | resolved_normal_completion | 3 | 0 | 5 | 0 | 0 | 0 | 0 | 10 |
+| int_math | resolved_normal_completion | 2 | 0 | 0 | 0 | 1 | 0 | 0 | 3 |
+| float_math | resolved_normal_completion | 4 | 0 | 0 | 0 | 1 | 0 | 0 | 3 |
+| call_direct | resolved_normal_completion | 3 | 0 | 0 | 0 | 1 | 0 | 0 | 3 |
+| branch_predictable | resolved_normal_completion | 3 | 0 | 0 | 0 | 2 | 0 | 0 | 4 |
+| branch_mixed | resolved_normal_completion | 3 | 0 | 0 | 0 | 2 | 0 | 0 | 4 |
+| binary_search | resolved_normal_completion | 1 | 0 | 0 | 1 | 2 | 0 | 0 | 4 |
+| word_count | resolved_normal_completion | 12 | 0 | 1 | 5 | 0 | 0 | 1 | 23 |
+| csv_aggregate | resolved_normal_completion | 19 | 5 | 5 | 5 | 0 | 0 | 1 | 61 |
+| json_transform | resolved_normal_completion | 19 | 0 | 30 | 5 | 0 | 0 | 39 | 68 |
+| packet_decode | resolved_normal_completion | 10 | 0 | 0 | 0 | 3 | 2 | 0 | 9 |
+| lox_eval | resolved_normal_completion | 1 | 0 | 3 | 1 | 0 | 0 | 0 | 21 |
+
+Scope: static caller-visible tagged count stores between the two clocks, on paths reaching the stop call. Pre-timing loops are setup/input construction; callee/runtime bodies and untagged header stores remain unknown. A count=1 initialization/release store and a saturated header check are separate JSON metrics. Full loop and assembly detail, parent-exclusive blocks, interval positions, abort paths and opaque call classes are retained.
+
+real	0m6.603s
+user	0m5.294s
+sys	0m1.313s

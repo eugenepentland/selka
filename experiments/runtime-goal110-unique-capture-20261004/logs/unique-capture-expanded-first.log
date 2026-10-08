@@ -1,0 +1,30 @@
+test-units
++- run test 18 pass, 1 fail (19 total)
+guardian/test: test wall 7.11s; slowest over 50ms:
+guardian/test:   4.82s  qbe_rc_unique_capture_test.test.RC duplicate capture preserves native snapshots held inputs traps and budgets
+guardian/test:   0.85s  qbe_rc_unique_capture_test.test.RC duplicate capture preserves counting site and collector emission
+guardian/test:   0.48s  qbe_rc_unique_capture_test.test.RC duplicate capture refuses an alternate entry into the adjacent store
+guardian/test:   0.47s  qbe_rc_unique_capture_test.test.RC duplicate capture refuses a mismatched physical descriptor
+guardian/test:   0.47s  qbe_rc_unique_capture_test.test.RC duplicate capture removes only the second checked named-root guard
+guardian/test: FAIL — 1 failed of 19
+guardian/test: RESULT {"passed":18,"failed":1,"skipped":0}
+error: 'qbe_rc_unique_capture_test.test.RC duplicate capture preserves native snapshots held inputs traps and budgets' failed:
+       guardian/test: 19 test(s) selected by filter: "RC duplicate capture" — 7 match by name, 12 unnamed test block(s) run regardless
+       ar rcs .task-tmp/unique-capture-zig-global/o/ade5db06abf87ca23466f5867b984f3a/libcompiler_rt.a .task-tmp/unique-capture-zig-global/o/ade5db06abf87ca23466f5867b984f3a/compiler_rt_zcu.o
+       ar rcs .task-tmp/unique-capture-zig-global/o/bc496d9ea70ab8fe18bbe85683a18aaf/libubsan_rt.a .task-tmp/unique-capture-zig-global/o/bc496d9ea70ab8fe18bbe85683a18aaf/ubsan_rt_zcu.o
+       expected 25, found 0
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x1497f03 in expectEqualInner__anon_44225 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x1498ae3 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/src/qbe_rc_unique_capture_test.zig:208:9: 0x1498b65 in test.RC duplicate capture preserves native snapshots held inputs traps and budgets (root_test.zig)
+               try t.expectEqual(value, fast.value);
+               ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.task-tmp/unique-capture-zig-local/o/4a47aa23307cae0525de9f1335141309/test "--guardian-filter=RC duplicate capture" --cache-dir=./.task-tmp/unique-capture-zig-local --seed=0xb3f7540c --listen=-
+
+Build Summary: 8/10 steps succeeded (1 failed); 18/19 tests passed (1 failed)
+test-units transitive failure
++- run test 18 pass, 1 fail (19 total)
+

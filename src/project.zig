@@ -507,30 +507,6 @@ fn budgetMessage(allocator: std.mem.Allocator, path: []const u8, options: Option
     }
     return std.fmt.allocPrint(allocator, "cannot load {s}: the file exceeds the {d}-byte max_file_bytes budget; raise budgets.max_file_bytes in mylang.json", .{ path, options.max_file_bytes });
 }
-/// MODULE-SCHEDULE-1: the modules one source imports, read from its header
-/// exactly as `Project.load` reads it, owned by `allocator`; null when the
-/// header has a problem `load` would report (a per-module build then loads
-/// the project whole, which reports it).
-pub fn headerImports(allocator: std.mem.Allocator, name: []const u8, bytes: []const u8, is_entry: bool) error{OutOfMemory}!?[]const []const u8 {
-    var project = Project.init(allocator);
-    defer project.deinit();
-    const arena = project.arena.allocator();
-    const path = modulePath(arena, name) catch |err| switch (err) {
-        error.InvalidModuleName => return null,
-        error.OutOfMemory => return error.OutOfMemory,
-    };
-    try project.modules.append(arena, .{ .name = name, .src = try source.Source.init(arena, path, bytes) });
-    var scratch = std.heap.ArenaAllocator.init(allocator);
-    defer scratch.deinit();
-    project.header(0, .{}, is_entry, &scratch) catch |err| switch (err) {
-        error.OutOfMemory => return error.OutOfMemory,
-        else => return null,
-    };
-    const imports = project.modules.items[0].imports;
-    const out = try allocator.alloc([]const u8, imports.len);
-    for (imports, out) |imported, *slot| slot.* = try allocator.dupe(u8, imported.name);
-    return out;
-}
 
 /// Check dotted module names while excluding filesystem traversal syntax.
 pub fn validName(name: []const u8) bool {

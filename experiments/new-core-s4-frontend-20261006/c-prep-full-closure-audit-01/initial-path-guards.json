@@ -1,0 +1,608 @@
+{
+  "inventory": "/home/epentland/.cache/mylang/core-tools-v1/tool-identity/9c163182f5d1cf4dca2cbdd66fa175d9619573955e172e109f917c3b11916400.inventory",
+  "inputs": 20907,
+  "directory_inputs": 1297,
+  "paths": [
+    {
+      "path": "/dev/urandom",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/etc/env.d/gcc",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/etc/lsb-release",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/etc/os-release",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/empty-sysroot",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/empty-sysroot/lib",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/empty-sysroot/lib32",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/empty-sysroot/lib64",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/empty-sysroot/libx32",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/zig-toolchains",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib",
+      "direct_snapshot": true,
+      "directory_snapshots": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib"
+      ],
+      "classification": "direct input",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/lib/linux5.10.0/x86_64",
+      "direct_snapshot": false,
+      "directory_snapshots": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib"
+      ],
+      "classification": "ancestor membership guard",
+      "note": "An ancestor directory guards additions/removals along presently inventoried descendants, not edits to an existing unlisted file."
+    },
+    {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/lib/x86_64-unknown-linux5.10.0-gnu2.31.0",
+      "direct_snapshot": false,
+      "directory_snapshots": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib"
+      ],
+      "classification": "ancestor membership guard",
+      "note": "An ancestor directory guards additions/removals along presently inventoried descendants, not edits to an existing unlisted file."
+    },
+    {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/share/ubsan_ignorelist.txt",
+      "direct_snapshot": false,
+      "directory_snapshots": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib"
+      ],
+      "classification": "ancestor membership guard",
+      "note": "An ancestor directory guards additions/removals along presently inventoried descendants, not edits to an existing unlisted file."
+    },
+    {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/std.zig",
+      "direct_snapshot": true,
+      "directory_snapshots": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib"
+      ],
+      "classification": "direct input",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/zig",
+      "direct_snapshot": false,
+      "directory_snapshots": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib"
+      ],
+      "classification": "ancestor membership guard",
+      "note": "An ancestor directory guards additions/removals along presently inventoried descendants, not edits to an existing unlisted file."
+    },
+    {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "direct_snapshot": true,
+      "directory_snapshots": [],
+      "classification": "direct input",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/zig-toolchains/lib",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/zig-toolchains/lib/clang/22/lib/linux5.10.0/x86_64",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/zig-toolchains/lib/clang/22/lib/x86_64-unknown-linux5.10.0-gnu2.31.0",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/zig-toolchains/lib/clang/22/share/ubsan_ignorelist.txt",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/zig-toolchains/lib/x86_64-unknown-linux5.10.0-gnu2.31.0",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/zig-toolchains/lib32",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/zig-toolchains/lib64",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/home/epentland/zig-toolchains/libx32",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/lib",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/lib/x86_64-linux-gnu",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/lib64",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/opt/rh",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/proc/self/exe",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/proc/self/fd",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/proc/self/fd/3",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/include/c++/15",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/include/x86_64-linux-gnu/c++/15",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc-cross",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/i386-linux5.10.0-gnu2.31.0",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/i386-redhat-linux",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/i386-redhat-linux6E",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/i386-unknown-linux5.10.0-gnu2.31.0",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/i586-linux-gnu",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/i586-suse-linux",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/i686-linux-gnu",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/i686-montavista-linux",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/i686-pc-linux-gnu",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/i686-redhat-linux",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-amazon-linux",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-linux-gnu",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/15",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/15/32/crtbegin.o",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/15/64/crtbegin.o",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/15/crtbegin.o",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/15/include/c++",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/15/sparcv8plus/crtbegin.o",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/15/x32/crtbegin.o",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/lib64",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-linux-gnux32",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-linux5.10.0-gnu2.31.0",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-manbo-linux-gnu",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-pc-linux-gnu",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-pc-linux-gnux32",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-redhat-linux",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-redhat-linux6E",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-slackware-linux",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-suse-linux",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-unknown-linux",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-unknown-linux-gnu",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/gcc/x86_64-unknown-linux5.10.0-gnu2.31.0",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/os-release",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib/x86_64-linux-gnu",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib32",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib64",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib64/gcc",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/lib64/gcc-cross",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/libx32",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/x86_64-linux-gnu/include/c++/15",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/x86_64-linux-gnu/lib",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    },
+    {
+      "path": "/usr/x86_64-linux-gnu/lib64",
+      "direct_snapshot": false,
+      "directory_snapshots": [],
+      "classification": "no existing input/directory guard",
+      "note": ""
+    }
+  ]
+}

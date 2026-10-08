@@ -1,55 +1,12 @@
 //! Unit test entry point, separate from the production compiler module.
-/// Canonical project loader exposed to native-test snapshot identity.
-pub const snapshot_project = @import("project.zig");
-/// Compile-time file embedding exposed to native-test snapshot capture.
-pub const snapshot_embed = @import("embed.zig");
-/// The compiler's language module, for the per-module build `mylang test` runs through.
+/// The compiler's language module, for command files this root compiles that
+/// reach the front end through `compiler_root`.
 pub const compiler_language = @import("compiler.zig");
 test {
-    _ = @import("qbe_rc_plain_aggregate_test.zig");
-    _ = @import("qbe_rc_fresh_constructor_test.zig");
-    _ = @import("qbe_mut_argument_places_test.zig");
-    _ = @import("qbe_rc_read_loans_test.zig");
-    _ = @import("qbe_rc_loan_relocate_test.zig");
-    _ = @import("qbe_rc_binding_moves_test.zig");
-    _ = @import("qbe_rc_transient_test.zig");
-    _ = @import("qbe_rc_readonly_anchor_test.zig");
-    _ = @import("rc_plain_updates_test.zig");
-    _ = @import("qbe_rc_variant_read_test.zig");
-    _ = @import("qbe_rc_aggregate_test.zig");
-    _ = @import("qbe_rc_inline_take_test.zig");
-    _ = @import("qbe_rc_loop_codegen_test.zig");
-    _ = @import("rc_glue_test.zig");
-    _ = @import("qbe_rc_inert_return_test.zig");
-    _ = @import("native_rc_stats_test.zig");
-    _ = @import("native_rc_contract_test.zig");
-    _ = @import("native_rc_collections_test.zig");
-    _ = @import("native_rc_arena_test.zig");
-    _ = @import("native_rc_hold_test.zig");
-    _ = @import("native_rc_fast_test.zig");
-    _ = @import("native_rc_image_test.zig");
-    _ = @import("native_file_cleanup_test.zig");
+    _ = @import("iteration_place_test.zig");
     _ = @import("input_probe_test.zig");
-    _ = @import("native_argv_test.zig");
+    _ = @import("module_syntax.zig");
     _ = @import("view_cycles_test.zig");
-    _ = @import("qbe_runtime_rc_test.zig");
-    _ = @import("rc_trap_teardown_test.zig");
-    _ = @import("native_rc_codecs_test.zig");
-    _ = @import("native_rc_host_test.zig");
-    _ = @import("native_test_cli_test.zig");
-    _ = @import("native_test_cases.zig");
-    _ = @import("native_test_snapshot.zig");
-    _ = @import("module_seeder.zig");
-    _ = @import("module_compile_command.zig");
-    _ = @import("native_test_plan.zig");
-    _ = @import("native_test_dependencies.zig");
-    _ = @import("native_test_execute.zig");
-    _ = @import("native_test_wire.zig");
-    _ = @import("native_test_property.zig");
-    _ = @import("property_types.zig");
-    _ = @import("property_generate.zig");
-    _ = @import("property_shrink.zig");
-    _ = @import("property_render.zig");
 
     _ = @import("doc_coverage.zig");
     _ = @import("tokens_dump_test.zig");
@@ -59,44 +16,16 @@ test {
     _ = @import("packages_command.zig");
     _ = @import("reference_test.zig");
     _ = @import("context_test.zig");
-    _ = @import("invoke_test.zig");
 
-    _ = @import("host_declarations_test.zig");
     _ = @import("native_execute.zig");
+    _ = @import("wiring/process_start.zig");
     _ = @import("exit_status_test.zig");
     _ = @import("error_trace_test.zig");
-    _ = @import("native_run.zig");
-    _ = @import("native_run_cache.zig");
-    _ = @import("wiring/native_session.zig");
+    _ = @import("wiring/core_runner.zig");
     _ = @import("zig_local_cache_test.zig");
     _ = @import("value_semantics_test.zig");
-    _ = @import("runtime_mode.zig");
-    _ = @import("main_runtime_flags.zig");
-    _ = @import("compiler.zig").runtime_mode;
-    _ = @import("qbe_build_test.zig");
-    _ = @import("qbe_build_llvm_test.zig");
-    _ = @import("qbe_build_llvm_sticky.zig");
-    _ = @import("qbe_build_llvm_compile.zig");
-    _ = @import("qbe_build_llvm_thin.zig");
-    _ = @import("qbe_build.zig");
-    _ = @import("runtime_options.zig");
-    _ = @import("qbe_build_cache.zig");
-    _ = @import("qbe_build_host.zig");
-    _ = @import("qbe_build_value.zig");
-    _ = @import("qbe_build_options.zig");
-    _ = @import("qbe_build_outputs.zig");
-    _ = @import("qbe_build_io.zig");
-    _ = @import("qbe_frame_map.zig");
-    _ = @import("qbe_frame_map_test.zig");
-    _ = @import("qbe_fragments.zig");
-    _ = @import("qbe_fragments_test.zig");
     // The manifest's own tables were described here but never reached this root,
     // so the QBE-TEXT/QBE-LIST checks that pin them existed without running.
-    _ = @import("qbe_wire.zig");
-    _ = @import("qbe_codecs.zig");
-    _ = @import("module_codecs.zig");
-
-    _ = @import("cli_grants.zig");
 
     _ = @import("prelude_builtins_test.zig");
     _ = @import("python_core_test.zig");
@@ -131,12 +60,10 @@ test {
     _ = @import("allocation_budget_test.zig");
     _ = @import("float_operations_test.zig");
     _ = @import("integer_operations_test.zig");
-    _ = @import("scoped_providers_test.zig");
     _ = @import("io_print_test.zig");
     _ = @import("io_files_test.zig");
     _ = @import("byte_literal_test.zig");
     _ = @import("nominal_provider_contracts_test.zig");
-    _ = @import("nominal_environment_test.zig");
     _ = @import("generic_codecs_test.zig");
     _ = @import("nominal_providers_test.zig");
     _ = @import("nominal_instances_test.zig");
@@ -169,10 +96,6 @@ test {
     _ = @import("semantic_cache_test.zig");
     _ = @import("check_scale_test.zig");
     _ = @import("module_interface_test.zig");
-    _ = @import("module_compile_test.zig");
-    _ = @import("module_physical_test.zig");
-    _ = @import("module_symbols_test.zig");
-    _ = @import("qbe_embeds.zig");
     _ = @import("semantic_key.zig");
     _ = @import("sema_builtins.zig");
     _ = @import("sema_places.zig");
@@ -196,7 +119,6 @@ test {
     _ = @import("interfaces_test.zig");
     _ = @import("interface_files_test.zig");
     _ = @import("compiler_test.zig");
-    _ = @import("bytecode_inline_test.zig");
     _ = @import("duplicates_test.zig");
     _ = @import("near_duplicates_test.zig");
     _ = @import("quality_test.zig");
@@ -205,9 +127,6 @@ test {
     _ = @import("navigation_test.zig");
     _ = @import("navigation_scale_test.zig");
     _ = @import("context_test.zig");
-    _ = @import("invoke_command.zig");
-    _ = @import("native_wire.zig");
-    _ = @import("qbe_wire.zig");
     _ = @import("ref_diff.zig");
     _ = @import("api_diff.zig");
     _ = @import("generic_api_test.zig");
@@ -215,25 +134,17 @@ test {
     _ = @import("structural_constraints_test.zig");
     _ = @import("named_constraints_namespace_test.zig");
     _ = @import("formatter_test.zig");
-    _ = @import("value_test.zig");
     _ = @import("records_test.zig");
     _ = @import("integers_test.zig");
     _ = @import("number_literal_test.zig");
     _ = @import("arrays_test.zig");
     _ = @import("array_places_test.zig");
-    _ = @import("qbe_loop_facts_test.zig");
-    _ = @import("qbe_positive_index_test.zig");
-    _ = @import("qbe_rc_field_inout_test.zig");
-    _ = @import("qbe_loop_version.zig");
-    _ = @import("qbe_loop_operands_test.zig");
     _ = @import("domains_test.zig");
     _ = @import("variants_test.zig");
     _ = @import("tables_test.zig");
-    _ = @import("arena_managed_test.zig");
     _ = @import("effects_test.zig");
     _ = @import("mutation.zig");
     _ = @import("input_manifest_test.zig");
-    _ = @import("typed_json_test.zig");
     _ = @import("external_capabilities_test.zig");
     _ = @import("external_resources_test.zig");
     _ = @import("resource_source_test.zig");
@@ -245,7 +156,6 @@ test {
     _ = @import("domain_codecs_test.zig");
     _ = @import("runtime_values_test.zig");
     _ = @import("managed_values_test.zig");
-    _ = @import("python_values_test.zig");
     _ = @import("python_bytes_test.zig");
     _ = @import("managed_lists_test.zig");
     _ = @import("python_collections_test.zig");
@@ -255,7 +165,6 @@ test {
     _ = @import("recursive_resources_test.zig");
     _ = @import("surface_collections_test.zig");
     _ = @import("builtin_context_test.zig");
-    _ = @import("json_document_test.zig");
     _ = @import("standard_library_test.zig");
     _ = @import("stand_ins_test.zig");
     _ = @import("byte_builder_test.zig");
@@ -266,7 +175,6 @@ test {
     _ = @import("incremental_test.zig");
     _ = @import("timings_test.zig");
     _ = @import("invalidation_test.zig");
-    _ = @import("managed_cell_test.zig");
     _ = @import("for_range_test.zig");
     _ = @import("type_aliases_test.zig");
     _ = @import("tuples_test.zig");
@@ -279,85 +187,11 @@ test {
 }
 
 test {
-    _ = @import("qbe.zig");
-    _ = @import("qbe_il_passes.zig");
-    _ = @import("qbe_frame.zig");
-    _ = @import("qbe_roots.zig");
-    _ = @import("qbe_test.zig");
-    _ = @import("ownership_test.zig");
-    _ = @import("rc_plan_test.zig");
-    _ = @import("rc_pin_summary_test.zig");
-    _ = @import("rc_borrow_certificate_test.zig");
-    _ = @import("qbe_rc_borrow_test.zig");
-    _ = @import("rc_readonly_body_test.zig");
-    _ = @import("rc_readonly_calls_test.zig");
-    _ = @import("rc_readonly_entry_test.zig");
-    _ = @import("rc_immortal_certificate_test.zig");
-    _ = @import("qbe_rc_inert_receiver_test.zig");
-    _ = @import("qbe_rc_inert_counted_test.zig");
-    _ = @import("qbe_rc_glue_inline_test.zig");
-    _ = @import("qbe_rc_native_variant_test.zig");
-    _ = @import("native_variant_policy_test.zig");
-    _ = @import("qbe_rc_native_variant_runtime_test.zig");
-    _ = @import("qbe_rc_native_variant_witness_test.zig");
-    _ = @import("qbe_rc_inert_field_test.zig");
-    _ = @import("qbe_rc_unique_test.zig");
-    _ = @import("qbe_rc_hoist_test.zig");
-    _ = @import("qbe_rc_scope_inline_test.zig");
-    _ = @import("qbe_list_literal_test.zig");
-    _ = @import("qbe_rc_fresh_root_test.zig");
-    _ = @import("qbe_rc_loop_version_test.zig");
-    _ = @import("qbe_rc_scalar_version_test.zig");
-    _ = @import("qbe_rc_read_version_test.zig");
-    _ = @import("qbe_rc_byte_version_test.zig");
-    _ = @import("qbe_rc_record_read_test.zig");
-    _ = @import("qbe_rc_record_read_anchor.zig");
-    _ = @import("qbe_rc_plain_write_test.zig");
-    _ = @import("qbe_rc_append_test.zig");
-    _ = @import("qbe_rc_alloc_test.zig");
-    _ = @import("qbe_zero.zig");
-    _ = @import("qbe_rc_admission_test.zig");
-    _ = @import("qbe_rc_views_test.zig");
-    _ = @import("qbe_rc_sites_test.zig");
-    _ = @import("qbe_rc_journal_test.zig");
-    _ = @import("qbe_rc_empty_locals_test.zig");
-    _ = @import("qbe_rc_nonheld_capture_test.zig");
-    _ = @import("qbe_rc_dictionary_tail_test.zig");
-    _ = @import("qbe_rc_dictionary_key_test.zig");
-    _ = @import("qbe_rc_dictionary_loop_test.zig");
-    _ = @import("qbe_rc_empty_frame_test.zig");
-    _ = @import("qbe_exit_skip_test.zig");
-    _ = @import("qbe_rc_field_transfer_test.zig");
-    _ = @import("qbe_rc_dead_field_move_test.zig");
-    _ = @import("qbe_rc_element_take_test.zig");
-    _ = @import("qbe_rc_plain_record_write_test.zig");
-    _ = @import("cow_test.zig");
-    _ = @import("cow_rebox_roots_test.zig");
-    _ = @import("qbe_text_test.zig");
-    _ = @import("qbe_range_keys_test.zig");
-    _ = @import("qbe_literals_test.zig");
-    _ = @import("qbe_alloc.zig");
-    _ = @import("aggref_abi_test.zig");
-}
-
-test {
-    _ = @import("native_ir_test.zig");
-    _ = @import("native_types_test.zig");
-    _ = @import("native_format.zig");
     _ = @import("number_text.zig");
     _ = @import("number_text_test.zig");
-    _ = @import("native_types.zig");
-    _ = @import("native_descriptors.zig");
 }
 
 test {
-    _ = @import("qbe_build_embed.zig");
-    _ = @import("qbe_build_shapes.zig");
-}
-
-test {
-    _ = @import("native_test_options.zig");
-    _ = @import("native_test_receipts.zig");
     _ = @import("memory_budget");
     _ = @import("memory_budget_frames_test.zig");
 }
@@ -371,4 +205,5 @@ test {
     _ = @import("prelude_scalar_test.zig");
     _ = @import("dictionary_views_test.zig");
     _ = @import("sets_test.zig");
+    _ = @import("retired_features_test.zig");
 }

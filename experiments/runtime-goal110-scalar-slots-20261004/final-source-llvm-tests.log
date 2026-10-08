@@ -1,0 +1,25 @@
+test-units
++- run test w
+guardian/test: 34 test(s) selected by filter: "LLVM" — 22 match by name, 12 unnamed test block(s) run regardless
+guardian/test: test wall 0.48s; slowest over 50ms:
+guardian/test:   0.28s  qbe_rc_local_list_test.test.local list stack actual admitted LLVM unit carries no foreign prefix alias scope
+guardian/test:   0.11s  qbe_test.test.a checked 64-bit add, subtract and multiply emit the exact flag formulas the LLVM adapter lowers to overflow intrinsics
+guardian/test:   0.06s  qbe_test.test.LLVM-ELEMENT-CLASS-1 a storage word is marked as element storage of its element size and kind
+guardian/test: PASS — 34 passed
+guardian/test: RESULT {"passed":34,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.task-tmp/zig-local/o/fac7bf77110087a28f92fbc8411da92f/test --guardian-filter=LLVM --cache-dir=./.task-tmp/zig-local --seed=0x1f35f23f --listen=-
+
+Build Summary: 10/10 steps succeeded; 34/34 tests passed
+test-units success
++- run test 34 pass (34 total) 510ms MaxRSS:41M
+   +- compile test debug native success 3s MaxRSS:448M
+   |  +- run exe qbe-build-assets (qbe_build_assets) success 79ms
+   |  |  +- compile exe qbe-build-assets debug native cached 10ms MaxRSS:36M
+   |  +- options cached
+   |     +- compile exe qbe fast native cached 21ms MaxRSS:36M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang success
+      +- compile exe mylang debug native success 4s MaxRSS:564M
+         +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

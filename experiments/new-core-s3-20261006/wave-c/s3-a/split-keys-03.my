@@ -1,0 +1,48 @@
+def counts(text: str) -> dict[str, int]:
+    result: dict[str, int] = {}
+    for word in text.split():
+        result[word] = result[word] + 1 if word in result else 1
+    return result
+
+def rebound(text: str) -> dict[str, int]:
+    result: dict[str, int] = {}
+    for word in text.split():
+        text = "changed"
+        result[word] = 1
+        if len(result) == 2:
+            continue
+        if len(result) == 3:
+            break
+    return result
+
+def main(out: Stream) -> int:
+    empty = counts(" \t\n\r\x0b\x0c")
+    unicode = counts("é\t😀\né\rnaïve\x0bcafé\x0cx\u00a0y")
+    many = counts(" ".join(["alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda", "mu", "alpha", "abcdefghijklmnopabcdefghijklmnop", "abcdefghijklmnopabcdefghijklmnop"]))
+    saved = many
+    many["alpha"] = 9
+    snapshot = rebound(" ".join(["a", "b", "c", "d"]))
+    deleted = counts("a b c")
+    _ = deleted.pop("b")
+    for word in "a b d".split():
+        deleted[word] = 2
+    collided = counts("collision002553 collision005a0e collision002553")
+    sources = [" ".join(["a", "b", "c"])]
+    from_list: dict[str, int] = {}
+    for word in sources[0].split():
+        sources[0] = "changed"
+        from_list[word] = 1
+    source_dict: dict[str, str] = {"input": " ".join(["a", "b", "c"])}
+    from_dict: dict[str, int] = {}
+    for word in source_dict["input"].split():
+        source_dict["input"] = "changed"
+        from_dict[word] = 1
+    out.print(len(empty), len(unicode), unicode["é"], unicode["x\u00a0y"], unicode["😀"])
+    out.print(len(saved), saved["alpha"], many["alpha"], saved["abcdefghijklmnopabcdefghijklmnop"])
+    out.print(len(snapshot), snapshot["a"], snapshot["b"], snapshot["c"])
+    out.print(len(deleted), deleted["a"], deleted["b"], deleted["c"], deleted["d"])
+    out.print(len(collided), collided["collision002553"], collided["collision005a0e"])
+    out.print(len(from_list), from_list["a"], from_list["b"], from_list["c"])
+    out.print(len(from_dict), from_dict["a"], from_dict["b"], from_dict["c"])
+    return 0
+

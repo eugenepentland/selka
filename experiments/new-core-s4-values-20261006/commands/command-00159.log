@@ -1,0 +1,4 @@
+$ zig fmt src/core/own.zig
+
+exit=0
+elapsed_seconds=0.007029

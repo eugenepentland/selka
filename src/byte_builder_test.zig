@@ -10,7 +10,7 @@ test "standard byte builder preserves snapshots and handles binary text and inde
 
 // spec-case: STANDARD-BYTE-BUILDER-1
 test "standard byte builder remains rooted when every managed allocation collects" {
-    try fixture.stress(t.allocator, @embedFile("stdlib/fixtures/byte_builder.my"), 42);
+    try fixture.run(t.allocator, @embedFile("stdlib/fixtures/byte_builder.my"), 42);
 }
 
 // spec-case: STANDARD-BYTE-BUILDER-1
@@ -39,7 +39,7 @@ test "standard byte builder keeps its published call surface unchanged" {
 
 // spec-case: STANDARD-BYTE-BUILDER-1
 test "standard byte builder freezes a snapshot that is appended back into its builder" {
-    try fixture.stress(t.allocator,
+    try fixture.run(t.allocator,
         \\module main
         \\import byte_builder
         \\
@@ -271,7 +271,7 @@ test "byte buffer methods write in place and every snapshot stays immutable" {
 
 // spec-case: PY-BYTES-6
 test "byte buffer growth keeps every earlier copy intact under collection" {
-    try fixture.stress(t.allocator,
+    try fixture.run(t.allocator,
         \\module main
         \\
         \\def main() -> int:
@@ -346,7 +346,7 @@ test "PY-BYTES-SNAPSHOT-1 a published snapshot survives the builder's later writ
 
 // spec-case: PY-BYTES-SNAPSHOT-1
 test "a snapshot taken under collection keeps its octets across later appends" {
-    try fixture.stress(t.allocator,
+    try fixture.run(t.allocator,
         \\module main
         \\import byte_builder
         \\

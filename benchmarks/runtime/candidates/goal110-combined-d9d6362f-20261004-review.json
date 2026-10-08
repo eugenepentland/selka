@@ -1,0 +1,233 @@
+{
+  "reviewed_utc": "2026-10-04T05:03:56.925499+00:00",
+  "kind": "independent combined-text oracle, median, ratio, plan and live artifact replay; exploratory only",
+  "pairs": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-combined-20261004/.mylang-cache/goal110-text-combined/combined-before-after.json",
+      "sha256": "ffc491609d0628740ac189c08505f18169390b0d9395a84d843d5925b70c9db2",
+      "outcomes": 288,
+      "rows": 12,
+      "live_binary_bindings": 4,
+      "screen_sha256": "e8a73bf10eb4fd87ce41155a5497945eb61338e3ac793a835cca8d147fa15790",
+      "results": [
+        {
+          "case": "string_search",
+          "profile": "small",
+          "ratios": {
+            "llvm": 1.0012895288932224,
+            "qbe": 1.001721959595999
+          }
+        },
+        {
+          "case": "string_search",
+          "profile": "large",
+          "ratios": {
+            "llvm": 0.9981746576898758,
+            "qbe": 0.9842281182652853
+          }
+        },
+        {
+          "case": "string_join",
+          "profile": "small",
+          "ratios": {
+            "llvm": 1.0486797553814917,
+            "qbe": 1.0417318125541504
+          }
+        },
+        {
+          "case": "string_join",
+          "profile": "large",
+          "ratios": {
+            "llvm": 0.9903811525095713,
+            "qbe": 1.0167919573883657
+          }
+        },
+        {
+          "case": "bytes_scan",
+          "profile": "small",
+          "ratios": {
+            "llvm": 1.0107257764312245,
+            "qbe": 1.0132771587793015
+          }
+        },
+        {
+          "case": "bytes_scan",
+          "profile": "large",
+          "ratios": {
+            "llvm": 0.9912327344088502,
+            "qbe": 1.0016555613720812
+          }
+        },
+        {
+          "case": "string_equal",
+          "profile": "small",
+          "ratios": {
+            "llvm": 1.0227994200274577,
+            "qbe": 0.9876127989356127
+          }
+        },
+        {
+          "case": "string_equal",
+          "profile": "large",
+          "ratios": {
+            "llvm": 0.3567487025922413,
+            "qbe": 0.3368762362324018
+          }
+        },
+        {
+          "case": "int_parse",
+          "profile": "small",
+          "ratios": {
+            "llvm": 0.9811574037663482,
+            "qbe": 0.9964152880033778
+          }
+        },
+        {
+          "case": "int_parse",
+          "profile": "large",
+          "ratios": {
+            "llvm": 0.9865263171765378,
+            "qbe": 0.9829245437641833
+          }
+        },
+        {
+          "case": "int_format",
+          "profile": "small",
+          "ratios": {
+            "llvm": 1.0267043772822104,
+            "qbe": 1.0275766565885467
+          }
+        },
+        {
+          "case": "int_format",
+          "profile": "large",
+          "ratios": {
+            "llvm": 1.0445613380529888,
+            "qbe": 1.0091604567677557
+          }
+        }
+      ]
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-combined-20261004/.mylang-cache/goal110-text-combined/combined-repeat.json",
+      "sha256": "e43cf9991593627b3c52d105e03c3bc8e05ad132dafb027d6ecede35374b4d63",
+      "outcomes": 216,
+      "rows": 3,
+      "live_binary_bindings": 4,
+      "screen_sha256": "e8a73bf10eb4fd87ce41155a5497945eb61338e3ac793a835cca8d147fa15790",
+      "results": [
+        {
+          "case": "string_search",
+          "profile": "large",
+          "ratios": {
+            "llvm": 1.0047056685729856,
+            "qbe": 1.0006836347847115
+          }
+        },
+        {
+          "case": "string_join",
+          "profile": "small",
+          "ratios": {
+            "llvm": 1.0552397090094408,
+            "qbe": 1.0425366449437519
+          }
+        },
+        {
+          "case": "string_equal",
+          "profile": "large",
+          "ratios": {
+            "llvm": 0.35591894084211234,
+            "qbe": 0.33786254198803656
+          }
+        }
+      ]
+    }
+  ],
+  "repeat_intervals": [
+    {
+      "case": "string_search",
+      "profile": "large",
+      "paired_bootstrap_95": {
+        "llvm": [
+          0.9974619484373035,
+          1.012788923601055
+        ],
+        "qbe": [
+          0.9979347312953324,
+          1.0050857997524076
+        ]
+      }
+    },
+    {
+      "case": "string_join",
+      "profile": "small",
+      "paired_bootstrap_95": {
+        "llvm": [
+          1.0484167985373234,
+          1.0594534723672988
+        ],
+        "qbe": [
+          1.0387231684817986,
+          1.0463587013343925
+        ]
+      }
+    },
+    {
+      "case": "string_equal",
+      "profile": "large",
+      "paired_bootstrap_95": {
+        "llvm": [
+          0.35440072787133214,
+          0.3573515426358076
+        ],
+        "qbe": [
+          0.33557600551246425,
+          0.3381683509981601
+        ]
+      }
+    }
+  ],
+  "review_script_sha256": "117f2fe9e54aed3eb94b1f5f0658ddc470cdcea65cdd9970b937f78760c34469",
+  "native_medium": {
+    "raw_sha256": "d605eafa79a0251bbf46f521c45e07cb9ad0a5a8407cd745025f7f95d507da11",
+    "rows": 80,
+    "samples": 960,
+    "live_binaries": 2,
+    "ratio_range": [
+      0.9278152355133293,
+      1.0477882152398943
+    ],
+    "method": "Independent complete-grid/median/ratio/artifact replay; timing helper reviewed to require exact equality outcome before returning a sample. Raw per-call checksums are not retained in this helper diagnostic."
+  },
+  "six_arm_verification": {
+    "groups": 72,
+    "samples": 360,
+    "qualifications": 720,
+    "live_artifacts": true,
+    "status": "passed"
+  },
+  "archive": {
+    "evidence_sha256": "1a70c0ed48f53143271dfb6cb88e88a4056227fd1a42220bccc9ab64dea551aa",
+    "raw_archive_bindings": 43,
+    "script_bindings": 8
+  },
+  "join_static": {
+    "evidence_sha256": "c2fa39b8a3603f833210c549a136d1154281304995167214409a250140e85e30",
+    "archive_bindings": 13,
+    "independently_replayed": [
+      {
+        "symbol": "myl_native_text_join",
+        "instructions": 328,
+        "bytes": 1229,
+        "normalized_identical": true
+      },
+      {
+        "symbol": "myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85",
+        "instructions": 408,
+        "bytes": 1668,
+        "normalized_identical": true
+      }
+    ],
+    "causal_limit": "Helper identity does not isolate the cause of the repeated slowdown; caller instruction/branch placement differs."
+  }
+}

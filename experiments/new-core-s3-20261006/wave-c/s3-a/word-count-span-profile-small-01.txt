@@ -1,0 +1,144 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 1K of event 'cpu_core/cycles/u'
+# Event count (approx.): 2416969402
+#
+# Overhead  Command          Shared Object       Symbol                       
+# ........  ...............  ..................  .............................
+#
+    29.70%  row_word_count_  row_word_count_new  [.] main
+            |          
+            |--26.23%--row_word_count::word_job (inlined)
+            |          row_word_count::kernel (inlined)
+            |          row_word_count::main (inlined)
+            |          myl.entry (inlined)
+            |          |          
+            |          |--2.71%--0x4
+            |          |          
+            |          |--2.17%--0x8
+            |          |          |          
+            |          |           --1.28%--0x5
+            |          |          
+            |          |--1.90%--0x6
+            |          |          
+            |          |--1.86%--0x7
+            |          |          |          
+            |          |           --1.21%--0x5
+            |          |          
+            |          |--1.82%--0x3
+            |          |          
+            |          |--1.78%--0x2
+            |          |          
+            |          |--1.56%--0x5
+            |          |          
+            |          |--1.04%--0xb
+            |          |          
+            |           --1.02%--0x9
+            |          
+             --3.47%--row_word_count::main (inlined)
+                       myl.entry (inlined)
+
+    19.38%  row_word_count_  row_word_count_new  [.] myl_core_dict_set
+            |          
+            |--7.86%--myl_core_dict_set
+            |          |          
+            |           --5.96%--row_word_count::word_job (inlined)
+            |                     row_word_count::kernel (inlined)
+            |                     row_word_count::main (inlined)
+            |                     myl.entry (inlined)
+            |          
+            |--6.68%--dict_entry (inlined)
+            |          myl_core_dict_set
+            |          row_word_count::word_job (inlined)
+            |          row_word_count::kernel (inlined)
+            |          row_word_count::main (inlined)
+            |          myl.entry (inlined)
+            |          |          
+            |           --1.06%--0x2
+            |          
+             --4.83%--dict_release_part (inlined)
+                       myl_core_dict_set
+                       row_word_count::word_job (inlined)
+                       row_word_count::kernel (inlined)
+                       row_word_count::main (inlined)
+                       myl.entry (inlined)
+
+    13.64%  row_word_count_  row_word_count_new  [.] myl_core_span_hash
+            |          
+             --13.59%--myl_core_span_hash
+                       |          
+                       |--1.89%--0x4
+                       |          
+                       |--1.19%--0x8
+                       |          
+                        --1.00%--0x5
+
+     7.55%  row_word_count_  row_word_count_new  [.] myl_core_split_ws_end
+            |
+            ---myl_core_split_ws_end
+               |          
+                --5.39%--row_word_count::word_job (inlined)
+                          row_word_count::kernel (inlined)
+                          row_word_count::main (inlined)
+                          myl.entry (inlined)
+
+     5.85%  row_word_count_  row_word_count_new  [.] myl_core_split_ws_start
+            |
+            ---myl_core_split_ws_start
+               |          
+                --3.32%--row_word_count::word_job (inlined)
+                          row_word_count::kernel (inlined)
+                          row_word_count::main (inlined)
+                          myl.entry (inlined)
+
+     2.77%  row_word_count_  row_word_count_new  [.] memcpy@plt
+            |
+            ---_fini (inlined)
+               row_word_count::word_job (inlined)
+               row_word_count::kernel (inlined)
+               row_word_count::main (inlined)
+               myl.entry (inlined)
+
+     2.51%  row_word_count_  row_word_count_new  [.] myl_core_dict_insert
+            |          
+             --1.53%--myl_core_dict_insert
+                       |          
+                        --1.40%--row_word_count::word_job (inlined)
+                                  row_word_count::kernel (inlined)
+                                  row_word_count::main (inlined)
+                                  myl.entry (inlined)
+
+     2.28%  row_word_count_  row_word_count_new  [.] myl_core_str_hash
+            |          
+             --1.43%--myl_core_span_hash (inlined)
+                       myl_core_str_hash
+
+     1.82%  row_word_count_  libc.so.6           [.] 0x000000000019759d
+            |
+            ---0x7c4045d9759d
+
+     1.59%  row_word_count_  libc.so.6           [.] 0x000000000019758e
+            |
+            ---0x7c4045d9758e
+
+     1.48%  row_word_count_  libc.so.6           [.] 0x0000000000197a85
+            |
+            ---0x7c4045d97a85
+               row_word_count::word_job (inlined)
+               row_word_count::kernel (inlined)
+               row_word_count::main (inlined)
+               myl.entry (inlined)
+
+     1.35%  row_word_count_  row_word_count_new  [.] bcmp@plt
+            |
+            ---_fini (inlined)
+
+     1.17%  row_word_count_  row_word_count_new  [.] block_alloc
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

@@ -1,0 +1,7 @@
+$ git commit -m 'fix(core): restrict counted fill stores to their loop backedge'
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+[codex/new-core-s4-values a2daebc63] fix(core): restrict counted fill stores to their loop backedge
+ 4 files changed, 32 insertions(+), 8 deletions(-)
+
+exit=0
+elapsed_seconds=0.128787

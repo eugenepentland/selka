@@ -1,0 +1,8 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 20 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 25 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 8620 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[perf/goal110-unique-capture-20261004 61e9bd6f] test: pass loop differential inputs through guest argv
+ 1 file changed, 26 insertions(+), 2 deletions(-)

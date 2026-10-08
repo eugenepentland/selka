@@ -1,0 +1,9 @@
+$ python3 -c 'from pathlib import Path; import json,subprocess; p=Path("experiments/new-core-s4-values-20261006/commands"); files=[];
+for receipt in p.glob("*.json"):
+ d=json.loads(receipt.read_text()); log=receipt.with_suffix(".log");
+ if "status" in d and log.exists(): files.extend([str(receipt),str(log)])
+subprocess.run(["git","add","--",*files],check=True); print("staged completed command receipt files",len(files))'
+staged completed command receipt files 550
+
+exit=0
+elapsed_seconds=0.301674

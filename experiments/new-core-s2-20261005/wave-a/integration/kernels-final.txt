@@ -1,0 +1,57 @@
+$ python3 experiments/new-core-s2-20261005/wave-a/measure_kernels.py --stage wave-a --rounds 7
+
+### integer_math (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core base --release | 12.441 | 14.860 | same |
+| new core base release | 0.457 | 0.698 | same |
+| new core Wave A release | 0.490 | 0.699 | same |
+| Rust | 6.845 | 12.018 | same |
+| Zig ReleaseSafe | 13.719 | 14.291 | same |
+
+### float_math (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core base --release | 11.432 | 9.533 | same |
+| new core base release | 1.816 | 1.942 | same |
+| new core Wave A release | 1.810 | 1.730 | same |
+| Rust | 10.363 | 7.953 | same |
+| Zig ReleaseSafe | 9.675 | 8.717 | same |
+
+### call_direct (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core base --release | 3.042 | 3.210 | same |
+| new core base release | 0.297 | 0.321 | same |
+| new core Wave A release | 0.296 | 0.321 | same |
+| Rust | 1.984 | 2.965 | same |
+| Zig ReleaseSafe | 2.992 | 4.204 | same |
+
+### branch_predictable (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core base --release | 4.040 | 4.435 | same |
+| new core base release | 0.399 | 0.501 | same |
+| new core Wave A release | 0.404 | 0.644 | same |
+| Rust | 3.204 | 3.341 | same |
+| Zig ReleaseSafe | 7.751 | 9.574 | same |
+
+### branch_mixed (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core base --release | 4.207 | 4.225 | same |
+| new core base release | 0.411 | 0.499 | same |
+| new core Wave A release | 0.404 | 0.498 | same |
+| Rust | 4.901 | 4.578 | same |
+| Zig ReleaseSafe | 9.316 | 9.233 | same |
+
+### binary_search (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core base --release | 149.760 | 33.112 | same |
+| new core base release | 35.198 | 18.133 | same |
+| new core Wave A release | 32.028 | 17.863 | same |
+| Rust | 41.042 | 19.832 | same |
+| Zig ReleaseSafe | 148.974 | 28.631 | same |
+
+exit=0 command_seconds=28.41

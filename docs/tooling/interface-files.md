@@ -151,7 +151,9 @@ changes for a project that does not set it. The bytes of every checked-in
 interface file are part of the configuration identity that the verdict caches
 use, so editing or deleting one never replays an earlier successful check.
 Navigation and report commands (`index-project`, `context`, `list-interfaces`,
-`lint`) and native-test preparation do not enforce the files.
+`lint`) do not enforce the files; `mylang test` checks the project the way
+`check` does, so a stale file fails a test run too, and such a project's test
+runs never replay a whole recorded report.
 `examples/interface-files` is a project with the key set and its files checked
 in.
 

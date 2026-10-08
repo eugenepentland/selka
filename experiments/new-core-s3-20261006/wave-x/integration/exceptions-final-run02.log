@@ -1,0 +1,16 @@
+{
+  "scope": "Top-level source test declarations; mirrors conformance file and *arena* filters",
+  "s4_files": [
+    "migrated/propagation"
+  ],
+  "arena_files": [
+    "arena_class_escape",
+    "arena_managed",
+    "arena_regions",
+    "arena_scopes",
+    "rc_arena_values"
+  ],
+  "s4_tests": 9,
+  "arena_tests": 118
+}
+exit 0

@@ -1,0 +1,32 @@
+{
+  "source_commit": "25803a3969d402fc7fa1e3b9dfabb4b9ca7a820a",
+  "new_command": [
+    "scripts/build-slot.sh",
+    "build",
+    "--",
+    "zig-out/bin/mylang-core",
+    "test",
+    "tests/lang/migrated/propagation.my",
+    "--json",
+    "--cache-dir",
+    ".mylang-cache/s4/base-propagation"
+  ],
+  "old_command": [
+    "scripts/build-slot.sh",
+    "build",
+    "--",
+    ".mylang-cache/s3/oracle/mylang",
+    "test",
+    "tests/lang/migrated/propagation.my",
+    "--json",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    ".mylang-cache/s4/base-propagation-old"
+  ],
+  "new_status": 0,
+  "old_status": 0,
+  "matching": 9,
+  "mismatching": 0,
+  "unsupported": 0
+}

@@ -1,0 +1,8 @@
+1/7 tool_ticket.test.tool tickets require same compiler provenance and ignore missing internal hints...OK
+2/7 tool_ticket.test.tool tickets reject damaged foreign and uncacheable identities...OK
+3/7 tool_identity.test.tool identity resolves executable PATH and propagates allocation failure...OK
+4/7 tool_identity.test.tool memo is reusable and corruption is a content rehash...OK
+5/7 tool_identity.test.same-size executable edit with restored mtime invalidates tool identity...OK
+6/7 tool_identity.test.library edits additions removals and an override invalidate tool identity...OK
+7/7 tool_identity.test.PATH selection and linked library content are command dependencies...OK
+All 7 tests passed.

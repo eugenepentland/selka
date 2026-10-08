@@ -1,0 +1,19 @@
+test-core
++- run test w
+guardian/test: 3 test(s) selected
+guardian/test: SLOW  11.12s  own_test.test.a phi that may hold undef is released only when it holds a block: a zero-trip loop does not crash, list and record
+guardian/test: SLOW  5.60s  own_test.test.managed undef memory phis remain empty while parallel incoming records swap, debug and release
+guardian/test: test wall 16.72s; slowest over 50ms:
+guardian/test:   11.12s  own_test.test.a phi that may hold undef is released only when it holds a block: a zero-trip loop does not crash, list and record
+guardian/test:   5.60s  own_test.test.managed undef memory phis remain empty while parallel incoming records swap, debug and release
+guardian/test: PASS — 3 passed
+guardian/test: RESULT {"passed":3,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/33e1efabfcd2015deff190434344f49c/test --cache-dir=./.zig-cache --seed=0x26ec0b91 --listen=-
+
+Build Summary: 5/5 steps succeeded; 3/3 tests passed
+test-core success
++- run test 3 pass (3 total) 16s MaxRSS:248M
+   +- compile test debug native success 1s MaxRSS:230M
+      +- options success
+         +- compile exe mylang-core debug native success 2s MaxRSS:356M
+

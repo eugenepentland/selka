@@ -177,7 +177,7 @@ fn moduleScenario(allocator: std.mem.Allocator) !void {
     try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     const ty = try compilation.publicValueType("model::Box<i64>");
     try t.expectEqual(@import("typed.zig").Type.i64, compilation.program.?.records[ty.recordIndex()].fields[0].ty);
     try t.expectEqual(@as(i64, 23), (try native.run(&compilation)).value);
@@ -187,7 +187,7 @@ test "nominal bodies preserve imported declaration identity through specializati
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), moduleScenario, .{});
 }
-test "nominal bodies bound growing function specialization before executable output" {
+test "nominal bodies bound growing function specialization before checking succeeds" {
     const source_text = definitions ++
         \\def grow[T](x: T) -> i64:
         \\    return grow[Box[T]](Box[T](value=x))
@@ -198,9 +198,9 @@ test "nominal bodies bound growing function specialization before executable out
     ;
     var compilation = try language.Compilation.init(t.allocator, "growing-nominal.my", source_text);
     defer compilation.deinit();
-    try t.expectError(error.SourceError, compilation.emit());
+    try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings("E_GENERIC_LIMIT", compilation.diagnostics.items[0].code);
-    try t.expect(compilation.program == null and compilation.code == null);
+    try t.expect(compilation.program == null);
 }
 test "nominal bodies propagate results with named error remapping and obligations" {
     try run(t.allocator, results, 12);

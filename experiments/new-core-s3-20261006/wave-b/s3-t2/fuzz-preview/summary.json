@@ -1,0 +1,81 @@
+{
+  "kind": "number",
+  "cases_requested": 2,
+  "seed": 731,
+  "cases_seen": 2,
+  "accepted": 0,
+  "old_rejected": 0,
+  "core_refused": 0,
+  "core_build_failed": 2,
+  "comparisons_expected": 30,
+  "native_runs": 0,
+  "harness": {
+    "cases": 2,
+    "old_rejected": 0,
+    "refused": 2,
+    "compared": 0,
+    "mismatch": 2,
+    "fact": 0,
+    "traps": 0,
+    "caught": 0
+  },
+  "harness_status": 1,
+  "complete": false,
+  "qualified": false,
+  "error": null,
+  "failures": [
+    {
+      "kind": "core_build_failed",
+      "command": [
+        "zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview/tmp/core-fuzz-s1.9x81qdmr/records_unions_propagate_mut_alias0.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview/tmp/core-fuzz-s1.9x81qdmr/records_unions_propagate_mut_alias0.debug",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview/tmp/core-fuzz-s1.9x81qdmr/cache-core"
+      ],
+      "returncode": 1,
+      "stderr": ".mylang-cache/s3/t2-fuzz-preview/tmp/core-fuzz-s1.9x81qdmr/cache-core/core_number_text-f5217418a192416c94e8e638ab23a08637d1f13deb819d3325f4d29f35966ad0/core_number_text.zig:83:9: error: expected type '@typeInfo(@typeInfo(@TypeOf(unicode.utf8CountCodepoints)).@\"fn\".return_type.?).error_union.error_set', found 'error{InvalidUtf8}'\n        error.InvalidUtf8 => myl_core_number_text_invalid(),\n        ^~~~~~~~~~~~~~~~~\n.mylang-cache/s3/t2-fuzz-preview/tmp/core-fuzz-s1.9x81qdmr/cache-core/core_number_text-f5217418a192416c94e8e638ab23a08637d1f13deb819d3325f4d29f35966ad0/core_number_text.zig:83:9: note: 'error.InvalidUtf8' not a member of destination error set\nreferenced by:\n    comptime: .mylang-cache/s3/t2-fuzz-preview/tmp/core-fuzz-s1.9x81qdmr/cache-core/core_number_text-f5217418a192416c94e8e638ab23a08637d1f13deb819d3325f4d29f35966ad0/core_number_text.zig:16:18\n    root: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:13:22\n    3 reference(s) hidden; use '-freference-trace=5' to see all references\n",
+      "retained_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-b/s3-t2/fuzz-preview/failures/records_unions_propagate_mut_alias0-542a15301dd1.my"
+    },
+    {
+      "kind": "core_build_failed",
+      "command": [
+        "zig-out/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview/tmp/core-fuzz-s1.9x81qdmr/records_unions_propagate_mut_alias1.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview/tmp/core-fuzz-s1.9x81qdmr/records_unions_propagate_mut_alias1.debug",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview/tmp/core-fuzz-s1.9x81qdmr/cache-core"
+      ],
+      "returncode": 1,
+      "stderr": ".mylang-cache/s3/t2-fuzz-preview/tmp/core-fuzz-s1.9x81qdmr/cache-core/core_number_text-f5217418a192416c94e8e638ab23a08637d1f13deb819d3325f4d29f35966ad0/core_number_text.zig:83:9: error: expected type '@typeInfo(@typeInfo(@TypeOf(unicode.utf8CountCodepoints)).@\"fn\".return_type.?).error_union.error_set', found 'error{InvalidUtf8}'\n        error.InvalidUtf8 => myl_core_number_text_invalid(),\n        ^~~~~~~~~~~~~~~~~\n.mylang-cache/s3/t2-fuzz-preview/tmp/core-fuzz-s1.9x81qdmr/cache-core/core_number_text-f5217418a192416c94e8e638ab23a08637d1f13deb819d3325f4d29f35966ad0/core_number_text.zig:83:9: note: 'error.InvalidUtf8' not a member of destination error set\nreferenced by:\n    comptime: .mylang-cache/s3/t2-fuzz-preview/tmp/core-fuzz-s1.9x81qdmr/cache-core/core_number_text-f5217418a192416c94e8e638ab23a08637d1f13deb819d3325f4d29f35966ad0/core_number_text.zig:16:18\n    root: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:13:22\n    3 reference(s) hidden; use '-freference-trace=5' to see all references\n",
+      "retained_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/experiments/new-core-s3-20261006/wave-b/s3-t2/fuzz-preview/failures/records_unions_propagate_mut_alias1-e04491e9aec5.my"
+    }
+  ],
+  "elapsed_seconds": 14.908956927014515,
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview",
+  "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview/tmp",
+  "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview/sources",
+  "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-numbers/.mylang-cache/s3/t2-fuzz-preview/zig",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ]
+}

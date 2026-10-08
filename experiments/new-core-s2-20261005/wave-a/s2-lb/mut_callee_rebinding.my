@@ -1,0 +1,102 @@
+module mut_callee_rebinding
+
+
+def replace(items: mut list[int]) -> None:
+    items = [7, 8]
+
+
+def grow_by_rebinding(items: mut list[int]) -> None:
+    items = [7, 8, 9]
+
+
+def iterate_same_length_rebinding(items: mut list[int]) -> int:
+    total = 0
+    for value in items:
+        total += value
+        replace(mut items)
+    return total
+
+
+def iterate_growing_rebinding(items: mut list[int]) -> int:
+    total = 0
+    for value in items:
+        total += value
+        grow_by_rebinding(mut items)
+    return total
+
+
+def iterate_callback_growing_rebinding(items: mut list[int]) -> int:
+    action = grow_by_rebinding
+    total = 0
+    for value in items:
+        total += value
+        action(mut items)
+    return total
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_same_length_mut_callee_rebinding_is_live() -> bool:
+    items = [1, 2]
+    saved = items
+    total = 0
+    for value in items:
+        total += value
+        replace(mut items)
+    return total == 9 and items == [7, 8] and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_mut_callee_rebinding_growth_is_live() -> bool:
+    items = [1, 2]
+    saved = items
+    total = 0
+    for value in items:
+        total += value
+        grow_by_rebinding(mut items)
+    return total == 18 and items == [7, 8, 9] and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_iterating_mut_parameter_sees_forwarded_same_length_rebinding() -> bool:
+    items = [1, 2]
+    saved = items
+    total = iterate_same_length_rebinding(mut items)
+    return total == 9 and items == [7, 8] and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_iterating_mut_parameter_sees_forwarded_growing_rebinding() -> bool:
+    items = [1, 2]
+    saved = items
+    total = iterate_growing_rebinding(mut items)
+    return total == 18 and items == [7, 8, 9] and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_function_value_same_length_rebinding_refreshes_a_local_source() -> bool:
+    items = [1, 2]
+    saved = items
+    action = replace
+    total = 0
+    for value in items:
+        total += value
+        action(mut items)
+    return total == 9 and items == [7, 8] and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public def test_function_value_growing_rebinding_refreshes_a_mut_parameter_source() -> bool:
+    items = [1, 2]
+    saved = items
+    total = iterate_callback_growing_rebinding(mut items)
+    return total == 18 and items == [7, 8, 9] and saved == [1, 2]
+
+
+def main() -> int:
+    assert test_same_length_mut_callee_rebinding_is_live()
+    assert test_mut_callee_rebinding_growth_is_live()
+    assert test_iterating_mut_parameter_sees_forwarded_same_length_rebinding()
+    assert test_iterating_mut_parameter_sees_forwarded_growing_rebinding()
+    assert test_function_value_same_length_rebinding_refreshes_a_local_source()
+    assert test_function_value_growing_rebinding_refreshes_a_mut_parameter_source()
+    return 0

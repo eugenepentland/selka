@@ -1,0 +1,12 @@
+test-units
++- run test w
+guardian/test: 20 test(s) selected by filter: "RC-PRESIZED-APPEND-1", "RC-PLAIN-READY-NESTED-1", "RC append loop" (+1 more) — 8 match by name, 12 unnamed test block(s) run regardless
+guardian/test: test wall 0.70s; slowest over 50ms:
+guardian/test:   0.23s  qbe_rc_append_test.test.RC-PLAIN-READY-NESTED-1 certified append selects hot query only inside another loop
+guardian/test:   0.23s  qbe_rc_append_test.test.RC append loop lazily queries after entry reset and invalidates before slow allocation
+guardian/test:   0.11s  qbe_rc_loop_codegen_test.test.RC-PRESIZED-APPEND-1 a certified comprehension appends into guarded room without calls
+guardian/test:   0.09s  qbe_rc_loop_codegen_test.test.RC-PRESIZED-APPEND-1 refused parameter and checked loops retain ordinary admission
+guardian/test: PASS — 20 passed
+guardian/test: RESULT {"passed":20,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/goal110-presize-ready-20261004/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.mylang-cache/goal110-presize-ready-review/zig-local/o/582f15089198e929c167cb6f5446f921/test --guardian-filter=RC-PRESIZED-APPEND-1 --guardian-filter=RC-PLAIN-READY-NESTED-1 "--guardian-filter=RC append loop" --guardian-filter=RC-PLAIN-APPEND-1 --cache-dir=./.mylang-cache/goal110-presize-ready-review/zig-local --seed=0x13d53e57 --listen=-
+

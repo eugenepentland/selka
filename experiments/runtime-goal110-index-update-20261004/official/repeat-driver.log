@@ -1,0 +1,13 @@
+mutate_unique small guest samples complete
+mutate_unique large guest samples complete
+mutate_shared small guest samples complete
+mutate_shared large guest samples complete
+record_reads small guest samples complete
+record_reads large guest samples complete
+All paired guest timing ended; bootstrap begins
+mutate_unique small {'llvm': {'candidate_to_before': 0.9481362642949812, 'paired_bootstrap_95_interval': [0.9436355274346202, 0.9513304792625993]}, 'qbe': {'candidate_to_before': 0.9469332372724325, 'paired_bootstrap_95_interval': [0.944464970829236, 0.9505933974818092]}}
+mutate_unique large {'llvm': {'candidate_to_before': 0.9456477036490526, 'paired_bootstrap_95_interval': [0.9358176558755651, 0.9577027401039935]}, 'qbe': {'candidate_to_before': 0.9443391667842973, 'paired_bootstrap_95_interval': [0.9416437658130421, 0.9503293786905809]}}
+mutate_shared small {'llvm': {'candidate_to_before': 0.9488123946454227, 'paired_bootstrap_95_interval': [0.945289851294594, 0.9512524745861944]}, 'qbe': {'candidate_to_before': 0.9833522130201883, 'paired_bootstrap_95_interval': [0.9812428019078239, 0.9848772740087481]}}
+mutate_shared large {'llvm': {'candidate_to_before': 0.9887246957755175, 'paired_bootstrap_95_interval': [0.9848532655568221, 0.9905732589124052]}, 'qbe': {'candidate_to_before': 0.9731883828232274, 'paired_bootstrap_95_interval': [0.9711557165135143, 0.9748542502712046]}}
+record_reads small {'llvm': {'candidate_to_before': 0.9864143102885868, 'paired_bootstrap_95_interval': [0.9790736223204827, 0.9929305780361409]}, 'qbe': {'candidate_to_before': 1.001833992814938, 'paired_bootstrap_95_interval': [0.9982064726150113, 1.0059175957424582]}}
+record_reads large {'llvm': {'candidate_to_before': 0.9917204799094781, 'paired_bootstrap_95_interval': [0.986304646790168, 1.0123093292460754]}, 'qbe': {'candidate_to_before': 0.9967807532606745, 'paired_bootstrap_95_interval': [0.9804607538441665, 1.0282605689436803]}}

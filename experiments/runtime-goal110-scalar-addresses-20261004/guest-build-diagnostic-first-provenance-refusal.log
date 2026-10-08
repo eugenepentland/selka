@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-addresses-20261004/build-diagnostic.py", line 63, in <module>
+    assert proof['sha256'] == control_manifest['binary_hashes'][key]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

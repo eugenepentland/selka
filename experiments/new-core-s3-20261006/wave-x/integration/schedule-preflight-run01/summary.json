@@ -1,0 +1,56 @@
+{
+  "qualified": true,
+  "registry": [
+    "s0",
+    "s1",
+    "rc",
+    "rebinding",
+    "iteration",
+    "dict",
+    "text",
+    "number",
+    "functions"
+  ],
+  "execution_order": [
+    "number",
+    "s0",
+    "s1",
+    "rc",
+    "rebinding",
+    "iteration",
+    "dict",
+    "text",
+    "functions"
+  ],
+  "seeds": {
+    "s0": 3301,
+    "s1": 3302,
+    "rc": 3303,
+    "rebinding": 3304,
+    "iteration": 3305,
+    "dict": 3306,
+    "text": 3307,
+    "number": 3308,
+    "functions": 3309
+  },
+  "scope": "Tool-only preflight; no native S3-X qualification",
+  "commands": [
+    {
+      "command": [
+        "/usr/bin/python3",
+        "-m",
+        "py_compile",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/fuzz_matrix.py"
+      ],
+      "status": 0
+    },
+    {
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/fuzz_matrix.py",
+        "--help"
+      ],
+      "status": 0
+    }
+  ]
+}

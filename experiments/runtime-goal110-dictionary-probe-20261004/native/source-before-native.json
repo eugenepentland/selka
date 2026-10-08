@@ -1,0 +1,11 @@
+{
+  "base": "eaf4cda8f5c758cadafaadfa5e328c0fba252ac6",
+  "files": {
+    "src/native_dictionary.c": "d271a3be88227a39c0dc749a41ac7877f9c50fce14dbe7aaa8b31f85b78d3e44",
+    "src/native_dictionary.h": "663d5c673d74ebab6b43afeb4bfee6c96691d2adeaa30db1f9785bb3b5a9e58f",
+    "tests/native_dictionary_probe_test.c": "57a339b6d8e0631db1c3cb99f2d45ab5effc7f2efbae107aa174101571d62a81",
+    "scripts/test_native_memory.py": "29845c56532280dfef8d9275bd31b3f512456e77b098b0a0a65e16b1020e9362",
+    "SPEC.md": "c5cd3c798026b5899a63d96fedf0a45c01aef2af72fb00ee38910648ef4f9ed1"
+  },
+  "purpose": "uncommitted focused proof; no timing"
+}

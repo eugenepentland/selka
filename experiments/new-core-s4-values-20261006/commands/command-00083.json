@@ -1,0 +1,14 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "zig-out/bin/mylang-core",
+    "dump-ir",
+    "test/core/row_grid_dp.my",
+    "--facts"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 1180895,
+  "status": 0,
+  "elapsed_seconds": 0.3690100139938295
+}

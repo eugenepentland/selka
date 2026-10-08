@@ -15,12 +15,6 @@ def test_fresh_root_and_zero_iterations() -> bool:
     assert len(fresh(0)) == 0
     return True
 
-def test_inherited_arena_keeps_original_region_and_growth() -> bool:
-    with arena():
-        assert fresh(50)["alpha"] == 25
-        assert len(fresh(0)) == 0
-    return fresh(6)["beta"] == 3
-
 def shared_empty(times: int) -> int:
     keys = ["key"]
     counts: dict[str, int] = {}
@@ -56,7 +50,8 @@ def calls(times: int) -> int:
     counts: dict[str, int] = {}
     for i in range(times):
         key = keys[0]
-        counts[key] = change(mut counts)
+        mutation_result_59 = change(mut counts)
+        counts[key] = mutation_result_59
     return counts["key"]
 
 def test_callback_and_reference_keep_fallback() -> bool:

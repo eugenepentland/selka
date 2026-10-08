@@ -1,0 +1,7 @@
+def main() -> int:
+    rows = ["a🙂"]
+    snapshot = rows
+    for letter in rows[0]:
+        _ = letter
+        rows.clear()
+    return len(snapshot)

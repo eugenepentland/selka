@@ -60,7 +60,6 @@ fn emitted(allocator: std.mem.Allocator, compilation: *pc.Compilation) !void {
         }
     }
     try t.expect(field_seen and local_call and imported_call);
-    try t.expect(compilation.code == null);
 }
 // spec: NAVIGATION-1
 test "navigation resolves qualified calls fields and source identities without execution" {

@@ -1,0 +1,12 @@
+$ .mylang-cache/s3/oracle/mylang build /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/test/core/row_dict_update.my -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/row_dict_update_old --release --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-all46-v2/cache/old --link /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/benchmarks/runtime/ports/native_clock.c
+row_dict_update.my:5:71: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                        ^
+row_dict_update.my:5:88: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                                         ^
+row_dict_update.my:5:112: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+                                                                                                                 ^
+
+exit=0

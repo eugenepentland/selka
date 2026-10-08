@@ -1,0 +1,97 @@
+{
+ "v1: today: generic read call, hint record, out-param": {
+  "cycles_per_iter": 209501.2461641094,
+  "instr_per_iter": 572128.3955970648,
+  "branch_miss_per_iter": 2107.7124749833224
+ },
+ "v2: + immutable dict: no hint record, hoisted fields": {
+  "cycles_per_iter": 117787.83922615077,
+  "instr_per_iter": 312693.0813875917,
+  "branch_miss_per_iter": 896.8058705803869
+ },
+ "v3: + typed int/int, probe inlined": {
+  "cycles_per_iter": 104877.45697131421,
+  "instr_per_iter": 238669.64242828553,
+  "branch_miss_per_iter": 843.8872581721148
+ },
+ "v4: + inline {key,value} slots, load<=1/2, 1-mul hash": {
+  "cycles_per_iter": 45953.40160106738,
+  "instr_per_iter": 186418.07204803202,
+  "branch_miss_per_iter": 34.552368245497
+ },
+ "v10: v4 layout with mylang hash (fold_multiply)": {
+  "cycles_per_iter": 149187.96064042696,
+  "instr_per_iter": 237356.87525016678,
+  "branch_miss_per_iter": 1636.8252168112074
+ },
+ "v5: + query-key induction (no div, no flags)": {
+  "cycles_per_iter": 25444.49499666444,
+  "instr_per_iter": 100415.07738492328,
+  "branch_miss_per_iter": 30.966644429619745
+ },
+ "v6: dense-key direct addressing (runtime flag)": {
+  "cycles_per_iter": 18181.54636424283,
+  "instr_per_iter": 61625.78852568379,
+  "branch_miss_per_iter": 18.258839226150766
+ },
+ "v7: hand AVX2 gather over dense, i64 values": {
+  "cycles_per_iter": 7017.3262174783185,
+  "instr_per_iter": 16551.076717811873,
+  "branch_miss_per_iter": 0.933955970647098
+ },
+ "v7n: hand AVX2 gather, u32 values": {
+  "cycles_per_iter": 3077.466310873916,
+  "instr_per_iter": 5050.077384923282,
+  "branch_miss_per_iter": 0.25483655770513675
+ },
+ "v8: hand AVX2 4-slot buckets (general keys)": {
+  "cycles_per_iter": 39089.49766511007,
+  "instr_per_iter": 158255.5617078052,
+  "branch_miss_per_iter": 18.026684456304203
+ },
+ "v20 holdout ref: today, identity keys from file": {
+  "cycles_per_iter": 216394.68779186124,
+  "instr_per_iter": 580320.3915943963,
+  "branch_miss_per_iter": 2027.398932621748
+ },
+ "v21 holdout: + immutable dict, identity keys from file": {
+  "cycles_per_iter": 126774.24749833222,
+  "instr_per_iter": 320885.0847231488,
+  "branch_miss_per_iter": 887.6184122748499
+ },
+ "v30 holdout: best scalar table, keys from file": {
+  "cycles_per_iter": 26352.336891260842,
+  "instr_per_iter": 116799.0700466978,
+  "branch_miss_per_iter": 32.81054036024016
+ },
+ "v31 holdout: AVX2 buckets, keys from file": {
+  "cycles_per_iter": 39626.50500333556,
+  "instr_per_iter": 162351.56771180787,
+  "branch_miss_per_iter": 18.03669112741828
+ },
+ "v5 baseline x86-64": {
+  "cycles_per_iter": 25886.37558372248,
+  "instr_per_iter": 104512.07605070046,
+  "branch_miss_per_iter": 29.361574382921948
+ },
+ "B0 rust": {
+  "cycles_per_iter": 173140.490993996,
+  "instr_per_iter": 768123.7291527685,
+  "branch_miss_per_iter": 152.17945296864576
+ },
+ "B0 zig-safe": {
+  "cycles_per_iter": 213716.74783188791,
+  "instr_per_iter": 664444.4096064043,
+  "branch_miss_per_iter": 1773.6711140760508
+ },
+ "B0 zig-fast": {
+  "cycles_per_iter": 174523.4669779853,
+  "instr_per_iter": 307898.3922615077,
+  "branch_miss_per_iter": 2166.231487658439
+ },
+ "B0 my-llvm": {
+  "cycles_per_iter": 210337.87191460974,
+  "instr_per_iter": 669022.0913942629,
+  "branch_miss_per_iter": 2013.072715143429
+ }
+}

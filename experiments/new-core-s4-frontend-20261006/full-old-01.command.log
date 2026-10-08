@@ -1,0 +1,4 @@
+S2-X test: waiting/running; source=b20cbfdc83a6f289fba99d568fe23d40aaae974f; log=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/full-old-01/test.log
+S2-X test: elapsed including admission=60s
+S2-X test: exit=1, command=56.84s, wall=86.44s, qualified=False
+RuntimeError: test did not qualify: missing or unsuccessful Build Summary; command exited 1

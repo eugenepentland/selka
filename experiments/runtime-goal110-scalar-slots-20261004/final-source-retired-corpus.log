@@ -1,0 +1,23 @@
+test-units
++- run test w
+guardian/test: 13 test(s) selected by filter: "whole golden corpus" — 1 match by name, 12 unnamed test block(s) run regardless
+guardian/test: test wall 0.06s; slowest over 50ms:
+guardian/test:   0.06s  qbe_build_llvm_test.test.the in-process translator reproduces the retired Python adapter's IR for its whole golden corpus
+guardian/test: PASS — 13 passed
+guardian/test: RESULT {"passed":13,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.task-tmp/zig-local/o/bb684775dedf83b78f78ceb237df2649/test "--guardian-filter=whole golden corpus" --cache-dir=./.task-tmp/zig-local --seed=0xdc2384bb --listen=-
+
+Build Summary: 10/10 steps succeeded; 13/13 tests passed
+test-units success
++- run test 13 pass (13 total) 79ms MaxRSS:19M
+   +- compile test debug native success 643ms MaxRSS:269M
+   |  +- run exe qbe-build-assets (qbe_build_assets) cached
+   |  |  +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:36M
+   |  +- options cached
+   |     +- compile exe qbe fast native cached 14ms MaxRSS:36M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang cached
+      +- compile exe mylang debug native cached 8ms MaxRSS:41M
+         +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

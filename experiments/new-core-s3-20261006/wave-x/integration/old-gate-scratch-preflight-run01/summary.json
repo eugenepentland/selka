@@ -1,0 +1,8 @@
+{
+  "qualified": true,
+  "scope": "Python syntax and scratch-path authority; native cache regression covered by full old gate",
+  "old_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/s2-x/full-gates/tmp",
+  "new_example_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s2-x/full-gates/final-old-run01/tmp",
+  "test_contract": "NATIVE-ZIG-CACHE-4",
+  "compiler_and_test_sources_unchanged": true
+}

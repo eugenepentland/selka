@@ -1,0 +1,5 @@
+{
+  "qualified": false,
+  "status": "NOT_RUNNING",
+  "reason": "Waiter already exited; inspect retained original log."
+}

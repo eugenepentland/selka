@@ -1,0 +1,1247 @@
+{
+  "status": "passed",
+  "checks": [
+    {
+      "backend": "llvm",
+      "input": [
+        "bytes_scan",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 333
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "bytes_scan",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 14099
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "bytes_scan",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 55776
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 4
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 4
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_equal",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 4
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_search",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 34
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_search",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 94
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_search",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 282
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_split",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 5712
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_split",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 50820
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_split",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 194572
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 6461
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 63539
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 244797
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "int_parse",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 999999440
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "int_parse",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 1562
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "int_parse",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 291
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "int_format",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 1098
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "int_format",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 1265
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "int_format",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 1572
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "word_count",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 10538
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "word_count",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 242812
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "word_count",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 3049738
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "csv_aggregate",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 10948
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "csv_aggregate",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 141050
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "csv_aggregate",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 794367
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "json_transform",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 53298
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "json_transform",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 320165
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "json_transform",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 1158724
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "2",
+        "1",
+        "1"
+      ],
+      "checksum": 1308
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "2",
+        "11",
+        "37"
+      ],
+      "checksum": 10001
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "3",
+        "1",
+        "1"
+      ],
+      "checksum": 1547
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "3",
+        "11",
+        "37"
+      ],
+      "checksum": 20156
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "7",
+        "1",
+        "1"
+      ],
+      "checksum": 4011
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "7",
+        "11",
+        "37"
+      ],
+      "checksum": 39909
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "8",
+        "1",
+        "1"
+      ],
+      "checksum": 4250
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "8",
+        "11",
+        "37"
+      ],
+      "checksum": 50064
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "9",
+        "1",
+        "1"
+      ],
+      "checksum": 5170
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "9",
+        "11",
+        "37"
+      ],
+      "checksum": 51397
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "15",
+        "1",
+        "1"
+      ],
+      "checksum": 7991
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "15",
+        "11",
+        "37"
+      ],
+      "checksum": 88391
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "16",
+        "1",
+        "1"
+      ],
+      "checksum": 8632
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "16",
+        "11",
+        "37"
+      ],
+      "checksum": 97061
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "17",
+        "1",
+        "1"
+      ],
+      "checksum": 9417
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "17",
+        "11",
+        "37"
+      ],
+      "checksum": 99725
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "31",
+        "1",
+        "1"
+      ],
+      "checksum": 16741
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "31",
+        "11",
+        "37"
+      ],
+      "checksum": 186785
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "32",
+        "1",
+        "1"
+      ],
+      "checksum": 17526
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "32",
+        "11",
+        "37"
+      ],
+      "checksum": 189449
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "33",
+        "1",
+        "1"
+      ],
+      "checksum": 17765
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "33",
+        "11",
+        "37"
+      ],
+      "checksum": 199604
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "63",
+        "1",
+        "1"
+      ],
+      "checksum": 33983
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "63",
+        "11",
+        "37"
+      ],
+      "checksum": 379052
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "65",
+        "1",
+        "1"
+      ],
+      "checksum": 35021
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "65",
+        "11",
+        "37"
+      ],
+      "checksum": 387471
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "257",
+        "1",
+        "1"
+      ],
+      "checksum": 139161
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "257",
+        "11",
+        "37"
+      ],
+      "checksum": 1535309
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "4096",
+        "1",
+        "1"
+      ],
+      "checksum": 2214280
+    },
+    {
+      "backend": "llvm",
+      "input": [
+        "string_join",
+        "4096",
+        "11",
+        "37"
+      ],
+      "checksum": 24501989
+    },
+    {
+      "backend": "llvm",
+      "control": "--max-steps=1",
+      "error": "R_NO_STEP_ACCOUNTING"
+    },
+    {
+      "backend": "llvm",
+      "control": "--max-frames=1",
+      "error": "R_NO_FRAME_ACCOUNTING"
+    },
+    {
+      "backend": "llvm",
+      "control": "MYLANG_MEMORY_LIMIT=1",
+      "error": "R_MEMORY_BUDGET"
+    },
+    {
+      "backend": "llvm",
+      "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/bin/text-my-llvm",
+      "sha256": "2f1badcf2277e1ccbc2d24bfdee9337e6d5cd28808737689eafbfd4208ab8b43",
+      "manifest_sha256": "d698c376fc507e827a9dc0020ea66077ae9021c264fd33b1c159a8f02218a333"
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "bytes_scan",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 333
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "bytes_scan",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 14099
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "bytes_scan",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 55776
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 4
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 4
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_equal",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 4
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_search",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 34
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_search",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 94
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_search",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 282
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_split",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 5712
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_split",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 50820
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_split",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 194572
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 6461
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 63539
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 244797
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "int_parse",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 999999440
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "int_parse",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 1562
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "int_parse",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 291
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "int_format",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 1098
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "int_format",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 1265
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "int_format",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 1572
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "word_count",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 10538
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "word_count",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 242812
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "word_count",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 3049738
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "csv_aggregate",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 10948
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "csv_aggregate",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 141050
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "csv_aggregate",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 794367
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "json_transform",
+        "2",
+        "7",
+        "19"
+      ],
+      "checksum": 53298
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "json_transform",
+        "17",
+        "7",
+        "19"
+      ],
+      "checksum": 320165
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "json_transform",
+        "64",
+        "7",
+        "19"
+      ],
+      "checksum": 1158724
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "2",
+        "1",
+        "1"
+      ],
+      "checksum": 1308
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "2",
+        "11",
+        "37"
+      ],
+      "checksum": 10001
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "3",
+        "1",
+        "1"
+      ],
+      "checksum": 1547
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "3",
+        "11",
+        "37"
+      ],
+      "checksum": 20156
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "7",
+        "1",
+        "1"
+      ],
+      "checksum": 4011
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "7",
+        "11",
+        "37"
+      ],
+      "checksum": 39909
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "8",
+        "1",
+        "1"
+      ],
+      "checksum": 4250
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "8",
+        "11",
+        "37"
+      ],
+      "checksum": 50064
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "9",
+        "1",
+        "1"
+      ],
+      "checksum": 5170
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "9",
+        "11",
+        "37"
+      ],
+      "checksum": 51397
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "15",
+        "1",
+        "1"
+      ],
+      "checksum": 7991
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "15",
+        "11",
+        "37"
+      ],
+      "checksum": 88391
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "16",
+        "1",
+        "1"
+      ],
+      "checksum": 8632
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "16",
+        "11",
+        "37"
+      ],
+      "checksum": 97061
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "17",
+        "1",
+        "1"
+      ],
+      "checksum": 9417
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "17",
+        "11",
+        "37"
+      ],
+      "checksum": 99725
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "31",
+        "1",
+        "1"
+      ],
+      "checksum": 16741
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "31",
+        "11",
+        "37"
+      ],
+      "checksum": 186785
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "32",
+        "1",
+        "1"
+      ],
+      "checksum": 17526
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "32",
+        "11",
+        "37"
+      ],
+      "checksum": 189449
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "33",
+        "1",
+        "1"
+      ],
+      "checksum": 17765
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "33",
+        "11",
+        "37"
+      ],
+      "checksum": 199604
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "63",
+        "1",
+        "1"
+      ],
+      "checksum": 33983
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "63",
+        "11",
+        "37"
+      ],
+      "checksum": 379052
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "65",
+        "1",
+        "1"
+      ],
+      "checksum": 35021
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "65",
+        "11",
+        "37"
+      ],
+      "checksum": 387471
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "257",
+        "1",
+        "1"
+      ],
+      "checksum": 139161
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "257",
+        "11",
+        "37"
+      ],
+      "checksum": 1535309
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "4096",
+        "1",
+        "1"
+      ],
+      "checksum": 2214280
+    },
+    {
+      "backend": "qbe",
+      "input": [
+        "string_join",
+        "4096",
+        "11",
+        "37"
+      ],
+      "checksum": 24501989
+    },
+    {
+      "backend": "qbe",
+      "control": "--max-steps=1",
+      "error": "R_NO_STEP_ACCOUNTING"
+    },
+    {
+      "backend": "qbe",
+      "control": "--max-frames=1",
+      "error": "R_NO_FRAME_ACCOUNTING"
+    },
+    {
+      "backend": "qbe",
+      "control": "MYLANG_MEMORY_LIMIT=1",
+      "error": "R_MEMORY_BUDGET"
+    },
+    {
+      "backend": "qbe",
+      "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/bin/text-my-qbe",
+      "sha256": "5ac2fe36573ac5c0429896b0b04df928c0d160cd383dd40df18b0b6ef11356fe",
+      "manifest_sha256": "d42044d30830603c1dc89681b7fa76eb3ede346cfb791c2bd2843eb4e2c0a8ad"
+    }
+  ]
+}

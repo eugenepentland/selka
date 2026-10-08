@@ -1,0 +1,3 @@
+$ .mylang-cache/s4-emission/debug-loop-budget-02/bin/mylang-core build experiments/new-core-s4-emission-20261006/paired-loop-budget-01/sources/json_transform/app.my --release -o experiments/new-core-s4-emission-20261006/paired-loop-budget-01/split-json_transform --cache-dir experiments/new-core-s4-emission-20261006/paired-loop-budget-01/cache/json_transform --emit-llvm experiments/new-core-s4-emission-20261006/paired-loop-budget-01/whole-json_transform.ll --link /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/benchmarks/runtime/ports/native_clock.c
+
+exit=0

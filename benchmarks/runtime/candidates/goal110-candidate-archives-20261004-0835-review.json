@@ -1,0 +1,281 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T08:36:23.412274+00:00",
+  "integrated_source_unchanged": "6cf7bdce11bc205862bf75b9d9ce72e46caad0a2",
+  "text_archive": {
+    "raw_bindings": 77,
+    "metadata_bindings_including_repeats": 22
+  },
+  "remainder_archive": {
+    "raw_bindings": 63
+  },
+  "text_initial": {
+    "raw_sha256": "fbb55f34494a76220e26e8a85bb371914add4617541df71c50ca18135926dc52",
+    "session_id": "0ac7f30e-c473-4fdd-bba8-0d25e215021b",
+    "checked_outcomes": 288,
+    "rows": [
+      {
+        "case": "string_equal",
+        "profile": "small",
+        "seed": 42,
+        "after_before": {
+          "llvm": 0.9634488094129702,
+          "qbe": 0.7305848481783886
+        }
+      },
+      {
+        "case": "string_equal",
+        "profile": "large",
+        "seed": 42,
+        "after_before": {
+          "llvm": 1.0051187737693152,
+          "qbe": 1.0004598031744927
+        }
+      },
+      {
+        "case": "bytes_scan",
+        "profile": "small",
+        "seed": 42,
+        "after_before": {
+          "llvm": 0.995058886526252,
+          "qbe": 0.9825693852967926
+        }
+      },
+      {
+        "case": "bytes_scan",
+        "profile": "large",
+        "seed": 42,
+        "after_before": {
+          "llvm": 1.01296263139384,
+          "qbe": 1.02535168160267
+        }
+      },
+      {
+        "case": "string_search",
+        "profile": "small",
+        "seed": 42,
+        "after_before": {
+          "llvm": 1.0054457422374161,
+          "qbe": 1.002672092164793
+        }
+      },
+      {
+        "case": "string_search",
+        "profile": "large",
+        "seed": 42,
+        "after_before": {
+          "llvm": 1.0564236460257557,
+          "qbe": 0.9993905573293123
+        }
+      },
+      {
+        "case": "string_join",
+        "profile": "small",
+        "seed": 42,
+        "after_before": {
+          "llvm": 1.0150637891675078,
+          "qbe": 0.9820501049960567
+        }
+      },
+      {
+        "case": "string_join",
+        "profile": "large",
+        "seed": 42,
+        "after_before": {
+          "llvm": 1.0008517544714672,
+          "qbe": 1.003731453217891
+        }
+      },
+      {
+        "case": "int_parse",
+        "profile": "small",
+        "seed": 42,
+        "after_before": {
+          "llvm": 0.999936845096758,
+          "qbe": 0.9965298815020812
+        }
+      },
+      {
+        "case": "int_parse",
+        "profile": "large",
+        "seed": 42,
+        "after_before": {
+          "llvm": 1.0043441129549002,
+          "qbe": 1.0019348565413482
+        }
+      },
+      {
+        "case": "int_format",
+        "profile": "small",
+        "seed": 42,
+        "after_before": {
+          "llvm": 1.0214551545640225,
+          "qbe": 0.9957017851170362
+        }
+      },
+      {
+        "case": "int_format",
+        "profile": "large",
+        "seed": 42,
+        "after_before": {
+          "llvm": 1.0133199746883224,
+          "qbe": 0.9915334795073079
+        }
+      }
+    ]
+  },
+  "text_repeat": {
+    "raw_sha256": "632d751c676c09fa69cfcf9343e118e44f525423d517ceaa539f69f7a61108dd",
+    "session_id": "9583c652-49d0-4387-8367-8545c80946aa",
+    "checked_outcomes": 144,
+    "rows": [
+      {
+        "case": "string_equal",
+        "profile": "small",
+        "seed": 42,
+        "after_before": {
+          "llvm": 0.9683142739651027,
+          "qbe": 0.719518945754609
+        }
+      },
+      {
+        "case": "string_search",
+        "profile": "large",
+        "seed": 42,
+        "after_before": {
+          "llvm": 1.0351985357406683,
+          "qbe": 1.0046682310839936
+        }
+      }
+    ]
+  },
+  "remainder_frozen": {
+    "raw_sha256": "db06ca7db3ae628de1571a1a33b78b25946de3b9e1b37fa6fa27ca9439bcf223",
+    "session_id": "214afcd5-6b57-488e-b4f2-fa82f4999c67",
+    "checked_outcomes": 192,
+    "rows": [
+      {
+        "case": "list_append",
+        "profile": "small",
+        "seed": 42,
+        "after_before": {
+          "llvm": 0.9904984721245913,
+          "qbe": 0.9697236396067579
+        }
+      },
+      {
+        "case": "list_append",
+        "profile": "large",
+        "seed": 42,
+        "after_before": {
+          "llvm": 0.9947881048049366,
+          "qbe": 1.0047163620186939
+        }
+      },
+      {
+        "case": "list_filter",
+        "profile": "small",
+        "seed": 42,
+        "after_before": {
+          "llvm": 0.9375547633704922,
+          "qbe": 0.9982411516410765
+        }
+      },
+      {
+        "case": "list_filter",
+        "profile": "large",
+        "seed": 42,
+        "after_before": {
+          "llvm": 0.9193681869673931,
+          "qbe": 0.9962686322653951
+        }
+      },
+      {
+        "case": "sort_int",
+        "profile": "small",
+        "seed": 42,
+        "after_before": {
+          "llvm": 0.868812951389699,
+          "qbe": 0.9697240472139248
+        }
+      },
+      {
+        "case": "sort_int",
+        "profile": "large",
+        "seed": 42,
+        "after_before": {
+          "llvm": 0.9760336727401828,
+          "qbe": 0.9991623243455618
+        }
+      },
+      {
+        "case": "mutate_nested",
+        "profile": "small",
+        "seed": 42,
+        "after_before": {
+          "llvm": 0.9828970263972603,
+          "qbe": 0.9972285368532958
+        }
+      },
+      {
+        "case": "mutate_nested",
+        "profile": "large",
+        "seed": 42,
+        "after_before": {
+          "llvm": 0.99351943138564,
+          "qbe": 0.9975680770077875
+        }
+      }
+    ]
+  },
+  "remainder_signed": {
+    "raw_sha256": "157dadaba4bf81d08ac22204a4e1afdbaa7b07ce8074d93a9cb0f51e11a39f03",
+    "session_id": "fc3b2e26-4a2e-44bb-bac4-f14a28993617",
+    "checked_outcomes": 96,
+    "rows": [
+      {
+        "case": "append_endpoint",
+        "profile": "small",
+        "seed": -1048576,
+        "after_before": {
+          "llvm": 1.0686272686511125,
+          "qbe": 1.1606276882253734
+        }
+      },
+      {
+        "case": "append_endpoint",
+        "profile": "small",
+        "seed": 42,
+        "after_before": {
+          "llvm": 0.9616671398531507,
+          "qbe": 0.9461673963822115
+        }
+      },
+      {
+        "case": "append_endpoint",
+        "profile": "large",
+        "seed": -1048576,
+        "after_before": {
+          "llvm": 1.1201274640368886,
+          "qbe": 1.2679708433553338
+        }
+      },
+      {
+        "case": "append_endpoint",
+        "profile": "large",
+        "seed": 42,
+        "after_before": {
+          "llvm": 0.8584821568773052,
+          "qbe": 0.8378700631413317
+        }
+      }
+    ]
+  },
+  "limitations": [
+    "Exploratory candidate evidence; neither candidate is integrated.",
+    "This replay independently checks oracles, medians and live guest bytes; it does not independently recompute confidence intervals.",
+    "Most timing reports retain parsed process outcomes, not complete raw process streams.",
+    "This archive review does not change goal confirmations."
+  ],
+  "script_sha256": "d397ba4db2dc22bf21fc6b980d4f1b37551b5085aaba83440cb495598dd1f543"
+}

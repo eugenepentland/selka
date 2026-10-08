@@ -1,0 +1,10 @@
+baseline paths 93 external reads ['/dev/urandom', '/etc/lsb-release', '/usr/lib/os-release'] enumerated nonprivate ['/usr/lib/gcc/x86_64-linux-gnu']
+no-default-config paths 93 external reads ['/dev/urandom', '/etc/lsb-release', '/usr/lib/os-release'] enumerated nonprivate ['/usr/lib/gcc/x86_64-linux-gnu']
+no-header-search paths 93 external reads ['/dev/urandom', '/etc/lsb-release', '/usr/lib/os-release'] enumerated nonprivate ['/usr/lib/gcc/x86_64-linux-gnu']
+depfile paths 85 external reads ['/dev/urandom', '/etc/lsb-release', '/usr/lib/os-release'] enumerated nonprivate ['/usr/lib/gcc/x86_64-linux-gnu']
+driver-argv paths 82 external reads ['/etc/lsb-release', '/usr/lib/os-release'] enumerated nonprivate ['/usr/lib/gcc/x86_64-linux-gnu']
+empty-gcc paths 48 external reads ['/dev/urandom', '/etc/lsb-release', '/usr/lib/os-release'] enumerated nonprivate []
+sysroot-only paths 93 external reads ['/dev/urandom', '/etc/lsb-release', '/usr/lib/os-release'] enumerated nonprivate ['/usr/lib/gcc/x86_64-linux-gnu']
+confined-search paths 48 external reads ['/dev/urandom', '/etc/lsb-release', '/usr/lib/os-release'] enumerated nonprivate []
+resource-confined paths 48 external reads ['/dev/urandom', '/etc/lsb-release', '/usr/lib/os-release'] enumerated nonprivate []
+inventory {'path': '/home/epentland/.cache/mylang/core-tools-v1/tool-identity/9c163182f5d1cf4dca2cbdd66fa175d9619573955e172e109f917c3b11916400.inventory', 'sha256': '04353e9958af25d578363b442ffd92a36b34eef29caf2b827e4d124fa61c2d8d', 'inputs': 20907, 'file_inputs': 19609, 'note': 'Decoded existing hint for observational path comparison; its opaque BLAKE3 checksum is not validated by this Python reader.'}

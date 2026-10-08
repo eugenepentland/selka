@@ -1,0 +1,12 @@
+{
+ "programs": 4,
+ "equal": 4,
+ "reference_failed": 0,
+ "modules": 9,
+ "units_compared": 124,
+ "units_whole": 124,
+ "specializations_shared": 0,
+ "interfaces_compared": 9,
+ "executables_identical": 4,
+ "different": []
+}

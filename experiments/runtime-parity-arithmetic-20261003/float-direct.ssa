@@ -1,0 +1,12 @@
+export function l $from_signed(l %v17) {
+@start
+ %v0 =d sltof %v17
+ %v1 =l cast %v0
+ ret %v1
+}
+export function l $from_unsigned(l %v17) {
+@start
+ %v0 =d ultof %v17
+ %v1 =l cast %v0
+ ret %v1
+}

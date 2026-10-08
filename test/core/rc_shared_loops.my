@@ -1,0 +1,26 @@
+module rc_shared_loops
+
+
+def published() -> int:
+    items = [1]
+    saved: list[list[int]] = []
+    for outer in range(3):
+        for at in range(2):
+            items.append(at)
+        saved.append(items)
+    return len(saved[0]) * 1000 + len(saved[1]) * 100 + len(saved[2]) * 10 + len(items)
+
+
+def snapshot(out: Stream) -> int:
+    items = [1]
+    before = items
+    for at in range(5):
+        items.append(at)
+    out.print(len(before), len(items), before == [1])
+    return 0
+
+
+def main(out: Stream) -> int:
+    code = published()
+    out.print(code // 1000, code // 100 % 10, code // 10 % 10, code % 10)
+    return snapshot(out)

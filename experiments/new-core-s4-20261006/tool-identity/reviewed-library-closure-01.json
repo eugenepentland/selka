@@ -1,0 +1,9 @@
+{
+  "domain": "core-approved-zig-library-v1",
+  "root": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib",
+  "inputs": 20899,
+  "files": 19602,
+  "sha256": "e6b4a1cd237963366bfba71c9e3b33d3b052274e4963d9a85d26fda3c9adf3f6",
+  "normalized_encoding": "SHA256(domain field + sorted relative-path/kind/file-SHA256 fields; field length unsigned little-endian 128bit)",
+  "symlinks": false
+}

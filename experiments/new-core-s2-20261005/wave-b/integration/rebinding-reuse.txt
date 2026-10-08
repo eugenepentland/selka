@@ -1,0 +1,22 @@
+Rebinding200 dictionary-fact repair reuse proof
+Launch command: nice -n 10 taskset -c 0,1,4-9,12-19 python3 experiments/new-core-s2-20261005/wave-b/integration/rebinding_reuse.py --root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration --after-root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries --scratch /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/rebinding-reuse --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-b/integration
+Interpreter command: /usr/bin/python3 experiments/new-core-s2-20261005/wave-b/integration/rebinding_reuse.py --root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration --after-root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries --scratch /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/rebinding-reuse --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-b/integration
+Before source: 090dabd5a6932a7c3beaec68248f9a35d4c637d7 (/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration)
+After base: 090dabd5a6932a7c3beaec68248f9a35d4c637d7; repaired staged source tree: 69bd18dfbbf741cfb5cee7af40e11d4540278643
+After worktree: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries
+Generator: wave-a/fuzz_rebinding.install(s1); one random.Random(2204); 200 consecutive s1.Gen(rng, ['mut','records','alias']).program() calls, with no other RNG use
+Original qualification: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-b/integration/fuzz-200/rebinding/summary.json
+Original: qualified200/200, 3000 comparisons, 4000 native runs, no mismatch/fact/crash/refusal.
+Frontend command for each source: BEFORE_OR_AFTER/mylang-core dump-ir SOURCE --facts
+Exact case commands, exit statuses and timings: rebinding-reuse.json
+Private generated sources and complete stdout/stderr: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/rebinding-reuse
+Affinity: [0, 1, 4, 5, 6, 7, 8, 9, 12, 13, 14, 15, 16, 17, 18, 19]; nice: 10
+Compiler changes: ['src/core/facts.zig']
+No guest dict/set constructs: True
+No dictionary IR operations: True (all 400 saved outputs also checked against every dict_* opcode name)
+Complete IR/facts identical: 200/200
+Complete: True; reuse justified: True
+Differences: []
+Elapsed seconds: 12.962
+Native builds/runs during proof: 0/0
+Wave B affected-check justification: the sole compiler-source change is dictionary transfer in facts.zig; all exact 200 guest sources contain no dict/set constructs or dictionary IR, and their complete optimized IR and printed facts are byte-identical. The completed source090 rebinding200 qualification can therefore be reused without a native fuzz replay.

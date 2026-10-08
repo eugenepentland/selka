@@ -1,0 +1,147 @@
+refused extern	main::runtime_bench_now
+ok main::integer	proven=0 exact=0 stack=0
+ok main::boolean	proven=0 exact=0 stack=0
+ok main::execute	proven=6 exact=19 stack=0
+ok main::row_key	proven=0 exact=0 stack=0
+ok main::fold	proven=4 exact=2 stack=0
+ok main::batch_result	proven=58 exact=105 stack=2
+ok main::parse_number	proven=0 exact=0 stack=0
+ok main::main	proven=32 exact=19 stack=0
+refused extern	main::runtime_bench_now
+ok main::parse_number	proven=0 exact=0 stack=0
+ok main::affine_a	proven=0 exact=2 stack=0
+ok main::affine_b	proven=0 exact=2 stack=0
+ok main::score	proven=0 exact=4 stack=0
+ok main::optional	proven=0 exact=2 stack=0
+ok main::checked	proven=0 exact=2 stack=0
+ok main::forwarded	proven=0 exact=2 stack=0
+ok main::search	proven=8 exact=0 stack=0
+ok main::make_frame	proven=10 exact=15 stack=0
+ok main::decode	proven=16 exact=8 stack=0
+ok main::main	proven=69 exact=20 stack=0
+refused extern	main::runtime_bench_now
+ok main::number	proven=0 exact=0 stack=0
+ok main::repeated	proven=0 exact=0 stack=0
+ok main::score	proven=5 exact=0 stack=0
+ok main::row_name	proven=0 exact=1 stack=0
+refused replace	main::inputs
+ok main::word_job	proven=4 exact=5 stack=0
+ok main::csv_rows	proven=1 exact=2 stack=0
+ok main::csv_job	proven=2 exact=18 stack=0
+ok main::json_integer	proven=0 exact=0 stack=0
+ok main::json_active	proven=0 exact=0 stack=0
+ok main::json_job	proven=2 exact=2 stack=0
+ok main::bytes_job	proven=3 exact=1 stack=0
+ok main::split_job	proven=4 exact=2 stack=0
+ok main::parse_job	proven=0 exact=0 stack=0
+ok main::kernel	proven=18 exact=50 stack=0
+refused contains	main::main
+ok strings::digits	proven=0 exact=0 stack=0
+ok strings::message	proven=0 exact=0 stack=0
+ok strings::base_digits	proven=0 exact=0 stack=0
+ok strings::letters	proven=0 exact=0 stack=0
+ok strings::whitespace	proven=0 exact=0 stack=0
+ok strings::table_index	proven=2 exact=2 stack=0
+ok strings::all_in	proven=1 exact=3 stack=0
+refused is_digit	strings::is_digit
+refused is_alpha	strings::is_alpha
+ok strings::is_alnum	proven=0 exact=0 stack=0
+refused is_space	strings::is_space
+ok strings::starts_with	proven=0 exact=0 stack=0
+ok strings::ends_with	proven=0 exact=0 stack=0
+ok strings::find	proven=0 exact=0 stack=0
+refused count	strings::count
+refused lstrip	strings::lstrip
+refused rstrip	strings::rstrip
+refused strip	strings::strip
+ok strings::lines	proven=3 exact=3 stack=0
+ok strings::repeat	proven=2 exact=4 stack=0
+ok strings::pad_left	proven=1 exact=3 stack=0
+ok strings::pad_right	proven=1 exact=3 stack=0
+refused upper	strings::upper
+refused lower	strings::lower
+refused replace	strings::substitute
+ok strings::to_int	proven=0 exact=0 stack=0
+refused parse_float	strings::to_float
+ok strings::format_int	proven=9 exact=1 stack=0
+ok strings::product_error	proven=0 exact=0 stack=0
+ok strings::format_float	proven=3 exact=4 stack=0
+ok strings::ord	proven=2 exact=5 stack=0
+refused decode	strings::chr
+ok math::max_finite	proven=0 exact=0 stack=0
+ok math::pi	proven=0 exact=0 stack=0
+ok math::e	proven=0 exact=0 stack=0
+ok math::nan	proven=0 exact=0 stack=0
+ok math::infinity	proven=0 exact=0 stack=0
+ok math::is_nan	proven=0 exact=0 stack=0
+ok math::is_inf	proven=0 exact=0 stack=0
+ok math::is_finite	proven=0 exact=0 stack=0
+ok math::fabs	proven=0 exact=0 stack=0
+ok math::sign	proven=1 exact=0 stack=0
+ok math::trunc	proven=0 exact=1 stack=0
+ok math::floor	proven=0 exact=0 stack=0
+ok math::ceil	proven=0 exact=0 stack=0
+ok math::round	proven=0 exact=0 stack=0
+refused f64_sqrt	math::sqrt
+refused f64_sin	math::sin
+refused f64_cos	math::cos
+ok math::positive_power	proven=2 exact=0 stack=0
+ok math::saturated	proven=3 exact=1 stack=0
+ok math::pow	proven=0 exact=0 stack=0
+ok math::fmin	proven=0 exact=0 stack=0
+ok math::fmax	proven=0 exact=0 stack=0
+ok math::abs	proven=2 exact=1 stack=0
+ok math::gcd	proven=0 exact=1 stack=0
+ok math::lcm	proven=0 exact=3 stack=0
+ok math::isqrt	proven=3 exact=6 stack=0
+ok json::message	proven=0 exact=0 stack=0
+ok json::max_depth	proven=0 exact=0 stack=0
+ok json::null_value	proven=0 exact=0 stack=0
+ok json::boolean	proven=0 exact=0 stack=0
+ok json::integer	proven=0 exact=0 stack=0
+ok json::number	proven=0 exact=0 stack=0
+ok json::text	proven=0 exact=0 stack=0
+ok json::array	proven=0 exact=0 stack=0
+ok json::object	proven=0 exact=0 stack=0
+ok json::type_name	proven=0 exact=0 stack=0
+ok json::is_null	proven=0 exact=0 stack=0
+ok json::as_bool	proven=0 exact=0 stack=0
+ok json::as_int	proven=0 exact=0 stack=0
+ok json::as_float	proven=0 exact=0 stack=0
+ok json::as_str	proven=0 exact=0 stack=0
+ok json::as_list	proven=0 exact=0 stack=0
+ok json::as_dict	proven=0 exact=0 stack=0
+ok json::get	proven=0 exact=0 stack=0
+ok json::at	proven=1 exact=1 stack=0
+ok json::scanner_of	proven=0 exact=0 stack=0
+ok json::at_end	proven=1 exact=0 stack=0
+ok json::peek	proven=1 exact=1 stack=0
+ok json::advance	proven=0 exact=1 stack=0
+ok json::skip_whitespace	proven=0 exact=0 stack=0
+ok json::fail	proven=0 exact=0 stack=0
+ok json::is_digit_byte	proven=0 exact=0 stack=0
+ok json::hex_value	proven=3 exact=1 stack=0
+refused byte_buffer type	json::append_code_point
+refused byte_buffer type	json::decoded
+ok json::read_hex4	proven=1 exact=2 stack=0
+refused byte_buffer type	json::read_unicode_escape
+refused byte_buffer type	json::read_escape
+refused byte_buffer type	json::read_string
+ok json::skip_digits	proven=0 exact=0 stack=0
+ok json::read_exponent	proven=0 exact=0 stack=0
+ok json::read_fraction	proven=0 exact=0 stack=0
+ok json::read_integer_part	proven=0 exact=0 stack=0
+refused parse_int_range	json::read_number
+ok json::read_literal	proven=4 exact=3 stack=0
+ok json::read_array	proven=0 exact=1 stack=0
+ok json::read_member	proven=0 exact=1 stack=0
+ok json::read_object	proven=0 exact=0 stack=0
+ok json::read_value	proven=0 exact=0 stack=0
+ok json::loads	proven=0 exact=0 stack=0
+refused byte_buffer type	json::write_control
+refused byte_buffer type	json::write_quoted
+refused byte_buffer type	json::write_number
+refused byte_buffer type	json::write_value
+refused byte_buffer type	json::write_array
+refused byte_buffer type	json::write_object
+refused byte_buffer type	json::dumps

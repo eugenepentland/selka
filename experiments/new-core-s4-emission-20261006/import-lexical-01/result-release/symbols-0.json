@@ -1,0 +1,11 @@
+{
+  "command": [
+    "nm",
+    "--defined-only",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/import-lexical-01/result-release/unit-0.o"
+  ],
+  "status": 0,
+  "stdout": "0000000000000000 T main\n",
+  "stderr": "",
+  "seconds": 0.0016653269995003939
+}

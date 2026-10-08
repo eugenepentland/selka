@@ -1,0 +1,20 @@
+test-core
++- run test w
+guardian/test: 3 test(s) selected
+guardian/test: SLOW  9.25s  emit_units_test.test.S4 consuming CFG clones retain exact callee and original call frames
+guardian/test: SLOW  6.45s  emit_units_test.test.S4 consuming generic clones distinguish shared spans and two original call sites
+guardian/test: test wall 18.75s; slowest over 50ms:
+guardian/test:   9.25s  emit_units_test.test.S4 consuming CFG clones retain exact callee and original call frames
+guardian/test:   6.45s  emit_units_test.test.S4 consuming generic clones distinguish shared spans and two original call sites
+guardian/test:   3.05s  emit_units_test.test.S4 nested consuming helpers retain all frames under fact verification
+guardian/test: PASS — 3 passed
+guardian/test: RESULT {"passed":3,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/5c81f05e8119d3ad73fdd675cced839c/test --cache-dir=./.zig-cache --seed=0x43554bf --listen=-
+
+Build Summary: 5/5 steps succeeded; 3/3 tests passed
+test-core success
++- run test 3 pass (3 total) 18s MaxRSS:251M
+   +- compile test debug native success 1s MaxRSS:346M
+      +- options cached
+         +- compile exe mylang-core debug native cached 6ms MaxRSS:41M
+

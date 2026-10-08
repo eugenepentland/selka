@@ -1,0 +1,51 @@
+{
+  "status": "native_exploratory_complete_official_RF_build_in_progress",
+  "source_pin": "3dcbe723da4036fb7d69046e77e9f8cd16d7512f",
+  "source_base": "6cf7bdce11bc205862bf75b9d9ce72e46caad0a2",
+  "native_session_id": "b5337f29-9dbc-4dcd-bb44-a50c8db08718",
+  "created_utc": "2026-10-04T07:41:59.117604+00:00",
+  "raw_bindings": [
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/native-distributions.json",
+      "raw_sha256": "b1b343111c11d1339395474ce0407f820a7beba394b54087ec916a6f4f114655",
+      "raw_bytes": 974301,
+      "archive": "native-distributions.json.gz",
+      "gzip_sha256": "59c976d707089db9dacf1d975714ad5b23e864cb2d941d69513c899f633439ed",
+      "gzip_bytes": 30918
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/native-distributions.log",
+      "raw_sha256": "a7a8b34c948f7e4d9348bbadfe6a13d7e1294bc570d2c46606019df47ebdc2be",
+      "raw_bytes": 1376,
+      "archive": "native-distributions.log.gz",
+      "gzip_sha256": "4358d6c352c42a8c16487209eb46312496d9bfbb9abef872892c922d9f9f50f2",
+      "gzip_bytes": 500
+    },
+    {
+      "source_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/native-analysis.json",
+      "raw_sha256": "f45e8982fe024a4fd301d88f30380b19f2d3524e7d1cc6f9690f09c03f071eb4",
+      "raw_bytes": 47513,
+      "archive": "native-analysis.json.gz",
+      "gzip_sha256": "06c4be9bcd6145ec5f4f61103424949aebbbd841eab83035f5999da04f7d2b70",
+      "gzip_bytes": 8659
+    }
+  ],
+  "limitations": [
+    "This archive is native exploratory evidence only; no generated guest or goal acceptance claimed.",
+    "10M iteration cap:427/800 measured calls below nominal30ms, minimum19.829757ms.",
+    "Five paired rounds; pointwise intervals do not cover between-session or multiple-comparison uncertainty.",
+    "128-middle owned/view controls need independent repeat."
+  ],
+  "bound_inputs": {
+    "native-checks-receipt.json": "6a50c29c6e6aaf09c075adec3648fc991bcc3fdd7ec472fd4d68990ba43ce161",
+    "helper-builds.json": "18c7f6c39beb95c11f62dbb042517c5c61c2b6db1e221b5534af691bf8ad5b87",
+    "helper-static.json": "7f4128ace3fd43be074466ae042c7432fad8767b3aa7ee159c54aaf9f9b62b93",
+    "helper-before-main.asm": "2c5d4ba34f23ccf8169a965d108999a9190d53773c9b69d2be9d034ec2de0e8a",
+    "helper-after-main.asm": "f63d3f80af8d1f8516a14c563f868263f65d8682e074fef7936a617bee98a99a",
+    "commands.json": "68297b7ca2a8687203d9902c0ecc3d9e391c7fa497dd15eaed768db21a473cd0",
+    "analyze-native.py": "2037fb30a7aed1b850841a1c9e66a2381e8f75e31824c61943d20ea6c8e5cf6e",
+    "time-distributions.py": "0ea3d05906669755317bf7de353423a92f6544a98c56ff52dec2c9262f976019",
+    "equality-distributions.c": "d6080eb0c24f2c45d125da439d50e02af785c76da05b9bf7e943077ddf3a2902",
+    "prior-scalar-context.json": "ae4b1efe3048e603b65de00acd83b23f9ac28e0d976227cf91d7376fcf860d04"
+  }
+}

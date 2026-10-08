@@ -1,4 +1,4 @@
-//! Boundary tests for external scalar parsing and runtime value construction.
+//! Boundary tests for decimal integer parsing.
 const std = @import("std");
 const values = @import("value.zig");
 const t = std.testing;
@@ -13,10 +13,4 @@ test "decimal boundary rejects InvalidInteger spellings and IntegerOutOfRange va
     try t.expectError(error.IntegerOutOfRange, values.Type.i8.parseDecimal("-129"));
     try t.expectEqual(@as(i128, -128), try values.Type.i8.parseDecimal("-128"));
     try t.expectEqual(@as(i128, std.math.maxInt(u64)), try values.Type.u64.parseDecimal("18446744073709551615"));
-}
-
-test "scalar aggregate constructors return InvalidAggregateType before allocating" {
-    try t.expectError(error.InvalidAggregateType, values.Value.create(t.allocator, .i64, &.{}));
-    try t.expectError(error.InvalidAggregateType, values.Value.createVariant(t.allocator, .bool, 0, null));
-    try t.expectError(error.InvalidAggregateType, values.Value.createOrdered(t.allocator, .u8, &.{}, &.{}));
 }

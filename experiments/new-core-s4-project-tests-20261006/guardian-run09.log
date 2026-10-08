@@ -1,0 +1,11 @@
+guardian: run-all: whole-tree run — --full was requested
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 29 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10499 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (formatting)
+guardian: failures grouped by check (1):
+  formatting (1 finding)
+    - src/core/test_runner_cases.zig:191: non-conforming formatting (first difference on this line)
+      fix: zig fmt src/core/test_runner_cases.zig
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

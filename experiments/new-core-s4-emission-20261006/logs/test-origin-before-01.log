@@ -1,0 +1,47 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 30s (all 3 build slot(s) busy)
+test-core
++- run test 0 pass, 1 fail (1 total)
+guardian/test: test wall 20.37s; slowest over 50ms:
+guardian/test:   20.37s  emit_units_test.test.S4 an inlined cross-module Result origin retains its source function
+guardian/test: FAIL — 1 failed of 1
+guardian/test: RESULT {"passed":0,"failed":1,"skipped":0}
+error: 'emit_units_test.test.S4 an inlined cross-module Result origin retains its source function' failed:
+       guardian/test: 1 test(s) selected
+       
+       ====== expected this output: =========
+       error: leaf failure
+         leaf.my:3:12  leaf::origin  Err(...) created
+         app.my:4:13   app::main     ? propagated
+       ␃
+       
+       ======== instead found this: =========
+       error: leaf failure
+         leaf.my:3:12  app::main  Err(...) created
+         app.my:4:13   app::main  ? propagated
+       ␃
+       
+       ======================================
+       First difference occurs on line 2:
+       expected:
+         leaf.my:3:12  leaf::origin  Err(...) created
+                       ^ ('\x6c')
+       found:
+         leaf.my:3:12  app::main  Err(...) created
+                       ^ ('\x61')
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x1340325 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/core/emit_units_test.zig:147:9: 0x1340821 in test.S4 an inlined cross-module Result origin retains its source function (root_test.zig)
+               try std.testing.expectEqualStrings("error: leaf failure\n  leaf.my:3:12  leaf::origin  Err(...) created\n  app.my:4:13   app::main     ? propagated\n", result.stderr);
+               ^
+       guardian/test: SLOW  20.37s  emit_units_test.test.S4 an inlined cross-module Result origin retains its source function
+failed command: ./.zig-cache/o/bbfcfd2debaeb49505dc287e691d5d58/test --cache-dir=./.zig-cache --seed=0xc72c0182 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 0/1 tests passed (1 failed)
+test-core transitive failure
++- run test 0 pass, 1 fail (1 total)
+   +- compile test debug native success 7s MaxRSS:342M
+      +- options cached
+         +- compile exe mylang-core debug native cached 19ms MaxRSS:38M
+

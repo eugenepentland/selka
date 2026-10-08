@@ -1,0 +1,3 @@
+guardian/test: 2584 test(s) selected
+guardian/test: test wall 475.30s; slowest over 50ms:
+guardian/test: RESULT {"passed":2584,"failed":0,"skipped":0}

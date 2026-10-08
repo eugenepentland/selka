@@ -1,0 +1,75 @@
+{
+  "kind": "dict",
+  "cases_requested": 200,
+  "seed": 3306,
+  "cases_seen": 3,
+  "accepted": 2,
+  "old_rejected": 0,
+  "core_refused": 0,
+  "core_build_failed": 0,
+  "comparisons_expected": 3000,
+  "native_runs": 40,
+  "harness": {},
+  "harness_status": 1,
+  "complete": false,
+  "qualified": false,
+  "error": "QualificationFailure: compile_timeout: ['/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang', 'build', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T192232Z-f8eca06dbc02/dict/tmp/core-fuzz-s1.ac9rlwz0/records_unions_propagate_mut_alias2.my', '-o', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T192232Z-f8eca06dbc02/dict/tmp/core-fuzz-s1.ac9rlwz0/records_unions_propagate_mut_alias2.old', '--release', '--cache-dir', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T192232Z-f8eca06dbc02/dict/tmp/core-fuzz-s1.ac9rlwz0/cache-old']; retained source: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/matrix-final-run01/dict/failures/records_unions_propagate_mut_alias2-c5083beb85b5.my",
+  "failures": [
+    {
+      "kind": "compile_timeout",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T192232Z-f8eca06dbc02/dict/tmp/core-fuzz-s1.ac9rlwz0/records_unions_propagate_mut_alias2.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T192232Z-f8eca06dbc02/dict/tmp/core-fuzz-s1.ac9rlwz0/records_unions_propagate_mut_alias2.old",
+        "--release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T192232Z-f8eca06dbc02/dict/tmp/core-fuzz-s1.ac9rlwz0/cache-old"
+      ],
+      "timeout": 60,
+      "stdout_b64": "",
+      "stderr_b64": "",
+      "retained_source": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/matrix-final-run01/dict/failures/records_unions_propagate_mut_alias2-c5083beb85b5.my"
+    }
+  ],
+  "elapsed_seconds": 89.00073285307735,
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T192232Z-f8eca06dbc02/dict",
+  "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T192232Z-f8eca06dbc02/dict/tmp",
+  "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/matrix-final-run01/dict/sources",
+  "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/wave-x/s3-x/20261006T192232Z-f8eca06dbc02/dict/zig",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang-core",
+      "sha256": "05e5206c53b853ff8855d547784cec0ae8c0587da3dbd5b0e02eb0eb2744721c"
+    }
+  },
+  "oracle_unchanged": true,
+  "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s2-20261005/wave-b/s2-d/fuzz_dict.py",
+  "harness_sha256": "1266fb7256490c975587c137f5c216c87870a79701c7dfc0dc0db235713de234",
+  "native_comparisons": 30,
+  "native_complete": false,
+  "command_count": 48
+}

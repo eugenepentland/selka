@@ -1,0 +1,11 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10437 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (try-in-return)
+guardian: failures grouped by check (1):
+  try-in-return (1 finding)
+    - src/core/inline.zig:23: `return try withParameters...` — bind the tried value to a local, then return it
+      fix: const v = try <expr>; return v;
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

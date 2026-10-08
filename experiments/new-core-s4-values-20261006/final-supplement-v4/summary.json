@@ -1,0 +1,358 @@
+{
+  "qualified": true,
+  "source_commit": "b9a1245c1a01c35904143c5b44d22239109d6c7e",
+  "old_sha256": "5f9fd4599bb8de25c7db51de8191e5724026a5dcc49603dfd7221d41a0c6e460",
+  "core_sha256": "3c86ebb5ac9db377a2a2b7ae0cffd48cce09bee554aabfec856c9c5a2a6fc2bc",
+  "commands": [
+    {
+      "fixture": "v_dynamic_repeat",
+      "role": "old",
+      "mode": "debug",
+      "valid": true,
+      "outputs": [
+        [
+          "v_dynamic_repeat::test_dynamic_repeat_list_context_and_cow",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0001.log"
+    },
+    {
+      "fixture": "v_dynamic_repeat",
+      "role": "old",
+      "mode": "release",
+      "valid": true,
+      "outputs": [
+        [
+          "v_dynamic_repeat::test_dynamic_repeat_list_context_and_cow",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0002.log"
+    },
+    {
+      "fixture": "v_dynamic_repeat",
+      "role": "new",
+      "mode": "debug",
+      "valid": true,
+      "outputs": [
+        [
+          "v_dynamic_repeat::test_dynamic_repeat_list_context_and_cow",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0003.log"
+    },
+    {
+      "fixture": "v_dynamic_repeat",
+      "role": "new",
+      "mode": "release",
+      "valid": true,
+      "outputs": [
+        [
+          "v_dynamic_repeat::test_dynamic_repeat_list_context_and_cow",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0004.log"
+    },
+    {
+      "fixture": "v_dynamic_repeat",
+      "role": "new",
+      "mode": "verify",
+      "valid": true,
+      "outputs": [
+        [
+          "v_dynamic_repeat::test_dynamic_repeat_list_context_and_cow",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0005.log"
+    },
+    {
+      "fixture": "v_nested_places",
+      "role": "old",
+      "mode": "debug",
+      "valid": true,
+      "outputs": [
+        [
+          "v_nested_places::test_nested_unique_and_shared_paths",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0006.log"
+    },
+    {
+      "fixture": "v_nested_places",
+      "role": "old",
+      "mode": "release",
+      "valid": true,
+      "outputs": [
+        [
+          "v_nested_places::test_nested_unique_and_shared_paths",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0007.log"
+    },
+    {
+      "fixture": "v_nested_places",
+      "role": "new",
+      "mode": "debug",
+      "valid": true,
+      "outputs": [
+        [
+          "v_nested_places::test_nested_unique_and_shared_paths",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0008.log"
+    },
+    {
+      "fixture": "v_nested_places",
+      "role": "new",
+      "mode": "release",
+      "valid": true,
+      "outputs": [
+        [
+          "v_nested_places::test_nested_unique_and_shared_paths",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0009.log"
+    },
+    {
+      "fixture": "v_nested_places",
+      "role": "new",
+      "mode": "verify",
+      "valid": true,
+      "outputs": [
+        [
+          "v_nested_places::test_nested_unique_and_shared_paths",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0010.log"
+    },
+    {
+      "fixture": "v_buffer_format",
+      "role": "old",
+      "mode": "debug",
+      "valid": true,
+      "outputs": [
+        [
+          "v_buffer_format::test_numeric_buffer_spelling_and_snapshots",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0011.log"
+    },
+    {
+      "fixture": "v_buffer_format",
+      "role": "old",
+      "mode": "release",
+      "valid": true,
+      "outputs": [
+        [
+          "v_buffer_format::test_numeric_buffer_spelling_and_snapshots",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0012.log"
+    },
+    {
+      "fixture": "v_buffer_format",
+      "role": "new",
+      "mode": "debug",
+      "valid": true,
+      "outputs": [
+        [
+          "v_buffer_format::test_numeric_buffer_spelling_and_snapshots",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0013.log"
+    },
+    {
+      "fixture": "v_buffer_format",
+      "role": "new",
+      "mode": "release",
+      "valid": true,
+      "outputs": [
+        [
+          "v_buffer_format::test_numeric_buffer_spelling_and_snapshots",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0014.log"
+    },
+    {
+      "fixture": "v_buffer_format",
+      "role": "new",
+      "mode": "verify",
+      "valid": true,
+      "outputs": [
+        [
+          "v_buffer_format::test_numeric_buffer_spelling_and_snapshots",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0015.log"
+    },
+    {
+      "fixture": "v_inline_loops",
+      "role": "old",
+      "mode": "debug",
+      "valid": true,
+      "outputs": [
+        [
+          "v_inline_loops::test_mut_loop_returns_and_shared_snapshots",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0016.log"
+    },
+    {
+      "fixture": "v_inline_loops",
+      "role": "old",
+      "mode": "release",
+      "valid": true,
+      "outputs": [
+        [
+          "v_inline_loops::test_mut_loop_returns_and_shared_snapshots",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0017.log"
+    },
+    {
+      "fixture": "v_inline_loops",
+      "role": "new",
+      "mode": "debug",
+      "valid": true,
+      "outputs": [
+        [
+          "v_inline_loops::test_mut_loop_returns_and_shared_snapshots",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0018.log"
+    },
+    {
+      "fixture": "v_inline_loops",
+      "role": "new",
+      "mode": "release",
+      "valid": true,
+      "outputs": [
+        [
+          "v_inline_loops::test_mut_loop_returns_and_shared_snapshots",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0019.log"
+    },
+    {
+      "fixture": "v_inline_loops",
+      "role": "new",
+      "mode": "verify",
+      "valid": true,
+      "outputs": [
+        [
+          "v_inline_loops::test_mut_loop_returns_and_shared_snapshots",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0020.log"
+    },
+    {
+      "fixture": "v_nested_lengths",
+      "role": "old",
+      "mode": "debug",
+      "valid": true,
+      "outputs": [
+        [
+          "v_nested_lengths::test_uniform_child_lengths_follow_each_list_value",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0021.log"
+    },
+    {
+      "fixture": "v_nested_lengths",
+      "role": "old",
+      "mode": "release",
+      "valid": true,
+      "outputs": [
+        [
+          "v_nested_lengths::test_uniform_child_lengths_follow_each_list_value",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0022.log"
+    },
+    {
+      "fixture": "v_nested_lengths",
+      "role": "new",
+      "mode": "debug",
+      "valid": true,
+      "outputs": [
+        [
+          "v_nested_lengths::test_uniform_child_lengths_follow_each_list_value",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0023.log"
+    },
+    {
+      "fixture": "v_nested_lengths",
+      "role": "new",
+      "mode": "release",
+      "valid": true,
+      "outputs": [
+        [
+          "v_nested_lengths::test_uniform_child_lengths_follow_each_list_value",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0024.log"
+    },
+    {
+      "fixture": "v_nested_lengths",
+      "role": "new",
+      "mode": "verify",
+      "valid": true,
+      "outputs": [
+        [
+          "v_nested_lengths::test_uniform_child_lengths_follow_each_list_value",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0025.log"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "command": [
+    ".mylang-cache/s3-packet/oracle/mylang",
+    "build",
+    ".mylang-cache/s3-packet/indices-03/index.my",
+    "-o",
+    ".mylang-cache/s3-packet/indices-03/old-release",
+    "--cache-dir",
+    ".mylang-cache/s3-packet/indices-03/cache-old-release",
+    "--release"
+  ],
+  "status": 0,
+  "stdout": "",
+  "stderr": ""
+}

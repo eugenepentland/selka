@@ -1,0 +1,452 @@
+--- before/row_record_update.ll
++++ after/row_record_update.ll
+@@ -121,7 +121,10 @@
+   call void @myl_core_free_block(ptr %block)
+   ret void
+ }
++declare void @myl_core_io_at(i32) nounwind
+ declare i64 @runtime_bench_now() nounwind
++declare void @myl_core_host_check(i64) nounwind
++declare i64 @myl_core_host_grant() nounwind
+ define internal fastcc { i1, i64 } @myl_core_digits8(ptr %data, i64 %n) alwaysinline nounwind {
+ entry:
+   %eight = icmp eq i64 %n, 8
+@@ -273,6 +276,11 @@
+   %parsed = call zeroext i1 @myl_core_str_parse_int(ptr %text, ptr %out)
+   ret i1 %parsed
+ }
++declare ptr @myl_core_buffer_new(i64) nounwind
++declare ptr @myl_core_buffer_copy(ptr) nounwind
++declare ptr @myl_core_buffer_push(ptr, i8 zeroext) nounwind
++declare ptr @myl_core_buffer_set(ptr, i64, i8 zeroext) nounwind
++declare ptr @myl_core_buffer_pop(ptr) nounwind
+ define internal i64 @"my.row_record_update::main"(ptr %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000003 {
+ entry:
+   %slot = alloca i64, align 8
+@@ -565,120 +573,124 @@
+   %v144 = add nuw nsw i64 %v127, 1
+   br label %b26
+ b29:
+-  %v155 = call i64 @runtime_bench_now(), !dbg !1000027
++  call void @myl_core_io_at(i32 20)
++  call void @myl_core_host_check(i64 %p1), !dbg !1000027
++  %v156 = call i64 @runtime_bench_now(), !dbg !1000028
+   br label %b30
+ b30:
+-  %v163 = phi i64 [ 0, %b29 ], [ %v246, %b32 ]
+-  %v235 = phi i64 [ 0, %b29 ], [ %v240, %b32 ]
+-  %v165 = icmp slt i64 %v163, %v34
+-  br i1 %v165, label %b31, label %b33
++  %v164 = phi i64 [ 0, %b29 ], [ %v247, %b32 ]
++  %v236 = phi i64 [ 0, %b29 ], [ %v241, %b32 ]
++  %v166 = icmp slt i64 %v164, %v34
++  br i1 %v166, label %b31, label %b33
+ b31:
+-  %v168 = urem i64 %v163, 17
++  %v169 = urem i64 %v164, 17
+   br label %b34
+ b32:
+-  %v246 = add nuw nsw i64 %v163, 1
++  %v247 = add nuw nsw i64 %v164, 1
+   br label %b30
+ b33:
+   call void @myl_core_free(ptr %v107)
+   call void @myl_core_free(ptr %v140)
+-  %v264 = call i64 @runtime_bench_now(), !dbg !1000028
+-  %p.104 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v264, i64 %v155)
+-  %v269 = extractvalue { i64, i1 } %p.104, 0
++  call void @myl_core_io_at(i32 21)
++  call void @myl_core_host_check(i64 %p1), !dbg !1000029
++  %v266 = call i64 @runtime_bench_now(), !dbg !1000030
++  %p.104 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v266, i64 %v156)
++  %v271 = extractvalue { i64, i1 } %p.104, 0
+   %o.105 = extractvalue { i64, i1 } %p.104, 1
+   br i1 %o.105, label %trap.106, label %b33.107, !prof !0
+ trap.106:
+-  call void @myl_core_trap(i32 20, i64 %v264, i64 %v155), !dbg !1000029
++  call void @myl_core_trap(i32 22, i64 %v266, i64 %v156), !dbg !1000031
+   unreachable
+ b33.107:
+-  call void @myl_core_print_i64(i64 %p2, i64 %v235)
++  call void @myl_core_print_i64(i64 %p2, i64 %v236)
+   call void @myl_core_print_sep(i64 %p2)
+-  call void @myl_core_print_i64(i64 %p2, i64 %v269)
++  call void @myl_core_print_i64(i64 %p2, i64 %v271)
+   call void @myl_core_print_end(i64 %p2)
+   ret i64 0
+ b34:
+-  %v173 = phi i64 [ 0, %b31 ], [ %v225, %b36 ]
+-  %v220 = phi i64 [ 0, %b31 ], [ %v221, %b36 ]
+-  %v175 = icmp slt i64 %v173, %v21
+-  br i1 %v175, label %b35, label %b37
++  %v174 = phi i64 [ 0, %b31 ], [ %v226, %b36 ]
++  %v221 = phi i64 [ 0, %b31 ], [ %v222, %b36 ]
++  %v176 = icmp slt i64 %v174, %v21
++  br i1 %v176, label %b35, label %b37
+ b35:
+   br i1 false, label %b38, label %b39
+ b36:
+-  %v225 = add nuw nsw i64 %v173, 1
++  %v226 = add nuw nsw i64 %v174, 1
+   br label %b34
+ b37:
+-  %p.108 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v235, i64 %v220)
+-  %v238 = extractvalue { i64, i1 } %p.108, 0
++  %p.108 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v236, i64 %v221)
++  %v239 = extractvalue { i64, i1 } %p.108, 0
+   %o.109 = extractvalue { i64, i1 } %p.108, 1
+   br i1 %o.109, label %trap.110, label %b37.111, !prof !0
+ trap.110:
+-  call void @myl_core_trap(i32 21, i64 %v235, i64 %v220), !dbg !1000030
++  call void @myl_core_trap(i32 23, i64 %v236, i64 %v221), !dbg !1000032
+   unreachable
+ b37.111:
+-  %q.112 = sdiv i64 %v238, 1000000007
+-  %r.113 = srem i64 %v238, 1000000007
++  %q.112 = sdiv i64 %v239, 1000000007
++  %r.113 = srem i64 %v239, 1000000007
+   %rnz.114 = icmp ne i64 %r.113, 0
+   %x.115 = xor i64 %r.113, 1000000007
+   %neg.116 = icmp slt i64 %x.115, 0
+   %fix.117 = and i1 %rnz.114, %neg.116
+   %ra.118 = select i1 %fix.117, i64 1000000007, i64 0
+-  %v240 = add i64 %r.113, %ra.118
++  %v241 = add i64 %r.113, %ra.118
+   br label %b32
+ b38:
+   %h.119 = getelementptr inbounds i8, ptr %v107, i64 8
+-  %v181 = load i64, ptr %h.119, align 8, !tbaa !5
+-  %hi.120 = icmp ugt i64 %v181, 9223372036854775807
++  %v182 = load i64, ptr %h.119, align 8, !tbaa !5
++  %hi.120 = icmp ugt i64 %v182, 9223372036854775807
+   br i1 %hi.120, label %trap.121, label %b38.122, !prof !0
+ trap.121:
+-  call void @myl_core_trap(i32 22, i64 %v181, i64 0), !dbg !1000031
++  call void @myl_core_trap(i32 24, i64 %v182, i64 0), !dbg !1000033
+   unreachable
+ b38.122:
+-  %v182 = add i64 %v181, 0
+-  %p.123 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v182, i64 %v173)
+-  %v183 = extractvalue { i64, i1 } %p.123, 0
++  %v183 = add i64 %v182, 0
++  %p.123 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v183, i64 %v174)
++  %v184 = extractvalue { i64, i1 } %p.123, 0
+   %o.124 = extractvalue { i64, i1 } %p.123, 1
+   br i1 %o.124, label %trap.125, label %b38.122.126, !prof !0
+ trap.125:
+-  call void @myl_core_trap(i32 23, i64 %v182, i64 %v173), !dbg !1000032
++  call void @myl_core_trap(i32 25, i64 %v183, i64 %v174), !dbg !1000034
+   unreachable
+ b38.122.126:
+   br label %b39
+ b39:
+-  %v185 = phi i64 [ %v173, %b35 ], [ %v183, %b38.122.126 ]
++  %v186 = phi i64 [ %v174, %b35 ], [ %v184, %b38.122.126 ]
+   %data.127 = getelementptr inbounds i8, ptr %v107, i64 32
+-  %elt.128 = getelementptr inbounds i64, ptr %data.127, i64 %v185
+-  %v187 = load i64, ptr %elt.128, align 8, !range !12, !tbaa !7
++  %elt.128 = getelementptr inbounds i64, ptr %data.127, i64 %v186
++  %v188 = load i64, ptr %elt.128, align 8, !range !12, !tbaa !7
+   br i1 false, label %b40, label %b41
+ b40:
+   %h.129 = getelementptr inbounds i8, ptr %v140, i64 8
+-  %v195 = load i64, ptr %h.129, align 8, !tbaa !5
+-  %hi.130 = icmp ugt i64 %v195, 9223372036854775807
++  %v196 = load i64, ptr %h.129, align 8, !tbaa !5
++  %hi.130 = icmp ugt i64 %v196, 9223372036854775807
+   br i1 %hi.130, label %trap.131, label %b40.132, !prof !0
+ trap.131:
+-  call void @myl_core_trap(i32 24, i64 %v195, i64 0), !dbg !1000033
++  call void @myl_core_trap(i32 26, i64 %v196, i64 0), !dbg !1000035
+   unreachable
+ b40.132:
+-  %v196 = add i64 %v195, 0
+-  %p.133 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v196, i64 %v173)
+-  %v197 = extractvalue { i64, i1 } %p.133, 0
++  %v197 = add i64 %v196, 0
++  %p.133 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v197, i64 %v174)
++  %v198 = extractvalue { i64, i1 } %p.133, 0
+   %o.134 = extractvalue { i64, i1 } %p.133, 1
+   br i1 %o.134, label %trap.135, label %b40.132.136, !prof !0
+ trap.135:
+-  call void @myl_core_trap(i32 25, i64 %v196, i64 %v173), !dbg !1000034
++  call void @myl_core_trap(i32 27, i64 %v197, i64 %v174), !dbg !1000036
+   unreachable
+ b40.132.136:
+   br label %b41
+ b41:
+-  %v199 = phi i64 [ %v173, %b39 ], [ %v197, %b40.132.136 ]
++  %v200 = phi i64 [ %v174, %b39 ], [ %v198, %b40.132.136 ]
+   %lh.137 = getelementptr inbounds i8, ptr %v140, i64 8
+   %len.138 = load i64, ptr %lh.137, align 8, !tbaa !5
+-  %oob.139 = icmp uge i64 %v199, %len.138
++  %oob.139 = icmp uge i64 %v200, %len.138
+   br i1 %oob.139, label %trap.140, label %b41.141, !prof !0
+ trap.140:
+-  call void @myl_core_trap(i32 26, i64 %v199, i64 %len.138), !dbg !1000035
++  call void @myl_core_trap(i32 28, i64 %v200, i64 %len.138), !dbg !1000037
+   unreachable
+ b41.141:
+   %data.142 = getelementptr inbounds i8, ptr %v140, i64 32
+-  %elt.143 = getelementptr inbounds [24 x i8], ptr %data.142, i64 %v199
++  %elt.143 = getelementptr inbounds [24 x i8], ptr %data.142, i64 %v200
+   %lf.144 = load i64, ptr %elt.143, align 8, !tbaa !7
+   %lr.145 = insertvalue { i64, i64, i64 } poison, i64 %lf.144, 0
+   %fp.147 = getelementptr inbounds i8, ptr %elt.143, i64 8
+@@ -686,61 +698,61 @@
+   %lr.148 = insertvalue { i64, i64, i64 } %lr.145, i64 %lf.146, 1
+   %fp.150 = getelementptr inbounds i8, ptr %elt.143, i64 16
+   %lf.149 = load i64, ptr %fp.150, align 8, !tbaa !7
+-  %v201 = insertvalue { i64, i64, i64 } %lr.148, i64 %lf.149, 2
+-  %v206 = add nuw nsw i64 %v187, %v168
+-  %v207 = insertvalue { i64, i64, i64 } %v201, i64 %v206, 0
+-  %v209 = urem i64 %v187, 17
+-  %v210 = insertvalue { i64, i64, i64 } %v207, i64 %v209, 1
+-  %v212 = mul nuw nsw i64 %v187, 3
+-  %v213 = add nuw nsw i64 %v212, %v168
+-  %v215 = urem i64 %v213, 101
+-  %v216 = insertvalue { i64, i64, i64 } %v210, i64 %v215, 2
+-  %v287 = extractvalue { i64, i64, i64 } %v216, 0
+-  %v288 = extractvalue { i64, i64, i64 } %v216, 1
+-  %p.151 = call { i64, i1 } @llvm.smul.with.overflow.i64(i64 %v288, i64 3)
+-  %v289 = extractvalue { i64, i1 } %p.151, 0
++  %v202 = insertvalue { i64, i64, i64 } %lr.148, i64 %lf.149, 2
++  %v207 = add nuw nsw i64 %v188, %v169
++  %v208 = insertvalue { i64, i64, i64 } %v202, i64 %v207, 0
++  %v210 = urem i64 %v188, 17
++  %v211 = insertvalue { i64, i64, i64 } %v208, i64 %v210, 1
++  %v213 = mul nuw nsw i64 %v188, 3
++  %v214 = add nuw nsw i64 %v213, %v169
++  %v216 = urem i64 %v214, 101
++  %v217 = insertvalue { i64, i64, i64 } %v211, i64 %v216, 2
++  %v289 = extractvalue { i64, i64, i64 } %v217, 0
++  %v290 = extractvalue { i64, i64, i64 } %v217, 1
++  %p.151 = call { i64, i1 } @llvm.smul.with.overflow.i64(i64 %v290, i64 3)
++  %v291 = extractvalue { i64, i1 } %p.151, 0
+   %o.152 = extractvalue { i64, i1 } %p.151, 1
+   br i1 %o.152, label %trap.153, label %b41.141.154, !prof !0
+ trap.153:
+-  call void @myl_core_trap(i32 27, i64 %v288, i64 3), !dbg !1000036
++  call void @myl_core_trap(i32 29, i64 %v290, i64 3), !dbg !1000038
+   unreachable
+ b41.141.154:
+-  %p.155 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v287, i64 %v289)
+-  %v290 = extractvalue { i64, i1 } %p.155, 0
++  %p.155 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v289, i64 %v291)
++  %v292 = extractvalue { i64, i1 } %p.155, 0
+   %o.156 = extractvalue { i64, i1 } %p.155, 1
+   br i1 %o.156, label %trap.157, label %b41.141.154.158, !prof !0
+ trap.157:
+-  call void @myl_core_trap(i32 28, i64 %v287, i64 %v289), !dbg !1000037
++  call void @myl_core_trap(i32 30, i64 %v289, i64 %v291), !dbg !1000039
+   unreachable
+ b41.141.154.158:
+-  %v291 = extractvalue { i64, i64, i64 } %v216, 2
+-  %p.159 = call { i64, i1 } @llvm.smul.with.overflow.i64(i64 %v291, i64 5)
+-  %v292 = extractvalue { i64, i1 } %p.159, 0
++  %v293 = extractvalue { i64, i64, i64 } %v217, 2
++  %p.159 = call { i64, i1 } @llvm.smul.with.overflow.i64(i64 %v293, i64 5)
++  %v294 = extractvalue { i64, i1 } %p.159, 0
+   %o.160 = extractvalue { i64, i1 } %p.159, 1
+   br i1 %o.160, label %trap.161, label %b41.141.154.158.162, !prof !0
+ trap.161:
+-  call void @myl_core_trap(i32 29, i64 %v291, i64 5), !dbg !1000038
++  call void @myl_core_trap(i32 31, i64 %v293, i64 5), !dbg !1000040
+   unreachable
+ b41.141.154.158.162:
+-  %p.163 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v290, i64 %v292)
+-  %v293 = extractvalue { i64, i1 } %p.163, 0
++  %p.163 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v292, i64 %v294)
++  %v295 = extractvalue { i64, i1 } %p.163, 0
+   %o.164 = extractvalue { i64, i1 } %p.163, 1
+   br i1 %o.164, label %trap.165, label %b41.141.154.158.162.166, !prof !0
+ trap.165:
+-  call void @myl_core_trap(i32 30, i64 %v290, i64 %v292), !dbg !1000039
++  call void @myl_core_trap(i32 32, i64 %v292, i64 %v294), !dbg !1000041
+   unreachable
+ b41.141.154.158.162.166:
+-  %p.167 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v220, i64 %v293)
+-  %v221 = extractvalue { i64, i1 } %p.167, 0
++  %p.167 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v221, i64 %v295)
++  %v222 = extractvalue { i64, i1 } %p.167, 0
+   %o.168 = extractvalue { i64, i1 } %p.167, 1
+   br i1 %o.168, label %trap.169, label %b41.141.154.158.162.166.170, !prof !0
+ trap.169:
+-  call void @myl_core_trap(i32 31, i64 %v220, i64 %v293), !dbg !1000040
++  call void @myl_core_trap(i32 33, i64 %v221, i64 %v295), !dbg !1000042
+   unreachable
+ b41.141.154.158.162.166.170:
+   br label %b36
+ }
+-define internal i64 @"my.row_record_update::parse_number"(ptr %p0) nounwind uwtable !dbg !1000041 {
++define internal i64 @"my.row_record_update::parse_number"(ptr %p0) nounwind uwtable !dbg !1000043 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -762,7 +774,7 @@
+ b4:
+   ret i64 0
+ }
+-define internal i64 @"my.row_record_update::score"({ i64, i64, i64 } %p0) nounwind uwtable !dbg !1000042 {
++define internal i64 @"my.row_record_update::score"({ i64, i64, i64 } %p0) nounwind uwtable !dbg !1000044 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -774,7 +786,7 @@
+   %o.2 = extractvalue { i64, i1 } %p.1, 1
+   br i1 %o.2, label %trap.3, label %b0.4, !prof !0
+ trap.3:
+-  call void @myl_core_trap(i32 32, i64 %v2, i64 3), !dbg !1000043
++  call void @myl_core_trap(i32 34, i64 %v2, i64 3), !dbg !1000045
+   unreachable
+ b0.4:
+   %p.5 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v1, i64 %v4)
+@@ -782,7 +794,7 @@
+   %o.6 = extractvalue { i64, i1 } %p.5, 1
+   br i1 %o.6, label %trap.7, label %b0.4.8, !prof !0
+ trap.7:
+-  call void @myl_core_trap(i32 33, i64 %v1, i64 %v4), !dbg !1000044
++  call void @myl_core_trap(i32 35, i64 %v1, i64 %v4), !dbg !1000046
+   unreachable
+ b0.4.8:
+   %v6 = extractvalue { i64, i64, i64 } %p0, 2
+@@ -791,7 +803,7 @@
+   %o.10 = extractvalue { i64, i1 } %p.9, 1
+   br i1 %o.10, label %trap.11, label %b0.4.8.12, !prof !0
+ trap.11:
+-  call void @myl_core_trap(i32 34, i64 %v6, i64 5), !dbg !1000045
++  call void @myl_core_trap(i32 36, i64 %v6, i64 5), !dbg !1000047
+   unreachable
+ b0.4.8.12:
+   %p.13 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v5, i64 %v8)
+@@ -799,15 +811,16 @@
+   %o.14 = extractvalue { i64, i1 } %p.13, 1
+   br i1 %o.14, label %trap.15, label %b0.4.8.12.16, !prof !0
+ trap.15:
+-  call void @myl_core_trap(i32 35, i64 %v5, i64 %v8), !dbg !1000046
++  call void @myl_core_trap(i32 37, i64 %v5, i64 %v8), !dbg !1000048
+   unreachable
+ b0.4.8.12.16:
+   ret i64 %v9
+ }
+-define i32 @main(i32 %argc, ptr %argv) uwtable !dbg !1000047 {
++define i32 @main(i32 %argc, ptr %argv) uwtable !dbg !1000049 {
+ entry:
+   %args = call ptr @myl_core_args(i32 %argc, ptr %argv)
+-  %r = call i64 @"my.row_record_update::main"(ptr %args, i64 1, i64 1), !dbg !1000048
++  %host1 = call i64 @myl_core_host_grant()
++  %r = call i64 @"my.row_record_update::main"(ptr %args, i64 %host1, i64 1), !dbg !1000050
+   call void @myl_core_release(ptr %args)
+   %s = call i32 @myl_core_exit(i64 %r)
+   ret i32 %s
+@@ -853,11 +866,11 @@
+ @myl.fn.18 = private constant [24 x i8] c"row_record_update::main\00"
+ @myl.op.19 = private constant [6 x i8] c"index\00"
+ @myl.fn.19 = private constant [24 x i8] c"row_record_update::main\00"
+-@myl.op.20 = private constant [4 x i8] c"sub\00"
++@myl.op.20 = private constant [7 x i8] c"effect\00"
+ @myl.fn.20 = private constant [24 x i8] c"row_record_update::main\00"
+-@myl.op.21 = private constant [4 x i8] c"add\00"
++@myl.op.21 = private constant [7 x i8] c"effect\00"
+ @myl.fn.21 = private constant [24 x i8] c"row_record_update::main\00"
+-@myl.op.22 = private constant [5 x i8] c"cast\00"
++@myl.op.22 = private constant [4 x i8] c"sub\00"
+ @myl.fn.22 = private constant [24 x i8] c"row_record_update::main\00"
+ @myl.op.23 = private constant [4 x i8] c"add\00"
+ @myl.fn.23 = private constant [24 x i8] c"row_record_update::main\00"
+@@ -865,28 +878,32 @@
+ @myl.fn.24 = private constant [24 x i8] c"row_record_update::main\00"
+ @myl.op.25 = private constant [4 x i8] c"add\00"
+ @myl.fn.25 = private constant [24 x i8] c"row_record_update::main\00"
+-@myl.op.26 = private constant [6 x i8] c"index\00"
++@myl.op.26 = private constant [5 x i8] c"cast\00"
+ @myl.fn.26 = private constant [24 x i8] c"row_record_update::main\00"
+-@myl.op.27 = private constant [4 x i8] c"mul\00"
++@myl.op.27 = private constant [4 x i8] c"add\00"
+ @myl.fn.27 = private constant [24 x i8] c"row_record_update::main\00"
+-@myl.op.28 = private constant [4 x i8] c"add\00"
++@myl.op.28 = private constant [6 x i8] c"index\00"
+ @myl.fn.28 = private constant [24 x i8] c"row_record_update::main\00"
+ @myl.op.29 = private constant [4 x i8] c"mul\00"
+ @myl.fn.29 = private constant [24 x i8] c"row_record_update::main\00"
+ @myl.op.30 = private constant [4 x i8] c"add\00"
+ @myl.fn.30 = private constant [24 x i8] c"row_record_update::main\00"
+-@myl.op.31 = private constant [4 x i8] c"add\00"
++@myl.op.31 = private constant [4 x i8] c"mul\00"
+ @myl.fn.31 = private constant [24 x i8] c"row_record_update::main\00"
+-@myl.op.32 = private constant [4 x i8] c"mul\00"
+-@myl.fn.32 = private constant [25 x i8] c"row_record_update::score\00"
++@myl.op.32 = private constant [4 x i8] c"add\00"
++@myl.fn.32 = private constant [24 x i8] c"row_record_update::main\00"
+ @myl.op.33 = private constant [4 x i8] c"add\00"
+-@myl.fn.33 = private constant [25 x i8] c"row_record_update::score\00"
++@myl.fn.33 = private constant [24 x i8] c"row_record_update::main\00"
+ @myl.op.34 = private constant [4 x i8] c"mul\00"
+ @myl.fn.34 = private constant [25 x i8] c"row_record_update::score\00"
+ @myl.op.35 = private constant [4 x i8] c"add\00"
+ @myl.fn.35 = private constant [25 x i8] c"row_record_update::score\00"
+-@myl_core_site_count = constant i32 36
+-@myl_core_sites = constant [36 x %myl.site] [%myl.site { i32 4, i32 31, i32 25, i32 64, ptr @myl.op.0, ptr @myl.fn.0 }, %myl.site { i32 0, i32 31, i32 25, i32 64, ptr @myl.op.1, ptr @myl.fn.1 }, %myl.site { i32 2, i32 31, i32 25, i32 64, ptr @myl.op.2, ptr @myl.fn.2 }, %myl.site { i32 4, i32 32, i32 31, i32 64, ptr @myl.op.3, ptr @myl.fn.3 }, %myl.site { i32 0, i32 32, i32 31, i32 64, ptr @myl.op.4, ptr @myl.fn.4 }, %myl.site { i32 2, i32 32, i32 31, i32 64, ptr @myl.op.5, ptr @myl.fn.5 }, %myl.site { i32 4, i32 33, i32 25, i32 64, ptr @myl.op.6, ptr @myl.fn.6 }, %myl.site { i32 0, i32 33, i32 25, i32 64, ptr @myl.op.7, ptr @myl.fn.7 }, %myl.site { i32 2, i32 33, i32 25, i32 64, ptr @myl.op.8, ptr @myl.fn.8 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.9, ptr @myl.fn.9 }, %myl.site { i32 4, i32 36, i32 14, i32 64, ptr @myl.op.10, ptr @myl.fn.10 }, %myl.site { i32 4, i32 36, i32 14, i32 64, ptr @myl.op.11, ptr @myl.fn.11 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.12, ptr @myl.fn.12 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.13, ptr @myl.fn.13 }, %myl.site { i32 4, i32 36, i32 14, i32 64, ptr @myl.op.14, ptr @myl.fn.14 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.15, ptr @myl.fn.15 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.16, ptr @myl.fn.16 }, %myl.site { i32 0, i32 36, i32 25, i32 64, ptr @myl.op.17, ptr @myl.fn.17 }, %myl.site { i32 0, i32 36, i32 21, i32 64, ptr @myl.op.18, ptr @myl.fn.18 }, %myl.site { i32 2, i32 37, i32 15, i32 64, ptr @myl.op.19, ptr @myl.fn.19 }, %myl.site { i32 0, i32 53, i32 39, i32 64, ptr @myl.op.20, ptr @myl.fn.20 }, %myl.site { i32 0, i32 52, i32 30, i32 64, ptr @myl.op.21, ptr @myl.fn.21 }, %myl.site { i32 4, i32 44, i32 17, i32 64, ptr @myl.op.22, ptr @myl.fn.22 }, %myl.site { i32 0, i32 44, i32 17, i32 64, ptr @myl.op.23, ptr @myl.fn.23 }, %myl.site { i32 4, i32 46, i32 22, i32 64, ptr @myl.op.24, ptr @myl.fn.24 }, %myl.site { i32 0, i32 46, i32 22, i32 64, ptr @myl.op.25, ptr @myl.fn.25 }, %myl.site { i32 2, i32 46, i32 22, i32 64, ptr @myl.op.26, ptr @myl.fn.26 }, %myl.site { i32 0, i32 17, i32 32, i32 64, ptr @myl.op.27, ptr @myl.fn.27 }, %myl.site { i32 0, i32 17, i32 21, i32 64, ptr @myl.op.28, ptr @myl.fn.28 }, %myl.site { i32 0, i32 17, i32 47, i32 64, ptr @myl.op.29, ptr @myl.fn.29 }, %myl.site { i32 0, i32 17, i32 36, i32 64, ptr @myl.op.30, ptr @myl.fn.30 }, %myl.site { i32 0, i32 51, i32 24, i32 64, ptr @myl.op.31, ptr @myl.fn.31 }, %myl.site { i32 0, i32 17, i32 32, i32 64, ptr @myl.op.32, ptr @myl.fn.32 }, %myl.site { i32 0, i32 17, i32 21, i32 64, ptr @myl.op.33, ptr @myl.fn.33 }, %myl.site { i32 0, i32 17, i32 47, i32 64, ptr @myl.op.34, ptr @myl.fn.34 }, %myl.site { i32 0, i32 17, i32 36, i32 64, ptr @myl.op.35, ptr @myl.fn.35 }]
++@myl.op.36 = private constant [4 x i8] c"mul\00"
++@myl.fn.36 = private constant [25 x i8] c"row_record_update::score\00"
++@myl.op.37 = private constant [4 x i8] c"add\00"
++@myl.fn.37 = private constant [25 x i8] c"row_record_update::score\00"
++@myl_core_site_count = constant i32 38
++@myl_core_sites = constant [38 x %myl.site] [%myl.site { i32 4, i32 31, i32 25, i32 64, ptr @myl.op.0, ptr @myl.fn.0 }, %myl.site { i32 0, i32 31, i32 25, i32 64, ptr @myl.op.1, ptr @myl.fn.1 }, %myl.site { i32 2, i32 31, i32 25, i32 64, ptr @myl.op.2, ptr @myl.fn.2 }, %myl.site { i32 4, i32 32, i32 31, i32 64, ptr @myl.op.3, ptr @myl.fn.3 }, %myl.site { i32 0, i32 32, i32 31, i32 64, ptr @myl.op.4, ptr @myl.fn.4 }, %myl.site { i32 2, i32 32, i32 31, i32 64, ptr @myl.op.5, ptr @myl.fn.5 }, %myl.site { i32 4, i32 33, i32 25, i32 64, ptr @myl.op.6, ptr @myl.fn.6 }, %myl.site { i32 0, i32 33, i32 25, i32 64, ptr @myl.op.7, ptr @myl.fn.7 }, %myl.site { i32 2, i32 33, i32 25, i32 64, ptr @myl.op.8, ptr @myl.fn.8 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.9, ptr @myl.fn.9 }, %myl.site { i32 4, i32 36, i32 14, i32 64, ptr @myl.op.10, ptr @myl.fn.10 }, %myl.site { i32 4, i32 36, i32 14, i32 64, ptr @myl.op.11, ptr @myl.fn.11 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.12, ptr @myl.fn.12 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.13, ptr @myl.fn.13 }, %myl.site { i32 4, i32 36, i32 14, i32 64, ptr @myl.op.14, ptr @myl.fn.14 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.15, ptr @myl.fn.15 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.16, ptr @myl.fn.16 }, %myl.site { i32 0, i32 36, i32 25, i32 64, ptr @myl.op.17, ptr @myl.fn.17 }, %myl.site { i32 0, i32 36, i32 21, i32 64, ptr @myl.op.18, ptr @myl.fn.18 }, %myl.site { i32 2, i32 37, i32 15, i32 64, ptr @myl.op.19, ptr @myl.fn.19 }, %myl.site { i32 7, i32 39, i32 13, i32 64, ptr @myl.op.20, ptr @myl.fn.20 }, %myl.site { i32 7, i32 53, i32 15, i32 64, ptr @myl.op.21, ptr @myl.fn.21 }, %myl.site { i32 0, i32 53, i32 39, i32 64, ptr @myl.op.22, ptr @myl.fn.22 }, %myl.site { i32 0, i32 52, i32 30, i32 64, ptr @myl.op.23, ptr @myl.fn.23 }, %myl.site { i32 4, i32 44, i32 17, i32 64, ptr @myl.op.24, ptr @myl.fn.24 }, %myl.site { i32 0, i32 44, i32 17, i32 64, ptr @myl.op.25, ptr @myl.fn.25 }, %myl.site { i32 4, i32 46, i32 22, i32 64, ptr @myl.op.26, ptr @myl.fn.26 }, %myl.site { i32 0, i32 46, i32 22, i32 64, ptr @myl.op.27, ptr @myl.fn.27 }, %myl.site { i32 2, i32 46, i32 22, i32 64, ptr @myl.op.28, ptr @myl.fn.28 }, %myl.site { i32 0, i32 17, i32 32, i32 64, ptr @myl.op.29, ptr @myl.fn.29 }, %myl.site { i32 0, i32 17, i32 21, i32 64, ptr @myl.op.30, ptr @myl.fn.30 }, %myl.site { i32 0, i32 17, i32 47, i32 64, ptr @myl.op.31, ptr @myl.fn.31 }, %myl.site { i32 0, i32 17, i32 36, i32 64, ptr @myl.op.32, ptr @myl.fn.32 }, %myl.site { i32 0, i32 51, i32 24, i32 64, ptr @myl.op.33, ptr @myl.fn.33 }, %myl.site { i32 0, i32 17, i32 32, i32 64, ptr @myl.op.34, ptr @myl.fn.34 }, %myl.site { i32 0, i32 17, i32 21, i32 64, ptr @myl.op.35, ptr @myl.fn.35 }, %myl.site { i32 0, i32 17, i32 47, i32 64, ptr @myl.op.36, ptr @myl.fn.36 }, %myl.site { i32 0, i32 17, i32 36, i32 64, ptr @myl.op.37, ptr @myl.fn.37 }]
+ !0 = !{!"branch_weights", i32 1, i32 1048575}
+ !1 = !{!"myl.tbaa"}
+ !2 = !{!"myl.count", !1, i64 0}
+@@ -929,28 +946,30 @@
+ !1000025 = !DILocation(line: 36, column: 21, scope: !1000003)
+ !1000026 = !DILocation(line: 37, column: 15, scope: !1000003)
+ !1000027 = !DILocation(line: 39, column: 13, scope: !1000003)
+-!1000028 = !DILocation(line: 53, column: 15, scope: !1000003)
+-!1000029 = !DILocation(line: 53, column: 39, scope: !1000003)
+-!1000030 = !DILocation(line: 52, column: 30, scope: !1000003)
+-!1000031 = !DILocation(line: 44, column: 17, scope: !1000003)
+-!1000032 = !DILocation(line: 44, column: 17, scope: !1000003)
+-!1000033 = !DILocation(line: 46, column: 22, scope: !1000003)
+-!1000034 = !DILocation(line: 46, column: 22, scope: !1000003)
++!1000028 = !DILocation(line: 39, column: 13, scope: !1000003)
++!1000029 = !DILocation(line: 53, column: 15, scope: !1000003)
++!1000030 = !DILocation(line: 53, column: 15, scope: !1000003)
++!1000031 = !DILocation(line: 53, column: 39, scope: !1000003)
++!1000032 = !DILocation(line: 52, column: 30, scope: !1000003)
++!1000033 = !DILocation(line: 44, column: 17, scope: !1000003)
++!1000034 = !DILocation(line: 44, column: 17, scope: !1000003)
+ !1000035 = !DILocation(line: 46, column: 22, scope: !1000003)
+-!1000036 = !DILocation(line: 17, column: 32, scope: !1000003)
+-!1000037 = !DILocation(line: 17, column: 21, scope: !1000003)
+-!1000038 = !DILocation(line: 17, column: 47, scope: !1000003)
+-!1000039 = !DILocation(line: 17, column: 36, scope: !1000003)
+-!1000040 = !DILocation(line: 51, column: 24, scope: !1000003)
+-!1000041 = distinct !DISubprogram(name: "row_record_update::parse_number", scope: !1000000, file: !1000000, line: 20, type: !1000002, scopeLine: 20, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
+-!1000042 = distinct !DISubprogram(name: "row_record_update::score", scope: !1000000, file: !1000000, line: 16, type: !1000002, scopeLine: 16, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
+-!1000043 = !DILocation(line: 17, column: 32, scope: !1000042)
+-!1000044 = !DILocation(line: 17, column: 21, scope: !1000042)
+-!1000045 = !DILocation(line: 17, column: 47, scope: !1000042)
+-!1000046 = !DILocation(line: 17, column: 36, scope: !1000042)
+-!1000047 = distinct !DISubprogram(name: "myl.entry", scope: !1000000, file: !1000000, line: 1, type: !1000002, scopeLine: 1, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
+-!1000048 = !DILocation(line: 1, column: 1, scope: !1000047)
++!1000036 = !DILocation(line: 46, column: 22, scope: !1000003)
++!1000037 = !DILocation(line: 46, column: 22, scope: !1000003)
++!1000038 = !DILocation(line: 17, column: 32, scope: !1000003)
++!1000039 = !DILocation(line: 17, column: 21, scope: !1000003)
++!1000040 = !DILocation(line: 17, column: 47, scope: !1000003)
++!1000041 = !DILocation(line: 17, column: 36, scope: !1000003)
++!1000042 = !DILocation(line: 51, column: 24, scope: !1000003)
++!1000043 = distinct !DISubprogram(name: "row_record_update::parse_number", scope: !1000000, file: !1000000, line: 20, type: !1000002, scopeLine: 20, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
++!1000044 = distinct !DISubprogram(name: "row_record_update::score", scope: !1000000, file: !1000000, line: 16, type: !1000002, scopeLine: 16, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
++!1000045 = !DILocation(line: 17, column: 32, scope: !1000044)
++!1000046 = !DILocation(line: 17, column: 21, scope: !1000044)
++!1000047 = !DILocation(line: 17, column: 47, scope: !1000044)
++!1000048 = !DILocation(line: 17, column: 36, scope: !1000044)
++!1000049 = distinct !DISubprogram(name: "myl.entry", scope: !1000000, file: !1000000, line: 1, type: !1000002, scopeLine: 1, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
++!1000050 = !DILocation(line: 1, column: 1, scope: !1000049)
+ !llvm.dbg.cu = !{!1000001}
+-!llvm.module.flags = !{!1000049, !1000050}
+-!1000049 = !{i32 2, !"Debug Info Version", i32 3}
+-!1000050 = !{i32 7, !"Dwarf Version", i32 4}
++!llvm.module.flags = !{!1000051, !1000052}
++!1000051 = !{i32 2, !"Debug Info Version", i32 3}
++!1000052 = !{i32 7, !"Dwarf Version", i32 4}

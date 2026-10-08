@@ -14,15 +14,11 @@ runs only those:
   file, the test files that import it directly, tests tagged with a ``spec:``
   tag the diff touches, tests whose body names a function or diagnostic code
   the diff touches, and a small guest smoke for compiler sources;
-* a host application's sources (``src/schematic`` ...): that application's step;
-* ``src/*.c`` / ``src/*.h``: ``test-native-memory``, ``test-native-heap`` and the
-  guest areas that exercise that part of the runtime;
+* the new core (``src/core/``, including its C runtime under
+  ``src/core/runtime/``) and its fixtures (``test/core/``): ``test-core``, plus
+  the guest smoke;
 * ``tests/lang/*.my`` / ``tests/guest/*.my``: ``mylang test`` on that file;
 * ``test/integration.zig``: the CLI tests whose bodies the diff touches;
-* ``experiments/llvm-backend/*`` (the retired adapter, the translator's
-  equivalence oracle): ``test-llvm-adapter`` plus an LLVM guest smoke;
-* the native build driver (``src/qbe_build*``): ``test-qbe-build``, plus an
-  LLVM guest smoke for the LLVM translator (``src/qbe_build_llvm*.zig``);
 * Markdown pages: ``mylang doctest`` on each changed page and ``doc-coverage``;
 * a Python driver under ``tests/``: the build step that runs it.
 
@@ -50,15 +46,12 @@ LOG_DIR = ROOT / ".mylang-cache" / "affected-tests"
 UNIT_ROOT = "src/root_test.zig"
 CLI_ROOT = "test/integration.zig"
 LANG_CACHE = ".mylang-cache/lang-tests"
-# `test-lang` runs tests/lang twice: under the default RC runtime and under the
-# tracing collector with --gc-stress (RC-DEFAULT-1).
-LANG_GC_CACHE = ".mylang-cache/lang-tests-gc"
+# `test-lang` runs tests/lang twice: at debug, and at release with its facts
+# verified and the runtime's leak check on (MYL_CORE_LEAKCHECK=1), as the gate does.
+LANG_RELEASE_CACHE = ".mylang-cache/lang-tests-release"
 GUEST_CACHE = ".mylang-cache/guest-tests"
-LLVM_CACHE = ".mylang-cache/affected-llvm"
 GATE = (
     "zig build test --summary all",
-    "zig build test-qbe --summary all",
-    "zig build test-qbe-build --summary all",
     "zig build fmt-check",
 )
 # Broad guest areas one compiler edit is most likely to break. The whole suite
@@ -76,28 +69,20 @@ GUEST_SMOKE = (
 # A diagnostic code or function name that ties more tests than this to the diff
 # is too common to say anything about the change; it selects nothing.
 TOKEN_LIMIT = 40
-LLVM_SMOKE = ("tests/lang/byte_ranges_llvm.my", "tests/lang/python_core.my")
-# Host applications and the build steps that test them. Checked in order; the
-# first prefix that matches a changed path owns it.
+# Paths owned by one build step. Checked in order; the first prefix that
+# matches a changed path owns it.
 HOST_STEPS = (
-    ("src/schematic/", "test-schematic"),
-    ("src/board_trial/", "test-board-trial"),
-    ("src/byte_io/", "test-byte-io"),
-    ("src/qbe_build", "test-qbe-build"),
-    ("src/host_native", "test-qbe-build"),
-    ("src/c_abi", "test-c-ffi"),
-    ("src/native_test_cli", "test-native-tests"),
+    ("src/core/", "test-core"),
+    ("test/core/", "test-core"),
     ("test/golden_parity.zig", "test-golden"),
     ("tests/goldens/", "test-golden"),
-    ("tests/native_boundary_matrix.py", "test-native-boundary"),
     ("tests/idiom_probes.py", "test-idioms"),
     ("tests/fixtures/idioms/", "test-idioms"),
     ("tests/parser_hints.py", "test-agent-usefulness"),
     ("tests/test_friction_harvest.py", "test-agent-usefulness"),
     ("velocity/", "test-agent-usefulness"),
-    ("tests/runtime_identity_cache.py", "test-runtime-identity"),
-    ("build_qbe_assets.zig", "test-runtime-identity"),
-    ("scripts/test_native_memory.py", "test-native-memory"),
+    ("tests/compiler_identity_cache.py", "test-compiler-identity"),
+    ("build_identity.zig", "test-compiler-identity"),
     ("scripts/affected_tests.py", "test-affected-selection"),
     ("tests/test_affected_tests.py", "test-affected-selection"),
     ("tests/test_inputs_coverage.py", "test-inputs-coverage"),
@@ -106,26 +91,6 @@ HOST_STEPS = (
     ("tests/test_spec_merge.py", "test-spec-merge"),
     ("build_test_inputs.zig", "test-inputs-coverage"),
     ("tests/input_manifest.py", "test-inputs-coverage"),
-    ("tests/native_heap_test.c", "test-native-heap"),
-    ("tests/native_arena_chunks_test.c", "test-native-heap"),
-    ("tests/invoke/", "test-native-boundary"),
-    ("tests/native/", "test-native-boundary"),
-    ("experiments/llvm-backend/", "test-llvm-adapter"),
-    ("vendor/qbe/", "test-qbe"),
-)
-# Parts of the C runtime and the guest areas (tests/lang name fragments) that
-# exercise them.
-RUNTIME_AREAS = (
-    ("text", ("string", "text", "print", "format")),
-    ("dictionary", ("dict",)),
-    ("collections", ("list", "collection", "array")),
-    ("heap", ("gc_", "managed", "arena")),
-    ("arena", ("arena",)),
-    ("regions", ("arena", "region")),
-    ("bytes", ("byte",)),
-    ("print", ("print",)),
-    ("equal", ("equal", "domain")),
-    ("scoped", ("arena",)),
 )
 TEST_DECL = re.compile(r'^test "((?:[^"\\]|\\.)*)" \{', re.M)
 SPEC_COMMENT = re.compile(r'(?://|#)\s*spec(?:-case)?:\s*([A-Z][A-Z0-9_-]*)')
@@ -144,7 +109,6 @@ class Selection:
         self.cli: dict[str, list[str]] = {}
         self.steps: dict[str, list[str]] = {}
         self.guest: dict[str, list[str]] = {}
-        self.llvm: dict[str, list[str]] = {}
         self.doctest: dict[str, list[str]] = {}
         self.doc_coverage: list[str] = []
         self.notes: list[str] = []
@@ -155,7 +119,7 @@ class Selection:
             reasons.append(reason)
 
     def empty(self) -> bool:
-        return not (self.unit or self.cli or self.steps or self.guest or self.llvm or self.doctest or self.doc_coverage)
+        return not (self.unit or self.cli or self.steps or self.guest or self.doctest or self.doc_coverage)
 
 
 # ── git ──────────────────────────────────────────────────────────────────────
@@ -305,7 +269,7 @@ def select_zig_file(sel: Selection, corpus: Corpus, path: str) -> None:
         sel.add(sel.unit, namespace(path), "tests declared in {}".format(path))
     stem = Path(path).stem
     if not stem.endswith("_test"):
-        # A module split out of a facade (`qbe_frame.zig` behind `qbe.zig`) is
+        # A module split out of a facade (`sema_places.zig` behind `sema.zig`) is
         # tested through the facade: its test file and the test files importing it.
         owners = [path] + facade_of(corpus, path)
         for owner in owners:
@@ -323,7 +287,7 @@ def select_zig_file(sel: Selection, corpus: Corpus, path: str) -> None:
 
 
 def facade_of(corpus: Corpus, path: str) -> list[str]:
-    """The family module (`src/qbe.zig` for `src/qbe_frame.zig`) when it imports `path`."""
+    """The family module (`src/sema.zig` for `src/sema_places.zig`) when it imports `path`."""
     family = Path(path).stem.split("_")[0]
     facade = str(Path(path).with_name(family + ".zig"))
     if facade != path and facade in corpus.importers.get(path, set()):
@@ -335,25 +299,6 @@ def guest_smoke(sel: Selection, reason: str) -> None:
     for entry in GUEST_SMOKE:
         if (ROOT / entry).is_file():
             sel.add(sel.guest, entry, reason + " (guest smoke)")
-
-
-def select_runtime(sel: Selection, corpus: Corpus, path: str) -> None:
-    """A C runtime source: its C suites and the guest areas that exercise it."""
-    sel.add(sel.steps, "test-native-memory", "C runtime {}".format(path))
-    sel.add(sel.steps, "test-native-heap", "C runtime {}".format(path))
-    stem = Path(path).stem
-    matched = False
-    for part, fragments in RUNTIME_AREAS:
-        if part not in stem:
-            continue
-        for entry in corpus.guest_files:
-            words = Path(entry).stem.split("_")
-            if entry.startswith("tests/lang/") and "/" not in entry[len("tests/lang/"):] and \
-                    any(word.startswith(f) for word in words for f in fragments):
-                sel.add(sel.guest, entry, "exercises the {} runtime ({})".format(part, path))
-                matched = True
-    if not matched:
-        guest_smoke(sel, "C runtime {}".format(path))
 
 
 def select_cli(sel: Selection, corpus: Corpus, changed: list[str]) -> None:
@@ -412,16 +357,12 @@ def select(files: list[str], lines_by_file: dict[str, list[str]], corpus: Corpus
         host = next((step for prefix, step in HOST_STEPS if path.startswith(prefix)), None)
         if host:
             sel.add(sel.steps, host, path)
-            if host == "test-llvm-adapter" or path.startswith("src/qbe_build_llvm"):
-                for entry in LLVM_SMOKE:
-                    sel.add(sel.llvm, entry, "LLVM backend {} (LLVM guest smoke)".format(path))
+            if host == "test-core":
+                guest_smoke(sel, "new core {}".format(path))
             continue
         if path.startswith("src/") and path.endswith(".zig"):
             if exists:
                 select_zig_file(sel, corpus, path)
-            continue
-        if path.startswith("src/") and path.endswith((".c", ".h")):
-            select_runtime(sel, corpus, path)
             continue
         if path.startswith(("tests/lang/", "tests/guest/")) and path.endswith(".my"):
             if exists and path in corpus.guest_tests and corpus.guest_tests[path]:
@@ -492,7 +433,7 @@ def plan(sel: Selection, zig: str, shards: int = 8) -> tuple[list[Command], list
             argv = [zig, "build", step, "--summary", "line", "-Dtest-shards={}".format(shards)]
             argv += ["-Dtest-filter=" + f for f in sorted(table)]
             builds.append(Command("zig {} tests ({} filter(s))".format(label, len(table)), argv))
-    needs_compiler = bool(sel.guest or sel.llvm or sel.doctest or sel.doc_coverage)
+    needs_compiler = bool(sel.guest or sel.doctest or sel.doc_coverage)
     steps = sorted(sel.steps)
     if needs_compiler:
         steps = ["affected-compiler"] + steps
@@ -500,17 +441,14 @@ def plan(sel: Selection, zig: str, shards: int = 8) -> tuple[list[Command], list
         builds.append(Command("zig build " + " ".join(steps), [zig, "build", *steps, "--summary", "line"]))
     compiler = str(ROOT / "zig-out" / "focus" / "mylang")
     env = dict(os.environ)
-    env["MYLANG_QBE"] = str(ROOT / "zig-out" / "focus" / "qbe")
     guests: list[Command] = []
     for entry in sorted(sel.guest):
         if entry.startswith("tests/guest"):
             guests.append(Command("mylang test " + entry, [compiler, "test", entry, "--cache-dir", GUEST_CACHE], env))
             continue
         guests.append(Command("mylang test " + entry, [compiler, "test", entry, "--cache-dir", LANG_CACHE], env))
-        stressed = [compiler, "test", entry, "--gc-runtime", "--cache-dir", LANG_GC_CACHE, "--gc-stress"]
-        guests.append(Command("mylang test {} (GC stress)".format(entry), stressed, env))
-    for entry in sorted(sel.llvm):
-        guests.append(Command("mylang test {} (LLVM)".format(entry), [compiler, "test", entry, "--release", "--cache-dir", LLVM_CACHE], env))
+        release = [compiler, "test", entry, "--release", "--verify-facts", "--cache-dir", LANG_RELEASE_CACHE]
+        guests.append(Command("mylang test {} (release, leak check)".format(entry), release, dict(env, MYL_CORE_LEAKCHECK="1")))
     for page in sorted(sel.doctest):
         guests.append(Command("mylang doctest " + page, [compiler, "doctest", ".", "--filter", page], env))
     if sel.doc_coverage:
@@ -550,7 +488,7 @@ def execute(command: Command, stamp: str, index: int) -> Command:
 def describe(sel: Selection) -> list[str]:
     lines = []
     for title, table in (("zig unit filter", sel.unit), ("zig CLI filter", sel.cli), ("build step", sel.steps),
-                         ("guest tests", sel.guest), ("LLVM guest", sel.llvm), ("doctest page", sel.doctest)):
+                         ("guest tests", sel.guest), ("doctest page", sel.doctest)):
         for key in sorted(table):
             lines.append("  {:<16} {}".format(title, key))
             for reason in table[key][:3]:

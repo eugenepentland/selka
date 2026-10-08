@@ -1,0 +1,5 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 10s (all 3 build slot(s) busy)
+c_runner_signal.my:2:1: error[E_HOST_EFFECTS]: host declarations require an explicit effects(host, ...) contract
+  extern def c_runner_signal() -> int
+  ^

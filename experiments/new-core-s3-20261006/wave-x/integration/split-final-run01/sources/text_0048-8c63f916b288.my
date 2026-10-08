@@ -1,0 +1,44 @@
+module text_0048
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+def tally(text: str, seed: int) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for word in text.split():
+        text = "rebound"
+        counts[word] = counts[word] + 1 if word in counts else 1
+        if len(counts) == seed % 7:
+            continue
+        if len(counts) > seed % 31 + 2:
+            break
+    return counts
+
+def score(counts: dict[str, int]) -> int:
+    value = len(counts)
+    for key in counts:
+        value += len(key) * counts[key]
+        for octet in key.encode():
+            value += octet
+    return value
+
+def main(args: list[str], out: Stream) -> int:
+    seed = number(args[0])
+    original = "long03éabcdefghijklmnop\x0b😀\na\rcollision005a0e\x0bcollision002553  long01éabcdefghijklmnop\nlong00éabcdefghijklmnop\x0cx y\tlong05éabcdefghijklmnop x y\nb\x0blong01éabcdefghijklmnop\rΩ\x0cΩ\x0bcollision002553\x0ccollision005a0e\x0clong01éabcdefghijklmnop\rnaïve\tlong04éabcdefghijklmnop\rb\x0cnaïve\nlong03éabcdefghijklmnop long00éabcdefghijklmnop\tlong01éabcdefghijklmnop\ta\x0cΩ\tb\x0bx y\rlong00éabcdefghijklmnop\x0clong04éabcdefghijklmnop\rcollision005a0e  long03éabcdefghijklmnop\tΩ\x0ccafé\tlong00éabcdefghijklmnop\ncollision005a0e\x0clong04éabcdefghijklmnop long02éabcdefghijklmnop\x0clong03éabcdefghijklmnop\x0bb\x0blong04éabcdefghijklmnop\x0blong01éabcdefghijklmnop collision005a0e\x0bcollision002553\nlong05éabcdefghijklmnop\x0bnaïve\t "
+    owned = "".join([original, " ", original])
+    counts = tally(owned, seed)
+    snapshot = counts
+    counts["post"] = seed + 1
+    _ = counts.pop("post")
+    for word in "post fresh café collision005a0e".split():
+        counts[word] = counts[word] + 1 if word in counts else 1
+    escaped: list[str] = []
+    for word in original.split():
+        escaped.append(word)
+    value = score(counts) + score(snapshot) + len(escaped)
+    out.print(value)
+    return 0

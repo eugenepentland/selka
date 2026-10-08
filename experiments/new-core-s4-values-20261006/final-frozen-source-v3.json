@@ -1,0 +1,56 @@
+{
+  "source_commit": "adb638e72d3b682c29a42ec22dbe251b89873d7c",
+  "compiler_source_commit": "3c86c3122",
+  "old_build_log": "commands/command-00189.log",
+  "core_build_log": "commands/command-00184.log",
+  "shared_checker_sha256": "6139f41ddc628a6d26427d76fa8f238779126a7c1baffb0e33428de2aae57e2f",
+  "tools": {
+    "mylang": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang",
+      "sha256": "abce00c53bb842b475b19c0815209207e89a859faebfc0714edd8d9d6b49049b",
+      "build_mode": "Debug"
+    },
+    "mylang-core": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang-core",
+      "sha256": "db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1",
+      "build_mode": "Debug"
+    },
+    "qbe": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/qbe",
+      "sha256": "f485cd7750ac153feed0be6ee14f4ca525ef5f50a61c44519a05813d3f5e461d",
+      "build_mode": "ReleaseFast"
+    },
+    "zig": {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+    }
+  },
+  "MYLANG_QBE": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/qbe",
+  "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "frozen_inputs": {
+    "SPEC.md": "a80463561a753a07022650c4865c7b1af8fcf3e69e5ccfb8f2383b788b8ee078",
+    "src/core/build.zig": "17974fc335a559559df78f4f65ce18c0523561451d77a9b25a2a3dea4cd25298",
+    "src/core/build_bytes.zig": "c7dece8de32b7021e5e21f71fdefb0d08cd5a6fd2efa938706a09231984fbbc4",
+    "src/core/emit_bytes.zig": "e16a1667b809691effe93d35fabcd881307f8c38378b756a344a92eb53874d08",
+    "src/core/emit_dict.zig": "caf3ab7378563696a3e1a9068ffd9d02c5befde0bd1314b41cd247c32d8092c9",
+    "src/core/emit_llvm.zig": "0f63bdb78855ebfcafd0a2bb0a7f8c20d81ab565d7a0c97e1705fc0728a1224f",
+    "src/core/facts.zig": "ca0622723af1c107e0fe26fa73fc5c14ae293fe8d21395c903ba775e9519d10c",
+    "src/core/flags.zig": "07204ec29013c9e5ec00db4c7628bf96652234863bc14a3a0b9548a868841f3e",
+    "src/core/inline.zig": "7f9cbfeb3b9c74102c8935d22840f5378dca458e59421d2a9d911bf0b962878b",
+    "src/core/inline_cfg.zig": "23ee2cd1402eb3768a081fdc83d7f46d39c6b042f3df6bd4bc9e8614d348f0c5",
+    "src/core/number_runtime.zig": "568be11ef2ac9948c81f6fa841d7c054c23839cd6560d7c723dac9e6c0c0d67c",
+    "src/core/own.zig": "c2b7916e89e7d69140e4787afdedc2b06ec0ecd0dd594fe08bcb4b5bbf20d61d",
+    "src/core/runtime/core_bytes.c": "cc09a6bb6b967fcbdcfae458e82707cf3388714b4ee65e708cc0d5d550f9f8e7",
+    "src/core/runtime/core_number_text.zig": "f96a4e88d290ab3587b8f90c64ad67eb1045f9143ecb7622bfccba3942ca05ea",
+    "src/core/s3_number_test.zig": "1f89c1dde7e7c2ce4341190893afd0b992770ccb2ac6474e08ec99b54a85f373",
+    "src/core/value_facts_test.zig": "bb527f3bc76847511696c7fe1b509b6e52af929de80acbfc376c1ad02c21a93a",
+    "src/core/vector_test.zig": "7e264d6ed1078901fd246ee92ed77d226e78f2a684f241761aaec074831453fc",
+    "src/core/verify_ir.zig": "27abbfca71f3bbe8b3f9f1a6da22fce8e689b36fbb4fdfa354d2712cf5f087f4",
+    "src/sema.zig": "6139f41ddc628a6d26427d76fa8f238779126a7c1baffb0e33428de2aae57e2f",
+    "test/core/v_buffer_format.my": "2bc3cf42d309bd8e797480d58433ffb63c68edd04ded0987920707335eccea28",
+    "test/core/v_dynamic_repeat.my": "14c1f56ab571d44a634cdd115c684ff565c34f2f7014816a91438b4dd4914d64",
+    "test/core/v_inline_loops.my": "23b0829f164f996b276a55d8252b07db20095c31aedb69afd8f355e94e09112c",
+    "test/core/v_nested_lengths.my": "7f72434f268f01af74d676e0afa518c402dd950822b4bc346a8d2a44f1949fc2",
+    "test/core/v_nested_places.my": "5409e9f1699489b34f51556d407a57d28b5ee143a9350637816b34c825831b58"
+  }
+}

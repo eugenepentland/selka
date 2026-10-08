@@ -1,0 +1,23 @@
+{
+  "checked_utc": "2026-10-05T17:18:07.619335+00:00",
+  "frozen_utc": "2026-10-05T16:44:58.626308+00:00",
+  "source_fixture_spec_sha256": "56f2d5d0480fe754f6e97bebd965f8fefb3e8edfea30978f9e2257f721ec2bac",
+  "checks": [
+    {
+      "map": "files",
+      "count": 1371,
+      "mismatches": []
+    },
+    {
+      "map": "qualification_inputs",
+      "count": 6,
+      "mismatches": []
+    },
+    {
+      "map": "binaries",
+      "count": 2,
+      "mismatches": []
+    }
+  ],
+  "passed": true
+}

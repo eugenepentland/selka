@@ -1,0 +1,9 @@
+fn identity(i64) -> i64
+b0:
+  ret param0
+fn main(cap) -> i64
+b0:
+  %4 = record_make [2]i64 0:i64, 0:i64
+  %10 = dict_find i64 undef, 42:i64
+  %11 = dict_insert dict[i64, i64] undef, %10, 42:i64, 42:i64
+  ret 0:i64

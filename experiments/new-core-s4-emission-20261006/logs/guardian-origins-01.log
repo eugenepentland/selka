@@ -1,0 +1,22 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 3/88 failed (error-discipline, test-no-conditional, line-length)
+guardian: failures grouped by check (3):
+  error-discipline (9 findings)
+    - src/core/inline_origins.zig: pub fn setBlock uses inferred error set `!T` (use `MyErr!T`)
+      fix: declare an explicit error set — `pub const MyError = error{ Foo, Bar };` — and return `MyError!void`.
+    - src/core/inline_origins.zig: pub fn setInstruction uses inferred error set `!T` (use `MyErr!T`)
+    - src/core/inline_origins.zig: pub fn prepare uses inferred error set `!T` (use `MyErr!T`)
+    - +6 more — use --verbose for full detail
+  test-no-conditional (1 finding)
+    - src/core/inline_origins_test.zig:77: more than one top-level loop — a test may keep one; the loop at line 77 asserts nothing, so hoist that one into a named helper
+      fix: one top-level loop is fine; merge multiple loops into one table-driven loop, split a branch into two independent tests, or hoist the computation into a helper. A multi-loop finding names the loop to hoist — the assertion-free one when there is one, otherwise the extra loop itself.
+  line-length (4 findings)
+    - src/core/emit_units_test.zig:420: line is 304 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+    - src/core/emit_units_test.zig:421: line is 299 chars (hard limit 240)
+    - src/core/emit_units_test.zig:422: line is 410 chars (hard limit 240)
+    - +1 more — use --verbose for full detail
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

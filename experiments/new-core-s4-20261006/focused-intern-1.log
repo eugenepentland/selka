@@ -1,0 +1,25 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 25s (all 3 build slot(s) busy)
+test-units
++- run test w
+guardian/test: 13 test(s) selected by filter: "nominal catalog interns" — 1 match by name, 12 unnamed test block(s) run regardless
+guardian/test: test wall 3.73s; slowest over 50ms:
+guardian/test:   3.73s  nominal_instances_test.test.nominal catalog interns each list type once however often the checker asks for it
+guardian/test: PASS — 13 passed
+guardian/test: RESULT {"passed":13,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/claude-new-core-s4-design/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/f12eebad3fd331dc504c9a26897b6c22/test "--guardian-filter=nominal catalog interns" --cache-dir=./.zig-cache --seed=0xd46c0601 --listen=-
+
+Build Summary: 10/10 steps succeeded; 13/13 tests passed
+test-units success
++- run test 13 pass (13 total) 3s MaxRSS:103M
+   +- compile test debug native success 5s MaxRSS:494M
+   |  +- run exe qbe-build-assets (qbe_build_assets) success 115ms
+   |  |  +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:35M
+   |  +- options success
+   |     +- compile exe qbe fast native cached 16ms MaxRSS:35M
+   +- install generated to qbe success
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang success
+      +- compile exe mylang debug native success 6s MaxRSS:556M
+         +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

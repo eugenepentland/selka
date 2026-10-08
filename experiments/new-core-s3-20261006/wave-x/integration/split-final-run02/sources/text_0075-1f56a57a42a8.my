@@ -1,0 +1,44 @@
+module text_0075
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+def tally(text: str, seed: int) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for word in text.split():
+        text = "rebound"
+        counts[word] = counts[word] + 1 if word in counts else 1
+        if len(counts) == seed % 7:
+            continue
+        if len(counts) > seed % 31 + 2:
+            break
+    return counts
+
+def score(counts: dict[str, int]) -> int:
+    value = len(counts)
+    for key in counts:
+        value += len(key) * counts[key]
+        for octet in key.encode():
+            value += octet
+    return value
+
+def main(args: list[str], out: Stream) -> int:
+    seed = number(args[0])
+    original = "x y\x0bnaïve\nlong03éabcdefghijklmnop\rcollision005a0e\nlong05éabcdefghijklmnop  b\x0ccafé\x0c😀 long06éabcdefghijklmnop long00éabcdefghijklmnop\rlong04éabcdefghijklmnop\ta\x0ccollision005a0e\x0blong02éabcdefghijklmnop\tcollision002553  a\tlong02éabcdefghijklmnop  long02éabcdefghijklmnop 😀\x0clong06éabcdefghijklmnop\x0blong01éabcdefghijklmnop  café\rlong02éabcdefghijklmnop\x0cb long02éabcdefghijklmnop x y\tcollision002553\rx y\nΩ café\ncafé long01éabcdefghijklmnop\tlong07éabcdefghijklmnop\tlong03éabcdefghijklmnop\x0cΩ\x0bcollision005a0e\rlong07éabcdefghijklmnop\nlong06éabcdefghijklmnop long00éabcdefghijklmnop\tlong05éabcdefghijklmnop  café\rlong03éabcdefghijklmnop\nlong07éabcdefghijklmnop\x0cb\rx y\x0ccafé\t😀\x0clong01éabcdefghijklmnop\rb\x0ctail"
+    owned = "".join([original, " ", original])
+    counts = tally(owned, seed)
+    snapshot = counts
+    counts["post"] = seed + 1
+    _ = counts.pop("post")
+    for word in "post fresh café collision005a0e".split():
+        counts[word] = counts[word] + 1 if word in counts else 1
+    escaped: list[str] = []
+    for word in original.split():
+        escaped.append(word)
+    value = score(counts) + score(snapshot) + len(escaped)
+    out.print(value)
+    return 0

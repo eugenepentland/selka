@@ -1,0 +1,44 @@
+[
+  {
+    "row": "int_parse",
+    "size": 4096,
+    "new_over_zig": 0.9775748502747071,
+    "new_over_old": 0.6170372498222872,
+    "both_gates_pass": true
+  },
+  {
+    "row": "int_parse",
+    "size": 64,
+    "new_over_zig": 1.0888508348069437,
+    "new_over_old": 0.6405649581989346,
+    "both_gates_pass": true
+  },
+  {
+    "row": "int_format",
+    "size": 4096,
+    "new_over_zig": 0.31896128839406235,
+    "new_over_old": 0.3100191658169139,
+    "both_gates_pass": true
+  },
+  {
+    "row": "int_format",
+    "size": 64,
+    "new_over_zig": 0.31712917399093654,
+    "new_over_old": 0.289329155456704,
+    "both_gates_pass": true
+  },
+  {
+    "row": "bytes_scan",
+    "size": 4096,
+    "new_over_zig": 0.03834054931598096,
+    "new_over_old": 0.6320336787278562,
+    "both_gates_pass": true
+  },
+  {
+    "row": "bytes_scan",
+    "size": 64,
+    "new_over_zig": 0.13574276646534536,
+    "new_over_old": 0.9857407371473099,
+    "both_gates_pass": true
+  }
+]

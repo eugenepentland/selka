@@ -1,0 +1,774 @@
+{
+  "kind": "deterministic-gzip-byte-preservation",
+  "artifacts": [
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_0f5912491d2de36e5414f85c642fb5ea4e1ed1309826128da061157c48716dab.ll",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_0f5912491d2de36e5414f85c642fb5ea4e1ed1309826128da061157c48716dab.ll.gz",
+      "uncompressed_bytes": 15463,
+      "uncompressed_sha256": "715a20c7d8f5ce956b4b65f116a93ba967cdbd93165bd609eda2a85098672b65",
+      "archive_bytes": 3818,
+      "archive_sha256": "64a8ac917151f739612a935dcc4a67f4f45f1f1953da85d4bb0d2a5da1cfe2c6"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_0f5912491d2de36e5414f85c642fb5ea4e1ed1309826128da061157c48716dab.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_0f5912491d2de36e5414f85c642fb5ea4e1ed1309826128da061157c48716dab.sigs.json.gz",
+      "uncompressed_bytes": 210,
+      "uncompressed_sha256": "b988df30eaae9b42dcb7a75a92383333ddf1a96db8e48e97337e5547f8d76ebe",
+      "archive_bytes": 174,
+      "archive_sha256": "cdd22c60d0d1aaeaefe17ed9c99d3c2be70004797c35d29f99d4f58bac02b615"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_0f5912491d2de36e5414f85c642fb5ea4e1ed1309826128da061157c48716dab.ssa",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_0f5912491d2de36e5414f85c642fb5ea4e1ed1309826128da061157c48716dab.ssa.gz",
+      "uncompressed_bytes": 2077,
+      "uncompressed_sha256": "ee88be97769a85c366e941cb32042576372356911877c2a652b68c57f76e74d0",
+      "archive_bytes": 774,
+      "archive_sha256": "c77c9517984f67507d0007e34bc6db3b6d2a27914bc7c4a0557c7665ff17b8e2"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_17303d726ab0869e1051922be702d2f9c3749ec85bd07184d07a9bb33e8aac3f.ll",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_17303d726ab0869e1051922be702d2f9c3749ec85bd07184d07a9bb33e8aac3f.ll.gz",
+      "uncompressed_bytes": 3014,
+      "uncompressed_sha256": "8f782f86c5aad7a9c640c010ee83ab7e25a2737e55968d8c3f31c73ecf8c5656",
+      "archive_bytes": 1378,
+      "archive_sha256": "0e32711132ef75e8d0d57b27623dd3106fa6203b0179812b2d99c2fef2d1642b"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_17303d726ab0869e1051922be702d2f9c3749ec85bd07184d07a9bb33e8aac3f.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_17303d726ab0869e1051922be702d2f9c3749ec85bd07184d07a9bb33e8aac3f.sigs.json.gz",
+      "uncompressed_bytes": 137,
+      "uncompressed_sha256": "2aa2115941930139bea9c81905f009a17c4fde60474749cc3bb6c4b12c3aef72",
+      "archive_bytes": 133,
+      "archive_sha256": "41e30530eef51b4b2696f8194d5f6adbc5a1cc0c2aee1ddc8ae7b483b2ac8445"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_17303d726ab0869e1051922be702d2f9c3749ec85bd07184d07a9bb33e8aac3f.ssa",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_17303d726ab0869e1051922be702d2f9c3749ec85bd07184d07a9bb33e8aac3f.ssa.gz",
+      "uncompressed_bytes": 202,
+      "uncompressed_sha256": "80d5985f48cfc372aee1d1f83ac7229421e60b3135243dc434a8f554714cfecf",
+      "archive_bytes": 181,
+      "archive_sha256": "771c6665e992a968a4a89c4b7d89f2e10ce523f05d074f89a96570fe4e7eb7ec"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_279bca7ea3455002813d3428837243f19fa395122ecd3289e227e37ae96a304d.ll",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_279bca7ea3455002813d3428837243f19fa395122ecd3289e227e37ae96a304d.ll.gz",
+      "uncompressed_bytes": 9556,
+      "uncompressed_sha256": "e068c2ca7447421dcad439ef9b246f5087d33619a4df263675c21f1f7bdc185e",
+      "archive_bytes": 2930,
+      "archive_sha256": "7e9c152f3b944746634557314f74f57e7294584d74f14d397bbea9f1b47095c6"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_279bca7ea3455002813d3428837243f19fa395122ecd3289e227e37ae96a304d.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_279bca7ea3455002813d3428837243f19fa395122ecd3289e227e37ae96a304d.sigs.json.gz",
+      "uncompressed_bytes": 137,
+      "uncompressed_sha256": "5ff4c6838db0e1019c151ad70898365e9e51be72ef2fc2b96fbc50fc4398798b",
+      "archive_bytes": 132,
+      "archive_sha256": "0f198b18ee7c5e8d0091dbba83edf93e82e7a60cbd6529ba15ee695f690c88d2"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_279bca7ea3455002813d3428837243f19fa395122ecd3289e227e37ae96a304d.ssa",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_279bca7ea3455002813d3428837243f19fa395122ecd3289e227e37ae96a304d.ssa.gz",
+      "uncompressed_bytes": 1162,
+      "uncompressed_sha256": "cfbfe3d45cf59918a3866cfc46050fc9508014a3fe98bc754304c790d79afa02",
+      "archive_bytes": 498,
+      "archive_sha256": "a337c47278049aba5c971c5d585886c7058352a2fc4e2679f42ce227041a80ca"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_33d8232212d3f1a1dc899b2b3b8bea00099cfffd34f229b9617aa3b58f06664c.ll",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_33d8232212d3f1a1dc899b2b3b8bea00099cfffd34f229b9617aa3b58f06664c.ll.gz",
+      "uncompressed_bytes": 662673,
+      "uncompressed_sha256": "d21462905d74f48d30ec47d4a1da5d364ee56307dfc1e0bf96e044acffb681da",
+      "archive_bytes": 98030,
+      "archive_sha256": "9bc1024ef91caefd569019df567000aeac113d3ff88908085a3c092d64493318"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_33d8232212d3f1a1dc899b2b3b8bea00099cfffd34f229b9617aa3b58f06664c.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_33d8232212d3f1a1dc899b2b3b8bea00099cfffd34f229b9617aa3b58f06664c.sigs.json.gz",
+      "uncompressed_bytes": 145,
+      "uncompressed_sha256": "7de977c63168da2295ac7b7623b0370970c702cd0ab16cbc4ac9a6db442998e6",
+      "archive_bytes": 134,
+      "archive_sha256": "20007f05c916ce66ce6a539355924910642394d4dfb3311588a1d03bc1da82cf"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_33d8232212d3f1a1dc899b2b3b8bea00099cfffd34f229b9617aa3b58f06664c.ssa",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_33d8232212d3f1a1dc899b2b3b8bea00099cfffd34f229b9617aa3b58f06664c.ssa.gz",
+      "uncompressed_bytes": 110443,
+      "uncompressed_sha256": "4ba66f68d07f5e8f226d31286c07183b466c73026aeb14f9245c622febab7670",
+      "archive_bytes": 24047,
+      "archive_sha256": "03568e89f592199104b0cf591228f17a0a747b2f5705993e451f2753209137d7"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_5369b4c66e5b43253a9b5eea086246fe91113f976d8e1318e9f59662c8ee3596.ll",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_5369b4c66e5b43253a9b5eea086246fe91113f976d8e1318e9f59662c8ee3596.ll.gz",
+      "uncompressed_bytes": 27735,
+      "uncompressed_sha256": "db34313866945843a2460a6bb79ed95789f4bfa113f60ad3505166f620335532",
+      "archive_bytes": 5674,
+      "archive_sha256": "7156af373230df3e8de39f3253b37ff5737394b891855deb26096aff1b51ec40"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_5369b4c66e5b43253a9b5eea086246fe91113f976d8e1318e9f59662c8ee3596.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_5369b4c66e5b43253a9b5eea086246fe91113f976d8e1318e9f59662c8ee3596.sigs.json.gz",
+      "uncompressed_bytes": 210,
+      "uncompressed_sha256": "ed9ec33e56f7940967c1ecbe8b50dbf8351665c027201e41d75d1d6a178e8cfc",
+      "archive_bytes": 172,
+      "archive_sha256": "1c0635cb41424c7d64804467a9d67d5d6bc6d6ca06fcb170b9a213e4f8c1f684"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_5369b4c66e5b43253a9b5eea086246fe91113f976d8e1318e9f59662c8ee3596.ssa",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_5369b4c66e5b43253a9b5eea086246fe91113f976d8e1318e9f59662c8ee3596.ssa.gz",
+      "uncompressed_bytes": 4013,
+      "uncompressed_sha256": "cad5630fec2f5f1bc2d0d4f9089aa4d8385a70bcc722b4923648d13fea2312f7",
+      "archive_bytes": 1299,
+      "archive_sha256": "741172ef307688c9acd0088313d246a190d93254a7df030339f3ed688a5e4b39"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_8340dc055bec62af6bc5ec8a63347300a765d35db6c5abfa9c31d85a59222d78.ll",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_8340dc055bec62af6bc5ec8a63347300a765d35db6c5abfa9c31d85a59222d78.ll.gz",
+      "uncompressed_bytes": 54911,
+      "uncompressed_sha256": "26e9e3f8c45dd9f0ed51d2acde873223d388e61ab26b00ac55db7a8bfb6ea11f",
+      "archive_bytes": 9318,
+      "archive_sha256": "33228b6e85c8f8bdef655b6febfd4362c6e9a084998ff41e7237be385a4e719d"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_8340dc055bec62af6bc5ec8a63347300a765d35db6c5abfa9c31d85a59222d78.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_8340dc055bec62af6bc5ec8a63347300a765d35db6c5abfa9c31d85a59222d78.sigs.json.gz",
+      "uncompressed_bytes": 145,
+      "uncompressed_sha256": "d386c7eb477749a6e02e9f4218465d4632437af0e9784fce06a5b382205debd4",
+      "archive_bytes": 134,
+      "archive_sha256": "45f9d1dbeff6d5e522cabe0a9d9c7f6577bfb63751554e3292f8a74909b4b21a"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_8340dc055bec62af6bc5ec8a63347300a765d35db6c5abfa9c31d85a59222d78.ssa",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_8340dc055bec62af6bc5ec8a63347300a765d35db6c5abfa9c31d85a59222d78.ssa.gz",
+      "uncompressed_bytes": 8314,
+      "uncompressed_sha256": "f7e2a53519a7a12b95d9b082dd913b66a58189d5f6f66f28e4c9c4e8ceb67866",
+      "archive_bytes": 2226,
+      "archive_sha256": "72ac1e75cff8d279d373d1c824ba057b498b01856499c3cef7eff9a8e83b2978"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_958e150c8e8d6bdababd5dd9f6c01f405c7a76ec04c592bc872ef959f2b49b31.ll",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_958e150c8e8d6bdababd5dd9f6c01f405c7a76ec04c592bc872ef959f2b49b31.ll.gz",
+      "uncompressed_bytes": 9555,
+      "uncompressed_sha256": "9ede5ff8574f5e9c377fb864a111aa5dbef3575a3db1e30125a2a465fdf21c4b",
+      "archive_bytes": 2930,
+      "archive_sha256": "be6819f1f72bd1e1893776a29dc92382169a5441eb1eb66f324cd934ace3b2ff"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_958e150c8e8d6bdababd5dd9f6c01f405c7a76ec04c592bc872ef959f2b49b31.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_958e150c8e8d6bdababd5dd9f6c01f405c7a76ec04c592bc872ef959f2b49b31.sigs.json.gz",
+      "uncompressed_bytes": 137,
+      "uncompressed_sha256": "9463b672bacca170ff53c2e4717b92eea886ccb7f347aec7efb99d896c8c9d8d",
+      "archive_bytes": 134,
+      "archive_sha256": "d1ebce5aadcb2505c1c3c022fd95c2f765e3b0b5815e3fbcb0c9c670767bea1f"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_958e150c8e8d6bdababd5dd9f6c01f405c7a76ec04c592bc872ef959f2b49b31.ssa",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_958e150c8e8d6bdababd5dd9f6c01f405c7a76ec04c592bc872ef959f2b49b31.ssa.gz",
+      "uncompressed_bytes": 1161,
+      "uncompressed_sha256": "e338bfccca0d1f05a9142c52f4109a856f409c083a43d81e75a9b1c30c22eaef",
+      "archive_bytes": 497,
+      "archive_sha256": "c6c2a3f2b1b1b3343b0b41ae42d8abe813ff1c9970a4631dfa4061dc9baa4b7f"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_b09f29efbbc619dfba8ae868481552f0edb3b268eea9cb9716361714c70d0deb.ll",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_b09f29efbbc619dfba8ae868481552f0edb3b268eea9cb9716361714c70d0deb.ll.gz",
+      "uncompressed_bytes": 55475,
+      "uncompressed_sha256": "da41293d7e727ec2e3b4a47892ab85eb786aa0b617f969182449f9885a6b4c5d",
+      "archive_bytes": 10411,
+      "archive_sha256": "eee2822d7a05135653f1c6f2a3436fa1497161c259d52f9f6e9a9068012d5385"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_b09f29efbbc619dfba8ae868481552f0edb3b268eea9cb9716361714c70d0deb.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_b09f29efbbc619dfba8ae868481552f0edb3b268eea9cb9716361714c70d0deb.sigs.json.gz",
+      "uncompressed_bytes": 137,
+      "uncompressed_sha256": "4902c9d251785e51255684eee79c62f0a90cce6c06ae4da66e38b8ab690ef8c0",
+      "archive_bytes": 133,
+      "archive_sha256": "a7ac14ce9b95943739705198ffe686971e8dddb3ce1bdfea555709791729d9cb"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_b09f29efbbc619dfba8ae868481552f0edb3b268eea9cb9716361714c70d0deb.ssa",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_b09f29efbbc619dfba8ae868481552f0edb3b268eea9cb9716361714c70d0deb.ssa.gz",
+      "uncompressed_bytes": 9684,
+      "uncompressed_sha256": "089b9a4c0ebe0ea6b2e823f0c6a093e563cfe2dfbc6626f7c632063ee2f48300",
+      "archive_bytes": 2639,
+      "archive_sha256": "592ff92a1c1c5d590c776eae2066dc6a3fb9dc9c3e93630db783dcdcb30d7a7c"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_b32cc247615f368431c1e05319a02632884f2ce62053e22555b89ba57c349ecd.ll",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_b32cc247615f368431c1e05319a02632884f2ce62053e22555b89ba57c349ecd.ll.gz",
+      "uncompressed_bytes": 144819,
+      "uncompressed_sha256": "cdc6d819008d4aafe7eb1d619c389f00f7c2a612459533ff0cc33a588e741784",
+      "archive_bytes": 21579,
+      "archive_sha256": "c5fbbd4d0fdb704b86178e0ab37b6ff81a16a09dbbbec6d3fa328c4e639ac766"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_b32cc247615f368431c1e05319a02632884f2ce62053e22555b89ba57c349ecd.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_b32cc247615f368431c1e05319a02632884f2ce62053e22555b89ba57c349ecd.sigs.json.gz",
+      "uncompressed_bytes": 202,
+      "uncompressed_sha256": "fe14578d722fda4f80d502b2216ba0aa2a7832ae73b61b392ffbecbaeb8a4fc7",
+      "archive_bytes": 173,
+      "archive_sha256": "8d23486d3cd7ba084dc28bb5f8ad3ad25b6dea5013695e266915acbf4fea1c19"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_b32cc247615f368431c1e05319a02632884f2ce62053e22555b89ba57c349ecd.ssa",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_b32cc247615f368431c1e05319a02632884f2ce62053e22555b89ba57c349ecd.ssa.gz",
+      "uncompressed_bytes": 17605,
+      "uncompressed_sha256": "618d925b032804bc017a3f63952e700a447f973759e7585c982a9e658bff1fc3",
+      "archive_bytes": 4297,
+      "archive_sha256": "880fbd5a596187131a8c2246490242e827c90df637838b6d368e7900d78e6e39"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.ll",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.ll.gz",
+      "uncompressed_bytes": 2869548,
+      "uncompressed_sha256": "dc11c2b701464224ce110ae509e4955efc1e65da1ff2cd827d08cca8b839f5b9",
+      "archive_bytes": 401863,
+      "archive_sha256": "4059a9fb1e087fbf04c38d11e011a664755c8db44175441e584aa3c32e52bbe5"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.sigs.json.gz",
+      "uncompressed_bytes": 1179,
+      "uncompressed_sha256": "9386f1ef600347875cf92d2fbcd337f93668da9ac701610c1042f389d9e8e4d3",
+      "archive_bytes": 459,
+      "archive_sha256": "75ce664bb169513b841bf68fd0c7a2dd16c665be04b79046ad7e05ca35f5d3c3"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.ssa",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.ssa.gz",
+      "uncompressed_bytes": 514911,
+      "uncompressed_sha256": "4b9df132eda0d9c88a34ca42e8dd0df7bf60c774c9c2ea408d8de89520ace024",
+      "archive_bytes": 107416,
+      "archive_sha256": "c84535c9b4b95220fbeb8bf88cf6b38f188de4b20c4b3960eaa1fde29b43af69"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.ll",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.ll.gz",
+      "uncompressed_bytes": 17994,
+      "uncompressed_sha256": "3393f6e8cc3203487a90180b2eb31ba38d9946a629f286c6eddafa47b152ec3a",
+      "archive_bytes": 4199,
+      "archive_sha256": "d07bbb7e93d93d5d0c3f055c9f609c8ffdd97efe2c93ed8d337843e2b71c60ee"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.sigs.json.gz",
+      "uncompressed_bytes": 137,
+      "uncompressed_sha256": "18d9b1298cc7225601b2abdc21f42e33c2149870e2b14ad5a2e93e8e583ae25d",
+      "archive_bytes": 132,
+      "archive_sha256": "a84803da5f72d4ba16d0e1546a2ea39ceab7e7ccc33a3d0131fbc7bcff795a24"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.ssa",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.ssa.gz",
+      "uncompressed_bytes": 2425,
+      "uncompressed_sha256": "1c66291d3161a92c821c47f14d74af56a906449e4a4386fb7735140e13cdb53e",
+      "archive_bytes": 820,
+      "archive_sha256": "004fe32c01dde7cbdfd94fba4615beb387f309bd4fb89da0a691496bea2543d8"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_eccc1b0a7698081677ef19e6adfc9eddb3e4e74ce8bb8dcc7378a10d96886bef.ll",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_eccc1b0a7698081677ef19e6adfc9eddb3e4e74ce8bb8dcc7378a10d96886bef.ll.gz",
+      "uncompressed_bytes": 16683,
+      "uncompressed_sha256": "c225a7ca4e835348ea5d14dcd4f8fb2e9cc9d583e28bed30239a45bfb2cee4e0",
+      "archive_bytes": 4049,
+      "archive_sha256": "28bdf33408f6e77c1520f8be0bb7b09b144d4f61025fc33600019a28c085c5b0"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_eccc1b0a7698081677ef19e6adfc9eddb3e4e74ce8bb8dcc7378a10d96886bef.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_eccc1b0a7698081677ef19e6adfc9eddb3e4e74ce8bb8dcc7378a10d96886bef.sigs.json.gz",
+      "uncompressed_bytes": 210,
+      "uncompressed_sha256": "aa2eb9d697b7620377dce0a97faa2b0067a5cac8f3334f74b3599622154634fa",
+      "archive_bytes": 172,
+      "archive_sha256": "2e35fa454f6aa29e7968b709d243a9a52771bb2f4c663ec5dc7ff32f002c2c34"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-slots-guests/llvm-dump/myl_f_eccc1b0a7698081677ef19e6adfc9eddb3e4e74ce8bb8dcc7378a10d96886bef.ssa",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/actual-LLVM-inputs/myl_f_eccc1b0a7698081677ef19e6adfc9eddb3e4e74ce8bb8dcc7378a10d96886bef.ssa.gz",
+      "uncompressed_bytes": 2287,
+      "uncompressed_sha256": "a545121ee3244613eb5e56a16bd6cfcb6ab1091d25045cb6321804856af40558",
+      "archive_bytes": 830,
+      "archive_sha256": "ff9f0b4b4abff080f68cab2a98ce81442c70b331a51b8f258398c7f67460dcf1"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_0f5912491d2de36e5414f85c642fb5ea4e1ed1309826128da061157c48716dab.ll",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_0f5912491d2de36e5414f85c642fb5ea4e1ed1309826128da061157c48716dab.ll.gz",
+      "uncompressed_bytes": 15463,
+      "uncompressed_sha256": "715a20c7d8f5ce956b4b65f116a93ba967cdbd93165bd609eda2a85098672b65",
+      "archive_bytes": 3818,
+      "archive_sha256": "64a8ac917151f739612a935dcc4a67f4f45f1f1953da85d4bb0d2a5da1cfe2c6"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_0f5912491d2de36e5414f85c642fb5ea4e1ed1309826128da061157c48716dab.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_0f5912491d2de36e5414f85c642fb5ea4e1ed1309826128da061157c48716dab.sigs.json.gz",
+      "uncompressed_bytes": 210,
+      "uncompressed_sha256": "b988df30eaae9b42dcb7a75a92383333ddf1a96db8e48e97337e5547f8d76ebe",
+      "archive_bytes": 174,
+      "archive_sha256": "cdd22c60d0d1aaeaefe17ed9c99d3c2be70004797c35d29f99d4f58bac02b615"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_0f5912491d2de36e5414f85c642fb5ea4e1ed1309826128da061157c48716dab.ssa",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_0f5912491d2de36e5414f85c642fb5ea4e1ed1309826128da061157c48716dab.ssa.gz",
+      "uncompressed_bytes": 2077,
+      "uncompressed_sha256": "ee88be97769a85c366e941cb32042576372356911877c2a652b68c57f76e74d0",
+      "archive_bytes": 774,
+      "archive_sha256": "c77c9517984f67507d0007e34bc6db3b6d2a27914bc7c4a0557c7665ff17b8e2"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_17303d726ab0869e1051922be702d2f9c3749ec85bd07184d07a9bb33e8aac3f.ll",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_17303d726ab0869e1051922be702d2f9c3749ec85bd07184d07a9bb33e8aac3f.ll.gz",
+      "uncompressed_bytes": 3014,
+      "uncompressed_sha256": "8f782f86c5aad7a9c640c010ee83ab7e25a2737e55968d8c3f31c73ecf8c5656",
+      "archive_bytes": 1378,
+      "archive_sha256": "0e32711132ef75e8d0d57b27623dd3106fa6203b0179812b2d99c2fef2d1642b"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_17303d726ab0869e1051922be702d2f9c3749ec85bd07184d07a9bb33e8aac3f.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_17303d726ab0869e1051922be702d2f9c3749ec85bd07184d07a9bb33e8aac3f.sigs.json.gz",
+      "uncompressed_bytes": 137,
+      "uncompressed_sha256": "2aa2115941930139bea9c81905f009a17c4fde60474749cc3bb6c4b12c3aef72",
+      "archive_bytes": 133,
+      "archive_sha256": "41e30530eef51b4b2696f8194d5f6adbc5a1cc0c2aee1ddc8ae7b483b2ac8445"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_17303d726ab0869e1051922be702d2f9c3749ec85bd07184d07a9bb33e8aac3f.ssa",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_17303d726ab0869e1051922be702d2f9c3749ec85bd07184d07a9bb33e8aac3f.ssa.gz",
+      "uncompressed_bytes": 202,
+      "uncompressed_sha256": "80d5985f48cfc372aee1d1f83ac7229421e60b3135243dc434a8f554714cfecf",
+      "archive_bytes": 181,
+      "archive_sha256": "771c6665e992a968a4a89c4b7d89f2e10ce523f05d074f89a96570fe4e7eb7ec"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_279bca7ea3455002813d3428837243f19fa395122ecd3289e227e37ae96a304d.ll",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_279bca7ea3455002813d3428837243f19fa395122ecd3289e227e37ae96a304d.ll.gz",
+      "uncompressed_bytes": 9556,
+      "uncompressed_sha256": "e068c2ca7447421dcad439ef9b246f5087d33619a4df263675c21f1f7bdc185e",
+      "archive_bytes": 2930,
+      "archive_sha256": "7e9c152f3b944746634557314f74f57e7294584d74f14d397bbea9f1b47095c6"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_279bca7ea3455002813d3428837243f19fa395122ecd3289e227e37ae96a304d.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_279bca7ea3455002813d3428837243f19fa395122ecd3289e227e37ae96a304d.sigs.json.gz",
+      "uncompressed_bytes": 137,
+      "uncompressed_sha256": "5ff4c6838db0e1019c151ad70898365e9e51be72ef2fc2b96fbc50fc4398798b",
+      "archive_bytes": 132,
+      "archive_sha256": "0f198b18ee7c5e8d0091dbba83edf93e82e7a60cbd6529ba15ee695f690c88d2"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_279bca7ea3455002813d3428837243f19fa395122ecd3289e227e37ae96a304d.ssa",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_279bca7ea3455002813d3428837243f19fa395122ecd3289e227e37ae96a304d.ssa.gz",
+      "uncompressed_bytes": 1162,
+      "uncompressed_sha256": "cfbfe3d45cf59918a3866cfc46050fc9508014a3fe98bc754304c790d79afa02",
+      "archive_bytes": 498,
+      "archive_sha256": "a337c47278049aba5c971c5d585886c7058352a2fc4e2679f42ce227041a80ca"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_33d8232212d3f1a1dc899b2b3b8bea00099cfffd34f229b9617aa3b58f06664c.ll",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_33d8232212d3f1a1dc899b2b3b8bea00099cfffd34f229b9617aa3b58f06664c.ll.gz",
+      "uncompressed_bytes": 609176,
+      "uncompressed_sha256": "701cacf3d1ac092f2a086522bfbc1c8057b232ec9025168574ae4e86c6290e8d",
+      "archive_bytes": 88314,
+      "archive_sha256": "24bf375c8c1ee068e55e4765dd1ebb06af4850842f050d2d2b40e0b99fd6349f"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_33d8232212d3f1a1dc899b2b3b8bea00099cfffd34f229b9617aa3b58f06664c.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_33d8232212d3f1a1dc899b2b3b8bea00099cfffd34f229b9617aa3b58f06664c.sigs.json.gz",
+      "uncompressed_bytes": 145,
+      "uncompressed_sha256": "7de977c63168da2295ac7b7623b0370970c702cd0ab16cbc4ac9a6db442998e6",
+      "archive_bytes": 134,
+      "archive_sha256": "20007f05c916ce66ce6a539355924910642394d4dfb3311588a1d03bc1da82cf"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_33d8232212d3f1a1dc899b2b3b8bea00099cfffd34f229b9617aa3b58f06664c.ssa",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_33d8232212d3f1a1dc899b2b3b8bea00099cfffd34f229b9617aa3b58f06664c.ssa.gz",
+      "uncompressed_bytes": 110443,
+      "uncompressed_sha256": "4ba66f68d07f5e8f226d31286c07183b466c73026aeb14f9245c622febab7670",
+      "archive_bytes": 24047,
+      "archive_sha256": "03568e89f592199104b0cf591228f17a0a747b2f5705993e451f2753209137d7"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_5369b4c66e5b43253a9b5eea086246fe91113f976d8e1318e9f59662c8ee3596.ll",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_5369b4c66e5b43253a9b5eea086246fe91113f976d8e1318e9f59662c8ee3596.ll.gz",
+      "uncompressed_bytes": 27735,
+      "uncompressed_sha256": "db34313866945843a2460a6bb79ed95789f4bfa113f60ad3505166f620335532",
+      "archive_bytes": 5674,
+      "archive_sha256": "7156af373230df3e8de39f3253b37ff5737394b891855deb26096aff1b51ec40"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_5369b4c66e5b43253a9b5eea086246fe91113f976d8e1318e9f59662c8ee3596.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_5369b4c66e5b43253a9b5eea086246fe91113f976d8e1318e9f59662c8ee3596.sigs.json.gz",
+      "uncompressed_bytes": 210,
+      "uncompressed_sha256": "ed9ec33e56f7940967c1ecbe8b50dbf8351665c027201e41d75d1d6a178e8cfc",
+      "archive_bytes": 172,
+      "archive_sha256": "1c0635cb41424c7d64804467a9d67d5d6bc6d6ca06fcb170b9a213e4f8c1f684"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_5369b4c66e5b43253a9b5eea086246fe91113f976d8e1318e9f59662c8ee3596.ssa",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_5369b4c66e5b43253a9b5eea086246fe91113f976d8e1318e9f59662c8ee3596.ssa.gz",
+      "uncompressed_bytes": 4013,
+      "uncompressed_sha256": "cad5630fec2f5f1bc2d0d4f9089aa4d8385a70bcc722b4923648d13fea2312f7",
+      "archive_bytes": 1299,
+      "archive_sha256": "741172ef307688c9acd0088313d246a190d93254a7df030339f3ed688a5e4b39"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_8340dc055bec62af6bc5ec8a63347300a765d35db6c5abfa9c31d85a59222d78.ll",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_8340dc055bec62af6bc5ec8a63347300a765d35db6c5abfa9c31d85a59222d78.ll.gz",
+      "uncompressed_bytes": 52670,
+      "uncompressed_sha256": "c254a080599cbb97b1f3763396e2a6d23e7937c5e77116b98a5f40fee80ffaa2",
+      "archive_bytes": 8893,
+      "archive_sha256": "357d848efd549309b2a183fe1325fc0771c0d5c722355945d7b31d6852ac70b7"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_8340dc055bec62af6bc5ec8a63347300a765d35db6c5abfa9c31d85a59222d78.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_8340dc055bec62af6bc5ec8a63347300a765d35db6c5abfa9c31d85a59222d78.sigs.json.gz",
+      "uncompressed_bytes": 145,
+      "uncompressed_sha256": "d386c7eb477749a6e02e9f4218465d4632437af0e9784fce06a5b382205debd4",
+      "archive_bytes": 134,
+      "archive_sha256": "45f9d1dbeff6d5e522cabe0a9d9c7f6577bfb63751554e3292f8a74909b4b21a"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_8340dc055bec62af6bc5ec8a63347300a765d35db6c5abfa9c31d85a59222d78.ssa",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_8340dc055bec62af6bc5ec8a63347300a765d35db6c5abfa9c31d85a59222d78.ssa.gz",
+      "uncompressed_bytes": 8314,
+      "uncompressed_sha256": "f7e2a53519a7a12b95d9b082dd913b66a58189d5f6f66f28e4c9c4e8ceb67866",
+      "archive_bytes": 2226,
+      "archive_sha256": "72ac1e75cff8d279d373d1c824ba057b498b01856499c3cef7eff9a8e83b2978"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_958e150c8e8d6bdababd5dd9f6c01f405c7a76ec04c592bc872ef959f2b49b31.ll",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_958e150c8e8d6bdababd5dd9f6c01f405c7a76ec04c592bc872ef959f2b49b31.ll.gz",
+      "uncompressed_bytes": 9555,
+      "uncompressed_sha256": "9ede5ff8574f5e9c377fb864a111aa5dbef3575a3db1e30125a2a465fdf21c4b",
+      "archive_bytes": 2930,
+      "archive_sha256": "be6819f1f72bd1e1893776a29dc92382169a5441eb1eb66f324cd934ace3b2ff"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_958e150c8e8d6bdababd5dd9f6c01f405c7a76ec04c592bc872ef959f2b49b31.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_958e150c8e8d6bdababd5dd9f6c01f405c7a76ec04c592bc872ef959f2b49b31.sigs.json.gz",
+      "uncompressed_bytes": 137,
+      "uncompressed_sha256": "9463b672bacca170ff53c2e4717b92eea886ccb7f347aec7efb99d896c8c9d8d",
+      "archive_bytes": 134,
+      "archive_sha256": "d1ebce5aadcb2505c1c3c022fd95c2f765e3b0b5815e3fbcb0c9c670767bea1f"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_958e150c8e8d6bdababd5dd9f6c01f405c7a76ec04c592bc872ef959f2b49b31.ssa",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_958e150c8e8d6bdababd5dd9f6c01f405c7a76ec04c592bc872ef959f2b49b31.ssa.gz",
+      "uncompressed_bytes": 1161,
+      "uncompressed_sha256": "e338bfccca0d1f05a9142c52f4109a856f409c083a43d81e75a9b1c30c22eaef",
+      "archive_bytes": 497,
+      "archive_sha256": "c6c2a3f2b1b1b3343b0b41ae42d8abe813ff1c9970a4631dfa4061dc9baa4b7f"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_b09f29efbbc619dfba8ae868481552f0edb3b268eea9cb9716361714c70d0deb.ll",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_b09f29efbbc619dfba8ae868481552f0edb3b268eea9cb9716361714c70d0deb.ll.gz",
+      "uncompressed_bytes": 53030,
+      "uncompressed_sha256": "149b7657af08c9c1dd994f015bd31552a8904b90031fbad34b9454754c4650a8",
+      "archive_bytes": 9967,
+      "archive_sha256": "3af6172ab9c525a424bdf0fa5a5b98b22e09551e916507e67433e7c8bc5c67d6"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_b09f29efbbc619dfba8ae868481552f0edb3b268eea9cb9716361714c70d0deb.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_b09f29efbbc619dfba8ae868481552f0edb3b268eea9cb9716361714c70d0deb.sigs.json.gz",
+      "uncompressed_bytes": 137,
+      "uncompressed_sha256": "4902c9d251785e51255684eee79c62f0a90cce6c06ae4da66e38b8ab690ef8c0",
+      "archive_bytes": 133,
+      "archive_sha256": "a7ac14ce9b95943739705198ffe686971e8dddb3ce1bdfea555709791729d9cb"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_b09f29efbbc619dfba8ae868481552f0edb3b268eea9cb9716361714c70d0deb.ssa",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_b09f29efbbc619dfba8ae868481552f0edb3b268eea9cb9716361714c70d0deb.ssa.gz",
+      "uncompressed_bytes": 9684,
+      "uncompressed_sha256": "089b9a4c0ebe0ea6b2e823f0c6a093e563cfe2dfbc6626f7c632063ee2f48300",
+      "archive_bytes": 2639,
+      "archive_sha256": "592ff92a1c1c5d590c776eae2066dc6a3fb9dc9c3e93630db783dcdcb30d7a7c"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_b32cc247615f368431c1e05319a02632884f2ce62053e22555b89ba57c349ecd.ll",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_b32cc247615f368431c1e05319a02632884f2ce62053e22555b89ba57c349ecd.ll.gz",
+      "uncompressed_bytes": 141052,
+      "uncompressed_sha256": "d1920cbd9e70fc511830bc64681b7d3d10bd2295553b2f167f12cbc116462fb3",
+      "archive_bytes": 20799,
+      "archive_sha256": "e3b2013bb224f3c3935b125d9dd1b2c72b295be272016e32df09f65c21e42885"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_b32cc247615f368431c1e05319a02632884f2ce62053e22555b89ba57c349ecd.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_b32cc247615f368431c1e05319a02632884f2ce62053e22555b89ba57c349ecd.sigs.json.gz",
+      "uncompressed_bytes": 202,
+      "uncompressed_sha256": "fe14578d722fda4f80d502b2216ba0aa2a7832ae73b61b392ffbecbaeb8a4fc7",
+      "archive_bytes": 173,
+      "archive_sha256": "8d23486d3cd7ba084dc28bb5f8ad3ad25b6dea5013695e266915acbf4fea1c19"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_b32cc247615f368431c1e05319a02632884f2ce62053e22555b89ba57c349ecd.ssa",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_b32cc247615f368431c1e05319a02632884f2ce62053e22555b89ba57c349ecd.ssa.gz",
+      "uncompressed_bytes": 17605,
+      "uncompressed_sha256": "618d925b032804bc017a3f63952e700a447f973759e7585c982a9e658bff1fc3",
+      "archive_bytes": 4297,
+      "archive_sha256": "880fbd5a596187131a8c2246490242e827c90df637838b6d368e7900d78e6e39"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.ll",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.ll.gz",
+      "uncompressed_bytes": 2652491,
+      "uncompressed_sha256": "9aa8b822e56741743fc5d1d5abeb954083304d29637479415573d61c61bdda41",
+      "archive_bytes": 365625,
+      "archive_sha256": "78c27ed04ac8feb6c6305202b27007c856614187fe89e380f3596ef51049eb3d"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.sigs.json.gz",
+      "uncompressed_bytes": 1179,
+      "uncompressed_sha256": "9386f1ef600347875cf92d2fbcd337f93668da9ac701610c1042f389d9e8e4d3",
+      "archive_bytes": 459,
+      "archive_sha256": "75ce664bb169513b841bf68fd0c7a2dd16c665be04b79046ad7e05ca35f5d3c3"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.ssa",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5.ssa.gz",
+      "uncompressed_bytes": 514911,
+      "uncompressed_sha256": "4b9df132eda0d9c88a34ca42e8dd0df7bf60c774c9c2ea408d8de89520ace024",
+      "archive_bytes": 107416,
+      "archive_sha256": "c84535c9b4b95220fbeb8bf88cf6b38f188de4b20c4b3960eaa1fde29b43af69"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.ll",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.ll.gz",
+      "uncompressed_bytes": 17994,
+      "uncompressed_sha256": "3393f6e8cc3203487a90180b2eb31ba38d9946a629f286c6eddafa47b152ec3a",
+      "archive_bytes": 4199,
+      "archive_sha256": "d07bbb7e93d93d5d0c3f055c9f609c8ffdd97efe2c93ed8d337843e2b71c60ee"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.sigs.json.gz",
+      "uncompressed_bytes": 137,
+      "uncompressed_sha256": "18d9b1298cc7225601b2abdc21f42e33c2149870e2b14ad5a2e93e8e583ae25d",
+      "archive_bytes": 132,
+      "archive_sha256": "a84803da5f72d4ba16d0e1546a2ea39ceab7e7ccc33a3d0131fbc7bcff795a24"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.ssa",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_c022a6ad651d6537a30c1e2f178a185a896cdb5bde02baa31c70d91d735e3e85.ssa.gz",
+      "uncompressed_bytes": 2425,
+      "uncompressed_sha256": "1c66291d3161a92c821c47f14d74af56a906449e4a4386fb7735140e13cdb53e",
+      "archive_bytes": 820,
+      "archive_sha256": "004fe32c01dde7cbdfd94fba4615beb387f309bd4fb89da0a691496bea2543d8"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_eccc1b0a7698081677ef19e6adfc9eddb3e4e74ce8bb8dcc7378a10d96886bef.ll",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_eccc1b0a7698081677ef19e6adfc9eddb3e4e74ce8bb8dcc7378a10d96886bef.ll.gz",
+      "uncompressed_bytes": 16683,
+      "uncompressed_sha256": "c225a7ca4e835348ea5d14dcd4f8fb2e9cc9d583e28bed30239a45bfb2cee4e0",
+      "archive_bytes": 4049,
+      "archive_sha256": "28bdf33408f6e77c1520f8be0bb7b09b144d4f61025fc33600019a28c085c5b0"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_eccc1b0a7698081677ef19e6adfc9eddb3e4e74ce8bb8dcc7378a10d96886bef.sigs.json",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_eccc1b0a7698081677ef19e6adfc9eddb3e4e74ce8bb8dcc7378a10d96886bef.sigs.json.gz",
+      "uncompressed_bytes": 210,
+      "uncompressed_sha256": "aa2eb9d697b7620377dce0a97faa2b0067a5cac8f3334f74b3599622154634fa",
+      "archive_bytes": 172,
+      "archive_sha256": "2e35fa454f6aa29e7968b709d243a9a52771bb2f4c663ec5dc7ff32f002c2c34"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/llvm-dump/myl_f_eccc1b0a7698081677ef19e6adfc9eddb3e4e74ce8bb8dcc7378a10d96886bef.ssa",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/actual-LLVM-inputs/myl_f_eccc1b0a7698081677ef19e6adfc9eddb3e4e74ce8bb8dcc7378a10d96886bef.ssa.gz",
+      "uncompressed_bytes": 2287,
+      "uncompressed_sha256": "a545121ee3244613eb5e56a16bd6cfcb6ab1091d25045cb6321804856af40558",
+      "archive_bytes": 830,
+      "archive_sha256": "ff9f0b4b4abff080f68cab2a98ce81442c70b331a51b8f258398c7f67460dcf1"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/objcopy-incident/a29-llvm.elf",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/incident-preserved/a29-llvm.elf.gz",
+      "uncompressed_bytes": 467112,
+      "uncompressed_sha256": "a360c8ec6a611a8bb82f9ceb7266d9ad7d887b555832e8693edf4947adf46d34",
+      "archive_bytes": 187377,
+      "archive_sha256": "6babcf2cacc9bd070cc253cd1ba0c7916ee25670159b323d66f39371c9b353af"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/objcopy-incident/a29-qbe.elf",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/incident-preserved/a29-qbe.elf.gz",
+      "uncompressed_bytes": 1267936,
+      "uncompressed_sha256": "9779710d7c1861720937dbe8785a1b4d80cdb34478a3695d113f9106f28e026e",
+      "archive_bytes": 372183,
+      "archive_sha256": "e43dcd661d72e7a49347e90c186e51b0f58f662e877b3da6a907119881162b02"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/objcopy-incident/control-llvm.elf",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/incident-preserved/control-llvm.elf.gz",
+      "uncompressed_bytes": 467136,
+      "uncompressed_sha256": "fa609878afefc2a5cf73af24a1a3bb55748761150b39f6882ec0ad8f317d326b",
+      "archive_bytes": 187385,
+      "archive_sha256": "2f7dcb2b592f37304ce4bc0e98612b444192e4e43d94ff9db3a1add57c8ee768"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/objcopy-incident/control-qbe.elf",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/incident-preserved/control-qbe.elf.gz",
+      "uncompressed_bytes": 1267968,
+      "uncompressed_sha256": "aa3cae5ab71c1ea98af1fe122241c0ef6aa7d11d3989ad881695e34a739d6625",
+      "archive_bytes": 372207,
+      "archive_sha256": "f8d96674b1853f3cf9216a11fe9ea6a2a59aa5c41081cd69785d5ff91492bcfb"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/objcopy-incident/pristine-legacy-llvm-after.elf",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/incident-preserved/pristine-legacy-llvm-after.elf.gz",
+      "uncompressed_bytes": 427416,
+      "uncompressed_sha256": "305919c50ff4f82cb799c8c4849edafadcdfd4a4af0ea4f03eb02e98cb5ee8cd",
+      "archive_bytes": 180076,
+      "archive_sha256": "809314bd63990f7705c3488f63ab365f0ae0a87bff123b6f0eb61ef402bfac4e"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.task-tmp/objcopy-incident/pristine-legacy-llvm-before.elf",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/incident-preserved/pristine-legacy-llvm-before.elf.gz",
+      "uncompressed_bytes": 427640,
+      "uncompressed_sha256": "b168b53488e5bc455d3b46f39032ded0292ddf9df14d620af7399e5ba40185cd",
+      "archive_bytes": 180121,
+      "archive_sha256": "33c5066dd0a2f2a6c981098c1e4f741d4fe74ee33798b5bc41d06f4a2ec61a59"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/llvm-control-entry.s",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/llvm-control-entry.s.gz",
+      "uncompressed_bytes": 307928,
+      "uncompressed_sha256": "d70f6aaa15c832af78752578fe8037f08608040f35ed06423a1074e620499dc1",
+      "archive_bytes": 44838,
+      "archive_sha256": "11796b94a4cc8a08505e64043c543a1fdedc7b3f2434b2049b566387c3e2bfdd"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/qbe-candidate-entry.s",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/qbe-candidate-entry.s.gz",
+      "uncompressed_bytes": 636445,
+      "uncompressed_sha256": "91c998da8a29a0a587f7ae2a639be1b99e3cfee7a1d1112c249b036c18584b51",
+      "archive_bytes": 85881,
+      "archive_sha256": "94e23f1460bb1ced6dd098cc783ab38355b6a340945c6c602a58b90c1ca650d2"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/qbe-control-entry.s",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/qbe-control-entry.s.gz",
+      "uncompressed_bytes": 636448,
+      "uncompressed_sha256": "5e920364afd6dee29ee1130cabd2618a90e84e321555433a627ffea49cd6f4b5",
+      "archive_bytes": 85887,
+      "archive_sha256": "089e3d62df795194d008a5bf3819b485e924e5c4fd7800b736d3ceade201fb65"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/llvm-candidate-entry.s",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/llvm-candidate-entry.s.gz",
+      "uncompressed_bytes": 307925,
+      "uncompressed_sha256": "6bf1908d8ea7267ce7e654a74e6b6515fb021df88098f6892732f8380c0ee2b1",
+      "archive_bytes": 44829,
+      "archive_sha256": "c2c06d8d77c62c38c9104864f5b9de16d0ef6e2fb292ffd18ca96268608d6661"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/llvm-control-instruction-only.s",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/llvm-control-instruction-only.s.gz",
+      "uncompressed_bytes": 205467,
+      "uncompressed_sha256": "2416a6bb09156ccfb82e482f3b7078967cb83536a8339461d27c3687794f1e3a",
+      "archive_bytes": 29541,
+      "archive_sha256": "49c314adafe482f468c9ca7f4627afc5431c252567836fa47c0648ef97de41ec"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/qbe-control-instruction-only.s",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/qbe-control-instruction-only.s.gz",
+      "uncompressed_bytes": 415738,
+      "uncompressed_sha256": "033b7c1645c1a21c871b1542935ca9c4f4f587012e069804023a42e1e9300058",
+      "archive_bytes": 60307,
+      "archive_sha256": "1d98980a924a1068c62d3aa42ad826dc863ef0d03f7e85f36fa098b6d5587b0c"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/llvm-candidate-instruction-only.s",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/llvm-candidate-instruction-only.s.gz",
+      "uncompressed_bytes": 205464,
+      "uncompressed_sha256": "ea11e2112bf82dc844080e763a8ae44315e6dbec8292b159c5a97bd880e5bb28",
+      "archive_bytes": 29531,
+      "archive_sha256": "f886b5460f7d38299c7af7781340fcdbde8cf857dca9de76f7588aa8adc9403a"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/qbe-candidate-instruction-only.s",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/qbe-candidate-instruction-only.s.gz",
+      "uncompressed_bytes": 415735,
+      "uncompressed_sha256": "c59ce10260381e40e6a5f0944dd31b9cc97accd909d91b72ef95a27b138ba160",
+      "archive_bytes": 60303,
+      "archive_sha256": "4153e5a044b76f4f3099785b8d9b9d47d5b30b5cf36296a1dd82b30be9dc41c6"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/llvm-control-text.bin",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/llvm-control-text.bin.gz",
+      "uncompressed_bytes": 169554,
+      "uncompressed_sha256": "9b5ea3e04a129179947ba072eb141e2b6a6ce5fee7849671bf3501da1185ca85",
+      "archive_bytes": 92464,
+      "archive_sha256": "2e28859a98c13fe82ef166caec7f77882ce4ea1d5a60e437ee96c41e1dbbee89"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/qbe-control-text.bin",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/qbe-control-text.bin.gz",
+      "uncompressed_bytes": 204125,
+      "uncompressed_sha256": "6b091060ab8d7dae37da80f63c536ae50ca3d02320528f3b8e7d239b22164e09",
+      "archive_bytes": 102747,
+      "archive_sha256": "bb3998836166eaa6ed7382c9e24116e8acb8c880e40defb98de8055280507701"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/llvm-candidate-text.bin",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/llvm-candidate-text.bin.gz",
+      "uncompressed_bytes": 169554,
+      "uncompressed_sha256": "9b5ea3e04a129179947ba072eb141e2b6a6ce5fee7849671bf3501da1185ca85",
+      "archive_bytes": 92464,
+      "archive_sha256": "2e28859a98c13fe82ef166caec7f77882ce4ea1d5a60e437ee96c41e1dbbee89"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/qbe-candidate-text.bin",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/qbe-candidate-text.bin.gz",
+      "uncompressed_bytes": 204125,
+      "uncompressed_sha256": "6b091060ab8d7dae37da80f63c536ae50ca3d02320528f3b8e7d239b22164e09",
+      "archive_bytes": 102747,
+      "archive_sha256": "bb3998836166eaa6ed7382c9e24116e8acb8c880e40defb98de8055280507701"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-addresses-20261004/hybrid-LLVM-entry.s",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/hybrid-LLVM-entry.s.gz",
+      "uncompressed_bytes": 205472,
+      "uncompressed_sha256": "2b98d8bd59069a5c41965b5f4d62e7623101df62f87a7b021479809a9b94337c",
+      "archive_bytes": 29544,
+      "archive_sha256": "f0939c8a7bd4f626cd8ca5f12660bf75561048173bdfe6d9c3acb98940191455"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-addresses-20261004/control-LLVM-entry.s",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/control-LLVM-entry.s.gz",
+      "uncompressed_bytes": 205488,
+      "uncompressed_sha256": "9e7e7ad0e6e755bdf1417bf22120a0c956793af64a5140abbe3434713c6aa761",
+      "archive_bytes": 29556,
+      "archive_sha256": "7131001a7cf077accfe7e0d2319b4b831e31bdf9fe77a92199b2db9ffd3bf299"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-addresses-20261004/llvm-candidate-entry.s",
+      "archive": "experiments/runtime-goal110-scalar-addresses-20261004/llvm-candidate-entry.s.gz",
+      "uncompressed_bytes": 307933,
+      "uncompressed_sha256": "4c06dd3410f2bebfa59812af27558dd52c615101e69bd3a5fcc1ef55f0af956e",
+      "archive_bytes": 44840,
+      "archive_sha256": "8193dac61223a36ec1fad3cb5fa447567696dde9972286b325f90f2314bbc0ea"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-compiler-receipt.json",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/control-compiler-receipt.json.gz",
+      "uncompressed_bytes": 656394,
+      "uncompressed_sha256": "6c0285cfcca85ade2fb6ef22aa4c1f1a25257b81e6230bb7c9fb7a19f11b7115",
+      "archive_bytes": 246090,
+      "archive_sha256": "d89940d78c8edd68984f15a2bd8018846ef59cb4aedb697c79f442fee1323a4d"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/manifest.json",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/retired-control-manifest.json.gz",
+      "uncompressed_bytes": 831306,
+      "uncompressed_sha256": "ce91e4fa047ca147560dd073e07d92afeecc60e336dd1dfccc6aa913e639a410",
+      "archive_bytes": 260218,
+      "archive_sha256": "34e5438798742111e0427b2025f44c92938dbaa843b5d91e851aa8017ad2b9b3"
+    },
+    {
+      "original_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner/manifest.json",
+      "archive": "experiments/runtime-goal110-scalar-slots-20261004/pristine-recovery-manifest.json.gz",
+      "uncompressed_bytes": 834524,
+      "uncompressed_sha256": "a5da83884425db6a06fc83d936b1503f8c1560c23203bc41a03f1c00883d36bf",
+      "archive_bytes": 260278,
+      "archive_sha256": "2cc863accefcaff3a4a2e929d4a70ca7aa7d23fa4c90c86ca5e25e7f5218fe7f"
+    }
+  ],
+  "no_production_integration": true
+}

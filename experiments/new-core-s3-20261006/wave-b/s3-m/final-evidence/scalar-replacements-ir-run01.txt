@@ -1,0 +1,568 @@
+fn main() -> i64
+b0:
+  %0 = call bool test_canonical_scalar_widths_and_domain_values_survive_replacement()
+  branch %0, b2, b1
+b1: ; preds b0
+  unreachable
+b2: ; preds b0
+  %3 = call bool test_plain_and_owning_fields_alternate_without_losing_pending_tokens()
+  branch %3, b4, b3
+b3: ; preds b2
+  unreachable
+b4: ; preds b2
+  %6 = call bool test_callback_replacement_refreshes_the_parent_before_scalar_store()
+  branch %6, b6, b5
+b5: ; preds b4
+  unreachable
+b6: ; preds b4
+  %9 = call bool test_scalar_updates_inside_an_arena_preserve_an_older_receiver()
+  branch %9, b8, b7
+b7: ; preds b6
+  unreachable
+b8: ; preds b6
+  ret 0:i64
+fn test_canonical_scalar_widths_and_domain_values_survive_replacement() -> bool
+b0:
+  %1 = list_new list[record{i8, u16, bool, f64, u16}] 1:i64
+  %7 = call u16 Distance.make(4:u16)
+  %8 = record_make record{i8, u16, bool, f64, u16} 1:i8, 2:u16, 0:bool, 3.5:f64, %7
+  %9 = list_push list[record{i8, u16, bool, f64, u16}] %1, %8
+  %10 = call list[record{i8, u16, bool, f64, u16}] edit(%9)
+  %13 = cmp.lt bool 0:i64, 0:i64
+  branch %13, b1, b2
+b1: ; preds b0
+  %15 = list_len u64 %10
+  %16 = convert.exact i64 %15
+  %17 = add.exact i64 %16, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %19 = phi i64 0:i64, %17
+  %21 = list_get.exact record{i8, u16, bool, f64, u16} %10, %19
+  %22 = record_get i8 %21, field0
+  %24 = cmp.eq bool %22, -120:i8
+  branch %24, b3, b4
+b3: ; preds b2
+  %26 = record_get u16 %21, field1
+  %28 = cmp.eq bool %26, 65000:u16
+  jump b4
+b4: ; preds b2 b3
+  %30 = phi bool %24, %28
+  branch %30, b5, b6
+b5: ; preds b4
+  %33 = record_get bool %21, field2
+  jump b6
+b6: ; preds b4 b5
+  %35 = phi bool %30, %33
+  branch %35, b7, b8
+b7: ; preds b6
+  %38 = record_get f64 %21, field3
+  %40 = fneg f64 1.25:f64
+  %41 = fcmp.eq bool %38, %40
+  jump b8
+b8: ; preds b6 b7
+  %43 = phi bool %35, %41
+  branch %43, b9, b10
+b9: ; preds b8
+  %46 = record_get u16 %21, field4
+  %47 = call u16 Distance.value(%46)
+  %49 = cmp.eq bool %47, 42000:u16
+  jump b10
+b10: ; preds b8 b9
+  %51 = phi bool %43, %49
+  branch %51, b11, b12
+b11: ; preds b10
+  %60 = cmp.lt bool 0:i64, 0:i64
+  branch %60, b13, b14
+b12: ; preds b10 b14
+  %73 = phi bool %51, %71
+  branch %73, b15, b16
+b13: ; preds b11
+  %62 = list_len u64 %9
+  %63 = convert.exact i64 %62
+  %64 = add.exact i64 %63, 0:i64
+  jump b14
+b14: ; preds b11 b13
+  %66 = phi i64 0:i64, %64
+  %69 = list_get_field.exact i8 %9, %66, path 0
+  %71 = cmp.eq bool %69, 1:i8
+  jump b12
+b15: ; preds b12
+  %79 = cmp.lt bool 0:i64, 0:i64
+  branch %79, b17, b18
+b16: ; preds b12 b18
+  %91 = phi bool %73, %89
+  ret %91
+b17: ; preds b15
+  %81 = list_len u64 %9
+  %82 = convert.exact i64 %81
+  %83 = add.exact i64 %82, 0:i64
+  jump b18
+b18: ; preds b15 b17
+  %85 = phi i64 0:i64, %83
+  %88 = list_get_field.exact bool %9, %85, path 2
+  %89 = not bool %88
+  jump b16
+fn test_plain_and_owning_fields_alternate_without_losing_pending_tokens() -> bool
+b0:
+  %2 = record_make [2]i64 2:i64, 3:i64
+  %4 = list_new list[record{i64, list[i64], [2]i64, bool}] 1:i64
+  %7 = list_new list[i64] 1:i64
+  %9 = list_push list[i64] %7, 4:i64
+  %11 = record_make record{i64, list[i64], [2]i64, bool} 1:i64, %9, %2, 0:bool
+  %12 = list_push list[record{i64, list[i64], [2]i64, bool}] %4, %11
+  %16 = cmp.lt bool 0:i64, 0:i64
+  branch %16, b1, b2
+b1: ; preds b0
+  %18 = list_len u64 %12
+  %19 = convert.exact i64 %18
+  %20 = add.exact i64 %19, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %22 = phi i64 0:i64, %20
+  %24 = list_get.exact record{i64, list[i64], [2]i64, bool} %12, %22
+  %25 = list_get.exact record{i64, list[i64], [2]i64, bool} %12, %22
+  %27 = record_set record{i64, list[i64], [2]i64, bool} %25, field0, 7:i64
+  %28 = list_set.exact list[record{i64, list[i64], [2]i64, bool}] %12, %22, %27
+  %31 = list_new list[i64] 2:i64
+  %33 = list_push list[i64] %31, 8:i64
+  %35 = list_push list[i64] %33, 9:i64
+  %38 = cmp.lt bool 0:i64, 0:i64
+  branch %38, b3, b4
+b3: ; preds b2
+  %40 = list_len u64 %28
+  %41 = convert.exact i64 %40
+  %42 = add.exact i64 %41, 0:i64
+  jump b4
+b4: ; preds b2 b3
+  %44 = phi i64 0:i64, %42
+  %46 = list_get.exact record{i64, list[i64], [2]i64, bool} %28, %44
+  %47 = list_get.exact record{i64, list[i64], [2]i64, bool} %28, %44
+  %49 = record_set record{i64, list[i64], [2]i64, bool} %47, field1, %35
+  %50 = list_set.exact list[record{i64, list[i64], [2]i64, bool}] %28, %44, %49
+  %54 = cmp.lt bool 0:i64, 0:i64
+  branch %54, b5, b6
+b5: ; preds b4
+  %56 = list_len u64 %50
+  %57 = convert.exact i64 %56
+  %58 = add.exact i64 %57, 0:i64
+  jump b6
+b6: ; preds b4 b5
+  %60 = phi i64 0:i64, %58
+  %63 = list_get_field.exact i64 %50, %60, path 0
+  %67 = cmp.lt bool 0:i64, 0:i64
+  branch %67, b7, b8
+b7: ; preds b6
+  %69 = list_len u64 %50
+  %70 = convert.exact i64 %69
+  %71 = add.exact i64 %70, 0:i64
+  jump b8
+b8: ; preds b6 b7
+  %73 = phi i64 0:i64, %71
+  %75 = list_get.exact record{i64, list[i64], [2]i64, bool} %50, %73
+  %76 = list_get.exact record{i64, list[i64], [2]i64, bool} %50, %73
+  %78 = record_set record{i64, list[i64], [2]i64, bool} %76, field0, %63
+  %79 = list_set.exact list[record{i64, list[i64], [2]i64, bool}] %50, %73, %78
+  %83 = record_make [2]i64 10:i64, 11:i64
+  %86 = cmp.lt bool 0:i64, 0:i64
+  branch %86, b9, b10
+b9: ; preds b8
+  %88 = list_len u64 %79
+  %89 = convert.exact i64 %88
+  %90 = add.exact i64 %89, 0:i64
+  jump b10
+b10: ; preds b8 b9
+  %92 = phi i64 0:i64, %90
+  %94 = list_get.exact record{i64, list[i64], [2]i64, bool} %79, %92
+  %95 = list_get.exact record{i64, list[i64], [2]i64, bool} %79, %92
+  %97 = record_set record{i64, list[i64], [2]i64, bool} %95, field2, %83
+  %98 = list_set.exact list[record{i64, list[i64], [2]i64, bool}] %79, %92, %97
+  %102 = cmp.lt bool 0:i64, 0:i64
+  branch %102, b11, b12
+b11: ; preds b10
+  %104 = list_len u64 %98
+  %105 = convert.exact i64 %104
+  %106 = add.exact i64 %105, 0:i64
+  jump b12
+b12: ; preds b10 b11
+  %108 = phi i64 0:i64, %106
+  %110 = list_get.exact record{i64, list[i64], [2]i64, bool} %98, %108
+  %111 = list_get.exact record{i64, list[i64], [2]i64, bool} %98, %108
+  %114 = record_set record{i64, list[i64], [2]i64, bool} %111, field3, undef
+  %115 = list_set.exact list[record{i64, list[i64], [2]i64, bool}] %98, %108, %114
+  %118 = list_new list[i64] 1:i64
+  %120 = list_push list[i64] %118, 12:i64
+  %123 = cmp.lt bool 0:i64, 0:i64
+  branch %123, b13, b14
+b13: ; preds b12
+  %125 = list_len u64 %115
+  %126 = convert.exact i64 %125
+  %127 = add.exact i64 %126, 0:i64
+  jump b14
+b14: ; preds b12 b13
+  %129 = phi i64 0:i64, %127
+  %131 = list_get.exact record{i64, list[i64], [2]i64, bool} %115, %129
+  %132 = list_get.exact record{i64, list[i64], [2]i64, bool} %115, %129
+  %134 = record_set record{i64, list[i64], [2]i64, bool} %132, field1, %120
+  %135 = list_set.exact list[record{i64, list[i64], [2]i64, bool}] %115, %129, %134
+  %140 = cmp.lt bool 0:i64, 0:i64
+  branch %140, b15, b16
+b15: ; preds b14
+  %142 = list_len u64 %135
+  %143 = convert.exact i64 %142
+  %144 = add.exact i64 %143, 0:i64
+  jump b16
+b16: ; preds b14 b15
+  %146 = phi i64 0:i64, %144
+  %148 = list_get.exact record{i64, list[i64], [2]i64, bool} %135, %146
+  %149 = list_get.exact record{i64, list[i64], [2]i64, bool} %135, %146
+  %151 = record_set record{i64, list[i64], [2]i64, bool} %149, field0, 13:i64
+  %152 = list_set.exact list[record{i64, list[i64], [2]i64, bool}] %135, %146, %151
+  %156 = cmp.lt bool 0:i64, 0:i64
+  branch %156, b17, b18
+b17: ; preds b16
+  %158 = list_len u64 %152
+  %159 = convert.exact i64 %158
+  %160 = add.exact i64 %159, 0:i64
+  jump b18
+b18: ; preds b16 b17
+  %162 = phi i64 0:i64, %160
+  %165 = list_get_field.exact i64 %152, %162, path 0
+  %167 = cmp.eq bool %165, 13:i64
+  branch %167, b19, b20
+b19: ; preds b18
+  %172 = cmp.lt bool 0:i64, 0:i64
+  branch %172, b21, b22
+b20: ; preds b18 b24
+  %208 = phi bool %167, %206
+  branch %208, b30, b31
+b21: ; preds b19
+  %174 = list_len u64 %152
+  %175 = convert.exact i64 %174
+  %176 = add.exact i64 %175, 0:i64
+  jump b22
+b22: ; preds b19 b21
+  %178 = phi i64 0:i64, %176
+  %181 = list_get_field.exact list[i64] %152, %178, path 1
+  %183 = list_new list[i64] 1:i64
+  %185 = list_push list[i64] %183, 12:i64
+  %186 = list_len u64 %181
+  %187 = list_len u64 %185
+  %188 = cmp.eq bool %186, %187
+  branch %188, b25, b24
+b23: ; preds b25 b28
+  %192 = phi u64 0:u64, %200
+  %193 = cmp.lt bool %192, %186
+  branch %193, b26, b27
+b24: ; preds b22 b29 b27
+  %206 = phi bool %188, 0:bool, 1:bool
+  jump b20
+b25: ; preds b22
+  jump b23
+b26: ; preds b23
+  %195 = list_get i64 %181, %192
+  %196 = list_get i64 %185, %192
+  %197 = cmp.eq bool %195, %196
+  branch %197, b28, b29
+b27: ; preds b23
+  jump b24
+b28: ; preds b26
+  %200 = add u64 %192, 1:u64
+  jump b23
+b29: ; preds b26
+  jump b24
+b30: ; preds b20
+  %216 = cmp.lt bool 0:i64, 0:i64
+  branch %216, b32, b33
+b31: ; preds b20 b33
+  %231 = phi bool %208, %229
+  branch %231, b34, b35
+b32: ; preds b30
+  %218 = list_len u64 %152
+  %219 = convert.exact i64 %218
+  %220 = add.exact i64 %219, 0:i64
+  jump b33
+b33: ; preds b30 b32
+  %222 = phi i64 0:i64, %220
+  %225 = list_get_field.exact [2]i64 %152, %222, path 2
+  %227 = array_get.exact i64 %225, 1:i64
+  %229 = cmp.eq bool %227, 11:i64
+  jump b31
+b34: ; preds b31
+  %250 = cmp.lt bool 0:i64, 0:i64
+  branch %250, b36, b37
+b35: ; preds b31 b37
+  %263 = phi bool %231, %261
+  branch %263, b38, b39
+b36: ; preds b34
+  %252 = list_len u64 %12
+  %253 = convert.exact i64 %252
+  %254 = add.exact i64 %253, 0:i64
+  jump b37
+b37: ; preds b34 b36
+  %256 = phi i64 0:i64, %254
+  %259 = list_get_field.exact i64 %12, %256, path 0
+  %261 = cmp.eq bool %259, 1:i64
+  jump b35
+b38: ; preds b35
+  %269 = cmp.lt bool 0:i64, 0:i64
+  branch %269, b40, b41
+b39: ; preds b35 b43
+  %305 = phi bool %263, %303
+  branch %305, b49, b50
+b40: ; preds b38
+  %271 = list_len u64 %12
+  %272 = convert.exact i64 %271
+  %273 = add.exact i64 %272, 0:i64
+  jump b41
+b41: ; preds b38 b40
+  %275 = phi i64 0:i64, %273
+  %278 = list_get_field.exact list[i64] %12, %275, path 1
+  %280 = list_new list[i64] 1:i64
+  %282 = list_push list[i64] %280, 4:i64
+  %283 = list_len u64 %278
+  %284 = list_len u64 %282
+  %285 = cmp.eq bool %283, %284
+  branch %285, b44, b43
+b42: ; preds b44 b47
+  %289 = phi u64 0:u64, %297
+  %290 = cmp.lt bool %289, %283
+  branch %290, b45, b46
+b43: ; preds b41 b48 b46
+  %303 = phi bool %285, 0:bool, 1:bool
+  jump b39
+b44: ; preds b41
+  jump b42
+b45: ; preds b42
+  %292 = list_get i64 %278, %289
+  %293 = list_get i64 %282, %289
+  %294 = cmp.eq bool %292, %293
+  branch %294, b47, b48
+b46: ; preds b42
+  jump b43
+b47: ; preds b45
+  %297 = add u64 %289, 1:u64
+  jump b42
+b48: ; preds b45
+  jump b43
+b49: ; preds b39
+  %313 = cmp.lt bool 0:i64, 0:i64
+  branch %313, b51, b52
+b50: ; preds b39 b52
+  %328 = phi bool %305, %326
+  ret %328
+b51: ; preds b49
+  %315 = list_len u64 %12
+  %316 = convert.exact i64 %315
+  %317 = add.exact i64 %316, 0:i64
+  jump b52
+b52: ; preds b49 b51
+  %319 = phi i64 0:i64, %317
+  %322 = list_get_field.exact [2]i64 %12, %319, path 2
+  %324 = array_get.exact i64 %322, 1:i64
+  %326 = cmp.eq bool %324, 3:i64
+  jump b50
+fn test_callback_replacement_refreshes_the_parent_before_scalar_store() -> bool
+b0:
+  %1 = list_new list[record{i8, u16, bool, f64, u16}] 1:i64
+  %7 = call u16 Distance.make(4:u16)
+  %8 = record_make record{i8, u16, bool, f64, u16} 1:i8, 2:u16, 0:bool, 3.5:f64, %7
+  %9 = list_push list[record{i8, u16, bool, f64, u16}] %1, %8
+  %10 = call record{i8, list[record{i8, u16, bool, f64, u16}]} replacement(%9)
+  %11 = record_get i8 %10, field0
+  %12 = record_get list[record{i8, u16, bool, f64, u16}] %10, field1
+  %15 = cmp.lt bool 0:i64, 0:i64
+  branch %15, b1, b2
+b1: ; preds b0
+  %17 = list_len u64 %12
+  %18 = convert.exact i64 %17
+  %19 = add.exact i64 %18, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %21 = phi i64 0:i64, %19
+  %23 = list_get.exact record{i8, u16, bool, f64, u16} %12, %21
+  %24 = list_get.exact record{i8, u16, bool, f64, u16} %12, %21
+  %26 = record_set record{i8, u16, bool, f64, u16} %24, field0, %11
+  %27 = list_set.exact list[record{i8, u16, bool, f64, u16}] %12, %21, %26
+  %31 = cmp.lt bool 0:i64, 0:i64
+  branch %31, b3, b4
+b3: ; preds b2
+  %33 = list_len u64 %27
+  %34 = convert.exact i64 %33
+  %35 = add.exact i64 %34, 0:i64
+  jump b4
+b4: ; preds b2 b3
+  %37 = phi i64 0:i64, %35
+  %40 = list_get_field.exact i8 %27, %37, path 0
+  %42 = cmp.eq bool %40, -13:i8
+  branch %42, b5, b6
+b5: ; preds b4
+  %47 = cmp.lt bool 0:i64, 0:i64
+  branch %47, b7, b8
+b6: ; preds b4 b8
+  %60 = phi bool %42, %58
+  branch %60, b9, b10
+b7: ; preds b5
+  %49 = list_len u64 %27
+  %50 = convert.exact i64 %49
+  %51 = add.exact i64 %50, 0:i64
+  jump b8
+b8: ; preds b5 b7
+  %53 = phi i64 0:i64, %51
+  %56 = list_get_field.exact u16 %27, %53, path 1
+  %58 = cmp.eq bool %56, 6:u16
+  jump b6
+b9: ; preds b6
+  %64 = list_len u64 %27
+  %65 = convert.exact i64 %64
+  %67 = cmp.eq bool %65, 2:i64
+  jump b10
+b10: ; preds b6 b9
+  %69 = phi bool %60, %67
+  branch %69, b11, b12
+b11: ; preds b10
+  %78 = cmp.lt bool 0:i64, 0:i64
+  branch %78, b13, b14
+b12: ; preds b10 b14
+  %91 = phi bool %69, %89
+  ret %91
+b13: ; preds b11
+  %80 = list_len u64 %9
+  %81 = convert.exact i64 %80
+  %82 = add.exact i64 %81, 0:i64
+  jump b14
+b14: ; preds b11 b13
+  %84 = phi i64 0:i64, %82
+  %87 = list_get_field.exact i8 %9, %84, path 0
+  %89 = cmp.eq bool %87, 1:i8
+  jump b12
+fn test_scalar_updates_inside_an_arena_preserve_an_older_receiver() -> bool
+b0:
+  %1 = list_new list[record{i8, u16, bool, f64, u16}] 1:i64
+  %7 = call u16 Distance.make(4:u16)
+  %8 = record_make record{i8, u16, bool, f64, u16} 1:i8, 2:u16, 0:bool, 3.5:f64, %7
+  %9 = list_push list[record{i8, u16, bool, f64, u16}] %1, %8
+  %10 = call list[record{i8, u16, bool, f64, u16}] edit(%9)
+  %13 = cmp.lt bool 0:i64, 0:i64
+  branch %13, b1, b2
+b1: ; preds b0
+  %15 = list_len u64 %10
+  %16 = convert.exact i64 %15
+  %17 = add.exact i64 %16, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %19 = phi i64 0:i64, %17
+  %22 = list_get_field.exact i8 %10, %19, path 0
+  %24 = cmp.eq bool %22, -120:i8
+  branch %24, b3, b4
+b3: ; preds b2
+  %29 = cmp.lt bool 0:i64, 0:i64
+  branch %29, b5, b6
+b4: ; preds b2 b6
+  %43 = phi bool %24, %41
+  ret %43
+b5: ; preds b3
+  %31 = list_len u64 %10
+  %32 = convert.exact i64 %31
+  %33 = add.exact i64 %32, 0:i64
+  jump b6
+b6: ; preds b3 b5
+  %35 = phi i64 0:i64, %33
+  %38 = list_get_field.exact u16 %10, %35, path 4
+  %39 = call u16 Distance.value(%38)
+  %41 = cmp.eq bool %39, 42000:u16
+  jump b4
+fn Distance.make(u16) -> u16
+b0:
+  ret param0
+fn edit(list[record{i8, u16, bool, f64, u16}]) -> list[record{i8, u16, bool, f64, u16}]
+b0:
+  %4 = cmp.lt bool 0:i64, 0:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %6 = list_len u64 param0
+  %7 = convert.exact i64 %6
+  %8 = add.exact i64 %7, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %10 = phi i64 0:i64, %8
+  %12 = list_get.exact record{i8, u16, bool, f64, u16} param0, %10
+  %13 = list_get.exact record{i8, u16, bool, f64, u16} param0, %10
+  %15 = record_set record{i8, u16, bool, f64, u16} %13, field0, -120:i8
+  %16 = list_set.exact list[record{i8, u16, bool, f64, u16}] param0, %10, %15
+  %21 = cmp.lt bool 0:i64, 0:i64
+  branch %21, b3, b4
+b3: ; preds b2
+  %23 = list_len u64 %16
+  %24 = convert.exact i64 %23
+  %25 = add.exact i64 %24, 0:i64
+  jump b4
+b4: ; preds b2 b3
+  %27 = phi i64 0:i64, %25
+  %29 = list_get.exact record{i8, u16, bool, f64, u16} %16, %27
+  %30 = list_get.exact record{i8, u16, bool, f64, u16} %16, %27
+  %32 = record_set record{i8, u16, bool, f64, u16} %30, field1, 65000:u16
+  %33 = list_set.exact list[record{i8, u16, bool, f64, u16}] %16, %27, %32
+  %38 = cmp.lt bool 0:i64, 0:i64
+  branch %38, b5, b6
+b5: ; preds b4
+  %40 = list_len u64 %33
+  %41 = convert.exact i64 %40
+  %42 = add.exact i64 %41, 0:i64
+  jump b6
+b6: ; preds b4 b5
+  %44 = phi i64 0:i64, %42
+  %46 = list_get.exact record{i8, u16, bool, f64, u16} %33, %44
+  %47 = list_get.exact record{i8, u16, bool, f64, u16} %33, %44
+  %49 = record_set record{i8, u16, bool, f64, u16} %47, field2, 1:bool
+  %50 = list_set.exact list[record{i8, u16, bool, f64, u16}] %33, %44, %49
+  %53 = fneg f64 1.25:f64
+  %56 = cmp.lt bool 0:i64, 0:i64
+  branch %56, b7, b8
+b7: ; preds b6
+  %58 = list_len u64 %50
+  %59 = convert.exact i64 %58
+  %60 = add.exact i64 %59, 0:i64
+  jump b8
+b8: ; preds b6 b7
+  %62 = phi i64 0:i64, %60
+  %64 = list_get.exact record{i8, u16, bool, f64, u16} %50, %62
+  %65 = list_get.exact record{i8, u16, bool, f64, u16} %50, %62
+  %67 = record_set record{i8, u16, bool, f64, u16} %65, field3, %53
+  %68 = list_set.exact list[record{i8, u16, bool, f64, u16}] %50, %62, %67
+  %71 = call u16 Distance.make(42000:u16)
+  %74 = cmp.lt bool 0:i64, 0:i64
+  branch %74, b9, b10
+b9: ; preds b8
+  %76 = list_len u64 %68
+  %77 = convert.exact i64 %76
+  %78 = add.exact i64 %77, 0:i64
+  jump b10
+b10: ; preds b8 b9
+  %80 = phi i64 0:i64, %78
+  %82 = list_get.exact record{i8, u16, bool, f64, u16} %68, %80
+  %83 = list_get.exact record{i8, u16, bool, f64, u16} %68, %80
+  %85 = record_set record{i8, u16, bool, f64, u16} %83, field4, %71
+  %86 = list_set.exact list[record{i8, u16, bool, f64, u16}] %68, %80, %85
+  ret %86
+fn Distance.value(u16) -> u16
+b0:
+  ret param0
+fn replacement(list[record{i8, u16, bool, f64, u16}]) -> record{i8, list[record{i8, u16, bool, f64, u16}]}
+b0:
+  %6 = call u16 Distance.make(8:u16)
+  %7 = record_make record{i8, u16, bool, f64, u16} 5:i8, 6:u16, 1:bool, 7.5:f64, %6
+  %10 = cmp.lt bool 0:i64, 0:i64
+  branch %10, b1, b2
+b1: ; preds b0
+  %12 = list_len u64 param0
+  %13 = convert.exact i64 %12
+  %14 = add.exact i64 %13, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %16 = phi i64 0:i64, %14
+  %19 = list_set.exact list[record{i8, u16, bool, f64, u16}] param0, %16, %7
+  %26 = call u16 Distance.make(12:u16)
+  %27 = record_make record{i8, u16, bool, f64, u16} 9:i8, 10:u16, 0:bool, 11.5:f64, %26
+  %28 = list_push list[record{i8, u16, bool, f64, u16}] %19, %27
+  %30 = record_make record{i8, list[record{i8, u16, bool, f64, u16}]} -13:i8, %28
+  ret %30

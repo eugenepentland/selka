@@ -1,0 +1,31 @@
+{
+  "qualification_claim": false,
+  "helper_eligibility": true,
+  "green": true,
+  "sources_before": {
+    "qualification_provenance.py": "08224aae89fd88bd3af8cdfa1b5c7e5fa242e681268f826d6c8f0fc265ae2676",
+    "conformance_checked.py": "62618ac85c594ed74923256e50ac567777c315ae1e6f610cca14318eb94f9ba0",
+    "project_matrix.py": "be02fa7c5882e9297d78765b4d1e95cbd7318195c37af63a516450d64ae1fae4",
+    "fuzz_matrix.py": "e7ca50a930081995b34f534c0b6a34d2f799cffb2e084470e99943ddbc6223e9",
+    "qualification_selftest.py": "77c28360de86e0e0da99fadbedf824e9108b1e67c17b5126e62cfe7a7367877b",
+    "qualification_support.py": "6f78a8ff7627b38c89aa4b5bd9e461aa1cdac214d78ab53297b3192da873f49f"
+  },
+  "sources_after": {
+    "qualification_provenance.py": "08224aae89fd88bd3af8cdfa1b5c7e5fa242e681268f826d6c8f0fc265ae2676",
+    "conformance_checked.py": "62618ac85c594ed74923256e50ac567777c315ae1e6f610cca14318eb94f9ba0",
+    "project_matrix.py": "be02fa7c5882e9297d78765b4d1e95cbd7318195c37af63a516450d64ae1fae4",
+    "fuzz_matrix.py": "e7ca50a930081995b34f534c0b6a34d2f799cffb2e084470e99943ddbc6223e9",
+    "qualification_selftest.py": "77c28360de86e0e0da99fadbedf824e9108b1e67c17b5126e62cfe7a7367877b",
+    "qualification_support.py": "6f78a8ff7627b38c89aa4b5bd9e461aa1cdac214d78ab53297b3192da873f49f"
+  },
+  "unchanged": true,
+  "status": 0,
+  "tests": 26,
+  "stdout": "",
+  "stderr": "test_actual_fresh_core_origin_and_incomplete_generation_refusal (__main__.QualificationTests.test_actual_fresh_core_origin_and_incomplete_generation_refusal) ... ok\ntest_actual_old_source_origin_rejects_false_label_and_wrong_artifact (__main__.QualificationTests.test_actual_old_source_origin_rejects_false_label_and_wrong_artifact) ... ok\ntest_authoritative_baselines_and_discovery_agree (__main__.QualificationTests.test_authoritative_baselines_and_discovery_agree) ... ok\ntest_canonical_compiler_execution_survives_supplied_alias_retarget (__main__.QualificationTests.test_canonical_compiler_execution_survives_supplied_alias_retarget) ... ok\ntest_deliberate_phase_mutation_rejects_unrelated_edits (__main__.QualificationTests.test_deliberate_phase_mutation_rejects_unrelated_edits) ... ok\ntest_empty_test_selection_cannot_qualify (__main__.QualificationTests.test_empty_test_selection_cannot_qualify) ... ok\ntest_exited_original_command_orphan_timeout_is_bounded_and_reaped (__main__.QualificationTests.test_exited_original_command_orphan_timeout_is_bounded_and_reaped) ... ok\ntest_final_fuzz_requires_200_cases_for_each_of_nine_kinds (__main__.QualificationTests.test_final_fuzz_requires_200_cases_for_each_of_nine_kinds) ... ok\ntest_final_matrix_rechecks_completed_worker_inputs (__main__.QualificationTests.test_final_matrix_rechecks_completed_worker_inputs) ... ok\ntest_force_cannot_normalize_cached_to_passed (__main__.QualificationTests.test_force_cannot_normalize_cached_to_passed) ... ok\ntest_full_conformance_requires_leak_and_fact_checks (__main__.QualificationTests.test_full_conformance_requires_leak_and_fact_checks) ... ok\ntest_fuzz_cleanup_preserves_paths_and_validates_before_removal (__main__.QualificationTests.test_fuzz_cleanup_preserves_paths_and_validates_before_removal) ... ok\ntest_fuzz_cleanup_rejects_last_minute_edit_and_unproved_removal (__main__.QualificationTests.test_fuzz_cleanup_rejects_last_minute_edit_and_unproved_removal) ... ok\ntest_fuzz_closure_guards_import_provider_policy_embed_and_membership (__main__.QualificationTests.test_fuzz_closure_guards_import_provider_policy_embed_and_membership) ... ok\ntest_fuzz_next_case_requires_completed_previous_phase (__main__.QualificationTests.test_fuzz_next_case_requires_completed_previous_phase) ... ok\ntest_guarded_strict_fuzz_rejects_mode_change_and_during_build_mutation (__main__.QualificationTests.test_guarded_strict_fuzz_rejects_mode_change_and_during_build_mutation) ... ok\ntest_identical_oracles_and_before_after_snapshots (__main__.QualificationTests.test_identical_oracles_and_before_after_snapshots) ... ok\ntest_legitimate_support_rows_and_exact_file_coverage (__main__.QualificationTests.test_legitimate_support_rows_and_exact_file_coverage) ... ok\ntest_live_phase_guards_config_absence_and_registered_outputs_only (__main__.QualificationTests.test_live_phase_guards_config_absence_and_registered_outputs_only) ... ok\ntest_live_phase_rejects_edits_additions_removals_and_alias_retargets (__main__.QualificationTests.test_live_phase_rejects_edits_additions_removals_and_alias_retargets) ... ok\ntest_orphan_cleanup_preserves_concurrent_commands (__main__.QualificationTests.test_orphan_cleanup_preserves_concurrent_commands) ... ok\ntest_package_scope_rejects_genuine_historical_core_source_differences (__main__.QualificationTests.test_package_scope_rejects_genuine_historical_core_source_differences) ... ok\ntest_report_duplicates_counts_status_and_unsupported_fail_closed (__main__.QualificationTests.test_report_duplicates_counts_status_and_unsupported_fail_closed) ... ok\ntest_requested_core_and_source_revision_survive_historical_forwarding (__main__.QualificationTests.test_requested_core_and_source_revision_survive_historical_forwarding) ... ok\ntest_source_tool_manifest_binds_paths_and_exact_bytes (__main__.QualificationTests.test_source_tool_manifest_binds_paths_and_exact_bytes) ... ok\ntest_timeout_kills_reaps_descendants_and_retains_partial_raw_output (__main__.QualificationTests.test_timeout_kills_reaps_descendants_and_retains_partial_raw_output) ... ok\n\n----------------------------------------------------------------------\nRan 26 tests in 14.257s\n\nOK\n",
+  "source_handoff": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/curated/source-handoff.json",
+    "sha256": "dff46095d93c9f9bd89b5b1f737d5749efc47568a73fa4a4feb51044554044fa"
+  },
+  "limitations": "Pure helper tests only. No compiler source changes or native tests performed."
+}

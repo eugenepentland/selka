@@ -1,0 +1,5 @@
+module tests.suite_test
+import dep
+
+public def test_dependency() -> bool:
+    return dep.value() == 3

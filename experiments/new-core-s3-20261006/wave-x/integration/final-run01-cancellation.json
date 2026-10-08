@@ -1,0 +1,38 @@
+{
+  "recorded_utc": "2026-10-06T19:42:25.464804+00:00",
+  "reason": "Strict rebinding case82 native_outcome_mismatch; finalqualificationheld and new frozen source required. These cancellations are intentional, not assertions/test failures.",
+  "retained_failure": "matrix-final-run01/rebinding/summary.json",
+  "cancelled_owned_groups": [
+    {
+      "process_group": 2471712,
+      "labels": [
+        "matrix"
+      ],
+      "witness_pids": [
+        2471712,
+        2471722
+      ],
+      "signal": "SIGTERM"
+    },
+    {
+      "process_group": 2542113,
+      "labels": [
+        "counts"
+      ],
+      "witness_pids": [
+        2542113,
+        2542123
+      ],
+      "signal": "SIGTERM"
+    }
+  ],
+  "retained_passes_historical_only": [
+    "matrix-final-run01/s0",
+    "matrix-final-run01/s1",
+    "matrix-final-run01/rc",
+    "split-final-run01",
+    "all40-final-run01.json",
+    "final-merge-run01"
+  ],
+  "final_s3_x_qualified": false
+}

@@ -1,0 +1,1 @@
+{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_SYNTAX","severity":"error","message":"unexpected token; expected (","location":{"path":"mut_rebind_modules.my","start":{"line":25,"column":13},"end":{"line":25,"column":14},"bytes":{"start":834,"end":835}},"notes":[],"stack":{"frames":[],"omitted":0}}}

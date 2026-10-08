@@ -1,0 +1,8 @@
+{
+  "kind": "protected focused compiler, not final package gate",
+  "source_commit": "0ebc9c8f0",
+  "source_snapshot": "experiments/new-core-s4-project-tests-20261006/case-validation-canonical-focus-05/source.json",
+  "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.zig-cache/o/b290baf432d0c238fa71491cc4595b63/mylang-core",
+  "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/oracles/pre-v-canonical-0eb/mylang-core",
+  "sha256": "591886dc7d20409c878ee0a5b15c9faa0394b5b836eeaaa8c75e43a31350f120"
+}

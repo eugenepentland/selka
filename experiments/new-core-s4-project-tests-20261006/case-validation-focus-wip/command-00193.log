@@ -1,0 +1,14 @@
+$ env MYLANG_SLOT_DIR=/run/user/1000/mylang-slots /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/scripts/build-slot.sh build -- bash -c 'cd "$1" && exec "$2" build test-core -Dtest-filter="typed case values" -Dtest-filter="case verdicts" -Dtest-filter="malformed typed cases" -Dtest-filter="generated shapes" -j2' -- /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig
+test-core
++- run test w
+guardian/test: 3 test(s) selected
+guardian/test: SLOW  34.29s  test_runner_project_test.test.malformed typed cases fail individually and never become cached successes
+guardian/test: test wall 34.29s; slowest over 50ms:
+guardian/test:   34.29s  test_runner_project_test.test.malformed typed cases fail individually and never become cached successes
+guardian/test: PASS — 3 passed
+guardian/test: RESULT {"passed":3,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/51166441fe208bf98cec3eb0ae07e1e3/test --cache-dir=./.zig-cache --seed=0x48b21276 --listen=-
+
+
+exit=0
+elapsed_seconds=37.131632

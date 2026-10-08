@@ -1,0 +1,30 @@
+{
+  "command": [
+    "strace",
+    "-f",
+    "-qq",
+    "-s",
+    "8192",
+    "-e",
+    "trace=execve",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/c-prep-core-foreign-header-01/control-both-fresh-execve.trace",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/mylang-core",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/app.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/guest",
+    "--link",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/value.c",
+    "--emit-llvm",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/program.ll",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/core-cache"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01",
+  "status": 0,
+  "timed_out": false,
+  "seconds": 11.247841416159645
+}

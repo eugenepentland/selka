@@ -1,0 +1,5 @@
+module leaf
+public def origin(x: int) -> int:
+    if x < 0:
+        return 0
+    return x + 1

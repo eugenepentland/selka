@@ -1,0 +1,45 @@
+{
+  "build": {
+    "command": [
+      "strace",
+      "-f",
+      "-yy",
+      "-s",
+      "4096",
+      "-e",
+      "trace=%file,%process,read,pread64,mmap,getdents64,getcwd,close",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/full.strace",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/mylang-core",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/app.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/guest",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/program.ll",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/core-cache"
+    ],
+    "status": 0,
+    "timed_out": false
+  },
+  "native": {
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/guest"
+    ],
+    "status": 7,
+    "timed_out": false
+  },
+  "compiler_sha256": "d6e4220ad8a833f3d56510eb5958637e25f9c367071949db281d64584d3bface",
+  "input_sha256": "0946d83fd6c3b101b55f9f421d47ef169105e621678475ba9ed5aa44486515a4",
+  "llvm_sha256": "1bece9ee6162873fe1ba1be4c741ab20e9d99a8893fe2a0e1634b4478793b74c",
+  "executable_sha256": "15db5e1d4a675bfad5e7984866407aef5319e47d3e50fcd579ed26834b002f26",
+  "full_trace": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-full-closure-audit-01/full.strace",
+    "size": 128385732,
+    "sha256": "e9d3f7ea2a77a8b04745ccdd344ab4c96fd2328067eb3d5efb5d93c31a1dc2d7"
+  },
+  "scope": "Read-only closure audit; no timing or qualification claim."
+}

@@ -1,0 +1,70 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T11:00:49.929907+00:00",
+  "session": "5157a204-eead-4030-a6c7-a374f5112514",
+  "outcomes": 108,
+  "rows": [
+    {
+      "case": "string_equal",
+      "profile": "small",
+      "ratios": {
+        "annotation/g4": {
+          "ratio": 0.9144544796320893,
+          "paired_95": [
+            0.9063766772723774,
+            0.917759654204126
+          ]
+        },
+        "fill32/annotation": {
+          "ratio": 0.9973168957971714,
+          "paired_95": [
+            0.9931981934074496,
+            1.0031514488480766
+          ]
+        },
+        "fill32/g4": {
+          "ratio": 0.9120009029744929,
+          "paired_95": [
+            0.9047314061306572,
+            0.9167126276253279
+          ]
+        }
+      }
+    },
+    {
+      "case": "string_search",
+      "profile": "large",
+      "ratios": {
+        "annotation/g4": {
+          "ratio": 1.1490858222721674,
+          "paired_95": [
+            1.1412300234807053,
+            1.1514579946345003
+          ]
+        },
+        "fill32/annotation": {
+          "ratio": 0.8772040146709271,
+          "paired_95": [
+            0.8737396725049247,
+            0.8800727313445007
+          ]
+        },
+        "fill32/g4": {
+          "ratio": 1.0079826964985887,
+          "paired_95": [
+            1.0001757799056985,
+            1.0110418496525173
+          ]
+        }
+      }
+    }
+  ],
+  "raw_sha256": "9e81ae2c31519e36a8636b1c099a77d939efaadf48580f7a795b0f562959c538",
+  "script_sha256": "8f9c7d08894622e27581dfb8369d98ebf6025432dc84cebed678d734d13073fe",
+  "bootstrap_helper_sha256": "ca202996170e072e7b95ebf3b20896142ec794d14e336c958af277037a7d7123",
+  "limitations": [
+    "Saved full timing streams; no new executions or goal confirmation.",
+    "Intervals use 2000 paired bootstrap draws, independently seeded; agent analysis uses 20000.",
+    "Placement of later symbols also changes, so this does not isolate the caller address."
+  ]
+}

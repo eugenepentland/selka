@@ -1,0 +1,350 @@
+0000000001032880 <my.app::main>:
+ 1032880:	55                   	push   %rbp
+ 1032881:	41 57                	push   %r15
+ 1032883:	41 56                	push   %r14
+ 1032885:	41 55                	push   %r13
+ 1032887:	41 54                	push   %r12
+ 1032889:	53                   	push   %rbx
+ 103288a:	48 83 ec 58          	sub    $0x58,%rsp
+ 103288e:	bb 02 00 00 00       	mov    $0x2,%ebx
+ 1032893:	48 83 7f 08 03       	cmpq   $0x3,0x8(%rdi)
+ 1032898:	0f 85 36 04 00 00    	jne    1032cd4 <my.app::main+0x454>
+ 103289e:	49 89 d4             	mov    %rdx,%r12
+ 10328a1:	49 89 f5             	mov    %rsi,%r13
+ 10328a4:	49 89 fe             	mov    %rdi,%r14
+ 10328a7:	48 8b 7f 20          	mov    0x20(%rdi),%rdi
+ 10328ab:	e8 50 05 00 00       	call   1032e00 <my.workload::parse_number>
+ 10328b0:	49 8b 56 08          	mov    0x8(%r14),%rdx
+ 10328b4:	48 83 fa 01          	cmp    $0x1,%rdx
+ 10328b8:	0f 86 ff 04 00 00    	jbe    1032dbd <my.app::main+0x53d>
+ 10328be:	49 89 c7             	mov    %rax,%r15
+ 10328c1:	4c 89 6c 24 20       	mov    %r13,0x20(%rsp)
+ 10328c6:	4c 89 64 24 28       	mov    %r12,0x28(%rsp)
+ 10328cb:	49 8b 7e 28          	mov    0x28(%r14),%rdi
+ 10328cf:	e8 2c 05 00 00       	call   1032e00 <my.workload::parse_number>
+ 10328d4:	49 8b 56 08          	mov    0x8(%r14),%rdx
+ 10328d8:	48 83 fa 02          	cmp    $0x2,%rdx
+ 10328dc:	0f 86 ec 04 00 00    	jbe    1032dce <my.app::main+0x54e>
+ 10328e2:	49 89 c4             	mov    %rax,%r12
+ 10328e5:	49 8b 7e 30          	mov    0x30(%r14),%rdi
+ 10328e9:	e8 12 05 00 00       	call   1032e00 <my.workload::parse_number>
+ 10328ee:	48 89 c5             	mov    %rax,%rbp
+ 10328f1:	49 83 ff 02          	cmp    $0x2,%r15
+ 10328f5:	0f 9c c0             	setl   %al
+ 10328f8:	4d 85 e4             	test   %r12,%r12
+ 10328fb:	0f 9e c1             	setle  %cl
+ 10328fe:	08 c1                	or     %al,%cl
+ 1032900:	48 8d 85 bf bd f0 ff 	lea    -0xf4241(%rbp),%rax
+ 1032907:	48 3d c0 bd f0 ff    	cmp    $0xfffffffffff0bdc0,%rax
+ 103290d:	0f 92 c0             	setb   %al
+ 1032910:	08 c8                	or     %cl,%al
+ 1032912:	0f 85 bc 03 00 00    	jne    1032cd4 <my.app::main+0x454>
+ 1032918:	49 81 ff 01 04 00 00 	cmp    $0x401,%r15
+ 103291f:	0f 93 c0             	setae  %al
+ 1032922:	4a 8d 34 fd 3f 00 00 	lea    0x3f(,%r15,8),%rsi
+ 1032929:	00 
+ 103292a:	48 89 f7             	mov    %rsi,%rdi
+ 103292d:	48 c1 ef 05          	shr    $0x5,%rdi
+ 1032931:	48 81 fe 20 04 00 00 	cmp    $0x420,%rsi
+ 1032938:	41 0f 93 c0          	setae  %r8b
+ 103293c:	41 08 c0             	or     %al,%r8b
+ 103293f:	4c 89 64 24 30       	mov    %r12,0x30(%rsp)
+ 1032944:	0f 85 9c 03 00 00    	jne    1032ce6 <my.app::main+0x466>
+ 103294a:	48 8d 15 df 6a 02 00 	lea    0x26adf(%rip),%rdx        # 1059430 <myl_core_free_lists>
+ 1032951:	48 8b 04 fa          	mov    (%rdx,%rdi,8),%rax
+ 1032955:	48 85 c0             	test   %rax,%rax
+ 1032958:	0f 84 88 03 00 00    	je     1032ce6 <my.app::main+0x466>
+ 103295e:	48 8b 08             	mov    (%rax),%rcx
+ 1032961:	48 89 0c fa          	mov    %rcx,(%rdx,%rdi,8)
+ 1032965:	c7 00 01 00 00 00    	movl   $0x1,(%rax)
+ 103296b:	89 f9                	mov    %edi,%ecx
+ 103296d:	c1 e1 18             	shl    $0x18,%ecx
+ 1032970:	89 48 04             	mov    %ecx,0x4(%rax)
+ 1032973:	48 c7 40 08 00 00 00 	movq   $0x0,0x8(%rax)
+ 103297a:	00 
+ 103297b:	89 f1                	mov    %esi,%ecx
+ 103297d:	81 e1 e0 07 00 00    	and    $0x7e0,%ecx
+ 1032983:	48 83 c1 e0          	add    $0xffffffffffffffe0,%rcx
+ 1032987:	48 c1 e9 03          	shr    $0x3,%rcx
+ 103298b:	48 89 48 10          	mov    %rcx,0x10(%rax)
+ 103298f:	48 c7 40 18 00 00 00 	movq   $0x0,0x18(%rax)
+ 1032996:	00 
+ 1032997:	49 b9 f3 59 37 98 22 	movabs $0x3759f22983759f3,%r9
+ 103299e:	9f 75 03 
+ 10329a1:	45 31 f6             	xor    %r14d,%r14d
+ 10329a4:	49 ba c3 00 cd 58 c2 	movabs $0x81e722c258cd00c3,%r10
+ 10329ab:	22 e7 81 
+ 10329ae:	31 db                	xor    %ebx,%ebx
+ 10329b0:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10329b7:	0f 1f 84 00 00 00 00 
+ 10329be:	00 
+ 10329bf:	90                   	nop
+ 10329c0:	49 39 d9             	cmp    %rbx,%r9
+ 10329c3:	0f 84 bf 03 00 00    	je     1032d88 <my.app::main+0x508>
+ 10329c9:	49 89 ec             	mov    %rbp,%r12
+ 10329cc:	4d 01 f4             	add    %r14,%r12
+ 10329cf:	0f 80 c7 03 00 00    	jo     1032d9c <my.app::main+0x51c>
+ 10329d5:	4c 89 e2             	mov    %r12,%rdx
+ 10329d8:	c4 42 93 f6 ea       	mulx   %r10,%r13,%r13
+ 10329dd:	48 8b 50 08          	mov    0x8(%rax),%rdx
+ 10329e1:	48 3b 50 10          	cmp    0x10(%rax),%rdx
+ 10329e5:	73 28                	jae    1032a0f <my.app::main+0x18f>
+ 10329e7:	49 c1 ed 09          	shr    $0x9,%r13
+ 10329eb:	49 69 cd f1 03 00 00 	imul   $0x3f1,%r13,%rcx
+ 10329f2:	49 29 cc             	sub    %rcx,%r12
+ 10329f5:	4c 89 64 d0 20       	mov    %r12,0x20(%rax,%rdx,8)
+ 10329fa:	48 ff c2             	inc    %rdx
+ 10329fd:	48 89 50 08          	mov    %rdx,0x8(%rax)
+ 1032a01:	48 ff c3             	inc    %rbx
+ 1032a04:	49 83 c6 25          	add    $0x25,%r14
+ 1032a08:	49 39 df             	cmp    %rbx,%r15
+ 1032a0b:	75 b3                	jne    10329c0 <my.app::main+0x140>
+ 1032a0d:	eb 44                	jmp    1032a53 <my.app::main+0x1d3>
+ 1032a0f:	48 89 7c 24 10       	mov    %rdi,0x10(%rsp)
+ 1032a14:	48 89 c7             	mov    %rax,%rdi
+ 1032a17:	be 08 00 00 00       	mov    $0x8,%esi
+ 1032a1c:	44 88 44 24 08       	mov    %r8b,0x8(%rsp)
+ 1032a21:	e8 ca 67 fd ff       	call   10091f0 <myl_core_list_grow>
+ 1032a26:	49 ba c3 00 cd 58 c2 	movabs $0x81e722c258cd00c3,%r10
+ 1032a2d:	22 e7 81 
+ 1032a30:	49 b9 f3 59 37 98 22 	movabs $0x3759f22983759f3,%r9
+ 1032a37:	9f 75 03 
+ 1032a3a:	44 0f b6 44 24 08    	movzbl 0x8(%rsp),%r8d
+ 1032a40:	48 8b 7c 24 10       	mov    0x10(%rsp),%rdi
+ 1032a45:	4a 8d 34 fd 3f 00 00 	lea    0x3f(,%r15,8),%rsi
+ 1032a4c:	00 
+ 1032a4d:	48 8b 50 08          	mov    0x8(%rax),%rdx
+ 1032a51:	eb 94                	jmp    10329e7 <my.app::main+0x167>
+ 1032a53:	45 84 c0             	test   %r8b,%r8b
+ 1032a56:	48 89 44 24 08       	mov    %rax,0x8(%rsp)
+ 1032a5b:	0f 85 a9 02 00 00    	jne    1032d0a <my.app::main+0x48a>
+ 1032a61:	48 8d 05 c8 69 02 00 	lea    0x269c8(%rip),%rax        # 1059430 <myl_core_free_lists>
+ 1032a68:	4c 8b 34 f8          	mov    (%rax,%rdi,8),%r14
+ 1032a6c:	4d 85 f6             	test   %r14,%r14
+ 1032a6f:	0f 84 95 02 00 00    	je     1032d0a <my.app::main+0x48a>
+ 1032a75:	49 8b 0e             	mov    (%r14),%rcx
+ 1032a78:	48 89 0c f8          	mov    %rcx,(%rax,%rdi,8)
+ 1032a7c:	41 c7 06 01 00 00 00 	movl   $0x1,(%r14)
+ 1032a83:	c1 e7 18             	shl    $0x18,%edi
+ 1032a86:	41 89 7e 04          	mov    %edi,0x4(%r14)
+ 1032a8a:	49 c7 46 08 00 00 00 	movq   $0x0,0x8(%r14)
+ 1032a91:	00 
+ 1032a92:	81 e6 e0 07 00 00    	and    $0x7e0,%esi
+ 1032a98:	48 83 c6 e0          	add    $0xffffffffffffffe0,%rsi
+ 1032a9c:	48 c1 ee 03          	shr    $0x3,%rsi
+ 1032aa0:	49 89 76 10          	mov    %rsi,0x10(%r14)
+ 1032aa4:	49 c7 46 18 00 00 00 	movq   $0x0,0x18(%r14)
+ 1032aab:	00 
+ 1032aac:	48 8d 05 45 1c fd ff 	lea    -0x2e3bb(%rip),%rax        # 10046f8 <core_number_pairs+0x1e8>
+ 1032ab3:	49 89 46 18          	mov    %rax,0x18(%r14)
+ 1032ab7:	31 db                	xor    %ebx,%ebx
+ 1032ab9:	0f 1f 80 00 00 00 00 	nopl   0x0(%rax)
+ 1032ac0:	48 89 df             	mov    %rbx,%rdi
+ 1032ac3:	48 89 ee             	mov    %rbp,%rsi
+ 1032ac6:	e8 35 05 00 00       	call   1033000 <my.workload::make_frame>
+ 1032acb:	49 8b 4e 08          	mov    0x8(%r14),%rcx
+ 1032acf:	49 3b 4e 10          	cmp    0x10(%r14),%rcx
+ 1032ad3:	73 16                	jae    1032aeb <my.app::main+0x26b>
+ 1032ad5:	49 89 44 ce 20       	mov    %rax,0x20(%r14,%rcx,8)
+ 1032ada:	48 ff c1             	inc    %rcx
+ 1032add:	49 89 4e 08          	mov    %rcx,0x8(%r14)
+ 1032ae1:	48 ff c3             	inc    %rbx
+ 1032ae4:	49 39 df             	cmp    %rbx,%r15
+ 1032ae7:	75 d7                	jne    1032ac0 <my.app::main+0x240>
+ 1032ae9:	eb 1c                	jmp    1032b07 <my.app::main+0x287>
+ 1032aeb:	be 08 00 00 00       	mov    $0x8,%esi
+ 1032af0:	4c 89 f7             	mov    %r14,%rdi
+ 1032af3:	49 89 c4             	mov    %rax,%r12
+ 1032af6:	e8 f5 66 fd ff       	call   10091f0 <myl_core_list_grow>
+ 1032afb:	49 89 c6             	mov    %rax,%r14
+ 1032afe:	4c 89 e0             	mov    %r12,%rax
+ 1032b01:	49 8b 4e 08          	mov    0x8(%r14),%rcx
+ 1032b05:	eb ce                	jmp    1032ad5 <my.app::main+0x255>
+ 1032b07:	48 8d 3d b2 25 00 00 	lea    0x25b2(%rip),%rdi        # 10350c0 <core_io_file_error.verbs+0x110>
+ 1032b0e:	e8 ad 76 fd ff       	call   100a1c0 <myl_core_io_at>
+ 1032b13:	48 8b 7c 24 20       	mov    0x20(%rsp),%rdi
+ 1032b18:	e8 13 f6 fe ff       	call   1022130 <myl_core_host_check>
+ 1032b1d:	31 ed                	xor    %ebp,%ebp
+ 1032b1f:	e8 8c 0f 00 00       	call   1033ab0 <runtime_bench_now>
+ 1032b24:	48 89 44 24 18       	mov    %rax,0x18(%rsp)
+ 1032b29:	48 8d 5c 24 38       	lea    0x38(%rsp),%rbx
+ 1032b2e:	31 f6                	xor    %esi,%esi
+ 1032b30:	48 89 74 24 10       	mov    %rsi,0x10(%rsp)
+ 1032b35:	45 31 e4             	xor    %r12d,%r12d
+ 1032b38:	45 31 ed             	xor    %r13d,%r13d
+ 1032b3b:	0f 1f 44 00 00       	nopl   0x0(%rax,%rax,1)
+ 1032b40:	4b 8b 74 ee 20       	mov    0x20(%r14,%r13,8),%rsi
+ 1032b45:	48 89 df             	mov    %rbx,%rdi
+ 1032b48:	e8 53 09 00 00       	call   10334a0 <my.workload::decode>
+ 1032b4d:	48 8b 74 24 40       	mov    0x40(%rsp),%rsi
+ 1032b52:	80 7c 24 38 00       	cmpb   $0x0,0x38(%rsp)
+ 1032b57:	74 27                	je     1032b80 <my.app::main+0x300>
+ 1032b59:	48 6b c6 65          	imul   $0x65,%rsi,%rax
+ 1032b5d:	71 4d                	jno    1032bac <my.app::main+0x32c>
+ 1032b5f:	e9 cd 01 00 00       	jmp    1032d31 <my.app::main+0x4b1>
+ 1032b64:	66 66 66 66 66 66 2e 	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1032b6b:	0f 1f 84 00 00 00 00 
+ 1032b72:	00 
+ 1032b73:	66 66 66 66 2e 0f 1f 	data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1032b7a:	84 00 00 00 00 00 
+ 1032b80:	48 8b 44 24 48       	mov    0x48(%rsp),%rax
+ 1032b85:	48 6b d0 03          	imul   $0x3,%rax,%rdx
+ 1032b89:	0f 80 d9 01 00 00    	jo     1032d68 <my.app::main+0x4e8>
+ 1032b8f:	48 89 f1             	mov    %rsi,%rcx
+ 1032b92:	48 01 d1             	add    %rdx,%rcx
+ 1032b95:	0f 80 e1 01 00 00    	jo     1032d7c <my.app::main+0x4fc>
+ 1032b9b:	48 8b 54 24 50       	mov    0x50(%rsp),%rdx
+ 1032ba0:	48 89 c8             	mov    %rcx,%rax
+ 1032ba3:	48 01 d0             	add    %rdx,%rax
+ 1032ba6:	0f 80 ad 01 00 00    	jo     1032d59 <my.app::main+0x4d9>
+ 1032bac:	4c 89 e2             	mov    %r12,%rdx
+ 1032baf:	48 01 c2             	add    %rax,%rdx
+ 1032bb2:	0f 80 67 01 00 00    	jo     1032d1f <my.app::main+0x49f>
+ 1032bb8:	49 ff c5             	inc    %r13
+ 1032bbb:	49 89 d4             	mov    %rdx,%r12
+ 1032bbe:	4d 39 ef             	cmp    %r13,%r15
+ 1032bc1:	0f 85 79 ff ff ff    	jne    1032b40 <my.app::main+0x2c0>
+ 1032bc7:	48 89 d1             	mov    %rdx,%rcx
+ 1032bca:	48 01 e9             	add    %rbp,%rcx
+ 1032bcd:	48 8b 74 24 10       	mov    0x10(%rsp),%rsi
+ 1032bd2:	0f 80 d6 01 00 00    	jo     1032dae <my.app::main+0x52e>
+ 1032bd8:	48 89 c8             	mov    %rcx,%rax
+ 1032bdb:	48 ba e5 8f a2 12 31 	movabs $0x89705f3112a28fe5,%rdx
+ 1032be2:	5f 70 89 
+ 1032be5:	48 f7 ea             	imul   %rdx
+ 1032be8:	48 01 ca             	add    %rcx,%rdx
+ 1032beb:	48 89 d0             	mov    %rdx,%rax
+ 1032bee:	48 c1 e8 3f          	shr    $0x3f,%rax
+ 1032bf2:	48 c1 fa 1d          	sar    $0x1d,%rdx
+ 1032bf6:	48 01 c2             	add    %rax,%rdx
+ 1032bf9:	48 69 c2 07 ca 9a 3b 	imul   $0x3b9aca07,%rdx,%rax
+ 1032c00:	48 29 c1             	sub    %rax,%rcx
+ 1032c03:	48 89 cd             	mov    %rcx,%rbp
+ 1032c06:	48 c1 fd 3f          	sar    $0x3f,%rbp
+ 1032c0a:	81 e5 07 ca 9a 3b    	and    $0x3b9aca07,%ebp
+ 1032c10:	48 01 cd             	add    %rcx,%rbp
+ 1032c13:	48 ff c6             	inc    %rsi
+ 1032c16:	48 3b 74 24 30       	cmp    0x30(%rsp),%rsi
+ 1032c1b:	0f 85 0f ff ff ff    	jne    1032b30 <my.app::main+0x2b0>
+ 1032c21:	48 8b 7c 24 08       	mov    0x8(%rsp),%rdi
+ 1032c26:	0f b6 47 07          	movzbl 0x7(%rdi),%eax
+ 1032c2a:	48 85 c0             	test   %rax,%rax
+ 1032c2d:	0f 84 0f 01 00 00    	je     1032d42 <my.app::main+0x4c2>
+ 1032c33:	48 83 7f 18 00       	cmpq   $0x0,0x18(%rdi)
+ 1032c38:	0f 85 04 01 00 00    	jne    1032d42 <my.app::main+0x4c2>
+ 1032c3e:	48 8d 0d eb 67 02 00 	lea    0x267eb(%rip),%rcx        # 1059430 <myl_core_free_lists>
+ 1032c45:	48 8b 14 c1          	mov    (%rcx,%rax,8),%rdx
+ 1032c49:	48 89 17             	mov    %rdx,(%rdi)
+ 1032c4c:	48 89 3c c1          	mov    %rdi,(%rcx,%rax,8)
+ 1032c50:	4c 8b 7c 24 18       	mov    0x18(%rsp),%r15
+ 1032c55:	41 0f b6 46 07       	movzbl 0x7(%r14),%eax
+ 1032c5a:	48 85 c0             	test   %rax,%rax
+ 1032c5d:	0f 84 e9 00 00 00    	je     1032d4c <my.app::main+0x4cc>
+ 1032c63:	49 83 7e 18 00       	cmpq   $0x0,0x18(%r14)
+ 1032c68:	0f 85 de 00 00 00    	jne    1032d4c <my.app::main+0x4cc>
+ 1032c6e:	48 8d 0d bb 67 02 00 	lea    0x267bb(%rip),%rcx        # 1059430 <myl_core_free_lists>
+ 1032c75:	48 8b 14 c1          	mov    (%rcx,%rax,8),%rdx
+ 1032c79:	49 89 16             	mov    %rdx,(%r14)
+ 1032c7c:	4c 89 34 c1          	mov    %r14,(%rcx,%rax,8)
+ 1032c80:	48 8d 3d 69 24 00 00 	lea    0x2469(%rip),%rdi        # 10350f0 <core_io_file_error.verbs+0x140>
+ 1032c87:	e8 34 75 fd ff       	call   100a1c0 <myl_core_io_at>
+ 1032c8c:	48 8b 7c 24 20       	mov    0x20(%rsp),%rdi
+ 1032c91:	e8 9a f4 fe ff       	call   1022130 <myl_core_host_check>
+ 1032c96:	e8 15 0e 00 00       	call   1033ab0 <runtime_bench_now>
+ 1032c9b:	48 89 c3             	mov    %rax,%rbx
+ 1032c9e:	4c 29 fb             	sub    %r15,%rbx
+ 1032ca1:	0f 80 38 01 00 00    	jo     1032ddf <my.app::main+0x55f>
+ 1032ca7:	4c 8b 74 24 28       	mov    0x28(%rsp),%r14
+ 1032cac:	4c 89 f7             	mov    %r14,%rdi
+ 1032caf:	48 89 ee             	mov    %rbp,%rsi
+ 1032cb2:	e8 09 7c fd ff       	call   100a8c0 <myl_core_print_i64>
+ 1032cb7:	4c 89 f7             	mov    %r14,%rdi
+ 1032cba:	e8 41 62 fd ff       	call   1008f00 <myl_core_print_sep>
+ 1032cbf:	4c 89 f7             	mov    %r14,%rdi
+ 1032cc2:	48 89 de             	mov    %rbx,%rsi
+ 1032cc5:	e8 f6 7b fd ff       	call   100a8c0 <myl_core_print_i64>
+ 1032cca:	4c 89 f7             	mov    %r14,%rdi
+ 1032ccd:	e8 ee 62 fd ff       	call   1008fc0 <myl_core_print_end>
+ 1032cd2:	31 db                	xor    %ebx,%ebx
+ 1032cd4:	48 89 d8             	mov    %rbx,%rax
+ 1032cd7:	48 83 c4 58          	add    $0x58,%rsp
+ 1032cdb:	5b                   	pop    %rbx
+ 1032cdc:	41 5c                	pop    %r12
+ 1032cde:	41 5d                	pop    %r13
+ 1032ce0:	41 5e                	pop    %r14
+ 1032ce2:	41 5f                	pop    %r15
+ 1032ce4:	5d                   	pop    %rbp
+ 1032ce5:	c3                   	ret
+ 1032ce6:	48 89 f3             	mov    %rsi,%rbx
+ 1032ce9:	be 08 00 00 00       	mov    $0x8,%esi
+ 1032cee:	49 89 fe             	mov    %rdi,%r14
+ 1032cf1:	4c 89 ff             	mov    %r15,%rdi
+ 1032cf4:	45 89 c4             	mov    %r8d,%r12d
+ 1032cf7:	e8 84 64 fd ff       	call   1009180 <myl_core_list_new_slow>
+ 1032cfc:	45 89 e0             	mov    %r12d,%r8d
+ 1032cff:	4c 89 f7             	mov    %r14,%rdi
+ 1032d02:	48 89 de             	mov    %rbx,%rsi
+ 1032d05:	e9 8d fc ff ff       	jmp    1032997 <my.app::main+0x117>
+ 1032d0a:	be 08 00 00 00       	mov    $0x8,%esi
+ 1032d0f:	4c 89 ff             	mov    %r15,%rdi
+ 1032d12:	e8 69 64 fd ff       	call   1009180 <myl_core_list_new_slow>
+ 1032d17:	49 89 c6             	mov    %rax,%r14
+ 1032d1a:	e9 8d fd ff ff       	jmp    1032aac <my.app::main+0x22c>
+ 1032d1f:	48 8d 3d 5a 24 00 00 	lea    0x245a(%rip),%rdi        # 1035180 <core_io_file_error.verbs+0x1d0>
+ 1032d26:	4c 89 e6             	mov    %r12,%rsi
+ 1032d29:	48 89 c2             	mov    %rax,%rdx
+ 1032d2c:	e8 4f 6b fd ff       	call   1009880 <myl_core_trap>
+ 1032d31:	48 8d 3d 08 25 00 00 	lea    0x2508(%rip),%rdi        # 1035240 <core_io_file_error.verbs+0x290>
+ 1032d38:	ba 65 00 00 00       	mov    $0x65,%edx
+ 1032d3d:	e8 3e 6b fd ff       	call   1009880 <myl_core_trap>
+ 1032d42:	e8 09 f5 ff ff       	call   1032250 <myl_core_free_block>
+ 1032d47:	e9 04 ff ff ff       	jmp    1032c50 <my.app::main+0x3d0>
+ 1032d4c:	4c 89 f7             	mov    %r14,%rdi
+ 1032d4f:	e8 fc f4 ff ff       	call   1032250 <myl_core_free_block>
+ 1032d54:	e9 27 ff ff ff       	jmp    1032c80 <my.app::main+0x400>
+ 1032d59:	48 8d 3d b0 24 00 00 	lea    0x24b0(%rip),%rdi        # 1035210 <core_io_file_error.verbs+0x260>
+ 1032d60:	48 89 ce             	mov    %rcx,%rsi
+ 1032d63:	e8 18 6b fd ff       	call   1009880 <myl_core_trap>
+ 1032d68:	48 8d 3d 41 24 00 00 	lea    0x2441(%rip),%rdi        # 10351b0 <core_io_file_error.verbs+0x200>
+ 1032d6f:	ba 03 00 00 00       	mov    $0x3,%edx
+ 1032d74:	48 89 c6             	mov    %rax,%rsi
+ 1032d77:	e8 04 6b fd ff       	call   1009880 <myl_core_trap>
+ 1032d7c:	48 8d 3d 5d 24 00 00 	lea    0x245d(%rip),%rdi        # 10351e0 <core_io_file_error.verbs+0x230>
+ 1032d83:	e8 f8 6a fd ff       	call   1009880 <myl_core_trap>
+ 1032d88:	48 8d 3d d1 22 00 00 	lea    0x22d1(%rip),%rdi        # 1035060 <core_io_file_error.verbs+0xb0>
+ 1032d8f:	ba 25 00 00 00       	mov    $0x25,%edx
+ 1032d94:	4c 89 ce             	mov    %r9,%rsi
+ 1032d97:	e8 e4 6a fd ff       	call   1009880 <myl_core_trap>
+ 1032d9c:	48 8d 3d ed 22 00 00 	lea    0x22ed(%rip),%rdi        # 1035090 <core_io_file_error.verbs+0xe0>
+ 1032da3:	48 89 ee             	mov    %rbp,%rsi
+ 1032da6:	4c 89 f2             	mov    %r14,%rdx
+ 1032da9:	e8 d2 6a fd ff       	call   1009880 <myl_core_trap>
+ 1032dae:	48 8d 3d 9b 23 00 00 	lea    0x239b(%rip),%rdi        # 1035150 <core_io_file_error.verbs+0x1a0>
+ 1032db5:	48 89 ee             	mov    %rbp,%rsi
+ 1032db8:	e8 c3 6a fd ff       	call   1009880 <myl_core_trap>
+ 1032dbd:	48 8d 3d 3c 22 00 00 	lea    0x223c(%rip),%rdi        # 1035000 <core_io_file_error.verbs+0x50>
+ 1032dc4:	be 01 00 00 00       	mov    $0x1,%esi
+ 1032dc9:	e8 b2 6a fd ff       	call   1009880 <myl_core_trap>
+ 1032dce:	48 8d 3d 5b 22 00 00 	lea    0x225b(%rip),%rdi        # 1035030 <core_io_file_error.verbs+0x80>
+ 1032dd5:	be 02 00 00 00       	mov    $0x2,%esi
+ 1032dda:	e8 a1 6a fd ff       	call   1009880 <myl_core_trap>
+ 1032ddf:	48 8d 3d 3a 23 00 00 	lea    0x233a(%rip),%rdi        # 1035120 <core_io_file_error.verbs+0x170>
+ 1032de6:	48 89 c6             	mov    %rax,%rsi
+ 1032de9:	4c 89 fa             	mov    %r15,%rdx
+ 1032dec:	e8 8f 6a fd ff       	call   1009880 <myl_core_trap>
+ 1032df1:	cc                   	int3
+ 1032df2:	cc                   	int3
+ 1032df3:	cc                   	int3
+ 1032df4:	cc                   	int3
+ 1032df5:	cc                   	int3
+ 1032df6:	cc                   	int3
+ 1032df7:	cc                   	int3
+ 1032df8:	cc                   	int3
+ 1032df9:	cc                   	int3
+ 1032dfa:	cc                   	int3
+ 1032dfb:	cc                   	int3
+ 1032dfc:	cc                   	int3
+ 1032dfd:	cc                   	int3
+ 1032dfe:	cc                   	int3
+ 1032dff:	cc                   	int3
+

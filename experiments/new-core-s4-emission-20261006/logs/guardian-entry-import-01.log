@@ -1,0 +1,11 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10491 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (bool-ops-per-condition)
+guardian: failures grouped by check (1):
+  bool-ops-per-condition (1 finding)
+    - src/core/emit_imports.zig:74: condition has 5 boolean ops (cap 3)
+      fix: split into nested/sequential ifs, or extract into a named bool.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

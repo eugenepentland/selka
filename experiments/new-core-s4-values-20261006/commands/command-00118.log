@@ -1,0 +1,4 @@
+$ git add src/core/s3_number_test.zig
+
+exit=0
+elapsed_seconds=0.049444

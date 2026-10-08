@@ -1,0 +1,24 @@
+test-core
++- run test 6 pass, 1 fail (7 total)
+guardian/test: test wall 3.13s; slowest over 50ms:
+guardian/test:   2.81s  byte_index_test.test.bytes and buffers normalize negative and extreme signed indices before their located bounds trap in every mode
+guardian/test:   0.30s  byte_index_test.test.the exact nonnegative byte index premise traps R_CORE_FACT when an injected interval excludes a valid negative input
+guardian/test: FAIL — 1 failed of 7
+guardian/test: RESULT {"passed":6,"failed":1,"skipped":0}
+error: 'byte_index_test.test.the exact nonnegative byte index premise traps R_CORE_FACT when an injected interval excludes a valid negative input' failed:
+       guardian/test: 7 test(s) selected
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x13e9079 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/core/byte_index_test.zig:252:5: 0x13e9ab8 in test.the exact nonnegative byte index premise traps R_CORE_FACT when an injected interval excludes a valid negative input (root_test.zig)
+           try std.testing.expect(injected);
+           ^
+failed command: ./.zig-cache/o/1bbff728abfe07a2f00101430d97ba8d/test --cache-dir=./.zig-cache --seed=0x96853415 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 6/7 tests passed (1 failed)
+test-core transitive failure
++- run test 6 pass, 1 fail (7 total)
+   +- compile test debug native success 1s MaxRSS:335M
+      +- options cached
+         +- compile exe mylang-core debug native cached 11ms MaxRSS:37M
+

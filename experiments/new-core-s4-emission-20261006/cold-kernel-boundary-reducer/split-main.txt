@@ -1,0 +1,31 @@
+
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/paired-combined-01/split-word_count:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+00000000010344b0 <main>:
+ 10344b0:	push   %r14
+ 10344b2:	push   %rbx
+ 10344b3:	push   %rax
+ 10344b4:	call   10098f0 <myl_core_args>
+ 10344b9:	mov    %rax,%rbx
+ 10344bc:	call   1022300 <myl_core_host_grant>
+ 10344c1:	mov    $0x1,%edx
+ 10344c6:	mov    %rbx,%rdi
+ 10344c9:	mov    %rax,%rsi
+ 10344cc:	call   1032ca0 <my.app::main>
+ 10344d1:	mov    %rax,%r14
+ 10344d4:	mov    %rbx,%rdi
+ 10344d7:	call   10098c0 <myl_core_release>
+ 10344dc:	mov    %r14,%rdi
+ 10344df:	add    $0x8,%rsp
+ 10344e3:	pop    %rbx
+ 10344e4:	pop    %r14
+ 10344e6:	jmp    100a3d0 <myl_core_exit>
+
+Disassembly of section .init:
+
+Disassembly of section .fini:
+
+Disassembly of section .plt:

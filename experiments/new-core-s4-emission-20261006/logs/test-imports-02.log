@@ -1,0 +1,17 @@
+test-core
++- run test w
+guardian/test: 1 test(s) selected
+guardian/test: SLOW  11.90s  emit_units_test.test.S4 imported aggregate bodies close rendering dependencies and export excluded private callees
+guardian/test: test wall 11.90s; slowest over 50ms:
+guardian/test:   11.90s  emit_units_test.test.S4 imported aggregate bodies close rendering dependencies and export excluded private callees
+guardian/test: PASS — 1 passed
+guardian/test: RESULT {"passed":1,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/06159c1a10c44686f549b1d11aa28770/test --cache-dir=./.zig-cache --seed=0xb1d2e7d0 --listen=-
+
+Build Summary: 5/5 steps succeeded; 1/1 tests passed
+test-core success
++- run test 1 pass (1 total) 11s MaxRSS:248M
+   +- compile test debug native success 7s MaxRSS:346M
+      +- options success
+         +- compile exe mylang-core debug native success 7s MaxRSS:349M
+

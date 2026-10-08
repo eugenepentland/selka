@@ -1,0 +1,25 @@
+Build Summary: 3/3 steps succeeded
+core success
++- install mylang-core success
+   +- compile exe mylang-core debug native success 2s MaxRSS:322M
+
+core build: 2.55 s, 315388 KB
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+operand_snapshots           55 |            45     0    10 |            45     0    10
+--------------------------------------------------------------------------------------
+TOTAL                       55
+  debug    matching 45, mismatching 0, unsupported 10 (of 55 tests; 45 supported)
+  release  matching 45, mismatching 0, unsupported 10 (of 55 tests; 45 supported)
+
+blocking features of the unsupported tests (tests / files):
+     3 /  1  fixed array type
+     2 /  1  index_of
+     1 /  1  bytes type
+     1 /  1  function_value
+     1 /  1  function value type
+     1 /  1  text of a non-integer value
+     1 /  1  contains
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+  operand_snapshots               10 of  55: fixed array type x3, index_of x2, bytes type x1, function_value x1, function value type x1, text of a non-integer value x1, contains x1

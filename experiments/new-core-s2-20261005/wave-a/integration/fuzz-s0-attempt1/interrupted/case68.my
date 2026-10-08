@@ -1,0 +1,51 @@
+def probe(xs: list[int], key: int) -> int:
+    low = 0
+    high = len(xs)
+    while low < high:
+        middle = (low + high) // 2
+        if xs[middle] < key:
+            low = middle + 1
+        else:
+            high = middle
+    if low < len(xs) and xs[low] == key:
+        return low + 1
+    return 0
+
+
+def number(text: str, fallback: int) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return fallback
+
+
+def main(args: list[str], out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    n = number(args[0], 3)
+    rounds = number(args[1], 2)
+    seed = number(args[2], 7)
+    if n < 0 or n > 100 or rounds < 0 or rounds > 5:
+        return 3
+    values = [(((j - j) + (13 // 1000000007))) % 1009 for j in range(n)]
+    second = [(j * 39 + 3) % 1009 for j in range(n)]
+    flags = [j % 3 != 0 for j in range(n)]
+    acc = 0
+    for b in range(rounds):
+        phase = b % 7
+        total = 0
+        for j in range(n + 2):
+            x = values[n - 1 - j]
+            y = second[j % n]
+            v = (((j * seed) % 3) + 1009)
+            if flags[j % n]:
+                v = ((101 % 7) + (j * x))
+            else:
+                v = v + 13
+            total += v
+        acc = acc + total
+    acc = acc + probe(second, (acc - 44))
+    out.print(acc, len(values))
+    return acc % 7
+

@@ -1,0 +1,5 @@
+1/4 tool_identity.test.tool identity resolves executable PATH and propagates allocation failure...OK
+2/4 tool_identity.test.tool memo is reusable and corruption is a content rehash...OK
+3/4 tool_identity.test.same-size executable edit with restored mtime invalidates tool identity...OK
+4/4 tool_identity.test.library edits additions removals and an override invalidate tool identity...OK
+All 4 tests passed.

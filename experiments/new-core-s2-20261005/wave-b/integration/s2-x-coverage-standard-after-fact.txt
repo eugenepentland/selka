@@ -1,0 +1,89 @@
+source_commit=996d9baad0e00ef98b4d3e7b59dc3616809fa013
+compiler_repair_commit=0c6029d7
+$ env TMPDIR=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-after-fact/tmp ZIG_LOCAL_CACHE_DIR=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-after-fact/zig ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache nice -n 10 taskset -c 0,1,4,5,6,7,8,9,12,13,14,15,16,17,18,19 /usr/bin/time -f '%e %M %x' -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/s2-x/coverage-after-fact/time.txt python3 experiments/new-core-s2-20261005/wave-a/qualify_coverage.py --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-b/integration/coverage-standard-after-fact
+## examples: 93 files (7 not checkable alone), 207 functions, 181 accepted (87%)
+  checks in accepted functions (analysed alone): proven 102, still exact 147
+  front end: 4 x error[E_MODULE_NAME]: declared `module shop.money`, but this
+  front end: 1 x error[E_MODULE_NAME]: declared `module config.values`, but t
+  front end: 1 x error[E_MODULE_NAME]: declared `module shop.billing`, but th
+     11  capability type
+      5  resource type
+      3  host function
+      2  extern
+      2  shift_right
+      1  text_chr
+      1  decode
+      1  hex
+## bench/parity: 45 files (0 not checkable alone), 123 functions, 93 accepted (76%)
+  checks in accepted functions (analysed alone): proven 148, still exact 133
+      5  f64_sqrt
+      2  find_any
+      2  shift_right
+      2  shift_left
+      2  replace
+      2  byte_buffer type
+      1  reverse
+      1  operator on an aggregate value
+      1  is_digit
+      1  is_alpha
+      1  is_space
+      1  count
+## tests/lang: 205 files (4 not checkable alone), 3156 functions, 2800 accepted (89%)
+  checks in accepted functions (analysed alone): proven 4441, still exact 3329
+  front end: 2 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/lines.t
+  front end: 1 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/nul.bin
+  front end: 1 x error[E_EMBED_MISSING]: cannot embed "embed_fixtures/support
+     63  byte_buffer type
+     41  capability type
+     29  aggregate storage of live dictionary views
+     18  text of a non-integer value
+     11  equality of a recursive value
+      9  view
+      9  operator on an aggregate value
+      9  extend
+      9  count
+      8  shift_right
+      8  interior mut argument ancestor changed during later argument evaluation
+      7  ordinary dictionary snapshot combined with a live view
+## benchmarks/runtime: 3 files (0 not checkable alone), 141 functions, 111 accepted (79%)
+  checks in accepted functions (analysed alone): proven 214, still exact 315
+     12  byte_buffer type
+      2  replace
+      1  extern
+      1  is_digit
+      1  is_alpha
+      1  is_space
+      1  count
+      1  lstrip
+      1  rstrip
+      1  strip
+      1  upper
+      1  lower
+## all corpora: checks proven 4757, still exact 3764 (in 3017 accepted functions)
+## all corpora: 3627 functions, 3185 accepted (88%)
+     77  byte_buffer type
+     52  capability type
+     29  aggregate storage of live dictionary views
+     18  text of a non-integer value
+     12  shift_right
+     11  count
+     11  equality of a recursive value
+     10  f64_sqrt
+     10  operator on an aggregate value
+      9  find_any
+      9  view
+      9  extend
+      8  replace
+      8  interior mut argument ancestor changed during later argument evaluation
+      7  decode
+      7  strip
+      7  ordinary dictionary snapshot combined with a live view
+      7  live dictionary view of an interior place
+      6  resource type
+      6  parse_int_range
+      6  number_format
+      5  lower
+      5  parse_float
+      5  live dictionary view with unproved source identity
+
+exit=0 elapsed_rss_exit=2.64 39300 0 wall=2.65

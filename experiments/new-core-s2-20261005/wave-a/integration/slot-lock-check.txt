@@ -1,0 +1,4 @@
+Waiting-parent gate/build lock check
+gate1: held during child execution
+build1: held during child execution
+exit=0

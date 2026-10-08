@@ -1,0 +1,95 @@
+module row_record_pass
+
+extern def runtime_bench_now(host: Host) -> i64 effects(host)
+
+# Row `record_pass` (S4 CONTRACT.md): a twelve-field record threaded through SIZE calls of a function
+# that returns a new record, so the record crosses every call by value. Arguments `size iterations
+# seed`, output `checksum elapsed`.
+
+
+record State:
+    f0: int
+    f1: int
+    f2: int
+    f3: int
+    f4: int
+    f5: int
+    f6: int
+    f7: int
+    f8: int
+    f9: int
+    f10: int
+    f11: int
+
+
+def mix(a: int, b: int) -> int:
+    return (a * 31 + b) % 1009
+
+
+def advance(s: State, x: int) -> State:
+    t = mix(s.f0 + s.f5, x)
+    f3 = mix(s.f4, x) if x % 3 == 0 else s.f4
+    return State(
+        f0=s.f1,
+        f1=s.f2,
+        f2=s.f3,
+        f3=f3,
+        f4=s.f5,
+        f5=s.f6,
+        f6=s.f7,
+        f7=s.f8,
+        f8=s.f9,
+        f9=s.f10,
+        f10=s.f11,
+        f11=t,
+    )
+
+
+def batch_result(size: int, batch: int, seed: int) -> int:
+    base = seed + batch
+    s = State(
+        f0=base % 1009,
+        f1=(base + 7) % 1009,
+        f2=(base + 14) % 1009,
+        f3=(base + 21) % 1009,
+        f4=(base + 28) % 1009,
+        f5=(base + 35) % 1009,
+        f6=(base + 42) % 1009,
+        f7=(base + 49) % 1009,
+        f8=(base + 56) % 1009,
+        f9=(base + 63) % 1009,
+        f10=(base + 70) % 1009,
+        f11=(base + 77) % 1009,
+    )
+    for j in range(size):
+        s = advance(s, (base + 13 * j) % 1009)
+    return (s.f0 + 2 * s.f1 + 3 * s.f2 + 4 * s.f3 + 5 * s.f4 + 6 * s.f5 + 7 * s.f6 + 8 * s.f7 + 9 * s.f8
+            + 10 * s.f9 + 11 * s.f10 + 12 * s.f11)
+
+
+def parse_number(text: str) -> int:
+    match int(text):
+        case Some(n):
+            return n
+        case None:
+            return 0
+
+
+def main(args: list[str], host: Host, out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    size = parse_number(args[0])
+    iterations = parse_number(args[1])
+    seed = parse_number(args[2])
+    if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
+        return 2
+    checksum = 0
+    start = runtime_bench_now(host)
+    for batch in range(iterations):
+        part = batch_result(size, batch, seed)
+        if part < 0:
+            return 2
+        checksum = (checksum + part) % 1000000007
+    elapsed = runtime_bench_now(host) - start
+    out.print(checksum, elapsed)
+    return 0

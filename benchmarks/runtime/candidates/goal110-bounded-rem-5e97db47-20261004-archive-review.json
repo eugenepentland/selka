@@ -1,0 +1,12 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T10:25:26.133196+00:00",
+  "archive_commit": "bdcfac1e8751982fd4ac1dafdc3f93e21d94bdc5",
+  "index_sha256": "c8a83fec2ecb5ae6bf7acbf3b4a756e78c9c04761d008a6d6f2a9f5c9d8725f0",
+  "raw_live_bindings": 89,
+  "exact_committed_files": 105,
+  "limitations": [
+    "Integrity and saved evidence; no new guest execution.",
+    "Native outcomes and timing independently replayed in separate root receipts."
+  ]
+}

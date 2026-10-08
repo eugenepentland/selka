@@ -1,0 +1,7 @@
+module app
+
+public def test_text() -> str:
+    return ""
+
+public def test_z_survivor() -> bool:
+    return True

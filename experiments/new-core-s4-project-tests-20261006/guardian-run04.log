@@ -1,0 +1,14 @@
+guardian: run-all: whole-tree run — --full was requested
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 29 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10434 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (spec)
+guardian: failures grouped by check (1):
+  spec (5 findings)
+    - unverified: New core S3 foundation - [NEW-CORE-S4-PROJECT-1] Core project entries resolve nested module paths and standalone test files, discover the nearest strict mylang.json, and enforce source budgets, import policy, embedded-asset roots and required generated interfaces before lowering.
+    - unverified: New core S3 foundation - [NEW-CORE-S4-TEST-1] Core file and directory test runs share one worker budget from explicit jobs, MYLANG_JOBS or available CPUs; empty selections exit 3 and small suites never start surplus workers.
+    - unverified: New core S3 foundation - [NEW-CORE-S4-TEST-2] Directory test discovery includes mains, standalone test entries and orphan test libraries. Every test-declaring source must be accounted for by a checked child report; a missing program or inventory fails the run.
+    - +2 more — use --verbose for full detail
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

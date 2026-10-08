@@ -27,16 +27,6 @@ pub const old_code = "E_CONTRACT_OLD";
 /// Diagnostic code for `old(...)` of a value that shares mutable storage.
 pub const old_shared_code = "E_CONTRACT_OLD_SHARED";
 
-/// The trap code each assertion kind raises, independently of its message.
-pub fn trapCode(kind: typed.AssertionKind) []const u8 {
-    return switch (kind) {
-        .statement => "R_ASSERT",
-        .requires => "R_REQUIRES",
-        .ensures => "R_ENSURES",
-        .invariant => "R_INVARIANT",
-    };
-}
-
 /// One contract trap message: `subject kind `clause`[: message]`. The
 /// clause text has its whitespace runs folded to one space, so a condition
 /// written across lines still reads as one.
@@ -674,7 +664,7 @@ fn captureOld(comptime Checker: type, self: *Checker, call_id: ast.NodeId) Error
 /// (`VALUE-SEMANTICS-7`).
 fn shared(records: []const typed.Record, node: typed.Node) bool {
     if (!typed.carriesWritableStorage(records, node.ty)) return false;
-    if (value_semantics.enabled() and value_semantics.copiesAll(records, node.ty)) return false;
+    if (value_semantics.copiesAll(records, node.ty)) return false;
     if (!fresh(node)) return true;
     const record = records[node.ty.recordIndex()];
     if (!record.isCollection()) return true;

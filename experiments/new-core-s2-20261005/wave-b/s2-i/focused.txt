@@ -1,0 +1,26 @@
+$ scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/.mylang-cache/wave-b/s2-i/focused-seconds.txt python3 experiments/new-core-s1-20261005/conformance.py live_place_iteration iteration_identity experiments/new-core-s2-20261005/wave-a/s2-lb/mut_callee_rebinding.my test/core/i_live_place.my --jobs 4 --leakcheck --verify --why --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/.mylang-cache/wave-b/s2-i/focused
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+live_place_iteration        37 |            22     0    15 |            22     0    15
+iteration_identity           8 |             4     0     4 |             4     0     4
+mut_callee_rebinding         6 |             4     0     2 |             4     0     2
+i_live_place                 5 |             5     0     0 |             5     0     0
+--------------------------------------------------------------------------------------
+TOTAL                       56
+  debug    matching 35, mismatching 0, unsupported 21 (of 56 tests; 35 supported)
+  release  matching 35, mismatching 0, unsupported 21 (of 56 tests; 35 supported)
+
+blocking features of the unsupported tests (tests / files):
+     8 /  2  fixed array type
+     4 /  2  dict type
+     4 /  1  string index
+     2 /  1  bytes type
+     2 /  1  function_value
+     1 /  1  set type
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+  live_place_iteration            15 of  37: fixed array type x7, string index x4, bytes type x2, dict type x1, set type x1
+  iteration_identity               4 of   8: dict type x3, fixed array type x1
+  mut_callee_rebinding             2 of   6: function_value x2
+
+exit=0 command_seconds=4.42

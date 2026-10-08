@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang-core-s3-c8313207",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-combined-after-01/bounds/app.my",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/mut-frame-combined-after-01/bounds-release-s3/cache",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/mut-frame-combined-after-01/bounds-release-s3/program",
+    "--release"
+  ],
+  "status": 0,
+  "stdout": "",
+  "stderr": "",
+  "seconds": 3.691168181132525
+}

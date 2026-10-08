@@ -1,0 +1,48 @@
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: all 1 gate slot(s) busy; waiting (120s so far)
+build-slot: all 1 gate slot(s) busy; waiting (180s so far)
+build-slot: all 1 gate slot(s) busy; waiting (240s so far)
+build-slot: all 1 gate slot(s) busy; waiting (300s so far)
+build-slot: all 1 gate slot(s) busy; waiting (360s so far)
+build-slot: all 1 gate slot(s) busy; waiting (421s so far)
+build-slot: all 1 gate slot(s) busy; waiting (481s so far)
+build-slot: all 1 gate slot(s) busy; waiting (541s so far)
+build-slot: gate slot 1 after 591s (all 1 gate slot(s) busy)
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 15s (all 3 build slot(s) busy)
+record_reads: 0 changed definitions; 0 unexpected
+tagged_stack: 0 changed definitions; 0 unexpected
+mutate_unique: 0 changed definitions; 0 unexpected
+mutate_shared: 0 changed definitions; 0 unexpected
+record_construct: 0 changed definitions; 0 unexpected
+record_update: 0 changed definitions; 0 unexpected
+option_handle: 0 changed definitions; 0 unexpected
+result_propagate: 0 changed definitions; 0 unexpected
+list_scan: 0 changed definitions; 0 unexpected
+list_append: 0 changed definitions; 0 unexpected
+list_filter: 0 changed definitions; 0 unexpected
+alloc_short: 0 changed definitions; 0 unexpected
+alloc_retained: 0 changed definitions; 0 unexpected
+mutate_nested: 0 changed definitions; 0 unexpected
+bytes_scan: 0 changed definitions; 0 unexpected
+string_equal: 0 changed definitions; 0 unexpected
+string_search: 0 changed definitions; 0 unexpected
+string_split: 0 changed definitions; 0 unexpected
+string_join: 0 changed definitions; 0 unexpected
+dict_lookup: 1 changed definitions; 0 unexpected
+dict_lookup_str: 1 changed definitions; 0 unexpected
+dict_update: 1 changed definitions; 0 unexpected
+dict_update_str: 1 changed definitions; 0 unexpected
+set_dedup: 0 changed definitions; 0 unexpected
+int_parse: 0 changed definitions; 0 unexpected
+int_format: 0 changed definitions; 0 unexpected
+call_indirect: 0 changed definitions; 0 unexpected
+sort_int: 0 changed definitions; 0 unexpected
+sort_records: 0 changed definitions; 0 unexpected
+int_math: 0 changed definitions; 0 unexpected
+float_math: 0 changed definitions; 0 unexpected
+call_direct: 0 changed definitions; 0 unexpected
+branch_predictable: 0 changed definitions; 0 unexpected
+branch_mixed: 0 changed definitions; 0 unexpected
+binary_search: 0 changed definitions; 0 unexpected

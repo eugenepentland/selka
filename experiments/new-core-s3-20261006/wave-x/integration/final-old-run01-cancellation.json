@@ -1,0 +1,571 @@
+{
+  "time_utc": "2026-10-06T19:41:46.780706+00:00",
+  "reason": "Parent-authorized cancellation after real final matrix rebinding case81 (82nd) stdout/status mismatch on args64 2 42; source5ee is unqualified. Termination is ours, not an old test assertion failure.",
+  "exec_session": 40434,
+  "owned_process_group": 2477826,
+  "state_before": "test already executing; Guardian88 passed; no aggregate test verdict",
+  "processes_before": [
+    {
+      "pid": 2477826,
+      "ppid": 754507,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/bin/bash -lc python3 - <<'PY' import hashlib,json,subprocess,time from pathlib import Path root=Path.cwd(); area=root/'experiments/new-core-s3-20261006/wave-x/integration' head='5ee5b8d2e1d1c697a98dfa590cbeda704ed7ae55' old=root/'.mylang-cache/s3/oracle/mylang'; new=root/'zig-out/bin/mylang-core' def digest(p): return hashlib.sha256(p.read_bytes()).hexdigest() def source(): return {'head':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'tracked_status':subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],text=True)} assert json.loads((area/'final-merge-run01/summary.json').read_text())['qualified'] is True state=source(); assert state=={'head':head,'tracked_status':''},state oracles={'old':{'path':str(old),'sha256':digest(old)},'new':{'path':str(new),'sha256':digest(new)}} assert oracles['old']['sha256']=='d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79' assert oracles['new']['sha256']=='05e5206c53b853ff8855d547784cec0ae8c0587da3dbd5b0e02eb0eb2744721c' receipt=area/'final-old-conformance-receipt-run01.json'; assert not receipt.exists() evidence=area/'final-old-run01'; assert not evidence.exists() log=area/'final-old-run01.log' command=['python3','experiments/new-core-s2-20261005/wave-b/integration/full_old_gate.py','--root',str(root),'--evidence',str(evidence)] record={'source_before':state,'oracles_before':oracles,'phase':'old_gate_running','old_gate':{'command':command,'log':str(log.relative_to(root))}} receipt.write_text(json.dumps(record,indent=2)+'\\n') started=time.monotonic() with log.open('x') as output:  output.write('source_commit='+head+'\\n'+json.dumps(oracles)+'\\n'); output.flush()  status=subprocess.run(command,cwd=root,stdout=output,stderr=subprocess.STDOUT).returncode record['old_gate'].update(status=status,wall_including_admission_seconds=time.monotonic()-started) record['source_after_old']=source(); record['oracles_after_old']={role:{'path':item['path'],'sha256':digest(Path(item['path']))} for role,item in oracles.items()} summary=evidence/'summary.json'; record['old_gate']['summary']=json.loads(summary.read_text()) if summary.exists() else None record['phase']='old_gate_passed' if status==0 and record['old_gate']['summary'] and record['old_gate']['summary'].get('qualified') is True else 'old_gate_failed' receipt.write_text(json.dumps(record,indent=2)+'\\n') assert record['source_after_old']==state,'source changed' assert record['oracles_after_old']==oracles,'oracle changed' assert record['phase']=='old_gate_passed',record print('OLD_GATE_GREEN',record['old_gate']['wall_including_admission_seconds']) PY"
+    },
+    {
+      "pid": 2477836,
+      "ppid": 2477826,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "python3 -"
+    },
+    {
+      "pid": 2477905,
+      "ppid": 2477836,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "python3 experiments/new-core-s2-20261005/wave-b/integration/full_old_gate.py --root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/final-old-run01"
+    },
+    {
+      "pid": 2477951,
+      "ppid": 2477905,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "bash -c \"$@\"; result=$?; exit \"$result\" -- scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/final-old-run01/test-seconds.txt zig build test --summary all"
+    },
+    {
+      "pid": 2477970,
+      "ppid": 2477951,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/final-old-run01/test-seconds.txt zig build test --summary all"
+    },
+    {
+      "pid": 2676632,
+      "ppid": 2477970,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/.zig-global-cache/o/13e7fd8c78eeb885c119e5c167e4e6f9/maker build --zig-lib=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib --zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --global-cache=/home/epentland/ai/canopy/.zig-global-cache --seed=0x58eb7f45 test --summary all"
+    },
+    {
+      "pid": 2678125,
+      "ppid": 2676632,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "./.zig-cache/o/13c9920ae71ae0ec9eec0209e613dd8b/test --guardian-shard=3/6 --cache-dir=./.zig-cache --seed=0x58eb7f45 --listen=-"
+    },
+    {
+      "pid": 2678128,
+      "ppid": 2678125,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "sh -c if [ -z \"${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then   if [ -n \"${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"$XDG_CACHE_HOME/zig\"   elif [ -n \"${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"$HOME/.cache/zig\"; fi fi if [ -n \"${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi ZIG_LOCAL_CACHE_DIR=$(mktemp -d \"${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2 export ZIG_LOCAL_CACHE_DIR (trap '' HUP INT TERM; while kill -0 $$ 2>/dev/null; do sleep 1; done; rm -rf \"$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 & exec env \"$@\" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/13c9920ae71ae0ec9eec0209e613dd8b/test --guardian-shard=3/6 --cache-dir=./.zig-cache --seed=0x58eb7f45 --listen=-"
+    },
+    {
+      "pid": 2678148,
+      "ppid": 2676632,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "./.zig-cache/o/13c9920ae71ae0ec9eec0209e613dd8b/test --guardian-shard=0/6 --cache-dir=./.zig-cache --seed=0x58eb7f45 --listen=-"
+    },
+    {
+      "pid": 2678150,
+      "ppid": 2678148,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "sh -c if [ -z \"${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then   if [ -n \"${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"$XDG_CACHE_HOME/zig\"   elif [ -n \"${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"$HOME/.cache/zig\"; fi fi if [ -n \"${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi ZIG_LOCAL_CACHE_DIR=$(mktemp -d \"${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2 export ZIG_LOCAL_CACHE_DIR (trap '' HUP INT TERM; while kill -0 $$ 2>/dev/null; do sleep 1; done; rm -rf \"$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 & exec env \"$@\" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/13c9920ae71ae0ec9eec0209e613dd8b/test --guardian-shard=0/6 --cache-dir=./.zig-cache --seed=0x58eb7f45 --listen=-"
+    },
+    {
+      "pid": 2678172,
+      "ppid": 2676632,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "./.zig-cache/o/13c9920ae71ae0ec9eec0209e613dd8b/test --guardian-shard=4/6 --cache-dir=./.zig-cache --seed=0x58eb7f45 --listen=-"
+    },
+    {
+      "pid": 2678173,
+      "ppid": 2676632,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "./.zig-cache/o/13c9920ae71ae0ec9eec0209e613dd8b/test --guardian-shard=5/6 --cache-dir=./.zig-cache --seed=0x58eb7f45 --listen=-"
+    },
+    {
+      "pid": 2678174,
+      "ppid": 2676632,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "./.zig-cache/o/13c9920ae71ae0ec9eec0209e613dd8b/test --guardian-shard=2/6 --cache-dir=./.zig-cache --seed=0x58eb7f45 --listen=-"
+    },
+    {
+      "pid": 2678176,
+      "ppid": 2676632,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "./.zig-cache/o/13c9920ae71ae0ec9eec0209e613dd8b/test --guardian-shard=1/6 --cache-dir=./.zig-cache --seed=0x58eb7f45 --listen=-"
+    },
+    {
+      "pid": 2678180,
+      "ppid": 2678172,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "sh -c if [ -z \"${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then   if [ -n \"${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"$XDG_CACHE_HOME/zig\"   elif [ -n \"${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"$HOME/.cache/zig\"; fi fi if [ -n \"${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi ZIG_LOCAL_CACHE_DIR=$(mktemp -d \"${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2 export ZIG_LOCAL_CACHE_DIR (trap '' HUP INT TERM; while kill -0 $$ 2>/dev/null; do sleep 1; done; rm -rf \"$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 & exec env \"$@\" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/13c9920ae71ae0ec9eec0209e613dd8b/test --guardian-shard=4/6 --cache-dir=./.zig-cache --seed=0x58eb7f45 --listen=-"
+    },
+    {
+      "pid": 2678182,
+      "ppid": 2678173,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "sh -c if [ -z \"${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then   if [ -n \"${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"$XDG_CACHE_HOME/zig\"   elif [ -n \"${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"$HOME/.cache/zig\"; fi fi if [ -n \"${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi ZIG_LOCAL_CACHE_DIR=$(mktemp -d \"${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2 export ZIG_LOCAL_CACHE_DIR (trap '' HUP INT TERM; while kill -0 $$ 2>/dev/null; do sleep 1; done; rm -rf \"$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 & exec env \"$@\" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/13c9920ae71ae0ec9eec0209e613dd8b/test --guardian-shard=5/6 --cache-dir=./.zig-cache --seed=0x58eb7f45 --listen=-"
+    },
+    {
+      "pid": 2678183,
+      "ppid": 2678174,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "sh -c if [ -z \"${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then   if [ -n \"${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"$XDG_CACHE_HOME/zig\"   elif [ -n \"${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"$HOME/.cache/zig\"; fi fi if [ -n \"${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi ZIG_LOCAL_CACHE_DIR=$(mktemp -d \"${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2 export ZIG_LOCAL_CACHE_DIR (trap '' HUP INT TERM; while kill -0 $$ 2>/dev/null; do sleep 1; done; rm -rf \"$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 & exec env \"$@\" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/13c9920ae71ae0ec9eec0209e613dd8b/test --guardian-shard=2/6 --cache-dir=./.zig-cache --seed=0x58eb7f45 --listen=-"
+    },
+    {
+      "pid": 2678186,
+      "ppid": 2678176,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "sh -c if [ -z \"${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then   if [ -n \"${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"$XDG_CACHE_HOME/zig\"   elif [ -n \"${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"$HOME/.cache/zig\"; fi fi if [ -n \"${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi ZIG_LOCAL_CACHE_DIR=$(mktemp -d \"${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2 export ZIG_LOCAL_CACHE_DIR (trap '' HUP INT TERM; while kill -0 $$ 2>/dev/null; do sleep 1; done; rm -rf \"$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 & exec env \"$@\" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/13c9920ae71ae0ec9eec0209e613dd8b/test --guardian-shard=1/6 --cache-dir=./.zig-cache --seed=0x58eb7f45 --listen=-"
+    },
+    {
+      "pid": 2682319,
+      "ppid": 2676632,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang test tests/lang --cache-dir .mylang-cache/lang-tests-gc --gc-stress"
+    },
+    {
+      "pid": 2682322,
+      "ppid": 2682319,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "sh -c if [ -z \"${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then   if [ -n \"${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"$XDG_CACHE_HOME/zig\"   elif [ -n \"${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"$HOME/.cache/zig\"; fi fi if [ -n \"${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi ZIG_LOCAL_CACHE_DIR=$(mktemp -d \"${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2 export ZIG_LOCAL_CACHE_DIR (trap '' HUP INT TERM; while kill -0 $$ 2>/dev/null; do sleep 1; done; rm -rf \"$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 & exec env \"$@\" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./zig-out/bin/mylang test tests/lang --gc-runtime --cache-dir .mylang-cache/lang-tests-gc --gc-stress"
+    },
+    {
+      "pid": 2700674,
+      "ppid": 2676632,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "./.zig-cache/o/d916fc6ca8e7b9a51e1fc4d72674f242/test --guardian-shard=8/12 --cache-dir=./.zig-cache --seed=0x58eb7f45 --listen=-"
+    },
+    {
+      "pid": 2700695,
+      "ppid": 2700674,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "sh -c if [ -z \"${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then   if [ -n \"${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"$XDG_CACHE_HOME/zig\"   elif [ -n \"${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"$HOME/.cache/zig\"; fi fi if [ -n \"${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi ZIG_LOCAL_CACHE_DIR=$(mktemp -d \"${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2 export ZIG_LOCAL_CACHE_DIR (trap '' HUP INT TERM; while kill -0 $$ 2>/dev/null; do sleep 1; done; rm -rf \"$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 & exec env \"$@\" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/d916fc6ca8e7b9a51e1fc4d72674f242/test --guardian-shard=8/12 --cache-dir=./.zig-cache --seed=0x58eb7f45 --listen=-"
+    },
+    {
+      "pid": 2742104,
+      "ppid": 2682319,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang test /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/record_field_snapshots.my --json --filter * --cache-dir .mylang-cache/lang-tests-gc --zig zig --mode Debug --max-steps 1000000 --max-frames 1024 --max-calls 4096 --timeout-ms 60000 --max-memory 536870912 --jobs 1 --gc-stress"
+    },
+    {
+      "pid": 2742107,
+      "ppid": 2682319,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang test /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/recursive_values.my --json --filter * --cache-dir .mylang-cache/lang-tests-gc --zig zig --mode Debug --max-steps 1000000 --max-frames 1024 --max-calls 4096 --timeout-ms 60000 --max-memory 536870912 --jobs 1 --gc-stress"
+    },
+    {
+      "pid": 2742108,
+      "ppid": 2682319,
+      "pgid": 2477826,
+      "state": "Z",
+      "command": "[mylang] <defunct>"
+    },
+    {
+      "pid": 2742111,
+      "ppid": 2682319,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang test /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/root_liveness.my --json --filter * --cache-dir .mylang-cache/lang-tests-gc --zig zig --mode Debug --max-steps 1000000 --max-frames 1024 --max-calls 4096 --timeout-ms 60000 --max-memory 536870912 --jobs 1 --gc-stress"
+    },
+    {
+      "pid": 2742115,
+      "ppid": 2682319,
+      "pgid": 2477826,
+      "state": "Z",
+      "command": "[mylang] <defunct>"
+    },
+    {
+      "pid": 2742133,
+      "ppid": 2682319,
+      "pgid": 2477826,
+      "state": "Z",
+      "command": "[mylang] <defunct>"
+    },
+    {
+      "pid": 2742151,
+      "ppid": 2682319,
+      "pgid": 2477826,
+      "state": "Z",
+      "command": "[mylang] <defunct>"
+    },
+    {
+      "pid": 2742153,
+      "ppid": 2682319,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang test /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/sets.my --json --filter * --cache-dir .mylang-cache/lang-tests-gc --zig zig --mode Debug --max-steps 1000000 --max-frames 1024 --max-calls 4096 --timeout-ms 60000 --max-memory 536870912 --jobs 1 --gc-stress"
+    },
+    {
+      "pid": 2742159,
+      "ppid": 2742104,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang compile-module /var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/snapshot-06ffc9cb30ad27a5eee5777f598d5479/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/record_field_snapshots.my --module=record_field_snapshots --interfaces=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/modules/3a5ea26af5819c2210b6fe61c159bb83f7755926b54d0e2fc80e1fe2544f0bcd/if --standard-interfaces=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/modules/standard-63309880a9ef229ccbceec0d22c6aff304e081a04e9eeaa867b3cead46d6d2a7/if --out=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/modules/3a5ea26af5819c2210b6fe61c159bb83f7755926b54d0e2fc80e1fe2544f0bcd/out --cache-dir=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7 --arenas=on --native-variants=qbe-v2 --tests --objects --ready -- --mode Debug --target amd64_sysv --zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --qbe=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/qbe"
+    },
+    {
+      "pid": 2742162,
+      "ppid": 2682319,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang test /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/sorted_keys.my --json --filter * --cache-dir .mylang-cache/lang-tests-gc --zig zig --mode Debug --max-steps 1000000 --max-frames 1024 --max-calls 4096 --timeout-ms 60000 --max-memory 536870912 --jobs 1 --gc-stress"
+    },
+    {
+      "pid": 2742166,
+      "ppid": 2682319,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang test /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/stable_sorting.my --json --filter * --cache-dir .mylang-cache/lang-tests-gc --zig zig --mode Debug --max-steps 1000000 --max-frames 1024 --max-calls 4096 --timeout-ms 60000 --max-memory 536870912 --jobs 1 --gc-stress"
+    },
+    {
+      "pid": 2742170,
+      "ppid": 2682319,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang test /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/standard_json.my --json --filter * --cache-dir .mylang-cache/lang-tests-gc --zig zig --mode Debug --max-steps 1000000 --max-frames 1024 --max-calls 4096 --timeout-ms 60000 --max-memory 536870912 --jobs 1 --gc-stress"
+    },
+    {
+      "pid": 2742179,
+      "ppid": 2682319,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang test /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/standard_strings.my --json --filter * --cache-dir .mylang-cache/lang-tests-gc --zig zig --mode Debug --max-steps 1000000 --max-frames 1024 --max-calls 4096 --timeout-ms 60000 --max-memory 536870912 --jobs 1 --gc-stress"
+    },
+    {
+      "pid": 2742185,
+      "ppid": 2682319,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang test /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/text_index.my --json --filter * --cache-dir .mylang-cache/lang-tests-gc --zig zig --mode Debug --max-steps 1000000 --max-frames 1024 --max-calls 4096 --timeout-ms 60000 --max-memory 536870912 --jobs 1 --gc-stress"
+    },
+    {
+      "pid": 2742196,
+      "ppid": 2742111,
+      "pgid": 2477826,
+      "state": "Z",
+      "command": "[mylang] <defunct>"
+    },
+    {
+      "pid": 2742197,
+      "ppid": 2682319,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang test /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/text_literal_index.my --json --filter * --cache-dir .mylang-cache/lang-tests-gc --zig zig --mode Debug --max-steps 1000000 --max-frames 1024 --max-calls 4096 --timeout-ms 60000 --max-memory 536870912 --jobs 1 --gc-stress"
+    },
+    {
+      "pid": 2742204,
+      "ppid": 2742107,
+      "pgid": 2477826,
+      "state": "Z",
+      "command": "[mylang] <defunct>"
+    },
+    {
+      "pid": 2742205,
+      "ppid": 2682319,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang test /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/text_scanning.my --json --filter * --cache-dir .mylang-cache/lang-tests-gc --zig zig --mode Debug --max-steps 1000000 --max-frames 1024 --max-calls 4096 --timeout-ms 60000 --max-memory 536870912 --jobs 1 --gc-stress"
+    },
+    {
+      "pid": 2742206,
+      "ppid": 2682319,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang test /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/text_views.my --json --filter * --cache-dir .mylang-cache/lang-tests-gc --zig zig --mode Debug --max-steps 1000000 --max-frames 1024 --max-calls 4096 --timeout-ms 60000 --max-memory 536870912 --jobs 1 --gc-stress"
+    },
+    {
+      "pid": 2742244,
+      "ppid": 2742153,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang native-test-compile /var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/snapshot-50da32dd38ceacf9cb1e30921d1e1b0a/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/sets.my --native-variants=qbe-v2 --cache-dir=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7"
+    },
+    {
+      "pid": 2742265,
+      "ppid": 2742162,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang native-test-compile /var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/snapshot-3b3c840e1b5b96fa437af8b03f92722f/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/sorted_keys.my --native-variants=qbe-v2 --cache-dir=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7"
+    },
+    {
+      "pid": 2742274,
+      "ppid": 2742185,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang native-test-compile /var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/snapshot-a634cb418d5314ad89b0d54e19305a10/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/text_index.my --native-variants=qbe-v2 --cache-dir=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7"
+    },
+    {
+      "pid": 2742284,
+      "ppid": 2742179,
+      "pgid": 2477826,
+      "state": "Z",
+      "command": "[mylang] <defunct>"
+    },
+    {
+      "pid": 2742293,
+      "ppid": 2742166,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang native-test-compile /var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/snapshot-0b7579d653a276b2ce8d1f3c93df2ae3/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/stable_sorting.my --native-variants=qbe-v2 --cache-dir=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7"
+    },
+    {
+      "pid": 2742304,
+      "ppid": 2742205,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang native-test-compile /var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/snapshot-a0a3aecc5e840e6849be03f02fe09871/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/text_scanning.my --native-variants=qbe-v2 --cache-dir=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7"
+    },
+    {
+      "pid": 2742305,
+      "ppid": 2742206,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang native-test-compile /var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/snapshot-38c41c7e1a05d046903842c409e1f3b0/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/text_views.my --native-variants=qbe-v2 --cache-dir=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7"
+    },
+    {
+      "pid": 2742326,
+      "ppid": 2742197,
+      "pgid": 2477826,
+      "state": "Z",
+      "command": "[mylang] <defunct>"
+    },
+    {
+      "pid": 2742358,
+      "ppid": 2742170,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang native-test-compile /var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/snapshot-0285cbf8b941a4ca9854bbf976fa290b/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/standard_json.my --native-variants=qbe-v2 --cache-dir=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7"
+    },
+    {
+      "pid": 2742428,
+      "ppid": 2682322,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "sleep 1"
+    },
+    {
+      "pid": 2742429,
+      "ppid": 2678176,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/o/ea22f676c5e170b1ab6d994f84c36491/mylang build /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/tmp/nYeveoJZ8cBDIH_I/main.my --project -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/tmp/nYeveoJZ8cBDIH_I/clean --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/tmp/nYeveoJZ8cBDIH_I/clean-2 --mode Debug --report --qbe=.zig-cache/o/f6f3eb1ca64f061167c64d534310d146/qbe --zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+    },
+    {
+      "pid": 2742431,
+      "ppid": 2700695,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "sleep 1"
+    },
+    {
+      "pid": 2742487,
+      "ppid": 2678128,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "sleep 1"
+    },
+    {
+      "pid": 2742504,
+      "ppid": 2678150,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "sleep 1"
+    },
+    {
+      "pid": 2742506,
+      "ppid": 2678180,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "sleep 1"
+    },
+    {
+      "pid": 2742507,
+      "ppid": 2678183,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "sleep 1"
+    },
+    {
+      "pid": 2742508,
+      "ppid": 2678182,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "sleep 1"
+    },
+    {
+      "pid": 2742509,
+      "ppid": 2678186,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "sleep 1"
+    },
+    {
+      "pid": 2742512,
+      "ppid": 2742197,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang build /var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/snapshot-b5cfc1123f52a5df49716e730f3f61c0/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/text_literal_index.my --project --library -o /var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/62ac09d035c7ff9770d3ee5299fc591a/.pending/c0ad131baf331a177b91fad299cd14e2/tests.so --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --qbe /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/qbe --mode Debug --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7 --manifest-file=/var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/62ac09d035c7ff9770d3ee5299fc591a/.pending/c0ad131baf331a177b91fad299cd14e2/native-test-selected.json"
+    },
+    {
+      "pid": 2742515,
+      "ppid": 2742179,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang build /var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/snapshot-3137ec9968d6f0310822b4be342080e3/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/standard_strings.my --project --library -o /var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/7d7b1e9edb7a596b0246c5712d0910c5/.pending/1c582390b066f91885b25206abaa15c5/tests.so --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --qbe /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/qbe --mode Debug --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7 --manifest-file=/var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/7d7b1e9edb7a596b0246c5712d0910c5/.pending/1c582390b066f91885b25206abaa15c5/native-test-selected.json"
+    },
+    {
+      "pid": 2742517,
+      "ppid": 2742111,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang build /var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/snapshot-f6d2748c8ea61b370620c304ee18a735/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/root_liveness.my --project --library -o /var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/cafcc6ef5f9b9684a205d5d68f99eb47/.pending/9e07001b49fb49503dea12e795943e86/tests.so --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --qbe /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/qbe --mode Debug --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7 --manifest-file=/var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/cafcc6ef5f9b9684a205d5d68f99eb47/.pending/9e07001b49fb49503dea12e795943e86/native-test-selected.json"
+    },
+    {
+      "pid": 2742628,
+      "ppid": 2678172,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/o/ea22f676c5e170b1ab6d994f84c36491/mylang check /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/tmp/5GVmmMOOUtfXghFw/main.my"
+    },
+    {
+      "pid": 2742630,
+      "ppid": 2742512,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig cc -std=c11 -O0 -g0 -fno-ident -fPIC -ffunction-sections -fdata-sections -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/4b4a8236abc90df8e93d3d7d5e2bf871=mylang-qbe -fdebug-compilation-dir=mylang-qbe -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/4b4a8236abc90df8e93d3d7d5e2bf871=mylang-qbe -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8=mylang-runtime -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8=mylang-runtime -I /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8 -fno-omit-frame-pointer -momit-leaf-frame-pointer -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/4b4a8236abc90df8e93d3d7d5e2bf871/.pending/1b15917a1f644f4a8f9264b0d43cbbb5=mylang-unit -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/4b4a8236abc90df8e93d3d7d5e2bf871/.pending/1b15917a1f644f4a8f9264b0d43cbbb5=mylang-unit -fsanitize-undefined-strip-path-components=-1 -c /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/4b4a8236abc90df8e93d3d7d5e2bf871/.pending/1b15917a1f644f4a8f9264b0d43cbbb5/unit.c -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/4b4a8236abc90df8e93d3d7d5e2bf871/.pending/1b15917a1f644f4a8f9264b0d43cbbb5/object.o"
+    },
+    {
+      "pid": 2742638,
+      "ppid": 2678174,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/o/ea22f676c5e170b1ab6d994f84c36491/mylang check main.my --cache-dir=cache"
+    },
+    {
+      "pid": 2742646,
+      "ppid": 2742515,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig cc -std=c11 -O0 -g0 -fno-ident -fPIC -ffunction-sections -fdata-sections -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/6b26f091e0b1b138bcf9b4128d23afd6=mylang-qbe -fdebug-compilation-dir=mylang-qbe -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/6b26f091e0b1b138bcf9b4128d23afd6=mylang-qbe -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8=mylang-runtime -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8=mylang-runtime -I /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8 -fno-omit-frame-pointer -momit-leaf-frame-pointer -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/6b26f091e0b1b138bcf9b4128d23afd6/.pending/ba92ff8c48582434e098f88214415973=mylang-unit -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/6b26f091e0b1b138bcf9b4128d23afd6/.pending/ba92ff8c48582434e098f88214415973=mylang-unit -fsanitize-undefined-strip-path-components=-1 -c /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/6b26f091e0b1b138bcf9b4128d23afd6/.pending/ba92ff8c48582434e098f88214415973/unit.c -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/6b26f091e0b1b138bcf9b4128d23afd6/.pending/ba92ff8c48582434e098f88214415973/object.o"
+    },
+    {
+      "pid": 2742667,
+      "ppid": 2742630,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig clang /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/4b4a8236abc90df8e93d3d7d5e2bf871/.pending/1b15917a1f644f4a8f9264b0d43cbbb5/unit.c --no-default-config -target x86_64-unknown-linux7.0.0-gnu2.43.0 -fno-PIE -fPIC -gdwarf-4 -gdwarf32 -fno-lto -MD -MV -MF .mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/4b4a8236abc90df8e93d3d7d5e2bf871/zig-local/tmp/4b3284c37f73307-unit.o.d -fhosted -nostdinc -D__GLIBC_MINOR__=43 -isystem /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/include -isystem /usr/include -isystem /usr/include/x86_64-linux-gnu -isystem /usr/local/include -isystem /usr/include/x86_64-linux-gnu -isystem /usr/include -fno-spell-checking -fsanitize=undefined -fno-sanitize=vptr -fno-sanitize=function -O0 -mred-zone -fno-omit-frame-pointer -fstack-protector-strong --param ssp-buffer-size=4 -fbuiltin -ffunction-sections -fdata-sections -fasynchronous-unwind-tables -Xclang -target-cpu -Xclang alderlake -Xclang -target-feature -Xclang -16bit-mode -Xclang -target-feature -Xclang -32bit-mode -Xclang -target-feature -Xclang +64bit -Xclang -target-feature -Xclang +adx -Xclang -target-feature -Xclang +aes -Xclang -target-feature -Xclang +allow-light-256-bit -Xclang -target-feature -Xclang -amx-avx512 -Xclang -target-feature -Xclang -amx-bf16 -Xclang -target-feature -Xclang -amx-complex -Xclang -target-feature -Xclang -amx-fp16 -Xclang -target-feature -Xclang -amx-fp8 -Xclang -target-feature -Xclang -amx-int8 -Xclang -target-feature -Xclang -amx-movrs -Xclang -target-feature -Xclang -amx-tf32 -Xclang -target-feature -Xclang -amx-tile -Xclang -target-feature -Xclang +avx -Xclang -target-feature -Xclang -avx10.1 -Xclang -target-feature -Xclang -avx10.2 -Xclang -target-feature -Xclang +avx2 -Xclang -target-feature -Xclang -avx512bf16 -Xclang -target-feature -Xclang -avx512bitalg -Xclang -target-feature -Xclang -avx512bw -Xclang -target-feature -Xclang -avx512cd -Xclang -target-feature -Xclang -avx512dq -Xclang -target-feature -Xclang -avx512f -Xclang -target-feature -Xclang -avx512fp16 -Xclang -target-feature -Xclang -avx512ifma -Xclang -target-feature -Xclang -avx512vbmi -Xclang -target-feature -Xclang -avx512vbmi2 -Xclang -target-feature -Xclang -avx512vl -Xclang -target-feature -Xclang -avx512vnni -Xclang -target-feature -Xclang -avx512vp2intersect -Xclang -target-feature -Xclang -avx512vpopcntdq -Xclang -target-feature -Xclang -avxifma -Xclang -target-feature -Xclang -avxneconvert -Xclang -target-feature -Xclang +avxvnni -Xclang -target-feature -Xclang -avxvnniint16 -Xclang -target-feature -Xclang -avxvnniint8 -Xclang -target-feature -Xclang +bmi -Xclang -target-feature -Xclang +bmi2 -Xclang -target-feature -Xclang -branch-hint -Xclang -target-feature -Xclang -branchfusion -Xclang -target-feature -Xclang -ccmp -Xclang -target-feature -Xclang -cf -Xclang -target-feature -Xclang -cldemote -Xclang -target-feature -Xclang +clflushopt -Xclang -target-feature -Xclang +clwb -Xclang -target-feature -Xclang -clzero -Xclang -target-feature -Xclang +cmov -Xclang -target-feature -Xclang -cmpccxadd -Xclang -target-feature -Xclang +crc32 -Xclang -target-feature -Xclang +cx16 -Xclang -target-feature -Xclang +cx8 -Xclang -target-feature -Xclang -egpr -Xclang -target-feature -Xclang -enqcmd -Xclang -target-feature -Xclang -ermsb -Xclang -target-feature -Xclang +f16c -Xclang -target-feature -Xclang -false-deps-getmant -Xclang -target-feature -Xclang -false-deps-lzcnt-tzcnt -Xclang -target-feature -Xclang -false-deps-mulc -Xclang -target-feature -Xclang -false-deps-mullq -Xclang -target-feature -Xclang +false-deps-perm -Xclang -target-feature -Xclang -false-deps-popcnt -Xclang -target-feature -Xclang -false-deps-range -Xclang -target-feature -Xclang -fast-11bytenop -Xclang -target-feature -Xclang +fast-15bytenop -Xclang -target-feature -Xclang -fast-7bytenop -Xclang -target-feature -Xclang -fast-bextr -Xclang -target-feature -Xclang -fast-dpwssd -Xclang -target-feature -Xclang +fast-gather -Xclang -target-feature -Xclang -fast-hops -Xclang -target-feature -Xclang -fast-imm16 -Xclang -target-feature -Xclang -fast-lzcnt -Xclang -target-feature -Xclang -fast-movbe -Xclang -target-feature -Xclang +fast-scalar-fsqrt -Xclang -target-feature -Xclang -fast-scalar-shift-masks -Xclang -target-feature -Xclang +fast-shld-rotate -Xclang -target-feature -Xclang +fast-variable-crosslane-shuffle -Xclang -target-feature -Xclang +fast-variable-perlane-shuffle -Xclang -target-feature -Xclang +fast-vector-fsqrt -Xclang -target-feature -Xclang -fast-vector-shift-masks -Xclang -target-feature -Xclang -faster-shift-than-shuffle -Xclang -target-feature -Xclang +fma -Xclang -target-feature -Xclang -fma4 -Xclang -target-feature -Xclang +fsgsbase -Xclang -target-feature -Xclang -fsrm -Xclang -target-feature -Xclang +fxsr -Xclang -target-feature -Xclang +gfni -Xclang -target-feature -Xclang -harden-sls-ijmp -Xclang -target-feature -Xclang -harden-sls-ret -Xclang -target-feature -Xclang +hreset -Xclang -target-feature -Xclang -idivl-to-divb -Xclang -target-feature -Xclang +idivq-to-divl -Xclang -target-feature -Xclang -inline-asm-use-gpr32 -Xclang -target-feature -Xclang +invpcid -Xclang -target-feature -Xclang +kl -Xclang -target-feature -Xclang -lea-sp -Xclang -target-feature -Xclang -lea-uses-ag -Xclang -target-feature -Xclang -lvi-cfi -Xclang -target-feature -Xclang -lvi-load-hardening -Xclang -target-feature -Xclang -lwp -Xclang -target-feature -Xclang +lzcnt -Xclang -target-feature -Xclang +macrofusion -Xclang -target-feature -Xclang +mmx -Xclang -target-feature -Xclang +movbe -Xclang -target-feature -Xclang +movdir64b -Xclang -target-feature -Xclang +movdiri -Xclang -target-feature -Xclang -movrs -Xclang -target-feature -Xclang -mwaitx -Xclang -target-feature -Xclang -ndd -Xclang -target-feature -Xclang -nf -Xclang -target-feature -Xclang -no-bypass-delay -Xclang -target-feature -Xclang +no-bypass-delay-blend -Xclang -target-feature -Xclang +no-bypass-delay-mov -Xclang -target-feature -Xclang +no-bypass-delay-shuffle -Xclang -target-feature -Xclang +nopl -Xclang -target-feature -Xclang -pad-short-functions -Xclang -target-feature -Xclang +pclmul -Xclang -target-feature -Xclang -pconfig -Xclang -target-feature -Xclang +pku -Xclang -target-feature -Xclang +popcnt -Xclang -target-feature -Xclang -ppx -Xclang -target-feature -Xclang -prefer-128-bit -Xclang -target-feature -Xclang -prefer-256-bit -Xclang -target-feature -Xclang -prefer-legacy-setcc -Xclang -target-feature -Xclang -prefer-mask-registers -Xclang -target-feature -Xclang +prefer-movmsk-over-vtest -Xclang -target-feature -Xclang -prefer-no-gather -Xclang -target-feature -Xclang -prefer-no-scatter -Xclang -target-feature -Xclang -prefetchi -Xclang -target-feature -Xclang +prfchw -Xclang -target-feature -Xclang +ptwrite -Xclang -target-feature -Xclang -push2pop2 -Xclang -target-feature -Xclang -raoint -Xclang -target-feature -Xclang +rdpid -Xclang -target-feature -Xclang -rdpru -Xclang -target-feature -Xclang +rdrnd -Xclang -target-feature -Xclang +rdseed -Xclang -target-feature -Xclang -retpoline -Xclang -target-feature -Xclang -retpoline-external-thunk -Xclang -target-feature -Xclang -retpoline-indirect-branches -Xclang -target-feature -Xclang -retpoline-indirect-calls -Xclang -target-feature -Xclang -rtm -Xclang -target-feature -Xclang +sahf -Xclang -target-feature -Xclang -sbb-dep-breaking -Xclang -target-feature -Xclang +serialize -Xclang -target-feature -Xclang -seses -Xclang -target-feature -Xclang -sgx -Xclang -target-feature -Xclang +sha -Xclang -target-feature -Xclang -sha512 -Xclang -target-feature -Xclang +shstk -Xclang -target-feature -Xclang +slow-3ops-lea -Xclang -target-feature -Xclang -slow-incdec -Xclang -target-feature -Xclang -slow-lea -Xclang -target-feature -Xclang -slow-pmaddwd -Xclang -target-feature -Xclang -slow-pmulld -Xclang -target-feature -Xclang +slow-pmullq -Xclang -target-feature -Xclang -slow-shld -Xclang -target-feature -Xclang -slow-two-mem-ops -Xclang -target-feature -Xclang -slow-unaligned-mem-16 -Xclang -target-feature -Xclang -slow-unaligned-mem-32 -Xclang -target-feature -Xclang -sm3 -Xclang -target-feature -Xclang -sm4 -Xclang -target-feature -Xclang +sse -Xclang -target-feature -Xclang +sse2 -Xclang -target-feature -Xclang +sse3 -Xclang -target-feature -Xclang +sse4.1 -Xclang -target-feature -Xclang +sse4.2 -Xclang -target-feature -Xclang -sse4a -Xclang -target-feature -Xclang -sse-unaligned-mem -Xclang -target-feature -Xclang +ssse3 -Xclang -target-feature -Xclang -tagged-globals -Xclang -target-feature -Xclang -tbm -Xclang -target-feature -Xclang -tsxldtrk -Xclang -target-feature -Xclang +tuning-fast-imm-vector-shift -Xclang -target-feature -Xclang -uintr -Xclang -target-feature -Xclang -use-glm-div-sqrt-costs -Xclang -target-feature -Xclang -use-slm-arith-costs -Xclang -target-feature -Xclang -usermsr -Xclang -target-feature -Xclang +vaes -Xclang -target-feature -Xclang +vpclmulqdq -Xclang -target-feature -Xclang +vzeroupper -Xclang -target-feature -Xclang +waitpkg -Xclang -target-feature -Xclang -wbnoinvd -Xclang -target-feature -Xclang +widekl -Xclang -target-feature -Xclang +x87 -Xclang -target-feature -Xclang -xop -Xclang -target-feature -Xclang +xsave -Xclang -target-feature -Xclang +xsavec -Xclang -target-feature -Xclang +xsaveopt -Xclang -target-feature -Xclang +xsaves -Xclang -target-feature -Xclang -zu -std=c11 -g0 -fno-ident -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/4b4a8236abc90df8e93d3d7d5e2bf871=mylang-qbe -fdebug-compilation-dir=mylang-qbe -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/4b4a8236abc90df8e93d3d7d5e2bf871=mylang-qbe -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8=mylang-runtime -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8=mylang-runtime -I /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8 -momit-leaf-frame-pointer -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/4b4a8236abc90df8e93d3d7d5e2bf871/.pending/1b15917a1f644f4a8f9264b0d43cbbb5=mylang-unit -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/4b4a8236abc90df8e93d3d7d5e2bf871/.pending/1b15917a1f644f4a8f9264b0d43cbbb5=mylang-unit -fsanitize-undefined-strip-path-components=-1 -c -o .mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/4b4a8236abc90df8e93d3d7d5e2bf871/zig-local/tmp/4b3284c37f73307-unit.o"
+    },
+    {
+      "pid": 2742672,
+      "ppid": 2742429,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/o/ea22f676c5e170b1ab6d994f84c36491/mylang compile-module /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/tmp/nYeveoJZ8cBDIH_I/main.my --module=helper --interfaces=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/tmp/nYeveoJZ8cBDIH_I/clean-2/modules/69eec0a668156226be1119a47a77e24838d020004a2463de45ae81a9cdd2b5df/if --standard-interfaces=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/tmp/nYeveoJZ8cBDIH_I/clean-2/modules/standard-8ce90cdce4ca74246c4bec76a0a6699e64af140ca3c9d4bb9d1f230d3cca8c69/if --out=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/tmp/nYeveoJZ8cBDIH_I/clean-2/modules/69eec0a668156226be1119a47a77e24838d020004a2463de45ae81a9cdd2b5df/out --cache-dir=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/tmp/nYeveoJZ8cBDIH_I/clean-2 --arenas=off --native-variants=qbe-v2 --objects --ready -- --mode Debug --target amd64_sysv --zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --qbe=.zig-cache/o/f6f3eb1ca64f061167c64d534310d146/qbe"
+    },
+    {
+      "pid": 2742697,
+      "ppid": 2678173,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/o/ea22f676c5e170b1ab6d994f84c36491/mylang check /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/tmp/dHGcyojuWLyfEb4Z/input.my"
+    },
+    {
+      "pid": 2742698,
+      "ppid": 2678125,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/o/ea22f676c5e170b1ab6d994f84c36491/mylang run /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/tmp/xA0HkucIBkfvLzcr/input.my --print-result --qbe=.zig-cache/o/f6f3eb1ca64f061167c64d534310d146/qbe --zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+    },
+    {
+      "pid": 2742742,
+      "ppid": 2678148,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/o/ea22f676c5e170b1ab6d994f84c36491/mylang check-project /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/tmp/YkYgggLt9KL9HJ8G/app/main.my --explain-invalidation --cache-dir=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache/tmp/YkYgggLt9KL9HJ8G/invalidation-cache"
+    },
+    {
+      "pid": 2742744,
+      "ppid": 2742517,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig cc -std=c11 -O0 -g0 -fno-ident -fPIC -ffunction-sections -fdata-sections -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64=mylang-qbe -fdebug-compilation-dir=mylang-qbe -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64=mylang-qbe -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8=mylang-runtime -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8=mylang-runtime -I /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8 -fno-omit-frame-pointer -momit-leaf-frame-pointer -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64/.pending/8743544625ae3853e7bc07e4a4d5307e=mylang-unit -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64/.pending/8743544625ae3853e7bc07e4a4d5307e=mylang-unit -fsanitize-undefined-strip-path-components=-1 -c /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64/.pending/8743544625ae3853e7bc07e4a4d5307e/unit.c -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64/.pending/8743544625ae3853e7bc07e4a4d5307e/object.o"
+    },
+    {
+      "pid": 2742746,
+      "ppid": 2742517,
+      "pgid": 2477826,
+      "state": "S",
+      "command": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig cc -std=c11 -O0 -g0 -fno-ident -fPIC -ffunction-sections -fdata-sections -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64=mylang-qbe -fdebug-compilation-dir=mylang-qbe -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64=mylang-qbe -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8=mylang-runtime -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8=mylang-runtime -I /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8 -fno-omit-frame-pointer -momit-leaf-frame-pointer -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64/.pending/fadcab7aad5d87c5986c2fc3a66c1510=mylang-unit -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64/.pending/fadcab7aad5d87c5986c2fc3a66c1510=mylang-unit -fsanitize-undefined-strip-path-components=-1 -c /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64/.pending/fadcab7aad5d87c5986c2fc3a66c1510/unit.c -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64/.pending/fadcab7aad5d87c5986c2fc3a66c1510/object.o"
+    },
+    {
+      "pid": 2742765,
+      "ppid": 2742646,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig clang /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/6b26f091e0b1b138bcf9b4128d23afd6/.pending/ba92ff8c48582434e098f88214415973/unit.c --no-default-config -target x86_64-unknown-linux7.0.0-gnu2.43.0 -fno-PIE -fPIC -gdwarf-4 -gdwarf32 -fno-lto -MD -MV -MF .mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/6b26f091e0b1b138bcf9b4128d23afd6/zig-local/tmp/422743e00a78f58f-unit.o.d -fhosted -nostdinc -D__GLIBC_MINOR__=43 -isystem /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/include -isystem /usr/include -isystem /usr/include/x86_64-linux-gnu -isystem /usr/local/include -isystem /usr/include/x86_64-linux-gnu -isystem /usr/include -fno-spell-checking -fsanitize=undefined -fno-sanitize=vptr -fno-sanitize=function -O0 -mred-zone -fno-omit-frame-pointer -fstack-protector-strong --param ssp-buffer-size=4 -fbuiltin -ffunction-sections -fdata-sections -fasynchronous-unwind-tables -Xclang -target-cpu -Xclang alderlake -Xclang -target-feature -Xclang -16bit-mode -Xclang -target-feature -Xclang -32bit-mode -Xclang -target-feature -Xclang +64bit -Xclang -target-feature -Xclang +adx -Xclang -target-feature -Xclang +aes -Xclang -target-feature -Xclang +allow-light-256-bit -Xclang -target-feature -Xclang -amx-avx512 -Xclang -target-feature -Xclang -amx-bf16 -Xclang -target-feature -Xclang -amx-complex -Xclang -target-feature -Xclang -amx-fp16 -Xclang -target-feature -Xclang -amx-fp8 -Xclang -target-feature -Xclang -amx-int8 -Xclang -target-feature -Xclang -amx-movrs -Xclang -target-feature -Xclang -amx-tf32 -Xclang -target-feature -Xclang -amx-tile -Xclang -target-feature -Xclang +avx -Xclang -target-feature -Xclang -avx10.1 -Xclang -target-feature -Xclang -avx10.2 -Xclang -target-feature -Xclang +avx2 -Xclang -target-feature -Xclang -avx512bf16 -Xclang -target-feature -Xclang -avx512bitalg -Xclang -target-feature -Xclang -avx512bw -Xclang -target-feature -Xclang -avx512cd -Xclang -target-feature -Xclang -avx512dq -Xclang -target-feature -Xclang -avx512f -Xclang -target-feature -Xclang -avx512fp16 -Xclang -target-feature -Xclang -avx512ifma -Xclang -target-feature -Xclang -avx512vbmi -Xclang -target-feature -Xclang -avx512vbmi2 -Xclang -target-feature -Xclang -avx512vl -Xclang -target-feature -Xclang -avx512vnni -Xclang -target-feature -Xclang -avx512vp2intersect -Xclang -target-feature -Xclang -avx512vpopcntdq -Xclang -target-feature -Xclang -avxifma -Xclang -target-feature -Xclang -avxneconvert -Xclang -target-feature -Xclang +avxvnni -Xclang -target-feature -Xclang -avxvnniint16 -Xclang -target-feature -Xclang -avxvnniint8 -Xclang -target-feature -Xclang +bmi -Xclang -target-feature -Xclang +bmi2 -Xclang -target-feature -Xclang -branch-hint -Xclang -target-feature -Xclang -branchfusion -Xclang -target-feature -Xclang -ccmp -Xclang -target-feature -Xclang -cf -Xclang -target-feature -Xclang -cldemote -Xclang -target-feature -Xclang +clflushopt -Xclang -target-feature -Xclang +clwb -Xclang -target-feature -Xclang -clzero -Xclang -target-feature -Xclang +cmov -Xclang -target-feature -Xclang -cmpccxadd -Xclang -target-feature -Xclang +crc32 -Xclang -target-feature -Xclang +cx16 -Xclang -target-feature -Xclang +cx8 -Xclang -target-feature -Xclang -egpr -Xclang -target-feature -Xclang -enqcmd -Xclang -target-feature -Xclang -ermsb -Xclang -target-feature -Xclang +f16c -Xclang -target-feature -Xclang -false-deps-getmant -Xclang -target-feature -Xclang -false-deps-lzcnt-tzcnt -Xclang -target-feature -Xclang -false-deps-mulc -Xclang -target-feature -Xclang -false-deps-mullq -Xclang -target-feature -Xclang +false-deps-perm -Xclang -target-feature -Xclang -false-deps-popcnt -Xclang -target-feature -Xclang -false-deps-range -Xclang -target-feature -Xclang -fast-11bytenop -Xclang -target-feature -Xclang +fast-15bytenop -Xclang -target-feature -Xclang -fast-7bytenop -Xclang -target-feature -Xclang -fast-bextr -Xclang -target-feature -Xclang -fast-dpwssd -Xclang -target-feature -Xclang +fast-gather -Xclang -target-feature -Xclang -fast-hops -Xclang -target-feature -Xclang -fast-imm16 -Xclang -target-feature -Xclang -fast-lzcnt -Xclang -target-feature -Xclang -fast-movbe -Xclang -target-feature -Xclang +fast-scalar-fsqrt -Xclang -target-feature -Xclang -fast-scalar-shift-masks -Xclang -target-feature -Xclang +fast-shld-rotate -Xclang -target-feature -Xclang +fast-variable-crosslane-shuffle -Xclang -target-feature -Xclang +fast-variable-perlane-shuffle -Xclang -target-feature -Xclang +fast-vector-fsqrt -Xclang -target-feature -Xclang -fast-vector-shift-masks -Xclang -target-feature -Xclang -faster-shift-than-shuffle -Xclang -target-feature -Xclang +fma -Xclang -target-feature -Xclang -fma4 -Xclang -target-feature -Xclang +fsgsbase -Xclang -target-feature -Xclang -fsrm -Xclang -target-feature -Xclang +fxsr -Xclang -target-feature -Xclang +gfni -Xclang -target-feature -Xclang -harden-sls-ijmp -Xclang -target-feature -Xclang -harden-sls-ret -Xclang -target-feature -Xclang +hreset -Xclang -target-feature -Xclang -idivl-to-divb -Xclang -target-feature -Xclang +idivq-to-divl -Xclang -target-feature -Xclang -inline-asm-use-gpr32 -Xclang -target-feature -Xclang +invpcid -Xclang -target-feature -Xclang +kl -Xclang -target-feature -Xclang -lea-sp -Xclang -target-feature -Xclang -lea-uses-ag -Xclang -target-feature -Xclang -lvi-cfi -Xclang -target-feature -Xclang -lvi-load-hardening -Xclang -target-feature -Xclang -lwp -Xclang -target-feature -Xclang +lzcnt -Xclang -target-feature -Xclang +macrofusion -Xclang -target-feature -Xclang +mmx -Xclang -target-feature -Xclang +movbe -Xclang -target-feature -Xclang +movdir64b -Xclang -target-feature -Xclang +movdiri -Xclang -target-feature -Xclang -movrs -Xclang -target-feature -Xclang -mwaitx -Xclang -target-feature -Xclang -ndd -Xclang -target-feature -Xclang -nf -Xclang -target-feature -Xclang -no-bypass-delay -Xclang -target-feature -Xclang +no-bypass-delay-blend -Xclang -target-feature -Xclang +no-bypass-delay-mov -Xclang -target-feature -Xclang +no-bypass-delay-shuffle -Xclang -target-feature -Xclang +nopl -Xclang -target-feature -Xclang -pad-short-functions -Xclang -target-feature -Xclang +pclmul -Xclang -target-feature -Xclang -pconfig -Xclang -target-feature -Xclang +pku -Xclang -target-feature -Xclang +popcnt -Xclang -target-feature -Xclang -ppx -Xclang -target-feature -Xclang -prefer-128-bit -Xclang -target-feature -Xclang -prefer-256-bit -Xclang -target-feature -Xclang -prefer-legacy-setcc -Xclang -target-feature -Xclang -prefer-mask-registers -Xclang -target-feature -Xclang +prefer-movmsk-over-vtest -Xclang -target-feature -Xclang -prefer-no-gather -Xclang -target-feature -Xclang -prefer-no-scatter -Xclang -target-feature -Xclang -prefetchi -Xclang -target-feature -Xclang +prfchw -Xclang -target-feature -Xclang +ptwrite -Xclang -target-feature -Xclang -push2pop2 -Xclang -target-feature -Xclang -raoint -Xclang -target-feature -Xclang +rdpid -Xclang -target-feature -Xclang -rdpru -Xclang -target-feature -Xclang +rdrnd -Xclang -target-feature -Xclang +rdseed -Xclang -target-feature -Xclang -retpoline -Xclang -target-feature -Xclang -retpoline-external-thunk -Xclang -target-feature -Xclang -retpoline-indirect-branches -Xclang -target-feature -Xclang -retpoline-indirect-calls -Xclang -target-feature -Xclang -rtm -Xclang -target-feature -Xclang +sahf -Xclang -target-feature -Xclang -sbb-dep-breaking -Xclang -target-feature -Xclang +serialize -Xclang -target-feature -Xclang -seses -Xclang -target-feature -Xclang -sgx -Xclang -target-feature -Xclang +sha -Xclang -target-feature -Xclang -sha512 -Xclang -target-feature -Xclang +shstk -Xclang -target-feature -Xclang +slow-3ops-lea -Xclang -target-feature -Xclang -slow-incdec -Xclang -target-feature -Xclang -slow-lea -Xclang -target-feature -Xclang -slow-pmaddwd -Xclang -target-feature -Xclang -slow-pmulld -Xclang -target-feature -Xclang +slow-pmullq -Xclang -target-feature -Xclang -slow-shld -Xclang -target-feature -Xclang -slow-two-mem-ops -Xclang -target-feature -Xclang -slow-unaligned-mem-16 -Xclang -target-feature -Xclang -slow-unaligned-mem-32 -Xclang -target-feature -Xclang -sm3 -Xclang -target-feature -Xclang -sm4 -Xclang -target-feature -Xclang +sse -Xclang -target-feature -Xclang +sse2 -Xclang -target-feature -Xclang +sse3 -Xclang -target-feature -Xclang +sse4.1 -Xclang -target-feature -Xclang +sse4.2 -Xclang -target-feature -Xclang -sse4a -Xclang -target-feature -Xclang -sse-unaligned-mem -Xclang -target-feature -Xclang +ssse3 -Xclang -target-feature -Xclang -tagged-globals -Xclang -target-feature -Xclang -tbm -Xclang -target-feature -Xclang -tsxldtrk -Xclang -target-feature -Xclang +tuning-fast-imm-vector-shift -Xclang -target-feature -Xclang -uintr -Xclang -target-feature -Xclang -use-glm-div-sqrt-costs -Xclang -target-feature -Xclang -use-slm-arith-costs -Xclang -target-feature -Xclang -usermsr -Xclang -target-feature -Xclang +vaes -Xclang -target-feature -Xclang +vpclmulqdq -Xclang -target-feature -Xclang +vzeroupper -Xclang -target-feature -Xclang +waitpkg -Xclang -target-feature -Xclang -wbnoinvd -Xclang -target-feature -Xclang +widekl -Xclang -target-feature -Xclang +x87 -Xclang -target-feature -Xclang -xop -Xclang -target-feature -Xclang +xsave -Xclang -target-feature -Xclang +xsavec -Xclang -target-feature -Xclang +xsaveopt -Xclang -target-feature -Xclang +xsaves -Xclang -target-feature -Xclang -zu -std=c11 -g0 -fno-ident -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/6b26f091e0b1b138bcf9b4128d23afd6=mylang-qbe -fdebug-compilation-dir=mylang-qbe -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/6b26f091e0b1b138bcf9b4128d23afd6=mylang-qbe -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8=mylang-runtime -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8=mylang-runtime -I /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8 -momit-leaf-frame-pointer -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/6b26f091e0b1b138bcf9b4128d23afd6/.pending/ba92ff8c48582434e098f88214415973=mylang-unit -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/6b26f091e0b1b138bcf9b4128d23afd6/.pending/ba92ff8c48582434e098f88214415973=mylang-unit -fsanitize-undefined-strip-path-components=-1 -c -o .mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/6b26f091e0b1b138bcf9b4128d23afd6/zig-local/tmp/422743e00a78f58f-unit.o"
+    },
+    {
+      "pid": 2742784,
+      "ppid": 2742746,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig clang /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64/.pending/fadcab7aad5d87c5986c2fc3a66c1510/unit.c --no-default-config -target x86_64-unknown-linux7.0.0-gnu2.43.0 -fno-PIE -fPIC -gdwarf-4 -gdwarf32 -fno-lto -MD -MV -MF .mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64/zig-local/tmp/fd40399e29f7c857-unit.o.d -fhosted -nostdinc -D__GLIBC_MINOR__=43 -isystem /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/include -isystem /usr/include -isystem /usr/include/x86_64-linux-gnu -isystem /usr/local/include -isystem /usr/include/x86_64-linux-gnu -isystem /usr/include -fno-spell-checking -fsanitize=undefined -fno-sanitize=vptr -fno-sanitize=function -O0 -mred-zone -fno-omit-frame-pointer -fstack-protector-strong --param ssp-buffer-size=4 -fbuiltin -ffunction-sections -fdata-sections -fasynchronous-unwind-tables -Xclang -target-cpu -Xclang alderlake -Xclang -target-feature -Xclang -16bit-mode -Xclang -target-feature -Xclang -32bit-mode -Xclang -target-feature -Xclang +64bit -Xclang -target-feature -Xclang +adx -Xclang -target-feature -Xclang +aes -Xclang -target-feature -Xclang +allow-light-256-bit -Xclang -target-feature -Xclang -amx-avx512 -Xclang -target-feature -Xclang -amx-bf16 -Xclang -target-feature -Xclang -amx-complex -Xclang -target-feature -Xclang -amx-fp16 -Xclang -target-feature -Xclang -amx-fp8 -Xclang -target-feature -Xclang -amx-int8 -Xclang -target-feature -Xclang -amx-movrs -Xclang -target-feature -Xclang -amx-tf32 -Xclang -target-feature -Xclang -amx-tile -Xclang -target-feature -Xclang +avx -Xclang -target-feature -Xclang -avx10.1 -Xclang -target-feature -Xclang -avx10.2 -Xclang -target-feature -Xclang +avx2 -Xclang -target-feature -Xclang -avx512bf16 -Xclang -target-feature -Xclang -avx512bitalg -Xclang -target-feature -Xclang -avx512bw -Xclang -target-feature -Xclang -avx512cd -Xclang -target-feature -Xclang -avx512dq -Xclang -target-feature -Xclang -avx512f -Xclang -target-feature -Xclang -avx512fp16 -Xclang -target-feature -Xclang -avx512ifma -Xclang -target-feature -Xclang -avx512vbmi -Xclang -target-feature -Xclang -avx512vbmi2 -Xclang -target-feature -Xclang -avx512vl -Xclang -target-feature -Xclang -avx512vnni -Xclang -target-feature -Xclang -avx512vp2intersect -Xclang -target-feature -Xclang -avx512vpopcntdq -Xclang -target-feature -Xclang -avxifma -Xclang -target-feature -Xclang -avxneconvert -Xclang -target-feature -Xclang +avxvnni -Xclang -target-feature -Xclang -avxvnniint16 -Xclang -target-feature -Xclang -avxvnniint8 -Xclang -target-feature -Xclang +bmi -Xclang -target-feature -Xclang +bmi2 -Xclang -target-feature -Xclang -branch-hint -Xclang -target-feature -Xclang -branchfusion -Xclang -target-feature -Xclang -ccmp -Xclang -target-feature -Xclang -cf -Xclang -target-feature -Xclang -cldemote -Xclang -target-feature -Xclang +clflushopt -Xclang -target-feature -Xclang +clwb -Xclang -target-feature -Xclang -clzero -Xclang -target-feature -Xclang +cmov -Xclang -target-feature -Xclang -cmpccxadd -Xclang -target-feature -Xclang +crc32 -Xclang -target-feature -Xclang +cx16 -Xclang -target-feature -Xclang +cx8 -Xclang -target-feature -Xclang -egpr -Xclang -target-feature -Xclang -enqcmd -Xclang -target-feature -Xclang -ermsb -Xclang -target-feature -Xclang +f16c -Xclang -target-feature -Xclang -false-deps-getmant -Xclang -target-feature -Xclang -false-deps-lzcnt-tzcnt -Xclang -target-feature -Xclang -false-deps-mulc -Xclang -target-feature -Xclang -false-deps-mullq -Xclang -target-feature -Xclang +false-deps-perm -Xclang -target-feature -Xclang -false-deps-popcnt -Xclang -target-feature -Xclang -false-deps-range -Xclang -target-feature -Xclang -fast-11bytenop -Xclang -target-feature -Xclang +fast-15bytenop -Xclang -target-feature -Xclang -fast-7bytenop -Xclang -target-feature -Xclang -fast-bextr -Xclang -target-feature -Xclang -fast-dpwssd -Xclang -target-feature -Xclang +fast-gather -Xclang -target-feature -Xclang -fast-hops -Xclang -target-feature -Xclang -fast-imm16 -Xclang -target-feature -Xclang -fast-lzcnt -Xclang -target-feature -Xclang -fast-movbe -Xclang -target-feature -Xclang +fast-scalar-fsqrt -Xclang -target-feature -Xclang -fast-scalar-shift-masks -Xclang -target-feature -Xclang +fast-shld-rotate -Xclang -target-feature -Xclang +fast-variable-crosslane-shuffle -Xclang -target-feature -Xclang +fast-variable-perlane-shuffle -Xclang -target-feature -Xclang +fast-vector-fsqrt -Xclang -target-feature -Xclang -fast-vector-shift-masks -Xclang -target-feature -Xclang -faster-shift-than-shuffle -Xclang -target-feature -Xclang +fma -Xclang -target-feature -Xclang -fma4 -Xclang -target-feature -Xclang +fsgsbase -Xclang -target-feature -Xclang -fsrm -Xclang -target-feature -Xclang +fxsr -Xclang -target-feature -Xclang +gfni -Xclang -target-feature -Xclang -harden-sls-ijmp -Xclang -target-feature -Xclang -harden-sls-ret -Xclang -target-feature -Xclang +hreset -Xclang -target-feature -Xclang -idivl-to-divb -Xclang -target-feature -Xclang +idivq-to-divl -Xclang -target-feature -Xclang -inline-asm-use-gpr32 -Xclang -target-feature -Xclang +invpcid -Xclang -target-feature -Xclang +kl -Xclang -target-feature -Xclang -lea-sp -Xclang -target-feature -Xclang -lea-uses-ag -Xclang -target-feature -Xclang -lvi-cfi -Xclang -target-feature -Xclang -lvi-load-hardening -Xclang -target-feature -Xclang -lwp -Xclang -target-feature -Xclang +lzcnt -Xclang -target-feature -Xclang +macrofusion -Xclang -target-feature -Xclang +mmx -Xclang -target-feature -Xclang +movbe -Xclang -target-feature -Xclang +movdir64b -Xclang -target-feature -Xclang +movdiri -Xclang -target-feature -Xclang -movrs -Xclang -target-feature -Xclang -mwaitx -Xclang -target-feature -Xclang -ndd -Xclang -target-feature -Xclang -nf -Xclang -target-feature -Xclang -no-bypass-delay -Xclang -target-feature -Xclang +no-bypass-delay-blend -Xclang -target-feature -Xclang +no-bypass-delay-mov -Xclang -target-feature -Xclang +no-bypass-delay-shuffle -Xclang -target-feature -Xclang +nopl -Xclang -target-feature -Xclang -pad-short-functions -Xclang -target-feature -Xclang +pclmul -Xclang -target-feature -Xclang -pconfig -Xclang -target-feature -Xclang +pku -Xclang -target-feature -Xclang +popcnt -Xclang -target-feature -Xclang -ppx -Xclang -target-feature -Xclang -prefer-128-bit -Xclang -target-feature -Xclang -prefer-256-bit -Xclang -target-feature -Xclang -prefer-legacy-setcc -Xclang -target-feature -Xclang -prefer-mask-registers -Xclang -target-feature -Xclang +prefer-movmsk-over-vtest -Xclang -target-feature -Xclang -prefer-no-gather -Xclang -target-feature -Xclang -prefer-no-scatter -Xclang -target-feature -Xclang -prefetchi -Xclang -target-feature -Xclang +prfchw -Xclang -target-feature -Xclang +ptwrite -Xclang -target-feature -Xclang -push2pop2 -Xclang -target-feature -Xclang -raoint -Xclang -target-feature -Xclang +rdpid -Xclang -target-feature -Xclang -rdpru -Xclang -target-feature -Xclang +rdrnd -Xclang -target-feature -Xclang +rdseed -Xclang -target-feature -Xclang -retpoline -Xclang -target-feature -Xclang -retpoline-external-thunk -Xclang -target-feature -Xclang -retpoline-indirect-branches -Xclang -target-feature -Xclang -retpoline-indirect-calls -Xclang -target-feature -Xclang -rtm -Xclang -target-feature -Xclang +sahf -Xclang -target-feature -Xclang -sbb-dep-breaking -Xclang -target-feature -Xclang +serialize -Xclang -target-feature -Xclang -seses -Xclang -target-feature -Xclang -sgx -Xclang -target-feature -Xclang +sha -Xclang -target-feature -Xclang -sha512 -Xclang -target-feature -Xclang +shstk -Xclang -target-feature -Xclang +slow-3ops-lea -Xclang -target-feature -Xclang -slow-incdec -Xclang -target-feature -Xclang -slow-lea -Xclang -target-feature -Xclang -slow-pmaddwd -Xclang -target-feature -Xclang -slow-pmulld -Xclang -target-feature -Xclang +slow-pmullq -Xclang -target-feature -Xclang -slow-shld -Xclang -target-feature -Xclang -slow-two-mem-ops -Xclang -target-feature -Xclang -slow-unaligned-mem-16 -Xclang -target-feature -Xclang -slow-unaligned-mem-32 -Xclang -target-feature -Xclang -sm3 -Xclang -target-feature -Xclang -sm4 -Xclang -target-feature -Xclang +sse -Xclang -target-feature -Xclang +sse2 -Xclang -target-feature -Xclang +sse3 -Xclang -target-feature -Xclang +sse4.1 -Xclang -target-feature -Xclang +sse4.2 -Xclang -target-feature -Xclang -sse4a -Xclang -target-feature -Xclang -sse-unaligned-mem -Xclang -target-feature -Xclang +ssse3 -Xclang -target-feature -Xclang -tagged-globals -Xclang -target-feature -Xclang -tbm -Xclang -target-feature -Xclang -tsxldtrk -Xclang -target-feature -Xclang +tuning-fast-imm-vector-shift -Xclang -target-feature -Xclang -uintr -Xclang -target-feature -Xclang -use-glm-div-sqrt-costs -Xclang -target-feature -Xclang -use-slm-arith-costs -Xclang -target-feature -Xclang -usermsr -Xclang -target-feature -Xclang +vaes -Xclang -target-feature -Xclang +vpclmulqdq -Xclang -target-feature -Xclang +vzeroupper -Xclang -target-feature -Xclang +waitpkg -Xclang -target-feature -Xclang -wbnoinvd -Xclang -target-feature -Xclang +widekl -Xclang -target-feature -Xclang +x87 -Xclang -target-feature -Xclang -xop -Xclang -target-feature -Xclang +xsave -Xclang -target-feature -Xclang +xsavec -Xclang -target-feature -Xclang +xsaveopt -Xclang -target-feature -Xclang +xsaves -Xclang -target-feature -Xclang -zu -std=c11 -g0 -fno-ident -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64=mylang-qbe -fdebug-compilation-dir=mylang-qbe -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64=mylang-qbe -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8=mylang-runtime -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8=mylang-runtime -I /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/runtime/0b06589f33279157c5e0b8457dcfb02361264a34d4703eda55e4d582a19482d8 -momit-leaf-frame-pointer -ffile-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64/.pending/fadcab7aad5d87c5986c2fc3a66c1510=mylang-unit -fdebug-prefix-map=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64/.pending/fadcab7aad5d87c5986c2fc3a66c1510=mylang-unit -fsanitize-undefined-strip-path-components=-1 -c -o .mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7/.pending/845ffae9cf82724fdc5ffa7e4bd4ab64/zig-local/tmp/fd40399e29f7c857-unit.o"
+    },
+    {
+      "pid": 2742795,
+      "ppid": 2742107,
+      "pgid": 2477826,
+      "state": "R",
+      "command": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang build /var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/snapshot-20f2614f30005852736a4969c8772a27/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/tests/lang/recursive_values.my --project --library -o /var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/01987636fda30b4acded4b1a51df2671/.pending/fe30b9989f21a53f510819ff060a253f/tests.so --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --qbe /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/qbe --mode Debug --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/lang-tests-gc/objects/1d57b18ea9ee149853f425392f03f86a8ea6ed52449f6784740daf7f1222bbe7 --manifest-file=/var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp/.pending/01987636fda30b4acded4b1a51df2671/.pending/fe30b9989f21a53f510819ff060a253f/native-test-selected.json"
+    }
+  ],
+  "signals": [
+    {
+      "signal": "SIGTERM",
+      "group": 2477826
+    }
+  ],
+  "ordinary_conformance_started": false,
+  "processes_after_term": [],
+  "processes_after": [],
+  "remaining_active_owned_processes": [],
+  "source_after": {
+    "head": "5ee5b8d2e1d1c697a98dfa590cbeda704ed7ae55",
+    "tracked_status": ""
+  },
+  "oracles_after": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang-core",
+      "sha256": "05e5206c53b853ff8855d547784cec0ae8c0587da3dbd5b0e02eb0eb2744721c"
+    }
+  },
+  "aggregate_summary_present": false,
+  "aggregate_summary": null,
+  "qualified": false,
+  "cancelled": true,
+  "source_unchanged": true,
+  "oracles_unchanged": true
+}

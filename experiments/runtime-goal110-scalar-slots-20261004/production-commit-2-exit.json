@@ -1,0 +1,10 @@
+{
+  "command": [
+    "git",
+    "commit",
+    "-m",
+    "perf(llvm): preserve proven scalar-slot allocation pointers"
+  ],
+  "exit_status": 0,
+  "revision_after": "a29aa6a9ade06c09b949f42de50bbd14d9cbaf02"
+}

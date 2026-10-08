@@ -1,0 +1,3 @@
+105199993 6526303
+[ perf record: Woken up 1 times to write data ]
+[ perf record: Captured and wrote 0.004 MB .mylang-cache/s3-packet-trace/profile-01.data (8 samples) ]

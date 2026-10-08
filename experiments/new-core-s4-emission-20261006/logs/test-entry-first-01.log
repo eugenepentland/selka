@@ -1,0 +1,19 @@
+test-core
++- run test w
+guardian/test: 4 test(s) selected
+guardian/test: SLOW  7.93s  emit_units_test.test.S4 consuming CFG clones retain exact callee and original call frames
+guardian/test: test wall 13.22s; slowest over 50ms:
+guardian/test:   7.93s  emit_units_test.test.S4 consuming CFG clones retain exact callee and original call frames
+guardian/test:   2.64s  emit_units_test.test.S4 imports bounded branch-heavy loops and refuses larger bodies without caller ripple
+guardian/test:   2.62s  emit_units_test.test.S4 a loop body called outside a caller loop imports with its source frame and stable ripple
+guardian/test: PASS — 4 passed
+guardian/test: RESULT {"passed":4,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/29e5952ece1cb6204c58c2c334be507b/test --cache-dir=./.zig-cache --seed=0x8400940b --listen=-
+
+Build Summary: 5/5 steps succeeded; 4/4 tests passed
+test-core success
++- run test 4 pass (4 total) 13s MaxRSS:252M
+   +- compile test debug native success 1s MaxRSS:349M
+      +- options success
+         +- compile exe mylang-core debug native cached 8ms MaxRSS:41M
+

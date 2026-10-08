@@ -1,0 +1,1 @@
+First metadata collector failed a fixed-space assertion against the successful conformance summary; it accidentally expected one extra space. No compiler or gate failed. The corrected collector validates both mode summary lines with whitespace-aware matching and retains the original full log.

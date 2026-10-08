@@ -1,0 +1,61 @@
+module row_union_find
+
+extern def runtime_bench_now(host: Host) -> i64 effects(host)
+
+# Row `union_find` (CONTRACT.md): union by linking roots, path halving that mutates `parent`.
+# Arguments `size iterations seed`; output `checksum elapsed`. `parent` is one fresh list per batch
+# and `find` takes it as `mut`, so every call site writes `find(mut parent, x)`.
+
+
+def find(parent: mut list[int], x: int) -> int:
+    while parent[x] != x:
+        parent[x] = parent[parent[x]]
+        x = parent[x]
+    return x
+
+
+def batch_result(size: int, batch: int, seed: int) -> int:
+    parent = list(range(size))
+    for j in range(size):
+        a = (seed + batch + 13 * j) % size
+        b = (seed + 7 * batch + 17 * j + 1) % size
+        ra = find(mut parent, a)
+        rb = find(mut parent, b)
+        if ra != rb:
+            parent[ra] = rb
+    components = 0
+    for j in range(size):
+        if find(mut parent, j) == j:
+            components += 1
+    rootsum = 0
+    for j in range(size):
+        rootsum += find(mut parent, j)
+    return (components * 1000003 + rootsum) % 1000000007
+
+
+def parse_number(text: str) -> int:
+    match int(text):
+        case Some(n):
+            return n
+        case None:
+            return 0
+
+
+def main(args: list[str], host: Host, out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    size = parse_number(args[0])
+    iterations = parse_number(args[1])
+    seed = parse_number(args[2])
+    if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
+        return 2
+    checksum = 0
+    start = runtime_bench_now(host)
+    for batch in range(iterations):
+        part = batch_result(size, batch, seed)
+        if part < 0:
+            return 2
+        checksum = (checksum + part) % 1000000007
+    elapsed = runtime_bench_now(host) - start
+    out.print(checksum, elapsed)
+    return 0

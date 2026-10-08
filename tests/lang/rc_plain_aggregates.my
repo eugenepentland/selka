@@ -18,7 +18,6 @@ def replace_during(values: mut list[Point]) -> int:
     return 7
 
 
-# spec-case: RC-PLAIN-AGGREGATE-1
 public def test_plain_record_update_preserves_the_earlier_snapshot() -> bool:
     values = [Point(1, 2), Point(3, 4)]
     before = values
@@ -26,7 +25,6 @@ public def test_plain_record_update_preserves_the_earlier_snapshot() -> bool:
     return values[1].x == 14 and values[1].y == 4 and before[1].x == 3
 
 
-# spec-case: RC-PLAIN-AGGREGATE-1
 public def test_same_and_neighbor_element_copies_preserve_independent_bytes() -> bool:
     values = [Point(1, 2), Point(3, 4)]
     values[0] = values[0]
@@ -35,7 +33,6 @@ public def test_same_and_neighbor_element_copies_preserve_independent_bytes() ->
     return values[0].x == 9 and values[0].y == 2 and values[1].x == 1 and values[1].y == 2
 
 
-# spec-case: RC-PLAIN-AGGREGATE-1
 public def test_plain_nested_arrays_copy_before_a_field_update() -> bool:
     boards = [Board([Point(1, 2), Point(3, 4)]), Board([Point(5, 6), Point(7, 8)])]
     before = boards
@@ -45,25 +42,14 @@ public def test_plain_nested_arrays_copy_before_a_field_update() -> bool:
     return before[0].points[1].y == 4 and boards[1].points[1].y == 40 and boards[1].points[0].x == 1
 
 
-# spec-case: RC-PLAIN-AGGREGATE-1
 public def test_rhs_callback_finishes_before_the_plain_field_receiver_is_read() -> bool:
     values = [Point(1, 2)]
     before = values
-    values[0].x = replace_during(mut values)
+    mutation_result_52 = replace_during(mut values)
+    values[0].x = mutation_result_52
     return values[0].x == 7 and values[0].y == 30 and len(values) == 2 and before[0].x == 1
 
 
-# spec-case: RC-PLAIN-AGGREGATE-1
-public def test_older_receiver_accepts_plain_values_from_inner_arena() -> bool:
-    values = [Point(1, 2)]
-    with arena() as scratch:
-        replacements = [Point(8, 9)]
-        values[0] = replacements[0]
-        edit(mut values, 0)
-    return values[0].x == 19 and values[0].y == 9
-
-
-# spec-case: RC-PLAIN-AGGREGATE-1
 public def test_fixed_array_element_store_keeps_source_and_destination_distinct() -> bool:
     values: list[[2]int] = [[1, 2], [3, 4]]
     before = values
@@ -72,7 +58,6 @@ public def test_fixed_array_element_store_keeps_source_and_destination_distinct(
     return before[0][1] == 2 and values[0][1] == 20 and values[1][1] == 2
 
 
-# spec-case: RC-PLAIN-AGGREGATE-1
 public def test_zero_sized_elements_keep_the_established_storage_path() -> bool:
     empty: [0]int = []
     values: list[[0]int] = [empty, empty]
@@ -85,7 +70,6 @@ def main() -> int:
     assert test_same_and_neighbor_element_copies_preserve_independent_bytes()
     assert test_plain_nested_arrays_copy_before_a_field_update()
     assert test_rhs_callback_finishes_before_the_plain_field_receiver_is_read()
-    assert test_older_receiver_accepts_plain_values_from_inner_arena()
     assert test_fixed_array_element_store_keeps_source_and_destination_distinct()
     assert test_zero_sized_elements_keep_the_established_storage_path()
     return 0

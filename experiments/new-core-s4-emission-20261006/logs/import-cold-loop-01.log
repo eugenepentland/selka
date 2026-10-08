@@ -1,0 +1,3 @@
+cold_loop/debug: exact old/split/whole diagnostics; unique real definitions
+cold_loop/release: exact old/split/whole diagnostics; unique real definitions
+cold_loop/verify: exact old/split/whole diagnostics; unique real definitions

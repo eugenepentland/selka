@@ -1,0 +1,13 @@
+--- src/native_text.c@965d416c
++++ private medium variant
+@@ -797,6 +797,10 @@
+  * then let libc compare the middle in bulk. Every load lies inside `count`:
+  * views can end at their owner's last octet, with no padding to read. */
+ static inline int equal_octets(const unsigned char *a, const unsigned char *b, size_t count) {
++    if (count>16 && count<=64) {
++        if (memcmp(a,b,16) || memcmp(a+count-16,b+count-16,16)) return 0;
++        return count<=32 || (!memcmp(a+16,b+16,16) && !memcmp(a+count-32,b+count-32,16));
++    }
+     if (count>=8) {
+         uint64_t first_a, first_b, last_a, last_b;
+         memcpy(&first_a,a,8); memcpy(&first_b,b,8);

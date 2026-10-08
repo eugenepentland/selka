@@ -1,0 +1,79 @@
+{
+  "runs": 12,
+  "passed": 12,
+  "producer_signature_unchanged": true,
+  "results": [
+    {
+      "mode": "rc",
+      "phase": "append-cold",
+      "value": 1,
+      "consumer_sha256": "58cfb341df5b73477b354dbb4787421b4ba74ca5dd9877a67fd619e5a4c39caf"
+    },
+    {
+      "mode": "rc",
+      "phase": "append-warm",
+      "value": 1,
+      "consumer_sha256": "58cfb341df5b73477b354dbb4787421b4ba74ca5dd9877a67fd619e5a4c39caf"
+    },
+    {
+      "mode": "rc",
+      "phase": "rebind-edited",
+      "value": 1,
+      "consumer_sha256": "58cfb341df5b73477b354dbb4787421b4ba74ca5dd9877a67fd619e5a4c39caf"
+    },
+    {
+      "mode": "rc",
+      "phase": "rebind-warm",
+      "value": 1,
+      "consumer_sha256": "58cfb341df5b73477b354dbb4787421b4ba74ca5dd9877a67fd619e5a4c39caf"
+    },
+    {
+      "mode": "gc-stress",
+      "phase": "append-cold",
+      "value": 1,
+      "consumer_sha256": "58cfb341df5b73477b354dbb4787421b4ba74ca5dd9877a67fd619e5a4c39caf"
+    },
+    {
+      "mode": "gc-stress",
+      "phase": "append-warm",
+      "value": 1,
+      "consumer_sha256": "58cfb341df5b73477b354dbb4787421b4ba74ca5dd9877a67fd619e5a4c39caf"
+    },
+    {
+      "mode": "gc-stress",
+      "phase": "rebind-edited",
+      "value": 1,
+      "consumer_sha256": "58cfb341df5b73477b354dbb4787421b4ba74ca5dd9877a67fd619e5a4c39caf"
+    },
+    {
+      "mode": "gc-stress",
+      "phase": "rebind-warm",
+      "value": 1,
+      "consumer_sha256": "58cfb341df5b73477b354dbb4787421b4ba74ca5dd9877a67fd619e5a4c39caf"
+    },
+    {
+      "mode": "release",
+      "phase": "append-cold",
+      "value": 1,
+      "consumer_sha256": "58cfb341df5b73477b354dbb4787421b4ba74ca5dd9877a67fd619e5a4c39caf"
+    },
+    {
+      "mode": "release",
+      "phase": "append-warm",
+      "value": 1,
+      "consumer_sha256": "58cfb341df5b73477b354dbb4787421b4ba74ca5dd9877a67fd619e5a4c39caf"
+    },
+    {
+      "mode": "release",
+      "phase": "rebind-edited",
+      "value": 1,
+      "consumer_sha256": "58cfb341df5b73477b354dbb4787421b4ba74ca5dd9877a67fd619e5a4c39caf"
+    },
+    {
+      "mode": "release",
+      "phase": "rebind-warm",
+      "value": 1,
+      "consumer_sha256": "58cfb341df5b73477b354dbb4787421b4ba74ca5dd9877a67fd619e5a4c39caf"
+    }
+  ]
+}

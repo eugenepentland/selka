@@ -1,0 +1,12 @@
+source_commit=d357bbda0d65c034206c6022ba483ade8490c5c2
+root=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-integration
+$ scripts/build-slot.sh gate -- bash -c '"$@"; result=$?; exit "$result"' -- scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-integration/experiments/new-core-s4-20261006/integration/base-old-run01/fmt-check-seconds.txt zig build fmt-check --summary all
+TMPDIR=/var/tmp/mylang-old-gate-base-old-run01-3r_h4lge/tmp
+ZIG_LOCAL_CACHE_DIR=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-integration/.zig-cache
+ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache
+Build Summary: 2/2 steps succeeded
+fmt-check success
++- zig fmt --check success
+
+
+exit=0 command_seconds=0.24 wall_including_admission_seconds=7.098

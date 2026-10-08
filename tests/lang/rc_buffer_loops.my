@@ -11,13 +11,11 @@ def repeated(count: int, piece: bytes) -> byte_buffer:
     return buffer
 
 
-# spec-case: RC-BUFFER-HOIST-1
 public def test_zero_and_many_iterations_append_the_same_octets() -> bool:
     piece = b"ab"
     return repeated(0, piece) == b"" and repeated(3, piece) == b"ab0ab1ab2" and len(repeated(1000, piece)) == 3000
 
 
-# spec-case: RC-BUFFER-HOIST-1
 public def test_a_snapshot_taken_before_the_loop_keeps_its_octets() -> bool:
     empty: list[int] = []
     buffer = byte_buffer(empty)
@@ -34,7 +32,6 @@ public def test_a_snapshot_taken_before_the_loop_keeps_its_octets() -> bool:
     return buffer == b"Axyzz" and before == b"A" and shared == b"A"
 
 
-# spec-case: RC-BUFFER-HOIST-1
 public def test_text_and_number_appends_share_one_entry_check() -> bool:
     empty: list[int] = []
     buffer = byte_buffer(empty)
@@ -51,18 +48,17 @@ def grow(buffer: mut byte_buffer) -> int:
     return 46
 
 
-# spec-case: RC-BUFFER-HOIST-1
 public def test_a_callback_or_snapshot_inside_the_loop_keeps_every_check() -> bool:
     empty: list[int] = []
     buffer = byte_buffer(empty)
     kept = bytes(buffer)
     for index in range(3):
         kept = bytes(buffer)
-        _ = buffer.append_byte(grow(mut buffer))
+        value = grow(mut buffer)
+        _ = buffer.append_byte(value)
     return buffer == b"!.!.!." and kept == b"!.!."
 
 
-# spec-case: RC-BUFFER-HOIST-1
 public def test_refused_appends_inside_the_loop_write_nothing() -> bool:
     empty: list[int] = []
     buffer = byte_buffer(empty)

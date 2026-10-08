@@ -1,0 +1,21 @@
+usage: mylang test <entry.my|directory> [--filter SUBSTRING|GLOB] [--cases FILE]
+  --affected --against REF  run only tests reaching a declaration changed since REF
+  --link FILE --link-library NAME --library-path DIR (repeatable)
+  --cache-dir DIR --force --no-cache --report --json --pure-skip --qbe PATH --zig PATH
+  --diagnostics=text|json  how a source that does not compile is reported
+  a test build uses QBE in either mode; --release builds the LLVM release path
+    (ReleaseFast, --llvm-opt 3 --lto) and refuses --mode and --qbe
+  --gc-stress  run every collected test under the runtime's stress collector
+  --whole-program  check and build with one whole-program session, not module by module
+  --mode Debug|ReleaseFast
+  --max-steps N --max-frames N --max-calls N --timeout-ms N
+  --max-memory BYTES  per-test byte ceiling (K/M/G suffixes; default 512M)
+  --seed N  seed every test's Entropy stand-in and generated inputs
+    (default: from the test's name)
+  --property-runs N  generated inputs each property test must pass (default 100)
+  --jobs N  test processes run at once, and a directory's fan-out width
+    (default: cores, capped by free memory)
+  bench: --bench PATTERN [--bench-only] [--bench-output FILE]
+         [--bench-baseline FILE] [--bench-policy FILE] [--bench-profile ID]
+         [--bench-warmup N] [--bench-batches N] [--bench-batch-ms N]
+         [--bench-timeout-ms N]

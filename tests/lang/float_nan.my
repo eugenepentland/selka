@@ -25,7 +25,6 @@ def negated() -> float:
     return -quotient(0.0, 0.0)
 
 
-# spec-case: FLOAT-NAN-OBSERVED-1
 public def test_a_payload_nan_propagates_and_compares_unordered() -> bool:
     nan = negated()
     if nan == nan or not (nan != nan):

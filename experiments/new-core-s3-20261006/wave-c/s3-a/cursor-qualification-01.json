@@ -1,0 +1,65 @@
+{
+  "source": "8d1e135a885b6d19eb68a71313dc5a89dd35c557",
+  "compiler_sha256": "ae105cd448e8d05576673e41310dee3831b1143340e9957299ae9368bc6869c3",
+  "exclusive_core_seconds": 2.92,
+  "core32": {
+    "source": "8d1e135a885b6d19eb68a71313dc5a89dd35c557",
+    "qualified": true,
+    "verdicts": 32,
+    "tests": {
+      "passed": 275,
+      "failed": 0,
+      "skipped": 0
+    },
+    "seconds": 124.24,
+    "max_shard_seconds": 75.76
+  },
+  "strict_conformance": {
+    "matching_each_mode": 1518,
+    "mismatching": 0,
+    "unsupported": 0,
+    "leakcheck": true,
+    "verify": true,
+    "seconds": 57.59
+  },
+  "split50": {
+    "qualified": true,
+    "seed": 20261006,
+    "cases": 50,
+    "compared": 750,
+    "mismatch": 0,
+    "error": null,
+    "seconds": 145.83
+  },
+  "original35": {
+    "rows": 35,
+    "unchanged_rows": 31,
+    "changed_functions": 4,
+    "exact_approved_scalar_stores": 6,
+    "unexpected_functions": 0,
+    "qualified": true
+  },
+  "word_performance": {
+    "4096": {
+      "new_over_old": 0.11336417492829445,
+      "new_over_zig": 0.6954726434091373,
+      "within_both_limits": true
+    },
+    "64": {
+      "new_over_old": 0.12500764540750403,
+      "new_over_zig": 0.9238648586498688,
+      "within_both_limits": true
+    }
+  },
+  "compiler_candidate_qualified": true,
+  "final_A_qualified": false,
+  "final_A_pending": [
+    "qualified trace merge",
+    "combined own-source install/Core64/strict1518",
+    "fresh all40 both gates",
+    "137 import/original/split native executions",
+    "pinned split receipt",
+    "combined raw35 scalar-store plus trace attribution",
+    "full old gate"
+  ]
+}

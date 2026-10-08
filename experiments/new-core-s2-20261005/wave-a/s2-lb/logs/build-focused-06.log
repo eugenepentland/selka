@@ -1,0 +1,15 @@
+Build Summary: 10/10 steps succeeded
+core success
++- install mylang-core success
+   +- compile exe mylang-core debug native success 2s MaxRSS:313M
+affected-compiler success
++- install generated to mylang success
+|  +- compile exe mylang debug native success 5s MaxRSS:551M
+|     +- run exe qbe-build-assets (qbe_build_assets) success 79ms
+|        +- compile exe qbe-build-assets debug native cached 8ms MaxRSS:37M
++- install generated to qbe cached
+   +- compile exe qbe fast native cached 18ms MaxRSS:37M
+
+real 5.58
+user 18.12
+sys 2.13

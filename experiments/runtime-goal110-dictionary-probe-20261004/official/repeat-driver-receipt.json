@@ -1,0 +1,42 @@
+{
+  "schema": "mylang-dictionary-probe-timing-driver-v1",
+  "driver_session_id": "24a896a1-f4a1-4452-a5a2-d9a47cecefdb",
+  "phase": "measurements",
+  "started_utc": "2026-10-04T10:45:30.418006+00:00",
+  "commands": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/repeat-commands.json",
+    "sha256": "c86bc5ac628a200c39eb118b25149e86c80cf429d42c29198ca58b26251149ce"
+  },
+  "script": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/execute-repeat.py",
+    "sha256": "bd41123fdb8113ceea8e6cf902bac2922bda191fb255561752cde8fbb508bfbc"
+  },
+  "runs": [
+    {
+      "command": [
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/time-repeat.py",
+        "--plans",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/repeat-plans.json",
+        "--before-manifest",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/manifest.json",
+        "--after-manifest",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/runner/manifest.json",
+        "--rounds",
+        "15",
+        "--warmups",
+        "3",
+        "--cpu",
+        "2",
+        "--output",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe-debug/paired-repeat.json"
+      ],
+      "started_utc": "2026-10-04T10:45:30.418080+00:00",
+      "log": ".mylang-cache/goal110-dict-probe-debug/repeat-command-0.log",
+      "status": 0,
+      "finished_utc": "2026-10-04T10:47:27.480092+00:00",
+      "log_sha256": "df5618013d501fad7635fdf2d77bba1597b4eaab69e232fa9c4b4cf70433a599"
+    }
+  ],
+  "finished_utc": "2026-10-04T10:47:27.480177+00:00"
+}

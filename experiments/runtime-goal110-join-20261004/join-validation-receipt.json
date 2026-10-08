@@ -1,0 +1,89 @@
+{
+  "kind": "local exploratory correctness/build receipt, not independent acceptance",
+  "source_revision": "5a60ef1039aca32657ef5877a464eb8a81d6c115",
+  "source_root": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004",
+  "compiler_host": "Debug",
+  "guest_policy": "ReleaseFast LLVM O3/full LTO and QBE",
+  "native_checks": "Five ASan/UBSan -O3 suites: four passed initialrun; methods passed focused recheck aftertestfixture listlength correction. Exact boundedcopies, views, Unicode, GCstress, refusal and overflow.",
+  "guest_checks": "120 checksums from independent textoracle +six runtimecontrol failures +two backendartifact records (128 total)",
+  "fixture_sources_unchanged": {
+    "expanded/text/CONTRACT.md": "c63d967f5425ca1a48927c379cce84c6816a797ca1e00e5f3d3fcb4c4a2168e8",
+    "expanded/text/Cargo.lock": "890ae737be8813c44d0f980b4c02db3dc3dfa7c78da86fa04929c4c017125202",
+    "expanded/text/Cargo.toml": "901ae84abfd66afcc4d102aca89a7d422c8339909fe67b794772289dbd115fec",
+    "expanded/text/README.md": "55e8d2b550546ce07ffd403c2c3e4a4c7ff3a9c067bc3086609ed3e0c19e0aae",
+    "expanded/text/main.go": "034f1b96198f48b20200032ca3f5dc76641d0985b98b712253b430c6c17e7e8d",
+    "expanded/text/main.my": "63c50defb2a59ab319bfcad20a5f789b5123662498628079b7e984781d1ec126",
+    "expanded/text/main.rs": "cdd8d7bba9d2d7590d6786ca1912bdba65ed6c36c6789f8f16252d14a1d7673c",
+    "expanded/text/main.zig": "94dd771cf7c78deef2a1f81aabfa63cad5515ab5ceb811d2a249659457547ddd",
+    "expanded/text/oracle.py": "9f955c24e2db9fd2af698f44d4bc0ec2f0b095ef93e99ee1befbd362907c6bde",
+    "expanded/text/test_oracle.py": "504de058026f0969238e3ad2da82c902273bbc15afdc3df7f93c695fd3b38882"
+  },
+  "before_reference_manifest": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/manifest.json",
+  "before_reference_manifest_sha256": "94ea9f6343133da2fefdcb327458fbb5fcf6d7f099ba29385ebb5b0bd430d721",
+  "evidence": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-compiler-receipt.json",
+      "sha256": "6c0285cfcca85ade2fb6ef22aa4c1f1a25257b81e6230bb7c9fb7a19f11b7115",
+      "retained": "experiments/runtime-goal110-join-20261004/join-compiler-receipt.json.gz",
+      "retained_sha256": "d89940d78c8edd68984f15a2bd8018846ef59cb4aedb697c79f442fee1323a4d"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-runner/manifest.json",
+      "sha256": "ce91e4fa047ca147560dd073e07d92afeecc60e336dd1dfccc6aa913e639a410",
+      "retained": "experiments/runtime-goal110-join-20261004/manifest.json.gz",
+      "retained_sha256": "34e5438798742111e0427b2025f44c92938dbaa843b5d91e851aa8017ad2b9b3"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/compiler-build.log",
+      "sha256": "ef3e5a8381308b9d953fbbfee158bcc195efd6e0117fba9091e0fed56a53562b",
+      "retained": "experiments/runtime-goal110-join-20261004/compiler-build.log.gz",
+      "retained_sha256": "59cca5522049a69c98303281f25e44590cb67978a2149e7bfe737402fa58adcc"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/compiler-build-stale-clone.log",
+      "sha256": "ee4e9cc4765fd8aac07ca71bcfecb278302fffd0990d995ded95d7f69711acb1",
+      "retained": "experiments/runtime-goal110-join-20261004/compiler-build-stale-clone.log.gz",
+      "retained_sha256": "102c36bcab9cc7e2c10a5fb69fd94f1db8b6c28d09047b11234281153f24dbef"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-guest-build.log",
+      "sha256": "45b25674f9497f6d6b9cbc583db55099fb289fd5c7c20e69cf0808bbad23aa97",
+      "retained": "experiments/runtime-goal110-join-20261004/join-guest-build.log.gz",
+      "retained_sha256": "92139515fcd3a1545dc2b2a3e434185abcf488a59f7b3e1e5a0ce64ed13293e1"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/experiments/runtime-goal110-join-20261004/join-native-tests.log",
+      "sha256": "46bbc91364e7c1d8670c92f5d181c354a561a9261cb0e87142a23bc4333d960b"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/experiments/runtime-goal110-join-20261004/join-guest-checks.json",
+      "sha256": "7a12e99fae4188e232a2e3c4bbd85807524cc4ddb597b8cc8261584c34d2086f"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/experiments/runtime-goal110-join-20261004/join-guest-checks.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/experiments/runtime-goal110-join-20261004/join-guest-initial-invalid-size.log",
+      "sha256": "39a25e8e537c58c6c7fc02f9a3b092a1d2f3b178b5dadcfa8a9657dc06f6c363"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/experiments/runtime-goal110-join-20261004/native-checks.py",
+      "sha256": "56d146d75f7f6e3df3410f7da72dbe0181022723194a1911d7c0c9fb479d54e2"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/experiments/runtime-goal110-join-20261004/guest-checks.py",
+      "sha256": "1a8f6d7669c0b2ebb216015cf68f84a1d9cc6e2bfe1ac5fc53ec0ba9af0095d2"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/src/native_text.c",
+      "sha256": "060965bfa7aabe7bfeb3248a8f619cb6b534ecb45543e546afdb77b62c16c6ed"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/tests/native_text_methods_test.c",
+      "sha256": "446100c139a1be1318eb33399266a5a4cf72f8fab57cc80bb334ed030f62b1de"
+    }
+  ],
+  "guardian": "88checks passed on cold whole-tree commit;88 diff-scoped buildchecks passed (65/753files plus38whole-tree checks); report-onlyfindings retained",
+  "timings": "notrun in thisreceipt"
+}

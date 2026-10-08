@@ -1,0 +1,329 @@
+{
+  "source_commit": "6d1c3b77d566d4f0da6238fa0bc249625998b977",
+  "rounds": 7,
+  "cpu": 10,
+  "cases": {
+    "packet_decode": {
+      "binaries": {
+        "whole": {
+          "path": ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_packet_decode",
+          "sha256": "6973b004cd5a14cb84c439a41c419a8ff89e5c42cb65280d2614167e3c4baba3"
+        },
+        "split": {
+          "path": "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-packet_decode",
+          "sha256": "075e24b806b405484a6865965941b860793759b5311ba0c3148bbd9b0e5d7802"
+        },
+        "original_row": {
+          "path": ".mylang-cache/s4-emission/all46-final-02/row_packet_decode_new",
+          "sha256": "933004cc74b90f986f9c1d01fba9555a8294967083bd3c12364c3bda2f39c038"
+        }
+      },
+      "sizes": {
+        "4096": {
+          "split": {
+            "over_whole": 1.0088307777985266,
+            "paired_ratios": [
+              0.994291708680639,
+              1.0088307777985266,
+              1.0280400300896864,
+              1.009362375429693,
+              1.0303853261192841,
+              1.0178085825126133,
+              1.0663399235715236
+            ],
+            "paired_median_bootstrap95": [
+              1.0088307777985266,
+              1.0303853261192841
+            ],
+            "within_noise": false
+          },
+          "original_row": {
+            "over_whole": 1.0258380518494332,
+            "paired_ratios": [
+              1.0334839785630683,
+              1.0258380518494332,
+              0.9402620061390539,
+              0.9883324811912879,
+              1.0788045635930283,
+              1.0405718954724619,
+              0.9912780047302644
+            ],
+            "paired_median_bootstrap95": [
+              0.9883324811912879,
+              1.0405718954724619
+            ],
+            "within_noise": true
+          }
+        },
+        "64": {
+          "split": {
+            "over_whole": 1.0102050426332263,
+            "paired_ratios": [
+              0.9937728853761522,
+              1.021504688906958,
+              0.9958435600719312,
+              0.966200892632445,
+              0.9668013368033712,
+              1.0270172603808256,
+              1.0135891098051795
+            ],
+            "paired_median_bootstrap95": [
+              0.9668013368033712,
+              1.021504688906958
+            ],
+            "within_noise": true
+          },
+          "original_row": {
+            "over_whole": 1.0082445451000641,
+            "paired_ratios": [
+              0.9734453390680285,
+              1.03523968782241,
+              1.0040271773572838,
+              0.9921827934041558,
+              0.9354890196437959,
+              1.0456636852142724,
+              0.9869694364495445
+            ],
+            "paired_median_bootstrap95": [
+              0.9734453390680285,
+              1.03523968782241
+            ],
+            "within_noise": true
+          }
+        }
+      }
+    },
+    "lox_eval": {
+      "binaries": {
+        "whole": {
+          "path": ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_lox_eval",
+          "sha256": "7685a24b6a5589dba40eff4837429acda7895b66e2e2eae823e0f334c49b2738"
+        },
+        "split": {
+          "path": "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-lox_eval",
+          "sha256": "d0217c44a3ba006c5296ae77e1730e5ae2ac47dd07b70e47afc87b16ca48c551"
+        },
+        "original_row": {
+          "path": ".mylang-cache/s4-emission/all46-final-02/row_lox_eval_new",
+          "sha256": "fec97032473f39e456bc96abd31fef205313f5499763fe8ed7fa58018db3b3cb"
+        }
+      },
+      "sizes": {
+        "4096": {
+          "split": {
+            "over_whole": 1.0051655283996375,
+            "paired_ratios": [
+              1.0082278495637729,
+              1.0029850953209114,
+              1.0049127013057986,
+              1.0053859938059975,
+              1.0052596660110307,
+              1.001073857577296,
+              1.004596531690698
+            ],
+            "paired_median_bootstrap95": [
+              1.0029850953209114,
+              1.0053859938059975
+            ],
+            "within_noise": false
+          },
+          "original_row": {
+            "over_whole": 0.9946998253360958,
+            "paired_ratios": [
+              0.996874606911415,
+              0.9968691146844061,
+              0.9903086547877921,
+              0.9936222543977562,
+              0.9932173110101215,
+              0.9906351399587269,
+              0.994715550191049
+            ],
+            "paired_median_bootstrap95": [
+              0.9906351399587269,
+              0.9968691146844061
+            ],
+            "within_noise": false
+          }
+        },
+        "64": {
+          "split": {
+            "over_whole": 1.0063125445047014,
+            "paired_ratios": [
+              1.0053167895918709,
+              1.005375247513731,
+              1.0046372143886309,
+              1.007620103458644,
+              1.0050449172679008,
+              1.007442828409571,
+              1.003606121511468
+            ],
+            "paired_median_bootstrap95": [
+              1.0046372143886309,
+              1.007442828409571
+            ],
+            "within_noise": false
+          },
+          "original_row": {
+            "over_whole": 0.9984629894874903,
+            "paired_ratios": [
+              0.9978762414025341,
+              0.9954472929163968,
+              0.996774297995319,
+              0.9995246968576402,
+              0.9941368175582302,
+              0.9922627082280281,
+              1.0004378363469444
+            ],
+            "paired_median_bootstrap95": [
+              0.9941368175582302,
+              0.9995246968576402
+            ],
+            "within_noise": false
+          }
+        }
+      }
+    },
+    "json_transform": {
+      "binaries": {
+        "whole": {
+          "path": ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_json_transform",
+          "sha256": "6bc02d0f3f089b6ca038f763a4ca51d3f5f9e8dbc99e0aec5e30d629994d2481"
+        },
+        "split": {
+          "path": "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-json_transform",
+          "sha256": "bd8cba59dfb8609be66c2f969ad25262a41b49989bfa0a12a7c108a98823bb3d"
+        },
+        "original_row": {
+          "path": ".mylang-cache/s4-emission/all46-final-02/row_json_transform_new",
+          "sha256": "587700634cc224df0ca41545233a9e8baf546e73020c29bb879d18a8aa51277e"
+        }
+      },
+      "sizes": {
+        "4096": {
+          "split": {
+            "over_whole": 1.0014033782130864,
+            "paired_ratios": [
+              1.0121129769969397,
+              1.0129995020232683,
+              0.9978211176117514,
+              1.0111542532674147,
+              1.0000249271126063,
+              0.8516712737584288,
+              0.9962910228091398
+            ],
+            "paired_median_bootstrap95": [
+              0.9962910228091398,
+              1.0121129769969397
+            ],
+            "within_noise": true
+          },
+          "original_row": {
+            "over_whole": 0.9987311561563266,
+            "paired_ratios": [
+              1.0084736148638682,
+              1.0067485235728655,
+              0.9994464137766738,
+              0.9998866106514975,
+              0.9966808924651002,
+              0.8514623220144276,
+              0.9917369378874766
+            ],
+            "paired_median_bootstrap95": [
+              0.9917369378874766,
+              1.0067485235728655
+            ],
+            "within_noise": true
+          }
+        },
+        "64": {
+          "split": {
+            "over_whole": 0.9968027639351884,
+            "paired_ratios": [
+              0.9955646147486531,
+              0.9946942630482096,
+              0.9971739425290461,
+              0.9953479762428287,
+              0.9960350079231972,
+              0.9959639297246243,
+              0.9979339756580997
+            ],
+            "paired_median_bootstrap95": [
+              0.9953479762428287,
+              0.9971739425290461
+            ],
+            "within_noise": false
+          },
+          "original_row": {
+            "over_whole": 1.0017662479151965,
+            "paired_ratios": [
+              1.0022447303878785,
+              1.0018009266333765,
+              1.002710074753232,
+              0.9999143400161882,
+              0.99873053680212,
+              1.002357405117807,
+              1.0029030923986375
+            ],
+            "paired_median_bootstrap95": [
+              0.9999143400161882,
+              1.002710074753232
+            ],
+            "within_noise": true
+          }
+        }
+      }
+    },
+    "result_propagate": {
+      "binaries": {
+        "whole": {
+          "path": ".mylang-cache/s4-emission/paired-cold-kernel-02-whole/row_result_propagate",
+          "sha256": "8611040d1f8f0118e48904a01d5e7db52d2a7e9a4a264d1ca73b35add4b8c961"
+        },
+        "split": {
+          "path": "experiments/new-core-s4-emission-20261006/paired-cold-kernel-02/split-result_propagate",
+          "sha256": "101a202c2fc93b55a006c20e9f2a7a89245906a1db11581242e802848f49f3c4"
+        }
+      },
+      "sizes": {
+        "4096": {
+          "split": {
+            "over_whole": 1.0004610877176572,
+            "paired_ratios": [
+              1.000170819982645,
+              1.0146057808080802,
+              0.9871219803387946,
+              0.9983304980851038,
+              0.9877474021984688,
+              0.9959885907926568,
+              1.005247363908396
+            ],
+            "paired_median_bootstrap95": [
+              0.9877474021984688,
+              1.005247363908396
+            ],
+            "within_noise": true
+          }
+        },
+        "64": {
+          "split": {
+            "over_whole": 1.0024521029966065,
+            "paired_ratios": [
+              1.0026433403477706,
+              1.0006598630900534,
+              1.0072677680005069,
+              0.9969280331675549,
+              0.9776278663665314,
+              1.001729115321238,
+              1.004625447879937
+            ],
+            "paired_median_bootstrap95": [
+              0.9969280331675549,
+              1.004625447879937
+            ],
+            "within_noise": true
+          }
+        }
+      }
+    }
+  }
+}

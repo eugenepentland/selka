@@ -1,0 +1,40 @@
+test-core
++- run test 3 pass, 1 fail (4 total)
+rc/core/byte_index_test.zig:50:20: 0x2056df3 in test.a source extern byte index lookalike retains its ordinary foreign call (root_test.zig)
+    const module = try support.buildSource(state.allocator(), source, &refusal);
+                   ^
+guardian/test: test wall 3.04s; slowest over 50ms:
+guardian/test:   2.81s  byte_index_test.test.bytes and buffers normalize negative and extreme signed indices before their located bounds trap in every mode
+guardian/test:   0.22s  byte_index_test.test.a source extern byte index lookalike retains its ordinary foreign call
+guardian/test: FAIL — 1 failed of 4
+guardian/test: RESULT {"passed":3,"failed":1,"skipped":0}
+error: 'byte_index_test.test.a source extern byte index lookalike retains its ordinary foreign call' failed:
+       guardian/test: 4 test(s) selected
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/sema.zig:1702:21: 0x1978bbb in checkBodies (compiler.zig)
+               if (failed) return error.SourceError;
+                           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/sema.zig:1922:23: 0x1642f73 in checkCore (compiler.zig)
+           const functions = try checkBodies(.{
+                             ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/sema.zig:1800:5: 0x163e4db in checkCached (compiler.zig)
+           return checkCore(allocator, src, program, sink, .{ .names = module_names, .cache = cache });
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/compiler.zig:222:24: 0x163db1c in checkWithCache (compiler.zig)
+               self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, cache);
+                              ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/compiler.zig:202:9: 0x163ce96 in check (compiler.zig)
+               return self.checkWithCache(null);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/src/core/test_support.zig:25:5: 0x137e62e in buildSource (root_test.zig)
+           try unit.check();
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-packet-performance/s
+failed command: ./.zig-cache/o/73e42b6a82c4b37819851c04db35d0d7/test --cache-dir=./.zig-cache --seed=0x754fd647 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 3/4 tests passed (1 failed)
+test-core transitive failure
++- run test 3 pass, 1 fail (4 total)
+   +- compile test debug native success 1s MaxRSS:313M
+      +- options cached
+         +- compile exe mylang-core debug native cached 7ms MaxRSS:38M
+

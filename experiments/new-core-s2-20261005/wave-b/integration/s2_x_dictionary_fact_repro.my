@@ -1,0 +1,23 @@
+module s2_x_dictionary_fact_repro
+
+def bump_text(counts: mut dict[str, i64], key: str) -> None:
+    counts[key] = counts.get(key, 0) + 1
+
+public def count_text_keys() -> bool:
+    sequence = "ACGTTGCAACGGTACCATGGACTTAGCATCGA"
+    reused: dict[str, i64] = {}
+    fresh: dict[str, i64] = {}
+    for i in range(len(sequence) - 2):
+        piece = sequence[i:i + 3]
+        bump_text(mut reused, piece)
+        bump_text(mut fresh, sequence[i:i + 3])
+        fresh[sequence[i:i + 3]] += 0
+    total = 0
+    for key in reused:
+        total += reused[key]
+    return reused == fresh and total == 30 and reused["ACG"] == 2 and list(reused.keys()) == list(fresh.keys())
+
+public def main() -> i64:
+    if count_text_keys():
+        return 0
+    return 1

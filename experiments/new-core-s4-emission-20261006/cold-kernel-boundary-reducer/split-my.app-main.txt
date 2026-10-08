@@ -1,0 +1,203 @@
+
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/paired-combined-01/split-word_count:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000001032ca0 <my.app::main>:
+ 1032ca0:	push   %rbp
+ 1032ca1:	push   %r15
+ 1032ca3:	push   %r14
+ 1032ca5:	push   %r13
+ 1032ca7:	push   %r12
+ 1032ca9:	push   %rbx
+ 1032caa:	sub    $0x38,%rsp
+ 1032cae:	mov    $0x2,%r15d
+ 1032cb4:	cmpq   $0x3,0x8(%rdi)
+ 1032cb9:	jne    1032f08 <my.app::main+0x268>
+ 1032cbf:	mov    %rdx,%rbx
+ 1032cc2:	mov    %rsi,%r14
+ 1032cc5:	mov    %rdi,%rbp
+ 1032cc8:	mov    0x20(%rdi),%rdi
+ 1032ccc:	call   1032f80 <my.workload::number>
+ 1032cd1:	mov    0x8(%rbp),%rdx
+ 1032cd5:	cmp    $0x1,%rdx
+ 1032cd9:	jbe    1032f4c <my.app::main+0x2ac>
+ 1032cdf:	mov    %rax,%r13
+ 1032ce2:	mov    0x28(%rbp),%rdi
+ 1032ce6:	call   1032f80 <my.workload::number>
+ 1032ceb:	mov    0x8(%rbp),%rdx
+ 1032cef:	cmp    $0x2,%rdx
+ 1032cf3:	jbe    1032f5d <my.app::main+0x2bd>
+ 1032cf9:	mov    %rax,%r12
+ 1032cfc:	mov    0x30(%rbp),%rdi
+ 1032d00:	call   1032f80 <my.workload::number>
+ 1032d05:	cmp    $0x2,%r13
+ 1032d09:	setl   %cl
+ 1032d0c:	test   %r12,%r12
+ 1032d0f:	setle  %dl
+ 1032d12:	or     %cl,%dl
+ 1032d14:	lea    -0xf4241(%rax),%rcx
+ 1032d1b:	cmp    $0xfffffffffff0bdc0,%rcx
+ 1032d22:	setb   %cl
+ 1032d25:	or     %dl,%cl
+ 1032d27:	jne    1032f08 <my.app::main+0x268>
+ 1032d2d:	lea    -0x2e6d4(%rip),%rbp        # 1004660 <core_number_pairs+0x150>
+ 1032d34:	lea    0x10(%rsp),%r15
+ 1032d39:	mov    %r15,%rdi
+ 1032d3c:	mov    %rbp,%rsi
+ 1032d3f:	mov    %r13,%rdx
+ 1032d42:	mov    %rax,%rcx
+ 1032d45:	mov    %rax,%r13
+ 1032d48:	call   1033c80 <my.workload::inputs>
+ 1032d4d:	lea    0x2d4c(%rip),%rdi        # 1035aa0 <core_io_file_error.verbs+0xb0>
+ 1032d54:	call   100a3c0 <myl_core_io_at>
+ 1032d59:	mov    %r14,%rdi
+ 1032d5c:	call   1022330 <myl_core_host_check>
+ 1032d61:	call   10344f0 <runtime_bench_now>
+ 1032d66:	mov    %rax,0x8(%rsp)
+ 1032d6b:	mov    %rbp,%rdi
+ 1032d6e:	mov    %r15,%rsi
+ 1032d71:	mov    %r12,%rdx
+ 1032d74:	mov    %r13,%rcx
+ 1032d77:	call   1033180 <my.workload::kernel>
+ 1032d7c:	mov    %rax,%r12
+ 1032d7f:	mov    0x10(%rsp),%rdi
+ 1032d84:	mov    (%rdi),%eax
+ 1032d86:	cmp    $0xffffffff,%eax
+ 1032d89:	je     1032dbd <my.app::main+0x11d>
+ 1032d8b:	dec    %eax
+ 1032d8d:	je     1032d93 <my.app::main+0xf3>
+ 1032d8f:	mov    %eax,(%rdi)
+ 1032d91:	jmp    1032dbd <my.app::main+0x11d>
+ 1032d93:	movzbl 0x7(%rdi),%eax
+ 1032d97:	test   %rax,%rax
+ 1032d9a:	je     1032f1a <my.app::main+0x27a>
+ 1032da0:	cmpq   $0x0,0x18(%rdi)
+ 1032da5:	jne    1032f1a <my.app::main+0x27a>
+ 1032dab:	lea    0x26f6e(%rip),%rcx        # 1059d20 <myl_core_free_lists>
+ 1032db2:	mov    (%rcx,%rax,8),%rdx
+ 1032db6:	mov    %rdx,(%rdi)
+ 1032db9:	mov    %rdi,(%rcx,%rax,8)
+ 1032dbd:	mov    0x18(%rsp),%rdi
+ 1032dc2:	mov    (%rdi),%eax
+ 1032dc4:	cmp    $0xffffffff,%eax
+ 1032dc7:	je     1032dfb <my.app::main+0x15b>
+ 1032dc9:	dec    %eax
+ 1032dcb:	je     1032dd1 <my.app::main+0x131>
+ 1032dcd:	mov    %eax,(%rdi)
+ 1032dcf:	jmp    1032dfb <my.app::main+0x15b>
+ 1032dd1:	movzbl 0x7(%rdi),%eax
+ 1032dd5:	test   %rax,%rax
+ 1032dd8:	je     1032f24 <my.app::main+0x284>
+ 1032dde:	cmpq   $0x0,0x18(%rdi)
+ 1032de3:	jne    1032f24 <my.app::main+0x284>
+ 1032de9:	lea    0x26f30(%rip),%rcx        # 1059d20 <myl_core_free_lists>
+ 1032df0:	mov    (%rcx,%rax,8),%rdx
+ 1032df4:	mov    %rdx,(%rdi)
+ 1032df7:	mov    %rdi,(%rcx,%rax,8)
+ 1032dfb:	mov    0x20(%rsp),%rdi
+ 1032e00:	mov    (%rdi),%eax
+ 1032e02:	cmp    $0xffffffff,%eax
+ 1032e05:	je     1032e39 <my.app::main+0x199>
+ 1032e07:	dec    %eax
+ 1032e09:	je     1032e0f <my.app::main+0x16f>
+ 1032e0b:	mov    %eax,(%rdi)
+ 1032e0d:	jmp    1032e39 <my.app::main+0x199>
+ 1032e0f:	movzbl 0x7(%rdi),%eax
+ 1032e13:	test   %rax,%rax
+ 1032e16:	je     1032f2e <my.app::main+0x28e>
+ 1032e1c:	cmpq   $0x0,0x18(%rdi)
+ 1032e21:	jne    1032f2e <my.app::main+0x28e>
+ 1032e27:	lea    0x26ef2(%rip),%rcx        # 1059d20 <myl_core_free_lists>
+ 1032e2e:	mov    (%rcx,%rax,8),%rdx
+ 1032e32:	mov    %rdx,(%rdi)
+ 1032e35:	mov    %rdi,(%rcx,%rax,8)
+ 1032e39:	mov    0x28(%rsp),%rdi
+ 1032e3e:	mov    (%rdi),%eax
+ 1032e40:	cmp    $0xffffffff,%eax
+ 1032e43:	je     1032e77 <my.app::main+0x1d7>
+ 1032e45:	dec    %eax
+ 1032e47:	je     1032e4d <my.app::main+0x1ad>
+ 1032e49:	mov    %eax,(%rdi)
+ 1032e4b:	jmp    1032e77 <my.app::main+0x1d7>
+ 1032e4d:	movzbl 0x7(%rdi),%eax
+ 1032e51:	test   %rax,%rax
+ 1032e54:	je     1032f38 <my.app::main+0x298>
+ 1032e5a:	cmpq   $0x0,0x18(%rdi)
+ 1032e5f:	jne    1032f38 <my.app::main+0x298>
+ 1032e65:	lea    0x26eb4(%rip),%rcx        # 1059d20 <myl_core_free_lists>
+ 1032e6c:	mov    (%rcx,%rax,8),%rdx
+ 1032e70:	mov    %rdx,(%rdi)
+ 1032e73:	mov    %rdi,(%rcx,%rax,8)
+ 1032e77:	mov    0x30(%rsp),%rdi
+ 1032e7c:	mov    (%rdi),%eax
+ 1032e7e:	cmp    $0xffffffff,%eax
+ 1032e81:	je     1032eb5 <my.app::main+0x215>
+ 1032e83:	dec    %eax
+ 1032e85:	je     1032e8b <my.app::main+0x1eb>
+ 1032e87:	mov    %eax,(%rdi)
+ 1032e89:	jmp    1032eb5 <my.app::main+0x215>
+ 1032e8b:	movzbl 0x7(%rdi),%eax
+ 1032e8f:	test   %rax,%rax
+ 1032e92:	je     1032f42 <my.app::main+0x2a2>
+ 1032e98:	cmpq   $0x0,0x18(%rdi)
+ 1032e9d:	jne    1032f42 <my.app::main+0x2a2>
+ 1032ea3:	lea    0x26e76(%rip),%rcx        # 1059d20 <myl_core_free_lists>
+ 1032eaa:	mov    (%rcx,%rax,8),%rdx
+ 1032eae:	mov    %rdx,(%rdi)
+ 1032eb1:	mov    %rdi,(%rcx,%rax,8)
+ 1032eb5:	lea    0x2c14(%rip),%rdi        # 1035ad0 <core_io_file_error.verbs+0xe0>
+ 1032ebc:	call   100a3c0 <myl_core_io_at>
+ 1032ec1:	mov    %r14,%rdi
+ 1032ec4:	call   1022330 <myl_core_host_check>
+ 1032ec9:	call   10344f0 <runtime_bench_now>
+ 1032ece:	mov    %rax,%r14
+ 1032ed1:	mov    0x8(%rsp),%rdx
+ 1032ed6:	sub    %rdx,%r14
+ 1032ed9:	jo     1032f6e <my.app::main+0x2ce>
+ 1032edf:	mov    %rbx,%rdi
+ 1032ee2:	mov    %r12,%rsi
+ 1032ee5:	call   100aac0 <myl_core_print_i64>
+ 1032eea:	mov    %rbx,%rdi
+ 1032eed:	call   1009100 <myl_core_print_sep>
+ 1032ef2:	mov    %rbx,%rdi
+ 1032ef5:	mov    %r14,%rsi
+ 1032ef8:	call   100aac0 <myl_core_print_i64>
+ 1032efd:	mov    %rbx,%rdi
+ 1032f00:	call   10091c0 <myl_core_print_end>
+ 1032f05:	xor    %r15d,%r15d
+ 1032f08:	mov    %r15,%rax
+ 1032f0b:	add    $0x38,%rsp
+ 1032f0f:	pop    %rbx
+ 1032f10:	pop    %r12
+ 1032f12:	pop    %r13
+ 1032f14:	pop    %r14
+ 1032f16:	pop    %r15
+ 1032f18:	pop    %rbp
+ 1032f19:	ret
+ 1032f1a:	call   1032690 <myl_core_free_block>
+ 1032f1f:	jmp    1032dbd <my.app::main+0x11d>
+ 1032f24:	call   1032690 <myl_core_free_block>
+ 1032f29:	jmp    1032dfb <my.app::main+0x15b>
+ 1032f2e:	call   1032690 <myl_core_free_block>
+ 1032f33:	jmp    1032e39 <my.app::main+0x199>
+ 1032f38:	call   1032690 <myl_core_free_block>
+ 1032f3d:	jmp    1032e77 <my.app::main+0x1d7>
+ 1032f42:	call   1032690 <myl_core_free_block>
+ 1032f47:	jmp    1032eb5 <my.app::main+0x215>
+ 1032f4c:	lea    0x2aed(%rip),%rdi        # 1035a40 <core_io_file_error.verbs+0x50>
+ 1032f53:	mov    $0x1,%esi
+ 1032f58:	call   1009a80 <myl_core_trap>
+ 1032f5d:	lea    0x2b0c(%rip),%rdi        # 1035a70 <core_io_file_error.verbs+0x80>
+ 1032f64:	mov    $0x2,%esi
+ 1032f69:	call   1009a80 <myl_core_trap>
+ 1032f6e:	lea    0x2b8b(%rip),%rdi        # 1035b00 <core_io_file_error.verbs+0x110>
+ 1032f75:	mov    %rax,%rsi
+ 1032f78:	call   1009a80 <myl_core_trap>
+
+Disassembly of section .init:
+
+Disassembly of section .fini:
+
+Disassembly of section .plt:

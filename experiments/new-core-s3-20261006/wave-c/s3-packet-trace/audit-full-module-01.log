@@ -1,0 +1,38 @@
+record_reads True
+tagged_stack True
+mutate_unique True
+mutate_shared True
+record_construct True
+record_update True
+option_handle True
+result_propagate True
+list_scan True
+list_append True
+list_filter True
+alloc_short True
+alloc_retained True
+mutate_nested True
+bytes_scan True
+string_equal True
+string_search True
+string_split True
+string_join True
+dict_lookup True
+dict_lookup_str True
+dict_update True
+dict_update_str True
+set_dedup True
+int_parse True
+int_format True
+call_indirect True
+sort_int True
+sort_records True
+Traceback (most recent call last):
+  File "<stdin>", line 13, in <module>
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 788, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 772, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '.mylang-cache/s3-packet-trace/audit-01/row_int_math.ll'

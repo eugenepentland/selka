@@ -1,0 +1,28 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T12:50:34.480793+00:00",
+  "bindings": 19,
+  "callers": [
+    {
+      "backend": "llvm",
+      "function_bytes": 52057,
+      "instructions": 10631,
+      "address_shift": 48,
+      "equal_after_exact_two_callee_substitutions": true
+    },
+    {
+      "backend": "qbe",
+      "function_bytes": 133468,
+      "instructions": 27755,
+      "address_shift": 48,
+      "equal_after_exact_two_callee_substitutions": true
+    }
+  ],
+  "raw_sha256": "2394989e411cfd70f8c2cd62d00d6f00b3ea272a201ce313f588661e0207cf34",
+  "script_sha256": "8d5dbb41cc2306abfd4936d993700881ccc8bf298cc9774b6dc3085b13214b9b",
+  "limitations": [
+    "Read-only static evidence; no guest execution or timing.",
+    "Address operands are normalized to symbolic referents; placement changes remain.",
+    "Placement is a plausible explanation for unchanged-path costs, not an isolated cache/branch causal experiment."
+  ]
+}

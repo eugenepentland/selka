@@ -1,0 +1,7 @@
+module app
+
+public def test_one() -> bool:
+    return True
+
+public def test_two() -> bool:
+    return 2 + 3 == 5

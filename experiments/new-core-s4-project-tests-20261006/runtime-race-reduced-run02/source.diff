@@ -1,0 +1,2352 @@
+diff --git a/src/core/main.zig b/src/core/main.zig
+index d6ef11da9..a6f641279 100644
+--- a/src/core/main.zig
++++ b/src/core/main.zig
+@@ -15,6 +15,7 @@ const check_command = @import("check_command.zig");
+ const usage =
+     \\usage: mylang-core build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR]
+     \\       mylang-core check FILE.my [--typed] [--stats] [--timings=json] [--cache-dir DIR] [--no-cache]
++    \\       mylang-core test FILE.my|DIR [--release] [--json] [--filter S] [--jobs N] [--force] [--cases PATH] [--max-steps N] [--timeout-ms N]
+     \\       mylang-core coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
+     \\       mylang-core dump-typed FILE.my [FUNCTION]
+     \\       mylang-core dump-ir FILE.my [--facts]   (--facts: after the release passes, with intervals)
+@@ -114,6 +115,11 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) !u8 {
+         const has_value = index + 1 < args.len;
+         if (std.mem.eql(u8, arg, "--release")) {
+             options.release = true;
++        } else if (std.mem.eql(u8, arg, "--project")) {
++            // Project configuration and graph checks are always applied.
++        } else if (std.mem.eql(u8, arg, "--mode") and has_value) {
++            index += 1;
++            if (std.mem.eql(u8, args[index], "ReleaseFast")) options.release = true else if (std.mem.eql(u8, args[index], "Debug")) options.release = false else return 2;
+         } else if (std.mem.eql(u8, arg, "--no-facts")) {
+             options.facts = .off;
+         } else if (std.mem.eql(u8, arg, "--generic-vectors")) {
+@@ -176,6 +182,7 @@ fn testCommand(init: std.process.Init, args: []const []const u8) !u8 {
+     var links: std.ArrayList([]const u8) = .empty;
+     var index: usize = 0;
+     while (index < args.len) : (index += 1) {
++        if (testControls(&options, args, &index) catch return 2) continue;
+         const arg = args[index];
+         const has_value = index + 1 < args.len;
+         if (std.mem.eql(u8, arg, "--release")) {
+@@ -220,6 +227,39 @@ fn testCommand(init: std.process.Init, args: []const []const u8) !u8 {
+     return test_runner.run(init, options);
+ }
+ 
++fn testControls(options: *test_runner.Options, args: []const []const u8, index: *usize) error{Usage}!bool {
++    const arg = args[index.*];
++    const has_value = index.* + 1 < args.len;
++    if (std.mem.eql(u8, arg, "--mode") and has_value) {
++        index.* += 1;
++        if (std.mem.eql(u8, args[index.*], "ReleaseFast")) options.build.release = true else if (std.mem.eql(u8, args[index.*], "Debug")) options.build.release = false else return error.Usage;
++    } else if (std.mem.eql(u8, arg, "--force")) {
++        options.controls.force = true;
++    } else if (std.mem.eql(u8, arg, "--cases") and has_value) {
++        index.* += 1;
++        options.controls.cases = args[index.*];
++    } else if (std.mem.eql(u8, arg, "--jobs") and has_value) {
++        index.* += 1;
++        options.controls.jobs = std.fmt.parseInt(usize, args[index.*], 10) catch return error.Usage;
++        if (options.controls.jobs.? == 0) return error.Usage;
++    } else if (std.mem.startsWith(u8, arg, "--jobs=")) {
++        options.controls.jobs = std.fmt.parseInt(usize, arg[7..], 10) catch return error.Usage;
++        if (options.controls.jobs.? == 0) return error.Usage;
++    } else if (std.mem.eql(u8, arg, "--timeout-ms") and has_value) {
++        index.* += 1;
++        options.controls.timeout_ms = std.fmt.parseInt(u32, args[index.*], 10) catch return error.Usage;
++        if (options.controls.timeout_ms == 0) return error.Usage;
++    } else if (std.mem.eql(u8, arg, "--max-steps") and has_value) {
++        index.* += 1;
++        options.controls.max_steps = std.fmt.parseInt(u64, args[index.*], 10) catch return error.Usage;
++        options.controls.explicit_steps = true;
++    } else if (std.mem.startsWith(u8, arg, "--max-steps=")) {
++        options.controls.max_steps = std.fmt.parseInt(u64, arg[12..], 10) catch return error.Usage;
++        options.controls.explicit_steps = true;
++    } else return false;
++    return true;
++}
++
+ /// The coverage sweep: check each file and try to build each of its functions alone.
+ /// Prints `ok NAME\tproven=P exact=E` (the checks the fact pass proves and keeps in
+ /// reachable code of the function analysed alone; `stack=S`, the lists it would put on
+diff --git a/src/core/pipeline.zig b/src/core/pipeline.zig
+index 6e632921f..d4aa0848c 100644
+--- a/src/core/pipeline.zig
++++ b/src/core/pipeline.zig
+@@ -3,6 +3,7 @@
+ const std = @import("std");
+ const language = @import("mylang");
+ const frontend = @import("frontend.zig");
++const project_entry = @import("project_entry.zig");
+ const build_ir = @import("build.zig");
+ const ir = @import("ir.zig");
+ const emit_llvm = @import("emit_llvm.zig");
+@@ -49,14 +50,16 @@ pub const Error = error{ SourceError, Unsupported, ToolFailed, WriteFailed, OutO
+ /// Build `path` into `options.output`.
+ pub fn build(init: std.process.Init, path: []const u8, options: Options, report: *std.ArrayList(u8)) Error!u8 {
+     const allocator = init.arena.allocator();
+-    const entry = frontend.entryOf(path);
++    const entry = try project_entry.resolve(allocator, init.io, path, report);
+     var session = frontend.Session.init(init.gpa, init.io, entry.root);
+     defer session.deinit();
++    entry.configure(&session);
+     try session.enableCache(init.gpa, options.cache);
+-    const checked = session.checkFile(allocator, path, report) catch |err| switch (err) {
++    const checked = session.checkFile(allocator, entry.path, report) catch |err| switch (err) {
+         error.OutOfMemory => return error.OutOfMemory,
+         else => return error.SourceError,
+     };
++    try entry.validate(allocator, &session, report);
+     var refusal: build_ir.Refusal = .{};
+     var module = build_ir.buildModuleSource(allocator, checked.program, checked.src, &refusal) catch |err| switch (err) {
+         error.Unsupported => {
+@@ -97,6 +100,26 @@ pub const Unit = struct {
+ /// link the executable. `mylang-core test` reaches it with a module of its own making.
+ pub fn finish(init: std.process.Init, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error!u8 {
+     const allocator = init.arena.allocator();
++    const llvm = try emitted(allocator, module, unit, options, report);
++    if (options.show.llvm) |where| std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = where, .data = llvm }) catch return error.WriteFailed;
++    var digest: [8]u8 = undefined;
++    std.crypto.hash.Blake3.hash(options.output, &digest, .{});
++    const program = try std.fs.path.join(allocator, &.{ options.cache, try std.fmt.allocPrint(allocator, "{s}-{x}.ll", .{ std.fs.path.basename(options.output), digest }) });
++    driver.link(allocator, init.io, init.environ_map, .{
++        .zig = options.zig,
++        .work = options.cache,
++        .program = program,
++        .output = options.output,
++        .release = options.release,
++        .links = options.links,
++        .llvm = llvm,
++    }, report) catch |err| return err;
++    return 0;
++}
++
++/// Run the same passes and emission used for linking, without invoking a tool.
++/// Test receipts hash this exact reachable program.
++pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error![]const u8 {
+     // A debug build of the compiler checks the IR it built, and again after the release passes.
+     if (verify_ir.enabled) try verify_ir.check(allocator, module, &.{}, report);
+     // Release builds compute facts and drop the checks they rule out; debug builds keep every check.
+@@ -134,20 +157,7 @@ pub fn finish(init: std.process.Init, module: *ir.Module, unit: Unit, options: O
+             return error.Unsupported;
+         },
+     };
+-    if (options.show.llvm) |where| std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = where, .data = llvm }) catch return error.WriteFailed;
+-    var digest: [8]u8 = undefined;
+-    std.crypto.hash.Blake3.hash(options.output, &digest, .{});
+-    const program = try std.fs.path.join(allocator, &.{ options.cache, try std.fmt.allocPrint(allocator, "{s}-{x}.ll", .{ std.fs.path.basename(options.output), digest }) });
+-    driver.link(allocator, init.io, init.environ_map, .{
+-        .zig = options.zig,
+-        .work = options.cache,
+-        .program = program,
+-        .output = options.output,
+-        .release = options.release,
+-        .links = options.links,
+-        .llvm = llvm,
+-    }, report) catch |err| return err;
+-    return 0;
++    return llvm;
+ }
+ 
+ fn locate(context: *const anyopaque, offset: u32) emit_llvm.Location {
+diff --git a/src/core/project_entry.zig b/src/core/project_entry.zig
+new file mode 100644
+index 000000000..8aeaf9067
+--- /dev/null
++++ b/src/core/project_entry.zig
+@@ -0,0 +1,150 @@
++//! Entry-anchored project configuration for the new compiler core. Import roots
++//! follow module paths; configuration roots separately confine embedded assets.
++//! The shared front end owns configuration, policy and .api parsing.
++const std = @import("std");
++const language = @import("mylang");
++const frontend = @import("frontend.zig");
++const config = language.project_config;
++
++/// Configuration and source failures have already been rendered to the caller.
++pub const Error = error{ SourceError, OutOfMemory };
++
++/// Borrowed entry settings, owned by the command's allocator.
++pub const Entry = struct {
++    path: []const u8,
++    root: []const u8,
++    name: []const u8,
++    configuration: ?config.Config = null,
++
++    /// Apply source budgets, nested module identity and embedded-file boundaries.
++    pub fn configure(self: Entry, session: *frontend.Session) void {
++        if (self.configuration) |configured| session.files.embed_root = std.fs.path.dirname(configured.path);
++        session.configureProject(self.limits(), self.name);
++    }
++
++    /// The same source limits apply to discovery and full checking.
++    pub fn limits(self: Entry) language.project.Options {
++        var options: language.project.Options = .{};
++        if (self.configuration) |configured| {
++            const budgets = configured.document.budgets;
++            if (budgets.max_modules) |maximum| options.max_modules = maximum;
++            if (budgets.max_imports) |maximum| options.max_imports = maximum;
++            if (budgets.max_file_bytes) |maximum| options.max_file_bytes = maximum;
++            if (budgets.max_total_bytes) |maximum| options.max_total_bytes = maximum;
++        }
++        return options;
++    }
++
++    /// Enforce the configured import policy and generated interfaces after checking.
++    pub fn validate(self: Entry, allocator: std.mem.Allocator, session: *frontend.Session, report: *std.ArrayList(u8)) Error!void {
++        const configured = self.configuration orelse return;
++        if (session.single != null) return;
++        if (configured.policy) |file| {
++            var policy = language.import_policy.Policy.parse(allocator, file.bytes) catch |err| {
++                if (err == error.OutOfMemory) return error.OutOfMemory;
++                try report.print(allocator, "{s}: error[E_PROJECT_CONFIG]: invalid import policy: {s}\n", .{ file.path, @errorName(err) });
++                return error.SourceError;
++            };
++            defer policy.deinit();
++            var result = language.import_policy.evaluate(allocator, &session.project, policy) catch |err| {
++                if (err == error.OutOfMemory) return error.OutOfMemory;
++                try report.appendSlice(allocator, "error[E_PROJECT_CONFIG]: configured import policy requires a complete module graph\n");
++                return error.SourceError;
++            };
++            defer result.deinit();
++            if (result.denied != 0) {
++                try report.appendSlice(allocator, try language.import_policy.render(allocator, result, &session.project, policy));
++                return error.SourceError;
++            }
++        }
++        if (configured.document.interface_files) {
++            const stale = language.api_files.staleDiagnostics(allocator, session.files.io, self.root, self.path, session.interfaceIndex()) catch |err| {
++                if (err == error.OutOfMemory) return error.OutOfMemory;
++                try report.print(allocator, "{s}: error[E_INTERFACE_FILE_STALE]: cannot validate generated interfaces: {s}\n", .{ self.path, @errorName(err) });
++                return error.SourceError;
++            };
++            if (stale) |text| {
++                try report.appendSlice(allocator, text);
++                return error.SourceError;
++            }
++        }
++    }
++};
++
++/// Resolve an entry and its nearest strict mylang.json before loading sources.
++pub fn resolve(allocator: std.mem.Allocator, io: std.Io, path: []const u8, report: *std.ArrayList(u8)) Error!Entry {
++    const absolute = std.Io.Dir.cwd().realPathFileAlloc(io, path, allocator) catch path;
++    const ordinary = frontend.entryOf(absolute);
++    var entry: Entry = .{ .path = absolute, .root = ordinary.root, .name = ordinary.module };
++    const located = config.testEntryLocation(allocator, io, absolute) catch |err| {
++        if (err == error.OutOfMemory) return error.OutOfMemory;
++        try report.print(allocator, "{s}: error[E_PROJECT_CONFIG]: cannot locate project entry: {s}\n", .{ absolute, @errorName(err) });
++        return error.SourceError;
++    };
++    if (located) |test_entry| {
++        entry.root = test_entry.root;
++        entry.name = test_entry.name;
++    } else {
++        const bytes = std.Io.Dir.cwd().readFileAlloc(io, absolute, allocator, .limited(64 << 20)) catch |err| {
++            if (err == error.OutOfMemory) return error.OutOfMemory;
++            try report.print(allocator, "error: cannot read {s}: {s}\n", .{ absolute, @errorName(err) });
++            return error.SourceError;
++        };
++        if (declaredModule(bytes)) |name| {
++            const relative = language.project.modulePath(allocator, name) catch return error.OutOfMemory;
++            if (rootFor(absolute, relative)) |root| {
++                entry.root = root;
++                entry.name = name;
++            }
++        }
++    }
++    const discovered = config.discover(allocator, io, absolute) catch |err| {
++        if (err == error.OutOfMemory) return error.OutOfMemory;
++        try report.print(allocator, "{s}: error[E_PROJECT_CONFIG]: cannot discover configuration: {s}\n", .{ absolute, @errorName(err) });
++        return error.SourceError;
++    };
++    if (discovered) |where| {
++        var failure: config.Failure = .{};
++        const configured = config.load(allocator, io, where, &failure) catch |err| {
++            if (err == error.OutOfMemory) return error.OutOfMemory;
++            try report.print(allocator, "{s}:{d}:{d}: error[E_PROJECT_CONFIG]: {s}\n", .{ failure.path, failure.location.line, failure.location.column, failure.detail });
++            return error.SourceError;
++        };
++        if (!configured.document.value_semantics) {
++            try report.print(allocator, "{s}: error[E_CORE_UNSUPPORTED]: the new core requires value_semantics\n", .{configured.path});
++            return error.SourceError;
++        }
++        entry.configuration = configured;
++    }
++    return entry;
++}
++
++fn rootFor(path: []const u8, relative: []const u8) ?[]const u8 {
++    if (!std.mem.endsWith(u8, path, relative) or path.len <= relative.len) return null;
++    const separator = path.len - relative.len - 1;
++    if (path[separator] != std.fs.path.sep) return null;
++    return if (separator == 0) path[0..1] else path[0..separator];
++}
++
++fn declaredModule(bytes: []const u8) ?[]const u8 {
++    var lines = std.mem.splitScalar(u8, bytes, '\n');
++    while (lines.next()) |raw| {
++        const line = std.mem.trim(u8, raw, " \t\r");
++        if (line.len == 0 or line[0] == '#') continue;
++        if (!std.mem.startsWith(u8, line, "module ")) return null;
++        var words = std.mem.tokenizeAny(u8, line["module ".len..], " \t\r#");
++        const name = words.next() orelse return null;
++        return if (language.project.validName(name)) name else null;
++    }
++    return null;
++}
++
++// spec-case: NEW-CORE-S4-PROJECT-1
++test "nested module root resolution respects file boundaries and mismatched declarations" {
++    try std.testing.expectEqualStrings("/project/src", rootFor("/project/src/types/shape.my", "types/shape.my").?);
++    try std.testing.expectEqualStrings("/", rootFor("/main.my", "main.my").?);
++    try std.testing.expect(rootFor("/project/my_main.my", "main.my") == null);
++    try std.testing.expect(rootFor("/project/main.my", "wrong.my") == null);
++    try std.testing.expectEqualStrings("types.shape", declaredModule("# comment\n\nmodule types.shape\n").?);
++    try std.testing.expect(declaredModule("module ../escape\n") == null);
++}
+diff --git a/src/core/property_ir.zig b/src/core/property_ir.zig
+index 43ee00eeb..7747bf483 100644
+--- a/src/core/property_ir.zig
++++ b/src/core/property_ir.zig
+@@ -26,7 +26,11 @@ pub const Context = struct {
+         const index: u32 = @intCast(self.module.functions.items.len);
+         try self.known.put(self.arena, key, index);
+         try self.pending.append(self.arena, .{ .name = name, .ty = ty, .index = index, .encode = encode });
+-        const symbol = try std.fmt.allocPrint(self.arena, "__test_{s}_{d}", .{ if (encode) "encode" else "decode", index });
++        const kind = if (self.module.kind(ty)) |found| @tagName(found) else @tagName(ty);
++        const semantic = try std.fmt.allocPrint(self.arena, "{s}:{s}", .{ kind, name });
++        var digest: [16]u8 = undefined;
++        std.crypto.hash.Blake3.hash(semantic, &digest, .{});
++        const symbol = try std.fmt.allocPrint(self.arena, "__test_{s}_{s}", .{ if (encode) "encode" else "decode", std.fmt.bytesToHex(digest, .lower) });
+         try self.module.functions.append(self.arena, .{ .name = symbol, .signature = .{
+             .params = if (encode) try self.arena.dupe(ir.Type, &.{ty}) else &.{},
+             .ret = if (encode) .void else ty,
+diff --git a/src/core/root_test.zig b/src/core/root_test.zig
+index c6a85646f..8fc2c9039 100644
+--- a/src/core/root_test.zig
++++ b/src/core/root_test.zig
+@@ -15,6 +15,12 @@ comptime {
+     _ = @import("value_facts_test.zig");
+     _ = @import("value_emit_test.zig");
+     _ = @import("test_runner_test.zig");
++    _ = @import("project_entry.zig");
++    _ = @import("test_runner_options.zig");
++    _ = @import("test_runner_directory.zig");
++    _ = @import("test_runner_receipt.zig");
++    _ = @import("test_runner_cases.zig");
++    _ = @import("test_runner_project_test.zig");
+     _ = @import("runner_property_test.zig");
+     _ = @import("property_codec.zig");
+     _ = @import("property_types.zig");
+diff --git a/src/core/runtime/core_test.c b/src/core/runtime/core_test.c
+index 52941df13..e9fa18cd5 100644
+--- a/src/core/runtime/core_test.c
++++ b/src/core/runtime/core_test.c
+@@ -10,6 +10,18 @@
+ static FILE *core_test_input, *core_test_output, *core_test_values;
+ static char *core_test_path;
+ static uint64_t core_test_trials;
++static uint64_t core_test_steps;
++static bool core_test_bounded;
++/* Compatible additive helpers; existing runtime signatures and layouts stay fixed. */
++void myl_core_test_limits(uint64_t steps, uint32_t timeout_ms) {
++    core_test_steps=steps;core_test_bounded=steps!=0;
++    alarm((unsigned)((uint64_t)timeout_ms+999)/1000);
++}
++void myl_core_test_tick(uint64_t cost) {
++    if(!core_test_bounded)return;
++    if(cost>core_test_steps)core_io_fail("R_STEP_LIMIT");
++    core_test_steps-=cost;
++}
+ static uint64_t core_test_word(FILE *file) {
+     unsigned char bytes[8];
+     if (!file || fread(bytes, 1, 8, file) != 8) _exit(70);
+diff --git a/src/core/test_runner.zig b/src/core/test_runner.zig
+index fc0310b13..17e650324 100644
+--- a/src/core/test_runner.zig
++++ b/src/core/test_runner.zig
+@@ -15,6 +15,7 @@
+ //! still run.
+ const std = @import("std");
+ const frontend = @import("frontend.zig");
++const project_entry = @import("project_entry.zig");
+ const build = @import("build.zig");
+ const pipeline = @import("pipeline.zig");
+ const discover = @import("test_runner_discover.zig");
+@@ -26,6 +27,9 @@ const property_types = @import("property_types.zig");
+ const property_schema = @import("property_schema.zig");
+ const property_execute = @import("property_execute.zig");
+ const batch_entry = @import("test_runner_batch.zig");
++const directory_runner = @import("test_runner_directory.zig");
++const receipt = @import("test_runner_receipt.zig");
++const case_settings = @import("test_runner_cases.zig");
+ const v = @import("property_value.zig");
+ 
+ /// The old runner's stub, appended to a file that defines no `main` of its own.
+@@ -35,38 +39,52 @@ pub const check_stub = "\n\ndef main() -> int:\n    return 0\n";
+ pub const Error = property.Error;
+ 
+ /// What the command line asked for.
+-pub const Options = struct {
+-    path: []const u8,
+-    /// `--filter`: a substring of the qualified name, or a glob.
+-    filter: []const u8 = "",
+-    json: bool = false,
+-    /// The build flags of the test executable (release, facts mode, `zig`, cache directory).
+-    build: pipeline.Options,
+-    /// Explicit entropy/property seed; null derives it from the qualified name.
+-    seed: ?u64 = null,
+-    /// Generated inputs every property must pass.
+-    property_runs: u32 = property.default_runs,
+-};
++pub const Options = @import("test_runner_options.zig").Options;
+ 
+ /// One selected test and its place in the report. `ready` tests have no verdict yet:
+ /// their `verdict` is filled in by building and running them.
+-const Selected = struct { case: discover.Case, verdict: report.Verdict, ready: bool };
++const Selected = struct { case: discover.Case, verdict: report.Verdict, ready: bool, identity: ?[32]u8 = null, settings: std.json.Value = .null };
++const case_expectation = "expected";
++const IdentityResources = struct { backing: std.mem.Allocator, io: std.Io };
++const ExecutionResources = struct { arena: std.mem.Allocator, backing: std.mem.Allocator, io: std.Io };
++const SelectionContext = struct { receipt: receipt.Context, base: [32]u8 };
+ 
+ /// Check, discover, build and run the tests of `options.path`, print the report, and return
+ /// the process exit status: 0 ok, 1 a test failed or the file does not check, 2 unreadable, 3 nothing selected.
+-pub fn run(init: std.process.Init, options: Options) Error!u8 {
++pub fn run(init: std.process.Init, requested: Options) Error!u8 {
++    if (directory_runner.selected(init.io, requested.path)) return directory_runner.run(init, requested);
++    var options = requested;
+     const allocator = init.arena.allocator();
+-    const located = frontend.entryOf(options.path);
++    var problems: std.ArrayList(u8) = .empty;
+     const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, options.path, allocator, .limited(64 << 20)) catch |err| {
+         const message = try std.fmt.allocPrint(allocator, "error: cannot read {s}: {s}\n", .{ options.path, @errorName(err) });
+         try writeAll(init, std.Io.File.stderr(), message);
+         return 2;
+     };
++    const located = project_entry.resolve(allocator, init.io, options.path, &problems) catch |err| {
++        if (err == error.OutOfMemory) return error.OutOfMemory;
++        try writeAll(init, std.Io.File.stderr(), problems.items);
++        return 1;
++    };
++    if (!try applyLimits(init, &options, located)) return 1;
++    const configured_cases = case_settings.load(allocator, init.io, located.path, options.controls.cases) catch |err| {
++        if (err == error.OutOfMemory) return error.OutOfMemory;
++        try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(allocator, "error: test cases: {s}\n", .{@errorName(err)}));
++        return 1;
++    };
++    options.controls.cases = configured_cases.path;
++    const context: receipt.Context = .{ .arena = allocator, .io = init.io, .environment = init.environ_map, .options = options, .entry = located, .case_bytes = configured_cases.bytes };
++    var native_inputs: std.ArrayList(receipt.Dependency) = .empty;
++    const base = try receipt.settings(context, &native_inputs);
++    if (try receipt.replay(context, base)) |cached| {
++        try writeAll(init, std.Io.File.stdout(), cached);
++        return 0;
++    }
+     var session = frontend.Session.init(init.gpa, init.io, located.root);
+     defer session.deinit();
++    located.configure(&session);
+     try session.enableCache(init.gpa, options.build.cache);
+     if (!definesMain(bytes)) session.entry_suffix = check_stub;
+-    var problems: std.ArrayList(u8) = .empty;
+     const checked = session.checkFile(allocator, options.path, &problems) catch |err| switch (err) {
+         error.OutOfMemory => return error.OutOfMemory,
+         else => {
+@@ -74,29 +92,184 @@ pub fn run(init: std.process.Init, options: Options) Error!u8 {
+             return 1;
+         },
+     };
++    var before: std.ArrayList(receipt.Dependency) = .empty;
++    try before.appendSlice(allocator, try receipt.captured(context, &session, &.{}));
++    try before.appendSlice(allocator, native_inputs.items);
++    located.validate(allocator, &session, &problems) catch |err| {
++        if (err == error.OutOfMemory) return error.OutOfMemory;
++        try writeAll(init, std.Io.File.stderr(), problems.items);
++        return 1;
++    };
++    const entry_module = moduleName(checked.program, located.name);
++    const modules = try moduleSources(allocator, &session, entry_module);
++    const all_cases = try discover.discover(allocator, checked.program, entry_module, modules);
++    case_settings.validate(configured_cases, all_cases) catch |err| {
++        if (err == error.OutOfMemory) return error.OutOfMemory;
++        try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(allocator, "error: test cases: {s}\n", .{@errorName(err)}));
++        return 1;
++    };
++    var selected_cases: std.ArrayList(discover.Case) = .empty;
++    for (all_cases) |case| if (discover.matches(options.filter, case.name)) {
++        try selected_cases.append(allocator, case);
++    };
++    const groups = case_settings.groups(allocator, configured_cases, selected_cases.items) catch |err| {
++        if (err == error.OutOfMemory) return error.OutOfMemory;
++        try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(allocator, "error: test providers: {s}\n", .{@errorName(err)}));
++        return 1;
++    };
+     var chosen: std.ArrayList(Selected) = .empty;
+-    const entry_module = moduleName(checked.program, located.module);
+-    const modules = try moduleSources(init, allocator, checked.program, located.root, .{ .name = entry_module, .text = bytes });
+-    for (try discover.discover(allocator, checked.program, entry_module, modules)) |case| {
+-        if (!discover.matches(options.filter, case.name)) continue;
+-        const refused = try classify(init.gpa, allocator, checked, case);
+-        try chosen.append(allocator, .{ .case = case, .verdict = refused orelse .{ .name = case.name, .status = .failed, .reason = "not run" }, .ready = refused == null });
++    var sources: std.ArrayList([]const u8) = .empty;
++    try addSources(allocator, &sources, context, &session);
++    for (groups) |group| {
++        var provider_session = frontend.Session.init(init.gpa, init.io, located.root);
++        defer provider_session.deinit();
++        var selected_program = checked;
++        var grouped_cases = group.cases;
++        if (group.providers.len != 0) {
++            case_settings.available(group.providers, &session, located.name) catch |err| {
++                if (err == error.OutOfMemory) return error.OutOfMemory;
++                try writeAll(init, std.Io.File.stderr(), "error: invalid test provider dependencies\n");
++                return 1;
++            };
++            located.configure(&provider_session);
++            try provider_session.enableCache(init.gpa, options.build.cache);
++            provider_session.setProviders(group.providers);
++            if (!definesMain(bytes)) provider_session.entry_suffix = check_stub;
++            selected_program = provider_session.checkFile(allocator, located.path, &problems) catch |err| {
++                if (err == error.OutOfMemory) return error.OutOfMemory;
++                try writeAll(init, std.Io.File.stderr(), problems.items);
++                return 1;
++            };
++            try before.appendSlice(allocator, try receipt.captured(context, &provider_session, group.providers));
++            located.validate(allocator, &provider_session, &problems) catch |err| {
++                if (err == error.OutOfMemory) return error.OutOfMemory;
++                try writeAll(init, std.Io.File.stderr(), problems.items);
++                return 1;
++            };
++            const provider_modules = try moduleSources(allocator, &provider_session, entry_module);
++            const discovered = try discover.discover(allocator, selected_program.program, entry_module, provider_modules);
++            case_settings.compatible(allocator, &session, &provider_session, checked, selected_program) catch |err| {
++                if (err == error.OutOfMemory) return error.OutOfMemory;
++                try writeAll(init, std.Io.File.stderr(), "error: ProviderSignatureChanged: test providers changed the exported type graph\n");
++                return 1;
++            };
++            grouped_cases = try remap(allocator, checked.program, selected_program.program, group.cases, discovered);
++            try addSources(allocator, &sources, context, &provider_session);
++        }
++        const items = try select(init, options, selected_program, grouped_cases, configured_cases, .{ .receipt = context, .base = base });
++        try execute(init, options, selected_program, items);
++        try chosen.appendSlice(allocator, items);
++    }
++    const unchanged = try receipt.unchanged(context, before.items);
++    if (!unchanged) {
++        try writeAll(init, std.Io.File.stderr(), "error: SourceChanged: a test input changed during checking or execution\n");
++        return 1;
+     }
+-    try execute(init, options, checked, chosen.items);
+     const verdicts = try allocator.alloc(report.Verdict, chosen.items.len);
+-    for (chosen.items, verdicts) |item, *verdict| verdict.* = item.verdict;
+-    const out = if (options.json) try report.json(allocator, verdicts) else try report.text(allocator, verdicts);
++    var successful = chosen.items.len != 0;
++    for (chosen.items, verdicts) |item, *verdict| {
++        verdict.* = item.verdict;
++        successful = successful and item.identity != null and (item.verdict.status == .passed or item.verdict.status == .cached);
++        if (unchanged and item.verdict.status == .passed) if (item.identity) |identity| try receipt.save(context, identity);
++    }
++    const json = try report.jsonSources(allocator, verdicts, sources.items);
++    if (successful and unchanged) try receipt.remember(context, base, before.items, json);
++    const out = if (options.json) json else try report.text(allocator, verdicts);
+     try writeAll(init, std.Io.File.stdout(), out);
+     return report.exitStatus(verdicts);
+ }
+ 
++fn applyLimits(init: std.process.Init, options: *Options, located: project_entry.Entry) Error!bool {
++    if (located.configuration) |configured| {
++        const limits = configured.document.limits.tests;
++        if (!options.controls.explicit_steps) if (limits.max_steps) |steps| {
++            options.controls.max_steps = steps;
++        };
++        if (limits.max_frames != null or limits.max_memory != null) {
++            try writeAll(init, std.Io.File.stderr(), "error[E_CORE_UNSUPPORTED]: configured test frame and memory limits are not implemented in the new core\n");
++            return false;
++        }
++    }
++    return true;
++}
++
++fn programIdentity(resources: IdentityResources, options: Options, checked: frontend.Checked, case: discover.Case, base: [32]u8) Error!?[32]u8 {
++    // The shared checker propagates effects through calls. Host calls have
++    // mutable external inputs and cannot publish persistent result receipts.
++    const function = checked.program.functions[@backingInt(case.function)];
++    const effects = @import("mylang").effect_set;
++    if (function.policy.host != null or function.policy.effects & effects.bit(.host) != 0) return null;
++    var scratch = std.heap.ArenaAllocator.init(resources.backing);
++    defer scratch.deinit();
++    const a = scratch.allocator();
++    var why: build.Refusal = .{};
++    var module = programFor(a, options, checked, &.{case}, &why) catch |err| {
++        if (err == error.OutOfMemory) return error.OutOfMemory;
++        return null;
++    };
++    var log: std.ArrayList(u8) = .empty;
++    const llvm = pipeline.emitted(a, &module, .{ .src = checked.src, .source_path = std.Io.Dir.cwd().realPathFileAlloc(resources.io, options.path, a) catch options.path, .main = .{} }, options.build, &log) catch |err| {
++        if (err == error.OutOfMemory) return error.OutOfMemory;
++        return null;
++    };
++    return receipt.key(base, case.name, llvm);
++}
++
++fn select(init: std.process.Init, options: Options, checked: frontend.Checked, cases: []const discover.Case, settings: case_settings.File, selection: SelectionContext) Error![]Selected {
++    const a = init.arena.allocator();
++    const chosen = try a.alloc(Selected, cases.len);
++    const context = selection.receipt;
++    for (cases, chosen) |case, *item| {
++        const configured = v.get(settings.document, case.name);
++        const skip = v.get(configured, "skip");
++        const refused = if (skip == .string and skip.string.len != 0) report.Verdict{ .name = case.name, .status = .skipped, .reason = skip.string } else try classify(init.gpa, a, checked, case, configured);
++        item.* = .{ .case = case, .verdict = refused orelse .{ .name = case.name, .status = .failed, .reason = "not run" }, .ready = refused == null, .settings = configured };
++        if (!item.ready) continue;
++        if (try programIdentity(.{ .backing = init.gpa, .io = init.io }, options, checked, case, selection.base)) |identity| {
++            item.identity = receipt.key(identity, "case-settings", try std.json.Stringify.valueAlloc(a, configured, .{}));
++            if (try receipt.hit(context, item.identity.?)) {
++                item.verdict = .{ .name = case.name, .status = .cached };
++                item.ready = false;
++            }
++        }
++    }
++    return chosen;
++}
++
++fn remap(a: std.mem.Allocator, before: typed.Program, after: typed.Program, original: []const discover.Case, discovered: []const discover.Case) Error![]const discover.Case {
++    const result = try a.alloc(discover.Case, original.len);
++    for (original, result) |case, *slot| {
++        const found = for (discovered) |candidate| {
++            if (std.mem.eql(u8, candidate.name, case.name)) break candidate;
++        } else return error.InvalidTestValue;
++        const old = before.functions[@backingInt(case.function)];
++        const new = after.functions[@backingInt(found.function)];
++        if (old.signature.parameter_count != new.signature.parameter_count) return error.InvalidTestValue;
++        if (!std.mem.eql(u16, old.signature.mutates, new.signature.mutates)) return error.InvalidTestValue;
++        if (!old.signature.return_origin.eql(new.signature.return_origin)) return error.InvalidTestValue;
++        const old_result = typed.typeName(old.signature.return_type, before.records);
++        const new_result = typed.typeName(new.signature.return_type, after.records);
++        if (!std.mem.eql(u8, old_result, new_result)) return error.InvalidTestValue;
++        for (old.scope.locals[0..old.signature.parameter_count], new.scope.locals[0..new.signature.parameter_count]) |left, right| {
++            if (!std.mem.eql(u8, left.name, right.name)) return error.InvalidTestValue;
++            if (!std.mem.eql(u8, typed.typeName(left.ty, before.records), typed.typeName(right.ty, after.records))) return error.InvalidTestValue;
++        }
++        slot.* = found;
++    }
++    return result;
++}
++
+ fn writeAll(init: std.process.Init, file: std.Io.File, text: []const u8) Error!void {
+     file.writeStreamingAll(init.io, text) catch return error.WriteFailed;
+ }
+ 
+ /// The `unsupported` verdict of a test the builder cannot build, or null when it can be built and run.
+-fn classify(gpa: std.mem.Allocator, keep: std.mem.Allocator, checked: frontend.Checked, case: discover.Case) Error!?report.Verdict {
+-    if (case.other_parameters != 0) {
++fn classify(gpa: std.mem.Allocator, keep: std.mem.Allocator, checked: frontend.Checked, case: discover.Case, settings: std.json.Value) Error!?report.Verdict {
++    const arguments = v.get(settings, "arguments");
++    const fixed = arguments == .object and arguments.object.count() != 0;
++    const expected = settings == .object and settings.object.contains(case_expectation);
++    if (case.other_parameters != 0 and !fixed) {
++        if (expected) return .{ .name = case.name, .status = .failed, .reason = "a property test's verdict is its bool result; remove `expected` or supply `arguments`" };
+         const function = checked.program.functions[@backingInt(case.function)];
+         const definitions = try property_schema.definitions(keep, checked.program);
+         const schema = try property_types.Schema.init(keep, definitions);
+@@ -109,7 +282,7 @@ fn classify(gpa: std.mem.Allocator, keep: std.mem.Allocator, checked: frontend.C
+             }
+         }
+     }
+-    if (case.shape == .other) return refusal(case, "test result type is not bool", "");
++    if (case.shape == .other and !expected) return refusal(case, "test result type is not bool", "");
+     var scratch = std.heap.ArenaAllocator.init(gpa);
+     defer scratch.deinit();
+     var why: build.Refusal = .{};
+@@ -121,7 +294,7 @@ fn classify(gpa: std.mem.Allocator, keep: std.mem.Allocator, checked: frontend.C
+             return refusal(case, try keep.dupe(u8, why.reason), try std.fmt.allocPrint(keep, "{d}:{d}", .{ at.line, at.column }));
+         },
+     };
+-    if (!entry.readable(&module, module.functions.items[0].signature.ret)) return refusal(case, "the runner's entry cannot read this test's result type yet (Result[bool, E])", "");
++    if (!expected and !entry.readable(&module, module.functions.items[0].signature.ret)) return refusal(case, "the runner's entry cannot read this test's result type yet (Result[bool, E])", "");
+     return null;
+ }
+ 
+@@ -137,24 +310,26 @@ fn moduleName(program: typed.Program, stem: []const u8) []const u8 {
+     return main[0..split];
+ }
+ 
+-/// The entry module's text and the source of every other module a function belongs to,
+-/// read from `root` (a module `a.b` is `root/a/b.my`); a module without a file is left out.
+-fn moduleSources(init: std.process.Init, allocator: std.mem.Allocator, program: typed.Program, root: []const u8, entry_module: discover.Module) std.mem.Allocator.Error![]const discover.Module {
+-    var modules: std.ArrayList(discover.Module) = .empty;
+-    try modules.append(allocator, entry_module);
+-    for (program.functions) |function| {
+-        const split = std.mem.lastIndexOf(u8, function.name, "::") orelse continue;
+-        const name = function.name[0..split];
+-        var known = false;
+-        for (modules.items) |module| known = known or std.mem.eql(u8, module.name, name);
+-        if (known) continue;
+-        const relative = try std.fmt.allocPrint(allocator, "{s}.my", .{name});
+-        std.mem.replaceScalar(u8, relative[0..name.len], '.', '/');
+-        const path = try std.fs.path.join(allocator, &.{ root, relative });
+-        const text = std.Io.Dir.cwd().readFileAlloc(init.io, path, allocator, .limited(64 << 20)) catch "";
+-        try modules.append(allocator, .{ .name = name, .text = text });
++/// Discover declarations from the immutable sources the checker actually used.
++fn moduleSources(a: std.mem.Allocator, session: *const frontend.Session, entry_module: []const u8) Error![]const discover.Module {
++    if (session.single) |unit| return a.dupe(discover.Module, &.{.{ .name = entry_module, .text = unit.src.bytes }});
++    const modules = try a.alloc(discover.Module, session.project.modules.items.len);
++    for (session.project.modules.items, modules) |source, *module| module.* = .{ .name = source.name, .text = source.src.bytes };
++    return modules;
++}
++
++fn addSources(a: std.mem.Allocator, paths: *std.ArrayList([]const u8), context: receipt.Context, session: *const frontend.Session) Error!void {
++    if (session.single != null) {
++        try paths.append(a, context.entry.path);
++        return;
++    }
++    for (session.project.modules.items) |module| {
++        if (std.mem.startsWith(u8, module.src.path, "@stdlib/")) continue;
++        const path = try std.fs.path.join(a, &.{ context.entry.root, module.src.path });
++        var present = false;
++        for (paths.items) |known| present = present or std.mem.eql(u8, known, path);
++        if (!present) try paths.append(a, path);
+     }
+-    return modules.toOwnedSlice(allocator);
+ }
+ 
+ fn definesMain(bytes: []const u8) bool {
+@@ -166,11 +341,17 @@ fn definesMain(bytes: []const u8) bool {
+ }
+ 
+ /// Build the pending tests together (isolating any the backend rejects) and run each.
+-fn execute(init: std.process.Init, options: Options, checked: frontend.Checked, chosen: []Selected) Error!void {
++fn execute(init: std.process.Init, requested: Options, checked: frontend.Checked, chosen: []Selected) Error!void {
+     const allocator = init.arena.allocator();
+     var live: std.ArrayList(usize) = .empty;
+     for (chosen, 0..) |item, position| if (item.ready) try live.append(allocator, position);
+     if (live.items.len == 0) return;
++    var options = requested;
++    var nonce: [16]u8 = undefined;
++    std.Io.random(init.io, &nonce);
++    options.build.output = try std.fmt.allocPrint(allocator, "{s}/tests/program-{s}", .{ requested.build.cache, std.fmt.bytesToHex(nonce, .lower) });
++    std.Io.Dir.cwd().createDirPath(init.io, options.build.output) catch return error.WriteFailed;
++    defer removePrivate(init.io, options.build.output);
+     var attempt = try buildExecutable(init, options, checked, chosen, live.items, "");
+     if (attempt == .failed and live.items.len > 1) {
+         // Find which tests the backend rejects by building each alone, then rebuild the rest.
+@@ -190,9 +371,54 @@ fn execute(init: std.process.Init, options: Options, checked: frontend.Checked,
+         .failed => |failure| for (live.items) |position| {
+             chosen[position].verdict = .{ .name = chosen[position].case.name, .status = failure.status, .reason = failure.reason };
+         },
+-        .built => |executable| for (live.items, 0..) |position, table_index| {
+-            chosen[position].verdict = try runSelected(init, options, checked.program, executable, table_index, chosen[position].case);
+-        },
++        .built => |executable| try executeWorkers(init, options, checked.program, executable, chosen, live.items),
++    }
++}
++
++const Work = struct {
++    resources: ExecutionResources,
++    options: Options,
++    program: typed.Program,
++    executable: []const u8,
++    table_index: usize,
++    selected: *Selected,
++    failure: ?Error = null,
++
++    fn run(self: *Work) void {
++        self.selected.verdict = runSelected(self.resources, self.options, self.program, self.executable, self.table_index, self.selected.*) catch |err| {
++            self.failure = err;
++            return;
++        };
++    }
++};
++
++fn executeWorkers(init: std.process.Init, options: Options, program: typed.Program, executable: []const u8, chosen: []Selected, positions: []const usize) Error!void {
++    const a = init.arena.allocator();
++    const width = @import("test_runner_options.zig").width(options.controls, init.environ_map, positions.len);
++    // The pinned Zig arena is thread-safe with Init's thread-safe backing.
++    const resources: ExecutionResources = .{ .arena = a, .backing = init.gpa, .io = init.io };
++    const work = try a.alloc(Work, positions.len);
++    for (positions, work, 0..) |position, *item, table_index| item.* = .{ .resources = resources, .options = options, .program = program, .executable = executable, .table_index = table_index, .selected = &chosen[position] };
++    if (width == 1) {
++        for (work) |*item| {
++            item.run();
++            if (item.failure) |err| return err;
++        }
++        return;
++    }
++    const threads = try a.alloc(std.Thread, width);
++    var begin: usize = 0;
++    while (begin < work.len) : (begin += width) {
++        var started: usize = 0;
++        for (work[begin..@min(work.len, begin + width)]) |*item| {
++            threads[started] = std.Thread.spawn(.{}, Work.run, .{item}) catch {
++                item.run();
++                continue;
++            };
++            started += 1;
++        }
++        for (threads[0..started]) |thread| thread.join();
++        for (work[begin..@min(work.len, begin + width)]) |item| if (item.failure) |err| return err;
+     }
+ }
+ 
+@@ -204,39 +430,16 @@ fn buildExecutable(init: std.process.Init, options: Options, checked: frontend.C
+     const name = chosen[positions[0]].case.name;
+     const cases = try allocator.alloc(discover.Case, positions.len);
+     for (positions, cases) |position, *case| case.* = chosen[position].case;
+-    const roots = try rootsFor(allocator, checked.program, cases);
+     var why: build.Refusal = .{};
+-    var module = build.buildRootsSource(allocator, checked.program, roots, checked.src, &why) catch |err| switch (err) {
+-        error.OutOfMemory => return error.OutOfMemory,
+-        error.Unsupported => return .{ .failed = .{ .name = name, .status = .unsupported, .reason = why.reason } },
+-    };
+-    const targets = try allocator.alloc(entry.Target, positions.len);
+-    for (targets, positions, 0..) |*target, position, table_index| {
+-        const case = chosen[position].case;
+-        const function = checked.program.functions[@backingInt(case.function)];
+-        const result = typed.resultShape(function.signature.return_type, checked.program.records);
+-        const parameters = try allocator.alloc([]const u8, function.signature.parameter_count);
+-        for (parameters, function.scope.locals[0..function.signature.parameter_count]) |*name_slot, parameter| name_slot.* = typed.typeName(parameter.ty, checked.program.records);
+-        target.* = .{
+-            .function = @intCast(table_index),
+-            .streams = case.streams,
+-            .parameters = case.parameters,
+-            .seed = entropySeed(options.seed, case.name),
+-            .data = .{ .parameters = parameters, .result = typed.typeName(function.signature.return_type, checked.program.records) },
+-            .result = if (result) |shape| .{ .ok_tag = @intCast(shape.ok_tag), .error_tag = @intCast(shape.error_tag) } else null,
+-        };
+-    }
+-    const schema = try property_types.Schema.init(allocator, try property_schema.definitions(allocator, checked.program));
+-    batch_entry.add(allocator, &module, targets, schema) catch |err| switch (err) {
++    var module = programFor(allocator, options, checked, cases, &why) catch |err| switch (err) {
+         error.OutOfMemory => return error.OutOfMemory,
+-        else => return .{ .failed = .{ .name = name, .status = .unsupported, .reason = "property copied-value adapter type" } },
++        else => return .{ .failed = .{ .name = name, .status = .unsupported, .reason = if (why.reason.len != 0) why.reason else "property copied-value adapter type" } },
+     };
+     const flavor = if (options.build.release) "release" else "debug";
+     const absolute = std.Io.Dir.cwd().realPathFileAlloc(init.io, options.path, allocator) catch options.path;
+     var digest: [8]u8 = undefined;
+     std.crypto.hash.Blake3.hash(absolute, &digest, .{});
+-    const directory = try std.fs.path.join(allocator, &.{ options.build.cache, "tests" });
+-    std.Io.Dir.cwd().createDirPath(init.io, directory) catch return error.WriteFailed;
++    const directory = options.build.output;
+     var request = options.build;
+     request.output = try std.fmt.allocPrint(allocator, "{s}/{s}-{x}-{s}{s}", .{ directory, frontend.entryOf(options.path).module, digest, flavor, tag });
+     var log: std.ArrayList(u8) = .empty;
+@@ -249,6 +452,31 @@ fn buildExecutable(init: std.process.Init, options: Options, checked: frontend.C
+     return .{ .built = request.output };
+ }
+ 
++fn programFor(allocator: std.mem.Allocator, options: Options, checked: frontend.Checked, cases: []const discover.Case, why: *build.Refusal) (Error || build.Error || batch_entry.Error)!@import("ir.zig").Module {
++    const roots = try rootsFor(allocator, checked.program, cases);
++    var module = try build.buildRootsSource(allocator, checked.program, roots, checked.src, why);
++    const targets = try allocator.alloc(entry.Target, cases.len);
++    for (targets, cases, 0..) |*target, case, table_index| {
++        const function = checked.program.functions[@backingInt(case.function)];
++        const result = typed.resultShape(function.signature.return_type, checked.program.records);
++        const parameters = try allocator.alloc([]const u8, function.signature.parameter_count);
++        for (parameters, function.scope.locals[0..function.signature.parameter_count]) |*name_slot, parameter| name_slot.* = typed.typeName(parameter.ty, checked.program.records);
++        target.* = .{
++            .function = @intCast(table_index),
++            .streams = case.streams,
++            .parameters = case.parameters,
++            .seed = entropySeed(options.seed, case.name),
++            .data = .{ .parameters = parameters, .result = typed.typeName(function.signature.return_type, checked.program.records) },
++            .result = if (result) |shape| .{ .ok_tag = @intCast(shape.ok_tag), .error_tag = @intCast(shape.error_tag) } else null,
++        };
++    }
++    const schema = try property_types.Schema.init(allocator, try property_schema.definitions(allocator, checked.program));
++    const originals = module.functions.items.len;
++    try batch_entry.add(allocator, &module, targets, schema);
++    try @import("test_runner_budget.zig").instrument(allocator, &module, originals, options.controls);
++    return module;
++}
++
+ fn firstLine(allocator: std.mem.Allocator, text: []const u8) std.mem.Allocator.Error![]const u8 {
+     return allocator.dupe(u8, std.mem.sliceTo(std.mem.trim(u8, text, "\n"), '\n'));
+ }
+@@ -298,35 +526,58 @@ fn functionValue(a: std.mem.Allocator, program: typed.Program, case: discover.Ca
+     return .{ .object = out };
+ }
+ 
+-fn runSelected(init: std.process.Init, options: Options, program: typed.Program, executable: []const u8, table_index: usize, case: discover.Case) Error!report.Verdict {
+-    const a = init.arena.allocator();
++fn runSelected(resources: ExecutionResources, options: Options, program: typed.Program, executable: []const u8, table_index: usize, selected: Selected) Error!report.Verdict {
++    const case = selected.case;
++    const a = resources.arena;
+     const function = try functionValue(a, program, case);
+     var nonce: [16]u8 = undefined;
+-    std.Io.random(init.io, &nonce);
++    std.Io.random(resources.io, &nonce);
+     const directory = try std.fmt.allocPrint(a, "{s}/tests/private-{s}", .{ options.build.cache, std.fmt.bytesToHex(nonce, .lower) });
+-    std.Io.Dir.cwd().createDirPath(init.io, directory) catch return error.WriteFailed;
+-    defer removePrivate(init.io, directory);
+-    const context: property_execute.Context = .{ .arena = a, .backing = init.gpa, .io = init.io };
+-    const source_path = std.Io.Dir.cwd().realPathFileAlloc(init.io, options.path, a) catch options.path;
++    std.Io.Dir.cwd().createDirPath(resources.io, directory) catch return error.WriteFailed;
++    defer removePrivate(resources.io, directory);
++    const context: property_execute.Context = .{ .arena = a, .backing = resources.backing, .io = resources.io };
++    const source_path = std.Io.Dir.cwd().realPathFileAlloc(resources.io, options.path, a) catch options.path;
+     const executor: property_execute.Executor = .{ .context = context, .types = try property_schema.definitions(a, program), .executable = executable, .table_index = table_index, .directory = directory, .source_path = source_path };
+-    if (case.other_parameters != 0) {
+-        const setup = try property.Property.bind(context, &executor, function, .{}, .{ .seed = entropySeed(options.seed, case.name), .runs = options.property_runs, .entry = options.path });
++    const arguments = v.get(selected.settings, "arguments");
++    const fixed = arguments == .object and arguments.object.count() != 0;
++    if (case.other_parameters != 0 and !fixed) {
++        const setup = try property.Property.bind(context, &executor, function, .{ .timeout_ms = options.controls.timeout_ms }, .{ .seed = entropySeed(options.seed, case.name), .runs = options.property_runs, .entry = options.path });
+         var bound = switch (setup) {
+             .invalid => |reason| return .{ .name = case.name, .status = .failed, .reason = reason },
+             .ready => |ready| ready,
+         };
+         var search: property.Search = .{};
+         const first = try bound.first(&search);
+-        const answers = try property_execute.executeBatches(context, &.{first}, .{}, 1);
++        const answers = try property_execute.executeBatches(context, &.{first}, .{ .timeout_ms = options.controls.timeout_ms }, 1);
+         const verdict = try bound.finish(&search, answers[0]);
+         return .{ .name = case.name, .status = if (verdict.passed) .passed else .failed, .reason = verdict.reason, .property = verdict.evidence };
+     }
+-    const answered = try property_execute.executeBatches(context, &.{.{ .executor = &executor, .function = function, .inputs = &.{&.{}} }}, .{}, 1);
+-    if (answered[0].outcomes.len != 1) return .{ .name = case.name, .status = .failed, .reason = if (answered[0].timed_out) "timed out after 60 s" else answered[0].ending };
++    const words = if (fixed) executor.encode(function, arguments) catch return .{ .name = case.name, .status = .failed, .reason = "invalid cases-file arguments" } else &.{};
++    const answered = try property_execute.executeBatches(context, &.{.{ .executor = &executor, .function = function, .inputs = &.{words} }}, .{ .timeout_ms = options.controls.timeout_ms }, 1);
++    if (answered[0].outcomes.len != 1) return .{ .name = case.name, .status = .failed, .reason = if (answered[0].timed_out) try std.fmt.allocPrint(a, "timed out after {d} ms", .{options.controls.timeout_ms}) else answered[0].ending };
+     const outcome = answered[0].outcomes[0];
+-    const passed = outcome.status.len != 0 and std.mem.eql(u8, outcome.status, "value") and truth(outcome.actual);
++    const explicit = selected.settings == .object and selected.settings.object.contains(case_expectation);
++    const returned = std.mem.eql(u8, outcome.status, "value");
++    const matches = if (!returned) false else if (explicit) try expectedResult(a, program, case, v.get(selected.settings, case_expectation), outcome.actual) else truth(outcome.actual);
++    const passed = returned and matches;
++    if (explicit and !passed and std.mem.eql(u8, outcome.status, "value")) {
++        const expected_text = try std.json.Stringify.valueAlloc(a, v.get(selected.settings, case_expectation), .{});
++        const actual_text = try std.json.Stringify.valueAlloc(a, outcome.actual, .{});
++        return .{ .name = case.name, .status = .failed, .reason = try std.fmt.allocPrint(a, "expected {s}, got {s}", .{ expected_text, actual_text }) };
++    }
+     return .{ .name = case.name, .status = if (passed) .passed else .failed, .reason = if (passed) "" else try ordinaryReason(a, outcome) };
+ }
++
++fn expectedResult(a: std.mem.Allocator, program: typed.Program, case: discover.Case, expected: std.json.Value, actual: std.json.Value) Error!bool {
++    const schema = try property_types.Schema.init(a, try property_schema.definitions(a, program));
++    const function = program.functions[@backingInt(case.function)];
++    const name = typed.typeName(function.signature.return_type, program.records);
++    var wanted: @import("property_codec.zig").Codec = .{ .allocator = a, .schema = schema };
++    wanted.encode(name, expected) catch return false;
++    var observed: @import("property_codec.zig").Codec = .{ .allocator = a, .schema = schema };
++    observed.encode(name, actual) catch return false;
++    return std.mem.eql(u64, wanted.words.items, observed.words.items);
++}
+ fn truth(value: std.json.Value) bool {
+     if (value == .bool) return value.bool;
+     return std.mem.eql(u8, v.text(v.get(value, "case")), "ok") and v.get(value, "value") == .bool and v.get(value, "value").bool;
+@@ -367,3 +618,24 @@ fn ordinaryReason(a: std.mem.Allocator, outcome: property_execute.Outcome) Error
+     if (outcome.output.len != 0) reason = try std.fmt.allocPrint(a, "{s}\n{s}", .{ reason, outcome.output });
+     return reason;
+ }
++
++// spec-case: NEW-CORE-S4-TEST-3
++test "programIdentity propagates allocation failure instead of inventing a reusable success" {
++    const resources: IdentityResources = .{ .backing = std.testing.failing_allocator, .io = std.testing.io };
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
++    const source = "module app\n\npublic def test_value() -> bool:\n    return True\n\ndef main() -> int:\n    return 0\n";
++    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = source });
++    const path = try std.fs.path.join(a, &.{ root, "app.my" });
++    var diagnostics: std.ArrayList(u8) = .empty;
++    var session = frontend.Session.init(std.testing.allocator, std.testing.io, root);
++    defer session.deinit();
++    const checked = try session.checkFile(a, path, &diagnostics);
++    const cases = try discover.discover(a, checked.program, "app", &.{.{ .name = "app", .text = source }});
++    try std.testing.expectEqual(@as(usize, 1), cases.len);
++    try std.testing.expectError(error.OutOfMemory, programIdentity(resources, .{ .path = path, .build = .{ .zig = "zig" } }, checked, cases[0], @splat(0)));
++}
+diff --git a/src/core/test_runner_batch.zig b/src/core/test_runner_batch.zig
+index e083ce3ab..15f93de90 100644
+--- a/src/core/test_runner_batch.zig
++++ b/src/core/test_runner_batch.zig
+@@ -81,7 +81,9 @@ fn trial(context: *adapters.Context, target: entry.Target) Error!u32 {
+     const module = context.module;
+     const signature = target.data orelse return error.UnsupportedTestType;
+     const source = module.functions.items[target.function].signature;
+-    var b: tools.Builder = .{ .arena = a, .function = .{ .name = try std.fmt.allocPrint(a, "__test_trial_{d}", .{target.function}), .signature = .{ .params = &.{}, .ret = .void } } };
++    var digest: [16]u8 = undefined;
++    std.crypto.hash.Blake3.hash(module.functions.items[target.function].name, &digest, .{});
++    var b: tools.Builder = .{ .arena = a, .function = .{ .name = try std.fmt.allocPrint(a, "__test_trial_{s}", .{std.fmt.bytesToHex(digest, .lower)}), .signature = .{ .params = &.{}, .ret = .void } } };
+     const start = try b.block();
+     const arguments = try a.alloc(ir.Ref, source.params.len);
+     var stream_index: usize = 0;
+diff --git a/src/core/test_runner_budget.zig b/src/core/test_runner_budget.zig
+new file mode 100644
+index 000000000..9b447885a
+--- /dev/null
++++ b/src/core/test_runner_budget.zig
+@@ -0,0 +1,39 @@
++//! Native test step bounds use existing Core calls. A block charges the number
++//! of original Core instructions it executes; generated adapters are not charged.
++const std = @import("std");
++const ir = @import("ir.zig");
++const tools = @import("test_builder.zig");
++const options = @import("test_runner_options.zig");
++
++/// Instrument only original program functions, resetting the counter per trial.
++pub fn instrument(a: std.mem.Allocator, module: *ir.Module, originals: usize, controls: options.Controls) error{OutOfMemory}!void {
++    const reset = try tools.helper(a, module, "myl_core_test_limits", &.{ .u64, .u32 }, .void);
++    const tick = if (controls.max_steps != 0) try tools.helper(a, module, "myl_core_test_tick", &.{.u64}, .void) else null;
++    for (module.functions.items, 0..) |*function, index| {
++        if (function.signature.linkage != .internal) continue;
++        var b: tools.Builder = .{ .arena = a, .function = function.* };
++        if (std.mem.startsWith(u8, function.name, "__test_trial_")) {
++            const args = &.{ try b.constant(.u64, @bitCast(controls.max_steps)), try b.constant(.u32, controls.timeout_ms) };
++            try prepend(&b, @fromBackingInt(0), module, reset, args);
++        } else if (index < originals and tick != null) {
++            for (b.function.blocks.items, 0..) |block, block_index| {
++                if (block.insts.items.len == 0) continue;
++                const cost = try b.constant(.u64, @intCast(block.insts.items.len));
++                try prepend(&b, @fromBackingInt(@intCast(block_index)), module, tick.?, &.{cost});
++            }
++        }
++        function.* = b.function;
++    }
++}
++
++fn prepend(b: *tools.Builder, block: ir.BlockId, module: *const ir.Module, helper: u32, arguments: []const ir.Ref) error{OutOfMemory}!void {
++    const ref = try b.call(block, module, helper, arguments);
++    const list = &b.function.blocks.items[block.index()].insts;
++    list.items.len -= 1;
++    var first: usize = 0;
++    while (first < list.items.len) : (first += 1) {
++        const op = b.function.inst(list.items[first]).op;
++        if (op != .phi and op != .copy) break;
++    }
++    try list.insert(b.arena, first, ref);
++}
+diff --git a/src/core/test_runner_cases.zig b/src/core/test_runner_cases.zig
+new file mode 100644
+index 000000000..63faebdc8
+--- /dev/null
++++ b/src/core/test_runner_cases.zig
+@@ -0,0 +1,185 @@
++//! Declarative cases and provider overlays retain original module paths. Provider
++//! paths must be existing dependencies, and cases never silently discard tests.
++const std = @import("std");
++const language = @import("mylang");
++const frontend = @import("frontend.zig");
++const discover = @import("test_runner_discover.zig");
++const v = @import("property_value.zig");
++const providers_key = "providers";
++pub const Error = error{ OutOfMemory, InvalidTestCases, UnknownTestCase, InvalidTestProviders, ProviderSignatureChanged, ReadFailed };
++/// Owned parsed document under the command arena.
++pub const File = struct { path: ?[]const u8 = null, document: std.json.Value = .null, bytes: []const u8 = "" };
++/// Cases sharing one provider graph can be checked and built together.
++pub const Group = struct { providers: []const frontend.Provider, cases: []const discover.Case };
++
++/// Explicit file or the old runner's sibling FILE.cases.json convention.
++pub fn load(a: std.mem.Allocator, io: std.Io, entry: []const u8, explicit: ?[]const u8) Error!File {
++    const inferred = try std.fmt.allocPrint(a, "{s}.cases.json", .{if (std.mem.endsWith(u8, entry, ".my")) entry[0 .. entry.len - 3] else entry});
++    const path = explicit orelse inferred;
++    const bytes = std.Io.Dir.cwd().readFileAlloc(io, path, a, .limited(16 << 20)) catch |err| {
++        if (err == error.OutOfMemory) return error.OutOfMemory;
++        if (explicit == null and err == error.FileNotFound) return .{};
++        return error.ReadFailed;
++    };
++    const value = std.json.parseFromSliceLeaky(std.json.Value, a, bytes, .{}) catch |err| {
++        if (err == error.OutOfMemory) return error.OutOfMemory;
++        return error.InvalidTestCases;
++    };
++    if (value != .object) return error.InvalidTestCases;
++    return .{ .path = std.Io.Dir.cwd().realPathFileAlloc(io, path, a) catch path, .document = value, .bytes = bytes };
++}
++
++/// Validate every name and field, including cases outside the current filter.
++pub fn validate(file: File, cases: []const discover.Case) Error!void {
++    if (file.document == .null) return;
++    var entries = file.document.object.iterator();
++    while (entries.next()) |item| {
++        var found = false;
++        for (cases) |case| found = found or std.mem.eql(u8, case.name, item.key_ptr.*);
++        if (!found) return error.UnknownTestCase;
++        if (item.value_ptr.* != .object) return error.InvalidTestCases;
++        var fields = item.value_ptr.object.iterator();
++        while (fields.next()) |setting| {
++            const name = setting.key_ptr.*;
++            if (!allowedField(name)) return error.InvalidTestCases;
++        }
++        const arguments = v.get(item.value_ptr.*, "arguments");
++        const skip = v.get(item.value_ptr.*, "skip");
++        const providers = v.get(item.value_ptr.*, providers_key);
++        if (arguments != .null and arguments != .object) return error.InvalidTestCases;
++        if (skip != .null and skip != .string) return error.InvalidTestCases;
++        if (providers != .null and providers != .object) return error.InvalidTestCases;
++    }
++}
++
++/// Retain one checked graph per distinct map of provider sources.
++pub fn groups(a: std.mem.Allocator, file: File, cases: []const discover.Case) Error![]const Group {
++    var result: std.ArrayList(Group) = .empty;
++    var lists: std.ArrayList(std.ArrayList(discover.Case)) = .empty;
++    for (cases) |case| {
++        const providers = try overlays(a, v.get(v.get(file.document, case.name), providers_key));
++        var index: ?usize = null;
++        for (result.items, 0..) |group, position| if (same(group.providers, providers)) {
++            index = position;
++        };
++        if (index == null) {
++            index = result.items.len;
++            try result.append(a, .{ .providers = providers, .cases = &.{} });
++            try lists.append(a, .empty);
++        }
++        try lists.items[index.?].append(a, case);
++    }
++    for (result.items, lists.items) |*group, list| group.cases = list.items;
++    return result.items;
++}
++
++/// A provider may replace an existing dependency, never the entry or a new path.
++pub fn available(providers: []const frontend.Provider, session: *const frontend.Session, entry: []const u8) Error!void {
++    for (providers) |provider| {
++        var found = false;
++        for (session.project.modules.items) |module| if (std.mem.eql(u8, module.src.path, provider.path)) {
++            if (std.mem.eql(u8, module.name, entry)) return error.InvalidTestProviders;
++            found = true;
++        };
++        if (!found) return error.InvalidTestProviders;
++    }
++}
++
++/// Provider bodies may change; their exported transitive type graph must retain
++/// its checked structure, including callbacks, aliases and union payloads.
++pub fn compatible(a: std.mem.Allocator, original: *frontend.Session, replacement: *frontend.Session, original_checked: frontend.Checked, replacement_checked: frontend.Checked) Error!void {
++    const left = try publicSchema(a, original, original_checked);
++    const right = try publicSchema(a, replacement, replacement_checked);
++    const left_types = try std.json.Stringify.valueAlloc(a, v.get(left, "types"), .{});
++    const right_types = try std.json.Stringify.valueAlloc(a, v.get(right, "types"), .{});
++    if (!std.mem.eql(u8, left_types, right_types)) return error.ProviderSignatureChanged;
++}
++
++fn publicSchema(a: std.mem.Allocator, session: *frontend.Session, checked: frontend.Checked) Error!std.json.Value {
++    // Schema rendering reads the already checked program and declaration index.
++    // Its check() returns immediately when program is present; merged syntax
++    // and lowering state are not required by testRoots or graph rendering.
++    var view: language.project_compile.Compilation = .{
++        .index = session.interfaceIndex(),
++        .src = checked.src,
++        .syntax = .{ .nodes = .empty, .statements = .empty, .functions = &.{} },
++        .diagnostics = .{ .allocator = a },
++        .program = checked.program,
++    };
++    // The shared checked-facts API exposes the schema rooted at every test,
++    // including private @test parameters; it does not lower or invoke a driver.
++    const bytes = view.emitNativeTestFactsScoped(a, .all) catch |err| {
++        if (err == error.OutOfMemory) return error.OutOfMemory;
++        return error.ProviderSignatureChanged;
++    };
++    const facts = std.json.parseFromSliceLeaky(std.json.Value, a, bytes, .{}) catch |err| {
++        if (err == error.OutOfMemory) return error.OutOfMemory;
++        return error.ProviderSignatureChanged;
++    };
++    return std.json.parseFromSliceLeaky(std.json.Value, a, v.text(v.get(facts, "schema")), .{}) catch |err| {
++        if (err == error.OutOfMemory) return error.OutOfMemory;
++        return error.ProviderSignatureChanged;
++    };
++}
++
++fn overlays(a: std.mem.Allocator, value: std.json.Value) Error![]const frontend.Provider {
++    if (value == .null) return &.{};
++    var found: std.ArrayList(frontend.Provider) = .empty;
++    var fields = value.object.iterator();
++    while (fields.next()) |item| {
++        const path = item.key_ptr.*;
++        if (std.fs.path.isAbsolute(path) or !std.mem.endsWith(u8, path, ".my") or item.value_ptr.* != .string) return error.InvalidTestProviders;
++        const module = try a.dupe(u8, path[0 .. path.len - 3]);
++        std.mem.replaceScalar(u8, module, '/', '.');
++        if (!language.project.validName(module)) return error.InvalidTestProviders;
++        try found.append(a, .{ .path = path, .text = item.value_ptr.string });
++    }
++    std.mem.sort(frontend.Provider, found.items, {}, before);
++    return found.items;
++}
++fn before(_: void, left: frontend.Provider, right: frontend.Provider) bool {
++    return std.mem.lessThan(u8, left.path, right.path);
++}
++fn same(left: []const frontend.Provider, right: []const frontend.Provider) bool {
++    if (left.len != right.len) return false;
++    for (left, right) |a, b| if (!std.mem.eql(u8, a.path, b.path) or !std.mem.eql(u8, a.text, b.text)) return false;
++    return true;
++}
++
++// spec-case: NEW-CORE-S4-TEST-4
++test "provider paths refuse traversal and preserve distinct fixture bodies" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    const invalid = try std.json.parseFromSliceLeaky(std.json.Value, a, "{\"../other.my\":\"module other\"}", .{});
++    try std.testing.expectError(error.InvalidTestProviders, overlays(a, invalid));
++    const one = try std.json.parseFromSliceLeaky(std.json.Value, a, "{\"dep.my\":\"module dep\\n\"}", .{});
++    const two = try std.json.parseFromSliceLeaky(std.json.Value, a, "{\"dep.my\":\"module dep\\n# changed\\n\"}", .{});
++    try std.testing.expect(!same(try overlays(a, one), try overlays(a, two)));
++}
++
++fn allowedField(name: []const u8) bool {
++    for ([_][]const u8{ providers_key, "arguments", "expected", "skip" }) |allowed| if (std.mem.eql(u8, name, allowed)) return true;
++    return false;
++}
++
++// spec-case: NEW-CORE-S4-TEST-4
++test "publicSchema refuses an invalid checked type catalog and propagates allocation failure" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
++    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = "module app\n\npublic record Cell:\n    value: int\n\ndef main() -> int:\n    return 0\n" });
++    const path = try std.fs.path.join(a, &.{ root, "app.my" });
++    var diagnostics: std.ArrayList(u8) = .empty;
++    var session = frontend.Session.init(std.testing.allocator, std.testing.io, root);
++    defer session.deinit();
++    const checked = try session.checkFile(a, path, &diagnostics);
++    var damaged = checked;
++    damaged.program.records = &.{};
++    try std.testing.expectError(error.ProviderSignatureChanged, publicSchema(a, &session, damaged));
++    var failing = std.testing.FailingAllocator.init(a, .{ .fail_index = 0 });
++    try std.testing.expectError(error.OutOfMemory, publicSchema(failing.allocator(), &session, checked));
++}
+diff --git a/src/core/test_runner_directory.zig b/src/core/test_runner_directory.zig
+new file mode 100644
+index 000000000..563509ba0
+--- /dev/null
++++ b/src/core/test_runner_directory.zig
+@@ -0,0 +1,319 @@
++//! Directory programs run in bounded child processes. Every test-declaring
++//! source must appear in a child's checked inventory, including orphan libraries.
++const std = @import("std");
++const language = @import("mylang");
++const project_entry = @import("project_entry.zig");
++const frontend = @import("frontend.zig");
++const options = @import("test_runner_options.zig");
++const report = @import("test_runner_report.zig");
++const Error = @import("test_runner_property.zig").Error;
++
++const Input = struct { path: []const u8, digest: [32]u8 };
++const Selection = struct { entries: []const []const u8, tested: []const []const u8, inputs: []const Input };
++const Orphan = struct { path: []const u8, closure: []const []const u8 };
++const Outcome = struct { code: u8 = 1, bytes: []const u8 = "" };
++const Fanout = struct { compiler: []const u8, directory: []const u8, controls: options.Options, jobs: usize };
++
++/// Whether the command names a directory rather than a single project entry.
++pub fn selected(io: std.Io, path: []const u8) bool {
++    const info = std.Io.Dir.cwd().statFile(io, path, .{}) catch return false;
++    return info.kind == .directory;
++}
++
++/// Discover roots and launch them with one shared bounded worker budget.
++pub fn run(init: std.process.Init, opts: options.Options) Error!u8 {
++    const a = init.arena.allocator();
++    if (opts.controls.cases != null) {
++        try write(init.io, std.Io.File.stderr(), "error: --cases requires a single test entry\n");
++        return 2;
++    }
++    var diagnostics: std.ArrayList(u8) = .empty;
++    const selection = programs(init, opts, &diagnostics) catch |err| {
++        if (err == error.OutOfMemory) return error.OutOfMemory;
++        try diagnostics.print(a, "error: directory test discovery failed: {s}\n", .{@errorName(err)});
++        try write(init.io, std.Io.File.stderr(), diagnostics.items);
++        return 1;
++    };
++    if (selection.entries.len == 0) {
++        try write(init.io, std.Io.File.stdout(), if (opts.json) try report.jsonSources(a, &.{}, &.{}) else try report.text(a, &.{}));
++        return 3;
++    }
++    const compiler = std.Io.Dir.cwd().realPathFileAlloc(init.io, "/proc/self/exe", a) catch return error.ReadFailed;
++    var nonce: [16]u8 = undefined;
++    std.Io.random(init.io, &nonce);
++    const directory = try std.fmt.allocPrint(a, "{s}/tests/directory-{s}", .{ opts.build.cache, std.fmt.bytesToHex(nonce, .lower) });
++    std.Io.Dir.cwd().createDirPath(init.io, directory) catch return error.WriteFailed;
++    defer retire(init.io, directory);
++    const workers = options.width(opts.controls, init.environ_map, selection.entries.len);
++    const overall = options.width(opts.controls, init.environ_map, std.math.maxInt(usize));
++    const fanout: Fanout = .{ .compiler = compiler, .directory = directory, .controls = opts, .jobs = @max(1, overall / workers) };
++    const outcomes = try a.alloc(Outcome, selection.entries.len);
++    var begin: usize = 0;
++    while (begin < selection.entries.len) : (begin += workers) {
++        const end = @min(selection.entries.len, begin + workers);
++        try wave(init, fanout, selection.entries[begin..end], outcomes[begin..end]);
++    }
++    return summarize(init, opts, selection, outcomes);
++}
++
++fn programs(init: std.process.Init, opts: options.Options, diagnostics: *std.ArrayList(u8)) !Selection {
++    const a = init.arena.allocator();
++    const found = try inventory(a, init.io, opts);
++    var roots: std.ArrayList([]const u8) = .empty;
++    var tested: std.ArrayList([]const u8) = .empty;
++    var libraries: std.ArrayList([]const u8) = .empty;
++    var inputs: std.ArrayList(Input) = .empty;
++    for (found) |path| {
++        const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, path, a, .limited(64 << 20));
++        var digest: [32]u8 = undefined;
++        std.crypto.hash.Blake3.hash(bytes, &digest, .{});
++        try inputs.append(a, .{ .path = path, .digest = digest });
++        const tests = declaresTests(bytes);
++        if (tests) try tested.append(a, path);
++        if (language.project_config.declaresMain(bytes) or std.mem.endsWith(u8, path, "_test.my")) {
++            try roots.append(a, path);
++        } else if (tests) try libraries.append(a, path);
++    }
++    var reached: std.StringHashMapUnmanaged(void) = .empty;
++    defer reached.deinit(a);
++    for (roots.items) |path| for (try closure(init, path, diagnostics)) |loaded| try reached.put(a, loaded, {});
++    var orphans: std.ArrayList(Orphan) = .empty;
++    for (libraries.items) |path| if (!reached.contains(path)) {
++        try orphans.append(a, .{ .path = path, .closure = try closure(init, path, diagnostics) });
++    };
++    for (orphans.items, 0..) |orphan, index| {
++        var imported = false;
++        for (orphans.items, 0..) |other, other_index| {
++            if (index == other_index) continue;
++            for (other.closure) |path| if (std.mem.eql(u8, path, orphan.path)) {
++                imported = true;
++            };
++        }
++        if (!imported) try roots.append(a, orphan.path);
++    }
++    if (roots.items.len > 4096) return error.TooManyTestPrograms;
++    std.mem.sort([]const u8, roots.items, {}, before);
++    return .{ .entries = roots.items, .tested = tested.items, .inputs = inputs.items };
++}
++
++fn inventory(a: std.mem.Allocator, io: std.Io, opts: options.Options) ![]const []const u8 {
++    const root = try std.Io.Dir.cwd().realPathFileAlloc(io, opts.path, a);
++    const working = try std.Io.Dir.cwd().realPathFileAlloc(io, ".", a);
++    const cache = std.Io.Dir.cwd().realPathFileAlloc(io, opts.build.cache, a) catch try std.fs.path.resolve(a, &.{ working, opts.build.cache });
++    const cache_prefix = try std.fmt.allocPrint(a, "{s}/", .{cache});
++    var directory = try std.Io.Dir.cwd().openDir(io, root, .{ .iterate = true, .follow_symlinks = false });
++    defer directory.close(io);
++    var walker = try directory.walk(a);
++    defer walker.deinit();
++    var found: std.ArrayList([]const u8) = .empty;
++    while (try walker.next(io)) |item| {
++        const absolute = try std.fs.path.join(a, &.{ root, item.path });
++        if (std.mem.eql(u8, absolute, cache) or std.mem.startsWith(u8, absolute, cache_prefix)) {
++            if (item.kind == .directory) walker.leave(io);
++            continue;
++        }
++        if (generated(item.basename)) {
++            if (item.kind == .directory) walker.leave(io);
++            continue;
++        }
++        if (item.kind == .file and std.mem.endsWith(u8, item.path, ".my")) try found.append(a, try std.fs.path.join(a, &.{ root, item.path }));
++    }
++    std.mem.sort([]const u8, found.items, {}, before);
++    return found.items;
++}
++
++fn closure(init: std.process.Init, path: []const u8, diagnostics: *std.ArrayList(u8)) ![]const []const u8 {
++    const a = init.arena.allocator();
++    const located = try project_entry.resolve(a, init.io, path, diagnostics);
++    const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, path, a, .limited(64 << 20));
++    if (!language.opensAsModule(bytes)) return a.dupe([]const u8, &.{located.path});
++    var session = frontend.Session.init(init.gpa, init.io, located.root);
++    defer session.deinit();
++    located.configure(&session);
++    try session.project.load(session.files.provider(), located.name, located.limits());
++    var paths: std.ArrayList([]const u8) = .empty;
++    for (session.project.modules.items) |module| {
++        if (std.mem.startsWith(u8, module.src.path, "@stdlib/")) continue;
++        try paths.append(a, try std.fs.path.join(a, &.{ located.root, module.src.path }));
++    }
++    return paths.items;
++}
++
++fn wave(init: std.process.Init, fanout: Fanout, paths: []const []const u8, outcomes: []Outcome) Error!void {
++    const a = init.arena.allocator();
++    const children = try a.alloc(std.process.Child, paths.len);
++    const files = try a.alloc(std.Io.File, paths.len);
++    const names = try a.alloc([]const u8, paths.len);
++    var started: usize = 0;
++    defer for (children[0..started], files[0..started]) |*child, file| {
++        child.kill(init.io);
++        file.close(init.io);
++    };
++    for (paths, 0..) |path, slot| {
++        names[slot] = try std.fmt.allocPrint(a, "{s}/{d}.json", .{ fanout.directory, slot });
++        files[slot] = std.Io.Dir.cwd().createFile(init.io, names[slot], .{}) catch return error.WriteFailed;
++        children[slot] = std.process.spawn(init.io, .{ .argv = try argv(a, fanout, path), .environ_map = init.environ_map, .stdout = .{ .file = files[slot] } }) catch {
++            files[slot].close(init.io);
++            return error.WriteFailed;
++        };
++        started += 1;
++    }
++    for (children, names, outcomes) |*child, name, *outcome| {
++        const term = child.wait(init.io) catch return error.ReadFailed;
++        outcome.* = .{ .code = switch (term) {
++            .exited => |code| code,
++            else => 1,
++        }, .bytes = std.Io.Dir.cwd().readFileAlloc(init.io, name, a, .limited(64 << 20)) catch "" };
++    }
++}
++
++fn argv(a: std.mem.Allocator, fanout: Fanout, path: []const u8) Error![]const []const u8 {
++    const opts = fanout.controls;
++    var arguments: std.ArrayList([]const u8) = .empty;
++    try arguments.appendSlice(a, &.{ fanout.compiler, "test", path, "--json", "--filter", opts.filter, "--cache-dir", opts.build.cache, "--zig", opts.build.zig, "--jobs", try std.fmt.allocPrint(a, "{d}", .{fanout.jobs}) });
++    try arguments.appendSlice(a, &.{ "--timeout-ms", try std.fmt.allocPrint(a, "{d}", .{opts.controls.timeout_ms}) });
++    if (opts.controls.explicit_steps) try arguments.appendSlice(a, &.{ "--max-steps", try std.fmt.allocPrint(a, "{d}", .{opts.controls.max_steps}) });
++    try arguments.appendSlice(a, &.{ "--property-runs", try std.fmt.allocPrint(a, "{d}", .{opts.property_runs}) });
++    if (opts.build.release) try arguments.append(a, "--release");
++    if (opts.build.facts == .verify) try arguments.append(a, "--verify-facts");
++    if (opts.build.facts == .off) try arguments.append(a, "--no-facts");
++    if (opts.controls.force) try arguments.append(a, "--force");
++    if (opts.seed) |seed| try arguments.appendSlice(a, &.{ "--seed", try std.fmt.allocPrint(a, "{d}", .{seed}) });
++    for (opts.build.links) |link| try arguments.appendSlice(a, &.{ "--link", link });
++    return arguments.items;
++}
++
++fn summarize(init: std.process.Init, opts: options.Options, selection: Selection, outcomes: []const Outcome) Error!u8 {
++    const a = init.arena.allocator();
++    var verdicts: std.ArrayList(report.Verdict) = .empty;
++    var accounted: std.StringHashMapUnmanaged(void) = .empty;
++    defer accounted.deinit(a);
++    for (selection.entries, outcomes) |path, outcome| {
++        const first_verdict = verdicts.items.len;
++        const parsed = std.json.parseFromSlice(std.json.Value, a, outcome.bytes, .{ .allocate = .alloc_always }) catch {
++            try verdicts.append(a, .{ .name = path, .status = .failed, .reason = "test program produced no usable report" });
++            continue;
++        };
++        const value = parsed.value;
++        if (value != .object or !std.mem.eql(u8, string(value, "version"), "native-tests-v1")) {
++            try verdicts.append(a, .{ .name = path, .status = .failed, .reason = "invalid test report version" });
++            continue;
++        }
++        const tests = value.object.get("tests") orelse .null;
++        const sources = value.object.get("sources") orelse .null;
++        if (tests != .array or sources != .array) {
++            try verdicts.append(a, .{ .name = path, .status = .failed, .reason = "incomplete test report" });
++            continue;
++        }
++        for (sources.array.items) |source| if (source == .string) {
++            try accounted.put(a, source.string, {});
++        };
++        for (tests.array.items) |test_value| {
++            const status = std.meta.stringToEnum(report.Status, string(test_value, "status")) orelse .failed;
++            var item: report.Verdict = .{ .name = string(test_value, "name"), .status = status, .reason = string(test_value, "reason"), .at = string(test_value, "at") };
++            if (test_value == .object) if (test_value.object.get("property")) |evidence| {
++                const parsed_evidence = std.json.parseFromValueLeaky(@import("test_runner_property.zig").Evidence, a, evidence, .{}) catch {
++                    item.status = .failed;
++                    item.reason = "invalid property evidence in test report";
++                    try verdicts.append(a, item);
++                    continue;
++                };
++                item.property = parsed_evidence;
++            };
++            try verdicts.append(a, item);
++        }
++        if (outcome.code != report.exitStatus(verdicts.items[first_verdict..])) try verdicts.append(a, .{ .name = path, .status = .failed, .reason = "test program exit status disagrees with its report" });
++    }
++    if (try sourceChanged(a, init.io, opts, selection.inputs)) try verdicts.append(a, .{ .name = opts.path, .status = .failed, .reason = "SourceChanged: directory discovery inputs changed during execution" });
++    for (selection.tested) |path| if (!accounted.contains(path)) {
++        try verdicts.append(a, .{ .name = path, .status = .failed, .reason = "test-declaring source was not loaded by any test program" });
++    };
++    var sources: std.ArrayList([]const u8) = .empty;
++    var keys = accounted.keyIterator();
++    while (keys.next()) |key| try sources.append(a, key.*);
++    std.mem.sort([]const u8, sources.items, {}, before);
++    try write(init.io, std.Io.File.stdout(), if (opts.json) try report.jsonSources(a, verdicts.items, sources.items) else try report.text(a, verdicts.items));
++    return report.exitStatus(verdicts.items);
++}
++
++fn sourceChanged(a: std.mem.Allocator, io: std.Io, opts: options.Options, inputs: []const Input) Error!bool {
++    const current = inventory(a, io, opts) catch |err| {
++        if (err == error.OutOfMemory) return error.OutOfMemory;
++        return true;
++    };
++    if (current.len != inputs.len) return true;
++    for (current, inputs) |path, input| {
++        if (!std.mem.eql(u8, path, input.path)) return true;
++        const bytes = std.Io.Dir.cwd().readFileAlloc(io, path, a, .limited(64 << 20)) catch |err| {
++            if (err == error.OutOfMemory) return error.OutOfMemory;
++            return true;
++        };
++        var digest: [32]u8 = undefined;
++        std.crypto.hash.Blake3.hash(bytes, &digest, .{});
++        if (!std.mem.eql(u8, &digest, &input.digest)) return true;
++    }
++    return false;
++}
++
++fn string(value: std.json.Value, key: []const u8) []const u8 {
++    if (value != .object) return "";
++    const field = value.object.get(key) orelse return "";
++    return if (field == .string) field.string else "";
++}
++
++fn write(io: std.Io, file: std.Io.File, bytes: []const u8) Error!void {
++    file.writeStreamingAll(io, bytes) catch return error.WriteFailed;
++}
++
++fn before(_: void, lhs: []const u8, rhs: []const u8) bool {
++    return std.mem.lessThan(u8, lhs, rhs);
++}
++fn generated(name: []const u8) bool {
++    return std.mem.eql(u8, name, ".git") or std.mem.startsWith(u8, name, ".mylang-cache") or std.mem.eql(u8, name, ".zig-cache") or std.mem.eql(u8, name, "zig-out") or std.mem.eql(u8, name, "node_modules");
++}
++fn declaresTests(bytes: []const u8) bool {
++    var lines = std.mem.splitScalar(u8, bytes, '\n');
++    while (lines.next()) |raw| {
++        var line = std.mem.trim(u8, raw, " \t\r");
++        if (std.mem.eql(u8, line, "@test")) return true;
++        if (std.mem.startsWith(u8, line, "public ")) line = std.mem.trimStart(u8, line[7..], " \t");
++        if (std.mem.startsWith(u8, line, "def test_")) return true;
++    }
++    return false;
++}
++
++// spec-case: NEW-CORE-S4-TEST-2
++test "directory inventory recognizes test declarations and generated subtrees" {
++    try std.testing.expect(declaresTests("public def test_x() -> bool:\n    return True\n"));
++    try std.testing.expect(declaresTests("@test\ndef property(x: int) -> bool:\n    return True\n"));
++    try std.testing.expect(!declaresTests("# def test_x()\n"));
++    try std.testing.expect(generated(".mylang-cache-new"));
++    try std.testing.expect(!generated("types"));
++}
++
++fn retire(io: std.Io, path: []const u8) void {
++    std.Io.Dir.cwd().deleteTree(io, path) catch return;
++}
++
++// spec-case: NEW-CORE-S4-TEST-2
++test "sourceChanged detects edited or removed discovery inputs and allocation failure" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
++    const path = try std.fs.path.join(a, &.{ root, "app.my" });
++    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = "original" });
++    var digest: [32]u8 = undefined;
++    std.crypto.hash.Blake3.hash("original", &digest, .{});
++    const inputs = &.{Input{ .path = path, .digest = digest }};
++    const opts: options.Options = .{ .path = root, .build = .{ .zig = "zig", .cache = try std.fs.path.join(a, &.{ root, "cache" }) } };
++    try std.testing.expect(!try sourceChanged(a, std.testing.io, opts, inputs));
++    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = "changed" });
++    try std.testing.expect(try sourceChanged(a, std.testing.io, opts, inputs));
++    try temporary.dir.deleteFile(std.testing.io, "app.my");
++    try std.testing.expect(try sourceChanged(a, std.testing.io, opts, inputs));
++    var failing = std.testing.FailingAllocator.init(a, .{ .fail_index = 0 });
++    try std.testing.expectError(error.OutOfMemory, sourceChanged(failing.allocator(), std.testing.io, opts, inputs));
++}
+diff --git a/src/core/test_runner_options.zig b/src/core/test_runner_options.zig
+new file mode 100644
+index 000000000..56d411044
+--- /dev/null
++++ b/src/core/test_runner_options.zig
+@@ -0,0 +1,49 @@
++//! Selection, deterministic trial inputs and bounded worker settings shared by
++//! file and directory test runs. One worker budget covers both levels.
++const std = @import("std");
++const pipeline = @import("pipeline.zig");
++const property = @import("test_runner_property.zig");
++
++/// Execution settings beyond one file's test selection.
++pub const Controls = struct {
++    jobs: ?usize = null,
++    force: bool = false,
++    cases: ?[]const u8 = null,
++    timeout_ms: u32 = 60000,
++    max_steps: u64 = 1000000,
++    explicit_steps: bool = false,
++};
++
++/// Command options; grouped execution settings keep the public type bounded.
++pub const Options = struct {
++    path: []const u8,
++    filter: []const u8 = "",
++    json: bool = false,
++    build: pipeline.Options,
++    seed: ?u64 = null,
++    property_runs: u32 = property.default_runs,
++    controls: Controls = .{},
++};
++
++/// Resolve one bounded worker width from --jobs, MYLANG_JOBS or available CPUs.
++pub fn width(controls: Controls, environment: *const std.process.Environ.Map, count: usize) usize {
++    const requested = controls.jobs orelse environmentJobs(environment) orelse (std.Thread.getCpuCount() catch 1);
++    return @min(@max(1, requested), @max(1, count));
++}
++
++fn environmentJobs(environment: *const std.process.Environ.Map) ?usize {
++    const text = environment.get("MYLANG_JOBS") orelse return null;
++    const parsed = std.fmt.parseInt(usize, text, 10) catch return null;
++    return if (parsed == 0) null else parsed;
++}
++
++// spec-case: NEW-CORE-S4-TEST-1
++test "worker settings honor explicit jobs before environment and bound empty or small suites" {
++    var environment: std.process.Environ.Map = .init(std.testing.allocator);
++    defer environment.deinit();
++    try environment.put("MYLANG_JOBS", "8");
++    try std.testing.expectEqual(@as(usize, 2), width(.{ .jobs = 2 }, &environment, 10));
++    try std.testing.expectEqual(@as(usize, 8), width(.{}, &environment, 10));
++    try std.testing.expectEqual(@as(usize, 3), width(.{}, &environment, 3));
++    try std.testing.expectEqual(@as(usize, 1), width(.{}, &environment, 0));
++}
+diff --git a/src/core/test_runner_project_test.zig b/src/core/test_runner_project_test.zig
+new file mode 100644
+index 000000000..1da28ea42
+--- /dev/null
++++ b/src/core/test_runner_project_test.zig
+@@ -0,0 +1,360 @@
++//! Project tests exercise fresh runs, unchanged receipts, provider edits and
++//! dependency invalidation through the actual command and native processes.
++const std = @import("std");
++const tools = @import("core_test_options");
++const language = @import("mylang");
++const frontend = @import("frontend.zig");
++const project_entry = @import("project_entry.zig");
++const v = @import("property_value.zig");
++const Outcome = struct { status: u8, report: std.json.Value, stderr: []const u8 };
++const command_cache = "--cache-dir";
++const diagnostic = std.debug.print;
++const Context = struct {
++    arena: std.mem.Allocator,
++    root: []const u8,
++    fn write(self: Context, path: []const u8, bytes: []const u8) !void {
++        const absolute = try std.fs.path.join(self.arena, &.{ self.root, path });
++        try std.Io.Dir.cwd().createDirPath(std.testing.io, std.fs.path.dirname(absolute).?);
++        try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = absolute, .data = bytes });
++    }
++    fn writeInterfaces(self: Context, source: []const u8) !void {
++        const path = try std.fs.path.join(self.arena, &.{ self.root, source });
++        var diagnostics: std.ArrayList(u8) = .empty;
++        const located = try project_entry.resolve(self.arena, std.testing.io, path, &diagnostics);
++        var session = frontend.Session.init(self.arena, std.testing.io, located.root);
++        defer session.deinit();
++        located.configure(&session);
++        session.entry_suffix = @import("test_runner.zig").check_stub;
++        _ = try session.checkFile(self.arena, located.path, &diagnostics);
++        const written = try language.api_files.run(self.arena, .{ .io = std.testing.io, .root = located.root, .entry = located.path, .mode = .write, .json = false }, session.interfaceIndex());
++        try std.testing.expectEqual(@as(u8, 0), written.status);
++    }
++    fn run(self: Context, source: []const u8, extra: []const []const u8) !Outcome {
++        const path = try std.fs.path.join(self.arena, &.{ self.root, source });
++        const cache = try std.fs.path.join(self.arena, &.{ self.root, "cache" });
++        var args: std.ArrayList([]const u8) = .empty;
++        try args.appendSlice(self.arena, &.{ tools.core_path, "test", path, "--json", command_cache, cache, "--jobs", "2", "--property-runs", "5" });
++        try args.appendSlice(self.arena, extra);
++        const result = try std.process.run(self.arena, std.testing.io, .{ .argv = args.items });
++        const parsed = std.json.parseFromSliceLeaky(std.json.Value, self.arena, result.stdout, .{}) catch .null;
++        return .{ .status = switch (result.term) {
++            .exited => |code| code,
++            else => 255,
++        }, .report = parsed, .stderr = result.stderr };
++    }
++};
++const project_source =
++    \\module app
++    \\import dep
++    \\
++    \\public def test_dependency() -> bool:
++    \\    return dep.value() == 3
++    \\
++    \\public def test_constant() -> bool:
++    \\    return True
++    \\
++    \\public def test_property(x: int) -> bool:
++    \\    return x == x
++    \\
++    \\def main() -> int:
++    \\    return 0
++    \\
++;
++const dependency_three = "module dep\n\npublic def value() -> int:\n    return 3\n";
++const dependency_four = "module dep\n\npublic def value() -> int:\n    return 4\n";
++
++fn verdict(value: std.json.Value, name: []const u8, wanted: []const u8) !void {
++    for (v.array(v.get(value, "tests"))) |item| {
++        if (!std.mem.eql(u8, v.text(v.get(item, "name")), name)) continue;
++        try std.testing.expectEqualStrings(wanted, v.text(v.get(item, "status")));
++        return;
++    }
++    return error.MissingTestVerdict;
++}
++fn expectStatus(context: Context, found: Outcome, status: u8) !void {
++    if (found.status != status) {
++        const json = try std.json.Stringify.valueAlloc(context.arena, found.report, .{});
++        diagnostic("unexpected project test result: {s}\n{s}\n", .{ found.stderr, json });
++    }
++    try std.testing.expectEqual(status, found.status);
++}
++
++// spec-case: NEW-CORE-S4-TEST-2
++// spec-case: NEW-CORE-S4-TEST-3
++test "directory receipts account for orphan libraries and rerun only the edited reachable program" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    const context: Context = .{ .arena = arena.allocator(), .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator()) };
++    try context.write("app.my", project_source);
++    try context.write("dep.my", dependency_three);
++    try context.write("orphan.my", "module orphan\n\ndef test_orphan() -> bool:\n    return True\n");
++    const cold = try context.run(".", &.{});
++    try expectStatus(context, cold, 0);
++    try std.testing.expectEqual(@as(u64, 4), v.number(v.get(cold.report, "passed")));
++    const warm = try context.run(".", &.{});
++    try expectStatus(context, warm, 0);
++    try std.testing.expectEqual(@as(u64, 4), v.number(v.get(warm.report, "cached")));
++    try context.write("dep.my", dependency_four);
++    const changed = try context.run(".", &.{});
++    try expectStatus(context, changed, 1);
++    try verdict(changed.report, "app::test_dependency", "failed");
++    try verdict(changed.report, "app::test_constant", "cached");
++    try verdict(changed.report, "app::test_property", "cached");
++    try verdict(changed.report, "orphan::test_orphan", "cached");
++    const force = try context.run("app.my", &.{ "--force", "--filter", "test_constant" });
++    try expectStatus(context, force, 0);
++    try verdict(force.report, "app::test_constant", "passed");
++}
++
++// spec-case: NEW-CORE-S4-TEST-4
++test "provider edits and explicit expectations invalidate successful test receipts" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    const a = arena.allocator();
++    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
++    try context.write("app.my", project_source);
++    try context.write("dep.my", dependency_three);
++    const fixture = try std.json.Stringify.valueAlloc(a, .{ .@"app::test_dependency" = .{ .providers = .{ .@"dep.my" = dependency_four }, .expected = false } }, .{});
++    try context.write("app.cases.json", fixture);
++    const cold = try context.run("app.my", &.{ "--filter", "test_dependency" });
++    try expectStatus(context, cold, 0);
++    try verdict(cold.report, "app::test_dependency", "passed");
++    const warm = try context.run("app.my", &.{ "--filter", "test_dependency" });
++    try expectStatus(context, warm, 0);
++    try verdict(warm.report, "app::test_dependency", "cached");
++    try context.write("app.cases.json", try std.json.Stringify.valueAlloc(a, .{ .@"app::test_dependency" = .{ .providers = .{ .@"dep.my" = dependency_three }, .expected = false } }, .{}));
++    const changed = try context.run("app.my", &.{ "--filter", "test_dependency" });
++    try expectStatus(context, changed, 1);
++    try verdict(changed.report, "app::test_dependency", "failed");
++    try context.write("app.cases.json", "{\"missing::test_unknown\":{}}");
++    const unknown = try context.run("app.my", &.{});
++    try expectStatus(context, unknown, 1);
++    try std.testing.expect(std.mem.indexOf(u8, unknown.stderr, "UnknownTestCase") != null);
++    const replacement = try std.json.Stringify.valueAlloc(a, .{ .@"app::test_dependency" = .{ .providers = .{ .@"app.my" = project_source } } }, .{});
++    try context.write("app.cases.json", replacement);
++    const entry_override = try context.run("app.my", &.{});
++    try expectStatus(context, entry_override, 1);
++    try std.testing.expect(std.mem.indexOf(u8, entry_override.stderr, "invalid test provider dependencies") != null);
++}
++
++// spec-case: NEW-CORE-S4-TEST-4
++// spec-case: NEW-CORE-S4-TEST-3
++test "provider-only imports and embedded assets participate in receipt invalidation" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    const a = arena.allocator();
++    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
++    try context.write("app.my", project_source);
++    try context.write("dep.my", dependency_three);
++    try context.write("extra.my", "module extra\n\npublic def value() -> int:\n    return 3\n");
++    const provided = "module dep\nimport extra\n\npublic def value() -> int:\n    return extra.value() + len(embed_bytes(\"data.bin\")) - 1\n";
++    try context.write("data.bin", "x");
++    try context.write("app.cases.json", try std.json.Stringify.valueAlloc(a, .{ .@"app::test_dependency" = .{ .providers = .{ .@"dep.my" = provided } } }, .{}));
++    try expectStatus(context, try context.run("app.my", &.{ "--filter", "test_dependency" }), 0);
++    const warm = try context.run("app.my", &.{ "--filter", "test_dependency" });
++    try verdict(warm.report, "app::test_dependency", "cached");
++    try context.write("extra.my", "module extra\n\npublic def value() -> int:\n    return 4\n");
++    const changed = try context.run("app.my", &.{ "--filter", "test_dependency" });
++    try expectStatus(context, changed, 1);
++    try verdict(changed.report, "app::test_dependency", "failed");
++    try context.write("extra.my", "module extra\n\npublic def value() -> int:\n    return 3\n");
++    try context.write("data.bin", "xx");
++    try expectStatus(context, try context.run("app.my", &.{ "--filter", "test_dependency" }), 1);
++}
++
++// spec-case: NEW-CORE-S4-TEST-4
++test "cases require canonical discovered names and never ignore an expectation" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    const a = arena.allocator();
++    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
++    try context.write("plain.my", "def test_value() -> bool:\n    return True\n");
++    try context.write("plain.cases.json", "{\"test_value\":{\"expected\":false}}");
++    const alias = try context.run("plain.my", &.{});
++    try expectStatus(context, alias, 1);
++    try std.testing.expect(std.mem.indexOf(u8, alias.stderr, "UnknownTestCase") != null);
++    try context.write("plain.cases.json", "{\"plain::test_value\":{\"expected\":false}}");
++    const canonical = try context.run("plain.my", &.{});
++    try expectStatus(context, canonical, 1);
++    try verdict(canonical.report, "plain::test_value", "failed");
++}
++
++// spec-case: NEW-CORE-S4-PROJECT-1
++// spec-case: NEW-CORE-S4-TEST-3
++test "embedded bytes and stricter project budgets invalidate unchanged test manifests" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    const a = arena.allocator();
++    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
++    try context.write("asset.my", "module asset\n\ndef test_asset() -> bool:\n    return len(embed_bytes(\"data.bin\")) == 1\n");
++    try context.write("data.bin", "x");
++    try expectStatus(context, try context.run("asset.my", &.{}), 0);
++    const cached = try context.run("asset.my", &.{});
++    try verdict(cached.report, "asset::test_asset", "cached");
++    try context.write("data.bin", "xx");
++    const changed = try context.run("asset.my", &.{});
++    try expectStatus(context, changed, 1);
++    try verdict(changed.report, "asset::test_asset", "failed");
++    try context.write("data.bin", "x");
++    try expectStatus(context, try context.run("asset.my", &.{}), 0);
++    try context.write("mylang.json", "{\"version\":1,\"budgets\":{\"max_file_bytes\":16}}");
++    const bounded = try context.run("asset.my", &.{});
++    try expectStatus(context, bounded, 1);
++    try std.testing.expect(std.mem.indexOf(u8, bounded.stderr, "E_PROJECT_BYTES") != null);
++}
++
++// spec-case: NEW-CORE-S4-TEST-1
++test "native test step and wall bounds are honored while force bypasses reuse" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    const a = arena.allocator();
++    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
++    try context.write("loop.my", "module loop\n\ndef test_loop() -> bool:\n    total = 0\n    for i in range(100):\n        total = total + i\n    return total == 4950\n");
++    try context.write("mylang.json", "{\"version\":1,\"limits\":{\"test\":{\"max_steps\":2}}}");
++    try expectStatus(context, try context.run("loop.my", &.{}), 1);
++    try expectStatus(context, try context.run("loop.my", &.{ "--max-steps", "100000" }), 0);
++    const limited = try context.run("loop.my", &.{ "--max-steps", "2" });
++    try expectStatus(context, limited, 1);
++    try verdict(limited.report, "loop::test_loop", "failed");
++    try context.write("loop.my", "module loop\n\ndef test_loop() -> bool:\n    while True:\n        pass\n    return True\n");
++    try expectStatus(context, try context.run("loop.my", &.{ "--max-steps", "0", "--timeout-ms", "50" }), 1);
++}
++
++// spec-case: NEW-CORE-S4-TEST-2
++test "directory assertion detects an omitted test verdict" {
++    try std.testing.expectError(error.MissingTestVerdict, verdict(.null, "missing", "passed"));
++}
++
++// spec-case: NEW-CORE-S4-PROJECT-1
++// spec-case: NEW-CORE-S4-TEST-3
++test "warm project tests revalidate import policy and required generated interfaces" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    const a = arena.allocator();
++    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
++    const source = "module app\nimport dep\n\npublic def test_dependency() -> bool:\n    return dep.value() == 3\n";
++    try context.write("app.my", source);
++    try context.write("dep.my", dependency_three);
++    try expectStatus(context, try context.run("app.my", &.{}), 0);
++    try context.write("mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
++    try context.write("policy.json", "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}");
++    const denied = try context.run("app.my", &.{});
++    try expectStatus(context, denied, 1);
++    try std.testing.expect(std.mem.indexOf(u8, denied.stderr, "deny") != null);
++    try context.write("policy.json", "{\"version\":1,\"default_action\":\"allow\",\"rules\":[]}");
++    try expectStatus(context, try context.run("app.my", &.{}), 0);
++    try context.write("mylang.json", "{\"version\":1,\"interface_files\":true}");
++    const missing = try context.run("app.my", &.{});
++    try expectStatus(context, missing, 1);
++    try std.testing.expect(std.mem.indexOf(u8, missing.stderr, "E_INTERFACE_FILE_STALE") != null);
++    try context.writeInterfaces("app.my");
++    try expectStatus(context, try context.run("app.my", &.{}), 0);
++    try context.write("dep.api", "damaged interface\n");
++    const stale = try context.run("app.my", &.{});
++    try expectStatus(context, stale, 1);
++    try std.testing.expect(std.mem.indexOf(u8, stale.stderr, "E_INTERFACE_FILE_STALE") != null);
++}
++
++// spec-case: NEW-CORE-S4-TEST-4
++test "providers preserve exported record layouts behind unchanged function signatures" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    const a = arena.allocator();
++    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
++    try context.write("app.my", "module app\nimport dep\n\npublic def test_answer() -> bool:\n    return dep.answer()\n");
++    const old = "module dep\n\npublic record Cell:\n    value: int\n\npublic def answer() -> bool:\n    return Cell(value=1).value == 1\n";
++    const changed = "module dep\n\npublic record Cell:\n    value: bool\n\npublic def answer() -> bool:\n    return Cell(value=True).value\n";
++    try context.write("dep.my", old);
++    try context.write("app.cases.json", try std.json.Stringify.valueAlloc(a, .{ .@"app::test_answer" = .{ .providers = .{ .@"dep.my" = old } } }, .{}));
++    try expectStatus(context, try context.run("app.my", &.{}), 0);
++    try context.write("app.cases.json", try std.json.Stringify.valueAlloc(a, .{ .@"app::test_answer" = .{ .providers = .{ .@"dep.my" = changed } } }, .{}));
++    const refused = try context.run("app.my", &.{});
++    try expectStatus(context, refused, 1);
++    try std.testing.expect(std.mem.indexOf(u8, refused.stderr, "ProviderSignatureChanged") != null);
++}
++
++// spec-case: NEW-CORE-S4-TEST-4
++test "providers preserve private parameter layouts of marked property tests" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    const a = arena.allocator();
++    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
++    try context.write("app.my", "module app\nimport dep\n\npublic def test_answer() -> bool:\n    return dep.answer()\n");
++    const old = "module dep\n\nrecord Cell:\n    value: int\n\n@test\ndef property(x: Cell) -> bool:\n    return x.value == x.value\n\npublic def answer() -> bool:\n    return True\n";
++    const changed = "module dep\n\nrecord Cell:\n    value: bool\n\n@test\ndef property(x: Cell) -> bool:\n    return x.value == x.value\n\npublic def answer() -> bool:\n    return True\n";
++    try context.write("dep.my", old);
++    try context.write("app.cases.json", try std.json.Stringify.valueAlloc(a, .{ .@"dep::property" = .{ .providers = .{ .@"dep.my" = old } } }, .{}));
++    try expectStatus(context, try context.run("app.my", &.{ "--filter", "dep::property" }), 0);
++    try context.write("app.cases.json", try std.json.Stringify.valueAlloc(a, .{ .@"dep::property" = .{ .providers = .{ .@"dep.my" = changed } } }, .{}));
++    const refused = try context.run("app.my", &.{ "--filter", "dep::property" });
++    try expectStatus(context, refused, 1);
++    try std.testing.expect(std.mem.indexOf(u8, refused.stderr, "ProviderSignatureChanged") != null);
++}
++
++// spec-case: NEW-CORE-S4-PROJECT-1
++test "nested standalone test entries use the configured project import root" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    const a = arena.allocator();
++    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
++    try context.write("mylang.json", "{\"version\":1}");
++    try context.write("dep.my", dependency_three);
++    try context.write("tests/suite_test.my", "module tests.suite_test\nimport dep\n\npublic def test_dependency() -> bool:\n    return dep.value() == 3\n");
++    const result = try context.run("tests/suite_test.my", &.{});
++    try expectStatus(context, result, 0);
++    try verdict(result.report, "tests.suite_test::test_dependency", "passed");
++}
++
++// spec-case: NEW-CORE-S4-PROJECT-1
++test "copied migrated propagation project retains all nine passing tests" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    const a = arena.allocator();
++    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
++    for (0..10) |index| {
++        const name = if (index == 0) "propagation.my" else try std.fmt.allocPrint(a, "propagation_case_{d}.my", .{index});
++        const source = try std.fs.path.join(a, &.{ tools.fixtures, "projects", "propagation", name });
++        const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, source, a, .limited(1 << 20));
++        try context.write(name, bytes);
++    }
++    const result = try context.run("propagation.my", &.{});
++    try expectStatus(context, result, 0);
++    try std.testing.expectEqual(@as(u64, 9), v.number(v.get(result.report, "passed")));
++}
++
++// spec-case: NEW-CORE-S4-TEST-2
++test "reserved embedded module names cannot account for an untested disk source" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    const a = arena.allocator();
++    const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
++    try context.write("app.my", "module app\nimport strings\n\npublic def test_ok() -> bool:\n    return True\n\ndef main() -> int:\n    return 0\n");
++    try context.write("strings.my", "module strings\n\ndef test_hidden() -> bool:\n    return False\n");
++    const result = try context.run(".", &.{});
++    try expectStatus(context, result, 1);
++    try std.testing.expect(v.number(v.get(result.report, "failed")) != 0);
++}
+diff --git a/src/core/test_runner_receipt.zig b/src/core/test_runner_receipt.zig
+new file mode 100644
+index 000000000..6c1a19296
+--- /dev/null
++++ b/src/core/test_runner_receipt.zig
+@@ -0,0 +1,333 @@
++//! Successful test receipts key the reachable emitted program and all execution
++//! inputs. A checked-file manifest only bypasses checking while every dependency
++//! still has its recorded bytes. Damaged records are ordinary cache misses.
++const std = @import("std");
++const frontend = @import("frontend.zig");
++const options = @import("test_runner_options.zig");
++const project_entry = @import("project_entry.zig");
++const report = @import("test_runner_report.zig");
++const Error = @import("test_runner_property.zig").Error;
++const Digest = [32]u8;
++
++/// Command resources and freshly resolved project configuration.
++pub const Context = struct {
++    arena: std.mem.Allocator,
++    io: std.Io,
++    environment: *const std.process.Environ.Map,
++    options: options.Options,
++    entry: project_entry.Entry,
++    case_bytes: []const u8 = "",
++};
++/// A file's exact identity, including absence for optional generated interfaces.
++pub const Dependency = struct { path: []const u8, digest: ?Digest };
++const Snapshot = struct { base: Digest, dependencies: []const Dependency, report: []const u8 };
++const Envelope = struct { version: []const u8, payload: []const u8, checksum: Digest };
++
++/// Complete settings, compiler/runtime/toolchain identity, native inputs and
++/// guest environment. Field lengths prevent concatenation ambiguities.
++pub fn settings(context: Context, inputs: *std.ArrayList(Dependency)) Error!Digest {
++    const a = context.arena;
++    var hash = std.crypto.hash.Blake3.init(.{});
++    field(&hash, "core-test-settings-v1");
++    field(&hash, frontend.compiler_identity);
++    field(&hash, context.entry.path);
++    field(&hash, context.entry.root);
++    field(&hash, context.options.build.zig);
++    if (context.options.controls.cases) |path| {
++        field(&hash, path);
++        field(&hash, context.case_bytes);
++    }
++    field(&hash, try std.json.Stringify.valueAlloc(a, .{
++        .release = context.options.build.release,
++        .facts = context.options.build.facts,
++        .vectors = context.options.build.show.generic_vectors,
++        .frames = context.options.build.show.trap_frames,
++        .seed = context.options.seed,
++        .runs = context.options.property_runs,
++        .timeout = context.options.controls.timeout_ms,
++        .steps = context.options.controls.max_steps,
++    }, .{}));
++    if (context.entry.configuration) |configured| {
++        field(&hash, configured.path);
++        field(&hash, configured.bytes);
++        if (configured.policy) |policy| {
++            field(&hash, policy.path);
++            field(&hash, policy.bytes);
++        }
++    }
++    for (context.options.build.links) |link| {
++        field(&hash, std.Io.Dir.cwd().realPathFileAlloc(context.io, link, a) catch link);
++        const bytes = std.Io.Dir.cwd().readFileAlloc(context.io, link, a, .limited(64 << 20)) catch |err| {
++            if (err == error.OutOfMemory) return error.OutOfMemory;
++            return error.ReadFailed;
++        };
++        field(&hash, bytes);
++        var digest: Digest = undefined;
++        std.crypto.hash.Blake3.hash(bytes, &digest, .{});
++        try inputs.append(a, .{ .path = link, .digest = digest });
++    }
++    var environment: std.ArrayList([]const u8) = .empty;
++    var entries = context.environment.iterator();
++    while (entries.next()) |item| try environment.append(a, try std.fmt.allocPrint(a, "{s}={s}", .{ item.key_ptr.*, item.value_ptr.* }));
++    std.mem.sort([]const u8, environment.items, {}, before);
++    for (environment.items) |item| field(&hash, item);
++    var digest: Digest = undefined;
++    hash.final(&digest);
++    return digest;
++}
++
++/// A test's own emitted program includes the copied-value schema and seed adapter.
++pub fn key(base: Digest, name: []const u8, llvm: []const u8) Digest {
++    var hash = std.crypto.hash.Blake3.init(.{});
++    field(&hash, "core-test-program-v1");
++    field(&hash, &base);
++    field(&hash, name);
++    field(&hash, llvm);
++    var digest: Digest = undefined;
++    hash.final(&digest);
++    return digest;
++}
++
++/// Only an exact, checksummed success record can bypass execution.
++pub fn hit(context: Context, identity: Digest) Error!bool {
++    if (!reusable(context)) return false;
++    const path = try receiptPath(context, identity);
++    const found = std.Io.Dir.cwd().readFileAlloc(context.io, path, context.arena, .limited(4096)) catch return false;
++    const expected = try success(context.arena, identity);
++    return std.mem.eql(u8, found, expected);
++}
++
++/// Publish successes atomically; a failed run never writes a receipt.
++pub fn save(context: Context, identity: Digest) Error!void {
++    try atomic(context, try receiptPath(context, identity), try success(context.arena, identity));
++}
++
++/// Look up a complete successful file run after resolving configuration anew.
++pub fn replay(context: Context, base: Digest) Error!?[]const u8 {
++    if (!reusable(context)) return null;
++    if (context.entry.configuration) |configured| if (configured.document.interface_files) return null;
++    const a = context.arena;
++    const path = try manifestPath(context);
++    const bytes = std.Io.Dir.cwd().readFileAlloc(context.io, path, a, .limited(64 << 20)) catch return null;
++    const envelope = std.json.parseFromSliceLeaky(Envelope, a, bytes, .{}) catch return null;
++    if (!std.mem.eql(u8, envelope.version, "core-test-manifest-v1")) return null;
++    var checksum: Digest = undefined;
++    std.crypto.hash.Blake3.hash(envelope.payload, &checksum, .{});
++    if (!std.mem.eql(u8, &checksum, &envelope.checksum)) return null;
++    const snapshot = std.json.parseFromSliceLeaky(Snapshot, a, envelope.payload, .{}) catch return null;
++    if (!std.mem.eql(u8, &snapshot.base, &base) or !try unchanged(context, snapshot.dependencies)) return null;
++    var value = std.json.parseFromSliceLeaky(std.json.Value, a, snapshot.report, .{}) catch return null;
++    if (value != .object) return null;
++    const tests = value.object.get("tests") orelse return null;
++    if (tests != .array or tests.array.items.len == 0) return null;
++    for (tests.array.items) |*test_value| {
++        if (test_value.* != .object) return null;
++        const status = test_value.object.get("status") orelse return null;
++        if (status != .string) return null;
++        const succeeded = std.mem.eql(u8, status.string, "passed") or std.mem.eql(u8, status.string, "cached");
++        if (!succeeded) return null;
++        try test_value.object.put(a, "status", .{ .string = "cached" });
++    }
++    try value.object.put(a, "passed", .{ .integer = 0 });
++    try value.object.put(a, "cached", .{ .integer = @intCast(tests.array.items.len) });
++    if (context.options.json) {
++        const encoded = try std.fmt.allocPrint(a, "{s}\n", .{try std.json.Stringify.valueAlloc(a, value, .{})});
++        return encoded;
++    }
++    const verdicts = try a.alloc(report.Verdict, tests.array.items.len);
++    for (tests.array.items, verdicts) |test_value, *verdict| {
++        const name = test_value.object.get("name") orelse return null;
++        if (name != .string) return null;
++        verdict.* = .{ .name = name.string, .status = .cached };
++    }
++    const rendered = try report.text(a, verdicts);
++    return rendered;
++}
++
++// Explicit native links may include headers not captured by this runner. Until
++// the driver supplies their complete dependency set, run them every time.
++fn reusable(context: Context) bool {
++    if (context.options.controls.force or context.options.build.facts == .verify or context.options.build.links.len != 0) return false;
++    const checking = context.environment.get("MYL_CORE_LEAKCHECK") orelse "0";
++    if (!std.mem.eql(u8, checking, "0")) return false;
++    var entries = context.environment.iterator();
++    while (entries.next()) |entry| {
++        if (std.mem.startsWith(u8, entry.key_ptr.*, "LD_") and entry.value_ptr.len != 0) return false;
++    }
++    return true;
++}
++
++/// Capture identities before execution and check them again before publication.
++pub fn dependencies(context: Context, paths: []const []const u8) Error![]const Dependency {
++    const found = try context.arena.alloc(Dependency, paths.len);
++    for (paths, found) |path, *item| item.* = .{ .path = path, .digest = try fileDigest(context, path) };
++    return found;
++}
++
++/// Record the exact loaded sources and embedded assets, before execution. Standard
++/// library bytes are covered by compiler_identity rather than fictitious disk paths.
++pub fn captured(context: Context, session: *const frontend.Session, providers: []const frontend.Provider) Error![]const Dependency {
++    const a = context.arena;
++    var files: std.ArrayList(Dependency) = .empty;
++    if (session.single) |unit| {
++        try loaded(context, &files, context.entry.path, unit.src, session.entry_suffix, false);
++    } else for (session.project.modules.items) |module| {
++        if (std.mem.startsWith(u8, module.src.path, "@stdlib/")) continue;
++        const path = try std.fs.path.join(a, &.{ context.entry.root, module.src.path });
++        var overridden = false;
++        for (providers) |provider| overridden = overridden or std.mem.eql(u8, module.src.path, provider.path);
++        try loaded(context, &files, path, module.src, if (std.mem.eql(u8, module.name, context.entry.name)) session.entry_suffix else "", overridden);
++        if (context.entry.configuration) |configured| if (configured.document.interface_files) {
++            const api = try std.fmt.allocPrint(a, "{s}.api", .{path[0 .. path.len - 3]});
++            try files.append(a, .{ .path = api, .digest = try fileDigest(context, api) });
++        };
++    }
++    if (context.options.controls.cases) |path| {
++        var digest: Digest = undefined;
++        std.crypto.hash.Blake3.hash(context.case_bytes, &digest, .{});
++        try files.append(a, .{ .path = path, .digest = digest });
++    }
++    if (context.entry.configuration) |configured| {
++        var digest: Digest = undefined;
++        std.crypto.hash.Blake3.hash(configured.bytes, &digest, .{});
++        try files.append(a, .{ .path = configured.path, .digest = digest });
++        if (configured.policy) |policy| {
++            std.crypto.hash.Blake3.hash(policy.bytes, &digest, .{});
++            try files.append(a, .{ .path = policy.path, .digest = digest });
++        }
++    }
++    return files.items;
++}
++
++fn loaded(context: Context, files: *std.ArrayList(Dependency), path: []const u8, source: @import("mylang").source.Source, suffix: []const u8, overridden: bool) Error!void {
++    const a = context.arena;
++    const bytes = if (suffix.len != 0 and std.mem.endsWith(u8, source.bytes, suffix)) source.bytes[0 .. source.bytes.len - suffix.len] else source.bytes;
++    var digest: Digest = undefined;
++    std.crypto.hash.Blake3.hash(bytes, &digest, .{});
++    if (!overridden) try files.append(a, .{ .path = path, .digest = digest });
++    for (source.embeds) |embed| {
++        if (embed.status != .ok) continue;
++        const asset = try std.fs.path.resolve(a, &.{ std.fs.path.dirname(path) orelse ".", embed.path });
++        try files.append(a, .{ .path = asset, .digest = embed.digest });
++    }
++}
++
++/// A source edit during a run prevents reuse of its results.
++pub fn unchanged(context: Context, files: []const Dependency) Error!bool {
++    for (files) |file| {
++        const current = try fileDigest(context, file.path);
++        if (current == null or file.digest == null) {
++            if ((current == null) != (file.digest == null)) return false;
++        } else if (!std.mem.eql(u8, &current.?, &file.digest.?)) return false;
++    }
++    return true;
++}
++
++/// Save a manifest only after all selected tests succeeded under unchanged inputs.
++pub fn remember(context: Context, base: Digest, files: []const Dependency, json: []const u8) Error!void {
++    if (!try unchanged(context, files)) return;
++    const payload = try std.json.Stringify.valueAlloc(context.arena, Snapshot{ .base = base, .dependencies = files, .report = json }, .{});
++    var checksum: Digest = undefined;
++    std.crypto.hash.Blake3.hash(payload, &checksum, .{});
++    const envelope: Envelope = .{ .version = "core-test-manifest-v1", .payload = payload, .checksum = checksum };
++    try atomic(context, try manifestPath(context), try std.json.Stringify.valueAlloc(context.arena, envelope, .{}));
++}
++
++fn fileDigest(context: Context, path: []const u8) Error!?Digest {
++    const bytes = std.Io.Dir.cwd().readFileAlloc(context.io, path, context.arena, .limited(64 << 20)) catch |err| {
++        if (err == error.OutOfMemory) return error.OutOfMemory;
++        if (err == error.FileNotFound) return null;
++        return error.ReadFailed;
++    };
++    defer context.arena.free(bytes);
++    var digest: Digest = undefined;
++    std.crypto.hash.Blake3.hash(bytes, &digest, .{});
++    return digest;
++}
++fn receiptPath(context: Context, identity: Digest) Error![]const u8 {
++    return std.fmt.allocPrint(context.arena, "{s}/tests/receipts-v1/{s}", .{ context.options.build.cache, std.fmt.bytesToHex(identity, .lower) });
++}
++fn manifestPath(context: Context) Error![]const u8 {
++    var hash = std.crypto.hash.Blake3.init(.{});
++    field(&hash, context.entry.path);
++    field(&hash, context.options.filter);
++    field(&hash, context.options.controls.cases orelse "");
++    var digest: Digest = undefined;
++    hash.final(&digest);
++    return std.fmt.allocPrint(context.arena, "{s}/tests/manifests-v1/{s}.json", .{ context.options.build.cache, std.fmt.bytesToHex(digest, .lower) });
++}
++fn success(a: std.mem.Allocator, identity: Digest) Error![]const u8 {
++    const payload = try std.fmt.allocPrint(a, "core-test-receipt-v1\n{s}\npassed\n", .{std.fmt.bytesToHex(identity, .lower)});
++    var checksum: Digest = undefined;
++    std.crypto.hash.Blake3.hash(payload, &checksum, .{});
++    return std.fmt.allocPrint(a, "{s}{s}\n", .{ payload, std.fmt.bytesToHex(checksum, .lower) });
++}
++fn atomic(context: Context, path: []const u8, bytes: []const u8) Error!void {
++    const cwd = std.Io.Dir.cwd();
++    cwd.createDirPath(context.io, std.fs.path.dirname(path).?) catch return error.WriteFailed;
++    var nonce: [16]u8 = undefined;
++    std.Io.random(context.io, &nonce);
++    const temporary = try std.fmt.allocPrint(context.arena, "{s}.{s}.partial", .{ path, std.fmt.bytesToHex(nonce, .lower) });
++    defer deletePartial(context.io, temporary);
++    cwd.writeFile(context.io, .{ .sub_path = temporary, .data = bytes }) catch return error.WriteFailed;
++    cwd.rename(temporary, cwd, path, context.io) catch return error.WriteFailed;
++}
++fn field(hash: *std.crypto.hash.Blake3, bytes: []const u8) void {
++    var length: [8]u8 = undefined;
++    std.mem.writeInt(u64, &length, bytes.len, .little);
++    hash.update(&length);
++    hash.update(bytes);
++}
++fn before(_: void, lhs: []const u8, rhs: []const u8) bool {
++    return std.mem.lessThan(u8, lhs, rhs);
++}
++
++// spec-case: NEW-CORE-S4-TEST-3
++test "receipt keys delimit fields and include the exact reachable program" {
++    const base: Digest = @splat(9);
++    const one = key(base, "ab", "c");
++    try std.testing.expect(!std.mem.eql(u8, &one, &key(base, "a", "bc")));
++    try std.testing.expect(!std.mem.eql(u8, &one, &key(base, "ab", "changed")));
++}
++
++fn deletePartial(io: std.Io, path: []const u8) void {
++    std.Io.Dir.cwd().deleteFile(io, path) catch return;
++}
++
++// spec-case: NEW-CORE-S4-TEST-3
++test "fileDigest handles absence and damaged receipts and manifests become misses" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
++    var environment: std.process.Environ.Map = .init(a);
++    defer environment.deinit();
++    const context: Context = .{
++        .arena = a,
++        .io = std.testing.io,
++        .environment = &environment,
++        .options = .{ .path = "app.my", .build = .{ .zig = "zig", .cache = root }, .json = true },
++        .entry = .{ .path = try std.fs.path.join(a, &.{ root, "app.my" }), .root = root, .name = "app" },
++    };
++    try std.testing.expect(try fileDigest(context, context.entry.path) == null);
++    try std.testing.expectError(error.ReadFailed, fileDigest(context, root));
++    const identity: Digest = @splat(3);
++    try save(context, identity);
++    try std.testing.expect(try hit(context, identity));
++    try environment.put("LD_PRELOAD", "/mutable-library.so");
++    try std.testing.expect(!try hit(context, identity));
++    try environment.put("LD_PRELOAD", "");
++    try std.Io.Dir.cwd().writeFile(context.io, .{ .sub_path = try receiptPath(context, identity), .data = "damaged" });
++    try std.testing.expect(!try hit(context, identity));
++    try std.Io.Dir.cwd().writeFile(context.io, .{ .sub_path = context.entry.path, .data = "source" });
++    const files = try dependencies(context, &.{context.entry.path});
++    const valid = try report.jsonSources(a, &.{.{ .name = "app::test_one", .status = .passed }}, &.{context.entry.path});
++    try remember(context, identity, files, valid);
++    try std.testing.expect(try replay(context, identity) != null);
++    try std.Io.Dir.cwd().writeFile(context.io, .{ .sub_path = context.entry.path, .data = "edited" });
++    try std.testing.expect(try replay(context, identity) == null);
++    try std.Io.Dir.cwd().writeFile(context.io, .{ .sub_path = try manifestPath(context), .data = "damaged" });
++    try std.testing.expect(try replay(context, identity) == null);
++}
+diff --git a/src/core/test_runner_report.zig b/src/core/test_runner_report.zig
+index fb83aa90b..30111f456 100644
+--- a/src/core/test_runner_report.zig
++++ b/src/core/test_runner_report.zig
+@@ -6,6 +6,8 @@ const std = @import("std");
+ /// How one test ended.
+ pub const Status = enum {
+     passed,
++    cached,
++    skipped,
+     failed,
+     /// The new core refuses a feature the test uses (`E_CORE_UNSUPPORTED`): neither a pass nor a failure.
+     unsupported,
+@@ -44,6 +46,8 @@ pub fn text(allocator: std.mem.Allocator, verdicts: []const Verdict) std.mem.All
+     var out: std.ArrayList(u8) = .empty;
+     for (verdicts) |verdict| switch (verdict.status) {
+         .passed => try out.print(allocator, "passed {s}\n", .{verdict.name}),
++        .cached => try out.print(allocator, "cached {s}\n", .{verdict.name}),
++        .skipped => try out.print(allocator, "skipped {s}: {s}\n", .{ verdict.name, verdict.reason }),
+         .failed => try out.print(allocator, "failed {s}: {s}\n", .{ verdict.name, std.mem.trimEnd(u8, verdict.reason, "\n") }),
+         .unsupported => {
+             try out.print(allocator, "unsupported {s}: E_CORE_UNSUPPORTED ({s})", .{ verdict.name, verdict.reason });
+@@ -51,7 +55,7 @@ pub fn text(allocator: std.mem.Allocator, verdicts: []const Verdict) std.mem.All
+             try out.appendSlice(allocator, "\n");
+         },
+     };
+-    try out.print(allocator, "{d} passed, 0 cached, {d} failed, 0 skipped", .{ count(verdicts, .passed), count(verdicts, .failed) });
++    try out.print(allocator, "{d} passed, {d} cached, {d} failed, {d} skipped", .{ count(verdicts, .passed), count(verdicts, .cached), count(verdicts, .failed), count(verdicts, .skipped) });
+     const refused = count(verdicts, .unsupported);
+     if (refused != 0) try out.print(allocator, ", {d} unsupported", .{refused});
+     try out.appendSlice(allocator, "\n");
+@@ -76,10 +80,20 @@ pub fn json(allocator: std.mem.Allocator, verdicts: []const Verdict) std.mem.All
+         }
+         try out.appendSlice(allocator, "}");
+     }
+-    try out.print(allocator, "],\"passed\":{d},\"failed\":{d},\"skipped\":0,\"cached\":0,\"unsupported\":{d}}}\n", .{ count(verdicts, .passed), count(verdicts, .failed), count(verdicts, .unsupported) });
++    const counts = .{ count(verdicts, .passed), count(verdicts, .failed), count(verdicts, .skipped), count(verdicts, .cached), count(verdicts, .unsupported) };
++    try out.print(allocator, "],\"passed\":{d},\"failed\":{d},\"skipped\":{d},\"cached\":{d},\"unsupported\":{d}}}\n", counts);
+     return out.toOwnedSlice(allocator);
+ }
+ 
++/// Add the checked source inventory used to account for directory test programs.
++pub fn jsonSources(allocator: std.mem.Allocator, verdicts: []const Verdict, sources: []const []const u8) std.mem.Allocator.Error![]u8 {
++    const basic = try json(allocator, verdicts);
++    defer allocator.free(basic);
++    const encoded = try std.json.Stringify.valueAlloc(allocator, sources, .{});
++    defer allocator.free(encoded);
++    return std.fmt.allocPrint(allocator, "{s},\"sources\":{s}}}\n", .{ basic[0 .. basic.len - 2], encoded });
++}
++
+ fn quoted(allocator: std.mem.Allocator, out: *std.ArrayList(u8), value: []const u8) std.mem.Allocator.Error!void {
+     try out.append(allocator, '"');
+     for (value) |byte| switch (byte) {

@@ -1,0 +1,6 @@
+module leaf
+public record Cell:
+    value: int
+
+public def render(x: int) -> str:
+    return f"{Cell(x)}"

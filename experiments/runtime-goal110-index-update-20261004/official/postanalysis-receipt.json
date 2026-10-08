@@ -1,0 +1,29 @@
+{
+  "schema": "mylang-index-update-postanalysis-v1",
+  "started_utc": "2026-10-04T09:08:33.597034+00:00",
+  "commands": [
+    {
+      "argv": [
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/finalize-screen.py",
+        "--raw",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/screen-raw.json",
+        "--output",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/screen.json"
+      ],
+      "exit_status": 0
+    },
+    {
+      "argv": [
+        "python3",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/benchmarks/runtime/compare_candidate.py",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/screen.json",
+        "--output",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/screen-comparison.json",
+        "--check-artifacts"
+      ],
+      "exit_status": 0
+    }
+  ],
+  "finished_utc": "2026-10-04T09:08:50.860184+00:00"
+}

@@ -1,0 +1,17 @@
+{
+  "integration_blocker": true,
+  "status": "reproduced; correction assigned to combined S4-E integration",
+  "problem": "Release cloning of a consuming mut helper removes the callee trap frame, leaving the caller frame at the cloned callee span",
+  "operations": ["bounds", "assert", "overflow"],
+  "reference_receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/mut-frame-references-02/summary.json",
+  "reference_source": "94a947c5b023c9357cb4b1e1550464e932141426",
+  "tested_v_source": "d4d8c4e5639c6f6470883eca97ba160a3b4de627",
+  "tested_v_core_sha256": "3c86ebb5ac9db377a2a2b7ae0cffd48cce09bee554aabfec856c9c5a2a6fc2bc",
+  "final_v_source": "3c86c3122fdcc186aa777b52bbcf7f25b03c172f",
+  "final_v_core_sha256": "db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1",
+  "unchanged_inline_cfg_sha256": "23ee2cd1402eb3768a081fdc83d7f46d39c6b042f3df6bd4bc9e8614d348f0c5",
+  "identity_receipt": "commands/command-00248.log",
+  "qualification_limit": "The existing green full-core, conformance, differential and performance gates do not establish correct trap provenance for these cloned mut helpers. The native reducer used the historical d4 compiler; inline_cfg.zig is byte-identical to the final frozen V source.",
+  "agreed_next_step": "Keep V frozen; S4-E adds sparse provenance outside the frozen IR and qualifies exact native traces on the combined compiler before S4 integration can pass.",
+  "ir_unchanged": true
+}

@@ -1,0 +1,81 @@
+Inspected optimized LLVM from zig cc -O3 -march=native -mllvm -x86-experimental-pref-innermost-loop-alignment=6 -Wno-override-module -S -emit-llvm INPUT -o OUTPUT.
+All timed helper bodies inline into main; direct function-name inspection alone cannot count them.
+
+string_split: relevant count blocks, reviewed against the original named kernel/split_job bodies
+  %rc.15.i.i.i = load i32, ptr %v7.i.i.i, align 8, !tbaa !8, !range !19, !noalias !33
+  %rs.16.i.i.i = icmp eq i32 %rc.15.i.i.i, -1
+  br i1 %rs.16.i.i.i, label %"my.row_string_split::split_job.exit.i.i", label %rc.dec.17.i.i.i
+
+rc.dec.17.i.i.i:                                  ; preds = %b6.i.i.i
+  %rn.19.i.i.i = add i32 %rc.15.i.i.i, -1
+  %rz.20.i.i.i = icmp eq i32 %rn.19.i.i.i, 0
+  br i1 %rz.20.i.i.i, label %rc.free.22.i.i.i, label %rc.keep.21.i.i.i
+
+rc.keep.21.i.i.i:                                 ; preds = %rc.dec.17.i.i.i
+  store i32 %rn.19.i.i.i, ptr %v7.i.i.i, align 8, !tbaa !8, !noalias !33
+  br label %"my.row_string_split::split_job.exit.i.i"
+
+rc.free.22.i.i.i:                                 ; preds = %rc.dec.17.i.i.i
+  %kind_at.i.i.i.i = getelementptr inbounds nuw i8, ptr %v7.i.i.i, i64 4
+  %kind.i.i.i.i = load i32, ptr %kind_at.i.i.i.i, align 4, !tbaa !11, !noalias !33
+  %class32.i.i.i.i = lshr i32 %kind.i.i.i.i, 24
+  %rc.35.i.i = load i32, ptr %myl.str.9.myl.str.10.i.i, align 32, !tbaa !8, !range !19, !noalias !33
+  %cond.i.i = icmp eq i32 %rc.35.i.i, 1
+  br i1 %cond.i.i, label %call.i.i.i, label %b8.38.i.i
+
+call.i.i.i:                                       ; preds = %"my.row_string_split::split_job.exit.i.i"
+  call void @myl_core_free_block(ptr nonnull %myl.str.9.myl.str.10.i.i), !noalias !33
+  br label %b8.38.i.i
+
+b8.38.i.i:                                        ; preds = %call.i.i.i, %"my.row_string_split::split_job.exit.i.i"
+  %p.43.i.i = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v4119.i.i, i64 %v22.lcssa.i.i.i)
+  %o.44.i.i = extractvalue { i64, i1 } %p.43.i.i, 1
+  br i1 %o.44.i.i, label %trap.45.i.i, label %b8.38.46.i.i, !prof !17
+
+trap.45.i.i:                                      ; preds = %b8.38.i.i
+  call void @myl_core_trap(i32 25, i64 %v4119.i.i, i64 %v22.lcssa.i.i.i), !dbg !48, !noalias !33
+  unreachable
+
+
+string_join: relevant count blocks, reviewed against the original named kernel/split_job bodies
+  %rc.13.i.i = load i32, ptr %myl.str.9.myl.str.10.i.i, align 32, !tbaa !8, !range !19, !noalias !33
+  %cond.i.i = icmp eq i32 %rc.13.i.i, 1
+  br i1 %cond.i.i, label %call.i9.i.i, label %b6.16.i.i
+
+call.i9.i.i:                                      ; preds = %b2.4.i.i
+  call void @myl_core_free_block(ptr nonnull %myl.str.9.myl.str.10.i.i), !noalias !33
+  br label %b6.16.i.i
+
+b6.16.i.i:                                        ; preds = %call.i9.i.i, %b2.4.i.i
+  %h.1.i.i.i = getelementptr inbounds nuw i8, ptr %v26.i.i, i64 8
+  %v2.i.i.i = load i64, ptr %h.1.i.i.i, align 8, !tbaa !11, !noalias !33
+  %vt1.i.i.i = call i64 @llvm.smax.i64(i64 %v2.i.i.i, i64 0)
+  %vnv1.i.i.i = and i64 %vt1.i.i.i, 9223372036854775792
+  %vd1.1.i.i.i = getelementptr inbounds nuw i8, ptr %v26.i.i, i64 32
+  %vhas1.not.i.i.i = icmp eq i64 %vnv1.i.i.i, 0
+  br i1 %vhas1.not.i.i.i, label %vexit1.i.i.i, label %vblock1.i.i.i
+
+  %rc.21.i.i = load i32, ptr %v26.i.i, align 8, !tbaa !8, !range !19, !noalias !33
+  %rs.22.i.i = icmp eq i32 %rc.21.i.i, -1
+  br i1 %rs.22.i.i, label %b6.16.24.i.i, label %rc.dec.23.i.i
+
+rc.dec.23.i.i:                                    ; preds = %"my.row_string_join::score.exit.i.i"
+  %rn.25.i.i = add i32 %rc.21.i.i, -1
+  %rz.26.i.i = icmp eq i32 %rn.25.i.i, 0
+  br i1 %rz.26.i.i, label %rc.free.28.i.i, label %rc.keep.27.i.i
+
+rc.keep.27.i.i:                                   ; preds = %rc.dec.23.i.i
+  store i32 %rn.25.i.i, ptr %v26.i.i, align 8, !tbaa !8, !noalias !33
+  br label %b6.16.24.i.i
+
+rc.free.28.i.i:                                   ; preds = %rc.dec.23.i.i
+  %kind_at.i.i.i = getelementptr inbounds nuw i8, ptr %v26.i.i, i64 4
+  %kind.i.i.i = load i32, ptr %kind_at.i.i.i, align 4, !tbaa !11, !noalias !33
+  %class32.i.i.i = lshr i32 %kind.i.i.i, 24
+
+Interpretation at the frozen text source:
+- bytes_scan bytes_job/kernel, string_equal kernel and string_search kernel: no count updates per timed iteration. Borrowed byte encode has no call or count traffic.
+- string_split score: zero count operations per byte/piece. Each split call materializes one list and its fresh pieces, then releases the list once. Runtime free walks those owned pieces. Separator select loads/tests the immortal count, but emits no decrement store after optimization.
+- string_join score and runtime copy loop: zero count operations per byte/piece. Each join call materializes one fresh result and releases it once. Separator select retains a count load/test but no decrement store after optimization.
+- Generated release sites for fresh list/result have conditional decrement stores for shared payloads; these row results are unique and take the free arm. Creation initializes each fresh header count to one. Untimed setup and final input cleanup are outside the repeated kernels.
+

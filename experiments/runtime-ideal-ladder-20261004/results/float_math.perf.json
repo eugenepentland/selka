@@ -1,0 +1,146 @@
+{
+ "v0: today incl. in-loop kind dispatch": {
+  "cycles_per_iter": 54400.567094515754,
+  "instr_per_iter": 208934.04100683448,
+  "branch_miss_per_iter": 1.1823637272878813,
+  "store_forward_blocks_per_iter": -0.0005000833472245374
+ },
+ "v1: dispatch unswitched: bounds check, runtime-call int(float), checked add": {
+  "cycles_per_iter": 49140.07217869645,
+  "instr_per_iter": 172068.03883980663,
+  "branch_miss_per_iter": 1.0211701950325054,
+  "store_forward_blocks_per_iter": 0.0001666944490748458
+ },
+ "v2: + inline checked int(float)": {
+  "cycles_per_iter": 26264.8023003834,
+  "instr_per_iter": 90145.02333722287,
+  "branch_miss_per_iter": 1.0305050841806969,
+  "store_forward_blocks_per_iter": -0.0001666944490748458
+ },
+ "v3: + immutable list, one bounds check, sticky checks (L2)": {
+  "cycles_per_iter": 29910.21620270045,
+  "instr_per_iter": 90147.02767127854,
+  "branch_miss_per_iter": 1.060510085014169,
+  "store_forward_blocks_per_iter": -0.0003333888981496916
+ },
+ "v4: + element range: no checks (f64, i64)": {
+  "cycles_per_iter": 14023.835639273213,
+  "instr_per_iter": 33595.02150358393,
+  "branch_miss_per_iter": 1.0015002500416736,
+  "store_forward_blocks_per_iter": -0.0003333888981496916
+ },
+ "v13: v4 + result range assume (types stay i64)": {
+  "cycles_per_iter": 14021.402067011168,
+  "instr_per_iter": 33595.02033672279,
+  "branch_miss_per_iter": 0.9949991665277547,
+  "store_forward_blocks_per_iter": 0.001666944490748458
+ },
+ "v5: + i32 conversions (plain C)": {
+  "cycles_per_iter": 5668.528754792465,
+  "instr_per_iter": 14144.015835972663,
+  "branch_miss_per_iter": 1.0046674445740957,
+  "store_forward_blocks_per_iter": 0.0
+ },
+ "v6: + u16 storage (plain C)": {
+  "cycles_per_iter": 5665.590098349725,
+  "instr_per_iter": 13114.015169194865,
+  "branch_miss_per_iter": 1.0173362227037839,
+  "store_forward_blocks_per_iter": 0.0001666944490748458
+ },
+ "v7: hand AVX2 f64, i64 storage": {
+  "cycles_per_iter": 5137.285880980164,
+  "instr_per_iter": 14895.015669278213,
+  "branch_miss_per_iter": 1.0050008334722453,
+  "store_forward_blocks_per_iter": 0.0
+ },
+ "v8: hand AVX2 f64, u16 storage": {
+  "cycles_per_iter": 5269.219869978329,
+  "instr_per_iter": 13870.015502583765,
+  "branch_miss_per_iter": 1.0080013335555926,
+  "store_forward_blocks_per_iter": 0.0005000833472245374
+ },
+ "v9: + FMA contraction": {
+  "cycles_per_iter": 3861.5717619603265,
+  "instr_per_iter": 11822.01266877813,
+  "branch_miss_per_iter": 0.980496749458243,
+  "store_forward_blocks_per_iter": -0.000833472245374229
+ },
+ "v10: f32 lanes (precision narrowing)": {
+  "cycles_per_iter": 1563.1208534755792,
+  "instr_per_iter": 5442.011168528088,
+  "branch_miss_per_iter": 0.9821636939489915,
+  "store_forward_blocks_per_iter": -0.0003333888981496916
+ },
+ "v11: WORK ELIM: integer identity": {
+  "cycles_per_iter": 1240.532255375896,
+  "instr_per_iter": 3638.011001833639,
+  "branch_miss_per_iter": 0.9911651941990332,
+  "store_forward_blocks_per_iter": 0.0003333888981496916
+ },
+ "v12: WORK ELIM: closed form": {
+  "cycles_per_iter": 19.426404400733457,
+  "instr_per_iter": 35.01000166694449,
+  "branch_miss_per_iter": 0.0010001666944490749,
+  "store_forward_blocks_per_iter": -0.0003333888981496916
+ },
+ "v30 holdout: data from file, v3 (no range)": {
+  "cycles_per_iter": 29927.410068344725,
+  "instr_per_iter": 90147.02233705617,
+  "branch_miss_per_iter": 0.9951658609768295,
+  "store_forward_blocks_per_iter": -0.0005000833472245374
+ },
+ "v31 holdout: data from file, runtime range guard + AVX2": {
+  "cycles_per_iter": 5078.748624770795,
+  "instr_per_iter": 14399.011668611436,
+  "branch_miss_per_iter": 0.9906651108518086,
+  "store_forward_blocks_per_iter": 0.0003333888981496916
+ },
+ "v3 baseline x86-64 (no AVX2)": {
+  "cycles_per_iter": 31756.964994165693,
+  "instr_per_iter": 102437.02500416736,
+  "branch_miss_per_iter": 0.9953325554259043,
+  "store_forward_blocks_per_iter": -0.0001666944490748458
+ },
+ "v4 baseline x86-64": {
+  "cycles_per_iter": 16098.851141856976,
+  "instr_per_iter": 44078.018836472744,
+  "branch_miss_per_iter": 1.0210035005834306,
+  "store_forward_blocks_per_iter": 0.0003333888981496916
+ },
+ "v5 baseline x86-64": {
+  "cycles_per_iter": 11218.835805967661,
+  "instr_per_iter": 31791.01650275046,
+  "branch_miss_per_iter": 0.9904984164027338,
+  "store_forward_blocks_per_iter": 0.0001666944490748458
+ },
+ "v6 baseline x86-64": {
+  "cycles_per_iter": 11068.197866311051,
+  "instr_per_iter": 31791.01233538923,
+  "branch_miss_per_iter": 0.99449908318053,
+  "store_forward_blocks_per_iter": 0.0003333888981496916
+ },
+ "B0 rust": {
+  "cycles_per_iter": 28604.867811301883,
+  "instr_per_iter": 106529.90465077513,
+  "branch_miss_per_iter": 1.0058343057176196,
+  "store_forward_blocks_per_iter": 0.0003333888981496916
+ },
+ "B0 zig-safe": {
+  "cycles_per_iter": 26682.148858143024,
+  "instr_per_iter": 98349.01966994499,
+  "branch_miss_per_iter": 0.993498916486081,
+  "store_forward_blocks_per_iter": -0.0015002500416736123
+ },
+ "B0 zig-fast": {
+  "cycles_per_iter": 17691.856642773797,
+  "instr_per_iter": 81955.01616936157,
+  "branch_miss_per_iter": 0.9771628604767462,
+  "store_forward_blocks_per_iter": 0.0003333888981496916
+ },
+ "B0 my-llvm": {
+  "cycles_per_iter": 47891.72628771462,
+  "instr_per_iter": 188458.03167194533,
+  "branch_miss_per_iter": 1.024670778463077,
+  "store_forward_blocks_per_iter": -0.005334222370395066
+ }
+}

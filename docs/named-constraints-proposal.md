@@ -396,8 +396,6 @@ the repository's required gates with the pinned toolchain:
 ```sh
 zig build
 zig build test --summary all
-zig build test-qbe --summary all
-zig build test-qbe-build --summary all
 zig build fmt-check
 ```
 

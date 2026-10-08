@@ -1,0 +1,16 @@
+{
+  "command": [
+    "git",
+    "add",
+    "experiments/new-core-s4-values-20261006/final-all46-v2.json",
+    "experiments/new-core-s4-values-20261006/performance_summary_v2.json",
+    "experiments/new-core-s4-values-20261006/archive_performance_v2.py",
+    "experiments/new-core-s4-values-20261006/final-performance-artifacts-v2",
+    "experiments/new-core-s4-values-20261006/final-performance-artifacts-incomplete-233",
+    "experiments/new-core-s4-values-20261006/final-performance-artifacts-incomplete-237"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3225970,
+  "status": 0,
+  "elapsed_seconds": 0.11412269109860063
+}

@@ -1,0 +1,241 @@
+{
+  "original_scope": "immutable M25d9 versus S3 correctedENV old, isolated build slot, before source correction",
+  "files": [
+    {
+      "path": "case-validation-red-01/summary.json",
+      "sha256": "867eaa4d7a71007fc77c9a3566f2517d498c3601f53171851305ea29dae2bc3e"
+    },
+    {
+      "path": "case-validation-red-01/case_reducers.py",
+      "sha256": "d3ab3230241194e2860dd58cbcf58b2d4ddbb35fcacf707b351092ecd85b8ed1"
+    },
+    {
+      "path": "case-validation-red-01/wrong-list-expectation/old-cold.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/wrong-list-expectation/core-cold.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/wrong-list-expectation/core-cold.stdout",
+      "sha256": "700e9acf0e7bce788ac9754d52040bedc08ff1c396ed4f6d959a39f2c249c0aa"
+    },
+    {
+      "path": "case-validation-red-01/wrong-list-expectation/core-warm.stdout",
+      "sha256": "de2f69082f792d3067dd4f0ad8d8c20b7ae1d4c295a7515949605d4f2a557190"
+    },
+    {
+      "path": "case-validation-red-01/wrong-list-expectation/app.my",
+      "sha256": "90f8768ab2580ce77a776ebaec6f9e9f249adb8db5d1345d8c614f76b852f1ba"
+    },
+    {
+      "path": "case-validation-red-01/wrong-list-expectation/core-warm.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/wrong-list-expectation/old-cold.stdout",
+      "sha256": "14f763130051ba68fa2d7ac67392d728df51fdb40dde84703498832bd491b367"
+    },
+    {
+      "path": "case-validation-red-01/wrong-list-expectation/explicit.json",
+      "sha256": "eae3b432781253972e0afd71a7264b8e20a32fde1d2223f118f586ed3b5a5386"
+    },
+    {
+      "path": "case-validation-red-01/wrong-text-expectation/old-cold.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/wrong-text-expectation/core-cold.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/wrong-text-expectation/core-cold.stdout",
+      "sha256": "a41dfc0a9810512383840cfd183ea2d9d6095658d5b17c1a6181efa8c4e60ac9"
+    },
+    {
+      "path": "case-validation-red-01/wrong-text-expectation/core-warm.stdout",
+      "sha256": "22f1b86d1369f774ea761a8ae315ea85d41dcbf602a86f3d7585f7347e4d2dd9"
+    },
+    {
+      "path": "case-validation-red-01/wrong-text-expectation/app.my",
+      "sha256": "c9c497d45305aa18b8c641a5721ff7a8277e32c7b155d3395f2876835412904f"
+    },
+    {
+      "path": "case-validation-red-01/wrong-text-expectation/core-warm.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/wrong-text-expectation/old-cold.stdout",
+      "sha256": "f8d135dbd2015520fda8f8e290a1fb6c8874582206e2d95b0cc1c73639dcb025"
+    },
+    {
+      "path": "case-validation-red-01/wrong-text-expectation/explicit.json",
+      "sha256": "99cd90041264bdec2ce6ffc77d1d01831084c93397ee7b5a038625612e61ca86"
+    },
+    {
+      "path": "case-validation-red-01/wrapped-integer-expectation/old-cold.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/wrapped-integer-expectation/core-cold.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/wrapped-integer-expectation/core-cold.stdout",
+      "sha256": "0c3805c3959c21f259c33afe18f3b02be6404930acfc0246e33ced0a563cbbb6"
+    },
+    {
+      "path": "case-validation-red-01/wrapped-integer-expectation/core-warm.stdout",
+      "sha256": "49b113067da767e850710544e86a77597a35f39551e20e615f683ab88ae254f7"
+    },
+    {
+      "path": "case-validation-red-01/wrapped-integer-expectation/app.my",
+      "sha256": "bebfb87a7921975288cdaa7859280bf1ec6f9fdf09844aaa16e80dc73dcf148f"
+    },
+    {
+      "path": "case-validation-red-01/wrapped-integer-expectation/core-warm.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/wrapped-integer-expectation/old-cold.stdout",
+      "sha256": "b5bbdfccad66cd7a9c1f5115acc95404b8f284623d30d1784170324fbf5dc4cb"
+    },
+    {
+      "path": "case-validation-red-01/wrapped-integer-expectation/explicit.json",
+      "sha256": "e7a6f352062554335f00f90c98e68b446088dbf52ed12dcda6858f5f1ab8d164"
+    },
+    {
+      "path": "case-validation-red-01/extra-arguments/old-cold.stderr",
+      "sha256": "65ed4accb16f1a1080c6571f7dceee780e0cde76d3854c37149fe22318a46ee8"
+    },
+    {
+      "path": "case-validation-red-01/extra-arguments/core-cold.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/extra-arguments/core-cold.stdout",
+      "sha256": "192de04e03a6ab9c3304d8786541c88c889ca70f7e6ed9c2a1a5589672bd2478"
+    },
+    {
+      "path": "case-validation-red-01/extra-arguments/core-warm.stdout",
+      "sha256": "27b461394b7a99797c8752b85d1dda6b718a5ce23699602c4713d668675cdccf"
+    },
+    {
+      "path": "case-validation-red-01/extra-arguments/app.my",
+      "sha256": "19688ffb7b8be3d86c14001d61286b2df51ec1bcef57446c51052d8f8a2b3746"
+    },
+    {
+      "path": "case-validation-red-01/extra-arguments/core-warm.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/extra-arguments/old-cold.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/extra-arguments/explicit.json",
+      "sha256": "7539ddc3ee2825fc4bc2e4effe98298d87e7d20e428a8f3cca570e21d627c21f"
+    },
+    {
+      "path": "case-validation-red-01/wrong-bool-expectation/old-cold.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/wrong-bool-expectation/core-cold.stderr",
+      "sha256": "c9f712ef1973bccee30d276d256c4414b60e510a9f1018f01f4baffbd5c7e79c"
+    },
+    {
+      "path": "case-validation-red-01/wrong-bool-expectation/core-cold.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/wrong-bool-expectation/core-warm.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/wrong-bool-expectation/app.my",
+      "sha256": "19688ffb7b8be3d86c14001d61286b2df51ec1bcef57446c51052d8f8a2b3746"
+    },
+    {
+      "path": "case-validation-red-01/wrong-bool-expectation/core-warm.stderr",
+      "sha256": "a6d87e790178ced7d57084ecec3fcb81ce41068b4543d2ec6d9361f8a4e68186"
+    },
+    {
+      "path": "case-validation-red-01/wrong-bool-expectation/old-cold.stdout",
+      "sha256": "46e46da752b0f68b1af7c9100f24fc2070bff58afcf219bfb37fc5952305e4b4"
+    },
+    {
+      "path": "case-validation-red-01/wrong-bool-expectation/explicit.json",
+      "sha256": "55a61264b4c9f47cfa06028ee80565a49b4c76fdb16e3ebb60867f29e2d6f347"
+    },
+    {
+      "path": "case-validation-red-01/malformed-dict-pair/old-cold.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/malformed-dict-pair/core-cold.stderr",
+      "sha256": "e32bb0430bffc014003439b40807c81cdf0dfcb3429ac2c896881beca56b2eec"
+    },
+    {
+      "path": "case-validation-red-01/malformed-dict-pair/core-cold.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/malformed-dict-pair/core-warm.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-01/malformed-dict-pair/app.my",
+      "sha256": "e16c8f7faffe66e53d82ef6ba607cbcf68f67cf8fbe437ca06c33bb9e166115a"
+    },
+    {
+      "path": "case-validation-red-01/malformed-dict-pair/core-warm.stderr",
+      "sha256": "2c5a99b9cabc215091841a4bf70f3dd08087407eeaa6c598374f48c116161970"
+    },
+    {
+      "path": "case-validation-red-01/malformed-dict-pair/old-cold.stdout",
+      "sha256": "ba890dea6b9970880923e3859cbe55d2f99fe7e0987c3180c8cfcb78e6cec566"
+    },
+    {
+      "path": "case-validation-red-01/malformed-dict-pair/explicit.json",
+      "sha256": "82821fd99e2d92946f0e9d7f710fb1e44419c57f99320cef27ad797d77034115"
+    },
+    {
+      "path": "case-validation-red-02/summary.json",
+      "sha256": "05b2fc33bce3a624999816a449b0d0222891b0f4e9eac244c4c435f74a1f0e5d"
+    },
+    {
+      "path": "case-validation-red-02/noncanonical-integer-expectation/old-cold.stderr",
+      "sha256": "617927f3c763875f2950a584524c2cc96b9f4ce90f1b77c5885106a6ba270e4a"
+    },
+    {
+      "path": "case-validation-red-02/noncanonical-integer-expectation/core-cold.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-02/noncanonical-integer-expectation/core-cold.stdout",
+      "sha256": "d8e03dc0c6d1681a2c8fec9e6d21f90d0174008f259fcfbfb315cad214b70c16"
+    },
+    {
+      "path": "case-validation-red-02/noncanonical-integer-expectation/core-warm.stdout",
+      "sha256": "b55a18a52af28ca27875fce63113cdf8cc8997cd05cb3808fa0e094dfec710ed"
+    },
+    {
+      "path": "case-validation-red-02/noncanonical-integer-expectation/app.my",
+      "sha256": "bebfb87a7921975288cdaa7859280bf1ec6f9fdf09844aaa16e80dc73dcf148f"
+    },
+    {
+      "path": "case-validation-red-02/noncanonical-integer-expectation/core-warm.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "case-validation-red-02/noncanonical-integer-expectation/old-cold.stdout",
+      "sha256": "a56446e4dc1c8bfb522e6d56698552a22520f19bfe3ad41c7390c3174913285a"
+    },
+    {
+      "path": "case-validation-red-02/noncanonical-integer-expectation/explicit.json",
+      "sha256": "cf3f4c9595e94dd3530c43643f1654da753e7d89a676e98dda6dd22afd4fee5b"
+    }
+  ]
+}

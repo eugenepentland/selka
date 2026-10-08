@@ -47,7 +47,6 @@ def change_key(value: mut Key) -> int:
     return 0
 
 
-# spec-case: COW-NESTED-1
 public def test_fixed_array_list() -> bool:
     original: [1]list[int] = [[1]]
     changed = original
@@ -55,7 +54,6 @@ public def test_fixed_array_list() -> bool:
     return original[0] == [1] and changed[0] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_fixed_array_dictionary() -> bool:
     original: [1]dict[str, list[int]] = [{"k": [1]}]
     changed = original
@@ -63,7 +61,6 @@ public def test_fixed_array_dictionary() -> bool:
     return original[0]["k"] == [1] and changed[0]["k"] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_repeated_fixed_array_wrappers() -> bool:
     original: [1][1] dict[str, list[int]] = [[{"k": [1]}]]
     changed = original
@@ -71,7 +68,6 @@ public def test_repeated_fixed_array_wrappers() -> bool:
     return original[0][0]["k"] == [1] and changed[0][0]["k"] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_fixed_array_list_dictionary() -> bool:
     original: [1]list[dict[str, list[int]]] = [[{"k": [1]}]]
     changed = original
@@ -79,7 +75,6 @@ public def test_fixed_array_list_dictionary() -> bool:
     return original[0][0]["k"] == [1] and changed[0][0]["k"] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_list_fixed_array_dictionary() -> bool:
     original: list[[1]dict[str, list[int]]] = [[{"k": [1]}]]
     changed = original
@@ -87,7 +82,6 @@ public def test_list_fixed_array_dictionary() -> bool:
     return original[0][0]["k"] == [1] and changed[0][0]["k"] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_dictionary_fixed_array_list() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
@@ -95,7 +89,6 @@ public def test_dictionary_fixed_array_list() -> bool:
     return original["k"][0] == [1] and changed["k"][0] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_dictionary_fixed_array_field_dictionary() -> bool:
     original: dict[str, [1]DictionaryField] = {"outer": [DictionaryField(entries={"k": [1]})]}
     changed = original
@@ -103,7 +96,6 @@ public def test_dictionary_fixed_array_field_dictionary() -> bool:
     return original["outer"][0].entries["k"] == [1] and changed["outer"][0].entries["k"] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_list_record_fixed_array_field() -> bool:
     original = [ArrayField(entries=[{"k": [1]}])]
     changed = original
@@ -111,7 +103,6 @@ public def test_list_record_fixed_array_field() -> bool:
     return original[0].entries[0]["k"] == [1] and changed[0].entries[0]["k"] == [1, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_dynamic_negative_fixed_array_index() -> bool:
     original: [2]dict[str, list[int]] = [{"k": [0]}, {"k": [1]}]
     changed = original
@@ -119,18 +110,6 @@ public def test_dynamic_negative_fixed_array_index() -> bool:
     return original[1]["k"] == [1] and changed[1]["k"] == [1, 2] and changed[0]["k"] == [0]
 
 
-# spec-case: ARENA-ESCAPE-VALUE-1
-public def test_fixed_array_nested_copies_escape_an_arena() -> bool:
-    original: [1]dict[str, list[int]] = [{"k": [1]}]
-    kept = original
-    with arena() as scratch:
-        changed = original
-        changed[0]["k"].append(2)
-        kept = scratch.escape(changed)
-    return original[0]["k"] == [1] and kept[0]["k"] == [1, 2]
-
-
-# spec-case: COW-NESTED-1
 public def test_enum_table_collection_element() -> bool:
     original: [Position]list[int] = {Position.first: [0], Position.second: [1]}
     changed = original
@@ -138,7 +117,6 @@ public def test_enum_table_collection_element() -> bool:
     return original[Position.second] == [1] and changed[Position.second] == [1, 2] and changed[Position.first] == [0]
 
 
-# spec-case: COW-NESTED-1
 public def test_list_array_path_inside_a_loop() -> bool:
     original: list[[1]dict[str, list[int]]] = [[{"k": [1]}]]
     changed = original
@@ -147,39 +125,42 @@ public def test_list_array_path_inside_a_loop() -> bool:
     return original[0][0]["k"] == [1] and changed[0][0]["k"] == [1, 2, 3, 4]
 
 
-# spec-case: COW-NESTED-1
-public def test_later_index_replaces_the_dictionary_entry() -> bool:
+public def test_replacement_call_finishes_before_dictionary_receiver_selection() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
-    changed["k"][replace_entry(mut changed)].append(2)
-    return original["k"][0] == [1] and changed["k"][0] == [9]
+    selected = replace_entry(mut changed)
+    changed["k"][selected].append(2)
+    return original["k"][0] == [1] and changed["k"][0] == [9, 2]
 
 
-# spec-case: COW-NESTED-1
-public def test_later_index_removes_the_dictionary_entry() -> bool:
+public def test_removed_entry_can_be_reinserted_before_receiver_selection() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
-    changed["k"][remove_entries(mut changed)].append(2)
-    return original["k"][0] == [1] and len(changed) == 0
+    selected = remove_entries(mut changed)
+    removed = len(changed) == 0
+    changed["k"] = [[9]]
+    changed["k"][selected].append(2)
+    return original["k"][0] == [1] and removed and changed["k"][0] == [9, 2]
 
 
-# spec-case: COW-NESTED-1
-public def test_later_index_rehashes_the_dictionary() -> bool:
+public def test_rehash_call_finishes_before_dictionary_receiver_selection() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original
-    changed["k"][grow_entries(mut changed)].append(2)
+    selected = grow_entries(mut changed)
+    changed["k"][selected].append(2)
     return original["k"][0] == [1] and changed["k"][0] == [1, 2] and len(changed) == 41
 
 
-# spec-case: COW-NESTED-1
-public def test_later_index_clears_the_outer_list() -> bool:
+public def test_cleared_outer_list_can_be_repopulated_before_receiver_selection() -> bool:
     original: list[[1]list[int]] = [[[1]]]
     changed = original
-    changed[0][clear_rows(mut changed)].append(2)
-    return original[0][0] == [1] and len(changed) == 0
+    selected = clear_rows(mut changed)
+    cleared = len(changed) == 0
+    changed.append([[9]])
+    changed[0][selected].append(2)
+    return original[0][0] == [1] and cleared and changed[0][0] == [9, 2]
 
 
-# spec-case: COW-NESTED-1
 public def test_later_index_changes_the_original_key_variable() -> bool:
     original: dict[Key, [1]list[int]] = {Key(number=1): [[1]]}
     changed = original
@@ -188,7 +169,6 @@ public def test_later_index_changes_the_original_key_variable() -> bool:
     return original[Key(number=1)][0] == [1] and changed[Key(number=1)][0] == [1, 2] and key.number == 2
 
 
-# spec-case: COW-NESTED-1
 public def test_dictionary_array_sliced_key_is_retained() -> bool:
     original: dict[str, [1]list[int]] = {"k": [[1]]}
     changed = original

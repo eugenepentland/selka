@@ -1,0 +1,33 @@
+$ scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-numbers/.mylang-cache/wave-b/s2-t2/qualified/own-sweep-seconds.txt python3 experiments/new-core-s1-20261005/conformance.py integer_text print_rendering number_literals float_integer_casts python_strings python_values test/core/n_numbers.my --jobs 4 --why --leakcheck --verify --mylang zig-out/bin/mylang --core zig-out/bin/mylang-core --cache-dir /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-numbers/.mylang-cache/wave-b/s2-t2/qualified/own-sweep
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+integer_text                 2 |             2     0     0 |             2     0     0
+print_rendering              2 |             0     0     2 |             0     0     2
+number_literals             10 |             9     0     1 |             9     0     1
+float_integer_casts          8 |             5     0     3 |             5     0     3
+python_strings               3 |             0     0     3 |             0     0     3
+python_values                8 |             4     0     4 |             4     0     4
+n_numbers                    3 |             3     0     0 |             3     0     0
+--------------------------------------------------------------------------------------
+TOTAL                       36
+  debug    matching 23, mismatching 0, unsupported 13 (of 36 tests; 23 supported)
+  release  matching 23, mismatching 0, unsupported 13 (of 36 tests; 23 supported)
+
+blocking features of the unsupported tests (tests / files):
+     3 /  1  f64_to_u64
+     3 /  1  dict type
+     2 /  1  text of a non-integer value
+     1 /  1  fixed array type
+     1 /  1  replace
+     1 /  1  splitlines
+     1 /  1  strip
+     1 /  1  contains
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+  print_rendering                  2 of   2: text of a non-integer value x2
+  number_literals                  1 of  10: fixed array type x1
+  float_integer_casts              3 of   8: f64_to_u64 x3
+  python_strings                   3 of   3: replace x1, splitlines x1, strip x1
+  python_values                    4 of   8: dict type x3, contains x1
+
+exit=0 command_seconds=2.98 wall_including_admission=3.01s

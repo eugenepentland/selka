@@ -1,0 +1,150 @@
+{
+  "frontend": {
+    "before": {
+      "manifest": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/before-collections.json",
+        "sha256": "59100377df5a1bb574eee50f4db90336893831d835a72b067379111d984a5ca1"
+      },
+      "body": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/before-batch_result.ssa",
+        "sha256": "be0ebea6de08e854793fe73961c9958226bf04a94ff0ff640c0d43680c91c4e8"
+      },
+      "word_calls": 0,
+      "ordinary_calls": 5
+    },
+    "after": {
+      "manifest": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/after-collections.json",
+        "sha256": "d2efb28cdc012038cf7013252eb889d6e98f0449e917658946b06278311c7bc3"
+      },
+      "body": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word/static/after-batch_result.ssa",
+        "sha256": "be34744e2a1be04ba1ed4df6ec44ec494d98e8f349ef0b0262cd83f7e6ab186a"
+      },
+      "word_calls": 2,
+      "ordinary_calls": 3
+    }
+  },
+  "function_sizes": {
+    "before": {
+      "myl_native_dictionary_read": 670,
+      "read_walk": 663,
+      "myl_f_4c388c09641a7cf53a57c584f19db2c37bf5f9318d201409d2cca2d83d777934": 52057
+    },
+    "after": {
+      "myl_native_dictionary_read": 670,
+      "read_walk": 663,
+      "myl_native_dictionary_read_word": 426,
+      "myl_f_4c388c09641a7cf53a57c584f19db2c37bf5f9318d201409d2cca2d83d777934": 52057
+    }
+  },
+  "controls": [
+    {
+      "name": "legacy/my-llvm",
+      "allocated_sections_identical": true,
+      "text_identical": true,
+      "program_headers_identical": true,
+      "executable_loads_identical": true,
+      "different_allocated_sections": []
+    },
+    {
+      "name": "legacy/my-qbe",
+      "allocated_sections_identical": true,
+      "text_identical": true,
+      "program_headers_identical": true,
+      "executable_loads_identical": true,
+      "different_allocated_sections": []
+    },
+    {
+      "name": "compute/my-llvm",
+      "allocated_sections_identical": true,
+      "text_identical": true,
+      "program_headers_identical": true,
+      "executable_loads_identical": true,
+      "different_allocated_sections": []
+    },
+    {
+      "name": "compute/my-qbe",
+      "allocated_sections_identical": true,
+      "text_identical": true,
+      "program_headers_identical": true,
+      "executable_loads_identical": true,
+      "different_allocated_sections": []
+    },
+    {
+      "name": "collections/my-llvm",
+      "allocated_sections_identical": false,
+      "text_identical": false,
+      "program_headers_identical": false,
+      "executable_loads_identical": false,
+      "different_allocated_sections": [
+        ".bss",
+        ".data",
+        ".data.rel.ro",
+        ".dynamic",
+        ".eh_frame",
+        ".eh_frame_hdr",
+        ".fini",
+        ".got",
+        ".got.plt",
+        ".init",
+        ".plt",
+        ".rela.dyn",
+        ".rela.plt",
+        ".relro_padding",
+        ".rodata",
+        ".tbss",
+        ".text",
+        "mylang_frame_map"
+      ]
+    },
+    {
+      "name": "collections/my-qbe",
+      "allocated_sections_identical": false,
+      "text_identical": false,
+      "program_headers_identical": false,
+      "executable_loads_identical": false,
+      "different_allocated_sections": [
+        ".bss",
+        ".data",
+        ".data.rel.ro",
+        ".dynamic",
+        ".eh_frame",
+        ".eh_frame_hdr",
+        ".fini",
+        ".got",
+        ".got.plt",
+        ".init",
+        ".plt",
+        ".rela.dyn",
+        ".rela.plt",
+        ".relro_padding",
+        ".rodata",
+        ".tbss",
+        ".text",
+        "mylang_frame_map"
+      ]
+    },
+    {
+      "name": "text/my-llvm",
+      "allocated_sections_identical": true,
+      "text_identical": true,
+      "program_headers_identical": true,
+      "executable_loads_identical": true,
+      "different_allocated_sections": []
+    },
+    {
+      "name": "text/my-qbe",
+      "allocated_sections_identical": false,
+      "text_identical": false,
+      "program_headers_identical": true,
+      "executable_loads_identical": false,
+      "different_allocated_sections": [
+        ".eh_frame",
+        ".eh_frame_hdr",
+        ".rodata",
+        ".text"
+      ]
+    }
+  ]
+}

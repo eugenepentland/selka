@@ -1,0 +1,44 @@
+module text_0063
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+def tally(text: str, seed: int) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for word in text.split():
+        text = "rebound"
+        counts[word] = counts[word] + 1 if word in counts else 1
+        if len(counts) == seed % 7:
+            continue
+        if len(counts) > seed % 31 + 2:
+            break
+    return counts
+
+def score(counts: dict[str, int]) -> int:
+    value = len(counts)
+    for key in counts:
+        value += len(key) * counts[key]
+        for octet in key.encode():
+            value += octet
+    return value
+
+def main(args: list[str], out: Stream) -> int:
+    seed = number(args[0])
+    original = "long02éabcdefghijklmnop\rΩ\rlong12éabcdefghijklmnop\ta\rlong01éabcdefghijklmnop\nΩ\tlong04éabcdefghijklmnop  café\x0blong08éabcdefghijklmnop  b\x0c😀 long02éabcdefghijklmnop\na  long07éabcdefghijklmnop\x0clong05éabcdefghijklmnop 😀  café  long11éabcdefghijklmnop\tcollision005a0e collision002553\x0blong09éabcdefghijklmnop\x0blong06éabcdefghijklmnop\x0clong03éabcdefghijklmnop café long05éabcdefghijklmnop b\rx y\x0bcollision002553  long07éabcdefghijklmnop\nlong07éabcdefghijklmnop 😀\tlong06éabcdefghijklmnop\x0bnaïve a long10éabcdefghijklmnop  long10éabcdefghijklmnop\nb\x0blong04éabcdefghijklmnop\nlong03éabcdefghijklmnop b\rlong12éabcdefghijklmnop long05éabcdefghijklmnop\x0bcollision005a0e\n😀\x0clong00éabcdefghijklmnop\tlong00éabcdefghijklmnop long06éabcdefghijklmnop\x0bnaïve\x0bΩ café\x0cé"
+    owned = "".join([original, " ", original])
+    counts = tally(owned, seed)
+    snapshot = counts
+    counts["post"] = seed + 1
+    _ = counts.pop("post")
+    for word in "post fresh café collision005a0e".split():
+        counts[word] = counts[word] + 1 if word in counts else 1
+    escaped: list[str] = []
+    for word in original.split():
+        escaped.append(word)
+    value = score(counts) + score(snapshot) + len(escaped)
+    out.print(value)
+    return 0

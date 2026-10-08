@@ -1,0 +1,80 @@
+0000000001032720 <main>:
+ 1032720:	41 57                	push   %r15
+ 1032722:	41 56                	push   %r14
+ 1032724:	41 54                	push   %r12
+ 1032726:	53                   	push   %rbx
+ 1032727:	50                   	push   %rax
+ 1032728:	e8 43 6c fd ff       	call   1009370 <myl_core_args>
+ 103272d:	49 89 c6             	mov    %rax,%r14
+ 1032730:	48 8b 58 08          	mov    0x8(%rax),%rbx
+ 1032734:	48 8d 0d 05 57 02 00 	lea    0x25705(%rip),%rcx        # 1057e40 <myl_core_free_lists>
+ 103273b:	48 8b 41 08          	mov    0x8(%rcx),%rax
+ 103273f:	48 85 c0             	test   %rax,%rax
+ 1032742:	0f 84 b0 00 00 00    	je     10327f8 <main+0xd8>
+ 1032748:	48 8b 10             	mov    (%rax),%rdx
+ 103274b:	48 89 51 08          	mov    %rdx,0x8(%rcx)
+ 103274f:	48 b9 01 00 00 00 00 	movabs $0x100000000000001,%rcx
+ 1032756:	00 00 01 
+ 1032759:	48 89 08             	mov    %rcx,(%rax)
+ 103275c:	c5 f8 57 c0          	vxorps %xmm0,%xmm0,%xmm0
+ 1032760:	c5 f8 11 40 08       	vmovups %xmm0,0x8(%rax)
+ 1032765:	48 c7 40 18 00 00 00 	movq   $0x0,0x18(%rax)
+ 103276c:	00 
+ 103276d:	41 bc 01 04 00 00    	mov    $0x401,%r12d
+ 1032773:	49 bf ff ff ff ff ff 	movabs $0x7fffffffffff,%r15
+ 103277a:	7f 00 00 
+ 103277d:	31 f6                	xor    %esi,%esi
+ 103277f:	90                   	nop
+ 1032780:	83 38 01             	cmpl   $0x1,(%rax)
+ 1032783:	75 36                	jne    10327bb <main+0x9b>
+ 1032785:	48 3b 70 10          	cmp    0x10(%rax),%rsi
+ 1032789:	73 1d                	jae    10327a8 <main+0x88>
+ 103278b:	48 c7 44 f0 20 01 00 	movq   $0x1,0x20(%rax,%rsi,8)
+ 1032792:	00 00 
+ 1032794:	4c 39 fe             	cmp    %r15,%rsi
+ 1032797:	48 8d 76 01          	lea    0x1(%rsi),%rsi
+ 103279b:	48 89 70 08          	mov    %rsi,0x8(%rax)
+ 103279f:	77 23                	ja     10327c4 <main+0xa4>
+ 10327a1:	49 ff cc             	dec    %r12
+ 10327a4:	75 da                	jne    1032780 <main+0x60>
+ 10327a6:	eb 2a                	jmp    10327d2 <main+0xb2>
+ 10327a8:	be 08 00 00 00       	mov    $0x8,%esi
+ 10327ad:	48 89 c7             	mov    %rax,%rdi
+ 10327b0:	e8 bb 66 fd ff       	call   1008e70 <myl_core_list_grow>
+ 10327b5:	48 8b 70 08          	mov    0x8(%rax),%rsi
+ 10327b9:	eb d0                	jmp    103278b <main+0x6b>
+ 10327bb:	48 8d 3d 9e 16 00 00 	lea    0x169e(%rip),%rdi        # 1033e60 <core_io_file_error.verbs+0x140>
+ 10327c2:	eb 28                	jmp    10327ec <main+0xcc>
+ 10327c4:	48 8d 3d 65 16 00 00 	lea    0x1665(%rip),%rdi        # 1033e30 <core_io_file_error.verbs+0x110>
+ 10327cb:	31 d2                	xor    %edx,%edx
+ 10327cd:	e8 2e 6d fd ff       	call   1009500 <myl_core_trap>
+ 10327d2:	49 8b 76 08          	mov    0x8(%r14),%rsi
+ 10327d6:	49 ff c7             	inc    %r15
+ 10327d9:	4c 39 fe             	cmp    %r15,%rsi
+ 10327dc:	77 41                	ja     103281f <main+0xff>
+ 10327de:	48 39 de             	cmp    %rbx,%rsi
+ 10327e1:	77 4a                	ja     103282d <main+0x10d>
+ 10327e3:	7f 57                	jg     103283c <main+0x11c>
+ 10327e5:	48 8d 3d a4 16 00 00 	lea    0x16a4(%rip),%rdi        # 1033e90 <core_io_file_error.verbs+0x170>
+ 10327ec:	ba 01 00 00 00       	mov    $0x1,%edx
+ 10327f1:	31 f6                	xor    %esi,%esi
+ 10327f3:	e8 08 6d fd ff       	call   1009500 <myl_core_trap>
+ 10327f8:	be 08 00 00 00       	mov    $0x8,%esi
+ 10327fd:	31 ff                	xor    %edi,%edi
+ 10327ff:	e8 fc 65 fd ff       	call   1008e00 <myl_core_list_new_slow>
+ 1032804:	48 8b 70 08          	mov    0x8(%rax),%rsi
+ 1032808:	48 85 f6             	test   %rsi,%rsi
+ 103280b:	0f 84 5c ff ff ff    	je     103276d <main+0x4d>
+ 1032811:	48 8d 3d e8 15 00 00 	lea    0x15e8(%rip),%rdi        # 1033e00 <core_io_file_error.verbs+0xe0>
+ 1032818:	31 d2                	xor    %edx,%edx
+ 103281a:	e8 e1 6c fd ff       	call   1009500 <myl_core_trap>
+ 103281f:	48 8d 3d 4a 15 00 00 	lea    0x154a(%rip),%rdi        # 1033d70 <core_io_file_error.verbs+0x50>
+ 1032826:	31 d2                	xor    %edx,%edx
+ 1032828:	e8 d3 6c fd ff       	call   1009500 <myl_core_trap>
+ 103282d:	48 8d 3d 6c 15 00 00 	lea    0x156c(%rip),%rdi        # 1033da0 <core_io_file_error.verbs+0x80>
+ 1032834:	48 89 da             	mov    %rbx,%rdx
+ 1032837:	e8 c4 6c fd ff       	call   1009500 <myl_core_trap>
+ 103283c:	48 8d 3d 8d 15 00 00 	lea    0x158d(%rip),%rdi        # 1033dd0 <core_io_file_error.verbs+0xb0>
+ 1032843:	48 89 da             	mov    %rbx,%rdx
+ 1032846:	e8 b5 6c fd ff       	call   1009500 <myl_core_trap>
+

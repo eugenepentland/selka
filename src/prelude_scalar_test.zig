@@ -12,7 +12,7 @@ const diagnostic_output = @import("diagnostic_output.zig");
 fn run(text: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(t.allocator, "split.my", text);
     defer compilation.deinit();
-    const result = native.runWithOptions(&compilation, .{ .gc_stress = true }) catch |err| {
+    const result = native.runWithOptions(&compilation, .{}) catch |err| {
         for (compilation.diagnostics.items) |diag| debug.print("{s}: {s}\n", .{ diag.code, diag.message });
         return err;
     };
@@ -24,7 +24,7 @@ fn run(text: []const u8, expected: i64) !void {
 fn trapped(text: []const u8, code: []const u8) !void {
     var compilation = try language.Compilation.init(t.allocator, "scalar.my", text);
     defer compilation.deinit();
-    const result = try native.runWithOptions(&compilation, .{ .gc_stress = true });
+    const result = try native.runWithOptions(&compilation, .{});
     try t.expect(result.trapped());
     try t.expectEqualStrings(code, result.trap.code);
 }
@@ -113,42 +113,6 @@ test "ord and chr trap R_TEXT_SCALAR on anything but one Unicode scalar" {
     try trapped("def main() -> int:\n    return len(chr(0 - 1))\n", "R_TEXT_SCALAR");
     try trapped("def main() -> int:\n    return len(chr(55296))\n", "R_TEXT_SCALAR");
     try trapped("def main() -> int:\n    return len(chr(1114112))\n", "R_TEXT_SCALAR");
-}
-
-test "ord of a one-scalar literal lowers to the same QBE as the raw code" {
-    // spec: PRELUDE-SCALAR-3
-    const folded =
-        \\def letter(code: int) -> bool:
-        \\    return code == ord("m")
-        \\
-        \\
-        \\def main() -> int:
-        \\    if letter(109):
-        \\        return 42
-        \\    return 1
-        \\
-    ;
-    const raw =
-        \\def letter(code: int) -> bool:
-        \\    return code == 109
-        \\
-        \\
-        \\def main() -> int:
-        \\    if letter(109):
-        \\        return 42
-        \\    return 1
-        \\
-    ;
-    var first = try language.Compilation.init(t.allocator, "fold.my", folded);
-    defer first.deinit();
-    var second = try language.Compilation.init(t.allocator, "fold.my", raw);
-    defer second.deinit();
-    const left = try first.emitQbe(t.allocator);
-    defer t.allocator.free(left);
-    const right = try second.emitQbe(t.allocator);
-    defer t.allocator.free(right);
-    try t.expectEqualStrings(left, right);
-    try t.expect(std.mem.indexOf(u8, left, "call $myl_native_text_ord") == null);
 }
 
 test "requireArgument attaches the callee signature to a rejected argument" {

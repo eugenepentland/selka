@@ -1,0 +1,309 @@
+--- 92590700
++++ S3-Wave-A
+@@ -343,8 +343,10 @@
+ b10:
+   call void @"my.row_string_split::inputs"(ptr sret([40 x i8]) align 8 %stack.47, ptr @myl.str.0, i64 %v22, i64 %v48), !dbg !1000016
+   %v69 = getelementptr inbounds i8, ptr %stack.47, i64 0
+-  %v74 = call i64 @runtime_bench_now(), !dbg !1000017
+-  %v75 = call i64 @"my.row_string_split::kernel"(ptr @myl.str.0, ptr %v69, i64 %v35, i64 %v48), !dbg !1000018
++  call void @myl_core_io_at(i32 9)
++  call void @myl_core_host_check(i64 %p1), !dbg !1000017
++  %v75 = call i64 @runtime_bench_now(), !dbg !1000018
++  %v76 = call i64 @"my.row_string_split::kernel"(ptr @myl.str.0, ptr %v69, i64 %v35, i64 %v48), !dbg !1000019
+   %cm.48 = load ptr, ptr %v69, align 8, !tbaa !7
+   %rc.49 = load i32, ptr %cm.48, align 8, !tbaa !3, !range !8
+   %rs.50 = icmp eq i32 %rc.49, -1
+@@ -424,18 +426,20 @@
+   call void @myl_core_free(ptr %cm.87)
+   br label %b10.52.62.72.82.92
+ b10.52.62.72.82.92:
+-  %v76 = call i64 @runtime_bench_now(), !dbg !1000019
+-  %p.97 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v76, i64 %v74)
+-  %v77 = extractvalue { i64, i1 } %p.97, 0
++  call void @myl_core_io_at(i32 10)
++  call void @myl_core_host_check(i64 %p1), !dbg !1000020
++  %v78 = call i64 @runtime_bench_now(), !dbg !1000021
++  %p.97 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v78, i64 %v75)
++  %v79 = extractvalue { i64, i1 } %p.97, 0
+   %o.98 = extractvalue { i64, i1 } %p.97, 1
+   br i1 %o.98, label %trap.99, label %b10.52.62.72.82.92.100, !prof !0
+ trap.99:
+-  call void @myl_core_trap(i32 9, i64 %v76, i64 %v74), !dbg !1000020
++  call void @myl_core_trap(i32 11, i64 %v78, i64 %v75), !dbg !1000022
+   unreachable
+ b10.52.62.72.82.92.100:
+-  call void @myl_core_print_i64(i64 %p2, i64 %v75)
++  call void @myl_core_print_i64(i64 %p2, i64 %v76)
+   call void @myl_core_print_sep(i64 %p2)
+-  call void @myl_core_print_i64(i64 %p2, i64 %v77)
++  call void @myl_core_print_i64(i64 %p2, i64 %v79)
+   call void @myl_core_print_end(i64 %p2)
+   ret i64 0
+ b11:
+@@ -448,7 +452,7 @@
+   %v56 = icmp slt i64 %v35, 1
+   br i1 %v56, label %b9, label %b12
+ }
+-define internal i64 @"my.row_string_split::number"(ptr %p0) nounwind uwtable !dbg !1000021 {
++define internal i64 @"my.row_string_split::number"(ptr %p0) nounwind uwtable !dbg !1000023 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -470,7 +474,7 @@
+ b4:
+   ret i64 0
+ }
+-define internal void @"my.row_string_split::inputs"(ptr noalias sret([40 x i8]) align 8 %ret, ptr %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000022 {
++define internal void @"my.row_string_split::inputs"(ptr noalias sret([40 x i8]) align 8 %ret, ptr %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000024 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -557,13 +561,13 @@
+   %o.32 = extractvalue { i64, i1 } %p.31, 1
+   br i1 %o.32, label %trap.33, label %b6.34, !prof !0
+ trap.33:
+-  call void @myl_core_trap(i32 10, i64 %p1, i64 0), !dbg !1000023
++  call void @myl_core_trap(i32 12, i64 %p1, i64 0), !dbg !1000025
+   unreachable
+ b6.34:
+   %lo.35 = icmp slt i64 %v35, 0
+   br i1 %lo.35, label %trap.36, label %b6.34.37, !prof !0
+ trap.36:
+-  call void @myl_core_trap(i32 11, i64 %v35, i64 0), !dbg !1000024
++  call void @myl_core_trap(i32 13, i64 %v35, i64 0), !dbg !1000026
+   unreachable
+ b6.34.37:
+   %v36 = add i64 %v35, 0
+@@ -575,7 +579,7 @@
+   %lo.38 = icmp slt i64 %p1, 0
+   br i1 %lo.38, label %trap.39, label %b8.40, !prof !0
+ trap.39:
+-  call void @myl_core_trap(i32 12, i64 %p1, i64 0), !dbg !1000025
++  call void @myl_core_trap(i32 14, i64 %p1, i64 0), !dbg !1000027
+   unreachable
+ b8.40:
+   %v38 = add i64 %p1, 0
+@@ -584,7 +588,7 @@
+   %o.42 = extractvalue { i64, i1 } %p.41, 1
+   br i1 %o.42, label %trap.43, label %b8.40.44, !prof !0
+ trap.43:
+-  call void @myl_core_trap(i32 13, i64 0, i64 1), !dbg !1000026
++  call void @myl_core_trap(i32 15, i64 0, i64 1), !dbg !1000028
+   unreachable
+ b8.40.44:
+   %n.45 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 0, i64 %v40)
+@@ -592,13 +596,13 @@
+   %o.46 = extractvalue { i64, i1 } %n.45, 1
+   br i1 %o.46, label %trap.47, label %b8.40.44.48, !prof !0
+ trap.47:
+-  call void @myl_core_trap(i32 14, i64 %v40, i64 0), !dbg !1000027
++  call void @myl_core_trap(i32 16, i64 %v40, i64 0), !dbg !1000029
+   unreachable
+ b8.40.44.48:
+   %lo.49 = icmp slt i64 %v41, 0
+   br i1 %lo.49, label %trap.50, label %b8.40.44.48.51, !prof !0
+ trap.50:
+-  call void @myl_core_trap(i32 15, i64 %v41, i64 0), !dbg !1000028
++  call void @myl_core_trap(i32 17, i64 %v41, i64 0), !dbg !1000030
+   unreachable
+ b8.40.44.48.51:
+   %v42 = add i64 %v41, 0
+@@ -607,7 +611,7 @@
+   %o.53 = extractvalue { i64, i1 } %p.52, 1
+   br i1 %o.53, label %trap.54, label %b8.40.44.48.51.55, !prof !0
+ trap.54:
+-  call void @myl_core_trap(i32 16, i64 %v38, i64 %v42), !dbg !1000029
++  call void @myl_core_trap(i32 18, i64 %v38, i64 %v42), !dbg !1000031
+   unreachable
+ b8.40.44.48.51.55:
+   %p.56 = call { i64, i1 } @llvm.uadd.with.overflow.i64(i64 %v43, i64 1)
+@@ -615,7 +619,7 @@
+   %o.57 = extractvalue { i64, i1 } %p.56, 1
+   br i1 %o.57, label %trap.58, label %b8.40.44.48.51.55.59, !prof !0
+ trap.58:
+-  call void @myl_core_trap(i32 17, i64 %v43, i64 1), !dbg !1000030
++  call void @myl_core_trap(i32 19, i64 %v43, i64 1), !dbg !1000032
+   unreachable
+ b8.40.44.48.51.55.59:
+   br label %b7
+@@ -630,7 +634,7 @@
+   %o.61 = extractvalue { i64, i1 } %p.60, 1
+   br i1 %o.61, label %trap.62, label %b10.63, !prof !0
+ trap.62:
+-  call void @myl_core_trap(i32 18, i64 %p2, i64 %v57), !dbg !1000031
++  call void @myl_core_trap(i32 20, i64 %p2, i64 %v57), !dbg !1000033
+   unreachable
+ b10.63:
+   %q.64 = sdiv i64 %v63, 5
+@@ -650,7 +654,7 @@
+   %v100 = call ptr @myl_core_list_new(i64 2, i64 8)
+   %lay.71 = getelementptr inbounds i8, ptr %v100, i64 24
+   store ptr @myl.layout.0, ptr %lay.71, align 8, !tbaa !5
+-  %v102 = call ptr @myl_core_str_join(ptr @myl.str.7, ptr %v77), !dbg !1000032
++  %v102 = call ptr @myl_core_str_join(ptr @myl.str.7, ptr %v77), !dbg !1000034
+   %v103 = call ptr @myl_core_list_reserve(ptr %v100, i64 8)
+   %pl.72 = getelementptr inbounds i8, ptr %v103, i64 8
+   %plen.73 = load i64, ptr %pl.72, align 8, !tbaa !5
+@@ -659,7 +663,7 @@
+   store ptr %v102, ptr %elt.76, align 8, !tbaa !7
+   %pn.74 = add nuw nsw i64 %plen.73, 1
+   store i64 %pn.74, ptr %pl.72, align 8, !tbaa !5
+-  %v105 = call ptr @myl_core_str_join(ptr @myl.str.8, ptr %v77), !dbg !1000033
++  %v105 = call ptr @myl_core_str_join(ptr @myl.str.8, ptr %v77), !dbg !1000035
+   %v106 = call ptr @myl_core_list_reserve(ptr %v103, i64 8)
+   %pl.77 = getelementptr inbounds i8, ptr %v106, i64 8
+   %plen.78 = load i64, ptr %pl.77, align 8, !tbaa !5
+@@ -692,7 +696,7 @@
+   %hi.92 = icmp ugt i64 %v69, 9223372036854775807
+   br i1 %hi.92, label %trap.93, label %b13.94, !prof !0
+ trap.93:
+-  call void @myl_core_trap(i32 19, i64 %v69, i64 0), !dbg !1000034
++  call void @myl_core_trap(i32 21, i64 %v69, i64 0), !dbg !1000036
+   unreachable
+ b13.94:
+   %v70 = add i64 %v69, 0
+@@ -701,7 +705,7 @@
+   %o.96 = extractvalue { i64, i1 } %p.95, 1
+   br i1 %o.96, label %trap.97, label %b13.94.98, !prof !0
+ trap.97:
+-  call void @myl_core_trap(i32 20, i64 %v70, i64 %v65), !dbg !1000035
++  call void @myl_core_trap(i32 22, i64 %v70, i64 %v65), !dbg !1000037
+   unreachable
+ b13.94.98:
+   br label %b14
+@@ -728,7 +732,7 @@
+   store i64 %pn.108, ptr %pl.106, align 8, !tbaa !5
+   br label %b11
+ }
+-define internal i64 @"my.row_string_split::kernel"(ptr %p0, ptr noalias readonly align 8 %p1, i64 %p2, i64 %p3) nounwind uwtable !dbg !1000036 {
++define internal i64 @"my.row_string_split::kernel"(ptr %p0, ptr noalias readonly align 8 %p1, i64 %p2, i64 %p3) nounwind uwtable !dbg !1000038 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -745,7 +749,7 @@
+   %o.2 = extractvalue { i64, i1 } %p.1, 1
+   br i1 %o.2, label %trap.3, label %b2.4, !prof !0
+ trap.3:
+-  call void @myl_core_trap(i32 21, i64 %p3, i64 %v7), !dbg !1000037
++  call void @myl_core_trap(i32 23, i64 %p3, i64 %v7), !dbg !1000039
+   unreachable
+ b2.4:
+   %fp.5 = getelementptr inbounds i8, ptr %p1, i64 8
+@@ -770,7 +774,7 @@
+   %hi.14 = icmp ugt i64 %v20, 9223372036854775807
+   br i1 %hi.14, label %trap.15, label %b5.16, !prof !0
+ trap.15:
+-  call void @myl_core_trap(i32 22, i64 %v20, i64 0), !dbg !1000038
++  call void @myl_core_trap(i32 24, i64 %v20, i64 0), !dbg !1000040
+   unreachable
+ b5.16:
+   %v21 = add i64 %v20, 0
+@@ -779,7 +783,7 @@
+   %o.18 = extractvalue { i64, i1 } %p.17, 1
+   br i1 %o.18, label %trap.19, label %b5.16.20, !prof !0
+ trap.19:
+-  call void @myl_core_trap(i32 23, i64 %v21, i64 %v16), !dbg !1000039
++  call void @myl_core_trap(i32 25, i64 %v21, i64 %v16), !dbg !1000041
+   unreachable
+ b5.16.20:
+   br label %b6
+@@ -790,7 +794,7 @@
+   %oob.23 = icmp uge i64 %v24, %len.22
+   br i1 %oob.23, label %trap.24, label %b6.25, !prof !0
+ trap.24:
+-  call void @myl_core_trap(i32 24, i64 %v24, i64 %len.22), !dbg !1000040
++  call void @myl_core_trap(i32 26, i64 %v24, i64 %len.22), !dbg !1000042
+   unreachable
+ b6.25:
+   %data.26 = getelementptr inbounds i8, ptr %v14, i64 32
+@@ -810,7 +814,7 @@
+   br label %b8
+ b8:
+   %v37 = phi ptr [ @myl.str.9, %b7 ], [ @myl.str.10, %b9 ]
+-  %v38 = call i64 @"my.row_string_split::split_job"(ptr %v26, ptr %v37), !dbg !1000041
++  %v38 = call i64 @"my.row_string_split::split_job"(ptr %v26, ptr %v37), !dbg !1000043
+   %rc.35 = load i32, ptr %v37, align 8, !tbaa !3, !range !8
+   %rs.36 = icmp eq i32 %rc.35, -1
+   br i1 %rs.36, label %b8.38, label %rc.dec.37
+@@ -830,7 +834,7 @@
+   %o.44 = extractvalue { i64, i1 } %p.43, 1
+   br i1 %o.44, label %trap.45, label %b8.38.46, !prof !0
+ trap.45:
+-  call void @myl_core_trap(i32 25, i64 %v41, i64 %v38), !dbg !1000042
++  call void @myl_core_trap(i32 27, i64 %v41, i64 %v38), !dbg !1000044
+   unreachable
+ b8.38.46:
+   %q.47 = sdiv i64 %v42, 1000000007
+@@ -845,7 +849,7 @@
+ b9:
+   br label %b8
+ }
+-define internal i64 @"my.row_string_split::split_job"(ptr %p0, ptr %p1) nounwind uwtable !dbg !1000043 {
++define internal i64 @"my.row_string_split::split_job"(ptr %p0, ptr %p1) nounwind uwtable !dbg !1000045 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -855,7 +859,7 @@
+   %v4 = icmp ne i64 %v2, 0
+   br i1 %v4, label %b1, label %b2
+ b1:
+-  %v7 = call ptr @myl_core_str_split(ptr %p0, ptr %p1), !dbg !1000044
++  %v7 = call ptr @myl_core_str_split(ptr %p0, ptr %p1), !dbg !1000046
+   %h.2 = getelementptr inbounds i8, ptr %v7, i64 8
+   %v8 = load i64, ptr %h.2, align 8, !tbaa !5
+   %v9 = add i64 %v8, 0
+@@ -865,7 +869,7 @@
+   %v14 = add i64 %v13, 0
+   br label %b3
+ b2:
+-  call void @myl_core_trap(i32 26, i64 0, i64 0), !dbg !1000045
++  call void @myl_core_trap(i32 28, i64 0, i64 0), !dbg !1000047
+   unreachable
+ b3:
+   %v16 = phi i64 [ 0, %b1 ], [ %v27, %b5 ]
+@@ -878,19 +882,19 @@
+   %oob.6 = icmp uge i64 %v16, %len.5
+   br i1 %oob.6, label %trap.7, label %b4.8, !prof !0
+ trap.7:
+-  call void @myl_core_trap(i32 27, i64 %v16, i64 %len.5), !dbg !1000046
++  call void @myl_core_trap(i32 29, i64 %v16, i64 %len.5), !dbg !1000048
+   unreachable
+ b4.8:
+   %data.9 = getelementptr inbounds i8, ptr %v7, i64 32
+   %elt.10 = getelementptr inbounds ptr, ptr %data.9, i64 %v16
+   %v21 = load ptr, ptr %elt.10, align 8, !tbaa !7
+-  %v23 = call i64 @"my.row_string_split::score"(ptr %v21), !dbg !1000047
++  %v23 = call i64 @"my.row_string_split::score"(ptr %v21), !dbg !1000049
+   %p.11 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v22, i64 %v23)
+   %v24 = extractvalue { i64, i1 } %p.11, 0
+   %o.12 = extractvalue { i64, i1 } %p.11, 1
+   br i1 %o.12, label %trap.13, label %b4.8.14, !prof !0
+ trap.13:
+-  call void @myl_core_trap(i32 28, i64 %v22, i64 %v23), !dbg !1000048
++  call void @myl_core_trap(i32 30, i64 %v22, i64 %v23), !dbg !1000050
+   unreachable
+ b4.8.14:
+   br label %b5
+@@ -914,7 +918,7 @@
+ b6.18:
+   ret i64 %v22
+ }
+-define internal i64 @"my.row_string_split::score"(ptr %p0) nounwind uwtable !dbg !1000049 {
++define internal i64 @"my.row_string_split::score"(ptr %p0) nounwind uwtable !dbg !1000051 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -981,10 +985,11 @@
+ b4:
+   ret i64 %v15
+ }
+-define i32 @main(i32 %argc, ptr %argv) uwtable !dbg !1000050 {
++define i32 @main(i32 %argc, ptr %argv) uwtable !dbg !1000052 {
+ entry:
+   %args = call ptr @myl_core_args(i32 %argc, ptr %argv)
+-  %r = call i64 @"my.row_string_split::main"(ptr %args, i64 1, i64 1), !dbg !1000051
++  %host1 = call i64 @myl_core_host_grant()
++  %r = call i64 @"my.row_string_split::main"(ptr %args, i64 %host1, i64 1), !dbg !1000053
+   call void @myl_core_release(ptr %args)
+   %s = call i32 @myl_core_exit(i64 %r)
+   ret i32 %s

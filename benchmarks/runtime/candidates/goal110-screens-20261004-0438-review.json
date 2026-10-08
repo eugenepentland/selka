@@ -1,0 +1,378 @@
+{
+  "reviewed_utc": "2026-10-04T04:39:41.039191+00:00",
+  "kind": "independent oracle, median, ratio, plan and live artifact replay; exploratory evidence only",
+  "pairs": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-presize-ready-20261004/.mylang-cache/goal110-presize-ready-review/paired-screen.json",
+      "sha256": "ccbe168cba4ee02c69577dd2b5b229f571393c927ee62559ae415f1db68959f8",
+      "outcomes": 192,
+      "rows": 8,
+      "live_binary_bindings": 4,
+      "screen_sha256": "20f286774876a955755458e47563c6318bf7913329f319ea04b4a9dd474564b2",
+      "results": [
+        {
+          "case": "sort_records",
+          "profile": "small",
+          "ratios": {
+            "llvm": 0.9930554831893501,
+            "qbe": 0.9997600776449198
+          }
+        },
+        {
+          "case": "sort_records",
+          "profile": "large",
+          "ratios": {
+            "llvm": 0.9537703778685349,
+            "qbe": 0.9981671617718982
+          }
+        },
+        {
+          "case": "sort_int",
+          "profile": "small",
+          "ratios": {
+            "llvm": 0.9799692888203718,
+            "qbe": 1.0008145436508915
+          }
+        },
+        {
+          "case": "sort_int",
+          "profile": "large",
+          "ratios": {
+            "llvm": 0.9938086763799918,
+            "qbe": 1.0045706703632669
+          }
+        },
+        {
+          "case": "mutate_nested",
+          "profile": "small",
+          "ratios": {
+            "llvm": 1.0116234690623969,
+            "qbe": 0.9975956311211733
+          }
+        },
+        {
+          "case": "mutate_nested",
+          "profile": "large",
+          "ratios": {
+            "llvm": 0.9957169698554015,
+            "qbe": 0.9959694807608565
+          }
+        },
+        {
+          "case": "list_append",
+          "profile": "small",
+          "ratios": {
+            "llvm": 0.9959179869028957,
+            "qbe": 0.997319653934291
+          }
+        },
+        {
+          "case": "list_append",
+          "profile": "large",
+          "ratios": {
+            "llvm": 1.0011075623690995,
+            "qbe": 0.9978748487590475
+          }
+        }
+      ]
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-search-align-20261004/.mylang-cache/goal110-search-align/alignment-controls.json",
+      "sha256": "f2a9ed986bb6548f85f8d147b9a02467c4a4789d92fb0009c5949989d3404ade",
+      "outcomes": 432,
+      "rows": 12,
+      "live_binary_bindings": 6,
+      "screen_sha256": "117b7be168e15b480301e9d05cd368e120e3e60d8201ccc59782a030574cae1b",
+      "results": [
+        {
+          "case": "string_search",
+          "profile": "small",
+          "ratios": {
+            "aligned570/parser52": {
+              "llvm": 0.9979899905038463,
+              "qbe": 1.0113488522505818
+            },
+            "aligned570/join5a": {
+              "llvm": 0.9998461771957491,
+              "qbe": 1.008222587489814
+            },
+            "parser52/join5a": {
+              "llvm": 1.0018599251591347,
+              "qbe": 0.9969088166226612
+            }
+          }
+        },
+        {
+          "case": "string_search",
+          "profile": "large",
+          "ratios": {
+            "aligned570/parser52": {
+              "llvm": 0.8595726719286375,
+              "qbe": 0.9785223686064707
+            },
+            "aligned570/join5a": {
+              "llvm": 0.9993522495056397,
+              "qbe": 0.9966016125905396
+            },
+            "parser52/join5a": {
+              "llvm": 1.1626151949007133,
+              "qbe": 1.0184760661218362
+            }
+          }
+        },
+        {
+          "case": "string_join",
+          "profile": "small",
+          "ratios": {
+            "aligned570/parser52": {
+              "llvm": 0.9757878415950825,
+              "qbe": 1.106128605986467
+            },
+            "aligned570/join5a": {
+              "llvm": 1.0093298967878472,
+              "qbe": 0.9565768896012091
+            },
+            "parser52/join5a": {
+              "llvm": 1.034374331963324,
+              "qbe": 0.8647971713452932
+            }
+          }
+        },
+        {
+          "case": "string_join",
+          "profile": "large",
+          "ratios": {
+            "aligned570/parser52": {
+              "llvm": 0.9940426456950873,
+              "qbe": 1.1332444764705594
+            },
+            "aligned570/join5a": {
+              "llvm": 0.9784533775787494,
+              "qbe": 0.934670774380894
+            },
+            "parser52/join5a": {
+              "llvm": 0.9843173045101731,
+              "qbe": 0.824774171670252
+            }
+          }
+        },
+        {
+          "case": "bytes_scan",
+          "profile": "small",
+          "ratios": {
+            "aligned570/parser52": {
+              "llvm": 0.9837556728406502,
+              "qbe": 1.0147263190656297
+            },
+            "aligned570/join5a": {
+              "llvm": 0.9945599045642454,
+              "qbe": 1.0019870048008241
+            },
+            "parser52/join5a": {
+              "llvm": 1.0109826372765884,
+              "qbe": 0.9874455663310909
+            }
+          }
+        },
+        {
+          "case": "bytes_scan",
+          "profile": "large",
+          "ratios": {
+            "aligned570/parser52": {
+              "llvm": 0.9908921123596698,
+              "qbe": 1.0239659011555031
+            },
+            "aligned570/join5a": {
+              "llvm": 0.9712760295803466,
+              "qbe": 1.02155473257654
+            },
+            "parser52/join5a": {
+              "llvm": 0.9802036139609486,
+              "qbe": 0.9976452647727406
+            }
+          }
+        },
+        {
+          "case": "string_equal",
+          "profile": "small",
+          "ratios": {
+            "aligned570/parser52": {
+              "llvm": 0.9931877949451059,
+              "qbe": 1.0266860874645054
+            },
+            "aligned570/join5a": {
+              "llvm": 1.001726224020824,
+              "qbe": 1.029999292744285
+            },
+            "parser52/join5a": {
+              "llvm": 1.0085969935586956,
+              "qbe": 1.003227086955042
+            }
+          }
+        },
+        {
+          "case": "string_equal",
+          "profile": "large",
+          "ratios": {
+            "aligned570/parser52": {
+              "llvm": 0.9986281690409409,
+              "qbe": 1.006162850845712
+            },
+            "aligned570/join5a": {
+              "llvm": 0.9998603851379041,
+              "qbe": 1.0038425225410639
+            },
+            "parser52/join5a": {
+              "llvm": 1.0012339088112712,
+              "qbe": 0.9976938839446339
+            }
+          }
+        },
+        {
+          "case": "int_parse",
+          "profile": "small",
+          "ratios": {
+            "aligned570/parser52": {
+              "llvm": 1.0068810080165334,
+              "qbe": 1.0074326939169433
+            },
+            "aligned570/join5a": {
+              "llvm": 0.9814101856391726,
+              "qbe": 0.9979990685273414
+            },
+            "parser52/join5a": {
+              "llvm": 0.9747032447979765,
+              "qbe": 0.9906359745454324
+            }
+          }
+        },
+        {
+          "case": "int_parse",
+          "profile": "large",
+          "ratios": {
+            "aligned570/parser52": {
+              "llvm": 1.0065779326927458,
+              "qbe": 1.0030995836304935
+            },
+            "aligned570/join5a": {
+              "llvm": 0.987917303324425,
+              "qbe": 0.9814637478854686
+            },
+            "parser52/join5a": {
+              "llvm": 0.9814613168417066,
+              "qbe": 0.9784310191150527
+            }
+          }
+        },
+        {
+          "case": "int_format",
+          "profile": "small",
+          "ratios": {
+            "aligned570/parser52": {
+              "llvm": 0.9445828177326415,
+              "qbe": 1.0145832479482688
+            },
+            "aligned570/join5a": {
+              "llvm": 0.965964248393091,
+              "qbe": 0.9945408002841337
+            },
+            "parser52/join5a": {
+              "llvm": 1.0226358454325615,
+              "qbe": 0.9802456351367266
+            }
+          }
+        },
+        {
+          "case": "int_format",
+          "profile": "large",
+          "ratios": {
+            "aligned570/parser52": {
+              "llvm": 0.9368385213382636,
+              "qbe": 1.0048917914860407
+            },
+            "aligned570/join5a": {
+              "llvm": 0.9694389882262835,
+              "qbe": 0.9949009718109848
+            },
+            "parser52/join5a": {
+              "llvm": 1.0347983842951403,
+              "qbe": 0.9900578154188311
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-presize-ready-20261004/.mylang-cache/goal110-presize-ready-review/paired-repeat.json",
+      "sha256": "f2cff6b7838d7e321bdf752363d7bde77192c88b1d72666f62a595568ddd97c6",
+      "outcomes": 216,
+      "rows": 3,
+      "live_binary_bindings": 4,
+      "screen_sha256": "20f286774876a955755458e47563c6318bf7913329f319ea04b4a9dd474564b2",
+      "results": [
+        {
+          "case": "sort_int",
+          "profile": "small",
+          "ratios": {
+            "llvm": 0.978960151916095,
+            "qbe": 1.0010615000342142
+          }
+        },
+        {
+          "case": "mutate_nested",
+          "profile": "small",
+          "ratios": {
+            "llvm": 1.0106066302108332,
+            "qbe": 0.9978576769093418
+          }
+        },
+        {
+          "case": "mutate_nested",
+          "profile": "large",
+          "ratios": {
+            "llvm": 0.9807390589335288,
+            "qbe": 1.0013063032306824
+          }
+        }
+      ]
+    }
+  ],
+  "scalar_negative": {
+    "archive_index_sha256": "ae78937482d8fd27eb6fc02d7cd726e72ab4055c8ad604802916692baac73a3e",
+    "archive_bindings": 96,
+    "machine_receipt_sha256": "915925ddd93f488543d3b2b77ef1525188b24c0d06f0b035e04b55eae3da7238",
+    "identical_live_ELFs": 2,
+    "elf_sha256": "4dd2666d4377d494db144e43b03fa8e92e2f8452797690f0ec40fe7aac193e67"
+  },
+  "alignment_archive": {
+    "evidence_sha256": "f1d2dc09ff6e96797b359765886538908a8104ed22b396160f38471dd1b50915",
+    "raw_archive_bindings": 33,
+    "helper_bindings": 5
+  },
+  "six_arm_verification": [
+    {
+      "source": "63842d3c",
+      "groups": 48,
+      "timing_samples": 240,
+      "qualifications": 720,
+      "live_artifacts": true,
+      "status": "passed"
+    },
+    {
+      "source": "57034382",
+      "groups": 72,
+      "timing_samples": 360,
+      "qualifications": 720,
+      "live_artifacts": true,
+      "status": "passed"
+    }
+  ],
+  "review_script_sha256": "343407f684a028860194611d73115a118417046c5a8c3a3afc6f8caba5e56402",
+  "readiness_archive": {
+    "validation_receipt_sha256": "1481885c71f3f1136f17ceab15c24cf8263d60b7632f6ea7ac9c0340bcc98316",
+    "raw_archive_bindings": 43,
+    "timing_evidence_sha256": "4178efecd7a5f782f48be2e2d9096b6b62b4e75b6f87898e2c654a7c0f83eece",
+    "timing_raw_archive_bindings": 6,
+    "timing_helper_bindings": 8
+  }
+}

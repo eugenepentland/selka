@@ -1,0 +1,4 @@
+$ git add experiments/new-core-s4-values-20261006/ports_recipe.md experiments/new-core-s4-values-20261006/ports-lox-inventory.json
+
+exit=0
+elapsed_seconds=0.030583

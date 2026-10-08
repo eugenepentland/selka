@@ -1,0 +1,50 @@
+def parse_or(text: str, fallback: int) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return fallback
+
+
+def collatz_steps(start: int) -> int:
+    n = start
+    steps = 0
+    while n != 1:
+        if n % 2 == 0:
+            n = n // 2
+        else:
+            n = 3 * n + 1
+        steps += 1
+    return steps
+
+
+def floors(a: int, b: int) -> int:
+    return (a // b) * 1000 + a % b
+
+
+def scan(limit: int) -> int:
+    total = 0
+    for i in range(limit):
+        if i % 3 == 0:
+            continue
+        if i > 40:
+            break
+        total += i
+    return total
+
+
+def main(args: list[str], out: Stream) -> int:
+    seed = 7
+    if len(args) > 0:
+        seed = parse_or(args[0], 7)
+    squares = [k * k - seed for k in range(10)]
+    acc = 0
+    for k in range(len(squares)):
+        acc += squares[k]
+    out.print(acc, collatz_steps(27), scan(100))
+    out.print(floors(7, 2), floors(-7, 2), floors(7, -2), floors(-7, -2))
+    out.print(parse_or(" -12 ", 0), parse_or("1_000", 0), parse_or("1__0", 5), parse_or("12a", 9), parse_or("+4", 0))
+    out.print(parse_or("9223372036854775807", 0), parse_or("9223372036854775808", 1), parse_or("-9223372036854775808", 0))
+    flag = seed > 3 and len(args) < 2 or seed == 0
+    out.print(flag, not flag)
+    return acc % 256

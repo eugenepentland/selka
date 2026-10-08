@@ -1,0 +1,22 @@
+ Percent |	Source code & Disassembly of row_packet_decode_new for cpu_core/cycles/u (638 samples, percent: local period)
+-----------------------------------------------------------------------------------------------------------------------------
+         : 0       0x10327b0 <myl_core_err_trace_preserve_most>:
+   48.28 :   10327b0:        pushq   %rbp
+    0.00 :   10327b1:        movq    %rsp, %rbp
+    0.00 :   10327b4:        pushq   %rcx
+    0.00 :   10327b5:        pushq   %rax
+    0.16 :   10327b6:        testl   %esi, %esi
+    0.00 :   10327b8:        je      0x10327d5 <myl_core_err_trace_preserve_most+0x25>
+    0.00 :   10327ba:        leaq    0x479f(%rip), %rax  # 0x1036f60 <error_trace>
+    0.00 :   10327c1:        movq    0x47a0(%rip), %rcx  # 0x1036f68 <error_trace+0x8>
+    0.00 :   10327c8:        leaq    0x1(%rcx), %r11
+    0.00 :   10327cc:        andl    $0x1f, %ecx
+    0.00 :   10327cf:        movl    %edi, 0x10(%rax,%rcx,4)
+    0.00 :   10327d3:        jmp     0x10327de <myl_core_err_trace_preserve_most+0x2e>
+    0.00 :   10327d5:        movl    %edi, 0x4785(%rip)  # 0x1036f60 <error_trace>
+    0.00 :   10327db:        xorl    %r11d, %r11d
+   49.53 :   10327de:        movq    %r11, 0x4783(%rip)  # 0x1036f68 <error_trace+0x8>
+    0.00 :   10327e5:        popq    %rax
+    1.25 :   10327e6:        popq    %rcx
+    0.00 :   10327e7:        popq    %rbp
+    0.78 :   10327e8:        retq

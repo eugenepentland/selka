@@ -1,0 +1,18 @@
+# spec-case: MUT-REBIND-CALLER-1
+# spec-case: COW-MUT-ARGUMENT-1
+def replace_entry(root: mut list[list[int]]) -> list[list[int]]:
+    root[0] = [21]
+    return root
+
+def rebind_selected(target: mut list[int], source: list[list[int]]) -> int:
+    before = target[0]
+    target = [13]
+    return before * 10000 + target[0] * 100 + source[0][0]
+
+def main() -> int:
+    items = [[7]]
+    saved = items
+    seen = rebind_selected(mut items[0], replace_entry(mut items))
+    assert items == [[21]]
+    assert saved == [[7]]
+    return seen

@@ -1,0 +1,8 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/resume-combined-fixtures-01/grants-old"
+  ],
+  "status": 2,
+  "stdout": "",
+  "stderr": "mylang: MYLANG_OPTIONS names --unknown-option, which is not a runtime option\n"
+}

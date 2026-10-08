@@ -1,0 +1,14 @@
+[
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-loop-budget-01/cache/packet_decode/program-9b8c5a4c7cb3104d/entry.ll",
+    "sha256": "eea80df9afc8936ec147b215c04a62d8ac51b431c511494edc3b22eb2a1e6fd2"
+  },
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-loop-budget-01/cache/packet_decode/program-9b8c5a4c7cb3104d/module-2ba6fe24c624a8200217cbaaa38092ee7becce804e727d55a01781aa0d2b482a.ll",
+    "sha256": "dca60ead98cd933d02d58d0d905e917253ccbd289bc83cd60fdb145c3867b757"
+  },
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-loop-budget-01/cache/packet_decode/program-9b8c5a4c7cb3104d/module-819b813edb0e06e8dfdd7ff60e54b591b15e01e8a00977de40701a326bcc3d4d.ll",
+    "sha256": "03853f307a2bd2c2a323b0dd6d9ce5804ea447242169531eac11d7d8ac038c50"
+  }
+]

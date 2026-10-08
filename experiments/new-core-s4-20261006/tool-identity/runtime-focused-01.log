@@ -1,0 +1,21 @@
+1/20 tool_ticket.test.tool tickets require same compiler provenance and ignore missing internal hints...OK
+2/20 tool_ticket.test.tool tickets reject damaged foreign and uncacheable identities...OK
+3/20 tool_ticket.test.valid tool tickets bind the executable generation and native CPU...OK
+4/20 tool_identity.test.tool identity resolves executable PATH and propagates allocation failure...OK
+5/20 tool_identity.test.tool memo is reusable and corruption is a content rehash...OK
+6/20 tool_identity.test.same-size executable edit with restored mtime invalidates tool identity...OK
+7/20 tool_identity.test.library edits additions removals and an override invalidate tool identity...OK
+8/20 tool_identity.test.PATH selection and linked library content are command dependencies...OK
+9/20 tool_identity.test.inventoryHint corruption rediscovers libraries and invalid library roots refuse reuse...OK
+10/20 tool_identity.test.inventoryHint allocation failure propagates instead of becoming a cache miss...OK
+11/20 tool_identity.test.MalformedHint rejects invalid count relative paths presence and timestamps...OK
+12/20 tool_identity.test.fileContent refuses SourceChanged generations and standalone rejects delegated scripts...OK
+13/20 tool_identity.test.lookupReplayCandidate misses damaged memos executable edits and allocation failure...OK
+14/20 tool_identity.test.lookupReplayCandidate library edits and additions require final unchanged refusal...OK
+15/20 tool_identity.test.closure approval refuses unknown static executables and unknown library contents...OK
+16/20 tool_identity.test.approval memo damage is a miss and library aliases cannot hide outside inputs...OK
+17/20 tool_identity.test.approval rejects uncaptured compiler environment paths without publishing trust...OK
+18/20 tool_identity.test.approvedLibrary refuses missing trees and propagates allocation failure...OK
+19/20 tool_identity.test.approvedRuntime refuses missing unknown preload and unreadable runtime inputs...OK
+20/20 tool_identity.test.runtime generation refresh refuses changed bytes absence and alias retarget...OK
+All 20 tests passed.

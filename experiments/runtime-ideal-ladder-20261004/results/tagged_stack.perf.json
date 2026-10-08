@@ -1,0 +1,104 @@
+{
+ "v1: today: heap list, RC checks, ready calls, floor mods, idiv cursor": {
+  "cycles_per_iter": 84.61529790382447,
+  "instr_per_iter": 180.75009668752418,
+  "branch_miss_per_iter": 0.0006257501564375391,
+  "store_forward_blocks_per_iter": 1.825056456264114
+ },
+ "v2: + value semantics: local list, header in regs": {
+  "cycles_per_iter": 65.32590733147683,
+  "instr_per_iter": 90.75008968752242,
+  "branch_miss_per_iter": 3.425000856250214e-05,
+  "store_forward_blocks_per_iter": 1.7847654461913616
+ },
+ "v8: + tagged values built in place (no store-forward stall)": {
+  "cycles_per_iter": 36.93590423397606,
+  "instr_per_iter": 77.00007650001912,
+  "branch_miss_per_iter": 1.5000003750000938e-06,
+  "store_forward_blocks_per_iter": -7.500001875000469e-07
+ },
+ "v3: + stack scalar-replaced (balanced push/pop)": {
+  "cycles_per_iter": 36.97405174351294,
+  "instr_per_iter": 77.00007300001825,
+  "branch_miss_per_iter": 2.575000643750161e-05,
+  "store_forward_blocks_per_iter": -5.000001250000312e-07
+ },
+ "v4: + range facts: unsigned, no overflow checks": {
+  "cycles_per_iter": 24.114839778709946,
+  "instr_per_iter": 39.500067625016904,
+  "branch_miss_per_iter": 1.4750003687500921e-05,
+  "store_forward_blocks_per_iter": 2.500000625000156e-07
+ },
+ "v5: + % M as cond-subtract, cursor compare-reset": {
+  "cycles_per_iter": 16.470736367684093,
+  "instr_per_iter": 35.500064375016095,
+  "branch_miss_per_iter": 0.0002305000576250144,
+  "store_forward_blocks_per_iter": 7.500001875000469e-07
+ },
+ "v6: + residue tracking (r = base mod 97)": {
+  "cycles_per_iter": 10.546172386543097,
+  "instr_per_iter": 33.250119312529826,
+  "branch_miss_per_iter": 6.150001537500385e-05,
+  "store_forward_blocks_per_iter": 2.500000625000156e-07
+ },
+ "v7: + table lookup for r % k": {
+  "cycles_per_iter": 9.842789460697364,
+  "instr_per_iter": 30.750228687557172,
+  "branch_miss_per_iter": 4.625001156250289e-05,
+  "store_forward_blocks_per_iter": -2.500000625000156e-07
+ },
+ "v30 holdout: opcodes from file, no range facts": {
+  "cycles_per_iter": 33.843265210816305,
+  "instr_per_iter": 62.00006975001744,
+  "branch_miss_per_iter": 5.0500012625003156e-05,
+  "store_forward_blocks_per_iter": 0.0
+ },
+ "v31 holdout: file + runtime guard + v7": {
+  "cycles_per_iter": 9.803936950984237,
+  "instr_per_iter": 30.750225937556486,
+  "branch_miss_per_iter": 0.00011050002762500691,
+  "store_forward_blocks_per_iter": -5.000001250000312e-07
+ },
+ "v20 holdout reference: today, file": {
+  "cycles_per_iter": 84.68043192010798,
+  "instr_per_iter": 180.75009643752412,
+  "branch_miss_per_iter": 5.4750013687503424e-05,
+  "store_forward_blocks_per_iter": 1.8276084569021143
+ },
+ "v5 baseline x86-64": {
+  "cycles_per_iter": 16.50387212596803,
+  "instr_per_iter": 35.50006387501597,
+  "branch_miss_per_iter": 1.8750004687501172e-05,
+  "store_forward_blocks_per_iter": 0.0
+ },
+ "v7 baseline x86-64": {
+  "cycles_per_iter": 9.830418207604552,
+  "instr_per_iter": 30.750228687557172,
+  "branch_miss_per_iter": 7.250001812500454e-05,
+  "store_forward_blocks_per_iter": -2.500000625000156e-07
+ },
+ "B0 rust": {
+  "cycles_per_iter": 27.393488598372148,
+  "instr_per_iter": 45.49995387498847,
+  "branch_miss_per_iter": 0.0023305005826251457,
+  "store_forward_blocks_per_iter": -2.500000625000156e-07
+ },
+ "B0 zig-safe": {
+  "cycles_per_iter": 53.838290209572556,
+  "instr_per_iter": 119.75007943751986,
+  "branch_miss_per_iter": 0.0010632502658125664,
+  "store_forward_blocks_per_iter": 0.9996612499153125
+ },
+ "B0 zig-fast": {
+  "cycles_per_iter": 53.08336577084144,
+  "instr_per_iter": 102.25007506251876,
+  "branch_miss_per_iter": 0.0006685001671250418,
+  "store_forward_blocks_per_iter": 0.9967984991996248
+ },
+ "B0 my-llvm": {
+  "cycles_per_iter": 88.32072033018008,
+  "instr_per_iter": 223.2501148125287,
+  "branch_miss_per_iter": 0.0001295000323750081,
+  "store_forward_blocks_per_iter": 1.8317944579486145
+ }
+}

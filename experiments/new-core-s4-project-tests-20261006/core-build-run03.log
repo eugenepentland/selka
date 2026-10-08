@@ -1,0 +1,26 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 10s (all 3 build slot(s) busy)
+core
++- install mylang-core
+   +- compile exe mylang-core debug native 1 errors
+src/core/test_runner_receipt.zig:121:56: error: expected type 'error{InvalidTestValue,OutOfMemory,ReadFailed,UnsupportedTestType,WriteFailed}!?[]const u8', found 'error{OutOfMemory}![]u8'
+    if (context.options.json) return std.fmt.allocPrint(a, "{s}\n", .{try std.json.Stringify.valueAlloc(a, value, .{})});
+                                     ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/core/test_runner_receipt.zig:121:56: note: error union payload '[]u8' cannot cast into error union payload '?[]const u8'
+src/core/test_runner_receipt.zig:97:52: note: function return type declared here
+pub fn replay(context: Context, base: Digest) Error!?[]const u8 {
+                                              ~~~~~^~~~~~~~~~~~
+referenced by:
+    run: src/core/test_runner.zig:60:27
+    testCommand: src/core/main.zig:250:27
+    6 reference(s) hidden; use '-freference-trace=8' to see all references
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang --dep qbe_build_assets -Mroot=src/core/main.zig -ODebug --dep runtime_contract --dep memory_budget -Mmylang=src/compiler.zig -ODebug -Mqbe_build_assets=.zig-cache/o/6ef0c3b944b4dcbe5ffdcb72fc38ad31/qbe_build_assets/assets.zig -ODebug -Mruntime_contract=src/runtime_contract.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 2/5 steps succeeded (1 failed)
+core transitive failure
++- install mylang-core transitive failure
+   +- compile exe mylang-core debug native 1 errors
+      +- run exe qbe-build-assets (qbe_build_assets) success 86ms
+         +- compile exe qbe-build-assets debug native cached 4ms MaxRSS:38M
+

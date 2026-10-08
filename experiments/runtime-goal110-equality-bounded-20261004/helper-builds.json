@@ -1,0 +1,74 @@
+{
+  "status": "built_not_timed",
+  "compiler": "zig cc -O3 fullLTO; defaultnative CPU/ISA policy unchanged in both arms",
+  "commands": {
+    "before": {
+      "argv": [
+        "scripts/build-slot.sh",
+        "build",
+        "zig",
+        "cc",
+        "-std=c11",
+        "-O3",
+        "-flto",
+        "-g0",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-Wl,--gc-sections",
+        "-I",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-g4-rf-20261004/src",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-g4-rf-20261004/src/native_text.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/experiments/runtime-goal110-equality-bounded-20261004/equality-distributions.c",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/helper-before-llvm"
+      ],
+      "environment": {
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/tmp",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/before-llvm-cache/local",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/before-llvm-cache/global"
+      }
+    },
+    "after": {
+      "argv": [
+        "scripts/build-slot.sh",
+        "build",
+        "zig",
+        "cc",
+        "-std=c11",
+        "-O3",
+        "-flto",
+        "-g0",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-Wl,--gc-sections",
+        "-I",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/src",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/src/native_text.c",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/experiments/runtime-goal110-equality-bounded-20261004/equality-distributions.c",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/helper-after-llvm"
+      ],
+      "environment": {
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/tmp",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/after-llvm-cache/local",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/after-llvm-cache/global"
+      }
+    }
+  },
+  "binaries": [
+    {
+      "arm": "before",
+      "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/helper-before-llvm",
+      "binary_sha256": "474ec9189b4e246c0e8096c3690ea9081613aca70650ae9510db46fb964e0b81",
+      "source_native_text_sha256": "102e8b2810853662682dfa87d00cd5e11c19a51c46e2875362d5cd7435e5bac1"
+    },
+    {
+      "arm": "after",
+      "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-bounded-20261004/.mylang-cache/goal110-equality-bounded/helper-after-llvm",
+      "binary_sha256": "0049f2168c3bef24abe7e91df8e8c2c436444664bc5a557c71d98a0d5ece4331",
+      "source_native_text_sha256": "96bb64311d813d79b590de01ff0c08e2363fb1872d68e94d32e0aff6a1cdf2e4"
+    }
+  ],
+  "fixture_sha256": "d6080eb0c24f2c45d125da439d50e02af785c76da05b9bf7e943077ddf3a2902",
+  "limit": "Standalone runtime helper, not MyLang guest or acceptance evidence."
+}

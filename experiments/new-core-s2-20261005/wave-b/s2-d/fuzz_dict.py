@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+"""Ordered dictionary/set fuzz using the S1 differential execution protocol.
+
+Run through Wave A fuzz_qualification.py with --harness this file; the inherited
+harness compares debug, release and verify, each on five argument sets. Every
+program includes COW snapshots, mutation through a helper, deletion/reinsertion
+and an order-sensitive fold; random steps exercise get/pop/default/update.
+"""
+import importlib.util
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[4]
+HEAD = '''def number(text: str, fallback: int) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return fallback
+
+
+def fold(d: dict[int, int]) -> int:
+    total = 0
+    for key, value in d.items():
+        total = (total * 31 + key * 7 + value) % 1000003
+    return total
+
+
+def change(d: mut dict[int, int], key: int, value: int):
+    d[key] = d.get(key, 0) + value
+
+
+def rebind(d: mut dict[int, int], other: dict[int, int], choose: bool):
+    if choose:
+        d = other
+    d[71] = 4
+'''
+
+
+class Gen:
+    def __init__(self, rng, features):
+        self.r = rng
+
+    def program(self):
+        lines = [HEAD, '', 'def main(args: list[str], out: Stream) -> int:',
+                 '    n = number(args[0], 3)', '    rounds = number(args[1], 2)',
+                 '    seed = number(args[2], 7)',
+                 '    if n < 1 or n > 100 or rounds < 0 or rounds > 5:', '        return 3',
+                 '    d: dict[int, int] = {}', '    for j in range(n):',
+                 '        d[j] = (seed + j * 13) % 1009', '    saved = d',
+                 '    d[0] = 91', '    deleted = d.pop(0, 19)', '    d[0] = deleted + 1',
+                 '    acc = fold(saved)', '    change(mut d, n + 2, 31)',
+                 '    rebind(mut d, saved, seed % 3 == 0)', '    other = d']
+        for _ in range(self.r.randint(7, 18)):
+            key, value = self.r.randrange(24), self.r.randrange(100)
+            action = self.r.randrange(6)
+            if action == 0:
+                lines += [f'    d[{key}] = d.get({key}, 17) + {value}']
+            elif action == 1:
+                lines += [f'    acc = (acc + d.pop({key}, {value})) % 1000003']
+            elif action == 2:
+                lines += [f'    change(mut d, {key}, {value})']
+            elif action == 3:
+                lines += ['    other = d', f'    other[{key}] = {value}', '    acc = (acc + fold(other)) % 1000003']
+            elif action == 4:
+                lines += [f'    acc = (acc + d.setdefault({key}, {value})) % 1000003']
+            else:
+                lines += ['    for key in d:', '        acc = (acc + key + d[key]) % 1000003']
+        lines += ['    text: dict[str, int] = {}', '    members: set[int] = set()',
+                  '    managed: dict[int, list[int]] = {}', '    for j in range(n):',
+                  '        name = "prefix-" + str(j % 19)',
+                  '        text[name] = text.get(name, 0) + j', '        members.add(j % 17)',
+                  '        managed[j] = [j, seed % 97]',
+                  '    text_saved = text', '    text["prefix-0"] = 71',
+                  '    members_saved = members', '    members.discard(0)', '    members.add(n + 71)',
+                  '    acc = (acc + members.pop()) % 1000003',
+                  '    managed_saved = managed', '    managed[0].append(91)',
+                  '    acc = (acc + len(managed[0]) + len(managed_saved[0])) % 1000003',
+                  '    for text_key, text_value in text.items():',
+                  '        acc = (acc + len(text_key) * 13 + text_value + text_saved.get(text_key, 17)) % 1000003',
+                  '    for member in members_saved:', '        acc = (acc * 7 + member) % 1000003',
+                  '    for key, value in d.items():',
+                  '        acc = (acc + value) % 1000003', '        d[71] = 19',
+                  '    observed = {1: 3}', '    live = list(observed.values())',
+                  '    frozen = list(live)', '    observed[1] = 7', '    observed[2] = 9',
+                  '    for current_value in live:', '        acc = (acc + current_value) % 1000003',
+                  '    acc = (acc + frozen[0]) % 1000003']
+        if self.r.randrange(5) == 0:
+            lines += ['    if seed % 2 == 0:', '        trapped: dict[int, int] = {1: 7, 2: 9}',
+                      '        for key in trapped:', '            trapped[3] = key']
+        lines += ['    out.print(acc, fold(d), fold(saved), fold(other))', '    return acc % 7', '']
+        return '\n'.join(lines)
+
+
+def main():
+    spec = importlib.util.spec_from_file_location('s1_dict', ROOT / 'experiments/new-core-s1-20261005/fuzz.py')
+    harness = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(harness)
+    harness.Gen = Gen
+    return harness.main()
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

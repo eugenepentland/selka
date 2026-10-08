@@ -1,0 +1,8 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 20 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 25 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 8635 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[perf/goal110-llvm-slots-20261004 1fdae8e1] experiment(llvm): retain integer values with direct scalar addresses
+ 5 files changed, 154 insertions(+), 14 deletions(-)

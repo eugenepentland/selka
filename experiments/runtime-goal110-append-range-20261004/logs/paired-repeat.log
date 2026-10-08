@@ -1,0 +1,5 @@
+list_append small {'llvm': 0.888327547270954, 'qbe': 0.9254933558161501}
+list_append large {'llvm': 0.7698623234536234, 'qbe': 0.9675678262082019}
+list_filter small {'llvm': 1.0390518571273777, 'qbe': 0.9755558860751466}
+Guest timing complete; computing exploratory paired intervals
+PASS paired Debug-host append arithmetic repeat: 180 measured samples, 36 warmups

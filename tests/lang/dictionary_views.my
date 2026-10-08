@@ -1,14 +1,14 @@
 module dictionary_views
 
 
-def total(values: DictValues[str, int]) -> int noalloc:
+def total(values: list[int]) -> int noalloc:
     result = 0
     for value in values:
         result += value
     return result
 
 
-def paired_total(items: DictItems[str, int]) -> int noalloc:
+def paired_total(items: list[DictItem[str, int]]) -> int noalloc:
     result = 0
     for key, value in items:
         result += len(key) + value
@@ -16,12 +16,12 @@ def paired_total(items: DictItems[str, int]) -> int noalloc:
 
 
 def generic_values[T: copy + storable](mapping: dict[str, T]) -> list[T]:
-    view = mapping.values()
-    return list(view)
+    view = list(mapping.values())
+    return view
 
 
-def generic_live_values[T: copy + storable](mapping: dict[str, T]) -> DictValues[str, T] noalloc:
-    return mapping.values()
+def generic_live_values[T: copy + storable](mapping: dict[str, T]) -> list[T]:
+    return list(mapping.values())
 
 
 def generic_items[T: copy + storable](mapping: dict[str, T]) -> list[DictItem[str, T]]:
@@ -29,24 +29,23 @@ def generic_items[T: copy + storable](mapping: dict[str, T]) -> list[DictItem[st
 
 
 def generic_first[T: copy + storable](mapping: dict[str, T], fallback: T) -> T noalloc:
-    items = mapping.items()
-    for key, value in items:
+    for key, value in mapping.items():
         return value
     return fallback
 
 
 # spec-case: DICT-VIEWS-1
-public def test_bound_views_are_live_and_snapshots_are_explicit() -> bool:
+public def test_bound_snapshots_stay_independent() -> bool:
     mapping = {"a": 10, "b": 20}
-    values = mapping.values()
-    keys = mapping.keys()
-    items = mapping.items()
+    values = list(mapping.values())
+    keys = list(mapping.keys())
+    items = list(mapping.items())
     snapshot = list(values)
     mapping["b"] = 30
     mapping["c"] = 2
-    if total(values) != 42 or paired_total(items) != 45:
+    if total(values) != 30 or paired_total(items) != 32:
         return False
-    return len(keys) == 3 and snapshot == [10, 20] and list(keys) == ["a", "b", "c"]
+    return len(keys) == 2 and snapshot == [10, 20] and list(keys) == ["a", "b"]
 
 
 # spec-case: DICT-VIEWS-1
@@ -83,7 +82,7 @@ public def test_views_support_comprehensions_and_generic_helpers() -> bool:
 
 # spec-case: DICT-VIEWS-1
 public def test_views_keep_mapping_alive_and_empty_views_work() -> bool:
-    items = {"alive": 42}.items()
+    items = list({"alive": 42}.items())
     for value in range(2000):
         garbage = [value, value + 1]
         if len(garbage) != 2:
@@ -108,16 +107,27 @@ public def test_view_reads_observe_value_replacement_and_loop_control() -> bool:
 
 
 # spec-case: DICT-VIEWS-1
-public def test_views_work_inside_arena_and_snapshots_stay_independent() -> bool:
-    result = 0
-    kept = {"old": 0}.values()
-    with arena() as scratch:
-        mapping = {"a": 20, "b": 22}
-        live = mapping.values()
-        frozen = list(live)
-        mapping["a"] = 1
-        result = total(live)
-        kept = scratch.escape(live)
-        if frozen != [20, 22]:
+# spec-case: D2-VIEW-STORAGE-1
+public def test_direct_projection_membership_and_snapshots() -> bool:
+    mapping = {1: [7, 8], 2: [9]}
+    if 1 not in mapping.keys() or 3 in mapping.keys():
+        return False
+    if [7, 8] not in mapping.values() or [8] in mapping.values():
+        return False
+    for item in mapping.items():
+        if item not in mapping.items():
             return False
-    return result == 23 and list(kept) == [1, 22]
+    other = {2: [8]}
+    for item in other.items():
+        if item in mapping.items():
+            return False
+    empty: dict[int, list[int]] = {}
+    if [9] in empty.values():
+        return False
+    for item in mapping.items():
+        if item in empty.items():
+            return False
+    values = list(mapping.values())
+    mapping[1].append(11)
+    values[1].append(13)
+    return values == [[7, 8], [9, 13]] and mapping[1] == [7, 8, 11] and mapping[2] == [9]

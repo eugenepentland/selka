@@ -1,0 +1,31 @@
+S2-X test: waiting/running; source=7c0c5899f25da94e0956ee637b6e1a91e2c3825b; log=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/full-old-03/test.log
+S2-X test: elapsed including admission=60s
+S2-X test: elapsed including admission=120s
+S2-X test: elapsed including admission=180s
+S2-X test: elapsed including admission=240s
+S2-X test: elapsed including admission=300s
+S2-X test: elapsed including admission=360s
+S2-X test: elapsed including admission=420s
+S2-X test: elapsed including admission=480s
+S2-X test: elapsed including admission=540s
+S2-X test: elapsed including admission=600s
+S2-X test: elapsed including admission=660s
+S2-X test: elapsed including admission=720s
+S2-X test: elapsed including admission=780s
+S2-X test: elapsed including admission=840s
+S2-X test: elapsed including admission=900s
+S2-X test: elapsed including admission=960s
+S2-X test: elapsed including admission=1020s
+S2-X test: elapsed including admission=1080s
+S2-X test: elapsed including admission=1140s
+S2-X test: elapsed including admission=1200s
+S2-X test: elapsed including admission=1260s
+S2-X test: elapsed including admission=1320s
+S2-X test: exit=0, command=912.69s, wall=1378.74s, qualified=True
+S2-X test-qbe: waiting/running; source=7c0c5899f25da94e0956ee637b6e1a91e2c3825b; log=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/full-old-03/test-qbe.log
+S2-X test-qbe: elapsed including admission=60s
+S2-X test-qbe: exit=0, command=87.82s, wall=92.87s, qualified=True
+S2-X test-qbe-build: waiting/running; source=7c0c5899f25da94e0956ee637b6e1a91e2c3825b; log=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/full-old-03/test-qbe-build.log
+S2-X test-qbe-build: exit=0, command=3.6s, wall=8.69s, qualified=True
+S2-X fmt-check: waiting/running; source=7c0c5899f25da94e0956ee637b6e1a91e2c3825b; log=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/full-old-03/fmt-check.log
+S2-X fmt-check: exit=0, command=0.25s, wall=6.54s, qualified=True

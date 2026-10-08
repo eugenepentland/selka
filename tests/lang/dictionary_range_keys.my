@@ -69,7 +69,6 @@ def churn(rounds: int) -> int:
     return total
 
 
-# spec-case: DICT-RANGE-KEY-1
 public def test_counting_by_described_slices_matches_counting_by_built_ones() -> bool:
     seq = dna(600)
     ok = True
@@ -80,7 +79,6 @@ public def test_counting_by_described_slices_matches_counting_by_built_ones() ->
     return ok
 
 
-# spec-case: DICT-RANGE-KEY-1
 public def test_every_key_spelling_answers_as_the_built_slice() -> bool:
     s = "abcdef"
     d: dict[str, int] = {"bc": 1, "ab": 2, "cd": 3, "bcd": 4}
@@ -97,7 +95,6 @@ public def test_every_key_spelling_answers_as_the_built_slice() -> bool:
     return ok and len(order) == 6 and order[4] == "abc" and order[5] == "cde"
 
 
-# spec-case: DICT-RANGE-KEY-1
 public def test_described_slices_clamp_and_count_like_built_ones() -> bool:
     s = "héllo wörld €uro"
     d: dict[str, int] = {}
@@ -115,7 +112,6 @@ public def test_described_slices_clamp_and_count_like_built_ones() -> bool:
     return ok and s[12:13] not in d and d.get(s[12:13], 0) == 0 and d[s[5:15]] == reference[" wörld €ur"]
 
 
-# spec-case: DICT-RANGE-KEY-1
 public def test_inserted_keys_outlive_the_text_they_were_cut_from() -> bool:
     counts = described_counts(dna(3000) + "ÅÅÅ", 3)
     _ = churn(2000)
@@ -127,7 +123,6 @@ public def test_inserted_keys_outlive_the_text_they_were_cut_from() -> bool:
     return ok and len(long_keys) == 201 and len(list(long_keys.keys())[0]) == 200
 
 
-# spec-case: DICT-RANGE-KEY-1
 public def test_described_and_owned_keys_hash_and_compare_alike() -> bool:
     text = "the quick brown fox jumps over the lazy dog"
     d: dict[str, int] = {"quick": 1, "the lazy dog": 2, "": 3, "x": 4}
@@ -170,7 +165,6 @@ public def test_an_absence_is_not_believed_across_a_pop_or_clear() -> bool:
     return ok and d["xy"] == 8 and len(d) == 1
 
 
-# spec-case: DICT-RANGE-KEY-1
 public def test_a_slice_key_beside_negative_indices_answers_as_the_built_slice() -> bool:
     # A range-keyed lookup sits in the same function as reads that count from
     # the end of a list and of a fixed array (PY-ARRAY-NEGATIVE-1).

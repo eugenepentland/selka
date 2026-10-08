@@ -1,0 +1,7 @@
+module app
+
+public def test_value() -> bool:
+    return True
+
+def main() -> int:
+    return 0

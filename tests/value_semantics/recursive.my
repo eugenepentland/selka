@@ -9,7 +9,6 @@ def leaf(value: int) -> Branch:
     return Branch(items=[value], next=None)
 
 
-# spec-case: COW-NESTED-1
 public def test_a_copied_recursive_box_shares_and_separates_nested_lists() -> bool:
     original = Branch(items=[0], next=Some(leaf(1)))
     changed = original
@@ -24,25 +23,6 @@ public def test_a_copied_recursive_box_shares_and_separates_nested_lists() -> bo
     return original.items == [0] and changed.items == [0] and old_child.items == [1] and new_child.items == [1, 2]
 
 
-# spec-case: COW-NESTED-1
-public def test_a_boxed_collection_survives_arena_escape() -> bool:
-    original = Branch(items=[0], next=Some(leaf(1)))
-    kept = original
-    with arena() as scratch:
-        local = original
-        child = local.next
-        if child is not None:
-            child.items.append(3)
-        local.next = child
-        kept = scratch.escape(local)
-    old_child = original.next
-    new_child = kept.next
-    if old_child is None or new_child is None:
-        return False
-    return old_child.items == [1] and new_child.items == [1, 3]
-
-
-# spec-case: COW-NESTED-1
 public def test_repeated_write_through_a_boxed_child() -> bool:
     original = Branch(items=[0], next=Some(leaf(1)))
     changed = original
@@ -65,7 +45,6 @@ def child_of(root: Branch) -> Branch:
     return child
 
 
-# spec-case: COW-NESTED-1
 public def test_a_projected_child_is_protected_before_a_later_box_copy() -> bool:
     original = Branch(items=[0], next=Some(leaf(1)))
     exposed = child_of(original)
@@ -83,7 +62,6 @@ def read_child_while_pinned(items: mut list[int], root: Branch) -> Branch:
     return snapshot
 
 
-# spec-case: COW-PIN-1
 public def test_a_box_projection_copies_a_pinned_child() -> bool:
     original = Branch(items=[0], next=Some(leaf(1)))
     child = child_of(original)

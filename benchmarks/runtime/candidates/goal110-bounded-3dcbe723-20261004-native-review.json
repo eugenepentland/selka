@@ -1,0 +1,23 @@
+{
+  "status": "passed",
+  "reviewed_utc": "2026-10-04T07:47:25.639880+00:00",
+  "source_revision": "3dcbe723da4036fb7d69046e77e9f8cd16d7512f",
+  "session_id": "b5337f29-9dbc-4dcd-bb44-a50c8db08718",
+  "verified_processes": {
+    "pilots": 322,
+    "warmups": 160,
+    "measured": 800
+  },
+  "raw_archive_bindings": 3,
+  "helper_bindings": 10,
+  "native_source_bindings": 78,
+  "below_30ms_samples": 427,
+  "minimum_sample_ns": 19829757,
+  "evidence_sha256": "6a791cb3175e6939d605dc21ce84899e214071f2af163ba24e918758d75b396d",
+  "script_sha256": "0462f9f2f5055986af5bfe2002c6eaca811b9654d038e53b79be508321274c04",
+  "limitations": [
+    "Standalone helper evidence, not generated guests or goal acceptance.",
+    "Saved stream and median replay; no fresh execution and no independent interval recalculation.",
+    "The 128-byte control regression still needs an independent repeat."
+  ]
+}

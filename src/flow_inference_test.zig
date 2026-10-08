@@ -68,43 +68,6 @@ test "flow inference does not infer presence from an unsafe Boolean alternative"
     , "E_TYPE");
 }
 
-// spec: OPTION-FLOW-4
-test "flow inference keeps heap fields and checked payloads explicit" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    try reject(
-        \\class Box:
-        \\    item: Option[int]
-        \\def get(box: Box) -> int:
-        \\    if box.item is None:
-        \\        return 0
-        \\    return box.item
-        \\def main() -> int:
-        \\    return get(Box(item=None))
-    , "E_TYPE");
-    try reject(
-        \\union CheckedMaybe:
-        \\    some: Result[int, int],
-        \\    none
-        \\def main() -> int:
-        \\    value: CheckedMaybe = CheckedMaybe.some(Ok(42))
-        \\    if value is None:
-        \\        return 0
-        \\    return 1
-    , "E_OPTION_TEST");
-    try reject(
-        \\def main() -> int:
-        \\    if 42 is None:
-        \\        return 0
-        \\    return 1
-    , "E_OPTION_TEST");
-    try reject(
-        \\const VALUE: bool = 42 is None
-        \\def main() -> int:
-        \\    return 0
-    , "E_OPTION_TEST");
-}
-
 // spec-case: OPTION-FLOW-3
 test "flow inference rejects unsafe uninstantiated template paths" {
     try reject(

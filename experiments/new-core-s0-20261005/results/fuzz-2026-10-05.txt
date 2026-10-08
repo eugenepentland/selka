@@ -1,0 +1,14 @@
+# fuzz.py --cases 200 --seed 31 (final compiler)
+case 158 debug ['0', '2', '1']: expected ('', 1, '') got ('', 1, 'R_LIST_BOUNDS')
+case 158 release ['0', '2', '1']: expected ('', 1, '') got ('', 1, 'R_LIST_BOUNDS')
+case 158 verify ['0', '2', '1']: expected ('', 1, '') got ('', 1, 'R_LIST_BOUNDS')
+cases=200 old_rejected=0 new_refused=0 compared=3000 mismatch=3 fact=0 traps=337 caught=0 vectorized=44 versioned=41
+# the 3 'mismatches' are one case: the old core printed 'R_LIST_BOUNDS: native execution failed' without the error[...] prefix; same stdout, exit status and trap kind (regex fixed after the run)
+
+# fuzz.py --cases 200 --seed 21 (before the fixes): 3 compiler crashes, now fixed and covered by tests
+cases=200 old_rejected=0 new_refused=3 compared=2955 mismatch=3 fact=0 traps=328 caught=0 vectorized=42 versioned=22
+
+# fuzz.py --cases 60 --seed 78 --sabotage (final compiler)
+cases=60 old_rejected=0 new_refused=0 compared=710 mismatch=0 fact=0 traps=101 caught=55 vectorized=12 versioned=11
+# fuzz.py --cases 60 --seed 77 --sabotage (earlier compiler)
+cases=60 old_rejected=0 new_refused=3 compared=676 mismatch=3 fact=0 traps=108 caught=52 vectorized=9 versioned=4

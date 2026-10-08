@@ -1,0 +1,158 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-cold-loop-01/bin/mylang-core",
+  "sha256": "f004e04b3680c93998d5b22e83b2bdafaa1b95244fbc9d1da447ea6eac4dc1fc",
+  "cases": {
+    "lox_eval": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-cold-loop-01/bin/mylang-core",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/paired-combined-01/sources/lox_eval/app.my",
+        "--facts"
+      ],
+      "status": 0,
+      "functions": {
+        "app::main": {
+          "signature": "fn app::main(list[str], cap, cap) -> i64",
+          "blocks": 20,
+          "instructions": 116,
+          "calls": [
+            "  %21 = call i64 workload::parse_number(%20)",
+            "  %34 = call i64 workload::parse_number(%33)",
+            "  %47 = call i64 workload::parse_number(%46)",
+            "  %224 = call i64 app::runtime_bench_now(param1)",
+            "  %234 = call i64 workload::batch_result(%21, %227, %47, %218)",
+            "  %250 = call i64 app::runtime_bench_now(param1)"
+          ]
+        },
+        "workload::parse_number": {
+          "signature": "fn workload::parse_number(str) -> i64",
+          "blocks": 5,
+          "instructions": 4,
+          "calls": []
+        },
+        "app::runtime_bench_now": {
+          "signature": "fn app::runtime_bench_now(cap) -> i64 extern",
+          "blocks": 0,
+          "instructions": 0,
+          "calls": []
+        },
+        "myl_core_host_check": {
+          "signature": "fn myl_core_host_check(cap) -> void runtime",
+          "blocks": 0,
+          "instructions": 0,
+          "calls": []
+        },
+        "workload::batch_result": {
+          "signature": "fn workload::batch_result(i64, i64, i64, list[record{i64, i64}]) -> i64",
+          "blocks": 1,
+          "instructions": 2,
+          "calls": [
+            "  %5 = call i64 workload::execute(param3, param0, %4)"
+          ]
+        },
+        "workload::execute": {
+          "signature": "fn workload::execute(list[record{i64, i64}], i64, i64) -> i64",
+          "blocks": 56,
+          "instructions": 152,
+          "calls": [
+            "  %90 = call i64 workload::integer(%88)",
+            "  %118 = call i64 workload::integer(%116)",
+            "  %124 = call i64 workload::integer(%122)",
+            "  %176 = call bool workload::boolean(%174)",
+            "  %213 = call i64 workload::integer(%211)"
+          ]
+        },
+        "workload::integer": {
+          "signature": "fn workload::integer(union{i64, bool}) -> i64",
+          "blocks": 5,
+          "instructions": 3,
+          "calls": []
+        },
+        "workload::boolean": {
+          "signature": "fn workload::boolean(union{i64, bool}) -> bool",
+          "blocks": 5,
+          "instructions": 3,
+          "calls": []
+        }
+      }
+    },
+    "packet_decode": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-cold-loop-01/bin/mylang-core",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/paired-combined-01/sources/packet_decode/app.my",
+        "--facts"
+      ],
+      "status": 0,
+      "functions": {
+        "app::main": {
+          "signature": "fn app::main(list[str], cap, cap) -> i64",
+          "blocks": 54,
+          "instructions": 116,
+          "calls": [
+            "  %21 = call i64 workload::parse_number(%20)",
+            "  %34 = call i64 workload::parse_number(%33)",
+            "  %47 = call i64 workload::parse_number(%46)",
+            "  %163 = call bytes workload::make_frame(%158, %47)",
+            "  %192 = call i64 app::runtime_bench_now(param1)",
+            "  %321 = call i64 app::runtime_bench_now(param1)",
+            "  %242 = call union{record{i64, i64, i64}, i64} workload::decode(%241)"
+          ]
+        },
+        "workload::parse_number": {
+          "signature": "fn workload::parse_number(str) -> i64",
+          "blocks": 5,
+          "instructions": 4,
+          "calls": []
+        },
+        "workload::make_frame": {
+          "signature": "fn workload::make_frame(i64, i64) -> bytes",
+          "blocks": 33,
+          "instructions": 76,
+          "calls": [
+            "  %146 = call bool myl_core_bytes_valid_list(%143)",
+            "  %149 = call bytes myl_core_bytes_from_list(%143)"
+          ]
+        },
+        "app::runtime_bench_now": {
+          "signature": "fn app::runtime_bench_now(cap) -> i64 extern",
+          "blocks": 0,
+          "instructions": 0,
+          "calls": []
+        },
+        "myl_core_host_check": {
+          "signature": "fn myl_core_host_check(cap) -> void runtime",
+          "blocks": 0,
+          "instructions": 0,
+          "calls": []
+        },
+        "workload::decode": {
+          "signature": "fn workload::decode(bytes) -> union{record{i64, i64, i64}, i64}",
+          "blocks": 19,
+          "instructions": 56,
+          "calls": [
+            "  %73 = call u64 myl_core_bytes_index_offset(param0, %72)"
+          ]
+        },
+        "myl_core_bytes_valid_list": {
+          "signature": "fn myl_core_bytes_valid_list(list[i64]) -> bool extern",
+          "blocks": 0,
+          "instructions": 0,
+          "calls": []
+        },
+        "myl_core_bytes_from_list": {
+          "signature": "fn myl_core_bytes_from_list(list[i64]) -> bytes extern",
+          "blocks": 0,
+          "instructions": 0,
+          "calls": []
+        },
+        "myl_core_bytes_index_offset": {
+          "signature": "fn myl_core_bytes_index_offset(bytes, i64) -> u64 runtime",
+          "blocks": 0,
+          "instructions": 0,
+          "calls": []
+        }
+      }
+    }
+  }
+}

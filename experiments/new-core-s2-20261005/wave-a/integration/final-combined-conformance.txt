@@ -1,0 +1,17 @@
+$ scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-a/final/combined-conformance-seconds.txt python3 experiments/new-core-s1-20261005/conformance.py experiments/new-core-s2-20261005/wave-a/s2-lb/mut_callee_rebinding.my --jobs 1 --why --leakcheck --verify
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+mut_callee_rebinding         6 |             0     0     6 |             0     0     6
+--------------------------------------------------------------------------------------
+TOTAL                        6
+  debug    matching 0, mismatching 0, unsupported 6 (of 6 tests; 0 supported)
+  release  matching 0, mismatching 0, unsupported 6 (of 6 tests; 0 supported)
+
+blocking features of the unsupported tests (tests / files):
+     4 /  1  write to a list while it is iterated (live-place iteration)
+     2 /  1  function_value
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+  mut_callee_rebinding             6 of   6: write to a list while it is iterated (live-place iteration) x4, function_value x2
+
+exit=0 command=0.37s wall_including_admission=0.42s

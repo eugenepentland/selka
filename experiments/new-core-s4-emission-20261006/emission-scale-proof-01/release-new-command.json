@@ -1,0 +1,19 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-proof/bin/mylang-core",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/emission-scale-proof-01/source-1200/main.my",
+    "--zig",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/emission-scale-proof-01/EMISSION-ONLY-zig-recorder.py",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/emission-scale-proof-01/1200-release-new/cache",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/emission-scale-proof-01/1200-release-new/NOT-EXECUTABLE",
+    "--release"
+  ],
+  "status": 0,
+  "stdout": "",
+  "stderr": "",
+  "seconds": 4.980905688833445,
+  "native_validation": false
+}

@@ -1,0 +1,10 @@
+$ scripts/build-slot.sh build python3 experiments/new-core-s4-20261006/integration/verify_six.py --bin .mylang-cache/s4-v/final-all46-v2 --evidence experiments/new-core-s4-values-20261006/final-independent-oracles-v2
+tree_build_walk: all five arms match the independent oracle at seven probes
+record_pass: all five arms match the independent oracle at seven probes
+grid_dp: all five arms match the independent oracle at seven probes
+union_find: all five arms match the independent oracle at seven probes
+float_format: all five arms match the independent oracle at seven probes
+buffer_write: all five arms match the independent oracle at seven probes
+
+exit=0
+elapsed_seconds=34.380059

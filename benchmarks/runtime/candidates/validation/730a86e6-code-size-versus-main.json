@@ -1,0 +1,167 @@
+{
+  "schema": "runtime-parity-static-size-comparison-v1",
+  "source_revisions": [
+    "1fd1d566793dcae92449d937aca595c55ee318c8",
+    "730a86e62b47c922dc1411d24b5868c3bd2132f3"
+  ],
+  "report_hashes": [
+    "f2e24958ec044a12de49d93c73108ebfa8e2ccd2dcd9e94f92dfce38b3b9d5f9",
+    "5120ad6c5f38f3c4cf8441fa832b8e85cb8550689a3aa6e068f2be2a9d4c55a9"
+  ],
+  "tool": {
+    "path": "/usr/bin/size",
+    "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+    "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty.\n"
+  },
+  "rows": [
+    {
+      "guest": "legacy/my-llvm",
+      "main": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-parity/runner/bin/legacy-my-llvm",
+        "sha256": "5a426a9e46a8e578103e6f5de5e3ca4b7d23039213cc967f0b00de3b92ed7dde",
+        "file_bytes": 438472,
+        "text_bytes": 171730,
+        "size_stdout": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-parity/runner/bin/legacy-my-llvm  :\nsection              size       addr\n.interp                28   16777952\n.note.ABI-tag          32   16777980\n.dynsym              1896   16778016\n.gnu.version          158   16779912\n.gnu.version_r        144   16780072\n.gnu.hash              28   16780216\n.hash                 640   16780244\n.dynstr               796   16780884\n.rela.dyn              96   16781680\n.rela.plt            1776   16781776\n.rodata             79044   16783552\nmylang_frame_map     2640   16862596\n.eh_frame_hdr        1900   16865236\n.eh_frame            9932   16867136\n.text              171730   16881168\n.init                  27   17052900\n.fini                  13   17052928\n.plt                 1200   17052944\n.tbss                   4   17054144\n.data.rel.ro         3448   17058240\n.dynamic              384   17061688\n.got                   56   17062072\n.got.plt              616   17062128\n.relro_padding       1192   17062744\n.data                7768   17066848\n.bss                 2176   17074624\n.comment               78          0\n.debug_loc          41964          0\n.debug_abbrev        3309          0\n.debug_info         37049          0\n.debug_ranges        4256          0\n.debug_str          19364          0\n.debug_line         14620          0\n.debug_aranges         96          0\nTotal              408460\n\n\n"
+      },
+      "final": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/legacy-my-llvm",
+        "sha256": "0b0b8183a6366d9afb65a2a610ca304ad142f2012d8aa39cc7fbc482249b0b76",
+        "file_bytes": 427640,
+        "text_bytes": 160546,
+        "size_stdout": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/legacy-my-llvm  :\nsection              size       addr\n.interp                28   16777952\n.note.ABI-tag          32   16777980\n.dynsym              1896   16778016\n.gnu.version          158   16779912\n.gnu.version_r        144   16780072\n.gnu.hash              28   16780216\n.hash                 640   16780244\n.dynstr               796   16780884\n.rela.dyn              96   16781680\n.rela.plt            1776   16781776\n.rodata             79364   16783552\nmylang_frame_map     2568   16862916\n.eh_frame_hdr        1860   16865484\n.eh_frame            9676   16867344\n.text              160546   16881120\n.init                  27   17041668\n.fini                  13   17041696\n.plt                 1200   17041712\n.tbss                   4   17042912\n.data.rel.ro         3448   17047008\n.dynamic              384   17050456\n.got                   56   17050840\n.got.plt              616   17050896\n.relro_padding        136   17051512\n.data                7928   17055616\n.bss                 2176   17063552\n.comment               78          0\n.debug_loc          41964          0\n.debug_abbrev        3309          0\n.debug_info         37049          0\n.debug_ranges        4256          0\n.debug_str          19364          0\n.debug_line         14620          0\n.debug_aranges         96          0\nTotal              396332\n\n\n"
+      },
+      "text_ratio_final_over_main": 0.9348745123158446
+    },
+    {
+      "guest": "legacy/my-qbe",
+      "main": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-parity/runner/bin/legacy-my-qbe",
+        "sha256": "8ad57b9cef6068ef1d53a6cd000937859f53ce01c64c6f7466957e297f9d58d1",
+        "file_bytes": 1230952,
+        "text_bytes": 201110,
+        "size_stdout": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-parity/runner/bin/legacy-my-qbe  :\nsection               size       addr\n.interp                 28   16777952\n.note.ABI-tag           32   16777980\n.dynsym               1680   16778016\n.gnu.version           140   16779696\n.gnu.version_r         160   16779836\n.gnu.hash               28   16780000\n.hash                  568   16780028\n.dynstr                717   16780596\n.rela.dyn              144   16781320\n.rela.plt             1536   16781464\nmylang_frame_map      5256   16783000\n.rodata              38768   16788256\n.eh_frame_hdr         2668   16827024\n.eh_frame            13564   16829696\n.text               201110   16847360\n.init                   27   17048472\n.fini                   13   17048500\n.plt                  1040   17048528\n.tbss                    4   17049568\n.data.rel.ro         46216   17053664\n.dynamic               400   17099880\n.got                    72   17100280\n.got.plt               536   17100352\n.relro_padding        4008   17100888\n.data                  224   17104984\n.bss                    44   17105208\n.comment                57          0\n.debug_loc          427840          0\n.debug_abbrev         1349          0\n.debug_info         211334          0\n.debug_ranges        55760          0\n.debug_str           47999          0\n.debug_pubnames      19895          0\n.debug_pubtypes       4103          0\n.debug_line         111489          0\nTotal              1198809\n\n\n"
+      },
+      "final": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/legacy-my-qbe",
+        "sha256": "8f58a6f0ae7b571155986a10ba8acf8791516b3c5717506cf6393bcc67a1081e",
+        "file_bytes": 1216832,
+        "text_bytes": 187718,
+        "size_stdout": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/legacy-my-qbe  :\nsection               size       addr\n.interp                 28   16777952\n.note.ABI-tag           32   16777980\n.dynsym               1680   16778016\n.gnu.version           140   16779696\n.gnu.version_r         160   16779836\n.gnu.hash               28   16780000\n.hash                  568   16780028\n.dynstr                717   16780596\n.rela.dyn              144   16781320\n.rela.plt             1536   16781464\nmylang_frame_map      5100   16783000\n.rodata              38624   16788128\n.eh_frame_hdr         2564   16826752\n.eh_frame            12960   16829320\n.text               187718   16846384\n.init                   27   17034104\n.fini                   13   17034132\n.plt                  1040   17034160\n.tbss                    4   17035200\n.data.rel.ro         46984   17039296\n.dynamic               400   17086280\n.got                    72   17086680\n.got.plt               536   17086752\n.relro_padding        1224   17087288\n.data                  224   17091384\n.bss                    44   17091608\n.comment                57          0\n.debug_loc          427840          0\n.debug_abbrev         1349          0\n.debug_info         211334          0\n.debug_ranges        55760          0\n.debug_str           47999          0\n.debug_pubnames      19895          0\n.debug_pubtypes       4103          0\n.debug_line         111513          0\nTotal              1182417\n\n\n"
+      },
+      "text_ratio_final_over_main": 0.9334095768484909
+    },
+    {
+      "guest": "compute/my-llvm",
+      "main": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-parity/runner/bin/compute-my-llvm",
+        "sha256": "13b1c3a14c078c89e420fe17d26697e2e7f5342862590a0a4f7164d50c33b091",
+        "file_bytes": 476288,
+        "text_bytes": 180722,
+        "size_stdout": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-parity/runner/bin/compute-my-llvm  :\nsection              size       addr\n.interp                28   16777952\n.note.ABI-tag          32   16777980\n.dynsym              1896   16778016\n.gnu.version          158   16779912\n.gnu.version_r        144   16780072\n.gnu.hash              28   16780216\n.hash                 640   16780244\n.dynstr               796   16780884\n.rela.dyn              96   16781680\n.rela.plt            1776   16781776\n.rodata             94340   16783552\nmylang_frame_map     4140   16877892\n.eh_frame_hdr        2028   16882032\n.eh_frame           10460   16884064\n.text              180722   16898624\n.init                  27   17079348\n.fini                  13   17079376\n.plt                 1200   17079392\n.tbss                   4   17080592\n.data.rel.ro         3448   17084688\n.dynamic              384   17088136\n.got                   56   17088520\n.got.plt              616   17088576\n.relro_padding       3416   17089192\n.data               12280   17093296\n.bss                 2704   17105584\n.comment               78          0\n.debug_loc          41964          0\n.debug_abbrev        3309          0\n.debug_info         37049          0\n.debug_ranges        4256          0\n.debug_str          19364          0\n.debug_line         14620          0\n.debug_aranges         96          0\nTotal              442168\n\n\n"
+      },
+      "final": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/compute-my-llvm",
+        "sha256": "366d46cc759592fd6d21f23e5a786d98516c29492b9c55a0c766f126c705f8b3",
+        "file_bytes": 467344,
+        "text_bytes": 169554,
+        "size_stdout": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/compute-my-llvm  :\nsection              size       addr\n.interp                28   16777952\n.note.ABI-tag          32   16777980\n.dynsym              1896   16778016\n.gnu.version          158   16779912\n.gnu.version_r        144   16780072\n.gnu.hash              28   16780216\n.hash                 640   16780244\n.dynstr               796   16780884\n.rela.dyn              96   16781680\n.rela.plt            1776   16781776\n.rodata             96724   16783552\nmylang_frame_map     4056   16880276\n.eh_frame_hdr        1948   16884332\n.eh_frame           10028   16886280\n.text              169554   16900416\n.init                  27   17069972\n.fini                  13   17070000\n.plt                 1200   17070016\n.tbss                   4   17071216\n.data.rel.ro         3448   17075312\n.dynamic              384   17078760\n.got                   56   17079144\n.got.plt              616   17079200\n.relro_padding        504   17079816\n.data               13064   17083920\n.bss                 2704   17096992\n.comment               78          0\n.debug_loc          41964          0\n.debug_abbrev        3309          0\n.debug_info         37049          0\n.debug_ranges        4256          0\n.debug_str          19364          0\n.debug_line         14620          0\n.debug_aranges         96          0\nTotal              430660\n\n\n"
+      },
+      "text_ratio_final_over_main": 0.9382034284702471
+    },
+    {
+      "guest": "compute/my-qbe",
+      "main": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-parity/runner/bin/compute-my-qbe",
+        "sha256": "11bf484b0a466e0a3ac70d15b05ae35251deb7913634becb9979da35eb453d9f",
+        "file_bytes": 1288832,
+        "text_bytes": 225901,
+        "size_stdout": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-parity/runner/bin/compute-my-qbe  :\nsection               size       addr\n.interp                 28   16777952\n.note.ABI-tag           32   16777980\n.dynsym               1680   16778016\n.gnu.version           140   16779696\n.gnu.version_r         160   16779836\n.gnu.hash               28   16780000\n.hash                  568   16780028\n.dynstr                717   16780596\n.rela.dyn              144   16781320\n.rela.plt             1536   16781464\n.rodata              42776   16783008\nmylang_frame_map      7872   16825784\n.eh_frame_hdr         2804   16833656\n.eh_frame            14236   16836464\n.text               225901   16854800\n.init                   27   17080704\n.fini                   13   17080732\n.plt                  1040   17080752\n.tbss                    4   17081792\n.data.rel.ro         64968   17085888\n.dynamic               400   17150856\n.got                    72   17151256\n.got.plt               536   17151328\n.relro_padding        2184   17151864\n.data                  680   17155960\n.bss                   580   17156640\n.comment                57          0\n.debug_loc          427840          0\n.debug_abbrev         1349          0\n.debug_info         211334          0\n.debug_ranges        55760          0\n.debug_str           47999          0\n.debug_pubnames      19895          0\n.debug_pubtypes       4103          0\n.debug_line         111489          0\nTotal              1248952\n\n\n"
+      },
+      "final": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/compute-my-qbe",
+        "sha256": "a170973d4d4661cf496b82943cd366db597c1ef6e94d518a8805c9fbf8eb708c",
+        "file_bytes": 1268296,
+        "text_bytes": 204125,
+        "size_stdout": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/compute-my-qbe  :\nsection               size       addr\n.interp                 28   16777952\n.note.ABI-tag           32   16777980\n.dynsym               1680   16778016\n.gnu.version           140   16779696\n.gnu.version_r         160   16779836\n.gnu.hash               28   16780000\n.hash                  568   16780028\n.dynstr                717   16780596\n.rela.dyn              144   16781320\n.rela.plt             1536   16781464\n.rodata              42632   16783008\nmylang_frame_map      7224   16825640\n.eh_frame_hdr         2692   16832864\n.eh_frame            13592   16835560\n.text               204125   16853248\n.init                   27   17057376\n.fini                   13   17057404\n.plt                  1040   17057424\n.tbss                    4   17058464\n.data.rel.ro         68344   17062560\n.dynamic               400   17130904\n.got                    72   17131304\n.got.plt               536   17131376\n.relro_padding        1656   17131912\n.data                  680   17136008\n.bss                   580   17136688\n.comment                57          0\n.debug_loc          427840          0\n.debug_abbrev         1349          0\n.debug_info         211334          0\n.debug_ranges        55760          0\n.debug_str           47999          0\n.debug_pubnames      19895          0\n.debug_pubtypes       4103          0\n.debug_line         111513          0\nTotal              1228500\n\n\n"
+      },
+      "text_ratio_final_over_main": 0.9036037910412084
+    },
+    {
+      "guest": "collections/my-llvm",
+      "main": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-parity/runner/bin/collections-my-llvm",
+        "sha256": "c0476a52a6aa7a0d95cd284e3b3e48262d7f71c7e1d1ed3f1a23ee32918493ed",
+        "file_bytes": 642104,
+        "text_bytes": 287266,
+        "size_stdout": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-parity/runner/bin/collections-my-llvm  :\nsection              size       addr\n.interp                28   16777952\n.note.ABI-tag          32   16777980\n.dynsym              1920   16778016\n.gnu.version          160   16779936\n.gnu.version_r        144   16780096\n.gnu.hash              28   16780240\n.hash                 648   16780268\n.dynstr               803   16780916\n.rela.dyn              96   16781720\n.rela.plt            1800   16781816\n.rodata            129476   16783616\nmylang_frame_map    11892   16913092\n.eh_frame_hdr        2476   16924984\n.eh_frame           12964   16927464\n.text              287266   16944528\n.init                  27   17231796\n.fini                  13   17231824\n.plt                 1216   17231840\n.tbss                   4   17233056\n.data.rel.ro         3448   17237152\n.dynamic              384   17240600\n.got                   56   17240984\n.got.plt              624   17241040\n.relro_padding       2496   17241664\n.data               21560   17245760\n.bss                 2176   17267328\n.comment               78          0\n.debug_loc          41964          0\n.debug_abbrev        3309          0\n.debug_info         37049          0\n.debug_ranges        4256          0\n.debug_str          19364          0\n.debug_line         14620          0\n.debug_aranges         96          0\nTotal              602473\n\n\n"
+      },
+      "final": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/collections-my-llvm",
+        "sha256": "b7ae862d780cdfc4535003f4bf0529e95f583e1b633ba3cbf1de3260899ec1c1",
+        "file_bytes": 647568,
+        "text_bytes": 292002,
+        "size_stdout": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/collections-my-llvm  :\nsection              size       addr\n.interp                28   16777952\n.note.ABI-tag          32   16777980\n.dynsym              1920   16778016\n.gnu.version          160   16779936\n.gnu.version_r        144   16780096\n.gnu.hash              28   16780240\n.hash                 648   16780268\n.dynstr               803   16780916\n.rela.dyn              96   16781720\n.rela.plt            1800   16781816\n.rodata            129620   16783616\nmylang_frame_map    11832   16913236\n.eh_frame_hdr        2532   16925068\n.eh_frame           13268   16927600\n.text              292002   16944976\n.init                  27   17236980\n.fini                  13   17237008\n.plt                 1216   17237024\n.tbss                   4   17238240\n.data.rel.ro         3448   17242336\n.dynamic              384   17245784\n.got                   56   17246168\n.got.plt              624   17246224\n.relro_padding       1408   17246848\n.data               21608   17250944\n.bss                 2176   17272560\n.comment               78          0\n.debug_loc          41964          0\n.debug_abbrev        3309          0\n.debug_info         37049          0\n.debug_ranges        4256          0\n.debug_str          19364          0\n.debug_line         14620          0\n.debug_aranges         96          0\nTotal              606613\n\n\n"
+      },
+      "text_ratio_final_over_main": 1.0164864620247436
+    },
+    {
+      "guest": "collections/my-qbe",
+      "main": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-parity/runner/bin/collections-my-qbe",
+        "sha256": "b53ec94282c8ce652321d9a597b5f9803748a0ab913db7637e3c1d86be1427a0",
+        "file_bytes": 1552584,
+        "text_bytes": 427270,
+        "size_stdout": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-parity/runner/bin/collections-my-qbe  :\nsection               size       addr\n.interp                 28   16777952\n.note.ABI-tag           32   16777980\n.dynsym               1680   16778016\n.gnu.version           140   16779696\n.gnu.version_r         160   16779836\n.gnu.hash               28   16780000\n.hash                  568   16780028\n.dynstr                717   16780596\n.rela.dyn              144   16781320\n.rela.plt             1536   16781464\nmylang_frame_map     23724   16783000\n.rodata              41944   16806752\n.eh_frame_hdr         3316   16848696\n.eh_frame            16776   16852016\n.text               427270   16872896\n.init                   27   17300168\n.fini                   13   17300196\n.plt                  1040   17300224\n.tbss                    4   17301264\n.data.rel.ro        104208   17305360\n.dynamic               400   17409568\n.got                    72   17409968\n.got.plt               536   17410040\n.relro_padding        1520   17410576\n.data                  768   17414672\n.bss                    44   17415440\n.comment                57          0\n.debug_loc          427840          0\n.debug_abbrev         1349          0\n.debug_info         211334          0\n.debug_ranges        55760          0\n.debug_str           47999          0\n.debug_pubnames      19895          0\n.debug_pubtypes       4103          0\n.debug_line         111489          0\nTotal              1506521\n\n\n"
+      },
+      "final": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/collections-my-qbe",
+        "sha256": "c328445225d6d9dbd820b07698d267f547126d544236ea501196f4919cbf5b00",
+        "file_bytes": 1540912,
+        "text_bytes": 418166,
+        "size_stdout": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/collections-my-qbe  :\nsection               size       addr\n.interp                 28   16777952\n.note.ABI-tag           32   16777980\n.dynsym               1680   16778016\n.gnu.version           140   16779696\n.gnu.version_r         160   16779836\n.gnu.hash               28   16780000\n.hash                  568   16780028\n.dynstr                717   16780596\n.rela.dyn              144   16781320\n.rela.plt             1536   16781464\nmylang_frame_map     20460   16783000\n.rodata              41960   16803488\n.eh_frame_hdr         3364   16845448\n.eh_frame            17032   16848816\n.text               418166   16869952\n.init                   27   17288120\n.fini                   13   17288148\n.plt                  1040   17288176\n.tbss                    4   17289216\n.data.rel.ro        104368   17289216\n.dynamic               400   17393584\n.got                    72   17393984\n.got.plt               536   17394056\n.relro_padding        1120   17394592\n.data                  768   17398688\n.bss                    44   17399456\n.comment                57          0\n.debug_loc          427840          0\n.debug_abbrev         1349          0\n.debug_info         211334          0\n.debug_ranges        55760          0\n.debug_str           47999          0\n.debug_pubnames      19895          0\n.debug_pubtypes       4103          0\n.debug_line         111513          0\nTotal              1494257\n\n\n"
+      },
+      "text_ratio_final_over_main": 0.9786926299529571
+    },
+    {
+      "guest": "text/my-llvm",
+      "main": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-parity/runner/bin/text-my-llvm",
+        "sha256": "1c63f1b242c70850066fd2b864d685340bc8b23a200b951e94f627ef55e5052f",
+        "file_bytes": 896376,
+        "text_bytes": 401714,
+        "size_stdout": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-parity/runner/bin/text-my-llvm  :\nsection              size       addr\n.interp                28   16777952\n.note.ABI-tag          32   16777980\n.dynsym              1920   16778016\n.gnu.version          160   16779936\n.gnu.version_r        144   16780096\n.gnu.hash              28   16780240\n.hash                 648   16780268\n.dynstr               803   16780916\n.rela.dyn              96   16781720\n.rela.plt            1800   16781816\n.rodata            178068   16783616\nmylang_frame_map    39672   16961684\n.eh_frame_hdr        2948   17001356\n.eh_frame           16020   17004304\n.text              401714   17024432\n.init                  27   17426148\n.fini                  13   17426176\n.plt                 1216   17426192\n.tbss                   4   17427408\n.data.rel.ro         3448   17431504\n.dynamic              384   17434952\n.got                   56   17435336\n.got.plt              624   17435392\n.relro_padding        656   17436016\n.data               39720   17440112\n.bss                 2704   17479840\n.comment               78          0\n.debug_loc          41964          0\n.debug_abbrev        3309          0\n.debug_info         37049          0\n.debug_ranges        4256          0\n.debug_str          19364          0\n.debug_line         14620          0\n.debug_aranges         96          0\nTotal              813669\n\n\n"
+      },
+      "final": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/text-my-llvm",
+        "sha256": "6b74952f6efd556a087288086664ef0dc2de827db2d49fb40aa2ac93c8f408fd",
+        "file_bytes": 954584,
+        "text_bytes": 429282,
+        "size_stdout": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/text-my-llvm  :\nsection              size       addr\n.interp                28   16777952\n.note.ABI-tag          32   16777980\n.dynsym              1920   16778016\n.gnu.version          160   16779936\n.gnu.version_r        144   16780096\n.gnu.hash              28   16780240\n.hash                 648   16780268\n.dynstr               803   16780916\n.rela.dyn              96   16781720\n.rela.plt            1800   16781816\n.rodata            199524   16783616\nmylang_frame_map    41580   16983140\n.eh_frame_hdr        3052   17024720\n.eh_frame           16660   17027776\n.text              429282   17048544\n.init                  27   17477828\n.fini                  13   17477856\n.plt                 1216   17477872\n.tbss                   4   17479088\n.data.rel.ro         3448   17483184\n.dynamic              384   17486632\n.got                   56   17487016\n.got.plt              624   17487072\n.relro_padding       2224   17487696\n.data               45464   17491792\n.bss                 2704   17537264\n.comment               78          0\n.debug_loc          41964          0\n.debug_abbrev        3309          0\n.debug_info         37049          0\n.debug_ranges        4256          0\n.debug_str          19364          0\n.debug_line         14620          0\n.debug_aranges         96          0\nTotal              872657\n\n\n"
+      },
+      "text_ratio_final_over_main": 1.068625937856286
+    },
+    {
+      "guest": "text/my-qbe",
+      "main": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-parity/runner/bin/text-my-qbe",
+        "sha256": "e75e2cf8f088620d5dd4cbdac1eac041e304e4a6948effbaf45813a4708177d8",
+        "file_bytes": 2085880,
+        "text_bytes": 719805,
+        "size_stdout": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-parity/runner/bin/text-my-qbe  :\nsection               size       addr\n.interp                 28   16777952\n.note.ABI-tag           32   16777980\n.dynsym               1704   16778016\n.gnu.version           142   16779720\n.gnu.version_r         160   16779864\n.gnu.hash               28   16780024\n.hash                  576   16780052\n.dynstr                724   16780628\n.rela.dyn              144   16781352\n.rela.plt             1560   16781496\nmylang_frame_map     64308   16783056\n.rodata              45696   16847392\n.eh_frame_hdr         3772   16893088\n.eh_frame            19016   16896864\n.text               719805   16919984\n.init                   27   17639792\n.fini                   13   17639820\n.plt                  1056   17639840\n.tbss                    4   17640896\n.data.rel.ro        231984   17644992\n.dynamic               400   17876976\n.got                    72   17877376\n.got.plt               544   17877448\n.relro_padding        1048   17877992\n.data                 7856   17882088\n.bss                   580   17889944\n.comment                57          0\n.debug_loc          427840          0\n.debug_abbrev         1349          0\n.debug_info         211334          0\n.debug_ranges        55760          0\n.debug_str           47999          0\n.debug_pubnames      19895          0\n.debug_pubtypes       4103          0\n.debug_line         111489          0\nTotal              1981105\n\n\n"
+      },
+      "final": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/text-my-qbe",
+        "sha256": "63ac808ad71028cefdb3b2799c5b74ef212c61c28cfc6dd0f7a75c27ec80401c",
+        "file_bytes": 2172272,
+        "text_bytes": 770813,
+        "size_stdout": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/text-my-qbe  :\nsection               size       addr\n.interp                 28   16777952\n.note.ABI-tag           32   16777980\n.dynsym               1704   16778016\n.gnu.version           142   16779720\n.gnu.version_r         160   16779864\n.gnu.hash               28   16780024\n.hash                  576   16780052\n.dynstr                724   16780628\n.rela.dyn              144   16781352\n.rela.plt             1560   16781496\nmylang_frame_map     72084   16783056\n.rodata              45760   16855168\n.eh_frame_hdr         3956   16900928\n.eh_frame            19800   16904888\n.text               770813   16928784\n.init                   27   17699600\n.fini                   13   17699628\n.plt                  1056   17699648\n.tbss                    4   17700704\n.data.rel.ro        259224   17704800\n.dynamic               400   17964024\n.got                    72   17964424\n.got.plt               544   17964496\n.relro_padding          16   17965040\n.data                 7680   17969136\n.bss                   580   17976816\n.comment                57          0\n.debug_loc          427840          0\n.debug_abbrev         1349          0\n.debug_info         211334          0\n.debug_ranges        55760          0\n.debug_str           47999          0\n.debug_pubnames      19895          0\n.debug_pubtypes       4103          0\n.debug_line         111513          0\nTotal              2066977\n\n\n"
+      },
+      "text_ratio_final_over_main": 1.0708636366793785
+    }
+  ],
+  "limitations": [
+    "Whole guest .text includes runtime and all kernels in the group; it is not hot-loop size or executed cost.",
+    "File sizes include section/linker/debug differences; both sources used ReleaseFast host and guest settings recorded in their original receipts.",
+    "No compile-time or memory-performance inference follows from these static byte counts."
+  ]
+}

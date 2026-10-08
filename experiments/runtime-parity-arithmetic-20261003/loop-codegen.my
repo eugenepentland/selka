@@ -1,0 +1,8 @@
+def calculate(count: int, seed: int) -> int:
+    total = seed
+    for at in range(count):
+        total = (total + at * 7) % 1000003
+    return total
+
+def main() -> int:
+    return calculate(32, 17)

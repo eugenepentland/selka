@@ -1,0 +1,24 @@
+{
+  "command": [
+    "python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/benchmarks/runtime/expanded/run.py",
+    "--candidate-id",
+    "goal110-join-5a60ef10-debug-objcopy-recovery-20261004",
+    "--compiler-receipt",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join/join-compiler-receipt.json",
+    "--mylang",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/zig-out/bin/mylang",
+    "--reuse-reference-manifest",
+    "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/manifest.json",
+    "--expected-reference-manifest-sha256",
+    "94ea9f6343133da2fefdcb327458fbb5fcf6d7f099ba29385ebb5b0bd430d721",
+    "--build-only",
+    "--work",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner",
+    "--output",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/recovery-build-only-output.json"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004",
+  "new_work": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner",
+  "old_controls_never_outputs": true
+}

@@ -1,0 +1,5 @@
+qualification progress: iteration: seen=25 elapsed=124.42s
+qualification progress: iteration: seen=50 elapsed=251.20s
+qualification progress: iteration: seen=75 elapsed=376.84s
+qualification progress: iteration: seen=100 elapsed=503.39s
+qualification progress: iteration: seen=125 elapsed=756.35s

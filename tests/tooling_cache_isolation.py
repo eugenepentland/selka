@@ -31,7 +31,9 @@ def main():
         run(compiler, ["test", str(source), "--no-cache", "--cache-dir", str(cache)], work)
         assert not (work / ".mylang-cache").exists(), "test --no-cache leaked a cwd cache"
         run(compiler, ["build", str(source), "-o", str(root / "built"), "--no-cache", "--cache-dir", str(cache)], work)
-        assert any(cache.rglob("*.o")), "build did not publish native objects in its explicit cache"
+        # --no-cache builds in a private directory under the explicit cache and removes it
+        # (NEW-CORE-S5-NO-CACHE-1): nothing is published, and nothing goes to the cwd.
+        assert cache.is_dir() and not any(path.name.startswith("no-cache-") for path in cache.iterdir()), "build --no-cache left its private cache"
         assert not (work / ".mylang-cache").exists(), "build --no-cache leaked a cwd cache"
         docs = root / "documentation"
         docs.mkdir()
@@ -43,7 +45,6 @@ def main():
         assert not (docs / ".mylang-cache").exists(), "doctest wrote its document root"
         assert not (work / ".mylang-cache").exists(), "doctest children leaked a cwd cache"
         assert not list(scratch.glob("doctest-*")), "doctest left its scratch workspace"
-        # spec-case: TEST-FRAME-ADVICE-1
         source.write_text("def recurse(n: int) -> bool:\n    if n == 0:\n        return True\n    return recurse(n - 1)\n\npublic def test_depth() -> bool:\n    return recurse(20)\n")
         failure = run(compiler, ["test", str(source), "--no-cache", "--cache-dir", str(cache), "--max-frames", "2"], work, status=1)
         assert "R_FRAME_LIMIT" in failure.stdout + failure.stderr

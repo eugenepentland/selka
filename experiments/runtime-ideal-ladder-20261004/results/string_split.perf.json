@@ -1,0 +1,116 @@
+{
+ "v1: today: owned pieces, encode copies, RC drain": {
+  "cycles_per_iter": 578412.7178631051,
+  "instr_per_iter": 2710818.859766277,
+  "branch_miss_per_iter": 180.57595993322204,
+  "store_forward_blocks_per_iter": 0.48414023372287146
+ },
+ "v2: + no RC/malloc: region allocation (L3)": {
+  "cycles_per_iter": 193034.39065108515,
+  "instr_per_iter": 784616.3939899832,
+  "branch_miss_per_iter": 72.1652754590985,
+  "store_forward_blocks_per_iter": -0.005008347245409015
+ },
+ "v3: + borrowed encode (no copy)": {
+  "cycles_per_iter": 152494.51585976628,
+  "instr_per_iter": 642076.3923205342,
+  "branch_miss_per_iter": 75.01502504173622,
+  "store_forward_blocks_per_iter": 0.0
+ },
+ "v4: + pieces as views (no copy, no per-piece alloc)": {
+  "cycles_per_iter": 140955.13021702837,
+  "instr_per_iter": 507318.2737896494,
+  "branch_miss_per_iter": 114.6110183639399,
+  "store_forward_blocks_per_iter": 0.011686143572621035
+ },
+ "v5: + fuse split into score (no parts list)": {
+  "cycles_per_iter": 116974.86477462438,
+  "instr_per_iter": 427033.94323873124,
+  "branch_miss_per_iter": 72.47412353923205,
+  "store_forward_blocks_per_iter": -0.001669449081803005
+ },
+ "v9: + byte-level fusion, per-part sums kept": {
+  "cycles_per_iter": 35514.67111853088,
+  "instr_per_iter": 234105.06677796328,
+  "branch_miss_per_iter": 1.7078464106844742,
+  "store_forward_blocks_per_iter": 0.0
+ },
+ "v6: + split-fold identity (no per-part work), scalar": {
+  "cycles_per_iter": 28572.025041736226,
+  "instr_per_iter": 144961.66277128548,
+  "branch_miss_per_iter": 1.2787979966611018,
+  "store_forward_blocks_per_iter": 0.00333889816360601
+ },
+ "v7: hand AVX2 scan (psadbw + cmpeq/popcnt)": {
+  "cycles_per_iter": 2174.0133555926545,
+  "instr_per_iter": 10640.544240400668,
+  "branch_miss_per_iter": 0.996661101836394,
+  "store_forward_blocks_per_iter": 0.11853088480801335
+ },
+ "v8: WORK ELIM: memoize the two documents": {
+  "cycles_per_iter": 19.07846410684474,
+  "instr_per_iter": 23.090150250417363,
+  "branch_miss_per_iter": 0.06343906510851419,
+  "store_forward_blocks_per_iter": 0.0
+ },
+ "v30 holdout: documents from file, v5": {
+  "cycles_per_iter": 120188.18030050084,
+  "instr_per_iter": 429198.56093489146,
+  "branch_miss_per_iter": 161.29048414023373,
+  "store_forward_blocks_per_iter": 0.001669449081803005
+ },
+ "v31 holdout: documents from file, hand AVX2": {
+  "cycles_per_iter": 2239.1752921535895,
+  "instr_per_iter": 10640.54590984975,
+  "branch_miss_per_iter": 0.989983305509182,
+  "store_forward_blocks_per_iter": 1.008347245409015
+ },
+ "v20 holdout reference: today, file": {
+  "cycles_per_iter": 579881.7646076794,
+  "instr_per_iter": 2709994.4991652756,
+  "branch_miss_per_iter": 146.76794657762937,
+  "store_forward_blocks_per_iter": 0.1001669449081803
+ },
+ "v5 baseline x86-64": {
+  "cycles_per_iter": 116974.5041736227,
+  "instr_per_iter": 427033.93155258766,
+  "branch_miss_per_iter": 71.26544240400668,
+  "store_forward_blocks_per_iter": -0.001669449081803005
+ },
+ "v9 baseline x86-64": {
+  "cycles_per_iter": 42494.83305509182,
+  "instr_per_iter": 234105.03839732887,
+  "branch_miss_per_iter": 2.1736227045075127,
+  "store_forward_blocks_per_iter": -0.001669449081803005
+ },
+ "v6 baseline x86-64": {
+  "cycles_per_iter": 41606.005008347245,
+  "instr_per_iter": 197787.29549248746,
+  "branch_miss_per_iter": 1.1786310517529215,
+  "store_forward_blocks_per_iter": 0.0
+ },
+ "B0 rust": {
+  "cycles_per_iter": 113417.8998330551,
+  "instr_per_iter": 631695.6944908181,
+  "branch_miss_per_iter": 15.702838063439065,
+  "store_forward_blocks_per_iter": 0.7445742904841403
+ },
+ "B0 zig-safe": {
+  "cycles_per_iter": 272312.57095158595,
+  "instr_per_iter": 1087714.9766277128,
+  "branch_miss_per_iter": 31.535893155258766,
+  "store_forward_blocks_per_iter": 2047.7696160267112
+ },
+ "B0 zig-fast": {
+  "cycles_per_iter": 254315.47746243738,
+  "instr_per_iter": 980680.7913188648,
+  "branch_miss_per_iter": 29.153589315525878,
+  "store_forward_blocks_per_iter": 2049.0634390651085
+ },
+ "B0 my-llvm": {
+  "cycles_per_iter": 832937.4524207012,
+  "instr_per_iter": 4710954.540901503,
+  "branch_miss_per_iter": 26.590984974958264,
+  "store_forward_blocks_per_iter": 0.27212020033388984
+ }
+}

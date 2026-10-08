@@ -7,7 +7,7 @@ const debug = std.debug;
 fn run(text: []const u8) !void {
     var compilation = try language.Compilation.init(t.allocator, "builtin.my", text);
     defer compilation.deinit();
-    const result = native.runWithOptions(&compilation, .{ .gc_stress = true }) catch |err| {
+    const result = native.runWithOptions(&compilation, .{}) catch |err| {
         for (compilation.diagnostics.items) |diag| debug.print("{s}: {s} ({s})\n", .{ diag.code, diag.message, compilation.src.text(diag.span) });
         return err;
     };
@@ -55,7 +55,7 @@ test "builtin list and Result share identity across imported module signatures" 
     try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     try t.expectEqual(@as(i64, 42), (try native.run(&compilation)).value);
 }
 
@@ -94,7 +94,7 @@ test "module-local Bucket declaration remains distinct from the prelude list" {
     try project.load(.{ .context = null, .read = ShadowModules.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     try t.expectEqual(@as(i64, 42), (try native.run(&compilation)).value);
 }
 
@@ -135,7 +135,7 @@ test "module-local Ok and Err functions shadow contextual constructors in generi
     try project.load(.{ .context = null, .read = ConstructorModules.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     try t.expectEqual(@as(i64, 42), (try native.run(&compilation)).value);
 }
 

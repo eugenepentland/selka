@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/mut-frame-combined-after-01/overflow-release-s3/program"
+  ],
+  "status": 1,
+  "stdout": "",
+  "stderr": "app.my:6:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in leaf::origin at app.my:6:14\n  in app::main at app.my:5:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n",
+  "seconds": 0.0010709429625421762
+}

@@ -1,0 +1,16 @@
+module sibling_probe
+record Cursor:
+    rows: list[list[int]]
+    ticks: int
+
+def tick_row(row: mut list[int]) -> int:
+    row.append(7)
+    return 0
+
+def add(row: mut list[int], ignored: int) -> None:
+    row.append(9)
+
+public def test_disjoint_list_element() -> bool:
+    rows = [[1], [2]]
+    add(mut rows[-1], tick_row(mut rows[0]))
+    return rows == [[1, 7], [2, 9]]

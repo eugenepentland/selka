@@ -1,0 +1,11 @@
+evidence=/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/experiments/new-core-s4-20261006/finish/x-matrix-01
+source_commit=af0bf538b7821ce399b93a8c3462cf6e34a2cae0
+s0: PASS; 599.2607007550541s
+s1: PASS; 838.9016350610182s
+rc: PASS; 555.1649890481494s
+number: PASS; 1159.7665706120897s
+rebinding: PASS; 756.6608697660267s
+iteration: PASS; 1168.3466605369467s
+text: PASS; 1012.4682193649933s
+dict: PASS; 1563.4684824009892s
+functions: PASS; 674.7866450720467s

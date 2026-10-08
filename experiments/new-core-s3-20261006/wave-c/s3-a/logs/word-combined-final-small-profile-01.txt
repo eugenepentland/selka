@@ -1,0 +1,3 @@
+452492377 2069565157
+[ perf record: Woken up 2 times to write data ]
+[ perf record: Captured and wrote 0.370 MB .mylang-cache/s3-a/word-combined-final-small-profile-01.data (2070 samples) ]

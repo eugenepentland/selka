@@ -1,0 +1,70 @@
+$ git commit -m 'S4-V record native trap provenance integration blocker'
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10371 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s4-values ef52c9601] S4-V record native trap provenance integration blocker
+ 58 files changed, 1130 insertions(+)
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/assert/app.my
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/assert/leaf.my
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/bounds/app.my
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/bounds/leaf.my
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-assert-debug-new.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-assert-debug-old.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-assert-debug-s3.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-assert-debug-values.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-assert-release-new.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-assert-release-old.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-assert-release-s3.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-assert-release-values.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-bounds-debug-new.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-bounds-debug-old.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-bounds-debug-s3.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-bounds-debug-values.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-bounds-release-new.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-bounds-release-old.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-bounds-release-s3.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-bounds-release-values.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-overflow-debug-new.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-overflow-debug-old.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-overflow-debug-s3.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-overflow-debug-values.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-overflow-release-new.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-overflow-release-old.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-overflow-release-s3.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/build-overflow-release-values.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/copy-manifest.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/mut_references.py
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/overflow/app.my
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/overflow/leaf.my
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-assert-debug-new.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-assert-debug-old.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-assert-debug-s3.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-assert-debug-values.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-assert-release-new.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-assert-release-old.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-assert-release-s3.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-assert-release-values.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-bounds-debug-new.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-bounds-debug-old.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-bounds-debug-s3.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-bounds-debug-values.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-bounds-release-new.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-bounds-release-old.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-bounds-release-s3.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-bounds-release-values.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-overflow-debug-new.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-overflow-debug-old.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-overflow-debug-s3.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-overflow-debug-values.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-overflow-release-new.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-overflow-release-old.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-overflow-release-s3.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/run-overflow-release-values.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance-reference-receipts/summary.json
+ create mode 100644 experiments/new-core-s4-values-20261006/provenance_integration_blocker.json
+
+exit=0
+elapsed_seconds=2.112439

@@ -1,0 +1,5 @@
+    240 FastISel missed:   %v = bitcast <N x iN> %v to iN (in function: my.pN::mN_count) 
+    240 FastISel missed call:   %v = call iN @F(iN %v, iN false) (in function: my.pN::mN_count) 
+    120 FastISel missed:   %v = insertvalue { ptr, iN } %v, iN %v, N (in function: my.pN::mN_label) 
+    120 FastISel missed:   %v = insertvalue { iN, ptr, ptr } %v, ptr %v, N (in function: my.pN::mN_run) 
+    120 FastISel missed call:   %v = call ptr @"my.pN::mN_label"({ iN, ptr, ptr } %v), !dbg !N 

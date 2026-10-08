@@ -1,0 +1,16 @@
+module v_trap_pop
+
+def drain(n: int) -> int:
+    xs: list[int] = []
+    for i in range(n):
+        xs.append(i)
+    total = 0
+    for i in range(n + 1):
+        total += xs.pop()
+    return total
+
+
+def main(out: Stream) -> int:
+    out.print(drain(3))
+    out.print(drain(0))
+    return 0

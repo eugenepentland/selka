@@ -1,0 +1,17 @@
+{
+  "guest": "benchmarks/runtime/expanded/collections/main.my",
+  "guest_sha256": "09b900a51f725290311e158fed0295ce8d8bca8eeb1c18578d8b1f7f446891eb",
+  "emission_command": "mylang emit-project-qbe benchmarks/runtime/expanded/collections/main.my --drop-step-checks",
+  "emission_sha256": "d7c1737b24c37d79ac6098c16548bce24d4a12086f11d8e80aeab03b7d59ca11",
+  "row_key_symbol": "myl_f_a496fe5abf0228c4dd4174c4700b3441c14d8d0308b9df1be836c021d58129eb",
+  "row_key_declaration": "export function l $myl_f_a496fe5abf0228c4dd4174c4700b3441c14d8d0308b9df1be836c021d58129eb(l %ctx, l %a0) {",
+  "row_key_il_bytes": 1195,
+  "batch_result_il_bytes": 2230774,
+  "native_scalar_sort_calls": 1,
+  "native_keyed_sort_calls": 1,
+  "direct_row_key_calls": 0,
+  "row_key_inline_origins": 0,
+  "stored_row_key": " storel extern $myl_f_a496fe5abf0228c4dd4174c4700b3441c14d8d0308b9df1be836c021d58129eb, %s0",
+  "following_typed_indirect_key_call": " %v40322 =l call %v40320(l %ctx, l %v40321)",
+  "scope": "Shared IL; no machine-code frequency or speedup claim."
+}

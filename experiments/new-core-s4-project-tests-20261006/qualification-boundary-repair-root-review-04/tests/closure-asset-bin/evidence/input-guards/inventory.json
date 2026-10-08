@@ -1,0 +1,400 @@
+{
+  "schema": "s4-fuzz-live-inputs-v1",
+  "sources": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.my": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.my",
+      "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.my",
+      "sha256": "0d1960a000bcc57a18e412a75e2d166c56438cb9a7f8abddc13c7ee8e6a92790",
+      "generation": [
+        66309,
+        120869954,
+        33204,
+        53,
+        1791353324153105303,
+        1791353324153105303
+      ],
+      "alias_generation": [
+        66309,
+        120869954,
+        33204,
+        53,
+        1791353324153105303,
+        1791353324153105303
+      ]
+    }
+  },
+  "phases": [
+    {
+      "source": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.my",
+      "root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs",
+      "inputs": {
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs": {
+          "directory": true,
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs",
+          "identity": [
+            66309,
+            120869953,
+            16893
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/asset.bin": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/asset.bin",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/asset.bin",
+          "sha256": "6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c",
+          "generation": [
+            66309,
+            120869958,
+            33204,
+            20,
+            1791353324153249874,
+            1791353324153249874
+          ],
+          "alias_generation": [
+            66309,
+            120869958,
+            33204,
+            20,
+            1791353324153249874,
+            1791353324153249874
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.api": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.api",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.api",
+          "sha256": "6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c",
+          "generation": [
+            66309,
+            120869957,
+            33204,
+            20,
+            1791353324153212448,
+            1791353324153212448
+          ],
+          "alias_generation": [
+            66309,
+            120869957,
+            33204,
+            20,
+            1791353324153212448,
+            1791353324153212448
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.cases.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.cases.json",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.cases.json",
+          "sha256": "6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c",
+          "generation": [
+            66309,
+            120869956,
+            33204,
+            20,
+            1791353324153172359,
+            1791353324153172359
+          ],
+          "alias_generation": [
+            66309,
+            120869956,
+            33204,
+            20,
+            1791353324153172359,
+            1791353324153172359
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.my": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.my",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.my",
+          "sha256": "0d1960a000bcc57a18e412a75e2d166c56438cb9a7f8abddc13c7ee8e6a92790",
+          "generation": [
+            66309,
+            120869954,
+            33204,
+            53,
+            1791353324153105303,
+            1791353324153105303
+          ],
+          "alias_generation": [
+            66309,
+            120869954,
+            33204,
+            53,
+            1791353324153105303,
+            1791353324153105303
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/dep.my": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/dep.my",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/dep.my",
+          "sha256": "6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c",
+          "generation": [
+            66309,
+            120869955,
+            33204,
+            20,
+            1791353324153139787,
+            1791353324153139787
+          ],
+          "alias_generation": [
+            66309,
+            120869955,
+            33204,
+            20,
+            1791353324153139787,
+            1791353324153139787
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/mylang.json",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/mylang.json",
+          "sha256": "46307f96419ce3690a39c914d0cfc5fe44d6838a05aa7f1f1d6859933ab4d91a",
+          "generation": [
+            66309,
+            120869960,
+            33204,
+            39,
+            1791353324153314801,
+            1791353324153314801
+          ],
+          "alias_generation": [
+            66309,
+            120869960,
+            33204,
+            39,
+            1791353324153314801,
+            1791353324153314801
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/policy": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/policy",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/policy",
+          "sha256": "6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c",
+          "generation": [
+            66309,
+            120869959,
+            33204,
+            20,
+            1791353324153282010,
+            1791353324153282010
+          ],
+          "alias_generation": [
+            66309,
+            120869959,
+            33204,
+            20,
+            1791353324153282010,
+            1791353324153282010
+          ]
+        }
+      },
+      "generated_paths": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/old-output",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/cache/frontend-old"
+      ],
+      "extra_paths": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/policy"
+      ],
+      "retained": {
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/asset.bin": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/evidence/input-guards/blobs/6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c",
+          "sha256": "6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c"
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.api": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/evidence/input-guards/blobs/6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c",
+          "sha256": "6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c"
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.cases.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/evidence/input-guards/blobs/6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c",
+          "sha256": "6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c"
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.my": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/evidence/input-guards/blobs/0d1960a000bcc57a18e412a75e2d166c56438cb9a7f8abddc13c7ee8e6a92790",
+          "sha256": "0d1960a000bcc57a18e412a75e2d166c56438cb9a7f8abddc13c7ee8e6a92790"
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/dep.my": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/evidence/input-guards/blobs/6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c",
+          "sha256": "6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c"
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/evidence/input-guards/blobs/46307f96419ce3690a39c914d0cfc5fe44d6838a05aa7f1f1d6859933ab4d91a",
+          "sha256": "46307f96419ce3690a39c914d0cfc5fe44d6838a05aa7f1f1d6859933ab4d91a"
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/policy": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/evidence/input-guards/blobs/6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c",
+          "sha256": "6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c"
+        }
+      }
+    }
+  ],
+  "roots": [
+    {
+      "root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs",
+      "inputs": {
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs": {
+          "directory": true,
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs",
+          "identity": [
+            66309,
+            120869953,
+            16893
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/asset.bin": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/asset.bin",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/asset.bin",
+          "sha256": "6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c",
+          "generation": [
+            66309,
+            120869958,
+            33204,
+            20,
+            1791353324153249874,
+            1791353324153249874
+          ],
+          "alias_generation": [
+            66309,
+            120869958,
+            33204,
+            20,
+            1791353324153249874,
+            1791353324153249874
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.api": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.api",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.api",
+          "sha256": "6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c",
+          "generation": [
+            66309,
+            120869957,
+            33204,
+            20,
+            1791353324153212448,
+            1791353324153212448
+          ],
+          "alias_generation": [
+            66309,
+            120869957,
+            33204,
+            20,
+            1791353324153212448,
+            1791353324153212448
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.cases.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.cases.json",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.cases.json",
+          "sha256": "6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c",
+          "generation": [
+            66309,
+            120869956,
+            33204,
+            20,
+            1791353324153172359,
+            1791353324153172359
+          ],
+          "alias_generation": [
+            66309,
+            120869956,
+            33204,
+            20,
+            1791353324153172359,
+            1791353324153172359
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.my": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.my",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/case.my",
+          "sha256": "0d1960a000bcc57a18e412a75e2d166c56438cb9a7f8abddc13c7ee8e6a92790",
+          "generation": [
+            66309,
+            120869954,
+            33204,
+            53,
+            1791353324153105303,
+            1791353324153105303
+          ],
+          "alias_generation": [
+            66309,
+            120869954,
+            33204,
+            53,
+            1791353324153105303,
+            1791353324153105303
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/dep.my": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/dep.my",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/dep.my",
+          "sha256": "6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c",
+          "generation": [
+            66309,
+            120869955,
+            33204,
+            20,
+            1791353324153139787,
+            1791353324153139787
+          ],
+          "alias_generation": [
+            66309,
+            120869955,
+            33204,
+            20,
+            1791353324153139787,
+            1791353324153139787
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/mylang.json",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/mylang.json",
+          "sha256": "46307f96419ce3690a39c914d0cfc5fe44d6838a05aa7f1f1d6859933ab4d91a",
+          "generation": [
+            66309,
+            120869960,
+            33204,
+            39,
+            1791353324153314801,
+            1791353324153314801
+          ],
+          "alias_generation": [
+            66309,
+            120869960,
+            33204,
+            39,
+            1791353324153314801,
+            1791353324153314801
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/policy": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/policy",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/policy",
+          "sha256": "6c5b97ef9c4e6fa7fc866df436cf29a4e90b74682e40d16ac58d95c51182264c",
+          "generation": [
+            66309,
+            120869959,
+            33204,
+            20,
+            1791353324153282010,
+            1791353324153282010
+          ],
+          "alias_generation": [
+            66309,
+            120869959,
+            33204,
+            20,
+            1791353324153282010,
+            1791353324153282010
+          ]
+        }
+      },
+      "generated_paths": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/old-output",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/cache/frontend-old"
+      ],
+      "extra_paths": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-root-review-04/tests/closure-asset-bin/inputs/policy"
+      ]
+    }
+  ],
+  "cleanups": []
+}

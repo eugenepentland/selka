@@ -1,0 +1,15 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "zig",
+    "fmt",
+    "src/core/build.zig",
+    "src/core/inline_cfg.zig",
+    "src/core/vector_test.zig"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 623272,
+  "status": 0,
+  "elapsed_seconds": 0.04129708185791969
+}

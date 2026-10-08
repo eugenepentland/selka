@@ -160,32 +160,8 @@ def inner_piece(index: int) -> str:
     return repeated("inner-text-", 100)[index:index + 300]
 
 
-# Pieces made inside an arena, of arena text and of outer text, are read there
-# and escape by copy; an outer text sliced in the arena is untouched after it.
-# spec-case: TEXT-VIEW-2
-public def test_pieces_in_arenas_read_and_escape() -> bool:
-    outer = repeated("outer-text-", 100)
-    kept: list[str] = []
-    one = ""
-    with arena() as scratch:
-        inner = repeated("inner-text-", 100)
-        pieces: list[str] = []
-        for index in range(50):
-            pieces.append(inner[index:index + 300])
-            pieces.append(outer[index:index + 300])
-        lines = (inner + "\n" + outer).split("\n")
-        inside = pieces[0][:5] == "inner" and pieces[1][:5] == "outer" and lines[1] == outer
-        kept = scratch.escape([pieces[98], pieces[99], lines[0][11:], "x"])
-        if inside:
-            one = scratch.escape(outer[11:22])
-    ok = len(kept) == 4 and kept[0] == inner_piece(49) and kept[1] == outer[49:349]
-    ok = ok and len(kept[2]) == 1089 and kept[2][:11] == "inner-text-" and kept[3] == "x"
-    return ok and one == "outer-text-" and outer[:11] == "outer-text-"
-
-
 # Omitted upper bounds keep streaming tails, including a tail of a tail. A
 # bounded slice still asks for the ordinary retention policy.
-# spec-case: TEXT-VIEW-5
 public def test_streaming_tails_preserve_scalars_and_consumers() -> bool:
     owner = repeated("abcdefé😀", 40) + "é😀abcdefghi"
     tail = owner[-11:]
@@ -197,16 +173,6 @@ public def test_streaming_tails_preserve_scalars_and_consumers() -> bool:
     ok = ok and nested.find("ghi") == 7 and nested.rfind("a", 0, 10) == 1
     ok = ok and nested.strip("😀i") == "abcdefgh" and repr(nested) == "'😀abcdefghi'"
     return ok and nested.encode() == b"\xf0\x9f\x98\x80abcdefghi"
-
-
-# spec-case: TEXT-VIEW-5
-public def test_streaming_arena_tails_escape_as_independent_text() -> bool:
-    escaped = ""
-    with arena() as scratch:
-        owner = repeated("é😀abcdefghijklmnop", 100)
-        tail = owner[-11:]
-        escaped = scratch.escape(tail[1:])
-    return escaped == "ghijklmnop" and len(escaped) == 10 and escaped[0] == "g"
 
 
 def main() -> int:

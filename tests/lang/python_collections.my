@@ -317,7 +317,8 @@ public def test_range_end_syntax_agrees_in_constant_and_runtime_evaluation() -> 
 # spec: PY-COLLECTIONS-13
 public def test_field_writeback_preserves_sibling_changes_made_by_its_right_hand_side() -> bool:
     rows = [WritebackPoint(x=0, y=0)]
-    rows[0].x = writeback(mut rows)
+    mutation_result_320 = writeback(mut rows)
+    rows[0].x = mutation_result_320
     return rows[0].x + rows[0].y == 42
 
 
@@ -327,7 +328,6 @@ public def test_generic_lists_preserve_literal_foreach_slice_and_write_element_t
     return xs[0] + xs[1] == 42
 
 
-# spec-case: QBE-ELEMENT-READ-1
 public def test_scalar_element_reads_load_every_width_from_backing_storage() -> bool:
     narrow = [1i16, 2i16, 300i16]
     wide = [7i64, 8i64, 9i64]

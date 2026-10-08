@@ -1,0 +1,37 @@
+test-units
++- run test 36 pass, 1 fail (37 total)
+guardian/test: test wall 1.02s; slowest over 50ms:
+guardian/test:   0.64s  qbe_build_llvm_test.test.LLVM scalar addresses retain integer definitions for escaped and mixed width entry cells
+guardian/test:   0.21s  qbe_rc_local_list_test.test.local list stack actual admitted LLVM unit carries no foreign prefix alias scope
+guardian/test:   0.09s  qbe_test.test.a checked 64-bit add, subtract and multiply emit the exact flag formulas the LLVM adapter lowers to overflow intrinsics
+guardian/test:   0.05s  qbe_test.test.LLVM-ELEMENT-CLASS-1 a storage word is marked as element storage of its element size and kind
+guardian/test: FAIL — 1 failed of 37
+guardian/test: RESULT {"passed":36,"failed":1,"skipped":0}
+error: 'qbe_build_llvm_test.test.LLVM scalar addresses retain integer definitions for escaped and mixed width entry cells' failed:
+       guardian/test: 37 test(s) selected by filter: "LLVM" — 25 match by name, 12 unnamed test block(s) run regardless
+       expected 4, found 5
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x1481ef9 in expectEqualInner__anon_41542 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x29b7025 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/src/qbe_build_llvm_test.zig:157:5: 0x29b70b0 in test.LLVM scalar addresses retain integer definitions for escaped and mixed width entry cells (root_test.zig)
+           try std.testing.expectEqual(@as(usize, 4), std.mem.count(u8, direct, "ptr %mem"));
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.task-tmp/zig-local/o/d33faad560f8f0842227674b49eac682/test --guardian-filter=LLVM --cache-dir=./.task-tmp/zig-local --seed=0x4abba201 --listen=-
+
+Build Summary: 8/10 steps succeeded (1 failed); 36/37 tests passed (1 failed)
+test-units transitive failure
++- run test 36 pass, 1 fail (37 total)
+   +- compile test debug native success 2s MaxRSS:449M
+   |  +- run exe qbe-build-assets (qbe_build_assets) success 320ms
+   |  |  +- compile exe qbe-build-assets debug native cached 10ms MaxRSS:39M
+   |  +- options cached
+   |     +- compile exe qbe fast native cached 18ms MaxRSS:38M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang success
+      +- compile exe mylang debug native success 3s MaxRSS:545M
+         +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

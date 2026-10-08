@@ -1,0 +1,19 @@
+{
+  "source_commit": "dfcc38c2993027eec25d47eac57628501be9b7b2",
+  "qualified": false,
+  "command": [
+    "zig",
+    "build",
+    "test-core",
+    "-Dcore-shards=64",
+    "--summary",
+    "all"
+  ],
+  "seconds": 187.92,
+  "passed": 303,
+  "failed": 1,
+  "total": 304,
+  "max_unit_rss_bytes": 271581184,
+  "reason": "V numeric buffer operation dependency was not declared by split unit emitter",
+  "source_ir_changed": false
+}

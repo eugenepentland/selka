@@ -1,0 +1,17 @@
+# spec-case: MUT-REBIND-CALLER-1
+def replace_and_copy(items: mut list[int]) -> list[int]:
+    items = [21]
+    return items
+
+def append_and_observe(items: mut list[int], source: list[int]) -> int:
+    before = items[0]
+    items.append(13)
+    return before * 10000 + items[0] * 100 + source[0]
+
+def main() -> int:
+    items = [7]
+    saved = items
+    seen = append_and_observe(mut items, replace_and_copy(mut items))
+    assert items == [21, 13]
+    assert saved == [7]
+    return seen

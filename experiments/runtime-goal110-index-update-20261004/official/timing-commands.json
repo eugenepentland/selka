@@ -1,0 +1,97 @@
+{
+  "schema": "mylang-index-update-timing-commands-v1",
+  "source_revision": "14ffa2c0f385a11e5216bbdec5bdff429f9f981b",
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004",
+  "commands": [
+    [
+      "python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/screen.py",
+      "--mylang",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/zig-out/bin/mylang",
+      "--zig",
+      "/home/epentland/.local/bin/zig",
+      "--candidate-id",
+      "goal110-index-forward-14ffa2c0-releasefast",
+      "--compiler-receipt",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/compiler-receipt.json",
+      "--reuse-reference-manifest",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-g4-rf-20261004/.mylang-cache/goal110-g4-rf/runner/manifest.json",
+      "--expected-reference-manifest-sha256",
+      "4757812159060d11f035115d40fbf94e894bc08030e961fa7c2fdd8d955f4479",
+      "--work",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner",
+      "--output",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/screen-raw.json",
+      "--skip-build",
+      "--rounds",
+      "5",
+      "--warmups",
+      "1",
+      "--cpu",
+      "2",
+      "--only",
+      "mutate_unique",
+      "mutate_shared",
+      "record_reads"
+    ],
+    [
+      "python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/time-paired.py",
+      "--plans",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/screen-raw.json",
+      "--before-manifest",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-g4-rf-20261004/.mylang-cache/goal110-g4-rf/runner/manifest.json",
+      "--after-manifest",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/manifest.json",
+      "--rounds",
+      "5",
+      "--warmups",
+      "1",
+      "--cpu",
+      "2",
+      "--output",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/paired-screen.json"
+    ],
+    [
+      "python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/finalize-screen.py",
+      "--raw",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/screen-raw.json",
+      "--output",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/screen.json"
+    ],
+    [
+      "python3",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/benchmarks/runtime/compare_candidate.py",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/screen.json",
+      "--output",
+      "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/screen-comparison.json",
+      "--check-artifacts"
+    ]
+  ],
+  "helper_sha256": {
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/screen.py": "28676ac45bf56e00b045ca187ed586f9eaaec01ec67936117c8696519d4036b5",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/time-paired.py": "d00be259c1ca4a7006b2c6516b34d428b445274657db712425b45bf1a0c58982",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/finalize-screen.py": "901a744bb269ab4a3e90a4e612e6456a2b5699e493141df67bf34d8ae387963b",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/benchmarks/runtime/expanded/run.py": "6c28224bf77a5127bd7c28072337caa80571f7a57c5f60c77d765a366d342e4a",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/benchmarks/runtime/runner.py": "e2238327ab7f603e7c0772b791ad4a2534ba90c6ce49a0d4e362790112b3b690",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/benchmarks/runtime/compare_candidate.py": "ca202996170e072e7b95ebf3b20896142ec794d14e336c958af277037a7d7123",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/benchmarks/runtime/expanded/verify.py": "34c6a85cedf05e4f8bf7759b699f814b601c5cf22aca01fd4e1dfada7796202a",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/benchmarks/runtime/diagnostics/holdouts.py": "1eeb8484148799594d5e76dfc6a793646073cfdb596e6ea2c46910040b34f3fc"
+  },
+  "policy": "Internalrunnerlock only; no guest modification;5r1w6arms then G4pairs; bootstrap/replay deferred until all guest measurements finish.",
+  "manifests": {
+    "before": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-g4-rf-20261004/.mylang-cache/goal110-g4-rf/runner/manifest.json",
+      "sha256": "4757812159060d11f035115d40fbf94e894bc08030e961fa7c2fdd8d955f4479"
+    },
+    "after": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/runner/manifest.json",
+      "sha256": "e02fd8476ee7b36d04e74a46287dcdbcc0fade79156f40b4e0de2d9e6674a171"
+    }
+  },
+  "readiness": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-index-forward-rf-20261004/.mylang-cache/goal110-index-forward-rf/readiness.json",
+    "sha256": "b455cacac632682a183027af274e8add63260ee13ce7d0b3d53f84d84258ebdd"
+  }
+}

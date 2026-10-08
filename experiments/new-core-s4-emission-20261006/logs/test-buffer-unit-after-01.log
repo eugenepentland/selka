@@ -1,0 +1,18 @@
+test-core
++- run test
+   +- compile test debug native 1 errors
+src/core/emit_units_test.zig:139:28: error: values of type '@EnumLiteral()' must be comptime-known, but index value is runtime-known
+    for ([_]@TypeOf(.debug){ .debug, .release, .verify }) |mode| {
+         ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+referenced by:
+    comptime: src/core/root_test.zig:7:17
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test -ODebug --dep mylang --dep core_test_options -Mroot=src/core/root_test.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -Mcore_test_options=.zig-cache/o/ab8fc97bd5dbfdea83d0477395f472be/options.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --test-filter "numeric buffer operations declare" --test-runner ../guardian-zig/src/test_runner.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name test --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 2/5 steps succeeded (1 failed)
+test-core transitive failure
++- run test transitive failure
+   +- compile test debug native 1 errors
+      +- options success
+         +- compile exe mylang-core debug native success 1s MaxRSS:348M
+

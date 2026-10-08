@@ -1,0 +1,43 @@
+== lox_eval small: size=16 iterations=100000 checksum=996994405
+version                                           ns/iter   ns/unit   x rust x fastest
+v1: today: RC lists, ready calls, vector-copy stalls, if/elif chain       4002.6   250.160    3.726     3.726
+v2: + value semantics: local lists, headers in regs (stalls remain)       3318.6   207.415    3.089     3.089
+v3: + tagged values in place (no store-forward stall)       1141.2    71.324    1.062     1.062
+v4: + list storage hoisted out of the batch loop       1124.2    70.264    1.046     1.046
+v5: + threaded dispatch (computed goto), pointer pc        799.4    49.964    0.744     0.744
+v6: + stack top cached in registers                 826.0    51.623    0.769     0.769
+v8: BOUND: assumes a load-time verifier (no tags/checks)        635.6    39.725    0.592     0.592
+v9: BOUND + 32-bit division bypass for %            590.0    36.873    0.549     0.549
+v7: WORK ELIM: partial evaluation of the fixed program         52.7     3.291    0.049     0.049
+v30 holdout: program from file, threaded            816.7    51.042    0.760     0.760
+v31 holdout: program from file, + stack cache        863.0    53.941    0.803     0.803
+v20 holdout reference: today, program from file       4023.1   251.441    3.745     3.745
+v3 baseline x86-64                                 1151.9    71.991    1.072     1.072
+v6 baseline x86-64                                  776.1    48.505    0.722     0.722
+B0 rust                                            1074.3    67.147    1.000     1.000
+B0 go                                              1223.0    76.435    1.138     1.138
+B0 zig-safe                                        3141.6   196.348    2.924     2.924
+B0 zig-fast                                        3069.2   191.827    2.857     2.857
+B0 my-llvm                                         4341.2   271.324    4.041     4.041
+== lox_eval large: size=256 iterations=3000 checksum=499379905
+version                                           ns/iter   ns/unit   x rust x fastest
+v1: today: RC lists, ready calls, vector-copy stalls, if/elif chain      62401.8   243.757    3.824     3.824
+v2: + value semantics: local lists, headers in regs (stalls remain)      53751.8   209.968    3.294     3.294
+v3: + tagged values in place (no store-forward stall)      17734.2    69.274    1.087     1.087
+v4: + list storage hoisted out of the batch loop      17688.4    69.095    1.084     1.084
+v5: + threaded dispatch (computed goto), pointer pc      12259.6    47.889    0.751     0.751
+v6: + stack top cached in registers               13255.6    51.780    0.812     0.812
+v8: BOUND: assumes a load-time verifier (no tags/checks)       9475.5    37.013    0.581     0.581
+v9: BOUND + 32-bit division bypass for %           9421.3    36.802    0.577     0.577
+v7: WORK ELIM: partial evaluation of the fixed program       1443.9     5.640    0.088     0.088
+v30 holdout: program from file, threaded          12158.1    47.492    0.745     0.745
+v31 holdout: program from file, + stack cache      13433.4    52.474    0.823     0.823
+v20 holdout reference: today, program from file      64827.4   253.232    3.973     3.973
+v3 baseline x86-64                                17522.3    68.446    1.074     1.074
+v6 baseline x86-64                                11822.3    46.181    0.725     0.725
+B0 rust                                           16316.6    63.737    1.000     1.000
+B0 go                                             20150.7    78.714    1.235     1.235
+B0 zig-safe                                       49452.8   193.175    3.031     3.031
+B0 zig-fast                                       48300.2   188.673    2.960     2.960
+B0 my-llvm                                        62305.3   243.380    3.819     3.819
+wrote /home/epentland/ai/canopy/mylang-worktrees/claude-ideal-ladder-20261004/experiments/runtime-ideal-ladder-20261004/results/lox_eval.json

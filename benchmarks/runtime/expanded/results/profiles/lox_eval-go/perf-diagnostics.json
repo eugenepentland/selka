@@ -1,0 +1,9 @@
+{
+  "record_stdout": "",
+  "record_stderr": "[ perf record: Woken up 2 times to write data ]\n[ perf record: Captured and wrote 0.054 MB /home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/benchmarks/runtime/expanded/results/profiles/lox_eval-go/perf.data (325 samples) ]\n",
+  "record_exit_status": 0,
+  "script_stderr": "",
+  "script_exit_status": 0,
+  "dump_stderr": "",
+  "dump_exit_status": 0
+}

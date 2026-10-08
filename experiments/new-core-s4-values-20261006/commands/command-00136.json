@@ -1,0 +1,12 @@
+{
+  "command": [
+    "git",
+    "commit",
+    "-m",
+    "evidence: retain measured S4-V mut-return alternative"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2360235,
+  "status": 0,
+  "elapsed_seconds": 3.778708605095744
+}

@@ -1,0 +1,41 @@
+== tagged_stack small: size=64 iterations=4000000 checksum=80534400
+version                                           ns/iter   ns/unit   x rust x fastest
+v1: today: heap list, RC checks, ready calls, floor mods, idiv cursor         24.6    24.578    2.835     2.835
+v2: + value semantics: local list, header in regs         19.7    19.746    2.278     2.278
+v8: + tagged values built in place (no store-forward stall)         11.0    10.989    1.268     1.268
+v3: + stack scalar-replaced (balanced push/pop)         11.0    11.023    1.271     1.271
+v4: + range facts: unsigned, no overflow checks          7.7     7.730    0.892     0.892
+v5: + % M as cond-subtract, cursor compare-reset          5.4     5.376    0.620     0.620
+v6: + residue tracking (r = base mod 97)              2.9     2.876    0.332     0.332
+v7: + table lookup for r % k                          2.4     2.389    0.276     0.276
+v30 holdout: opcodes from file, no range facts         10.9    10.918    1.259     1.259
+v31 holdout: file + runtime guard + v7                2.5     2.455    0.283     0.283
+v20 holdout reference: today, file                   24.5    24.514    2.828     2.828
+v5 baseline x86-64                                    5.3     5.281    0.609     0.609
+v7 baseline x86-64                                    2.4     2.398    0.277     0.277
+B0 rust                                               8.7     8.670    1.000     1.000
+B0 go                                                 9.4     9.351    1.079     1.079
+B0 zig-safe                                          16.0    15.957    1.841     1.841
+B0 zig-fast                                          16.7    16.713    1.928     1.928
+B0 my-llvm                                           25.2    25.241    2.911     2.911
+== tagged_stack large: size=4096 iterations=4000000 checksum=80534400
+version                                           ns/iter   ns/unit   x rust x fastest
+v1: today: heap list, RC checks, ready calls, floor mods, idiv cursor         23.8    23.800    2.804     2.804
+v2: + value semantics: local list, header in regs         18.5    18.527    2.183     2.183
+v8: + tagged values built in place (no store-forward stall)         10.7    10.719    1.263     1.263
+v3: + stack scalar-replaced (balanced push/pop)         10.6    10.627    1.252     1.252
+v4: + range facts: unsigned, no overflow checks          7.4     7.389    0.870     0.870
+v5: + % M as cond-subtract, cursor compare-reset          5.2     5.208    0.613     0.613
+v6: + residue tracking (r = base mod 97)              2.7     2.707    0.319     0.319
+v7: + table lookup for r % k                          2.3     2.323    0.274     0.274
+v30 holdout: opcodes from file, no range facts         10.4    10.426    1.228     1.228
+v31 holdout: file + runtime guard + v7                2.3     2.282    0.269     0.269
+v20 holdout reference: today, file                   23.6    23.575    2.777     2.777
+v5 baseline x86-64                                    5.0     4.975    0.586     0.586
+v7 baseline x86-64                                    2.3     2.330    0.274     0.274
+B0 rust                                               8.5     8.489    1.000     1.000
+B0 go                                                 8.8     8.831    1.040     1.040
+B0 zig-safe                                          15.4    15.441    1.819     1.819
+B0 zig-fast                                          15.9    15.944    1.878     1.878
+B0 my-llvm                                           24.2    24.231    2.855     2.855
+wrote /home/epentland/ai/canopy/mylang-worktrees/claude-ideal-ladder-20261004/experiments/runtime-ideal-ladder-20261004/results/tagged_stack.json

@@ -1,0 +1,8 @@
+src/core/tool_identity.zig:345:72: error: expected type 'i96', found 'i128'
+    return .{ .inode = inode, .size = size, .mtime = .{ .nanoseconds = mtime }, .ctime = .{ .nanoseconds = ctime }, .permissions = .fromMode(mode), .kind = kind, .nlink = 0, .atime = null, .block_size = 1 };
+                                                                       ^~~~~
+src/core/tool_identity.zig:345:72: note: signed 96-bit int cannot represent all possible signed 128-bit values
+referenced by:
+    decodeHint: src/core/tool_identity.zig:328:80
+    inventoryHint: src/core/tool_identity.zig:311:22
+    4 reference(s) hidden; use '-freference-trace=6' to see all references

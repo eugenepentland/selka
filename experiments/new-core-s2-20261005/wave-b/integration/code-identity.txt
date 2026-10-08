@@ -1,0 +1,43 @@
+source_commit=090dabd5a6932a7c3beaec68248f9a35d4c637d7
+$ scripts/build-slot.sh build -- python3 experiments/new-core-s2-20261005/wave-a/compare_code.py --stage s2-t2
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: all 3 build slot(s) busy; waiting (120s so far)
+build-slot: all 3 build slot(s) busy; waiting (180s so far)
+build-slot: all 3 build slot(s) busy; waiting (241s so far)
+build-slot: all 3 build slot(s) busy; waiting (301s so far)
+build-slot: all 3 build slot(s) busy; waiting (361s so far)
+build-slot: all 3 build slot(s) busy; waiting (421s so far)
+build-slot: all 3 build slot(s) busy; waiting (481s so far)
+build-slot: all 3 build slot(s) busy; waiting (541s so far)
+build-slot: all 3 build slot(s) busy; waiting (601s so far)
+build-slot: all 3 build slot(s) busy; waiting (662s so far)
+build-slot: all 3 build slot(s) busy; waiting (722s so far)
+build-slot: all 3 build slot(s) busy; waiting (782s so far)
+build-slot: all 3 build slot(s) busy; waiting (842s so far)
+build-slot: all 3 build slot(s) busy; waiting (902s so far)
+build-slot: all 3 build slot(s) busy; waiting (962s so far)
+build-slot: all 3 build slot(s) busy; waiting (1022s so far)
+build-slot: build slot 3 after 1048s (all 3 build slot(s) busy)
+row_record_reads changed definitions; inspect diff 4f75589c67c0c1d72afb84ec291d4caca7ec6ab440a4267594cd1923075b10fd 2.096s
+row_tagged_stack changed definitions; inspect diff cf13a4079b5ec287e041313777232838858dd8dff8296dd43afead47304cfb4b 0.127s
+row_mutate_unique changed definitions; inspect diff 64f6957d441228675737bbdf91bdb7c578b0b95cbae7e7b5f1430f9fca64b474 0.105s
+row_mutate_shared changed definitions; inspect diff 4d547346c73fc7f287a25dfe7bbd59ef2220735022b3ed6fb6e02f3f0ae721b8 0.109s
+row_record_construct changed definitions; inspect diff 84c3adca0b725dceed4c6682d141183faa6d0cd7ba5df037677627caa3978836 0.110s
+row_record_update changed definitions; inspect diff 9907c54f0252f9b70da7e024eb3caa0f1d0dc9e1ec5938e11a16e1b972f68f64 0.100s
+row_option_handle changed definitions; inspect diff aead6054da5bdcbd69c570087cfd15603c97be3e13f900c2a2a2a6457ce7e76c 0.104s
+row_result_propagate changed definitions; inspect diff 0514a8b2ef9eda7765faff04cac99f7d4e078c68cbb3747177be97a3f2d3e1f1 0.118s
+row_list_scan changed definitions; inspect diff 350cc0784e2d20584d911bdcc7e2f81c320529654e70e4da8c00b6ce5725a270 0.105s
+row_list_append changed definitions; inspect diff ecc35afccbeef808bd7361c6bba1ced8bbf6e716121dfaca702d2e1ddfab7197 0.117s
+row_list_filter changed definitions; inspect diff d10be931e2d528f8dd37b68fd26150b952040e270e26065281ccda7cbcbec982 0.131s
+row_alloc_short changed definitions; inspect diff 6bfdd23925e790c32341331f7e6db0b383fbdae6b2568b952ca0c936f8d38a60 0.092s
+row_alloc_retained changed definitions; inspect diff 1f66eb2f04770ad19cd33c6ae63330e4aab57a8e62a0cbd299c3e4d4f71d0b7f 0.112s
+row_mutate_nested changed definitions; inspect diff 84958c9d71877433c0c2e0d316730a5125d1eb70460b4197ffd4693c84199677 0.120s
+int_math changed definitions; inspect diff 3762391c9beb3d0c6b8c11311dff3d916445a652f50623dad17fc90b144382ac 0.117s
+float_math changed definitions; inspect diff 0c606e9d5c2c4c543917c0d5576171caa4bf87f7854288258e0698c53c06a844 0.113s
+call_direct changed definitions; inspect diff 9e1d2d6f63e1a00ed7beefcd5a55775288b7747fd8d85ed71f7b0c1d95f268ad 0.099s
+branch_predictable changed definitions; inspect diff 08710fde99443200341d834d25fd80881099e974274d00b6d50a315c2accd904 0.109s
+branch_mixed changed definitions; inspect diff 2df990e4ed56f7e2299bd10110c2241e804355af396023045cff35245231322b 0.113s
+binary_search changed definitions; inspect diff 0729a73a7eb22bca0300ae74d6ba7b1d50de44bcf1831da74f5a19e2f370c47a 0.112s
+
+exit=0 wall_including_admission=1051.78

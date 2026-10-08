@@ -1,0 +1,46 @@
+module repro
+
+# File name has a dash, so the compiler cannot load it in place: copy it to repro.my to run it.
+#
+# Performance finding, not a wrong answer. A nested element write `rows[i][j] = v` is one
+# load of the row `rows[i]`, one `list_set` on that row, one `list_set` of the row back into `rows`.
+# The new core's own pass puts an unconditional `myl_core_list_copy` (malloc + memcpy of the whole row +
+# retains + release of the old row) between the load and the set, so a write costs O(row width):
+# `mylang-core dump-ir` shows `%315 = list_set.exact list[i64] %302, %311, %291` followed by
+# `list_set.exact list[list[i64]] %292, %300, %315`, and the emitted LLVM calls @myl_core_list_copy on
+# every write. Old core: about 4 cycles per write at any width.
+#
+# Build with `--link benchmarks/runtime/ports/native_clock.c --release`; run `./repro ITERATIONS`.
+# 4096 cells (64 x 64) per iteration; try 1542 iterations. Output is `checksum elapsed_ns`.
+extern def runtime_bench_now(host: Host) -> i64 effects(host)
+
+
+def fill(w: int, h: int, rows: mut list[list[int]]) -> int:
+    for i in range(h):
+        for j in range(w):
+            rows[i][j] = i + j
+    return rows[h - 1][w - 1]
+
+
+def parse_number(text: str) -> int:
+    match int(text):
+        case Some(n):
+            return n
+        case None:
+            return 0
+
+
+def main(args: list[str], host: Host, out: Stream) -> int:
+    if len(args) != 1:
+        return 2
+    iterations = parse_number(args[0])
+    w = 64
+    h = 64
+    total = 0
+    start = runtime_bench_now(host)
+    for batch in range(iterations):
+        rows = [[0 for j in range(w)] for i in range(h)]
+        total += fill(w, h, mut rows)
+    elapsed = runtime_bench_now(host) - start
+    out.print(total, elapsed)
+    return 0

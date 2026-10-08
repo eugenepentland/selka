@@ -1,0 +1,94 @@
+build csv_aggregate old: status=0
+build csv_aggregate new: status=0
+build json_transform old: status=0
+build json_transform new: status=0
+build bytes_scan old: status=0
+build bytes_scan new: status=0
+build string_equal old: status=0
+build string_equal new: status=0
+build string_search old: status=0
+build string_search new: status=0
+build string_split old: status=0
+build string_split new: status=0
+build string_join old: status=0
+build string_join new: status=0
+
+### csv_aggregate (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 4887.851 | 4161.111 | same |
+| new core release | 1727.127 | 1563.418 | same |
+| Rust | 1169.759 | 1065.435 | same |
+| Zig ReleaseSafe | 1046.911 | 988.064 | same |
+| new / old | 0.353 | 0.376 | same |
+| new / Zig | 1.650 | 1.582 | same |
+| new / Rust | 1.476 | 1.467 | same |
+
+### json_transform (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 13679.214 | 14017.624 | same |
+| new core release | 3170.548 | 3378.083 | same |
+| Rust | 1779.442 | 1984.716 | same |
+| Zig ReleaseSafe | 2834.894 | 2849.865 | same |
+| new / old | 0.232 | 0.241 | same |
+| new / Zig | 1.118 | 1.185 | same |
+| new / Rust | 1.782 | 1.702 | same |
+
+### bytes_scan (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 0.087 | 0.242 | same |
+| new core release | 0.052 | 0.248 | same |
+| Rust | 1.137 | 1.196 | same |
+| Zig ReleaseSafe | 1.366 | 1.692 | same |
+| new / old | 0.596 | 1.021 | same |
+| new / Zig | 0.038 | 0.146 | same |
+| new / Rust | 0.046 | 0.207 | same |
+
+### string_equal (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 53.510 | 16.666 | same |
+| new core release | 50.468 | 15.258 | same |
+| Rust | 135.467 | 12.738 | same |
+| Zig ReleaseSafe | 277.547 | 16.849 | same |
+| new / old | 0.943 | 0.915 | same |
+| new / Zig | 0.182 | 0.906 | same |
+| new / Rust | 0.373 | 1.198 | same |
+
+### string_search (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 421.910 | 79.558 | same |
+| new core release | 433.592 | 68.268 | same |
+| Rust | 5583.136 | 179.687 | same |
+| Zig ReleaseSafe | 12931.202 | 383.646 | same |
+| new / old | 1.028 | 0.858 | same |
+| new / Zig | 0.034 | 0.178 | same |
+| new / Rust | 0.078 | 0.380 | same |
+
+### string_split (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 201.241 | 209.889 | same |
+| new core release | 60.765 | 64.506 | same |
+| Rust | 27.762 | 35.852 | same |
+| Zig ReleaseSafe | 65.634 | 69.050 | same |
+| new / old | 0.302 | 0.307 | same |
+| new / Zig | 0.926 | 0.934 | same |
+| new / Rust | 2.189 | 1.799 | same |
+
+### string_join (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 6.408 | 10.170 | same |
+| new core release | 4.576 | 5.456 | same |
+| Rust | 13.867 | 14.582 | same |
+| Zig ReleaseSafe | 18.112 | 20.349 | same |
+| new / old | 0.714 | 0.536 | same |
+| new / Zig | 0.253 | 0.268 | same |
+| new / Rust | 0.330 | 0.374 | same |
+
+valid rows: 7; speed gate misses: ['csv_aggregate/4096', 'csv_aggregate/64', 'json_transform/4096', 'json_transform/64']
+Both new/old and new/Zig must be at most 1.10. binary_search misses require the plan's identical-code/layout-noise review; all other misses require repair.

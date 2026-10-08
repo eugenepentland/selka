@@ -1,0 +1,10 @@
+{
+  "source_revision": "b1b0500e1ef37b2dd53bbae87aa2122c21f954a7",
+  "production_revision": "730a86e62b47c922dc1411d24b5868c3bd2132f3",
+  "baseline_binary": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-harness-20261003/.mylang-cache/runtime-candidate-730a86e6-releasefast/runner/bin/text-my-llvm",
+  "baseline_binary_sha256": "6b74952f6efd556a087288086664ef0dc2de827db2d49fb40aa2ac93c8f408fd",
+  "baseline_manifest_sha256": "d6b9848f16a706c4899c807c3ce46cc0d14fb10284ac6b9590ac9fd6b776fba7",
+  "before_kernel_sha256": "f36cf5ab2e2ebd62767a2f327355911b99bb531bf22ecd6cbb62e302e3ff06b9",
+  "native_text_sha256": "315db11439dd39044df63d5faa819d18d730d29b496be91c25c4bfe6bf63de16",
+  "test_source_sha256": "92a6ca8f9c87abc7372c7c20e4416816aace83590da8c262d3f7eafbc05a07ae"
+}

@@ -1,0 +1,42 @@
+source_commit=5ee5b8d2e1d1c697a98dfa590cbeda704ed7ae55
+root=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration
+$ scripts/build-slot.sh gate -- bash -c '"$@"; result=$?; exit "$result"' -- scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/final-old-run01/test-seconds.txt zig build test --summary all
+TMPDIR=/var/tmp/mylang-old-gate-final-old-run01-0gu79pro/tmp
+ZIG_LOCAL_CACHE_DIR=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.zig-cache
+ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: all 3 build slot(s) busy; waiting (120s so far)
+build-slot: all 3 build slot(s) busy; waiting (180s so far)
+build-slot: all 3 build slot(s) busy; waiting (240s so far)
+build-slot: all 3 build slot(s) busy; waiting (300s so far)
+build-slot: all 3 build slot(s) busy; waiting (360s so far)
+build-slot: all 3 build slot(s) busy; waiting (421s so far)
+build-slot: all 3 build slot(s) busy; waiting (481s so far)
+build-slot: all 3 build slot(s) busy; waiting (541s so far)
+build-slot: all 3 build slot(s) busy; waiting (601s so far)
+build-slot: all 3 build slot(s) busy; waiting (661s so far)
+build-slot: all 3 build slot(s) busy; waiting (721s so far)
+build-slot: all 3 build slot(s) busy; waiting (781s so far)
+build-slot: all 3 build slot(s) busy; waiting (842s so far)
+build-slot: all 3 build slot(s) busy; waiting (902s so far)
+build-slot: all 3 build slot(s) busy; waiting (962s so far)
+build-slot: build slot 1 after 972s (all 3 build slot(s) busy)
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 255/879 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 17 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 4848 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 255 file(s) in scope
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 255/879 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 17 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 4848 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 255 file(s) in scope
+test
++- run exe native-cow-test w
+cow-stats {"marks":297,"checks":1,"hoisted":0,"copies":34,"copied_bytes":2868,"pinned_copies":5,"pins":0}
+failed command: ./.zig-cache/o/3a71fe22ace9c29bdc5df24848fa2503/native-cow-test
+

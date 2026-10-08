@@ -1,0 +1,25 @@
+test-core
++- run test w
+guardian/test: 14 test(s) selected
+guardian/test: test wall 20.22s; slowest over 50ms:
+guardian/test:   3.31s  s3_ir_test.test.S3 runtime C passes a stream token while source extern erases it
+guardian/test:   1.78s  s3_ir_test.test.S3 IR buffer_pop verifies its mutable receiver
+guardian/test:   1.76s  s3_ir_test.test.S3 IR shift_right compiles and verifies integer operands
+guardian/test:   1.73s  s3_ir_test.test.S3 IR shift_left compiles and verifies integer operands
+guardian/test:   1.68s  s3_ir_test.test.S3 IR buffer_set verifies its index and byte replacement
+guardian/test:   1.67s  s3_ir_test.test.S3 IR buffer_push verifies its byte argument
+guardian/test:   1.66s  s3_ir_test.test.S3 IR float_unary compiles and verifies floating operands
+guardian/test:   1.65s  s3_ir_test.test.S3 IR buffer_new compiles and refuses before returning a value
+guardian/test:   1.64s  s3_ir_test.test.S3 IR saturating_add compiles and verifies result signedness
+guardian/test:   1.64s  s3_ir_test.test.S3 fresh mutable bytes assert uniqueness before update and admit byte reads
+guardian/test: PASS — 14 passed
+guardian/test: RESULT {"passed":14,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/825a5098c34aff4747f39bb74debfaf9/test --cache-dir=./.zig-cache --seed=0x2500c445 --listen=-
+
+Build Summary: 5/5 steps succeeded; 14/14 tests passed
+test-core success
++- run test 14 pass (14 total) 20s MaxRSS:204M
+   +- compile test debug native success 712ms MaxRSS:211M
+      +- options success
+         +- compile exe mylang-core debug native cached 6ms MaxRSS:41M
+

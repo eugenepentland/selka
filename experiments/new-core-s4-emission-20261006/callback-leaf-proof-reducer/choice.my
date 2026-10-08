@@ -1,0 +1,13 @@
+def first(x: int) -> int:
+    return x * 3 + 7
+def second(x: int) -> int:
+    return x * 5 + 11
+def total(n: int, seed: int) -> int:
+    f = first if seed % 2 == 0 else second
+    acc = 0
+    for i in range(n):
+        acc += f(i)
+    return acc
+def main(out: Stream) -> int:
+    out.print(total(4, 7))
+    return 0

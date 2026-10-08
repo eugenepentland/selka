@@ -1,0 +1,20 @@
+{
+  "source_commit": "93030b84e1538abc35aefa6984e3b00cc7dcc958",
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/scripts/build-slot.sh",
+    "gate",
+    "--",
+    "nice",
+    "-n",
+    "10",
+    "zig",
+    "build",
+    "test-core",
+    "-Dcore-shards=16",
+    "--summary",
+    "all"
+  ],
+  "new_sha256": "65aa3175e6c6ce4277b12ac66ca96f46583dd98f20a8ea62366db6a0465c2400",
+  "exit_status": 0,
+  "elapsed_seconds": 75.71878755209036
+}

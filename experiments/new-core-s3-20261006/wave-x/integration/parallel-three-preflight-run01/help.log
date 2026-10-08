@@ -1,0 +1,21 @@
+$ python3 experiments/new-core-s3-20261006/wave-x/integration/fuzz_matrix.py --help
+usage: fuzz_matrix.py [-h] --old OLD --new NEW
+                      [--qualified-head QUALIFIED_HEAD] [--evidence EVIDENCE]
+                      [--jobs {1,2,3}]
+
+Run S3-X's fresh strict nine-kind x 200-case matrix with up to three workers.
+Run only after qualification of the final integrated source and both explicit
+oracles. Launch the matrix through scripts/build-slot.sh gate; every worker
+also obtains a build slot. This driver never builds the compiler or runs
+gates.
+
+options:
+  -h, --help            show this help message and exit
+  --old OLD             Explicit qualified old oracle
+  --new NEW             Explicit qualified final integrated new oracle
+  --qualified-head QUALIFIED_HEAD
+                        Require this full qualified source commit to remain
+                        HEAD
+  --evidence EVIDENCE   Fresh directory below experiments; default is a unique
+                        UTC/UUID run
+  --jobs {1,2,3}

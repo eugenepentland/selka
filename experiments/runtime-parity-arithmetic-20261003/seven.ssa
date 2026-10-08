@@ -1,0 +1,109 @@
+type :myl_slice = { l, l }
+export function l $myl_f_3ba8d02b16fd2a01c1a8ba1a1f036d7ce386ed953696fa57331c2ac48a80b255(l %ctx, l %a0) {
+@entry
+ %trap =l add %ctx, 32
+ %l0 =l alloc8 8
+ %s0 =l alloc8 8
+ %s1 =l alloc8 8
+ %v4 =l add %ctx, 8
+ %v7 =l loadl %v4
+ %v8 =l add %ctx, 56
+ %v9 =l loadl %v8
+ %v10 =l ceql %v7, %v9
+ jnz %v10, @limitfail2, @frameadmit0
+@limitfail2
+ call $myl_qbe_fail_frame(l %ctx)
+ jmp @entry_failure
+@frameadmit0
+ %v6 =l alloc8 32
+ %v5 =l add %ctx, 48
+ %v14 =l loadl %v5
+ storel %v14, %v6
+ %v15 =l add %v6, 8
+ storel extern $myl_f_3ba8d02b16fd2a01c1a8ba1a1f036d7ce386ed953696fa57331c2ac48a80b255_meta, %v15
+ %v16 =l add %v6, 16
+ storel 0, %v16
+ storel %v6, %v5
+ %v17 =l add %v7, 1
+ storel %v17, %v4
+ %position =l add %v6, 16
+ storel %a0, %l0
+ %maxsteps =l add %ctx, 16
+ jmp @i0
+@i0
+ storel 0, %position
+ %v18 =l loadl %ctx
+ %v19 =l loadl %maxsteps
+ %v20 =l ceql %v18, %v19
+ jnz %v20, @step_limit, @step21
+@step21
+ %v21 =l add %v18, 1
+ storel %v21, %ctx
+ %v22 =l loadl %l0
+ storel %v22, %s0
+ storel 1, %position
+ %v23 =l loadl %ctx
+ %v24 =l loadl %maxsteps
+ %v25 =l ceql %v23, %v24
+ jnz %v25, @step_limit, @step26
+@step26
+ %v26 =l add %v23, 1
+ storel %v26, %ctx
+ storel 7, %s1
+ storel 2, %position
+ %v27 =l loadl %ctx
+ %v28 =l loadl %maxsteps
+ %v29 =l ceql %v27, %v28
+ jnz %v29, @step_limit, @step30
+@step30
+ %v30 =l add %v27, 1
+ storel %v30, %ctx
+ %v31 =l loadl %s1
+ %v32 =l loadl %s0
+ %v34 =l sar %v32, 63
+ %v35 =l xor %v32, %v34
+ %v36 =l sub %v35, %v34
+ %v37 =l umulh %v36, 2635249153387078803
+ %v38 =l sub %v36, %v37
+ %v39 =l shr %v38, 1
+ %v40 =l add %v39, %v37
+ %v41 =l shr %v40, 2
+ %v42 =l xor %v41, %v34
+ %v43 =l sub %v42, %v34
+ %v44 =l mul %v43, %v31
+ %v45 =l sub %v32, %v44
+ %v46 =l cnel %v45, 0
+ %v47 =l and %v46, %v34
+ %v33 =l sub %v43, %v47
+ storel %v33, %s0
+ %v48 =l loadl %trap
+ jnz %v48, @failure, @ok48
+@ok48
+ storel 3, %position
+ %v49 =l loadl %ctx
+ %v50 =l loadl %maxsteps
+ %v51 =l ceql %v49, %v50
+ jnz %v51, @step_limit, @step52
+@step52
+ %v52 =l add %v49, 1
+ storel %v52, %ctx
+ %v53 =l loadl %s0
+ %v54 =l loadl %v6
+ storel %v54, %v5
+ %v55 =l loadl %v4
+ %v56 =l sub %v55, 1
+ storel %v56, %v4
+ ret %v53
+@step_limit
+ call $myl_qbe_fail_step(l %ctx)
+ jmp @failure
+@failure
+ %v57 =l loadl %v6
+ storel %v57, %v5
+ %v58 =l loadl %v4
+ %v59 =l sub %v58, 1
+ storel %v59, %v4
+ ret 0
+@entry_failure
+ ret 0
+}

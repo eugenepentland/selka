@@ -55,7 +55,7 @@ fn execute(allocator: std.mem.Allocator, files: *Files, cache: *Cache, clear: bo
     var index = try interfaces.buildWithCache(&project, cache, null);
     if (clear) cache.clear();
     var compilation = try @import("project_compile.zig").Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     const result = try @import("native_execute.zig").run(&compilation);
     return result.value;
 }

@@ -21,7 +21,6 @@ def check(node: Node) -> int:
     return 1 + check(left) + check(right)
 
 
-# spec-case: RC-DRAIN-PAIR-1
 public def test_short_lived_trees_die_and_reuse_their_slots() -> bool:
     total = 0
     for _ in range(40):
@@ -29,7 +28,6 @@ public def test_short_lived_trees_die_and_reuse_their_slots() -> bool:
     return total == 40 * 127
 
 
-# spec-case: RC-DRAIN-PAIR-1
 public def test_shared_subtrees_outlive_their_first_parent() -> bool:
     shared = make(3)
     kept: list[Node] = []
@@ -62,7 +60,6 @@ def length(item: Labelled) -> int:
     return total
 
 
-# spec-case: RC-DRAIN-PAIR-1
 public def test_text_and_node_edges_die_together() -> bool:
     total = 0
     for count in range(30):

@@ -1,0 +1,19 @@
+{
+  "compiler_sha256": "536fc1baf3e3883ee6175fff808dcf90a0e9c35234d0a17da6486b4cfcd58b19",
+  "source_head": "7877aa5d369f57aeb8fb850e8198c08c520b3a51",
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/zig-out/bin/mylang-core",
+    "test",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/runtime-race-reduced-run02/project",
+    "--json",
+    "--jobs",
+    "2",
+    "--zig",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/runtime-race-reduced-run02/zig-barrier",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-runtime-race/barrier-run02"
+  ],
+  "status": 1,
+  "seconds": 14.13247693493031,
+  "barrier": "Both runtime compiler invocations finish writing their shared partial before returning; output bytes and compiler arguments unchanged."
+}

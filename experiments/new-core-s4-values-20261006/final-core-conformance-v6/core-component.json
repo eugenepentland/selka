@@ -1,0 +1,13 @@
+{
+  "source_commit": "a2daebc63c2427e4bda8fe4dc03297df9195c17f",
+  "shards": 64,
+  "tests": {
+    "passed": 279,
+    "failed": 0,
+    "skipped": 0
+  },
+  "seconds": 163.7,
+  "longest_shard_seconds": 49.48,
+  "inspection_errors": [],
+  "max_test_rss_bytes": 271581184.0
+}

@@ -1,0 +1,261 @@
+{
+  "schema": "mylang-goal110-rejected-screens-coordinator-review-v1",
+  "reviewed_utc": "2026-10-04T03:34:09.654045+00:00",
+  "status": "pass",
+  "scope": "Independent oracle outcomes, round/arm completeness, live executable hashes, medians and ratios. Archive and relocation-normalized static comparisons also reviewed. No bootstrap recomputation or goal acceptance claim. Equality remains rejected; sorting804 was adopted as63df6b6c with the repeated QBE regression explicitly accepted as an LLVM-first tradeoff.",
+  "checks": [
+    {
+      "name": "equality99",
+      "raw_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-equality-always-20261004/.mylang-cache/goal110-equality-always/equality-before-after.json",
+      "raw_sha256": "7d35d681a4527f659bd41a6a121edb8a54752f3c05e38650b3b33432a90fc016",
+      "status": "pass",
+      "outcomes_replayed": 192,
+      "live_binary_hashes_checked": 4,
+      "rows": [
+        {
+          "case": "string_equal",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 1.0190310483118294,
+            "qbe": 0.9830487010199042
+          }
+        },
+        {
+          "case": "string_equal",
+          "size": 4096,
+          "candidate_to_before": {
+            "llvm": 0.35408494056523204,
+            "qbe": 0.33696364436615855
+          }
+        },
+        {
+          "case": "string_join",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 1.039731323653114,
+            "qbe": 0.987820808806302
+          }
+        },
+        {
+          "case": "string_join",
+          "size": 4096,
+          "candidate_to_before": {
+            "llvm": 0.9970258130008132,
+            "qbe": 1.0072078328225096
+          }
+        },
+        {
+          "case": "string_search",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 1.0038231823613795,
+            "qbe": 1.0279705851548822
+          }
+        },
+        {
+          "case": "string_search",
+          "size": 4096,
+          "candidate_to_before": {
+            "llvm": 1.1631081868608144,
+            "qbe": 0.9952921441279623
+          }
+        },
+        {
+          "case": "bytes_scan",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 1.029826441744138,
+            "qbe": 0.9929291837654248
+          }
+        },
+        {
+          "case": "bytes_scan",
+          "size": 4096,
+          "candidate_to_before": {
+            "llvm": 1.043990974270023,
+            "qbe": 1.001570862380256
+          }
+        }
+      ],
+      "archive_review": {
+        "status": "pass",
+        "source_evidence_commit": "073572f7",
+        "directory": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-equality-always-20261004",
+        "archive_hash_and_raw_byte_bindings_checked": 12,
+        "source_and_helper_hashes_checked": 9
+      }
+    },
+    {
+      "name": "rotation804-screen",
+      "raw_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-rotation-20261004/.mylang-cache/goal110-rotation-review/paired-screen.json",
+      "raw_sha256": "8cd6dd1c91b254222b4c857ab30713793e52c8c688cdb5d3fd629a9646551a58",
+      "status": "pass",
+      "outcomes_replayed": 192,
+      "live_binary_hashes_checked": 4,
+      "rows": [
+        {
+          "case": "sort_records",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 1.025474859453693,
+            "qbe": 1.0131637990488336
+          }
+        },
+        {
+          "case": "sort_records",
+          "size": 4096,
+          "candidate_to_before": {
+            "llvm": 1.0101239955989922,
+            "qbe": 1.000310728074191
+          }
+        },
+        {
+          "case": "sort_int",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 0.8223374840924355,
+            "qbe": 0.8748036139955453
+          }
+        },
+        {
+          "case": "sort_int",
+          "size": 4096,
+          "candidate_to_before": {
+            "llvm": 1.0015202502205598,
+            "qbe": 0.9938467222954368
+          }
+        },
+        {
+          "case": "mutate_nested",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 0.989103850643372,
+            "qbe": 1.002635832574091
+          }
+        },
+        {
+          "case": "mutate_nested",
+          "size": 1024,
+          "candidate_to_before": {
+            "llvm": 0.9996045132796678,
+            "qbe": 1.1059645460587924
+          }
+        },
+        {
+          "case": "list_append",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 1.0111817871510558,
+            "qbe": 0.9985649353182321
+          }
+        },
+        {
+          "case": "list_append",
+          "size": 4096,
+          "candidate_to_before": {
+            "llvm": 0.9951756807613704,
+            "qbe": 0.9990492277926684
+          }
+        }
+      ],
+      "extra_live_identity_checks": 11
+    },
+    {
+      "name": "rotation804-repeat",
+      "raw_path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-rotation-20261004/.mylang-cache/goal110-rotation-review/paired-repeat.json",
+      "raw_sha256": "236aa527de14d070fb1f7900bc5dda280bd07b2a7612d4204771e7d842b228b2",
+      "status": "pass",
+      "outcomes_replayed": 432,
+      "live_binary_hashes_checked": 4,
+      "rows": [
+        {
+          "case": "sort_records",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 1.0197799773304748,
+            "qbe": 1.0097101966363762
+          }
+        },
+        {
+          "case": "sort_records",
+          "size": 4096,
+          "candidate_to_before": {
+            "llvm": 1.0119379817529266,
+            "qbe": 0.9997296015727103
+          }
+        },
+        {
+          "case": "sort_int",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 0.8239638078682756,
+            "qbe": 0.8744571141919055
+          }
+        },
+        {
+          "case": "sort_int",
+          "size": 4096,
+          "candidate_to_before": {
+            "llvm": 1.0046812914051637,
+            "qbe": 0.9959359866372277
+          }
+        },
+        {
+          "case": "mutate_nested",
+          "size": 64,
+          "candidate_to_before": {
+            "llvm": 0.9864393523217163,
+            "qbe": 0.9986640344432429
+          }
+        },
+        {
+          "case": "mutate_nested",
+          "size": 1024,
+          "candidate_to_before": {
+            "llvm": 1.0012205533041063,
+            "qbe": 1.1097205747167573
+          }
+        }
+      ],
+      "extra_live_identity_checks": 11
+    }
+  ],
+  "static_untimed_archive_review": {
+    "status": "pass",
+    "source_revision": "1c367e95cf9079035948a72fc0a01046d057b785",
+    "evidence_commit": "0d720fa8",
+    "directory": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-equality-inline-20261004",
+    "archive_bindings": 6,
+    "live_raw_byte_comparisons": 5,
+    "timing_claim": false
+  },
+  "six_arm_live_verification": {
+    "status": "pass",
+    "equality99": {
+      "groups": 48,
+      "samples": 240,
+      "qualifications": 720
+    },
+    "rotation804": {
+      "groups": 48,
+      "samples": 240,
+      "qualifications": 720
+    }
+  },
+  "rotation_archive_review": {
+    "status": "pass",
+    "directory": "/home/epentland/ai/canopy/mylang-worktrees/goal110-sort-rotation-20261004/experiments/runtime-goal110-sort-rotation-20261004",
+    "archive_hash_and_raw_byte_bindings_checked": 49,
+    "static_instruction_replay": {
+      "status": "pass",
+      "named_functions": 402,
+      "changed_functions": 6,
+      "nested_instructions": 2649,
+      "direct_call_closure_functions": 96,
+      "causal_timing_claim": false
+    },
+    "holdouts_replayed": 516,
+    "source_evidence_commit": "5feb6062",
+    "integrated_directory": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-sort-rotation-20261004"
+  }
+}

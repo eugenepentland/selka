@@ -1,0 +1,9 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 2 after 70s (all 3 build slot(s) busy)
+bounds debug {'old': True, 's3': True, 'values': True, 'new': True}
+bounds release {'old': True, 's3': True, 'values': False, 'new': True}
+assert debug {'old': True, 's3': True, 'values': True, 'new': True}
+assert release {'old': True, 's3': True, 'values': False, 'new': True}
+overflow debug {'old': True, 's3': True, 'values': True, 'new': True}
+overflow release {'old': True, 's3': True, 'values': False, 'new': True}

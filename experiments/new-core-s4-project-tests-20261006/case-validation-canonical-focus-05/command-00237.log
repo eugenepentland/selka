@@ -1,0 +1,10 @@
+$ bash -c 'cd "$1" && exec taskset -c 0-9 /home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check all . --full' -- /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests
+guardian: run-all: whole-tree run — --full was requested
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 29 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10547 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+
+exit=0
+elapsed_seconds=1.720908

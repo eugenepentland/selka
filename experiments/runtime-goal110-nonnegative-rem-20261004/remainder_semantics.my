@@ -1,0 +1,25 @@
+module remainder_semantics
+
+def calculate(n: int, seed: int, offset: int) -> int:
+    values: list[int] = []
+    for i in range(n):
+        values.append((seed + offset + i * 13) % 1009)
+    if n <= 0:
+        return len(values)
+    return len(values) + values[0] + values[-1]
+
+def parse_number(text: str) -> int:
+    match int(text):
+        case Some(n):
+            return n
+        case None:
+            return 0
+
+def main(args: list[str], out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    n = parse_number(args[0])
+    seed = parse_number(args[1])
+    offset = parse_number(args[2])
+    out.print(17)
+    return calculate(n, seed, offset)

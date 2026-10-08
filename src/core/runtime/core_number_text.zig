@@ -1,0 +1,111 @@
+//! Core-block adapters for the ported native_format/number_text/format_spec algorithms.
+const std = @import("std");
+const builtin = @import("builtin");
+const grammar = @import("core_number_parse.zig");
+const formatting = @import("core_number_format.zig");
+
+const Block = extern struct { count: u32, kind: u32, len: i64, cap: i64, reserved: u64 };
+extern fn myl_core_number_text_new(length: usize) *Block;
+extern fn myl_core_buffer_append_spelled(buffer: *Block, bytes: [*]const u8, length: usize) *Block;
+extern fn myl_core_number_text_invalid() noreturn;
+
+comptime {
+    if (!builtin.is_test) {
+        @export(&appendFloat, .{ .name = "myl_core_buffer_append_f64" });
+        @export(&floatText, .{ .name = "myl_core_str_from_f64" });
+        @export(&formatNumber, .{ .name = "myl_core_format_number" });
+        @export(&formatFloat, .{ .name = "myl_core_format_float" });
+        @export(&formatText, .{ .name = "myl_core_format_text" });
+        @export(&parseFloat, .{ .name = "myl_core_parse_float_range" });
+        @export(&roundFloat, .{ .name = "myl_core_round_float" });
+    }
+}
+
+fn data(block: *const Block) [*]const u8 {
+    return @as([*]const u8, @ptrCast(block)) + @sizeOf(Block);
+}
+
+fn output(block: *Block) [*]u8 {
+    return @as([*]u8, @ptrCast(block)) + @sizeOf(Block);
+}
+
+fn copied(bytes: []const u8) *Block {
+    const text = myl_core_number_text_new(bytes.len);
+    @memcpy(output(text)[0..bytes.len], bytes);
+    return text;
+}
+
+// Port of native_format.format's floating case, including integral .0 and -0.0.
+fn spelledFloat(buffer: []u8, value: f64) error{NoSpaceLeft}![]const u8 {
+    if (std.math.isNan(value)) return "nan";
+    if (std.math.isInf(value)) return if (value < 0) "-inf" else "inf";
+    const bytes = try std.fmt.bufPrint(buffer, "{d}", .{value});
+    if (std.mem.indexOfAny(u8, bytes, ".eE") != null) return bytes;
+    if (buffer.len - bytes.len < 2) return error.NoSpaceLeft;
+    @memcpy(buffer[bytes.len..][0..2], ".0");
+    return buffer[0 .. bytes.len + 2];
+}
+
+fn floatText(value: f64) callconv(.c) *Block {
+    var buffer: [1024]u8 = undefined;
+    return copied(spelledFloat(&buffer, value) catch |err| switch (err) {
+        error.NoSpaceLeft => myl_core_number_text_invalid(),
+    });
+}
+
+fn rendered(spec: formatting.Spec, input: formatting.Input) *Block {
+    var measure: formatting.Out = .{};
+    formatting.render(&measure, spec, input);
+    const text = myl_core_number_text_new(measure.len);
+    var out: formatting.Out = .{ .buffer = output(text)[0..measure.len] };
+    formatting.render(&out, spec, input);
+    // Numeric and text format fills may be non-ASCII. Publish no false ASCII premise.
+    text.kind &= ~@as(u32, 1 << 8);
+    return text;
+}
+
+fn formatNumber(bits: u64, word: u64) callconv(.c) *Block {
+    const spec = formatting.unpack(word) orelse return myl_core_number_text_invalid();
+    return rendered(spec, switch (spec.family) {
+        .signed => .{ .signed = @bitCast(bits) },
+        .unsigned => .{ .unsigned = bits },
+        .float => .{ .float = @bitCast(bits) },
+        .text => unreachable,
+    });
+}
+
+fn formatFloat(value: f64, word: u64) callconv(.c) *Block {
+    return formatNumber(@bitCast(value), word);
+}
+
+fn formatText(source: *const Block, word: u64) callconv(.c) *Block {
+    const spec = formatting.unpack(word) orelse return myl_core_number_text_invalid();
+    const bytes = data(source)[0..@intCast(source.len)];
+    return rendered(spec, .{ .text = .{ .bytes = bytes, .scalars = std.unicode.utf8CountCodepoints(bytes) catch |err| switch (err) {
+        else => myl_core_number_text_invalid(),
+    } } });
+}
+
+fn endpoint(index: i64, length: i64) usize {
+    return @intCast(@max(0, @min(length, if (index < 0) length + index else index)));
+}
+
+// The frozen x86-64 scalar Option ABI returns tag in rax and binary64 in xmm0.
+const ParsedFloat = extern struct { tag: u64, value: f64 };
+
+fn parseFloat(source: *const Block, start: i64, end: i64) callconv(.c) ParsedFloat {
+    const lower = endpoint(start, source.len);
+    const upper = @max(lower, endpoint(end, source.len));
+    const value = grammar.floatingBytes(data(source)[lower..upper]) orelse return .{ .tag = 0, .value = 0 };
+    return .{ .tag = 1, .value = value };
+}
+
+fn roundFloat(value: f64, digits: i64) callconv(.c) f64 {
+    return formatting.roundFloat(value, digits);
+}
+
+fn appendFloat(buffer: *Block, value: f64) callconv(.c) *Block {
+    var frame: [1024]u8 = undefined;
+    const bytes = spelledFloat(&frame, value) catch return myl_core_number_text_invalid();
+    return myl_core_buffer_append_spelled(buffer, bytes.ptr, bytes.len);
+}

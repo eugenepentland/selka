@@ -1,0 +1,4 @@
+qualification progress: number: seen=25 elapsed=79.68s
+qualification progress: number: seen=50 elapsed=143.43s
+records,unions,propagate,mut,alias cases=50 old_rejected=0 refused=0 compared=750 mismatch=0 fact=0 traps=0 caught=0
+qualification {"kind": "number", "qualified": true, "accepted": 50, "old_rejected": 0, "core_refused": 0, "core_build_failed": 0, "elapsed_seconds": 146.2135608419776}

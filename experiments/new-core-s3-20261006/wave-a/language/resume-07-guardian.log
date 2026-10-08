@@ -1,0 +1,12 @@
+guardian: run-all: whole-tree run — --full was requested
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 27 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 9781 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (repeated-string-literal)
+guardian: failures grouped by check (1):
+  repeated-string-literal (1 finding)
+    - src/sema.zig: string literal generic_bodies.zig appears 3 times (lines 378, 1492, 1497) — extract a const
+      fix: extract the literal/const into a shared file-scope const and import it.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

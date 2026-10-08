@@ -86,10 +86,7 @@ fn sandbox(box: *Sandbox) !void {
 fn scenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, module, program);
     defer compilation.deinit();
-    try compilation.emit();
-    const dump = try compilation.dump(allocator);
-    defer allocator.free(dump);
-    try t.expect(std.mem.indexOf(u8, dump, "RESOURCE_read") != null);
+    try compilation.check();
 }
 // spec: NOMINAL-PROVIDER-1
 test "nominal providers specialize named payloads byte inputs and completion retry ownership" {
@@ -165,18 +162,21 @@ test "nominal providers unwind traps at every instruction including failed compl
     var box: Sandbox = undefined;
     try sandbox(&box);
     defer box.deinit();
-    var compilation = try language.Compilation.init(t.allocator, "nominal-traps.my", trapping);
-    defer compilation.deinit();
     var options = box.options();
+    // The unbounded run first, then one run per budget, all of one build and run
+    // as one batch (NEW-CORE-S5-UNITS-BATCH-1).
+    var programs: native.Batch = .init(t.allocator);
+    defer programs.deinit();
+    try programs.add("nominal-traps.my", trapping, options);
     // Each budget cuts the program at a different boundary; an owner released
     // twice would abort the process rather than return or trap cleanly. The exit
     // status now carries the entry result, so a clean run either returned normally
     // or trapped with a runtime `R_*` code.
     for (1..110) |budget| {
         options.max_steps = budget;
-        const outcome = try native.runWithOptions(&compilation, options);
-        try t.expect(!outcome.trapped() or std.mem.startsWith(u8, outcome.trap.code, "R_"));
+        try programs.again(0, options);
     }
-    options.max_steps = null;
-    try t.expectEqual(@as(i64, 3), (try native.runWithOptions(&compilation, options)).value);
+    const runs = try programs.run();
+    try t.expectEqual(@as(i64, 3), runs[0].value);
+    try native.expectEndedCleanly(runs[1..]);
 }

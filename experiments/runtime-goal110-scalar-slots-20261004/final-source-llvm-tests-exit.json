@@ -1,0 +1,21 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "zig",
+    "build",
+    "test-units",
+    "-Dtest-filter=LLVM",
+    "-j2",
+    "--summary",
+    "all"
+  ],
+  "exit_status": 0,
+  "source_hashes": {
+    "src/qbe_build_llvm_slots.zig": "fc37597bf5292f68b98fd3c97f229b66bef050f589c3138b1ccecd3fd5536746",
+    "src/qbe_build_llvm_emit.zig": "2cb0fd0d602ed317ac1453447ea6d733f3adc38774fec917c0251b16d540716a",
+    "src/qbe_build_llvm_lower.zig": "e0b96640ffb36e6a3e57c24aa0fa18b36c8e694515e9d1d64971a1d63f1f27a8",
+    "src/qbe_build_llvm_compile.zig": "58e202505c44330e5ff67c6e115446b1fb84ea0e8eb26a7d973f36d09b353172",
+    "src/qbe_build_llvm_test.zig": "1f68a2341c4fe4e6693b945ff5d512b4048b18d8e6d4da054c8bfc08f1f7b295"
+  }
+}

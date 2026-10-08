@@ -1,0 +1,17 @@
+{
+  "scope": "focused WIP, not final package",
+  "head": "b1e49ce08a6bf2661b8b4f6f9ddb80f174daf837",
+  "file_sha256": {
+    "src/core/emit_llvm.zig": "f9611dd0dc685814057ee59cc1ad66bf736cdc69112cec78388caece54dd5395",
+    "src/core/emit_llvm_test.zig": "15d3c783e51549d29e53f35d05bf0ab70525274d419f2cc411a237165407c858",
+    "src/core/own_test.zig": "c70a10fcb4779973446fb3049ee8f22eeb887932c9b1bbaf4cb5daf89bfedeb5",
+    "src/core/property_validate.zig": "adfa34f910d8b26e877c98dffad71fde52790b227940a5019ecab14422400359",
+    "src/core/property_codec.zig": "7dd15700ad24a2fdbc83fa76d32a8e86d7fc4d3482e03eb4a327471cf31f1e1d",
+    "src/core/property_execute.zig": "5640d91c03d97820f5b54b002d88b31d1a377777d9573982a83c7e2d76a508b3",
+    "src/core/test_runner.zig": "fd623ce227b91d4cbad5a02643198ada136409e18ff680df374d805071f410c5",
+    "src/core/test_runner_project_test.zig": "6912427fa023fc196051cc3411c9b42a8ff14aeb681648c51b6fb24cc771bd65",
+    "src/core/root_test.zig": "606949fb034214d75ea6b48dcbd99836b2534c75307dce2134a0dd462a769360"
+  },
+  "ir_sha256": "7232a25ca00d51c16b3cd552ae86859769a3ffb48d7a4f20ed4323708b651d5d",
+  "note": "Final focused WIP source: capture names, union count usize, explicit root test import, function-named native regression, OOM validator test."
+}

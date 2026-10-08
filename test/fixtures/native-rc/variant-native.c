@@ -228,15 +228,7 @@ static void managed(myl_native_heap *heap) {
     fast_drop(heap, &output);
     assert(drops == before + 1);
     zeroed(&output);
-    leaf = myl_rc_storage_bytes(heap, 8, 0);
-    myl_rc_hold hold = {0};
-    assert(leaf && myl_rc_hold_acquire(heap, leaf, &hold) == MYL_RC_OK);
-    value = (Choice){.tag = 3, .left = leaf};
-    before = drops;
-    fast_drop(heap, &value);
-    assert(drops == before + 1 && !header(leaf)->holds && header(leaf)->owners == 1);
-    hold.payload = NULL; /* The tagged live-view value owned the sole H token. */
-    myl_rc_owner_release(heap, leaf);
+
 }
 
 int main(void) {

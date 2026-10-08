@@ -1,0 +1,16 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "env",
+    "ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache",
+    "zig",
+    "build",
+    "--summary",
+    "all"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2234054,
+  "status": 0,
+  "elapsed_seconds": 2.3734520620200783
+}

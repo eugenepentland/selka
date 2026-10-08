@@ -1,0 +1,6 @@
+{
+  "status": "ABORTED before build admission",
+  "reason": "Requeued with CPU10 lock first to honor no overlap with timing. Original waiter owned no build slot and ran no native compiler.",
+  "log": "command-01.log",
+  "native_actions": 0
+}

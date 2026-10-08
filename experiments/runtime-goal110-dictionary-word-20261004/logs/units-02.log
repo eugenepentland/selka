@@ -1,0 +1,65 @@
+test-units
++- run test 14 pass, 1 fail (15 total)
+guardian/test: test wall 0.40s; slowest over 50ms:
+guardian/test:   0.38s  qbe_test.test.PY-DICT-4 word schemas specialize ordinary index and get
+guardian/test: FAIL — 1 failed of 15
+guardian/test: RESULT {"passed":14,"failed":1,"skipped":0}
+error: 'qbe_test.test.PY-DICT-4 word schemas specialize ordinary index and get' failed:
+       guardian/test: 15 test(s) selected by filter: "PY-DICT-4 word", "trap helpers and listed runtime reads" — 3 match by name, 12 unnamed test block(s) run regardless
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/diagnostic.zig:189:9: 0x196ed8b in fail (root_test.zig)
+               return error.SourceError;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/nominal_templates.zig:274:47: 0x25de778 in lookup (root_test.zig)
+               const id = self.names.get(key) orelse return ctx.sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
+                                                     ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/nominal_templates.zig:400:20: 0x25dc1db in expression (root_test.zig)
+               const id = try self.lookup(span);
+                          ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/nominal_templates.zig:373:108: 0x25dadff in expression (root_test.zig)
+                       out.* = if (required.constant_length) try self.lengthExpression(argument, parameters) else try self.expression(argument, parameters);
+                                                                                                                  ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/nominal_sources.zig:129:28: 0x25e4b4d in collect (root_test.zig)
+               const expression = try index.expression(syntax.span, parameters);
+                                  ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/nominal_catalog.zig:397:21: 0x25d2082 in collect (root_test.zig)
+           const sources = try @import("nominal_sources.zig").collect(allocator, src, program, index, graph, sink);
+                           ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/records.zig:14:19: 0x25cfca5 in collectWithNames (root_test.zig)
+           var catalog = try @import("nominal_catalog.zig").collect(allocator, src, program, sink, module_names);
+                         ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/sema.zig:1813:21: 0x1d00f30 in checkCore (root_test.zig)
+           const catalog = try records.collectWithNames(allocator, src, program, sink, module_names);
+                           ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/sema.zig:1776:5: 0x1d000ab in checkCached (root_test.zig)
+           return checkCore(allocator, src, program, sink, .{ .names = module_names, .cache = cache });
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/compiler.zig:221:24: 0x1cff6ec in checkWithCache (root_test.zig)
+               self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, cache);
+                              ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/compiler.zig:201:9: 0x1cfee06 in check (root_test.zig)
+               return self.checkWithCache(null);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/compiler.zig:247:9: 0x1c4a1d1 in emitWithOptions (root_test.zig)
+               try self.check();
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/compiler.zig:261:9: 0x13c0dfc in emitQbeWithOptions (root_test.zig)
+               try self.emitWithOptions(policy.drop_debug);
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/compiler.zig:256:9: 0x13c0c51 in emitQbe (root_test.zig)
+               return self.emitQbeWithOptions(allocator, .{});
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/qbe_test.zig:18:22: 0x13be4a6 in emittedWithInlining (root_test.zig)
+           const manifest = try c.emitQbe(a);
+                            ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/qbe_test.zig:9:5: 0x13be777 in emitted (root_test.zig)
+           return emittedWithInlining(a, input, true);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/src/qbe_test.zig:1031:18: 0x263c014 in test.PY-DICT-4 word schemas specialize ordinary index and get (root_test.zig)
+           var parsed = try emitted(std.testing.allocator,
+                        ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.mylang-cache/goal110-dict-word/zig-local/o/288fdc0c12b9da38990abb6099c53f66/test "--guardian-filter=PY-DICT-4 word" "--guardian-filter=trap helpers and listed runtime reads" --cache-dir=./.mylang-cache/goal110-dict-word/zig-local --seed=0x6cd8e1b4 --listen=-
+
+Build Summary: 8/10 steps succeeded (1 failed); 14/15 tests passed (1 failed)
+test-units transitive failure
++- run test 14 pass, 1 fail (15 total)
+

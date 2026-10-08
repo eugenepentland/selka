@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/zig-out/bin/mylang-core",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/expanded/text/main.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/original-text-new-release",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-01/cache-new",
+    "--link",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+    "--release"
+  ],
+  "status": 0,
+  "seconds": 0.9068992340471596,
+  "stdout": "",
+  "stderr": ""
+}

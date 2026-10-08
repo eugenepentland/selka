@@ -1,0 +1,16 @@
+$ scripts/build-slot.sh gate bash -c '"$@"; s4_v_status=$?; exit "$s4_v_status"' -- scripts/build-slot.sh build python3 experiments/new-core-s4-values-20261006/verify_values.py --old zig-out/bin/mylang --evidence experiments/new-core-s4-values-20261006/final-supplement-v2
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: all 1 gate slot(s) busy; waiting (120s so far)
+build-slot: all 1 gate slot(s) busy; waiting (180s so far)
+build-slot: gate slot 1 after 221s (all 1 gate slot(s) busy)
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 46s (all 3 build slot(s) busy)
+v_dynamic_repeat: old debug/release and new debug/release/verify agree
+v_nested_places: old debug/release and new debug/release/verify agree
+v_buffer_format: old debug/release and new debug/release/verify agree
+v_inline_loops: old debug/release and new debug/release/verify agree
+v_nested_lengths: old debug/release and new debug/release/verify agree
+
+exit=0
+elapsed_seconds=307.663086

@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "from pathlib import Path; import json,subprocess,tempfile,hashlib; old=Path(\".mylang-cache/s4-v/immutable-3c86c/mylang-core\"); new=Path(\"zig-out/bin/mylang-core\"); p=Path(\"experiments/new-core-s4-values-20261006/rebuild-binary-difference.json\"); report={\"old_sha256\":hashlib.sha256(old.read_bytes()).hexdigest(),\"new_sha256\":hashlib.sha256(new.read_bytes()).hexdigest(),\"sections\":{}};\nwith tempfile.TemporaryDirectory(dir=\".mylang-cache/s4-v\") as tmp:\n for name in (\".text\",\".rodata\",\".data\",\".data.rel.ro\",\".debug_info\",\".debug_line\",\".debug_abbrev\",\".debug_str\"):\n  pair=[]\n  for i,exe in enumerate((old,new)):\n   out=Path(tmp)/(str(i)+name); cmd=[\"objcopy\",\"--dump-section\",name+\"=\"+str(out),str(exe)]; done=subprocess.run(cmd,capture_output=True,text=True); pair.append({\"status\":done.returncode,\"stderr\":done.stderr,\"size\":out.stat().st_size if out.exists() else None,\"sha256\":hashlib.sha256(out.read_bytes()).hexdigest() if out.exists() else None})\n  report[\"sections\"][name]={\"old\":pair[0],\"new\":pair[1],\"equal\":pair[0][\"sha256\"]==pair[1][\"sha256\"]}\np.write_text(json.dumps(report,indent=2)+\"\\n\"); print(json.dumps(report,indent=2))"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2797721,
+  "status": 0,
+  "elapsed_seconds": 4.607515890849754
+}

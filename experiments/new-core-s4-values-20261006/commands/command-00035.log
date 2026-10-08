@@ -1,0 +1,13 @@
+$ scripts/build-slot.sh build /home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check all . --gate
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 25s (all 3 build slot(s) busy)
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10358 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+
+exit=0
+elapsed_seconds=32.342207

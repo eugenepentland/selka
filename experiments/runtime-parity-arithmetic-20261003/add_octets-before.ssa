@@ -1,0 +1,510 @@
+dbgfile "myl_f_0e91d8ceeecff252be7bb71a2bd2d556518988052d3f7bf778b373334a5acad6"
+type :myl_slice = { l, l }
+export function l $myl_f_0e91d8ceeecff252be7bb71a2bd2d556518988052d3f7bf778b373334a5acad6(l %ctx, l %a0, l %a1) {
+@entry
+ %trap =l add %ctx, 32
+ %rcr0 =l alloc8 8
+ %rcg1 =l alloc8 8
+ %rcr1 =l alloc8 8
+ %rcg2 =l alloc8 8
+ %rcr2 =l alloc8 8
+ %rcg3 =l alloc8 8
+ %rcs0 =l alloc8 8
+ %rcwork =l alloc8 8
+ %l0 =l alloc8 8
+ %l1 =l alloc8 8
+ %l2 =l alloc8 8
+ %l3 =l alloc8 8
+ %l4 =l alloc8 8
+ %l5 =l alloc8 8
+ %l6 =l alloc8 8
+ %s0 =l alloc8 8
+ %s1 =l alloc8 8
+ storel 0, %l3
+ storel %a0, %l0
+ storel %a1, %l1
+ dbgloc 1
+ %heap =l call $myl_qbe_heap(l %ctx)
+ # rc-frame 5
+ dbgloc 1
+ storew 0, %rcr0
+ storew 0, %rcg1
+ storew 0, %rcr1
+ storew 0, %rcg2
+ storew 0, %rcr2
+ storew 0, %rcg3
+ storew 2, %rcr0
+ storew 2, %rcr1
+ jmp @i0
+@i0
+ %v2 =l loadl %l1
+ storel %v2, %s0
+ %v3 =l loadl %s0
+ storel %v3, %l2
+ %v4 =l loadl %l0
+ %v7 =w loaduw %rcr0
+ %v8 =w ceqw %v7, 8
+ %v9 =w copy 0
+ %v10 =w and %v8, %v9
+ jnz %v10, @rchold5, @rcordinary5
+@rchold5
+ %v12 =l copy %rcwork
+ # RC-GLUE-1 hold
+ %v22 =w cnel %v4, 0
+ jnz %v22, @rcgnn15, @rcgstore15
+@rcgnn15
+ %v16 =l sub %v4, 16
+ # myl-rc %v16
+ %v17 =l loadl %v16
+ %v18 =l and %v17, 4611686018427387906
+ %v23 =w cnel %v18, 0
+ jnz %v23, @rcgstore15, @rcginc15
+@rcginc15
+ %v19 =l sub %v4, 24
+ # myl-rc %v19
+ %v20 =l loadl %v19
+ %v21 =l add %v20, 1
+ %v24 =w ceql %v21, 0
+ jnz %v24, @rcglimit15, @rcgcapacity15
+@rcglimit15
+ dbgloc 3
+ %v25 =w call $myl_qbe_rc_status(l %ctx, w 2)
+ jmp @failure
+@rcgcapacity15
+ storel %v21, %v19
+@rcgstore15
+ storel %v4, %v12
+ storew 1, %rcg3
+ %v29 =l copy %rcs0
+ %v30 =l copy %rcwork
+ %v31 =l loadl %v30
+ storel %v31, %v29
+ storew 2, %rcr2
+ storew 8, %rcr2
+ storew 1, %rcg2
+ storew 0, %rcg3
+ storel %v31, %s0
+ jmp @rcholdjoined5
+@rcordinary5
+ storel %v4, %s0
+@rcholdjoined5
+ %v36 =l loadl %s0
+ %v37 =l copy %rcwork
+ # RC-GLUE-1 hold
+ %v47 =w cnel %v36, 0
+ jnz %v47, @rcgnn40, @rcgstore40
+@rcgnn40
+ %v41 =l sub %v36, 16
+ # myl-rc %v41
+ %v42 =l loadl %v41
+ %v43 =l and %v42, 4611686018427387906
+ %v48 =w cnel %v43, 0
+ jnz %v48, @rcgstore40, @rcginc40
+@rcginc40
+ %v44 =l sub %v36, 24
+ # myl-rc %v44
+ %v45 =l loadl %v44
+ %v46 =l add %v45, 1
+ %v49 =w ceql %v46, 0
+ jnz %v49, @rcglimit40, @rcgcapacity40
+@rcglimit40
+ dbgloc 4
+ %v50 =w call $myl_qbe_rc_status(l %ctx, w 2)
+ jmp @failure
+@rcgcapacity40
+ storel %v46, %v44
+@rcgstore40
+ storel %v36, %v37
+ storew 1, %rcg3
+ %v55 =w loaduw %rcg2
+ jnz %v55, @rcslotdrop56, @rcslotdone56
+@rcslotdrop56
+ storew 0, %rcg2
+ %v57 =l copy %rcs0
+ %v58 =w loaduw %rcr2
+ %v59 =w and %v58, 28
+ jnz %v59, @rcslotrole56, @rcslotowner56
+@rcslotrole56
+ # RC-GLUE-1 unloan
+ %v61 =l copy %heap
+ %v62 =l loadl %v57
+ %v73 =w cnel %v62, 0
+ jnz %v73, @rcgnn72, @rcgdone72
+@rcgnn72
+ %v63 =l sub %v62, 16
+ # myl-rc %v63
+ %v64 =l loadl %v63
+ %v65 =l and %v64, 4611686018427387906
+ %v74 =w cnel %v65, 0
+ jnz %v74, @rcgclear72, @rcgcounted72
+@rcgcounted72
+ %v66 =l sub %v62, 24
+ # myl-rc %v66
+ %v67 =l loadl %v66
+ %v71 =l sub %v67, 1
+ %v68 =w ceql %v71, 0
+ jnz %v68, @rcglast72, @rcgdec72
+@rcglast72
+ %v69 =l sub %v62, 32
+ # myl-rc %v69
+ %v70 =l loadl %v69
+ %v75 =w cnel %v70, 0
+ jnz %v75, @rcgdec72, @rcgslow72
+@rcgslow72
+ dbgloc 4
+ call $myl_t_277089d91c0bdf4f2e6862ba7e4a07605119431f5d13f726dd352b06f1b206a9_rcg_unloan(l %v61, l %v57)
+ jmp @rcgdone72
+@rcgdec72
+ storel %v71, %v66
+@rcgclear72
+ storel 0, %v57
+@rcgdone72
+ jmp @rcslotdone56
+@rcslotowner56
+ # RC-GLUE-1 drop
+ %v76 =l copy %heap
+ %v77 =l loadl %v57
+ %v88 =w cnel %v77, 0
+ jnz %v88, @rcgnn87, @rcgdone87
+@rcgnn87
+ %v78 =l sub %v77, 16
+ # myl-rc %v78
+ %v79 =l loadl %v78
+ %v80 =l and %v79, 4611686018427387906
+ %v89 =w cnel %v80, 0
+ jnz %v89, @rcgclear87, @rcgcounted87
+@rcgcounted87
+ %v81 =l sub %v77, 32
+ # myl-rc %v81
+ %v82 =l loadl %v81
+ %v86 =l sub %v82, 1
+ %v83 =w ceql %v86, 0
+ jnz %v83, @rcglast87, @rcgdec87
+@rcglast87
+ %v84 =l sub %v77, 24
+ # myl-rc %v84
+ %v85 =l loadl %v84
+ %v90 =w cnel %v85, 0
+ jnz %v90, @rcgdec87, @rcgslow87
+@rcgslow87
+ dbgloc 4
+ call $myl_t_277089d91c0bdf4f2e6862ba7e4a07605119431f5d13f726dd352b06f1b206a9_rcg_drop(l %v76, l %v57)
+ jmp @rcgdone87
+@rcgdec87
+ storel %v86, %v81
+@rcgclear87
+ storel 0, %v57
+@rcgdone87
+@rcslotdone56
+ %v91 =l copy %rcs0
+ %v92 =l copy %rcwork
+ %v93 =l loadl %v92
+ storel %v93, %v91
+ storew 2, %rcr2
+ storew 8, %rcr2
+ storew 1, %rcg2
+ storew 0, %rcg3
+ storel %v93, %s0
+ %v98 =l copy %rcwork
+ %v99 =l loadl %s0
+ storel %v99, %v98
+ storew 1, %rcg3
+ storew 0, %rcg2
+ %v105 =w loaduw %rcg1
+ jnz %v105, @rcslotdrop106, @rcslotdone106
+@rcslotdrop106
+ storew 0, %rcg1
+ %v107 =l copy %l3
+ %v108 =w loaduw %rcr1
+ %v109 =w and %v108, 28
+ jnz %v109, @rcslotrole106, @rcslotowner106
+@rcslotrole106
+ # RC-GLUE-1 unloan
+ %v111 =l copy %heap
+ %v112 =l loadl %v107
+ %v123 =w cnel %v112, 0
+ jnz %v123, @rcgnn122, @rcgdone122
+@rcgnn122
+ %v113 =l sub %v112, 16
+ # myl-rc %v113
+ %v114 =l loadl %v113
+ %v115 =l and %v114, 4611686018427387906
+ %v124 =w cnel %v115, 0
+ jnz %v124, @rcgclear122, @rcgcounted122
+@rcgcounted122
+ %v116 =l sub %v112, 24
+ # myl-rc %v116
+ %v117 =l loadl %v116
+ %v121 =l sub %v117, 1
+ %v118 =w ceql %v121, 0
+ jnz %v118, @rcglast122, @rcgdec122
+@rcglast122
+ %v119 =l sub %v112, 32
+ # myl-rc %v119
+ %v120 =l loadl %v119
+ %v125 =w cnel %v120, 0
+ jnz %v125, @rcgdec122, @rcgslow122
+@rcgslow122
+ dbgloc 4
+ call $myl_t_277089d91c0bdf4f2e6862ba7e4a07605119431f5d13f726dd352b06f1b206a9_rcg_unloan(l %v111, l %v107)
+ jmp @rcgdone122
+@rcgdec122
+ storel %v121, %v116
+@rcgclear122
+ storel 0, %v107
+@rcgdone122
+ jmp @rcslotdone106
+@rcslotowner106
+ # RC-GLUE-1 drop
+ %v126 =l copy %heap
+ %v127 =l loadl %v107
+ %v138 =w cnel %v127, 0
+ jnz %v138, @rcgnn137, @rcgdone137
+@rcgnn137
+ %v128 =l sub %v127, 16
+ # myl-rc %v128
+ %v129 =l loadl %v128
+ %v130 =l and %v129, 4611686018427387906
+ %v139 =w cnel %v130, 0
+ jnz %v139, @rcgclear137, @rcgcounted137
+@rcgcounted137
+ %v131 =l sub %v127, 32
+ # myl-rc %v131
+ %v132 =l loadl %v131
+ %v136 =l sub %v132, 1
+ %v133 =w ceql %v136, 0
+ jnz %v133, @rcglast137, @rcgdec137
+@rcglast137
+ %v134 =l sub %v127, 24
+ # myl-rc %v134
+ %v135 =l loadl %v134
+ %v140 =w cnel %v135, 0
+ jnz %v140, @rcgdec137, @rcgslow137
+@rcgslow137
+ dbgloc 4
+ call $myl_t_277089d91c0bdf4f2e6862ba7e4a07605119431f5d13f726dd352b06f1b206a9_rcg_drop(l %v126, l %v107)
+ jmp @rcgdone137
+@rcgdec137
+ storel %v136, %v131
+@rcgclear137
+ storel 0, %v107
+@rcgdone137
+@rcslotdone106
+ %v141 =l copy %l3
+ %v142 =l loadl %v98
+ storel %v142, %v141
+ storew 2, %rcr1
+ storew 8, %rcr1
+ storew 1, %rcg1
+ storew 0, %rcg3
+ storel 0, %s0
+ %v147 =l loadl %s0
+ storel %v147, %l4
+ %v148 =l loadl %l3
+ # myl-obj %v148
+ %v150 =l add %v148, 0
+ %v149 =l loadl %v150
+ storel %v149, %s0
+ %v151 =l loadl %s0
+ storel %v151, %s0
+ %v152 =l loadl %s0
+ storel %v152, %l5
+@i9
+ %v153 =l loadl %l4
+ storel %v153, %s0
+ %v154 =l loadl %l5
+ storel %v154, %s1
+ %v155 =l loadl %s1
+ %v156 =l loadl %s0
+ %v157 =l csltl %v156, %v155
+ storel %v157, %s0
+ %v158 =l loadl %s0
+ jnz %v158, @next159, @i32
+@next159
+ %v159 =l loadl %l5
+ storel %v159, %s0
+ %v160 =l loadl %l3
+ # myl-obj %v160
+ %v162 =l loadl %s0
+ %v163 =l loadl %v160
+ %v161 =l ceql %v163, %v162
+ jnz %v161, @success164, @failed164
+@failed164
+ dbgloc 15
+ call $myl_qbe_fail_iteration(l %ctx)
+ hlt
+@success164
+ storel 0, %s0
+ %v165 =l loadl %l4
+ storel %v165, %s0
+ %v166 =l loadl %l3
+ # myl-obj %v166
+ %v168 =l loadl %s0
+ # myl-obj %v166
+ %v169 =l loadl %v166
+ %v170 =l cultl %v168, %v169
+ jnz %v170, @success171, @failed171
+@failed171
+ dbgloc 18
+ call $myl_qbe_fail_normalized_index_bounds(l %ctx, l %v168, l %v169)
+ hlt
+@success171
+ # myl-obj %v166
+ %v174 =l add %v166, 32
+ %v175 =l loadl %v174
+ # myl-elem %v175 1v
+ %v173 =l add %v175, %v168
+ %v176 =l loadub %v173
+ storel %v176, %s0
+ %v177 =l loadl %s0
+ storel %v177, %s0
+ %v178 =l loadl %s0
+ storel %v178, %l6
+ %v179 =l loadl %l2
+ storel %v179, %s0
+ %v180 =l loadl %l6
+ storel %v180, %s1
+ %v181 =l loadl %s1
+ %v182 =l loadl %s0
+ %v183 =l add %v182, %v181
+ %v185 =l xor %v182, %v183
+ %v186 =l xor %v181, %v183
+ %v187 =l and %v185, %v186
+ %v184 =l csltl %v187, 0
+ jnz %v184, @overflow183, @checked183
+@overflow183
+ dbgloc 23
+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v182, l %v181, l 64)
+ hlt
+@checked183
+ storel %v183, %s0
+ %v188 =l loadl %s0
+ storel %v188, %l2
+ %v189 =l loadl %l5
+ storel %v189, %s0
+ %v190 =l loadl %l3
+ # myl-obj %v190
+ %v192 =l loadl %s0
+ %v193 =l loadl %v190
+ %v191 =l ceql %v193, %v192
+ jnz %v191, @success194, @failed194
+@failed194
+ dbgloc 26
+ call $myl_qbe_fail_iteration(l %ctx)
+ hlt
+@success194
+ storel 0, %s0
+ %v195 =l loadl %l4
+ storel %v195, %s0
+ storel 1, %s1
+ %v196 =l loadl %s1
+ %v197 =l loadl %s0
+ %v198 =l add %v197, %v196
+ # myl-affine %v198
+ %v199 =l csgtl %v197, 9223372036854775806
+ jnz %v199, @overflow198, @checked198
+@overflow198
+ dbgloc 30
+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v197, l %v196, l 64)
+ hlt
+@checked198
+ storel %v198, %s0
+ %v200 =l loadl %s0
+ storel %v200, %l4
+ jmp @i9
+@i32
+ %v201 =l loadl %l2
+ storel %v201, %s0
+ %v202 =l loadl %s0
+ # rc-exit
+ %v204 =w loaduw %rcg2
+ jnz %v204, @rcslotdrop205, @rcslotdone205
+@rcslotdrop205
+ storew 0, %rcg2
+@rcslotdone205
+ %v207 =w loaduw %rcg1
+ jnz %v207, @rcslotdrop208, @rcslotdone208
+@rcslotdrop208
+ storew 0, %rcg1
+ %v209 =l copy %l3
+ %v210 =w loaduw %rcr1
+ %v211 =w and %v210, 28
+ jnz %v211, @rcslotrole208, @rcslotowner208
+@rcslotrole208
+ # RC-GLUE-1 unloan
+ %v213 =l copy %heap
+ %v214 =l loadl %v209
+ %v225 =w cnel %v214, 0
+ jnz %v225, @rcgnn224, @rcgdone224
+@rcgnn224
+ %v215 =l sub %v214, 16
+ # myl-rc %v215
+ %v216 =l loadl %v215
+ %v217 =l and %v216, 4611686018427387906
+ %v226 =w cnel %v217, 0
+ jnz %v226, @rcgclear224, @rcgcounted224
+@rcgcounted224
+ %v218 =l sub %v214, 24
+ # myl-rc %v218
+ %v219 =l loadl %v218
+ %v223 =l sub %v219, 1
+ %v220 =w ceql %v223, 0
+ jnz %v220, @rcglast224, @rcgdec224
+@rcglast224
+ %v221 =l sub %v214, 32
+ # myl-rc %v221
+ %v222 =l loadl %v221
+ %v227 =w cnel %v222, 0
+ jnz %v227, @rcgdec224, @rcgslow224
+@rcgslow224
+ dbgloc 34
+ call $myl_t_277089d91c0bdf4f2e6862ba7e4a07605119431f5d13f726dd352b06f1b206a9_rcg_unloan(l %v213, l %v209)
+ jmp @rcgdone224
+@rcgdec224
+ storel %v223, %v218
+@rcgclear224
+ storel 0, %v209
+@rcgdone224
+ jmp @rcslotdone208
+@rcslotowner208
+ # RC-GLUE-1 drop
+ %v228 =l copy %heap
+ %v229 =l loadl %v209
+ %v240 =w cnel %v229, 0
+ jnz %v240, @rcgnn239, @rcgdone239
+@rcgnn239
+ %v230 =l sub %v229, 16
+ # myl-rc %v230
+ %v231 =l loadl %v230
+ %v232 =l and %v231, 4611686018427387906
+ %v241 =w cnel %v232, 0
+ jnz %v241, @rcgclear239, @rcgcounted239
+@rcgcounted239
+ %v233 =l sub %v229, 32
+ # myl-rc %v233
+ %v234 =l loadl %v233
+ %v238 =l sub %v234, 1
+ %v235 =w ceql %v238, 0
+ jnz %v235, @rcglast239, @rcgdec239
+@rcglast239
+ %v236 =l sub %v229, 24
+ # myl-rc %v236
+ %v237 =l loadl %v236
+ %v242 =w cnel %v237, 0
+ jnz %v242, @rcgdec239, @rcgslow239
+@rcgslow239
+ dbgloc 34
+ call $myl_t_277089d91c0bdf4f2e6862ba7e4a07605119431f5d13f726dd352b06f1b206a9_rcg_drop(l %v228, l %v209)
+ jmp @rcgdone239
+@rcgdec239
+ storel %v238, %v233
+@rcgclear239
+ storel 0, %v209
+@rcgdone239
+@rcslotdone208
+ ret %v202
+@failure
+ ret 0
+@entry_failure
+ ret 0
+}

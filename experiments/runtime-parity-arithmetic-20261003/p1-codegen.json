@@ -1,0 +1,57 @@
+{
+  "purpose": "Untimed generated-code evidence; this does not establish benchmark performance or parity.",
+  "base": "0817752ab2e04acb7dcafd1d3c8d5a3ab7380921",
+  "compiler_sha256": "501c735930b8933c6403179b07bca22312c5f52e2d534b20a555aa668046f1b3",
+  "qbe_sha256": "05030fa66864f44f28754425d644e46155c95bc5442fc2de705a85eee1443945",
+  "source_sha256": "581de9d4e047ccc090752204cdeb0c3ed5e403a5cee23c4955dbd45ed7504408",
+  "command": "zig-out/focus/mylang build experiments/runtime-parity-arithmetic-20261003/codegen.my --qbe zig-out/focus/qbe --keep-symbols -o .mylang-cache/arithmetic-codegen",
+  "functions": [
+    {
+      "function": "seven",
+      "symbol": "myl_f_3ba8d02b16fd2a01c1a8ba1a1f036d7ce386ed953696fa57331c2ac48a80b255",
+      "instructions": 31,
+      "hardware_divide": 0,
+      "multiply_high_il": 1,
+      "artifact": "seven.asm"
+    },
+    {
+      "function": "power",
+      "symbol": "myl_f_07d715edb696fb5f628f7298e5d7217ed4d2bdfc5347a1c55fee30832267f21d",
+      "instructions": 8,
+      "hardware_divide": 0,
+      "multiply_high_il": 0,
+      "artifact": "power.asm"
+    },
+    {
+      "function": "negative",
+      "symbol": "myl_f_09f04951af4cd503877815fd30f98e3af8d3d50a0972e83a4aaa42f4fba59761",
+      "instructions": 38,
+      "hardware_divide": 0,
+      "multiply_high_il": 1,
+      "artifact": "negative.asm"
+    },
+    {
+      "function": "wide",
+      "symbol": "myl_f_0abaa40b10436a8fbba40ad39a0ba58da06f7aa0fd12a488f1ee358ed04fb942",
+      "instructions": 11,
+      "hardware_divide": 0,
+      "multiply_high_il": 1,
+      "artifact": "wide.asm"
+    },
+    {
+      "function": "variable",
+      "symbol": "myl_f_3b325109deb02ebf8150c4cc76e908d55f977082fe74bfd455e298770351b77d",
+      "instructions": 49,
+      "hardware_divide": 2,
+      "multiply_high_il": 0,
+      "artifact": "variable.asm"
+    }
+  ],
+  "validation": {
+    "recipe_low_pairs": 16777216,
+    "guest_qbe": 58,
+    "guest_llvm_release": 58,
+    "focused_zig_named": 4,
+    "guardian_checks": 88
+  }
+}

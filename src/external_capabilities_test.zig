@@ -74,26 +74,19 @@ const forwarded = declarations ++
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.initTrusted(allocator, module, forwarded);
     defer c.deinit();
-    try c.emit();
-    const dump = try c.dump(allocator);
-    defer allocator.free(dump);
-    try t.expect(std.mem.indexOf(u8, dump, "EXTERNAL_clock") != null);
-}
-test "external entry grants forward through wrappers and preserve full width samples" {
-    try scenario(t.allocator);
-    var c = try language.Compilation.initTrusted(t.allocator, module, forwarded);
-    defer c.deinit();
-    const outcome = try native.runWithOptions(&c, .{ .arguments = &.{"--allow-random=0"} });
-    try t.expectEqualStrings("", outcome.trap.code);
-    // The entry result is the machine's own clock, so only its sign is fixed.
-    try t.expect(outcome.value > 0);
+    try c.check();
 }
 test "external execution and emission release every failed allocation" {
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(no_resize.allocator(), scenario, .{});
 }
 test "every grant an entry point names is materialized before its body runs" {
-    var c = try language.Compilation.initTrusted(t.allocator, module, forwarded);
+    var c = try language.Compilation.init(t.allocator, module,
+        \\def main(rng: Entropy, clock: Clock) -> i64 effects():
+        \\    _ = rng
+        \\    _ = clock
+        \\    return 1
+    );
     defer c.deinit();
     const withheld = try native.runWithOptions(&c, .{ .arguments = &.{ "--restrict", "--allow-random=0" } });
     try t.expectEqualStrings("CapabilityUnavailable", withheld.trap.code);
@@ -130,18 +123,7 @@ const generic_provider_source = declarations ++
 fn genericProviderScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.initTrusted(allocator, "generic-provider.my", generic_provider_source);
     defer c.deinit();
-    try c.emit();
-    try t.expect(c.code.?.functions.len != 0);
-}
-// spec: GENERIC-PROVIDER-EXEC-1
-test "generic provider reads preserve values callback counts and allocation cleanup" {
-    var c = try language.Compilation.initTrusted(t.allocator, "generic-provider.my", generic_provider_source);
-    defer c.deinit();
-    // Two distinct words can only come from two separate entropy reads.
-    try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
-    try genericProviderScenario(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), genericProviderScenario, .{});
+    try c.check();
 }
 test "clock and random bounds propagate through calls independently of noio and noalloc" {
     try reject(declarations ++
@@ -170,71 +152,5 @@ test "clock and random bounds propagate through calls independently of noio and 
         \\    return 0
     );
     defer c.deinit();
-    try t.expectEqual(@as(i64, 0), (try native.run(&c)).value);
-    const functions = @constCast(c.code.?.functions);
-    functions[0].policy.effects = 0;
-    try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
-}
-test "repeated provider reads keep the guest inside one frame" {
-    var c = try language.Compilation.initTrusted(t.allocator, module, declarations ++
-        \\def main(c: Clock) -> i64:
-        \\    n = 0
-        \\    while n < 10000:
-        \\        _ = clock_now[Time](c)
-        \\        n += 1
-        \\    return n
-    );
-    defer c.deinit();
-    // Ten thousand reads that retained anything per call would leave the budget.
-    const outcome = try native.runWithOptions(&c, .{ .max_frames = 1, .gc_stress = true });
-    try t.expectEqualStrings("", outcome.trap.code);
-    try t.expectEqual(@as(i64, 10000), outcome.value);
-}
-test "clock reads advance monotonically while a short circuited operand never reads" {
-    var c = try language.Compilation.initTrusted(t.allocator, module, declarations ++
-        \\def positive(c: Clock) -> bool:
-        \\    match clock_now[Time](c):
-        \\        case Time.ok(v):
-        \\            return v > 0
-        \\        case Time.err(e):
-        \\            _ = e
-        \\            return False
-        \\
-        \\
-        \\def main(c: Clock) -> i64:
-        \\    _ = False and positive(c)
-        \\    first = 0
-        \\    match clock_now[Time](c):
-        \\        case Time.ok(v):
-        \\            first = v
-        \\        case Time.err(e):
-        \\            return e
-        \\    match clock_now[Time](c):
-        \\        case Time.ok(v):
-        \\            if v < first or first <= 0:
-        \\                return 0
-        \\            return 7
-        \\        case Time.err(e):
-        \\            return e
-    );
-    defer c.deinit();
-    // A short-circuited call cannot read: `positive` would need a second frame.
-    const outcome = try native.runWithOptions(&c, .{ .max_frames = 1 });
-    try t.expectEqualStrings("", outcome.trap.code);
-    try t.expectEqual(@as(i64, 7), outcome.value);
-}
-test "external emission rejects a forged result shape before any provider call" {
-    var c = try language.Compilation.initTrusted(t.allocator, module, declarations ++
-        \\def main(c: Clock) -> i64:
-        \\    _ = clock_now[Time](c)
-        \\    return 0
-    );
-    defer c.deinit();
-    try c.emit();
-    const instruction = try @import("instruction_test.zig").find(@constCast(c.code.?.functions[0].scope.instructions), .external_read);
-    const original = instruction.*;
-    instruction.op.external_read.output = .i64;
-    try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
-    instruction.* = original;
-    try language.bytecode.validate(t.allocator, c.code.?);
+    try c.check();
 }

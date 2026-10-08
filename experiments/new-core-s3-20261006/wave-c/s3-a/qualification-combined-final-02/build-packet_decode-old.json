@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/oracle/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/test/core/row_packet_decode.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-combined-final-02/packet_decode-old",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/qualification-combined-final-02/cache-old",
+    "--link",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/benchmarks/runtime/ports/native_clock.c",
+    "--release"
+  ],
+  "status": 0,
+  "seconds": 1.7074497998692095,
+  "stdout": "",
+  "stderr": "row_packet_decode.my:69:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          phase = batch % 17\n          ^\nrow_packet_decode.my:72:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n              x = values[j]\n              ^\n"
+}

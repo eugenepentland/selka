@@ -120,22 +120,6 @@ public def test_a_set_iterates_sorts_and_folds_in_insertion_order() -> bool:
     return sum(values) == 60 and min(values) == 10 and max(values) == 30 and any({False, True})
 
 
-# spec-case: SET-1
-public def test_a_set_built_inside_an_arena_escapes_with_its_elements() -> bool:
-    kept: set[Labelled] = set()
-    with arena() as scratch:
-        local: set[Labelled] = set()
-        for i in range(40):
-            local.add(Labelled(name="p" + str(i), at=SetPoint(x=i, y=0)))
-        local.remove(Labelled(name="p3", at=SetPoint(x=3, y=0)))
-        kept = scratch.escape(local)
-    found = 0
-    for i in range(40):
-        if Labelled(name="p" + str(i), at=SetPoint(x=i, y=0)) in kept:
-            found += 1
-    return found == 39 and len(kept) == 39
-
-
 # spec: SET-OPERATORS-1
 public def test_the_combining_operators_keep_left_order_then_new_right_elements() -> bool:
     left = {1, 2, 3, 4}
@@ -293,7 +277,7 @@ public def test_list_sorted_and_the_folds_of_a_dictionary_read_its_keys() -> boo
     widths = {4: "a", 9: "b", 1: "c"}
     keys = list(ages)
     ordered = sorted(ages)
-    return keys == ["cy", "al", "bo"] and ordered == ["al", "bo", "cy"] and sum(widths) == 14 and max(widths) == 9 and min(ages.values()) == 1 and sorted(ages.values()) == [1, 2, 3]
+    return keys == ["cy", "al", "bo"] and ordered == ["al", "bo", "cy"] and sum(widths) == 14 and max(widths) == 9 and min(list(ages.values())) == 1 and sorted(ages.values()) == [1, 2, 3]
 
 
 # Benchmarks: one operation builds a set of `size` records, probes every one of

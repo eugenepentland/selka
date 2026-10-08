@@ -1,0 +1,18 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "python3",
+    "experiments/new-core-s4-values-20261006/verify_rows.py",
+    "--bin",
+    ".mylang-cache/s4-v/final-all46-v1",
+    "--evidence",
+    "experiments/new-core-s4-values-20261006/final-rows-leak-verify-v1",
+    "--cache",
+    ".mylang-cache/s4-v/final-rows-leak-verify-v1"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 1518457,
+  "status": 0,
+  "elapsed_seconds": 23.310534814139828
+}

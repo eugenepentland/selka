@@ -1,0 +1,9 @@
+$ scripts/build-slot.sh build flock /run/user/1000/mylang-slots/cpu10.lock python3 experiments/new-core-s4-values-20261006/alternatives/measure_return.py --rows union_find --bin .mylang-cache/s4-v/measure-first --rounds 7 --json experiments/new-core-s4-values-20261006/alternatives/cheaper-return-seven.json
+
+### union_find (cycles per element, median of 7 interleaved rounds, CPU 10)
+measurement INVALID: status 1: ['taskset', '-c', '10', 'perf', 'stat', '-x,', '-e', 'cpu_core/cycles/u', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/union-find-cheaper-return', '4096', '1', '7']
+stdout=''
+stderr='Workload failed: No such file or directory\n'
+
+exit=1
+elapsed_seconds=1.965306

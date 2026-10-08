@@ -1,0 +1,370 @@
+--- before/row_bytes_scan.ll
++++ after/row_bytes_scan.ll
+@@ -121,10 +121,13 @@
+   call void @myl_core_free_block(ptr %block)
+   ret void
+ }
++declare void @myl_core_io_at(i32) nounwind
+ declare i64 @runtime_bench_now() nounwind
++declare void @myl_core_host_check(i64) nounwind
+ declare ptr @myl_core_text_encode(ptr) nounwind
+ declare zeroext i1 @myl_core_bytes_valid_list(ptr) nounwind
+ declare ptr @myl_core_bytes_from_list(ptr) nounwind
++declare i64 @myl_core_host_grant() nounwind
+ define internal fastcc { i1, i64 } @myl_core_digits8(ptr %data, i64 %n) alwaysinline nounwind {
+ entry:
+   %eight = icmp eq i64 %n, 8
+@@ -276,6 +279,11 @@
+   %parsed = call zeroext i1 @myl_core_str_parse_int(ptr %text, ptr %out)
+   ret i1 %parsed
+ }
++declare ptr @myl_core_buffer_new(i64) nounwind
++declare ptr @myl_core_buffer_copy(ptr) nounwind
++declare ptr @myl_core_buffer_push(ptr, i8 zeroext) nounwind
++declare ptr @myl_core_buffer_set(ptr, i64, i8 zeroext) nounwind
++declare ptr @myl_core_buffer_pop(ptr) nounwind
+ define internal i64 @"my.row_bytes_scan::main"(ptr %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000003 {
+ entry:
+   %slot = alloca i64, align 8
+@@ -399,8 +407,10 @@
+ b10:
+   call void @"my.row_bytes_scan::inputs"(ptr sret([40 x i8]) align 8 %stack.47, ptr @myl.str.0, i64 %v22, i64 %v48), !dbg !1000016
+   %v69 = getelementptr inbounds i8, ptr %stack.47, i64 0
+-  %v74 = call i64 @runtime_bench_now(), !dbg !1000017
+-  %v75 = call i64 @"my.row_bytes_scan::kernel"(ptr @myl.str.0, ptr %v69, i64 %v35, i64 %v48), !dbg !1000018
++  call void @myl_core_io_at(i32 9)
++  call void @myl_core_host_check(i64 %p1), !dbg !1000017
++  %v75 = call i64 @runtime_bench_now(), !dbg !1000018
++  %v76 = call i64 @"my.row_bytes_scan::kernel"(ptr @myl.str.0, ptr %v69, i64 %v35, i64 %v48), !dbg !1000019
+   %cm.48 = load ptr, ptr %v69, align 8, !tbaa !7
+   %rc.49 = load i32, ptr %cm.48, align 8, !tbaa !3, !range !8
+   %rs.50 = icmp eq i32 %rc.49, -1
+@@ -480,18 +490,20 @@
+   call void @myl_core_free(ptr %cm.87)
+   br label %b10.52.62.72.82.92
+ b10.52.62.72.82.92:
+-  %v76 = call i64 @runtime_bench_now(), !dbg !1000019
+-  %p.97 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v76, i64 %v74)
+-  %v77 = extractvalue { i64, i1 } %p.97, 0
++  call void @myl_core_io_at(i32 10)
++  call void @myl_core_host_check(i64 %p1), !dbg !1000020
++  %v78 = call i64 @runtime_bench_now(), !dbg !1000021
++  %p.97 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v78, i64 %v75)
++  %v79 = extractvalue { i64, i1 } %p.97, 0
+   %o.98 = extractvalue { i64, i1 } %p.97, 1
+   br i1 %o.98, label %trap.99, label %b10.52.62.72.82.92.100, !prof !0
+ trap.99:
+-  call void @myl_core_trap(i32 9, i64 %v76, i64 %v74), !dbg !1000020
++  call void @myl_core_trap(i32 11, i64 %v78, i64 %v75), !dbg !1000022
+   unreachable
+ b10.52.62.72.82.92.100:
+-  call void @myl_core_print_i64(i64 %p2, i64 %v75)
++  call void @myl_core_print_i64(i64 %p2, i64 %v76)
+   call void @myl_core_print_sep(i64 %p2)
+-  call void @myl_core_print_i64(i64 %p2, i64 %v77)
++  call void @myl_core_print_i64(i64 %p2, i64 %v79)
+   call void @myl_core_print_end(i64 %p2)
+   ret i64 0
+ b11:
+@@ -504,7 +516,7 @@
+   %v56 = icmp slt i64 %v35, 1
+   br i1 %v56, label %b9, label %b12
+ }
+-define internal i64 @"my.row_bytes_scan::number"(ptr %p0) nounwind uwtable !dbg !1000021 {
++define internal i64 @"my.row_bytes_scan::number"(ptr %p0) nounwind uwtable !dbg !1000023 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -526,7 +538,7 @@
+ b4:
+   ret i64 0
+ }
+-define internal void @"my.row_bytes_scan::inputs"(ptr noalias sret([40 x i8]) align 8 %ret, ptr %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000022 {
++define internal void @"my.row_bytes_scan::inputs"(ptr noalias sret([40 x i8]) align 8 %ret, ptr %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000024 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -566,13 +578,13 @@
+   %o.5 = extractvalue { i64, i1 } %p.4, 1
+   br i1 %o.5, label %trap.6, label %b6.7, !prof !0
+ trap.6:
+-  call void @myl_core_trap(i32 10, i64 %p1, i64 0), !dbg !1000023
++  call void @myl_core_trap(i32 12, i64 %p1, i64 0), !dbg !1000025
+   unreachable
+ b6.7:
+   %lo.8 = icmp slt i64 %v23, 0
+   br i1 %lo.8, label %trap.9, label %b6.7.10, !prof !0
+ trap.9:
+-  call void @myl_core_trap(i32 11, i64 %v23, i64 0), !dbg !1000024
++  call void @myl_core_trap(i32 13, i64 %v23, i64 0), !dbg !1000026
+   unreachable
+ b6.7.10:
+   %v24 = add i64 %v23, 0
+@@ -584,7 +596,7 @@
+   %lo.11 = icmp slt i64 %p1, 0
+   br i1 %lo.11, label %trap.12, label %b8.13, !prof !0
+ trap.12:
+-  call void @myl_core_trap(i32 12, i64 %p1, i64 0), !dbg !1000025
++  call void @myl_core_trap(i32 14, i64 %p1, i64 0), !dbg !1000027
+   unreachable
+ b8.13:
+   %v26 = add i64 %p1, 0
+@@ -593,7 +605,7 @@
+   %o.15 = extractvalue { i64, i1 } %p.14, 1
+   br i1 %o.15, label %trap.16, label %b8.13.17, !prof !0
+ trap.16:
+-  call void @myl_core_trap(i32 13, i64 0, i64 1), !dbg !1000026
++  call void @myl_core_trap(i32 15, i64 0, i64 1), !dbg !1000028
+   unreachable
+ b8.13.17:
+   %n.18 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 0, i64 %v28)
+@@ -601,13 +613,13 @@
+   %o.19 = extractvalue { i64, i1 } %n.18, 1
+   br i1 %o.19, label %trap.20, label %b8.13.17.21, !prof !0
+ trap.20:
+-  call void @myl_core_trap(i32 14, i64 %v28, i64 0), !dbg !1000027
++  call void @myl_core_trap(i32 16, i64 %v28, i64 0), !dbg !1000029
+   unreachable
+ b8.13.17.21:
+   %lo.22 = icmp slt i64 %v29, 0
+   br i1 %lo.22, label %trap.23, label %b8.13.17.21.24, !prof !0
+ trap.23:
+-  call void @myl_core_trap(i32 15, i64 %v29, i64 0), !dbg !1000028
++  call void @myl_core_trap(i32 17, i64 %v29, i64 0), !dbg !1000030
+   unreachable
+ b8.13.17.21.24:
+   %v30 = add i64 %v29, 0
+@@ -616,7 +628,7 @@
+   %o.26 = extractvalue { i64, i1 } %p.25, 1
+   br i1 %o.26, label %trap.27, label %b8.13.17.21.24.28, !prof !0
+ trap.27:
+-  call void @myl_core_trap(i32 16, i64 %v26, i64 %v30), !dbg !1000029
++  call void @myl_core_trap(i32 18, i64 %v26, i64 %v30), !dbg !1000031
+   unreachable
+ b8.13.17.21.24.28:
+   %p.29 = call { i64, i1 } @llvm.uadd.with.overflow.i64(i64 %v31, i64 1)
+@@ -624,7 +636,7 @@
+   %o.30 = extractvalue { i64, i1 } %p.29, 1
+   br i1 %o.30, label %trap.31, label %b8.13.17.21.24.28.32, !prof !0
+ trap.31:
+-  call void @myl_core_trap(i32 17, i64 %v31, i64 1), !dbg !1000030
++  call void @myl_core_trap(i32 19, i64 %v31, i64 1), !dbg !1000032
+   unreachable
+ b8.13.17.21.24.28.32:
+   br label %b7
+@@ -639,7 +651,7 @@
+   %o.34 = extractvalue { i64, i1 } %p.33, 1
+   br i1 %o.34, label %trap.35, label %b10.36, !prof !0
+ trap.35:
+-  call void @myl_core_trap(i32 18, i64 %v45, i64 37), !dbg !1000031
++  call void @myl_core_trap(i32 20, i64 %v45, i64 37), !dbg !1000033
+   unreachable
+ b10.36:
+   %p.37 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %p2, i64 %v51)
+@@ -647,7 +659,7 @@
+   %o.38 = extractvalue { i64, i1 } %p.37, 1
+   br i1 %o.38, label %trap.39, label %b10.36.40, !prof !0
+ trap.39:
+-  call void @myl_core_trap(i32 19, i64 %p2, i64 %v51), !dbg !1000032
++  call void @myl_core_trap(i32 21, i64 %p2, i64 %v51), !dbg !1000034
+   unreachable
+ b10.36.40:
+   %q.41 = sdiv i64 %v52, 256
+@@ -671,10 +683,10 @@
+   %v59 = add nuw nsw i64 %v45, 1
+   br label %b9
+ b12:
+-  %v70 = call i1 @myl_core_bytes_valid_list(ptr %v55), !dbg !1000033
++  %v70 = call i1 @myl_core_bytes_valid_list(ptr %v55), !dbg !1000035
+   br i1 %v70, label %b13, label %b14
+ b13:
+-  %v73 = call ptr @myl_core_bytes_from_list(ptr %v55), !dbg !1000034
++  %v73 = call ptr @myl_core_bytes_from_list(ptr %v55), !dbg !1000036
+   %rc.53 = load i32, ptr %v55, align 8, !tbaa !3, !range !8
+   %rs.54 = icmp eq i32 %rc.53, -1
+   br i1 %rs.54, label %b13.56, label %rc.dec.55
+@@ -700,10 +712,10 @@
+   store ptr %v12, ptr %fp.64, align 8, !tbaa !7
+   ret void
+ b14:
+-  call void @myl_core_trap(i32 20, i64 0, i64 0), !dbg !1000035
+-  unreachable
+-}
+-define internal i64 @"my.row_bytes_scan::kernel"(ptr %p0, ptr noalias readonly align 8 %p1, i64 %p2, i64 %p3) nounwind uwtable !dbg !1000036 {
++  call void @myl_core_trap(i32 22, i64 0, i64 0), !dbg !1000037
++  unreachable
++}
++define internal i64 @"my.row_bytes_scan::kernel"(ptr %p0, ptr noalias readonly align 8 %p1, i64 %p2, i64 %p3) nounwind uwtable !dbg !1000038 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -720,7 +732,7 @@
+   %o.2 = extractvalue { i64, i1 } %p.1, 1
+   br i1 %o.2, label %trap.3, label %b2.4, !prof !0
+ trap.3:
+-  call void @myl_core_trap(i32 21, i64 %p3, i64 %v7), !dbg !1000037
++  call void @myl_core_trap(i32 23, i64 %p3, i64 %v7), !dbg !1000039
+   unreachable
+ b2.4:
+   %v14 = load ptr, ptr %p1, align 8, !tbaa !7
+@@ -732,13 +744,13 @@
+   %fix.10 = and i1 %rnz.7, %neg.9
+   %ra.11 = select i1 %fix.10, i64 256, i64 0
+   %v16 = add i64 %r.6, %ra.11
+-  %v17 = call i64 @"my.row_bytes_scan::bytes_job"(ptr %v14, i64 %v16), !dbg !1000038
++  %v17 = call i64 @"my.row_bytes_scan::bytes_job"(ptr %v14, i64 %v16), !dbg !1000040
+   %p.12 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v18, i64 %v17)
+   %v19 = extractvalue { i64, i1 } %p.12, 0
+   %o.13 = extractvalue { i64, i1 } %p.12, 1
+   br i1 %o.13, label %trap.14, label %b2.4.15, !prof !0
+ trap.14:
+-  call void @myl_core_trap(i32 22, i64 %v18, i64 %v17), !dbg !1000039
++  call void @myl_core_trap(i32 24, i64 %v18, i64 %v17), !dbg !1000041
+   unreachable
+ b2.4.15:
+   %q.16 = sdiv i64 %v19, 1000000007
+@@ -756,7 +768,7 @@
+ b4:
+   ret i64 %v18
+ }
+-define internal i64 @"my.row_bytes_scan::bytes_job"(ptr %p0, i64 %p1) nounwind uwtable !dbg !1000040 {
++define internal i64 @"my.row_bytes_scan::bytes_job"(ptr %p0, i64 %p1) nounwind uwtable !dbg !1000042 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -824,10 +836,11 @@
+ b4:
+   ret i64 %v14
+ }
+-define i32 @main(i32 %argc, ptr %argv) uwtable !dbg !1000041 {
++define i32 @main(i32 %argc, ptr %argv) uwtable !dbg !1000043 {
+ entry:
+   %args = call ptr @myl_core_args(i32 %argc, ptr %argv)
+-  %r = call i64 @"my.row_bytes_scan::main"(ptr %args, i64 1, i64 1), !dbg !1000042
++  %host1 = call i64 @myl_core_host_grant()
++  %r = call i64 @"my.row_bytes_scan::main"(ptr %args, i64 %host1, i64 1), !dbg !1000044
+   call void @myl_core_release(ptr %args)
+   %s = call i32 @myl_core_exit(i64 %r)
+   ret i32 %s
+@@ -851,36 +864,40 @@
+ @myl.fn.7 = private constant [21 x i8] c"row_bytes_scan::main\00"
+ @myl.op.8 = private constant [6 x i8] c"index\00"
+ @myl.fn.8 = private constant [21 x i8] c"row_bytes_scan::main\00"
+-@myl.op.9 = private constant [4 x i8] c"sub\00"
++@myl.op.9 = private constant [7 x i8] c"effect\00"
+ @myl.fn.9 = private constant [21 x i8] c"row_bytes_scan::main\00"
+-@myl.op.10 = private constant [4 x i8] c"sub\00"
+-@myl.fn.10 = private constant [23 x i8] c"row_bytes_scan::inputs\00"
+-@myl.op.11 = private constant [5 x i8] c"cast\00"
+-@myl.fn.11 = private constant [23 x i8] c"row_bytes_scan::inputs\00"
+-@myl.op.12 = private constant [5 x i8] c"cast\00"
++@myl.op.10 = private constant [7 x i8] c"effect\00"
++@myl.fn.10 = private constant [21 x i8] c"row_bytes_scan::main\00"
++@myl.op.11 = private constant [4 x i8] c"sub\00"
++@myl.fn.11 = private constant [21 x i8] c"row_bytes_scan::main\00"
++@myl.op.12 = private constant [4 x i8] c"sub\00"
+ @myl.fn.12 = private constant [23 x i8] c"row_bytes_scan::inputs\00"
+-@myl.op.13 = private constant [4 x i8] c"add\00"
++@myl.op.13 = private constant [5 x i8] c"cast\00"
+ @myl.fn.13 = private constant [23 x i8] c"row_bytes_scan::inputs\00"
+-@myl.op.14 = private constant [4 x i8] c"neg\00"
++@myl.op.14 = private constant [5 x i8] c"cast\00"
+ @myl.fn.14 = private constant [23 x i8] c"row_bytes_scan::inputs\00"
+-@myl.op.15 = private constant [5 x i8] c"cast\00"
++@myl.op.15 = private constant [4 x i8] c"add\00"
+ @myl.fn.15 = private constant [23 x i8] c"row_bytes_scan::inputs\00"
+-@myl.op.16 = private constant [4 x i8] c"add\00"
++@myl.op.16 = private constant [4 x i8] c"neg\00"
+ @myl.fn.16 = private constant [23 x i8] c"row_bytes_scan::inputs\00"
+-@myl.op.17 = private constant [4 x i8] c"add\00"
++@myl.op.17 = private constant [5 x i8] c"cast\00"
+ @myl.fn.17 = private constant [23 x i8] c"row_bytes_scan::inputs\00"
+-@myl.op.18 = private constant [4 x i8] c"mul\00"
++@myl.op.18 = private constant [4 x i8] c"add\00"
+ @myl.fn.18 = private constant [23 x i8] c"row_bytes_scan::inputs\00"
+ @myl.op.19 = private constant [4 x i8] c"add\00"
+ @myl.fn.19 = private constant [23 x i8] c"row_bytes_scan::inputs\00"
+-@myl.op.20 = private constant [5 x i8] c"text\00"
++@myl.op.20 = private constant [4 x i8] c"mul\00"
+ @myl.fn.20 = private constant [23 x i8] c"row_bytes_scan::inputs\00"
+ @myl.op.21 = private constant [4 x i8] c"add\00"
+-@myl.fn.21 = private constant [23 x i8] c"row_bytes_scan::kernel\00"
+-@myl.op.22 = private constant [4 x i8] c"add\00"
+-@myl.fn.22 = private constant [23 x i8] c"row_bytes_scan::kernel\00"
+-@myl_core_site_count = constant i32 23
+-@myl_core_sites = constant [23 x %myl.site] [%myl.site { i32 4, i32 56, i32 19, i32 64, ptr @myl.op.0, ptr @myl.fn.0 }, %myl.site { i32 0, i32 56, i32 19, i32 64, ptr @myl.op.1, ptr @myl.fn.1 }, %myl.site { i32 2, i32 56, i32 19, i32 64, ptr @myl.op.2, ptr @myl.fn.2 }, %myl.site { i32 4, i32 57, i32 25, i32 64, ptr @myl.op.3, ptr @myl.fn.3 }, %myl.site { i32 0, i32 57, i32 25, i32 64, ptr @myl.op.4, ptr @myl.fn.4 }, %myl.site { i32 2, i32 57, i32 25, i32 64, ptr @myl.op.5, ptr @myl.fn.5 }, %myl.site { i32 4, i32 58, i32 19, i32 64, ptr @myl.op.6, ptr @myl.fn.6 }, %myl.site { i32 0, i32 58, i32 19, i32 64, ptr @myl.op.7, ptr @myl.fn.7 }, %myl.site { i32 2, i32 58, i32 19, i32 64, ptr @myl.op.8, ptr @myl.fn.8 }, %myl.site { i32 0, i32 65, i32 39, i32 64, ptr @myl.op.9, ptr @myl.fn.9 }, %myl.site { i32 0, i32 41, i32 17, i32 64, ptr @myl.op.10, ptr @myl.fn.10 }, %myl.site { i32 4, i32 41, i32 17, i32 64, ptr @myl.op.11, ptr @myl.fn.11 }, %myl.site { i32 4, i32 41, i32 17, i32 64, ptr @myl.op.12, ptr @myl.fn.12 }, %myl.site { i32 0, i32 41, i32 17, i32 64, ptr @myl.op.13, ptr @myl.fn.13 }, %myl.site { i32 0, i32 41, i32 17, i32 64, ptr @myl.op.14, ptr @myl.fn.14 }, %myl.site { i32 4, i32 41, i32 17, i32 64, ptr @myl.op.15, ptr @myl.fn.15 }, %myl.site { i32 0, i32 41, i32 17, i32 64, ptr @myl.op.16, ptr @myl.fn.16 }, %myl.site { i32 0, i32 41, i32 17, i32 64, ptr @myl.op.17, ptr @myl.fn.17 }, %myl.site { i32 0, i32 41, i32 28, i32 64, ptr @myl.op.18, ptr @myl.fn.18 }, %myl.site { i32 0, i32 41, i32 24, i32 64, ptr @myl.op.19, ptr @myl.fn.19 }, %myl.site { i32 14, i32 41, i32 11, i32 64, ptr @myl.op.20, ptr @myl.fn.20 }, %myl.site { i32 0, i32 47, i32 23, i32 64, ptr @myl.op.21, ptr @myl.fn.21 }, %myl.site { i32 0, i32 49, i32 30, i32 64, ptr @myl.op.22, ptr @myl.fn.22 }]
++@myl.fn.21 = private constant [23 x i8] c"row_bytes_scan::inputs\00"
++@myl.op.22 = private constant [5 x i8] c"text\00"
++@myl.fn.22 = private constant [23 x i8] c"row_bytes_scan::inputs\00"
++@myl.op.23 = private constant [4 x i8] c"add\00"
++@myl.fn.23 = private constant [23 x i8] c"row_bytes_scan::kernel\00"
++@myl.op.24 = private constant [4 x i8] c"add\00"
++@myl.fn.24 = private constant [23 x i8] c"row_bytes_scan::kernel\00"
++@myl_core_site_count = constant i32 25
++@myl_core_sites = constant [25 x %myl.site] [%myl.site { i32 4, i32 56, i32 19, i32 64, ptr @myl.op.0, ptr @myl.fn.0 }, %myl.site { i32 0, i32 56, i32 19, i32 64, ptr @myl.op.1, ptr @myl.fn.1 }, %myl.site { i32 2, i32 56, i32 19, i32 64, ptr @myl.op.2, ptr @myl.fn.2 }, %myl.site { i32 4, i32 57, i32 25, i32 64, ptr @myl.op.3, ptr @myl.fn.3 }, %myl.site { i32 0, i32 57, i32 25, i32 64, ptr @myl.op.4, ptr @myl.fn.4 }, %myl.site { i32 2, i32 57, i32 25, i32 64, ptr @myl.op.5, ptr @myl.fn.5 }, %myl.site { i32 4, i32 58, i32 19, i32 64, ptr @myl.op.6, ptr @myl.fn.6 }, %myl.site { i32 0, i32 58, i32 19, i32 64, ptr @myl.op.7, ptr @myl.fn.7 }, %myl.site { i32 2, i32 58, i32 19, i32 64, ptr @myl.op.8, ptr @myl.fn.8 }, %myl.site { i32 7, i32 63, i32 13, i32 64, ptr @myl.op.9, ptr @myl.fn.9 }, %myl.site { i32 7, i32 65, i32 15, i32 64, ptr @myl.op.10, ptr @myl.fn.10 }, %myl.site { i32 0, i32 65, i32 39, i32 64, ptr @myl.op.11, ptr @myl.fn.11 }, %myl.site { i32 0, i32 41, i32 17, i32 64, ptr @myl.op.12, ptr @myl.fn.12 }, %myl.site { i32 4, i32 41, i32 17, i32 64, ptr @myl.op.13, ptr @myl.fn.13 }, %myl.site { i32 4, i32 41, i32 17, i32 64, ptr @myl.op.14, ptr @myl.fn.14 }, %myl.site { i32 0, i32 41, i32 17, i32 64, ptr @myl.op.15, ptr @myl.fn.15 }, %myl.site { i32 0, i32 41, i32 17, i32 64, ptr @myl.op.16, ptr @myl.fn.16 }, %myl.site { i32 4, i32 41, i32 17, i32 64, ptr @myl.op.17, ptr @myl.fn.17 }, %myl.site { i32 0, i32 41, i32 17, i32 64, ptr @myl.op.18, ptr @myl.fn.18 }, %myl.site { i32 0, i32 41, i32 17, i32 64, ptr @myl.op.19, ptr @myl.fn.19 }, %myl.site { i32 0, i32 41, i32 28, i32 64, ptr @myl.op.20, ptr @myl.fn.20 }, %myl.site { i32 0, i32 41, i32 24, i32 64, ptr @myl.op.21, ptr @myl.fn.21 }, %myl.site { i32 14, i32 41, i32 11, i32 64, ptr @myl.op.22, ptr @myl.fn.22 }, %myl.site { i32 0, i32 47, i32 23, i32 64, ptr @myl.op.23, ptr @myl.fn.23 }, %myl.site { i32 0, i32 49, i32 30, i32 64, ptr @myl.op.24, ptr @myl.fn.24 }]
+ @myl.str.0 = private unnamed_addr constant { i32, i32, i64, i64, i64, [11 x i8] } { i32 -1, i32 1793, i64 10, i64 10, i64 47234037204, [11 x i8] c"bytes_scan\00" }, align 32
+ @myl.str.1 = private unnamed_addr constant { i32, i32, i64, i64, i64, [1 x i8] } { i32 -1, i32 1793, i64 0, i64 0, i64 1062380357, [1 x i8] c"\00" }, align 32
+ !0 = !{!"branch_weights", i32 1, i32 1048575}
+@@ -914,32 +931,34 @@
+ !1000015 = !DILocation(line: 58, column: 12, scope: !1000003)
+ !1000016 = !DILocation(line: 61, column: 12, scope: !1000003)
+ !1000017 = !DILocation(line: 63, column: 13, scope: !1000003)
+-!1000018 = !DILocation(line: 64, column: 16, scope: !1000003)
+-!1000019 = !DILocation(line: 65, column: 15, scope: !1000003)
+-!1000020 = !DILocation(line: 65, column: 39, scope: !1000003)
+-!1000021 = distinct !DISubprogram(name: "row_bytes_scan::number", scope: !1000000, file: !1000000, line: 16, type: !1000002, scopeLine: 16, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
+-!1000022 = distinct !DISubprogram(name: "row_bytes_scan::inputs", scope: !1000000, file: !1000000, line: 35, type: !1000002, scopeLine: 35, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
+-!1000023 = !DILocation(line: 41, column: 17, scope: !1000022)
+-!1000024 = !DILocation(line: 41, column: 17, scope: !1000022)
+-!1000025 = !DILocation(line: 41, column: 17, scope: !1000022)
+-!1000026 = !DILocation(line: 41, column: 17, scope: !1000022)
+-!1000027 = !DILocation(line: 41, column: 17, scope: !1000022)
+-!1000028 = !DILocation(line: 41, column: 17, scope: !1000022)
+-!1000029 = !DILocation(line: 41, column: 17, scope: !1000022)
+-!1000030 = !DILocation(line: 41, column: 17, scope: !1000022)
+-!1000031 = !DILocation(line: 41, column: 28, scope: !1000022)
+-!1000032 = !DILocation(line: 41, column: 24, scope: !1000022)
+-!1000033 = !DILocation(line: 41, column: 11, scope: !1000022)
+-!1000034 = !DILocation(line: 41, column: 11, scope: !1000022)
+-!1000035 = !DILocation(line: 41, column: 11, scope: !1000022)
+-!1000036 = distinct !DISubprogram(name: "row_bytes_scan::kernel", scope: !1000000, file: !1000000, line: 44, type: !1000002, scopeLine: 44, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
+-!1000037 = !DILocation(line: 47, column: 23, scope: !1000036)
+-!1000038 = !DILocation(line: 48, column: 17, scope: !1000036)
+-!1000039 = !DILocation(line: 49, column: 30, scope: !1000036)
+-!1000040 = distinct !DISubprogram(name: "row_bytes_scan::bytes_job", scope: !1000000, file: !1000000, line: 29, type: !1000002, scopeLine: 29, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
+-!1000041 = distinct !DISubprogram(name: "myl.entry", scope: !1000000, file: !1000000, line: 1, type: !1000002, scopeLine: 1, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
+-!1000042 = !DILocation(line: 1, column: 1, scope: !1000041)
++!1000018 = !DILocation(line: 63, column: 13, scope: !1000003)
++!1000019 = !DILocation(line: 64, column: 16, scope: !1000003)
++!1000020 = !DILocation(line: 65, column: 15, scope: !1000003)
++!1000021 = !DILocation(line: 65, column: 15, scope: !1000003)
++!1000022 = !DILocation(line: 65, column: 39, scope: !1000003)
++!1000023 = distinct !DISubprogram(name: "row_bytes_scan::number", scope: !1000000, file: !1000000, line: 16, type: !1000002, scopeLine: 16, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
++!1000024 = distinct !DISubprogram(name: "row_bytes_scan::inputs", scope: !1000000, file: !1000000, line: 35, type: !1000002, scopeLine: 35, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
++!1000025 = !DILocation(line: 41, column: 17, scope: !1000024)
++!1000026 = !DILocation(line: 41, column: 17, scope: !1000024)
++!1000027 = !DILocation(line: 41, column: 17, scope: !1000024)
++!1000028 = !DILocation(line: 41, column: 17, scope: !1000024)
++!1000029 = !DILocation(line: 41, column: 17, scope: !1000024)
++!1000030 = !DILocation(line: 41, column: 17, scope: !1000024)
++!1000031 = !DILocation(line: 41, column: 17, scope: !1000024)
++!1000032 = !DILocation(line: 41, column: 17, scope: !1000024)
++!1000033 = !DILocation(line: 41, column: 28, scope: !1000024)
++!1000034 = !DILocation(line: 41, column: 24, scope: !1000024)
++!1000035 = !DILocation(line: 41, column: 11, scope: !1000024)
++!1000036 = !DILocation(line: 41, column: 11, scope: !1000024)
++!1000037 = !DILocation(line: 41, column: 11, scope: !1000024)
++!1000038 = distinct !DISubprogram(name: "row_bytes_scan::kernel", scope: !1000000, file: !1000000, line: 44, type: !1000002, scopeLine: 44, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
++!1000039 = !DILocation(line: 47, column: 23, scope: !1000038)
++!1000040 = !DILocation(line: 48, column: 17, scope: !1000038)
++!1000041 = !DILocation(line: 49, column: 30, scope: !1000038)
++!1000042 = distinct !DISubprogram(name: "row_bytes_scan::bytes_job", scope: !1000000, file: !1000000, line: 29, type: !1000002, scopeLine: 29, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
++!1000043 = distinct !DISubprogram(name: "myl.entry", scope: !1000000, file: !1000000, line: 1, type: !1000002, scopeLine: 1, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
++!1000044 = !DILocation(line: 1, column: 1, scope: !1000043)
+ !llvm.dbg.cu = !{!1000001}
+-!llvm.module.flags = !{!1000043, !1000044}
+-!1000043 = !{i32 2, !"Debug Info Version", i32 3}
+-!1000044 = !{i32 7, !"Dwarf Version", i32 4}
++!llvm.module.flags = !{!1000045, !1000046}
++!1000045 = !{i32 2, !"Debug Info Version", i32 3}
++!1000046 = !{i32 7, !"Dwarf Version", i32 4}

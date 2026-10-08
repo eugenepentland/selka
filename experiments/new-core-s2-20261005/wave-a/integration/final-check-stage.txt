@@ -1,0 +1,8 @@
+final: build: exit=0, command=0.01s; /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/final-build.txt
+final: old-build: exit=0, command=1.18s; /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/final-old-build.txt
+final: test-core: exit=0, command=115.30s; /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/final-test-core.txt
+final: code: exit=0, command=2.49s; /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/final-code.txt
+final: conformance: exit=0, command=141.02s; /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/final-conformance.txt
+final: combined-conformance: exit=0, command=0.37s; /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/final-combined-conformance.txt
+final: rows: exit=0, command=91.01s; /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/final-rows.txt
+exit 0

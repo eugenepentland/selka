@@ -1,0 +1,24 @@
+{
+  "source_commit": "e26abb83b91b99634b0987b198daa4712f01b16e",
+  "command": [
+    "zig",
+    "build",
+    "core",
+    "--summary",
+    "all"
+  ],
+  "seconds": 4.4463345990516245,
+  "exit": 0,
+  "source_identical_rebuild": true,
+  "compile_artifact": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/3c9f1e6ddb42763401198e075f0b64ee/mylang-core",
+  "invalidated_private_manifests": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/h/163b38924ec1e07e1ae8211bc19772e9.txt",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/h/66c0c366b31ada5754026c089dd3e7a8.txt"
+  ],
+  "original_sha256": "db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1",
+  "rebuilt_sha256": "47948b7a3b1f0d59077edbb7f3a6a474e2887cfdf45b1fdbde05496ca8c8c30c",
+  "affinity": [
+    10
+  ],
+  "qualified": true
+}

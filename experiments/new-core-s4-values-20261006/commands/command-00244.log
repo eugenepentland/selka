@@ -1,0 +1,58 @@
+$ python3 -c 'import json,pathlib; p=pathlib.Path("experiments/new-core-s4-values-20261006/final-fuzz-v3"); print([(x.parent.name,json.loads(x.read_text()).get("accepted")) for x in p.glob("*/summary.json")]); print((p/"functions.log").read_text()[-1200:]); print(pathlib.Path("experiments/new-core-s4-values-20261006/final-independent-oracles-v2/summary.json").read_text()[:1500])'
+[('rc', 50), ('values', 50), ('rebinding', 50)]
+$ python3 experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py --kind functions --old /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s3/oracle/mylang --new /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang-core --cases 50 --seed 410602 --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/functions --cache-root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-fuzz-v3/functions
+
+{
+  "qualified": true,
+  "comparisons": [
+    {
+      "case": "tree_build_walk",
+      "arm": "old",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "expected": 16,
+      "status": 0,
+      "binary_sha256": "fd872892c2f8ef6130c518ace835c8e845506c12456febce5d4d2822cfcdf88a",
+      "oracle_sha256": "4295136cfef60a2cfa671c1754f9d60b5377ffce738c61d2496a1a7b9150e236",
+      "log": "command-0001.log",
+      "qualified": true
+    },
+    {
+      "case": "tree_build_walk",
+      "arm": "new",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "expected": 16,
+      "status": 0,
+      "binary_sha256": "215e632766d3b801cb74355d83a323e216e3581764e06699443538b3ddaa3230",
+      "oracle_sha256": "4295136cfef60a2cfa671c1754f9d60b5377ffce738c61d2496a1a7b9150e236",
+      "log": "command-0002.log",
+      "qualified": true
+    },
+    {
+      "case": "tree_build_walk",
+      "arm": "rust",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "expected": 16,
+      "status": 0,
+      "binary_sha256": "af16324367468b7af9ecae1e96568c1104fa9e7980dfa1d7147295b719c008b7",
+      "oracle_sha256": "4295136cfef60a2cfa671c1754f9d60b5377ffce738c61d2496a1a7b9150e236",
+      "log": "command-0003.log",
+      "qualified": true
+    },
+    {
+      "case": "tree_build_walk",
+      "arm": "zig-safe",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "expected": 16,
+      "status": 0,
+      "binary_sha256": "256c917f34c358945f57e345445ee68fb053931ddf8f9f99a46335c0dbf54a
+
+exit=0
+elapsed_seconds=0.030518

@@ -1,0 +1,11 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 27 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 9930 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (cognitive-complexity)
+guardian: failures grouped by check (1):
+  cognitive-complexity (1 finding)
+    - src/core/build.zig: fn bufferOperation cognitive complexity 26 (limit: 25)
+      fix: extract helpers; reduce nested control flow.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

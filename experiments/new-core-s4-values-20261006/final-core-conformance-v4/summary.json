@@ -1,0 +1,9 @@
+{
+  "source_commit": "be7978a37aa7ae9bbd97e273d86a42d054305dd0",
+  "old_sha256": "29a8662e86f113341f5f71c9c4fce5686481b4aa8fea223be47788f027797dbe",
+  "core_shards": 64,
+  "results": [],
+  "qualified": false,
+  "core_sha256": "3c86ebb5ac9db377a2a2b7ae0cffd48cce09bee554aabfec856c9c5a2a6fc2bc",
+  "error": "could not convert string to float: 'Command exited with non-zero status 1\\n2.59\\n'"
+}

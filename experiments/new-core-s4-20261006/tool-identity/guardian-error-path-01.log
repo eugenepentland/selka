@@ -1,0 +1,16 @@
+guardian: error-path-test FAILED (11 added error path(s) no test names)
+  src/core/tool_identity.zig:316: new catch block — no test names enclosing fn `inventoryHint`
+  src/core/tool_identity.zig:326: new catch block — no test names enclosing fn `inventoryHint`
+  src/core/tool_identity.zig:332: new error-set member — no test names error `MalformedHint`
+  src/core/tool_identity.zig:337: new returned error — no test names error `MalformedHint`
+  src/core/tool_identity.zig:342: new returned error — no test names error `MalformedHint`
+  src/core/tool_identity.zig:344: new returned error — no test names error `MalformedHint`
+  src/core/tool_identity.zig:346: new returned error — no test names error `MalformedHint`
+  src/core/tool_identity.zig:353: new returned error — no test names error `MalformedHint`
+  src/core/tool_identity.zig:359: new returned error — no test names error `MalformedHint`
+  src/core/tool_identity.zig:360: new returned error — no test names error `MalformedHint`
+  src/core/tool_identity.zig:361: new returned error — no test names error `MalformedHint`
+  fix: add (or extend) a test that names the error identifier — `try testing.expectError(error.X, …)` is enough — in this same change.
+  waive: put `// UNTESTED-ERROR: <reason>` on the line or in the comment block above it. The reason is mandatory; a bare marker waives nothing.
+  not that: this check judges the CHANGE, so it has no baseline — `guardian-check accept error-path-test .` and `GUARDIAN_UPDATE_SNAPSHOT=error-path-test` do NOT clear it.
+  wrong base? the diff is against HEAD: pass `--against <ref>` (or GUARDIAN_AGAINST=<ref>) when your change spans more than that.

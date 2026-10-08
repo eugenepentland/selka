@@ -1,0 +1,17 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 3 after 95s (all 3 build slot(s) busy)
+records,unions,propagate,mut,alias case 0: the old core rejected the program (a generator bug):
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/.mylang-cache/s2-d/fuzz/tmp/core-fuzz-s1.2s1s4w2g/records_unions_propagate_mut_alias0.my:72:9: error[E_SHADOWING]: iteration binding shadows an active declaration
+      for name, value in text.items():
+          ^
+
+records,unions,propagate,mut,alias case 1: the old core rejected the program (a generator bug):
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/.mylang-cache/s2-d/fuzz/tmp/core-fuzz-s1.2s1s4w2g/records_unions_propagate_mut_alias1.my:77:9: error[E_SHADOWING]: iteration binding shadows an active declaration
+      for name, value in text.items():
+          ^
+
+qualification progress: dict: seen=25 elapsed=5.94s
+qualification progress: dict: seen=50 elapsed=12.01s
+records,unions,propagate,mut,alias cases=50 old_rejected=50 refused=0 compared=0 mismatch=0 fact=0 traps=0 caught=0
+qualification {"kind": "dict", "qualified": false, "accepted": 0, "old_rejected": 50, "core_refused": 0, "core_build_failed": 0, "elapsed_seconds": 12.262239235918969}

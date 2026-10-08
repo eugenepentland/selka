@@ -1,0 +1,6 @@
+int_math 5.755s
+float_math 1.426s
+call_direct 1.439s
+branch_predictable 1.630s
+branch_mixed 1.611s
+binary_search 1.736s

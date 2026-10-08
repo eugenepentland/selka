@@ -1,0 +1,3 @@
+c_runner_signal.my:2:1: error[E_HOST_EFFECTS]: host declarations require an explicit effects(host, ...) contract
+  extern def c_runner_signal() -> int
+  ^

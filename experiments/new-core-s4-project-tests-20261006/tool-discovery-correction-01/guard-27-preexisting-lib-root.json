@@ -1,0 +1,77 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-guard-probe-25",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-native-replay-27/tool/distribution/zig",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-native-replay-27/tool/lib/clang/22/share/ubsan_ignorelist.txt",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-native-replay-27/helper-cache"
+  ],
+  "status": 0,
+  "values": {
+    "cacheable_before": "false",
+    "before_inputs": "21203",
+    "before_digest": "a40235fa483a971001eab7c2ca171eb5e2bdef2ad6b00becaceab2f6b935b4b6",
+    "before_generation": "ecaa7a2cbbbb1a835fc2d955b90d9fb66cb5e2605063822fd8c96703a022b300",
+    "ready": "true",
+    "cacheable_after": "false",
+    "after_inputs": "21203",
+    "unchanged": "true",
+    "provisional_present": "false",
+    "provisional_unchanged": "false",
+    "after_digest": "a40235fa483a971001eab7c2ca171eb5e2bdef2ad6b00becaceab2f6b935b4b6",
+    "after_generation": "ecaa7a2cbbbb1a835fc2d955b90d9fb66cb5e2605063822fd8c96703a022b300"
+  },
+  "native_before": {
+    "command": [
+      "strace",
+      "-f",
+      "-yy",
+      "-s",
+      "4096",
+      "-e",
+      "trace=%file,read,pread64,mmap,getdents64,getcwd,close",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/tool-discovery-correction-01/native-27-preexisting-lib-root-before.strace",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-native-replay-27/tool/distribution/zig",
+      "cc",
+      "-c",
+      "-O0",
+      "-target",
+      "x86_64-linux-gnu.2.31",
+      "-march=native",
+      "-mllvm",
+      "-x86-experimental-pref-innermost-loop-alignment=6",
+      "-Wno-override-module",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-native-replay-27/preexisting-lib-root-before/fresh.o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-native-replay-27/preexisting-lib-root-before/canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-native-replay-27/preexisting-lib-root-before",
+    "status": 0,
+    "timeout": false,
+    "affinity": [
+      0,
+      1,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "object_sha256": "d8dd5741be1e8c641748d89dec8810ff602a9203e1b8afeaf4006e4cfe7a0b37",
+    "object_bytes": 3184,
+    "llvm_sha256": "1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48",
+    "native_cache_dirs": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-native-replay-27/preexisting-lib-root-before/local",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/tool-discovery-native-replay-27/preexisting-lib-root-before/global"
+    ]
+  }
+}

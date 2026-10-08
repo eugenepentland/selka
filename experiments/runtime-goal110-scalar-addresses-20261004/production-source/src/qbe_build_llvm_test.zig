@@ -1,0 +1,747 @@
+//! Tests of the in-process LLVM translator (LLVM-ZIG-1): the retired Python
+//! adapter's translations plus reviewed constant-overflow deltas, refusals, the runtime
+//! helper registry, float and integer literal spellings, and the clang command
+//! the build derives from `zig cc -###`.
+const std = @import("std");
+const bundled = @import("qbe_build_assets");
+const llvm = @import("qbe_build_llvm.zig");
+const emit = @import("qbe_build_llvm_emit.zig");
+const il = @import("qbe_build_llvm_il.zig");
+const compile = @import("qbe_build_llvm_compile.zig");
+const slots_proof = @import("qbe_build_llvm_slots.zig");
+const classes = @import("qbe_build_llvm_classes.zig");
+
+/// The golden corpus `experiments/llvm-zig-20260924/pack_fixtures.py` wrote
+/// from the retired adapter: its own unit tests' translations plus units of
+/// real `--release` builds.
+const corpus_path = "test/fixtures/llvm-translate/adapter-corpus.json";
+
+const scalar_slot_unit =
+    \\export function l $scalar_slot(l %count) {
+    \\@start
+    \\ %cell =l alloc8 8
+    \\ storel 0, %cell
+    \\ jnz %count, @loop, @done
+    \\@loop
+    \\ %before =l loadl %cell
+    \\ %after =l add %before, 1
+    \\ storel %after, %cell
+    \\ %again =l csltl %after, %count
+    \\ jnz %again, @loop, @done
+    \\@done
+    \\ %result =l loadl %cell
+    \\ ret %result
+    \\}
+;
+
+// spec: LLVM-SCALAR-SLOTS-1
+test "LLVM scalar slots keep their entry allocation pointer across loop loads and stores" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const signatures: llvm.Signatures = .empty;
+    const table: llvm.RuntimeTable = .{};
+    var diagnostic: llvm.Diagnostic = .{};
+    const optimized = try llvm.translate(a, scalar_slot_unit, .{ .signatures = &signatures, .runtime = &table }, &diagnostic);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, optimized, " = alloca i8, i64 8, align 8"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, optimized, " = ptrtoint ptr "));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, optimized, " = inttoptr i64 "));
+    try std.testing.expectEqual(@as(usize, 4), std.mem.count(u8, optimized, "ptr %mem"));
+    const ordinary = try llvm.translate(a, scalar_slot_unit, .{ .signatures = &signatures, .runtime = &table, .pointers = .{ .scalar_slots = false } }, &diagnostic);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, ordinary, " = ptrtoint ptr "));
+    try std.testing.expectEqual(@as(usize, 4), std.mem.count(u8, ordinary, " = inttoptr i64 "));
+}
+
+fn scalarSlotPlan(a: std.mem.Allocator, body: []const u8) !slots_proof.Plan {
+    var diagnostic: il.Diagnostic = .{};
+    const source = try std.fmt.allocPrint(a, "export function l $slots(l %condition, l %other) {{\n@start\n{s}\n}}\n", .{body});
+    const unit = try il.parse(a, source, &diagnostic);
+    const counts = try classes.definitionCounts(a, &unit.function);
+    var strict = try slots_proof.find(a, &unit.function, &counts);
+    errdefer strict.deinit(a);
+    var addresses = try slots_proof.addresses(a, &unit.function, &counts);
+    defer addresses.deinit(a);
+    var names = strict.keyIterator();
+    while (names.next()) |name| try std.testing.expect(addresses.contains(name.*));
+    return strict;
+}
+
+// spec-case: LLVM-SCALAR-SLOTS-1
+test "LLVM scalar slots refuse escapes, arithmetic aliases, repeated definitions and unsupported access widths" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const cases = [_][]const u8{
+        " %cell =l alloc8 8\n %copy =l copy %cell\n ret 0",
+        " %cell =l alloc8 8\n %copy =l add %cell, 0\n ret 0",
+        " %cell =l alloc8 8\n storel %cell, %other\n ret 0",
+        " %cell =l alloc8 8\n storel %cell, %cell\n ret 0",
+        " %cell =l alloc8 8\n call $consume(l %cell)\n ret 0",
+        " %cell =l alloc8 8\n call %cell()\n ret 0",
+        " %cell =l alloc8 8\n ret call $consume(l %cell)",
+        " %cell =l alloc8 8\n ret call %cell()",
+        " %cell =l alloc8 8\n ret %cell",
+        " %cell =l alloc8 8\n storeb 1, %cell\n ret 0",
+        " %cell =l alloc8 8\n %value =w loaduw %cell\n ret 0",
+        " %cell =l alloc8 8\n %cell =l copy %other\n ret 0",
+        " %cell =l alloc8 %condition\n storel 1, %cell\n ret 0",
+        " %cell =l alloc8 4\n storel 1, %cell\n ret 0",
+        " %cell =l alloc4 8\n storel 1, %cell\n ret 0",
+        " %cell =w alloc8 8\n storel 1, %cell\n ret 0",
+        " %cell =l alloc8 8\n jmp @join\n@join\n %copy =l phi @start %cell\n ret 0",
+    };
+    for (cases) |body| try std.testing.expectEqual(@as(usize, 0), (try scalarSlotPlan(a, body)).count());
+    const independent = try scalarSlotPlan(a, " %cell =l alloc8 8\n %safe =l alloc16 8\n call $consume(l %cell)\n storel 1, %safe\n %value =l loadl %safe\n ret %value");
+    try std.testing.expect(!independent.contains("cell"));
+    try std.testing.expect(independent.contains("safe"));
+}
+
+// spec-case: LLVM-SCALAR-SLOTS-1
+test "LLVM scalar slots refuse nondominating, before-definition and repeated-entry allocations" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const cases = [_][]const u8{
+        " storel 1, %cell\n %cell =l alloc8 8\n ret 0",
+        " jnz %condition, @allocate, @join\n@allocate\n %cell =l alloc8 8\n storel 1, %cell\n jmp @join\n@join\n %value =l loadl %cell\n ret %value",
+        " jmp @loop\n@loop\n %cell =l alloc8 8\n storel 1, %cell\n jnz %condition, @loop, @done\n@done\n %value =l loadl %cell\n ret %value",
+        " %cell =l alloc8 8\n storel 1, %cell\n jnz %condition, @start, @done\n@done\n %value =l loadl %cell\n ret %value",
+    };
+    for (cases) |body| try std.testing.expectEqual(@as(usize, 0), (try scalarSlotPlan(a, body)).count());
+}
+
+fn scalarSlotAllocationFailures(a: std.mem.Allocator, function: *const il.Function, counts: *const std.StringHashMapUnmanaged(u32)) !void {
+    var plan = try slots_proof.find(a, function, counts);
+    defer plan.deinit(a);
+    try std.testing.expect(plan.contains("cell"));
+}
+
+// spec-case: LLVM-SCALAR-SLOTS-1
+test "LLVM scalar slots release their proof map on allocation failure" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var diagnostic: il.Diagnostic = .{};
+    const unit = try il.parse(a, scalar_slot_unit, &diagnostic);
+    const counts = try classes.definitionCounts(a, &unit.function);
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, scalarSlotAllocationFailures, .{ &unit.function, &counts });
+}
+
+// spec-case: LLVM-SCALAR-SLOTS-1
+test "LLVM scalar addresses retain integer definitions for escaped and mixed width entry cells" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const source =
+        \\export function l $scalar_address(l %seed) {
+        \\@start
+        \\ %cell =l alloc8 8
+        \\ storel %seed, %cell
+        \\ %alias =l copy %cell
+        \\ call $poke(l %alias)
+        \\ %byte =w loadub %cell
+        \\ storeb 7, %cell
+        \\ %result =l loadl %cell
+        \\ ret %result
+        \\}
+    ;
+    var diagnostic: llvm.Diagnostic = .{};
+    var signatures: llvm.Signatures = .empty;
+    try signatures.put(a, "poke", .{ .parameters = &.{"l"}, .result = null });
+    const table: llvm.RuntimeTable = .{};
+    const direct = try llvm.translate(a, source, .{ .signatures = &signatures, .runtime = &table }, &diagnostic);
+    const legacy = try llvm.translate(a, source, .{ .signatures = &signatures, .runtime = &table, .pointers = .{ .scalar_slots = false } }, &diagnostic);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, direct, " = ptrtoint ptr "));
+    try std.testing.expect(std.mem.indexOf(u8, direct, "store i64 %ptr") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, direct, " = inttoptr i64 "));
+    try std.testing.expectEqual(@as(usize, 4), std.mem.count(u8, direct, ", ptr %mem"));
+    try std.testing.expectEqual(@as(usize, 4), std.mem.count(u8, legacy, " = inttoptr i64 "));
+}
+
+fn scalarAddressPlan(a: std.mem.Allocator, body: []const u8) !slots_proof.Plan {
+    var diagnostic: il.Diagnostic = .{};
+    const source = try std.fmt.allocPrint(a, "export function l $addresses(l %condition, l %other) {{\n@start\n{s}\n}}\n", .{body});
+    const unit = try il.parse(a, source, &diagnostic);
+    const counts = try classes.definitionCounts(a, &unit.function);
+    return slots_proof.addresses(a, &unit.function, &counts);
+}
+
+// spec-case: LLVM-SCALAR-SLOTS-1
+test "LLVM scalar addresses refuse order, identity, entry reentry and allocation shape counterexamples" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const cases = [_][]const u8{
+        " storel 1, %cell\n %cell =l alloc8 8\n ret 0",
+        " call $consume(l %cell)\n %cell =l alloc8 8\n ret 0",
+        " call %cell()\n %cell =l alloc8 8\n ret 0",
+        " %value =l add 1, call $consume(l %cell)\n %cell =l alloc8 8\n ret 0",
+        " %value =l add 1, call %cell()\n %cell =l alloc8 8\n ret 0",
+        " jnz %condition, @allocate, @join\n@allocate\n %cell =l alloc8 8\n storel 1, %cell\n jmp @join\n@join\n %value =l loadl %cell\n ret %value",
+        " jmp @loop\n@loop\n %cell =l alloc8 8\n storel 1, %cell\n jnz %condition, @loop, @done\n@done\n %value =l loadl %cell\n ret %value",
+        " %cell =l alloc8 8\n storel 1, %cell\n jnz %condition, @start, @done\n@done\n %value =l loadl %cell\n ret %value",
+        " %cell =l alloc8 8\n %cell =l copy %other\n ret 0",
+        " %cell =l alloc8 %condition\n ret 0",
+        " %cell =l alloc8 4\n ret 0",
+        " %cell =l alloc4 8\n ret 0",
+        " %cell =w alloc8 8\n ret 0",
+    };
+    for (cases) |body| try std.testing.expectEqual(@as(usize, 0), (try scalarAddressPlan(a, body)).count());
+}
+
+fn scalarAddressAllocationFailures(a: std.mem.Allocator, function: *const il.Function, counts: *const std.StringHashMapUnmanaged(u32)) !void {
+    var plan = try slots_proof.addresses(a, function, counts);
+    defer plan.deinit(a);
+    try std.testing.expect(plan.contains("cell"));
+}
+
+// spec-case: LLVM-SCALAR-SLOTS-1
+test "LLVM scalar addresses release their identity proof map on allocation failure" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var diagnostic: il.Diagnostic = .{};
+    const unit = try il.parse(a, scalar_slot_unit, &diagnostic);
+    const counts = try classes.definitionCounts(a, &unit.function);
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, scalarAddressAllocationFailures, .{ &unit.function, &counts });
+}
+
+// spec-case: QBE-INTEGER-FLOAT-DIRECT-1
+test "LLVM integer float opcodes convert numerically and cast preserves bits" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const source =
+        \\export function l $integer_float(l %signed, l %unsigned, w %word) {
+        \\@start
+        \\ %a =d sltof %signed
+        \\ %b =d ultof %unsigned
+        \\ %c =s swtof %word
+        \\ %d =s uwtof %word
+        \\ %bits =l cast %a
+        \\ ret %bits
+        \\}
+    ;
+    const signatures: llvm.Signatures = .empty;
+    const table: llvm.RuntimeTable = .{};
+    var diagnostic: llvm.Diagnostic = .{ .unit = "integer_float" };
+    const ir = try llvm.translate(arena.allocator(), source, .{ .signatures = &signatures, .runtime = &table }, &diagnostic);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, ir, " = sitofp i64 "));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, ir, " = uitofp i64 "));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, ir, " = sitofp i32 "));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, ir, " = uitofp i32 "));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, ir, " = bitcast double "));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, ir, " = bitcast i64 "));
+}
+
+/// The runtime registry every build reads: the bundled runtime tree's top level.
+fn bundledTable(arena: std.mem.Allocator) !llvm.RuntimeTable {
+    var sources: std.ArrayList(llvm.RuntimeSource) = .empty;
+    for (bundled.files) |file| {
+        if (std.mem.indexOfScalar(u8, file.path, '/') != null) continue;
+        try sources.append(arena, .{ .name = file.path, .bytes = file.bytes });
+    }
+    std.mem.sort(llvm.RuntimeSource, sources.items, {}, struct {
+        fn less(_: void, left: llvm.RuntimeSource, right: llvm.RuntimeSource) bool {
+            return std.mem.lessThan(u8, left.name, right.name);
+        }
+    }.less);
+    return llvm.RuntimeTable.read(arena, sources.items);
+}
+
+/// How a replay of the corpus went: cases whose IR matched, cases both sides
+/// refused, and the name of the first case that did neither.
+const Replay = struct { identical: usize = 0, refused: usize = 0, cases: usize = 0, first_difference: []const u8 = "" };
+
+fn replayCorpus(arena: std.mem.Allocator) !Replay {
+    const text = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, corpus_path, arena, .limited(16 << 20));
+    const cases = try std.json.parseFromSliceLeaky(std.json.Value, arena, text, .{});
+    const table = try bundledTable(arena);
+    var replay: Replay = .{ .cases = cases.array.items.len };
+    for (cases.array.items) |case| {
+        const produced = translateCase(arena, case, &table) catch |err| switch (err) {
+            error.TranslationFailed => null,
+            else => return err,
+        };
+        const expected = case.object.get("expected").?;
+        const same = if (produced) |ir| expected == .string and std.mem.eql(u8, ir, expected.string) else expected == .null;
+        if (same and produced == null) replay.refused += 1 else if (same) replay.identical += 1;
+        if (!same and replay.first_difference.len == 0) replay.first_difference = case.object.get("name").?.string;
+    }
+    return replay;
+}
+
+fn translateCase(arena: std.mem.Allocator, case: std.json.Value, table: *const llvm.RuntimeTable) !?[]const u8 {
+    const fields = case.object;
+    var signatures: llvm.Signatures = .empty;
+    var entries = fields.get("signatures").?.object.iterator();
+    while (entries.next()) |entry| {
+        const parameters = entry.value_ptr.object.get("parameters").?.array.items;
+        const letters = try arena.alloc([]const u8, parameters.len);
+        for (parameters, letters) |parameter, *letter| letter.* = parameter.string;
+        const result = entry.value_ptr.object.get("result").?;
+        try signatures.put(arena, entry.key_ptr.*, .{ .parameters = letters, .result = if (result == .string) result.string else null });
+    }
+    const switches = fields.get("switches").?.object;
+    const options: llvm.Options = .{
+        .signatures = &signatures,
+        .runtime = table,
+        .target_cpu = fields.get("target_cpu").?.string,
+        .target_features = fields.get("target_features").?.string,
+        .alias = on(switches, "MYLANG_QBE_LLVM_ALIAS"),
+        // Historical byte-shape replay predates direct scalar-slot pointers.
+        .pointers = .{ .element_gep = on(switches, "MYLANG_QBE_LLVM_ELEMENT_GEP"), .scalar_slots = false },
+        .sticky = on(switches, "MYLANG_QBE_LLVM_STICKY"),
+    };
+    var diagnostic: llvm.Diagnostic = .{ .unit = fields.get("name").?.string };
+    const translated = try llvm.translate(arena, fields.get("ssa").?.string, options, &diagnostic);
+    return translated;
+}
+
+fn on(switches: std.json.ObjectMap, name: []const u8) bool {
+    const value = switches.get(name) orelse return true;
+    return !std.mem.eql(u8, value.string, "0");
+}
+
+// spec: LLVM-ZIG-1
+test "the in-process translator reproduces the retired Python adapter's IR for its whole golden corpus" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const replay = try replayCorpus(arena.allocator());
+    // Historical cases match byte for byte, with five explicit constant-bound
+    // expectations updated for LLVM-CONSTANT-OVERFLOW-1. Each keeps its old IR.
+    try std.testing.expectEqualStrings("", replay.first_difference);
+    try std.testing.expectEqual(replay.cases, replay.identical + replay.refused);
+    try std.testing.expect(replay.identical >= 100);
+    try std.testing.expect(replay.refused >= 1);
+}
+
+const refused_unit =
+    \\export function l $myl_f_bad(l %ctx) {
+    \\@start
+    \\ %v =l vaarg %ctx
+    \\ ret %v
+    \\}
+;
+
+// spec-case: LLVM-ZIG-1
+test "a construct the translator does not know is refused with a diagnostic naming the unit" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const signatures: llvm.Signatures = .empty;
+    const table: llvm.RuntimeTable = .{};
+    var diagnostic: llvm.Diagnostic = .{ .unit = "bad-unit" };
+    const options: llvm.Options = .{ .signatures = &signatures, .runtime = &table };
+    try std.testing.expectError(error.TranslationFailed, llvm.translate(a, refused_unit, options, &diagnostic));
+    try std.testing.expect(std.mem.indexOf(u8, diagnostic.message, "bad-unit") != null);
+    try std.testing.expect(std.mem.indexOf(u8, diagnostic.message, "unsupported opcode") != null);
+    // An undeclared runtime helper is refused rather than declared from its call site.
+    const helper = "export function l $f(l %ctx) {\n@start\n %v =l call $myl_qbe_no_such_helper(l %ctx)\n ret %v\n}\n";
+    diagnostic = .{ .unit = "helper-unit" };
+    try std.testing.expectError(error.TranslationFailed, llvm.translate(a, helper, options, &diagnostic));
+    try std.testing.expect(std.mem.indexOf(u8, diagnostic.message, "has no checked C signature") != null);
+}
+
+// spec: ERROR-TRACE-5
+test "an error trace recorder call is free to inline and no other call is" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const signatures: llvm.Signatures = .empty;
+    const table = try bundledTable(a);
+    const options: llvm.Options = .{ .signatures = &signatures, .runtime = &table };
+    var diagnostic: llvm.Diagnostic = .{ .unit = "traced" };
+    const unit = "export function l $f(l %ctx, l %a0) {\n@start\n jnz %a0, @fail, @ok\n@fail\n" ++
+        " call $myl_qbe_error_trace_origin(l %ctx, l 5)\n call $myl_qbe_error_trace_append(l %ctx, l 6)\n ret 1\n@ok\n ret 0\n}\n";
+    const traced = try llvm.translate(a, unit, options, &diagnostic);
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, traced, "\"call-inline-cost\"=\"0\""));
+    try std.testing.expect(std.mem.indexOf(u8, traced, " @myl_qbe_error_trace_origin_preserve_most(ptr, i64) cold nounwind\n") != null);
+    const plain = try llvm.translate(a, "export function l $g(l %ctx) {\n@start\n %v =l call $myl_qbe_heap(l %ctx)\n ret %v\n}\n", options, &diagnostic);
+    try std.testing.expect(std.mem.indexOf(u8, plain, "call-inline-cost") == null);
+}
+
+/// The bundled runtime file called `name`.
+fn bundledFile(name: []const u8) []const u8 {
+    for (bundled.files) |file| if (std.mem.eql(u8, file.path, name)) return file.bytes;
+    return "";
+}
+
+// spec: ERROR-TRACE-6
+test "a trace recorder call goes to its preserve_most twin under preserve_mostcc and no other call changes convention" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const signatures: llvm.Signatures = .empty;
+    const table = try bundledTable(a);
+    const options: llvm.Options = .{ .signatures = &signatures, .runtime = &table };
+    var diagnostic: llvm.Diagnostic = .{ .unit = "traced" };
+    const unit = "export function l $f(l %ctx, l %a0) {\n@start\n %h =l call $myl_qbe_heap(l %ctx)\n jnz %a0, @fail, @ok\n@fail\n" ++
+        " call $myl_qbe_error_trace_origin(l %ctx, l 5)\n call $myl_qbe_error_trace_append(l %ctx, l 6)\n ret %h\n@ok\n ret 0\n}\n";
+    const traced = try llvm.translate(a, unit, options, &diagnostic);
+    try std.testing.expect(std.mem.indexOf(u8, traced, "\ndeclare preserve_mostcc void @myl_qbe_error_trace_origin_preserve_most(ptr, i64) cold nounwind\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, traced, "\ndeclare preserve_mostcc void @myl_qbe_error_trace_append_preserve_most(ptr, i64) cold nounwind\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, traced, "  call preserve_mostcc void @myl_qbe_error_trace_origin_preserve_most(ptr ") != null);
+    try std.testing.expect(std.mem.indexOf(u8, traced, "  call preserve_mostcc void @myl_qbe_error_trace_append_preserve_most(ptr ") != null);
+    // Two declarations and two calls name a twin; the C-convention recorders are
+    // never named, and the heap helper keeps the C convention.
+    try std.testing.expectEqual(@as(usize, 4), std.mem.count(u8, traced, "preserve_mostcc"));
+    try std.testing.expectEqual(@as(usize, 4), std.mem.count(u8, traced, "_preserve_most("));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, traced, "@myl_qbe_error_trace_origin("));
+    try std.testing.expect(std.mem.indexOf(u8, traced, "\ndeclare ptr @myl_qbe_heap(ptr) memory(none) nounwind willreturn\n") != null);
+    // The runtime defines each twin with the convention the translation calls it
+    // with, running the body its C-convention recorder runs.
+    const header = bundledFile("qbe_runtime.h");
+    try std.testing.expect(std.mem.indexOf(u8, header, "\n__attribute__((preserve_most)) void myl_qbe_error_trace_origin_preserve_most(const MylQbeFunction *function, uint64_t site);\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, header, "\n__attribute__((preserve_most)) void myl_qbe_error_trace_append_preserve_most(const MylQbeFunction *function, uint64_t site);\n") != null);
+    const source = bundledFile("qbe_runtime.c");
+    const twin = "__attribute__((cold, noinline, preserve_most)) void myl_qbe_error_trace_{s}_preserve_most(const MylQbeFunction *function, uint64_t site) {{\n";
+    const origin = try std.fmt.allocPrint(a, twin ++ "    error_trace_record_origin(function, site);\n}}\n", .{"origin"});
+    const append = try std.fmt.allocPrint(a, twin ++ "    error_trace_record_append(function, site);\n}}\n", .{"append"});
+    try std.testing.expect(std.mem.indexOf(u8, source, origin) != null);
+    try std.testing.expect(std.mem.indexOf(u8, source, append) != null);
+    try std.testing.expect(std.mem.indexOf(u8, source, "__attribute__((cold, noinline)) void myl_qbe_error_trace_append(const MylQbeFunction *function, uint64_t site) {\n    error_trace_record_append(function, site);\n}\n") != null);
+    try std.testing.expectEqualStrings("ptr", table.signature("myl_qbe_error_trace_append_preserve_most").?.parameters[0]);
+}
+
+// spec-case: LLVM-ZIG-1
+test "network host narrowing translates with the checked capability ABI" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const table = try bundledTable(arena.allocator());
+    const signatures: llvm.Signatures = .empty;
+    var diagnostic: llvm.Diagnostic = .{ .unit = "network-host" };
+    const unit = "export function l $f(l %ctx, l %cap, l %host) {\n@start\n %v =l call $myl_qbe_host_resource(l %ctx, l %cap, l %host, l 4)\n ret %v\n}\n";
+    const translated = try llvm.translate(arena.allocator(), unit, .{ .signatures = &signatures, .runtime = &table }, &diagnostic);
+    try std.testing.expect(std.mem.indexOf(u8, translated, "declare i64 @myl_qbe_host_resource(ptr, i64, ptr, i64)") != null);
+}
+
+// spec-case: LLVM-ZIG-1
+test "the runtime registry reads helpers from headers and Zig exports and refuses unknown types" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const sources = [_]llvm.RuntimeSource{
+        .{ .name = "a.h", .bytes = "/* skipped(int x); */\nint32_t myl_native_sum(const void *heap,\n    int64_t count); // tail\nuint8_t myl_qbe_byte(int x);\nvoid *myl_qbe_where(void);\n" },
+        .{ .name = "b.zig", .bytes = "comptime {\n    @export(&twice, .{ .name = \"myl_native_twice\" });\n}\npub fn twice(heap: ?*anyopaque, value: u32) callconv(.c) f64 {\n    return 0;\n}\n" },
+    };
+    const table = try llvm.RuntimeTable.read(arena.allocator(), &sources);
+    const sum = table.signature("myl_native_sum").?;
+    try std.testing.expectEqualDeep(@as([]const []const u8, &.{ "ptr", "i64" }), sum.parameters);
+    try std.testing.expectEqualStrings("i32", sum.result);
+    try std.testing.expectEqualStrings("ptr", table.signature("myl_qbe_where").?.result);
+    try std.testing.expectEqualDeep(@as([]const []const u8, &.{ "ptr", "i32" }), table.signature("myl_native_twice").?.parameters);
+    try std.testing.expectEqualStrings("double", table.signature("myl_native_twice").?.result);
+    // `uint8_t` is not a type the registry spells, so the helper stays unknown.
+    try std.testing.expectEqual(@as(?llvm.RuntimeSignature, null), table.signature("myl_qbe_byte"));
+    // The curated table and the generated renderer shape need no source at all.
+    try std.testing.expectEqualStrings("void", table.signature("myl_r_anything").?.result);
+    try std.testing.expectEqualStrings("ptr", table.signature("myl_qbe_heap").?.result);
+}
+
+// spec-case: LLVM-ZIG-1
+test "float and integer literals are spelled as the adapter's Python spelled them" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try std.testing.expectEqualStrings("1.5", try emit.pythonRepr(a, 1.5));
+    try std.testing.expectEqualStrings("100.0", try emit.pythonRepr(a, 100.0));
+    try std.testing.expectEqualStrings("-0.0", try emit.pythonRepr(a, -0.0));
+    try std.testing.expectEqualStrings("0.0001", try emit.pythonRepr(a, 0.0001));
+    try std.testing.expectEqualStrings("1e-05", try emit.pythonRepr(a, 0.00001));
+    try std.testing.expectEqualStrings("1234567890123456.0", try emit.pythonRepr(a, 1234567890123456.0));
+    try std.testing.expectEqualStrings("1e+16", try emit.pythonRepr(a, 1e16));
+    try std.testing.expectEqualStrings("1.2345678901234568e+16", try emit.pythonRepr(a, 12345678901234567.0));
+    try std.testing.expectEqual(@as(?u64, 31), il.pythonInt("0x1F"));
+    try std.testing.expectEqual(@as(?u64, 1000), il.pythonInt("1_000"));
+    try std.testing.expectEqual(@as(?u64, std.math.maxInt(u64)), il.pythonInt("-1"));
+    try std.testing.expectEqual(@as(?u64, null), il.pythonInt("010"));
+    try std.testing.expectEqual(@as(?u64, 0), il.pythonInt("00"));
+}
+
+// spec-case: LLVM-ZIG-1
+test "the clang command of an LLVM unit is the cc1 line of zig cc's own listing" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const listing =
+        \\clang version 22.1.8
+        \\ (in-process)
+        \\ "/opt/zig/zig" "-cc1" "-triple" "x86_64-unknown-linux-gnu" "-O2" "-emit-llvm-bc" "-flto=full" "-main-file-name" "object.o.ll" "-D" "A=\"b\\c\"" "-o" "/w/object.o" "-x" "ir" "/w/object.o.ll"
+        \\
+    ;
+    const argv = (try compile.commandLine(arena.allocator(), .{ .zig = "/tools/zig", .front = "-cc1" }, listing)).?;
+    try std.testing.expectEqualStrings("/tools/zig", argv[0]);
+    try std.testing.expectEqualStrings("clang", argv[1]);
+    try std.testing.expectEqualStrings("-cc1", argv[2]);
+    try std.testing.expectEqualStrings("A=\"b\\c\"", argv[11]);
+    try std.testing.expectEqualStrings("/w/object.o.ll", argv[argv.len - 1]);
+    try std.testing.expectEqual(@as(?[]const []const u8, null), try compile.commandLine(arena.allocator(), .{ .zig = "/tools/zig", .front = "-cc1" }, "no command here\n"));
+    try std.testing.expectEqual(@as(?usize, argv.len - 4), compile.outputPosition(argv, "/w/object.o"));
+}
+
+// spec-case: LLVM-ZIG-1
+test "a unit built without LTO writes its assembly where the -S command's -o says, not to /dev/null" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const listing =
+        \\ "/opt/zig/zig" "-cc1" "-triple" "x86_64-unknown-linux-gnu" "-S" "-O2" "-o" "/dev/null" "-x" "ir" "/w/unit.s.ll"
+        \\
+    ;
+    const argv = (try compile.commandLine(arena.allocator(), .{ .zig = "/tools/zig", .front = "-cc1" }, listing)).?;
+    const at = compile.outputPosition(argv, "/w/unit.s").?;
+    try std.testing.expectEqualStrings("/dev/null", argv[at]);
+    try std.testing.expectEqualStrings("-o", argv[at - 1]);
+    try std.testing.expectEqual(@as(?usize, null), compile.outputPosition(&.{ "zig", "clang", "-o" }, "/w/unit.s"));
+}
+
+// spec-case: RC-RUNTIME-CONTRACT-1
+test "RC runtime helpers use checked C status and transfer signatures" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const table = try bundledTable(arena.allocator());
+    try std.testing.expectEqualStrings("i32", table.signature("myl_rc_owner_acquire").?.result);
+    try std.testing.expectEqualStrings("void", table.signature("myl_rc_owner_release").?.result);
+    try std.testing.expectEqualDeep(@as([]const []const u8, &.{ "ptr", "ptr" }), table.signature("myl_rc_owner_acquire").?.parameters);
+    try std.testing.expectEqualDeep(@as([]const []const u8, &.{ "ptr", "ptr", "ptr", "i32" }), table.signature("myl_rc_value_replace").?.parameters);
+    try std.testing.expectEqualDeep(@as([]const []const u8, &.{ "ptr", "ptr", "i64", "ptr" }), table.signature("myl_rc_list_set").?.parameters);
+    try std.testing.expectEqualStrings("i32", table.signature("myl_rc_dictionary_pop").?.result);
+    try std.testing.expect(@import("qbe_build_llvm_runtime.zig").isHelper("myl_rc_unknown"));
+    try std.testing.expectEqual(@as(?llvm.RuntimeSignature, null), table.signature("myl_rc_unknown"));
+}
+
+// spec: LLVM-SELF-ADDRESS-1
+test "an LLVM callback may name the function currently being defined" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var signatures: llvm.Signatures = .empty;
+    try signatures.put(a, "through", .{ .parameters = &.{ "l", "l" }, .result = "l" });
+    const table: llvm.RuntimeTable = .{};
+    const options: llvm.Options = .{ .signatures = &signatures, .runtime = &table };
+    var diagnostic: llvm.Diagnostic = .{ .unit = "self-callback" };
+    const translated = try llvm.translate(a, "export function l $recurse(l %ctx) {\n@start\n %v =l call $through(l $recurse, l %ctx)\n ret %v\n}\n", options, &diagnostic);
+    try std.testing.expect(std.mem.indexOf(u8, translated, "ptrtoint (ptr @recurse to i64)") != null);
+    try std.testing.expect(std.mem.indexOf(u8, translated, "declare i64 @recurse") == null);
+    try std.testing.expect(std.mem.indexOf(u8, translated, "declare i64 @through(i64, i64)") != null);
+}
+
+const prefix_unit =
+    \\export function l $myl_f_prefix(l %ctx, l %a0) {
+    \\@start
+    \\ %p =l loadl %a0
+    \\ %h =l sub %p, 24
+    \\ # myl-rc %h
+    \\ %c =w loaduw %h
+    \\ %n =w add %c, 1
+    \\ storew %n, %h
+    \\ %m =l sub %p, 16
+    \\ # myl-rc %m
+    \\ %k =l loadl %m
+    \\ %q =l sub %p, 16
+    \\ %j =l loadl %q
+    \\ %r =l add %k, %j
+    \\ ret %r
+    \\}
+;
+
+// spec: LLVM-RC-PREFIX-1
+test "a marked RC prefix word is a getelementptr from its payload in a scope apart from frame, objects and elements" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const signatures: llvm.Signatures = .empty;
+    const table: llvm.RuntimeTable = .{};
+    var diagnostic: llvm.Diagnostic = .{ .unit = "prefix-unit" };
+    const ir = try llvm.translate(a, prefix_unit, .{ .signatures = &signatures, .runtime = &table }, &diagnostic);
+    // Each access through a marked word is a constant offset from the payload.
+    try std.testing.expect(std.mem.indexOf(u8, ir, "i64 -24") != null);
+    try std.testing.expect(std.mem.indexOf(u8, ir, "i64 -16") != null);
+    try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, ir, "= getelementptr i8, ptr"));
+    // The count load and store and the mark load carry the prefix scope.
+    try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, ir, "!alias.scope !9, !noalias !10"));
+    try std.testing.expect(std.mem.indexOf(u8, ir, "!8 = distinct !{!8, !0, !\"rc prefix\"}") != null);
+    try std.testing.expect(std.mem.indexOf(u8, ir, "!10 = !{!1, !5}") != null);
+    // Every `sub` still computes its integer; the unmarked header read keeps
+    // an `inttoptr` of it (as do the parameter and each payload base).
+    try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, ir, " = sub i64 "));
+    try std.testing.expectEqual(@as(usize, 5), std.mem.count(u8, ir, " = inttoptr i64 "));
+    // Without GEPs and alias metadata the marker changes nothing.
+    diagnostic = .{ .unit = "prefix-unit" };
+    const plain = try llvm.translate(a, prefix_unit, .{ .signatures = &signatures, .runtime = &table, .alias = false, .pointers = .{ .element_gep = false } }, &diagnostic);
+    try std.testing.expect(std.mem.indexOf(u8, plain, "getelementptr") == null);
+    try std.testing.expect(std.mem.indexOf(u8, plain, "rc prefix") == null);
+}
+
+/// Translate one constant-bound test without invoking loop versioning.
+fn constantOverflowIr(arena: std.mem.Allocator, body: []const u8) ![]const u8 {
+    var signatures: llvm.Signatures = .empty;
+    try signatures.put(arena, "touch", .{ .parameters = &.{"l"}, .result = null });
+    const table: llvm.RuntimeTable = .{};
+    var diagnostic: llvm.Diagnostic = .{ .unit = "constant-overflow" };
+    const source = try std.fmt.allocPrint(arena, "export function l $probe(l %a, l %other) {{\n@start\n{s}\n ret %flag\n}}\n", .{body});
+    return llvm.translate(arena, source, .{ .signatures = &signatures, .runtime = &table, .sticky = false }, &diagnostic);
+}
+
+const overflow_extract = "extractvalue { i64, i1 }";
+const unit_overflow_cases = [_][4][]const u8{
+    .{ "sub", "1", "csltl", "-9223372036854775807" },
+    .{ "add", "-1", "csltl", "-9223372036854775807" },
+    .{ "add", "1", "csgtl", "9223372036854775806" },
+    .{ "sub", "-1", "csgtl", "9223372036854775806" },
+};
+
+/// The four +/-1 arithmetic forms have exactly one signed overflow bound.
+fn constantOverflowPositive(arena: std.mem.Allocator) !usize {
+    const cases = unit_overflow_cases;
+    var accepted: usize = 0;
+    for (cases) |case| {
+        const body = try std.fmt.allocPrint(arena, " %slot =l alloc8 8\n storel {s}, %slot\n %rhs =l loadl %slot\n %result =l {s} %a, %rhs\n %flag =l {s} %a, {s}", .{ case[1], case[0], case[2], case[3] });
+        const ir = try constantOverflowIr(arena, body);
+        const stem = if (std.mem.eql(u8, case[0], "add")) "sadd" else "ssub";
+        const intrinsic = try std.fmt.allocPrint(arena, "call {{ i64, i1 }} @llvm.{s}.with.overflow.i64", .{stem});
+        try std.testing.expect(std.mem.indexOf(u8, ir, intrinsic) != null);
+        try std.testing.expect(std.mem.indexOf(u8, ir, "load i64") != null);
+        try std.testing.expect(std.mem.indexOf(u8, ir, overflow_extract) != null);
+        accepted += 1;
+    }
+    return accepted;
+}
+
+/// Refuse facts lacking an exact private eight-byte slot and local value.
+fn constantOverflowNegative(arena: std.mem.Allocator) !usize {
+    const before = " %slot =l alloc8 8\n storel 1, %slot\n";
+    const after = " %rhs =l loadl %slot\n %result =l sub %a, %rhs\n %flag =l csltl %a, -9223372036854775807";
+    const cases = [_][]const u8{
+        " %slot =l alloc4 8\n storel 1, %slot\n" ++ after,
+        " %slot =l alloc8 4\n storel 1, %slot\n" ++ after,
+        before ++ " call $touch(l %slot)\n" ++ after,
+        before ++ " %alias =l copy %slot\n" ++ after,
+        before ++ " # myl-obj %a\n" ++ after,
+        before ++ " %slot =l copy %other\n" ++ after,
+        before ++ " %alias =l add %slot, 0\n storel 2, %alias\n" ++ after,
+        before ++ " storew 1, %slot\n" ++ after,
+        before ++ " storel 2, %slot\n" ++ after,
+        before ++ " storel 1, %other\n" ++ after,
+        before ++ " blit %other, %slot, 8\n" ++ after,
+        before ++ " %other_slot =l alloc8 8\n storel 99, %other_slot\n" ++ after,
+        " %slot =l alloc8 8\n %alias =l copy %slot\n storel 1, %slot\n storel 2, %alias\n" ++ after,
+        " %slot =l alloc8 8\n %alias =l copy %slot\n storel 1, %slot\n blit %other, %alias, 8\n" ++ after,
+        before ++ " call $touch(l %other)\n" ++ after,
+        before ++ " jmp @next\n@next\n" ++ after,
+        before ++ " %rhs =l loadl %slot\n %result =l sub %a, %rhs\n jmp @next\n@next\n %flag =l csltl %a, -9223372036854775807",
+        before ++ " %rhs =l loadl %slot\n %result =l sub %a, %rhs\n %a =l copy 7\n %flag =l csltl %a, -9223372036854775807",
+        before ++ " %rhs =l loadl %slot\n %result =l sub %a, %rhs\n %flag =l csltl %a, -9223372036854775808",
+        " %slot =l alloc8 8\n storel extern $1, %slot\n" ++ after,
+        " %slot =l alloc8 extern $8\n storel 1, %slot\n" ++ after,
+        " %slot =l alloc8 8\n %rhs =l loadl %slot\n %result =l sub %a, %rhs\n %flag =l csltl %a, -9223372036854775807",
+        " %slot =l alloc8 8\n storel -1, %slot\n %rhs =w loadl %slot\n %result =l add %a, %rhs\n %flag =l csltl %a, -9223372036854775807",
+        " %rhs =w copy 1\n %result =w sub %a, %rhs\n %flag =l csltl %a, -9223372036854775807",
+    };
+    for (cases) |body| {
+        const ir = try constantOverflowIr(arena, body);
+        try std.testing.expect(std.mem.indexOf(u8, ir, ".with.overflow") == null);
+    }
+    return cases.len;
+}
+
+/// A fresh store can prove a value after a historical escape, without noalias.
+fn constantOverflowLocal(arena: std.mem.Allocator) !usize {
+    const after = " %rhs =l loadl %slot\n %result =l sub %a, %rhs\n %flag =l csltl %a, -9223372036854775807";
+    const cases = [_][]const u8{
+        " %slot =l alloc8 8\n call $touch(l %slot)\n storel 1, %slot\n" ++ after,
+        " %slot =l alloc8 8\n %alias =l copy %slot\n storel 1, %slot\n" ++ after,
+        " %slot =l alloc8 8\n %alias =l copy %slot\n storel 2, %alias\n storel 1, %slot\n" ++ after,
+        " %slot =l alloc8 8\n storel 2, %slot\n storel 1, %slot\n" ++ after,
+        " %slot =l alloc8 8\n storel 1, %slot\n %rhs =l loadl %slot\n call $touch(l %slot)\n %result =l sub %a, %rhs\n %flag =l csltl %a, -9223372036854775807",
+        " %slot =l alloc8 8\n %alias =l copy %slot\n storel 1, %slot\n %rhs =l loadl %slot\n blit %other, %alias, 8\n %result =l sub %a, %rhs\n %flag =l csltl %a, -9223372036854775807",
+    };
+    for (cases) |body| {
+        const ir = try constantOverflowIr(arena, body);
+        try std.testing.expect(std.mem.indexOf(u8, ir, "@llvm.ssub.with.overflow.i64") != null);
+    }
+    return cases.len;
+}
+
+// spec-case: LLVM-CONSTANT-OVERFLOW-1
+test "constant overflow reaching stores survive historical escapes and captured values survive later writes" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqual(@as(usize, 6), try constantOverflowLocal(arena.allocator()));
+}
+
+// spec: LLVM-CONSTANT-OVERFLOW-1
+test "constant overflow intrinsics admit the four exact local signed bounds" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqual(@as(usize, 4), try constantOverflowPositive(arena.allocator()));
+}
+
+// spec-case: LLVM-CONSTANT-OVERFLOW-1
+test "constant overflow intrinsics refuse escaping alias wrong width reset and cross-block facts" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqual(@as(usize, 24), try constantOverflowNegative(arena.allocator()));
+}
+
+fn affineOverflowCases(arena: std.mem.Allocator) !usize {
+    const cases = unit_overflow_cases;
+    for (cases) |case| {
+        const body = try std.fmt.allocPrint(arena, " %slot =l alloc8 8\n storel {s}, %slot\n %rhs =l loadl %slot\n # myl-affine %result\n %result =l {s} %a, %rhs\n %flag =l {s} %a, {s}", .{ case[1], case[0], case[2], case[3] });
+        const hinted = try constantOverflowIr(arena, body);
+        const ordinary = try std.fmt.allocPrint(arena, " = {s} i64 ", .{case[0]});
+        try std.testing.expect(std.mem.indexOf(u8, hinted, ordinary) != null);
+        try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, hinted, overflow_extract));
+        try std.testing.expect(std.mem.indexOf(u8, hinted, "load i64") != null);
+        const unmarked = try std.mem.replaceOwned(u8, arena, body, "# myl-affine %result", "# no hint");
+        const original = try constantOverflowIr(arena, unmarked);
+        try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, original, overflow_extract));
+    }
+    return cases.len;
+}
+
+// spec: LLVM-INDUCTION-RESULT-1
+test "induction result manual hints keep wrapped operations and exact overflow flags for all unit forms" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqual(@as(usize, 4), try affineOverflowCases(arena.allocator()));
+}
+
+fn affineRefusals(arena: std.mem.Allocator) !usize {
+    const cases = [_][]const u8{
+        " # myl-affine %result\n %result =l sub %a, %other\n %flag =l csltl %a, -9223372036854775807",
+        " # myl-affine %result\n %result =w sub %a, 1\n %flag =l csltl %a, -9223372036854775807",
+        " # myl-affine %result\n %result =l sub %a, 1\n %flag =l csltl %a, -9223372036854775808",
+        " # myl-affine %result\n # myl-obj %a\n %result =l sub %a, 1\n %flag =l csltl %a, -9223372036854775807",
+        " # myl-affine %result\n # myl-rc %a\n %result =l sub %a, 1\n %flag =l csltl %a, -9223372036854775807",
+    };
+    for (cases) |body| {
+        const refused = try constantOverflowIr(arena, body);
+        try std.testing.expect(std.mem.indexOf(u8, refused, ".with.overflow") == null);
+        try std.testing.expect(std.mem.indexOf(u8, refused, "icmp slt") != null);
+    }
+    return cases.len;
+}
+
+// spec-case: LLVM-INDUCTION-RESULT-1
+test "induction result hints grant no literal width pointer or range authority" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqual(@as(usize, 5), try affineRefusals(arena.allocator()));
+}
+
+// spec: QBE-CHECKED-PRODUCT-HIGH-1
+test "compact multiply high preserves exact signed and unsigned LLVM overflow intrinsics" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const prefix = " %result =l mul %a, %other\n %high =l umulh %a, %other\n";
+    const unsigned = try constantOverflowIr(a, prefix ++ " %flag =l cnel %high, 0");
+    try std.testing.expect(std.mem.indexOf(u8, unsigned, "call { i64, i1 } @llvm.umul.with.overflow.i64") != null);
+    const signed = try constantOverflowIr(a, prefix ++
+        " %an =l csltl %a, 0\n %bn =l csltl %other, 0\n %am =l neg %an\n %bm =l neg %bn\n" ++
+        " %at =l and %other, %am\n %bt =l and %a, %bm\n %s1 =l sub %high, %at\n %s2 =l sub %s1, %bt\n" ++
+        " %sign =l sar %result, 63\n %flag =l cnel %s2, %sign");
+    try std.testing.expect(std.mem.indexOf(u8, signed, "call { i64, i1 } @llvm.smul.with.overflow.i64") != null);
+    const mismatched = try constantOverflowIr(a, " %result =l mul %a, %other\n %high =l umulh %a, 7\n %flag =l cnel %high, 0");
+    try std.testing.expect(std.mem.indexOf(u8, mismatched, ".with.overflow") == null);
+    const truncated = try constantOverflowIr(a, " %result =l mul %a, %other\n %high =w umulh %a, %other\n %flag =l cnel %high, 0");
+    try std.testing.expect(std.mem.indexOf(u8, truncated, ".with.overflow") == null);
+}

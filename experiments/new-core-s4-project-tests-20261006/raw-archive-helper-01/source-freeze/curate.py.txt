@@ -1,0 +1,93 @@
+import hashlib
+import importlib.util
+import json
+import os
+from pathlib import Path
+import shutil
+import stat
+
+base = Path('/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests')
+experiment = base / 'experiments/new-core-s4-project-tests-20261006'
+original = base / '.mylang-cache/s4-m/raw-archive-selftest-01'
+target = experiment / 'raw-archive-helper-01'
+spec = importlib.util.spec_from_file_location('raw_archive_tool', experiment / 'archive_raw_processes.py')
+tool = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(tool)
+expected = {
+    'conformance_checked.py': '67a69be4c0e3c7f96b8350de8b211ab2528bc2b6e859836ff014320ff54cd70d',
+    'project_matrix.py': 'c47fcf0efd23eec1cb2f693afa5c012a02dae6d1a2cc1d1e80f48e0c91ac2b1a',
+    'fuzz_matrix.py': '2d3bdf4cfdb1845f1e61d4ed0d8e12e877fde7b1ae408d0789776559efadcf58',
+    'qualification_support.py': '6f78a8ff7627b38c89aa4b5bd9e461aa1cdac214d78ab53297b3192da873f49f',
+    'qualification_selftest.py': 'c772c5a047fe44458bc6468710e353fa6b3e5b043c8b3bea2bf78dea72c66ac2',
+}
+
+def frozen_hashes():
+    found = {name: tool.digest_file(experiment / name) for name in expected}
+    if found != expected:
+        raise ValueError('frozen qualification sources changed')
+    return found
+
+before = frozen_hashes()
+target.mkdir(exist_ok=False)
+omitted_special = []
+copied = {}
+for home, dirs, names in os.walk(original, followlinks=False):
+    parent = Path(home)
+    dirs[:] = [name for name in dirs if name != 'processes']
+    for name in list(dirs):
+        path = parent / name
+        if path.is_symlink():
+            omitted_special.append({'name': str(path.relative_to(original)), 'kind': 'directory-symlink', 'target': os.readlink(path)})
+            dirs.remove(name)
+    for name in names:
+        path = parent / name
+        relative = path.relative_to(original)
+        info = path.lstat()
+        if not stat.S_ISREG(info.st_mode):
+            omitted_special.append({'name': str(relative), 'kind': 'symlink' if path.is_symlink() else 'special',
+                                    'target': os.readlink(path) if path.is_symlink() else None})
+            continue
+        dest = target / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(path, dest)
+        if tool.digest_file(dest) != tool.digest_file(path):
+            raise ValueError('copied receipt differs')
+        copied[str(relative)] = {'size': dest.stat().st_size, 'sha256': tool.digest_file(dest)}
+
+archived = []
+for fixture in sorted(original.glob('test_*')):
+    raw = fixture / 'processes'
+    snapshot = tool.snapshot(raw)
+    output = target / fixture.name / 'fixture-raw-archive'
+    output.parent.mkdir(parents=True, exist_ok=True)
+    index = tool.create_archive(raw, output)
+    if tool.snapshot(raw) != snapshot:
+        raise ValueError('original raw test evidence changed during curation')
+    archived.append({'original_raw': str(raw), 'archive': str(output.relative_to(target)),
+                     'file_count': index['file_count'], 'total_bytes': index['total_bytes'],
+                     'archive_sha256': index['archive_sha256'], 'original_unchanged': True})
+
+freeze = target / 'source-freeze'
+freeze.mkdir()
+hashes = {}
+for name in ('archive_raw_processes.py', 'archive_raw_processes_test.py'):
+    content = (experiment / name).read_bytes()
+    (freeze / (name + '.txt')).write_bytes(content)
+    hashes[name] = hashlib.sha256(content).hexdigest()
+(freeze / 'hashes.json').write_text(json.dumps(hashes, indent=2, sort_keys=True) + '\n')
+commands = target / 'commands'
+commands.mkdir()
+journal = Path('/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-receipts')
+for number in (324, 325):
+    shutil.copyfile(journal / f'command-{number:05d}.log', commands / f'command-{number:05d}.log')
+after = frozen_hashes()
+(target / 'curation.json').write_text(json.dumps({
+    'scope': 'Archive integrity helper only; no compiler qualification claim',
+    'original_helper_receipts': str(original), 'helper_sources': hashes,
+    'frozen_qualification_sources_before': before, 'frozen_qualification_sources_after': after,
+    'archived_raw_fixture_directories': archived, 'copied_readable_receipts': copied,
+    'omitted_unsafe_fixture_descriptors': omitted_special,
+}, indent=2, sort_keys=True) + '\n')
+print(json.dumps({'curated': str(target), 'raw_directories_verified': len(archived),
+                  'files': sum(1 for path in target.rglob('*') if path.is_file()),
+                  'frozen_five_unchanged': before == after, 'helper_sources': hashes}, indent=2))

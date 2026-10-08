@@ -1,0 +1,354 @@
+{
+  "kind": "static-inner-loop-dispatch-proof-not-execution-count-or-kernel-cost",
+  "source_revision": "d14e26f4473d6c50f56751736ed8ef325adcaecd",
+  "binary": "/home/epentland/ai/canopy/mylang-worktrees/goal110-calls-20261004/.mylang-cache/goal110-calls-d14e26f4-guests/compute-my-llvm",
+  "binary_sha256": "6689fee1d324c068941fe51a3536b2d3e566c14955fb20d3824b8b7f904ff0b0",
+  "disassembly_sha256": "224ad2e2460796286002acbcda92e4f00b58d8fbd458932df896df233f397ece",
+  "outer_batch_dispatch": "0x102d07b",
+  "common_batch_fold_scope_end": "0x102e791",
+  "table_address": "0x1009e90",
+  "table_bytes_hex": "82d00201000000002fd502010000000046d802010000000046d8020100000000ffd10201000000003fe1020100000000e4e30201000000006fd4020100000000f9d50201000000008cd6020100000000cfe502010000000089e4020100000000",
+  "selected_source_guard_order": [
+    0,
+    1,
+    7,
+    6,
+    8,
+    4,
+    9,
+    10,
+    5
+  ],
+  "scope_limits": "Direct control flow between the outer dispatch and common batch fold; cold external edges and indirect fallback targets are not followed. Counts include case setup and direct helper calls but exclude helper bodies. No dynamic instruction count or timing inference.",
+  "baseline_repeated_dispatch": {
+    "inner_header": "0x102cead",
+    "kind_load": "0x102ceb9",
+    "indirect_jump": "0x102ced3",
+    "iteration_increment": "0x102ce9b",
+    "inner_exit": "0x102d64d"
+  },
+  "records": [
+    {
+      "case": "integer_math",
+      "kind": 0,
+      "selected": true,
+      "entry": "0x102d082",
+      "static_instructions_in_direct_cfg_scope": 90,
+      "backedges_in_scope": [
+        [
+          "0x102d1f4",
+          "0x102d153"
+        ]
+      ],
+      "indirect_jumps_in_scope": [],
+      "edges_outside_scope": [
+        "0x102e7ad",
+        "0x102f710",
+        "0x102f725",
+        "0x102f740",
+        "0x102f841",
+        "0x102f855",
+        "0x102ff62"
+      ],
+      "indirect_targets_followed": false
+    },
+    {
+      "case": "float_math",
+      "kind": 1,
+      "selected": true,
+      "entry": "0x102d52f",
+      "static_instructions_in_direct_cfg_scope": 36,
+      "backedges_in_scope": [
+        [
+          "0x102d5ee",
+          "0x102d56d"
+        ]
+      ],
+      "indirect_jumps_in_scope": [],
+      "edges_outside_scope": [
+        "0x102e7a0",
+        "0x102f904",
+        "0x102f918"
+      ],
+      "indirect_targets_followed": false
+    },
+    {
+      "case": "branch_predictable",
+      "kind": 2,
+      "selected": false,
+      "entry": "0x102d846",
+      "static_instructions_in_direct_cfg_scope": 87,
+      "backedges_in_scope": [
+        [
+          "0x102e0ad",
+          "0x102d8aa"
+        ]
+      ],
+      "indirect_jumps_in_scope": [
+        [
+          "0x102d8d0",
+          "jmp    *0x1009ef0(,%rcx,8)"
+        ]
+      ],
+      "edges_outside_scope": [
+        "0x102ade0",
+        "0x102e796",
+        "0x102ed1c",
+        "0x102fae9",
+        "0x102fb07",
+        "0x102fe73",
+        "0x102fe88",
+        "0x102fea6",
+        "0x102feb9",
+        "0x102ff21"
+      ],
+      "indirect_targets_followed": false
+    },
+    {
+      "case": "branch_mixed",
+      "kind": 3,
+      "selected": false,
+      "entry": "0x102d846",
+      "static_instructions_in_direct_cfg_scope": 87,
+      "backedges_in_scope": [
+        [
+          "0x102e0ad",
+          "0x102d8aa"
+        ]
+      ],
+      "indirect_jumps_in_scope": [
+        [
+          "0x102d8d0",
+          "jmp    *0x1009ef0(,%rcx,8)"
+        ]
+      ],
+      "edges_outside_scope": [
+        "0x102ade0",
+        "0x102e796",
+        "0x102ed1c",
+        "0x102fae9",
+        "0x102fb07",
+        "0x102fe73",
+        "0x102fe88",
+        "0x102fea6",
+        "0x102feb9",
+        "0x102ff21"
+      ],
+      "indirect_targets_followed": false
+    },
+    {
+      "case": "record_construct",
+      "kind": 4,
+      "selected": true,
+      "entry": "0x102d1ff",
+      "static_instructions_in_direct_cfg_scope": 143,
+      "backedges_in_scope": [
+        [
+          "0x102d464",
+          "0x102d33e"
+        ]
+      ],
+      "indirect_jumps_in_scope": [],
+      "edges_outside_scope": [
+        "0x102e791",
+        "0x102f69d",
+        "0x102f75b",
+        "0x102f775",
+        "0x102f787",
+        "0x102f7a5",
+        "0x102f7bb",
+        "0x102f86a",
+        "0x102f874",
+        "0x102f88e",
+        "0x102f8df",
+        "0x102fc98"
+      ],
+      "indirect_targets_followed": false
+    },
+    {
+      "case": "record_update",
+      "kind": 5,
+      "selected": true,
+      "entry": "0x102e13f",
+      "static_instructions_in_direct_cfg_scope": 150,
+      "backedges_in_scope": [
+        [
+          "0x102e3d4",
+          "0x102e299"
+        ]
+      ],
+      "indirect_jumps_in_scope": [],
+      "edges_outside_scope": [
+        "0x102e791",
+        "0x102f657",
+        "0x102f675",
+        "0x102f6c2",
+        "0x102f6e0",
+        "0x102f985",
+        "0x102f9aa",
+        "0x102f9cf",
+        "0x102f9d9",
+        "0x102f9f3",
+        "0x102f9fd",
+        "0x102fa1c",
+        "0x102fa26",
+        "0x102fa3d",
+        "0x102ff59",
+        "0x103008c"
+      ],
+      "indirect_targets_followed": false
+    },
+    {
+      "case": "call_direct",
+      "kind": 6,
+      "selected": true,
+      "entry": "0x102e3e4",
+      "static_instructions_in_direct_cfg_scope": 38,
+      "backedges_in_scope": [
+        [
+          "0x102e47f",
+          "0x102e43a"
+        ]
+      ],
+      "indirect_jumps_in_scope": [],
+      "edges_outside_scope": [
+        "0x102e7b5",
+        "0x102f688",
+        "0x102f7d9",
+        "0x102fa56",
+        "0x102fa6a",
+        "0x102fa6d",
+        "0x102fa85",
+        "0x102ff62"
+      ],
+      "indirect_targets_followed": false
+    },
+    {
+      "case": "call_indirect",
+      "kind": 7,
+      "selected": true,
+      "entry": "0x102d46f",
+      "static_instructions_in_direct_cfg_scope": 43,
+      "backedges_in_scope": [
+        [
+          "0x102d523",
+          "0x102d4cf"
+        ]
+      ],
+      "indirect_jumps_in_scope": [],
+      "edges_outside_scope": [
+        "0x102e796",
+        "0x102f6b0",
+        "0x102f8a7",
+        "0x102f8bc",
+        "0x102fca1"
+      ],
+      "indirect_targets_followed": false
+    },
+    {
+      "case": "option_handle",
+      "kind": 8,
+      "selected": true,
+      "entry": "0x102d5f9",
+      "static_instructions_in_direct_cfg_scope": 33,
+      "backedges_in_scope": [
+        [
+          "0x102d685",
+          "0x102d608"
+        ]
+      ],
+      "indirect_jumps_in_scope": [],
+      "edges_outside_scope": [
+        "0x102e7b5",
+        "0x102f928",
+        "0x102f93c",
+        "0x102fb29",
+        "0x102fb39"
+      ],
+      "indirect_targets_followed": false
+    },
+    {
+      "case": "result_propagate",
+      "kind": 9,
+      "selected": true,
+      "entry": "0x102d68c",
+      "static_instructions_in_direct_cfg_scope": 73,
+      "backedges_in_scope": [
+        [
+          "0x102d78c",
+          "0x102d6b2"
+        ],
+        [
+          "0x102d7ce",
+          "0x102d71e"
+        ],
+        [
+          "0x102d83b",
+          "0x102d77e"
+        ]
+      ],
+      "indirect_jumps_in_scope": [],
+      "edges_outside_scope": [
+        "0x102e7ad",
+        "0x102f94c",
+        "0x102f963",
+        "0x102f978",
+        "0x102fad9",
+        "0x103000b"
+      ],
+      "indirect_targets_followed": false
+    },
+    {
+      "case": "binary_search",
+      "kind": 10,
+      "selected": true,
+      "entry": "0x102e5cf",
+      "static_instructions_in_direct_cfg_scope": 102,
+      "backedges_in_scope": [
+        [
+          "0x102e786",
+          "0x102e6d6"
+        ]
+      ],
+      "indirect_jumps_in_scope": [],
+      "edges_outside_scope": [
+        "0x102e791",
+        "0x102f7f7",
+        "0x102f809",
+        "0x102fa97",
+        "0x102fabf",
+        "0x102ffb5",
+        "0x102ffbf",
+        "0x102ffdb",
+        "0x102fff7"
+      ],
+      "indirect_targets_followed": false
+    },
+    {
+      "case": "packet_decode",
+      "kind": 11,
+      "selected": false,
+      "entry": "0x102e489",
+      "static_instructions_in_direct_cfg_scope": 63,
+      "backedges_in_scope": [
+        [
+          "0x102e5c4",
+          "0x102e4a7"
+        ]
+      ],
+      "indirect_jumps_in_scope": [],
+      "edges_outside_scope": [
+        "0x102ade0",
+        "0x102e796",
+        "0x102fb4e",
+        "0x102fb6c",
+        "0x102fb81",
+        "0x102fbb5",
+        "0x102fbd0",
+        "0x102fbe6",
+        "0x102fc06"
+      ],
+      "indirect_targets_followed": false
+    }
+  ]
+}

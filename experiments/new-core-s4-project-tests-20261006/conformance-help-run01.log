@@ -1,0 +1,51 @@
+usage: conformance_checked.py [-h] [--set {clean13,s1,excluded,all}]
+                              [--modes MODES] [--why] [--jobs JOBS]
+                              [--leakcheck] [--verify] [--pin PIN]
+                              [--include-arena] [--verbose] [--mylang MYLANG]
+                              [--core CORE] [--cache-dir CACHE_DIR]
+                              [files ...]
+
+Per-test conformance of the new core against the old one (docs/design/new-core-s1.md §9).
+
+For every file it runs
+
+  old      `mylang test FILE --json`                 (the oracle)
+  debug    `mylang-core test FILE --json`
+  release  `mylang-core test FILE --json --release`
+
+and requires, per test function: the same set of test names, the same verdict (pass,
+false, or a trap with the same `R_...` code; the trap position may differ), and nothing
+the new core cannot build counts against it: a test it refuses is `unsupported`
+(`E_CORE_UNSUPPORTED`), reported separately from mismatches. Arena tests are excluded
+(§11): the five arena files and every test whose name matches `*arena*`.
+
+usage:
+  conformance.py [--set clean13|s1|excluded|all | FILE...] [--modes debug,release]
+                 [--why] [--verbose] [--jobs N] [--pin PATH] [--include-arena]
+                 [--leakcheck] [--verify]
+                 [--mylang P] [--core P] [--cache-dir D] [--verbose]
+
+FILE is a path, or a bare name that means tests/lang/NAME.my. Exit status 1 when any
+test mismatches or a file cannot be compared.
+
+positional arguments:
+  files
+
+options:
+  -h, --help            show this help message and exit
+  --set {clean13,s1,excluded,all}
+  --modes MODES
+  --why                 list each blocking feature, and why excluded files are
+                        excluded
+  --jobs JOBS
+  --leakcheck           run the new core's tests with MYL_CORE_LEAKCHECK=1: a
+                        leak fails the test
+  --verify              build the release mode with --verify-facts (facts,
+                        uniqueness and stack capacity asserted)
+  --pin PIN             write the pins file test-core checks (tests passing
+                        everywhere)
+  --include-arena
+  --verbose
+  --mylang MYLANG
+  --core CORE
+  --cache-dir CACHE_DIR

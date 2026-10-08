@@ -1,0 +1,32 @@
+{
+  "8": {
+    "status": 0,
+    "printed_blocks": 373,
+    "active_blocks": 373,
+    "noncopy_printed": 493
+  },
+  "10": {
+    "status": 0,
+    "printed_blocks": 441,
+    "active_blocks": 441,
+    "noncopy_printed": 595
+  },
+  "12": {
+    "status": 0,
+    "printed_blocks": 509,
+    "active_blocks": 509,
+    "noncopy_printed": 697
+  },
+  "16": {
+    "status": 0,
+    "printed_blocks": 645,
+    "active_blocks": 645,
+    "noncopy_printed": 901
+  },
+  "24": {
+    "status": 0,
+    "printed_blocks": 917,
+    "active_blocks": 917,
+    "noncopy_printed": 1309
+  }
+}

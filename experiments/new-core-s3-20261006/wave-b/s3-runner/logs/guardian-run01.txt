@@ -1,0 +1,34 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 7/88 failed (spec, twin-drift, init-deinit-symmetry, test-no-conditional, line-length, repeated-string-literal, error-path-test)
+guardian: failures grouped by check (7):
+  spec (6 findings)
+    - duplicate tag: id:property-test-3
+    - in: src/core/property_shrink.zig
+    - in: src/property_shrink.zig
+    - +3 more — use --verbose for full detail
+  twin-drift (1 finding)
+    - src/core/test_runner_property.zig:150: twin-drift: fn draw (11 lines) and src/native_test_property.zig:150 (11 lines) share 91% of their body and differ in 2 line(s) — reconcile the two copies or lift the shared part into one fn (// twin-drift-ok: <why> if the divergence is deliberate)
+      fix: reconcile the two copies, or lift the shared part into one fn both call. If the divergence is deliberate, say so above either copy: `// twin-drift-ok: <why>`. what drifted: only in src/core/test_runner_property.zig: `nodes += input.nodes.len / 2;`; only in src/native_test_property.zig: `nodes += input.nodes.len;`;
+  init-deinit-symmetry (4 findings)
+    - src/core/property_ir.zig:16: pub struct 'Context' owns an allocator field but has no pub fn deinit
+      fix: add `pub fn deinit(self: *Self) void` that frees the owned resources.
+    - src/core/property_codec.zig:10: pub struct 'Codec' owns an allocator field but has no pub fn deinit
+    - src/core/property_execute.zig:14: pub struct 'Context' owns an allocator field but has no pub fn deinit
+    - +1 more — use --verbose for full detail
+  test-no-conditional (1 finding)
+    - src/core/property_codec.zig:166: more than one top-level loop — a test may keep one; the loop at line 166 asserts nothing, so hoist that one into a named helper
+      fix: one top-level loop is fine; merge multiple loops into one table-driven loop, split a branch into two independent tests, or hoist the computation into a helper. A multi-loop finding names the loop to hoist — the assertion-free one when there is one, otherwise the extra loop itself.
+  line-length (1 finding)
+    - src/core/test_runner.zig:105: line is 259 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+  repeated-string-literal (2 findings)
+    - duplicate const parameters_key = "parameters" across 2 files
+      fix: extract the literal/const into a shared file-scope const and import it.
+    - duplicate const version = "property-generator-v1" across 2 files
+  error-path-test (1 finding)
+    - src/core/runner_property_test.zig:22: new returned error — no test names error `MissingTest`
+      fix: add (or extend) a test that names the error identifier — `try testing.expectError(error.X, …)` is enough — in this same change.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

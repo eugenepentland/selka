@@ -1,0 +1,29 @@
+$ scripts/build-slot.sh build zig build test-core -Dtest-filter=Guard.check -Dtest-filter=driver_test -Dtest-filter=s3_number --summary all --verbose
+info(verbose): /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug -Mroot=build_qbe_assets.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name qbe-build-assets --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+info(verbose): ./.zig-cache/o/d2fc47eaff2764b12f85081ed6a427a2/qbe-build-assets /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src 0.17.0-dev.1683+5ceec001b debug ./.zig-cache/tmp/92a34481e7c22376/qbe_build_assets ./.zig-cache/tmp/92a34481e7c22376/assets.d
+info(verbose): /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang --dep core_tool_platform --dep qbe_build_assets -Mroot=src/core/main.zig -ODebug --dep runtime_contract --dep memory_budget -Mmylang=src/compiler.zig -Mcore_tool_platform=src/config_core_tool_platform.zig -ODebug -Mqbe_build_assets=.zig-cache/o/0b7d6c04d880bb1c9617411a5bba71ea/qbe_build_assets/assets.zig -ODebug -Mruntime_contract=src/runtime_contract.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+info(verbose): /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test -ODebug --dep mylang --dep core_tool_platform --dep qbe_build_assets --dep core_test_options -Mroot=src/core/root_test.zig -ODebug --dep runtime_contract --dep memory_budget -Mmylang=src/compiler.zig -Mcore_tool_platform=src/config_core_tool_platform.zig -ODebug -Mqbe_build_assets=.zig-cache/o/0b7d6c04d880bb1c9617411a5bba71ea/qbe_build_assets/assets.zig -Mcore_test_options=.zig-cache/o/68d2abc52112c99566e2a75b3db1e9f0/options.zig -ODebug -Mruntime_contract=src/runtime_contract.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig --test-filter Guard.check --test-filter driver_test --test-filter s3_number --test-runner ../guardian-zig/src/test_runner.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name test --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+info(verbose): ./.zig-cache/o/82d45bacc2576c018fec93ed80eed6c8/test --cache-dir=./.zig-cache --seed=0x909f0960 --listen=-
+test-core
++- run test w
+guardian/test: 6 test(s) selected
+guardian/test: SLOW  89.77s  s3_number_test.test.S3 native float text and mutable byte snapshots match at every core level
+guardian/test: test wall 89.82s; slowest over 50ms:
+guardian/test:   89.77s  s3_number_test.test.S3 native float text and mutable byte snapshots match at every core level
+guardian/test:   0.05s  driver.test.Guard.check refuses changed and missing tool inputs and propagates allocation failure
+guardian/test: PASS — 6 passed
+guardian/test: RESULT {"passed":6,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/82d45bacc2576c018fec93ed80eed6c8/test --cache-dir=./.zig-cache --seed=0x909f0960 --listen=-
+
+Build Summary: 7/7 steps succeeded; 6/6 tests passed
+test-core success
++- run test 6 pass (6 total) 1m MaxRSS:453M
+   +- compile test debug native success 980ms MaxRSS:215M
+      +- run exe qbe-build-assets (qbe_build_assets) success 57ms
+      |  +- compile exe qbe-build-assets debug native cached 8ms MaxRSS:41M
+      +- options success
+         +- compile exe mylang-core debug native success 2s MaxRSS:389M
+            +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+
+
+{"argv": ["scripts/build-slot.sh", "build", "zig", "build", "test-core", "-Dtest-filter=Guard.check", "-Dtest-filter=driver_test", "-Dtest-filter=s3_number", "--summary", "all", "--verbose"], "status": 0, "wall_seconds": 94.61550592607819}

@@ -1,0 +1,33 @@
+median of 7 interleaved rounds, CPU 10
+| kernel | build | 4096 cycles | misses/1000 | 64 cycles | misses/1000 | checksum |
+|---|---|---:|---:|---:|---:|---|
+| integer_math | before | 0.355 | 0.2 | 0.492 | 0.0 | same |
+| integer_math | after | 0.357 | 0.2 | 0.491 | 0.0 | same |
+| integer_math | Rust | 5.706 | 0.2 | 6.184 | 15.6 | same |
+| integer_math | Zig ReleaseSafe | 7.807 | 0.2 | 8.313 | 15.6 | same |
+| integer_math | after/before | 1.005 | | 0.997 | | |
+| float_math | before | 1.564 | 0.2 | 1.705 | 0.0 | same |
+| float_math | after | 1.567 | 0.2 | 1.704 | 0.0 | same |
+| float_math | Rust | 6.969 | 0.2 | 7.328 | 15.6 | same |
+| float_math | Zig ReleaseSafe | 6.513 | 0.2 | 7.031 | 15.6 | same |
+| float_math | after/before | 1.002 | | 0.999 | | |
+| call_direct | before | 0.302 | 0.2 | 0.316 | 0.0 | same |
+| call_direct | after | 0.300 | 0.2 | 0.319 | 0.0 | same |
+| call_direct | Rust | 2.017 | 0.2 | 2.935 | 15.6 | same |
+| call_direct | Zig ReleaseSafe | 3.021 | 0.2 | 4.115 | 15.6 | same |
+| call_direct | after/before | 0.994 | | 1.011 | | |
+| branch_predictable | before | 0.396 | 0.2 | 0.495 | 0.0 | same |
+| branch_predictable | after | 0.398 | 0.2 | 0.498 | -0.0 | same |
+| branch_predictable | Rust | 3.199 | 0.2 | 3.253 | 0.0 | same |
+| branch_predictable | Zig ReleaseSafe | 7.704 | 62.5 | 7.895 | 62.5 | same |
+| branch_predictable | after/before | 1.004 | | 1.005 | | |
+| branch_mixed | before | 0.396 | 0.2 | 0.497 | -0.0 | same |
+| branch_mixed | after | 0.393 | 0.2 | 0.495 | 0.0 | same |
+| branch_mixed | Rust | 4.865 | 14.1 | 4.522 | 0.0 | same |
+| branch_mixed | Zig ReleaseSafe | 9.271 | 30.9 | 9.038 | 12.1 | same |
+| branch_mixed | after/before | 0.994 | | 0.996 | | |
+| binary_search | before | 139.451 | 3086.5 | 30.682 | 21.6 | same |
+| binary_search | after | 30.428 | 71.8 | 17.908 | 12.5 | same |
+| binary_search | Rust | 37.607 | 206.6 | 19.485 | 35.9 | same |
+| binary_search | Zig ReleaseSafe | 137.213 | 2857.9 | 27.972 | 45.4 | same |
+| binary_search | after/before | 0.218 | | 0.584 | | |

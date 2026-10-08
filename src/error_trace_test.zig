@@ -12,13 +12,6 @@ fn run(source: []const u8) !native.Run {
     return native.run(&compilation);
 }
 
-/// The manifest, unit text included, the compiler emits for one program.
-fn emitted(allocator: std.mem.Allocator, source: []const u8) ![]const u8 {
-    var compilation = try language.Compilation.init(t.allocator, "trace.my", source);
-    defer compilation.deinit();
-    return compilation.emitQbe(allocator);
-}
-
 /// How many times `needle` occurs in `text`.
 fn occurrences(text: []const u8, needle: []const u8) usize {
     return std.mem.count(u8, text, needle);
@@ -132,57 +125,6 @@ test "a runtime operation that answers Err starts the trace at its call" {
     try t.expect(std.mem.indexOf(u8, outcome.stderr, "trace.my:2:15  load  Err produced by the runtime\n") != null);
     try t.expect(std.mem.indexOf(u8, outcome.stderr, "trace.my:2:15  load  ? propagated\n") != null);
     try t.expect(std.mem.endsWith(u8, outcome.stderr, "trace.my:5:12  main  ? propagated\n"));
-}
-
-// spec-case: ERROR-TRACE-1
-test "the success paths execute no trace store: a returned Ok checks nothing and a ? records only past its error branch" {
-    // RC-DEFAULT-1: reads the tracing collector's lowering, not the RC default's.
-    const collector_runtime = language.runtime_mode.pinCollector();
-    defer language.runtime_mode.set(collector_runtime);
-    var arena = std.heap.ArenaAllocator.init(t.allocator);
-    defer arena.deinit();
-    const ok_only = try emitted(arena.allocator(),
-        \\def make_ok(value: int) -> Result[int, str]:
-        \\    return Ok(value)
-        \\
-        \\def main() -> int:
-        \\    match make_ok(3):
-        \\        case Ok(value):
-        \\            return value
-        \\        case Err(message):
-        \\            return len(message)
-    );
-    try t.expectEqual(@as(usize, 0), occurrences(ok_only, "myl_qbe_error_trace"));
-    const propagating = try emitted(arena.allocator(),
-        \\def make_ok(value: int) -> Result[int, str]:
-        \\    return Ok(value)
-        \\
-        \\def twice(value: int) -> Result[int, str]:
-        \\    return Ok(make_ok(value)? * 2)
-        \\
-        \\def main() -> int:
-        \\    match twice(3):
-        \\        case Ok(value):
-        \\            return value
-        \\        case Err(message):
-        \\            return len(message)
-    );
-    // One `?`: its error branch appends once; the construction and the return
-    // of `Ok(...)` record nothing.
-    try t.expectEqual(@as(usize, 1), occurrences(propagating, "myl_qbe_error_trace"));
-    const branch = std.mem.indexOf(u8, propagating, "@tryerror").?;
-    try t.expect(std.mem.indexOf(u8, propagating, "call $myl_qbe_error_trace_append(").? > branch);
-}
-
-// spec-case: ERROR-TRACE-1
-test "each trace record is one call to a cold recorder that collects nothing" {
-    const error_trace = @import("qbe_error_trace.zig");
-    const roots = @import("qbe_roots.zig");
-    const llvm_runtime = @import("qbe_build_llvm_runtime.zig");
-    try t.expect(roots.pureCallee(error_trace.origin_symbol));
-    try t.expect(roots.pureCallee(error_trace.append_symbol));
-    try t.expectEqualStrings("cold nounwind", llvm_runtime.attributes(error_trace.origin_symbol));
-    try t.expectEqualStrings("cold nounwind", llvm_runtime.attributes(error_trace.append_symbol));
 }
 
 // spec: ERROR-TRACE-2

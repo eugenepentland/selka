@@ -47,7 +47,6 @@ test "resolved reachability includes untaken call paths cycles and incoming site
     try t.expect(result.functions[try index(&c, "b")].reachable);
     try t.expect(!result.functions[try index(&c, "unused")].reachable);
     try t.expectEqual(@as(usize, 3), result.functions[try index(&c, "leaf")].incoming_sites);
-    try t.expect(c.code == null);
     const rendered = try quality.render(t.allocator, result, c.program.?, c.src);
     defer t.allocator.free(rendered);
     try t.expect(std.mem.indexOf(u8, rendered, "private=true; reachable-from-main=false") != null);
@@ -99,7 +98,6 @@ test "static call reachability traverses a long chain without host recursion" {
     defer result.deinit();
     for (result.functions) |function| try t.expect(function.reachable);
     try t.expectEqual(@as(usize, 1), result.functions[try index(&c, "f2000")].incoming_sites);
-    try t.expect(c.code == null);
 }
 
 test "explicit quality roots validate bounds and tolerate duplicate or empty roots" {

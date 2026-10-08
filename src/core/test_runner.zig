@@ -1,0 +1,968 @@
+//! `mylang-core test FILE.my [--release] [--filter S] [--json]` (docs/design/new-core-s1.md §9).
+//!
+//! The file is checked with the old runner's stub `main` appended (so a library checks as a
+//! program), its tests are discovered by the old rule, and the supported ones are built into
+//! **one executable** whose entry dispatches on `argv[1]` (`test_runner_entry.zig`). Each test
+//! runs as its own process, so a trap or a hang ends one test, not the file.
+//!
+//! Grading is per test function. Before the real build every test is built *alone* from its
+//! own root (`build.buildRoots`), which follows exactly the functions that test can reach: a
+//! test that reaches a construct the new core refuses is reported `unsupported`, with the
+//! refusal's reason and position, and left out of the executable. The tests that survive
+//! are built together. If the backend (emission or the C toolchain) then rejects the
+//! combined module, each test is built alone again to find the culprits, which are reported
+//! (`unsupported` for an emission refusal, `failed` for a toolchain error) while the rest
+//! still run.
+const std = @import("std");
+const frontend = @import("frontend.zig");
+const project_entry = @import("project_entry.zig");
+const build = @import("build.zig");
+const pipeline = @import("pipeline.zig");
+const discover = @import("test_runner_discover.zig");
+const entry = @import("test_runner_entry.zig");
+const report = @import("test_runner_report.zig");
+const typed = @import("mylang").typed;
+const property = @import("test_runner_property.zig");
+const property_types = @import("property_types.zig");
+const property_schema = @import("property_schema.zig");
+const property_execute = @import("property_execute.zig");
+const batch_entry = @import("test_runner_batch.zig");
+const directory_runner = @import("test_runner_directory.zig");
+const receipt = @import("test_runner_receipt.zig");
+const tool_identity = @import("tool_identity.zig");
+const tool_ticket = @import("tool_ticket.zig");
+const case_settings = @import("test_runner_cases.zig");
+const affected = @import("test_runner_affected.zig");
+const v = @import("property_value.zig");
+const test_contracts = @import("test_runner_contracts.zig");
+
+/// The old runner's stub, appended to a file that defines no `main` of its own.
+pub const check_stub = "\n\ndef main() -> int:\n    return 0\n";
+
+/// What stops a run: memory, or an output stream that cannot be written.
+pub const Error = property.Error;
+
+/// What the command line asked for.
+pub const Options = options_module.Options;
+const options_module = @import("test_runner_options.zig");
+
+/// One selected test and its place in the report. `ready` tests have no verdict yet:
+/// their `verdict` is filled in by building and running them.
+const Selected = struct { case: discover.Case, verdict: report.Verdict, ready: bool, identity: ?[32]u8 = null, settings: std.json.Value = .null };
+const case_expectation = "expected";
+/// A test's identity work: `scratch` is an arena it may leave allocations in, and
+/// `prebuilt` the test's reachable functions when `classify` already built them.
+const IdentityResources = struct { scratch: std.mem.Allocator, io: std.Io, prebuilt: ?@import("ir.zig").Module = null };
+const ExecutionResources = struct { arena: std.mem.Allocator, backing: std.mem.Allocator, io: std.Io };
+const SelectionContext = struct { receipt: receipt.Context, base: [32]u8 };
+
+/// Check, discover, build and run the tests of `options.path`, print the report, and return
+/// the process exit status: 0 ok, 1 a test failed or the file does not check, 2 unreadable
+/// or an invalid cases file or provider fixture, 3 nothing selected or every selected test skipped.
+pub fn run(init: std.process.Init, requested: Options) Error!u8 {
+    if (directory_runner.selected(init.io, requested.path)) return directory_runner.run(init, requested);
+    var options = requested;
+    const allocator = init.arena.allocator();
+    var problems: std.ArrayList(u8) = .empty;
+    const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, options.path, allocator, .limited(64 << 20)) catch |err| return unreadable(init, options.path, @errorName(err));
+    const located = project_entry.resolve(allocator, init.io, options.path, &problems) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try writeAll(init, std.Io.File.stderr(), problems.items);
+        return project_entry.status(err);
+    };
+    // A malformed byte ceiling or a frame budget it cannot back is refused like a usage error.
+    if (!try applyLimits(init, &options, located)) return 2;
+    // An invalid cases file or provider fixture is a setup failure, status 2 (the old core's).
+    const configured_cases = try configuredCases(init, &options, located) orelse return 2;
+    options.controls.cases = configured_cases.path;
+    if (try cachedReplay(init, options, located, configured_cases.bytes)) |cached| {
+        try writeAll(init, std.Io.File.stdout(), cached);
+        return 0;
+    }
+    const guest = try guestTool(init, options) orelse return 1;
+    // Spawn the exact executable whose content and library tree were captured.
+    options.build.zig = guest.path;
+    const context: receipt.Context = .{ .arena = allocator, .io = init.io, .environment = init.environ_map, .options = options, .entry = located, .case_bytes = configured_cases.bytes, .tool = guest };
+    var native_inputs: std.ArrayList(receipt.Dependency) = .empty;
+    const base = try receipt.settings(context, &native_inputs);
+    if (try replayRun(context, base)) |cached| {
+        try writeAll(init, std.Io.File.stdout(), cached);
+        return 0;
+    }
+    var session = frontend.Session.init(init.gpa, init.io, located.root);
+    defer session.deinit();
+    located.configure(&session);
+    try session.enableCache(init.gpa, options.build.cache);
+    const entry_text: EntryText = .{ .overlay = try headerlessTest(allocator, located, bytes), .stub = !definesMain(bytes) };
+    entry_text.apply(&session, entry_text.overlay);
+    const provider_sets = case_settings.providerSets(allocator, configured_cases, options.filter) catch |err| return casesFailure(init, err);
+    if (provider_sets.len != 0) if (try validateProviders(init, options, located, entry_text, provider_sets)) |status| return status;
+    // NATIVE-TEST-5: with providers, an unselected production body is never checked; the
+    // first provider graph then answers discovery, and a case without providers fails.
+    var first_provider = frontend.Session.init(init.gpa, init.io, located.root);
+    defer first_provider.deinit();
+    const base_checked: ?frontend.Checked = session.checkFile(allocator, options.path, &problems) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => if (provider_sets.len == 0) return failWith(init, problems.items, 1) else null,
+    };
+    const checked = base_checked orelse try providerGraph(init, options, located, entry_text, provider_sets[0], &first_provider) orelse return failWith(init, problems.items, 1);
+    var before: std.ArrayList(receipt.Dependency) = .empty;
+    try before.appendSlice(allocator, try checkedInputs(context, &session, entry_text.overlay, bytes));
+    try before.appendSlice(allocator, native_inputs.items);
+    located.validate(allocator, &session, &problems) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try writeAll(init, std.Io.File.stderr(), problems.items);
+        return project_entry.status(err);
+    };
+    const entry_module = moduleName(checked.program, located.name);
+    const modules = try moduleSources(allocator, &session, entry_module);
+    const all_cases = try discover.discover(allocator, checked.program, entry_module, modules);
+    case_settings.validate(configured_cases, all_cases) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(allocator, "error: test cases: {s}\n", .{@errorName(err)}));
+        return 2;
+    };
+    const selection = switch (try chooseCases(init, options, located, checked, all_cases)) {
+        .kept => |kept| kept,
+        .exit => |status| return status,
+    };
+    const groups = case_settings.groups(allocator, configured_cases, selection) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(allocator, "error: test providers: {s}\n", .{@errorName(err)}));
+        return 2;
+    };
+    var collected: Collected = .{ .before = before };
+    try addSources(allocator, &collected.sources, context, &session);
+    const shared: GroupRun = .{ .init = init, .selection = .{ .receipt = context, .base = base }, .session = &session, .base_checked = base_checked, .discovery = checked, .entry = entry_text, .cases = configured_cases };
+    for (groups) |group| {
+        if (base_checked == null and group.providers.len == 0) return failWith(init, problems.items, 1);
+        if (try shared.runGroup(group, entry_module, &collected)) |status| return status;
+    }
+    before = collected.before;
+    const chosen = collected.chosen;
+    const sources = collected.sources;
+    const unchanged = try receipt.unchanged(context, before.items) and try receipt.toolUnchanged(context);
+    if (!unchanged) {
+        try writeAll(init, std.Io.File.stderr(), "error: SourceChanged: a test input changed during checking or execution\n");
+        return 1;
+    }
+    const verdicts = try allocator.alloc(report.Verdict, chosen.items.len);
+    var successful = chosen.items.len != 0;
+    for (chosen.items, verdicts) |item, *verdict| {
+        verdict.* = item.verdict;
+        successful = successful and item.identity != null and (item.verdict.status == .passed or item.verdict.status == .cached);
+        if (unchanged and item.verdict.status == .passed) if (item.identity) |identity| try receipt.save(context, identity);
+    }
+    const json = try report.jsonSources(allocator, verdicts, sources.items);
+    if (successful and unchanged and options.controls.against == null) try receipt.remember(context, base, before.items, json);
+    const out = if (options.json) json else try report.text(allocator, verdicts);
+    try writeAll(init, std.Io.File.stdout(), out);
+    try siblingHint(init, &session, located, verdicts.len);
+    return report.exitStatus(verdicts);
+}
+
+/// The entry file as every session of a run reads it: its header-less overlay
+/// (`headerlessTest`) and whether the old runner's stub `main` is appended.
+const EntryText = struct {
+    overlay: []const frontend.Provider,
+    stub: bool,
+
+    /// Read the entry this way in `session`, with `providers` replacing dependencies.
+    fn apply(self: EntryText, session: *frontend.Session, providers: []const frontend.Provider) void {
+        session.setProviders(providers);
+        if (self.stub) session.entry_suffix = check_stub;
+    }
+};
+
+/// What a run's provider groups add up: the inputs their verdicts depend on, the
+/// sources the report lists and the selected tests.
+const Collected = struct {
+    before: std.ArrayList(receipt.Dependency),
+    sources: std.ArrayList([]const u8) = .empty,
+    chosen: std.ArrayList(Selected) = .empty,
+};
+
+/// What every provider group of one run shares: the base session (fully checked, or
+/// only declared when providers replace an unfinished production body), the program
+/// that answered discovery, and the entry's text and cases.
+const GroupRun = struct {
+    init: std.process.Init,
+    selection: SelectionContext,
+    session: *frontend.Session,
+    base_checked: ?frontend.Checked,
+    discovery: frontend.Checked,
+    entry: EntryText,
+    cases: case_settings.File,
+
+    /// Check `group`'s provider graph (the base graph when it has none), select, build
+    /// and run its cases into `out`; the exit status of a refusal, or null.
+    fn runGroup(self: *const GroupRun, group: case_settings.Group, entry_module: []const u8, out: *Collected) Error!?u8 {
+        const init = self.init;
+        const a = init.arena.allocator();
+        const context = self.selection.receipt;
+        const located = context.entry;
+        var provider_session = frontend.Session.init(init.gpa, init.io, located.root);
+        defer provider_session.deinit();
+        var program = self.base_checked orelse self.discovery;
+        var cases = group.cases;
+        var identity: ?report.Identity = null;
+        if (group.providers.len != 0) {
+            var problems: std.ArrayList(u8) = .empty;
+            const overlays = try std.mem.concat(a, frontend.Provider, &.{ group.providers, self.entry.overlay });
+            located.configure(&provider_session);
+            try provider_session.enableCache(init.gpa, context.options.build.cache);
+            self.entry.apply(&provider_session, overlays);
+            program = provider_session.checkFile(a, located.path, &problems) catch |err| return checkFailure(init, err, problems.items, 1);
+            try out.before.appendSlice(a, try receipt.captured(context, &provider_session, overlays));
+            located.validate(a, &provider_session, &problems) catch |err| return checkFailure(init, err, problems.items, project_entry.status(err));
+            const discovered = try discover.discover(a, program.program, entry_module, try moduleSources(a, &provider_session, entry_module));
+            // A replacement's declarations were validated before any body was checked;
+            // with a checked production graph its exported type graph must agree too.
+            if (self.base_checked) |production| case_settings.compatible(a, self.session, &provider_session, production, program, group) catch |err|
+                return checkFailure(init, err, "error: ProviderSignatureChanged: test providers changed the exported type graph\n", 1);
+            cases = try remap(a, self.discovery.program, program.program, group.cases, discovered);
+            try addSources(a, &out.sources, context, &provider_session);
+            identity = try providerIdentities(a, self.session, group.providers, self.selection.base);
+        }
+        const items = try select(init, context.options, program, cases, self.cases, self.selection);
+        try execute(init, context.options, program, items);
+        if (identity) |known| for (items) |*item| {
+            item.verdict.identity = known;
+        };
+        try out.chosen.appendSlice(a, items);
+        return null;
+    }
+};
+
+/// NATIVE-TEST-5: the identities a provider test's report carries: the production
+/// declarations its providers replace, the providers' sources, and the run's inputs.
+fn providerIdentities(a: std.mem.Allocator, production: *frontend.Session, providers: []const frontend.Provider, base: [32]u8) Error!report.Identity {
+    var replaced: std.ArrayList(test_contracts.Module) = .empty;
+    for (providers) |provider| if (try declaredModule(production, try moduleOfPath(a, provider.path))) |module| try replaced.append(a, module);
+    return .{
+        .contract = try test_contracts.identity(a, replaced.items),
+        .provider = try test_contracts.providerIdentity(a, providers),
+        .source = try a.dupe(u8, &std.fmt.bytesToHex(base, .lower)),
+    };
+}
+
+/// Module `name`'s exported declarations in `session`'s declared graph; null when it
+/// has none or they cannot be rendered.
+fn declaredModule(session: *frontend.Session, name: []const u8) Error!?test_contracts.Module {
+    return test_contracts.declarations(session, name) catch |err| if (err == error.OutOfMemory) return error.OutOfMemory else null;
+}
+
+/// `dir/name.my` is module `dir.name`.
+fn moduleOfPath(a: std.mem.Allocator, path: []const u8) Error![]const u8 {
+    const module = try a.dupe(u8, path[0 .. path.len - ".my".len]);
+    std.mem.replaceScalar(u8, module, '/', '.');
+    return module;
+}
+
+/// NATIVE-TEST-5: before any body is checked, every provider set the selection uses
+/// must replace only modules the entry imports and keep each one's exported
+/// declarations (`test_runner_contracts.zig`). The exit status of a refusal, or null.
+fn validateProviders(init: std.process.Init, options: Options, located: project_entry.Entry, entry_text: EntryText, sets: []const []const frontend.Provider) Error!?u8 {
+    const a = init.arena.allocator();
+    var problems: std.ArrayList(u8) = .empty;
+    var production = frontend.Session.init(init.gpa, init.io, located.root);
+    defer production.deinit();
+    located.configure(&production);
+    try production.enableCache(init.gpa, options.build.cache);
+    entry_text.apply(&production, entry_text.overlay);
+    production.declare(a, located.name, &problems) catch |err| return checkFailure(init, err, problems.items, 1);
+    for (sets) |set| {
+        case_settings.available(set, &production, located.name) catch |err|
+            return checkFailure(init, err, "error: InvalidTestProviders: invalid test provider dependencies: a provider may replace only a module the entry imports, never the entry\n", 2);
+        var replacement = frontend.Session.init(init.gpa, init.io, located.root);
+        defer replacement.deinit();
+        located.configure(&replacement);
+        try replacement.enableCache(init.gpa, options.build.cache);
+        entry_text.apply(&replacement, try std.mem.concat(a, frontend.Provider, &.{ set, entry_text.overlay }));
+        replacement.declare(a, located.name, &problems) catch |err| return checkFailure(init, err, problems.items, 2);
+        for (set) |provider| if (try keeps(a, &production, &replacement, provider.path)) |refused| return checkFailure(init, error.IncompatibleProvider, refused, 2);
+    }
+    return null;
+}
+
+/// Whether the replacement graph keeps the declarations module `path` exports in
+/// production: null when it does, else the refusal to print.
+fn keeps(a: std.mem.Allocator, production: *frontend.Session, replacement: *frontend.Session, path: []const u8) Error!?[]const u8 {
+    const name = try moduleOfPath(a, path);
+    const refused = try std.fmt.allocPrint(a, "error: IncompatibleProvider: provider {s} does not keep the exported declarations of module {s}\n", .{ path, name });
+    // Declarations the production graph cannot render (a test's private parameter type)
+    // leave the comparison to the checked type graph (`case_settings.compatible`).
+    const before = try declaredModule(production, name) orelse return null;
+    const after = try declaredModule(replacement, name) orelse return refused;
+    test_contracts.validate(before, after) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else refused;
+    return null;
+}
+
+/// The first provider graph, fully checked, which answers discovery when the
+/// production graph's bodies are not checked; null after printing nothing when it
+/// does not check (its diagnostics are the production check's concern).
+fn providerGraph(init: std.process.Init, options: Options, located: project_entry.Entry, entry_text: EntryText, set: []const frontend.Provider, session: *frontend.Session) Error!?frontend.Checked {
+    const a = init.arena.allocator();
+    var problems: std.ArrayList(u8) = .empty;
+    located.configure(session);
+    try session.enableCache(init.gpa, options.build.cache);
+    entry_text.apply(session, try std.mem.concat(a, frontend.Provider, &.{ set, entry_text.overlay }));
+    if (session.checkFile(a, located.path, &problems)) |checked| return checked else |err| _ = try checkFailure(init, err, problems.items, 1);
+    return null;
+}
+
+/// A check's failure as an exit status: memory runs out of the run itself; any other
+/// error was already rendered into `text`, which goes to stderr.
+fn checkFailure(init: std.process.Init, err: anyerror, text: []const u8, status: u8) Error!?u8 {
+    if (err == error.OutOfMemory) return error.OutOfMemory;
+    try writeAll(init, std.Io.File.stderr(), text);
+    return status;
+}
+
+/// Print `text` on stderr and answer `status`.
+fn failWith(init: std.process.Init, text: []const u8, status: u8) Error!u8 {
+    try writeAll(init, std.Io.File.stderr(), text);
+    return status;
+}
+
+fn casesFailure(init: std.process.Init, err: case_settings.Error) Error!u8 {
+    if (err == error.OutOfMemory) return error.OutOfMemory;
+    return failWith(init, try std.fmt.allocPrint(init.arena.allocator(), "error: test providers: {s}\n", .{@errorName(err)}), 2);
+}
+
+/// The sources a check read, as receipts record them. A header-less test entry is
+/// overlaid with its header (`headerlessTest`), so its own bytes are its input.
+fn checkedInputs(context: receipt.Context, session: *const frontend.Session, overlay: []const frontend.Provider, bytes: []const u8) Error![]const receipt.Dependency {
+    const inputs = try receipt.captured(context, session, overlay);
+    if (overlay.len == 0) return inputs;
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.Blake3.hash(bytes, &digest, .{});
+    return std.mem.concat(context.arena, receipt.Dependency, &.{ inputs, &.{.{ .path = context.entry.path, .digest = digest }} });
+}
+
+/// CLI-INPUT-REFUSED-1: refuse an entry that cannot be read, naming it and the reason
+/// as the old CLI words them, with the usage status.
+fn unreadable(init: std.process.Init, path: []const u8, name: []const u8) Error!u8 {
+    const reason = if (std.mem.eql(u8, name, "FileNotFound")) "no such file or directory" else if (std.mem.eql(u8, name, "AccessDenied") or std.mem.eql(u8, name, "PermissionDenied")) "permission denied" else name;
+    try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(init.arena.allocator(), "mylang test: cannot read '{s}': {s}\n", .{ path, reason }));
+    return 2;
+}
+
+/// TEST-SIBLING-HINT-1: when nothing is selected and `FILE_test.my` beside the entry
+/// exists outside the loaded graph, say so on stderr and how to run it.
+fn siblingHint(init: std.process.Init, session: *const frontend.Session, located: project_entry.Entry, selected: usize) Error!void {
+    const a = init.arena.allocator();
+    if (selected != 0 or !std.mem.endsWith(u8, located.path, ".my")) return;
+    const sibling = try std.fmt.allocPrint(a, "{s}_test.my", .{located.path[0 .. located.path.len - ".my".len]});
+    std.Io.Dir.cwd().access(init.io, sibling, .{}) catch return;
+    if (session.single == null) for (session.project.modules.items) |module| {
+        const path = try std.fs.path.join(a, &.{ located.root, module.src.path });
+        if (std.mem.eql(u8, path, sibling)) return;
+    };
+    try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(a, "mylang test: no tests selected; sibling test file {s} is not included by this entry. Run that file explicitly with mylang test, or test its directory.\n", .{sibling}));
+}
+
+/// FMT-TEST-MODULE-1: a header-less `*_test.my` file that imports project modules is
+/// checked as the module its stem names, as the old runner checked it: its text with
+/// `module NAME; ` on the first line, so every line keeps its number. Empty otherwise.
+fn headerlessTest(a: std.mem.Allocator, located: project_entry.Entry, bytes: []const u8) Error![]const frontend.Provider {
+    if (!std.mem.endsWith(u8, located.path, "_test.my")) return &.{};
+    var lines = std.mem.splitScalar(u8, bytes, '\n');
+    const opening = while (lines.next()) |raw| {
+        const line = std.mem.trim(u8, raw, " \t\r");
+        if (line.len != 0 and line[0] != '#') break line;
+    } else return &.{};
+    if (!std.mem.startsWith(u8, opening, "import ")) return &.{};
+    const relative = try std.mem.concat(a, u8, &.{ try std.mem.replaceOwned(u8, a, located.name, ".", "/"), ".my" });
+    const text = try std.fmt.allocPrint(a, "module {s}; {s}", .{ located.name, bytes });
+    return a.dupe(frontend.Provider, &.{.{ .path = relative, .text = text }});
+}
+
+/// The cases `--filter` selects and, with `--against`, the ones `--affected` keeps of
+/// them (NEW-CORE-S5-AFFECTED-1), or the exit status of a reference git cannot resolve.
+fn chooseCases(init: std.process.Init, options: Options, located: project_entry.Entry, checked: frontend.Checked, all_cases: []const discover.Case) Error!affected.Narrowed {
+    const allocator = init.arena.allocator();
+    var filtered: std.ArrayList(discover.Case) = .empty;
+    for (all_cases) |case| if (discover.matches(options.filter, case.name)) {
+        try filtered.append(allocator, case);
+    };
+    const reference = options.controls.against orelse return .{ .kept = filtered.items };
+    const request: affected.Request = .{ .arena = allocator, .backing = init.gpa, .io = init.io, .root = located.root, .entry = located.path, .reference = reference };
+    return affected.narrow(request, checked, filtered.items);
+}
+
+/// The whole run's recorded report, unless `--affected` selects by git state that no
+/// record captures.
+fn replayRun(context: receipt.Context, base: [32]u8) Error!?[]const u8 {
+    if (context.options.controls.against != null) return null;
+    return receipt.replay(context, base);
+}
+
+fn cachedReplay(init: std.process.Init, options: Options, located: project_entry.Entry, case_bytes: []const u8) Error!?[]const u8 {
+    if (options.controls.against != null) return null;
+    const borrowed = try borrowedReplay(init, options, located, case_bytes);
+    // The private transport never reaches native guests or a persistent key.
+    _ = init.environ_map.swapRemove(tool_ticket.hint);
+    return borrowed orelse try localReplay(init, options, located, case_bytes);
+}
+
+fn borrowedReplay(init: std.process.Init, requested: Options, located: project_entry.Entry, case_bytes: []const u8) Error!?[]const u8 {
+    const a = init.arena.allocator();
+    const resources: tool_identity.Request = .{ .arena = a, .io = init.io, .environment = init.environ_map, .executable = requested.build.zig, .cache = requested.build.cache };
+    const guest = try tool_ticket.borrow(.{ .tool = resources, .compiler_identity = frontend.compiler_identity }) orelse return null;
+    var options = requested;
+    options.build.zig = guest.path;
+    const context: receipt.Context = .{ .arena = a, .io = init.io, .environment = init.environ_map, .options = options, .entry = located, .case_bytes = case_bytes, .tool = guest };
+    var native_inputs: std.ArrayList(receipt.Dependency) = .empty;
+    return receipt.replayProvisional(context, try receipt.settings(context, &native_inputs));
+}
+
+fn localReplay(init: std.process.Init, requested: Options, located: project_entry.Entry, case_bytes: []const u8) Error!?[]const u8 {
+    const a = init.arena.allocator();
+    const resources: tool_identity.Request = .{ .arena = a, .io = init.io, .environment = init.environ_map, .executable = requested.build.zig, .cache = requested.build.cache };
+    const guest = tool_identity.lookupReplayCandidate(resources) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return null;
+    } orelse return null;
+    var options = requested;
+    options.build.zig = guest.path;
+    const context: receipt.Context = .{ .arena = a, .io = init.io, .environment = init.environ_map, .options = options, .entry = located, .case_bytes = case_bytes, .tool = guest };
+    var native_inputs: std.ArrayList(receipt.Dependency) = .empty;
+    const base = try receipt.settings(context, &native_inputs);
+    // Buffer the candidate without publishing anything under its unverified key.
+    _ = try receipt.replayProvisional(context, base) orelse return null;
+    if (!try receipt.toolUnchanged(context)) return null;
+    // Source/dependency bytes must still agree after the full tool validation.
+    return receipt.replayProvisional(context, base);
+}
+
+fn configuredCases(init: std.process.Init, options: *const Options, located: project_entry.Entry) Error!?case_settings.File {
+    return case_settings.load(init.arena.allocator(), init.io, located.path, options.controls.cases) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(init.arena.allocator(), "error: test cases: {s}\n", .{@errorName(err)}));
+        return null;
+    };
+}
+
+fn guestTool(init: std.process.Init, options: Options) Error!?tool_identity.Identity {
+    const a = init.arena.allocator();
+    return tool_identity.capture(.{ .arena = a, .io = init.io, .environment = init.environ_map, .executable = options.build.zig, .cache = options.build.cache }) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(a, "error: cannot identify guest toolchain: {s}\n", .{@errorName(err)}));
+        return null;
+    };
+}
+
+/// Settle the step, frame and byte ceilings: a flag, then (memory only) `MYLANG_MEMORY_LIMIT`,
+/// then the project's `limits.test`, then the defaults. A frame budget the byte ceiling
+/// cannot back is refused before anything is built, as the old core refuses it.
+fn applyLimits(init: std.process.Init, options: *Options, located: project_entry.Entry) Error!bool {
+    var frames: ?u64 = null;
+    var memory: ?u64 = null;
+    if (located.configuration) |configured| {
+        const limits = configured.document.limits.tests;
+        if (!options.controls.ceilings.explicit_steps) if (limits.max_steps) |steps| {
+            options.controls.max_steps = steps;
+        };
+        frames = limits.max_frames;
+        memory = limits.max_memory;
+    }
+    const a = init.arena.allocator();
+    options.controls.ceilings = options_module.resolve(options.controls.ceilings, init.environ_map, frames, memory) catch {
+        try writeAll(init, std.Io.File.stderr(), "error: MYLANG_MEMORY_LIMIT is not a byte count with an optional K, M or G suffix\n");
+        return false;
+    };
+    if (try options_module.frameRefusal(a, init.environ_map, options.controls.ceilings)) |refused| {
+        try writeAll(init, std.Io.File.stderr(), refused);
+        return false;
+    }
+    return true;
+}
+
+fn programIdentity(resources: IdentityResources, options: Options, checked: frontend.Checked, case: discover.Case, base: [32]u8) Error!?[32]u8 {
+    // The shared checker propagates effects through calls. Host calls have
+    // mutable external inputs and cannot publish persistent result receipts.
+    const function = checked.program.functions[@backingInt(case.function)];
+    const effects = @import("mylang").effect_set;
+    if (function.policy.host != null or function.policy.effects & effects.bit(.host) != 0) return null;
+    const a = resources.scratch;
+    var why: build.Refusal = .{};
+    const built = if (resources.prebuilt) |prebuilt| withEntry(a, options, checked, &.{case}, prebuilt) else programFor(a, options, checked, &.{case}, &why);
+    const module = built catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return null;
+    };
+    const source_path = std.Io.Dir.cwd().realPathFileAlloc(resources.io, options.path, a) catch options.path;
+    const identity = receipt.programKey(base, case.name, .{ .module = &module, .source_path = source_path, .locator = pipeline.locator(&checked.src) });
+    return identity;
+}
+
+fn select(init: std.process.Init, options: Options, checked: frontend.Checked, cases: []const discover.Case, settings: case_settings.File, selection: SelectionContext) Error![]Selected {
+    const a = init.arena.allocator();
+    const chosen = try a.alloc(Selected, cases.len);
+    const context = selection.receipt;
+    for (cases, chosen) |case, *item| {
+        var scratch = std.heap.ArenaAllocator.init(init.gpa);
+        defer scratch.deinit();
+        var built: ?@import("ir.zig").Module = null;
+        const configured = v.get(settings.document, case.name);
+        const skip = v.get(configured, "skip");
+        const refused = if (skip == .string and skip.string.len != 0) report.Verdict{ .name = case.name, .status = .skipped, .reason = skip.string } else try classify(scratch.allocator(), a, checked, case, configured, &built);
+        item.* = .{ .case = case, .verdict = refused orelse .{ .name = case.name, .status = .failed, .reason = "not run" }, .ready = refused == null, .settings = configured };
+        if (!item.ready) continue;
+        if (try programIdentity(.{ .scratch = scratch.allocator(), .io = init.io, .prebuilt = built }, options, checked, case, selection.base)) |identity| {
+            item.identity = receipt.configuredKey(identity, try std.json.Stringify.valueAlloc(a, configured, .{}));
+            if (try receipt.hit(context, item.identity.?)) {
+                item.verdict = .{ .name = case.name, .status = .cached };
+                item.ready = false;
+            }
+        }
+    }
+    return chosen;
+}
+
+fn remap(a: std.mem.Allocator, before: typed.Program, after: typed.Program, original: []const discover.Case, discovered: []const discover.Case) Error![]const discover.Case {
+    const result = try a.alloc(discover.Case, original.len);
+    for (original, result) |case, *slot| {
+        const found = for (discovered) |candidate| {
+            if (std.mem.eql(u8, candidate.name, case.name)) break candidate;
+        } else return error.InvalidTestValue;
+        const old = before.functions[@backingInt(case.function)];
+        const new = after.functions[@backingInt(found.function)];
+        if (old.signature.parameter_count != new.signature.parameter_count) return error.InvalidTestValue;
+        if (!std.mem.eql(u16, old.signature.mutates, new.signature.mutates)) return error.InvalidTestValue;
+        if (!old.signature.return_origin.eql(new.signature.return_origin)) return error.InvalidTestValue;
+        const old_result = typed.typeName(old.signature.return_type, before.records);
+        const new_result = typed.typeName(new.signature.return_type, after.records);
+        if (!std.mem.eql(u8, old_result, new_result)) return error.InvalidTestValue;
+        for (old.scope.locals[0..old.signature.parameter_count], new.scope.locals[0..new.signature.parameter_count]) |left, right| {
+            if (!std.mem.eql(u8, left.name, right.name)) return error.InvalidTestValue;
+            if (!std.mem.eql(u8, typed.typeName(left.ty, before.records), typed.typeName(right.ty, after.records))) return error.InvalidTestValue;
+        }
+        slot.* = found;
+    }
+    return result;
+}
+
+fn writeAll(init: std.process.Init, file: std.Io.File, text: []const u8) Error!void {
+    file.writeStreamingAll(init.io, text) catch return error.WriteFailed;
+}
+
+/// The `unsupported` verdict of a test the builder cannot build, or null when it can be
+/// built and run; then `built` holds its reachable functions, allocated in `scratch`.
+fn classify(scratch: std.mem.Allocator, keep: std.mem.Allocator, checked: frontend.Checked, case: discover.Case, settings: std.json.Value, built: *?@import("ir.zig").Module) Error!?report.Verdict {
+    const arguments = v.get(settings, "arguments");
+    const fixed = arguments == .object and arguments.object.count() != 0;
+    const expected = settings == .object and settings.object.contains(case_expectation);
+    if (case.other_parameters != 0 and !fixed) {
+        if (expected) return .{ .name = case.name, .status = .failed, .reason = "a property test's verdict is its bool result; remove `expected` or supply `arguments`" };
+        const function = checked.program.functions[@backingInt(case.function)];
+        const definitions = try property_schema.definitions(keep, checked.program);
+        const schema = try property_types.Schema.init(keep, definitions);
+        for (function.scope.locals[0..function.signature.parameter_count], case.parameters) |parameter, family| {
+            if (family != 255 and family <= 5) continue;
+            const name = typed.typeName(parameter.ty, checked.program.records);
+            if (try property_types.refused(schema, name)) |found| {
+                return .{ .name = case.name, .status = .failed, .reason = try property.refusedText(keep, parameter.name, name, found) };
+            }
+        }
+    }
+    // NEW-CORE-S5-TEST-1: an exported `test_*` with another result is a failed case, as the old runner reports it.
+    if (case.shape == .other and !expected) {
+        if (case.other_parameters == 0) return .{ .name = case.name, .status = .failed, .reason = "test result type is not bool" };
+        const result = typed.typeName(checked.program.functions[@backingInt(case.function)].signature.return_type, checked.program.records);
+        return .{ .name = case.name, .status = .failed, .reason = try std.fmt.allocPrint(keep, property.non_bool_result, .{result}) };
+    }
+    var why: build.Refusal = .{};
+    const selected_roots = try rootsFor(scratch, checked.program, &.{case});
+    const module = build.buildRootsSource(scratch, checked.program, selected_roots, checked.src, &why) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.Unsupported => {
+            const at = frontend.position(checked.src, .{ .start = why.span, .end = why.span });
+            return refusal(case, try keep.dupe(u8, why.reason), try std.fmt.allocPrint(keep, "{d}:{d}", .{ at.line, at.column }));
+        },
+    };
+    if (!expected and !entry.readable(&module, module.functions.items[0].signature.ret)) return refusal(case, "the runner's entry cannot read this test's result type yet (Result[bool, E])", "");
+    built.* = module;
+    return null;
+}
+
+fn refusal(case: discover.Case, reason: []const u8, at: []const u8) report.Verdict {
+    return .{ .name = case.name, .status = .unsupported, .reason = reason, .at = at };
+}
+
+/// The entry module's name, which qualifies its tests: the prefix of the (stub) `main`'s
+/// own name, since a `module` header may differ from the file's stem; the stem for a header-less file.
+fn moduleName(program: typed.Program, stem: []const u8) []const u8 {
+    const main = program.functions[@backingInt(program.main)].name;
+    const split = std.mem.lastIndexOf(u8, main, "::") orelse return stem;
+    return main[0..split];
+}
+
+/// Discover declarations from the immutable sources the checker actually used.
+fn moduleSources(a: std.mem.Allocator, session: *const frontend.Session, entry_module: []const u8) Error![]const discover.Module {
+    if (session.single) |unit| return a.dupe(discover.Module, &.{.{ .name = entry_module, .text = unit.src.bytes }});
+    const modules = try a.alloc(discover.Module, session.project.modules.items.len);
+    for (session.project.modules.items, modules) |source, *module| module.* = .{ .name = source.name, .text = source.src.bytes };
+    return modules;
+}
+
+fn addSources(a: std.mem.Allocator, paths: *std.ArrayList([]const u8), context: receipt.Context, session: *const frontend.Session) Error!void {
+    if (session.single != null) {
+        try paths.append(a, context.entry.path);
+        return;
+    }
+    for (session.project.modules.items) |module| {
+        if (std.mem.startsWith(u8, module.src.path, "@stdlib/")) continue;
+        const path = try std.fs.path.join(a, &.{ context.entry.root, module.src.path });
+        var present = false;
+        for (paths.items) |known| present = present or std.mem.eql(u8, known, path);
+        if (!present) try paths.append(a, path);
+    }
+}
+
+fn definesMain(bytes: []const u8) bool {
+    var lines = std.mem.splitScalar(u8, bytes, '\n');
+    while (lines.next()) |line| {
+        if (std.mem.startsWith(u8, line, "def main(") or std.mem.startsWith(u8, line, "public def main(")) return true;
+    }
+    return false;
+}
+
+/// Build the pending tests together (isolating any the backend rejects) and run each.
+fn execute(init: std.process.Init, requested: Options, checked: frontend.Checked, chosen: []Selected) Error!void {
+    const allocator = init.arena.allocator();
+    var live: std.ArrayList(usize) = .empty;
+    for (chosen, 0..) |item, position| if (item.ready) try live.append(allocator, position);
+    if (live.items.len == 0) return;
+    var options = requested;
+    var nonce: [16]u8 = undefined;
+    std.Io.random(init.io, &nonce);
+    options.build.output = try std.fmt.allocPrint(allocator, "{s}/tests/program-{s}", .{ requested.build.cache, std.fmt.bytesToHex(nonce, .lower) });
+    std.Io.Dir.cwd().createDirPath(init.io, options.build.output) catch return error.WriteFailed;
+    defer removePrivate(init.io, options.build.output);
+    var attempt = try buildExecutable(init, options, checked, chosen, live.items, "");
+    if (attempt == .failed and live.items.len > 1) {
+        // Find which tests the backend rejects by building each alone, then rebuild the rest.
+        var good: std.ArrayList(usize) = .empty;
+        for (live.items) |position| {
+            const alone = try buildExecutable(init, options, checked, chosen, &.{position}, "-probe");
+            switch (alone) {
+                .built => try good.append(allocator, position),
+                .failed => |failure| chosen[position].verdict = failure,
+            }
+        }
+        live = good;
+        if (live.items.len == 0) return;
+        attempt = try buildExecutable(init, options, checked, chosen, live.items, "");
+    }
+    switch (attempt) {
+        .failed => |failure| for (live.items) |position| {
+            chosen[position].verdict = .{ .name = chosen[position].case.name, .status = failure.status, .reason = failure.reason };
+        },
+        .built => |executable| try executeWorkers(init, options, checked.program, executable, chosen, live.items),
+    }
+}
+
+const Work = struct {
+    resources: ExecutionResources,
+    options: Options,
+    program: typed.Program,
+    executable: []const u8,
+    table_index: usize,
+    selected: *Selected,
+    failure: ?Error = null,
+
+    fn run(self: *Work) void {
+        self.selected.verdict = runSelected(self.resources, self.options, self.program, self.executable, self.table_index, self.selected.*) catch |err| {
+            self.failure = err;
+            return;
+        };
+    }
+};
+
+fn executeWorkers(init: std.process.Init, options: Options, program: typed.Program, executable: []const u8, chosen: []Selected, positions: []const usize) Error!void {
+    const a = init.arena.allocator();
+    const width = @import("test_runner_options.zig").width(options.controls, init.environ_map, positions.len, @import("memory_budget").available(init.io));
+    // The pinned Zig arena is thread-safe with Init's thread-safe backing.
+    const resources: ExecutionResources = .{ .arena = a, .backing = init.gpa, .io = init.io };
+    const work = try a.alloc(Work, positions.len);
+    for (positions, work, 0..) |position, *item, table_index| item.* = .{ .resources = resources, .options = options, .program = program, .executable = executable, .table_index = table_index, .selected = &chosen[position] };
+    if (width == 1) {
+        for (work) |*item| {
+            item.run();
+            if (item.failure) |err| return err;
+        }
+        return;
+    }
+    const threads = try a.alloc(std.Thread, width);
+    var begin: usize = 0;
+    while (begin < work.len) : (begin += width) {
+        var started: usize = 0;
+        for (work[begin..@min(work.len, begin + width)]) |*item| {
+            threads[started] = std.Thread.spawn(.{}, Work.run, .{item}) catch {
+                item.run();
+                continue;
+            };
+            started += 1;
+        }
+        for (threads[0..started]) |thread| thread.join();
+        for (work[begin..@min(work.len, begin + width)]) |item| if (item.failure) |err| return err;
+    }
+}
+
+const Built = union(enum) { built: []const u8, failed: report.Verdict };
+
+/// Build the executable for `chosen[positions]`; its dispatch table lists them in order.
+fn buildExecutable(init: std.process.Init, options: Options, checked: frontend.Checked, chosen: []const Selected, positions: []const usize, tag: []const u8) Error!Built {
+    const allocator = init.arena.allocator();
+    const name = chosen[positions[0]].case.name;
+    const cases = try allocator.alloc(discover.Case, positions.len);
+    for (positions, cases) |position, *case| case.* = chosen[position].case;
+    var why: build.Refusal = .{};
+    var module = programFor(allocator, options, checked, cases, &why) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return .{ .failed = .{ .name = name, .status = .unsupported, .reason = if (why.reason.len != 0) why.reason else "property copied-value adapter type" } },
+    };
+    const flavor = if (options.build.release) "release" else "debug";
+    const absolute = std.Io.Dir.cwd().realPathFileAlloc(init.io, options.path, allocator) catch options.path;
+    var digest: [8]u8 = undefined;
+    std.crypto.hash.Blake3.hash(absolute, &digest, .{});
+    const directory = options.build.output;
+    var request = options.build;
+    request.output = try std.fmt.allocPrint(allocator, "{s}/{s}-{x}-{s}{s}", .{ directory, frontend.entryOf(options.path).module, digest, flavor, tag });
+    var log: std.ArrayList(u8) = .empty;
+    const unit: pipeline.Unit = .{ .src = checked.src, .source_path = absolute, .main = .{} };
+    _ = pipeline.finish(init, &module, unit, request, &log) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.Unsupported => return .{ .failed = .{ .name = name, .status = .unsupported, .reason = try firstLine(allocator, log.items) } },
+        else => return .{ .failed = .{ .name = name, .status = .failed, .reason = try std.fmt.allocPrint(allocator, "build error ({s}): {s}", .{ @errorName(err), try firstLine(allocator, log.items) }) } },
+    };
+    return .{ .built = request.output };
+}
+
+fn programFor(allocator: std.mem.Allocator, options: Options, checked: frontend.Checked, cases: []const discover.Case, why: *build.Refusal) (Error || build.Error || batch_entry.Error)!@import("ir.zig").Module {
+    const roots = try rootsFor(allocator, checked.program, cases);
+    const reachable = try build.buildRootsSource(allocator, checked.program, roots, checked.src, why);
+    return withEntry(allocator, options, checked, cases, reachable);
+}
+
+/// `reachable` (the cases' functions) with the runner's entry and step budget added.
+fn withEntry(allocator: std.mem.Allocator, options: Options, checked: frontend.Checked, cases: []const discover.Case, reachable: @import("ir.zig").Module) (Error || batch_entry.Error)!@import("ir.zig").Module {
+    var module = reachable;
+    try qualifyHeaderless(allocator, &module, checked.program, cases);
+    const targets = try allocator.alloc(entry.Target, cases.len);
+    for (targets, cases, 0..) |*target, case, table_index| {
+        const function = checked.program.functions[@backingInt(case.function)];
+        const result = typed.resultShape(function.signature.return_type, checked.program.records);
+        const parameters = try allocator.alloc([]const u8, function.signature.parameter_count);
+        for (parameters, function.scope.locals[0..function.signature.parameter_count]) |*name_slot, parameter| name_slot.* = typed.typeName(parameter.ty, checked.program.records);
+        target.* = .{
+            .function = @intCast(table_index),
+            .streams = case.streams,
+            .parameters = case.parameters,
+            .seed = entropySeed(options.seed, case.name),
+            .data = .{ .parameters = parameters, .result = typed.typeName(function.signature.return_type, checked.program.records) },
+            .result = if (result) |shape| .{ .ok_tag = @intCast(shape.ok_tag), .error_tag = @intCast(shape.error_tag) } else null,
+        };
+    }
+    const schema = try property_types.Schema.init(allocator, try property_schema.definitions(allocator, checked.program));
+    const originals = module.functions.items.len;
+    try batch_entry.add(allocator, &module, targets, schema);
+    try @import("test_runner_budget.zig").instrument(allocator, &module, originals, options.controls);
+    return module;
+}
+
+fn firstLine(allocator: std.mem.Allocator, text: []const u8) std.mem.Allocator.Error![]const u8 {
+    return allocator.dupe(u8, std.mem.sliceTo(std.mem.trim(u8, text, "\n"), '\n'));
+}
+
+/// Stable stand-in/property seed, identical to native_test_wire.entropySeed.
+fn entropySeed(explicit: ?u64, name: []const u8) u64 {
+    if (explicit) |seed| return seed;
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(name, &digest, .{});
+    return std.mem.readInt(u64, digest[0..8], .little);
+}
+
+fn rootsFor(a: std.mem.Allocator, program: typed.Program, cases: []const discover.Case) Error![]const typed.FunctionId {
+    var roots: std.ArrayList(typed.FunctionId) = .empty;
+    for (cases) |case| try roots.append(a, case.function);
+    const schema = try property_types.Schema.init(a, try property_schema.definitions(a, program));
+    for (program.functions) |candidate| {
+        const prefix = "@invariant:";
+        if (!std.mem.startsWith(u8, candidate.name, prefix)) continue;
+        var needed = false;
+        for (cases) |case| {
+            const f = program.functions[@backingInt(case.function)];
+            for (f.scope.locals[0..f.signature.parameter_count], case.parameters) |parameter, family| {
+                if (family != 255) continue;
+                needed = needed or try property_types.reaches(schema, typed.typeName(parameter.ty, program.records), candidate.name[prefix.len..]);
+            }
+        }
+        if (needed) try roots.append(a, candidate.id);
+    }
+    return roots.toOwnedSlice(a);
+}
+
+fn functionValue(a: std.mem.Allocator, program: typed.Program, case: discover.Case) Error!std.json.Value {
+    const f = program.functions[@backingInt(case.function)];
+    var out: std.json.ObjectMap = .empty;
+    try out.put(a, "name", .{ .string = case.name });
+    try out.put(a, "result", .{ .string = typed.typeName(f.signature.return_type, program.records) });
+    var parameters: std.json.Array = .init(a);
+    for (f.scope.locals[0..f.signature.parameter_count]) |parameter| {
+        var item: std.json.ObjectMap = .empty;
+        try item.put(a, "name", .{ .string = parameter.name });
+        try item.put(a, "type", .{ .string = typed.typeName(parameter.ty, program.records) });
+        try item.put(a, "mode", .{ .string = "value" });
+        try parameters.append(.{ .object = item });
+    }
+    try out.put(a, "parameters", .{ .array = parameters });
+    return .{ .object = out };
+}
+
+fn runSelected(resources: ExecutionResources, options: Options, program: typed.Program, executable: []const u8, table_index: usize, selected: Selected) Error!report.Verdict {
+    const case = selected.case;
+    const a = resources.arena;
+    const function = try functionValue(a, program, case);
+    var nonce: [16]u8 = undefined;
+    std.Io.random(resources.io, &nonce);
+    const directory = try std.fmt.allocPrint(a, "{s}/tests/private-{s}", .{ options.build.cache, std.fmt.bytesToHex(nonce, .lower) });
+    std.Io.Dir.cwd().createDirPath(resources.io, directory) catch return error.WriteFailed;
+    defer removePrivate(resources.io, directory);
+    const context: property_execute.Context = .{ .arena = a, .backing = resources.backing, .io = resources.io };
+    const source_path = std.Io.Dir.cwd().realPathFileAlloc(resources.io, options.path, a) catch options.path;
+    const executor: property_execute.Executor = .{ .context = context, .types = try property_schema.definitions(a, program), .executable = executable, .table_index = table_index, .directory = directory, .source_path = source_path };
+    const arguments = v.get(selected.settings, "arguments");
+    const fixed = arguments == .object and arguments.object.count() != 0;
+    if (case.other_parameters != 0 and !fixed) {
+        const setup = try property.Property.bind(context, &executor, function, .{ .timeout_ms = options.controls.timeout_ms }, .{ .seed = entropySeed(options.seed, case.name), .runs = options.property_runs, .entry = options.path });
+        var bound = switch (setup) {
+            .invalid => |reason| return .{ .name = case.name, .status = .failed, .reason = reason },
+            .ready => |ready| ready,
+        };
+        var search: property.Search = .{};
+        const first = try bound.first(&search);
+        const answers = try property_execute.executeBatches(context, &.{first}, .{ .timeout_ms = options.controls.timeout_ms }, 1);
+        const verdict = try bound.finish(&search, answers[0]);
+        return .{ .name = case.name, .status = if (verdict.passed) .passed else .failed, .reason = verdict.reason, .property = verdict.evidence };
+    }
+    const words = if (fixed) executor.encode(function, arguments) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return .{ .name = case.name, .status = .failed, .reason = "invalid cases-file arguments" };
+    } else &.{};
+    const answered = try property_execute.executeBatches(context, &.{.{ .executor = &executor, .function = function, .inputs = &.{words} }}, .{ .timeout_ms = options.controls.timeout_ms }, 1);
+    if (answered[0].outcomes.len != 1) return .{ .name = case.name, .status = .failed, .reason = if (answered[0].timed_out) try std.fmt.allocPrint(a, "timed out after {d} ms", .{options.controls.timeout_ms}) else answered[0].ending };
+    const outcome = answered[0].outcomes[0];
+    const explicit = selected.settings == .object and selected.settings.object.contains(case_expectation);
+    const returned = std.mem.eql(u8, outcome.status, "value");
+    const matches = if (!returned) false else if (explicit) try expectedResult(a, program, case, v.get(selected.settings, case_expectation), outcome.actual) else truth(outcome.actual);
+    const passed = returned and matches;
+    if (explicit and !passed and std.mem.eql(u8, outcome.status, "value")) {
+        const expected_text = try std.json.Stringify.valueAlloc(a, v.get(selected.settings, case_expectation), .{});
+        const actual_text = if (outcome.actual == .string and integerResult(program, case)) outcome.actual.string else try std.json.Stringify.valueAlloc(a, outcome.actual, .{});
+        return .{ .name = case.name, .status = .failed, .reason = try std.fmt.allocPrint(a, "expected {s}, got {s}", .{ expected_text, actual_text }) };
+    }
+    return .{ .name = case.name, .status = if (passed) .passed else .failed, .reason = if (passed) "" else try ordinaryReason(a, outcome) };
+}
+
+/// NATIVE-TEST-8: whether `case` returns a plain integer, whose value a failed typed
+/// expectation quotes bare (`got 3`) rather than in the cases encoding (`got "3"`).
+fn integerResult(program: typed.Program, case: discover.Case) bool {
+    const name = typed.typeName(program.functions[@backingInt(case.function)].signature.return_type, program.records);
+    for ([_][]const u8{ "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64" }) |integer| if (std.mem.eql(u8, name, integer)) return true;
+    return false;
+}
+
+fn expectedResult(a: std.mem.Allocator, program: typed.Program, case: discover.Case, expected: std.json.Value, actual: std.json.Value) Error!bool {
+    const schema = try property_types.Schema.init(a, try property_schema.definitions(a, program));
+    const function = program.functions[@backingInt(case.function)];
+    const name = typed.typeName(function.signature.return_type, program.records);
+    const validation = @import("property_validate.zig");
+    validation.validate(schema, name, expected, 0) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return false;
+    };
+    validation.validate(schema, name, actual, 0) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return false;
+    };
+    return validation.equivalent(expected, actual);
+}
+fn truth(value: std.json.Value) bool {
+    if (value == .bool) return value.bool;
+    return std.mem.eql(u8, v.text(v.get(value, "case")), "ok") and v.get(value, "value") == .bool and v.get(value, "value").bool;
+}
+
+/// ERROR-TRACE-3: a header-less file is checked alone, so its functions carry bare
+/// names; the old runner checked it as the module its stem names, and its error
+/// traces and trap frames say `module::name`. Qualify the file's own functions so the
+/// new core's say the same. A module entry's functions are already qualified.
+fn qualifyHeaderless(allocator: std.mem.Allocator, module: *@import("ir.zig").Module, program: typed.Program, cases: []const discover.Case) Error!void {
+    if (std.mem.indexOf(u8, program.functions[@backingInt(program.main)].name, "::") != null or cases.len == 0) return;
+    const split = std.mem.lastIndexOf(u8, cases[0].name, "::") orelse return;
+    const prefix = cases[0].name[0 .. split + 2];
+    for (module.functions.items) |*function| {
+        if (function.signature.linkage != .internal or function.name.len == 0) continue;
+        if (!std.ascii.isAlphabetic(function.name[0]) or std.mem.indexOf(u8, function.name, "::") != null) continue;
+        function.name = try std.mem.concat(allocator, u8, &.{ prefix, function.name });
+    }
+}
+
+/// Best-effort retirement only touches the selected test's owned directory.
+fn removePrivate(io: std.Io, directory: []const u8) void {
+    std.Io.Dir.cwd().deleteTree(io, directory) catch return;
+}
+
+// spec-case: NEW-CORE-S3-RUNNER-1
+test "removePrivate retires trial files and accepts an already absent directory" {
+    var temp = std.testing.tmpDir(.{});
+    defer temp.cleanup();
+    const a = std.testing.allocator;
+    const root = try temp.dir.realPathFileAlloc(std.testing.io, ".", a);
+    defer a.free(root);
+    const directory = try std.fs.path.join(a, &.{ root, "private" });
+    defer a.free(directory);
+    const file = try std.fs.path.join(a, &.{ directory, "trial.input" });
+    defer a.free(file);
+    const cwd = std.Io.Dir.cwd();
+    try cwd.createDirPath(std.testing.io, directory);
+    try cwd.writeFile(std.testing.io, .{ .sub_path = file, .data = "owned trial" });
+    removePrivate(std.testing.io, directory);
+    try std.testing.expectError(error.FileNotFound, cwd.openDir(std.testing.io, directory, .{}));
+    removePrivate(std.testing.io, directory);
+}
+fn ordinaryReason(a: std.mem.Allocator, outcome: property_execute.Outcome) Error![]const u8 {
+    var reason = outcome.diagnostics;
+    if (std.mem.eql(u8, outcome.status, "value")) {
+        const actual = outcome.actual;
+        const text = if (actual == .bool) (if (actual.bool) "true" else "false") else try std.json.Stringify.valueAlloc(a, actual, .{});
+        const expected = if (actual == .bool) "true" else "{\"case\":\"ok\",\"value\":true}";
+        reason = try std.fmt.allocPrint(a, "expected {s}, got {s}", .{ expected, text });
+        if (outcome.trace.len != 0) reason = try std.fmt.allocPrint(a, "{s}\n{s}", .{ reason, std.mem.trimEnd(u8, outcome.trace, "\n") });
+    }
+    if (outcome.output.len != 0) reason = try std.fmt.allocPrint(a, "{s}\n{s}", .{ reason, outcome.output });
+    return reason;
+}
+
+// spec-case: NEW-CORE-S4-TEST-3
+test "programIdentity propagates allocation failure instead of inventing a reusable success" {
+    const resources: IdentityResources = .{ .scratch = std.testing.failing_allocator, .io = std.testing.io };
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const source = "module app\n\npublic def test_value() -> bool:\n    return True\n\ndef main() -> int:\n    return 0\n";
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = source });
+    const path = try std.fs.path.join(a, &.{ root, "app.my" });
+    var diagnostics: std.ArrayList(u8) = .empty;
+    var session = frontend.Session.init(std.testing.allocator, std.testing.io, root);
+    defer session.deinit();
+    const checked = try session.checkFile(a, path, &diagnostics);
+    const cases = try discover.discover(a, checked.program, "app", &.{.{ .name = "app", .text = source }});
+    try std.testing.expectEqual(@as(usize, 1), cases.len);
+    try std.testing.expectError(error.OutOfMemory, programIdentity(resources, .{ .path = path, .build = .{ .zig = "zig" } }, checked, cases[0], @splat(0)));
+}

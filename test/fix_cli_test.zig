@@ -108,7 +108,7 @@ const unused_module =
     \\
 ;
 
-// spec-case: FIX-MIGRATION-1
+// spec: FIX-MIGRATION-1
 test "CLI fix applies every structured fix across modules to a fixed point" {
     var project = try Project.init(&.{
         .{ .path = "main.my", .data = fixable_main },
@@ -154,6 +154,33 @@ test "CLI fix applies every structured fix across modules to a fixed point" {
     const checked = try project.run("check", "main.my", &.{});
     defer checked.deinit();
     try testing.expectEqual(@as(u8, 0), checked.status);
+}
+
+// spec-case: FIX-MIGRATION-1
+test "CLI fix splits receiver overlap into a preceding call without repeating effects" {
+    const original = @embedFile("fixtures/fix-migration/receiver-overlap.my");
+    var project = try Project.init(&.{.{ .path = "main.my", .data = original }});
+    defer project.deinit();
+    const preview = try project.run("fix", "main.my", &.{"--check"});
+    defer preview.deinit();
+    try testing.expectEqual(@as(u8, 1), preview.status);
+    try testing.expect(contains(preview.stdout, "E_MUTATION_OVERLAP"));
+    const before = try project.read("main.my");
+    defer testing.allocator.free(before);
+    try testing.expectEqualStrings(original, before);
+    const fixed = try project.run("fix", "main.my", &.{});
+    defer fixed.deinit();
+    try testing.expectEqual(@as(u8, 0), fixed.status);
+    const after = try project.read("main.my");
+    defer testing.allocator.free(after);
+    try testing.expectEqual(@as(usize, 1), std.mem.count(u8, after, "selected(mut items)"));
+    try testing.expect(contains(after, " = selected(mut items)\n    items[mutation_result_"));
+    const checked = try project.run("check", "main.my", &.{});
+    defer checked.deinit();
+    try testing.expectEqual(@as(u8, 0), checked.status);
+    const again = try project.run("fix", "main.my", &.{"--check"});
+    defer again.deinit();
+    try testing.expectEqual(@as(u8, 0), again.status);
 }
 
 // spec-case: FIX-MIGRATION-1
@@ -225,39 +252,6 @@ test "CLI check checks a library module or a test file without main" {
     try testing.expectEqual(@as(u8, 0), headerless_test.status);
 }
 
-// spec: NATIVE-TEST-DIAGNOSTICS-1
-test "CLI test renders a test entry that does not compile as diagnostic-v1 JSON" {
-    var project = try Project.init(&.{.{ .path = "grow_test.my", .data =
-        \\module grow_test
-        \\
-        \\
-        \\def grow(xs: mut list[int]) -> None:
-        \\    xs.append(1)
-        \\
-        \\
-        \\public def test_grow() -> bool:
-        \\    xs: list[int] = []
-        \\    grow(xs)
-        \\    return len(xs) == 1
-        \\
-    }});
-    defer project.deinit();
-    const cache = try project.path(".test-cache");
-    defer testing.allocator.free(cache);
-    const json = try project.run("test", "grow_test.my", &.{ "--diagnostics=json", "--cache-dir", cache });
-    defer json.deinit();
-    try testing.expectEqual(@as(u8, 1), json.status);
-    try testing.expect(contains(json.stderr, "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_MUTATION_MARKER\""));
-    try testing.expect(contains(json.stderr, "\"fix\":{\"edits\":[{\"path\":\"grow_test.my\""));
-    const text = try project.run("test", "grow_test.my", &.{ "--diagnostics=text", "--cache-dir", cache });
-    defer text.deinit();
-    try testing.expectEqual(@as(u8, 1), text.status);
-    try testing.expect(contains(text.stderr, "grow_test.my:10:10: error[E_MUTATION_MARKER]"));
-    const unknown = try project.run("test", "grow_test.my", &.{ "--diagnostics=xml", "--cache-dir", cache });
-    defer unknown.deinit();
-    try testing.expectEqual(@as(u8, 2), unknown.status);
-}
-
 /// The pinned migration corpus: nine modules and tests of the value-semantics
 /// Lox port (the copy the RC performance harness pins, 2026-09-29) with every
 /// call-site `mut` marker stripped, as a program written before the markers
@@ -306,4 +300,167 @@ test "CLI fix migrates the pinned pre-marker Lox corpus with no hand edits" {
     const heap = try project.read("heap.my");
     defer testing.allocator.free(heap);
     try testing.expect(contains(heap, "    mark_table(mut marker, rt.globals)\n"));
+}
+
+const abi_append_producer = "module lib\n\npublic def change(items: mut list[int]):\n    items.append(9)\n\npublic def append_only(items: mut list[int]):\n    items.append(3)\n";
+const abi_rebind_producer = "module lib\n\npublic def change(items: mut list[int]):\n    items = [7]\n    items.append(8)\n\npublic def append_only(items: mut list[int]):\n    items.append(3)\n";
+const abi_consumer =
+    \\module main
+    \\
+    \\import lib
+    \\def main() -> int:
+    \\    first = [1]
+    \\    first_saved = first
+    \\    lib.change(mut first)
+    \\    action = lib.change
+    \\    second = [1]
+    \\    second_saved = second
+    \\    action(mut second)
+    \\    third = [1]
+    \\    third_saved = third
+    \\    append = lib.append_only
+    \\    append(mut third)
+    \\    lib.append_only(mut third)
+    \\    return 1 if first == second and first != [1] and first_saved == [1] and second_saved == [1] and third == [1, 3, 3] and third_saved == [1] else 0
+;
+
+fn abiRun(project: *const Project) !void {
+    const result = try project.run("run", "main.my", &.{"--print-result"});
+    defer result.deinit();
+    try testing.expectEqual(@as(u8, 1), result.status);
+    try testing.expectEqualStrings("1\n", result.stdout);
+}
+
+// spec-case: MUT-REBIND-CALLER-1
+test "CLI warm imported direct and callback ABIs follow producer rebinding changes" {
+    var project = try Project.init(&.{ .{ .path = "main.my", .data = abi_consumer }, .{ .path = "lib.my", .data = abi_append_producer } });
+    defer project.deinit();
+    try abiRun(&project);
+    try abiRun(&project);
+    try project.temp.dir.writeFile(testing.io, .{ .sub_path = "lib.my", .data = abi_rebind_producer });
+    try abiRun(&project);
+    try abiRun(&project);
+    const consumer = try project.read("main.my");
+    defer testing.allocator.free(consumer);
+    try testing.expectEqualStrings(abi_consumer, consumer);
+}
+
+// spec: NEW-CORE-S5-ARENA-3
+// spec-case: FIX-MIGRATION-1
+test "CLI fix removes retired arena blocks, dedents their bodies and unwraps escapes" {
+    const original = @embedFile("fixtures/fix-migration/arenas.my");
+    var project = try Project.init(&.{.{ .path = "main.my", .data = original }});
+    defer project.deinit();
+    const preview = try project.run("fix", "main.my", &.{"--check"});
+    defer preview.deinit();
+    try testing.expectEqual(@as(u8, 1), preview.status);
+    try testing.expect(contains(preview.stdout, "W_ARENA_RETIRED"));
+    const fixed = try project.run("fix", "main.my", &.{});
+    defer fixed.deinit();
+    try testing.expectEqual(@as(u8, 0), fixed.status);
+    try testing.expectEqualStrings("", fixed.stderr);
+    const after = try project.read("main.my");
+    defer testing.allocator.free(after);
+    try testing.expectEqualStrings(arenas_migrated, after);
+    const checked = try project.run("check", "main.my", &.{});
+    defer checked.deinit();
+    try testing.expectEqual(@as(u8, 0), checked.status);
+    try testing.expectEqualStrings("", checked.stderr);
+    const again = try project.run("fix", "main.my", &.{"--check"});
+    defer again.deinit();
+    try testing.expectEqual(@as(u8, 0), again.status);
+}
+
+/// `fixtures/fix-migration/arenas.my` after `mylang fix`.
+const arenas_migrated =
+    \\# Pre-S5 arena code: `mylang fix` deletes every `with arena():` line, dedents
+    \\# the block's body and rewrites each `name.escape(value)` to `value`.
+    \\record Reading:
+    \\    sensor: int
+    \\    samples: list[int]
+    \\
+    \\
+    \\def collect(sensors: int) -> list[Reading]:
+    \\    readings: list[Reading] = []
+    \\    for sensor in range(sensors):
+    \\        # one region per sensor
+    \\        samples: list[int] = []
+    \\        for index in range(3):
+    \\            samples.append(sensor * 3 + index)
+    \\
+    \\        # kept: a copy survives the region
+    \\        readings.append(Reading(sensor=sensor, samples=samples))
+    \\    return readings
+    \\
+    \\
+    \\def loudest(readings: list[Reading]) -> int:
+    \\    best = 0
+    \\# a comment at the left margin stays where it is
+    \\    for reading in readings:
+    \\        total = 0
+    \\        for sample in reading.samples:
+    \\            total = total + sample
+    \\        if total > best:
+    \\            best = total
+    \\    return best
+    \\
+    \\
+    \\def nested() -> int:
+    \\    kept = "z"
+    \\    joined = "-".join(["a", str(2)])
+    \\    kept = (joined + "!")
+    \\    size = len(joined)
+    \\    # after the inner block
+    \\    return len(kept) + size
+    \\
+    \\
+    \\def main() -> int:
+    \\    readings = collect(4)
+    \\    return len(readings) + loudest(readings) + nested()
+    \\
+;
+
+// spec-case: FIX-MIGRATION-1
+// spec-case: D2-VIEW-STORAGE-1
+test "D2 CLI fix materializes stored dictionary projections with contextual list snapshots" {
+    const original = @embedFile("fixtures/fix-migration/dictionary-views.my");
+    var project = try Project.init(&.{.{ .path = "main.my", .data = original }});
+    defer project.deinit();
+    const preview = try project.run("fix", "main.my", &.{"--check"});
+    defer preview.deinit();
+    try testing.expectEqual(@as(u8, 1), preview.status);
+    try testing.expect(contains(preview.stdout, "E_VIEW_STORED"));
+    const fixed = try project.run("fix", "main.my", &.{});
+    defer fixed.deinit();
+    try testing.expectEqual(@as(u8, 0), fixed.status);
+    const after = try project.read("main.my");
+    defer testing.allocator.free(after);
+    try testing.expect(contains(after, "keys = list(mapping.keys())"));
+    try testing.expect(contains(after, "values = list(mapping.values())"));
+    try testing.expect(contains(after, "items = list(mapping.items())"));
+    try testing.expect(contains(after, "nested = [list(mapping.values())]"));
+    try testing.expect(contains(after, "interior = list(rows[0].values())"));
+    const checked = try project.run("check", "main.my", &.{});
+    defer checked.deinit();
+    try testing.expectEqual(@as(u8, 0), checked.status);
+    const again = try project.run("fix", "main.my", &.{"--check"});
+    defer again.deinit();
+    try testing.expectEqual(@as(u8, 0), again.status);
+}
+
+fn storedViewCorpus(path: []const u8, text: []const u8) !void {
+    var project = try Project.init(&.{.{ .path = path, .data = text }});
+    defer project.deinit();
+    const checked = try project.run("check", path, &.{"--diagnostics=json"});
+    defer checked.deinit();
+    try testing.expectEqual(@as(u8, 1), checked.status);
+    try testing.expect(contains(checked.stderr, "E_VIEW_STORED"));
+}
+
+// spec-case: D2-VIEW-STORAGE-1
+test "D2 rejects the former held receiver snapshot history and aggregate view corpora" {
+    try storedViewCorpus("rc_dictionary_views.my", @embedFile("fixtures/view-storage/rc_dictionary_views.my"));
+    try storedViewCorpus("rc_view_receivers.my", @embedFile("fixtures/view-storage/rc_view_receivers.my"));
+    try storedViewCorpus("live_view_snapshots.my", @embedFile("fixtures/view-storage/live_view_snapshots.my"));
+    try storedViewCorpus("rc_semantic_history.my", @embedFile("fixtures/view-storage/rc_semantic_history.my"));
 }

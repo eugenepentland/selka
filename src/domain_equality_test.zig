@@ -46,34 +46,6 @@ test "domain equality releases operands on allocation failures" {
     try t.checkAllAllocationFailures(stable.allocator(), allocationFailures, .{});
 }
 
-fn domainComparison(code: language.bytecode.Program) !*language.bytecode.Instruction {
-    for (code.functions) |function| for (function.scope.instructions) |*instruction| {
-        if (instruction.op == .cmp_domain) return @constCast(instruction);
-    };
-    return error.TestUnexpectedResult;
-}
-
-test "domain equality bytecode rejects invalid comparison schemas and mismatched operand identities" {
-    var compilation = try language.Compilation.init(t.allocator, "bytecode.my", comparison);
-    defer compilation.deinit();
-    try compilation.emit();
-    const code = compilation.code.?;
-    const dump = try @import("disassemble.zig").dump(t.allocator, code, compilation.src);
-    defer t.allocator.free(dump);
-    try t.expect(std.mem.indexOf(u8, dump, "CMP_DOMAIN Id eq") != null);
-    try language.bytecode.validate(t.allocator, code);
-    const instruction = try domainComparison(code);
-    const original = instruction.*;
-    defer instruction.* = original;
-    for ([_]typed.Type{ .i64, .bool, @fromBackingInt(999999) }) |invalid| {
-        instruction.op.cmp_domain.ty = invalid;
-        try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, code));
-    }
-    // Other is a valid domain schema, so validation accepts it on its own.
-    instruction.op.cmp_domain.ty = code.records[1].id;
-    try language.bytecode.validate(t.allocator, code);
-}
-
 test "domain equality emits native comparisons without a feature rejection" {
     var compilation = try language.Compilation.init(t.allocator, "native.my", comparison);
     defer compilation.deinit();
@@ -125,7 +97,7 @@ test "domain equality resolves declaration identity through module aliases" {
         var index = try language.interfaces.build(&project);
         var compilation = try language.project_compile.Compilation.init(&index);
         if (context == null) {
-            try compilation.emit();
+            try compilation.check();
             try t.expectEqual(@as(i64, 1), (try native.run(&compilation)).value);
         } else {
             try t.expectError(error.SourceError, compilation.check());

@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang-core-s3-c8313207",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/leaf-trap-provenance-reducer/overflow/app.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/leaf-trap-provenance-before-01/s3-overflow-release/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/leaf-trap-provenance-before-01/s3-overflow-release/cache",
+    "--release"
+  ],
+  "status": 0,
+  "stdout": "",
+  "stderr": ""
+}

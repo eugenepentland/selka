@@ -1,0 +1,51 @@
+core
++- install mylang-core
+   +- compile exe mylang-core debug native 2 errors
+src/iteration_place.zig:94:26: error: capture shadows declaration of 'block'
+        .block_value => |block| rootOf(Checker, checker, block.value, depth + 1),
+                         ^~~~~
+src/iteration_place.zig:47:5: note: declared here
+pub fn block(comptime Checker: type, b: collections.Builder(Checker), prepared: Source, statements: []const typed.StatementId, value: typed.NodeId) Error!typed.Node {
+~~~~^~
+src/iteration_place.zig:151:34: error: capture shadows declaration of 'block'
+                .block_value => |block| self.rebuild(block.value, depth + 1),
+                                 ^~~~~
+src/iteration_place.zig:47:5: note: declared here
+pub fn block(comptime Checker: type, b: collections.Builder(Checker), prepared: Source, statements: []const typed.StatementId, value: typed.NodeId) Error!typed.Node {
+~~~~^~
+error: 2 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang -Mroot=src/core/main.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+affected-compiler
++- install generated to mylang
+   +- compile exe mylang debug native 2 errors
+src/iteration_place.zig:94:26: error: capture shadows declaration of 'block'
+        .block_value => |block| rootOf(Checker, checker, block.value, depth + 1),
+                         ^~~~~
+src/iteration_place.zig:47:5: note: declared here
+pub fn block(comptime Checker: type, b: collections.Builder(Checker), prepared: Source, statements: []const typed.StatementId, value: typed.NodeId) Error!typed.Node {
+~~~~^~
+src/iteration_place.zig:151:34: error: capture shadows declaration of 'block'
+                .block_value => |block| self.rebuild(block.value, depth + 1),
+                                 ^~~~~
+src/iteration_place.zig:47:5: note: declared here
+pub fn block(comptime Checker: type, b: collections.Builder(Checker), prepared: Source, statements: []const typed.StatementId, value: typed.NodeId) Error!typed.Node {
+~~~~^~
+error: 2 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang --dep memory_budget --dep runtime_contract --dep native_test_root=root --dep user-doc/primer --dep user-doc/syntax --dep user-doc/statements --dep user-doc/records --dep user-doc/functions --dep user-doc/errors --dep user-doc/text --dep user-doc/bytes --dep user-doc/io --dep user-doc/effects --dep user-doc/contracts --dep user-doc/modules --dep user-doc/memory --dep user-doc/sets --dep user-doc/arenas --dep user-doc/stdlib --dep user-doc/tests --dep user-doc/build --dep user-doc/navigation --dep user-doc/context --dep user-doc/api --dep user-doc/fix --dep qbe_build_assets -Mroot=src/main.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig -ODebug -Mruntime_contract=src/runtime_contract.zig -Muser-doc/primer=docs/primer.md -Muser-doc/syntax=docs/python-syntax.md -Muser-doc/statements=docs/statements.md -Muser-doc/records=docs/records-and-unions.md -Muser-doc/functions=docs/functions.md -Muser-doc/errors=docs/results-and-options.md -Muser-doc/text=docs/text.md -Muser-doc/bytes=docs/bytes.md -Muser-doc/io=docs/io.md -Muser-doc/effects=docs/effects.md -Muser-doc/contracts=docs/contracts.md -Muser-doc/modules=docs/modules.md -Muser-doc/memory=docs/managed-memory.md -Muser-doc/sets=docs/sets.md -Muser-doc/arenas=docs/arenas.md -Muser-doc/stdlib=docs/standard-library.md -Muser-doc/tests=docs/tooling/guest-tests.md -Muser-doc/build=docs/tooling/native-build.md -Muser-doc/navigation=docs/tooling/navigation.md -Muser-doc/context=docs/tooling/agent-context.md -Muser-doc/api=docs/tooling/interface-files.md -Muser-doc/fix=docs/tooling/fix.md -ODebug -Mqbe_build_assets=.zig-cache/o/2d47e0461be4ac8edf72bd602e11a6f4/qbe_build_assets/assets.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name mylang --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 4/10 steps succeeded (2 failed)
+core transitive failure
++- install mylang-core transitive failure
+   +- compile exe mylang-core debug native 2 errors
+affected-compiler transitive failure
++- install generated to mylang transitive failure
+|  +- compile exe mylang debug native 2 errors
+|     +- run exe qbe-build-assets (qbe_build_assets) success 65ms
+|        +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:39M
++- install generated to qbe cached
+   +- compile exe qbe fast native cached 16ms MaxRSS:38M
+
+real 3.86
+user 14.42
+sys 1.34

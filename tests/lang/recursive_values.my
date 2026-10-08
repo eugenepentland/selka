@@ -162,7 +162,6 @@ public def test_recursive_declarations_build_and_match() -> bool:
     return leaves(shape) == 3
 
 
-# spec-case: RECURSIVE-VALUES-2
 public def test_writes_copy_the_path_and_leave_other_holders_alone() -> bool:
     original = Node(value=1, left=Some(Node(value=2, left=Some(leaf(3)), right=None)), right=None)
     holder = original
@@ -182,7 +181,6 @@ public def test_writes_copy_the_path_and_leave_other_holders_alone() -> bool:
     return holder != original
 
 
-# spec-case: RECURSIVE-VALUES-2
 public def test_replace_and_updates_keep_the_value_semantics() -> bool:
     base = Node(value=1, left=Some(leaf(2)), right=None)
     nine: Option[Node] = Some(leaf(9))
@@ -194,7 +192,6 @@ public def test_replace_and_updates_keep_the_value_semantics() -> bool:
     return swapped.left == nine and base.right is None
 
 
-# spec-case: RECURSIVE-VALUES-2
 public def test_mut_collections_carry_recursive_values_in_and_out() -> bool:
     shared = Node(value=1, left=Some(leaf(2)), right=None)
     nodes: list[Node] = [shared]
@@ -225,7 +222,6 @@ def graft(cells: mut [2]Node) -> None:
     cells[1].left = Some(leaf(8))
 
 
-# spec-case: RECURSIVE-VALUES-2
 public def test_equality_hashing_and_printing_see_the_value() -> bool:
     a = Expr.add(Expr.num(1), Expr.neg(Expr.num(2)))
     b = Expr.add(Expr.num(1), Expr.neg(Expr.num(2)))
@@ -244,22 +240,12 @@ public def test_equality_hashing_and_printing_see_the_value() -> bool:
     return text == "Node(value=1, left=Some(Node(value=2, left=None, right=None)), right=None)"
 
 
-# spec-case: RECURSIVE-VALUES-2
 public def test_propagation_reads_through_boxed_options() -> bool:
     chain = chain_of(3)
     one: Option[int] = Some(1)
     assert second_value(chain) == one
     assert second_value(chain_of(1)) is None
     return second_value(None) is None
-
-
-# spec-case: RECURSIVE-VALUES-2
-public def test_arena_escape_copies_the_boxes() -> bool:
-    kept: Option[Node] = None
-    with arena() as scratch:
-        built = chain_of(50)
-        kept = scratch.escape(built)
-    return depth_of(kept) == 50 and kept == chain_of(50)
 
 
 # spec: RECURSIVE-VALUES-3

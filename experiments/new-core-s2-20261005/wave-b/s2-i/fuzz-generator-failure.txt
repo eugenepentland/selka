@@ -1,0 +1,10 @@
+mut,records,alias case 1: the old core rejected the program (a generator bug):
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/.mylang-cache/wave-b/s2-i/fuzz/tmp/core-fuzz-s1.9uh7dy5h/mut_records_alias1.my:131:9: error[E_EXPLICIT_DISCARD_REQUIRED]: a standalone non-unit value requires `_ =` or result handling
+          live.pop()
+          ^
+
+mut,records,alias case 10: the old core rejected the program (a generator bug):
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-live-iteration/.mylang-cache/wave-b/s2-i/fuzz/tmp/core-fuzz-s1.9uh7dy5h/mut_records_alias10.my:131:9: error[E_EXPLICIT_DISCARD_REQUIRED]: a standalone non-unit value requires `_ =` or result handling
+          live.pop()
+          ^
+

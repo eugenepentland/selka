@@ -1,0 +1,14 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 1 after 85s (all 3 build slot(s) busy)
+file                     tests | debug   match misma unsup | release match misma unsup
+--------------------------------------------------------------------------------------
+f_features                   5 |             5     0     0 |             5     0     0
+--------------------------------------------------------------------------------------
+TOTAL                        5
+  debug    matching 5, mismatching 0, unsupported 0 (of 5 tests; 5 supported)
+  release  matching 5, mismatching 0, unsupported 0 (of 5 tests; 5 supported)
+
+blocking features of the unsupported tests (tests / files):
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):

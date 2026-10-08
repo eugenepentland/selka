@@ -1,0 +1,46 @@
+test-core
++- run test 1 pass, 1 fail (2 total)
+guardian/test: test wall 2.92s; slowest over 50ms:
+guardian/test:   2.90s  emit_units_test.test.S4 a loop body called outside a caller loop imports with its source frame and stable ripple
+guardian/test: FAIL — 1 failed of 2
+guardian/test: RESULT {"passed":1,"failed":1,"skipped":0}
+error: 'emit_units_test.test.S4 a loop body called outside a caller loop imports with its source frame and stable ripple' failed:
+       guardian/test: 2 test(s) selected
+       
+       ====== expected this output: =========
+       leaf.my:5:9: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 9223372036854775807, width 64)
+         in leaf::compute at leaf.my:5:9
+         in app::main at app.my:4:12
+       MYLANG-TRAP {"version":1,"operation":"add","left":9223372036854775807,"right":9223372036854775807,"width":64}
+       ␃
+       
+       ======== instead found this: =========
+       leaf.my:5:15: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 9223372036854775807, width 64)
+         in leaf::compute at leaf.my:5:15
+         in app::main at app.my:4:12
+       MYLANG-TRAP {"version":1,"operation":"add","left":9223372036854775807,"right":9223372036854775807,"width":64}
+       ␃
+       
+       ======================================
+       First difference occurs on line 1:
+       expected:
+       leaf.my:5:9: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 9223372036854775807, width 64)
+                 ^ ('\x39')
+       found:
+       leaf.my:5:15: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 9223372036854775807, width 64)
+                 ^ ('\x31')
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x13337b5 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/core/emit_units_test.zig:397:5: 0x133424f in test.S4 a loop body called outside a caller loop imports with its source frame and stable ripple (root_test.zig)
+           try std.testing.expectEqualStrings("leaf.my:5:9: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 9223372036854775807, width 64)\n" ++
+           ^
+failed command: ./.zig-cache/o/be2f39395dec7db76201d78643bd5c5f/test --cache-dir=./.zig-cache --seed=0x2d733034 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 1/2 tests passed (1 failed)
+test-core transitive failure
++- run test 1 pass, 1 fail (2 total)
+   +- compile test debug native success 1s MaxRSS:343M
+      +- options success
+         +- compile exe mylang-core debug native success 1s MaxRSS:350M
+

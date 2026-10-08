@@ -1,0 +1,20 @@
+module propagation_case_4
+
+
+def first(values: list[i64]) -> Option[i64]:
+    if len(values) == 0:
+        return None
+    return Some(values[0])
+
+
+def pick(values: list[i64]) -> Option[i64]:
+    value = first(values)?
+    return Some(value + 1)
+
+
+public def program() -> i64:
+    match pick([41]):
+        case Some(value):
+            return value
+        case None:
+            return 0

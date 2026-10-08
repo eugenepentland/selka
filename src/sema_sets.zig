@@ -23,9 +23,8 @@ const eSetOperator = "E_SET_OPERATOR";
 const eSetIndex = set_lower.index_code;
 
 /// One set method call whose receiver and arguments are already checked: the
-/// receiver expression, the local it names when it is one (for the arena
-/// store check), the method and its argument nodes.
-pub const SetCall = struct { span: source.Span, base: typed.NodeId, receiver: ?typed.LocalId, kind: BufferKind, arguments: []const typed.NodeId };
+/// receiver expression, the method and its argument nodes.
+pub const SetCall = struct { span: source.Span, base: typed.NodeId, kind: BufferKind, arguments: []const typed.NodeId };
 
 const impl = @This();
 /// Bind set checking to the concrete checker without an import cycle.
@@ -186,7 +185,6 @@ fn checkSetMethod(comptime Checker: type, self: *Checker, input_call: SetCall) E
     return switch (call.kind) {
         .set_add => added: {
             const operands = [_]typed.NodeId{ call.arguments[0], try b.node(.unit, .unit) };
-            try self.requireArenaOperation(call.receiver, .write, &operands);
             break :added b.access(call.base, .write, &operands, false);
         },
         // `remove` traps with `R_MISSING_KEY` exactly as `d.pop(key)` does;
@@ -194,10 +192,7 @@ fn checkSetMethod(comptime Checker: type, self: *Checker, input_call: SetCall) E
         // simply absent afterwards.
         .remove => b.access(call.base, .pop_key, call.arguments, false),
         .set_discard => b.access(call.base, .pop_default, &.{ call.arguments[0], try b.node(.unit, .unit) }, false),
-        .update => updated: {
-            try self.requireArenaOperation(call.receiver, .update, call.arguments);
-            break :updated b.access(call.base, .update, call.arguments, false);
-        },
+        .update => b.access(call.base, .update, call.arguments, false),
         .pop, .clear, .copy => b.access(call.base, call.kind, call.arguments, false),
         .set_union => sets.combine(.@"union", call.base, call.arguments[0]),
         .set_intersection => sets.combine(.intersection, call.base, call.arguments[0]),

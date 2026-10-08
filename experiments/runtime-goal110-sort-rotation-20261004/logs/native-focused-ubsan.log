@@ -1,0 +1,5 @@
+COMPILE/RUN native_collections
+native collections tests passed
+COMPILE/RUN native_sort_rotation
+native sort rotation: 78 stable run cases, 7 unchanged scratch refusals passed
+PASS optimized native rotation and collection UBSan suites

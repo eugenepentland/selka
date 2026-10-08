@@ -32,7 +32,6 @@ const record_layouts = @import("record_layouts.zig");
 const Error = diagnostic.Error;
 const Literal = @import("integer_literal.zig").Literal;
 const instances = @import("generic_instances.zig");
-const eArenaBinding = sema_shared.eArenaBinding;
 const Work = sema_shared.Work;
 const prelude = @import("prelude.zig");
 const arrays = @import("array_literals.zig");
@@ -769,7 +768,7 @@ fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, min
             const value = self.resolved[@backingInt(copy.value)].?;
             out.ty = self.nodes.items[@backingInt(value)].ty;
             if (self.requiresHandling(out.ty)) return self.sink.fail(eResultOperation, node.span, "escape requires a value without a pending result obligation");
-            if (typed.moveOnly(out.ty, self.catalog.records)) return self.sink.fail(eArenaBinding, node.span, "escape copies managed values; owned storage and capabilities cannot be copied out of an arena");
+            if (typed.moveOnly(out.ty, self.catalog.records)) return self.sink.fail(sema_shared.eWithResource, node.span, "`escape` takes a copyable value; owned storage cannot pass through it");
             out.data = .{ .arena_escape = value };
         },
         .cast => |cast| {
@@ -1019,6 +1018,7 @@ fn expressionWithTemporaries(comptime Checker: type, self: *Checker, root: ast.N
             if (try queueExpression(Checker, self, &work, task.id)) continue;
         }
         const out = try checkedExpression(Checker, self, node, minimum_literal, temporaries.items);
+        try dictionary_views.validateUse(Checker, self, task.id, out.ty);
         const consumed = try consumedTemporaries(Checker, self, node, out);
         std.debug.assert(temporaries.items.len >= consumed);
         temporaries.shrinkRetainingCapacity(temporaries.items.len - consumed);

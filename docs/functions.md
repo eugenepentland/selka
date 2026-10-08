@@ -72,6 +72,14 @@ The rendered interface signature carries the same `*`, so
 `def(host:int,*,code:int,file:int=0,position:int=4)->i64`, and a reader of the
 contract knows which parameters a call may pass positionally.
 
+### Wide signatures
+
+A function may take any number of scalar parameters (`int`, `float`, `bool` and the
+other fixed-width numbers). A list, string, record or other aggregate parameter must be
+one of its first 64 parameters, because the checker tracks which inputs a written or
+returned value may come from by position; a later one is `E_PARAMETER_POSITION`. Move
+it earlier, or group related parameters into a record and pass that.
+
 ## Unit procedures
 
 A function that produces no value is a procedure. Write `-> None` or omit the

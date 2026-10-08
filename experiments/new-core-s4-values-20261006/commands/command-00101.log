@@ -1,0 +1,70 @@
+$ scripts/build-slot.sh gate bash -c '"$@"; s4_v_status=$?; exit "$s4_v_status"' -- scripts/build-slot.sh build zig build test-core -Dtest-filter=uniform --summary all
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: all 1 gate slot(s) busy; waiting (121s so far)
+build-slot: all 1 gate slot(s) busy; waiting (181s so far)
+build-slot: all 1 gate slot(s) busy; waiting (241s so far)
+build-slot: all 1 gate slot(s) busy; waiting (301s so far)
+build-slot: all 1 gate slot(s) busy; waiting (361s so far)
+build-slot: all 1 gate slot(s) busy; waiting (421s so far)
+build-slot: all 1 gate slot(s) busy; waiting (481s so far)
+build-slot: all 1 gate slot(s) busy; waiting (541s so far)
+build-slot: all 1 gate slot(s) busy; waiting (602s so far)
+build-slot: all 1 gate slot(s) busy; waiting (662s so far)
+build-slot: all 1 gate slot(s) busy; waiting (722s so far)
+build-slot: all 1 gate slot(s) busy; waiting (782s so far)
+build-slot: all 1 gate slot(s) busy; waiting (842s so far)
+build-slot: all 1 gate slot(s) busy; waiting (902s so far)
+build-slot: all 1 gate slot(s) busy; waiting (962s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1022s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1083s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1143s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1203s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1263s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1323s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1383s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1443s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1503s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1563s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1624s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1684s so far)
+build-slot: gate slot 1 after 1734s (all 1 gate slot(s) busy)
+test-core
++- run test 0 pass, 1 crash (1 total)
+guardian/test: 1 test(s) selected
+guardian/test: test wall 0.00s
+guardian/test: PASS — 0 passed
+guardian/test: RESULT {"passed":0,"failed":0,"skipped":0}
+error: 'value_facts_test.test.uniform child lengths prove nested accesses but pop invalidates them' terminated with signal ABRT with stderr:
+       guardian/test: 1 test(s) selected
+       thread 2148657 panic: start index 2347 is larger than end index 0
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/src/core/value_facts_test.zig:36:24: 0x13344d4 in test.uniform child lengths prove nested accesses but pop invalidates them (root_test.zig)
+           const ragged = text[std.mem.indexOf(u8, text, "fn ragged").?..std.mem.indexOf(u8, text, "fn main").?];
+                              ^
+       /home/epentland/ai/canopy/mylang-worktrees/guardian-zig/src/test_runner.zig:685:39: 0x12ce073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/ai/canopy/mylang-worktrees/guardian-zig/src/test_runner.zig:610:42: 0x12ce8c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/ai/canopy/mylang-worktrees/guardian-zig/src/test_runner.zig:306:39: 0x12cef6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x12cb7ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x12cb1d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+failed command: ./.zig-cache/o/5d2a45f71b9ea8f5772e3641492e4580/test --cache-dir=./.zig-cache --seed=0xb036f3fb --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 0/1 tests passed (1 crashed)
+test-core transitive failure
++- run test 0 pass, 1 crash (1 total)
+   +- compile test debug native success 1s MaxRSS:329M
+      +- options cached
+         +- compile exe mylang-core debug native cached 10ms MaxRSS:41M
+
+
+exit=1
+elapsed_seconds=1742.079654

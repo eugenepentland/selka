@@ -1,0 +1,385 @@
+{
+  "schema": "mylang-goal110-nonnegative-rem-archive-index-v1",
+  "source_revision": "27de73d302d23a9efaf811d541f1cb723323c434",
+  "status": "unintegrated_negative_input_cost_blocker",
+  "archives": {
+    "raw/compiler-receipt.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/compiler-receipt.json",
+      "uncompressed_bytes": 658214,
+      "uncompressed_sha256": "325925fbcb0b08bcb7ed61050da3ecf6eb30be34e1772128052204e4717b652f",
+      "archive_sha256": "907f91171e7bbc7c787ec47d0de0a7dbc17dd38f4dee4faf0f1fe575cb0bdadc"
+    },
+    "raw/qualification.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/qualification.json",
+      "uncompressed_bytes": 969125,
+      "uncompressed_sha256": "a4bca519eea9f412e8f32ffad2b17fa743c9e34388cf59684085c4809f08a560",
+      "archive_sha256": "16669cfe21b802ae725dacdba10c1caffcfec7e0323babc51e5d3476c0377531"
+    },
+    "raw/holdouts.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/holdouts.json",
+      "uncompressed_bytes": 1111093,
+      "uncompressed_sha256": "2237fce79b8ff15570f8a940ebfeca11e4adb999c6e75e470229b6559378c470",
+      "archive_sha256": "7c2c44daff0709220b89830f0427ccae298465a14d06391c653dbfa790113fde"
+    },
+    "raw/actual-llvm-semantics.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/actual-llvm-semantics.json",
+      "uncompressed_bytes": 820845,
+      "uncompressed_sha256": "4b4abd7aa40002ae0cf58446252ba1777c262ae91471309f19e54d409a965cc3",
+      "archive_sha256": "153d9ade5ea723b596ab488d0dfd6df06d8fb3593f2b7909484689b42f26a17f"
+    },
+    "raw/supplement-build.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/supplement-build.json",
+      "uncompressed_bytes": 1641537,
+      "uncompressed_sha256": "6dbcaa1fdf40b45433947ac4c28f8bde71cba92537354c14be02405d44f2d740",
+      "archive_sha256": "03e7799a007d677836ec20481207d8d8d4df01d4c7b153faadc589831e8675e8"
+    },
+    "raw/screen.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/screen.json",
+      "uncompressed_bytes": 2266446,
+      "uncompressed_sha256": "7909e474b879234ed82e6d62c936c8207e6057c954cec7f953d5db001a8098da",
+      "archive_sha256": "7156a098b89fdd226ef01c0f223209bb3988abce363205260fddff3b9a783112"
+    },
+    "raw/paired.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/paired.json",
+      "uncompressed_bytes": 1683328,
+      "uncompressed_sha256": "db06ca7db3ae628de1571a1a33b78b25946de3b9e1b37fa6fa27ca9439bcf223",
+      "archive_sha256": "6f3522426fd496367f81d9f62fe02897eeb004314e4adcebb76c4ecfbb93b847"
+    },
+    "raw/supplement-timing.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/supplement-timing.json",
+      "uncompressed_bytes": 39352,
+      "uncompressed_sha256": "157dadaba4bf81d08ac22204a4e1afdbaa7b07ce8074d93a9cb0f51e11a39f03",
+      "archive_sha256": "f297041de7df8bf4e1ca2d250bd12714d395d24be8138d389256a605626535ea"
+    },
+    "raw/manifest.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/runner/manifest.json",
+      "uncompressed_bytes": 838449,
+      "uncompressed_sha256": "23830b933cee9a4adce540ca784942956da9a8008682a6db929a9347a27f31b8",
+      "archive_sha256": "ff584d0ed472b0c402e933d38ec43cc3a62290aee41b8490dfd296da34ae0fc7"
+    },
+    "raw/compiler-driver.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/compiler-driver.log",
+      "uncompressed_bytes": 97,
+      "uncompressed_sha256": "7a44ffce894e4a1cfd2ab468d6f7ed36440cce120642e53a4e18bc549fdb0c3e",
+      "archive_sha256": "e3bf2e5b4ec2f8df1bc1ca6e9480940269426d2c2002a78cf9bda76c3c6aaf95"
+    },
+    "raw/guest-build.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/guest-build.log",
+      "uncompressed_bytes": 640,
+      "uncompressed_sha256": "45b25674f9497f6d6b9cbc583db55099fb289fd5c7c20e69cf0808bbad23aa97",
+      "archive_sha256": "92139515fcd3a1545dc2b2a3e434185abcf488a59f7b3e1e5a0ce64ed13293e1"
+    },
+    "raw/qualification.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/qualification.log",
+      "uncompressed_bytes": 1000,
+      "uncompressed_sha256": "5dc2a9a20610176e71e3aeee62f43d36cdf55bb69b607574ee401527235fbe4f",
+      "archive_sha256": "6044de8a8e44733c76ecdd5f1dacd0eeacbb77be954972784c7b7588a305b8d3"
+    },
+    "raw/holdouts.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/holdouts.log",
+      "uncompressed_bytes": 3569,
+      "uncompressed_sha256": "eb66e9fc422e3bdd9ea3b208eafd19a7b76a31a9901b96a3b302202d5b03f32c",
+      "archive_sha256": "d79d7335a6c3b4da407d6b262d969e8fb48a8a034d93a7a1c4aea203df26a5ef"
+    },
+    "raw/actual-llvm-semantics.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/actual-llvm-semantics.log",
+      "uncompressed_bytes": 526,
+      "uncompressed_sha256": "62b69aadb1bb16c9edeb95b90957d8a8cc0c8b7082f40a32955ea691d9f4668f",
+      "archive_sha256": "f76abac2b009c150bbf661a69806808a0dce68abc5bddcf221565997b4b6692b"
+    },
+    "raw/supplement-build.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/supplement-build.log",
+      "uncompressed_bytes": 204,
+      "uncompressed_sha256": "e65b45e3a216d583bc79b38bbb265326bd333ffb75063c150e0fc50e1d293844",
+      "archive_sha256": "85335907a48d4d9d36d515de38154ae08d848b4c8f4e58518f6d647e7711436d"
+    },
+    "raw/screen.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/screen.log",
+      "uncompressed_bytes": 1706,
+      "uncompressed_sha256": "e41310dc6133e8674cbcf8094f5f793e1f3747351e0fa2dbda13053dac4612bf",
+      "archive_sha256": "8a2030784cdda82f61a99315b047e17038cf1cb4c89b55e6e5b81025d9db9852"
+    },
+    "raw/paired.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/paired.log",
+      "uncompressed_bytes": 741,
+      "uncompressed_sha256": "33a68a44614c24e050aa904bdcfb109ab9990796ddf73353c7bc68e354531de2",
+      "archive_sha256": "686a89b849be3783cbce1e94a95b0cb0687609f4a8d1aa424a9d7a4ed726b582"
+    },
+    "raw/supplement-timing.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/supplement-timing.log",
+      "uncompressed_bytes": 418,
+      "uncompressed_sha256": "47394db374d285d8f55c5a2d88f07e8bce0fa4f63b8b619987c73cc8de4fa90a",
+      "archive_sha256": "3347e0f58444b4a10ed514b757ad014f00318a460ea9417db4a4b0a2a2587b4a"
+    },
+    "raw/screen-verify.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/screen-verify.log",
+      "uncompressed_bytes": 76,
+      "uncompressed_sha256": "6629fac8203d9ee5388405fa9fd80f2056623edbb1821c73121e45333cf76ee7",
+      "archive_sha256": "1e748bfb3ace009815fe3c8b9b3538db53b2bcde83898f0c0ab0caead22c0360"
+    },
+    "raw/corrected-static.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static.json",
+      "uncompressed_bytes": 9786,
+      "uncompressed_sha256": "dbdf50baf80286cef6cabb620ac6228bd8d141967ad135ee537c0eae01411ed9",
+      "archive_sha256": "034817eeb3391b2a5ebce6902502be640522246db1bc549423d32d402ebfd9f5"
+    },
+    "raw/corrected-static.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static.log",
+      "uncompressed_bytes": 150,
+      "uncompressed_sha256": "df81cb0e009fffe2b0b60d984effdeaaa74829afdca84277595c706accc3fcd5",
+      "archive_sha256": "97f12eb3a27045feb4a204929dc3af7c2d06bc7b3d0f903dbee38450281ad8a6"
+    },
+    "raw/corrected-static-marker-failure.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static-marker-failure.log",
+      "uncompressed_bytes": 899,
+      "uncompressed_sha256": "21b0191084fdc22c7dc19b5d44fcbc6f31e16456fb14f1584bfc47fb7fc9172a",
+      "archive_sha256": "6e41e2eaed6316af93dd0b744381b1ae98ebac4b06d6eeb87881de5ed64f067b"
+    },
+    "raw/corrected-static-byte-continuation-failure.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static-byte-continuation-failure.log",
+      "uncompressed_bytes": 576,
+      "uncompressed_sha256": "0934e281ce37a105da2a811eade4c8d4607f46dce68dea8cb2c6d620ba16866e",
+      "archive_sha256": "c034d05dfe64bdf367bdc84e10b3da7834b56be350094c46b9e6aab92c563fee"
+    },
+    "raw/compiler-driver-checkout-incomplete.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/compiler-driver-checkout-incomplete.log",
+      "uncompressed_bytes": 1359,
+      "uncompressed_sha256": "0396c89db15cad9db2c5faf556d781214bbeca669915c8c71e096526796aab81",
+      "archive_sha256": "39ff0ebf10cfea5f3e36eb4bd906e13b68610ec6eedf4b8a41a6abe8e13391de"
+    },
+    "raw/unit-llvm-repaired-final.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-review/unit-llvm-repaired-final.log",
+      "uncompressed_bytes": 317734,
+      "uncompressed_sha256": "44ffefc93608f715c218a9d6bb759340e6c3174d3373d463a0f2b80490cec412",
+      "archive_sha256": "5558af41f7c12d0426aeb5ba48f75881297518b509cea76d16089573a2a65a6b"
+    },
+    "raw/source-gate-llvm-repaired.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-review/source-gate-llvm-repaired.log",
+      "uncompressed_bytes": 446,
+      "uncompressed_sha256": "a62bf6d1b538b9bf92bddaab157375d2b51aa48b146128e4db58165711ba96af",
+      "archive_sha256": "7c75de1ed51b181fbcd88f6bc7062c286b97b7c93bf7567ac00b04f5485038da"
+    },
+    "raw/llvm-production-commit.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-review/llvm-production-commit.log",
+      "uncompressed_bytes": 606,
+      "uncompressed_sha256": "6d0ee0a8a4c67d4ca9164c59ea313174e40dc50c2aaf5815408f52eeba9ae060",
+      "archive_sha256": "6c0d40bb2e7fb1463f588a88c301d00ce4906bf20693484fb4cc2d85dc3483e3"
+    },
+    "raw/llvm-final-native-outcomes.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-review/llvm-final-native-outcomes.json",
+      "uncompressed_bytes": 63664,
+      "uncompressed_sha256": "a594f66e81c5a93ea5c812c9d46780d37b35d897d8f924b1f1bd8df5c8d11746",
+      "archive_sha256": "ddb593a14a206a27fe48009dcf8fcd76cc457ef6ef995ca5f393af0e816ce538"
+    },
+    "raw/llvm-final-translated.ll.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-review/llvm-final-translated.ll",
+      "uncompressed_bytes": 229472,
+      "uncompressed_sha256": "cc223fb3f2ed1deb950b66f5ee216e0b43ef4ffbbb9b6a2a3cd0d9c59f449825",
+      "archive_sha256": "5ac0bd86d51b6614237b7c28c9489661a5668c218f2a96621d4744c8cb7e59eb"
+    },
+    "raw/llvm-final-policy.il.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-review/llvm-final-policy.il",
+      "uncompressed_bytes": 38088,
+      "uncompressed_sha256": "e7faea864ce5b8a564a3ddf6f405b7e278f41c8e0d6a6b9b010f426e6b26dd6d",
+      "archive_sha256": "6fcb34c2dca0d66e8ec570db346a8edbdeaff8913e4a3f41086ed7067c255ab0"
+    },
+    "raw/llvm-corrected-source-review.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-review/llvm-corrected-source-review.json",
+      "uncompressed_bytes": 2614,
+      "uncompressed_sha256": "ab39b71076efa231191dd78b489ecda69fc40f34930c40ffea53e72c5f23a9f1",
+      "archive_sha256": "a40a3173859e1b45a5301a51d0596616216992c86e053c3bf5987f1b6aa55c7e"
+    },
+    "raw/source-gate-llvm-final.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-review/source-gate-llvm-final.log",
+      "uncompressed_bytes": 1449,
+      "uncompressed_sha256": "6cf72c51b8892a1fb901e78edccdbdf56ccf66637981e458174d16969f0d86a7",
+      "archive_sha256": "66fb2280a83efb22b34a6639e643f88dfb3b0c92ea3cdb0a34f0841c4f441d24"
+    },
+    "raw/llvm-correction.patch.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-review/llvm-correction.patch",
+      "uncompressed_bytes": 14136,
+      "uncompressed_sha256": "0af2daf8d1b12889552788e00dba5be84a44a3b00177f85b4265652b9d67140e",
+      "archive_sha256": "c3c7a39c569fe20cbae1256601edd1d1e07801f40190bf923fc17283ceb33711"
+    },
+    "raw/unit-final-pinned.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-review/unit-final-pinned.log",
+      "uncompressed_bytes": 34166,
+      "uncompressed_sha256": "438f92d88245f23d038c708ebeaf26dce6c4ac806a95906687556c3e48ef0cb2",
+      "archive_sha256": "0c0b3aeab8119ac1d7f74003c2bcd29ca48bdfb2cdcdfaa1630f79a0372ef13f"
+    },
+    "raw/precursor-073e-compiler-receipt.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-rf/compiler-receipt.json",
+      "uncompressed_bytes": 658018,
+      "uncompressed_sha256": "70d06105b0125bd655933a00d0ef2d5fcf96c6dc194154d44020d12bd65d8c01",
+      "archive_sha256": "2d8837aeb649ae9f13cf18282406432e997b2a2c1dc03c011c37c1db3d358ad1"
+    },
+    "raw/precursor-073e-qualification.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-rf/qualification.json",
+      "uncompressed_bytes": 966716,
+      "uncompressed_sha256": "007c707c6b27c3841cd8a88dffbe6e2a7b2d6ae680a8d118b8ae653ff4ab7aa5",
+      "archive_sha256": "2d5a62d3073da3c8704b5a4cd23673d4266db1ffbc7c607394d06d65f5c58b86"
+    },
+    "raw/precursor-073e-holdouts.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-rf/holdouts.json",
+      "uncompressed_bytes": 1101944,
+      "uncompressed_sha256": "b9181ceae5fd312261a94a9e42492d8eaf571b082d54cfa9ecc18de758bbfcc5",
+      "archive_sha256": "652e0c38f9ab61fb0855e3778529ca20b5aa86aa58eccfd4ea0489115f9e1025"
+    },
+    "raw/precursor-073e-manifest.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-rf/runner/manifest.json",
+      "uncompressed_bytes": 835248,
+      "uncompressed_sha256": "94cf9a53ab4394ae4a452e866ff338849943bcb1041dc5012c4f21403656ec53",
+      "archive_sha256": "a71385cee459ac2d45ef0d3ab1fdd395ce7e1b911e0a1a9f9121b13aad2366e5"
+    },
+    "raw/semantic-accounted-backend.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/actual-llvm-semantics/accounted/remainder-semantics.qbe-manifest.json",
+      "uncompressed_bytes": 2094,
+      "uncompressed_sha256": "af33bd899b9759e3ed957aa5e9336353aaae48b862e7c09324e57468a7a97506",
+      "archive_sha256": "819fd971e2abd9de9c8e6e302eb0b663cb0f474907c01848a99a2ebb61baf842"
+    },
+    "raw/semantic-unaccounted-backend.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/actual-llvm-semantics/unaccounted/remainder-semantics.qbe-manifest.json",
+      "uncompressed_bytes": 2100,
+      "uncompressed_sha256": "39a813c94ec31e17bdb4c241d0923a47d2a261376aeb388077e7dd542dee5924",
+      "archive_sha256": "735d059ebc03a33f20662fedae34ac74b076b6361de6a39656b76a352084cb94"
+    },
+    "raw/supplement-before-llvm-backend.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/supplement/before-llvm/append-endpoint.qbe-manifest.json",
+      "uncompressed_bytes": 3086,
+      "uncompressed_sha256": "a4f12a1a6a2f93e3ccaeb8c1804f22313e7d7a2b26da4d523e879f17d783c336",
+      "archive_sha256": "184f192aac5fd579d584fb690b41831b473c57085379b093683990ea36a46ca4"
+    },
+    "raw/supplement-before-qbe-backend.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/supplement/before-qbe/append-endpoint.qbe-manifest.json",
+      "uncompressed_bytes": 486,
+      "uncompressed_sha256": "5e64c3c208b9e09d1c232f7564f1f83d8b615b7424fbf8989d3758a627dc6419",
+      "archive_sha256": "46210a6573ef6760f121b5e758a6436cd89a23848b2fbed4df3679e1b693c46e"
+    },
+    "raw/supplement-after-llvm-backend.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/supplement/after-llvm/append-endpoint.qbe-manifest.json",
+      "uncompressed_bytes": 3099,
+      "uncompressed_sha256": "cdb4c735131b1313d848f8065e7fd164284a5d3e0e2092784ff9af83f98d0716",
+      "archive_sha256": "6117f4d2c8e5c6e4c310373602ee9ca9f94d348a28b721359ff8d0ab6f68a366"
+    },
+    "raw/supplement-after-qbe-backend.json.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/supplement/after-qbe/append-endpoint.qbe-manifest.json",
+      "uncompressed_bytes": 504,
+      "uncompressed_sha256": "96f5512bdac9ec6158dd14cacb1fd4720434ea6afdb0a1a5febb0ac5d529577a",
+      "archive_sha256": "9837121ad3dbeb30f185e47beed1d2df4e59b772f8e9fa52bc1370f3cc341ebc"
+    },
+    "raw/static-after-llvm-batch.asm.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static/after-llvm-batch.asm",
+      "uncompressed_bytes": 527796,
+      "uncompressed_sha256": "f98c9e818b090cefcafaf0d92c9244f3bbf6bbd367593e2601d2420180be6bfc",
+      "archive_sha256": "f12aec10c4f0c44bd3e55af407255ec101d81635b57a306a9ab470172478d2a6"
+    },
+    "raw/static-after-llvm-fallback.ssa.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static/after-llvm-fallback.ssa",
+      "uncompressed_bytes": 4062,
+      "uncompressed_sha256": "f4d7ef69c18ae4e7dd5fb8ae7f755953beb8f720f077abfbdb72cc1d3b57015f",
+      "archive_sha256": "31aeaa9f8b8128390d66ba9f1291385dc4952116142f298ad85c932bf10e0f82"
+    },
+    "raw/static-after-llvm-fast.ssa.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static/after-llvm-fast.ssa",
+      "uncompressed_bytes": 2260,
+      "uncompressed_sha256": "1b4d9d9382fb4bfa72bf14d0c06ccce9b63ed62eeb904ea174386b45eb298690",
+      "archive_sha256": "e8d3165c2726d55b5d8947bad0cf0505b44bd9888130454c29d15f3e1642152e"
+    },
+    "raw/static-after-llvm-guard.ssa.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static/after-llvm-guard.ssa",
+      "uncompressed_bytes": 980,
+      "uncompressed_sha256": "ed69f108cfbe07fdbceb6c74a4cd61552da8b132f2e0c3f17b4e87d069cb23d5",
+      "archive_sha256": "21ef952d8d4873e4e0fd7533d21a651f727cbdb5c7041d553bc012327757dbac"
+    },
+    "raw/static-after-qbe-batch.asm.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static/after-qbe-batch.asm",
+      "uncompressed_bytes": 1291745,
+      "uncompressed_sha256": "c8dc5f9b98a886b757a74b584c0c5085ecb32bbdbe9fba582f788e962cc134f1",
+      "archive_sha256": "06d6dca03865d74930901209ceae3ec37fab6d6927de819d4f564727b4a242a2"
+    },
+    "raw/static-after-qbe-fallback.ssa.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static/after-qbe-fallback.ssa",
+      "uncompressed_bytes": 3870,
+      "uncompressed_sha256": "5864c4646b15c0499b6004c2a0123964c5a5316bdc54a19abffb319dd015106f",
+      "archive_sha256": "4eed4d90b3a937c874836ce9cc8b5962e8ce418057a4b6dcd96f65aa2d3fb45f"
+    },
+    "raw/static-after-qbe-fast.ssa.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static/after-qbe-fast.ssa",
+      "uncompressed_bytes": 2382,
+      "uncompressed_sha256": "4c371bf2111e59969440c363cd28c638aabff6ba94c224bc1682525ab10cd1f8",
+      "archive_sha256": "f2abe62442058f125bd23ad02445ed3a63054828b7ebd7609116cd823194bad1"
+    },
+    "raw/static-after-qbe-guard.ssa.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static/after-qbe-guard.ssa",
+      "uncompressed_bytes": 980,
+      "uncompressed_sha256": "ed69f108cfbe07fdbceb6c74a4cd61552da8b132f2e0c3f17b4e87d069cb23d5",
+      "archive_sha256": "21ef952d8d4873e4e0fd7533d21a651f727cbdb5c7041d553bc012327757dbac"
+    },
+    "raw/static-before-llvm-batch.asm.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static/before-llvm-batch.asm",
+      "uncompressed_bytes": 532119,
+      "uncompressed_sha256": "de4017d72c82f1086e7719114d8f6c88870708182267c844b488e1de7a5654d0",
+      "archive_sha256": "280bad2d185105a31986c0de74bbc1bfa91b3a9091922a9965a1e6be1262915e"
+    },
+    "raw/static-before-llvm-fallback.ssa.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static/before-llvm-fallback.ssa",
+      "uncompressed_bytes": 4062,
+      "uncompressed_sha256": "81a44633414b84ce96fb3645ef615f195da32f72ffac2745105da45865bf7f46",
+      "archive_sha256": "5a0daeed6bfbef006f270d7af249bed1bb607c5f557331dea734d20c9f41bb71"
+    },
+    "raw/static-before-llvm-fast.ssa.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static/before-llvm-fast.ssa",
+      "uncompressed_bytes": 2835,
+      "uncompressed_sha256": "8d03412cff0393d3474c3b81c900c962963ea1b79b5880183086b6d785af2de7",
+      "archive_sha256": "b91b83301fc851f49529a3dcabec4c21e3a720fe600936622419bebd39ea6bb7"
+    },
+    "raw/static-before-llvm-guard.ssa.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static/before-llvm-guard.ssa",
+      "uncompressed_bytes": 802,
+      "uncompressed_sha256": "a0614defe81a15e3a5506893377b10c20784c2369a591c78548e599ceea83eae",
+      "archive_sha256": "0053725c98594b088407a4dccc1a9b561953e3279941dc43a648adde8900e175"
+    },
+    "raw/static-before-qbe-batch.asm.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static/before-qbe-batch.asm",
+      "uncompressed_bytes": 1291656,
+      "uncompressed_sha256": "1252b93f473a1c6dbc991e2ddef2002eb2b50ca00672ef72b2253a69b18f71af",
+      "archive_sha256": "e5f356ed4501d28fc9e8e2856c7d4ac176b8d89718b8caad73ff136cc5db4cc9"
+    },
+    "raw/static-before-qbe-fallback.ssa.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static/before-qbe-fallback.ssa",
+      "uncompressed_bytes": 3870,
+      "uncompressed_sha256": "0b65515e2f62f53aa39f629b7e7deed20860bff257cb0eb9cf803251d443e0d1",
+      "archive_sha256": "67732b2088416d4561b2176ef9985f36ac78929027f7c60007659f3fcd6eec54"
+    },
+    "raw/static-before-qbe-fast.ssa.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static/before-qbe-fast.ssa",
+      "uncompressed_bytes": 2643,
+      "uncompressed_sha256": "65f9782227ba4183e43b4d57d4d4569ef242d66aeb5bfc991d63f533548c53cf",
+      "archive_sha256": "236530062fbdb876b21eea903f586e905f6406d502bf5dd40a56c0a13aa5b8a8"
+    },
+    "raw/static-before-qbe-guard.ssa.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/corrected-static/before-qbe-guard.ssa",
+      "uncompressed_bytes": 802,
+      "uncompressed_sha256": "a0614defe81a15e3a5506893377b10c20784c2369a591c78548e599ceea83eae",
+      "archive_sha256": "0053725c98594b088407a4dccc1a9b561953e3279941dc43a648adde8900e175"
+    },
+    "raw/supplement-before-llvm-function.ssa.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/supplement/before-llvm/mycache/frontend/fragments/a8e5a3645cd21e86e9cc2717d574413f90d58420355240bb9879403f850639f3/il/fa10f69aaaf328ad788c9a2af40d4230686f30e1ec86c9ca06d42dbd5e6de293",
+      "uncompressed_bytes": 30835,
+      "uncompressed_sha256": "8b02ac9cafd63937be62cce720176c9caeefa213ea97478165f982d8b741c469",
+      "archive_sha256": "2f6119d72c8eb9ce3ae71b253ee5fe9473d123cc0778af9d31e80d6937d212bf"
+    },
+    "raw/supplement-after-llvm-function.ssa.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-llvm-rf/supplement/after-llvm/mycache/frontend/fragments/481dee5eceff4fb94dbbc7759c3238ec551fd451bbe9522f0f1afaad3521ee79/il/143a856b4aea358e3ec8d532ae273ac6a23c9d3f1d5d6f55066a0a68c089b74b",
+      "uncompressed_bytes": 30467,
+      "uncompressed_sha256": "0ac98f1ee56ae2e0d6d71f334a345f6ff950ebcfadecb4e52bfbf50470071463",
+      "archive_sha256": "1967a961ab11308c9d919b72cc7d4cae0d823e85a19e9a63ddde8cfd71bcd9f6"
+    },
+    "raw/archive-replay.log.gz": {
+      "origin": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-llvm-rf-20261004/.mylang-cache/goal110-nonnegative-rem-review/archive-replay.log",
+      "uncompressed_bytes": 170,
+      "uncompressed_sha256": "65985ec5bef7ec623234904d4646bc70bad0807c2e4f6318aa24ff0f51ca46de",
+      "archive_sha256": "efa2a6ad99103cc2714b0680351a8792376942acc666392492fc64053cbed0ef"
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "split": {
+    "binary": "experiments/new-core-s4-emission-20261006/paired-budget64-01/split-lox_eval",
+    "sha256": "3c7909828ad8cd0137c9052b8b1e91c6c5ebdddf91ee532df3c01886afa14e45",
+    "argv": [
+      "objdump",
+      "-d",
+      "--no-show-raw-insn",
+      "--disassemble=my.app::main",
+      "experiments/new-core-s4-emission-20261006/paired-budget64-01/split-lox_eval"
+    ],
+    "status": 0,
+    "instructions": 1317,
+    "clock_calls": [
+      359,
+      938
+    ],
+    "hot_instructions": 578,
+    "calls": [
+      " 1033942:\tcall   10094f0 <myl_core_list_grow>",
+      " 103397b:\tcall   10094f0 <myl_core_list_grow>",
+      " 10339b4:\tcall   10094f0 <myl_core_list_grow>",
+      " 10339ed:\tcall   10094f0 <myl_core_list_grow>",
+      " 1033a26:\tcall   10094f0 <myl_core_list_grow>",
+      " 1033a5f:\tcall   10094f0 <myl_core_list_grow>",
+      " 1033a95:\tcall   10094f0 <myl_core_list_grow>",
+      " 1033ace:\tcall   10094f0 <myl_core_list_grow>",
+      " 1033b0a:\tcall   10094f0 <myl_core_list_grow>",
+      " 1033c45:\tcall   1009480 <myl_core_list_new_slow>",
+      " 1033c73:\tcall   1009480 <myl_core_list_new_slow>",
+      " 1033ca1:\tcall   1009480 <myl_core_list_new_slow>",
+      " 1033cbf:\tcall   10094f0 <myl_core_list_grow>",
+      " 1033cf3:\tcall   10094f0 <myl_core_list_grow>",
+      " 1033d1e:\tcall   1032790 <myl_core_free_block>",
+      " 1033d42:\tcall   1032790 <myl_core_free_block>",
+      " 1033d69:\tcall   1032790 <myl_core_free_block>",
+      " 1033dd3:\tcall   1009b80 <myl_core_trap>",
+      " 1033e2c:\tcall   100a4c0 <myl_core_io_at>",
+      " 1033e34:\tcall   1022430 <myl_core_host_check>"
+    ],
+    "symbols": [
+      "0000000001035070 000000000000003b T main",
+      "00000000010346c0 0000000000000984 t my.workload::execute",
+      "0000000001032da0 00000000000016b4 t my.app::main"
+    ]
+  },
+  "whole": {
+    "binary": ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval",
+    "sha256": "f90a14e95e5eb4c6a1dfd1df93d46a0f99758e5658717d964a433025dacfb4ff",
+    "argv": [
+      "objdump",
+      "-d",
+      "--no-show-raw-insn",
+      "--disassemble=main",
+      ".mylang-cache/s4-emission/paired-budget64-01-whole/row_lox_eval"
+    ],
+    "status": 0,
+    "instructions": 1311,
+    "clock_calls": [
+      361,
+      929
+    ],
+    "hot_instructions": 567,
+    "calls": [
+      " 1033732:\tcall   1009130 <myl_core_list_grow>",
+      " 10337e8:\tcall   1009130 <myl_core_list_grow>",
+      " 1033822:\tcall   1009130 <myl_core_list_grow>",
+      " 103385c:\tcall   1009130 <myl_core_list_grow>",
+      " 1033896:\tcall   1009130 <myl_core_list_grow>",
+      " 10338cf:\tcall   1009130 <myl_core_list_grow>",
+      " 103390d:\tcall   1009130 <myl_core_list_grow>",
+      " 103394c:\tcall   1009130 <myl_core_list_grow>",
+      " 1033a89:\tcall   10090c0 <myl_core_list_new_slow>",
+      " 1033abe:\tcall   10090c0 <myl_core_list_new_slow>",
+      " 1033af8:\tcall   10090c0 <myl_core_list_new_slow>",
+      " 1033b16:\tcall   1009130 <myl_core_list_grow>",
+      " 1033b51:\tcall   1009130 <myl_core_list_grow>",
+      " 1033b80:\tcall   10323d0 <myl_core_free_block>",
+      " 1033ba5:\tcall   10323d0 <myl_core_free_block>",
+      " 1033bcd:\tcall   10323d0 <myl_core_free_block>",
+      " 1033c3c:\tcall   10097c0 <myl_core_trap>",
+      " 1033c98:\tcall   100a100 <myl_core_io_at>",
+      " 1033ca2:\tcall   1022070 <myl_core_host_check>"
+    ],
+    "symbols": [
+      "0000000001032c00 00000000000016d9 T main"
+    ]
+  }
+}

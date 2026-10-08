@@ -542,46 +542,6 @@ test "retyping a field reached only through element and return types re-checks e
     try t.expectEqualStrings(lowering.cold.diagnostics, lowering.warm.diagnostics);
 }
 
-// Mutually recursive classes, and a facade that re-exports one of them.
-const cycle_user =
-    \\module user
-    \\import shapes
-    \\import api
-    \\public def f1(a: shapes.A) -> int:
-    \\    return a.w
-    \\public def f2(b: shapes.B) -> int:
-    \\    return b.a.w
-    \\public def f3(a: api.A) -> int:
-    \\    return a.w
-    \\public def unused() -> int:
-    \\    return 0
-    \\
-;
-const cycle_shapes = "module shapes\npublic class A:\n    b: B\n    w: int\npublic class B:\n    a: A\n";
-fn cycleFiles(shapes: []const u8) [4]File {
-    return .{
-        .{ .path = "main.my", .bytes = "module main\nimport user\ndef main() -> int:\n    return user.unused()\n" },
-        // `f1` is keyed first, so `B` is reached from inside the `A`-`B` cycle
-        // before `f2` asks for it; `f3` names `A` only through the facade.
-        .{ .path = "user.my", .bytes = cycle_user },
-        .{ .path = "api.my", .bytes = "module api\nimport shapes\nexport shapes.A\n" },
-        .{ .path = "shapes.my", .bytes = shapes },
-    };
-}
-
-// spec-case: SEMANTIC-KEY-TRANSITIVE-1
-test "a type reached through a declaration cycle or a facade re-export invalidates its users" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    const original = cycleFiles(cycle_shapes);
-    const renamed = cycleFiles("module shapes\npublic class A:\n    b: B\n    z: int\npublic class B:\n    a: A\n");
-    const outcome = try checkAfterEdit(&original, &renamed);
-    defer outcome.warm.deinit();
-    defer outcome.cold.deinit();
-    try t.expectEqual(@as(usize, 3), std.mem.count(u8, outcome.cold.diagnostics, "E_UNKNOWN_FIELD"));
-    try t.expectEqualStrings(outcome.cold.diagnostics, outcome.warm.diagnostics);
-}
-
 // spec: CHECK-SHAPES-1
 test "a summary whose touched record shape no longer matches is not stood in" {
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);

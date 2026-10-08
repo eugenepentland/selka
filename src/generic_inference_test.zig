@@ -70,7 +70,7 @@ test "generic inference keeps module relocation and formatter source identity" {
     try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
-    try compilation.emit();
+    try compilation.check();
     try t.expectEqual(@as(i64, 7), (try native.run(&compilation)).value);
     var source_compilation = try language.Compilation.init(t.allocator, "format.my", text);
     defer source_compilation.deinit();

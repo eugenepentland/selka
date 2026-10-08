@@ -1,0 +1,12 @@
+{
+  "command": [
+    "sed",
+    "-n",
+    "1,260p",
+    "experiments/new-core-s4-values-20261006/qualify_fuzz_values.py"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3251028,
+  "status": 0,
+  "elapsed_seconds": 0.0014955040533095598
+}

@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/zig-out/bin/mylang-core",
+    "test",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-smoke-run01/tree/app.my",
+    "--json",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4/m-smoke-run01/cache",
+    "--jobs",
+    "2",
+    "--property-runs",
+    "10"
+  ],
+  "status": 0,
+  "seconds": 0.04298804188147187
+}

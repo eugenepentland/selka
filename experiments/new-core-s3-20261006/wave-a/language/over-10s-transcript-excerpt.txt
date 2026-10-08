@@ -1,0 +1,26 @@
+This is a retained excerpt copied from the tool transcript. The original
+focused-fix.log was reused by later focused invocations, so this is not the
+complete original log. That reuse was an evidence retention mistake.
+
+Command:
+scripts/build-slot.sh build -- zig build test-cli -Dtest-filter='dictionary projections' --summary all > experiments/new-core-s3-20261006/wave-a/language/focused-fix.log 2>&1
+
+The original Build Summary compiler subtree:
+   +- compile test debug native success 995ms MaxRSS:157M
+   |  +- options success
+   |     +- compile exe mylang debug native success 12s MaxRSS:569M
+   |     |  +- run exe qbe-build-assets (qbe_build_assets) success 91ms
+   |     |     +- compile exe qbe-build-assets debug native cached 9ms MaxRSS:41M
+   |     +- compile exe qbe fast native cached 28ms MaxRSS:41M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang success
+      +- compile exe mylang debug native (+1 more reused dependencies)
+
+This was the compiler step, not wrapper admission or overall elapsed time.
+The focused CLI test then failed at preview.stdout E_VIEW_STORED because its
+module declaration differed from the temporary main.my path. That fixture
+was subsequently repaired; final focused-fix.log reports 5/5 passing.
+The full old-core test gate was running concurrently. Contention does not
+exempt the S2/S3 edit/build stop condition. No further builds or changes are
+being started after the coordinator's explicit hold.

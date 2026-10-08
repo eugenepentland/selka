@@ -1,21 +1,25 @@
 //! Zig-native golden parity harness for the retired `tests/qbe_*.py` drivers.
 //!
 //! The bytecode interpreter that produced the reference side is gone, and the
-//! `tests/goldens/qbe_*.json` documents now hold the recorded outcomes
-//! (`golden-outcomes-v1`).  This root discovers every checked-in `qbe_*.json`
-//! document, replays each reproducible case through the compiler selected by
-//! `test_options.compiler_path`, and compares the native result with the
-//! recording.  It shells out only to that compiler (which in turn runs the
-//! bundled `qbe` and `zig` named by `test_options`); no Python is involved.
+//! `tests/goldens/qbe_*.json` documents now hold the outcomes the old core
+//! recorded (`golden-outcomes-v1`).  This root discovers every checked-in
+//! `qbe_*.json` document, replays each reproducible case through the compiler
+//! selected by `test_options.compiler_path` — `mylang`, on the new core since
+//! S5 — and compares the native result with the recording, which is never
+//! edited.  It shells out only to that compiler (which in turn runs the `zig`
+//! named by `test_options`); no Python is involved.
 //!
 //! How each entry maps
 //! -------------------
 //! * `case[0]` containing a newline is source text.  The harness writes it to a
 //!   scratch `case.my`, prepares a working directory holding the `qbe_files`
 //!   fixtures (`greeting.txt`, `lines.txt`), and spawns
-//!   `run case.my --print-result --qbe=… --zig=… --cache-dir=…`, appending every
+//!   `run case.my --print-result --zig=… --cache-dir=…`, appending every
 //!   string option flattened out of `case[1:]`.  (`qbe_files` records the
 //!   `--gc-stress` variant as `case[2]`, so all trailing arrays are merged.)
+//!   `--gc-stress` selected the retired collector's stress mode (S5-D4), which
+//!   never changed a program's output, so it is dropped and the case still checks
+//!   the recorded outcome.
 //!   The cache directory lives outside the working directory, otherwise
 //!   `listdir(fs, ".")` would count it like the retired driver never did.
 //! * `case[0]` naming a repository fixture is looked up in `fixture_sources`
@@ -25,10 +29,11 @@
 //!   compares exit status and the first `R_*` code on each side, so absolute
 //!   paths and diagnostic prose may drift without turning the harness red.
 //!
-//! Five source cases intentionally retain historical shared-alias outcomes.
-//! Their recorded option arrays now select `--legacy-sharing`; every other
-//! replay uses the default value model. Sources and expected outcomes remain
-//! unchanged, and these five cases still count as checked.
+//! Retired by S5 (counted, never silently green): the five source cases that
+//! record shared-alias outcomes under `--legacy-sharing` (S5-D4) and the three
+//! that record `R_ARENA_ESCAPE` (managed arenas, S5-D3) assert retired features;
+//! one case (`per_dispatch_cases`) asserts the old core's per-dispatch step count,
+//! an old internal (the new core counts blocks).
 //!
 //! What is intentionally skipped (counted, never silently green)
 //! -------------------------------------------------------------
@@ -52,8 +57,6 @@ const test_options = @import("test_options");
 
 /// The compiler built by this repository.
 const compiler_path = test_options.compiler_path;
-/// The vendored QBE executable this build produced.
-const qbe_path = test_options.qbe_path;
 /// The pinned Zig executable this build used.
 const zig_path = test_options.zig_path;
 
@@ -99,11 +102,13 @@ const Report = struct {
     docs_skipped: usize = 0,
     fixture_skipped: usize = 0,
     data_skipped: usize = 0,
+    /// Cases that assert a feature S5 retired, or an old core's internals.
+    retired_skipped: usize = 0,
     mismatches: usize = 0,
 
     /// Every entry the harness classified, checked or skipped.
     fn total(self: Report) usize {
-        return self.checked + self.docs_skipped + self.fixture_skipped + self.data_skipped;
+        return self.checked + self.docs_skipped + self.fixture_skipped + self.data_skipped + self.retired_skipped;
     }
 };
 
@@ -133,7 +138,6 @@ fn failedRun(stderr: []const u8) bool {
 /// compiler from inside its own scratch working directory.
 const Tools = struct {
     compiler: [:0]u8,
-    qbe: [:0]u8,
     zig: [:0]u8,
 };
 
@@ -189,8 +193,9 @@ test "checked-in golden corpora replay natively with explicit skip counts" {
     // Minimum coverage mirrors the checked-in goldens: every source-bearing
     // entry plus every file-backed `qbe_native_cases` fixture.  If a future
     // re-record shrinks a corpus, this fails instead of quietly passing.
-    try testing.expect(report.source_checked >= 175);
-    try testing.expect(report.fixture_checked >= 56);
+    try testing.expect(report.source_checked >= 167);
+    try testing.expect(report.fixture_checked >= 55);
+    try testing.expect(report.retired_skipped >= 9);
     try testing.expect(report.checked == report.source_checked + report.fixture_checked);
     try testing.expect(report.docs_skipped >= 27);
     try testing.expect(report.fixture_skipped >= 345);
@@ -278,14 +283,49 @@ fn checkEntry(context: *Context, corpus: []const u8, key: []const u8, entry: std
     }
 }
 
+/// The one recorded case that asserts the old core's per-dispatch step count: the
+/// `arithmetic` fixture (`return 1 + 2 * 3`, one block) under `--max-steps=1`, which
+/// the old core trapped after one instruction; the new core counts blocks.
+const per_dispatch_cases = [_][]const u8{"4031fd54adafc91765248f0ee1abc6ce"};
+
+/// Whether a recorded case asserts a feature S5 retired (`--legacy-sharing`, a managed
+/// arena's `R_ARENA_ESCAPE`) or the old core's per-dispatch step count.
+fn retired(key: []const u8, options: []const []const u8, entry: std.json.Value) !bool {
+    for (per_dispatch_cases) |known| if (std.mem.eql(u8, key, known)) return true;
+    for (options) |option| if (std.mem.eql(u8, option, "--legacy-sharing")) return true;
+    const object = asObject(entry) orelse return false;
+    const encoded = asString(object.get("stderr") orelse return false) orelse return false;
+    var buffer: [4096]u8 = undefined;
+    const size = std.base64.standard.Decoder.calcSizeForSlice(encoded) catch return false;
+    if (size > buffer.len) return false;
+    std.base64.standard.Decoder.decode(buffer[0..size], encoded) catch return false;
+    return std.mem.indexOf(u8, buffer[0..size], "R_ARENA_ESCAPE") != null;
+}
+
+/// The recorded options without `--gc-stress`, the retired collector's stress mode.
+fn replayed(allocator: std.mem.Allocator, options: []const []const u8) !std.ArrayList([]const u8) {
+    var kept: std.ArrayList([]const u8) = .empty;
+    errdefer kept.deinit(allocator);
+    for (options) |option| if (!std.mem.eql(u8, option, "--gc-stress")) try kept.append(allocator, option);
+    return kept;
+}
+
 /// Run one recorded source-text case and compare its native signature.
 fn checkSourceCase(context: *Context, corpus: []const u8, key: []const u8, source: []const u8, options: []const []const u8, entry: std.json.Value) !void {
+    if (try retired(key, options, entry)) {
+        context.report.retired_skipped += 1;
+        return;
+    }
     context.report.source_checked += 1;
     return runRecordedCase(context, corpus, key, source, options, entry);
 }
 
 /// Load one recorded fixture by repository path and compare its native signature.
 fn checkFixtureCase(context: *Context, corpus: []const u8, key: []const u8, relative_path: []const u8, options: []const []const u8, entry: std.json.Value) !void {
+    if (try retired(key, options, entry)) {
+        context.report.retired_skipped += 1;
+        return;
+    }
     context.report.fixture_checked += 1;
     const source = try loadRepositoryFile(context, relative_path);
     defer context.allocator.free(source);
@@ -309,7 +349,9 @@ fn runRecordedCase(context: *Context, corpus: []const u8, key: []const u8, sourc
     const work_path = try prepareWorkDir(context, index);
     defer context.allocator.free(work_path);
 
-    const result = try invoke(context, source_path, options, work_path);
+    var kept = try replayed(context.allocator, options);
+    defer kept.deinit(context.allocator);
+    const result = try invoke(context, source_path, kept.items, work_path);
     defer context.allocator.free(result.stdout);
     defer context.allocator.free(result.stderr);
 
@@ -363,9 +405,6 @@ fn invoke(context: *Context, source_path: []const u8, options: []const []const u
     try args.append(context.allocator, source_path);
     try args.append(context.allocator, "--print-result");
 
-    const qbe_arg = try std.fmt.allocPrint(context.allocator, "--qbe={s}", .{context.tools.qbe});
-    defer context.allocator.free(qbe_arg);
-    try args.append(context.allocator, qbe_arg);
     const zig_arg = try std.fmt.allocPrint(context.allocator, "--zig={s}", .{context.tools.zig});
     defer context.allocator.free(zig_arg);
     try args.append(context.allocator, zig_arg);
@@ -508,10 +547,8 @@ fn resolveTools(allocator: std.mem.Allocator) !Tools {
     const cwd = std.Io.Dir.cwd();
     const compiler = try cwd.realPathFileAlloc(testing.io, compiler_path, allocator);
     errdefer allocator.free(compiler);
-    const qbe = try cwd.realPathFileAlloc(testing.io, qbe_path, allocator);
-    errdefer allocator.free(qbe);
     const zig = try cwd.realPathFileAlloc(testing.io, zig_path, allocator);
-    return .{ .compiler = compiler, .qbe = qbe, .zig = zig };
+    return .{ .compiler = compiler, .zig = zig };
 }
 
 /// Walk up from the working directory to the first ancestor owning `tests/goldens`.
@@ -548,7 +585,6 @@ fn loadRepositoryFile(context: *Context, relative_path: []const u8) ![]u8 {
 /// Release the absolute tool paths.
 fn freeTools(allocator: std.mem.Allocator, tools: Tools) void {
     allocator.free(tools.compiler);
-    allocator.free(tools.qbe);
     allocator.free(tools.zig);
 }
 
@@ -566,15 +602,16 @@ fn reportFailures(failures: *const std.ArrayList([]const u8)) void {
 /// Print the checked/skipped tally, including the explicit skip reasons.
 fn reportSummary(report: Report) void {
     std.debug.print(
-        "golden parity: checked {d} (source {d}, fixtures {d}), skipped {d} (docs {d}, unmatched fixtures {d}, data-only {d}), mismatches {d}\n",
+        "golden parity: checked {d} (source {d}, fixtures {d}), skipped {d} (docs {d}, unmatched fixtures {d}, data-only {d}, retired or old internals {d}), mismatches {d}\n",
         .{
             report.checked,
             report.source_checked,
             report.fixture_checked,
-            report.docs_skipped + report.fixture_skipped + report.data_skipped,
+            report.docs_skipped + report.fixture_skipped + report.data_skipped + report.retired_skipped,
             report.docs_skipped,
             report.fixture_skipped,
             report.data_skipped,
+            report.retired_skipped,
             report.mismatches,
         },
     );

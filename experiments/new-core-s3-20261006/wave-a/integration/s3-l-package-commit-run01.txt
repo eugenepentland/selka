@@ -1,0 +1,77 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 27 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 9781 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s3-language 225bee07] feat: enforce D2 ephemeral dictionary views
+ 119 files changed, 19167 insertions(+), 827 deletions(-)
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/README.md
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/compiler-install-green.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/converted-tests.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/coverage-name-delta.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/focused-d2.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/focused-fix.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/gate-test-status.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/gate-test.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/guardian-feedback-commit.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/initial-guardian-failure.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/membership-runtime.err
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/membership-runtime.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/over-10s-transcript-excerpt.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/remaining-coverage-refusals.md
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-01-focused-d2.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-02-format.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-03-guardian.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-04-focused-cli.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-05-format.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-06-guardian.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-07-guardian.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-08-focused-d2.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-08-focused-d2.time
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-09-guardian.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-10-canceled.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-10-core-build.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-11-core-build.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-11-core-build.time
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-12-test-core.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-12-test-core.time
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-13-old-test.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-13-old-test.time
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-14-format.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-15-test-core.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-15-test-core.time
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-16-conformance.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-16-conformance.time
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-17-coverage.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-17-coverage.time
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-17-coverage/corpus-1.err
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-17-coverage/corpus-1.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-17-coverage/corpus-2.err
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-17-coverage/corpus-2.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-17-coverage/corpus-3.err
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-17-coverage/corpus-3.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-17-coverage/corpus-4.err
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-17-coverage/corpus-4.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-17-coverage/summary.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-18-fuzz-dict.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-18-fuzz-dict.time
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-18-fuzz-dict/harness.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-18-fuzz-dict/summary.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-19-old-qbe.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-19-old-qbe.time
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-20-spec.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-21-old-qbe-build.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-21-old-qbe-build.time
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-22-old-fmt.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-22-old-fmt.time
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-23-guardian-feedback.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-24-compound-canceled.log
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resume-24-compound-canceled.txt
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/resumed-commands.json
+ create mode 100644 experiments/new-core-s3-20261006/wave-a/language/retired-tag-guardian-failure.log
+ create mode 100644 test/fixtures/fix-migration/dictionary-views.my
+ create mode 100644 test/fixtures/view-storage/live_view_snapshots.my
+ create mode 100644 test/fixtures/view-storage/rc_dictionary_views.my
+ create mode 100644 test/fixtures/view-storage/rc_semantic_history.my
+ create mode 100644 test/fixtures/view-storage/rc_view_receivers.my

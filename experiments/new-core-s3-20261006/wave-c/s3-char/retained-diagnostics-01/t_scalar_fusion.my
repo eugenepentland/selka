@@ -1,0 +1,140 @@
+module t_scalar_fusion
+
+def select(text: str, take: bool) -> str:
+    out = ""
+    for ch in text:
+        if ch == "\0" or "é" == ch:
+            out += ch
+        elif ch == "\U0010ffff":
+            out += ch
+        elif ch != "🙂":
+            if take:
+                out += ch
+            else:
+                out += "."
+        else:
+            out += ch
+    return out
+
+def compares(text: str, index: int) -> bool:
+    ch = text[index]
+    return ch == "\0" or ch == "é" or ch == "\U0010ffff"
+
+def branch(text: str, take: bool) -> str:
+    ch = text[0]
+    out = ""
+    if ch == "é":
+        if take:
+            out += ch
+        else:
+            out += "!"
+    elif ch != "x":
+        out += ch
+        out += ch
+    return out
+
+def append_same(text: str) -> str:
+    ch = text[0]
+    if ch == "é":
+        text += ch
+    return text
+
+def append_distinct_alias(values: list[str]) -> str:
+    source = values[0]
+    out = values[1]
+    ch = source[0]
+    if ch == "é" or ch == "\0":
+        out += ch
+    return out
+
+def replaced(text: str) -> str:
+    ch = text[-1]
+    matched = ch == "é"
+    text = "replaced"
+    out = ""
+    if matched and len(text) == 8:
+        out += ch
+    return out
+
+def identity(text: str) -> str:
+    return text
+
+def returned(text: str) -> str:
+    ch = text[0]
+    if ch == "é":
+        return ch
+    return "!"
+
+def stored(text: str) -> str:
+    ch = text[0]
+    values = [ch]
+    return values[0]
+
+def called(text: str) -> str:
+    ch = text[0]
+    matched = ch == "é"
+    result = identity(ch)
+    return result if matched else "!"
+
+def joined(text: str, take: bool) -> str:
+    ch = text[0]
+    selected = ch if take else "!"
+    return selected
+
+def wider_comparison(text: str) -> bool:
+    ch = text[0]
+    return ch != "éx" and ch != ""
+
+# spec-case: NEW-CORE-STR-1
+public def test_comparisons_and_appends_preserve_all_unicode_scalars() -> bool:
+    text = "aé\0🙂\U0010ffff"
+    return select(text, True) == text and select(text, False) == ".é\0🙂\U0010ffff"
+
+# spec-case: NEW-CORE-STR-1
+public def test_comparison_only_reads_cover_nul_and_scalar_extremes() -> bool:
+    return compares("\0é\U0010ffff", 0) and compares("\0é\U0010ffff", -2) and compares("\0é\U0010ffff", 2) and not compares("x", 0)
+
+# spec-case: NEW-CORE-STR-1
+public def test_distinct_branches_and_repeated_appends_keep_the_selected_character() -> bool:
+    return branch("éz", True) == "é" and branch("éz", False) == "!" and branch("\0z", False) == "\0\0" and branch("xz", True) == ""
+
+# spec-case: NEW-CORE-TEXT-BYTES-1
+public def test_same_source_destination_keeps_the_ordinary_path_and_snapshot() -> bool:
+    source = "".join(["é", "z"])
+    saved = source
+    return append_same(source) == "ézé" and saved == "éz" and source == "éz"
+
+# spec-case: NEW-CORE-TEXT-BYTES-1
+public def test_distinct_ssa_aliases_share_input_but_copy_the_append_destination() -> bool:
+    source = "".join(["é", "z"])
+    values = [source, source]
+    result = append_distinct_alias(values)
+    return result == "ézé" and source == "éz" and values == ["éz", "éz"]
+
+# spec-case: NEW-CORE-TEXT-BYTES-1
+public def test_rebinding_the_receiver_does_not_change_the_selected_bytes() -> bool:
+    return replaced("aé") == "é"
+
+# spec-case: NEW-CORE-STR-1
+public def test_escaping_and_multiscalar_consumers_remain_strings() -> bool:
+    return returned("éz") == "é" and stored("éz") == "é" and called("éz") == "é" and joined("éz", True) == "é" and joined("éz", False) == "!" and wider_comparison("éz")
+
+# spec-case: NEW-CORE-TEXT-BYTES-1
+public def test_empty_iteration_does_not_read_past_the_text() -> bool:
+    return select("", True) == ""
+
+# spec-case: NEW-CORE-TEXT-BYTES-1
+public def test_empty_comparison_only_read_traps() -> bool:
+    return compares("", 0)
+
+# spec-case: NEW-CORE-TEXT-BYTES-1
+public def test_large_positive_index_traps() -> bool:
+    return compares("aé", 9223372036854775807)
+
+# spec-case: NEW-CORE-TEXT-BYTES-1
+public def test_large_negative_index_traps() -> bool:
+    return compares("aé", -9223372036854775807)
+
+# spec-case: NEW-CORE-TEXT-S3-1
+public def test_surrogate_construction_traps_before_scalar_uses() -> bool:
+    return compares(chr(55296), 0)

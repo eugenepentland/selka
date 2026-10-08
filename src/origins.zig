@@ -30,6 +30,19 @@ pub const mutation_marker_code = "E_MUTATION_MARKER";
 /// Error code for a parameter declared `mut` that the body never writes.
 pub const unused_mut_code = mutation_marker_code;
 
+/// A set of parameter positions, one bit per position. A position at or past
+/// `mask_positions` cannot be named exactly: an origin or footprint that reaches one
+/// is `unknown` (every possible alias) instead, never a dropped bit.
+pub const Mask = u64;
+
+/// How many parameter positions a `Mask` names exactly.
+pub const mask_positions = @bitSizeOf(Mask);
+
+/// The mask bit of parameter `position`, or 0 for a position a `Mask` cannot name.
+pub fn bitOf(position: usize) Mask {
+    return if (position < mask_positions) @as(Mask, 1) << @intCast(position) else 0;
+}
+
 /// Abstract upper bound on the caller inputs a value may alias.
 ///
 /// `positions` names the enclosing function's parameter positions whose managed
@@ -37,12 +50,14 @@ pub const unused_mut_code = mutation_marker_code;
 /// value with no positions and no unknown bit is definitely fresh local storage
 /// and therefore disjoint from every caller input.
 pub const Origin = struct {
-    positions: u16 = 0,
+    positions: Mask = 0,
     unknown: bool = false,
 
-    /// Build the origin of a direct reference to one parameter position.
+    /// Build the origin of a direct reference to one parameter position; a position
+    /// past `mask_positions` is an unknown origin.
     pub fn fromPosition(position: u16) Origin {
-        return .{ .positions = @as(u16, 1) << @intCast(position) };
+        if (position >= mask_positions) return .{ .unknown = true };
+        return .{ .positions = bitOf(position) };
     }
 
     /// Build the origin of definitely fresh local storage.
@@ -60,18 +75,19 @@ pub const Origin = struct {
         return self.positions == 0 and !self.unknown;
     }
 
-    /// Whether one parameter position is in the alias set.
+    /// Whether one parameter position is in the alias set (for a position past
+    /// `mask_positions`, whether the origin is unknown).
     pub fn has(self: Origin, position: u16) bool {
-        return self.positions & (@as(u16, 1) << @intCast(position)) != 0;
+        if (position >= mask_positions) return self.unknown;
+        return self.positions & bitOf(position) != 0;
     }
 };
 
 /// Inferred transitive facts for one checked function.
 pub const Summary = struct {
     return_origin: Origin = .{},
-    borrow_origin: Origin = .{},
     /// Positions of this function's parameters it may write (transitively).
-    mutates: u16 = 0,
+    mutates: Mask = 0,
     /// A write target's origin could not be attributed to a parameter position.
     mutates_unknown: bool = false,
     /// Any managed receiver write, fresh local or not.
@@ -100,7 +116,6 @@ pub fn standIn(stubs: []const ?Fact, index: usize) ?Fact {
 fn mergeSummaries(a: Summary, b: Summary) Summary {
     return .{
         .return_origin = Origin.merge(a.return_origin, b.return_origin),
-        .borrow_origin = Origin.merge(a.borrow_origin, b.borrow_origin),
         .mutates = a.mutates | b.mutates,
         .mutates_unknown = a.mutates_unknown or b.mutates_unknown,
         .writes = a.writes or b.writes,
@@ -117,41 +132,13 @@ fn mergeSummaries(a: Summary, b: Summary) Summary {
 pub fn sameSummary(a: Summary, b: Summary) bool {
     return a.mutates == b.mutates and a.mutates_unknown == b.mutates_unknown and
         a.writes == b.writes and a.external == b.external and
-        a.return_origin.positions == b.return_origin.positions and a.return_origin.unknown == b.return_origin.unknown and
-        a.borrow_origin.positions == b.borrow_origin.positions and a.borrow_origin.unknown == b.borrow_origin.unknown;
+        a.return_origin.positions == b.return_origin.positions and a.return_origin.unknown == b.return_origin.unknown;
 }
 
 /// Whether a value of `ty` may reach managed storage another value could share.
 pub fn mayContainManaged(program: typed.Program, ty: typed.Type) bool {
     var path: [64]typed.Type = undefined;
     return mayContainManagedDepth(program, ty, &path, 0);
-}
-
-/// Whether the value physically holds managed backing, including immutable
-/// text and bytes that still cost a reference-count transfer. A recursive
-/// type repeats only through a box; that pointer itself is retained backing.
-fn mayContainRetained(program: typed.Program, ty: typed.Type) bool {
-    var path: [64]typed.Type = undefined;
-    return retainedDepth(program, ty, &path, 0);
-}
-
-fn retainedDepth(program: typed.Program, ty: typed.Type, path: *[64]typed.Type, depth: usize) bool {
-    if (!ty.isAggregate()) return false;
-    const index = ty.recordIndex();
-    if (index >= program.records.len or depth == path.len) return true;
-    for (path[0..depth]) |seen| if (seen == ty) return false;
-    path[depth] = ty;
-    const record = program.records[index];
-    if (record.managed) return true;
-    if (record.shape.array) |array| if (retainedDepth(program, array.element, path, depth + 1)) return true;
-    if (record.shape.variants) |variants| for (variants.cases) |case| {
-        if (case.boxed) return true;
-        if (case.payload) |payload| if (retainedDepth(program, payload, path, depth + 1)) return true;
-    };
-    for (record.fields) |field| {
-        if (field.boxed or retainedDepth(program, field.ty, path, depth + 1)) return true;
-    }
-    return false;
 }
 
 /// `path` holds the types on the current walk: a recursive value type reaches
@@ -189,27 +176,27 @@ fn managedElement(program: typed.Program, owner: typed.Type) bool {
 }
 
 /// Normalize a sorted-free list of parameter positions to a bitset.
-pub fn positionsBitset(positions: []const u16) u16 {
-    var mask: u16 = 0;
-    for (positions) |position| mask |= @as(u16, 1) << @intCast(position);
+pub fn positionsBitset(positions: []const u16) Mask {
+    var mask: Mask = 0;
+    for (positions) |position| mask |= bitOf(position);
     return mask;
 }
 
-fn bitCount(mask: u16) usize {
+fn bitCount(mask: Mask) usize {
     var count: usize = 0;
-    var position: u5 = 0;
-    while (position < 16) : (position += 1) {
-        if (mask & (@as(u16, 1) << @intCast(position)) != 0) count += 1;
+    var position: u7 = 0;
+    while (position < mask_positions) : (position += 1) {
+        if (mask & (bitOf(position)) != 0) count += 1;
     }
     return count;
 }
 
-fn bitsetPositions(allocator: std.mem.Allocator, mask: u16) std.mem.Allocator.Error![]const u16 {
+fn bitsetPositions(allocator: std.mem.Allocator, mask: Mask) std.mem.Allocator.Error![]const u16 {
     const out = try allocator.alloc(u16, bitCount(mask));
     var written: usize = 0;
-    var position: u5 = 0;
-    while (position < 16) : (position += 1) {
-        if (mask & (@as(u16, 1) << @intCast(position)) == 0) continue;
+    var position: u7 = 0;
+    while (position < mask_positions) : (position += 1) {
+        if (mask & (bitOf(position)) == 0) continue;
         out[written] = position;
         written += 1;
     }
@@ -222,7 +209,10 @@ fn originFromBound(bound: typed.ReturnOrigin) Origin {
         .unknown => .{ .unknown = true },
         .params => |positions| blk: {
             var origin = Origin{};
-            for (positions) |position| origin.positions |= @as(u16, 1) << @intCast(position);
+            for (positions) |position| {
+                if (position >= mask_positions) origin.unknown = true;
+                origin.positions |= bitOf(position);
+            }
             break :blk origin;
         },
     };
@@ -234,12 +224,16 @@ fn boundFromOrigin(allocator: std.mem.Allocator, origin: Origin) std.mem.Allocat
     return .{ .params = try bitsetPositions(allocator, origin.positions) };
 }
 
-const Footprint = struct { positions: u16 = 0, unknown: bool = false };
+const Footprint = struct { positions: Mask = 0, unknown: bool = false };
 
 fn effectiveFootprint(program: typed.Program, summaries: []const Summary, index: usize) Footprint {
     const function = program.functions[index];
     if (function.policy.effect_bound != null) {
-        return .{ .positions = positionsBitset(function.signature.declared_mutates) };
+        const declared = function.signature.declared_mutates;
+        const untracked = for (declared) |position| {
+            if (position >= mask_positions) break true;
+        } else false;
+        return .{ .positions = positionsBitset(declared), .unknown = untracked };
     }
     const summary = summaries[index];
     return .{ .positions = summary.mutates, .unknown = summary.mutates_unknown };
@@ -279,7 +273,7 @@ fn bindStatement(context: *const Context, function: typed.Function, origins: []O
     switch (statement.data) {
         .initialize, .assign => |store| {
             // VALUE-SEMANTICS-4: a named local receives its own copy.
-            if (!context.physical and copiedHome(context.program, function, store.slot)) return false;
+            if (copiedHome(context.program, function, store.slot)) return false;
             const value = context.nodeOrigin(function, origins, store.value, depth);
             return widen(origins, @backingInt(store.slot), value);
         },
@@ -289,7 +283,7 @@ fn bindStatement(context: *const Context, function: typed.Function, origins: []O
                 const slot = arm.slot orelse continue;
                 const index = @backingInt(slot);
                 if (index >= function.scope.locals.len) continue;
-                if (!context.physical and copiedHome(context.program, function, slot)) continue;
+                if (copiedHome(context.program, function, slot)) continue;
                 const payload = function.scope.locals[index].ty;
                 if (widen(origins, index, context.childIfManaged(payload, function, origins, matched.value, depth))) grew = true;
             }
@@ -303,7 +297,6 @@ fn bindStatement(context: *const Context, function: typed.Function, origins: []O
 /// shares nothing writable with its source, so the local starts fresh: a named
 /// local (not a parameter) whose type reaches no `class` or Cell.
 fn copiedHome(program: typed.Program, function: typed.Function, slot: typed.LocalId) bool {
-    if (!value_semantics.enabled()) return false;
     const index = @backingInt(slot);
     if (index < function.signature.parameter_count or index >= function.scope.locals.len) return false;
     if (!value_semantics.namedHome(function, index)) return false;
@@ -323,10 +316,9 @@ const Context = struct {
     allocator: std.mem.Allocator,
     program: typed.Program,
     summaries: []const Summary,
-    physical: bool = false,
 
     fn tracks(self: *const Context, ty: typed.Type) bool {
-        return if (self.physical) mayContainRetained(self.program, ty) else mayContainManaged(self.program, ty);
+        return mayContainManaged(self.program, ty);
     }
 
     /// Resolve the origin of one checked expression under the current local origins.
@@ -383,7 +375,7 @@ const Context = struct {
         // like `bytes` but keeps writable storage, so a write through it belongs
         // to whoever owns the buffer. A read-only `str`, `bytes` or scalar-only
         // record carries no origin because nothing can be written through it.
-        if (if (self.physical) !self.tracks(ty) else !typed.carriesWritableStorage(self.program.records, ty)) return Origin{};
+        if (!typed.carriesWritableStorage(self.program.records, ty)) return Origin{};
         return self.nodeOrigin(function, origins, base, depth + 1);
     }
 
@@ -415,7 +407,6 @@ const Context = struct {
 
     fn invokeOrigin(self: *const Context, function: typed.Function, origins: []const Origin, invoke: @FieldType(@FieldType(typed.Node, "data"), "invoke"), depth: usize) Origin {
         const signature = callables.signature(self.program.nodes[@backingInt(invoke.callee)].ty, self.program.records) orelse return .{ .unknown = true };
-        if (self.physical) return .{ .unknown = true };
         return self.substituteOrigin(function, origins, originFromBound(signature.return_origin), invoke.arguments, depth + 1);
     }
 
@@ -429,12 +420,6 @@ const Context = struct {
     fn ownerElementManaged(self: *const Context, function: typed.Function, slot: typed.LocalId) bool {
         const index = @backingInt(slot);
         if (index >= function.scope.locals.len) return true;
-        if (self.physical) {
-            const ty = function.scope.locals[index].ty;
-            if (!ty.isAggregate() or ty.recordIndex() >= self.program.records.len) return true;
-            const element = self.program.records[ty.recordIndex()].shape.buffer orelse return true;
-            return self.tracks(element);
-        }
         return managedElement(self.program, function.scope.locals[index].ty);
     }
 
@@ -469,8 +454,8 @@ const Context = struct {
     fn substituteOrigin(self: *const Context, function: typed.Function, origins: []const Origin, bound: Origin, arguments: []const typed.NodeId, depth: usize) Origin {
         if (bound.unknown) return .{ .unknown = true };
         var origin = Origin{};
-        var position: u5 = 0;
-        while (position < 16) : (position += 1) {
+        var position: u7 = 0;
+        while (position < mask_positions) : (position += 1) {
             if (!bound.has(position)) continue;
             if (position >= arguments.len) {
                 origin.unknown = true;
@@ -501,8 +486,7 @@ const Context = struct {
     fn callResultOrigin(self: *const Context, function: typed.Function, origins: []const Origin, callee: typed.FunctionId, arguments: []const typed.NodeId, depth: usize) Origin {
         const index = @backingInt(callee);
         if (index >= self.summaries.len) return .{ .unknown = true };
-        const bound = if (self.physical) self.summaries[index].borrow_origin else self.summaries[index].return_origin;
-        return self.substituteOrigin(function, origins, bound, arguments, depth + 1);
+        return self.substituteOrigin(function, origins, self.summaries[index].return_origin, arguments, depth + 1);
     }
 };
 
@@ -532,13 +516,13 @@ const WriteSite = struct {
     /// first such write overall, and the first one that reaches a parameter the
     /// signature does not declare `mut`, so a missing-marker diagnostic points
     /// at a write that needs the marker rather than at an allowed one.
-    fn witness(self: WriteSite, positions: u16, span: source.Span) void {
+    fn witness(self: WriteSite, positions: Mask, span: source.Span) void {
         if (self.summary.witnesses.external == null) self.summary.witnesses.external = span;
         const declared = positionsBitset(self.function.signature.declared_mutates);
         if (positions & ~declared != 0 and self.summary.witnesses.undeclared == null) self.summary.witnesses.undeclared = span;
     }
 
-    fn absorb(self: WriteSite, mask: u16, unknown: bool, span: source.Span) void {
+    fn absorb(self: WriteSite, mask: Mask, unknown: bool, span: source.Span) void {
         if (unknown) {
             self.summary.writes = true;
             // An unknown footprint can only reach caller state through an actual
@@ -557,9 +541,9 @@ const WriteSite = struct {
             }
             return;
         }
-        var position: u5 = 0;
-        while (position < 16) : (position += 1) {
-            if (mask & (@as(u16, 1) << @intCast(position)) == 0) continue;
+        var position: u7 = 0;
+        while (position < mask_positions) : (position += 1) {
+            if (mask & (bitOf(position)) == 0) continue;
             if (position >= self.arguments.len) {
                 self.summary.writes = true;
                 self.summary.mutates_unknown = true;
@@ -573,10 +557,8 @@ const WriteSite = struct {
     }
 };
 
-/// Record an element write `a[i] = v` into a local. Only a fixed-array
-/// parameter's own storage belongs to the caller — a `mut` one is the caller's
-/// array, and any other is refused as an undeclared write exactly as a list
-/// parameter is — so a write into any other local stays inside this frame.
+/// Record assignments that write a parameter's caller storage: fixed-array
+/// elements and whole `mut` record or collection variables.
 fn absorbElementWrite(context: *const Context, function: typed.Function, origins: []const Origin, store: typed.Store, span: source.Span, summary: *Summary) void {
     const slot = @backingInt(store.slot);
     if (slot >= function.signature.parameter_count) return;
@@ -584,8 +566,11 @@ fn absorbElementWrite(context: *const Context, function: typed.Function, origins
     const array_write = store.element and typed.referenceArray(context.program.records, ty);
     // VALUE-SEMANTICS-3: any assignment to a `mut` record parameter (a field
     // write rebuilds it) lands in the caller's record.
-    const record_write = typed.referenceRecord(context.program.records, ty) and declaredMut(function, slot);
-    if (!array_write and !record_write) return;
+    const declared_mut = declaredMut(function, slot);
+    const record_write = typed.referenceRecord(context.program.records, ty) and declared_mut;
+    const collection_write = @import("mut_abi.zig").collection(context.program.records, ty) and declared_mut;
+    const caller_write = array_write or record_write or collection_write;
+    if (!caller_write) return;
     const site = WriteSite{ .context = context, .function = function, .origins = origins, .arguments = &.{}, .summary = summary };
     site.absorbWrite(Origin.fromPosition(@intCast(slot)), span);
 }
@@ -642,8 +627,7 @@ fn applyStatement(context: *const Context, function: typed.Function, origins: []
         .ret => |value| {
             // VALUE-SEMANTICS-4: a returned value is the caller's own copy.
             const returned = context.program.nodes[@backingInt(value)].ty;
-            if (context.physical and !context.tracks(returned)) return false;
-            if (!context.physical and value_semantics.enabled() and value_semantics.copiesAll(context.program.records, returned)) return false;
+            if (value_semantics.copiesAll(context.program.records, returned)) return false;
             summary.return_origin = Origin.merge(summary.return_origin, context.nodeOrigin(function, origins, value, 0));
         },
         else => return bindStatement(context, function, origins, statement, 0),
@@ -711,7 +695,6 @@ fn buildSummaries(allocator: std.mem.Allocator, program: typed.Program, stubs: [
     var scratch = std.heap.ArenaAllocator.init(allocator);
     defer scratch.deinit();
     const context = Context{ .allocator = scratch.allocator(), .program = program, .summaries = summaries };
-    const physical = Context{ .allocator = scratch.allocator(), .program = program, .summaries = summaries, .physical = true };
     const budget = program.functions.len * 4 + 32;
     var iteration: usize = 0;
     while (true) {
@@ -719,8 +702,7 @@ fn buildSummaries(allocator: std.mem.Allocator, program: typed.Program, stubs: [
         for (program.functions, 0..) |_, index| {
             if (standIn(stubs, index) != null) continue;
             _ = scratch.reset(.retain_capacity);
-            var computed = try analyzeFunction(&context, index);
-            computed.borrow_origin = (try analyzeFunction(&physical, index)).return_origin;
+            const computed = try analyzeFunction(&context, index);
             const merged = mergeSummaries(summaries[index], computed);
             if (!sameSummary(merged, summaries[index])) {
                 summaries[index] = merged;
@@ -735,7 +717,6 @@ fn buildSummaries(allocator: std.mem.Allocator, program: typed.Program, stubs: [
     if (widened) for (summaries) |*summary| {
         summary.mutates_unknown = true;
         summary.return_origin.unknown = true;
-        summary.borrow_origin.unknown = true;
         summary.writes = true;
         summary.external = true;
     };
@@ -748,20 +729,24 @@ fn publish(allocator: std.mem.Allocator, program: typed.Program, summaries: []co
         const mutable = @constCast(&program.functions[index]);
         mutable.signature.inferred.writes = summary.writes;
         mutable.signature.inferred.external = summary.external;
-        var positions = summary.mutates;
-        if (summary.mutates_unknown) {
-            var bit: u5 = 0;
-            while (bit < 16) : (bit += 1) {
-                if (bit < function.signature.parameter_count) positions |= @as(u16, 1) << @intCast(bit);
-            }
-        }
-        mutable.signature.mutates = try bitsetPositions(allocator, positions);
+        // An unattributed write may reach every parameter, including any past what a
+        // `Mask` names, so the published list is all of them.
+        mutable.signature.mutates = if (summary.mutates_unknown)
+            try allPositions(allocator, function.signature.parameter_count)
+        else
+            try bitsetPositions(allocator, summary.mutates);
         mutable.signature.return_origin = try boundFromOrigin(allocator, summary.return_origin);
-        mutable.signature.inferred.borrow_origin = try boundFromOrigin(allocator, summary.borrow_origin);
     }
 }
 
-fn permissionMessage(allocator: std.mem.Allocator, function: typed.Function, summary: Summary, permitted: u16, has_permission: bool) std.mem.Allocator.Error![]const u8 {
+/// Every parameter position of a function with `count` parameters, in order.
+fn allPositions(allocator: std.mem.Allocator, count: usize) std.mem.Allocator.Error![]const u16 {
+    const out = try allocator.alloc(u16, count);
+    for (out, 0..) |*position, index| position.* = @intCast(index);
+    return out;
+}
+
+fn permissionMessage(allocator: std.mem.Allocator, function: typed.Function, summary: Summary, permitted: Mask, has_permission: bool) std.mem.Allocator.Error![]const u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
     text.writer.print("managed write in `{s}` exceeds its contract", .{function.name}) catch return error.OutOfMemory;
@@ -772,22 +757,21 @@ fn permissionMessage(allocator: std.mem.Allocator, function: typed.Function, sum
     } else {
         text.writer.writeAll("; the declared mutates footprint does not cover ") catch return error.OutOfMemory;
         var listed = false;
-        var position: u5 = 0;
-        while (position < 16) : (position += 1) {
-            const bit = @as(u16, 1) << @intCast(position);
+        var position: u7 = 0;
+        while (position < mask_positions) : (position += 1) {
+            const bit = bitOf(position);
             if (summary.mutates & bit == 0 or permitted & bit != 0) continue;
             text.writer.print("{s}p{d}", .{ if (listed) ", " else "", position }) catch return error.OutOfMemory;
             listed = true;
         }
-        const repair = if (value_semantics.enabled()) "assign the value to a local and change that copy" else "pass a fresh local snapshot";
-        text.writer.print("; declare both effects(mutation) and mutates(...), or {s}", .{repair}) catch return error.OutOfMemory;
+        text.writer.writeAll("; declare both effects(mutation) and mutates(...), or assign the value to a local and change that copy") catch return error.OutOfMemory;
     }
     return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
 }
 
 /// Write one parameter's source name, falling back to `p<N>` when the checked
 /// local carries no name. Positions are zero-based, matching `mutates(...)`.
-fn writeParameterName(writer: *std.Io.Writer, function: typed.Function, position: u5) std.Io.Writer.Error!void {
+fn writeParameterName(writer: *std.Io.Writer, function: typed.Function, position: u7) std.Io.Writer.Error!void {
     const index: usize = position;
     if (index < function.scope.locals.len) {
         const name = function.scope.locals[index].name;
@@ -800,37 +784,32 @@ fn writeParameterName(writer: *std.Io.Writer, function: typed.Function, position
 /// exact declaration the reader should paste. `positions` is the inferred write
 /// set widened by every position an untraceable target could reach, so the paste
 /// covers the whole contract the body needs.
-fn unmarkedWriteMessage(allocator: std.mem.Allocator, src: source.Source, declared: ast.Function, function: typed.Function, positions: u16) std.mem.Allocator.Error![]const u8 {
+fn unmarkedWriteMessage(allocator: std.mem.Allocator, src: source.Source, declared: ast.Function, function: typed.Function, positions: Mask) std.mem.Allocator.Error![]const u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
     text.writer.writeAll("this function writes ") catch return error.OutOfMemory;
     var listed = false;
-    var position: u5 = 0;
-    while (position < 16) : (position += 1) {
-        if (positions & (@as(u16, 1) << @intCast(position)) == 0) continue;
+    var position: u7 = 0;
+    while (position < mask_positions) : (position += 1) {
+        if (positions & (bitOf(position)) == 0) continue;
         if (listed) text.writer.writeAll(", ") catch return error.OutOfMemory;
         text.writer.writeAll("`") catch return error.OutOfMemory;
         writeParameterName(&text.writer, function, position) catch return error.OutOfMemory;
         text.writer.print("` (parameter {d})", .{@as(u32, position) + 1}) catch return error.OutOfMemory;
         listed = true;
     }
-    if (value_semantics.enabled()) {
-        // VALUE-SEMANTICS-4: a parameter is read-only unless declared `mut`.
-        text.writer.writeAll(", which is read-only here; declare ") catch return error.OutOfMemory;
-        writeMutatedParameters(&text.writer, src, declared, function, positions) catch return error.OutOfMemory;
-        text.writer.writeAll(" so the change reaches the caller, or assign it to a local (`copy = ") catch return error.OutOfMemory;
-        writeParameterName(&text.writer, function, @intCast(@ctz(positions))) catch return error.OutOfMemory;
-        text.writer.writeAll("`) and change the copy") catch return error.OutOfMemory;
-        return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
-    }
-    text.writer.writeAll(" reachable from the caller; declare ") catch return error.OutOfMemory;
+    // VALUE-SEMANTICS-4: a parameter is read-only unless declared `mut`.
+    text.writer.writeAll(", which is read-only here; declare ") catch return error.OutOfMemory;
     writeMutatedParameters(&text.writer, src, declared, function, positions) catch return error.OutOfMemory;
+    text.writer.writeAll(" so the change reaches the caller, or assign it to a local (`copy = ") catch return error.OutOfMemory;
+    writeParameterName(&text.writer, function, @intCast(@ctz(positions))) catch return error.OutOfMemory;
+    text.writer.writeAll("`) and change the copy") catch return error.OutOfMemory;
     return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
 }
 
 /// Build the rejection for a `mut` parameter the body never writes, with the
 /// parameter's own declaration as the paste that removes the marker.
-fn unusedMutMessage(allocator: std.mem.Allocator, src: source.Source, declared: ast.Function, function: typed.Function, position: u5) std.mem.Allocator.Error![]const u8 {
+fn unusedMutMessage(allocator: std.mem.Allocator, src: source.Source, declared: ast.Function, function: typed.Function, position: u7) std.mem.Allocator.Error![]const u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
     text.writer.writeAll("`") catch return error.OutOfMemory;
@@ -847,7 +826,7 @@ const lost_part_text = "` is declared `mut` but never written: the only change g
     "store the copy back after changing it (`{s} = {s}`) so the change reaches the caller";
 
 /// One `mut` parameter whose only change went to a local copy of it.
-const LostCopyQuote = struct { src: source.Source, program: typed.Program, function: typed.Function, position: u5, copy: value_checks.LostCopy };
+const LostCopyQuote = struct { src: source.Source, program: typed.Program, function: typed.Function, position: u7, copy: value_checks.LostCopy };
 
 /// VALUE-SEMANTICS-6: the rejection for a `mut` parameter whose only change
 /// went to a local copy. Removing `mut` would keep the program wrong, so the
@@ -874,11 +853,11 @@ fn lostCopyMessage(allocator: std.mem.Allocator, quote: LostCopyQuote) std.mem.A
 
 /// Write one `name: mut T` declaration per set bit of `positions`, comma
 /// separated. Each is a paste-ready parameter annotation.
-fn writeMutatedParameters(writer: *std.Io.Writer, src: source.Source, declared: ast.Function, function: typed.Function, positions: u16) std.mem.Allocator.Error!void {
+fn writeMutatedParameters(writer: *std.Io.Writer, src: source.Source, declared: ast.Function, function: typed.Function, positions: Mask) std.mem.Allocator.Error!void {
     var listed = false;
-    var position: u5 = 0;
-    while (position < 16) : (position += 1) {
-        if (positions & (@as(u16, 1) << @intCast(position)) == 0) continue;
+    var position: u7 = 0;
+    while (position < mask_positions) : (position += 1) {
+        if (positions & (bitOf(position)) == 0) continue;
         if (listed) writer.writeAll(", ") catch return error.OutOfMemory;
         writer.writeAll("`") catch return error.OutOfMemory;
         try writeMutatedParameter(writer, src, declared, function, position);
@@ -890,7 +869,7 @@ fn writeMutatedParameters(writer: *std.Io.Writer, src: source.Source, declared: 
 /// One parameter's declaration as `name: mut T`. The type is the source text the
 /// reader actually wrote, so the paste is exactly the edit they need to make and
 /// appears verbatim in the message.
-fn writeMutatedParameter(writer: *std.Io.Writer, src: source.Source, declared: ast.Function, function: typed.Function, position: u5) std.mem.Allocator.Error!void {
+fn writeMutatedParameter(writer: *std.Io.Writer, src: source.Source, declared: ast.Function, function: typed.Function, position: u7) std.mem.Allocator.Error!void {
     writeParameterName(writer, function, position) catch return error.OutOfMemory;
     writer.writeAll(": mut ") catch return error.OutOfMemory;
     const index: usize = position;
@@ -904,11 +883,11 @@ fn writeMutatedParameter(writer: *std.Io.Writer, src: source.Source, declared: a
 /// Every parameter position an unattributed write could reach. An untraceable
 /// target can only be caller state through an argument, and every argument of
 /// this function is one of its own parameters.
-fn unknownWritePositions(function: typed.Function) u16 {
-    var positions: u16 = 0;
-    var bit: u5 = 0;
-    while (bit < 16) : (bit += 1) {
-        if (bit < function.signature.parameter_count) positions |= @as(u16, 1) << @intCast(bit);
+fn unknownWritePositions(function: typed.Function) Mask {
+    var positions: Mask = 0;
+    var bit: u7 = 0;
+    while (bit < mask_positions) : (bit += 1) {
+        if (bit < function.signature.parameter_count) positions |= bitOf(bit);
     }
     return positions;
 }
@@ -952,7 +931,7 @@ fn checkMutDeclarations(allocator: std.mem.Allocator, program: typed.Program, re
     const function = program.functions[index];
     // The declaring syntax is found by a scan of every declaration, so it is
     // looked up only for a function that actually reports a diagnostic.
-    const positions: u16 = if (summary.mutates_unknown) unknownWritePositions(function) else summary.mutates;
+    const positions: Mask = if (summary.mutates_unknown) unknownWritePositions(function) else summary.mutates;
     const declared = positionsBitset(function.signature.declared_mutates);
     var violated = false;
     if (summary.external and positions & ~declared != 0) {
@@ -971,11 +950,11 @@ fn checkMutDeclarations(allocator: std.mem.Allocator, program: typed.Program, re
     // A host declaration has no body to write, and a lambda implements a
     // destination contract that may permit more positions than it writes.
     if (function.policy.host != null or isLambdaName(function.name)) return violated;
-    var position: u5 = 0;
-    while (position < 16) : (position += 1) {
-        if (declared & (@as(u16, 1) << @intCast(position)) == 0) continue;
-        if (summary.mutates & (@as(u16, 1) << @intCast(position)) != 0) continue;
-        const lost = if (value_semantics.enabled()) try value_checks.lostCopy(allocator, program, function, position) else null;
+    var position: u7 = 0;
+    while (position < mask_positions) : (position += 1) {
+        if (declared & (bitOf(position)) == 0) continue;
+        if (summary.mutates & (bitOf(position)) != 0) continue;
+        const lost = try value_checks.lostCopy(allocator, program, function, position);
         const message = if (lost) |copy|
             try lostCopyMessage(allocator, .{ .src = src, .program = program, .function = function, .position = position, .copy = copy })
         else
@@ -1002,12 +981,12 @@ fn exactDeclaration(syntax: ast.Program, function: typed.Function) ?ast.Function
 
 /// The fix for an unmarked written parameter: `mut ` in front of each written
 /// parameter's declared type, in parameter order.
-fn markParameters(allocator: std.mem.Allocator, syntax: ast.Program, function: typed.Function, positions: u16) std.mem.Allocator.Error!?diagnostic.Fix {
+fn markParameters(allocator: std.mem.Allocator, syntax: ast.Program, function: typed.Function, positions: Mask) std.mem.Allocator.Error!?diagnostic.Fix {
     const declared = exactDeclaration(syntax, function) orelse return null;
     var edits: std.ArrayList(diagnostic.Edit) = .empty;
-    var position: u5 = 0;
-    while (position < 16) : (position += 1) {
-        if (positions & (@as(u16, 1) << @intCast(position)) == 0) continue;
+    var position: u7 = 0;
+    while (position < mask_positions) : (position += 1) {
+        if (positions & (bitOf(position)) == 0) continue;
         if (position >= declared.signature.parameters.len) return null;
         const at = declared.signature.parameters[position].ty.start;
         try edits.append(allocator, .{ .span = .{ .start = at, .end = at }, .text = "mut " });
@@ -1018,7 +997,7 @@ fn markParameters(allocator: std.mem.Allocator, syntax: ast.Program, function: t
 
 /// The fix for a `mut` parameter the body never writes: delete the `mut` and
 /// the blank that separates it from the declared type.
-fn unmarkParameter(src: source.Source, syntax: ast.Program, function: typed.Function, position: u5) ?diagnostic.Fix {
+fn unmarkParameter(src: source.Source, syntax: ast.Program, function: typed.Function, position: u7) ?diagnostic.Fix {
     const declared = exactDeclaration(syntax, function) orelse return null;
     if (position >= declared.signature.parameters.len) return null;
     return diagnostic.removeMut(src.bytes, declared.signature.parameters[position].ty.start);
@@ -1068,7 +1047,7 @@ fn checkDeclaredBound(allocator: std.mem.Allocator, program: typed.Program, inde
 /// Whether the declared `mut` positions already permit every position an
 /// unattributed write could reach, which is what makes such a write the marker
 /// error's business rather than a permission failure's.
-fn mutCoversUnknown(permitted: u16, function: typed.Function) bool {
+fn mutCoversUnknown(permitted: Mask, function: typed.Function) bool {
     return unknownWritePositions(function) & ~permitted == 0;
 }
 
@@ -1214,11 +1193,11 @@ const OverlapChecker = struct {
     roots: ?Roots = null,
 
     /// Report the first writable/read-only argument pair not proven disjoint.
-    fn checkArguments(self: *const OverlapChecker, site: CallSite, written_mask: u16) std.mem.Allocator.Error!bool {
+    fn checkArguments(self: *const OverlapChecker, site: CallSite, written_mask: Mask) std.mem.Allocator.Error!bool {
         const context = Context{ .allocator = self.allocator, .program = self.program, .summaries = self.summaries };
-        var written: u5 = 0;
-        while (written < 16) : (written += 1) {
-            const written_bit = @as(u16, 1) << @intCast(written);
+        var written: u7 = 0;
+        while (written < mask_positions) : (written += 1) {
+            const written_bit = bitOf(written);
             if (written_mask & written_bit == 0 or written >= site.arguments.len) continue;
             if (written >= site.arguments.len or !mayContainManaged(self.program, site.typeAt(written))) continue;
             const fresh = context.nodeOrigin(site.function, site.origins, site.arguments[written], 0).isFresh();
@@ -1227,10 +1206,10 @@ const OverlapChecker = struct {
         return false;
     }
 
-    fn checkReadOnly(self: *const OverlapChecker, context: *const Context, site: CallSite, written: u5, written_mask: u16, written_fresh: bool) std.mem.Allocator.Error!bool {
-        var read_only: u5 = 0;
-        while (read_only < 16) : (read_only += 1) {
-            const read_bit = @as(u16, 1) << @intCast(read_only);
+    fn checkReadOnly(self: *const OverlapChecker, context: *const Context, site: CallSite, written: u7, written_mask: Mask, written_fresh: bool) std.mem.Allocator.Error!bool {
+        var read_only: u7 = 0;
+        while (read_only < mask_positions) : (read_only += 1) {
+            const read_bit = bitOf(read_only);
             if (read_only == written or read_only >= site.arguments.len) continue;
             if (written_mask & read_bit != 0) continue;
             const written_type = site.typeAt(written);
@@ -1257,79 +1236,6 @@ const OverlapChecker = struct {
         return false;
     }
 };
-
-fn overlapForCall(checker: *const OverlapChecker, function: typed.Function, origins: []const Origin, node: typed.Node, sink: *diagnostic.Sink) std.mem.Allocator.Error!bool {
-    switch (node.data) {
-        .call => |call| {
-            const callee_index = @backingInt(call.function);
-            const callee = checker.program.functions[callee_index];
-            // Overlap is a proof obligation created by a declared `mutates(...)`
-            // contract. An unannotated helper's inferred writes are not such a
-            // promise, so forwarding shared inputs through it is ordinary
-            // sequential aliasing; only a declared footprint is checked.
-            if (callee.signature.declared_mutates.len == 0) return false;
-            const mask = positionsBitset(callee.signature.declared_mutates);
-            if (mask == 0) return false;
-            const site = CallSite{
-                .function = function,
-                .origins = origins,
-                .arguments = call.arguments,
-                .parameter_locals = callee.scope.locals[0..callee.signature.parameter_count],
-                .sink = sink,
-                .roots = checker.roots,
-            };
-            return checker.checkArguments(site, mask);
-        },
-        .invoke => |invoke| {
-            const signature = callables.signature(checker.program.nodes[@backingInt(invoke.callee)].ty, checker.program.records) orelse return false;
-            const mask = positionsBitset(signature.mutates);
-            if (mask == 0) return false;
-            const site = CallSite{
-                .function = function,
-                .origins = origins,
-                .arguments = invoke.arguments,
-                .parameter_types = signature.parameters,
-                .sink = sink,
-                .roots = checker.roots,
-            };
-            return checker.checkArguments(site, mask);
-        },
-        else => return false,
-    }
-}
-
-fn collectOverlaps(allocator: std.mem.Allocator, program: typed.Program, summaries: []const Summary, index: usize, sink: *diagnostic.Sink) std.mem.Allocator.Error!bool {
-    const function = program.functions[index];
-    const locals = function.scope.locals.len;
-    var scratch = std.heap.ArenaAllocator.init(allocator);
-    defer scratch.deinit();
-    const origins = try scratch.allocator().alloc(Origin, if (locals == 0) 1 else locals);
-    @memset(origins, .{});
-    const roots = try Roots.init(scratch.allocator(), origins.len);
-    const checker = OverlapChecker{ .allocator = allocator, .program = program, .summaries = summaries, .roots = roots };
-    const context = Context{ .allocator = allocator, .program = program, .summaries = summaries };
-    var violated = false;
-    var walker = try Walker.init(scratch.allocator(), program, function.scope.body);
-    defer walker.deinit();
-    while (try walker.next()) |item| switch (item) {
-        .statement => |statement_id| {
-            const statement = program.statements[@backingInt(statement_id)];
-            _ = bindStatement(&context, function, origins, statement, 0);
-            switch (statement.data) {
-                .initialize, .assign => |store| if (mutation.nodeRoot(program, store.value)) |root| roots.join(@backingInt(store.slot), @backingInt(root)),
-                .match => |matched| if (mutation.nodeRoot(program, matched.value)) |root| {
-                    for (matched.arms) |arm| if (arm.slot) |slot| roots.join(@backingInt(slot), @backingInt(root));
-                },
-                else => {},
-            }
-        },
-        .expression => |expression_id| {
-            const node = program.nodes[@backingInt(expression_id)];
-            if (try overlapForCall(&checker, function, origins, node, sink)) violated = true;
-        },
-    };
-    return violated;
-}
 
 /// Enforce M2's mutation permissions over a checked program. Returns whether
 /// any diagnostic was emitted; callers turn that into `error.SourceError`.
@@ -1367,16 +1273,9 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, request: Requ
     // or a real copy where a `mut` argument of the same call could reach
     // it), so no writable/read-only overlap is possible. Instead a write
     // through a value binding or into a returned value is rejected.
-    if (value_semantics.enabled()) {
-        for (program.functions, 0..) |_, index| {
-            if (standIn(request.stubs, index) != null) continue;
-            if (try value_checks.checkWrites(allocator, program, index, sink)) violated = true;
-        }
-        return violated;
-    }
     for (program.functions, 0..) |_, index| {
         if (standIn(request.stubs, index) != null) continue;
-        if (try collectOverlaps(allocator, program, built.summaries, index, sink)) violated = true;
+        if (try value_checks.checkWrites(allocator, program, index, sink)) violated = true;
     }
     return violated;
 }

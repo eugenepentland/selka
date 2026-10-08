@@ -1,0 +1,10 @@
+[
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-entry-import-01/cache/result_propagate/program-4006e80366c0f43d/entry.ll",
+    "sha256": "6abb118af0147c06fbd212bf9c7726f5e88e75319c34f5a1ca8a1d019a3f545a"
+  },
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-entry-import-01/cache/result_propagate/program-4006e80366c0f43d/module-c45495eed5abeed33c6f2c3dbda49d4d42c754b56d577e837ca1040dac08f668.ll",
+    "sha256": "baca6b32216e47fc8d3b9bd742f37ff8aa594c46617b06486960e6e6afd456fa"
+  }
+]

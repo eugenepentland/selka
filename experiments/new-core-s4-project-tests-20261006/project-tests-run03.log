@@ -1,0 +1,46 @@
+test-core
++- run test 11 pass, 1 fail (12 total)
+guardian/test: test wall 68.79s; slowest over 50ms:
+guardian/test:   14.58s  test_runner_project_test.test.provider-only imports and embedded assets participate in receipt invalidation
+guardian/test:   13.87s  test_runner_project_test.test.provider edits and explicit expectations invalidate successful test receipts
+guardian/test:   13.75s  test_runner_project_test.test.embedded bytes and stricter project budgets invalidate unchanged test manifests
+guardian/test:   13.17s  test_runner_project_test.test.directory receipts account for orphan libraries and rerun only the edited reachable program
+guardian/test:   12.76s  test_runner_project_test.test.cases require canonical discovered names and never ignore an expectation
+guardian/test:   0.62s  test_runner_project_test.test.native test step and wall bounds are honored while force bypasses reuse
+guardian/test: FAIL — 1 failed of 12
+guardian/test: RESULT {"passed":11,"failed":1,"skipped":0}
+error: 'test_runner_project_test.test.native test step and wall bounds are honored while force bypasses reuse' failed:
+       guardian/test: 12 test(s) selected
+       guardian/test: SLOW  13.17s  test_runner_project_test.test.directory receipts account for orphan libraries and rerun only the edited reachable program
+       guardian/test: SLOW  13.87s  test_runner_project_test.test.provider edits and explicit expectations invalidate successful test receipts
+       guardian/test: SLOW  14.58s  test_runner_project_test.test.provider-only imports and embedded assets participate in receipt invalidation
+       guardian/test: SLOW  12.76s  test_runner_project_test.test.cases require canonical discovered names and never ignore an expectation
+       guardian/test: SLOW  13.75s  test_runner_project_test.test.embedded bytes and stricter project budgets invalidate unchanged test manifests
+       unexpected project test result: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.zig-cache/tmp/SQHXsWsR06uq6B0t/mylang.json:1:33: error[E_PROJECT_CONFIG]: unknown field in limits; expected run or test
+       
+       null
+       expected 0, found 1
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x128d2d4 in expectEqualInner__anon_43355 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x128d52a in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/core/test_runner_project_test.zig:64:5: 0x128d583 in expectStatus (root_test.zig)
+           try std.testing.expectEqual(status, found.status);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/src/core/test_runner_project_test.zig:212:5: 0x128e40e in test.native test step and wall bounds are honored while force bypasses reuse (root_test.zig)
+           try expectStatus(context, try context.run("loop.my", &.{ "--max-steps", "100000" }), 0);
+           ^
+failed command: ./.zig-cache/o/1646bca23fed9b442d25ddfc2a10cd5a/test --cache-dir=./.zig-cache --seed=0x404cc65c --listen=-
+
+Build Summary: 5/7 steps succeeded (1 failed); 11/12 tests passed (1 failed)
+test-core transitive failure
++- run test 11 pass, 1 fail (12 total)
+   +- compile test debug native success 1s MaxRSS:187M
+      +- run exe qbe-build-assets (qbe_build_assets) success 207ms
+      |  +- compile exe qbe-build-assets debug native cached 16ms MaxRSS:38M
+      +- options success
+         +- compile exe mylang-core debug native success 10s MaxRSS:354M
+            +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+

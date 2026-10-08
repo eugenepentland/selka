@@ -1,0 +1,2 @@
+zig: warning: argument unused during compilation: '-MD' [-Wunused-command-line-argument]
+zig: warning: argument unused during compilation: '-MF unit.d' [-Wunused-command-line-argument]

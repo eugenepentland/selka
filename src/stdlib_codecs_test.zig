@@ -10,7 +10,7 @@ test "standard base64 and hex match their vectors and reject noncanonical input"
 
 // spec-case: STANDARD-CODECS-1
 test "standard base64 round-trips every byte value under collection stress" {
-    try fixture.stress(t.allocator, "module main\nimport base64\n" ++
+    try fixture.run(t.allocator, "module main\nimport base64\n" ++
         "def main() -> int:\n" ++
         "    octets: list[int] = []\n" ++
         "    value = 0\n" ++

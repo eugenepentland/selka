@@ -1,0 +1,49 @@
+{"argv": ["/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/backtrace-runtime-probe-01"], "environment_change": {"LD_DEBUG": "libs"}, "status": 0}
+STDOUT
+frames=4
+STDERR
+   3259689:	find library=libc.so.6 [0]; searching
+   3259689:	 search cache=/etc/ld.so.cache
+   3259689:	  trying file=/usr/lib/x86_64-linux-gnu/libc.so.6
+   3259689:	
+   3259689:	find library=libpthread.so.0 [0]; searching
+   3259689:	 search cache=/etc/ld.so.cache
+   3259689:	  trying file=/usr/lib/x86_64-linux-gnu/libpthread.so.0
+   3259689:	
+   3259689:	
+   3259689:	calling init: /lib64/ld-linux-x86-64.so.2
+   3259689:	
+   3259689:	
+   3259689:	calling init: /usr/lib/x86_64-linux-gnu/libc.so.6
+   3259689:	
+   3259689:	
+   3259689:	calling init: /usr/lib/x86_64-linux-gnu/libpthread.so.0
+   3259689:	
+   3259689:	
+   3259689:	initialize program: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/backtrace-runtime-probe-01
+   3259689:	
+   3259689:	
+   3259689:	transferring control: /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/backtrace-runtime-probe-01
+   3259689:	
+   3259689:	find library=libgcc_s.so.1 [0]; searching
+   3259689:	 search cache=/etc/ld.so.cache
+   3259689:	  trying file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   3259689:	
+   3259689:	
+   3259689:	calling init: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   3259689:	
+   3259689:	
+   3259689:	calling fini:  [0]
+   3259689:	
+   3259689:	
+   3259689:	calling fini: /usr/lib/x86_64-linux-gnu/libpthread.so.0 [0]
+   3259689:	
+   3259689:	
+   3259689:	calling fini: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 [0]
+   3259689:	
+   3259689:	
+   3259689:	calling fini: /usr/lib/x86_64-linux-gnu/libc.so.6 [0]
+   3259689:	
+   3259689:	
+   3259689:	calling fini: /lib64/ld-linux-x86-64.so.2 [0]
+   3259689:	

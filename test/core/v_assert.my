@@ -1,0 +1,28 @@
+module v_assert
+
+
+record Gauge:
+    level: int
+    limit: int
+
+
+def checked_sum(xs: list[int], limit: int) -> int:
+    total = 0
+    for i in range(len(xs)):
+        assert i < len(xs), "index in range"
+        total += xs[i]
+        assert total <= limit, "limit exceeded"
+    return total
+
+
+def fill(g: Gauge, amount: int) -> int:
+    assert g.level + amount <= g.limit
+    return g.level + amount
+
+
+def main(out: Stream) -> int:
+    out.print(checked_sum([1, 2, 3], 10))
+    assert len([1]) == 1
+    out.print(fill(Gauge(level=1, limit=5), 3))
+    out.print(checked_sum([5, 6, 7], 10))
+    return 0

@@ -1,0 +1,4360 @@
+{
+  "schema": "mylang-unique-capture-untimed-qualification-v1",
+  "source_revision": "d4c28bdace208ee284fe22cc63f074b183990967",
+  "manifest": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/manifest.json",
+    "sha256": "8a52685f4da30ba4d90cedaba73e6da9787066bae76ef2e4e700336dcaf2c368"
+  },
+  "binary_hashes": {
+    "legacy/my-llvm": "fb11b3d28a1f00c6491e8c1ab4b41b686e6dbe4e7ccb7d29f0d4196eb01db2ad",
+    "legacy/my-qbe": "d385d0645873b7db0299463613d5e9a8d1689ad5aae2713f06374a673b53c3aa",
+    "legacy/rust": "cc6488c8f54e33c93e483b78db70d21ef88309bbb38856394a5e94abde17099f",
+    "legacy/go": "2e8d267a37dd077ba5993c00658197c739750cdde576a3c2b98261c9f133bd17",
+    "legacy/zig-safe": "ed51d49b2018d1543fff0e80b7d23cb8b941e232fd93033cfc7f4b0175b8b4cd",
+    "legacy/zig-fast": "5ec59c0266719ed9b4d926a243432a903e66f672034227f3653ca11c41bc81bb",
+    "compute/my-llvm": "d5559536dcc6a04724e0ac2547ddc3cbde61b643b51408e36ecfa77c9d0400d9",
+    "compute/my-qbe": "ca0a4b5781ea9fa4aa28e6874acd2ac488eea45e77ea3d4016f130f2f44e19a4",
+    "compute/rust": "342de880685aeee869ada3a39ad109b59795221d944b5e0b2089a7eaebc83655",
+    "compute/go": "9d7e9f9c912eb8f93f2c610023ddad89a52a473f90d569d038947edacbd48b68",
+    "compute/zig-safe": "807a12c75a50a9e59590e710a84ed874132e3d2e273b83a23475b04f1c8eec2a",
+    "compute/zig-fast": "eef38971a3afb65f80d611a6d1ab23cec85d5fbac71841d35538e4823dd28928",
+    "collections/my-llvm": "3b8587b80f8233f89276474b8bbbdc7d0a152af174ea0a1ff53d43b550b3eacd",
+    "collections/my-qbe": "438e77622e2b4a29317b6785ff05707890a9710f0fa3d01ade4989ec33f2cffb",
+    "collections/rust": "4b7ee53e36cbc6eefaf6bf2b559906eecf348a18ee2fc5acc90b3aceb9d93d21",
+    "collections/go": "039eca570573f3fa304e3ec5e3df2976a9256e1ee7af43a9192a58bdd9917da6",
+    "collections/zig-safe": "77f77faf4a8a3f4f5956b81efc737f598933ff48cd0938f6df3a8d005a2e096b",
+    "collections/zig-fast": "ab34bafd6a39d4a6fefe32ab4720c6fa6b0c3b322072b9bac55ca1620b095d0b",
+    "text/my-llvm": "f2e07788012a420a64429b0e19d1c7ff91ee73ccd4172673407a3dde59ccaa8e",
+    "text/my-qbe": "622767f7a0831c6b51cf84312cf364cf99dcb586268cd471aa2a044b925b3478",
+    "text/rust": "230ff4317181142193c29c7ee5f260fa6866d527fb59caf512aefe33c1a0b7d4",
+    "text/go": "afb67832762f3925b772321b0a0ee58101305268d7935eec0669e7c49e9c38d3",
+    "text/zig-safe": "6ae0410adb082a0a657a5b23ddc24751a9cfbe31763f082b84f7376a01835649",
+    "text/zig-fast": "aee37be81b0094356f1f4323d6979530082101a1adf368d8792118b5a1447e6f",
+    "native_clock.o": "d4f78b33801beaed2d1f789b184785731ed69a1f88f777f84c25796303f4658f"
+  },
+  "samples": [
+    {
+      "case": "record_reads",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 30,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-llvm",
+        "record_reads",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "30 157\n",
+      "stderr": ""
+    },
+    {
+      "case": "record_reads",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 30,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-qbe",
+        "record_reads",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "30 442\n",
+      "stderr": ""
+    },
+    {
+      "case": "record_reads",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 1620,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-llvm",
+        "record_reads",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "1620 358\n",
+      "stderr": ""
+    },
+    {
+      "case": "record_reads",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 1620,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-qbe",
+        "record_reads",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "1620 711\n",
+      "stderr": ""
+    },
+    {
+      "case": "record_reads",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 31008538,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-llvm",
+        "record_reads",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "31008538 564\n",
+      "stderr": ""
+    },
+    {
+      "case": "record_reads",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 31008538,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-qbe",
+        "record_reads",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "31008538 1271\n",
+      "stderr": ""
+    },
+    {
+      "case": "tagged_stack",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 1020,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-llvm",
+        "tagged_stack",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "1020 526\n",
+      "stderr": ""
+    },
+    {
+      "case": "tagged_stack",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 1020,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-qbe",
+        "tagged_stack",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "1020 878\n",
+      "stderr": ""
+    },
+    {
+      "case": "tagged_stack",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 12525,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-llvm",
+        "tagged_stack",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "12525 817\n",
+      "stderr": ""
+    },
+    {
+      "case": "tagged_stack",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 12525,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-qbe",
+        "tagged_stack",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "12525 1314\n",
+      "stderr": ""
+    },
+    {
+      "case": "tagged_stack",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 27573,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-llvm",
+        "tagged_stack",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "27573 1531\n",
+      "stderr": ""
+    },
+    {
+      "case": "tagged_stack",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 27573,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-qbe",
+        "tagged_stack",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "27573 2151\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_unique",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-llvm",
+        "mutate_unique",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "31 472\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_unique",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-qbe",
+        "mutate_unique",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "31 827\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_unique",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 604,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-llvm",
+        "mutate_unique",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "604 471\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_unique",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 604,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-qbe",
+        "mutate_unique",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "604 1274\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_unique",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 14419,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-llvm",
+        "mutate_unique",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "14419 588\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_unique",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 14419,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-qbe",
+        "mutate_unique",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "14419 2241\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_shared",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 45,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-llvm",
+        "mutate_shared",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "45 3026\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_shared",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 45,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-qbe",
+        "mutate_shared",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "45 4884\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_shared",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 987,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-llvm",
+        "mutate_shared",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "987 3889\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_shared",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 987,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-qbe",
+        "mutate_shared",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "987 5934\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_shared",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 24990,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-llvm",
+        "mutate_shared",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "24990 6387\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_shared",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 24990,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/legacy-my-qbe",
+        "mutate_shared",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "24990 11624\n",
+      "stderr": ""
+    },
+    {
+      "case": "integer_math",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 100,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "integer_math",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "100 615\n",
+      "stderr": ""
+    },
+    {
+      "case": "integer_math",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 100,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "integer_math",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "100 549\n",
+      "stderr": ""
+    },
+    {
+      "case": "integer_math",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 4242,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "integer_math",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "4242 637\n",
+      "stderr": ""
+    },
+    {
+      "case": "integer_math",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 4242,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "integer_math",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "4242 1318\n",
+      "stderr": ""
+    },
+    {
+      "case": "integer_math",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 252673,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "integer_math",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "252673 4037\n",
+      "stderr": ""
+    },
+    {
+      "case": "integer_math",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 252673,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "integer_math",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "252673 8468\n",
+      "stderr": ""
+    },
+    {
+      "case": "float_math",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 2197,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "float_math",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "2197 935\n",
+      "stderr": ""
+    },
+    {
+      "case": "float_math",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 2197,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "float_math",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "2197 906\n",
+      "stderr": ""
+    },
+    {
+      "case": "float_math",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 190085,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "float_math",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "190085 922\n",
+      "stderr": ""
+    },
+    {
+      "case": "float_math",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 190085,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "float_math",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "190085 1182\n",
+      "stderr": ""
+    },
+    {
+      "case": "float_math",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 91585528,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "float_math",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "91585528 6155\n",
+      "stderr": ""
+    },
+    {
+      "case": "float_math",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 91585528,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "float_math",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "91585528 21090\n",
+      "stderr": ""
+    },
+    {
+      "case": "branch_predictable",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 127,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "branch_predictable",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "127 1160\n",
+      "stderr": ""
+    },
+    {
+      "case": "branch_predictable",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 127,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "branch_predictable",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "127 1106\n",
+      "stderr": ""
+    },
+    {
+      "case": "branch_predictable",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 5859,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "branch_predictable",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "5859 1150\n",
+      "stderr": ""
+    },
+    {
+      "case": "branch_predictable",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 5859,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "branch_predictable",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "5859 2067\n",
+      "stderr": ""
+    },
+    {
+      "case": "branch_predictable",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 627184,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "branch_predictable",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "627184 3784\n",
+      "stderr": ""
+    },
+    {
+      "case": "branch_predictable",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 627184,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "branch_predictable",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "627184 15869\n",
+      "stderr": ""
+    },
+    {
+      "case": "branch_mixed",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 209,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "branch_mixed",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "209 756\n",
+      "stderr": ""
+    },
+    {
+      "case": "branch_mixed",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 209,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "branch_mixed",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "209 1234\n",
+      "stderr": ""
+    },
+    {
+      "case": "branch_mixed",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 8757,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "branch_mixed",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "8757 1041\n",
+      "stderr": ""
+    },
+    {
+      "case": "branch_mixed",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 8757,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "branch_mixed",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "8757 1888\n",
+      "stderr": ""
+    },
+    {
+      "case": "branch_mixed",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 735122,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "branch_mixed",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "735122 4312\n",
+      "stderr": ""
+    },
+    {
+      "case": "branch_mixed",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 735122,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "branch_mixed",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "735122 14278\n",
+      "stderr": ""
+    },
+    {
+      "case": "record_construct",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 134,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "record_construct",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "134 1113\n",
+      "stderr": ""
+    },
+    {
+      "case": "record_construct",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 134,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "record_construct",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "134 1587\n",
+      "stderr": ""
+    },
+    {
+      "case": "record_construct",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 6405,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "record_construct",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "6405 1302\n",
+      "stderr": ""
+    },
+    {
+      "case": "record_construct",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 6405,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "record_construct",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "6405 3177\n",
+      "stderr": ""
+    },
+    {
+      "case": "record_construct",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 322607,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "record_construct",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "322607 7366\n",
+      "stderr": ""
+    },
+    {
+      "case": "record_construct",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 322607,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "record_construct",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "322607 29602\n",
+      "stderr": ""
+    },
+    {
+      "case": "record_update",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 134,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "record_update",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "134 1104\n",
+      "stderr": ""
+    },
+    {
+      "case": "record_update",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 134,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "record_update",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "134 1725\n",
+      "stderr": ""
+    },
+    {
+      "case": "record_update",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 6405,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "record_update",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "6405 793\n",
+      "stderr": ""
+    },
+    {
+      "case": "record_update",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 6405,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "record_update",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "6405 3802\n",
+      "stderr": ""
+    },
+    {
+      "case": "record_update",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 322607,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "record_update",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "322607 5763\n",
+      "stderr": ""
+    },
+    {
+      "case": "record_update",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 322607,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "record_update",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "322607 35554\n",
+      "stderr": ""
+    },
+    {
+      "case": "call_direct",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 131,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "call_direct",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "131 4321\n",
+      "stderr": ""
+    },
+    {
+      "case": "call_direct",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 131,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "call_direct",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "131 1186\n",
+      "stderr": ""
+    },
+    {
+      "case": "call_direct",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 5313,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "call_direct",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "5313 904\n",
+      "stderr": ""
+    },
+    {
+      "case": "call_direct",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 5313,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "call_direct",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "5313 2215\n",
+      "stderr": ""
+    },
+    {
+      "case": "call_direct",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 584426,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "call_direct",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "584426 3219\n",
+      "stderr": ""
+    },
+    {
+      "case": "call_direct",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 584426,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "call_direct",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "584426 21393\n",
+      "stderr": ""
+    },
+    {
+      "case": "call_indirect",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 217,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "call_indirect",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "217 891\n",
+      "stderr": ""
+    },
+    {
+      "case": "call_indirect",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 217,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "call_indirect",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "217 1176\n",
+      "stderr": ""
+    },
+    {
+      "case": "call_indirect",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 5313,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "call_indirect",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "5313 947\n",
+      "stderr": ""
+    },
+    {
+      "case": "call_indirect",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 5313,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "call_indirect",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "5313 2688\n",
+      "stderr": ""
+    },
+    {
+      "case": "call_indirect",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 973692,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "call_indirect",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "973692 4230\n",
+      "stderr": ""
+    },
+    {
+      "case": "call_indirect",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 973692,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "call_indirect",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "973692 26283\n",
+      "stderr": ""
+    },
+    {
+      "case": "option_handle",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 119,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "option_handle",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "119 896\n",
+      "stderr": ""
+    },
+    {
+      "case": "option_handle",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 119,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "option_handle",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "119 1419\n",
+      "stderr": ""
+    },
+    {
+      "case": "option_handle",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 2814,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "option_handle",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "2814 1145\n",
+      "stderr": ""
+    },
+    {
+      "case": "option_handle",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 2814,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "option_handle",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "2814 3059\n",
+      "stderr": ""
+    },
+    {
+      "case": "option_handle",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 413249,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "option_handle",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "413249 3692\n",
+      "stderr": ""
+    },
+    {
+      "case": "option_handle",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 413249,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "option_handle",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "413249 26826\n",
+      "stderr": ""
+    },
+    {
+      "case": "result_propagate",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 119,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "result_propagate",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "119 866\n",
+      "stderr": ""
+    },
+    {
+      "case": "result_propagate",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 119,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "result_propagate",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "119 1527\n",
+      "stderr": ""
+    },
+    {
+      "case": "result_propagate",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 5187,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "result_propagate",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "5187 1066\n",
+      "stderr": ""
+    },
+    {
+      "case": "result_propagate",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 5187,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "result_propagate",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "5187 3042\n",
+      "stderr": ""
+    },
+    {
+      "case": "result_propagate",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 479339,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "result_propagate",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "479339 5802\n",
+      "stderr": ""
+    },
+    {
+      "case": "result_propagate",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 479339,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "result_propagate",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "479339 36329\n",
+      "stderr": ""
+    },
+    {
+      "case": "binary_search",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "binary_search",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0 1059\n",
+      "stderr": ""
+    },
+    {
+      "case": "binary_search",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "binary_search",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0 1971\n",
+      "stderr": ""
+    },
+    {
+      "case": "binary_search",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 6,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "binary_search",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "6 1655\n",
+      "stderr": ""
+    },
+    {
+      "case": "binary_search",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 6,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "binary_search",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "6 3945\n",
+      "stderr": ""
+    },
+    {
+      "case": "binary_search",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 1464,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "binary_search",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "1464 20786\n",
+      "stderr": ""
+    },
+    {
+      "case": "binary_search",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 1464,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "binary_search",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "1464 55373\n",
+      "stderr": ""
+    },
+    {
+      "case": "packet_decode",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 244,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "packet_decode",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "244 1212\n",
+      "stderr": ""
+    },
+    {
+      "case": "packet_decode",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 244,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "packet_decode",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "244 1999\n",
+      "stderr": ""
+    },
+    {
+      "case": "packet_decode",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 8267,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "packet_decode",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "8267 1581\n",
+      "stderr": ""
+    },
+    {
+      "case": "packet_decode",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 8267,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "packet_decode",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "8267 4620\n",
+      "stderr": ""
+    },
+    {
+      "case": "packet_decode",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 2977023,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-llvm",
+        "packet_decode",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "2977023 8573\n",
+      "stderr": ""
+    },
+    {
+      "case": "packet_decode",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 2977023,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/compute-my-qbe",
+        "packet_decode",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "2977023 47594\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_scan",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 15,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "list_scan",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "15 2496\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_scan",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 15,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "list_scan",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "15 8881\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_scan",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 1218,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "list_scan",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "1218 2980\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_scan",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 1218,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "list_scan",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "1218 10453\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_scan",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 96441,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "list_scan",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "96441 6472\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_scan",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 96441,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "list_scan",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "96441 17936\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_append",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 29,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "list_append",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "29 11517\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_append",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 29,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "list_append",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "29 12519\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_append",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 2618,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "list_append",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "2618 13721\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_append",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 2618,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "list_append",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "2618 17026\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_append",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 1032393,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "list_append",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "1032393 22448\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_append",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 1032393,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "list_append",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "1032393 46712\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_filter",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "list_filter",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0 6045\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_filter",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "list_filter",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0 13568\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_filter",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 393,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "list_filter",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "393 15346\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_filter",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 393,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "list_filter",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "393 19108\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_filter",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 124995,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "list_filter",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "124995 34677\n",
+      "stderr": ""
+    },
+    {
+      "case": "list_filter",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 124995,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "list_filter",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "124995 46923\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_lookup",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "dict_lookup",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "31 2523\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_lookup",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "dict_lookup",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "31 10205\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_lookup",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 724,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "dict_lookup",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "724 4447\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_lookup",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 724,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "dict_lookup",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "724 9187\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_lookup",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 48872,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "dict_lookup",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "48872 22596\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_lookup",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 48872,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "dict_lookup",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "48872 26949\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_lookup_str",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "dict_lookup_str",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "31 2491\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_lookup_str",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "dict_lookup_str",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "31 7759\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_lookup_str",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 724,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "dict_lookup_str",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "724 3586\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_lookup_str",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 724,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "dict_lookup_str",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "724 10979\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_lookup_str",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 48872,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "dict_lookup_str",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "48872 25835\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_lookup_str",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 48872,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "dict_lookup_str",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "48872 42227\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_update",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 65,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "dict_update",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "65 24614\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_update",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 65,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "dict_update",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "65 30556\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_update",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 1890,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "dict_update",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "1890 47552\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_update",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 1890,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "dict_update",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "1890 60316\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_update",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 128312,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "dict_update",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "128312 355342\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_update",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 128312,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "dict_update",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "128312 369808\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_update_str",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 65,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "dict_update_str",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "65 31218\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_update_str",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 65,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "dict_update_str",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "65 26033\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_update_str",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 1890,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "dict_update_str",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "1890 55962\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_update_str",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 1890,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "dict_update_str",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "1890 60734\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_update_str",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 128312,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "dict_update_str",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "128312 464975\n",
+      "stderr": ""
+    },
+    {
+      "case": "dict_update_str",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 128312,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "dict_update_str",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "128312 535515\n",
+      "stderr": ""
+    },
+    {
+      "case": "set_dedup",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "set_dedup",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "1 19961\n",
+      "stderr": ""
+    },
+    {
+      "case": "set_dedup",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "set_dedup",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "1 21371\n",
+      "stderr": ""
+    },
+    {
+      "case": "set_dedup",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "set_dedup",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "7 26452\n",
+      "stderr": ""
+    },
+    {
+      "case": "set_dedup",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "set_dedup",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "7 39784\n",
+      "stderr": ""
+    },
+    {
+      "case": "set_dedup",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 186,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "set_dedup",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "186 119009\n",
+      "stderr": ""
+    },
+    {
+      "case": "set_dedup",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 186,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "set_dedup",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "186 138345\n",
+      "stderr": ""
+    },
+    {
+      "case": "alloc_short",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 24,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "alloc_short",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "24 11586\n",
+      "stderr": ""
+    },
+    {
+      "case": "alloc_short",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 24,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "alloc_short",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "24 14098\n",
+      "stderr": ""
+    },
+    {
+      "case": "alloc_short",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 3990,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "alloc_short",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "3990 17154\n",
+      "stderr": ""
+    },
+    {
+      "case": "alloc_short",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 3990,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "alloc_short",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "3990 17911\n",
+      "stderr": ""
+    },
+    {
+      "case": "alloc_short",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 108015796,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "alloc_short",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "108015796 129865\n",
+      "stderr": ""
+    },
+    {
+      "case": "alloc_short",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 108015796,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "alloc_short",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "108015796 133109\n",
+      "stderr": ""
+    },
+    {
+      "case": "alloc_retained",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 24,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "alloc_retained",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "24 11728\n",
+      "stderr": ""
+    },
+    {
+      "case": "alloc_retained",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 24,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "alloc_retained",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "24 13177\n",
+      "stderr": ""
+    },
+    {
+      "case": "alloc_retained",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 3990,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "alloc_retained",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "3990 14688\n",
+      "stderr": ""
+    },
+    {
+      "case": "alloc_retained",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 3990,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "alloc_retained",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "3990 23016\n",
+      "stderr": ""
+    },
+    {
+      "case": "alloc_retained",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 108015796,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "alloc_retained",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "108015796 117501\n",
+      "stderr": ""
+    },
+    {
+      "case": "alloc_retained",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 108015796,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "alloc_retained",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "108015796 173478\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_nested",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 104,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "mutate_nested",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "104 14199\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_nested",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 104,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "mutate_nested",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "104 16813\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_nested",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 1514,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "mutate_nested",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "1514 20937\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_nested",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 1514,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "mutate_nested",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "1514 27152\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_nested",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 33722,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "mutate_nested",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "33722 53672\n",
+      "stderr": ""
+    },
+    {
+      "case": "mutate_nested",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 33722,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "mutate_nested",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "33722 57821\n",
+      "stderr": ""
+    },
+    {
+      "case": "sort_int",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 29,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "sort_int",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "29 11408\n",
+      "stderr": ""
+    },
+    {
+      "case": "sort_int",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 29,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "sort_int",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "29 9775\n",
+      "stderr": ""
+    },
+    {
+      "case": "sort_int",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 2618,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "sort_int",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "2618 12820\n",
+      "stderr": ""
+    },
+    {
+      "case": "sort_int",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 2618,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "sort_int",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "2618 14404\n",
+      "stderr": ""
+    },
+    {
+      "case": "sort_int",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 1032393,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "sort_int",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "1032393 25314\n",
+      "stderr": ""
+    },
+    {
+      "case": "sort_int",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 1032393,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "sort_int",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "1032393 28938\n",
+      "stderr": ""
+    },
+    {
+      "case": "sort_records",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 495,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "sort_records",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "495 10232\n",
+      "stderr": ""
+    },
+    {
+      "case": "sort_records",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 495,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "sort_records",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "495 19247\n",
+      "stderr": ""
+    },
+    {
+      "case": "sort_records",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 38346,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "sort_records",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "38346 20827\n",
+      "stderr": ""
+    },
+    {
+      "case": "sort_records",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 38346,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "sort_records",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "38346 43374\n",
+      "stderr": ""
+    },
+    {
+      "case": "sort_records",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 14789643,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "sort_records",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "14789643 73712\n",
+      "stderr": ""
+    },
+    {
+      "case": "sort_records",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 14789643,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "sort_records",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "14789643 88365\n",
+      "stderr": ""
+    },
+    {
+      "case": "lox_eval",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 11,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "lox_eval",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "11 19509\n",
+      "stderr": ""
+    },
+    {
+      "case": "lox_eval",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 11,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "lox_eval",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "11 21546\n",
+      "stderr": ""
+    },
+    {
+      "case": "lox_eval",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 3052,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "lox_eval",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "3052 37373\n",
+      "stderr": ""
+    },
+    {
+      "case": "lox_eval",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 3052,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "lox_eval",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "3052 43662\n",
+      "stderr": ""
+    },
+    {
+      "case": "lox_eval",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 15694016,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-llvm",
+        "lox_eval",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "15694016 257959\n",
+      "stderr": ""
+    },
+    {
+      "case": "lox_eval",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 15694016,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/collections-my-qbe",
+        "lox_eval",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "15694016 314506\n",
+      "stderr": ""
+    },
+    {
+      "case": "bytes_scan",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 39,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "bytes_scan",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "39 966\n",
+      "stderr": ""
+    },
+    {
+      "case": "bytes_scan",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 39,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "bytes_scan",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "39 1567\n",
+      "stderr": ""
+    },
+    {
+      "case": "bytes_scan",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 1382,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "bytes_scan",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "1382 915\n",
+      "stderr": ""
+    },
+    {
+      "case": "bytes_scan",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 1382,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "bytes_scan",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "1382 1892\n",
+      "stderr": ""
+    },
+    {
+      "case": "bytes_scan",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 57495,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "bytes_scan",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "57495 1332\n",
+      "stderr": ""
+    },
+    {
+      "case": "bytes_scan",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 57495,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "bytes_scan",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "57495 2909\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_equal",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "string_equal",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0 1049\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_equal",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "string_equal",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "0 1941\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_equal",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 4,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "string_equal",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "4 1343\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_equal",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 4,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "string_equal",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "4 1928\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_equal",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 16,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "string_equal",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "16 1792\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_equal",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 16,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "string_equal",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "16 2069\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_search",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 9,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "string_search",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "9 1745\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_search",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 9,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "string_search",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "9 2594\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_search",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 28,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "string_search",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "28 3131\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_search",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 28,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "string_search",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "28 3631\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_search",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 376,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "string_search",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "376 5598\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_search",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 376,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "string_search",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "376 7053\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_split",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 1204,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "string_split",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "1204 7384\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_split",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 1204,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "string_split",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "1204 9033\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_split",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 11277,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "string_split",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "11277 12598\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_split",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 11277,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "string_split",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "11277 16734\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_split",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 228811,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "string_split",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "228811 115395\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_split",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 228811,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "string_split",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "228811 142029\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_join",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 1308,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "string_join",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "1308 4165\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_join",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 1308,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "string_join",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "1308 5509\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_join",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 12838,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "string_join",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "12838 6645\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_join",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 12838,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "string_join",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "12838 9186\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_join",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 285330,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "string_join",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "285330 19830\n",
+      "stderr": ""
+    },
+    {
+      "case": "string_join",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 285330,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "string_join",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "285330 24238\n",
+      "stderr": ""
+    },
+    {
+      "case": "int_parse",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 999999869,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "int_parse",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "999999869 1328\n",
+      "stderr": ""
+    },
+    {
+      "case": "int_parse",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 999999869,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "int_parse",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "999999869 2349\n",
+      "stderr": ""
+    },
+    {
+      "case": "int_parse",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 400,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "int_parse",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "400 1650\n",
+      "stderr": ""
+    },
+    {
+      "case": "int_parse",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 400,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "int_parse",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "400 2823\n",
+      "stderr": ""
+    },
+    {
+      "case": "int_parse",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 2006253,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "int_parse",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "2006253 3979\n",
+      "stderr": ""
+    },
+    {
+      "case": "int_parse",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 2006253,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "int_parse",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "2006253 5387\n",
+      "stderr": ""
+    },
+    {
+      "case": "int_format",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 159,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "int_format",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "159 8204\n",
+      "stderr": ""
+    },
+    {
+      "case": "int_format",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 159,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "int_format",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "159 11867\n",
+      "stderr": ""
+    },
+    {
+      "case": "int_format",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 1092,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "int_format",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "1092 12917\n",
+      "stderr": ""
+    },
+    {
+      "case": "int_format",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 1092,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "int_format",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "1092 11656\n",
+      "stderr": ""
+    },
+    {
+      "case": "int_format",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 6683,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "int_format",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "6683 17695\n",
+      "stderr": ""
+    },
+    {
+      "case": "int_format",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 6683,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "int_format",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "6683 20686\n",
+      "stderr": ""
+    },
+    {
+      "case": "word_count",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 2379,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "word_count",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "2379 29647\n",
+      "stderr": ""
+    },
+    {
+      "case": "word_count",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 2379,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "word_count",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "2379 32095\n",
+      "stderr": ""
+    },
+    {
+      "case": "word_count",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 15733,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "word_count",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "15733 45436\n",
+      "stderr": ""
+    },
+    {
+      "case": "word_count",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 15733,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "word_count",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "15733 77126\n",
+      "stderr": ""
+    },
+    {
+      "case": "word_count",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 1076884,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "word_count",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "1076884 283151\n",
+      "stderr": ""
+    },
+    {
+      "case": "word_count",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 1076884,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "word_count",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "1076884 337613\n",
+      "stderr": ""
+    },
+    {
+      "case": "csv_aggregate",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 1510,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "csv_aggregate",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "1510 58367\n",
+      "stderr": ""
+    },
+    {
+      "case": "csv_aggregate",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 1510,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "csv_aggregate",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "1510 76544\n",
+      "stderr": ""
+    },
+    {
+      "case": "csv_aggregate",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 21679,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "csv_aggregate",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "21679 183636\n",
+      "stderr": ""
+    },
+    {
+      "case": "csv_aggregate",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 21679,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "csv_aggregate",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "21679 240899\n",
+      "stderr": ""
+    },
+    {
+      "case": "csv_aggregate",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 6658645,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "csv_aggregate",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "6658645 2199884\n",
+      "stderr": ""
+    },
+    {
+      "case": "csv_aggregate",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 6658645,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "csv_aggregate",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "6658645 2399091\n",
+      "stderr": ""
+    },
+    {
+      "case": "json_transform",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-llvm",
+      "expected": 7450,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "json_transform",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "7450 39184\n",
+      "stderr": ""
+    },
+    {
+      "case": "json_transform",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "arm": "my-qbe",
+      "expected": 7450,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "json_transform",
+        "2",
+        "1",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "7450 66158\n",
+      "stderr": ""
+    },
+    {
+      "case": "json_transform",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-llvm",
+      "expected": 53402,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "json_transform",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "53402 227181\n",
+      "stderr": ""
+    },
+    {
+      "case": "json_transform",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "arm": "my-qbe",
+      "expected": 53402,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "json_transform",
+        "3",
+        "7",
+        "42"
+      ],
+      "status": 0,
+      "stdout": "53402 424153\n",
+      "stderr": ""
+    },
+    {
+      "case": "json_transform",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-llvm",
+      "expected": 1390987,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-llvm",
+        "json_transform",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "1390987 4327274\n",
+      "stderr": ""
+    },
+    {
+      "case": "json_transform",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "arm": "my-qbe",
+      "expected": 1390987,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/.mylang-cache/goal110-unique-capture-debug/runner/bin/text-my-qbe",
+        "json_transform",
+        "17",
+        "31",
+        "999983"
+      ],
+      "status": 0,
+      "stdout": "1390987 8766752\n",
+      "stderr": ""
+    }
+  ],
+  "limits": "Untimed oracle checks only. Kernel times printed by guests are retained as raw output and never used to infer performance.",
+  "status": "passed",
+  "execution_count": 240
+}

@@ -133,8 +133,6 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, owned_source);
     defer compilation.deinit();
     try compilation.check();
-    const dump = try compilation.dump(allocator);
-    defer allocator.free(dump);
     var discovery = try language.duplicates.discover(allocator, compilation.program.?, .{});
     defer discovery.deinit();
 }

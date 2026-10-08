@@ -1,0 +1,66 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T09:25:12.314389+00:00",
+  "rows": [
+    {
+      "binary": "compute-my-llvm",
+      "allocated_sections": 26,
+      "before_sha256": "eb14112d5afff7b7533c6f4b2e8611b67da03b49c9e1d8e211d51f90742466a0",
+      "after_sha256": "0f6b9922882927c75ac4ec6fd8f0b280f590c46a16dfc29420c2180546b07982",
+      "mapped_header_only_differences": [
+        40
+      ]
+    },
+    {
+      "binary": "compute-my-qbe",
+      "allocated_sections": 26,
+      "before_sha256": "df67bc74aeaec2fc73d17a3ccf9ffb4ee28defcfccfb26761f8f66d9d275b710",
+      "after_sha256": "5eea7635b990ae49766c41e370038b7e746a9bd5cef568de025968e8ea9d0f36",
+      "mapped_header_only_differences": [
+        40
+      ]
+    },
+    {
+      "binary": "collections-my-llvm",
+      "allocated_sections": 26,
+      "before_sha256": "02e90fd182b34d87d33b9f9b3cdbadc9bcf2025b9a21e2bb2d1ceac869545efb",
+      "after_sha256": "fcfdeed706101254dd3dcff2dbf97cc41cfa880c6820398feeaa5c93846e6137",
+      "mapped_header_only_differences": [
+        40
+      ]
+    },
+    {
+      "binary": "collections-my-qbe",
+      "allocated_sections": 26,
+      "before_sha256": "6b7cd8aaa1c8bfd0bdcb921f6318c2d3202c38d7b25f62be60e0ed5d017ca48d",
+      "after_sha256": "a21a356e4e20e55445bcd7fb3e215fc4154813558cb20b81ebddeed959bab1da",
+      "mapped_header_only_differences": [
+        40
+      ]
+    },
+    {
+      "binary": "text-my-llvm",
+      "allocated_sections": 26,
+      "before_sha256": "4ede38a119076cae2ef8e2a76d297b14faf60d9d074ae7f5b954e8d5fbc72f73",
+      "after_sha256": "144a1fd0709c7bb6e9545afe1776ae3ace3ce3d7b29dcee2d5ef391875fbc76c",
+      "mapped_header_only_differences": [
+        40
+      ]
+    },
+    {
+      "binary": "text-my-qbe",
+      "allocated_sections": 26,
+      "before_sha256": "f87f3741c5b689f23676a584c2558f3c1e0ff8c834c19982d83c188f902c4718",
+      "after_sha256": "73aeabb8c15db75dae8b3acfda59bdd1de75b0a82ba2815cd657c870fc8da719",
+      "mapped_header_only_differences": [
+        40
+      ]
+    }
+  ],
+  "script_sha256": "f9512271f578f88c2cb09cda1ea84c7306f63b497c7129ed7de12188b3e5b07d",
+  "limitations": [
+    "Static identity of allocated sections, program headers and executable LOAD bytes; no new timing.",
+    "Mapped ELF section-table offsets differ; debug/file metadata are not runtime performance evidence.",
+    "Prior passing targets remain stale until normal integrated confirmation."
+  ]
+}

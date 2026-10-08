@@ -1,0 +1,11 @@
+source_commit=7bb4b90bdd76c77980cd8e3463c90ddd26befee0
+$ scripts/build-slot.sh gate -- bash -c '"$@"; result=$?; exit "$result"' -- scripts/build-slot.sh build -- python3 experiments/new-core-s3-20261006/wave-a/exclusive_core.py -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/experiments/new-core-s5-20261007/s5-0/qualify-01/install-core.seconds zig build core --summary all
+core-exclusive: all 3 build slots held; other-build wait=460.488s; gate wrapper excludes gate execution
+Build Summary: 6/6 steps succeeded
+core success
++- install mylang-core cached
+   +- compile exe mylang-core debug native cached 7ms MaxRSS:42M
+      +- run exe qbe-build-assets (qbe_build_assets) cached
+      |  +- compile exe qbe-build-assets debug native cached 6ms MaxRSS:42M
+      +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:43M
+

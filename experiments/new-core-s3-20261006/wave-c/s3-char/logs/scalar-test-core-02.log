@@ -1,0 +1,29 @@
+test-core
++- run test
+   +- compile test debug native
+      +- options
+         +- compile exe mylang-core debug native 1 errors
+src/core/emit_text.zig:56:40: error: expected type 'emit_text.scalarIndex__struct_56178', found 'emit_text.bounds__struct_55035'
+    const index = scalarIndex(context, access) orelse return context.trapIf(out, outside, site, try context.value(access.offset), length);
+                                       ^~~~~~
+src/core/emit_text.zig:47:112: note: struct declared here
+fn bounds(comptime Context: type, comptime Output: type, context: Context, out: Output, inst: ir.Inst, access: struct { receiver: ir.Ref, offset: ir.Ref }) Error!void {
+                                                                                                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/core/emit_text.zig:71:42: note: struct declared here
+fn scalarIndex(context: anytype, access: struct { receiver: ir.Ref, offset: ir.Ref }) ?struct { ref: ir.Ref, normalized: bool } {
+                                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/core/emit_text.zig:71:42: note: parameter type declared here
+referenced by:
+    instruction__anon_44380: src/core/emit_text.zig:13:23
+    instruction: src/core/emit_llvm.zig:1204:147
+    11 reference(s) hidden; use '-freference-trace=13' to see all references
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang -Mroot=src/core/main.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -ODebug -Mruntime_contract=src/runtime_contract.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name mylang-core --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 0/5 steps succeeded (1 failed)
+test-core transitive failure
++- run test transitive failure
+   +- compile test debug native transitive failure
+      +- options transitive failure
+         +- compile exe mylang-core debug native 1 errors
+

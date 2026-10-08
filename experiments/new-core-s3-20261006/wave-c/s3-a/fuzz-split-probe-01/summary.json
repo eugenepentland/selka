@@ -1,0 +1,8 @@
+{
+  "qualified": false,
+  "seed": 20261006,
+  "cases": 3,
+  "compared": 0,
+  "mismatch": 0,
+  "error": "nonzero command: {'command': ['/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/oracle/mylang', 'build', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/experiments/new-core-s3-20261006/wave-c/s3-a/fuzz-split-probe-01/0000/split_0000.my', '-o', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/fuzz-split-probe-01/old', '--release', '--cache-dir', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/.mylang-cache/s3-a/fuzz-split-probe-01/old-cache'], 'status': 1, 'stdout': '', 'stderr': 'split_0000.my:31:16: error[E_BYTE_ESCAPE]: unknown byte escape\\n      original = \"long00\u00e9abcdefghijklmnop\\\\nlong07\u00e9abcdefghijklmnop\\\\tlong08\u00e9abcdefghijklmnop\\\\tlong07\u00e9abcdefghijklmnop\\\\flong07\u00e9abcdefghijklmnop\\\\f\"\\n                 ^\\n'}"
+}

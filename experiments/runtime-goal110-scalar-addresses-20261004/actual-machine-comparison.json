@@ -1,0 +1,38 @@
+{
+  "kind": "PRE-PRODUCTION-uncommitted-hybrid-address-actual-LLVM-O3-fullLTO-machine-comparison",
+  "source_revision_at_execution": "a29aa6a9ade06c09b949f42de50bbd14d9cbaf02",
+  "production_patch_sha256": "896957f402c735e72b6d8e2f2ef74ac567c4291345b2bc464ad1fff596102eb5",
+  "frozen_SSA_identical_units": 12,
+  "entire_text_identical": true,
+  "entry_disassembly_identical_except_filename": true,
+  "artifact_hashes_preserved_during_read_only_inspection": true,
+  "ELF_reader_sha256": "c4446e8e28f0717f8acc8bb841c51ca65c80d140c78119af0526587da67da9c0",
+  "arms": [
+    {
+      "arm": "control",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-text-rf-host-20261004/.mylang-cache/goal110-join-objcopy-recovery-20261004/runner/bin/compute-my-llvm",
+      "sha256": "4dd2666d4377d494db144e43b03fa8e92e2f8452797690f0ec40fe7aac193e67",
+      "entry_bytes": 20050,
+      "text_bytes": 169554,
+      "text_sha256": "9b5ea3e04a129179947ba072eb141e2b6a6ce5fee7849671bf3501da1185ca85",
+      "entry_instructions": 4148,
+      "frame_prologue": [
+        "1029c4a:\tsub    $0x2d8,%rsp"
+      ],
+      "stack_access_instructions": 1000
+    },
+    {
+      "arm": "hybrid",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/.mylang-cache/goal110-scalar-addresses-diagnostic/compute-my-llvm",
+      "sha256": "4dd2666d4377d494db144e43b03fa8e92e2f8452797690f0ec40fe7aac193e67",
+      "entry_bytes": 20050,
+      "text_bytes": 169554,
+      "text_sha256": "9b5ea3e04a129179947ba072eb141e2b6a6ce5fee7849671bf3501da1185ca85",
+      "entry_instructions": 4148,
+      "frame_prologue": [
+        "1029c4a:\tsub    $0x2d8,%rsp"
+      ],
+      "stack_access_instructions": 1000
+    }
+  ]
+}

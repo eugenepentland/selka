@@ -1,0 +1,11 @@
+guardian: run-all: whole-tree run — --full was requested
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10342 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (error-path-test)
+guardian: failures grouped by check (1):
+  error-path-test (1 finding)
+    - src/core/frontend_test.zig:85: new returned error — no test names error `ExpectedSourceError`
+      fix: add (or extend) a test that names the error identifier — `try testing.expectError(error.X, …)` is enough — in this same change.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

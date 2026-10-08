@@ -1,0 +1,17 @@
+$ scripts/build-slot.sh build /home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check all . --gate
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 2/88 failed (spec, line-length)
+guardian: failures grouped by check (2):
+  spec (2 findings)
+    - unverified: New core S4 values - **NEW-CORE-NESTED-LENGTH-S4-1.** A list value whose child lists all have the same immutable parameter or constant length may prove nested bounds from that length. Push, replacement, pop, copy and phi facts preserve this only when every child agrees; changed child lengths invalidate it. Verify builds assert each loaded child's symbolic length while that child is live.
+    - unlinked tag: NEW-CORE-NESTED-LENGTH-S4-1 in src/core/value_facts_test.zig
+  line-length (1 finding)
+    - src/core/emit_llvm.zig:1128: line is 243 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+
+exit=1
+elapsed_seconds=17.298774

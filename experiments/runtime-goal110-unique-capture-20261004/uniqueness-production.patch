@@ -1,0 +1,385 @@
+commit 97f6686ea44455c36cbd374f72ea98a9174f9a70
+Author:     Eugene Pentland <epentland@2yfv.com>
+AuthorDate: Sun Oct 4 05:14:16 2026 +0000
+Commit:     Eugene Pentland <epentland@2yfv.com>
+CommitDate: Sun Oct 4 05:14:16 2026 +0000
+
+    perf: omit duplicate checked scalar-list receiver capture
+
+diff --git a/SPEC.md b/SPEC.md
+index 1931aa9d..a7fad86f 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -1658,6 +1658,8 @@ host failure in one worker leaves the units the other workers hold running.
+ 
+ - [RC-NONHELD-CAPTURE-1] A bounded exact named-source load/store proof may refine the function-wide possibility of terminal held list tokens only when canonical publication, all writers and the independent whole-local empty-token lifetime are established. Parameters, repeated source definitions, pattern/ref writers, borrowed entries and uncertain inputs retain normal handling. Actual iterator/view holds, source owners, clone checks, semantic history, callback/trap behavior and physical counters remain unchanged.
+ 
++- [RC-UNIQUE-CAPTURE-1] Ordinary RC may omit only the second uniqueness check at an adjacent scalar-list mutation receiver capture when the exact first check prepares the same named ordinary root and finalized independent input and whole-local proofs establish a raw load and physically empty capture. Both instructions retain their positions and accounting; the first check retains its failure provenance. Alternate entries, aliases, descriptor or storage mismatches, publication, hidden physical effects, arena programs and speculative paths keep ordinary lowering. GC, RC counting and RC site instrumentation retain all original checks and events.
++
+ - [RC-PLAIN-RECORD-WRITE-1] Experimental RC may publish a direct plain scalar field into an initialized caller-owned inline record when the complete RHS precedes an exact effect-free capture/update/store-back tail. Every use and definition of the compiler capture must prove its token stays empty, including across backedges. Only the original final store publishes the scalar; managed siblings retain their existing owners and marks, and any intervening step trap leaves the record unchanged. Unknown aliases, planned ownership effects, managed replacements, unique contents and live views retain general lowering.
+ - [RC-NAMED-RECORD-WRITE-1] The same exact scalar tail may address a private named inline record only after a bounded whole-root CFG proof converges to initialized ordinary ownership at its entry. Canonical definitions, rebindings, planned cleanup and arena watermarks participate in the proof. Every mutable reference must have one traced direct typed caller-storage consumer; unknown publishers, escaping references, moves, held or borrowed homes and unsupported effects retain general lowering. The original final store remains the only scalar publication.
+ 
+diff --git a/src/qbe_rc_locals.zig b/src/qbe_rc_locals.zig
+index 8071fa1a..53664f03 100644
+--- a/src/qbe_rc_locals.zig
++++ b/src/qbe_rc_locals.zig
+@@ -73,6 +73,8 @@ fn store(comptime E: type, self: *E, index: usize, operand: usize) Error!void {
+         try receiverCleanup(E, self, index, operand);
+         if (@import("qbe_rc_dictionary_tail.zig").store(E, self, index)) {
+             try self.print(" # RC-DICTIONARY-TAIL-1 local {d} root {d}\n", .{ index, parent });
++        } else if (@import("qbe_rc_unique_capture.zig").store(E, self, index, parent)) {
++            try self.print(" # RC-UNIQUE-CAPTURE-1 local {d} root {d}\n", .{ index, parent });
+         } else try @import("qbe_rc_unique.zig").local(E, self, .{ .local = parent });
+         const value = try self.load("l", parent);
+         try @import("qbe_cow.zig").Lower(E).borrowReceiver(self, index, value);
+diff --git a/src/qbe_rc_unique_capture.zig b/src/qbe_rc_unique_capture.zig
+new file mode 100644
+index 00000000..2d707415
+--- /dev/null
++++ b/src/qbe_rc_unique_capture.zig
+@@ -0,0 +1,97 @@
++//! One raw receiver capture cannot invalidate its immediately preceding check.
++const cow = @import("cow_plan.zig");
++const frame = @import("qbe_rc_frame.zig");
++const runtime = @import("runtime_mode.zig");
++
++/// RC-UNIQUE-CAPTURE-1: keep the first exact root check and omit only the
++/// duplicate at its adjacent empty receiver store. Unknown physical effects,
++/// incoming edges, counted instrumentation and speculative emission refuse.
++pub fn store(comptime E: type, self: *E, local: usize, parent: usize) bool {
++    if (!runtime.enabled() or runtime.counting() or self.arenas) return false;
++    if (self.version != null or self.original != null or self.fused != null) return false;
++    const state = frame.get(E, self) orelse return false;
++    if (state.readonly or state.contract.result == .borrowed) return false;
++    if (!frame.emptyLocal(E, self, local)) return false;
++    if (!@import("qbe_rc_inert_receiver.zig").emptyLocal(E, self, local)) return false;
++    const plan = self.cow.?.plan;
++    if (local >= plan.aliases.len or plan.aliases[local] != parent) return false;
++    // This separate input proof fixes the descriptor, named ordinary root,
++    // adjacent producer, single definition and exact physical storage.
++    if (!@import("qbe_rc_nonheld_capture.zig").proven(E, self, local, self.pc)) return false;
++    const previous = self.function.scope.instructions[self.pc - 1].op;
++    if (@backingInt(previous.load_local) != parent) return false;
++    // A physical hoist can suppress localCall despite a semantic unique site.
++    // This proof deliberately requires an actual first check at the producer.
++    if (hoisted(plan, self.pc - 1, parent)) return false;
++    if (!quiet(E, self, self.pc - 1, parent, true) or !quiet(E, self, self.pc, parent, false)) return false;
++    // The existing empty-local proof makes receiverCleanup a no-op: the
++    // raw load acquired no operand token, and the target never owns one.
++    return true;
++}
++
++fn hoisted(plan: cow.Plan, pc: usize, parent: usize) bool {
++    for (plan.loops.entries, 0..) |entries, head| {
++        if (pc <= head or pc > plan.loops.back[head]) continue;
++        for (entries) |entry| if (!entry.elements and entry.local == parent) return true;
++    }
++    return false;
++}
++
++fn quiet(comptime E: type, self: *E, pc: usize, parent: usize, first: bool) bool {
++    const state = self.cow.?;
++    const site = state.plan.at(pc);
++    if (!siteQuiet(site, parent, first) or state.plan.entry(pc).len != 0) return false;
++    if (state.captures[pc].begin != cow.none or state.captures[pc].active != cow.none) return false;
++    const records = state.rc.?.plan.records;
++    for (records.transfers) |proof| if (proof.intercepts(pc)) return false;
++    for (records.writes) |proof| if (pc >= proof.start and pc < proof.start + 8) return false;
++    for (records.reads) |proof| if (pc >= proof.start and pc <= proof.end) return false;
++    return true;
++}
++
++fn siteQuiet(site: cow.Site, parent: usize, first: bool) bool {
++    if (site.capture or site.fill or site.unique_field != null) return false;
++    if (site.shares.len != 0 or site.read_captures.len != 0) return false;
++    if (!first) return site.unique.len == 0;
++    return site.unique.len == 1 and site.unique[0].local == parent and site.unique[0].alias == cow.none;
++}
++
++// spec-case: RC-UNIQUE-CAPTURE-1
++test "RC duplicate capture requires one exact root check and no publication" {
++    const t = @import("std").testing;
++    const check = [_]cow.Unique{.{ .local = 2 }};
++    var site: cow.Site = .{ .unique = &check };
++    try t.expect(siteQuiet(site, 2, true));
++    try t.expect(!siteQuiet(site, 3, true));
++    try t.expect(!siteQuiet(site, 2, false));
++    site.unique = &.{.{ .local = 2, .alias = 1 }};
++    try t.expect(!siteQuiet(site, 2, true));
++    site.unique = &.{ .{ .local = 2 }, .{ .local = 2 } };
++    try t.expect(!siteQuiet(site, 2, true));
++    site.unique = &.{};
++    try t.expect(siteQuiet(site, 2, false));
++    site.capture = true;
++    try t.expect(!siteQuiet(site, 2, false));
++    site = .{ .unique = &check, .fill = true };
++    try t.expect(!siteQuiet(site, 2, true));
++    site = .{ .unique = &check, .shares = &.{0} };
++    try t.expect(!siteQuiet(site, 2, true));
++    site = .{ .unique = &check, .read_captures = &.{0} };
++    try t.expect(!siteQuiet(site, 2, true));
++    site = .{ .unique = &check, .unique_field = .{ .parent = 2, .step = .field, .base = 0, .fill = 2 } };
++    try t.expect(!siteQuiet(site, 2, true));
++}
++
++// spec-case: RC-UNIQUE-CAPTURE-1
++test "RC duplicate capture refuses producer checks suppressed by a physical hoist" {
++    const t = @import("std").testing;
++    var entry = [_]cow.Hoisted{.{ .local = 2, .elements = false }};
++    const plan: cow.Plan = .{ .loops = .{ .entries = &.{ &.{}, &entry, &.{}, &.{}, &.{} }, .back = &.{ cow.none, 3, cow.none, cow.none, cow.none } } };
++    try t.expect(!hoisted(plan, 1, 2));
++    try t.expect(hoisted(plan, 2, 2));
++    try t.expect(hoisted(plan, 3, 2));
++    try t.expect(!hoisted(plan, 4, 2));
++    try t.expect(!hoisted(plan, 2, 3));
++    entry[0].elements = true;
++    try t.expect(!hoisted(plan, 2, 2));
++}
+diff --git a/src/qbe_rc_unique_capture_test.zig b/src/qbe_rc_unique_capture_test.zig
+new file mode 100644
+index 00000000..fa2df037
+--- /dev/null
++++ b/src/qbe_rc_unique_capture_test.zig
+@@ -0,0 +1,230 @@
++//! Adjacent receiver captures preserve snapshots and uncertain held inputs.
++const std = @import("std");
++const compiler = @import("compiler.zig");
++const runtime = @import("runtime_mode.zig");
++const bytecode = @import("bytecode.zig");
++const t = std.testing;
++const Manifest = struct { functions: []const struct { name: []const u8, il: []const u8 } };
++const marker = "# RC-UNIQUE-CAPTURE-1";
++const source =
++    \\def plain(times: int, index: int) -> int:
++    \\    values = [7, 11]
++    \\    for at in range(times):
++    \\        next_value = values[index] + at + 1
++    \\        values[index] = next_value
++    \\    return values[0] + values[1]
++    \\def once(delta: int, index: int) -> int:
++    \\    values = [7, 11]
++    \\    flags = [True, False]
++    \\    values[index] = delta
++    \\    return values[0] + values[1] + (1 if flags[0] else 0)
++    \\def snapshot(index: int) -> int:
++    \\    values = [7, 11]
++    \\    saved = values
++    \\    values[index] = 13
++    \\    return saved[index] * 100 + values[index]
++    \\def repeat(times: int, index: int, shared: bool) -> int:
++    \\    values = [7, 11]
++    \\    total = 0
++    \\    for at in range(times):
++    \\        if shared:
++    \\            saved = values
++    \\            values[index] = (values[index] + at + 1) % 1000003
++    \\            total += saved[index] + values[index]
++    \\            saved = []
++    \\        else:
++    \\            values[index] = (values[index] + at + 1) % 1000003
++    \\            total += values[index]
++    \\    return total + values[0] + values[1]
++    \\def change(values: mut list[int]) -> int:
++    \\    values.clear()
++    \\    values.append(17)
++    \\    return 0
++    \\def callback() -> int:
++    \\    values = [7, 11]
++    \\    values[change(mut values)] = 13
++    \\    return values[0]
++    \\def rebound() -> int:
++    \\    values = [7, 11]
++    \\    values = [19, 23]
++    \\    values[0] = 13
++    \\    return values[0] + values[1]
++    \\def held(groups: list[list[int]]) -> int:
++    \\    total = 0
++    \\    for element in groups:
++    \\        values = element
++    \\        values[0] = 13
++    \\        total += values[0]
++    \\    return total + groups[0][0]
++    \\def managed() -> int:
++    \\    values = [[7], [11]]
++    \\    values[0] = [13]
++    \\    return values[0][0]
++    \\def main() -> int:
++    \\    return plain(2, -1)
++;
++
++fn emitted(text: []const u8) !std.json.Parsed(Manifest) {
++    var compilation = try compiler.Compilation.init(t.allocator, "unique_capture.my", text);
++    defer compilation.deinit();
++    const il = try compilation.emitQbe(t.allocator);
++    defer t.allocator.free(il);
++    return std.json.parseFromSlice(Manifest, t.allocator, il, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
++}
++
++fn body(manifest: Manifest, name: []const u8) ![]const u8 {
++    for (manifest.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.il;
++    return error.TestUnexpectedResult;
++}
++
++// spec: RC-UNIQUE-CAPTURE-1
++test "RC duplicate capture removes only the second checked named-root guard" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var result = try emitted(source);
++    defer result.deinit();
++    const cases = [_]struct { name: []const u8, copies: usize }{
++        .{ .name = "once", .copies = 1 },     .{ .name = "snapshot", .copies = 1 },
++        .{ .name = "repeat", .copies = 2 },   .{ .name = "plain", .copies = 0 },
++        .{ .name = "callback", .copies = 0 }, .{ .name = "rebound", .copies = 0 },
++        .{ .name = "held", .copies = 0 },     .{ .name = "managed", .copies = 0 },
++    };
++    for (cases) |case| try checkAdmission(try body(result.value, case.name), case.copies);
++}
++
++fn checkAdmission(il: []const u8, copies: usize) !void {
++    try t.expectEqual(copies, std.mem.count(u8, il, marker));
++    if (copies == 0) return;
++    const at = std.mem.indexOf(u8, il, marker).?;
++    try t.expect(std.mem.indexOf(u8, il[0..at], "$myl_qbe_rc_unique_local") != null);
++    try t.expect(std.mem.indexOf(u8, il[at..], "myl_qbe_fail_normalized_index_bounds") != null);
++}
++
++// spec-case: RC-UNIQUE-CAPTURE-1
++test "RC duplicate capture preserves counting site and collector emission" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    for ([_]runtime.Selection{ .rc_counting, .rc_sites, .gc }) |selection| {
++        runtime.set(selection);
++        var result = try emitted(source);
++        defer result.deinit();
++        try t.expect(std.mem.indexOf(u8, try body(result.value, "once"), marker) == null);
++    }
++}
++
++// spec-case: RC-UNIQUE-CAPTURE-1
++test "RC duplicate capture refuses an alternate entry into the adjacent store" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var compilation = try compiler.Compilation.init(t.allocator, "middle_capture.my", source);
++    defer compilation.deinit();
++    try compilation.emit();
++    const function = try checkedFunction(&compilation, "once");
++    const original = function.scope.instructions;
++    const code = try t.allocator.alloc(bytecode.Instruction, original.len + 2);
++    defer t.allocator.free(code);
++    @memcpy(code[0..original.len], original);
++    var target: ?usize = null;
++    var parent: ?@FieldType(bytecode.Instruction, "op") = null;
++    const locals = function.scope.locals;
++    for (original, 0..) |instruction, pc| {
++        if (instruction.op != .store_local or pc == 0 or code[pc - 1].op != .load_local) continue;
++        const local = @backingInt(instruction.op.store_local);
++        if (!locals[local].usage.temporary or !locals[local].ty.isAggregate()) continue;
++        target = pc;
++        parent = code[pc - 1].op;
++        break;
++    }
++    const at = target orelse return error.TestUnexpectedResult;
++    // Even an unreachable extra predecessor conservatively refuses the proof.
++    // Its one-value stack matches the store; the original path is untouched.
++    code[original.len] = .{ .span = original[at].span, .op = parent.? };
++    code[original.len + 1] = .{ .span = original[at].span, .op = .{ .jump = at } };
++    function.scope.instructions = code;
++    const il = try compilation.emitQbe(t.allocator);
++    defer t.allocator.free(il);
++    var result = try std.json.parseFromSlice(Manifest, t.allocator, il, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
++    defer result.deinit();
++    try t.expect(std.mem.indexOf(u8, try body(result.value, "once"), marker) == null);
++}
++
++fn checkedFunction(compilation: *compiler.Compilation, name: []const u8) !*bytecode.Function {
++    for (@constCast(compilation.code.?.functions)) |*function|
++        if (std.mem.eql(u8, function.name, name)) return function;
++    return error.TestUnexpectedResult;
++}
++
++// spec-case: RC-UNIQUE-CAPTURE-1
++test "RC duplicate capture refuses a mismatched physical descriptor" {
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    var compilation = try compiler.Compilation.init(t.allocator, "descriptor_capture.my", source);
++    defer compilation.deinit();
++    try compilation.emit();
++    const function = try checkedFunction(&compilation, "once");
++    try mismatchDescriptor(function);
++    const text = try compilation.emitQbe(t.allocator);
++    defer t.allocator.free(text);
++    var result = try std.json.parseFromSlice(Manifest, t.allocator, text, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
++    defer result.deinit();
++    try t.expect(std.mem.indexOf(u8, try body(result.value, "once"), marker) == null);
++}
++
++fn mismatchDescriptor(function: *bytecode.Function) !void {
++    const locals = @constCast(function.scope.locals);
++    const other = try flagsType(function);
++    for (function.scope.instructions, 0..) |instruction, pc| {
++        if (instruction.op != .store_local or pc == 0 or function.scope.instructions[pc - 1].op != .load_local) continue;
++        const local = @backingInt(instruction.op.store_local);
++        if (!locals[local].usage.temporary or !locals[local].ty.isAggregate()) continue;
++        // The two pointer-width collections deliberately disagree on their
++        // element descriptor. This forged input must never earn a certificate.
++        locals[local].ty = other;
++        return;
++    }
++    return error.TestUnexpectedResult;
++}
++
++fn flagsType(function: *bytecode.Function) !@import("typed.zig").Type {
++    for (function.scope.locals) |local| if (std.mem.eql(u8, local.name, "flags")) return local.ty;
++    return error.TestUnexpectedResult;
++}
++
++// spec-case: RC-UNIQUE-CAPTURE-1
++test "RC duplicate capture preserves native snapshots held inputs traps and budgets" {
++    const native = @import("native_execute.zig");
++    const saved = runtime.get();
++    defer runtime.set(saved);
++    runtime.set(.rc);
++    const prefix = comptime source[0..std.mem.indexOf(u8, source, "def main(").?];
++    const input = prefix ++
++        \\def main(args: list[str], out: Stream) -> int:
++        \\    out.print(41)
++        \\    if args[0] == "bounds":
++        \\        return once(13, 2)
++        \\    if args[0] == "held":
++        \\        return held([[7, 11], [19, 23]])
++        \\    if args[0] == "snapshot":
++        \\        return snapshot(-1)
++        \\    return once(13, 0)
++    ;
++    var compilation = try compiler.Compilation.init(t.allocator, "native_capture.my", input);
++    defer compilation.deinit();
++    for ([_][]const u8{ "once", "snapshot", "held", "bounds" }, [_]i64{ 25, 1113, 33, 0 }) |name, value| {
++        const options: native.Options = .{ .arguments = &.{ "--", name } };
++        const ordinary = try native.runWithOptions(&compilation, options);
++        const fast = try native.runUnaccounted(&compilation, options);
++        try t.expectEqualDeep(ordinary, fast);
++        try t.expectEqual(value, fast.value);
++        try t.expectEqualStrings("41\n", fast.stdout);
++        try t.expectEqual(std.mem.eql(u8, name, "bounds"), fast.failed);
++    }
++    const limited = try native.runWithOptions(&compilation, .{ .arguments = &.{ "--", "once" }, .max_steps = 1 });
++    try t.expectEqualStrings("R_STEP_LIMIT", limited.trap.code);
++    const stressed = try native.runWithOptions(&compilation, .{ .arguments = &.{ "--", "held" }, .gc_stress = true });
++    try t.expectEqual(@as(i64, 33), stressed.value);
++    try t.expect(!stressed.failed);
++}
+diff --git a/src/root_test.zig b/src/root_test.zig
+index 4de5de3b..e669f0cf 100644
+--- a/src/root_test.zig
++++ b/src/root_test.zig
+@@ -330,6 +330,7 @@ test {
+     _ = @import("qbe_rc_journal_test.zig");
+     _ = @import("qbe_rc_empty_locals_test.zig");
+     _ = @import("qbe_rc_nonheld_capture_test.zig");
++    _ = @import("qbe_rc_unique_capture_test.zig");
+     _ = @import("qbe_rc_dictionary_tail_test.zig");
+     _ = @import("qbe_rc_dictionary_key_test.zig");
+     _ = @import("qbe_rc_dictionary_loop_test.zig");

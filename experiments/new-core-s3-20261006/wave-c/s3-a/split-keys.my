@@ -1,0 +1,29 @@
+def counts(text: str) -> dict[str, int]:
+    result: dict[str, int] = {}
+    for word in text.split():
+        result[word] = result[word] + 1 if word in result else 1
+    return result
+
+def rebound(text: str) -> dict[str, int]:
+    result: dict[str, int] = {}
+    for word in text.split():
+        text = "changed"
+        result[word] = 1
+        if len(result) == 2:
+            continue
+        if len(result) == 3:
+            break
+    return result
+
+def main(out: Stream) -> int:
+    empty = counts(" \t\n\r\x0b\x0c")
+    unicode = counts("é\t😀\né\rnaïve\x0bcafé\x0cx\u00a0y")
+    many = counts(" ".join(["alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda", "mu", "alpha", "abcdefghijklmnopabcdefghijklmnop", "abcdefghijklmnopabcdefghijklmnop"]))
+    saved = many
+    many["alpha"] = 9
+    snapshot = rebound(" ".join(["a", "b", "c", "d"]))
+    out.print(len(empty), len(unicode), unicode["é"], unicode["x\u00a0y"], unicode["😀"])
+    out.print(len(saved), saved["alpha"], many["alpha"], saved["abcdefghijklmnopabcdefghijklmnop"])
+    out.print(len(snapshot), snapshot["a"], snapshot["b"], snapshot["c"])
+    return 0
+

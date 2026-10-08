@@ -1,0 +1,9 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10258 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s3-integration cb494086d] Let S3 fuzz builds overlap the final gate through existing slots
+ 3 files changed, 19 insertions(+), 6 deletions(-)
+ create mode 100644 experiments/new-core-s3-20261006/wave-x/integration/parallel-gate-overlap-preflight-run01/summary.json

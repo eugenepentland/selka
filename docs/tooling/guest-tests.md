@@ -2,42 +2,71 @@
 
 `mylang test` is the compiler's own runner for tests written in the language. It
 checks the project, finds the exported functions whose names begin with `test_`,
-builds them natively and runs each one in its own process. Cases are configured
-with one JSON file rather than with a framework inside the language, and the
-runner itself needs no Python. Its builds use QBE in either mode (`Debug` by
-default) and stay Python-free; `mylang test --release` builds the LLVM release
-path (ReleaseFast, `-O3` with LTO) and therefore needs the installed adapter,
-exactly as `mylang build --release` does. The
-design record is
-[the guest test workflow](../experiments/guest-tests.md).
+builds them with the compiler's core (Core IR, LLVM, `zig cc`) and runs each one
+in its own process. Cases are configured with one JSON file rather than with a
+framework inside the language, and the runner needs no Python. A run builds a
+debug program by default; `--release` builds the optimized one, as
+`mylang build --release` does, and both keep every overflow, cast and bounds
+check. The design record is [the guest test workflow](../experiments/guest-tests.md).
 
 ## `mylang test`
 
+```text
+mylang test FILE.my|DIR [--release] [--json] [--filter S] [--affected --against REF]
+    [--no-cache] [--force] [--jobs N] [--cases PATH] [--max-steps N] [--max-frames N]
+    [--max-memory SIZE] [--timeout-ms N] [--seed N] [--property-runs N] [--link FILE.c]
+    [--verify-facts | --no-facts] [--cache-dir DIR] [--zig PATH]
+```
+
 The command discovers `test_` functions in the project's reachable public
-schema. A parameter-free test returning `bool` asserts `true`, and one returning
+schema. A parameter-free test returning `bool` asserts `True`, and one returning
 `Result[bool, E]` asserts `Ok(True)`, so it may use `?` and a failure it
 propagates is reported with its
-[error return trace](../results-and-options.md#error-return-traces); any other result
-type needs an explicit expected typed JSON value, so an undeclared expectation is
-a configuration error rather than a silent pass. A test with data parameters and
-no cases-file `arguments` is a [property test](#property-tests): the runner
-generates its inputs. `--cases FILE` supplies
-arguments, expectations and skip reasons keyed by qualified test name, and
-`--filter` selects qualified names case-sensitively: a pattern carrying no `*`,
-`?` or `[` matches any substring of the qualified name, and one that carries them
-is a shell-style glob. Each selected case runs
-as a fresh native process bounded by `--max-steps`, `--max-frames`, `--max-calls`
-and `--timeout-ms`, with no implicit clock, entropy, filesystem, network or
-environment grants; a test that declares one of those capabilities as a
-parameter receives a deterministic stand-in instead
-([capability parameters](#capability-parameters)). The cases run concurrently: `--jobs N` (then `MYLANG_JOBS`,
-then the cores the run may use, capped by how many per-test memory ceilings the
-machine's free memory holds) worker threads each start one test process at a
-time without copying the runner, and every result is reported in the same order
-whichever finished first. `--json` prints a `native-tests-v1` report instead of the text
-summary. Exit status is 0 when every selected runnable case passed, 1 on a
-failure or trap, 2 on a setup failure, and 3 when the selection was empty or
-entirely skipped — a filter that matches nothing is not a green run.
+[error return trace](../results-and-options.md#error-return-traces). Any other
+result type needs an expected value in a cases file; without one the test fails
+with `test result type is not bool`, so an undeclared expectation is never a
+silent pass. A test with data parameters and no cases-file `arguments` is a
+[property test](#property-tests): the runner generates its inputs.
+
+`--cases FILE` supplies arguments, expectations, skip reasons and
+[provider fixtures](#isolated-source-provider-fixtures) keyed by qualified test
+name; without it the runner reads the entry's own
+[cases file](#per-entry-cases-files) when there is one. `--filter` selects
+qualified names case-sensitively: a pattern with no `*`, `?` or `[` matches any
+substring of the qualified name, and one with them is a shell-style glob.
+
+The selected tests are built into one executable, and each test runs as its own
+process of it, so a trap or a hang ends one test, not the run. A test process
+gets no clock, entropy, filesystem, network or environment authority; a test
+that declares one of those capabilities as a parameter receives a deterministic
+stand-in instead ([capability parameters](#capability-parameters)). Each process
+runs under the test budgets:
+
+| Budget | Flag | Default | Trap |
+| --- | --- | --- | --- |
+| executed blocks of program functions | `--max-steps N` (`0` removes it) | 1,000,000, else `limits.test.max_steps` | `R_STEP_LIMIT` |
+| call depth of program functions | `--max-frames N` | 1,024, else `limits.test.max_frames` | `R_FRAME_LIMIT` |
+| bytes the heap may hold | `--max-memory SIZE` (`K`/`M`/`G`) | `MYLANG_MEMORY_LIMIT`, else `limits.test.max_memory`, else 512 MiB | `R_MEMORY_BUDGET` |
+| wall clock per test | `--timeout-ms N` | 60,000 | the test fails, `timed out after N ms` |
+
+`limits.test` lives in `mylang.json`
+([runtime budgets](runtime-budgets.md)). A frame budget whose stack (32 KiB per
+frame plus 8 MiB) the byte ceiling cannot back is refused before anything is
+built.
+
+`--json` prints a `native-tests-v1` report instead of the text listing: one
+object per test with `name`, `status` (`passed`, `cached`, `failed`, `skipped`
+or `unsupported`), `reason` and `at`, the counts, and the project `sources` the
+check loaded.
+
+Exit status:
+
+| Status | When |
+| --- | --- |
+| 0 | every selected test passed or was replayed, with at least one not skipped |
+| 1 | a test failed or trapped, or the project does not check |
+| 2 | a usage error, an unreadable entry, a `mylang.json` that does not load, an invalid cases file or provider fixture, or a frame budget the byte ceiling cannot back |
+| 3 | nothing was selected (a filter or `--affected` that matches nothing), every selected test was skipped by its cases file, or the project's import policy denies an import |
 
 ```console
 $ mylang test examples/testing/main.my
@@ -52,49 +81,50 @@ $ echo $?
 
 ### Test entries
 
-A test entry is a `.my` file, not necessarily a program. A library module without
-`main`, or a standalone file named `*_test.my`, is accepted: the runner checks a
-private copy with a stub `def main() -> int: return 0` appended, so the exported
-`test_` functions run without editing the source or weakening the `main`
-requirement for ordinary `run`. Any file without a `module` declaration — a bare
-`*_test.my`, or a single-file script with its own `main` and `test_` functions —
-also gains a matching header in the private copy, written in front of the first
-line so that every diagnostic and failure keeps the line number of your file.
-`mylang test` therefore accepts every file that `check`, `run` and `build` accept.
+A test entry is a `.my` file, not necessarily a program. A file with no `def
+main(` line of its own, such as a library module or a standalone `*_test.my`,
+is checked with a stub `def main() -> int: return 0` appended, so its exported
+`test_` functions run without editing the source. A file without a `module`
+header is module `<stem>`: `solo_test.my` holds `solo_test::test_alone`. Such a
+file may import only standard modules; one that imports a project module must
+start with its dotted header, and `E_MODULE_HEADER` names the header to write.
 
-A standalone `*_test.my` may sit in a subdirectory of the project. The runner
-resolves its `import`s and its module name from the enclosing project root: the
-nearest ancestor holding `mylang.json`, or the nearest ancestor holding a
-non-test `.my` source. `tests/parser_test.my` is therefore module
-`tests.parser_test`, and `import sexpr.parser` reads `sexpr/parser.my` from the
-project root. A file with no `module` header gains the dotted header
-automatically; a file that writes one must spell the dotted path. A child
-compiler's located diagnostic is reported on its own, with exit status 1 rather
-than the generic host-failure line.
+A standalone `*_test.my` may sit in a subdirectory of the project. Its imports
+and its module name resolve from the enclosing project root: the nearest
+ancestor holding `mylang.json`, or the nearest ancestor holding a non-test `.my`
+source. `tests/parser_test.my` is therefore module `tests.parser_test`, starts
+with `module tests.parser_test`, and `import sexpr.parser` reads
+`sexpr/parser.my` from the project root. A project that does not check prints
+its diagnostics and exits 1.
 
 ### Failure text
 
-A failed expectation reports both sides of the comparison as
-`expected <value>, got <value>` instead of a value-less sentence, and a failed
-`assert` keeps its `R_ASSERT` code and source location and reports the message
-written after the condition as `R_ASSERT: <message>`. Guest output written by
-`print` is redirected off the runner's binary protocol channel and captured; the
-runner appends it to a failure's text, so a debug print is visible without
-aborting the run. A passing test's output is captured and discarded, and a
-benchmarked function's output goes to the diagnostic stream so timing batches
-never corrupt the protocol.
+A failed expectation reports both sides as `expected <value>, got <value>`. A
+failed `assert` keeps its `R_ASSERT` code and source location and reports the
+message written after the condition. A test's output, written through an `out:
+Stream` or `err: Stream` parameter, is captured: the runner appends it to a
+failure's text and discards it when the test passes. A trap prints its code,
+its message, the innermost sixteen frames that led to it (then `N frames
+omitted` when there were more) and, for a budget's trap, the runtime's hint.
 
 ```console
-$ mylang test main.my --filter test_total
-failed main::test_total: expected 42, got 41
-0 passed, 0 cached, 1 failed, 0 skipped
-$ mylang test main.my --filter test_reading
+$ mylang test main.my
+failed main::test_flag: expected true, got false
 failed main::test_reading: R_ASSERT: x should be two
-  in main::test_reading at main.my:6:5
+  in main::test_reading at main.my:12:12
 
 reading 41 rows
-0 passed, 0 cached, 1 failed, 0 skipped
+failed main::test_total: expected "42", got "41"
+0 passed, 0 cached, 3 failed, 0 skipped
 ```
+
+Here `test_total` returns `int`, and `main.cases.json` beside the entry
+expects `"42"` of it.
+
+A test that reaches a construct the compiler's core does not build yet is
+reported as `unsupported NAME: E_CORE_UNSUPPORTED (REASON) at LINE:COLUMN` and
+left out of the executable; the summary line then ends with `, N unsupported`.
+It is neither a pass nor a failure.
 
 ## Capability parameters
 
@@ -114,13 +144,13 @@ build.
 | `Environment` | an environment with no names |
 | `Network` | a network that refuses every connection with `network.denied_here()` |
 
-No test is ever handed real authority: a `Host` parameter is not supplied, and
-without cases-file arguments such a test fails as a property test whose `Host`
-parameter cannot be generated. Every test gets its own
-stand-ins, so nothing one test writes is visible to another, and each test's
-entropy stream is its own and stays the same from run to run; renaming the test
-changes it, and `--seed N` pins every test's (a directory run forwards it). The
-seed and the start instant are part of a result receipt's identity, so an
+No test is ever handed real authority: a `Host` parameter is never supplied,
+and without cases-file arguments such a test fails as a property test whose
+parameter cannot be generated (`a Host capability is never handed to a test`).
+Every test gets its own stand-ins, so nothing one test writes is visible to
+another, and each test's entropy stream is its own and stays the same from run
+to run; renaming the test changes it, and `--seed N` pins every test's (a
+directory run forwards it). The seed is part of a receipt's identity, so an
 unchanged test that takes capabilities is reused like any other, and a
 different seed executes it again.
 
@@ -185,9 +215,9 @@ passed main::test_uptime_counts_whole_seconds
 ```
 
 `main` above builds the same stand-ins itself, which is how any code — a
-helper, an example, a benchmark — gets them: the constructors need no
-capability, and using a stand-in is not an effect of a function whose own
-parameters supply none ([deterministic stand-ins](../effects.md#deterministic-stand-ins)).
+helper, an example — gets them: the constructors need no capability, and using
+a stand-in is not an effect of a function whose own parameters supply none
+([deterministic stand-ins](../effects.md#deterministic-stand-ins)).
 
 ## Property tests
 
@@ -196,10 +226,12 @@ a property test. The runner generates an input for every data parameter from its
 type, hands its capability parameters their
 [deterministic stand-ins](#capability-parameters) as it does for any test, and
 calls the test once per input: it passes when every input — 100 unless
-`--property-runs N` says otherwise — returns `True` (or `Ok(True)`) without
-trapping. `False`, `Ok(False)`, an `Err` and a trap (a failed `assert`, a broken
-contract, an index out of bounds, an overflow) are failures. A cases-file entry
-with `arguments` still wins: the test then runs once with exactly those.
+`--property-runs N` (1 to 1,000,000) says otherwise — returns `True` (or
+`Ok(True)`) without trapping. `False`, `Ok(False)`, an `Err` and a trap (a
+failed `assert`, a broken contract, an index out of bounds, an overflow) are
+failures. A cases-file entry with `arguments` still wins: the test then runs
+once with exactly those. An `expected` value without `arguments` is refused,
+because a property's verdict is its `bool` result.
 
 ```mylang
 # doc: check
@@ -273,19 +305,19 @@ it is nested, and an input stops growing collections once it holds 4096 nodes.
 | `str` | seven scalars in ten printable ASCII, plus tab, newline, NUL and other controls, well-known non-ASCII scalars (`é`, `Ω`, `中`, `😀`, a combining accent, U+FEFF, U+10FFFF) and scalars from the whole range |
 | `bytes` | octets, a quarter of them 0, 1, 0x7F, 0x80 or 0xFF |
 | `list[T]`, `set[T]`, `dict[K, V]` | elements or entries of the element types; a set element or a dictionary key drawn twice is dropped, so keys of every hashable type work |
-| tuples, records | fieldwise |
+| records | fieldwise |
 | fixed arrays, enum-indexed tables | every element or entry |
 | enums, unions, `Option[T]`, `Result[T, E]` | a case drawn uniformly, then its payload |
 
-A `class` (its values have identity), a `domain` (built only through its own
-constructors), a function value and `Host` are never generated: a property test
-with a parameter whose type reaches one fails, naming the parameter and the
-type, and so does one whose result is not `bool` or `Result[bool, E]`. With a
-`class Box` and a `test_boxes(boxes: list[Box]) -> bool` in the same module:
+A `domain` (built only through its own constructors), a function value and
+`Host` are never generated: a property test with a parameter whose type reaches
+one fails, naming the parameter and the type, and so does one whose result is
+not `bool` or `Result[bool, E]`. With a
+`test_callbacks(callbacks: list[def(int) -> int effects()]) -> bool`:
 
 ```console
-$ mylang test app/main.my --filter test_boxes
-failed main::test_boxes: property test parameter `boxes: List<main::Box>` cannot be generated: it holds main::Box, and a class value has identity, so it is built by its own code rather than generated
+$ mylang test app/main.my --filter test_callbacks
+failed main::test_callbacks: property test parameter `callbacks: List<def(i64) -> i64 effects()>` cannot be generated: a function value cannot be generated
 0 passed, 0 cached, 1 failed, 0 skipped
 ```
 
@@ -296,8 +328,8 @@ An input that breaks the test's own `@requires` is discarded, not failed:
 runner generates was not built by a constructor, so every `test_` function also
 checks, on entry, the [`@invariant`](../contracts.md#invariants) of every record
 or domain its parameters hold — in fields, list, set and dictionary elements,
-arrays, tuples and every union case — and an input that breaks one is discarded
-the same way: `test_a_span_is_ordered` only ever sees ordered spans. A
+arrays and every union case — and an input that breaks one is discarded the
+same way: `test_a_span_is_ordered` only ever sees ordered spans. A
 precondition that a function the test calls breaks is a failure like any other.
 Discarded inputs are replaced by more runs; when more than ten times the
 requested runs have been discarded the test fails, naming the clause that
@@ -310,7 +342,7 @@ for one exact value, `@requires(n == 12345, "a single value")` on
 ```console
 $ mylang test app/main.my --filter test_picky
 failed main::test_picky: too many discarded inputs: 1001 of 1001 generated inputs broke a precondition before 0 of 100 runs passed; most often test_picky requires `n == 12345`: a single value
-  reproduce: mylang test app/main.my --filter 'main::test_picky' --seed 4128163384585622329
+  reproduce: mylang test app/main.my --filter 'main::test_picky' --seed 7017186523047142524
 0 passed, 0 cached, 1 failed, 0 skipped
 ```
 
@@ -322,15 +354,15 @@ reason), until no candidate of any parameter does or 2,000 candidates have run:
 integers move toward 0 by halving the distance (100 tries 0, 50, 75, 88, 94, 97,
 99), floats toward `0.0`, strings, bytes and collections first lose elements —
 all of them, then halves, quarters and single ones — then shrink the ones left
-(never into a set element or dictionary key another one holds), records and
-tuples shrink field by field, and enums, unions and `Option` move toward earlier
-cases and `None`. The report prints the minimal input as mylang literals, one
-line per parameter, the input as generated and its run, the reason — the value
-returned (an `Err` with its [error return trace](../results-and-options.md#error-return-traces)), or a
-trap's code, message and frames — the original input's own reason
-when shrinking reached a different failure, and a command that reproduces the
-whole search. An input that ran past `--timeout-ms` is reported as generated,
-because every candidate could run as long.
+(never into a set element or dictionary key another one holds), records shrink
+field by field, and enums, unions and `Option` move toward earlier cases and
+`None`. The report prints the minimal input as mylang literals, one line per
+parameter, the input as generated and its run, the reason — the value returned
+(an `Err` with its [error return trace](../results-and-options.md#error-return-traces)),
+or a trap's code, message and frames — the original input's own reason when
+shrinking reached a different failure, and a command that reproduces the whole
+search. An input that ran past `--timeout-ms` is reported as generated, because
+every candidate could run as long.
 
 `--json` adds a `property` object to every property test's result: its `seed`,
 its `counts` (`runs`, `passed`, `discarded`, `processes`, `shrinks`,
@@ -348,20 +380,15 @@ $ mylang test app/main.my --filter test_budget --json | jq '.tests[0].property.f
 
 ### Batches and receipts
 
-A property does not pay one process launch per input. The harness process makes
+A property does not pay one process launch per input. The test process makes
 one copied-value call per input and writes each answer as it finishes, so a
-passing 100-run property is one process, and every property's first batch runs
-beside the others. Replacements for discarded inputs and shrink candidates run
-in further batches. A child that dies or runs out of time mid-batch keeps the
-answers of the inputs before the one it was running; that input runs alone in a
-process of its own, and the rest of the batch in another. On the Debug compiler
-a warm 100-run property over `list[int]` takes about 0.2 seconds of
-`mylang test`, the whole command included.
+passing 100-run property is one process. Replacements for discarded inputs and
+shrink candidates run in further batches. A child that dies or runs out of time
+mid-batch keeps the answers of the inputs before the one it was running.
 
-A passing property is reused like any other test. Its receipt identity adds the
-seed, the run count and the generator version, so changing `--seed`,
-`--property-runs` or the compiler's generator runs it again; a failure is never
-reused.
+A passing property is reused like any other test. Its receipt's identity
+includes the seed and the run count, so changing `--seed` or `--property-runs`
+runs it again; a failure is never reused.
 
 ```console
 $ mylang test app/main.my --filter test_reversing
@@ -377,158 +404,108 @@ passed main::test_reversing_twice_is_the_identity
 
 ## Directory runs
 
-The positional argument may be a directory instead of one entry. Every project
-root beneath it is selected in sorted path order: a `.my` file that declares a
-top-level `main`, plus standalone `*_test.my` files. A library module imported by
-a root is not run as a program of its own, so a multi-module project is one
-program rather than one `E_MAIN`/`E_MODULE_NAME` failure per module; its tests
-run once, as part of that root. A library that declares a test (a `def test_`
-function or an `@test` one) and that no root's import closure reaches is
-selected as well and checked through the stub-`main` projection above, so a
-test file needs neither `main` nor the `*_test.my` suffix. Of two such
-libraries where one imports the other, only the importer is selected. Generated
-`.mylang-cache`, `.zig-cache`, `zig-out` and `.git` trees are skipped, and each
-root runs as its own child command, up to the machine's core count at a time.
-The children share one object cache and one receipt directory, so an unchanged
-program reuses its results instead of rebuilding, and the runtime archive every
-program links is built once for the whole suite. Their reports merge into one
-case listing, one count line naming how many programs took part, and the most
-severe exit status: 2 if any program failed to set up, 1 if any case failed, 3
-if the whole selection was empty or skipped, and 0 otherwise. `--cases` is
-rejected for a directory run, because its keys name the tests of one project;
-instead each entry's own [cases file](#per-entry-cases-files) beside it applies
-to that entry.
+The positional argument may be a directory instead of one entry. Every `.my`
+file beneath it is inventoried in sorted path order, skipping the cache
+directory and generated `.mylang-cache*`, `.zig-cache`, `zig-out`,
+`node_modules` and `.git` trees. A file that declares a top-level `main`, and
+every `*_test.my` file, is a root. A library that declares a test and that no
+root's import closure reaches is a root as well, checked through the stub
+`main` above, so a test file needs neither `main` nor the `*_test.my` suffix; of
+two such libraries where one imports the other, only the importer is a root. A
+library imported by a root is not run on its own: its tests run once, as part of
+that root.
 
-Each child's `--json` report lists the project sources its check loaded as
-`modules`. After merging, the directory run names every test-declaring source
-beneath the directory that no reporting child loaded as `not run: <path>
-(declares tests, but no program loaded it)`, adds `N test sources not loaded` to
-the count line and `unloaded` to the JSON report, and exits 2. A test file can
-therefore fail a run, but it can never silently drop out of one.
+Each root runs as a child `mylang test ROOT --json` with the run's filter,
+budgets, seed, property runs, `--release`, `--verify-facts`/`--no-facts`,
+`--force`, `--affected --against REF` and `--link` inputs. Children share one
+worker budget (NEW-CORE-S4-TEST-1): `--jobs N`, else `MYLANG_JOBS`, else the CPU
+count capped by how many per-test memory ceilings `MemAvailable` holds
+(NEW-CORE-S5-FANOUT-1). At most that many children run at once, in waves, and each child gets
+the budget divided by the children running beside it for its own builds. They
+share the run's cache directory, so an unchanged program replays its results
+instead of rebuilding.
 
-Each run materializes its private source snapshot under `$TMPDIR/.pending/` when
-`TMPDIR` is set and non-empty, and under `/tmp/.pending/` otherwise. On a host
-whose `/tmp` is a small or quota-bound tmpfs, point `TMPDIR` at disk; otherwise
-a full `/tmp` fails every test with `host failure: DiskQuota`. The snapshot sits
-at the same path on every run of one project from one cache
-(`.pending/snapshot-<key>`), because the compiler's caches of check verdicts,
-parsed modules and emitted functions are keyed by source path as well as bytes;
-a second run of the same project that starts while the first still holds that
-path stages at a fresh private one instead.
-
-A run removes that staging on every exit it controls — a pass, a failing test,
-a rejected project, a host error. A run killed outright (`SIGKILL`, a crash)
-cannot, so each run's staging directory carries a `.owner` marker it holds an
-exclusive `flock` on for as long as it lives. The next run reclaims every
-`.pending/` sibling whose marker it can lock, because the kernel releases a
-dead process's locks; directories without a marker (another tool's, or an
-older compiler's) and markers a live run still holds are never touched. The
-same applies to the report workspace a directory run keeps under its cache.
-
-On a corpus of 100 small programs with 200 tests, a cold run takes about 7
-seconds, an unchanged rerun about 0.6 seconds, and a run after editing one
-program about 0.8 seconds — re-executing only the two tests that program owns.
+The children's reports merge into one listing in root order and one summary
+line. A child that produces no usable report (a project that does not check, a
+setup failure) adds a failed line naming its path, with its diagnostics on
+stderr. Every test-declaring source beneath the directory must appear in some
+child's loaded `sources`; one that no child loaded fails the run as
+`test-declaring source was not loaded by any test program`, so a test file can
+fail a run but never silently drop out of one. A source, configuration or
+toolchain change during the run fails it with `SourceChanged`. The exit status
+is 2 if any child failed to set up (status 2), else that of the merged listing:
+1 if any line failed, 3 if nothing was selected or every selected test was
+skipped, 0 otherwise. `--cases` is refused for a directory run (status 2), because its
+keys name the tests of one project; each entry's own
+[cases file](#per-entry-cases-files) applies to that entry instead.
 
 ```console
-$ mylang test suite/ --cache-dir /tmp/suite-cache
-passed prog000::test_scale0
-passed prog000::test_sum0
-200 passed, 0 cached, 0 failed, 0 skipped across 100 programs
-$ mylang test suite/ --cache-dir /tmp/suite-cache --filter test_scale4
-cached prog004::test_scale4
-cached prog040::test_scale40
-0 passed, 11 cached, 0 failed, 0 skipped across 100 programs
+$ mylang test . --cache-dir /tmp/suite-cache
+passed scaled_test::test_scaled
+passed scanner_test::test_is_digit
+2 passed, 0 cached, 0 failed, 0 skipped
+$ mylang test . --cache-dir /tmp/suite-cache --filter test_scaled
+cached scaled_test::test_scaled
+0 passed, 1 cached, 0 failed, 0 skipped
+$ mylang test . --cases scaled_test.cases.json
+error: --cases requires a single test entry
 ```
 
 ## Reusing unaffected results
 
-Allocation, process-local mutation and output are deterministic for keyed test
-inputs, so they do not prevent successful-result reuse. A test that takes
-`out: Stream` or `err: Stream` is reused like any other: the runner captures a
-test process's standard output and standard error and discards both when the
-test passes, and a receipt records only a pass, so a cached pass shows exactly
-what an executed pass shows. A failure's captured output is part of its report,
-and a failure is never reused. The clock, entropy, the environment, the
-filesystem and the network do not prevent reuse either: a test process holds no
-host-granted capability and registers no host provider, so every one it can use
-is a [deterministic stand-in](#capability-parameters) whose seed and start
-instant the receipt binds. Only a call into host-provided code prevents reuse.
-The stricter
-`--pure-skip` signature rule still excludes declared mutation and any capability
-parameter, `Stream` included.
+A passing test leaves a receipt under `<cache>/tests/receipts-v2`, where
+`<cache>` is `--cache-dir DIR` or `.mylang-cache/core` relative to the current
+directory. A later run that computes the same identity reports `cached` instead
+of building and executing the test. Failures, traps and timeouts never become
+receipts, so they always run again.
 
-The source identity covers the resolved import closure, required configuration
-and policy files, and the files the closure's modules embed with
-[`embed_bytes` and `embed_str`](../bytes.md#embedding-a-file-at-compile-time):
-the runner captures each embedded fixture with the sources and copies it to the
-path its relative reference needs, and a test that reads a fixture keys on the
-fixture's digest, so editing only the fixture reruns exactly the tests that use it. An edit to an unimported neighboring module neither discards
-checked facts nor aborts an ordinary run with `SourceChanged`. Provider replacement
-still verifies the full captured inventory because a fixture can introduce imports.
-The environment fingerprint includes compiler/build controls rather than every
-inherited variable, so shell/session metadata does not discard warm caches.
-This includes native C search/link paths, Python adapter controls, Zig installation
-overrides and reproducible-build settings as well as Mylang compiler controls.
-Dynamic-loader overrides disable durable result reuse, and tests that call
-host-provided code remain non-cacheable. Resolved native tool stamps remain part of identity.
+A receipt's identity (NEW-CORE-S4-TEST-3) is:
 
-A warm unchanged deterministic run still checks project validity through the shared
-query cache, but admits valid result receipts without lowering, emitting or linking
-any code, so it executes zero tests. That validity check replays the verdict the
-previous run's check recorded, and the declaration contracts come from the cache
-under the same resolved source identity, so an unchanged rerun starts exactly one
-compiler process and costs about what an unchanged `mylang check` does. Receipt reuse is bound to the selected
-dependency closure, contract and provider identities plus fixture, environment and
-budget identities; a helper edit executes only its dependent tests. A fully cached
-selection also needs durable checked facts (`native-test-graph-v3`), keyed by
-compiler/tool stamps, mode, environment hash, source identity and canonical
-provider identity. The graph stores the requested input key in its envelope,
-checksums its payload, and rejects a missing, damaged, wrong-version or
-structurally invalid graph; an intact graph copied under another key is a miss
-rather than a stale success. `mylang test --report` emits a `work-report-v1`
-line whose `executed_tests.performed`/`reused` counts reconcile with the
-`native-tests-v1` `executed`/`cached` fields.
-`--force` skips existing graph and result reuse but may publish refreshed graphs
-and successful receipts, whereas `--no-cache` performs no durable result or graph
-reads and writes at all.
+- **the test's program** (NEW-CORE-S4-TEST-6): the Core IR of the functions the
+  test reaches, before any pass, hashed field by field with every source span
+  replaced by its file, line and column, and the entry path. Passes and LLVM
+  emission are pure functions of that IR and the settings below, so looking up
+  a receipt emits no code. An edit to a function the test does not reach, or
+  one that only moves code in another file, keeps the key; whitespace edits that
+  move a reached function's lines do not;
+- **the settings**: `--release`, `--no-facts`/`--verify-facts`, the seed, the
+  property runs, the step, frame, memory and time budgets, the test's own
+  cases-file entry and the cases file's bytes;
+- **the compiler, runtime and toolchain identity**, including the `zig` the run
+  uses, and the bytes of `mylang.json` and its import policy;
+- **the environment variables that can change an outcome**
+  (NEW-CORE-S4-TEST-5): every `MYL_` and `MYLANG_` variable except
+  `MYLANG_JOBS` and `MYLANG_CORE_RUNTIME_CACHE`, and the C compiler and Zig
+  toolchain inputs (`CPATH`, `C_INCLUDE_PATH`, `LIBRARY_PATH`, `ZIG`,
+  `ZIG_LIB_DIR`, `SOURCE_DATE_EPOCH` and the like). A shell's `_` or `OLDPWD`,
+  a terminal's variables or a wrapper such as `time` leave receipts valid.
 
-When facts or receipts miss, one checked compilation per selected provider graph
-produces the test facts and is retained in that graph's `native-test-compile`
-session; the planner then selects only the uncached tests' reachable function
-closure, including required adapters, specializations, runtime support and a
-conservative set around indirect calls and codec boundaries. Selective lowering
-consumes that same checked result, and the linking driver consumes its checked
-frontend manifest (`--manifest-file`) instead of spawning a second frontend, so
-each provider graph is fully checked once. Only that closure is lowered, emitted,
-compiled and linked, so a helper edit does not rebuild the whole selected-provider
-project. A whole-project request with no selection keeps its own frontend check
-and is reported as a named `work-report-v1` bypass rather than hidden. Distinct
-provider graphs stay isolated; identical graphs share one closure and library per
-invocation.
+Output and capabilities do not prevent reuse. A test that prints through a
+`Stream` parameter is reused like any other, because its output is discarded on
+a pass; a test that takes a `Clock`, `Entropy`, `Filesystem`, `Environment` or
+`Network` gets a [deterministic stand-in](#capability-parameters) whose seed the
+receipt binds.
 
-The work of a run after an edit follows the edit rather than the project. The
-checked facts describe only what the discovered tests and benchmarks reach; a
-test whose closure does not contain the edited function is answered from its
-receipt and is not linked into the library; the functions that are rebuilt reuse
-every emitted unit whose inputs did not change; and the compiled test harness is
-kept in the cache. When no case names a provider fixture, the body check starts
-alongside the declaration check instead of after it, and it reads the check
-summaries the way `build` does, so the effect passes revisit only changed bodies.
-On a generated 200,000-line project where an edit reaches half of the 480 tests,
-the run after the edit takes about 1.2 seconds, against 0.4 for `mylang check`
-(`docs/audits/devspeed-test-loop-scale-2026-09-24.md`).
+A run whose every selected test passed or replayed also records the whole
+report in `<cache>/tests/manifests-v2`, with the digest of every source,
+embedded file, cases file and configuration file it loaded. An unchanged rerun
+replays that report without checking the project; any changed byte falls back
+to the ordinary run, which still replays each test's own receipt. A project
+with `"interface_files": true` in `mylang.json` never replays a whole report,
+so its interface files are checked on every run.
 
-A successful deterministic case leaves a receipt under `.mylang-cache/tests`, or
-under `--cache-dir DIR`. The receipt's identity covers the case settings, the
-call signature, the execution limits, the semantic dependency closure the test
-actually used, and the compiler and native build environment, so a later run can
-report `cached` instead of executing. Editing a helper invalidates the tests that
-reach it and leaves the others reusable; whitespace and unrelated edits keep
-results valid. Failures, traps and corrupt receipts are always re-executed, and
-`--force` re-executes every selected unskipped case. This reuses result
-receipts, native objects, per-function checked bodies and the reduced
-preparation graph; project validity is still checked through the shared query
-cache on every invocation.
+What runs every test again:
+
+- `--force` and `--verify-facts` execute every selected test; a pass still
+  records its receipt;
+- a run with `--link FILE.c` never reads receipts, because the runner does not
+  yet capture the headers a C input includes;
+- a run with `MYL_CORE_LEAKCHECK` set to anything but `0`, or with a non-empty
+  `LD_*` variable, never reads receipts;
+- `--no-cache` builds and runs through an empty private cache under the cache
+  directory, removed when the command ends (NEW-CORE-S5-NO-CACHE-1): nothing is
+  read from or published to the receipt, manifest, program or front-end
+  caches. The per-user object store of compiled units is still used.
 
 ```console
 $ mylang test app/main.my --cache-dir /tmp/test-cache
@@ -540,131 +517,41 @@ $ mylang test app/main.my --cache-dir /tmp/test-cache
 cached main::test_square
 passed main::test_sum
 1 passed, 1 cached, 0 failed, 0 skipped
-```
-
-## Tests module by module
-
-`mylang test` of a project builds its tests from the same per-module artifacts
-`build` and `check` use (see
-[building a project module by module](module-interfaces.md#building-a-project-module-by-module)).
-`--whole-program` asks for the whole-program session described above.
-
-```console
-$ mylang test app/main.my --cache-dir /tmp/test-cache
+$ mylang test app/main.my --cache-dir /tmp/test-cache --force
 passed main::test_square
-passed util::test_sum
+passed main::test_sum
 2 passed, 0 cached, 0 failed, 0 skipped
-$ mylang test app/main.my --cache-dir /tmp/test-cache --whole-program
-passed main::test_square
-passed util::test_sum
-2 passed, 0 cached, 0 failed, 0 skipped
-```
-
-- **Compiles.** Every stale module is compiled as `compile-module --tests`.
-  Besides its objects, the compile writes `NAME.tests.json`, which holds:
-  - its share of the test facts: every function it emits, described as the
-    whole program's facts describe it, but without the two program-wide
-    dependency sets;
-  - its own entry of the declaration contracts;
-  - the schema and export descriptions of its tests and benchmarks;
-  - its wire and codec tables.
-
-  An unchanged module is not compiled again.
-- **Facts.** The run merges the shares into the facts of the tests' closure
-  and adds the program-wide edges: every body that invokes a function value
-  gets an `indirect` edge to every function any module takes as a value, and,
-  when any module declares a domain codec, every body gets its codec edges.
-  Tests are discovered from the merged contracts, so the run starts no
-  declaration check, and results are planned and replayed from receipts as
-  before. The merge is kept, so a run in which no module changed reads one
-  file.
-- **The test executable.** The tests that must run are linked into one
-  executable, with the harness, from the modules' objects and a wrapper that
-  exports those tests. A test process then maps the executable instead of
-  loading and relocating a library of the whole program. The wire and codec
-  tables are sorted by name (MODULE-TEST-2), so the merged tables are the
-  whole-program library's.
-- **Work follows the edit.** An unchanged rerun compiles, links and starts
-  nothing but the tests that are not cacheable. An edit compiles the edited
-  module and the modules that read an interface it changed, never a module
-  below it, and runs exactly the tests whose closure reaches the edit. The
-  trace (`MYLANG_TEST_TRACE`) names each `compile-module` and `module-link`.
-- **Whole-program instead.** `--whole-program` takes the whole-program path, and
-  so do the following:
-  - `--no-cache`, `--release`, explicit link inputs, `--affected`,
-    benchmarks and `--diagnostics=json`;
-  - a case configuration that names provider fixtures;
-  - a project the modules cannot build (the session then reports it).
-
-  The two paths key receipts alike (a module's contract entry is rendered as
-  `list-interfaces --contracts` renders it), so a verdict recorded on one
-  replays on the other.
-- **Cold.** A first run module by module compiles every module, as a first
-  `build` does, where the whole-program session lowers and compiles only the
-  tests' closure. So the first run of a project of at least 64 modules
-  (`MYLANG_TEST_SEED_MODULES` sets the count) is the whole-program run's, and
-  it starts a detached seeder (`MYLANG_TEST_SEED=1`, no standard streams, never
-  waited for). The seeder waits until the run has released the project's
-  snapshot path, compiles every module into the test variant, runs no test and
-  prints nothing, at nice 19. `MYLANG_TEST_SEED=off` starts no seeder.
-- **Never waiting.** A run started while the seeder works does not wait for
-  it: it stages at a private path and is the whole-program run's, which
-  replays the verdicts of every test the edit did not reach. The same holds
-  while another run of the project holds its snapshot path or its modules.
-  The seeder is stopped while such a run works, so the run has the cores,
-  and goes on when the run ends. A private watcher also resumes it after
-  foreground death, including SIGKILL, without retaining snapshot/cache locks.
-  Failed watcher setup stops nothing. Once the seeder is done, runs are module by
-  module again, replaying the earlier runs' verdicts. The trace names how a
-  run was staged: `stage stable`, `stage private` or `stage seeding`, and
-  `pause-seeder` when it stopped the seeder.
-
-## Collector stress
-
-`mylang test --gc-stress` runs every collected test's copied-value call with the
-runtime's stress collector, the same collector coverage the Zig root's
-`native_execute` tests get from the `--gc-stress` argument they pass to a guest.
-Only the tracing collector has anything to stress, so the flag selects
-`--gc-runtime` when no runtime flag is given (the default is reference counting)
-and is a usage error next to an `--rc-runtime` flag.
-A directory run forwards the flag to every child, so one invocation reports one
-collector condition, and the flag is part of the execution identity a receipt
-binds: a result recorded without stress is not reused as a stressed pass, and a
-stressed pass is not reused for a later run without the flag.
-
-```console
-$ mylang test tests/lang --cache-dir /tmp/lang-cache --gc-stress
-passed integers::test_width_conversions
-...
-6 passed, 0 cached, 0 failed, 0 skipped
-$ mylang test tests/lang --cache-dir /tmp/lang-cache --gc-stress
-cached integers::test_width_conversions
-...
-0 passed, 6 cached, 0 failed, 0 skipped
 ```
 
 ## Affected selection
 
 `mylang test --affected --against REF` narrows a run to the tests that reach a
-declaration whose own source lines changed since `REF`. It reads the changed
-lines of every `.my` file from one `git diff` in the entry file's own
-repository (plus `git ls-files --others` for files not yet added, which count as
-changed throughout) and maps each changed line onto the top-level declaration
-that owns it, by indentation: a line inside a function or constant changes that
-declaration, and a line anywhere else — the module header, an import, a record,
-a domain — changes every declaration of the module. A test then runs only when
-a changed declaration is in the dependency closure the run already derives to
-key the test's receipt, so the selection costs a `git diff` and a line scan
-rather than a second check of the project: on the 50k-line scale tier it adds
-a few hundredths of a second to a cached run.
+declaration whose own source lines changed since the git revision `REF`
+(NEW-CORE-S5-AFFECTED-1). It reads the changed lines of every `.my` file from
+one `git diff` under the project root (plus `git ls-files --others` for files
+not yet added, which count as changed throughout) and maps each changed line
+onto the top-level declaration that owns it, by indentation: a line inside a
+function or constant changes that declaration, and a line anywhere else — the
+module header, an import, a record, a domain — changes every declaration of the
+module. A test then runs only when a function its Core IR build reaches (the
+reachable set its receipt is keyed on) is a changed function, a specialization
+of one, or a function of a wholly changed module. A changed constant is folded
+into every reader, and a deleted function leaves nothing to reach, so a changed
+name of a loaded module that no checked function carries keeps every test, as
+does a test the core cannot build. A change in a module the program does not
+load selects nothing. The selection costs a `git diff`, a line scan and one IR
+build per test, never a second check of the project.
 
-The derivation is a selection, never a verdict: the selected count and every
-skipped test are printed on stderr, so `--json`'s stdout report stays
-machine-readable, and an empty derivation exits 3 exactly as a filter that
-matches nothing does. `--filter` still applies first, `lint --gate` and CI run
-the whole set, `--against` without `--affected` (or the reverse) is a usage
-error, and a `REF` that `git` cannot resolve is a host failure. A project that
-cannot be checked fails exactly as it would without `--affected`.
+The derivation is a selection, never a verdict. `--filter` applies first. The
+`affected: N selected, M skipped against REF` line and one `skipped NAME: no
+changed declaration is reachable` line per dropped test go to stderr, so
+`--json`'s report on stdout stays machine-readable, and an empty selection exits
+3 exactly as a filter that matches nothing does. `--against` without
+`--affected`, or the reverse, is a usage error, and a `REF` git cannot resolve
+exits 2 with `--against names a revision git cannot resolve`. Such a run neither
+replays nor records a whole-run report, while each selected test still replays
+its own receipt; a directory run passes both switches to every child. CI and
+`lint --gate` run the whole set.
 
 ```console
 $ mylang test app/main.my --affected --against HEAD
@@ -685,79 +572,65 @@ $ echo $?
 
 To fake a capability, prefer [capability parameters](#capability-parameters) and
 the deterministic stand-ins: a function that takes a `Clock` is tested by
-passing it a simulated one, with no fixture file. Provider fixtures remain for
-replacing a dependency's source wholesale — a `host def` module, or a
-collaborator whose behaviour the test must pin.
+passing it a simulated one, with no fixture file. Provider fixtures replace a
+dependency's source wholesale, for a collaborator whose behaviour the test must
+pin (NEW-CORE-S4-TEST-4).
 
-A case may carry a `providers` object mapping existing dependency `.my` paths to
-replacement source text. The runner parses every reachable module and validates
-its exported declarations and interfaces first, then copies a bounded inventory
-of the project's sources into a private directory, applies the replacements
-there, and fully checks only the selected provider graph. A replacement is
-validated against every public contract it replaces — names, defaults, types
-and nominal identities, data shapes, generic requirements, declared effects,
-mutation footprints and return-origin bounds — with the directional subset
-relation: a narrower implementation is accepted, a stronger one rejects. The
-unselected production bodies are not checked, so an unfinished body may be
-`todo[T]()` or contain a body type error while its declarations stay valid,
-but a production interface error or a syntax error still rejects. The original files are never modified. A
-fixture cannot replace the test entry or introduce a path the project does not
-already have; source snapshots reject symbolic links and are bounded by the
-project's `max_total_bytes` budget (64 MiB unless `mylang.json` sets it),
-with at most 128 files for a provider snapshot. Invalid fixture source or a
-changed public contract is a setup failure, and the fixture settings are part of
-the receipt identity, so changing an injected value re-executes the case.
-Cases that select the same provider graph share one declaration validation,
-checked project and prepared native library within an invocation, while each
-case still executes in its own isolated request directory and process. Receipt
-acceptance uses the selected test's dependency closure plus the contract and
-provider identities; an unrelated source edit does not invalidate an unaffected
-case.
+A case may carry a `providers` object mapping existing dependency `.my` paths,
+relative to the project root, to replacement source text. The runner first
+checks the project as written, then checks it again with the replacements
+applied in memory; the files on disk are never modified. A provider may replace
+an existing dependency only, never the entry module or a path the project does
+not load (`error: invalid test provider dependencies`). The replaced module's
+own exported types and functions must keep their checked structure, and so must
+the selected test's signature and every type it reaches; other modules' exports
+are not compared, so a provider may import fewer modules. A provider that
+changes them fails the run with `ProviderSignatureChanged`, or with the check
+error a caller now sees. Cases that name the same providers share one check and
+one build; each test still runs in its own process. A case's providers are part
+of its receipt's identity, so changing an injected source runs the case again.
 
 ```console
 $ mylang test app/main.my
-failed main::test_reading: actual value does not match expected value
+failed main::test_reading: expected true, got false
 0 passed, 0 cached, 1 failed, 0 skipped
 $ cat cases.json
 {
   "main::test_reading": {
-    "providers": {"reading.my": "module reading\nexport sample\n\ndef sample() -> int:\n    return 42\n"}
+    "providers": {"reading.my": "module reading\n\npublic def sample() -> int:\n    return 42\n"}
   }
 }
 $ mylang test app/main.my --cases cases.json
 passed main::test_reading
 1 passed, 0 cached, 0 failed, 0 skipped
+$ mylang test app/main.my --cases cases.json
+cached main::test_reading
+0 passed, 1 cached, 0 failed, 0 skipped
 ```
 
 ## Deterministic provider fixtures
 
-A test that needs a deterministic clock, entropy stream, filesystem, environment
-or network should declare it as a [capability parameter](#capability-parameters)
-or build a stand-in; this section covers dependencies that bypass capabilities.
-The native runner registers no host callbacks and grants no ambient authority, so
-a test that reaches a clock, an entropy source or the environment through a
-`host def` declaration fails with `HostMissingRegistration` rather than reading
-the real machine. A case makes such a dependency deterministic by replacing the
-module that declares it with ordinary guest source returning a fixed value. The
-substitution lives in the private snapshot, is captured in the receipt identity,
-and is therefore stable across runs and reusable. These are source-level
-replacements, not registered native providers: they change what the guest
-computes, and they do not validate a real host implementation of the same
-declaration.
+A test runs with no ambient authority. The runner grants a test process no
+clock, entropy, filesystem, network or environment of the machine: a capability
+parameter gets a [deterministic stand-in](#capability-parameters), and a `Host`
+parameter, which `extern def` C calls need, is never supplied. A test's outcome is therefore a function of its sources, its
+cases-file entry and the keyed settings, which is what lets a receipt stand in
+for it.
+
+Code that needs the real machine takes a capability parameter, and the test
+passes it the stand-in. When a test reaches a collaborator whose production
+answer it must not depend on, a [provider fixture](#isolated-source-provider-fixtures)
+replaces that module's source with one returning a fixed value; the replacement
+is part of the receipt's identity, so the case stays reusable. Provider fixtures
+are source replacements: they change what the guest computes, and they do not
+validate a real implementation of the same declaration.
 
 ```console
-$ mylang test app/main.my
-failed main::test_stamp: HostMissingRegistration
-
+$ mylang test app/main.my --filter test_stamp
+failed main::test_stamp: property test parameter `host: host_cap` cannot be generated: a Host capability is never handed to a test
 0 passed, 0 cached, 1 failed, 0 skipped
-$ cat cases.json
-{
-  "main::test_stamp": {
-    "providers": {"clock.my": "module clock\nexport now\n\n\ndef now() -> i64:\n    return 1700000000\n"}
-  }
-}
-$ mylang test app/main.my --cases cases.json
-passed main::test_stamp
+$ mylang test app/uptime.my
+passed uptime::test_uptime_counts_whole_seconds
 1 passed, 0 cached, 0 failed, 0 skipped
 ```
 
@@ -787,16 +660,21 @@ public def test_is_digit() -> bool:
     return scanner.is_digit("7") and not scanner.is_digit("x")
 $ mylang test .
 passed scanner_test::test_is_digit
-1 passed, 0 cached, 0 failed, 0 skipped, 0 dropped across 1 programs
+1 passed, 0 cached, 0 failed, 0 skipped
 ```
 
 ### Per-entry cases files
 
-An entry's cases file sits beside it as `<stem>.cases.json`: `driver_tests.my`
-owns `driver_tests.cases.json`. A run of the entry without `--cases` applies that
+An entry's cases file sits beside it as `<stem>.cases.json`: `scaled_test.my`
+owns `scaled_test.cases.json`. A run of the entry without `--cases` applies that
 file, so a directory run applies each entry's file to that entry alone and a
 single-file run of the same entry sees the same cases. An explicit `--cases FILE`
-still takes precedence for a single entry.
+still takes precedence for a single entry. A cases file is a JSON object keyed
+by qualified test name; each entry may carry `arguments` (typed JSON values by
+parameter name), `expected`, `skip` (a reason string) and `providers`. An
+unknown test name or field stops the run with `error: test cases: ...` and
+status 2; a `skip`ped test is reported as `skipped NAME: REASON` and does not
+fail the run, though a run whose every selected test was skipped exits 3.
 
 ```console
 $ cat scaled_test.cases.json
@@ -804,74 +682,23 @@ $ cat scaled_test.cases.json
 $ mylang test .
 passed scaled_test::test_scaled
 cached scanner_test::test_is_digit
-1 passed, 1 cached, 0 failed, 0 skipped, 0 dropped across 2 programs
+1 passed, 1 cached, 0 failed, 0 skipped
 ```
 
-## Performance benchmarks
+## Dropped flags
 
-`mylang test --bench PATTERN` discovers exported `bench_` functions beside the
-`test_` functions, runs the correctness tests first, and measures only after they
-pass. One invocation of a benchmark function is one operation; the harness owns
-repetition. Benchmark filtering is independent of `--filter`, and `--cases` is
-shared: a benchmark uses the same typed arguments, expectations, skips and
-provider substitutions as a test, and may declare `sizes` so one function covers
-small, medium and large inputs. Boolean results default to `true`; other result
-types need an explicit expectation. `--bench-only` skips the correctness pass for
-local iteration.
+The runner on the compiler's core dropped the old runner's features below
+(S5-D6). Each flag is refused with status 2 and a one-line reason.
 
-```console
-$ mylang test app/main.my --bench '*' --release
-passed main::test_square
-1 passed, 0 cached, 0 failed, 0 skipped
-bench main::bench_sum[small] measured median=12.40 ns/op spread=1.20% samples=9
-benchmarks: 1 measured, 0 compared, passed
-$ cat cases.json
-{
-  "main::bench_sum": {
-    "sizes": {"small": {"arguments": {"limit": "1000"}, "expected": "499500"}}
-  }
-}
-```
+| Flag | Replacement |
+| --- | --- |
+| `--diagnostics` | `mylang check FILE.my --diagnostics=json` reports the same diagnostics |
+| `--report`, `--timings`, `--timings=json`, `--explain-invalidation` | `--json` reports each test, with `cached` for a replayed receipt; `mylang run FILE.my --timings` times one program |
+| `--friction-log` | `mylang check FILE.my --friction-log=PATH` |
+| `--pure-skip` | none: a failure is never replayed |
+| `--max-calls` | `--max-steps` and `--max-frames` |
+| `--bench`, `--bench-only`, `--bench-output`, `--bench-baseline`, `--bench-policy`, `--bench-profile`, `--bench-warmup`, `--bench-batches`, `--bench-batch-ms`, `--bench-timeout-ms`, and `mylang bench-promote` | none: `bench_` functions, baselines and policies were dropped; time a built program instead |
+| `--gc-stress`, `--gc-runtime`, `--rc-runtime`, `--legacy-sharing`, `--value-semantics` | none: one-count reference counting and value semantics are the only modes |
+| `--library`, `--provider`, `--link-library`, `--library-path` | `extern def` with `--link FILE.c` |
 
-The declared timing boundary is the complete native copied-value call, including
-argument and result codec costs. Compilation, process startup, library loading,
-fixture preparation and report serialization are excluded. Every operation is a
-fresh copied-value call, so no guest state carries between operations, and the
-returned value is validated outside every timed region. A trap, an incorrect
-result, a timeout or an invalid output fails the run and is listed in the
-candidate's failures instead of producing a measurement. `--bench-warmup`,
-`--bench-batches` and `--bench-batch-ms` tune sampling, and `--bench-timeout-ms`
-bounds the whole child. A directory run measures one program at a time so timing
-batches never compete, and it rejects `--bench-output`, `--bench-baseline` and
-`--bench-policy` because it has no single aggregate report.
-
-### Reviewed baselines
-
-`--bench-output FILE` writes an atomic candidate report containing provenance,
-raw batch durations, medians and spreads. A candidate is not an approved
-baseline: promote it with `bench-promote`, which requires a complete, passing
-candidate and records the approver, reason, revision and the replaced
-measurements in retained history. The approved file is never modified by a
-comparison.
-
-```console
-$ mylang test app/main.my --bench '*' --release \
-    --bench-output perf/candidate.json
-$ mylang bench-promote --candidate perf/candidate.json --baseline perf/baseline.json \
-    --approver maintainer --reason "accept 4% growth" --revision testrev
-$ mylang test app/main.my --bench '*' --release \
-    --bench-baseline perf/baseline.json --bench-policy perf/policy.json
-```
-
-`perf/policy.json` supplies default and per-benchmark `allowed_growth_percent`,
-`minimum_meaningful_delta_ns` and an independent `max_ns_per_op` ceiling, the
-`required` benchmark suite and the noise budget. A relative regression is flagged
-only when both the percentage limit and the absolute floor are exceeded;
-equality with a limit passes and zero percent tolerance is valid. Runs are
-compared only when their optimization mode, runner profile, boundary version,
-sampling configuration, workload version and fixture identity match, so ordinary
-code and compiler revisions stay comparable. New, removed, skipped, incompatible
-and unresolved-noise results are explicit non-pass verdicts, and a near-limit or
-noisy sample earns at most one predefined confirmation whose batches are
-evaluated together. Malformed artifacts, unknown schema versions, duplicate
-benchmark IDs, invalid numbers and nonpositive baselines are rejected.
+`--whole-program` is accepted and ignored, and `--qbe PATH` is ignored.

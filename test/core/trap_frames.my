@@ -1,0 +1,21 @@
+module trap_frames
+
+def leaf(xs: list[int], i: int) -> int:
+    total = 0
+    for k in range(i):
+        total = total + xs[k]
+    return total
+
+
+def mid(xs: list[int], i: int) -> int:
+    v = leaf(xs, i)
+    if v > 100:
+        return v
+    return v + 1
+
+
+def main(args: list[str], out: Stream) -> int:
+    xs = [1, 2, 3]
+    out.print(mid(xs, 1))
+    out.print(mid(xs, len(args) + 7))
+    return 0

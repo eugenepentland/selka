@@ -1,0 +1,33 @@
+module integer_text
+
+public def test_integer_formatting_roundtrips_signed_limits_and_retained_outputs() -> bool:
+    values: list[int] = [0, 1, -1, 9, -9, 10, -10, 1000000000000000000, -9223372036854775808, 9223372036854775807]
+    kept: list[str] = []
+    for value in values:
+        kept.append(str(value))
+    for index, spelling in enumerate(kept):
+        match int(spelling):
+            case Some(value):
+                if value != values[index]:
+                    return False
+            case None:
+                return False
+    maximum: u64 = 18446744073709551615
+    if str(maximum) != "18446744073709551615":
+        return False
+    return kept[0] == "0" and kept[8] == "-9223372036854775808" and kept[9] == "9223372036854775807"
+
+
+# spec-case: PY-NUM-1
+public def test_integer_parser_preserves_sign_whitespace_underscores_and_refusals() -> bool:
+    if int(" \t+9_223_372_036_854_775_807\r\n") != Some(9223372036854775807):
+        return False
+    if int("-9_223_372_036_854_775_808") != Some(-9223372036854775808):
+        return False
+    if int("000_000_042") != Some(42) or int("-0") != Some(0):
+        return False
+    invalid = ["", " ", "+", "-", "_1", "1_", "1__2", "1x", "1 2", "é", "１２", "9223372036854775808", "-9223372036854775809"]
+    for spelling in invalid:
+        if int(spelling) != None:
+            return False
+    return True

@@ -1,0 +1,65 @@
+test-core
++- run test 187 pass, 2 fail (189 total)
+error: 'value_build_test.test.a record holding an unsupported type is refused with its reason, every time it is used' failed:
+       ====== expected this output: =========
+       capability type␃
+
+       ======== instead found this: =========
+       record field type␃
+
+       ======================================
+       First difference occurs on line 1:
+       expected:
+       capability type
+       ^ ('\x63')
+       found:
+       record field type
+       ^ ('\x72')
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x1eb9975 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/src/core/value_build_test.zig:245:5: 0x20e3598 in test.a record holding an unsupported type is refused with its reason, every time it is used (root_test.zig)
+           try std.testing.expectEqualStrings("capability type", refusal.reason);
+           ^
+error: 's2_ir_test.test.remaining S2 builder dispatch stubs keep precise source refusals' failed:
+       no_such_file_in_tests_lang (debug): mylang-core test did not finish cleanly:
+       error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/tests/lang/no_such_file_in_tests_lang.my: FileNotFound
+
+       no_such_row: the new core failed to build the row:
+       error: cannot read /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/test/core/row_no_such_row.my: FileNotFound
+
+
+       ====== expected this output: =========
+       index␃
+
+       ======== instead found this: =========
+       index of a non-array␃
+
+       ======================================
+       First difference occurs on line 1:
+       expected:
+       index
+            ^ (end of string)
+       found:
+       index of a non-array
+            ^ ('\x20')
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x1eb9975 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/src/core/s2_ir_test.zig:626:5: 0x1eb9c3b in refuseSource (root_test.zig)
+           try std.testing.expectEqualStrings(reason, refusal.reason);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-functions/src/core/s2_ir_test.zig:636:5: 0x1eb9f7d in test.remaining S2 builder dispatch stubs keep precise source refusals (root_test.zig)
+           try refuseSource(a, "def main() -> int:\n    s = \"abc\"\n    ch = s[0]\n    return len(ch)\n", "index");
+           ^
+failed command: ./.zig-cache/o/d2290fdae6348249647fb08b3d9851b5/test --cache-dir=./.zig-cache --seed=0x98b37050 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 187/189 tests passed (2 failed)
+test-core transitive failure
++- run test 187 pass, 2 fail (189 total)
+   +- compile test debug native success 2s MaxRSS:324M
+      +- options cached
+         +- compile exe mylang-core debug native cached 7ms MaxRSS:38M
+
+Command exited with non-zero status 1
+command_seconds=241.31

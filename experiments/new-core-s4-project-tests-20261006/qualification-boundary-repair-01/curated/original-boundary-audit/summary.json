@@ -1,0 +1,45 @@
+{
+  "schema": "s4-qualification-boundary-audit-v1",
+  "compiler_processes": 0,
+  "native_processes": 0,
+  "sources": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification_support.py",
+      "sha256": "6f78a8ff7627b38c89aa4b5bd9e461aa1cdac214d78ab53297b3192da873f49f"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/conformance_checked.py",
+      "sha256": "d1aecb451e0519e409d0eddf69399ee7fdbf21ed7d4bf5cd1948a83f9d397042"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/project_matrix.py",
+      "sha256": "c47fcf0efd23eec1cb2f693afa5c012a02dae6d1a2cc1d1e80f48e0c91ac2b1a"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/fuzz_matrix.py",
+      "sha256": "2d3bdf4cfdb1845f1e61d4ed0d8e12e877fde7b1ae408d0789776559efadcf58"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification_selftest.py",
+      "sha256": "b45ebf59e5dd42c795dc4c6a70225b0cd902fcfb5b2dd5ad066e956c8784e9e9"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py",
+      "sha256": "ed1d46e6a9741a66ff2a0137a8410e413eabb31a63295a1bc380eeba1c3ff70d"
+    }
+  ],
+  "source_bytes_unchanged": true,
+  "head_before": "0acc9d1a70316d8b9e5ee3218f62fcafaf26a5c9",
+  "head_after": "0acc9d1a70316d8b9e5ee3218f62fcafaf26a5c9",
+  "head_unchanged": true,
+  "tracked_status": "",
+  "reductions": [
+    "source-label",
+    "project-live-input",
+    "fuzz-source-mutation",
+    "report-executed",
+    "report-dropped",
+    "report-unloaded",
+    "full-mode-flags"
+  ]
+}

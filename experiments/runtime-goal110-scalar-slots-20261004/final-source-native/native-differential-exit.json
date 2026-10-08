@@ -1,0 +1,11 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/native-differential.py",
+    "--evidence-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/goal110-llvm-slots-20261004/experiments/runtime-goal110-scalar-slots-20261004/final-source-native"
+  ],
+  "exit_status": 0
+}

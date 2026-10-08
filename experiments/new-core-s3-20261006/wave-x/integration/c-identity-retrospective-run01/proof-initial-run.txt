@@ -1,0 +1,5 @@
+Command: PYTHONDONTWRITEBYTECODE=1 python3 proof.py --write-raw-diffs --output summary.json
+Status: 0
+Stdout:
+35 modules; 343 definitions; 70 guard pairs; 35 entry grants; 0 residuals; outside-function module content unqualified
+Stderr: empty

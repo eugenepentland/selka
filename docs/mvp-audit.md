@@ -11,6 +11,9 @@
 > `invoke-project` commands went with the interpreter. Bytecode survives only as the
 > compiler's internal IR that QBE consumes, which `dump-bytecode` still prints. The VM
 > evidence recorded below is history.
+>
+> Retired in October 2026 (new compiler core, S5): the QBE back end, bytecode and
+> `dump-bytecode`. Native code now comes from Core IR through LLVM (`mylang dump-ir`).
 
 Scope: the scalar compiler and the then-current bytecode VM in plan sections 4–13,
 on Guardian's exact Zig `0.17.0-dev.1683+5ceec001b` snapshot. Plan sections 15 and 18

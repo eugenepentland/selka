@@ -1,0 +1,297 @@
+--- before/row_record_construct.ll
++++ after/row_record_construct.ll
+@@ -121,7 +121,10 @@
+   call void @myl_core_free_block(ptr %block)
+   ret void
+ }
++declare void @myl_core_io_at(i32) nounwind
+ declare i64 @runtime_bench_now() nounwind
++declare void @myl_core_host_check(i64) nounwind
++declare i64 @myl_core_host_grant() nounwind
+ define internal fastcc { i1, i64 } @myl_core_digits8(ptr %data, i64 %n) alwaysinline nounwind {
+ entry:
+   %eight = icmp eq i64 %n, 8
+@@ -273,6 +276,11 @@
+   %parsed = call zeroext i1 @myl_core_str_parse_int(ptr %text, ptr %out)
+   ret i1 %parsed
+ }
++declare ptr @myl_core_buffer_new(i64) nounwind
++declare ptr @myl_core_buffer_copy(ptr) nounwind
++declare ptr @myl_core_buffer_push(ptr, i8 zeroext) nounwind
++declare ptr @myl_core_buffer_set(ptr, i64, i8 zeroext) nounwind
++declare ptr @myl_core_buffer_pop(ptr) nounwind
+ define internal i64 @"my.row_record_construct::main"(ptr %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000003 {
+ entry:
+   %slot = alloca i64, align 8
+@@ -523,92 +531,96 @@
+   %v111 = add nuw nsw i64 %v97, 1
+   br label %b22
+ b25:
+-  %v130 = call i64 @runtime_bench_now(), !dbg !1000026
++  call void @myl_core_io_at(i32 19)
++  call void @myl_core_host_check(i64 %p1), !dbg !1000026
++  %v131 = call i64 @runtime_bench_now(), !dbg !1000027
+   br label %b26
+ b26:
+-  %v137 = phi i64 [ 0, %b25 ], [ %v196, %b28 ]
+-  %v187 = phi i64 [ 0, %b25 ], [ %v191, %b28 ]
+-  %v139 = icmp slt i64 %v137, %v34
+-  br i1 %v139, label %b27, label %b29
++  %v138 = phi i64 [ 0, %b25 ], [ %v197, %b28 ]
++  %v188 = phi i64 [ 0, %b25 ], [ %v192, %b28 ]
++  %v140 = icmp slt i64 %v138, %v34
++  br i1 %v140, label %b27, label %b29
+ b27:
+-  %v142 = urem i64 %v137, 17
++  %v143 = urem i64 %v138, 17
+   br label %b30
+ b28:
+-  %v196 = add nuw nsw i64 %v137, 1
++  %v197 = add nuw nsw i64 %v138, 1
+   br label %b26
+ b29:
+   call void @myl_core_free(ptr %v107)
+-  %v209 = call i64 @runtime_bench_now(), !dbg !1000027
+-  %p.89 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v209, i64 %v130)
+-  %v213 = extractvalue { i64, i1 } %p.89, 0
++  call void @myl_core_io_at(i32 20)
++  call void @myl_core_host_check(i64 %p1), !dbg !1000028
++  %v211 = call i64 @runtime_bench_now(), !dbg !1000029
++  %p.89 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v211, i64 %v131)
++  %v215 = extractvalue { i64, i1 } %p.89, 0
+   %o.90 = extractvalue { i64, i1 } %p.89, 1
+   br i1 %o.90, label %trap.91, label %b29.92, !prof !0
+ trap.91:
+-  call void @myl_core_trap(i32 19, i64 %v209, i64 %v130), !dbg !1000028
++  call void @myl_core_trap(i32 21, i64 %v211, i64 %v131), !dbg !1000030
+   unreachable
+ b29.92:
+-  call void @myl_core_print_i64(i64 %p2, i64 %v187)
++  call void @myl_core_print_i64(i64 %p2, i64 %v188)
+   call void @myl_core_print_sep(i64 %p2)
+-  call void @myl_core_print_i64(i64 %p2, i64 %v213)
++  call void @myl_core_print_i64(i64 %p2, i64 %v215)
+   call void @myl_core_print_end(i64 %p2)
+   ret i64 0
+ b30:
+-  %v147 = phi i64 [ 0, %b27 ], [ %v181, %b32 ]
+-  %v176 = phi i64 [ 0, %b27 ], [ %v177, %b32 ]
+-  %v149 = icmp slt i64 %v147, %v21
+-  br i1 %v149, label %b31, label %b33
++  %v148 = phi i64 [ 0, %b27 ], [ %v182, %b32 ]
++  %v177 = phi i64 [ 0, %b27 ], [ %v178, %b32 ]
++  %v150 = icmp slt i64 %v148, %v21
++  br i1 %v150, label %b31, label %b33
+ b31:
+   br i1 false, label %b34, label %b35
+ b32:
+-  %v181 = add nuw nsw i64 %v147, 1
++  %v182 = add nuw nsw i64 %v148, 1
+   br label %b30
+ b33:
+-  %v189 = add nuw nsw i64 %v187, %v176
+-  %v191 = urem i64 %v189, 1000000007
++  %v190 = add nuw nsw i64 %v188, %v177
++  %v192 = urem i64 %v190, 1000000007
+   br label %b28
+ b34:
+   %h.93 = getelementptr inbounds i8, ptr %v107, i64 8
+-  %v155 = load i64, ptr %h.93, align 8, !tbaa !5
+-  %hi.94 = icmp ugt i64 %v155, 9223372036854775807
++  %v156 = load i64, ptr %h.93, align 8, !tbaa !5
++  %hi.94 = icmp ugt i64 %v156, 9223372036854775807
+   br i1 %hi.94, label %trap.95, label %b34.96, !prof !0
+ trap.95:
+-  call void @myl_core_trap(i32 20, i64 %v155, i64 0), !dbg !1000029
++  call void @myl_core_trap(i32 22, i64 %v156, i64 0), !dbg !1000031
+   unreachable
+ b34.96:
+-  %v156 = add i64 %v155, 0
+-  %p.97 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v156, i64 %v147)
+-  %v157 = extractvalue { i64, i1 } %p.97, 0
++  %v157 = add i64 %v156, 0
++  %p.97 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v157, i64 %v148)
++  %v158 = extractvalue { i64, i1 } %p.97, 0
+   %o.98 = extractvalue { i64, i1 } %p.97, 1
+   br i1 %o.98, label %trap.99, label %b34.96.100, !prof !0
+ trap.99:
+-  call void @myl_core_trap(i32 21, i64 %v156, i64 %v147), !dbg !1000030
++  call void @myl_core_trap(i32 23, i64 %v157, i64 %v148), !dbg !1000032
+   unreachable
+ b34.96.100:
+   br label %b35
+ b35:
+-  %v159 = phi i64 [ %v147, %b31 ], [ %v157, %b34.96.100 ]
++  %v160 = phi i64 [ %v148, %b31 ], [ %v158, %b34.96.100 ]
+   %data.101 = getelementptr inbounds i8, ptr %v107, i64 32
+-  %elt.102 = getelementptr inbounds i64, ptr %data.101, i64 %v159
+-  %v161 = load i64, ptr %elt.102, align 8, !range !11, !tbaa !7
+-  %v165 = add nuw nsw i64 %v161, %v142
+-  %v167 = urem i64 %v161, 17
+-  %v169 = mul nuw nsw i64 %v161, 3
+-  %v170 = add nuw nsw i64 %v169, %v142
+-  %v172 = urem i64 %v170, 101
+-  %rm.103 = insertvalue { i64, i64, i64 } poison, i64 %v165, 0
+-  %rm.104 = insertvalue { i64, i64, i64 } %rm.103, i64 %v167, 1
+-  %v173 = insertvalue { i64, i64, i64 } %rm.104, i64 %v172, 2
+-  %v229 = extractvalue { i64, i64, i64 } %v173, 0
+-  %v230 = extractvalue { i64, i64, i64 } %v173, 1
+-  %v231 = mul nuw nsw i64 %v230, 3
+-  %v232 = add nuw nsw i64 %v229, %v231
+-  %v233 = extractvalue { i64, i64, i64 } %v173, 2
+-  %v234 = mul nuw nsw i64 %v233, 5
+-  %v235 = add nuw nsw i64 %v232, %v234
+-  %v177 = add nuw nsw i64 %v176, %v235
++  %elt.102 = getelementptr inbounds i64, ptr %data.101, i64 %v160
++  %v162 = load i64, ptr %elt.102, align 8, !range !11, !tbaa !7
++  %v166 = add nuw nsw i64 %v162, %v143
++  %v168 = urem i64 %v162, 17
++  %v170 = mul nuw nsw i64 %v162, 3
++  %v171 = add nuw nsw i64 %v170, %v143
++  %v173 = urem i64 %v171, 101
++  %rm.103 = insertvalue { i64, i64, i64 } poison, i64 %v166, 0
++  %rm.104 = insertvalue { i64, i64, i64 } %rm.103, i64 %v168, 1
++  %v174 = insertvalue { i64, i64, i64 } %rm.104, i64 %v173, 2
++  %v231 = extractvalue { i64, i64, i64 } %v174, 0
++  %v232 = extractvalue { i64, i64, i64 } %v174, 1
++  %v233 = mul nuw nsw i64 %v232, 3
++  %v234 = add nuw nsw i64 %v231, %v233
++  %v235 = extractvalue { i64, i64, i64 } %v174, 2
++  %v236 = mul nuw nsw i64 %v235, 5
++  %v237 = add nuw nsw i64 %v234, %v236
++  %v178 = add nuw nsw i64 %v177, %v237
+   br label %b32
+ }
+-define internal i64 @"my.row_record_construct::parse_number"(ptr %p0) nounwind uwtable !dbg !1000031 {
++define internal i64 @"my.row_record_construct::parse_number"(ptr %p0) nounwind uwtable !dbg !1000033 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -630,7 +642,7 @@
+ b4:
+   ret i64 0
+ }
+-define internal i64 @"my.row_record_construct::score"({ i64, i64, i64 } %p0) nounwind uwtable !dbg !1000032 {
++define internal i64 @"my.row_record_construct::score"({ i64, i64, i64 } %p0) nounwind uwtable !dbg !1000034 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -642,7 +654,7 @@
+   %o.2 = extractvalue { i64, i1 } %p.1, 1
+   br i1 %o.2, label %trap.3, label %b0.4, !prof !0
+ trap.3:
+-  call void @myl_core_trap(i32 22, i64 %v2, i64 3), !dbg !1000033
++  call void @myl_core_trap(i32 24, i64 %v2, i64 3), !dbg !1000035
+   unreachable
+ b0.4:
+   %p.5 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v1, i64 %v4)
+@@ -650,7 +662,7 @@
+   %o.6 = extractvalue { i64, i1 } %p.5, 1
+   br i1 %o.6, label %trap.7, label %b0.4.8, !prof !0
+ trap.7:
+-  call void @myl_core_trap(i32 23, i64 %v1, i64 %v4), !dbg !1000034
++  call void @myl_core_trap(i32 25, i64 %v1, i64 %v4), !dbg !1000036
+   unreachable
+ b0.4.8:
+   %v6 = extractvalue { i64, i64, i64 } %p0, 2
+@@ -659,7 +671,7 @@
+   %o.10 = extractvalue { i64, i1 } %p.9, 1
+   br i1 %o.10, label %trap.11, label %b0.4.8.12, !prof !0
+ trap.11:
+-  call void @myl_core_trap(i32 24, i64 %v6, i64 5), !dbg !1000035
++  call void @myl_core_trap(i32 26, i64 %v6, i64 5), !dbg !1000037
+   unreachable
+ b0.4.8.12:
+   %p.13 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v5, i64 %v8)
+@@ -667,15 +679,16 @@
+   %o.14 = extractvalue { i64, i1 } %p.13, 1
+   br i1 %o.14, label %trap.15, label %b0.4.8.12.16, !prof !0
+ trap.15:
+-  call void @myl_core_trap(i32 25, i64 %v5, i64 %v8), !dbg !1000036
++  call void @myl_core_trap(i32 27, i64 %v5, i64 %v8), !dbg !1000038
+   unreachable
+ b0.4.8.12.16:
+   ret i64 %v9
+ }
+-define i32 @main(i32 %argc, ptr %argv) uwtable !dbg !1000037 {
++define i32 @main(i32 %argc, ptr %argv) uwtable !dbg !1000039 {
+ entry:
+   %args = call ptr @myl_core_args(i32 %argc, ptr %argv)
+-  %r = call i64 @"my.row_record_construct::main"(ptr %args, i64 1, i64 1), !dbg !1000038
++  %host1 = call i64 @myl_core_host_grant()
++  %r = call i64 @"my.row_record_construct::main"(ptr %args, i64 %host1, i64 1), !dbg !1000040
+   call void @myl_core_release(ptr %args)
+   %s = call i32 @myl_core_exit(i64 %r)
+   ret i32 %s
+@@ -719,22 +732,26 @@
+ @myl.fn.17 = private constant [27 x i8] c"row_record_construct::main\00"
+ @myl.op.18 = private constant [4 x i8] c"add\00"
+ @myl.fn.18 = private constant [27 x i8] c"row_record_construct::main\00"
+-@myl.op.19 = private constant [4 x i8] c"sub\00"
++@myl.op.19 = private constant [7 x i8] c"effect\00"
+ @myl.fn.19 = private constant [27 x i8] c"row_record_construct::main\00"
+-@myl.op.20 = private constant [5 x i8] c"cast\00"
++@myl.op.20 = private constant [7 x i8] c"effect\00"
+ @myl.fn.20 = private constant [27 x i8] c"row_record_construct::main\00"
+-@myl.op.21 = private constant [4 x i8] c"add\00"
++@myl.op.21 = private constant [4 x i8] c"sub\00"
+ @myl.fn.21 = private constant [27 x i8] c"row_record_construct::main\00"
+-@myl.op.22 = private constant [4 x i8] c"mul\00"
+-@myl.fn.22 = private constant [28 x i8] c"row_record_construct::score\00"
++@myl.op.22 = private constant [5 x i8] c"cast\00"
++@myl.fn.22 = private constant [27 x i8] c"row_record_construct::main\00"
+ @myl.op.23 = private constant [4 x i8] c"add\00"
+-@myl.fn.23 = private constant [28 x i8] c"row_record_construct::score\00"
++@myl.fn.23 = private constant [27 x i8] c"row_record_construct::main\00"
+ @myl.op.24 = private constant [4 x i8] c"mul\00"
+ @myl.fn.24 = private constant [28 x i8] c"row_record_construct::score\00"
+ @myl.op.25 = private constant [4 x i8] c"add\00"
+ @myl.fn.25 = private constant [28 x i8] c"row_record_construct::score\00"
+-@myl_core_site_count = constant i32 26
+-@myl_core_sites = constant [26 x %myl.site] [%myl.site { i32 4, i32 31, i32 25, i32 64, ptr @myl.op.0, ptr @myl.fn.0 }, %myl.site { i32 0, i32 31, i32 25, i32 64, ptr @myl.op.1, ptr @myl.fn.1 }, %myl.site { i32 2, i32 31, i32 25, i32 64, ptr @myl.op.2, ptr @myl.fn.2 }, %myl.site { i32 4, i32 32, i32 31, i32 64, ptr @myl.op.3, ptr @myl.fn.3 }, %myl.site { i32 0, i32 32, i32 31, i32 64, ptr @myl.op.4, ptr @myl.fn.4 }, %myl.site { i32 2, i32 32, i32 31, i32 64, ptr @myl.op.5, ptr @myl.fn.5 }, %myl.site { i32 4, i32 33, i32 25, i32 64, ptr @myl.op.6, ptr @myl.fn.6 }, %myl.site { i32 0, i32 33, i32 25, i32 64, ptr @myl.op.7, ptr @myl.fn.7 }, %myl.site { i32 2, i32 33, i32 25, i32 64, ptr @myl.op.8, ptr @myl.fn.8 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.9, ptr @myl.fn.9 }, %myl.site { i32 4, i32 36, i32 14, i32 64, ptr @myl.op.10, ptr @myl.fn.10 }, %myl.site { i32 4, i32 36, i32 14, i32 64, ptr @myl.op.11, ptr @myl.fn.11 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.12, ptr @myl.fn.12 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.13, ptr @myl.fn.13 }, %myl.site { i32 4, i32 36, i32 14, i32 64, ptr @myl.op.14, ptr @myl.fn.14 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.15, ptr @myl.fn.15 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.16, ptr @myl.fn.16 }, %myl.site { i32 0, i32 36, i32 25, i32 64, ptr @myl.op.17, ptr @myl.fn.17 }, %myl.site { i32 0, i32 36, i32 21, i32 64, ptr @myl.op.18, ptr @myl.fn.18 }, %myl.site { i32 0, i32 49, i32 39, i32 64, ptr @myl.op.19, ptr @myl.fn.19 }, %myl.site { i32 4, i32 43, i32 17, i32 64, ptr @myl.op.20, ptr @myl.fn.20 }, %myl.site { i32 0, i32 43, i32 17, i32 64, ptr @myl.op.21, ptr @myl.fn.21 }, %myl.site { i32 0, i32 17, i32 32, i32 64, ptr @myl.op.22, ptr @myl.fn.22 }, %myl.site { i32 0, i32 17, i32 21, i32 64, ptr @myl.op.23, ptr @myl.fn.23 }, %myl.site { i32 0, i32 17, i32 47, i32 64, ptr @myl.op.24, ptr @myl.fn.24 }, %myl.site { i32 0, i32 17, i32 36, i32 64, ptr @myl.op.25, ptr @myl.fn.25 }]
++@myl.op.26 = private constant [4 x i8] c"mul\00"
++@myl.fn.26 = private constant [28 x i8] c"row_record_construct::score\00"
++@myl.op.27 = private constant [4 x i8] c"add\00"
++@myl.fn.27 = private constant [28 x i8] c"row_record_construct::score\00"
++@myl_core_site_count = constant i32 28
++@myl_core_sites = constant [28 x %myl.site] [%myl.site { i32 4, i32 31, i32 25, i32 64, ptr @myl.op.0, ptr @myl.fn.0 }, %myl.site { i32 0, i32 31, i32 25, i32 64, ptr @myl.op.1, ptr @myl.fn.1 }, %myl.site { i32 2, i32 31, i32 25, i32 64, ptr @myl.op.2, ptr @myl.fn.2 }, %myl.site { i32 4, i32 32, i32 31, i32 64, ptr @myl.op.3, ptr @myl.fn.3 }, %myl.site { i32 0, i32 32, i32 31, i32 64, ptr @myl.op.4, ptr @myl.fn.4 }, %myl.site { i32 2, i32 32, i32 31, i32 64, ptr @myl.op.5, ptr @myl.fn.5 }, %myl.site { i32 4, i32 33, i32 25, i32 64, ptr @myl.op.6, ptr @myl.fn.6 }, %myl.site { i32 0, i32 33, i32 25, i32 64, ptr @myl.op.7, ptr @myl.fn.7 }, %myl.site { i32 2, i32 33, i32 25, i32 64, ptr @myl.op.8, ptr @myl.fn.8 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.9, ptr @myl.fn.9 }, %myl.site { i32 4, i32 36, i32 14, i32 64, ptr @myl.op.10, ptr @myl.fn.10 }, %myl.site { i32 4, i32 36, i32 14, i32 64, ptr @myl.op.11, ptr @myl.fn.11 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.12, ptr @myl.fn.12 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.13, ptr @myl.fn.13 }, %myl.site { i32 4, i32 36, i32 14, i32 64, ptr @myl.op.14, ptr @myl.fn.14 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.15, ptr @myl.fn.15 }, %myl.site { i32 0, i32 36, i32 14, i32 64, ptr @myl.op.16, ptr @myl.fn.16 }, %myl.site { i32 0, i32 36, i32 25, i32 64, ptr @myl.op.17, ptr @myl.fn.17 }, %myl.site { i32 0, i32 36, i32 21, i32 64, ptr @myl.op.18, ptr @myl.fn.18 }, %myl.site { i32 7, i32 38, i32 13, i32 64, ptr @myl.op.19, ptr @myl.fn.19 }, %myl.site { i32 7, i32 49, i32 15, i32 64, ptr @myl.op.20, ptr @myl.fn.20 }, %myl.site { i32 0, i32 49, i32 39, i32 64, ptr @myl.op.21, ptr @myl.fn.21 }, %myl.site { i32 4, i32 43, i32 17, i32 64, ptr @myl.op.22, ptr @myl.fn.22 }, %myl.site { i32 0, i32 43, i32 17, i32 64, ptr @myl.op.23, ptr @myl.fn.23 }, %myl.site { i32 0, i32 17, i32 32, i32 64, ptr @myl.op.24, ptr @myl.fn.24 }, %myl.site { i32 0, i32 17, i32 21, i32 64, ptr @myl.op.25, ptr @myl.fn.25 }, %myl.site { i32 0, i32 17, i32 47, i32 64, ptr @myl.op.26, ptr @myl.fn.26 }, %myl.site { i32 0, i32 17, i32 36, i32 64, ptr @myl.op.27, ptr @myl.fn.27 }]
+ !0 = !{!"branch_weights", i32 1, i32 1048575}
+ !1 = !{!"myl.tbaa"}
+ !2 = !{!"myl.count", !1, i64 0}
+@@ -775,19 +792,21 @@
+ !1000024 = !DILocation(line: 36, column: 25, scope: !1000003)
+ !1000025 = !DILocation(line: 36, column: 21, scope: !1000003)
+ !1000026 = !DILocation(line: 38, column: 13, scope: !1000003)
+-!1000027 = !DILocation(line: 49, column: 15, scope: !1000003)
+-!1000028 = !DILocation(line: 49, column: 39, scope: !1000003)
+-!1000029 = !DILocation(line: 43, column: 17, scope: !1000003)
+-!1000030 = !DILocation(line: 43, column: 17, scope: !1000003)
+-!1000031 = distinct !DISubprogram(name: "row_record_construct::parse_number", scope: !1000000, file: !1000000, line: 20, type: !1000002, scopeLine: 20, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
+-!1000032 = distinct !DISubprogram(name: "row_record_construct::score", scope: !1000000, file: !1000000, line: 16, type: !1000002, scopeLine: 16, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
+-!1000033 = !DILocation(line: 17, column: 32, scope: !1000032)
+-!1000034 = !DILocation(line: 17, column: 21, scope: !1000032)
+-!1000035 = !DILocation(line: 17, column: 47, scope: !1000032)
+-!1000036 = !DILocation(line: 17, column: 36, scope: !1000032)
+-!1000037 = distinct !DISubprogram(name: "myl.entry", scope: !1000000, file: !1000000, line: 1, type: !1000002, scopeLine: 1, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
+-!1000038 = !DILocation(line: 1, column: 1, scope: !1000037)
++!1000027 = !DILocation(line: 38, column: 13, scope: !1000003)
++!1000028 = !DILocation(line: 49, column: 15, scope: !1000003)
++!1000029 = !DILocation(line: 49, column: 15, scope: !1000003)
++!1000030 = !DILocation(line: 49, column: 39, scope: !1000003)
++!1000031 = !DILocation(line: 43, column: 17, scope: !1000003)
++!1000032 = !DILocation(line: 43, column: 17, scope: !1000003)
++!1000033 = distinct !DISubprogram(name: "row_record_construct::parse_number", scope: !1000000, file: !1000000, line: 20, type: !1000002, scopeLine: 20, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
++!1000034 = distinct !DISubprogram(name: "row_record_construct::score", scope: !1000000, file: !1000000, line: 16, type: !1000002, scopeLine: 16, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
++!1000035 = !DILocation(line: 17, column: 32, scope: !1000034)
++!1000036 = !DILocation(line: 17, column: 21, scope: !1000034)
++!1000037 = !DILocation(line: 17, column: 47, scope: !1000034)
++!1000038 = !DILocation(line: 17, column: 36, scope: !1000034)
++!1000039 = distinct !DISubprogram(name: "myl.entry", scope: !1000000, file: !1000000, line: 1, type: !1000002, scopeLine: 1, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
++!1000040 = !DILocation(line: 1, column: 1, scope: !1000039)
+ !llvm.dbg.cu = !{!1000001}
+-!llvm.module.flags = !{!1000039, !1000040}
+-!1000039 = !{i32 2, !"Debug Info Version", i32 3}
+-!1000040 = !{i32 7, !"Dwarf Version", i32 4}
++!llvm.module.flags = !{!1000041, !1000042}
++!1000041 = !{i32 2, !"Debug Info Version", i32 3}
++!1000042 = !{i32 7, !"Dwarf Version", i32 4}

@@ -1,0 +1,7 @@
+module app
+import leaf
+def main(args: list[str]) -> int:
+    x = 9223372036854775807
+    if len(args) > 0:
+        x = 0
+    return leaf.origin(x)

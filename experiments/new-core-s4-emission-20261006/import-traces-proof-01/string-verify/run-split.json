@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-traces-proof-01/string-verify/split"
+  ],
+  "status": 1,
+  "stdout": "",
+  "stderr": "error: generic failure\n  leaf.my:3:12  leaf::origin[str]  Err(...) created\n  app.my:5:17   app::main          ? propagated\n",
+  "seconds": 0.0006884019821882248
+}

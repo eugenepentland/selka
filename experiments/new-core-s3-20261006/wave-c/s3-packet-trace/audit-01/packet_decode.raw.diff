@@ -1,0 +1,57 @@
+--- 0a5
++++ trace-twins
+@@ -36,7 +36,8 @@
+ declare void @myl_core_print_sep(i64) nounwind
+ declare void @myl_core_print_end(i64) nounwind
+ declare ptr @myl_core_box_new(i64) nounwind
+-declare void @myl_core_err_trace(i32, i32) nounwind cold
++declare preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32) nounwind cold
++declare preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32) nounwind cold
+ declare void @myl_core_assert_fail(i32) noreturn nounwind cold
+ declare void @llvm.memcpy.p0.p0.i64(ptr noalias nocapture writeonly, ptr noalias nocapture readonly, i64, i1 immarg)
+ declare void @llvm.memmove.p0.p0.i64(ptr nocapture writeonly, ptr nocapture readonly, i64, i1 immarg)
+@@ -1254,7 +1255,7 @@
+   %fp.10 = getelementptr inbounds i8, ptr %stack.3, i64 16
+   %uw.9 = load i64, ptr %fp.10, align 8, !tbaa !7
+   %v7 = insertvalue { i8, [3 x i64] } %u.8, i64 %uw.9, 1, 2
+-  call void @myl_core_err_trace(i32 59, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 59) #1
+   ret { i8, [3 x i64] } %v7
+ b2:
+   %lh.11 = getelementptr inbounds i8, ptr %p0, i64 8
+@@ -1283,7 +1284,7 @@
+   %fp.26 = getelementptr inbounds i8, ptr %stack.19, i64 16
+   %uw.25 = load i64, ptr %fp.26, align 8, !tbaa !7
+   %v18 = insertvalue { i8, [3 x i64] } %u.24, i64 %uw.25, 1, 2
+-  call void @myl_core_err_trace(i32 61, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 61) #1
+   ret { i8, [3 x i64] } %v18
+ b4:
+   %lh.27 = getelementptr inbounds i8, ptr %p0, i64 8
+@@ -1312,7 +1313,7 @@
+   %fp.42 = getelementptr inbounds i8, ptr %stack.35, i64 16
+   %uw.41 = load i64, ptr %fp.42, align 8, !tbaa !7
+   %v29 = insertvalue { i8, [3 x i64] } %u.40, i64 %uw.41, 1, 2
+-  call void @myl_core_err_trace(i32 63, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 63) #1
+   ret { i8, [3 x i64] } %v29
+ b6:
+   %lh.43 = getelementptr inbounds i8, ptr %p0, i64 8
+@@ -1345,7 +1346,7 @@
+   %fp.59 = getelementptr inbounds i8, ptr %stack.52, i64 16
+   %uw.58 = load i64, ptr %fp.59, align 8, !tbaa !7
+   %v43 = insertvalue { i8, [3 x i64] } %u.57, i64 %uw.58, 1, 2
+-  call void @myl_core_err_trace(i32 65, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 65) #1
+   ret { i8, [3 x i64] } %v43
+ b8:
+   %h.60 = getelementptr inbounds i8, ptr %p0, i64 8
+@@ -1441,7 +1442,7 @@
+   %fp.83 = getelementptr inbounds i8, ptr %stack.76, i64 16
+   %uw.82 = load i64, ptr %fp.83, align 8, !tbaa !7
+   %v79 = insertvalue { i8, [3 x i64] } %u.81, i64 %uw.82, 1, 2
+-  call void @myl_core_err_trace(i32 67, i32 0) #1
++  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32 67) #1
+   ret { i8, [3 x i64] } %v79
+ b14:
+   %h.84 = getelementptr inbounds i8, ptr %p0, i64 8

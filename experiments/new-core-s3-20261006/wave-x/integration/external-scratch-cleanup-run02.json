@@ -1,0 +1,9 @@
+{
+ "recorded_utc": "2026-10-06T21:35:50.140434+00:00",
+ "removed": [
+  "/var/tmp/mylang-old-gate-final-old-run02-l0a2l52_"
+ ],
+ "contents_before": [],
+ "reason": "private scratch of full_old_gate.py run02 (final-old-run02); its evidence is retained in integration/final-old-run02",
+ "removed_ok": true
+}

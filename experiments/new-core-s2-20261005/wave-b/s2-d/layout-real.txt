@@ -1,0 +1,47 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 30s (all 3 build slot(s) busy)
+In file included from /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/.mylang-cache/s2-d/layout/bench.c:13:
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/src/core/runtime/core_rt.c:13:9: warning: '_POSIX_C_SOURCE' macro redefined [-Wmacro-redefined]
+   13 | #define _POSIX_C_SOURCE 200809L
+      |         ^
+/usr/include/features.h:319:10: note: previous definition is here
+  319 | # define _POSIX_C_SOURCE        202405L
+      |          ^
+1 warning generated.
+# Production Core runtime + extracted LLVM alwaysinline probe; zig cc -O3 -march=native -flto; CPU10
+unit: user cycles/op
+dict_lookup    n=64       old 10.70  old+hint 11.32  cpython 8.35  cpython+hint 8.06  swiss 10.76  emitted 12.80   (median of 3)
+dict_update/2  n=64       old 35.07  old+hint 35.90  cpython 27.57  cpython+hint 27.27  swiss 54.88  emitted 60.77   (median of 3)
+dict_update/1  n=64       old 31.83  old+hint 33.16  cpython 24.48  cpython+hint 25.03  swiss 52.21  emitted 56.85   (median of 3)
+set_dedup      n=64       old 17.42  old+hint 19.26  cpython 16.18  cpython+hint 16.02  swiss 26.25  emitted 30.72   (median of 3)
+sparse_int     n=64       old 7.14  old+hint 6.75  cpython 7.19  cpython+hint 5.17  swiss 5.30  emitted 8.04   (median of 3)
+churn          n=64       old 87.01  old+hint 90.14  cpython 70.75  cpython+hint 72.89  swiss 74.45  emitted 91.32   (median of 3)
+lookup_str     n=64       old 11.59  old+hint 11.56  cpython 12.82  swiss 14.38  emitted 16.88   (median of 3)
+update_str/2   n=64       old 43.72  old+hint 41.26  cpython 37.25  swiss 70.28  emitted 64.76   (median of 3)
+update_str/1   n=64       old 38.34  old+hint 38.16  cpython 29.33  swiss 58.89  emitted 56.74   (median of 3)
+mixed_str      n=64       old 13.78  old+hint 13.77  cpython 13.59  swiss 14.78  emitted 13.95   (median of 3)
+word_count     n=64       old 59.85  old+hint 49.39  cpython 58.77  swiss 60.35  emitted 98.51   (median of 3)
+unit: user cycles/op
+dict_lookup    n=4096     old 9.57  old+hint 10.16  cpython 8.95  cpython+hint 8.63  swiss 10.72  emitted 13.18   (median of 3)
+dict_update/2  n=4096     old 28.72  old+hint 29.50  cpython 25.27  cpython+hint 24.32  swiss 41.14  emitted 56.90   (median of 3)
+dict_update/1  n=4096     old 35.90  old+hint 40.74  cpython 29.01  cpython+hint 31.88  swiss 56.74  emitted 77.09   (median of 3)
+set_dedup      n=4096     old 25.65  old+hint 26.68  cpython 14.24  cpython+hint 15.05  swiss 20.87  emitted 26.08   (median of 3)
+sparse_int     n=4096     old 26.73  old+hint 39.00  cpython 28.48  cpython+hint 21.15  swiss 14.89  emitted 17.38   (median of 3)
+churn          n=4096     old 70.91  old+hint 74.27  cpython 67.37  cpython+hint 69.55  swiss 68.44  emitted 81.22   (median of 3)
+lookup_str     n=4096     old 45.06  old+hint 31.70  cpython 53.47  swiss 19.04  emitted 21.44   (median of 3)
+update_str/2   n=4096     old 69.39  old+hint 67.47  cpython 63.81  swiss 76.23  emitted 64.81   (median of 3)
+update_str/1   n=4096     old 63.08  old+hint 63.07  cpython 57.99  swiss 62.99  emitted 57.28   (median of 3)
+mixed_str      n=4096     old 57.84  old+hint 64.42  cpython 57.60  swiss 39.08  emitted 36.46   (median of 3)
+word_count     n=4096     old 58.35  old+hint 47.93  cpython 58.76  swiss 59.56  emitted 96.72   (median of 3)
+unit: user cycles/op
+dict_lookup    n=65536    old 26.38  old+hint 26.98  cpython 13.67  cpython+hint 13.36  swiss 15.55  emitted 19.83   (median of 3)
+dict_update/2  n=65536    old 54.64  old+hint 55.05  cpython 42.01  cpython+hint 41.76  swiss 63.15  emitted 72.73   (median of 3)
+dict_update/1  n=65536    old 48.11  old+hint 51.70  cpython 40.06  cpython+hint 42.18  swiss 60.93  emitted 67.03   (median of 3)
+set_dedup      n=65536    old 21.20  old+hint 21.80  cpython 14.09  cpython+hint 14.86  swiss 21.78  emitted 27.31   (median of 3)
+sparse_int     n=65536    old 56.48  old+hint 59.48  cpython 67.25  cpython+hint 70.72  swiss 30.84  emitted 39.37   (median of 3)
+churn          n=65536    old 83.92  old+hint 87.51  cpython 74.17  cpython+hint 76.09  swiss 72.58  emitted 86.66   (median of 3)
+lookup_str     n=65536    old 98.49  old+hint 99.09  cpython 106.42  swiss 55.83  emitted 59.44   (median of 3)
+update_str/2   n=65536    old 124.90  old+hint 124.09  cpython 118.88  swiss 161.85  emitted 114.50   (median of 3)
+update_str/1   n=65536    old 118.93  old+hint 120.91  cpython 111.86  swiss 149.68  emitted 104.20   (median of 3)
+mixed_str      n=65536    old 114.47  old+hint 113.74  cpython 127.47  swiss 90.44  emitted 98.34   (median of 3)
+word_count     n=65536    old 59.26  old+hint 50.04  cpython 57.91  swiss 60.96  emitted 95.77   (median of 3)

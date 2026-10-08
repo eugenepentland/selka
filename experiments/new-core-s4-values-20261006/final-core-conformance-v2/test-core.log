@@ -1,0 +1,3 @@
+source_commit=d4d8c4e5639c6f6470883eca97ba160a3b4de627
+$ scripts/build-slot.sh gate -- bash -c '"$@"; result=$?; exit "$result"' -- scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-core-conformance-v2/test-core.seconds zig build test-core -Dcore-shards=64 --summary all
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)

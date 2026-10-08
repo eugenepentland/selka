@@ -1,0 +1,19 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "env",
+    "MYL_CORE_LEAKCHECK=1",
+    "zig-out/bin/mylang-core",
+    "test",
+    "test/core/v_nested_places.my",
+    "--release",
+    "--verify-facts",
+    "--cache-dir",
+    ".mylang-cache/s4-v/focused-nested-v4"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 686789,
+  "status": 0,
+  "elapsed_seconds": 24.989558121887967
+}

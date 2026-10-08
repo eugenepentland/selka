@@ -1,0 +1,18 @@
+1/17 tool_ticket.test.tool tickets require same compiler provenance and ignore missing internal hints...OK
+2/17 tool_ticket.test.tool tickets reject damaged foreign and uncacheable identities...OK
+3/17 tool_ticket.test.valid tool tickets bind the executable generation and native CPU...OK
+4/17 tool_identity.test.tool identity resolves executable PATH and propagates allocation failure...OK
+5/17 tool_identity.test.tool memo is reusable and corruption is a content rehash...OK
+6/17 tool_identity.test.same-size executable edit with restored mtime invalidates tool identity...OK
+7/17 tool_identity.test.library edits additions removals and an override invalidate tool identity...OK
+8/17 tool_identity.test.PATH selection and linked library content are command dependencies...OK
+9/17 tool_identity.test.inventoryHint corruption rediscovers libraries and invalid library roots refuse reuse...OK
+10/17 tool_identity.test.inventoryHint allocation failure propagates instead of becoming a cache miss...OK
+11/17 tool_identity.test.MalformedHint rejects invalid count relative paths presence and timestamps...OK
+12/17 tool_identity.test.fileContent refuses SourceChanged generations and standalone rejects delegated scripts...OK
+13/17 tool_identity.test.lookupReplayCandidate misses damaged memos executable edits and allocation failure...OK
+14/17 tool_identity.test.lookupReplayCandidate library edits and additions require final unchanged refusal...OK
+15/17 tool_identity.test.closure approval refuses unknown static executables and unknown library contents...OK
+16/17 tool_identity.test.approval memo damage is a miss and library aliases cannot hide outside inputs...OK
+17/17 tool_identity.test.approval rejects uncaptured compiler environment paths without publishing trust...OK
+All 17 tests passed.

@@ -32,6 +32,7 @@ def bump(counter: FieldCounter) -> FieldCounter:
 
 
 def reset(counter: mut FieldCounter) -> int:
+    counter.n = 99
     counter.items.append(100)
     return 1
 
@@ -73,12 +74,14 @@ public def test_augmented_addition_to_a_list_field_extends_in_place() -> bool:
     return len(c.items) == 3 and c.items[2] == 8 and before == [1]
 
 
-# Python reads the field before it evaluates the right-hand side.
+# An overlapping mut call finishes before the current field is read.
 # spec-case: AUGMENTED-FIELD-1
-public def test_augmented_field_reads_the_field_before_the_right_side() -> bool:
+public def test_augmented_field_reads_the_current_field_after_the_mut_call() -> bool:
     c = new_counter()
-    c.n += reset(mut c)
-    return c.n == 2
+    before = c
+    added = reset(mut c)
+    c.n += added
+    return c.n == 100 and c.items == [1, 100] and before.n == 1 and before.items == [1]
 
 
 def main() -> int:
@@ -100,7 +103,8 @@ def replace_items(counter: mut FieldCounter) -> list[int]:
 
 
 # spec-case: AUGMENTED-FIELD-1
-public def test_augmented_list_field_reads_then_refreshes_other_fields() -> bool:
+public def test_augmented_list_field_updates_the_replacement_after_the_mut_call() -> bool:
     c = new_counter()
-    c.items += replace_items(mut c)
-    return c.items == [1, 2] and c.n == 7
+    added = replace_items(mut c)
+    c.items += added
+    return c.items == [50, 2] and c.n == 7

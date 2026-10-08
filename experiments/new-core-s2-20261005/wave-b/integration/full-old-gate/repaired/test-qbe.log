@@ -1,0 +1,211 @@
+source_commit=090dabd5a6932a7c3beaec68248f9a35d4c637d7
+root=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration
+$ scripts/build-slot.sh gate -- bash -c '"$@"; result=$?; exit "$result"' -- scripts/build-slot.sh build -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-b/integration/full-old-gate/repaired/test-qbe-seconds.txt zig build test-qbe --summary all
+TMPDIR=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.zig-cache/s2-x/full-gates/tmp
+ZIG_LOCAL_CACHE_DIR=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.zig-cache
+ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 188/831 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 12 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 3588 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 188 file(s) in scope
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 188/831 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 12 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 3588 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 188 file(s) in scope
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 188/831 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 12 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 3588 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 188 file(s) in scope
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 188/831 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 12 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 3588 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 188 file(s) in scope
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 188/831 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 12 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 3588 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 188 file(s) in scope
+test-qbe
++- test-c-ffi
+   +- run test w
+guardian/test: 119 test(s) selected
+guardian/test: test wall 0.19s; slowest over 50ms:
+guardian/test:   0.12s  chunked_arena.test.the chunked arena reserves at most one chunk beyond what it holds and returns what large lists leave behind
+guardian/test: PASS — 119 passed
+guardian/test: RESULT {"passed":119,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/dc7cd11a30b753a64a37569fcff731fe/test --cache-dir=./.zig-cache --seed=0x7af63361 --listen=-
+
+test-qbe
++- test-qbe-build
+   +- run test w
+guardian/test: 4 test(s) selected
+guardian/test: test wall 2.71s; slowest over 50ms:
+guardian/test:   2.70s  host_native.test.the host native public build reads embedded files through its actual project frontend
+guardian/test: PASS — 4 passed
+guardian/test: RESULT {"passed":4,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/3c355fb88ae11cd41503172ca79ee264/test --cache-dir=./.zig-cache --seed=0x7af63361 --listen=-
+
+test-qbe
++- test-native-tests
+   +- run test w
+guardian/test: 256 test(s) selected
+warning: something
+warning: something
+guardian/test: test wall 9.91s; slowest over 50ms:
+guardian/test:   2.87s  qbe_build_io.test.concurrent staging in one destination never loses a child to another build's reclaim
+guardian/test:   1.81s  native_test_wire.test.local mutation and output both reuse a receipt
+guardian/test:   1.28s  qbe_build_link.test.a link naming more object bytes than one execve can carry links through a response file, recorded and direct
+guardian/test:   1.06s  native_test_wire.test.an optional text, list and optional optional cross the copied-value boundary as case nodes
+guardian/test:   1.00s  qbe_build_spawn.test.a pool hears first from the tool that finishes first, whatever order they started in
+guardian/test:   0.89s  native_test_wire.test.a record, an array, a nested record, a zero-length and a large argument round-trip through mylang test
+guardian/test:   0.41s  native_test_execute.test.a parallel run returns every outcome in its call's slot, bounding and isolating each child
+guardian/test:   0.10s  chunked_arena.test.the chunked arena reserves at most one chunk beyond what it holds and returns what large lists leave behind
+guardian/test: PASS — 256 passed
+guardian/test: RESULT {"passed":256,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/0dbe0deba02cbf4e8fcf0c8c48eadf00/test --cache-dir=./.zig-cache --seed=0x7af63361 --listen=-
+
+test-qbe
++- test-qbe-build
+   +- run test w
+guardian/test: 139 test(s) selected
+guardian/test: SLOW  20.59s  qbe_build_test.test.optional registration images link and run through direct and frame-map full and ThinLTO
+guardian/test: SLOW  18.00s  qbe_build_test.test.a prebuilt runtime installed beside the compiler links directly, and damage falls back to source
+guardian/test: test wall 56.79s; slowest over 50ms:
+guardian/test:   20.59s  qbe_build_test.test.optional registration images link and run through direct and frame-map full and ThinLTO
+guardian/test:   18.00s  qbe_build_test.test.a prebuilt runtime installed beside the compiler links directly, and damage falls back to source
+guardian/test:   2.45s  qbe_build_test.test.a batched build and an unbatched build of one program behave identically
+guardian/test:   2.16s  qbe_build_test.test.native RC record field transfers balance owned and caller traps, arenas and budgets
+guardian/test:   2.12s  qbe_build_test.test.native RC sites build attributes every counted event to a source site
+guardian/test:   2.12s  qbe_build_io.test.concurrent staging in one destination never loses a child to another build's reclaim
+guardian/test:   1.99s  qbe_build_test.test.RC field inout unaccounted native owner and hold balances survive traps arenas and budgets
+guardian/test:   1.92s  qbe_build_test.test.native RC closed field owner balances storeback snapshot traps and arena refusal
+guardian/test:   1.79s  qbe_build_test.test.native RC argv owner balances borrowed entry returns capability refusal and traps
+guardian/test:   1.00s  qbe_build_spawn.test.a pool hears first from the tool that finishes first, whatever order they started in
+guardian/test: PASS — 139 passed
+guardian/test: RESULT {"passed":139,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/046f37c5bebfb0606ab5580706a7c8ec/test --cache-dir=./.zig-cache --seed=0x7af63361 --listen=-
+
+test-qbe
++- test-golden
+   +- run test w
+guardian/test: 1 test(s) selected
+golden parity: checked 231 (source 175, fixtures 56), skipped 373 (docs 27, unmatched fixtures 345, data-only 1), mismatches 0
+guardian/test: SLOW  71.86s  golden_parity.test.checked-in golden corpora replay natively with explicit skip counts
+guardian/test: test wall 71.86s; slowest over 50ms:
+guardian/test:   71.86s  golden_parity.test.checked-in golden corpora replay natively with explicit skip counts
+guardian/test: PASS — 1 passed
+guardian/test: RESULT {"passed":1,"failed":0,"skipped":0}
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/6ed7143a83b70833493604f122c45b1b/test --cache-dir=./.zig-cache --seed=0x7af63361 --listen=-
+
+Build Summary: 51/51 steps succeeded; 519/519 tests passed
+test-qbe success
++- run exe native-cow-test cached
+|  +- compile exe native-cow-test debug native cached 13ms MaxRSS:39M
++- run exe native-heap-test cached
+|  +- compile exe native-heap-test debug native cached 13ms MaxRSS:40M
++- run exe native-arena-chunks-test cached
+|  +- compile exe native-arena-chunks-test debug native cached 14ms MaxRSS:41M
++- run exe error-trace-abi-test cached
+|  +- compile exe error-trace-abi-test debug native cached 14ms MaxRSS:41M
++- test-native-tests success
+|  +- run test 256 pass (256 total) 9s MaxRSS:103M
+|  |  +- compile test debug native success 1s MaxRSS:304M
+|  |  |  +- run exe qbe-build-assets (qbe_build_assets) cached
+|  |  |     +- compile exe qbe-build-assets debug native cached 4ms MaxRSS:39M
+|  |  +- install success
+|  |  |  +- install mylang cached
+|  |  |  |  +- compile exe mylang debug native cached 7ms MaxRSS:41M
+|  |  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|  |  |  |     +- guardian-selfcheck success
+|  |  |  |        +- run ../guardian-zig/zig-out/bin/guardian-check success 6ms
+|  |  |  +- install qbe cached
+|  |  |  |  +- compile exe qbe fast native cached 11ms MaxRSS:41M
+|  |  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  |  +- install generated/ cached
+|  |  |  |  +- run exe mylang (mylang-runtime) cached
+|  |  |  |     +- compile exe mylang debug native (+1 more reused dependencies)
+|  |  |  |     +- install mylang (+2 more reused dependencies)
+|  |  |  |     +- compile exe qbe fast native (reused)
+|  |  |  +- install board-trial cached
+|  |  |  |  +- compile exe board-trial debug native cached 8ms MaxRSS:41M
+|  |  |  |  |  +- options cached
+|  |  |  |  |  |  +- compile exe qbe fast native (reused)
+|  |  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  |  +- install schematic-svg cached
+|  |  |  |  +- compile exe schematic-svg debug native cached 8ms MaxRSS:41M
+|  |  |  |  |  +- options (+1 more reused dependencies)
+|  |  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  |  +- install mylang-io cached
+|  |  |  |  +- compile exe mylang-io debug native cached 7ms MaxRSS:41M
+|  |  |  |  |  +- options (+1 more reused dependencies)
+|  |  |  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  |  +- hash declared test inputs success 163ms
+|  |  +- record the test environment success 3ms
+|  |  +- compile exe qbe fast native (reused)
+|  |  +- compile exe mylang debug native (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|     +- guardian-selfcheck (+1 more reused dependencies)
++- test-c-ffi success
+|  +- run test 119 pass (119 total) 249ms MaxRSS:71M
+|  |  +- compile test debug native cached 6ms MaxRSS:41M
+|  |  +- install (+7 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- compile exe qbe fast native (reused)
+|  |  +- compile exe mylang debug native (+1 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 2s
+|     +- guardian-selfcheck (+1 more reused dependencies)
++- test-qbe-build success
+|  +- run test 4 pass (4 total) 2s MaxRSS:104M
+|  |  +- compile test debug native success 1s MaxRSS:231M
+|  |  |  +- options (+1 more reused dependencies)
+|  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  +- install (+7 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- compile exe qbe fast native (reused)
+|  |  +- compile exe mylang debug native (+1 more reused dependencies)
+|  +- run test 139 pass (139 total) 56s MaxRSS:293M
+|  |  +- compile test debug native success 1s MaxRSS:236M
+|  |  |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+|  |  +- install (+7 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- compile exe qbe fast native (reused)
+|  |  +- compile exe mylang debug native (+1 more reused dependencies)
+|  +- run exe host-bridge-test cached
+|  |  +- compile exe host-bridge-test debug native cached 13ms MaxRSS:40M
+|  |  +- install (+7 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|     +- guardian-selfcheck (+1 more reused dependencies)
++- test-golden success
+|  +- run test 1 pass (1 total) 1m MaxRSS:143M
+|     +- compile test debug native success 578ms MaxRSS:158M
+|     |  +- options cached
+|     |     +- compile exe mylang debug native (+1 more reused dependencies)
+|     |     +- compile exe qbe fast native (reused)
+|     +- install (+7 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- compile exe qbe fast native (reused)
+|     +- compile exe mylang debug native (+1 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+   +- guardian-selfcheck (+1 more reused dependencies)
+
+
+exit=0 command_seconds=75.41 wall_including_admission_seconds=82.184

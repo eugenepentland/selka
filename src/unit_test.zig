@@ -34,7 +34,7 @@ test "unit calls bare returns and generic fallthrough preserve results" {
     try scenario(t.allocator);
 }
 // spec: UNIT-3
-test "unit data and host boundaries reject unsupported ABI values explicitly" {
+test "unit data and extern boundaries reject unsupported ABI values explicitly" {
     const typed = @import("typed.zig");
     try t.expectEqual(typed.Type.unit, @as(typed.Value, .unit).typeOf());
     try t.expect(!typed.Type.unit.isAggregate());
@@ -42,7 +42,7 @@ test "unit data and host boundaries reject unsupported ABI values explicitly" {
     try t.expectEqual(@as(?u3, null), typed.Type.unit.capabilityIndex());
     try t.expectError(error.NotDataType, @import("data_type.zig").check(t.allocator, &.{}, .unit, true));
     var c = try language.Compilation.init(t.allocator, "host.my",
-        \\host def f(host: Host) effects(host)
+        \\extern def f(host: Host, x: unit) -> i64 effects(host)
         \\
         \\
         \\def main() -> i64:
@@ -50,7 +50,7 @@ test "unit data and host boundaries reject unsupported ABI values explicitly" {
     );
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
-    try t.expectEqualStrings("E_HOST_SIGNATURE", c.diagnostics.items[0].code);
+    try t.expectEqualStrings("E_EXTERN_SIGNATURE", c.diagnostics.items[0].code);
 }
 fn publicUnit(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;

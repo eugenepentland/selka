@@ -1,0 +1,41 @@
+{
+  "runtime_object_sha256": "e81b25f1e4c285e13a9687ba4eee2aea7525294b29b44d1a7450a2b09909e802",
+  "runs": [
+    {
+      "name": "program",
+      "argv": [
+        "zig",
+        "cc",
+        "-O3",
+        "-march=native",
+        "-Wno-override-module",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/ownership-frame-reducer/program.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/mut-frame-combined-before-01/overflow-release-new/cache/core_rt-a5b0556a3a4eebfb.o",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/ownership-frame-reducer/program"
+      ],
+      "llvm_sha256": "732092b2f81c41abf92eb3e6dd5ecd84b8024d9ca538ecc158a46c8056dca945",
+      "status": 1,
+      "stdout": "",
+      "stderr": "hand.my:1:62: error[R_CORE_FACT]: native execution failed (count == 1 before an in-place update: value 0, other 1)\n  in origin at hand.my:1:62\n"
+    },
+    {
+      "name": "program-notail",
+      "argv": [
+        "zig",
+        "cc",
+        "-O3",
+        "-march=native",
+        "-Wno-override-module",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/ownership-frame-reducer/program-notail.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/mut-frame-combined-before-01/overflow-release-new/cache/core_rt-a5b0556a3a4eebfb.o",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/ownership-frame-reducer/program-notail"
+      ],
+      "llvm_sha256": "409195c78eaaff9579fc94b320d4dc7ace01b216410f9bbcf34016059bb8de45",
+      "status": 1,
+      "stdout": "",
+      "stderr": "hand.my:1:62: error[R_CORE_FACT]: native execution failed (count == 1 before an in-place update: value 0, other 1)\n  in origin at hand.my:1:62\n"
+    }
+  ]
+}

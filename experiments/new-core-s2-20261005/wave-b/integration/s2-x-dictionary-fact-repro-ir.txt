@@ -1,0 +1,289 @@
+fn s2_x_dictionary_fact_repro::main() -> i64
+b0:
+  %0 = call bool s2_x_dictionary_fact_repro::count_text_keys()
+  branch %0, b1, b2
+b1: ; preds b0
+  ret 0:i64
+b2: ; preds b0
+  ret 1:i64
+fn s2_x_dictionary_fact_repro::count_text_keys() -> bool
+b0:
+  %2 = dict_new dict[str, i64] 0:u64
+  %4 = dict_new dict[str, i64] 0:u64
+  %6 = call u64 myl_core_str_chars(str0)
+  %7 = convert.exact i64 %6
+  %9 = sub.proven i64 %7, 2:i64
+  jump b1
+b1: ; preds b0 b3
+  %11 = phi i64 0:i64, %50
+  %19 = phi dict[str, i64] %2, %20
+  %21 = phi dict[str, i64] %4, %45
+  %13 = cmp.lt bool %11, %9
+  branch %13, b2, b4
+b2: ; preds b1
+  %17 = add.proven i64 %11, 3:i64
+  %18 = str_slice str str0, %11, %17
+  %20 = call dict[str, i64] s2_x_dictionary_fact_repro::bump_text(%19, %18)
+  release %18
+  %23 = add.proven i64 %11, 3:i64
+  %24 = str_slice str str0, %11, %23
+  %25 = call dict[str, i64] s2_x_dictionary_fact_repro::bump_text(%21, %24)
+  release %24
+  %27 = add.proven i64 %11, 3:i64
+  %28 = str_slice str str0, %11, %27
+  %29 = dict_find i64 %25, %28
+  %31 = cmp.ge bool %29, 0:i64
+  branch %31, b5, b6
+b3: ; preds b9
+  %50 = add.proven i64 %11, 1:i64
+  jump b1
+b4: ; preds b1
+  %57 = dict_len u64 %19
+  %58 = convert.proven i64 %57
+  jump b10
+b5: ; preds b2
+  %34 = dict_entry_value i64 %25, %29
+  %36 = add.proven i64 %34, 0:i64
+  %39 = iconst bool 1
+  branch 1:bool, b7, b8
+b6: ; preds b2
+  unreachable
+b7: ; preds b5
+  release %28
+  %199 = is_unique bool %25
+  branch %199, b45, b46
+b8: ; preds b5
+  %206 = is_unique bool %25
+  branch %206, b47, b48
+b9: ; preds b45 b47
+  %45 = phi dict[str, i64] %41, %43
+  jump b3
+b10: ; preds b4 b12
+  %60 = phi i64 0:i64, %78
+  %67 = phi i64 0:i64, %75
+  %62 = cmp.lt bool %60, %58
+  branch %62, b11, b13
+b11: ; preds b10
+  %65 = call i64 myl_core_dict_ordinal(%19, %60)
+  %66 = dict_entry_key str %19, %65
+  %69 = dict_find i64 %19, %66
+  %71 = cmp.ge bool %69, 0:i64
+  branch %71, b14, b15
+b12: ; preds b14
+  %78 = add.proven i64 %60, 1:i64
+  jump b10
+b13: ; preds b10
+  %81 = dict_len u64 %19
+  %82 = dict_len u64 %21
+  %83 = cmp.eq bool %81, %82
+  branch %83, b16, b21
+b14: ; preds b11
+  %74 = dict_entry_value i64 %19, %69
+  %75 = add.exact i64 %67, %74
+  jump b12
+b15: ; preds b11
+  unreachable
+b16: ; preds b13 b20
+  %86 = phi u64 0:u64, %102
+  %105 = phi bool %83, %99
+  %87 = cmp.lt bool %86, %81
+  branch %87, b17, b21
+b17: ; preds b16
+  %89 = call i64 myl_core_dict_ordinal(%19, %86)
+  %90 = dict_entry_key str %19, %89
+  %91 = dict_find i64 %21, %90
+  %93 = cmp.ge bool %91, 0:i64
+  branch %93, b18, b19
+b18: ; preds b17
+  %97 = dict_entry_value i64 %19, %89
+  %98 = dict_entry_value i64 %21, %91
+  %99 = cmp.eq bool %97, %98
+  branch %99, b20, b21
+b19: ; preds b17
+  jump b21
+b20: ; preds b18
+  %102 = add u64 %86, 1:u64
+  jump b16
+b21: ; preds b13 b16 b19 b18
+  %104 = phi bool %83, %105, 0:bool, %99
+  branch %104, b22, b23
+b22: ; preds b21
+  %110 = cmp.eq bool %67, 30:i64
+  jump b23
+b23: ; preds b21 b22
+  %112 = phi bool %104, %110
+  branch %112, b24, b25
+b24: ; preds b23
+  %118 = dict_find i64 %19, str1
+  %120 = cmp.ge bool %118, 0:i64
+  branch %120, b26, b27
+b25: ; preds b23 b26
+  %127 = phi bool %112, %125
+  branch %127, b28, b49
+b26: ; preds b24
+  %123 = dict_entry_value i64 %19, %118
+  %125 = cmp.eq bool %123, 2:i64
+  jump b25
+b27: ; preds b24
+  unreachable
+b28: ; preds b25
+  %130 = record_make record{dict[str, i64]} %19
+  %131 = record_get dict[str, i64] %130, field0
+  %132 = dict_len u64 %131
+  %133 = convert.proven i64 %132
+  %135 = list_new list[str] %133
+  jump b30
+b29: ; preds b49 b39
+  %197 = phi bool %127, %195
+  ret %197
+b30: ; preds b28 b32
+  %137 = phi i64 0:i64, %148
+  %144 = phi list[str] %135, %145
+  %139 = cmp.lt bool %137, %133
+  branch %139, b31, b33
+b31: ; preds b30
+  %142 = call i64 myl_core_dict_ordinal(%131, %137)
+  %143 = dict_entry_key str %131, %142
+  retain %143
+  %145 = list_push list[str] %144, %143
+  jump b32
+b32: ; preds b31
+  %148 = add.proven i64 %137, 1:i64
+  jump b30
+b33: ; preds b30
+  release %131
+  %155 = record_make record{dict[str, i64]} %21
+  %156 = record_get dict[str, i64] %155, field0
+  %157 = dict_len u64 %156
+  %158 = convert.proven i64 %157
+  %160 = list_new list[str] %158
+  jump b34
+b34: ; preds b33 b36
+  %162 = phi i64 0:i64, %173
+  %169 = phi list[str] %160, %170
+  %164 = cmp.lt bool %162, %158
+  branch %164, b35, b37
+b35: ; preds b34
+  %167 = call i64 myl_core_dict_ordinal(%156, %162)
+  %168 = dict_entry_key str %156, %167
+  retain %168
+  %170 = list_push list[str] %169, %168
+  jump b36
+b36: ; preds b35
+  %173 = add.proven i64 %162, 1:i64
+  jump b34
+b37: ; preds b34
+  release %156
+  %175 = list_len u64 %144
+  %176 = list_len u64 %169
+  %177 = cmp.eq bool %175, %176
+  branch %177, b40, b50
+b38: ; preds b40 b43
+  %181 = phi u64 0:u64, %189
+  %182 = cmp.lt bool %181, %175
+  branch %182, b41, b42
+b39: ; preds b50 b44 b42
+  %195 = phi bool %177, 0:bool, 1:bool
+  jump b29
+b40: ; preds b37
+  jump b38
+b41: ; preds b38
+  %184 = list_get str %144, %181
+  %185 = list_get str %169, %181
+  %186 = call bool myl_core_str_eq(%184, %185)
+  branch %186, b43, b44
+b42: ; preds b38
+  release %144
+  release %169
+  jump b39
+b43: ; preds b41
+  %189 = add u64 %181, 1:u64
+  jump b38
+b44: ; preds b41
+  release %144
+  release %169
+  jump b39
+b45: ; preds b7 b46
+  %205 = phi dict[str, i64] %25, %202
+  %41 = dict_set_value dict[str, i64] %205, %29, %36
+  jump b9
+b46: ; preds b7
+  %202 = dict_copy dict[str, i64] %25
+  release %25
+  jump b45
+b47: ; preds b8 b48
+  %212 = phi dict[str, i64] %25, %209
+  %213 = dict_find i64 %212, %28
+  %43 = dict_insert dict[str, i64] %212, %213, %28, %36
+  jump b9
+b48: ; preds b8
+  %209 = dict_copy dict[str, i64] %25
+  release %25
+  jump b47
+b49: ; preds b25
+  release %19
+  release %21
+  jump b29
+b50: ; preds b37
+  release %144
+  release %169
+  jump b39
+fn myl_core_str_chars(str) -> u64 extern
+fn s2_x_dictionary_fact_repro::bump_text(dict[str, i64], str) -> dict[str, i64]
+b0:
+  %3 = dict_find i64 param0, param1
+  %5 = cmp.ge bool %3, 0:i64
+  branch %5, b1, b2
+b1: ; preds b0
+  %7 = dict_entry_value i64 param0, %3
+  jump b3
+b2: ; preds b0
+  jump b3
+b3: ; preds b1 b2
+  %10 = phi i64 %7, 0:i64
+  %12 = add.exact i64 %10, 1:i64
+  %17 = cmp.ge bool %3, 0:i64
+  branch %17, b4, b5
+b4: ; preds b3
+  %26 = is_unique bool param0
+  branch %26, b7, b8
+b5: ; preds b3
+  %33 = is_unique bool param0
+  branch %33, b9, b10
+b6: ; preds b7 b9
+  %23 = phi dict[str, i64] %19, %21
+  ret %23
+b7: ; preds b4 b8
+  %32 = phi dict[str, i64] param0, %29
+  %19 = dict_set_value dict[str, i64] %32, %3, %12
+  jump b6
+b8: ; preds b4
+  %29 = dict_copy dict[str, i64] param0
+  release param0
+  jump b7
+b9: ; preds b5 b10
+  %39 = phi dict[str, i64] param0, %36
+  %40 = dict_find i64 %39, param1
+  retain param1
+  %21 = dict_insert dict[str, i64] %39, %40, param1, %12
+  jump b6
+b10: ; preds b5
+  %36 = dict_copy dict[str, i64] param0
+  release param0
+  jump b9
+fn myl_core_dict_ordinal(dict[str, i64], i64) -> i64 extern
+fn myl_core_dict_ordinal(dict[str, i64], u64) -> i64 extern
+fn myl_core_str_eq(str, str) -> bool extern
+facts s2_x_dictionary_fact_repro::main: %0=[0,1]
+facts s2_x_dictionary_fact_repro::count_text_keys: %6=[0,18446744073709551615] %7=[0,9223372036854775807] %9=[-2,9223372036854775805] %11=[0,9223372036854775805] %12=[-9223372036854775808,9223372036854775807] %13=[0,1] %17=[3,9223372036854775807] %23=[3,9223372036854775807] %27=[3,9223372036854775807] %29=[-9223372036854775808,9223372036854775807] %31=[0,1] %34=[-9223372036854775808,9223372036854775807] %36=[-9223372036854775808,9223372036854775807] %37=[-9223372036854775808,9223372036854775807] %39=[1,1] %48=[-9223372036854775808,9223372036854775807] %50=[1,9223372036854775805] %52=[-9223372036854775808,9223372036854775807] %57=[0,140737488355328] %58=[0,140737488355328] %60=[0,140737488355328] %61=[-9223372036854775808,9223372036854775807] %62=[0,1] %65=[-9223372036854775808,9223372036854775807] %67=[-9223372036854775808,9223372036854775807] %69=[-9223372036854775808,9223372036854775807] %71=[0,1] %74=[-9223372036854775808,9223372036854775807] %75=[-9223372036854775808,9223372036854775807] %78=[1,140737488355328] %81=[0,140737488355328] %82=[0,0] %83=[0,1] %86=[0,140737488355328] %87=[0,1] %89=[-9223372036854775808,9223372036854775807] %91=[-9223372036854775808,9223372036854775807] %93=[0,1] %97=[-9223372036854775808,9223372036854775807] %98=[-9223372036854775808,9223372036854775807] %99=[0,1] %102=[1,140737488355328] %104=[0,1] %105=[0,1] %107=[-9223372036854775808,9223372036854775807] %108=[-9223372036854775808,9223372036854775807] %110=[0,1] %112=[0,1] %118=[-9223372036854775808,9223372036854775807] %120=[0,1] %123=[-9223372036854775808,9223372036854775807] %125=[0,1] %127=[0,1] %132=[0,140737488355328] %133=[0,140737488355328] %137=[0,140737488355328] %138=[-9223372036854775808,9223372036854775807] %139=[0,1] %142=[-9223372036854775808,9223372036854775807] %148=[1,140737488355328] %157=[0,140737488355328] %158=[0,140737488355328] %162=[0,140737488355328] %163=[-9223372036854775808,9223372036854775807] %164=[0,1] %167=[-9223372036854775808,9223372036854775807] %173=[1,140737488355328] %175=[0,140737488355328] %176=[0,140737488355328] %177=[0,1] %181=[0,140737488355328] %182=[0,1] %186=[0,1] %189=[1,140737488355328] %195=[0,1] %197=[0,1]
+list s2_x_dictionary_fact_repro::count_text_keys %19: settled=true length=%-1
+list s2_x_dictionary_fact_repro::count_text_keys %21: settled=true length=%-1
+list s2_x_dictionary_fact_repro::count_text_keys %45: settled=true length=%-1
+list s2_x_dictionary_fact_repro::count_text_keys %135: settled=true length=%-1 len=[0,0]
+list s2_x_dictionary_fact_repro::count_text_keys %144: settled=true length=%133 len=[0,140737488355328]
+list s2_x_dictionary_fact_repro::count_text_keys %145: settled=true length=%-1 len=[1,140737488355328]
+list s2_x_dictionary_fact_repro::count_text_keys %160: settled=true length=%-1 len=[0,0]
+list s2_x_dictionary_fact_repro::count_text_keys %169: settled=true length=%158 len=[0,140737488355328]
+list s2_x_dictionary_fact_repro::count_text_keys %170: settled=true length=%-1 len=[1,140737488355328]
+facts s2_x_dictionary_fact_repro::bump_text: %3=[-9223372036854775808,9223372036854775807] %5=[0,1] %7=[-9223372036854775808,9223372036854775807] %10=[-9223372036854775808,9223372036854775807] %12=[-9223372036854775807,9223372036854775807] %15=[-9223372036854775808,9223372036854775807] %17=[0,1]
+list s2_x_dictionary_fact_repro::bump_text %23: settled=true length=%-1

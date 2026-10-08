@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "source_revision": "27de73d302d23a9efaf811d541f1cb723323c434",
+  "reviewed_utc": "2026-10-04T07:41:00.913261+00:00",
+  "exact_native_pairs": 41,
+  "qbe_policy_qbe_execution_pairs": 32,
+  "llvm_policy_qbe_execution_pairs": 9,
+  "successful_pairs": 32,
+  "failure_pairs": 9,
+  "log": "/home/epentland/ai/canopy/mylang-worktrees/goal110-nonnegative-rem-20261004/.mylang-cache/goal110-nonnegative-rem-review/unit-llvm-repaired-final.log",
+  "log_sha256": "44ffefc93608f715c218a9d6bb759340e6c3174d3373d463a0f2b80490cec412",
+  "oracle_script_sha256": "d9fdbb0e2bb33ba945843aa72f82a00b8819e74e1a89d17ed315a29ef7013860",
+  "script_sha256": "beaf1eb6e48fc65d893bbae027ff506b034581076a7bd8e551f7652d9d9f12bf",
+  "source_receipt_sha256": "ab39b71076efa231191dd78b489ecda69fc40f34930c40ffea53e72c5f23a9f1",
+  "limits": [
+    "Saved complete native outcome replay; no new guest execution.",
+    "The nine LLVM-policy pairs execute through QBE, not actual LLVM machine code.",
+    "Trap code and prior output are independently expected; full trap provenance and streams match the accounted control.",
+    "Official successor LLVM qualification remains separate."
+  ]
+}

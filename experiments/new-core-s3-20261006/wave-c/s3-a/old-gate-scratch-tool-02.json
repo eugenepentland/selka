@@ -1,0 +1,9 @@
+{
+  "source": "203c0ca6100344304cbd9fd20d22cc7f9448a145",
+  "tool_commit": "02f796a87cb7d51c4e51897e0a1a05e6526914f5",
+  "tool": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s2-20261005/wave-b/integration/full_old_gate.py",
+  "tool_sha256": "7c2943e7f6e47904e0c70240949709164719a5c53b087b94b8aec8ec0ccf4937",
+  "fix": "TMPDIR outside project .zig-cache, unique evidence name under own .mylang-cache; no compiler/runtime/test change",
+  "failed_receipt": "old-gate-combined-final-01/summary.json",
+  "fresh_receipt": "old-gate-combined-final-02/summary.json"
+}

@@ -1,0 +1,100 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T10:48:35.523020+00:00",
+  "rows": [
+    {
+      "group": "compute",
+      "backend": "llvm",
+      "allocated_sections": 26,
+      "mapped_header_only_differences": [
+        40
+      ],
+      "before_sha256": "7bc288b1ab6ef8fed9549fd4be965ff909b70de5231516993da8024870e3b4c4",
+      "after_sha256": "d0cff4271421fc064a619815b0dc8ab62f169e12dce79c7ba48aceb9260441d9"
+    },
+    {
+      "group": "compute",
+      "backend": "qbe",
+      "allocated_sections": 26,
+      "mapped_header_only_differences": [
+        40
+      ],
+      "before_sha256": "df67bc74aeaec2fc73d17a3ccf9ffb4ee28defcfccfb26761f8f66d9d275b710",
+      "after_sha256": "681430a5980f60df6a8bf6341e4b3d3dc1cb4a57acba8f85009fb666b3fb0396"
+    },
+    {
+      "group": "collections",
+      "backend": "llvm",
+      "allocated_sections": 26,
+      "mapped_header_only_differences": [
+        40
+      ],
+      "before_sha256": "fd657f721993a374cc9c0d6990a021c5380a9e0046fd61bb30cf14f63322ce1a",
+      "after_sha256": "c1cdcb9534ae12ebc8af12c3307d032d029078ce9f779e449bcfb49b19ac11a0"
+    },
+    {
+      "group": "collections",
+      "backend": "qbe",
+      "allocated_sections": 26,
+      "mapped_header_only_differences": [
+        40
+      ],
+      "before_sha256": "6b7cd8aaa1c8bfd0bdcb921f6318c2d3202c38d7b25f62be60e0ed5d017ca48d",
+      "after_sha256": "340f191ced5226e37a42793f885d3d4f84fa0e6d19859c36b3f0c2738d6cdad0"
+    },
+    {
+      "group": "text",
+      "backend": "llvm",
+      "allocated_sections": 26,
+      "mapped_header_only_differences": [
+        40
+      ],
+      "before_sha256": "27079a31c417fef4358f02b1064babb8a6e62d0274cf1f402e3b4b8b87e5418f",
+      "after_sha256": "4fb3521ed8d37bbba38a4b4a37612a38fbfc31a803a4b686eacc7e91ab9413d9"
+    },
+    {
+      "group": "text",
+      "backend": "qbe",
+      "allocated_sections": 26,
+      "mapped_header_only_differences": [
+        40
+      ],
+      "before_sha256": "f87f3741c5b689f23676a584c2558f3c1e0ff8c834c19982d83c188f902c4718",
+      "after_sha256": "9b39a6495897d52f54a019ca97e26e79280927cd30760348ff70f1709e7bc084"
+    },
+    {
+      "group": "legacy",
+      "backend": "llvm",
+      "allocated_sections": 26,
+      "mapped_header_only_differences": [
+        40
+      ],
+      "before_sha256": "46a5f0c52ff09aa379187803199ac1f7d0b172ccea9cf893a96244799465df4e",
+      "after_sha256": "661985d957b3c50556daeeb02ecee201f651f92374cc422ddfaf88f91ebe1ff7"
+    },
+    {
+      "group": "legacy",
+      "backend": "qbe",
+      "allocated_sections": 26,
+      "mapped_header_only_differences": [
+        40
+      ],
+      "before_sha256": "14f34251549be0f10e4ed968e0621869e97863bc716aae2b2b24f6bfcfb42c6b",
+      "after_sha256": "054cf1b38fa617492b10cd0b719601f4b2b32a7917b148df66c19ec5e4aa0bf9"
+    }
+  ],
+  "checks": {
+    "qualification.json": 720,
+    "holdouts.json": 516
+  },
+  "manifest_sha256": "f676f9954ae56e2d773f1939f917266781910cb89bd746628e9714207a1c9462",
+  "saved_receipt_sha256": "f54fdd4afa094c3d5e88848c0588276f6afc36792901f8a383eddcdc82a0e611",
+  "script_sha256": "01f34e78ba648f8e622eff86450dba0d5e6507c0776819a2ac2ca27b22187f44",
+  "elf_helper_sha256": "f9512271f578f88c2cb09cda1ea84c7306f63b497c7129ed7de12188b3e5b07d",
+  "limitations": [
+    "Saved outcomes and read-only ELF parsing; no fresh timing.",
+    "LLVM images equal the measured 5e candidate; QBE images equal G4.",
+    "This candidate does not yet include the integrated index optimization.",
+    "Evidence supports adoption, not integrated goal confirmation."
+  ]
+}

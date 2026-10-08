@@ -1,0 +1,50 @@
+D1 PREP root=@enumFromInt(1) input=.{ .local = @enumFromInt(1) } body=@enumFromInt(7)
+D1 NAME items
+D1 CHANGED items true
+D1 PREP root=@enumFromInt(1) input=.{ .local = @enumFromInt(1) } body=@enumFromInt(19)
+D1 NAME items
+D1 CHANGED items true
+D1 PREP root=@enumFromInt(1) input=.{ .local = @enumFromInt(1) } body=@enumFromInt(28)
+D1 NAME items
+D1 CHANGED items true
+D1 PREP root=@enumFromInt(1) input=.{ .field = .{ .base = @enumFromInt(202), .index = 0 } } body=@enumFromInt(39)
+D1 NAME holder
+D1 CHANGED holder true
+D1 PREP root=@enumFromInt(1) input=.{ .local = @enumFromInt(1) } body=@enumFromInt(48)
+D1 NAME items
+D1 PREP root=@enumFromInt(1) input=.{ .field = .{ .base = @enumFromInt(336), .index = 0 } } body=@enumFromInt(57)
+D1 NAME holder
+D1 PREP root=null input=.{ .block_value = .{ .body = @enumFromInt(265), .value = @enumFromInt(425) } } body=@enumFromInt(67)
+D1 PREP root=@enumFromInt(1) input=.{ .local = @enumFromInt(1) } body=@enumFromInt(77)
+D1 NAME items
+D1 CHANGED items true
+D1 PREP root=@enumFromInt(1) input=.{ .local = @enumFromInt(1) } body=@enumFromInt(90)
+D1 NAME left
+D1 CHANGED left true
+D1 PREP root=@enumFromInt(3) input=.{ .local = @enumFromInt(3) } body=@enumFromInt(90)
+D1 NAME right
+D1 CHANGED right true
+D1 PREP root=@enumFromInt(0) input=.{ .field = .{ .base = @enumFromInt(630), .index = 0 } } body=@enumFromInt(99)
+D1 NAME mapping
+D1 CHANGED mapping true
+{"version":"frontend-cache-v1","syntax_hits":0,"syntax_misses":1,"syntax_stored":1,"verdict_hits":0,"verdict_misses":1,"verdict_stored":1,"damaged":0,"bypassed":0,"evicted":0,"retained_bytes":26310,"stages":{"load_source":{"hits":0,"misses":1,"skipped":0},"lex_parse":{"hits":0,"misses":1,"skipped":0},"collect_declarations":{"hits":0,"misses":1,"skipped":0},"resolve_interface":{"hits":0,"misses":1,"skipped":0},"check_body":{"hits":0,"misses":1,"skipped":0},"instantiate_specialization":{"hits":0,"misses":1,"skipped":0},"lower_function":{"hits":0,"misses":0,"skipped":1},"emit_fragment":{"hits":0,"misses":0,"skipped":1},"link":{"hits":0,"misses":0,"skipped":1}}}
+{"version":"work-report-v1","command":"check","reused":false,"parsed_modules":{"status":"miss","performed":1,"reused":0},"checked_bodies":{"status":"miss","performed":13,"reused":0},"instantiated_specializations":{"status":"miss","performed":0,"reused":0},"lowered_functions":{"status":"skipped","performed":0,"reused":0},"emitted_fragments":{"status":"skipped","performed":0,"reused":0},"links":{"status":"skipped","performed":0,"reused":0},"executed_tests":{"status":"skipped","performed":0,"reused":0},"reused_results":0,"session_reused_results":0,"symbolic_templates":{"status":"skipped","performed":0,"reused":0},"specialization_bodies":{"status":"skipped","performed":0,"reused":0},"semantic_cache":{"retained_bytes":0,"ordinary_bytes":0,"symbolic_bytes":0,"specialization_bytes":0,"evicted":0},"bypassed":[],"session":{"parsed_modules":{"performed":1,"reused":0},"checked_bodies":{"performed":13,"reused":0},"instantiated_specializations":{"performed":0,"reused":0},"lowered_functions":{"performed":0,"reused":0},"emitted_fragments":{"performed":0,"reused":0},"links":{"performed":0,"reused":0},"executed_tests":{"performed":0,"reused":0}}}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"source_load","duration_ns":173393,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"source_load_parse","duration_ns":1874571,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"syntax_parse","duration_ns":3449398,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"declarations_interfaces","duration_ns":87459,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"source_merge","duration_ns":410149,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"summary_load","duration_ns":64039,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"dependency_key_preparation","duration_ns":2860075,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"symbolic_templates","duration_ns":1743,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"stand_in_planning","duration_ns":4535,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"ordinary_body_replay","duration_ns":4624,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"fresh_body_check","duration_ns":4616861,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"entry_adaptation","duration_ns":7046,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"effect_origin_passes","duration_ns":5186486,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"domain_codec_validation","duration_ns":1127,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"warning_derivation","duration_ns":280985,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"check_summaries","duration_ns":836203,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"retention_store_io","duration_ns":5669,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"summary_store","duration_ns":920824,"inclusive":false,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}
+{"version":"phase-timings-v1","kind":"timing","tool":"compiler","name":"total","duration_ns":23374727,"inclusive":true,"counts":{"modules":1,"source_bytes":4078,"ast_nodes":432,"typed_nodes":1247},"exit_code":0}

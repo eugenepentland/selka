@@ -1,0 +1,21 @@
+guardian: diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8: 206/831 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 16 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 4263 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 4/88 failed (function-size, cognitive-complexity, test-no-conditional, try-in-return) — diff-scoped vs 1fd1d566793dcae92449d937aca595c55ee318c8, 206 file(s) in scope
+guardian: failures grouped by check (4):
+  function-size (1 finding)
+    - src/sema.zig:1486: fn checkGenericContracts has 7 runtime params (+0 comptime; runtime limit: 6)
+      fix: bundle related runtime parameters into a struct; comptime specialization inputs are excluded.
+  cognitive-complexity (1 finding)
+    - src/generic_bodies.zig: fn checkWithCatalogCached cognitive complexity 26 (limit: 25)
+      fix: extract helpers; reduce nested control flow.
+  test-no-conditional (2 findings)
+    - src/dictionary_views_test.zig:126: if at top level of test body
+      fix: one top-level loop is fine; merge multiple loops into one table-driven loop, split a branch into two independent tests, or hoist the computation into a helper. A multi-loop finding names the loop to hoist — the assertion-free one when there is one, otherwise the extra loop itself.
+    - src/dictionary_views_test.zig:130: more than one top-level loop — a test may keep one; the loop at line 126 asserts nothing, so hoist that one into a named helper
+  try-in-return (1 finding)
+    - src/dictionary_views.zig:273: `return try names.symbolKind...` — bind the tried value to a local, then return it
+      fix: const v = try <expr>; return v;
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

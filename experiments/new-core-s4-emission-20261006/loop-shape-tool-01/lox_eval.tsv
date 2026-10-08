@@ -1,0 +1,8 @@
+app::main	20	141	1	1
+workload::parse_number	4	8	0	0
+app::runtime_bench_now	0	0	0	0
+myl_core_host_check	0	0	0	0
+workload::batch_result	1	3	0	0
+workload::execute	55	210	1	1
+workload::integer	4	7	0	0
+workload::boolean	4	7	0	0

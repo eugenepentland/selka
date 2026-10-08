@@ -1,0 +1,12 @@
+{
+  "qualified": true,
+  "scope": "Python syntax and CLI only; no native qualification",
+  "jobs_default": 3,
+  "jobs_supported": [
+    1,
+    2,
+    3
+  ],
+  "build_slots_unchanged": 3,
+  "cases_and_seeds_unchanged": true
+}

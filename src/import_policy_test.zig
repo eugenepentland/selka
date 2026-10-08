@@ -91,7 +91,6 @@ test "first matching policy rule wins and defaults apply to remaining edges" {
     try t.expectError(error.IncompleteProject, policy.evaluate(t.allocator, &empty, fallback));
 }
 
-// spec-case: MODULE-PROJECT-1
 test "one edge's policy decision is the evaluator's first matching rule or the default" {
     var config = try policy.Policy.parse(t.allocator,
         \\{"version":1,"default_action":"allow","rules":[{"from":"core.*","to":"app.*","action":"deny","reason":"layering"},{"from":"core.*","to":"*","action":"allow","reason":"core may use anything else"}]}
@@ -149,7 +148,7 @@ test "policy parsing rejects invalid actions and byte and rule budgets" {
     try t.expectError(error.TooManyPolicyRules, policy.Policy.parse(t.allocator, bytes));
 }
 
-const project_config = @import("project_config.zig");
+const project_config = @import("compiler.zig").project_config;
 const valid_policy = "{\"version\":1,\"default_action\":\"allow\",\"rules\":[]}";
 
 fn writeTmp(dir: *std.testing.TmpDir, path: []const u8, data: []const u8) !void {

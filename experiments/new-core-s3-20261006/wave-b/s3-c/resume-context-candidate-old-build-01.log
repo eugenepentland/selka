@@ -1,0 +1,3 @@
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/test/core/c_environment_context.my:3:19: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          case Some(value):
+                    ^

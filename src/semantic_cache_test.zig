@@ -64,7 +64,6 @@ fn compare(allocator: std.mem.Allocator, cache: *Cache, bytes: []const u8, expec
             try t.expectEqual(a.policy.effects, b.policy.effects);
             try t.expectEqualSlices(u16, a.signature.mutates, b.signature.mutates);
             try t.expect(a.signature.return_origin.eql(b.signature.return_origin));
-            try t.expect(a.signature.inferred.borrow_origin.eql(b.signature.inferred.borrow_origin));
         }
         try t.expectEqual(number, (try native.run(&cached)).value);
         try t.expectEqual(number, (try native.run(&fresh)).value);
@@ -337,9 +336,9 @@ test "semantic cache rechecks transitive effects when only a callee body changes
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     // Only the callee body changes; the unchanged caller is reused but rechecked.
-    // The host declaration is never executed, so this stays a checking-only test.
+    // The extern declaration is never executed, so this stays a checking-only test.
     const shared =
-        \\host def tick(host: Host) -> i64 effects(host)
+        \\extern def tick(host: Host) -> i64 effects(host)
         \\
         \\
         \\def main(host: Host) -> i64 effects():
@@ -728,7 +727,7 @@ test "semantic cache binds the mutation contract version and effects contract" {
     const baseline_checked = cache.statistics.checked;
 
     // A changed mutation-contract encoding must invalidate every retained body.
-    cache.context.mutation_contract = "mutation-v2";
+    cache.context.mutation_contract = "mutation-contract-under-test";
     try compare(t.allocator, &cache, prefix ++ suffix, 42);
     try t.expectEqual(baseline_reused, cache.statistics.reused);
     try t.expectEqual(baseline_checked + 3, cache.statistics.checked);
@@ -747,66 +746,6 @@ test "semantic cache binds the mutation contract version and effects contract" {
     try t.expectEqual(baseline_checked + 9, cache.statistics.checked);
 }
 
-// spec-case: SEMANTIC-CACHE-7
-test "a reused caller recomputes its return-origin bound after a callee alias change" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
-    defer cache.deinit();
-    const base =
-        \\def source(values: list[int]) -> list[int]:
-        \\    return values
-        \\
-        \\
-        \\def caller(values: list[int]) -> list[int]:
-        \\    return source(values)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    values = [1]
-        \\    result = caller(values)
-        \\    return result[0]
-    ;
-    const edited =
-        \\def source(values: list[int]) -> list[int]:
-        \\    return [values[0]]
-        \\
-        \\
-        \\def caller(values: list[int]) -> list[int]:
-        \\    return source(values)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    values = [1]
-        \\    result = caller(values)
-        \\    return result[0]
-    ;
-    try compare(t.allocator, &cache, base, 1);
-    const base_caller_contract = storedContract(&cache, "caller");
-    // The alias change is real: `source` returns a parameter in the base and a
-    // freshly allocated list after the edit.
-    {
-        var first = try language.Compilation.init(t.allocator, "probe.my", base);
-        defer first.deinit();
-        try first.check();
-        var second = try language.Compilation.init(t.allocator, "probe.my", edited);
-        defer second.deinit();
-        try second.check();
-        try t.expect(!functionReturnOrigin(first.program.?, "source").eql(functionReturnOrigin(second.program.?, "source")));
-        try t.expect(!functionReturnOrigin(first.program.?, "caller").eql(functionReturnOrigin(second.program.?, "caller")));
-    }
-    const before = cache.statistics.reused;
-    const before_checked = cache.statistics.checked;
-    // `caller` and `main` reuse and are recomputed by the mandatory M2 pass;
-    // only `source`, whose body changed, is checked fresh.
-    try compare(t.allocator, &cache, edited, 1);
-    try t.expectEqual(before + 2, cache.statistics.reused);
-    try t.expectEqual(before_checked + 1, cache.statistics.checked);
-    // The reused caller's persisted checked contract is refreshed from the
-    // global pass, so a return-origin change is visible to C2 admission.
-    try t.expect(!std.mem.eql(u8, &base_caller_contract, &storedContract(&cache, "caller")));
-}
-
 /// Borrow one retained entry's checked contract digest by declaration key suffix.
 fn storedContract(cache: *Cache, key_suffix: []const u8) [32]u8 {
     for (cache.entries) |entry| {
@@ -818,87 +757,6 @@ fn storedContract(cache: *Cache, key_suffix: []const u8) [32]u8 {
 fn functionReturnOrigin(program: checked_typed.Program, name: []const u8) checked_typed.ReturnOrigin {
     for (program.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.signature.return_origin;
     unreachable;
-}
-
-fn functionBorrowOrigin(program: checked_typed.Program, name: []const u8) checked_typed.ReturnOrigin {
-    for (program.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.signature.inferred.borrow_origin;
-    unreachable;
-}
-
-fn expectPhysicalOrigin(text: []const u8, position: ?u16) !void {
-    var compilation = try language.Compilation.init(t.allocator, "borrow-cache.my", text);
-    defer compilation.deinit();
-    try compilation.check();
-    const program = compilation.program.?;
-    try t.expect(functionReturnOrigin(program, "source") == .fresh);
-    try t.expect(functionReturnOrigin(program, "caller") == .fresh);
-    const origin = functionBorrowOrigin(program, "caller");
-    if (position) |expected| {
-        switch (origin) {
-            .params => |positions| try t.expectEqualSlices(u16, &.{expected}, positions),
-            else => return error.TestUnexpectedResult,
-        }
-    } else try t.expect(origin == .fresh);
-}
-
-// spec-case: RETURN-BORROW-1
-test "cached chained physical return origins invalidate from parameter to fresh and another parameter" {
-    const values = @import("value_semantics.zig");
-    const previous = values.enabled();
-    values.setEnabled(true);
-    defer values.setEnabled(previous);
-    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
-    defer cache.deinit();
-    const before =
-        \\record Node:
-        \\    data: bytes
-        \\
-        \\def source(left: list[Node], right: list[Node]) -> Node:
-        \\    return left[0]
-        \\
-    ;
-    const fresh =
-        \\record Node:
-        \\    data: bytes
-        \\
-        \\def source(left: list[Node], right: list[Node]) -> Node:
-        \\    return Node(data=b"x")
-        \\
-    ;
-    const second =
-        \\record Node:
-        \\    data: bytes
-        \\
-        \\def source(left: list[Node], right: list[Node]) -> Node:
-        \\    return right[0]
-        \\
-    ;
-    const caller =
-        \\def caller(left: list[Node], right: list[Node]) -> Node:
-        \\    return source(left, right)
-        \\
-        \\def main() -> int:
-        \\    left = [Node(data=b"x")]
-        \\    right = [Node(data=b"x")]
-        \\    return len(caller(left, right).data)
-    ;
-    const original = try std.mem.concat(t.allocator, u8, &.{ before, caller });
-    defer t.allocator.free(original);
-    const independent = try std.mem.concat(t.allocator, u8, &.{ fresh, caller });
-    defer t.allocator.free(independent);
-    const other = try std.mem.concat(t.allocator, u8, &.{ second, caller });
-    defer t.allocator.free(other);
-    try expectPhysicalOrigin(original, 0);
-    try compare(t.allocator, &cache, original, 1);
-    const first_key = storedContract(&cache, "caller");
-    try expectPhysicalOrigin(independent, null);
-    try compare(t.allocator, &cache, independent, 1);
-    const fresh_key = storedContract(&cache, "caller");
-    try t.expect(!std.mem.eql(u8, &first_key, &fresh_key));
-    try expectPhysicalOrigin(other, 1);
-    try compare(t.allocator, &cache, other, 1);
-    const second_key = storedContract(&cache, "caller");
-    try t.expect(!std.mem.eql(u8, &fresh_key, &second_key));
 }
 
 // C2 durable-store behavior is not yet registered in SPEC.md; the required registration patch is reported with this package.

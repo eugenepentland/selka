@@ -1,0 +1,44 @@
+module row_set_dedup
+
+extern def runtime_bench_now(host: Host) -> i64 effects(host)
+
+def batch_result(size: int, batch: int, seed: int, values: list[int], keys: list[str], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
+    total = 0
+    dedup: set[int] = set()
+    limit = max(2, size // 4)
+    for j in range(size):
+        dedup.add((seed + batch + j * 13) % limit)
+    for value in dedup:
+        total += value
+    return total
+
+def parse_number(text: str) -> int:
+    match int(text):
+        case Some(n):
+            return n
+        case None:
+            return 0
+
+
+def main(args: list[str], host: Host, out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    size = parse_number(args[0])
+    iterations = parse_number(args[1])
+    seed = parse_number(args[2])
+    if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
+        return 2
+    values = [(seed + j * 13) % 1009 for j in range(size)]
+    keys: list[str] = []
+    lookup: dict[int, int] = {}
+    lookup_str: dict[str, int] = {}
+    checksum = 0
+    start = runtime_bench_now(host)
+    for batch in range(iterations):
+        part = batch_result(size, batch, seed, values, keys, lookup, lookup_str)
+        if part < 0:
+            return 2
+        checksum = (checksum + part) % 1000000007
+    elapsed = runtime_bench_now(host) - start
+    out.print(checksum, elapsed)
+    return 0

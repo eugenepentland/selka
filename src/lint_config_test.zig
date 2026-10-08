@@ -2,7 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const lint_config = @import("lint_config.zig");
-const project_config = @import("project_config.zig");
+const project_config = @import("compiler.zig").project_config;
 
 fn writeTmp(dir: *std.testing.TmpDir, path: []const u8, body: []const u8) !void {
     if (std.fs.path.dirname(path)) |parent| try dir.dir.createDirPath(t.io, parent);

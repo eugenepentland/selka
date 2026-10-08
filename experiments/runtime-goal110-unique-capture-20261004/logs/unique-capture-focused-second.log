@@ -1,0 +1,63 @@
+test-units
++- run test 14 pass, 2 fail (16 total)
+guardian/test: test wall 1.50s; slowest over 50ms:
+guardian/test:   0.89s  qbe_rc_unique_capture_test.test.RC duplicate capture removes only the second checked named-root guard
+guardian/test:   0.59s  qbe_rc_unique_capture_test.test.RC duplicate capture preserves counting site and collector emission
+guardian/test: FAIL — 2 failed of 16
+guardian/test: RESULT {"passed":14,"failed":2,"skipped":0}
+error: 'qbe_rc_unique_capture_test.test.RC duplicate capture removes only the second checked named-root guard' failed:
+       guardian/test: 16 test(s) selected by filter: "RC duplicate capture" — 4 match by name, 12 unnamed test block(s) run regardless
+       expected 1, found 0
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x266d3d9 in expectEqualInner__anon_231800 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x266d685 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/src/qbe_rc_unique_capture_test.zig:69:9: 0x266d736 in test.RC duplicate capture removes only the second checked named-root guard (root_test.zig)
+        
+error: 'qbe_rc_unique_capture_test.test.RC duplicate capture refuses an alternate entry into the adjacent store' failed:
+              try t.expectEqual(@as(usize, 1), std.mem.count(u8, il, marker));
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/src/native_ir.zig:264:41: 0x1b9388a in analyze (root_test.zig)
+                   if (pops > stack.items.len) return error.InternalError;
+                                               ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/src/native_ir.zig:13:22: 0x1b903a8 in analyze (root_test.zig)
+           const capacity = try analyzer.analyze();
+                            ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/src/qbe.zig:1945:36: 0x1603448 in emit (root_test.zig)
+                   error.InternalError => return error.InternalError,
+                                          ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/src/qbe.zig:880:18: 0x16024c9 in emitEntry (root_test.zig)
+           const text = try emitter.emit(name, certificate);
+                        ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/src/qbe.zig:854:5: 0x1c72adf in emitOne (root_test.zig)
+           return emitEntry(pass, index, scratch, null);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/src/qbe.zig:1326:25: 0x1c7e921 in firstPass (root_test.zig)
+               const emitted = try emitOne(pass, index, scratch.allocator());
+                               ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/src/qbe.zig:492:21: 0x1bc4780 in runPasses (root_test.zig)
+               const own = try firstPass(pass.*, reuse);
+                           ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/src/qbe.zig:297:5: 0x1430fee in generateImpl (root_test.zig)
+           try runPasses(&pass, &reuse, src, standins, shape.lean);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/src/qbe.zig:217:5: 0x142f059 in generateWithInterface (root_test.zig)
+           return generateImpl(allocator, program, src, sink, interface, null);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/src/compiler.zig:264:9: 0x142ed03 in emitQbeWithOptions (root_test.zig)
+               return @import("qbe.zig").generateWithInterface(allocator, self.code.?, self.src, &sink, .{ .policy = policy });
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/src/compiler.zig:256:9: 0x142e0c1 in emitQbe (root_test.zig)
+               return self.emitQbeWithOptions(allocator, .{});
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/src/qbe_rc_unique_capture_test.zig:107:16: 0x1409810 in test.RC duplicate capture refuses an alternate entry into the adjacent store (root_test.zig)
+           const il = try compilation.emitQbe(t.allocator);
+                      ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/goal110-unique-capture-20261004/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.task-tmp/unique-capture-zig-local/o/c2919629f2208463fdedf9b97b453281/test "--guardian-filter=RC duplicate capture" --cache-dir=./.task-tmp/unique-capture-zig-local --seed=0x81b3229f --listen=-
+
+Build Summary: 8/10 steps succeeded (1 failed); 14/16 tests passed (2 failed)
+test-units transitive failure
++- run test 14 pass, 2 fail (16 total)
+

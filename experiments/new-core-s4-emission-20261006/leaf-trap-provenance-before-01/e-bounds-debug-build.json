@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-imports-always/bin/mylang-core",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/leaf-trap-provenance-reducer/bounds/app.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/leaf-trap-provenance-before-01/e-bounds-debug/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/leaf-trap-provenance-before-01/e-bounds-debug/cache"
+  ],
+  "status": 0,
+  "stdout": "",
+  "stderr": ""
+}

@@ -1,0 +1,157 @@
+{
+  "phase": "corrected-stale-cache",
+  "inputs": {
+    "app.my": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/app.my",
+      "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/app.my",
+      "device": 66309,
+      "inode": 118513129,
+      "size": 134,
+      "mode": 33204,
+      "mtime_ns": 1791342808012916852,
+      "ctime_ns": 1791342808012916852,
+      "sha256": "ab1371bfcd442c116b7bdc05df19d5c7dd1b31fe630dcfec0d3ab1621253ad4b"
+    },
+    "value.c": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/value.c",
+      "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/value.c",
+      "device": 66309,
+      "inode": 118513132,
+      "size": 60,
+      "mode": 33204,
+      "mtime_ns": 1791342808012971116,
+      "ctime_ns": 1791342808012971116,
+      "sha256": "376e2c0f6d1e35d157bd82371aceb476ff7aa6c6b96837a625acda09c960d3b8"
+    },
+    "value.h": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/value.h",
+      "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/value.h",
+      "device": 66309,
+      "inode": 118513134,
+      "size": 16,
+      "mode": 33204,
+      "mtime_ns": 1791342808013000920,
+      "ctime_ns": 1791342862182969043,
+      "sha256": "030b953cd8488024bb0d840555074cd3f538a72bb806adfed74fb65cd5df2873"
+    }
+  },
+  "zig": {
+    "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "resolved": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "device": 64512,
+    "inode": 5535292,
+    "size": 183954208,
+    "mode": 33261,
+    "mtime_ns": 1786441756000000000,
+    "ctime_ns": 1787367075660610100,
+    "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+  },
+  "build": {
+    "command": [
+      "strace",
+      "-f",
+      "-qq",
+      "-s",
+      "8192",
+      "-e",
+      "trace=execve",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/c-prep-core-foreign-header-01/corrected-stale-cache-execve.trace",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/mylang-core-corrected",
+      "build",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/app.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/guest",
+      "--link",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/value.c",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/program.ll",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/core-cache"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01",
+    "status": 0,
+    "timed_out": false,
+    "seconds": 11.400884196162224
+  },
+  "expected_native": 8,
+  "guest": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/guest",
+    "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/guest",
+    "device": 66309,
+    "inode": 118523992,
+    "size": 953376,
+    "mode": 33277,
+    "mtime_ns": 1791343594117824208,
+    "ctime_ns": 1791343594117824208,
+    "sha256": "516fa88932ae97baeffcda819e91dc6655bf405bb040d7735b1ab569e60d60e1"
+  },
+  "program.ll": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/program.ll",
+    "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/program.ll",
+    "device": 66309,
+    "inode": 118514307,
+    "size": 14110,
+    "mode": 33204,
+    "mtime_ns": 1791343583327417776,
+    "ctime_ns": 1791343583327417776,
+    "sha256": "4a663a0a90362a8e1d3f581740beacca8ab60135dd0baa89039bafe47eabe320"
+  },
+  "native": {
+    "command": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/guest"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01",
+    "status": 8,
+    "timed_out": false,
+    "seconds": 0.0016132760792970657
+  },
+  "correct": true,
+  "preserved_stale_object_before": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/core-cache/zig-local/o/28bc771cd113958732d1c3162b526349/value.o",
+    "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/core-cache/zig-local/o/28bc771cd113958732d1c3162b526349/value.o",
+    "device": 66309,
+    "inode": 118514555,
+    "size": 2208,
+    "mode": 33204,
+    "mtime_ns": 1791342849383773022,
+    "ctime_ns": 1791342849387773172,
+    "sha256": "7c860790acfdfa3c6d6a09aa892a8947c2c8bf23b3e8dbd72a354e76af2fb3c9"
+  },
+  "preserved_stale_object_after": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/core-cache/zig-local/o/28bc771cd113958732d1c3162b526349/value.o",
+    "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/core-cache/zig-local/o/28bc771cd113958732d1c3162b526349/value.o",
+    "device": 66309,
+    "inode": 118514555,
+    "size": 2208,
+    "mode": 33204,
+    "mtime_ns": 1791342849383773022,
+    "ctime_ns": 1791342849387773172,
+    "sha256": "7c860790acfdfa3c6d6a09aa892a8947c2c8bf23b3e8dbd72a354e76af2fb3c9"
+  },
+  "owned_cache_cleanup": true,
+  "historical_compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/mylang-core",
+    "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/mylang-core",
+    "device": 66309,
+    "inode": 118513128,
+    "size": 143173133,
+    "mode": 33133,
+    "mtime_ns": 1791342363571474385,
+    "ctime_ns": 1791342808011214681,
+    "sha256": "591886dc7d20409c878ee0a5b15c9faa0394b5b836eeaaa8c75e43a31350f120"
+  },
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/mylang-core-corrected",
+    "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-core-foreign-header-01/mylang-core-corrected",
+    "device": 66309,
+    "inode": 118522967,
+    "size": 143195874,
+    "mode": 33133,
+    "mtime_ns": 1791343471154192649,
+    "ctime_ns": 1791343582927402709,
+    "sha256": "d6e4220ad8a833f3d56510eb5958637e25f9c367071949db281d64584d3bface"
+  }
+}

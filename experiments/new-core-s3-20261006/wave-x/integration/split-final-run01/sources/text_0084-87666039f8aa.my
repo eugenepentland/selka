@@ -1,0 +1,44 @@
+module text_0084
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+def tally(text: str, seed: int) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for word in text.split():
+        text = "rebound"
+        counts[word] = counts[word] + 1 if word in counts else 1
+        if len(counts) == seed % 7:
+            continue
+        if len(counts) > seed % 31 + 2:
+            break
+    return counts
+
+def score(counts: dict[str, int]) -> int:
+    value = len(counts)
+    for key in counts:
+        value += len(key) * counts[key]
+        for octet in key.encode():
+            value += octet
+    return value
+
+def main(args: list[str], out: Stream) -> int:
+    seed = number(args[0])
+    original = "long02éabcdefghijklmnop\x0cx y\nlong00éabcdefghijklmnop\tlong04éabcdefghijklmnop collision005a0e\nx y\tnaïve\x0blong03éabcdefghijklmnop  long02éabcdefghijklmnop\nlong00éabcdefghijklmnop\x0blong00éabcdefghijklmnop long03éabcdefghijklmnop\rb long00éabcdefghijklmnop\x0clong02éabcdefghijklmnop\x0blong01éabcdefghijklmnop\x0clong00éabcdefghijklmnop\x0bb\nlong04éabcdefghijklmnop  a\x0ccafé\tcafé  long02éabcdefghijklmnop\x0bcollision002553\x0cx y  b\tcollision005a0e\t😀\x0clong03éabcdefghijklmnop\rlong04éabcdefghijklmnop\rx y Ω\rΩ\tb\t😀  long00éabcdefghijklmnop\x0bcollision005a0e\na\nlong04éabcdefghijklmnop\nlong01éabcdefghijklmnop\x0clong02éabcdefghijklmnop\x0bcollision005a0e\x0ccollision005a0e\tΩ\tlong02éabcdefghijklmnop\rlong04éabcdefghijklmnop b\tΩ\x0clong03éabcdefghijklmnop\x0b😀\né"
+    owned = "".join([original, " ", original])
+    counts = tally(owned, seed)
+    snapshot = counts
+    counts["post"] = seed + 1
+    _ = counts.pop("post")
+    for word in "post fresh café collision005a0e".split():
+        counts[word] = counts[word] + 1 if word in counts else 1
+    escaped: list[str] = []
+    for word in original.split():
+        escaped.append(word)
+    value = score(counts) + score(snapshot) + len(escaped)
+    out.print(value)
+    return 0

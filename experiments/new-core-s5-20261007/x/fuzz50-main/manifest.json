@@ -1,0 +1,44 @@
+{
+  "source_commit": "f0511d6a3f21b70e46afbce792b551146f142644",
+  "qualified_head_requested": null,
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/experiments/new-core-s5-20261007/tools/frozen-old-core",
+      "sha256": "ca55bbb15d1ef6accc6aa834f23651d5b3182ddf2e59136b93115ac3e41a7091"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/.mylang-cache/batch/q/mylang-main",
+      "sha256": "c2391a651e3f34b92cbbaebf9bbed10758bb95f85cfd1fdbd4da5328c991e932"
+    }
+  },
+  "references": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+    "sha256": "f8db2bd9ccebf42d5f4fbbf3974a15980d97204d46a4f8ac3ca5d93f41d8c1b0"
+  },
+  "cases_per_kind": 50,
+  "maximum_parallel_jobs": 3,
+  "kinds": [
+    "s0",
+    "s1",
+    "rc",
+    "rebinding",
+    "iteration",
+    "dict",
+    "text",
+    "number",
+    "functions"
+  ],
+  "execution_order": [
+    "number",
+    "s0",
+    "s1",
+    "rc",
+    "rebinding",
+    "iteration",
+    "dict",
+    "text",
+    "functions"
+  ],
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/.mylang-cache/s5/fuzz/20261008T071924Z-11d87831ceb4",
+  "run_id": "20261008T071924Z-11d87831ceb4"
+}

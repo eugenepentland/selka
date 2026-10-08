@@ -1,0 +1,60 @@
+{
+  "qualified": true,
+  "source_commit": "bd7a2ec780098a92d03c20f7f78ac433d4e37b11",
+  "results": [
+    {
+      "kind": "values",
+      "status": 0,
+      "summary": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/values/summary.json",
+      "qualified": true
+    },
+    {
+      "kind": "rc",
+      "status": 0,
+      "summary": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/rc/summary.json",
+      "qualified": true
+    },
+    {
+      "kind": "rebinding",
+      "status": 0,
+      "summary": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/rebinding/summary.json",
+      "qualified": true
+    },
+    {
+      "kind": "functions",
+      "status": 0,
+      "summary": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/functions/summary.json",
+      "qualified": true
+    },
+    {
+      "kind": "s1",
+      "status": 0,
+      "summary": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/s1/summary.json",
+      "qualified": true
+    },
+    {
+      "kind": "dict",
+      "status": 0,
+      "summary": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/dict/summary.json",
+      "qualified": true
+    },
+    {
+      "kind": "number",
+      "status": 0,
+      "summary": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/number/summary.json",
+      "qualified": true
+    },
+    {
+      "kind": "iteration",
+      "status": 0,
+      "summary": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/iteration/summary.json",
+      "qualified": true
+    }
+  ],
+  "compiler_modes": {
+    "fresh_old": "Debug",
+    "new": "Debug"
+  },
+  "fresh_old_sha256": "abce00c53bb842b475b19c0815209207e89a859faebfc0714edd8d9d6b49049b",
+  "core_sha256": "db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1"
+}

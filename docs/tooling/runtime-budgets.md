@@ -34,35 +34,54 @@ zig build test
 
 ## Instruction and frame budgets
 
-Every process that runs guest code also counts **instructions** and **call depth**.
-`mylang run`, `mylang build --run` and a binary you built and started yourself
-have **no step or frame ceiling by default**: the byte ceiling below already
-contains a runaway allocation, and a development loop should not stop an honest
-program. Pass `--max-steps=N` or `--max-frames=N` to impose one, and
-`--timeout=SECONDS` to cap elapsed time on whichever command runs the program:
+`mylang run`, `run-project` and `build --run` have **no step or frame ceiling by
+default**: the byte ceiling below already contains a runaway allocation, and a
+development loop should not stop an honest program. Pass `--max-steps N` or
+`--max-frames N` to impose one, and `--timeout SECONDS` to cap elapsed time. Each
+takes `--flag N` or `--flag=N`, and N must be a positive integer:
 
 ```console
-$ MYLANG_OPTIONS=--max-steps=500000000 ./loop   # built binary: options in the environment
-$ mylang run loop.my --max-steps=500000000
+$ mylang run loop.my --max-steps 1000
+error[R_STEP_LIMIT]: native execution failed
+instruction budget exhausted; raise it with --max-steps=N
 $ mylang build loop.my --run --max-steps=500000000
-$ mylang run loop.my --timeout=30     # wall-clock guard; no default
-loop.my:3:13: error[R_TIMEOUT]: wall-clock budget exhausted; raise it with --timeout=SECONDS
+$ mylang run loop.my --timeout 30     # wall-clock guard; no default
 ```
 
-`mylang run` and `run-project` take every budget, `--max-steps`, `--max-frames`,
-`--timeout` and `--max-memory`, in both spellings, `--max-frames=2000000` and
-`--max-frames 2000000`, exactly as `mylang test` does. A command line they reject
-prints the usage of `run`, not the `test` usage.
+`mylang run` compiles the budgets it was given into the program: `main` installs
+them before anything else runs, every block of a program function charges one step
+when steps are bounded, and every call of one counts a frame when frames are.
+Generated adapters are not charged. A program built with `mylang build -o` carries
+no budget code at all and pays nothing for it; to bound it, run it through
+`mylang run` or `build --run`.
+
+A `mylang test` child is different: each test process starts at **1,000,000**
+steps and **1,024** frames, because a test is the one place a tight guard is useful.
+`--max-steps` and `--max-frames` on `mylang test` bound each test process and may be
+lowered or raised; `--timeout-ms N` (default 60,000) bounds each test's wall clock.
+
+`R_STEP_LIMIT`, `R_FRAME_LIMIT` and `R_MEMORY_BUDGET` end with one advice line
+naming the flag that raises them, in text and in the `message` of
+`--diagnostics=json`: "instruction budget exhausted; raise it with --max-steps=N",
+"call-depth budget exhausted; raise it with --max-frames=N (each frame reserves 32
+KiB of stack, so --max-memory must cover N x 32 KiB)" and "memory budget exhausted;
+raise it with --max-memory=SIZE". `--timeout` arms a timer inside the program; when
+it fires the process reports `R_TIMEOUT` and exits 1. A zero, negative, empty or
+non-numeric budget is refused before anything is built.
+
+These counters bound *compiler-generated work*, not elapsed time: a program that
+calls into a linked C function can spend arbitrary time inside that call. The byte
+ceiling below bounds memory, not time.
 
 ### What a frame budget costs
 
-A `--max-frames=N` ceiling is only honest if N frames fit on the native stack, so
-the runtime maps **32 KiB of stack for every frame the budget allows**, plus 8 MiB,
-inside the guest's address space: its `--max-memory` ceiling plus 256 MiB. Nothing
+A `--max-frames N` ceiling is only honest if N frames fit on the native stack, so
+the program runs on a stack of **32 KiB for every frame the budget allows**, plus
+8 MiB, inside its address space: its `--max-memory` ceiling plus 256 MiB. Nothing
 is touched until the recursion reaches it, but the reservation counts against the
 address-space limit, so a large budget needs a large `--max-memory` beside it:
 150,000 frames reserve 4.6 GiB and do not fit the 4 GiB default. A budget that
-cannot fit is refused before anything is built, with what it needs:
+cannot fit is refused before anything is built, with status 2 and what it needs:
 
 ```console
 $ mylang run deep.my --max-frames 150000
@@ -71,72 +90,21 @@ $ mylang run deep.my --max-frames 150000 --max-memory 5G
 ```
 
 `mylang test` refuses the same way for a per-test ceiling (512 MiB by default, so
-`--max-frames 30000` needs `--max-memory 1G`), and a built program run with
-`MYLANG_OPTIONS=--max-frames=N` reports the same facts from the runtime when its
-mapping fails. `R_FRAME_LIMIT` therefore advises `--max-frames=N` together with a
-`--max-memory` that covers N x 32 KiB.
+`--max-frames 30000` needs `--max-memory 1G`).
 
-The address space a guest may map is also bounded by the original caller's
-soft and hard limits. The compiler's own 8 GiB ceiling
-(`MYLANG_HOST_MEMORY_LIMIT`, below) is restored to the caller's allowance only
-inside a native guest, so `--max-frames=400000 --max-memory=64G` can run when the
-caller allows that reservation. Frame preflight uses that restored allowance;
-a tighter caller `ulimit -v` is still refused and must be raised by the caller.
-An unaddressable frame reservation is refused with advice to lower the frame
-count, without overflowing the suggested memory size.
-
-A `mylang test` child is different: each test process starts at **1,000,000**
-instructions and **1,024** frames, because a test is the one place a tight guard
-is useful. `--max-steps` and `--max-frames` on `mylang test` bound each test
-process and may be lowered or raised.
-
-Once a ceiling is in force, `R_STEP_LIMIT` answers "instruction budget
-exhausted; raise it with --max-steps=N" and `R_FRAME_LIMIT` answers "call-depth
-budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of
-stack, so --max-memory must cover N x 32 KiB)". The hints appear in text and in
-the `message` field of `--diagnostics=json`. A zero, negative, empty or
-non-numeric budget is refused before the run rather than treated as unlimited.
-`--timeout` arms a monotonic timer inside the guest; when it fires the process
-writes `R_TIMEOUT` to standard error and exits 1.
-
-These counters bound *compiler-generated work*, not elapsed time: one step is a
-dispatch, so a program that calls into a linked C function can spend arbitrary time
-inside that call. The separate byte ceiling below bounds memory, not time.
-
-## Host application guests
-
-A host application — `schematic-svg`, `mylang-io`, `board-trial` — compiles its
-guest and runs it in a private child process, so it chooses that child's
-ceilings itself rather than taking them from a command line. `schematic-svg`
-bounds one render with a **call-depth ceiling and the wall clock** and counts no
-instructions, because instruction accounting triples an optimized render while
-these two cost nothing measurable. A runaway guest still stops: recursion at the
-depth ceiling, a loop that never leaves at the timeout, an allocation at the
-byte ceiling.
-
-`--bounded` restores the instruction ceiling for an invocation that wants an
-exact, deterministic bound on generated work, and `--backend qbe` builds the
-guest with the debug assembler instead of the release code generator:
-
-```bash
-# the shipped policy: release code generator, depth and wall-clock ceilings
-schematic-svg --project src/schematic/guest circuit.sexp pinout.sexp interface.sexp > out.svg
-# count instructions instead, the way a bounded `mylang run` does
-schematic-svg --bounded --project src/schematic/guest circuit.sexp pinout.sexp interface.sexp > out.svg
-# build the guest with QBE (faster cold build, slower render)
-schematic-svg --backend qbe --project src/schematic/guest circuit.sexp pinout.sexp interface.sexp > out.svg
-```
-
-The ceilings a host passes always match the accounting it built the guest with,
-so a guest is never handed a `--max-steps=` it would refuse with
-`R_NO_STEP_ACCOUNTING`.
+The address space a program may map is also bounded by the original caller's soft
+and hard limits. The compiler's own 8 GiB ceiling (`MYLANG_HOST_MEMORY_LIMIT`,
+below) is given back to the caller's allowance for the program it runs, so
+`--max-frames=400000 --max-memory=64G` can run when the caller allows that
+reservation; a tighter caller `ulimit -v` is still refused and must be raised by the
+caller.
 
 ### Project defaults in `mylang.json`
 
-A project that always needs the same budgets, a parser test that recurses
-20,000 frames deep for example, can say so once instead of on every command
-line. `mylang.json` takes an optional `limits` object with a `run` entry and a
-`test` entry, each any of `max_steps`, `max_frames` (positive integers up to
+A project that always needs the same budgets, a parser test that recurses 20,000
+frames deep for example, can say so once instead of on every command line.
+`mylang.json` takes an optional `limits` object with a `run` entry and a `test`
+entry, each any of `max_steps`, `max_frames` (positive integers up to
 4,294,967,295) and `max_memory` (a byte count or a `K`/`M`/`G` size, `0` for no
 ceiling):
 
@@ -144,57 +112,46 @@ ceiling):
 {"version": 1, "limits": {"test": {"max_steps": 4000000000, "max_frames": 30000, "max_memory": "1G"}}}
 ```
 
-`mylang run`, `run-project` and `test` read the configuration nearest the entry
-file and use these as defaults for the matching flag. A flag on the command line
-always wins, `MYLANG_MEMORY_LIMIT` outranks the file's `max_memory`, and the
-built-in defaults apply to whatever the file leaves out. A configured budget goes
-through the same checks as the flag, so a `max_frames` the memory cannot back is
-refused with what it needs. A directory run leaves each program to the
-configuration nearest that program. An unknown key, a repeated key or a budget
-that is zero, not an integer or out of range is a configuration failure.
+`mylang run`, `run-project` and `test` read the configuration nearest the entry file
+and use these as defaults for the matching flag. A flag on the command line always
+wins, `MYLANG_MEMORY_LIMIT` outranks the file's `max_memory`, and the built-in
+defaults apply to whatever the file leaves out. A configured budget goes through the
+same checks as the flag, so a `max_frames` the memory cannot back is refused with
+what it needs. A directory run leaves each program to the configuration nearest
+that program. An unknown key, a repeated key or a budget that is zero, not an
+integer or out of range is a configuration failure.
 
 ## Guest memory ceilings
 
-The budgets above bound what one embedded allocator hands out. A *ceiling*
-is coarser and applies to every process that runs guest code: the native test
-runner's children, `mylang build --run`, and a program you built and started
-yourself. It exists so one runaway guest cannot take the machine into swap.
+A *ceiling* bounds a whole process that runs guest code, so one runaway program
+cannot take the machine into swap. `mylang run`, `run-project`, `build --run` and
+every `mylang test` child run under one; a program built with `mylang build -o` and
+started by hand carries none and pays nothing for it.
 
-Two mechanisms enforce it. The soft one is the managed heap's byte budget: an
-allocation that would exceed it *after a collection* traps with
-`R_MEMORY_BUDGET`, "memory budget exhausted", and exit status 1, exactly like
-`R_STEP_LIMIT` bounds instructions. The hard one is the kernel's: before its
-first allocation the runtime lowers its own `RLIMIT_AS` to the budget plus 256
-MiB of headroom, so a defect in the runtime cannot outgrow the budget the heap
-is enforcing. `RLIMIT_AS` was chosen over a pre-`exec` hook because Zig's
-`std.process.Child` has none, and because a process that bounds itself is also
-bounded when you start it by hand. A tighter ceiling already in force is never
-loosened, and no ceiling is installed in a sanitizer build, whose shadow mapping
-reserves far more address space than any budget would permit.
+Two mechanisms enforce it. The soft one is the runtime's byte count: it counts the
+chunks small blocks are carved from and every live large block, and an allocation
+past the ceiling traps `R_MEMORY_BUDGET` with exit status 1, exactly like
+`R_STEP_LIMIT` bounds steps. The hard one is the kernel's: the program lowers its
+own `RLIMIT_AS` (never raises it) to the ceiling plus 256 MiB, so an allocation the
+OS then refuses reports `R_MEMORY_BUDGET` too. A process that bounds itself is also
+bounded when you start it by hand.
 
-The budget travels in `MYLANG_MEMORY_LIMIT`, written as bytes with an optional
-`K`, `M` or `G` suffix, so no spawner needs a new argument ABI. Precedence is
-`--max-memory=BYTES` on `run`, `build --run` and `test` first, then the
-variable, then the built-in default: **512 MiB** for one `mylang test` child and
-**4 GiB** for `run` and `build --run`. Malformed text refuses the run rather
-than leaving it unbounded; `0` removes the ceiling. A program you built with
-`-o` and start yourself is unbounded unless the variable is exported. The
-resolved test ceiling is part of a receipt key, so raising or lowering it
-re-executes rather than reusing.
+Precedence is `--max-memory SIZE` on `run`, `build --run` and `test` first, then
+`MYLANG_MEMORY_LIMIT`, then the project's `limits` in `mylang.json`, then the
+built-in default: **4 GiB** for `run` and `build --run`, **512 MiB** for one
+`mylang test` child. Sizes are bytes with an optional `K`, `M` or `G` suffix;
+malformed text refuses the run rather than leaving it unbounded, and `0` removes
+the ceiling. The resolved test ceiling and frame budget are part of a test receipt's
+key, so changing them re-executes rather than reusing.
 
 The compiler bounds itself too, at 8 GiB unless `MYLANG_HOST_MEMORY_LIMIT` says
 otherwise, so a compiler defect fails loudly instead of swapping; the `zig cc`
-and QBE children a native build spawns complete under that inherited ceiling.
-The ceiling is on address space, and the project arena reserves at most one
-64 MiB chunk beyond what it has touched (ARENA-BOUNDED-1), so it bounds what the
-frontend really uses. A cold `check` of a generated million-line project peaks
-at 6.2 GB and fits; the cold frontend of a million-line `build` peaks at about
-9 GB and needs `MYLANG_HOST_MEMORY_LIMIT=12G` once, after which edit builds
-reuse its caches and fit the default.
+children a build spawns complete under that inherited ceiling, while the program it
+runs gets the caller's limit back before applying its own.
 
 ```console
 $ cat grow.my
-def grow(values: list[int], rounds: int) -> int:
+def grow(values: mut list[int], rounds: int) -> int:
     for r in range(rounds):
         values.append(r)
     return len(values)
@@ -202,47 +159,44 @@ def grow(values: list[int], rounds: int) -> int:
 
 def main() -> int:
     values: list[int] = []
-    return grow(values, 100000000)
+    return grow(mut values, 100000000)
 $ mylang build grow.my --run --max-memory=64M
-grow.my:3:9: error[R_MEMORY_BUDGET]: memory budget exhausted
-  in grow at grow.my:3:9
+error[R_MEMORY_BUDGET]: native execution failed
   in main at grow.my:9:12
+memory budget exhausted; raise it with --max-memory=SIZE
 $ echo $?
 1
 ```
 
-A `mylang test` child reports the same trap as an ordinary failure, with the
-guest source trace, rather than dying:
+A `mylang test` child reports the same trap as an ordinary failure, with its trace:
 
 ```console
-$ mylang test suite/main.my --max-memory=32M --max-steps=4000000
-failed main::test_runaway: R_MEMORY_BUDGET
-  in main::grow at main.my:7:9
-  in main::test_runaway at main.my:13:12
-
+$ mylang test suite/main.my --max-memory=32M --max-steps=400000000
+failed main::test_runaway: NativeTestProcessFailed: .{ .exited = 1 }
+error[R_MEMORY_BUDGET]: native execution failed
+  in main::test_runaway at main.my:11:12
+  in __test_trial_352905b6a34bbacc7c39e58cdc29fa1f at main.my:1:1
+memory budget exhausted; raise it with --max-memory=SIZE
 0 passed, 0 cached, 1 failed, 0 skipped
 ```
 
-## Fan-out bounded by memory
+## Test fan-out
 
-A directory run (`mylang test suite/`) starts one child per program. Its worker
-count is the machine's core count, further limited by how many per-child
-ceilings `MemAvailable` in `/proc/meminfo` can hold — each child is counted as
-its ceiling plus the same 256 MiB of headroom. A cold fan-out on a loaded
-machine therefore waits rather than oversubscribing, and it is never fewer than
-one worker or more workers than there are programs. `--jobs N` overrides it,
-`MYLANG_JOBS` overrides the derived default, and zero or non-numeric widths are
-rejected.
+A directory run (`mylang test suite/`) runs each program's tests in its own
+processes, from one worker budget shared by the whole run: `--jobs N`, else
+`MYLANG_JOBS`, else the CPUs the process may use, capped by how many per-test byte
+ceilings (each plus the 256 MiB address-space headroom) the machine's `MemAvailable`
+holds, and at least one. It never starts more workers than there is work, and a zero
+or non-numeric `--jobs` is rejected. An explicit width is not capped by memory: on a
+loaded machine, leave it out, or lower it or the per-test `--max-memory`.
 
 ```console
 $ mylang test suite/ --jobs 4 --max-memory=256M
-8 passed, 0 cached, 0 failed, 0 skipped across 4 programs
 ```
 
-That bounds one invocation. Several agents building and gating on one machine
-share it through `scripts/build-slot.sh`, which admits a job only when a slot and
-enough `MemAvailable` are free
-([many agents on one machine](many-agents.md)).
+That bounds one invocation. Several agents building and gating on one machine share
+it through `scripts/build-slot.sh`, which admits a job only when a slot and enough
+`MemAvailable` are free ([many agents on one machine](many-agents.md)).
 
 ## Sharded Zig test roots
 
@@ -250,7 +204,7 @@ The gate's two slow Zig test roots run as several processes rather than one:
 `zig build test` splits `src/root_test.zig` into `-Dtest-shards=N` shards
 (default 12) and `test/integration.zig` into `N/2`, each an independent run of
 the same test binary under `--guardian-shard=K/N`, declaring its own `max_rss`
-(1 GiB per unit shard, 768 MiB per CLI shard) so `zig build --maxrss` still
+(2.5 GiB per unit shard, 768 MiB per CLI shard) so `zig build --maxrss` still
 bounds the whole gate. Guardian's runner gives each shard the named tests whose
 position among them is `K` modulo `N`, and the unnamed `test { }` blocks to
 shard 0 alone, so the shards partition the root and their `N test(s) selected`
@@ -275,9 +229,9 @@ above the largest single process, which the runner checks and fails on. On
 2026-09-23 a clean-cache `zig build test` never held more than 5.8 GiB at once,
 while its declarations summed to far more than 30 GiB: the last unit shards
 waited most of a minute for reservations that were never used. The ceilings in
-`build.zig` now follow measured peaks — 1 GiB per unit shard (largest process
-570 MiB), 768 MiB per CLI shard (141 MiB), 1.5 GiB for the host-application
-roots and `tests/guest`, 256 MiB for checks that run no compiler — and a rerun
+`build.zig` now follow measured peaks — then 1 GiB per unit shard (largest process
+570 MiB; 2.5 GiB since a 2.18 GiB shard peak on 2026-10-05), 768 MiB per CLI shard (141 MiB), 1.5 GiB for the host-application
+roots (since retired) and `tests/guest`, 256 MiB for checks that run no compiler — and a rerun
 of every test took 98 s instead of 136 s on the same loaded machine (81 s with
 no memory limit at all). Measure a step's tree before raising its ceiling; a
 larger number is not a safer one.
@@ -285,9 +239,9 @@ larger number is not a safer one.
 ## Cached test verdicts
 
 A `zig build` Run step is re-executed only when its cache key changes, and the
-gate's test steps now use that: the root shards, the host-application roots,
+gate's test steps now use that: the root shards,
 the Python drivers and `mylang doctest` are keyed on the test binary, the
-emitted compiler and `qbe` they run, their command, the environment variables
+emitted compiler they run, their command, the environment variables
 they depend on, and the repository files listed for them in
 `build_test_inputs.zig`. Those lists are
 expanded on every build by `tests/input_manifest.py`, which writes one content
@@ -303,7 +257,7 @@ existing repository path that its step does not declare, and
 `-Dtest-rerun=true` re-runs every cached test step when a verdict is in doubt.
 
 Every test step runs in the environment of the `zig build` that runs it. The
-build names the native tools (`MYLANG_QBE`, `MYLANG_ZIG`)
+build names the native tool (`MYLANG_ZIG`)
 and Zig's global cache through a `sh … env NAME=value` prefix on the command,
 never through `Step.Run.setEnvironmentVariable`: that call copies the whole
 configure-time environment into the step, the build runner stores the copy in

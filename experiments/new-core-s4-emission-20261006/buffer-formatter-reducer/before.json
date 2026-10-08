@@ -1,0 +1,17 @@
+{
+  "source_commit": "dfcc38c2993027eec25d47eac57628501be9b7b2",
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-final-01/bin/mylang-core",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/buffer-formatter-reducer/app.my",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/buffer-formatter-before",
+    "--emit-llvm",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/buffer-formatter-reducer/whole-before.ll",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/buffer-formatter-reducer/program-before"
+  ],
+  "status": 1,
+  "stdout": "",
+  "stderr": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/buffer-formatter-before/program-f9dd5883d54a51b2/module-819b813edb0e06e8dfdd7ff60e54b591b15e01e8a00977de40701a326bcc3d4d.ll:162:19: error: use of undefined value '@myl_core_buffer_append_f64'\n  162 |   %v12 = call ptr @myl_core_buffer_append_f64(ptr %v9, double 0x3FF8000000000000)\n      |                   ^\n1 error generated.\n"
+}

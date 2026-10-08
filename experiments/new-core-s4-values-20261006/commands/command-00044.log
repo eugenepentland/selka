@@ -1,0 +1,4 @@
+$ python3 experiments/new-core-s4-values-20261006/alternatives/check_return_alias.py
+
+exit=0
+elapsed_seconds=0.027381

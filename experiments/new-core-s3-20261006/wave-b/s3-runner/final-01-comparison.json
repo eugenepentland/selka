@@ -1,0 +1,219 @@
+{
+  "tests": 24,
+  "mismatches": 2,
+  "pairs": [
+    {
+      "old": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-properties-old.txt",
+      "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-properties-core.txt",
+      "tests": 10,
+      "matching": 10,
+      "mismatches": []
+    },
+    {
+      "old": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-failures-old.txt",
+      "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-failures-core.txt",
+      "tests": 9,
+      "matching": 9,
+      "mismatches": []
+    },
+    {
+      "old": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-standins-old.txt",
+      "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-standins-core.txt",
+      "tests": 1,
+      "matching": 1,
+      "mismatches": []
+    },
+    {
+      "old": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-state-old.txt",
+      "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-state-core.txt",
+      "tests": 1,
+      "matching": 1,
+      "mismatches": []
+    },
+    {
+      "old": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-signal-old.txt",
+      "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-signal-core.txt",
+      "tests": 1,
+      "matching": 0,
+      "mismatches": [
+        {
+          "name": "c_runner_signal::test_signal_is_a_failure",
+          "old": {
+            "name": "c_runner_signal::test_signal_is_a_failure",
+            "status": "failed",
+            "reason": "falsified after 0 passing runs (seed 7)\n  minimal input (1 shrink, 1 attempt):\n    value = 0\n  original input (run 1):\n    value = -1\n  reason: the test process ended without answering: NativeTestProcessFailed: .{ .exited = 2 }\n    /tmp/.pending/f72248a2736d120ee698be333c875855/.pending/78d93eb0affe340fbbaa75168656ee66/tests.so: undefined symbol: __ubsan_handle_builtin_unreachable\n    \n  reproduce: mylang test test/core/c_runner_signal.my --filter 'c_runner_signal::test_signal_is_a_failure' --seed 7 --property-runs 12",
+            "property": {
+              "seed": 7,
+              "counts": {
+                "runs": 12,
+                "passed": 0,
+                "discarded": 0,
+                "processes": 4,
+                "shrinks": 1,
+                "attempts": 1
+              },
+              "failure": {
+                "run": 0,
+                "minimal": {
+                  "arguments": {
+                    "value": "0"
+                  },
+                  "literals": {
+                    "value": "0"
+                  }
+                },
+                "original": {
+                  "arguments": {
+                    "value": "-1"
+                  },
+                  "literals": {
+                    "value": "-1"
+                  }
+                },
+                "reason": "the test process ended without answering: NativeTestProcessFailed: .{ .exited = 2 }\n/tmp/.pending/f72248a2736d120ee698be333c875855/.pending/78d93eb0affe340fbbaa75168656ee66/tests.so: undefined symbol: __ubsan_handle_builtin_unreachable\n",
+                "reproduce": "mylang test test/core/c_runner_signal.my --filter 'c_runner_signal::test_signal_is_a_failure' --seed 7 --property-runs 12",
+                "shrunk": true,
+                "first_reason": ""
+              }
+            }
+          },
+          "core": {
+            "name": "c_runner_signal::test_signal_is_a_failure",
+            "status": "failed",
+            "reason": "falsified after 0 passing runs (seed 7)\n  minimal input (1 shrink, 1 attempt):\n    value = 0\n  original input (run 1):\n    value = -1\n  reason: the test process ended without answering: NativeTestProcessFailed: .{ .signal = .SEGV }\n    \n  reproduce: mylang test test/core/c_runner_signal.my --filter 'c_runner_signal::test_signal_is_a_failure' --seed 7 --property-runs 12",
+            "property": {
+              "seed": 7,
+              "counts": {
+                "runs": 12,
+                "passed": 0,
+                "discarded": 0,
+                "processes": 4,
+                "shrinks": 1,
+                "attempts": 1
+              },
+              "failure": {
+                "run": 0,
+                "minimal": {
+                  "arguments": {
+                    "value": "0"
+                  },
+                  "literals": {
+                    "value": "0"
+                  }
+                },
+                "original": {
+                  "arguments": {
+                    "value": "-1"
+                  },
+                  "literals": {
+                    "value": "-1"
+                  }
+                },
+                "reason": "the test process ended without answering: NativeTestProcessFailed: .{ .signal = .SEGV }\n",
+                "reproduce": "mylang test test/core/c_runner_signal.my --filter 'c_runner_signal::test_signal_is_a_failure' --seed 7 --property-runs 12",
+                "shrunk": true,
+                "first_reason": ""
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "old": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-exit-old.txt",
+      "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-exit-core.txt",
+      "tests": 1,
+      "matching": 0,
+      "mismatches": [
+        {
+          "name": "c_runner_signal::test_signal_is_a_failure",
+          "old": {
+            "name": "c_runner_signal::test_signal_is_a_failure",
+            "status": "failed",
+            "reason": "falsified after 0 passing runs (seed 7)\n  minimal input (1 shrink, 1 attempt):\n    value = 0\n  original input (run 1):\n    value = -1\n  reason: the test process ended without answering: NativeTestProcessFailed: .{ .exited = 2 }\n    /tmp/.pending/aaa3f279ad03fc950ddee3535358d00d/.pending/2529a0f1da65d59af7af47ec44f17c92/tests.so: undefined symbol: __ubsan_handle_builtin_unreachable\n    \n  reproduce: mylang test test/core/c_runner_signal.my --filter 'c_runner_signal::test_signal_is_a_failure' --seed 7 --property-runs 12",
+            "property": {
+              "seed": 7,
+              "counts": {
+                "runs": 12,
+                "passed": 0,
+                "discarded": 0,
+                "processes": 4,
+                "shrinks": 1,
+                "attempts": 1
+              },
+              "failure": {
+                "run": 0,
+                "minimal": {
+                  "arguments": {
+                    "value": "0"
+                  },
+                  "literals": {
+                    "value": "0"
+                  }
+                },
+                "original": {
+                  "arguments": {
+                    "value": "-1"
+                  },
+                  "literals": {
+                    "value": "-1"
+                  }
+                },
+                "reason": "the test process ended without answering: NativeTestProcessFailed: .{ .exited = 2 }\n/tmp/.pending/aaa3f279ad03fc950ddee3535358d00d/.pending/2529a0f1da65d59af7af47ec44f17c92/tests.so: undefined symbol: __ubsan_handle_builtin_unreachable\n",
+                "reproduce": "mylang test test/core/c_runner_signal.my --filter 'c_runner_signal::test_signal_is_a_failure' --seed 7 --property-runs 12",
+                "shrunk": true,
+                "first_reason": ""
+              }
+            }
+          },
+          "core": {
+            "name": "c_runner_signal::test_signal_is_a_failure",
+            "status": "failed",
+            "reason": "falsified after 0 passing runs (seed 7)\n  minimal input (1 shrink, 1 attempt):\n    value = 0\n  original input (run 1):\n    value = -1\n  reason: the test process ended without answering: NativeTestProcessFailed: .{ .exited = 17 }\n    \n  reproduce: mylang test test/core/c_runner_signal.my --filter 'c_runner_signal::test_signal_is_a_failure' --seed 7 --property-runs 12",
+            "property": {
+              "seed": 7,
+              "counts": {
+                "runs": 12,
+                "passed": 0,
+                "discarded": 0,
+                "processes": 4,
+                "shrinks": 1,
+                "attempts": 1
+              },
+              "failure": {
+                "run": 0,
+                "minimal": {
+                  "arguments": {
+                    "value": "0"
+                  },
+                  "literals": {
+                    "value": "0"
+                  }
+                },
+                "original": {
+                  "arguments": {
+                    "value": "-1"
+                  },
+                  "literals": {
+                    "value": "-1"
+                  }
+                },
+                "reason": "the test process ended without answering: NativeTestProcessFailed: .{ .exited = 17 }\n",
+                "reproduce": "mylang test test/core/c_runner_signal.my --filter 'c_runner_signal::test_signal_is_a_failure' --seed 7 --property-runs 12",
+                "shrunk": true,
+                "first_reason": ""
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "old": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-name-seed-old.txt",
+      "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-runner/experiments/new-core-s3-20261006/wave-b/s3-runner/logs/final-01-name-seed-core.txt",
+      "tests": 1,
+      "matching": 1,
+      "mismatches": []
+    }
+  ]
+}

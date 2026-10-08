@@ -1,0 +1,22 @@
+{
+  "probe_sha256": "97761dd854df3b88d1fb756ba133c8eb50ba5e11146df03d5a9c61e782e319de",
+  "delegate_sha256": "7c80f2130f5aa60924fc52df4a16289bf8a381ffce6fbe3c7317d8813510e149",
+  "delegate_version": "0.17.0-dev.1683+5ceec001b",
+  "outside_compiler_before": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "outside_compiler_after": "5098971cf5b1d098bea7ee3f83e5c60e8c9b4547f0edbd1a79d3c997077177a2",
+  "initial_identity": {
+    "inputs": 4,
+    "memo_hit": false,
+    "cacheable": true,
+    "digest": "90c5557fea5f60f1a5910a2b6c87a78891e2133e71c6ff693add73a63d95968f",
+    "generation": "17cc85fb262fbc893300c9c8a1429828490840fe08d9d667dace38632ce2e7b9"
+  },
+  "changed_identity": {
+    "inputs": 4,
+    "memo_hit": true,
+    "cacheable": true,
+    "digest": "90c5557fea5f60f1a5910a2b6c87a78891e2133e71c6ff693add73a63d95968f",
+    "generation": "17cc85fb262fbc893300c9c8a1429828490840fe08d9d667dace38632ce2e7b9"
+  },
+  "defect_reproduced": true
+}

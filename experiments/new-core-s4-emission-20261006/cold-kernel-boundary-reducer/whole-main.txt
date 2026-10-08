@@ -1,0 +1,820 @@
+
+/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/paired-combined-01-whole/row_word_count:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000001032e00 <main>:
+ 1032e00:	push   %rbp
+ 1032e01:	push   %r15
+ 1032e03:	push   %r14
+ 1032e05:	push   %r13
+ 1032e07:	push   %r12
+ 1032e09:	push   %rbx
+ 1032e0a:	sub    $0xd8,%rsp
+ 1032e11:	call   1009830 <myl_core_args>
+ 1032e16:	mov    %rax,%rbx
+ 1032e19:	call   1022240 <myl_core_host_grant>
+ 1032e1e:	mov    %rbx,%rdi
+ 1032e21:	mov    $0x2,%ebx
+ 1032e26:	cmpq   $0x3,0x8(%rdi)
+ 1032e2b:	jne    1032eba <main+0xba>
+ 1032e31:	mov    %rax,0x40(%rsp)
+ 1032e36:	mov    %rdi,0x8(%rsp)
+ 1032e3b:	mov    0x8(%rsp),%rax
+ 1032e40:	mov    0x20(%rax),%rdi
+ 1032e44:	call   1032c00 <my.workload::number>
+ 1032e49:	mov    %rax,%r14
+ 1032e4c:	mov    0x8(%rsp),%rax
+ 1032e51:	mov    0x8(%rax),%rdx
+ 1032e55:	cmp    $0x1,%rdx
+ 1032e59:	jbe    1033bcb <main+0xdcb>
+ 1032e5f:	mov    0x8(%rsp),%rax
+ 1032e64:	mov    0x28(%rax),%rdi
+ 1032e68:	call   1032c00 <my.workload::number>
+ 1032e6d:	mov    %rax,%r15
+ 1032e70:	mov    0x8(%rsp),%rax
+ 1032e75:	mov    0x8(%rax),%rdx
+ 1032e79:	cmp    $0x2,%rdx
+ 1032e7d:	jbe    1033bdc <main+0xddc>
+ 1032e83:	mov    0x8(%rsp),%rax
+ 1032e88:	mov    0x30(%rax),%rdi
+ 1032e8c:	call   1032c00 <my.workload::number>
+ 1032e91:	mov    0x8(%rsp),%rdi
+ 1032e96:	cmp    $0x2,%r14
+ 1032e9a:	setl   %dl
+ 1032e9d:	test   %r15,%r15
+ 1032ea0:	setle  %cl
+ 1032ea3:	or     %dl,%cl
+ 1032ea5:	lea    -0xf4241(%rax),%rdx
+ 1032eac:	cmp    $0xfffffffffff0bdc0,%rdx
+ 1032eb3:	setb   %dl
+ 1032eb6:	or     %cl,%dl
+ 1032eb8:	je     1032ed9 <main+0xd9>
+ 1032eba:	call   1009800 <myl_core_release>
+ 1032ebf:	mov    %rbx,%rdi
+ 1032ec2:	call   100a310 <myl_core_exit>
+ 1032ec7:	add    $0xd8,%rsp
+ 1032ece:	pop    %rbx
+ 1032ecf:	pop    %r12
+ 1032ed1:	pop    %r13
+ 1032ed3:	pop    %r14
+ 1032ed5:	pop    %r15
+ 1032ed7:	pop    %rbp
+ 1032ed8:	ret
+ 1032ed9:	mov    %r15,0x88(%rsp)
+ 1032ee1:	lea    0xb0(%rsp),%rdi
+ 1032ee9:	mov    %r14,%rsi
+ 1032eec:	mov    %rax,0x48(%rsp)
+ 1032ef1:	mov    %rax,%rdx
+ 1032ef4:	call   1033c00 <my.workload::inputs>
+ 1032ef9:	lea    0x2b40(%rip),%rdi        # 1035a40 <core_io_file_error.verbs+0xb0>
+ 1032f00:	call   100a300 <myl_core_io_at>
+ 1032f05:	mov    0x40(%rsp),%rdi
+ 1032f0a:	call   1022270 <myl_core_host_check>
+ 1032f0f:	call   1034490 <runtime_bench_now>
+ 1032f14:	mov    %rax,0x78(%rsp)
+ 1032f19:	xor    %r14d,%r14d
+ 1032f1c:	mov    0xb8(%rsp),%rax
+ 1032f24:	xor    %ebx,%ebx
+ 1032f26:	mov    %rax,0x80(%rsp)
+ 1032f2e:	xchg   %ax,%ax
+ 1032f30:	mov    0x48(%rsp),%rsi
+ 1032f35:	add    %rbx,%rsi
+ 1032f38:	jo     1033b9c <main+0xd9c>
+ 1032f3e:	mov    %r14,0x98(%rsp)
+ 1032f46:	and    $0x1,%esi
+ 1032f49:	mov    0x8(%rax),%rdx
+ 1032f4d:	cmp    %rdx,%rsi
+ 1032f50:	jae    1033bb0 <main+0xdb0>
+ 1032f56:	mov    0x20(%rax,%rsi,8),%r14
+ 1032f5b:	xor    %edi,%edi
+ 1032f5d:	lea    0x2da4(%rip),%rsi        # 1035d08 <core_io_file_error.verbs+0x378>
+ 1032f64:	call   100f670 <myl_core_dict_new>
+ 1032f69:	mov    %rax,%r13
+ 1032f6c:	mov    0x8(%r14),%rsi
+ 1032f70:	mov    %r14,0x28(%rsp)
+ 1032f75:	lea    0x20(%r14),%rdi
+ 1032f79:	mov    $0x0,%r14d
+ 1032f7f:	test   %rsi,%rsi
+ 1032f82:	mov    %rbx,0x90(%rsp)
+ 1032f8a:	jle    1032fe0 <main+0x1e0>
+ 1032f8c:	xor    %r14d,%r14d
+ 1032f8f:	jmp    1032fcc <main+0x1cc>
+ 1032f91:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1032fa0:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1032faf:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1032fbe:	xchg   %ax,%ax
+ 1032fc0:	inc    %r14
+ 1032fc3:	cmp    %r14,%rsi
+ 1032fc6:	je     1033410 <main+0x610>
+ 1032fcc:	movzbl (%rdi,%r14,1),%eax
+ 1032fd1:	lea    -0x9(%rax),%ecx
+ 1032fd4:	cmp    $0x5,%ecx
+ 1032fd7:	jb     1032fc0 <main+0x1c0>
+ 1032fd9:	cmp    $0x20,%eax
+ 1032fdc:	je     1032fc0 <main+0x1c0>
+ 1032fde:	xchg   %ax,%ax
+ 1032fe0:	cmp    %rsi,%r14
+ 1032fe3:	jge    1033410 <main+0x610>
+ 1032fe9:	mov    %rsi,%rax
+ 1032fec:	mov    %r14,%rbx
+ 1032fef:	mov    %rsi,0x50(%rsp)
+ 1032ff4:	mov    %rdi,0x20(%rsp)
+ 1032ff9:	jmp    103300f <main+0x20f>
+ 1032ffb:	nopl   0x0(%rax,%rax,1)
+ 1033000:	mov    %rax,%rbx
+ 1033003:	mov    %rbx,%r14
+ 1033006:	cmp    %rsi,%rbx
+ 1033009:	jge    1033410 <main+0x610>
+ 103300f:	test   %r14,%r14
+ 1033012:	js     1033066 <main+0x266>
+ 1033014:	mov    %r14,%rbx
+ 1033017:	cmp    %rax,%r14
+ 103301a:	jge    1033066 <main+0x266>
+ 103301c:	mov    %r14,%rbx
+ 103301f:	jmp    103304c <main+0x24c>
+ 1033021:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033030:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 103303f:	nop
+ 1033040:	inc    %rbx
+ 1033043:	cmp    %rbx,%rax
+ 1033046:	je     10333fb <main+0x5fb>
+ 103304c:	movzbl (%rdi,%rbx,1),%ecx
+ 1033050:	cmp    $0x20,%rcx
+ 1033054:	ja     1033040 <main+0x240>
+ 1033056:	movabs $0x100003e00,%rdx
+ 1033060:	bt     %rcx,%rdx
+ 1033064:	jae    1033040 <main+0x240>
+ 1033066:	test   %r14,%r14
+ 1033069:	js     1033b25 <main+0xd25>
+ 103306f:	mov    %rbx,%rdx
+ 1033072:	sub    %r14,%rdx
+ 1033075:	jo     1033b36 <main+0xd36>
+ 103307b:	js     1033b48 <main+0xd48>
+ 1033081:	add    %rdi,%r14
+ 1033084:	mov    0x18(%r13),%r12
+ 1033088:	mov    0x8(%r12),%rax
+ 103308d:	or     0x18(%r12),%rax
+ 1033092:	mov    %r13,(%rsp)
+ 1033096:	mov    %rdx,0x18(%rsp)
+ 103309b:	jne    1033170 <main+0x370>
+ 10330a1:	mov    %r14,%rdi
+ 10330a4:	mov    %rdx,%rsi
+ 10330a7:	call   1010960 <myl_core_span_hash>
+ 10330ac:	mov    0x18(%rsp),%rdx
+ 10330b1:	mov    0x20(%r12),%r15
+ 10330b6:	test   %r15,%r15
+ 10330b9:	je     1033188 <main+0x388>
+ 10330bf:	mov    %eax,%eax
+ 10330c1:	movabs $0x9e3779b97f4a7c15,%rcx
+ 10330cb:	imul   %rcx,%rax
+ 10330cf:	mov    %rax,%rsi
+ 10330d2:	shr    $0x20,%rsi
+ 10330d6:	xor    %rax,%rsi
+ 10330d9:	mov    0x10(%r12),%r13
+ 10330de:	mov    (%rsp),%rax
+ 10330e2:	lea    0x20(%rax),%rbp
+ 10330e6:	xor    %r12d,%r12d
+ 10330e9:	mov    %rsi,0x10(%rsp)
+ 10330ee:	jmp    103310c <main+0x30c>
+ 10330f0:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10330ff:	nop
+ 1033100:	inc    %r12
+ 1033103:	add    $0x10,%rbp
+ 1033107:	cmp    %r12,%r15
+ 103310a:	je     1033188 <main+0x388>
+ 103310c:	cmp    %rsi,0x0(%r13,%r12,8)
+ 1033111:	jne    1033100 <main+0x300>
+ 1033113:	mov    0x0(%rbp),%rdi
+ 1033117:	cmp    %rdx,0x8(%rdi)
+ 103311b:	jne    1033100 <main+0x300>
+ 103311d:	add    $0x20,%rdi
+ 1033121:	mov    %r14,%rsi
+ 1033124:	call   10345d0 <bcmp@plt>
+ 1033129:	mov    0x10(%rsp),%rsi
+ 103312e:	mov    0x18(%rsp),%rdx
+ 1033133:	test   %eax,%eax
+ 1033135:	jne    1033100 <main+0x300>
+ 1033137:	nopw   0x0(%rax,%rax,1)
+ 1033140:	test   %r12,%r12
+ 1033143:	js     1033188 <main+0x388>
+ 1033145:	shl    $0x4,%r12
+ 1033149:	mov    (%rsp),%r13
+ 103314d:	mov    0x28(%r13,%r12,1),%rsi
+ 1033152:	mov    %rsi,%rax
+ 1033155:	inc    %rax
+ 1033158:	jo     1033b8b <main+0xd8b>
+ 103315e:	mov    %rax,0x28(%r13,%r12,1)
+ 1033163:	jmp    1033303 <main+0x503>
+ 1033168:	nopl   0x0(%rax,%rax,1)
+ 1033170:	mov    %r13,%rdi
+ 1033173:	mov    %r14,%rsi
+ 1033176:	call   10105c0 <myl_core_dict_find_span>
+ 103317b:	mov    0x18(%rsp),%rdx
+ 1033180:	mov    %rax,%r12
+ 1033183:	test   %r12,%r12
+ 1033186:	jns    1033145 <main+0x345>
+ 1033188:	mov    %r14,%rdi
+ 103318b:	mov    %rdx,%rsi
+ 103318e:	call   1011270 <myl_core_ir_str_from_view>
+ 1033193:	mov    %rax,0x38(%rsp)
+ 1033198:	testb  $0x2,0x5(%rax)
+ 103319c:	mov    %rax,0x18(%rsp)
+ 10331a1:	jne    10331b0 <main+0x3b0>
+ 10331a3:	mov    %rax,%rdi
+ 10331a6:	call   1010a70 <myl_core_str_hash>
+ 10331ab:	jmp    10331b3 <main+0x3b3>
+ 10331ad:	nopl   (%rax)
+ 10331b0:	mov    0x18(%rax),%eax
+ 10331b3:	mov    (%rsp),%rdi
+ 10331b7:	mov    %eax,%eax
+ 10331b9:	movabs $0x9e3779b97f4a7c15,%rcx
+ 10331c3:	imul   %rcx,%rax
+ 10331c7:	mov    %rax,%rdx
+ 10331ca:	shr    $0x20,%rdx
+ 10331ce:	xor    %rax,%rdx
+ 10331d1:	mov    0x18(%rdi),%rcx
+ 10331d5:	mov    0x8(%rcx),%rax
+ 10331d9:	test   %rax,%rax
+ 10331dc:	je     10332b0 <main+0x4b0>
+ 10331e2:	mov    (%rax),%ecx
+ 10331e4:	tzcnt  %ecx,%esi
+ 10331e8:	neg    %sil
+ 10331eb:	shrx   %rsi,%rdx,%r12
+ 10331f0:	lea    -0x1(%rcx),%r14d
+ 10331f4:	vmovdqu 0x10(%rax,%r12,1),%xmm1
+ 10331fb:	mov    %rdx,0x10(%rsp)
+ 1033200:	and    $0x7f,%dl
+ 1033203:	vmovd  %edx,%xmm0
+ 1033207:	vpbroadcastb %xmm0,%xmm0
+ 103320c:	vmovdqa %xmm1,0x60(%rsp)
+ 1033212:	vpcmpeqb %xmm0,%xmm1,%xmm0
+ 1033216:	vpmovmskb %xmm0,%edx
+ 103321a:	test   %edx,%edx
+ 103321c:	je     1033274 <main+0x474>
+ 103321e:	add    $0x1e,%ecx
+ 1033221:	and    $0xfffffff0,%ecx
+ 1033224:	lea    (%rax,%rcx,1),%r13
+ 1033228:	add    $0x10,%r13
+ 103322c:	movzwl %dx,%ebp
+ 103322f:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 103323e:	xchg   %ax,%ax
+ 1033240:	tzcnt  %ebp,%eax
+ 1033244:	add    %r12d,%eax
+ 1033247:	and    %r14d,%eax
+ 103324a:	mov    0x0(%r13,%rax,4),%r15d
+ 103324f:	mov    %r15,%rax
+ 1033252:	shl    $0x4,%rax
+ 1033256:	mov    (%rsp),%rcx
+ 103325a:	mov    0x20(%rcx,%rax,1),%rdi
+ 103325f:	mov    0x38(%rsp),%rsi
+ 1033264:	call   1010bd0 <myl_core_str_eq>
+ 1033269:	test   %al,%al
+ 103326b:	jne    10332c8 <main+0x4c8>
+ 103326d:	blsr   %ebp,%ebp
+ 1033272:	jne    1033240 <main+0x440>
+ 1033274:	vmovdqa 0x60(%rsp),%xmm0
+ 103327a:	vpcmpeqb -0x2fa62(%rip),%xmm0,%xmm0        # 1003820 <core_io_raw_layout+0x2a0>
+ 1033282:	vpmovmskb %xmm0,%eax
+ 1033286:	test   %eax,%eax
+ 1033288:	mov    (%rsp),%rdi
+ 103328c:	mov    0x10(%rsp),%rdx
+ 1033291:	je     10332bb <main+0x4bb>
+ 1033293:	tzcnt  %eax,%r15d
+ 1033298:	add    %r12d,%r15d
+ 103329b:	and    %r14d,%r15d
+ 103329e:	not    %r15
+ 10332a1:	jmp    10332c8 <main+0x4c8>
+ 10332a3:	data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10332b0:	cmpq   $0x0,0x18(%rcx)
+ 10332b5:	je     1033362 <main+0x562>
+ 10332bb:	lea    0x38(%rsp),%rsi
+ 10332c0:	call   100f300 <myl_core_dict_find>
+ 10332c5:	mov    %rax,%r15
+ 10332c8:	mov    0x18(%rsp),%rax
+ 10332cd:	mov    %rax,0xa8(%rsp)
+ 10332d5:	movq   $0x1,0xa0(%rsp)
+ 10332e1:	mov    (%rsp),%rdi
+ 10332e5:	mov    %r15,%rsi
+ 10332e8:	lea    0xa8(%rsp),%rdx
+ 10332f0:	lea    0xa0(%rsp),%rcx
+ 10332f8:	xor    %r8d,%r8d
+ 10332fb:	call   100f860 <myl_core_dict_insert>
+ 1033300:	mov    %rax,%r13
+ 1033303:	mov    0x50(%rsp),%rsi
+ 1033308:	mov    0x20(%rsp),%rdi
+ 103330d:	mov    0x28(%rsp),%rax
+ 1033312:	mov    0x8(%rax),%rax
+ 1033316:	test   %rbx,%rbx
+ 1033319:	js     1033003 <main+0x203>
+ 103331f:	cmp    %rax,%rbx
+ 1033322:	jl     103334c <main+0x54c>
+ 1033324:	jmp    1033003 <main+0x203>
+ 1033329:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033338:	nopl   0x0(%rax,%rax,1)
+ 1033340:	inc    %rbx
+ 1033343:	cmp    %rbx,%rax
+ 1033346:	je     1033000 <main+0x200>
+ 103334c:	movzbl (%rdi,%rbx,1),%ecx
+ 1033350:	lea    -0x9(%rcx),%edx
+ 1033353:	cmp    $0x5,%edx
+ 1033356:	jb     1033340 <main+0x540>
+ 1033358:	cmp    $0x20,%ecx
+ 103335b:	je     1033340 <main+0x540>
+ 103335d:	jmp    1033003 <main+0x203>
+ 1033362:	mov    0x20(%rcx),%rax
+ 1033366:	mov    $0xffffffffffffffff,%r15
+ 103336d:	test   %rax,%rax
+ 1033370:	je     10332c8 <main+0x4c8>
+ 1033376:	mov    0x10(%rcx),%r12
+ 103337a:	lea    0x20(%rdi),%r13
+ 103337e:	xor    %ebp,%ebp
+ 1033380:	mov    %rax,0x10(%rsp)
+ 1033385:	jmp    10333d0 <main+0x5d0>
+ 1033387:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033396:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10333a5:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10333b4:	data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10333c0:	inc    %rbp
+ 10333c3:	add    $0x10,%r13
+ 10333c7:	cmp    %rbp,%rax
+ 10333ca:	je     10332c8 <main+0x4c8>
+ 10333d0:	cmp    %rdx,(%r12,%rbp,8)
+ 10333d4:	jne    10333c0 <main+0x5c0>
+ 10333d6:	mov    0x0(%r13),%rdi
+ 10333da:	mov    0x38(%rsp),%rsi
+ 10333df:	mov    %rdx,%r14
+ 10333e2:	call   1010bd0 <myl_core_str_eq>
+ 10333e7:	mov    %r14,%rdx
+ 10333ea:	test   %al,%al
+ 10333ec:	mov    0x10(%rsp),%rax
+ 10333f1:	je     10333c0 <main+0x5c0>
+ 10333f3:	mov    %rbp,%r15
+ 10333f6:	jmp    10332c8 <main+0x4c8>
+ 10333fb:	mov    %rax,%rbx
+ 10333fe:	test   %r14,%r14
+ 1033401:	jns    103306f <main+0x26f>
+ 1033407:	jmp    1033b25 <main+0xd25>
+ 103340c:	nopl   0x0(%rax)
+ 1033410:	mov    0x8(%r13),%rax
+ 1033414:	mov    %rax,0x20(%rsp)
+ 1033419:	test   %rax,%rax
+ 103341c:	je     1033880 <main+0xa80>
+ 1033422:	lea    0x20(%r13),%rax
+ 1033426:	mov    %rax,0x60(%rsp)
+ 103342b:	xor    %eax,%eax
+ 103342d:	xor    %esi,%esi
+ 103342f:	movabs $0x10000000000,%rbx
+ 1033439:	mov    %r13,(%rsp)
+ 103343d:	nopl   (%rax)
+ 1033440:	mov    %rax,0x10(%rsp)
+ 1033445:	mov    %r13,%rdi
+ 1033448:	mov    %rsi,0x28(%rsp)
+ 103344d:	call   10101b0 <myl_core_dict_ordinal>
+ 1033452:	shl    $0x4,%rax
+ 1033456:	mov    0x20(%r13,%rax,1),%rdi
+ 103345b:	mov    0x8(%rdi),%rax
+ 103345f:	mov    %rax,%rcx
+ 1033462:	sar    $0x3f,%rcx
+ 1033466:	andn   %rax,%rcx,%rcx
+ 103346b:	mov    %rax,%r14
+ 103346e:	movabs $0x7fffffffffffffe0,%rdx
+ 1033478:	and    %rdx,%rcx
+ 103347b:	vpxor  %xmm2,%xmm2,%xmm2
+ 103347f:	je     10334f4 <main+0x6f4>
+ 1033485:	xor    %edx,%edx
+ 1033487:	mov    %rax,%r14
+ 103348a:	nopw   0x0(%rax,%rax,1)
+ 1033490:	mov    %rdx,%r8
+ 1033493:	lea    (%rdx,%rbx,1),%rsi
+ 1033497:	cmp    %rcx,%rsi
+ 103349a:	mov    %rcx,%rdx
+ 103349d:	cmovb  %rsi,%rdx
+ 10334a1:	vpxor  %xmm0,%xmm0,%xmm0
+ 10334a5:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10334b4:	data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 10334c0:	vpsadbw 0x20(%rdi,%r8,1),%ymm2,%ymm1
+ 10334c7:	vpaddq %ymm0,%ymm1,%ymm0
+ 10334cb:	add    $0x20,%r8
+ 10334cf:	cmp    %rdx,%r8
+ 10334d2:	jb     10334c0 <main+0x6c0>
+ 10334d4:	vextracti128 $0x1,%ymm0,%xmm1
+ 10334da:	vpaddq %xmm1,%xmm0,%xmm0
+ 10334de:	vpshufd $0xee,%xmm0,%xmm1
+ 10334e3:	vpaddq %xmm1,%xmm0,%xmm0
+ 10334e7:	vmovq  %xmm0,%r8
+ 10334ec:	add    %r8,%r14
+ 10334ef:	cmp    %rcx,%rsi
+ 10334f2:	jb     1033490 <main+0x690>
+ 10334f4:	mov    %rax,%rdx
+ 10334f7:	sub    %rcx,%rdx
+ 10334fa:	jbe    1033690 <main+0x890>
+ 1033500:	cmp    $0x4,%rdx
+ 1033504:	jae    1033510 <main+0x710>
+ 1033506:	mov    %rcx,%rdx
+ 1033509:	jmp    1033680 <main+0x880>
+ 103350e:	xchg   %ax,%ax
+ 1033510:	cmp    $0x10,%rdx
+ 1033514:	jae    103351d <main+0x71d>
+ 1033516:	xor    %esi,%esi
+ 1033518:	jmp    10335ec <main+0x7ec>
+ 103351d:	mov    %eax,%r8d
+ 1033520:	and    $0xf,%r8d
+ 1033524:	mov    %rdx,%rsi
+ 1033527:	sub    %r8,%rsi
+ 103352a:	vmovq  %r14,%xmm0
+ 103352f:	mov    %rax,%r9
+ 1033532:	and    $0xfffffffffffffff0,%r9
+ 1033536:	vpxor  %xmm1,%xmm1,%xmm1
+ 103353a:	mov    %rcx,%r10
+ 103353d:	vpxor  %xmm2,%xmm2,%xmm2
+ 1033541:	vpxor  %xmm3,%xmm3,%xmm3
+ 1033545:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033554:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033563:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033572:	data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033580:	vpmovzxbq 0x20(%rdi,%r10,1),%ymm4
+ 1033587:	vpaddq %ymm4,%ymm0,%ymm0
+ 103358b:	vpmovzxbq 0x24(%rdi,%r10,1),%ymm4
+ 1033592:	vpaddq %ymm4,%ymm1,%ymm1
+ 1033596:	vpmovzxbq 0x28(%rdi,%r10,1),%ymm4
+ 103359d:	vpaddq %ymm4,%ymm2,%ymm2
+ 10335a1:	vpmovzxbq 0x2c(%rdi,%r10,1),%ymm4
+ 10335a8:	vpaddq %ymm4,%ymm3,%ymm3
+ 10335ac:	add    $0x10,%r10
+ 10335b0:	cmp    %r10,%r9
+ 10335b3:	jne    1033580 <main+0x780>
+ 10335b5:	vpaddq %ymm0,%ymm1,%ymm0
+ 10335b9:	vpaddq %ymm0,%ymm2,%ymm0
+ 10335bd:	vpaddq %ymm0,%ymm3,%ymm0
+ 10335c1:	vextracti128 $0x1,%ymm0,%xmm1
+ 10335c7:	vpaddq %xmm1,%xmm0,%xmm0
+ 10335cb:	vpshufd $0xee,%xmm0,%xmm1
+ 10335d0:	vpaddq %xmm1,%xmm0,%xmm0
+ 10335d4:	vmovq  %xmm0,%r14
+ 10335d9:	test   %r8,%r8
+ 10335dc:	je     1033690 <main+0x890>
+ 10335e2:	cmp    $0x4,%r8d
+ 10335e6:	jb     1033870 <main+0xa70>
+ 10335ec:	mov    %eax,%r8d
+ 10335ef:	and    $0x3,%r8d
+ 10335f3:	sub    %r8,%rdx
+ 10335f6:	add    %rcx,%rdx
+ 10335f9:	vmovq  %r14,%xmm0
+ 10335fe:	add    %rcx,%rsi
+ 1033601:	mov    %rax,%rcx
+ 1033604:	and    $0xfffffffffffffffc,%rcx
+ 1033608:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033617:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033626:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033635:	data16 cs nopw 0x0(%rax,%rax,1)
+ 1033640:	vpmovzxbq 0x20(%rdi,%rsi,1),%ymm1
+ 1033647:	vpaddq %ymm1,%ymm0,%ymm0
+ 103364b:	add    $0x4,%rsi
+ 103364f:	cmp    %rsi,%rcx
+ 1033652:	jne    1033640 <main+0x840>
+ 1033654:	vextracti128 $0x1,%ymm0,%xmm1
+ 103365a:	vpaddq %xmm1,%xmm0,%xmm0
+ 103365e:	vpshufd $0xee,%xmm0,%xmm1
+ 1033663:	vpaddq %xmm1,%xmm0,%xmm0
+ 1033667:	vmovq  %xmm0,%r14
+ 103366c:	test   %r8,%r8
+ 103366f:	je     1033690 <main+0x890>
+ 1033671:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 1033680:	movzbl 0x20(%rdi,%rdx,1),%ecx
+ 1033685:	add    %rcx,%r14
+ 1033688:	inc    %rdx
+ 103368b:	cmp    %rax,%rdx
+ 103368e:	jb     1033680 <main+0x880>
+ 1033690:	mov    %rdi,0x30(%rsp)
+ 1033695:	testb  $0x2,0x5(%rdi)
+ 1033699:	jne    10336b0 <main+0x8b0>
+ 103369b:	vzeroupper
+ 103369e:	call   1010a70 <myl_core_str_hash>
+ 10336a3:	jmp    10336b3 <main+0x8b3>
+ 10336a5:	data16 cs nopw 0x0(%rax,%rax,1)
+ 10336b0:	mov    0x18(%rdi),%eax
+ 10336b3:	mov    %eax,%eax
+ 10336b5:	movabs $0x9e3779b97f4a7c15,%rcx
+ 10336bf:	imul   %rcx,%rax
+ 10336c3:	mov    %rax,%r15
+ 10336c6:	shr    $0x20,%r15
+ 10336ca:	xor    %rax,%r15
+ 10336cd:	mov    0x18(%r13),%rcx
+ 10336d1:	mov    0x8(%rcx),%rax
+ 10336d5:	test   %rax,%rax
+ 10336d8:	je     1033790 <main+0x990>
+ 10336de:	mov    (%rax),%ecx
+ 10336e0:	tzcnt  %ecx,%edx
+ 10336e4:	neg    %dl
+ 10336e6:	shrx   %rdx,%r15,%rdx
+ 10336eb:	mov    %rdx,0x18(%rsp)
+ 10336f0:	vmovdqu 0x10(%rax,%rdx,1),%xmm1
+ 10336f6:	mov    %r15d,%edx
+ 10336f9:	and    $0x7f,%dl
+ 10336fc:	vmovd  %edx,%xmm0
+ 1033700:	vpbroadcastb %xmm0,%xmm0
+ 1033705:	vmovdqa %xmm1,0x50(%rsp)
+ 103370b:	vpcmpeqb %xmm0,%xmm1,%xmm0
+ 103370f:	vpmovmskb %xmm0,%edx
+ 1033713:	test   %edx,%edx
+ 1033715:	je     1033774 <main+0x974>
+ 1033717:	lea    -0x1(%rcx),%r13d
+ 103371b:	add    $0x1e,%ecx
+ 103371e:	and    $0xfffffff0,%ecx
+ 1033721:	lea    (%rax,%rcx,1),%rbx
+ 1033725:	add    $0x10,%rbx
+ 1033729:	movzwl %dx,%ebp
+ 103372c:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 103373b:	nopl   0x0(%rax,%rax,1)
+ 1033740:	tzcnt  %ebp,%eax
+ 1033744:	add    0x18(%rsp),%eax
+ 1033748:	and    %r13d,%eax
+ 103374b:	mov    (%rbx,%rax,4),%r12d
+ 103374f:	shl    $0x4,%r12
+ 1033753:	mov    (%rsp),%rax
+ 1033757:	mov    0x20(%rax,%r12,1),%rdi
+ 103375c:	mov    0x30(%rsp),%rsi
+ 1033761:	vzeroupper
+ 1033764:	call   1010bd0 <myl_core_str_eq>
+ 1033769:	test   %al,%al
+ 103376b:	jne    10337bb <main+0x9bb>
+ 103376d:	blsr   %ebp,%ebp
+ 1033772:	jne    1033740 <main+0x940>
+ 1033774:	vmovdqa 0x50(%rsp),%xmm0
+ 103377a:	vpcmpeqb -0x2ff62(%rip),%xmm0,%xmm0        # 1003820 <core_io_raw_layout+0x2a0>
+ 1033782:	vpmovmskb %xmm0,%eax
+ 1033786:	test   %eax,%eax
+ 1033788:	je     1033797 <main+0x997>
+ 103378a:	jmp    1033ae8 <main+0xce8>
+ 103378f:	nop
+ 1033790:	cmpq   $0x0,0x18(%rcx)
+ 1033795:	je     1033811 <main+0xa11>
+ 1033797:	mov    (%rsp),%rdi
+ 103379b:	lea    0x30(%rsp),%rsi
+ 10337a0:	mov    %r15,%rdx
+ 10337a3:	vzeroupper
+ 10337a6:	call   100f300 <myl_core_dict_find>
+ 10337ab:	mov    %rax,%r12
+ 10337ae:	test   %r12,%r12
+ 10337b1:	js     1033ae8 <main+0xce8>
+ 10337b7:	shl    $0x4,%r12
+ 10337bb:	mov    (%rsp),%r13
+ 10337bf:	mov    0x28(%r13,%r12,1),%rdx
+ 10337c4:	mov    %r14,%rsi
+ 10337c7:	imul   %rdx,%rsi
+ 10337cb:	jo     1033b07 <main+0xd07>
+ 10337d1:	mov    %rsi,%rax
+ 10337d4:	imul   %rdx,%rax
+ 10337d8:	movabs $0x10000000000,%rbx
+ 10337e2:	jo     1033afb <main+0xcfb>
+ 10337e8:	mov    0x10(%rsp),%rsi
+ 10337ed:	mov    %rsi,%r14
+ 10337f0:	add    %rax,%r14
+ 10337f3:	jo     1033b16 <main+0xd16>
+ 10337f9:	mov    0x28(%rsp),%rsi
+ 10337fe:	inc    %rsi
+ 1033801:	mov    %r14,%rax
+ 1033804:	cmp    0x20(%rsp),%rsi
+ 1033809:	jne    1033440 <main+0x640>
+ 103380f:	jmp    1033883 <main+0xa83>
+ 1033811:	mov    0x20(%rcx),%r13
+ 1033815:	test   %r13,%r13
+ 1033818:	je     1033ae8 <main+0xce8>
+ 103381e:	mov    0x10(%rcx),%rbx
+ 1033822:	mov    0x60(%rsp),%rbp
+ 1033827:	xor    %r12d,%r12d
+ 103382a:	jmp    1033850 <main+0xa50>
+ 103382c:	data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+ 103383b:	nopl   0x0(%rax,%rax,1)
+ 1033840:	inc    %r12
+ 1033843:	add    $0x10,%rbp
+ 1033847:	cmp    %r12,%r13
+ 103384a:	je     1033ae8 <main+0xce8>
+ 1033850:	cmp    %r15,(%rbx,%r12,8)
+ 1033854:	jne    1033840 <main+0xa40>
+ 1033856:	mov    0x0(%rbp),%rdi
+ 103385a:	mov    0x30(%rsp),%rsi
+ 103385f:	vzeroupper
+ 1033862:	call   1010bd0 <myl_core_str_eq>
+ 1033867:	test   %al,%al
+ 1033869:	je     1033840 <main+0xa40>
+ 103386b:	jmp    10337ae <main+0x9ae>
+ 1033870:	add    %rsi,%rcx
+ 1033873:	jmp    1033506 <main+0x706>
+ 1033878:	nopl   0x0(%rax,%rax,1)
+ 1033880:	xor    %r14d,%r14d
+ 1033883:	mov    0x0(%r13),%eax
+ 1033887:	cmp    $0xffffffff,%eax
+ 103388a:	mov    0x90(%rsp),%rbx
+ 1033892:	je     10338c8 <main+0xac8>
+ 1033894:	dec    %eax
+ 1033896:	je     10338a0 <main+0xaa0>
+ 1033898:	mov    %eax,0x0(%r13)
+ 103389c:	jmp    10338c8 <main+0xac8>
+ 103389e:	xchg   %ax,%ax
+ 10338a0:	movzbl 0x7(%r13),%eax
+ 10338a5:	test   %rax,%rax
+ 10338a8:	je     1033933 <main+0xb33>
+ 10338ae:	cmpq   $0x0,0x18(%r13)
+ 10338b3:	jne    1033933 <main+0xb33>
+ 10338b5:	lea    0x26404(%rip),%rdx        # 1059cc0 <myl_core_free_lists>
+ 10338bc:	mov    (%rdx,%rax,8),%rcx
+ 10338c0:	mov    %rcx,0x0(%r13)
+ 10338c4:	mov    %r13,(%rdx,%rax,8)
+ 10338c8:	mov    0x98(%rsp),%rsi
+ 10338d0:	mov    %rsi,%rcx
+ 10338d3:	add    %r14,%rcx
+ 10338d6:	jo     1033bbc <main+0xdbc>
+ 10338dc:	mov    %rcx,%rax
+ 10338df:	movabs $0x89705f3112a28fe5,%rdx
+ 10338e9:	imul   %rdx
+ 10338ec:	add    %rcx,%rdx
+ 10338ef:	mov    %rdx,%rax
+ 10338f2:	shr    $0x3f,%rax
+ 10338f6:	sar    $0x1d,%rdx
+ 10338fa:	add    %rax,%rdx
+ 10338fd:	imul   $0x3b9aca07,%rdx,%rax
+ 1033904:	sub    %rax,%rcx
+ 1033907:	mov    %rcx,%r14
+ 103390a:	sar    $0x3f,%r14
+ 103390e:	and    $0x3b9aca07,%r14d
+ 1033915:	add    %rcx,%r14
+ 1033918:	inc    %rbx
+ 103391b:	cmp    0x88(%rsp),%rbx
+ 1033923:	mov    0x80(%rsp),%rax
+ 103392b:	jne    1032f30 <main+0x130>
+ 1033931:	jmp    103393d <main+0xb3d>
+ 1033933:	mov    %r13,%rdi
+ 1033936:	call   10325d0 <myl_core_free_block>
+ 103393b:	jmp    10338c8 <main+0xac8>
+ 103393d:	mov    0xb0(%rsp),%rdi
+ 1033945:	mov    (%rdi),%eax
+ 1033947:	cmp    $0xffffffff,%eax
+ 103394a:	je     103397e <main+0xb7e>
+ 103394c:	dec    %eax
+ 103394e:	je     1033954 <main+0xb54>
+ 1033950:	mov    %eax,(%rdi)
+ 1033952:	jmp    103397e <main+0xb7e>
+ 1033954:	movzbl 0x7(%rdi),%eax
+ 1033958:	test   %rax,%rax
+ 103395b:	je     1033b59 <main+0xd59>
+ 1033961:	cmpq   $0x0,0x18(%rdi)
+ 1033966:	jne    1033b59 <main+0xd59>
+ 103396c:	lea    0x2634d(%rip),%rdx        # 1059cc0 <myl_core_free_lists>
+ 1033973:	mov    (%rdx,%rax,8),%rcx
+ 1033977:	mov    %rcx,(%rdi)
+ 103397a:	mov    %rdi,(%rdx,%rax,8)
+ 103397e:	mov    0xb8(%rsp),%rdi
+ 1033986:	mov    (%rdi),%eax
+ 1033988:	cmp    $0xffffffff,%eax
+ 103398b:	je     10339bf <main+0xbbf>
+ 103398d:	dec    %eax
+ 103398f:	je     1033995 <main+0xb95>
+ 1033991:	mov    %eax,(%rdi)
+ 1033993:	jmp    10339bf <main+0xbbf>
+ 1033995:	movzbl 0x7(%rdi),%eax
+ 1033999:	test   %rax,%rax
+ 103399c:	je     1033b63 <main+0xd63>
+ 10339a2:	cmpq   $0x0,0x18(%rdi)
+ 10339a7:	jne    1033b63 <main+0xd63>
+ 10339ad:	lea    0x2630c(%rip),%rdx        # 1059cc0 <myl_core_free_lists>
+ 10339b4:	mov    (%rdx,%rax,8),%rcx
+ 10339b8:	mov    %rcx,(%rdi)
+ 10339bb:	mov    %rdi,(%rdx,%rax,8)
+ 10339bf:	mov    0xc0(%rsp),%rdi
+ 10339c7:	mov    (%rdi),%eax
+ 10339c9:	cmp    $0xffffffff,%eax
+ 10339cc:	je     1033a00 <main+0xc00>
+ 10339ce:	dec    %eax
+ 10339d0:	je     10339d6 <main+0xbd6>
+ 10339d2:	mov    %eax,(%rdi)
+ 10339d4:	jmp    1033a00 <main+0xc00>
+ 10339d6:	movzbl 0x7(%rdi),%eax
+ 10339da:	test   %rax,%rax
+ 10339dd:	je     1033b6d <main+0xd6d>
+ 10339e3:	cmpq   $0x0,0x18(%rdi)
+ 10339e8:	jne    1033b6d <main+0xd6d>
+ 10339ee:	lea    0x262cb(%rip),%rdx        # 1059cc0 <myl_core_free_lists>
+ 10339f5:	mov    (%rdx,%rax,8),%rcx
+ 10339f9:	mov    %rcx,(%rdi)
+ 10339fc:	mov    %rdi,(%rdx,%rax,8)
+ 1033a00:	mov    0xc8(%rsp),%rdi
+ 1033a08:	mov    (%rdi),%eax
+ 1033a0a:	cmp    $0xffffffff,%eax
+ 1033a0d:	je     1033a41 <main+0xc41>
+ 1033a0f:	dec    %eax
+ 1033a11:	je     1033a17 <main+0xc17>
+ 1033a13:	mov    %eax,(%rdi)
+ 1033a15:	jmp    1033a41 <main+0xc41>
+ 1033a17:	movzbl 0x7(%rdi),%eax
+ 1033a1b:	test   %rax,%rax
+ 1033a1e:	je     1033b77 <main+0xd77>
+ 1033a24:	cmpq   $0x0,0x18(%rdi)
+ 1033a29:	jne    1033b77 <main+0xd77>
+ 1033a2f:	lea    0x2628a(%rip),%rdx        # 1059cc0 <myl_core_free_lists>
+ 1033a36:	mov    (%rdx,%rax,8),%rcx
+ 1033a3a:	mov    %rcx,(%rdi)
+ 1033a3d:	mov    %rdi,(%rdx,%rax,8)
+ 1033a41:	mov    0xd0(%rsp),%rdi
+ 1033a49:	mov    (%rdi),%eax
+ 1033a4b:	cmp    $0xffffffff,%eax
+ 1033a4e:	je     1033a82 <main+0xc82>
+ 1033a50:	dec    %eax
+ 1033a52:	je     1033a58 <main+0xc58>
+ 1033a54:	mov    %eax,(%rdi)
+ 1033a56:	jmp    1033a82 <main+0xc82>
+ 1033a58:	movzbl 0x7(%rdi),%eax
+ 1033a5c:	test   %rax,%rax
+ 1033a5f:	je     1033b81 <main+0xd81>
+ 1033a65:	cmpq   $0x0,0x18(%rdi)
+ 1033a6a:	jne    1033b81 <main+0xd81>
+ 1033a70:	lea    0x26249(%rip),%rdx        # 1059cc0 <myl_core_free_lists>
+ 1033a77:	mov    (%rdx,%rax,8),%rcx
+ 1033a7b:	mov    %rcx,(%rdi)
+ 1033a7e:	mov    %rdi,(%rdx,%rax,8)
+ 1033a82:	lea    0x1fe7(%rip),%rdi        # 1035a70 <core_io_file_error.verbs+0xe0>
+ 1033a89:	call   100a300 <myl_core_io_at>
+ 1033a8e:	mov    0x40(%rsp),%rdi
+ 1033a93:	call   1022270 <myl_core_host_check>
+ 1033a98:	call   1034490 <runtime_bench_now>
+ 1033a9d:	mov    %rax,%rbx
+ 1033aa0:	mov    0x78(%rsp),%rdx
+ 1033aa5:	sub    %rdx,%rbx
+ 1033aa8:	jo     1033bed <main+0xded>
+ 1033aae:	mov    $0x1,%edi
+ 1033ab3:	mov    %r14,%rsi
+ 1033ab6:	call   100aa00 <myl_core_print_i64>
+ 1033abb:	mov    $0x1,%edi
+ 1033ac0:	call   1009040 <myl_core_print_sep>
+ 1033ac5:	mov    $0x1,%edi
+ 1033aca:	mov    %rbx,%rsi
+ 1033acd:	call   100aa00 <myl_core_print_i64>
+ 1033ad2:	mov    $0x1,%edi
+ 1033ad7:	call   1009100 <myl_core_print_end>
+ 1033adc:	xor    %ebx,%ebx
+ 1033ade:	mov    0x8(%rsp),%rdi
+ 1033ae3:	jmp    1032eba <main+0xba>
+ 1033ae8:	lea    0x2191(%rip),%rdi        # 1035c80 <core_io_file_error.verbs+0x2f0>
+ 1033aef:	xor    %esi,%esi
+ 1033af1:	xor    %edx,%edx
+ 1033af3:	vzeroupper
+ 1033af6:	call   10099c0 <myl_core_trap>
+ 1033afb:	lea    0x21ae(%rip),%rdi        # 1035cb0 <core_io_file_error.verbs+0x320>
+ 1033b02:	call   10099c0 <myl_core_trap>
+ 1033b07:	lea    0x2142(%rip),%rdi        # 1035c50 <core_io_file_error.verbs+0x2c0>
+ 1033b0e:	mov    %r14,%rsi
+ 1033b11:	call   10099c0 <myl_core_trap>
+ 1033b16:	lea    0x21c3(%rip),%rdi        # 1035ce0 <core_io_file_error.verbs+0x350>
+ 1033b1d:	mov    %rax,%rdx
+ 1033b20:	call   10099c0 <myl_core_trap>
+ 1033b25:	lea    0x2064(%rip),%rdi        # 1035b90 <core_io_file_error.verbs+0x200>
+ 1033b2c:	mov    %r14,%rsi
+ 1033b2f:	xor    %edx,%edx
+ 1033b31:	call   10099c0 <myl_core_trap>
+ 1033b36:	lea    0x2083(%rip),%rdi        # 1035bc0 <core_io_file_error.verbs+0x230>
+ 1033b3d:	mov    %rbx,%rsi
+ 1033b40:	mov    %r14,%rdx
+ 1033b43:	call   10099c0 <myl_core_trap>
+ 1033b48:	lea    0x20a1(%rip),%rdi        # 1035bf0 <core_io_file_error.verbs+0x260>
+ 1033b4f:	mov    %rdx,%rsi
+ 1033b52:	xor    %edx,%edx
+ 1033b54:	call   10099c0 <myl_core_trap>
+ 1033b59:	call   10325d0 <myl_core_free_block>
+ 1033b5e:	jmp    103397e <main+0xb7e>
+ 1033b63:	call   10325d0 <myl_core_free_block>
+ 1033b68:	jmp    10339bf <main+0xbbf>
+ 1033b6d:	call   10325d0 <myl_core_free_block>
+ 1033b72:	jmp    1033a00 <main+0xc00>
+ 1033b77:	call   10325d0 <myl_core_free_block>
+ 1033b7c:	jmp    1033a41 <main+0xc41>
+ 1033b81:	call   10325d0 <myl_core_free_block>
+ 1033b86:	jmp    1033a82 <main+0xc82>
+ 1033b8b:	lea    0x208e(%rip),%rdi        # 1035c20 <core_io_file_error.verbs+0x290>
+ 1033b92:	mov    $0x1,%edx
+ 1033b97:	call   10099c0 <myl_core_trap>
+ 1033b9c:	lea    0x1f5d(%rip),%rdi        # 1035b00 <core_io_file_error.verbs+0x170>
+ 1033ba3:	mov    0x48(%rsp),%rsi
+ 1033ba8:	mov    %rbx,%rdx
+ 1033bab:	call   10099c0 <myl_core_trap>
+ 1033bb0:	lea    0x1f79(%rip),%rdi        # 1035b30 <core_io_file_error.verbs+0x1a0>
+ 1033bb7:	call   10099c0 <myl_core_trap>
+ 1033bbc:	lea    0x1f9d(%rip),%rdi        # 1035b60 <core_io_file_error.verbs+0x1d0>
+ 1033bc3:	mov    %r14,%rdx
+ 1033bc6:	call   10099c0 <myl_core_trap>
+ 1033bcb:	lea    0x1e0e(%rip),%rdi        # 10359e0 <core_io_file_error.verbs+0x50>
+ 1033bd2:	mov    $0x1,%esi
+ 1033bd7:	call   10099c0 <myl_core_trap>
+ 1033bdc:	lea    0x1e2d(%rip),%rdi        # 1035a10 <core_io_file_error.verbs+0x80>
+ 1033be3:	mov    $0x2,%esi
+ 1033be8:	call   10099c0 <myl_core_trap>
+ 1033bed:	lea    0x1eac(%rip),%rdi        # 1035aa0 <core_io_file_error.verbs+0x110>
+ 1033bf4:	mov    %rax,%rsi
+ 1033bf7:	call   10099c0 <myl_core_trap>
+
+Disassembly of section .init:
+
+Disassembly of section .fini:
+
+Disassembly of section .plt:

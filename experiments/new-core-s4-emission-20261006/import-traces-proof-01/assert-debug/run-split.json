@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-traces-proof-01/assert-debug/split"
+  ],
+  "status": 1,
+  "stdout": "",
+  "stderr": "leaf.my:3:12: error[R_ASSERT]: native execution failed: loop check\n  in leaf::origin at leaf.my:3:12\n  in app::main at app.my:6:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"loop check\"}\n",
+  "seconds": 0.0010336381383240223
+}

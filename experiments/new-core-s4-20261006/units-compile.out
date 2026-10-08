@@ -1,0 +1,4 @@
+{"modules": 1200, "level": "-O0", "units": 13, "whole": 3.33, "unit_sum": 3.42, "unit_max": 0.27, "lpt8": 0.55, "lpt16": 0.27, "link_units": 0.03, "output_matches": true}
+{"modules": 1200, "level": "-O3", "units": 13, "whole": 50.27, "unit_sum": 46.14, "unit_max": 3.99, "lpt8": 7.61, "lpt16": 3.99, "link_units": 0.02, "output_matches": true}
+{"modules": 4800, "level": "-O0", "units": 49, "whole": 17.12, "unit_sum": 17.81, "unit_max": 0.72, "lpt8": 2.48, "lpt16": 1.41, "link_units": 0.07, "output_matches": true}
+{"modules": 4800, "level": "-O3", "units": 49, "whole": 218.13, "unit_sum": 225.18, "unit_max": 7.32, "lpt8": 28.36, "lpt16": 14.97, "link_units": 0.04, "output_matches": true}

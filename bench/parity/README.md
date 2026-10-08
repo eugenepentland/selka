@@ -17,14 +17,12 @@ zig build bench-parity -- --json /tmp/parity.json --arms my zig-safe
 Without `-Dbench-mylang` the step first installs this checkout's compiler (the
 ordinary `zig build`, so a Debug compiler unless `-Doptimize` says otherwise).
 The compiler's own optimization changes only how long the builds take: the
-programs are built as `mylang build --release` builds them (ReleaseFast, LLVM O3
-+ LTO; the harness spells out `--backend llvm --llvm-opt 3 --lto` so an older
-compiler named by `-Dbench-mylang` builds the same arm), and a Debug and a
+programs are built with `mylang build --release` (the whole program as one
+optimized LLVM unit; a compiler named by `-Dbench-mylang` must be a new-core one,
+since the old `--backend`/`--llvm-opt`/`--lto` spellings are refused), and a Debug and a
 ReleaseFast compiler emit byte-identical binaries
 (`python3 bench/parity/bench_parity.py same-binaries --other PATH/bin/mylang`
-checks every mylang arm; 88 of 88 matched on 2026-09-23). Add
-`-Dcompiler-only=true` so that install skips the three application runners,
-which it would otherwise build without using them.
+checks every mylang arm; 88 of 88 matched on 2026-09-23).
 
 ## Layout
 
@@ -47,9 +45,8 @@ and counterfactual tooling; this directory is the maintained copy.
 
 | arm | build |
 |---|---|
-| `my` | `mylang build --backend llvm --llvm-opt 3 --lto` (what `--release` means) |
+| `my` | `mylang build --release` |
 | `my-<variant>` | a variant file with the `my` flags (`_tuned`, `_arena`, `_class`, `_flat`, ...) |
-| `my-qbe` | `--backend qbe` (the plain `mylang build` since 2026-09-23), only with `-- --qbe` |
 | `zig-fast` | `zig build-exe -O ReleaseFast`: **the reference of every ratio** |
 | `zig-safe`, `zig-<variant>` | `-O ReleaseSafe`; a Zig variant with ReleaseFast |
 | `rust`, `rust-checked`, `rust-<variant>` | `rustc --edition 2021 -C opt-level=3 -C codegen-units=1 -C target-cpu=native -C panic=abort`, `+ -C overflow-checks=on` |

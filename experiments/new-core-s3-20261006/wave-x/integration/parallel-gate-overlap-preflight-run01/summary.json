@@ -1,0 +1,10 @@
+{
+  "qualified": true,
+  "scope": "Python syntax and command/resource review only; no native qualification",
+  "matrix_parent_gate_required": false,
+  "workers_hold_build_slots": true,
+  "default_workers": 3,
+  "binding_rules": "S2 plan \u00a75 fuzz command; S3 plan \u00a76 build slots for builds, gate slots for gate steps",
+  "measured_core_before_overlap": true,
+  "cases_and_seeds_unchanged": true
+}

@@ -1,0 +1,440 @@
+{
+  "schema": "s4-fuzz-live-inputs-v1",
+  "sources": {
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0.my": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0.my",
+      "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0.my",
+      "sha256": "4dad1352c448f2ce96b7f512b88c02c0e21d89d097de6a654627729da5dd849a",
+      "generation": [
+        66309,
+        118935975,
+        33204,
+        32,
+        1791352572608450805,
+        1791352572608450805
+      ],
+      "alias_generation": [
+        66309,
+        118935975,
+        33204,
+        32,
+        1791352572608450805,
+        1791352572608450805
+      ]
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case1.my": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case1.my",
+      "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case1.my",
+      "sha256": "6a3128767c8efcc67b4eef5575c1b0bb9ca6baf1fa20b7d1a24384a9fe5fad3c",
+      "generation": [
+        66309,
+        118935983,
+        33204,
+        32,
+        1791352572639782180,
+        1791352572639782180
+      ],
+      "alias_generation": [
+        66309,
+        118935983,
+        33204,
+        32,
+        1791352572639782180,
+        1791352572639782180
+      ]
+    }
+  },
+  "phases": [
+    {
+      "source": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0.my",
+      "root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs",
+      "inputs": {
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs": {
+          "directory": true,
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs",
+          "identity": [
+            66309,
+            118935974,
+            16893
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0.my": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0.my",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0.my",
+          "sha256": "4dad1352c448f2ce96b7f512b88c02c0e21d89d097de6a654627729da5dd849a",
+          "generation": [
+            66309,
+            118935975,
+            33204,
+            32,
+            1791352572608450805,
+            1791352572608450805
+          ],
+          "alias_generation": [
+            66309,
+            118935975,
+            33204,
+            32,
+            1791352572608450805,
+            1791352572608450805
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/mylang.json": {
+          "path": "/home/epentland/ai/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/mylang.json": {
+          "path": "/home/epentland/mylang.json",
+          "absent": true
+        },
+        "/home/mylang.json": {
+          "path": "/home/mylang.json",
+          "absent": true
+        },
+        "/mylang.json": {
+          "path": "/mylang.json",
+          "absent": true
+        }
+      },
+      "generated_paths": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0-old",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/cache/frontend-old"
+      ],
+      "extra_paths": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/mylang.json",
+        "/home/epentland/ai/canopy/mylang.json",
+        "/home/epentland/ai/mylang.json",
+        "/home/epentland/mylang.json",
+        "/home/mylang.json",
+        "/mylang.json"
+      ],
+      "retained": {
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0.my": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/evidence/input-guards/blobs/4dad1352c448f2ce96b7f512b88c02c0e21d89d097de6a654627729da5dd849a",
+          "sha256": "4dad1352c448f2ce96b7f512b88c02c0e21d89d097de6a654627729da5dd849a"
+        }
+      }
+    },
+    {
+      "source": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case1.my",
+      "root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs",
+      "inputs": {
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs": {
+          "directory": true,
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs",
+          "identity": [
+            66309,
+            118935974,
+            16893
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0.my": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0.my",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0.my",
+          "sha256": "4dad1352c448f2ce96b7f512b88c02c0e21d89d097de6a654627729da5dd849a",
+          "generation": [
+            66309,
+            118935975,
+            33204,
+            32,
+            1791352572608450805,
+            1791352572608450805
+          ],
+          "alias_generation": [
+            66309,
+            118935975,
+            33204,
+            32,
+            1791352572608450805,
+            1791352572608450805
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case1.my": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case1.my",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case1.my",
+          "sha256": "6a3128767c8efcc67b4eef5575c1b0bb9ca6baf1fa20b7d1a24384a9fe5fad3c",
+          "generation": [
+            66309,
+            118935983,
+            33204,
+            32,
+            1791352572639782180,
+            1791352572639782180
+          ],
+          "alias_generation": [
+            66309,
+            118935983,
+            33204,
+            32,
+            1791352572639782180,
+            1791352572639782180
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/mylang.json": {
+          "path": "/home/epentland/ai/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/mylang.json": {
+          "path": "/home/epentland/mylang.json",
+          "absent": true
+        },
+        "/home/mylang.json": {
+          "path": "/home/mylang.json",
+          "absent": true
+        },
+        "/mylang.json": {
+          "path": "/mylang.json",
+          "absent": true
+        }
+      },
+      "generated_paths": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0-old",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/cache/frontend-core",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/cache/frontend-old",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case1-old",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0-verify",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0-release",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0-debug"
+      ],
+      "extra_paths": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/mylang.json",
+        "/home/epentland/ai/canopy/mylang.json",
+        "/home/epentland/ai/mylang.json",
+        "/home/epentland/mylang.json",
+        "/home/mylang.json",
+        "/mylang.json"
+      ],
+      "retained": {
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0.my": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/evidence/input-guards/blobs/4dad1352c448f2ce96b7f512b88c02c0e21d89d097de6a654627729da5dd849a",
+          "sha256": "4dad1352c448f2ce96b7f512b88c02c0e21d89d097de6a654627729da5dd849a"
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case1.my": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/evidence/input-guards/blobs/6a3128767c8efcc67b4eef5575c1b0bb9ca6baf1fa20b7d1a24384a9fe5fad3c",
+          "sha256": "6a3128767c8efcc67b4eef5575c1b0bb9ca6baf1fa20b7d1a24384a9fe5fad3c"
+        }
+      }
+    }
+  ],
+  "roots": [
+    {
+      "root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs",
+      "inputs": {
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs": {
+          "directory": true,
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs",
+          "identity": [
+            66309,
+            118935974,
+            16893
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0.my": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0.my",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0.my",
+          "sha256": "4dad1352c448f2ce96b7f512b88c02c0e21d89d097de6a654627729da5dd849a",
+          "generation": [
+            66309,
+            118935975,
+            33204,
+            32,
+            1791352572608450805,
+            1791352572608450805
+          ],
+          "alias_generation": [
+            66309,
+            118935975,
+            33204,
+            32,
+            1791352572608450805,
+            1791352572608450805
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case1.my": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case1.my",
+          "resolved": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case1.my",
+          "sha256": "6a3128767c8efcc67b4eef5575c1b0bb9ca6baf1fa20b7d1a24384a9fe5fad3c",
+          "generation": [
+            66309,
+            118935983,
+            33204,
+            32,
+            1791352572639782180,
+            1791352572639782180
+          ],
+          "alias_generation": [
+            66309,
+            118935983,
+            33204,
+            32,
+            1791352572639782180,
+            1791352572639782180
+          ]
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang-worktrees/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang-worktrees/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/canopy/mylang.json": {
+          "path": "/home/epentland/ai/canopy/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/ai/mylang.json": {
+          "path": "/home/epentland/ai/mylang.json",
+          "absent": true
+        },
+        "/home/epentland/mylang.json": {
+          "path": "/home/epentland/mylang.json",
+          "absent": true
+        },
+        "/home/mylang.json": {
+          "path": "/home/mylang.json",
+          "absent": true
+        },
+        "/mylang.json": {
+          "path": "/mylang.json",
+          "absent": true
+        }
+      },
+      "generated_paths": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0-old",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/cache/frontend-core",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/cache/frontend-old",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case1-old",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0-verify",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0-release",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/case0-debug"
+      ],
+      "extra_paths": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/inputs/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/next-case-phase/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/pure-run05/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/mylang.json",
+        "/home/epentland/ai/canopy/mylang-worktrees/mylang.json",
+        "/home/epentland/ai/canopy/mylang.json",
+        "/home/epentland/ai/mylang.json",
+        "/home/epentland/mylang.json",
+        "/home/mylang.json",
+        "/mylang.json"
+      ]
+    }
+  ],
+  "cleanups": []
+}

@@ -1,0 +1,70 @@
+$ python3 -c 'import json,pathlib; e=pathlib.Path("experiments/new-core-s4-values-20261006"); d=json.loads((e/"final-core-conformance-v7/summary.json").read_text()); print("result count",len(d["results"])); print([(list(x),x.get("seconds")) for x in d["results"]]); print((e/"final-core-conformance-v7/core-component.json").read_text()); print((e/"final-rebuild-v1.json").read_text()[:2800]); print((e/"supplement-v6/summary.json").read_text()[:600]); print((e/"final-fuzz-v3/s1.log").read_text()[-900:])'
+result count 2
+[(['command', 'log', 'status', 'seconds', 'wall_including_admission', 'build_inspection', 'longest_shard_seconds', 'tests'], 157.28), (['command', 'log', 'status', 'seconds', 'wall_including_admission'], 171.27)]
+{
+  "source_commit": "3c86c3122",
+  "core_sha256": "db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1",
+  "shards": 64,
+  "tests": {
+    "passed": 279,
+    "failed": 0,
+    "skipped": 0
+  },
+  "seconds": 157.28,
+  "longest_shard_seconds": 57.88,
+  "max_test_rss_bytes": 271581184.0,
+  "inspection_errors": []
+}
+
+{
+  "source_commit": "e26abb83b91b99634b0987b198daa4712f01b16e",
+  "command": [
+    "zig",
+    "build",
+    "core",
+    "--summary",
+    "all"
+  ],
+  "seconds": 4.4463345990516245,
+  "exit": 0,
+  "source_identical_rebuild": true,
+  "compile_artifact": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/o/3c9f1e6ddb42763401198e075f0b64ee/mylang-core",
+  "invalidated_private_manifests": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/h/163b38924ec1e07e1ae8211bc19772e9.txt",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.zig-cache/h/66c0c366b31ada5754026c089dd3e7a8.txt"
+  ],
+  "original_sha256": "db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1",
+  "rebuilt_sha256": "47948b7a3b1f0d59077edbb7f3a6a474e2887cfdf45b1fdbde05496ca8c8c30c",
+  "affinity": [
+    10
+  ],
+  "qualified": true
+}
+
+{
+  "qualified": true,
+  "source_commit": "adb638e72d3b682c29a42ec22dbe251b89873d7c",
+  "old_sha256": "abce00c53bb842b475b19c0815209207e89a859faebfc0714edd8d9d6b49049b",
+  "core_sha256": "db0fb54873a05c0a7203a6933510c762d260c8da09ab8bc8ee7fb4815165b3d1",
+  "commands": [
+    {
+      "fixture": "v_dynamic_repeat",
+      "role": "old",
+      "mode": "debug",
+      "valid": true,
+      "outputs": [
+        [
+          "v_dynamic_repeat::test_dynamic_repeat_list_context_and_cow",
+          "passed",
+          ""
+        ]
+      ],
+      "log": "command-0001.log"
+    },
+    {
+      "fixture": "v_dyn
+$ python3 experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py --kind s1 --old /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s3/oracle/mylang --new /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-3c86c/mylang-core --cases 50 --seed 410603 --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/final-fuzz-v3/s1 --cache-root /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/final-fuzz-v3/s1
+
+
+exit=0
+elapsed_seconds=0.020933

@@ -1,0 +1,27 @@
+{
+  "source_commit": "93030b84e1538abc35aefa6984e3b00cc7dcc958",
+  "decision_checkpoint": "e50e508a4",
+  "ir_frozen_commit": "dc1a5831",
+  "ir_unchanged": true,
+  "ownership_pass_unchanged_since_decisions": true,
+  "public_types_schemas_formats_unchanged_since_decisions": true,
+  "language_corpus_unchanged_since_decisions": true,
+  "formats": {
+    "module-interface": "module-interface-v5",
+    "check-summaries": "check-summaries-v6",
+    "mutation": "mutation-v2"
+  },
+  "file_sha256": {
+    "src/core/ir.zig": "7232a25ca00d51c16b3cd552ae86859769a3ffb48d7a4f20ed4323708b651d5d",
+    "src/core/own.zig": "fc8f7d3a6aea1c1a7058fa82b0fa1184aefc9b1606ca2c30d1ead2a394a22979",
+    "src/typed.zig": "77208b575cde47de4a7c3896f5a41955c435f8203073c5af61bf7df2d4f2103c",
+    "src/schema.zig": "7c94137df383e4ebf6c0ece1956751f07aeb5cdf33575a594b11432b595034ac",
+    "src/module_interface.zig": "d1746cf0ced0ab30cb7331dc4bd86bd62a1f485e6c8c8199f10adf1f126a6cc7",
+    "src/semantic_summary.zig": "ddee47a839ce4e44bfee0fd9897a1cf15a8edca9bd43ec135deca9265dfa2f1d",
+    "src/semantic_cache.zig": "282a83c925803dc59ceff2331d2353faca576c509c5b49ab13a90fd76da39f3b"
+  },
+  "qualified_old_source": "65036fe792ef540392d0eb00c41c9ec71c7b2c82",
+  "old_sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+  "new_sha256": "65aa3175e6c6ce4277b12ac66ca96f46583dd98f20a8ea62366db6a0465c2400",
+  "final_old_gate_owned_by_coordinator": true
+}

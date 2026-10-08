@@ -1,0 +1,21 @@
+source_commit=5ee5b8d2e1d1c697a98dfa590cbeda704ed7ae55
+{"old": {"path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/.mylang-cache/s3/oracle/mylang", "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"}, "new": {"path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/zig-out/bin/mylang-core", "sha256": "05e5206c53b853ff8855d547784cec0ae8c0587da3dbd5b0e02eb0eb2744721c"}}
+S2-X test: waiting/running; source=5ee5b8d2e1d1c697a98dfa590cbeda704ed7ae55; log=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/final-old-run01/test.log
+S2-X test: elapsed including admission=60s
+S2-X test: elapsed including admission=120s
+S2-X test: elapsed including admission=180s
+S2-X test: elapsed including admission=240s
+S2-X test: elapsed including admission=300s
+S2-X test: elapsed including admission=360s
+S2-X test: elapsed including admission=420s
+S2-X test: elapsed including admission=480s
+S2-X test: elapsed including admission=540s
+S2-X test: elapsed including admission=600s
+S2-X test: elapsed including admission=660s
+S2-X test: elapsed including admission=720s
+S2-X test: elapsed including admission=780s
+S2-X test: elapsed including admission=840s
+S2-X test: elapsed including admission=900s
+S2-X test: elapsed including admission=960s
+S2-X test: elapsed including admission=1020s
+S2-X test: elapsed including admission=1080s

@@ -1,0 +1,21 @@
+{
+  "command": [
+    "env",
+    "MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/.mylang-cache/s4-v/immutable-a2da/qbe",
+    "MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "python3",
+    "experiments/new-core-s4-values-20261006/qualify_correctness.py",
+    "--shards",
+    "64",
+    "--old",
+    ".mylang-cache/s4-v/immutable-a2da/mylang",
+    "--old-sha256",
+    "b0406333649e3bf83d7a9852a23eca69765d6689a4bbc8ecda4550fa53e66396",
+    "--evidence",
+    "experiments/new-core-s4-values-20261006/final-core-conformance-v6"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2586893,
+  "status": 1,
+  "elapsed_seconds": 374.22630712599494
+}

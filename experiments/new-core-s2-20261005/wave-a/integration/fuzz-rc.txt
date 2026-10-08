@@ -1,0 +1,11 @@
+qualification progress: rc: seen=25 elapsed=50.28s
+qualification progress: rc: seen=50 elapsed=104.87s
+qualification progress: rc: seen=75 elapsed=164.77s
+qualification progress: rc: seen=100 elapsed=220.02s
+qualification progress: rc: seen=125 elapsed=284.88s
+qualification progress: rc: seen=150 elapsed=350.56s
+qualification progress: rc: seen=175 elapsed=403.60s
+qualification progress: rc: seen=200 elapsed=462.75s
+cases=200 refused=0 rejected=0 compared=1800 mismatch=0
+qualification {"kind": "rc", "qualified": true, "accepted": 200, "old_rejected": 0, "core_refused": 0, "core_build_failed": 0, "elapsed_seconds": 465.0998578921426}
+rc exit 0

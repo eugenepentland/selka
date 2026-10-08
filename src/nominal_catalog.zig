@@ -153,65 +153,67 @@ const Builder = struct {
             const identity = &self.identities.items.items[i];
             if (node.key.base == .length) continue;
             if (identity.ty != null or identity.name == null or node.state != .complete) continue;
-            if (node.key.base == .array) {
-                const array = node.key.base.array;
-                const shape: typed.Array = .{
-                    .length = array.length,
-                    .element = try self.runtimeType(node.key.arguments[0]),
-                    .key = if (array.key) |key| try self.runtimeType(key) else null,
-                };
-                if (self.catalog.arrays.shapes.get(shape)) |found| {
-                    identity.ty = found;
-                    continue;
-                }
-            }
-            if (node.key.base == .tuple) {
-                var elements: [8]typed.Type = undefined;
-                for (node.key.arguments, 0..) |argument, index| elements[index] = try self.runtimeType(argument);
-                // A tuple value may already have interned this element list, so
-                // the spelling and the value keep one record instead of two.
-                if (typed.internedTuple(storage.items, elements[0..node.key.arguments.len])) |found| {
-                    identity.ty = found;
-                    continue;
-                }
-            }
-            if (node.key.base == .callback) {
-                var parameters: [16]typed.Type = undefined;
-                for (node.key.arguments[0 .. node.key.arguments.len - 1], 0..) |argument, argument_index| parameters[argument_index] = try self.runtimeType(argument);
-                const contract: typed.Callable = .{
-                    .parameters = parameters[0 .. node.key.arguments.len - 1],
-                    .return_type = try self.runtimeType(node.key.arguments[node.key.arguments.len - 1]),
-                    .effects = node.key.base.callback.effects,
-                    .mutates = node.key.base.callback.mutates,
-                    .return_origin = node.key.base.callback.return_origin,
-                };
-                for (storage.items) |record| if (record.contract.callback) |existing| {
-                    if (callables.equal(existing, contract)) {
-                        identity.ty = record.id;
-                        break;
-                    }
-                };
-                if (identity.ty != null) continue;
-            }
-            const ty: typed.Type = @fromBackingInt(typed.Type.record_base + storage.items.len);
-            try storage.append(allocator, .{
-                .id = ty,
-                .name = identity.name.?,
-                .declaration = node.site,
-                .fields = &.{},
-                .contract = .{ .public_arguments = self.publicArguments(node) },
-            });
+            const ty = try self.intern(&storage, node, identity.name.?);
             identity.ty = ty;
-            if (node.key.base == .named and node.key.arguments.len == 0 and !self.index.isSynthetic(node.key.base.named)) try self.catalog.names.put(allocator, identity.name.?, ty);
+            // Only identities resolved now are indexed; the highest node wins, as
+            // when every identity was re-indexed on each call.
+            const slot = try self.identities.by_type.getOrPut(allocator, ty);
+            if (!slot.found_existing or @backingInt(slot.value_ptr.*) < i) slot.value_ptr.* = @fromBackingInt(i);
         }
         const indexed = self.catalog.field_names.items.len;
         try self.catalog.field_names.resize(allocator, storage.items.len);
         @memset(self.catalog.field_names.items[indexed..], .empty);
-        for (self.identities.items.items, 0..) |identity, i| if (identity.ty) |ty| try self.identities.by_type.put(allocator, ty, @fromBackingInt(i));
+    }
+    /// The runtime type of one completed graph node: an existing array shape,
+    /// interned tuple or equal callback record, else a new record appended to `storage`.
+    fn intern(self: *Builder, storage: *std.ArrayList(typed.Record), node: layouts.Node, name: []const u8) Error!typed.Type {
+        const allocator = self.context.allocator;
+        if (node.key.base == .array) {
+            const array = node.key.base.array;
+            const shape: typed.Array = .{
+                .length = array.length,
+                .element = try self.runtimeType(node.key.arguments[0]),
+                .key = if (array.key) |key| try self.runtimeType(key) else null,
+            };
+            if (self.catalog.arrays.shapes.get(shape)) |found| return found;
+        }
+        if (node.key.base == .tuple) {
+            var elements: [8]typed.Type = undefined;
+            for (node.key.arguments, 0..) |argument, index| elements[index] = try self.runtimeType(argument);
+            // A tuple value may already have interned this element list, so
+            // the spelling and the value keep one record instead of two.
+            if (typed.internedTuple(storage.items, elements[0..node.key.arguments.len])) |found| return found;
+        }
+        if (node.key.base == .callback) {
+            var parameters: [16]typed.Type = undefined;
+            for (node.key.arguments[0 .. node.key.arguments.len - 1], 0..) |argument, argument_index| parameters[argument_index] = try self.runtimeType(argument);
+            const contract: typed.Callable = .{
+                .parameters = parameters[0 .. node.key.arguments.len - 1],
+                .return_type = try self.runtimeType(node.key.arguments[node.key.arguments.len - 1]),
+                .effects = node.key.base.callback.effects,
+                .mutates = node.key.base.callback.mutates,
+                .return_origin = node.key.base.callback.return_origin,
+            };
+            for (storage.items) |record| if (record.contract.callback) |existing| {
+                if (callables.equal(existing, contract)) return record.id;
+            };
+        }
+        const ty: typed.Type = @fromBackingInt(typed.Type.record_base + storage.items.len);
+        try storage.append(allocator, .{
+            .id = ty,
+            .name = name,
+            .declaration = node.site,
+            .fields = &.{},
+            .contract = .{ .public_arguments = self.publicArguments(node) },
+        });
+        if (node.key.base == .named and node.key.arguments.len == 0 and !self.index.isSynthetic(node.key.base.named)) try self.catalog.names.put(allocator, name, ty);
+        return ty;
     }
     fn complete(self: *Builder) Error!void {
         const first = self.catalog.records.len;
         try self.identify();
+        // An already-interned type adds no record; the catalog was validated when it last grew.
+        if (self.catalog.records.len == first) return;
         try self.fill(first);
         try record_layouts.validate(self.context.allocator, self.catalog.records, self.context.sink);
         try @import("view_cycles.zig").validate(self.context.allocator, self.catalog.*, self.context.sink);
@@ -443,6 +445,8 @@ pub fn instantiateLengths(catalog: *Catalog, declaration: usize, arguments: []co
         } else ids[i] = try state.typeArgument(catalog.records, argument, span, 0);
     }
     const id = try state.graph.materializeKey(.{ .base = .{ .named = declaration }, .arguments = ids[0..arguments.len] }, span);
+    // The common case, an already-interned type, needs no pass over the graph.
+    if (state.settled(id)) |ty| return ty;
     var builder: Builder = .{ .context = state.context, .index = state.index, .graph = state.graph, .catalog = catalog, .identities = &state.identities };
     try builder.complete();
     return builder.runtimeType(id);

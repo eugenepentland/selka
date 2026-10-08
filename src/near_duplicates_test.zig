@@ -34,7 +34,6 @@ test "approximate discovery reports literal drift once per exact-group represent
     try t.expectEqualStrings("1", pair.changes[0].before.?);
     try t.expectEqualStrings("3", pair.changes[0].after.?);
     try t.expect(!result.approximate.truncated);
-    try t.expect(c.code == null);
     const first = try discovery.render(t.allocator, result, c.program.?, c.src);
     defer t.allocator.free(first);
     const second = try discovery.render(t.allocator, result, c.program.?, c.src);

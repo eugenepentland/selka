@@ -3,7 +3,6 @@ module float_environment
 # QBE-FLOAT-ENV-1 removes the per-operation floating-point environment check.
 # These assertions pin results that depend on every binary64 bit, so a lowering
 # that changed rounding, fused an operation, or reordered a comparison fails.
-# spec-case: QBE-FLOAT-ENV-1
 public def test_float_arithmetic_keeps_exact_bits() -> bool:
     total = 0.1 + 0.2
     if total != 0.30000000000000004:

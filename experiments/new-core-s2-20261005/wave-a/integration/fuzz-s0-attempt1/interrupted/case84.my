@@ -1,0 +1,44 @@
+def helper0(a: int, b: int) -> int:
+    if (b - b) != a or a == 45:
+        return ((b + a) % 1)
+    return ((a // b) % 3)
+
+
+def helper1(a: int, b: int) -> int:
+    if a >= (b + 65536):
+        return (a % 1009)
+    return b
+
+
+def number(text: str, fallback: int) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return fallback
+
+
+def main(args: list[str], out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    n = number(args[0], 3)
+    rounds = number(args[1], 2)
+    seed = number(args[2], 7)
+    if n < 0 or n > 100 or rounds < 0 or rounds > 5:
+        return 3
+    values = [((seed % 16)) % 4000 for j in range(n)]
+    second = [(j * 4 + 3) % 64 for j in range(n)]
+    flags = [j % 3 != 0 for j in range(n)]
+    acc = 0
+    for b in range(rounds):
+        phase = b % 10
+        total = 0
+        for j in range(n):
+            x = values[j]
+            y = second[j]
+            v = 19
+            total += v
+        acc = (acc + total) % 1000000007
+    out.print(acc, len(values))
+    return acc % 7
+

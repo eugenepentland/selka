@@ -17,7 +17,7 @@ fn outcome(files: *Files, cache: *language.syntax_cache.Cache) ![]u8 {
     try project.load(.{ .context = files, .read = Files.read }, "main", .{});
     var index = try language.interfaces.buildWithCache(&project, cache, null);
     var compilation = try language.project_compile.Compilation.init(&index);
-    compilation.emit() catch |err| {
+    compilation.check() catch |err| {
         if (err != error.SourceError) return err;
         return std.fmt.allocPrint(t.allocator, "diagnostic:{s}", .{compilation.diagnostics.items.items[0].code});
     };

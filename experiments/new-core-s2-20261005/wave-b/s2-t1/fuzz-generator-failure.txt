@@ -1,0 +1,14 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: all 3 build slot(s) busy; waiting (120s so far)
+build-slot: build slot 2 after 125s (all 3 build slot(s) busy)
+list-modules: entry must be an identifier.my file; imports resolve beneath its directory
+
+qualification {"kind": "s1", "qualified": false, "accepted": 0, "old_rejected": 1, "core_refused": 0, "core_build_failed": 0, "elapsed_seconds": 0.3084442769177258}
+
+Second malformed generator run:
+text_0000.my:1:8: error[E_MODULE_NAME]: declared `module text_fuzz_0`, but this file is `text_0000.my`, so its module name is `text_0000`: a module's name is its path from the project root without `.my`; write `module text_0000`
+  module text_fuzz_0
+         ^
+
+qualification {"kind": "s1", "qualified": false, "accepted": 0, "old_rejected": 1, "core_refused": 0, "core_build_failed": 0, "elapsed_seconds": 0.30613525095395744}

@@ -1,0 +1,12 @@
+{
+  "command": [
+    "git",
+    "commit",
+    "-m",
+    "evidence: preserve S4-V correctness attempt 1"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2401239,
+  "status": 0,
+  "elapsed_seconds": 4.040030776057392
+}

@@ -1,0 +1,7 @@
+evidence=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/matrix-final-run01
+source_commit=5ee5b8d2e1d1c697a98dfa590cbeda704ed7ae55
+s0: PASS; 504.7877284050919s
+s1: PASS; 681.7914257328957s
+rebinding: STOP; 279.48251037602313s
+rc: PASS; 476.5144984461367s
+dict: STOP; 89.00073285307735s

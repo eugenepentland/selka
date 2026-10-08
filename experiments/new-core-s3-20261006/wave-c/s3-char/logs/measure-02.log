@@ -1,0 +1,16 @@
+build csv_aggregate old: status=0
+build csv_aggregate new: status=0
+
+### csv_aggregate (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 4885.588 | 4159.021 | same |
+| new core release | 1308.410 | 1203.457 | same |
+| Rust | 1170.858 | 1059.659 | same |
+| Zig ReleaseSafe | 1047.503 | 985.518 | same |
+| new / old | 0.268 | 0.289 | same |
+| new / Zig | 1.249 | 1.221 | same |
+| new / Rust | 1.117 | 1.136 | same |
+
+valid rows: 1; speed gate misses: ['csv_aggregate/4096', 'csv_aggregate/64']
+Both new/old and new/Zig must be at most 1.10. binary_search misses require the plan's identical-code/layout-noise review; all other misses require repair.

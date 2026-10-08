@@ -1,0 +1,33 @@
+{
+  "kind": "local exploratory validation",
+  "compiler_optimize": "Debug",
+  "guest_modes": {
+    "llvm": "ReleaseFast / O3 / full LTO",
+    "qbe": "ReleaseFast"
+  },
+  "native_sanitizers": "ASan + UBSan, cc -O3",
+  "native_suites": [
+    "native_text_dictionary",
+    "native_text_views",
+    "native_text_index",
+    "native_equal",
+    "native_equal_allocations"
+  ],
+  "guest_check_records": 120,
+  "guardian_result": "88 checks passed; 65/753 production source files diff-scoped vs 1fd1d566; 38 whole-tree checks; report-only size/length/ABI findings retained",
+  "files": {
+    "src/native_text.c": "315db11439dd39044df63d5faa819d18d730d29b496be91c25c4bfe6bf63de16",
+    "tests/native_text_dictionary_test.c": "92a6ca8f9c87abc7372c7c20e4416816aace83590da8c262d3f7eafbc05a07ae",
+    "zig-out/bin/mylang": "20531e1cbd02b085bc09f685d3c86abaacb5e897b5bf87cd4afb135fd29b0961",
+    "zig-out/bin/qbe": "b6cec3a8a58ad02ae0e06981968a5f0d905eb0cb80d7a8edf0dae8d536d6bb99",
+    "experiments/runtime-goal110-text-20261004/equality-after-helper.asm": "b89a941827aca5eff402e3b74443a4d1fa693ee78ac5b39036d7be5b6afebb67",
+    "experiments/runtime-goal110-text-20261004/equality-after-kernel.asm.gz": "354f567d193c12bfa79c8a0dbf3886862ce188c97b12e8425580a4541adc092f",
+    "experiments/runtime-goal110-text-20261004/equality-build.log": "9836345c21443d9b88d061f67a651f003d868db7c698a80dbe31a4d66945b5f4",
+    "experiments/runtime-goal110-text-20261004/equality-distributions.c": "d6080eb0c24f2c45d125da439d50e02af785c76da05b9bf7e943077ddf3a2902",
+    "experiments/runtime-goal110-text-20261004/equality-guest-checks.json": "23a7f918368982304a6a062a58670ea4bd86ef9b89efdd627835ce12e4dde7bc",
+    "experiments/runtime-goal110-text-20261004/equality-llvm-build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "experiments/runtime-goal110-text-20261004/equality-native-tests.log": "18789525525ad0d1df3853d59986999a157c484445cb77fb17ed5910c8ef4911",
+    "experiments/runtime-goal110-text-20261004/equality-qbe-build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "experiments/runtime-goal110-text-20261004/equality-static-before.json": "bdd1c76c0a913de75474bc366570f9acf1ea40d9f8c2bfad6354a63b715d92b5"
+  }
+}

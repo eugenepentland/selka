@@ -1,0 +1,4 @@
+source_commit=090dabd5a6932a7c3beaec68248f9a35d4c637d7
+$ python3 experiments/new-core-s2-20261005/wave-b/integration/check_conformance_status.py
+PASS: 16 process/report cases; empty status3 admitted, signals/blank stdout/status disagreement rejected; no native runs
+exit=0

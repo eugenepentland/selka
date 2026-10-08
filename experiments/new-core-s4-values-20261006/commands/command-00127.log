@@ -1,0 +1,5 @@
+$ git commit -q -m 'test(core): inspect nested length functions independent of order'
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+
+exit=0
+elapsed_seconds=0.163386

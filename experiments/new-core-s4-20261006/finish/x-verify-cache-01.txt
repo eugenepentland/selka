@@ -1,0 +1,12 @@
+== lox debug: rebuild with --verify-cache
+mylang-core: cache: 19 units, 19 reused, 0 compiled, 19 verified; program reused; 19 processes
+exit=0
+== lox release: rebuild with --verify-cache
+mylang-core: cache: 1 units, 1 reused, 0 compiled, 1 verified; program reused; 1 processes
+exit=0
+== eda debug: rebuild with --verify-cache
+mylang-core: cache: 66 units, 66 reused, 0 compiled, 66 verified; program reused; 66 processes
+exit=0
+== eda release: rebuild with --verify-cache
+mylang-core: cache: 1 units, 1 reused, 0 compiled, 1 verified; program reused; 1 processes
+exit=0

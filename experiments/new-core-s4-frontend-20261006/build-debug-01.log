@@ -1,0 +1,7 @@
+Build Summary: 5/5 steps succeeded
+core success
++- install mylang-core success
+   +- compile exe mylang-core debug native success 1s MaxRSS:378M
+      +- run exe qbe-build-assets (qbe_build_assets) success 52ms
+         +- compile exe qbe-build-assets debug native success 253ms MaxRSS:145M
+

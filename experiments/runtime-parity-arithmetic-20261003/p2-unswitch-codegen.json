@@ -1,0 +1,351 @@
+{
+  "kind": "untimed-invariant-dispatch-codegen-audit",
+  "acceptance": "Timing acceptance pending integrated harness; no parity claim.",
+  "source": "benchmarks/runtime/expanded/compute/main.my",
+  "source_sha256": "d0abe8dea7693c5c0c17f871d631264721f47b8c4cd35f76f865ef68499a02e9",
+  "diagnostic_source": "experiments/runtime-parity-arithmetic-20261003/dispatch-codegen.my",
+  "diagnostic_source_sha256": "9f307e39811223b563d554ce30473b910dc8e75c5d692997e72d4db82c99b3ed",
+  "source_note": "Diagnostic copy removes only module main header for standalone CLI emission; frozen benchmark source unchanged.",
+  "compiler_sha256": "d86224436b5fc0b0dd90381efb8abe4807c8dd7d0687d3f05ddb73784239cba7",
+  "compiler_mode": "Debug",
+  "qbe_sha256": "05030fa66864f44f28754425d644e46155c95bc5442fc2de705a85eee1443945",
+  "codegen_flags": [
+    "--drop-debug",
+    "--drop-step-checks",
+    "--drop-frame-checks"
+  ],
+  "source_loop": [
+    553,
+    1035
+  ],
+  "selector_local": 6,
+  "literal_values": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "original_region_bytes_before_late_passes": 107718,
+  "aggregate_pruned_copy_bytes": 196873,
+  "initial_refusal": "Complete copies exceeded initial 64 KiB cap; source, lifetime and CFG certificates admitted all 12 literals.",
+  "general_budget": {
+    "absolute_added_bytes": 262144,
+    "added_to_region_ratio": 2,
+    "added_to_function_ratio": 0.5,
+    "small_function_allowance_bytes": 4096
+  },
+  "records": [
+    {
+      "phase": "before",
+      "il_file": "experiments/runtime-parity-arithmetic-20261003/dispatch-before.ssa",
+      "il_bytes": 520421,
+      "il_sha256": "e1442a3a6843a66e9dd0d543b0293eb1f9d19f0d4cc579e1b50447e54b4590aa",
+      "assembly_file": "experiments/runtime-parity-arithmetic-20261003/dispatch-before.s",
+      "assembly_sha256": "deb4eeb32f4b7e8e992ce2b7bd1dba105fe35b123159a994f25070967c30ff92",
+      "object_sha256": "71ec219d8bb4f4388f8e7b1efacdd84d567a03054b6c7804bd55449100e6e480",
+      "symbol": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+      "symbol_bytes": 50928,
+      "machine_instruction_count": 10887
+    },
+    {
+      "phase": "after",
+      "il_file": "experiments/runtime-parity-arithmetic-20261003/dispatch-after.ssa",
+      "il_bytes": 720300,
+      "il_sha256": "7bf6dfa960bb7f4a21aa5d5b4a8fb50a02bd801be1fac9382fab6e58c08cb03f",
+      "assembly_file": "experiments/runtime-parity-arithmetic-20261003/dispatch-after.s",
+      "assembly_sha256": "d8b3445f04b614667fdc56c28418565f6e69e9000efc7d7cfbd87e01539d3a44",
+      "object_sha256": "010264f7f7b3d3a578a5868b3ae9b1a84b16ec2249f28099f76be581fcd8045b",
+      "symbol": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+      "symbol_bytes": 61591,
+      "machine_instruction_count": 13223
+    }
+  ],
+  "certified_dispatch_branches": [
+    [
+      578,
+      0
+    ],
+    [
+      595,
+      1
+    ],
+    [
+      692,
+      2
+    ],
+    [
+      698,
+      3
+    ],
+    [
+      736,
+      4
+    ],
+    [
+      773,
+      5
+    ],
+    [
+      857,
+      6
+    ],
+    [
+      874,
+      7
+    ],
+    [
+      885,
+      8
+    ],
+    [
+      919,
+      9
+    ],
+    [
+      968,
+      10
+    ],
+    [
+      989,
+      11
+    ]
+  ],
+  "specialized_copies": [
+    {
+      "literal": 0,
+      "folded_branch_pcs": [
+        578
+      ],
+      "unreachable_branch_pcs": [
+        595,
+        692,
+        698,
+        736,
+        773,
+        857,
+        874,
+        885,
+        919,
+        968,
+        989
+      ]
+    },
+    {
+      "literal": 1,
+      "folded_branch_pcs": [
+        578,
+        595
+      ],
+      "unreachable_branch_pcs": [
+        692,
+        698,
+        736,
+        773,
+        857,
+        874,
+        885,
+        919,
+        968,
+        989
+      ]
+    },
+    {
+      "literal": 2,
+      "folded_branch_pcs": [
+        578,
+        595,
+        692,
+        698,
+        736,
+        773,
+        857,
+        874,
+        885,
+        919,
+        968,
+        989
+      ],
+      "unreachable_branch_pcs": []
+    },
+    {
+      "literal": 3,
+      "folded_branch_pcs": [
+        578,
+        595,
+        692,
+        698
+      ],
+      "unreachable_branch_pcs": [
+        736,
+        773,
+        857,
+        874,
+        885,
+        919,
+        968,
+        989
+      ]
+    },
+    {
+      "literal": 4,
+      "folded_branch_pcs": [
+        578,
+        595,
+        692,
+        698,
+        736
+      ],
+      "unreachable_branch_pcs": [
+        773,
+        857,
+        874,
+        885,
+        919,
+        968,
+        989
+      ]
+    },
+    {
+      "literal": 5,
+      "folded_branch_pcs": [
+        578,
+        595,
+        692,
+        698,
+        736,
+        773
+      ],
+      "unreachable_branch_pcs": [
+        857,
+        874,
+        885,
+        919,
+        968,
+        989
+      ]
+    },
+    {
+      "literal": 6,
+      "folded_branch_pcs": [
+        578,
+        595,
+        692,
+        698,
+        736,
+        773,
+        857
+      ],
+      "unreachable_branch_pcs": [
+        874,
+        885,
+        919,
+        968,
+        989
+      ]
+    },
+    {
+      "literal": 7,
+      "folded_branch_pcs": [
+        578,
+        595,
+        692,
+        698,
+        736,
+        773,
+        857,
+        874
+      ],
+      "unreachable_branch_pcs": [
+        885,
+        919,
+        968,
+        989
+      ]
+    },
+    {
+      "literal": 8,
+      "folded_branch_pcs": [
+        578,
+        595,
+        692,
+        698,
+        736,
+        773,
+        857,
+        874,
+        885
+      ],
+      "unreachable_branch_pcs": [
+        919,
+        968,
+        989
+      ]
+    },
+    {
+      "literal": 9,
+      "folded_branch_pcs": [
+        578,
+        595,
+        692,
+        698,
+        736,
+        773,
+        857,
+        874,
+        885,
+        919
+      ],
+      "unreachable_branch_pcs": [
+        968,
+        989
+      ]
+    },
+    {
+      "literal": 10,
+      "folded_branch_pcs": [
+        578,
+        595,
+        692,
+        698,
+        736,
+        773,
+        857,
+        874,
+        885,
+        919,
+        968
+      ],
+      "unreachable_branch_pcs": [
+        989
+      ]
+    },
+    {
+      "literal": 11,
+      "folded_branch_pcs": [
+        578,
+        595,
+        692,
+        698,
+        736,
+        773,
+        857,
+        874,
+        885,
+        919,
+        968,
+        989
+      ],
+      "unreachable_branch_pcs": []
+    }
+  ],
+  "compile_cost_observation_receipt": "p2-unswitch-boundaries.json",
+  "compile_cost_note": "One observed RC fast-QBE native build took 389898013 ns wall time with a Debug compiler; frontend 167086798 ns, codegen 39977910 ns, link 20115765 ns. Cache state and concurrent load uncontrolled; this is not a statistical before/after result."
+}

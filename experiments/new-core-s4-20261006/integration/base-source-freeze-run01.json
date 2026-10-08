@@ -1,0 +1,16 @@
+{
+  "s3_exit": "82c125ddd8eacad35937a6d6cd59c5f11b7ddf3d",
+  "s3_source": "d4994214579adb8d1897a40fc65de1462b000939",
+  "merged_base": "d357bbda0d65c034206c6022ba483ade8490c5c2",
+  "protected_refs": {
+    "main": "df55c52d7b4d319c02dfac66d7222701151825aa",
+    "codex/new-core-s2-integration": "92590700cb0bf5e4dc19cc1f0c836c3a41693f64",
+    "codex/new-core-s3-integration": "82c125ddd8eacad35937a6d6cd59c5f11b7ddf3d"
+  },
+  "ir_sha256": "7232a25ca00d51c16b3cd552ae86859769a3ffb48d7a4f20ed4323708b651d5d",
+  "old_sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79",
+  "external_refs": {
+    "lox": "f44302d877dfc8a01b64673e70c44b9e0c49f063",
+    "eda": "510c2e229f8389e5cd9d82db690abc0084397b1c"
+  }
+}

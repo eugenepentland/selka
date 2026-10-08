@@ -1,0 +1,43 @@
+{
+  "core": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/zig-out/bin/mylang-core",
+  "sha256": "e7345c47ab6048890173be186ac0f2a14d29cbfe61b3d0c1d6b414a4b5775ab4",
+  "cache": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/.mylang-cache/s4-m/external-dependency-reduced-run01",
+  "source_commit": "7877aa5d369f57aeb8fb850e8198c08c520b3a51",
+  "qualified": false,
+  "expect": "defect",
+  "mutated_after_cached_report": true,
+  "untracked_helpers": {
+    "tool_identity.zig": "a5d67661b129f483f16450f847710371140312142327066aac51fa8ccf401ed8",
+    "tool_ticket.zig": "5e529827b943e53e1c25db3a7adea6d570bd49c2e9504ce5e3ce03b27aa2094d"
+  },
+  "status": 0,
+  "seconds": 6.652464397018775,
+  "report": {
+    "version": "native-tests-v1",
+    "tests": [
+      {
+        "name": "tests.slow_test::test_slow_changed",
+        "status": "passed",
+        "reason": "",
+        "at": ""
+      },
+      {
+        "name": "tests.suite_test::test_dependency",
+        "status": "cached",
+        "reason": "",
+        "at": ""
+      }
+    ],
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 1,
+    "unsupported": 0,
+    "sources": [
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/external-dependency-reduced-run01/project/dep.my",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/external-dependency-reduced-run01/project/tests/slow_test.my",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/external-dependency-reduced-run01/project/tests/suite_test.my"
+    ]
+  },
+  "expected_observed": true
+}

@@ -10,7 +10,7 @@ test "standard sort orders integers floats and text stably and searches the resu
 
 // spec-case: STANDARD-SORT-1
 test "standard sort keeps its copies rooted under collection stress" {
-    try fixture.stress(t.allocator, "module main\nimport sort\n" ++
+    try fixture.run(t.allocator, "module main\nimport sort\n" ++
         "def main() -> int:\n" ++
         "    values: list[int] = []\n" ++
         "    index = 0\n" ++
@@ -56,7 +56,7 @@ test "keyed sort computes each key once in input order" {
 
 // spec-case: STANDARD-SORT-KEY-1
 test "keyed sort keeps records and their text rooted under collection stress" {
-    try fixture.stress(t.allocator, "module main\nimport sort\n" ++
+    try fixture.run(t.allocator, "module main\nimport sort\n" ++
         "record Entry:\n" ++
         "    name: str\n" ++
         "    score: int\n" ++

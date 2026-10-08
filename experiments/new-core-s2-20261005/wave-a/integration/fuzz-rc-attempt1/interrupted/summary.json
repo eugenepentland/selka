@@ -1,0 +1,11 @@
+{
+  "kind": "rc",
+  "reason": "Coordinator requested stop for final S1 native SIGSEGV investigation",
+  "generated_sources_preserved": 15,
+  "qualification_complete": false,
+  "pids": [
+    960258,
+    960277
+  ],
+  "saved_sources": ".mylang-cache/wave-a/final-fuzz/rc/sources"
+}

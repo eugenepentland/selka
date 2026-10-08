@@ -1,0 +1,328 @@
+--- qualified-C
++++ combined-A
+@@ -36,7 +36,8 @@
+ declare void @myl_core_print_sep(i64) nounwind
+ declare void @myl_core_print_end(i64) nounwind
+ declare ptr @myl_core_box_new(i64) nounwind
+-declare void @myl_core_err_trace(i32, i32) nounwind cold
++declare preserve_mostcc void @myl_core_err_trace_origin_preserve_most(i32) nounwind cold
++declare preserve_mostcc void @myl_core_err_trace_append_preserve_most(i32) nounwind cold
+ declare void @myl_core_assert_fail(i32) noreturn nounwind cold
+ declare void @llvm.memcpy.p0.p0.i64(ptr noalias nocapture writeonly, ptr noalias nocapture readonly, i64, i1 immarg)
+ declare void @llvm.memmove.p0.p0.i64(ptr nocapture writeonly, ptr nocapture readonly, i64, i1 immarg)
+@@ -286,9 +287,8 @@
+ entry:
+   %slot = alloca i64, align 8
+   %stack.150 = alloca [8 x i8], align 8
+-  %stack.152 = alloca [8 x i8], align 8
+-  %stack.158 = alloca [8 x i8], align 8
+-  %stack.159 = alloca [8 x i8], align 8
++  %stack.160 = alloca [8 x i8], align 8
++  %stack.161 = alloca [8 x i8], align 8
+   br label %b0
+ b0:
+   %h.1 = getelementptr inbounds i8, ptr %p0, i64 8
+@@ -729,24 +729,27 @@
+   %v223 = icmp sge i64 %v221, 0
+   br i1 %v223, label %b46, label %b47
+ b46:
+-  store i64 %v203, ptr %stack.152, align 8, !tbaa !7
+-  %v225 = call ptr @myl_core_dict_set(ptr %v205, i64 %v221, ptr %stack.152)
++  %dictstore.152 = mul i64 %v221, 16
++  %dictstore.153 = add i64 %dictstore.152, 40
++  %dictstore.154 = getelementptr inbounds i8, ptr %v205, i64 %dictstore.153
++  store i64 %v203, ptr %dictstore.154, align 8, !tbaa !7
++  %v225 = getelementptr inbounds i8, ptr %v205, i64 0
+   br label %b48
+ b47:
+-  %rc.153 = load i32, ptr %v218, align 8, !tbaa !3, !range !8
+-  %rs.154 = icmp eq i32 %rc.153, -1
+-  br i1 %rs.154, label %b47.156, label %rc.inc.155
+-rc.inc.155:
+-  %rn.157 = add nuw i32 %rc.153, 1
+-  store i32 %rn.157, ptr %v218, align 8, !tbaa !3
+-  br label %b47.156
+-b47.156:
+-  store ptr %v218, ptr %stack.158, align 8, !tbaa !7
+-  store i64 %v203, ptr %stack.159, align 8, !tbaa !7
+-  %v227 = call ptr @myl_core_dict_insert(ptr %v205, i64 %v221, ptr %stack.158, ptr %stack.159, i1 false)
++  %rc.155 = load i32, ptr %v218, align 8, !tbaa !3, !range !8
++  %rs.156 = icmp eq i32 %rc.155, -1
++  br i1 %rs.156, label %b47.158, label %rc.inc.157
++rc.inc.157:
++  %rn.159 = add nuw i32 %rc.155, 1
++  store i32 %rn.159, ptr %v218, align 8, !tbaa !3
++  br label %b47.158
++b47.158:
++  store ptr %v218, ptr %stack.160, align 8, !tbaa !7
++  store i64 %v203, ptr %stack.161, align 8, !tbaa !7
++  %v227 = call ptr @myl_core_dict_insert(ptr %v205, i64 %v221, ptr %stack.160, ptr %stack.161, i1 false)
+   br label %b48
+ b48:
+-  %v229 = phi ptr [ %v225, %b46 ], [ %v227, %b47.156 ]
++  %v229 = phi ptr [ %v225, %b46 ], [ %v227, %b47.158 ]
+   br label %b40
+ b49:
+   %v282 = phi i64 [ 0, %b41 ], [ %v304, %b51 ]
+@@ -761,145 +764,145 @@
+   %v304 = add nuw nsw i64 %v282, 1
+   br label %b49
+ b52:
+-  %rc.160 = load i32, ptr %v107, align 8, !tbaa !3, !range !8
+-  %rs.161 = icmp eq i32 %rc.160, -1
+-  br i1 %rs.161, label %b52.163, label %rc.dec.162
+-rc.dec.162:
+-  %rn.164 = sub nuw i32 %rc.160, 1
+-  %rz.165 = icmp eq i32 %rn.164, 0
+-  br i1 %rz.165, label %rc.free.167, label %rc.keep.166
+-rc.keep.166:
+-  store i32 %rn.164, ptr %v107, align 8, !tbaa !3
+-  br label %b52.163
+-rc.free.167:
++  %rc.162 = load i32, ptr %v107, align 8, !tbaa !3, !range !8
++  %rs.163 = icmp eq i32 %rc.162, -1
++  br i1 %rs.163, label %b52.165, label %rc.dec.164
++rc.dec.164:
++  %rn.166 = sub nuw i32 %rc.162, 1
++  %rz.167 = icmp eq i32 %rn.166, 0
++  br i1 %rz.167, label %rc.free.169, label %rc.keep.168
++rc.keep.168:
++  store i32 %rn.166, ptr %v107, align 8, !tbaa !3
++  br label %b52.165
++rc.free.169:
+   call void @myl_core_free(ptr %v107)
+-  br label %b52.163
+-b52.163:
+-  %rc.168 = load i32, ptr %v167, align 8, !tbaa !3, !range !8
+-  %rs.169 = icmp eq i32 %rc.168, -1
+-  br i1 %rs.169, label %b52.163.171, label %rc.dec.170
+-rc.dec.170:
+-  %rn.172 = sub nuw i32 %rc.168, 1
+-  %rz.173 = icmp eq i32 %rn.172, 0
+-  br i1 %rz.173, label %rc.free.175, label %rc.keep.174
+-rc.keep.174:
+-  store i32 %rn.172, ptr %v167, align 8, !tbaa !3
+-  br label %b52.163.171
+-rc.free.175:
++  br label %b52.165
++b52.165:
++  %rc.170 = load i32, ptr %v167, align 8, !tbaa !3, !range !8
++  %rs.171 = icmp eq i32 %rc.170, -1
++  br i1 %rs.171, label %b52.165.173, label %rc.dec.172
++rc.dec.172:
++  %rn.174 = sub nuw i32 %rc.170, 1
++  %rz.175 = icmp eq i32 %rn.174, 0
++  br i1 %rz.175, label %rc.free.177, label %rc.keep.176
++rc.keep.176:
++  store i32 %rn.174, ptr %v167, align 8, !tbaa !3
++  br label %b52.165.173
++rc.free.177:
+   call void @myl_core_free(ptr %v167)
+-  br label %b52.163.171
+-b52.163.171:
+-  %rc.176 = load i32, ptr %v180, align 8, !tbaa !3, !range !8
+-  %rs.177 = icmp eq i32 %rc.176, -1
+-  br i1 %rs.177, label %b52.163.171.179, label %rc.dec.178
+-rc.dec.178:
+-  %rn.180 = sub nuw i32 %rc.176, 1
+-  %rz.181 = icmp eq i32 %rn.180, 0
+-  br i1 %rz.181, label %rc.free.183, label %rc.keep.182
+-rc.keep.182:
+-  store i32 %rn.180, ptr %v180, align 8, !tbaa !3
+-  br label %b52.163.171.179
+-rc.free.183:
++  br label %b52.165.173
++b52.165.173:
++  %rc.178 = load i32, ptr %v180, align 8, !tbaa !3, !range !8
++  %rs.179 = icmp eq i32 %rc.178, -1
++  br i1 %rs.179, label %b52.165.173.181, label %rc.dec.180
++rc.dec.180:
++  %rn.182 = sub nuw i32 %rc.178, 1
++  %rz.183 = icmp eq i32 %rn.182, 0
++  br i1 %rz.183, label %rc.free.185, label %rc.keep.184
++rc.keep.184:
++  store i32 %rn.182, ptr %v180, align 8, !tbaa !3
++  br label %b52.165.173.181
++rc.free.185:
+   call void @myl_core_free(ptr %v180)
+-  br label %b52.163.171.179
+-b52.163.171.179:
+-  %rc.184 = load i32, ptr %v205, align 8, !tbaa !3, !range !8
+-  %rs.185 = icmp eq i32 %rc.184, -1
+-  br i1 %rs.185, label %b52.163.171.179.187, label %rc.dec.186
+-rc.dec.186:
+-  %rn.188 = sub nuw i32 %rc.184, 1
+-  %rz.189 = icmp eq i32 %rn.188, 0
+-  br i1 %rz.189, label %rc.free.191, label %rc.keep.190
+-rc.keep.190:
+-  store i32 %rn.188, ptr %v205, align 8, !tbaa !3
+-  br label %b52.163.171.179.187
+-rc.free.191:
++  br label %b52.165.173.181
++b52.165.173.181:
++  %rc.186 = load i32, ptr %v205, align 8, !tbaa !3, !range !8
++  %rs.187 = icmp eq i32 %rc.186, -1
++  br i1 %rs.187, label %b52.165.173.181.189, label %rc.dec.188
++rc.dec.188:
++  %rn.190 = sub nuw i32 %rc.186, 1
++  %rz.191 = icmp eq i32 %rn.190, 0
++  br i1 %rz.191, label %rc.free.193, label %rc.keep.192
++rc.keep.192:
++  store i32 %rn.190, ptr %v205, align 8, !tbaa !3
++  br label %b52.165.173.181.189
++rc.free.193:
+   call void @myl_core_free(ptr %v205)
+-  br label %b52.163.171.179.187
+-b52.163.171.179.187:
++  br label %b52.165.173.181.189
++b52.165.173.181.189:
+   call void @myl_core_io_at(i32 33)
+   call void @myl_core_host_check(i64 %p1), !dbg !1000043
+   %v324 = call i64 @runtime_bench_now(), !dbg !1000044
+-  %p.192 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v324, i64 %v267)
+-  %v326 = extractvalue { i64, i1 } %p.192, 0
+-  %o.193 = extractvalue { i64, i1 } %p.192, 1
+-  br i1 %o.193, label %trap.194, label %b52.163.171.179.187.195, !prof !0
+-trap.194:
++  %p.194 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v324, i64 %v267)
++  %v326 = extractvalue { i64, i1 } %p.194, 0
++  %o.195 = extractvalue { i64, i1 } %p.194, 1
++  br i1 %o.195, label %trap.196, label %b52.165.173.181.189.197, !prof !0
++trap.196:
+   call void @myl_core_trap(i32 34, i64 %v324, i64 %v267), !dbg !1000045
+   unreachable
+-b52.163.171.179.187.195:
++b52.165.173.181.189.197:
+   call void @myl_core_print_i64(i64 %p2, i64 %v298)
+   call void @myl_core_print_sep(i64 %p2)
+   call void @myl_core_print_i64(i64 %p2, i64 %v326)
+   call void @myl_core_print_end(i64 %p2)
+   ret i64 0
+ b53:
+-  %rc.196 = load i32, ptr %v107, align 8, !tbaa !3, !range !8
+-  %rs.197 = icmp eq i32 %rc.196, -1
+-  br i1 %rs.197, label %b53.199, label %rc.dec.198
+-rc.dec.198:
+-  %rn.200 = sub nuw i32 %rc.196, 1
+-  %rz.201 = icmp eq i32 %rn.200, 0
+-  br i1 %rz.201, label %rc.free.203, label %rc.keep.202
+-rc.keep.202:
+-  store i32 %rn.200, ptr %v107, align 8, !tbaa !3
+-  br label %b53.199
+-rc.free.203:
++  %rc.198 = load i32, ptr %v107, align 8, !tbaa !3, !range !8
++  %rs.199 = icmp eq i32 %rc.198, -1
++  br i1 %rs.199, label %b53.201, label %rc.dec.200
++rc.dec.200:
++  %rn.202 = sub nuw i32 %rc.198, 1
++  %rz.203 = icmp eq i32 %rn.202, 0
++  br i1 %rz.203, label %rc.free.205, label %rc.keep.204
++rc.keep.204:
++  store i32 %rn.202, ptr %v107, align 8, !tbaa !3
++  br label %b53.201
++rc.free.205:
+   call void @myl_core_free(ptr %v107)
+-  br label %b53.199
+-b53.199:
+-  %rc.204 = load i32, ptr %v167, align 8, !tbaa !3, !range !8
+-  %rs.205 = icmp eq i32 %rc.204, -1
+-  br i1 %rs.205, label %b53.199.207, label %rc.dec.206
+-rc.dec.206:
+-  %rn.208 = sub nuw i32 %rc.204, 1
+-  %rz.209 = icmp eq i32 %rn.208, 0
+-  br i1 %rz.209, label %rc.free.211, label %rc.keep.210
+-rc.keep.210:
+-  store i32 %rn.208, ptr %v167, align 8, !tbaa !3
+-  br label %b53.199.207
+-rc.free.211:
++  br label %b53.201
++b53.201:
++  %rc.206 = load i32, ptr %v167, align 8, !tbaa !3, !range !8
++  %rs.207 = icmp eq i32 %rc.206, -1
++  br i1 %rs.207, label %b53.201.209, label %rc.dec.208
++rc.dec.208:
++  %rn.210 = sub nuw i32 %rc.206, 1
++  %rz.211 = icmp eq i32 %rn.210, 0
++  br i1 %rz.211, label %rc.free.213, label %rc.keep.212
++rc.keep.212:
++  store i32 %rn.210, ptr %v167, align 8, !tbaa !3
++  br label %b53.201.209
++rc.free.213:
+   call void @myl_core_free(ptr %v167)
+-  br label %b53.199.207
+-b53.199.207:
+-  %rc.212 = load i32, ptr %v180, align 8, !tbaa !3, !range !8
+-  %rs.213 = icmp eq i32 %rc.212, -1
+-  br i1 %rs.213, label %b53.199.207.215, label %rc.dec.214
+-rc.dec.214:
+-  %rn.216 = sub nuw i32 %rc.212, 1
+-  %rz.217 = icmp eq i32 %rn.216, 0
+-  br i1 %rz.217, label %rc.free.219, label %rc.keep.218
+-rc.keep.218:
+-  store i32 %rn.216, ptr %v180, align 8, !tbaa !3
+-  br label %b53.199.207.215
+-rc.free.219:
++  br label %b53.201.209
++b53.201.209:
++  %rc.214 = load i32, ptr %v180, align 8, !tbaa !3, !range !8
++  %rs.215 = icmp eq i32 %rc.214, -1
++  br i1 %rs.215, label %b53.201.209.217, label %rc.dec.216
++rc.dec.216:
++  %rn.218 = sub nuw i32 %rc.214, 1
++  %rz.219 = icmp eq i32 %rn.218, 0
++  br i1 %rz.219, label %rc.free.221, label %rc.keep.220
++rc.keep.220:
++  store i32 %rn.218, ptr %v180, align 8, !tbaa !3
++  br label %b53.201.209.217
++rc.free.221:
+   call void @myl_core_free(ptr %v180)
+-  br label %b53.199.207.215
+-b53.199.207.215:
+-  %rc.220 = load i32, ptr %v205, align 8, !tbaa !3, !range !8
+-  %rs.221 = icmp eq i32 %rc.220, -1
+-  br i1 %rs.221, label %b53.199.207.215.223, label %rc.dec.222
+-rc.dec.222:
+-  %rn.224 = sub nuw i32 %rc.220, 1
+-  %rz.225 = icmp eq i32 %rn.224, 0
+-  br i1 %rz.225, label %rc.free.227, label %rc.keep.226
+-rc.keep.226:
+-  store i32 %rn.224, ptr %v205, align 8, !tbaa !3
+-  br label %b53.199.207.215.223
+-rc.free.227:
++  br label %b53.201.209.217
++b53.201.209.217:
++  %rc.222 = load i32, ptr %v205, align 8, !tbaa !3, !range !8
++  %rs.223 = icmp eq i32 %rc.222, -1
++  br i1 %rs.223, label %b53.201.209.217.225, label %rc.dec.224
++rc.dec.224:
++  %rn.226 = sub nuw i32 %rc.222, 1
++  %rz.227 = icmp eq i32 %rn.226, 0
++  br i1 %rz.227, label %rc.free.229, label %rc.keep.228
++rc.keep.228:
++  store i32 %rn.226, ptr %v205, align 8, !tbaa !3
++  br label %b53.201.209.217.225
++rc.free.229:
+   call void @myl_core_free(ptr %v205)
+-  br label %b53.199.207.215.223
+-b53.199.207.215.223:
++  br label %b53.201.209.217.225
++b53.201.209.217.225:
+   ret i64 2
+ b54:
+-  %p.228 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v298, i64 %v292)
+-  %v299 = extractvalue { i64, i1 } %p.228, 0
+-  %o.229 = extractvalue { i64, i1 } %p.228, 1
+-  br i1 %o.229, label %trap.230, label %b54.231, !prof !0
+-trap.230:
++  %p.230 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v298, i64 %v292)
++  %v299 = extractvalue { i64, i1 } %p.230, 0
++  %o.231 = extractvalue { i64, i1 } %p.230, 1
++  br i1 %o.231, label %trap.232, label %b54.233, !prof !0
++trap.232:
+   call void @myl_core_trap(i32 35, i64 %v298, i64 %v292), !dbg !1000046
+   unreachable
+-b54.231:
++b54.233:
+   %v301 = urem i64 %v299, 1000000007
+   br label %b51
+ }

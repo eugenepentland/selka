@@ -1,0 +1,4 @@
+{
+  "qualified": false,
+  "reason": "Preliminary LLVM-to-assembly compile ran without required build-slot admission. No reassembly/link/timing or production source edits performed. Complete diagnostic will rerun in fresh evidence under build slot."
+}

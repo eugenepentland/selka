@@ -1,0 +1,14 @@
+[
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-combined-01/cache/word_count/program-e6ae4e687cc89630/entry.ll",
+    "sha256": "eea80df9afc8936ec147b215c04a62d8ac51b431c511494edc3b22eb2a1e6fd2"
+  },
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-combined-01/cache/word_count/program-e6ae4e687cc89630/module-2ba6fe24c624a8200217cbaaa38092ee7becce804e727d55a01781aa0d2b482a.ll",
+    "sha256": "c88867a852b854f0a365cee10dfd56f2ada72345438234b99041a6332a734f53"
+  },
+  {
+    "path": "experiments/new-core-s4-emission-20261006/paired-combined-01/cache/word_count/program-e6ae4e687cc89630/module-819b813edb0e06e8dfdd7ff60e54b591b15e01e8a00977de40701a326bcc3d4d.ll",
+    "sha256": "48024a347beb07f279ee5faa71fd9d2a75a634d8b42efa36b1564c20e5c860d6"
+  }
+]

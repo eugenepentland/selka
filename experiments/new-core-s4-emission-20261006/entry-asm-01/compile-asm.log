@@ -1,0 +1,3 @@
+['zig', 'cc', '-O3', '-march=native', '-mllvm', '-x86-experimental-pref-innermost-loop-alignment=6', '-Wno-override-module', '-S', '-o', 'experiments/new-core-s4-emission-20261006/entry-asm-01/entry.s', '/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/entry.ll']
+zig: warning: argument unused during compilation: '-c' [-Wunused-command-line-argument]
+exit=0

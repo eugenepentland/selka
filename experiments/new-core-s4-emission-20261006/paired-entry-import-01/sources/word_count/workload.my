@@ -1,0 +1,62 @@
+module workload
+
+
+public record Inputs:
+    raw: bytes
+    texts: list[str]
+    other: list[str]
+    numbers: list[int]
+    fragments: list[str]
+
+
+public def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+public def score(text: str) -> int:
+    raw = text.encode()
+    result = len(raw)
+    for value in raw:
+        result += value
+    return result
+
+
+public def word_job(text: str) -> int:
+    counts: dict[str, int] = {}
+    for word in text.split():
+        counts[word] = counts[word] + 1 if word in counts else 1
+    result = 0
+    for word in counts:
+        result += score(word) * counts[word] * counts[word]
+    return result
+
+
+# Fixture CSV subset: quoted commas/doubled quotes; LF records; no embedded LF.
+
+
+public def inputs(kind: str, size: int, seed: int) -> Inputs:
+    raw = b""
+    texts: list[str] = []
+    other: list[str] = []
+    numbers: list[int] = []
+    fragments: list[str] = []
+    vocabulary = ["red", "blue", "café", "red", "green", "blue", "naïve", "red"]
+    separators = [" ", "\t", "\n", "  "]
+    chunks = [vocabulary[(seed + j) % 8] + separators[j % 4] for j in range(size)]
+    document = "".join(chunks)
+    texts = [document + "red", document + "blue"]
+    return Inputs(raw=raw, texts=texts, other=other, numbers=numbers, fragments=fragments)
+
+
+public def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+    checksum = 0
+    for step in range(iterations):
+        cursor = seed + step
+        value = word_job(data.texts[cursor % 2])
+        checksum = (checksum + value) % 1000000007
+    return checksum
+

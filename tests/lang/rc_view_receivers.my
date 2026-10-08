@@ -1,91 +1,20 @@
 module rc_view_receivers
 
-
-# spec: RC-HELD-RECEIVER-1
-public def test_unshared_mapping_write_preserves_live_identity() -> bool:
+# spec-case: D2-VIEW-STORAGE-1
+public def test_explicit_snapshot_preserves_prior_values() -> bool:
     mapping = {1: 7}
-    view = mapping.values()
-    view.mapping[1] = 9
-    return list(view) == [9] and mapping[1] == 9
+    saved = list(mapping.values())
+    mapping[1] = 9
+    mapping[2] = 11
+    return saved == [7] and list(mapping.values()) == [9, 11]
 
+def replace(values: mut list[int]):
+    values = [9, 11]
 
-# spec-case: RC-HELD-RECEIVER-1
-public def test_shared_mapping_write_replaces_only_held_edge() -> bool:
+# spec-case: D2-VIEW-STORAGE-1
+public def test_snapshot_mutation_and_rebinding_leave_mapping_independent() -> bool:
     mapping = {1: 7}
-    snapshot = mapping
-    view = mapping.values()
-    view.mapping[1] = 9
-    return list(view) == [9] and mapping[1] == 7 and snapshot[1] == 7
-
-
-def only_view() -> DictValues[int, int]:
-    mapping = {1: 7}
-    return mapping.values()
-
-
-# spec-case: RC-HELD-RECEIVER-1
-public def test_held_only_mapping_remains_mutable() -> bool:
-    view = only_view()
-    view.mapping[1] = 9
-    view.mapping[2] = 11
-    return list(view) == [9, 11]
-
-
-record Holder:
-    view: DictValues[int, int]
-
-
-# spec-case: RC-HELD-RECEIVER-1
-public def test_nested_view_field_detaches_without_releasing_snapshot() -> bool:
-    mapping = {1: 7}
-    snapshot = mapping
-    holder = Holder(mapping.values())
-    holder.view.mapping.clear()
-    return len(holder.view) == 0 and mapping[1] == 7 and snapshot[1] == 7
-
-
-def capture_mapping(mapping: dict[int, list[int]], saved: mut list[dict[int, list[int]]]) -> int:
-    saved.append(mapping)
-    return 9
-
-
-# spec-case: RC-HELD-RECEIVER-1
-public def test_pending_nested_mapping_receiver_pins_snapshot_path() -> bool:
-    mapping = {1: [7]}
-    view = mapping.values()
-    saved: list[dict[int, list[int]]] = []
-    view.mapping[1].append(capture_mapping(mapping, mut saved))
-    return list(view) == [[7, 9]] and mapping[1] == [7, 9] and saved[0][1] == [7]
-
-
-def replace_mapping(view: mut DictValues[int, list[int]]) -> int:
-    view.mapping = {2: [8]}
-    return 9
-
-
-# spec-case: RC-HELD-RECEIVER-1
-public def test_pending_mapping_survives_callback_rebinding_view() -> bool:
-    mapping = {1: [7]}
-    view = mapping.values()
-    view.mapping[1].append(replace_mapping(mut view))
-    return list(view) == [[8]] and mapping[1] == [7, 9]
-
-
-# spec-case: RC-HELD-RECEIVER-1
-public def test_list_of_views_preserves_ordinary_mapping_snapshots() -> bool:
-    mapping = {1: 7}
-    snapshot = mapping
-    views = [mapping.values()]
-    views[0].mapping[1] = 9
-    return list(views[0]) == [9] and mapping[1] == 7 and snapshot[1] == 7
-
-
-def main() -> int:
-    assert test_unshared_mapping_write_preserves_live_identity()
-    assert test_shared_mapping_write_replaces_only_held_edge()
-    assert test_held_only_mapping_remains_mutable()
-    assert test_nested_view_field_detaches_without_releasing_snapshot()
-    assert test_pending_nested_mapping_receiver_pins_snapshot_path()
-    assert test_pending_mapping_survives_callback_rebinding_view()
-    assert test_list_of_views_preserves_ordinary_mapping_snapshots()
-    return 0
+    saved = list(mapping.values())
+    saved.append(8)
+    replace(mut saved)
+    return saved == [9, 11] and mapping[1] == 7

@@ -1,0 +1,48 @@
+test-core
++- run test 1 pass, 2 fail (3 total)
+guardian/test: test wall 0.07s; slowest over 50ms:
+guardian/test:   0.07s  emit_text_split_test.test.private whitespace cursor LLVM guards negative empty Unicode and past-end inputs in every mode
+guardian/test: FAIL — 2 failed of 3
+guardian/test: RESULT {"passed":1,"failed":2,"skipped":0}
+error: 'emit_text_split_test.test.private whitespace cursor LLVM guards negative empty Unicode and past-end inputs in every mode' failed:
+       guardian/test: 3 test(s) selected
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/core/emit_llvm.zig:468:20: 0x1333f21 in emitEntry (root_test.zig)
+                   } else return error.UnsupportedEntry;
+                          ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/core/emit_llvm.zig:198:5: 0x1337c9c in emitModule (root_test.zig)
+           try state.emitEntry(&body);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/core/test_support.zig:231:18: 0x12c8032 in runOwned (root_test.zig)
+           const llvm = try emit_llvm.emitModule(arena, module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "hand.my", .main = options.main, .verify = options.verify, .facts = options.known });
+                        ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/core/emit_text_split_test.zig:71:24: 0x12c2d5f in nativeBoundaries (root_test.zig)
+               const result = try support.runOwned(a, &module, mode);
+                              ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/core/emit_text_split_test.zig:85:5: 0x153ddf9 in test.private whitespace cursor LLVM guards negative empty Unicode and past-end inputs in every mode (root_test.zig)
+           try nativeBoundaries(arena.allocator(), .runtime_c);
+           ^
+error: 'emit_text_split_test.test.extern whitespace cursor calls retain their C boundary implementation in every mode' failed:
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/core/emit_llvm.zig:468:20: 0x1333f21 in emitEntry (root_test.zig)
+                   } else return error.UnsupportedEntry;
+                          ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/core/emit_llvm.zig:198:5: 0x1337c9c in emitModule (root_test.zig)
+           try state.emitEntry(&body);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/core/test_support.zig:231:18: 0x12c8032 in runOwned (root_test.zig)
+           const llvm = try emit_llvm.emitModule(arena, module, .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "hand.my", .main = options.main, .verify = options.verify, .facts = options.known });
+                        ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/core/emit_text_split_test.zig:71:24: 0x12c2d5f in nativeBoundaries (root_test.zig)
+               const result = try support.runOwned(a, &module, mode);
+                              ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-applications/src/core/emit_text_split_test.zig:92:5: 0x12c35c9 in test.extern whitespace cursor calls retain their C boundary implementation in every mode (root_test.zig)
+           try nativeBoundaries(arena.allocator(), .extern_c);
+           ^
+failed command: ./.zig-cache/o/1bc7dcdbd59200239ec2e7101a48546b/test --cache-dir=./.zig-cache --seed=0x5e127607 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 1/3 tests passed (2 failed)
+test-core transitive failure
++- run test 1 pass, 2 fail (3 total)
+   +- compile test debug native success 1s MaxRSS:220M
+      +- options success
+         +- compile exe mylang-core debug native cached 7ms MaxRSS:38M
+

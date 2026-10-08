@@ -1,0 +1,22 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T11:54:15.271282+00:00",
+  "source_revision": "a2dfdfa994e19ac3c80373a443913c7ecdef23d7",
+  "pairs": 368,
+  "executions": 736,
+  "counts": {
+    "R_MISSING_KEY": 35,
+    "success": 294,
+    "R_OVERFLOW": 35,
+    "R_STEP_LIMIT": 2,
+    "R_FRAME_LIMIT": 2
+  },
+  "live_bindings": 5301,
+  "report_sha256": "a1310006aac7ee4b154daa35d11e1229953f7e1125b695a63d6dce52100fb29b",
+  "script_sha256": "394561a598d13978fb63da5f70386f3db6ae07fed05ed907240503862f072fb4",
+  "limitations": [
+    "Saved direct native outcomes, no new execution or timing.",
+    "Exact streams check provenance/accounting parity; state model independently checks language results.",
+    "Emission manifests establish selection; actual benchmark machine code is reviewed separately."
+  ]
+}

@@ -1,0 +1,14 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 20 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 25 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 8620 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (test-no-conditional)
+guardian: failures grouped by check (1):
+  test-no-conditional (3 findings)
+    - src/qbe_rc_unique_capture_test.zig:94: more than one top-level loop — a test may keep one; hoist the loop at line 94 into a named helper, or merge the loops into one table-driven loop
+      fix: one top-level loop is fine; merge multiple loops into one table-driven loop, split a branch into two independent tests, or hoist the computation into a helper. A multi-loop finding names the loop to hoist — the assertion-free one when there is one, otherwise the extra loop itself.
+    - src/qbe_rc_unique_capture_test.zig:164: if at top level of test body
+    - src/qbe_rc_unique_capture_test.zig:167: more than one top-level loop — a test may keep one; hoist the loop at line 167 into a named helper, or merge the loops into one table-driven loop
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

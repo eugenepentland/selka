@@ -1,0 +1,962 @@
+{
+  "paired-screen": {
+    "measurement_session_id": "b7eff65d-5de2-436a-9a95-56a29c1e1354",
+    "started_utc": "2026-10-04T12:17:04.692303+00:00",
+    "guest_finished_utc": "2026-10-04T12:17:54.470853+00:00",
+    "finished_utc": "2026-10-04T12:17:55.443755+00:00",
+    "rounds": 5,
+    "warmups": 1,
+    "rows": [
+      {
+        "plan": {
+          "case": "dict_lookup",
+          "size": 64,
+          "profile": "small",
+          "seed": 42,
+          "group": "collections",
+          "family": "dict",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 212304,
+          "expected": 182831129,
+          "calibration": {
+            "fastest_ns": 49365269,
+            "slowest_ns": 123165933,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "slowest_arm_budget",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 440.03447415027506,
+          "before-qbe": 641.5436920642098,
+          "candidate-llvm": 352.29286777451205,
+          "candidate-qbe": 593.8547083427538
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 0.8006028810692714,
+            "paired_bootstrap_95_interval": [
+              0.799684041328617,
+              0.8070969748148986
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 0.9256652597299905,
+            "paired_bootstrap_95_interval": [
+              0.902653291004617,
+              0.9273548009341326
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "dict_lookup",
+          "size": 4096,
+          "profile": "large",
+          "seed": 42,
+          "group": "collections",
+          "family": "dict",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 1795,
+          "expected": 968800593,
+          "calibration": {
+            "fastest_ns": 49352593,
+            "slowest_ns": 102098710,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "slowest_arm_budget",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 49549.48412256267,
+          "before-qbe": 64024.02729805014,
+          "candidate-llvm": 39241.28300835655,
+          "candidate-qbe": 57697.95821727019
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 0.7919614846300242,
+            "paired_bootstrap_95_interval": [
+              0.7860221170766811,
+              0.807178932103861
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 0.9011922656578555,
+            "paired_bootstrap_95_interval": [
+              0.8996857766011143,
+              0.9046059679665401
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "dict_lookup_str",
+          "size": 64,
+          "profile": "small",
+          "seed": 42,
+          "group": "collections",
+          "family": "dict",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 141208,
+          "expected": 116990858,
+          "calibration": {
+            "fastest_ns": 51832414,
+            "slowest_ns": 113197618,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "target",
+            "limited": false,
+            "target_reached": true,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 529.5041782335278,
+          "before-qbe": 823.8210795422356,
+          "candidate-llvm": 555.1239306554869,
+          "candidate-qbe": 826.4856240439635
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 1.048384419755532,
+            "paired_bootstrap_95_interval": [
+              1.0354827923341001,
+              1.053085502042521
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 1.0032343728121262,
+            "paired_bootstrap_95_interval": [
+              1.0025281129079664,
+              1.0932129460743105
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "dict_lookup_str",
+          "size": 4096,
+          "profile": "large",
+          "seed": 42,
+          "group": "collections",
+          "family": "dict",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 1244,
+          "expected": 374266052,
+          "calibration": {
+            "fastest_ns": 47747925,
+            "slowest_ns": 103121302,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "slowest_arm_budget",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 64558.643890675245,
+          "before-qbe": 85664.95096463023,
+          "candidate-llvm": 64856.18247588424,
+          "candidate-qbe": 84769.22025723473
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 1.0046088109550884,
+            "paired_bootstrap_95_interval": [
+              0.9974015676502319,
+              1.0127012857406918
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 0.9895437901112517,
+            "paired_bootstrap_95_interval": [
+              0.9801490132306065,
+              0.9952965038526586
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "dict_update",
+          "size": 64,
+          "profile": "small",
+          "seed": 42,
+          "group": "collections",
+          "family": "dict",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 20357,
+          "expected": 464687075,
+          "calibration": {
+            "fastest_ns": 47948618,
+            "slowest_ns": 311506552,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "slowest_arm_budget",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 11682.06317237314,
+          "before-qbe": 15384.520508915852,
+          "candidate-llvm": 11280.095397160681,
+          "candidate-qbe": 15519.188829395294
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 0.9655910288036217,
+            "paired_bootstrap_95_interval": [
+              0.9624744587904316,
+              0.9685283082078829
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 1.0087534948132701,
+            "paired_bootstrap_95_interval": [
+              1.0074162305857242,
+              1.0099583283820408
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "dict_update",
+          "size": 4096,
+          "profile": "large",
+          "seed": 42,
+          "group": "collections",
+          "family": "dict",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 122,
+          "expected": 507521836,
+          "calibration": {
+            "fastest_ns": 49631649,
+            "slowest_ns": 136339358,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "slowest_arm_budget",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 911175.3114754099,
+          "before-qbe": 1144312.3524590165,
+          "candidate-llvm": 901210.368852459,
+          "candidate-qbe": 1139221.9098360655
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 0.9890636384706086,
+            "paired_bootstrap_95_interval": [
+              0.9836575060126811,
+              0.9933732705470929
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 0.9955515269829849,
+            "paired_bootstrap_95_interval": [
+              0.9947390133151685,
+              1.0019466073295173
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "dict_update_str",
+          "size": 64,
+          "profile": "small",
+          "seed": 42,
+          "group": "collections",
+          "family": "dict",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 10748,
+          "expected": 890923599,
+          "calibration": {
+            "fastest_ns": 49455300,
+            "slowest_ns": 183050307,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "slowest_arm_budget",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 13922.562709341273,
+          "before-qbe": 17817.71911053219,
+          "candidate-llvm": 13490.286378861183,
+          "candidate-qbe": 17561.1963155936
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 0.9689513820476415,
+            "paired_bootstrap_95_interval": [
+              0.9578139058087947,
+              0.9812630209168802
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 0.9856029386619436,
+            "paired_bootstrap_95_interval": [
+              0.9782423234708979,
+              0.9913393608366703
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "dict_update_str",
+          "size": 4096,
+          "profile": "large",
+          "seed": 42,
+          "group": "collections",
+          "family": "dict",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 75,
+          "expected": 215595515,
+          "calibration": {
+            "fastest_ns": 48447751,
+            "slowest_ns": 94509940,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "slowest_arm_budget",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 1110125.0666666667,
+          "before-qbe": 1298918.7333333334,
+          "candidate-llvm": 1098421.16,
+          "candidate-qbe": 1289063.5466666666
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 0.9894571278335246,
+            "paired_bootstrap_95_interval": [
+              0.9860610425018727,
+              0.9953349017877676
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 0.9924127765550228,
+            "paired_bootstrap_95_interval": [
+              0.9880557430890605,
+              1.004574232037613
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "set_dedup",
+          "size": 64,
+          "profile": "small",
+          "seed": 42,
+          "group": "collections",
+          "family": "set",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 185022,
+          "expected": 22202640,
+          "calibration": {
+            "fastest_ns": 51252926,
+            "slowest_ns": 645531379,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "target",
+            "limited": false,
+            "target_reached": true,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 2798.813557306699,
+          "before-qbe": 3657.5960210137173,
+          "candidate-llvm": 2807.2672114667444,
+          "candidate-qbe": 3618.7926678989525
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 1.0030204420505167,
+            "paired_bootstrap_95_interval": [
+              0.9899349705102194,
+              1.0053240246318953
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 0.9893910227122321,
+            "paired_bootstrap_95_interval": [
+              0.9877919041661343,
+              1.0058704628971336
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "set_dedup",
+          "size": 4096,
+          "profile": "large",
+          "seed": 42,
+          "group": "collections",
+          "family": "set",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 955,
+          "expected": 500206080,
+          "calibration": {
+            "fastest_ns": 50240564,
+            "slowest_ns": 213308817,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "target",
+            "limited": false,
+            "target_reached": true,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 182964.64607329844,
+          "before-qbe": 232957.51308900522,
+          "candidate-llvm": 179799.7109947644,
+          "candidate-qbe": 231449.11413612566
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 0.9827019309661271,
+            "paired_bootstrap_95_interval": [
+              0.9810599277407833,
+              0.9899342880597289
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 0.9935250040538368,
+            "paired_bootstrap_95_interval": [
+              0.9911820371124963,
+              1.0037761344962388
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "mutate_nested",
+          "size": 64,
+          "profile": "small",
+          "seed": 42,
+          "group": "collections",
+          "family": "mutate",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 73139,
+          "expected": 495839164,
+          "calibration": {
+            "fastest_ns": 50441014,
+            "slowest_ns": 81408620,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "target",
+            "limited": false,
+            "target_reached": true,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 723.8613872215917,
+          "before-qbe": 837.1674619560016,
+          "candidate-llvm": 719.445507868579,
+          "candidate-qbe": 848.5988050151083
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 0.9938995511696483,
+            "paired_bootstrap_95_interval": [
+              0.9914949661997683,
+              1.0015856936643721
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 1.0136547866210637,
+            "paired_bootstrap_95_interval": [
+              1.0063381515330971,
+              1.0177608405060226
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "mutate_nested",
+          "size": 1024,
+          "profile": "large",
+          "seed": 42,
+          "group": "collections",
+          "family": "mutate",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 7220,
+          "expected": 159075144,
+          "calibration": {
+            "fastest_ns": 49044287,
+            "slowest_ns": 131003585,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "slowest_arm_budget",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 6947.99432132964,
+          "before-qbe": 7948.042520775623,
+          "candidate-llvm": 7085.503185595568,
+          "candidate-qbe": 8349.03836565097
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 1.0197911595643925,
+            "paired_bootstrap_95_interval": [
+              1.015515328173121,
+              1.0342803971383145
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 1.0504521514356737,
+            "paired_bootstrap_95_interval": [
+              1.0340928566893381,
+              1.0648847154773706
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "string_search",
+          "size": 64,
+          "profile": "small",
+          "seed": 42,
+          "group": "text",
+          "family": "strings",
+          "level": "micro",
+          "unit": "one substring search",
+          "iterations": 2699072,
+          "expected": 95142288,
+          "calibration": {
+            "fastest_ns": 50190492,
+            "slowest_ns": 227565587,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "target",
+            "limited": false,
+            "target_reached": true,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 19.52293640184478,
+          "before-qbe": 24.30896582232708,
+          "candidate-llvm": 19.398410638915895,
+          "candidate-qbe": 24.301822255945748
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 0.9936215659178647,
+            "paired_bootstrap_95_interval": [
+              0.9854393047270835,
+              1.0064941070894178
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 0.9997061345005976,
+            "paired_bootstrap_95_interval": [
+              0.9945157605889148,
+              1.003594105200199
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "string_search",
+          "size": 4096,
+          "profile": "large",
+          "seed": 42,
+          "group": "text",
+          "family": "strings",
+          "level": "micro",
+          "unit": "one substring search",
+          "iterations": 318911,
+          "expected": 654164137,
+          "calibration": {
+            "fastest_ns": 26330704,
+            "slowest_ns": 899518634,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "pilot_limit",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 86.12679713148809,
+          "before-qbe": 90.86621032200206,
+          "candidate-llvm": 85.46436153033291,
+          "candidate-qbe": 90.85939964441489
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 0.9923086005376021,
+            "paired_bootstrap_95_interval": [
+              0.980021095549514,
+              1.0042511233975044
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 0.9999250471923168,
+            "paired_bootstrap_95_interval": [
+              0.986957058530314,
+              1.0064715123771864
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "paired-repeat": {
+    "measurement_session_id": "ac4d3604-c619-420c-94e1-84490e5b2c23",
+    "started_utc": "2026-10-04T12:41:34.336894+00:00",
+    "guest_finished_utc": "2026-10-04T12:42:28.803772+00:00",
+    "finished_utc": "2026-10-04T12:42:29.746188+00:00",
+    "rounds": 15,
+    "warmups": 3,
+    "rows": [
+      {
+        "plan": {
+          "case": "dict_lookup",
+          "size": 64,
+          "profile": "small",
+          "seed": 42,
+          "group": "collections",
+          "family": "dict",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 212304,
+          "expected": 182831129,
+          "calibration": {
+            "fastest_ns": 49365269,
+            "slowest_ns": 123165933,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "slowest_arm_budget",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 423.7004860954104,
+          "before-qbe": 628.3697480970684,
+          "candidate-llvm": 340.8711140628533,
+          "candidate-qbe": 581.6359889592283
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 0.8045096129205165,
+            "paired_bootstrap_95_interval": [
+              0.8020890638736186,
+              0.8060280810487547
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 0.9256269747559189,
+            "paired_bootstrap_95_interval": [
+              0.923237051703855,
+              0.92747006267689
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "dict_lookup",
+          "size": 4096,
+          "profile": "large",
+          "seed": 42,
+          "group": "collections",
+          "family": "dict",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 1795,
+          "expected": 968800593,
+          "calibration": {
+            "fastest_ns": 49352593,
+            "slowest_ns": 102098710,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "slowest_arm_budget",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 49074.426183844014,
+          "before-qbe": 63476.08802228412,
+          "candidate-llvm": 38729.22841225627,
+          "candidate-qbe": 57347.38997214485
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 0.7891937089018164,
+            "paired_bootstrap_95_interval": [
+              0.7876433606416359,
+              0.7910373982012087
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 0.9034487120884369,
+            "paired_bootstrap_95_interval": [
+              0.9000673312250845,
+              0.9086864363055223
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "dict_lookup_str",
+          "size": 64,
+          "profile": "small",
+          "seed": 42,
+          "group": "collections",
+          "family": "dict",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 141208,
+          "expected": 116990858,
+          "calibration": {
+            "fastest_ns": 51832414,
+            "slowest_ns": 113197618,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "target",
+            "limited": false,
+            "target_reached": true,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 520.3129567729874,
+          "before-qbe": 813.2660684947028,
+          "candidate-llvm": 544.0856962778313,
+          "candidate-qbe": 816.0220100844144
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 1.0456893090886759,
+            "paired_bootstrap_95_interval": [
+              1.0422786198234597,
+              1.0494281182540663
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 1.0033887330315068,
+            "paired_bootstrap_95_interval": [
+              1.0020341829148491,
+              1.0058167927585322
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "dict_update",
+          "size": 64,
+          "profile": "small",
+          "seed": 42,
+          "group": "collections",
+          "family": "dict",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 20357,
+          "expected": 464687075,
+          "calibration": {
+            "fastest_ns": 47948618,
+            "slowest_ns": 311506552,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "slowest_arm_budget",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 11556.823647885249,
+          "before-qbe": 15263.398732622685,
+          "candidate-llvm": 11129.161762538684,
+          "candidate-qbe": 15349.310654811612
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 0.9629948592817006,
+            "paired_bootstrap_95_interval": [
+              0.9608243547897419,
+              0.9666187562067248
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 1.005628623329174,
+            "paired_bootstrap_95_interval": [
+              1.0009634173383983,
+              1.0086627475506587
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "dict_update",
+          "size": 4096,
+          "profile": "large",
+          "seed": 42,
+          "group": "collections",
+          "family": "dict",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 122,
+          "expected": 507521836,
+          "calibration": {
+            "fastest_ns": 49631649,
+            "slowest_ns": 136339358,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "slowest_arm_budget",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 906701.9672131147,
+          "before-qbe": 1142061.7786885246,
+          "candidate-llvm": 896617.5327868853,
+          "candidate-qbe": 1139877.1967213114
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 0.9888778950626682,
+            "paired_bootstrap_95_interval": [
+              0.9875864777709518,
+              0.9918525279164729
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 0.9980871595495282,
+            "paired_bootstrap_95_interval": [
+              0.9943319439189977,
+              1.0001314303987086
+            ]
+          }
+        }
+      },
+      {
+        "plan": {
+          "case": "mutate_nested",
+          "size": 1024,
+          "profile": "large",
+          "seed": 42,
+          "group": "collections",
+          "family": "mutate",
+          "level": "micro",
+          "unit": "one complete SIZE-element dataset operation",
+          "iterations": 7220,
+          "expected": 159075144,
+          "calibration": {
+            "fastest_ns": 49044287,
+            "slowest_ns": 131003585,
+            "target_ns": 50000000,
+            "slowest_cap_ns": 1000000000,
+            "iteration_cap": 10000000,
+            "reason": "slowest_arm_budget",
+            "limited": true,
+            "target_reached": false,
+            "slowest_budget_exceeded": false
+          }
+        },
+        "medians_ns_per_iteration": {
+          "before-llvm": 6917.05512465374,
+          "before-qbe": 7868.438504155125,
+          "candidate-llvm": 7221.649030470914,
+          "candidate-qbe": 8318.920637119114
+        },
+        "comparisons": {
+          "llvm": {
+            "candidate_to_before": 1.0440351999988466,
+            "paired_bootstrap_95_interval": [
+              1.041329494143394,
+              1.052828630565832
+            ]
+          },
+          "qbe": {
+            "candidate_to_before": 1.057251782895183,
+            "paired_bootstrap_95_interval": [
+              1.0516594369706778,
+              1.063840521237839
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

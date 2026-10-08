@@ -25,6 +25,7 @@ const eShadowing = diagnostic.shadowing;
 const eConversionBody = "E_CONVERSION_BODY";
 const sem_copy = @import("semantic_copy.zig");
 const generic_specializations = @import("generic_specializations.zig");
+const generic_bodies = @import("generic_bodies.zig");
 const semantic_key = @import("semantic_key.zig");
 const sem_entry = @import("semantic_entry.zig");
 
@@ -121,11 +122,9 @@ const origins = @import("origins.zig");
 const timings = @import("timings.zig");
 const generic_cache = @import("generic_cache.zig");
 const Names = @import("module_names.zig").Names;
-const LoopScope = struct { id: usize, before: []const Pending, arenas: usize = 0, exited: bool = false };
-const ArenaScope = struct { name: []const u8, declaration: source.Span, watermark: typed.LocalId };
-const eArenaEscape = "E_ARENA_ESCAPE";
+const LoopScope = struct { id: usize, before: []const Pending, exited: bool = false };
+const ArenaScope = struct { name: []const u8 };
 const eUnbound = "E_UNBOUND";
-const eArenaBinding = sema_shared.eArenaBinding;
 const eWithResource = sema_shared.eWithResource;
 const eFileArgument = sema_shared.eFileArgument;
 const Pending = sema_shared.Pending;
@@ -150,10 +149,13 @@ const Checker = struct {
     allocator: std.mem.Allocator,
     src: source.Source,
     syntax: ast.Program,
+    view_consumers: dictionary_views.Consumers,
     sink: *diagnostic.Sink,
     nodes: std.ArrayList(typed.Node) = .empty,
     statements: std.ArrayList(typed.Statement) = .empty,
     locals: std.ArrayList(typed.Local) = .empty,
+    /// Statements in earlier functions use a different local ID namespace.
+    function_statement_start: usize = 0,
     active: std.StringHashMapUnmanaged(typed.LocalId) = .empty,
     resolved: []?typed.NodeId,
     expected_types: std.AutoHashMapUnmanaged(source.Span, typed.Type) = .empty,
@@ -218,6 +220,7 @@ const Checker = struct {
         self.expected_types.clearRetainingCapacity();
         self.option_facts.clear();
         self.locals = .empty;
+        self.function_statement_start = self.statements.items.len;
         self.counters.clearRetainingCapacity();
         self.active.clearRetainingCapacity();
         self.owner = if (function.policy.owner) |owner| try self.ty(owner) else null;
@@ -371,7 +374,7 @@ const Checker = struct {
     fn checkLambdaFunction(self: *Checker, index: usize) Error!typed.Function {
         const lambda = self.syntax.lambdas[index];
         const lambda_type = self.lambda_types[index] orelse {
-            if (self.inGenericBody(lambda.span)) return self.sink.fail("E_GENERIC_BODY_UNSUPPORTED", lambda.span, @import("generic_bodies.zig").lambda_in_generic_body);
+            if (self.inGenericBody(lambda.span)) return self.sink.fail("E_GENERIC_BODY_UNSUPPORTED", lambda.span, generic_bodies.lambda_in_generic_body);
             return self.sink.fail(lambda_context_code, lambda.span, "lambda requires an expected callback type");
         };
         if (lambda_type == uninferred_lambda) return error.SourceError;
@@ -386,6 +389,7 @@ const Checker = struct {
         self.expected_types.clearRetainingCapacity();
         self.option_facts.clear();
         self.locals = .empty;
+        self.function_statement_start = self.statements.items.len;
         self.counters.clearRetainingCapacity();
         self.active.clearRetainingCapacity();
         self.owner = null;
@@ -586,10 +590,9 @@ const Checker = struct {
     }
     const ResolvedCall = struct { declaration: instances.DeclarationId, call: @FieldType(@FieldType(ast.Node, "data"), "call") };
     /// Whether one in-scope local may appear in a hole snapshot as a usable
-    /// input: initialized, not consumed, not arena-confined, not synthetic.
+    /// input: initialized, not consumed, not synthetic.
     fn holeUsable(self: *Checker, local: typed.Local) bool {
         if (!local.ownership.initialized) return false;
-        if (local.ownership.arena_confined) return false;
         if (local.usage.temporary) return false;
         return !self.transfers(local.ty) or local.ownership.transfer_available;
     }
@@ -880,15 +883,9 @@ const Checker = struct {
         return self.sink.fail("E_ARITY", name, message);
     }
     /// Reject reading a function-scoped binding that no path reaching here has
-    /// assigned, or one that names a managed value confined to a released arena.
+    /// assigned.
     pub fn requireReadable(self: *Checker, slot: typed.LocalId, name: source.Span) Error!void {
         const local = self.locals.items[@backingInt(slot)];
-        if (local.ownership.arena_confined) return self.sink.failRelated(
-            eArenaEscape,
-            name,
-            "names a managed value that lives in a released `with arena()` scope; an arena value cannot be read after the block, so copy it out with `arena.escape(...)` into a binding declared before the block",
-            .{ .span = local.declaration, .message = "arena-managed binding first assigned here" },
-        );
         if (!local.ownership.initialized) return self.sink.failRelated(
             eUnbound,
             name,
@@ -1041,6 +1038,21 @@ const Checker = struct {
     /// Give each operand of one binary operator the numeric type the other side
     /// or the context makes obvious, so a literal adopts its partner's width.
     pub fn hintOperands(self: *Checker, binary: @FieldType(@FieldType(ast.Node, "data"), "binary"), context: ?typed.Type) Error!void {
+        // Sequence repetition has unlike operand types. A runtime count must
+        // not lend its integer type to a contextual list constructor.
+        if (binary.op == .mul) {
+            for ([_]ast.NodeId{ binary.left, binary.right }) |operand| {
+                switch (self.syntax.nodes.items[@backingInt(operand)].data) {
+                    .list_literal, .comprehension => {
+                        if (context) |expected| {
+                            if (expected.isAggregate() and self.catalog.records[expected.recordIndex()].collection.kind == .list) try self.hint(operand, expected);
+                        }
+                        return;
+                    },
+                    else => {},
+                }
+            }
+        }
         const expected = self.obviousType(binary.left) orelse self.obviousType(binary.right) orelse context orelse return;
         if (!expected.isInteger() and !numeric_surface.isFloat(expected, self.catalog.records)) {
             // `==`/`!=` operands share one aggregate type, so a typed side gives a
@@ -1189,115 +1201,12 @@ const Checker = struct {
     pub const repeatAssignment = idiom_checks.repeatAssignment;
     pub const formatField = idiom_checks.formatField;
     pub const checkValueIndex = operator_checks.checkValueIndex;
-    /// Whether a local of this type needs cleanup when it leaves scope: a file,
-    /// a move-only value, or a value holding managed storage.
-    pub fn needsLocalCleanup(self: *Checker, local_type: typed.Type) Error!bool {
-        if (local_type.isFile()) return true;
-        if (typed.moveOnly(local_type, self.catalog.records)) return true;
-        return self.managedBearing(local_type);
-    }
-    /// Whether values of this type may hold a garbage-collected reference, including
-    /// references nested inside records, variants, options, results and arrays.
-    pub fn managedBearing(self: *Checker, local_type: typed.Type) Error!bool {
-        if (!local_type.isAggregate()) return false;
-        if (self.managed_types.len != self.catalog.records.len) {
-            const flags = try @import("record_layouts.zig").managedTypes(self.allocator, self.catalog.records);
-            self.allocator.free(self.managed_types);
-            self.managed_types = flags;
-        }
-        return self.managed_types[local_type.recordIndex()];
-    }
-    /// Source spelling of the innermost arena binding, or `arena` when anonymous.
-    fn arenaName(self: *Checker) []const u8 {
-        const scope = self.arenas.items[self.arenas.items.len - 1];
-        return if (scope.name.len == 0) "arena" else scope.name;
-    }
-    /// Resolve an arena binding spelling, rejecting an enclosing rather than innermost scope.
-    pub fn arenaBinding(self: *Checker, name: source.Span) Error!bool {
+    /// Whether a name spells the binding of an enclosing `with arena() as name:`
+    /// block, whose one use is `name.escape(value)` (NEW-CORE-S5-ARENA-2).
+    pub fn arenaBinding(self: *Checker, name: source.Span) bool {
         const text = self.src.text(name);
-        var index = self.arenas.items.len;
-        while (index > 0) {
-            index -= 1;
-            if (!std.mem.eql(u8, self.arenas.items[index].name, text)) continue;
-            if (index + 1 != self.arenas.items.len) return self.sink.fail(eArenaEscape, name, "escape must name the innermost active arena scope");
-            return true;
-        }
+        for (self.arenas.items) |scope| if (std.mem.eql(u8, scope.name, text)) return true;
         return false;
-    }
-    /// Whether this slot names a binding that outlives the innermost arena scope.
-    fn outlivesArena(self: *Checker, slot: typed.LocalId) bool {
-        if (self.arenas.items.len == 0) return false;
-        return @backingInt(slot) < @backingInt(self.arenas.items[self.arenas.items.len - 1].watermark);
-    }
-    /// Whether a checked expression is the arena copy-out that re-homes its result.
-    fn isArenaEscape(self: *Checker, value: typed.NodeId) bool {
-        return self.nodes.items[@backingInt(value)].data == .arena_escape;
-    }
-    /// Reject a managed value leaving the innermost arena, naming scope and destination.
-    fn failArenaEscape(self: *Checker, span: source.Span, message: []const u8, destination: ?source.Span) Error {
-        const scope = self.arenas.items[self.arenas.items.len - 1];
-        const cause: diagnostic.Related = .{ .span = scope.declaration, .message = "arena scope opened here" };
-        if (destination) |at| return self.sink.failProvenance(eArenaEscape, span, message, cause, at);
-        return self.sink.failRelated(eArenaEscape, span, message, cause);
-    }
-    /// Resolve a plain-name collection receiver to its local slot for arena store checks.
-    pub fn arenaReceiver(self: *Checker, id: ast.NodeId) ?typed.LocalId {
-        if (self.arenas.items.len == 0) return null;
-        const node = self.syntax.nodes.items[@backingInt(id)];
-        if (node.data != .name) return null;
-        return self.active.get(self.src.text(node.data.name));
-    }
-    /// Reject an arena-allocated element stored through a collection mutation.
-    pub fn requireArenaOperation(self: *Checker, owner: ?typed.LocalId, kind: BufferKind, arguments: []const typed.NodeId) Error!void {
-        const slot = owner orelse return;
-        if (self.arenas.items.len == 0) return;
-        // `update` copies every entry of its operand in, exactly as `extend`
-        // copies every element, so an arena-held operand is refused the same way.
-        if ((kind == .append or kind == .extend or kind == .update) and arguments.len == 1) return self.requireArenaStore(slot, arguments[0]);
-        if (kind != .write or arguments.len != 2) return;
-        try self.requireArenaStore(slot, arguments[0]);
-        try self.requireArenaStore(slot, arguments[1]);
-    }
-    /// Reject storing a managed value into a container binding that outlives the arena.
-    pub fn requireArenaStore(self: *Checker, owner: typed.LocalId, value: typed.NodeId) Error!void {
-        if (!self.outlivesArena(owner)) return;
-        if (!try self.managedBearing(self.nodes.items[@backingInt(value)].ty)) return;
-        if (self.isArenaEscape(value)) return;
-        const local = self.locals.items[@backingInt(owner)];
-        const span = self.nodes.items[@backingInt(value)].span;
-        const message = try std.fmt.allocPrint(
-            self.allocator,
-            "`{s}` stores a managed value into `{s}`, which outlives arena `{s}`; store `{s}.escape(...)` instead",
-            .{ self.src.text(span), local.name, self.arenaName(), self.arenaName() },
-        );
-        return self.failArenaEscape(span, message, local.declaration);
-    }
-    /// Reject assigning a managed value to a binding declared outside the arena.
-    pub fn requireArenaAssignment(self: *Checker, slot: typed.LocalId, value: typed.NodeId) Error!void {
-        if (!self.outlivesArena(slot)) return;
-        if (!try self.managedBearing(self.locals.items[@backingInt(slot)].ty)) return;
-        if (self.isArenaEscape(value)) return;
-        const local = self.locals.items[@backingInt(slot)];
-        const span = self.nodes.items[@backingInt(value)].span;
-        const message = try std.fmt.allocPrint(
-            self.allocator,
-            "`{s}` is assigned to `{s}`, which outlives arena `{s}`; assign `{s}.escape(...)` instead",
-            .{ self.src.text(span), local.name, self.arenaName(), self.arenaName() },
-        );
-        return self.failArenaEscape(span, message, local.declaration);
-    }
-    /// Reject returning a managed value out of an arena scope. A copy-out of the
-    /// outermost arena in this function targets the caller's region and is allowed.
-    pub fn requireArenaReturn(self: *Checker, value: typed.NodeId, span: source.Span) Error!void {
-        if (self.arenas.items.len == 0) return;
-        if (!try self.managedBearing(self.nodes.items[@backingInt(value)].ty)) return;
-        if (self.arenas.items.len == 1 and self.isArenaEscape(value)) return;
-        const message = try std.fmt.allocPrint(
-            self.allocator,
-            "`{s}` returns a managed value from inside arena `{s}`; assign `{s}.escape(...)` to a binding declared before the block and return it afterwards",
-            .{ self.src.text(self.nodes.items[@backingInt(value)].span), self.arenaName(), self.arenaName() },
-        );
-        return self.failArenaEscape(span, message, null);
     }
     const contract_checks = sema_contracts.Checks(Checker);
     pub const indexInvariants = contract_checks.indexInvariants;
@@ -1341,7 +1250,7 @@ const Checker = struct {
         const allocator = self.allocator;
         const src = self.src;
         const sink = self.sink;
-        for (function.signature.parameters) |parameter| {
+        for (function.signature.parameters, 0..) |parameter, position| {
             const name = src.text(parameter.name);
             if (self.active.get(name)) |previous| return sink.failRelated(
                 "E_DUPLICATE_PARAMETER",
@@ -1355,6 +1264,15 @@ const Checker = struct {
             if (try self.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "parameter shadows a top-level function");
             const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
             const parameter_type = try self.ty(parameter.ty);
+            // ORIGIN-WIDE-1: the mutation and alias analysis names the positions of
+            // aggregate parameters exactly in an `origins.Mask`. An aggregate past it
+            // is a located error, not a conservative answer that would demand `mut`
+            // on every parameter; scalar parameters are never tracked and stay unlimited.
+            if (position >= origins.mask_positions and parameter_type.isAggregate()) return sink.fail(
+                "E_PARAMETER_POSITION",
+                parameter.name,
+                "a list, string, record or other aggregate parameter must be one of a function's first 64 parameters; move it earlier or group parameters into a record",
+            );
             // `mut` promises a write the caller can observe, so it is accepted
             // only on a type that can carry one. Rejecting it here, before any
             // body or call is checked, keeps the declaration out of the published
@@ -1383,10 +1301,7 @@ const Checker = struct {
                 const message = try std.fmt.allocPrint(
                     allocator,
                     "`mut` on `{s}` has nothing to write; {s}",
-                    .{ typed.typeName(parameter_type, self.catalog.records), if (value_semantics.enabled())
-                        "a number, bool, `str` or `bytes` cannot change the caller's value, so return the new value instead"
-                    else
-                        "only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`" },
+                    .{ typed.typeName(parameter_type, self.catalog.records), "a number, bool, `str` or `bytes` cannot change the caller's value, so return the new value instead" },
                 );
                 const fix = diagnostic.removeMut(src.bytes, parameter.ty.start) orelse return sink.fail(mutation_marker_code, parameter.ty, message);
                 return sink.failFix(mutation_marker_code, parameter.ty, message, fix.edit);
@@ -1451,8 +1366,12 @@ fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool
 // source diagnostic once, ordered independently of specialization discovery.
 fn normalizeDiagnostics(sink: *diagnostic.Sink) void {
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
+    // NEW-CORE-S5-ARENA-1: a rejected program reports its errors as before; the
+    // retired-arena advice is for a program that otherwise checks.
+    const rejected = reportedError(sink.items.items);
     var count: usize = 0;
     for (sink.items.items) |item| {
+        if (rejected and std.mem.eql(u8, item.code, @import("arena_fix.zig").retired_code)) continue;
         if (count != 0) {
             const previous = sink.items.items[count - 1];
             if (previous.span.start == item.span.start and previous.span.end == item.span.end and
@@ -1469,9 +1388,18 @@ const presize_threshold = 1 << 14;
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
     return checkWithNames(allocator, src, program, sink, null);
 }
-fn checkGenericContracts(src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: records.Catalog, symbolic: *?generic_cache.Session, declared: []const ?effect_set.Mask) Error!void {
-    const session: ?*generic_cache.Session = if (symbolic.*) |*reuse| reuse else null;
-    try @import("generic_bodies.zig").checkWithCatalogCached(sink.allocator, src, program, sink, catalog, .{ .symbolic = session, .declared = declared });
+fn checkGenericContracts(
+    src: source.Source,
+    program: ast.Program,
+    sink: *diagnostic.Sink,
+    catalog: records.Catalog,
+    symbolic: *?generic_cache.Session,
+    reuse: generic_bodies.Reuse,
+) Error!void {
+    const session: ?*generic_cache.Session = if (symbolic.*) |*retained| retained else null;
+    var options = reuse;
+    options.symbolic = session;
+    try generic_bodies.checkWithCatalogCached(sink.allocator, src, program, sink, catalog, options);
 }
 /// MODULE-INTERFACE-1: per AST function, the transitive effect mask an
 /// imported interface declares for a body this compilation does not have, or
@@ -1816,9 +1744,11 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     defer deinitSymbolic(&symbolic);
     var spec_session = try openSpecializationSession(cache, &session);
     defer deinitSpecialization(&spec_session);
+    const view_consumers = try dictionary_views.Consumers.init(allocator, src, program);
+    defer view_consumers.deinit(allocator);
     var failed = false;
     const symbolic_start = timingStart(timing);
-    checkGenericContracts(src, program, sink, catalog, &symbolic, try declaredMasks(allocator, cache, &session)) catch |err| switch (err) {
+    checkGenericContracts(src, program, sink, catalog, &symbolic, .{ .declared = try declaredMasks(allocator, cache, &session), .view_consumers = view_consumers }) catch |err| switch (err) {
         error.SourceError => failed = true,
         else => return err,
     };
@@ -1836,6 +1766,7 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
         .allocator = allocator,
         .src = src,
         .syntax = program,
+        .view_consumers = view_consumers,
         .sink = sink,
         .resolved = resolved,
         .catalog = catalog,
@@ -1926,9 +1857,9 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink) catch |err| return retryOr(&plan, err);
     timingAdd(timing, "domain_codec_validation", codecs_start);
     const warnings_start = timingStart(timing);
-    try @import("alias_warning.zig").check(allocator, src, checked, sink);
     try warnBindings(allocator, checker.catalog.records, functions, stubs, sink);
     try warnImports(module_names, sink);
+    try @import("arena_fix.zig").warn(allocator, src, program, sink);
     const pass_items: []const diagnostic.Diagnostic = if (plan != null) try allocator.dupe(diagnostic.Diagnostic, sink.items.items[pass_start..]) else &.{};
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
     timingAdd(timing, "warning_derivation", warnings_start);
@@ -2015,11 +1946,14 @@ fn checkHostType(allocator: std.mem.Allocator, catalog: []const typed.Record, ty
     };
 }
 
-/// Whether local `slot` of `function` is a `mut` record parameter, which
-/// under value semantics is the caller's own variable (`VALUE-SEMANTICS-3`).
-fn inoutRecord(catalog: []const typed.Record, function: typed.Function, slot: usize) bool {
+/// Whether local `slot` is a `mut` record or collection parameter whose
+/// assignment changes the caller's variable.
+fn callerBinding(catalog: []const typed.Record, function: typed.Function, slot: usize) bool {
     if (slot >= function.signature.parameter_count) return false;
-    for (function.signature.declared_mutates) |position| if (position == slot) return typed.referenceRecord(catalog, function.scope.locals[slot].ty);
+    for (function.signature.declared_mutates) |position| if (position == slot) {
+        const ty = function.scope.locals[slot].ty;
+        return typed.referenceRecord(catalog, ty) or @import("mut_abi.zig").collection(catalog, ty);
+    };
     return false;
 }
 
@@ -2040,16 +1974,13 @@ fn warnBindings(allocator: std.mem.Allocator, catalog: []const typed.Record, fun
                     .severity = .err,
                     .code = "E_DEAD_RECORD_WRITE",
                     .span = span,
-                    .message = if (value_semantics.enabled())
-                        "field write to a record copy is never observed; the write cannot reach the original; declare the parameter `mut` to change the caller's record, or return the updated record"
-                    else
-                        "field write to a `record` copy is never observed; `record` values are copies, so the write cannot reach the original; use `class` for reference semantics, or return the updated record",
+                    .message = "field write to a record copy is never observed; the write cannot reach the original; declare the parameter `mut` to change the caller's record, or return the updated record",
                 });
             }
             if (local.usage.temporary or local.usage.reads != 0) continue;
-            // VALUE-SEMANTICS-3: rebinding a `mut` record parameter reaches
-            // the caller, so the binding is used even if the body never reads it.
-            if (inoutRecord(catalog, function, slot)) continue;
+            // Rebinding a `mut` caller variable uses the parameter even when
+            // the body never reads its previous value.
+            if (callerBinding(catalog, function, slot)) continue;
             // A capability parameter is the signature's whole claim to an
             // effect: a body that never reads it promises authority it does not
             // use, so the over-claim is rejected rather than warned about.

@@ -44,7 +44,6 @@ def list_sum(values: list[int]) -> int:
     return total
 
 
-# spec-case: RC-READONLY-BODY-1
 public def test_recursive_reader_preserves_caller_snapshot() -> bool:
     node = Link(None)
     for index in range(128):
@@ -57,7 +56,6 @@ public def test_recursive_reader_preserves_caller_snapshot() -> bool:
     return total == 1032 and length(before) == 129 and length(node) == 1
 
 
-# spec-case: RC-READONLY-BODY-1
 public def test_loop_reader_leaves_collection_available_for_later_mutation() -> bool:
     values = [1, 2, 3]
     before = values
@@ -73,7 +71,6 @@ def main() -> int:
     return 0
 
 
-# spec-case: RC-READONLY-BODY-1
 public def test_inline_and_recursive_variant_wrappers_preserve_input() -> bool:
     items = [1, 2, 3]
     before = items

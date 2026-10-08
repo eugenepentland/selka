@@ -1,0 +1,45 @@
+== branch_mixed small: size=64 iterations=300000 checksum=504097771
+version                                           ns/iter   ns/unit   x rust x fastest
+v1: today: bounds checks, branch on flags, checked arms        110.6     1.728    1.127     1.127
+v2: + immutable lists, hoisted bounds, sticky checks (L2)         87.3     1.364    0.890     0.890
+v3: + range facts: no arm checks (branch written as if)         65.7     1.026    0.669     0.669
+v4: + if-conversion written as select                61.1     0.955    0.623     0.623
+v5: + narrow arithmetic (i32), plain C               30.5     0.476    0.311     0.311
+v6: + u16 storage, plain C                           27.8     0.435    0.283     0.283
+v8: + chunked u32 accumulation, plain C              16.6     0.259    0.169     0.169
+v7: hand AVX2 u16 blend                               9.1     0.142    0.093     0.093
+v2 holdout: file data, L2 form, branchy (no range facts)         86.5     1.351    0.881     0.881
+v30 holdout: file data, no range facts, branch-free sticky        166.1     2.595    1.692     1.692
+v31 holdout: file data, runtime guard + AVX2 i32         19.6     0.306    0.200     0.200
+v20 holdout reference: today, file                  111.7     1.746    1.138     1.138
+v4 baseline x86-64                                   65.4     1.022    0.666     0.666
+v6 baseline x86-64                                   33.0     0.515    0.336     0.336
+v8 baseline x86-64                                   26.2     0.409    0.267     0.267
+B0 rust                                              98.1     1.534    1.000     1.000
+B0 go                                               149.6     2.337    1.524     1.524
+B0 zig-safe                                         171.7     2.683    1.749     1.749
+B0 zig-fast                                          99.6     1.557    1.015     1.015
+B0 my-llvm                                          143.1     2.236    1.458     1.458
+== branch_mixed large: size=4096 iterations=8000 checksum=337288761
+version                                           ns/iter   ns/unit   x rust x fastest
+v1: today: bounds checks, branch on flags, checked arms       7598.3     1.855    1.026     1.143
+v2: + immutable lists, hoisted bounds, sticky checks (L2)       5800.2     1.416    0.784     0.872
+v3: + range facts: no arm checks (branch written as if)       4069.4     0.994    0.550     0.612
+v4: + if-conversion written as select              4757.6     1.162    0.643     0.715
+v5: + narrow arithmetic (i32), plain C             1946.3     0.475    0.263     0.293
+v6: + u16 storage, plain C                         1764.1     0.431    0.238     0.265
+v8: + chunked u32 accumulation, plain C             963.8     0.235    0.130     0.145
+v7: hand AVX2 u16 blend                             482.7     0.118    0.065     0.073
+v2 holdout: file data, L2 form, branchy (no range facts)       6765.0     1.652    0.914     1.017
+v30 holdout: file data, no range facts, branch-free sticky      13029.8     3.181    1.760     1.959
+v31 holdout: file data, runtime guard + AVX2 i32       1076.2     0.263    0.145     0.162
+v20 holdout reference: today, file                 8259.1     2.016    1.116     1.242
+v4 baseline x86-64                                 4400.2     1.074    0.594     0.662
+v6 baseline x86-64                                 2186.9     0.534    0.295     0.329
+v8 baseline x86-64                                 1946.7     0.475    0.263     0.293
+B0 rust                                            7402.6     1.807    1.000     1.113
+B0 go                                             11643.3     2.843    1.573     1.751
+B0 zig-safe                                       13846.7     3.381    1.871     2.082
+B0 zig-fast                                        6649.6     1.623    0.898     1.000
+B0 my-llvm                                        10127.2     2.472    1.368     1.523
+wrote /home/epentland/ai/canopy/mylang-worktrees/claude-ideal-ladder-20261004/experiments/runtime-ideal-ladder-20261004/results/branch_mixed.json

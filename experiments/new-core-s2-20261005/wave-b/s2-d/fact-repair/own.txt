@@ -1,0 +1,104 @@
+source_base=090dabd5a6932a7c3beaec68248f9a35d4c637d7
+$ scripts/build-slot.sh build -- /usr/bin/time -f '%e %M %x' -o /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-dictionaries/.mylang-cache/wave-b/s2-d/fact-repair/own-time.txt python3 experiments/new-core-s2-20261005/wave-b/s2-d/conformance_checked.py borrowed_roots collection_read_callbacks dict_comprehensions dictionary_hash_index dictionary_hashing dictionary_views discard_names gc_footprint live_view_snapshots mut_dictionary_arguments python_comprehension rc_box_writeback rc_compact_journal rc_dictionary_keys rc_dictionary_loops rc_dictionary_tails rc_dictionary_text_loops rc_dictionary_views rc_field_transfers rc_journal_types rc_mut_payload_snapshots rc_named_releases rc_nested_read_loans rc_plain_replacements rc_range_key_anchors rc_semantic_history rc_semantic_publication rc_view_receivers rc_writeback_moves scalar_dictionary_publication sets migrated/managed_values python_values python_collections record_field_snapshots text_views standard_json operand_snapshots test/core/d_collections.my test/core/d_view_identity.my test/core/d_fact_inputs.my --jobs 4 --why --leakcheck --verify --mylang /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/.mylang-cache/wave-b/baseline/mylang --core zig-out/bin/mylang-core --cache-dir .mylang-cache/wave-b/s2-d/fact-repair/own
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 2 after 80s (all 3 build slot(s) busy)
+file                          tests | debug   match misma unsup | release match misma unsup
+-------------------------------------------------------------------------------------------
+borrowed_roots                    7 |             7     0     0 |             7     0     0
+collection_read_callbacks        10 |            10     0     0 |            10     0     0
+dict_comprehensions              10 |            10     0     0 |            10     0     0
+dictionary_hash_index             6 |             5     0     1 |             5     0     1
+dictionary_hashing               11 |             8     0     3 |             8     0     3
+dictionary_views                  5 |             2     0     3 |             2     0     3
+discard_names                     9 |             9     0     0 |             9     0     0
+gc_footprint                      6 |             6     0     0 |             6     0     0
+live_view_snapshots               9 |             1     0     8 |             1     0     8
+mut_dictionary_arguments          1 |             0     0     1 |             0     0     1
+python_comprehension              4 |             4     0     0 |             4     0     0
+rc_box_writeback                  3 |             2     0     1 |             2     0     1
+rc_compact_journal                2 |             1     0     1 |             1     0     1
+rc_dictionary_keys               10 |            10     0     0 |            10     0     0
+rc_dictionary_loops               6 |             6     0     0 |             6     0     0
+rc_dictionary_tails               6 |             6     0     0 |             6     0     0
+rc_dictionary_text_loops          2 |             2     0     0 |             2     0     0
+rc_dictionary_views               5 |             0     0     5 |             0     0     5
+rc_field_transfers                8 |             7     0     1 |             7     0     1
+rc_journal_types                  2 |             0     0     2 |             0     0     2
+rc_mut_payload_snapshots          4 |             4     0     0 |             4     0     0
+rc_named_releases                 4 |             4     0     0 |             4     0     0
+rc_nested_read_loans              6 |             6     0     0 |             6     0     0
+rc_plain_replacements             2 |             2     0     0 |             2     0     0
+rc_range_key_anchors              5 |             5     0     0 |             5     0     0
+rc_semantic_history              10 |             2     0     8 |             2     0     8
+rc_semantic_publication           6 |             3     0     3 |             3     0     3
+rc_view_receivers                 7 |             0     0     7 |             0     0     7
+rc_writeback_moves               18 |            18     0     0 |            18     0     0
+scalar_dictionary_publication     3 |             3     0     0 |             3     0     0
+sets                             18 |            11     0     7 |            11     0     7
+migrated/managed_values          11 |             9     0     2 |             9     0     2
+python_values                     8 |             7     0     1 |             7     0     1
+python_collections               22 |            17     0     5 |            17     0     5
+record_field_snapshots           11 |            10     0     1 |            10     0     1
+text_views                        8 |             3     0     5 |             3     0     5
+standard_json                     4 |             0     0     4 |             0     0     4
+operand_snapshots                55 |            50     0     5 |            50     0     5
+d_collections                     8 |             8     0     0 |             8     0     0
+d_view_identity                  10 |             0     0    10 |             0     0    10
+d_fact_inputs                     6 |             6     0     0 |             6     0     0
+-------------------------------------------------------------------------------------------
+TOTAL                           348
+  debug    matching 264, mismatching 0, unsupported 84 (of 348 tests; 264 supported)
+  release  matching 264, mismatching 0, unsupported 84 (of 348 tests; 264 supported)
+
+blocking features of the unsupported tests (tests / files):
+    19 /  6  aggregate storage of live dictionary views
+    10 /  3  aggregate or captured dictionary alias combined with a live view
+     9 /  3  text of a non-integer value
+     6 /  3  byte_buffer type
+     5 /  4  ordinary dictionary snapshot combined with a live view
+     4 /  3  live dictionary view of an interior place
+     4 /  3  contains
+     3 /  2  text_chr
+     3 /  3  live dictionary view with unproved source identity
+     3 /  2  extend
+     3 /  2  index_of
+     2 /  2  escaping live dictionary view
+     2 /  2  mut live dictionary view argument
+     2 /  2  list storage of live dictionary views
+     2 /  1  count
+     1 /  1  rebinding a live dictionary view
+     1 /  1  reverse
+     1 /  1  slice_step
+     1 /  1  parse_float
+     1 /  1  strip
+     1 /  1  rfind_range
+     1 /  1  fixed array storage of live dictionary views
+
+blocking features per file (file: tests unsupported of tests; the features, most common first):
+  dictionary_hash_index            1 of   6: text_chr x1
+  dictionary_hashing               3 of  11: text_chr x2, text of a non-integer value x1
+  dictionary_views                 3 of   5: aggregate or captured dictionary alias combined with a live view x1, live dictionary view with unproved source identity x1, escaping live dictionary view x1
+  live_view_snapshots              8 of   9: aggregate storage of live dictionary views x7, mut live dictionary view argument x1
+  mut_dictionary_arguments         1 of   1: live dictionary view of an interior place x1
+  rc_box_writeback                 1 of   3: live dictionary view of an interior place x1
+  rc_compact_journal               1 of   2: ordinary dictionary snapshot combined with a live view x1
+  rc_dictionary_views              5 of   5: aggregate storage of live dictionary views x2, ordinary dictionary snapshot combined with a live view x1, rebinding a live dictionary view x1, list storage of live dictionary views x1
+  rc_field_transfers               1 of   8: aggregate storage of live dictionary views x1
+  rc_journal_types                 2 of   2: aggregate storage of live dictionary views x2
+  rc_semantic_history              8 of  10: aggregate storage of live dictionary views x6, ordinary dictionary snapshot combined with a live view x2
+  rc_semantic_publication          3 of   6: live dictionary view of an interior place x2, extend x1
+  rc_view_receivers                7 of   7: mut live dictionary view argument x1, escaping live dictionary view x1, list storage of live dictionary views x1, aggregate storage of live dictionary views x1, aggregate or captured dictionary alias combined with a live view x1, ordinary dictionary snapshot combined with a live view x1, live dictionary view with unproved source identity x1
+  sets                             7 of  18: text of a non-integer value x7
+  migrated/managed_values          2 of  11: contains x2
+  python_values                    1 of   8: contains x1
+  python_collections               5 of  22: extend x2, index_of x1, reverse x1, slice_step x1
+  record_field_snapshots           1 of  11: byte_buffer type x1
+  text_views                       5 of   8: count x2, parse_float x1, strip x1, rfind_range x1
+  standard_json                    4 of   4: byte_buffer type x4
+  operand_snapshots                5 of  55: index_of x2, byte_buffer type x1, text of a non-integer value x1, contains x1
+  d_view_identity                 10 of  10: aggregate or captured dictionary alias combined with a live view x8, fixed array storage of live dictionary views x1, live dictionary view with unproved source identity x1
+
+exit=0 time_rss_exit=14.35 194288 0 wall_including_admission=94.59
+qualified_source_commit=0c6029d7
+tested_source_tree=69bd18dfbbf741cfb5cee7af40e11d4540278643

@@ -1,0 +1,61 @@
+{
+  "source_commit": "93030b84e1538abc35aefa6984e3b00cc7dcc958",
+  "compiler_runtime_checkpoint": "93030b84e1538abc35aefa6984e3b00cc7dcc958",
+  "tooling_checkpoint": "404ba3c531846a76104467643b75d92680489648",
+  "kind": "functions",
+  "cases": 50,
+  "seed": 3309,
+  "gate_slot": true,
+  "build_slot": true,
+  "old": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3/oracle/mylang",
+    "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+  },
+  "new": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/zig-out/bin/mylang-core",
+    "sha256": "65aa3175e6c6ce4277b12ac66ca96f46583dd98f20a8ea62366db6a0465c2400"
+  },
+  "harness": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/experiments/new-core-s2-20261005/wave-b/s2-f/fuzz_functions.py",
+    "sha256": "b6ffc9a537d0a114285abbb80e4d573a214c832150cf02c269d49cbcdadc69b2"
+  },
+  "wrapper": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-exit-tools/experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py",
+    "sha256": "ed1d46e6a9741a66ff2a0137a8410e413eabb31a63295a1bc380eeba1c3ff70d"
+  },
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/scripts/build-slot.sh",
+    "gate",
+    "--",
+    "bash",
+    "-c",
+    "\"$@\"; result=$?; exit \"$result\"",
+    "--",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/scripts/build-slot.sh",
+    "build",
+    "--",
+    "nice",
+    "-n",
+    "10",
+    "/usr/bin/python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-exit-tools/experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py",
+    "--kind",
+    "functions",
+    "--cases",
+    "50",
+    "--seed",
+    "3309",
+    "--old",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3/oracle/mylang",
+    "--new",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/zig-out/bin/mylang-core",
+    "--harness",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/experiments/new-core-s2-20261005/wave-b/s2-f/fuzz_functions.py",
+    "--evidence",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/experiments/new-core-s3-20261006/wave-b/s3-m/resume-fuzz-functions-run02",
+    "--cache-root",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-values/.mylang-cache/s3/resume-fuzz-functions-run02"
+  ],
+  "exit_status": 0,
+  "elapsed_seconds": 134.35433273087256
+}

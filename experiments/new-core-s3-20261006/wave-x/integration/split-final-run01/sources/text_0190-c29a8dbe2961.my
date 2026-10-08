@@ -1,0 +1,44 @@
+module text_0190
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+def tally(text: str, seed: int) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for word in text.split():
+        text = "rebound"
+        counts[word] = counts[word] + 1 if word in counts else 1
+        if len(counts) == seed % 7:
+            continue
+        if len(counts) > seed % 31 + 2:
+            break
+    return counts
+
+def score(counts: dict[str, int]) -> int:
+    value = len(counts)
+    for key in counts:
+        value += len(key) * counts[key]
+        for octet in key.encode():
+            value += octet
+    return value
+
+def main(args: list[str], out: Stream) -> int:
+    seed = number(args[0])
+    original = "b\x0c😀\nlong00éabcdefghijklmnop\ra\tlong03éabcdefghijklmnop  long00éabcdefghijklmnop\x0clong03éabcdefghijklmnop naïve\x0ba\nnaïve\rlong04éabcdefghijklmnop\x0b😀\tlong01éabcdefghijklmnop\nlong03éabcdefghijklmnop collision002553\x0clong08éabcdefghijklmnop\x0clong01éabcdefghijklmnop  Ω\x0blong04éabcdefghijklmnop\nlong06éabcdefghijklmnop\ra\nΩ  a  collision002553  Ω long01éabcdefghijklmnop\x0clong06éabcdefghijklmnop\ncollision002553\nlong07éabcdefghijklmnop\x0cΩ  long08éabcdefghijklmnop\rlong09éabcdefghijklmnop\rnaïve\ncollision005a0e\x0b "
+    owned = "".join([original, " ", original])
+    counts = tally(owned, seed)
+    snapshot = counts
+    counts["post"] = seed + 1
+    _ = counts.pop("post")
+    for word in "post fresh café collision005a0e".split():
+        counts[word] = counts[word] + 1 if word in counts else 1
+    escaped: list[str] = []
+    for word in original.split():
+        escaped.append(word)
+    value = score(counts) + score(snapshot) + len(escaped)
+    out.print(value)
+    return 0

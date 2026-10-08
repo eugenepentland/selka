@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+"""Hold the qualification lock for S4-V's complete strict differential matrix.
+
+Launch through flock core-qualification.lock and scripts/build-slot.sh build.
+"""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import shlex
+import subprocess
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--evidence", type=Path, required=True)
+    p.add_argument("--cache", type=Path, required=True)
+    p.add_argument("--fresh-old", type=Path, required=True)
+    p.add_argument("--fresh-old-sha256", required=True)
+    p.add_argument("--core", type=Path, default=ROOT / "zig-out/bin/mylang-core")
+    a = p.parse_args()
+    area, cache = a.evidence.resolve(), a.cache.resolve()
+    area.mkdir(parents=True, exist_ok=False)
+    cache.mkdir(parents=True, exist_ok=False)
+    records = []
+    summary = {"qualified": False, "source_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(), "results": records}
+    pinned = ROOT / ".mylang-cache/s3/oracle/mylang"
+    if hashlib.sha256(pinned.read_bytes()).hexdigest() != "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79":
+        raise RuntimeError("uncorrected pinned S3 ENV oracle")
+    fresh = a.fresh_old.resolve()
+    if hashlib.sha256(fresh.read_bytes()).hexdigest() != a.fresh_old_sha256:
+        raise RuntimeError("unqualified fresh shared-checker oracle")
+    core = a.core.resolve()
+    core_hash = hashlib.sha256(core.read_bytes()).hexdigest()
+    summary["compiler_modes"] = {"fresh_old": "Debug", "new": "Debug"}
+    summary["fresh_old_sha256"] = hashlib.sha256(fresh.read_bytes()).hexdigest()
+    summary["core_sha256"] = core_hash
+    try:
+        kinds = ("rc", "rebinding", "functions", "s1", "dict", "number", "iteration", "values")
+        # Exercise the new fact and dynamic-repeat paths first, preserving each
+        # kind's original seed and all eight mandatory strict matrices.
+        for kind in (kinds[-1], *kinds[:-1]):
+            index = kinds.index(kind)
+            old = fresh if kind == "values" else pinned
+            command = ["python3", "experiments/new-core-s3-20261006/wave-x/integration/fuzz_qualification.py", "--kind", "functions" if kind == "values" else kind,
+                       "--old", str(old), "--new", str(core), "--cases", "50", "--seed", str(410600 + index),
+                       "--evidence", str(area / kind), "--cache-root", str(cache / kind)]
+            if kind == "values":
+                command += ["--harness", str(ROOT / "experiments/new-core-s4-values-20261006/fuzz_values.py")]
+            log = area / (kind + ".log")
+            print(kind + ": waiting/running; log=" + str(log), flush=True)
+            with log.open("x") as out:
+                out.write("$ " + shlex.join(command) + "\n")
+                out.flush()
+                result = subprocess.run(command, stdout=out, stderr=subprocess.STDOUT)
+            report = json.loads((area / kind / "summary.json").read_text())
+            records.append({"kind": kind, "status": result.returncode, "summary": str(area / kind / "summary.json"), "qualified": report["qualified"]})
+            if result.returncode or not report["qualified"]:
+                raise RuntimeError("strict matrix failed: " + kind)
+            print(kind + ": accepted=50; qualified=true", flush=True)
+        if hashlib.sha256(core.read_bytes()).hexdigest() != core_hash:
+            raise RuntimeError("new compiler changed during matrix")
+        if hashlib.sha256(fresh.read_bytes()).hexdigest() != summary["fresh_old_sha256"]:
+            raise RuntimeError("fresh old compiler changed during matrix")
+        summary["qualified"] = True
+    finally:
+        (area / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+
+
+if __name__ == "__main__":
+    main()

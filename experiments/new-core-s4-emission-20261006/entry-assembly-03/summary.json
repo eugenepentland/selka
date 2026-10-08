@@ -1,0 +1,2638 @@
+{
+  "production_change": false,
+  "complete": true,
+  "embedded_llvm": true,
+  "traced_argv": [
+    "zig",
+    "cc",
+    "-O3",
+    "-march=native",
+    "-mllvm",
+    "-x86-experimental-pref-innermost-loop-alignment=6",
+    "-Wno-override-module",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-program",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/module-c45495eed5abeed33c6f2c3dbda49d4d42c754b56d577e837ca1040dac08f668.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/entry.ll",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/core_rt-a5b0556a3a4eebfb.o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/benchmarks/runtime/ports/native_clock.c"
+  ],
+  "entry": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/entry.ll",
+    "sha256": "6abb118af0147c06fbd212bf9c7726f5e88e75319c34f5a1ca8a1d019a3f545a"
+  },
+  "dead_upper_bits_proof": "After the AL comparison and void append call, LEA writes full RAX from RDX before any caller read. Append saves/restores RAX but does not use it as an input.",
+  "matched_context": "callq\tmyl_core_err_trace_origin_preserve_most@PLT\n\tmovl\t$1, %edx\n\tmovb\t$1, %al\n\tcmpb\t$1, %al\n\tjne\t.LBB0_93\n.LBB0_97:                               # %b39.i\n                                        #   in Loop: Header=BB0_91 Depth=2\n\tmovq\t%r9, %rdi\n\tcallq\tmyl_core_err_trace_append_preserve_most@PLT\n\tleaq\t(,%rdx,8), %rax\n\tsubq\t%rdx, %rax\n\tjmp\t.LBB0_94\n\t.p2align\t4\n.LBB0_98:                               # %b33.i\n                                        #   in Loop: Header=BB0_90 Depth=1\n\tmovq\t%rdx, %rsi\n\taddq\t%rbp, %rsi\n\tjo\t.LBB0_111\n# %bb.99:              ",
+  "arms": {
+    "assembly_baseline": {
+      "assembly": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/entry.s",
+        "sha256": "65a592b81eabe559189c587f2a50d2a2f8c385eafcf240a093c8a0c0509211b1"
+      },
+      "object": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/entry.o",
+        "sha256": "5113197388d3ecd684cfd0c2be29f91af8d0a27e61e370c49af4bc9042e65a68"
+      },
+      "binary": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+        "sha256": "74804eda0eb1a0b437c563f156fe67a60f6920d02c5dbeb8f3aac002c0410f7e"
+      },
+      "text_bytes": 2648,
+      "text_sha256": "aa337c72cabd36fdd6506f9129c06ef817af354d1112e566d4d9a4e1299aee2e",
+      "link_argv": [
+        "zig",
+        "cc",
+        "-O3",
+        "-march=native",
+        "-mllvm",
+        "-x86-experimental-pref-innermost-loop-alignment=6",
+        "-Wno-override-module",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/module-c45495eed5abeed33c6f2c3dbda49d4d42c754b56d577e837ca1040dac08f668.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/entry.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/core_rt-a5b0556a3a4eebfb.o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/benchmarks/runtime/ports/native_clock.c"
+      ]
+    },
+    "partial_nop": {
+      "assembly": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/entry.s",
+        "sha256": "84950ed9cb746cd18ddafa62a4f926a5eae2dff4dbf333e6f93da30245743d74"
+      },
+      "object": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/entry.o",
+        "sha256": "fd289dfc0b4e359d6aa67f1847e02273a4a7418dc9ffc1b16e5accd730e86052"
+      },
+      "binary": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+        "sha256": "73358afc4de72a03fe0a10db533aa5a9abda26596d22697dbe8d829d995c1da9"
+      },
+      "text_bytes": 2648,
+      "text_sha256": "820866d88d63e6800712bd28f819f632fbeee5368c5ee5695d6864269e31169c",
+      "link_argv": [
+        "zig",
+        "cc",
+        "-O3",
+        "-march=native",
+        "-mllvm",
+        "-x86-experimental-pref-innermost-loop-alignment=6",
+        "-Wno-override-module",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/module-c45495eed5abeed33c6f2c3dbda49d4d42c754b56d577e837ca1040dac08f668.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/entry.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/core_rt-a5b0556a3a4eebfb.o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/benchmarks/runtime/ports/native_clock.c"
+      ]
+    },
+    "full_eax": {
+      "assembly": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/entry.s",
+        "sha256": "b2fa03fed93f5e1e2cbd3d20ebff12d55efc9763f6938eb48fe72b03af750a90"
+      },
+      "object": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/entry.o",
+        "sha256": "9f13d9568850000615fa7ad5f83b2409e0409b0eeadf2219ff6748c5a1f63daf"
+      },
+      "binary": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+        "sha256": "8058ceea2f7e9930de6d7299adee6983ec2508bb282df21e94bce470dacc9437"
+      },
+      "text_bytes": 2648,
+      "text_sha256": "a5fc85574785e882a851596cb6a6b490ab042b80b9a6c438500b5d30d8e97d55",
+      "link_argv": [
+        "zig",
+        "cc",
+        "-O3",
+        "-march=native",
+        "-mllvm",
+        "-x86-experimental-pref-innermost-loop-alignment=6",
+        "-Wno-override-module",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/program-47b788da90e4c5af/module-c45495eed5abeed33c6f2c3dbda49d4d42c754b56d577e837ca1040dac08f668.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/entry.ll",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-attributes-02/result_propagate/traced-cache/core_rt-a5b0556a3a4eebfb.o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/benchmarks/runtime/ports/native_clock.c"
+      ]
+    }
+  },
+  "measurement": {
+    "unit": "element",
+    "binaries": {
+      "whole": {
+        "path": ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+        "sha256": "a281ad39f80a13262ea722bd02df7586bcb2c3885492a542c86f4b3110d24f9c"
+      },
+      "actual": {
+        "path": "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+        "sha256": "cac50ee841378b92a11cbed2611a4890ac714e5b775b44c532c051f7a0e6c26e"
+      },
+      "assembly_baseline": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+        "sha256": "74804eda0eb1a0b437c563f156fe67a60f6920d02c5dbeb8f3aac002c0410f7e"
+      },
+      "partial_nop": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+        "sha256": "73358afc4de72a03fe0a10db533aa5a9abda26596d22697dbe8d829d995c1da9"
+      },
+      "full_eax": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+        "sha256": "8058ceea2f7e9930de6d7299adee6983ec2508bb282df21e94bce470dacc9437"
+      }
+    },
+    "sizes": {
+      "4096": {
+        "iterations": 4000,
+        "checksum": 166728930,
+        "startup": {
+          "whole": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 5611\n",
+              "stderr": "343792,,cpu_core/cycles/u,339081,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 5611,
+              "cycles": 343792
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 3899\n",
+              "stderr": "356337,,cpu_core/cycles/u,245709,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 3899,
+              "cycles": 356337
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 3924\n",
+              "stderr": "394131,,cpu_core/cycles/u,259764,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 3924,
+              "cycles": 394131
+            }
+          ],
+          "actual": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 5850\n",
+              "stderr": "353384,,cpu_core/cycles/u,271612,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 5850,
+              "cycles": 353384
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 5522\n",
+              "stderr": "356324,,cpu_core/cycles/u,252986,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 5522,
+              "cycles": 356324
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 5378\n",
+              "stderr": "346671,,cpu_core/cycles/u,240103,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 5378,
+              "cycles": 346671
+            }
+          ],
+          "assembly_baseline": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 5212\n",
+              "stderr": "352912,,cpu_core/cycles/u,243356,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 5212,
+              "cycles": 352912
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 5129\n",
+              "stderr": "349496,,cpu_core/cycles/u,232612,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 5129,
+              "cycles": 349496
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 5072\n",
+              "stderr": "350468,,cpu_core/cycles/u,238519,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 5072,
+              "cycles": 350468
+            }
+          ],
+          "partial_nop": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 4012\n",
+              "stderr": "351757,,cpu_core/cycles/u,223490,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 4012,
+              "cycles": 351757
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 4363\n",
+              "stderr": "346535,,cpu_core/cycles/u,245625,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 4363,
+              "cycles": 346535
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 3958\n",
+              "stderr": "344626,,cpu_core/cycles/u,237993,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 3958,
+              "cycles": 344626
+            }
+          ],
+          "full_eax": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 3955\n",
+              "stderr": "348265,,cpu_core/cycles/u,219669,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 3955,
+              "cycles": 348265
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 3887\n",
+              "stderr": "345054,,cpu_core/cycles/u,235031,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 3887,
+              "cycles": 345054
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "4096",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "4963108 3885\n",
+              "stderr": "347189,,cpu_core/cycles/u,247426,100.00,,\n",
+              "checksum": 4963108,
+              "elapsed_ns": 3885,
+              "cycles": 347189
+            }
+          ]
+        },
+        "runs": {
+          "whole": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13076189\n",
+              "stderr": "59463259,,cpu_core/cycles/u,13310322,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13076189,
+              "cycles": 59463259
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13257957\n",
+              "stderr": "60503892,,cpu_core/cycles/u,13497911,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13257957,
+              "cycles": 60503892
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13517384\n",
+              "stderr": "60167565,,cpu_core/cycles/u,13752289,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13517384,
+              "cycles": 60167565
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13089256\n",
+              "stderr": "59414629,,cpu_core/cycles/u,13325583,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13089256,
+              "cycles": 59414629
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13142880\n",
+              "stderr": "59488144,,cpu_core/cycles/u,13375490,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13142880,
+              "cycles": 59488144
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13204806\n",
+              "stderr": "59852884,,cpu_core/cycles/u,13488401,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13204806,
+              "cycles": 59852884
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13099334\n",
+              "stderr": "59429561,,cpu_core/cycles/u,13334764,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13099334,
+              "cycles": 59429561
+            }
+          ],
+          "actual": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 17989116\n",
+              "stderr": "81979066,,cpu_core/cycles/u,18223829,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 17989116,
+              "cycles": 81979066
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18453208\n",
+              "stderr": "83508512,,cpu_core/cycles/u,18684101,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18453208,
+              "cycles": 83508512
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18329251\n",
+              "stderr": "82831041,,cpu_core/cycles/u,18555640,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18329251,
+              "cycles": 82831041
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 17976159\n",
+              "stderr": "81823179,,cpu_core/cycles/u,18214208,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 17976159,
+              "cycles": 81823179
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 17917137\n",
+              "stderr": "81511397,,cpu_core/cycles/u,18150763,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 17917137,
+              "cycles": 81511397
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18131898\n",
+              "stderr": "82287811,,cpu_core/cycles/u,18358910,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18131898,
+              "cycles": 82287811
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 17950374\n",
+              "stderr": "81763376,,cpu_core/cycles/u,18162443,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 17950374,
+              "cycles": 81763376
+            }
+          ],
+          "assembly_baseline": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18142169\n",
+              "stderr": "82816244,,cpu_core/cycles/u,18393356,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18142169,
+              "cycles": 82816244
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 17972583\n",
+              "stderr": "81772646,,cpu_core/cycles/u,18200747,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 17972583,
+              "cycles": 81772646
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18428942\n",
+              "stderr": "83646015,,cpu_core/cycles/u,18657747,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18428942,
+              "cycles": 83646015
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 18384678\n",
+              "stderr": "82748082,,cpu_core/cycles/u,18574274,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 18384678,
+              "cycles": 82748082
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 19207500\n",
+              "stderr": "82396562,,cpu_core/cycles/u,19437007,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 19207500,
+              "cycles": 82396562
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 17963148\n",
+              "stderr": "81929288,,cpu_core/cycles/u,18198719,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 17963148,
+              "cycles": 81929288
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 17941635\n",
+              "stderr": "81656397,,cpu_core/cycles/u,18173764,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 17941635,
+              "cycles": 81656397
+            }
+          ],
+          "partial_nop": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13280661\n",
+              "stderr": "60503939,,cpu_core/cycles/u,13525041,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13280661,
+              "cycles": 60503939
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13317385\n",
+              "stderr": "60745584,,cpu_core/cycles/u,13525789,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13317385,
+              "cycles": 60745584
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13305227\n",
+              "stderr": "60506691,,cpu_core/cycles/u,13548164,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13305227,
+              "cycles": 60506691
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13703464\n",
+              "stderr": "61909502,,cpu_core/cycles/u,13929007,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13703464,
+              "cycles": 61909502
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13453222\n",
+              "stderr": "60755519,,cpu_core/cycles/u,13636491,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13453222,
+              "cycles": 60755519
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13339721\n",
+              "stderr": "60519000,,cpu_core/cycles/u,13570837,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13339721,
+              "cycles": 60519000
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13579619\n",
+              "stderr": "61799080,,cpu_core/cycles/u,13819062,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13579619,
+              "cycles": 61799080
+            }
+          ],
+          "full_eax": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13343717\n",
+              "stderr": "60609760,,cpu_core/cycles/u,13567672,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13343717,
+              "cycles": 60609760
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13456753\n",
+              "stderr": "61116677,,cpu_core/cycles/u,13667693,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13456753,
+              "cycles": 61116677
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13397125\n",
+              "stderr": "60035977,,cpu_core/cycles/u,13603819,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13397125,
+              "cycles": 60035977
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13241804\n",
+              "stderr": "60173437,,cpu_core/cycles/u,13475469,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13241804,
+              "cycles": 60173437
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13188284\n",
+              "stderr": "60064567,,cpu_core/cycles/u,13406358,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13188284,
+              "cycles": 60064567
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13237963\n",
+              "stderr": "60196936,,cpu_core/cycles/u,13481334,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13237963,
+              "cycles": 60196936
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "4096",
+                "4000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "166728930 13321249\n",
+              "stderr": "60045343,,cpu_core/cycles/u,13523470,100.00,,\n",
+              "checksum": 166728930,
+              "elapsed_ns": 13321249,
+              "cycles": 60045343
+            }
+          ]
+        },
+        "cycles_per_unit": {
+          "whole": [
+            3.6076002197265624,
+            3.6711154174804688,
+            3.650587646484375,
+            3.604632080078125,
+            3.609119079589844,
+            3.6313810424804687,
+            3.60554345703125
+          ],
+          "actual": [
+            4.9820362548828125,
+            5.07538623046875,
+            5.034036682128907,
+            4.972521667480469,
+            4.953492004394532,
+            5.0008805541992185,
+            4.96887158203125
+          ],
+          "assembly_baseline": [
+            5.0333115234375,
+            4.9696153564453125,
+            5.083956726074219,
+            5.029151245117188,
+            5.007696166992187,
+            4.979176025390625,
+            4.9625200805664065
+          ],
+          "partial_nop": [
+            3.671716552734375,
+            3.686465393066406,
+            3.671884521484375,
+            3.7575053100585936,
+            3.68707177734375,
+            3.672635803222656,
+            3.750765686035156
+          ],
+          "full_eax": [
+            3.678135437011719,
+            3.7090751953125,
+            3.643114501953125,
+            3.65150439453125,
+            3.6448594970703123,
+            3.652938659667969,
+            3.6436861572265626
+          ]
+        },
+        "comparisons": {
+          "actual": {
+            "over_whole": 1.3804022934729527,
+            "paired_ratios": [
+              1.3809834658620863,
+              1.3825188405413986,
+              1.3789661198730112,
+              1.3794810557677488,
+              1.3724933689241055,
+              1.3771291130559224,
+              1.3781200091601569
+            ],
+            "paired_median_bootstrap95": [
+              1.3771291130559224,
+              1.3809834658620863
+            ],
+            "within_noise": false
+          },
+          "assembly_baseline": {
+            "over_whole": 1.3875120373033754,
+            "paired_ratios": [
+              1.3951965896650818,
+              1.3537071955792717,
+              1.392640642656593,
+              1.3951912798290882,
+              1.3875120373033754,
+              1.3711521779574873,
+              1.376358415785805
+            ],
+            "paired_median_bootstrap95": [
+              1.3711521779574873,
+              1.3951912798290882
+            ],
+            "within_noise": false
+          },
+          "partial_nop": {
+            "over_whole": 1.0214308011930027,
+            "paired_ratios": [
+              1.0177725715441586,
+              1.0041812838443724,
+              1.005833821034405,
+              1.0424102173493266,
+              1.0215988156763076,
+              1.011360625684714,
+              1.0402774868018037
+            ],
+            "paired_median_bootstrap95": [
+              1.005833821034405,
+              1.0402774868018037
+            ],
+            "within_noise": false
+          },
+          "full_eax": {
+            "over_whole": 1.0117439502567545,
+            "paired_ratios": [
+              1.0195518386154503,
+              1.0103401210572898,
+              0.9979528927244229,
+              1.0130033560740292,
+              1.0099028091598823,
+              1.0059364789691072,
+              1.0105789045812026
+            ],
+            "paired_median_bootstrap95": [
+              1.0059364789691072,
+              1.0130033560740292
+            ],
+            "within_noise": false
+          }
+        }
+      },
+      "64": {
+        "iterations": 250000,
+        "checksum": 330997534,
+        "startup": {
+          "whole": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 308\n",
+              "stderr": "314402,,cpu_core/cycles/u,240537,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 308,
+              "cycles": 314402
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 292\n",
+              "stderr": "306202,,cpu_core/cycles/u,224449,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 292,
+              "cycles": 306202
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 285\n",
+              "stderr": "314213,,cpu_core/cycles/u,230154,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 285,
+              "cycles": 314213
+            }
+          ],
+          "actual": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 291\n",
+              "stderr": "313988,,cpu_core/cycles/u,208244,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 291,
+              "cycles": 313988
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 304\n",
+              "stderr": "312617,,cpu_core/cycles/u,201890,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 304,
+              "cycles": 312617
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 317\n",
+              "stderr": "306368,,cpu_core/cycles/u,208795,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 317,
+              "cycles": 306368
+            }
+          ],
+          "assembly_baseline": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 288\n",
+              "stderr": "312282,,cpu_core/cycles/u,208231,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 288,
+              "cycles": 312282
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 300\n",
+              "stderr": "310126,,cpu_core/cycles/u,210616,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 300,
+              "cycles": 310126
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 215\n",
+              "stderr": "311868,,cpu_core/cycles/u,202625,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 215,
+              "cycles": 311868
+            }
+          ],
+          "partial_nop": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 340\n",
+              "stderr": "310824,,cpu_core/cycles/u,241533,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 340,
+              "cycles": 310824
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 216\n",
+              "stderr": "305511,,cpu_core/cycles/u,217469,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 216,
+              "cycles": 305511
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 243\n",
+              "stderr": "312960,,cpu_core/cycles/u,222602,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 243,
+              "cycles": 312960
+            }
+          ],
+          "full_eax": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 328\n",
+              "stderr": "315969,,cpu_core/cycles/u,227740,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 328,
+              "cycles": 315969
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 218\n",
+              "stderr": "300230,,cpu_core/cycles/u,219552,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 218,
+              "cycles": 300230
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "64",
+                "1",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "72076 235\n",
+              "stderr": "305851,,cpu_core/cycles/u,199065,100.00,,\n",
+              "checksum": 72076,
+              "elapsed_ns": 235,
+              "cycles": 305851
+            }
+          ]
+        },
+        "runs": {
+          "whole": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12443172\n",
+              "stderr": "56354599,,cpu_core/cycles/u,12674794,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12443172,
+              "cycles": 56354599
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12618243\n",
+              "stderr": "56338188,,cpu_core/cycles/u,12846492,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12618243,
+              "cycles": 56338188
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12406771\n",
+              "stderr": "56334228,,cpu_core/cycles/u,12641300,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12406771,
+              "cycles": 56334228
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12437012\n",
+              "stderr": "56362041,,cpu_core/cycles/u,12663114,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12437012,
+              "cycles": 56362041
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12379329\n",
+              "stderr": "56428547,,cpu_core/cycles/u,12612655,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12379329,
+              "cycles": 56428547
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12404212\n",
+              "stderr": "56361786,,cpu_core/cycles/u,12638462,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12404212,
+              "cycles": 56361786
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                ".mylang-cache/s4-emission/paired-entry-import-01-whole/row_result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12531315\n",
+              "stderr": "56854869,,cpu_core/cycles/u,12735108,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12531315,
+              "cycles": 56854869
+            }
+          ],
+          "actual": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12453492\n",
+              "stderr": "56764260,,cpu_core/cycles/u,12686251,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12453492,
+              "cycles": 56764260
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12487218\n",
+              "stderr": "56662072,,cpu_core/cycles/u,12732502,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12487218,
+              "cycles": 56662072
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12602592\n",
+              "stderr": "56703461,,cpu_core/cycles/u,12827638,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12602592,
+              "cycles": 56703461
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12796648\n",
+              "stderr": "58156200,,cpu_core/cycles/u,13012055,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12796648,
+              "cycles": 58156200
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12517978\n",
+              "stderr": "56684511,,cpu_core/cycles/u,12755104,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12517978,
+              "cycles": 56684511
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12546482\n",
+              "stderr": "56855745,,cpu_core/cycles/u,12752976,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12546482,
+              "cycles": 56855745
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "experiments/new-core-s4-emission-20261006/paired-entry-import-01/split-result_propagate",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12534622\n",
+              "stderr": "56670957,,cpu_core/cycles/u,12756374,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12534622,
+              "cycles": 56670957
+            }
+          ],
+          "assembly_baseline": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12450122\n",
+              "stderr": "56655381,,cpu_core/cycles/u,12683237,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12450122,
+              "cycles": 56655381
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12575864\n",
+              "stderr": "56676307,,cpu_core/cycles/u,12811855,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12575864,
+              "cycles": 56676307
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12470375\n",
+              "stderr": "56667669,,cpu_core/cycles/u,12693925,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12470375,
+              "cycles": 56667669
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12433896\n",
+              "stderr": "56667035,,cpu_core/cycles/u,12664928,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12433896,
+              "cycles": 56667035
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12518147\n",
+              "stderr": "56678614,,cpu_core/cycles/u,12743354,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12518147,
+              "cycles": 56678614
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12356998\n",
+              "stderr": "56681618,,cpu_core/cycles/u,12609894,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12356998,
+              "cycles": 56681618
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/assembly_baseline/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12530509\n",
+              "stderr": "56693006,,cpu_core/cycles/u,12753587,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12530509,
+              "cycles": 56693006
+            }
+          ],
+          "partial_nop": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12582682\n",
+              "stderr": "57240216,,cpu_core/cycles/u,12829603,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12582682,
+              "cycles": 57240216
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12976827\n",
+              "stderr": "57174846,,cpu_core/cycles/u,13195448,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12976827,
+              "cycles": 57174846
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12692048\n",
+              "stderr": "57195818,,cpu_core/cycles/u,12918866,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12692048,
+              "cycles": 57195818
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12611811\n",
+              "stderr": "57166984,,cpu_core/cycles/u,12840931,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12611811,
+              "cycles": 57166984
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12521820\n",
+              "stderr": "57180297,,cpu_core/cycles/u,12731277,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12521820,
+              "cycles": 57180297
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12541579\n",
+              "stderr": "57180553,,cpu_core/cycles/u,12733680,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12541579,
+              "cycles": 57180553
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/partial_nop/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12536800\n",
+              "stderr": "57172023,,cpu_core/cycles/u,12765200,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12536800,
+              "cycles": 57172023
+            }
+          ],
+          "full_eax": [
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12451808\n",
+              "stderr": "56670254,,cpu_core/cycles/u,12688342,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12451808,
+              "cycles": 56670254
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12525888\n",
+              "stderr": "56680137,,cpu_core/cycles/u,12752726,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12525888,
+              "cycles": 56680137
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12472879\n",
+              "stderr": "56671692,,cpu_core/cycles/u,12712100,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12472879,
+              "cycles": 56671692
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12496399\n",
+              "stderr": "56699395,,cpu_core/cycles/u,12722306,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12496399,
+              "cycles": 56699395
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12510687\n",
+              "stderr": "56678324,,cpu_core/cycles/u,12735304,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12510687,
+              "cycles": 56678324
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12544814\n",
+              "stderr": "56958929,,cpu_core/cycles/u,12771541,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12544814,
+              "cycles": 56958929
+            },
+            {
+              "command": [
+                "taskset",
+                "-c",
+                "10",
+                "perf",
+                "stat",
+                "-x,",
+                "-e",
+                "cpu_core/cycles/u",
+                "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/experiments/new-core-s4-emission-20261006/entry-assembly-03/full_eax/program",
+                "64",
+                "250000",
+                "7"
+              ],
+              "status": 0,
+              "stdout": "330997534 12500440\n",
+              "stderr": "56696080,,cpu_core/cycles/u,12723383,100.00,,\n",
+              "checksum": 330997534,
+              "elapsed_ns": 12500440,
+              "cycles": 56696080
+            }
+          ]
+        },
+        "cycles_per_unit": {
+          "whole": [
+            3.502524125,
+            3.5014984375,
+            3.5012509375,
+            3.50298925,
+            3.507145875,
+            3.5029733125,
+            3.533791
+          ],
+          "actual": [
+            3.5282276875,
+            3.5218409375,
+            3.52442775,
+            3.6152239375,
+            3.523243375,
+            3.5339455,
+            3.52239625
+          ],
+          "assembly_baseline": [
+            3.5214695625,
+            3.5227774375,
+            3.5222375625,
+            3.5221979375,
+            3.522921625,
+            3.523109375,
+            3.523821125
+          ],
+          "partial_nop": [
+            3.558087,
+            3.554001375,
+            3.555312125,
+            3.55351,
+            3.5543420625,
+            3.5543580625,
+            3.5538249375
+          ],
+          "full_eax": [
+            3.5227751875,
+            3.523392875,
+            3.5228650625,
+            3.5245965,
+            3.5232795625,
+            3.540817375,
+            3.5243893125
+          ]
+        },
+        "comparisons": {
+          "actual": {
+            "over_whole": 1.006124636297811,
+            "paired_ratios": [
+              1.0073385825715047,
+              1.0058096555983398,
+              1.0066195805195697,
+              1.0320396893881418,
+              1.0045899145840347,
+              1.0088416852590567,
+              0.9967754884202263
+            ],
+            "paired_median_bootstrap95": [
+              1.0045899145840347,
+              1.0088416852590567
+            ],
+            "within_noise": false
+          },
+          "assembly_baseline": {
+            "over_whole": 1.005653518663511,
+            "paired_ratios": [
+              1.0054090812293834,
+              1.006077112521916,
+              1.005994036238655,
+              1.0054835131166902,
+              1.0044981733187817,
+              1.0057482774499442,
+              0.997178702701999
+            ],
+            "paired_median_bootstrap95": [
+              1.0044981733187817,
+              1.005994036238655
+            ],
+            "within_noise": false
+          },
+          "partial_nop": {
+            "over_whole": 1.0146643281056968,
+            "paired_ratios": [
+              1.0158636666064362,
+              1.0149944197997376,
+              1.0154405349588,
+              1.0144221824260522,
+              1.0134571498255687,
+              1.0146688956540544,
+              1.0056692479832565
+            ],
+            "paired_median_bootstrap95": [
+              1.0134571498255687,
+              1.0154405349588
+            ],
+            "within_noise": false
+          },
+          "full_eax": {
+            "over_whole": 1.0058292086974043,
+            "paired_ratios": [
+              1.0057818481121812,
+              1.0062528765586518,
+              1.0061732578971998,
+              1.0061682318893783,
+              1.004600232803262,
+              1.0108034115946465,
+              0.9973394896585565
+            ],
+            "paired_median_bootstrap95": [
+              1.004600232803262,
+              1.0062528765586518
+            ],
+            "within_noise": false
+          }
+        }
+      }
+    }
+  }
+}

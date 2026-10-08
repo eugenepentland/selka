@@ -1,0 +1,18 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 20 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 25 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 8626 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 9 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 2/88 failed (spec, type-size)
+guardian: failures grouped by check (2):
+  spec (5 findings)
+    - duplicate tag: id:llvm-scalar-slots-1
+    - in: src/qbe_build_llvm_test.zig
+    - in: src/qbe_build_llvm_test.zig
+    - +2 more — use --verbose for full detail
+  type-size (2 findings)
+    - src/qbe_build_llvm_emit.zig: pub const Facts (struct_) has 8 fields (cap 7)
+      fix: a new offender at 8 fields — reduce it below the cap, or accept: `guardian-check accept type-size .` (or `zig build guardian-accept -Dguardian-checks=type-size`)
+    - src/qbe_build_llvm_emit.zig: pub const Options (struct_) has 8 fields (cap 7)
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

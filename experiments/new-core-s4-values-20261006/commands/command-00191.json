@@ -1,0 +1,12 @@
+{
+  "command": [
+    "git",
+    "commit",
+    "-m",
+    "fix(core): validate child fill length at snapshot capture"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2714184,
+  "status": 0,
+  "elapsed_seconds": 0.1696700188331306
+}

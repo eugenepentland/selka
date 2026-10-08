@@ -1,0 +1,4 @@
+$ scripts/build-slot.sh build zig fmt src/core/build.zig src/core/inline_cfg.zig src/core/vector_test.zig
+
+exit=0
+elapsed_seconds=0.041297

@@ -1,0 +1,120 @@
+module v_wide
+
+record Wide:
+    a: int
+    b: int
+    c: int
+    d: int
+    e: int
+    f: int
+
+
+record Mixed:
+    tag: u8
+    small: i32
+    flag: bool
+    big: int
+    half: i16
+
+
+record Outer:
+    id: int
+    inner: Mixed
+    wide: Wide
+
+
+record Pair:
+    left: Wide
+    right: Wide
+
+
+union Slot:
+    empty,
+    one: int,
+    many: Wide,
+    pair: Mixed
+
+
+union Tree:
+    leaf: Wide,
+    node(left: Tree, right: Tree)
+
+
+def widen(w: Wide, k: int) -> Wide:
+    w.a = w.a + k
+    w.f = w.f * 2
+    return w
+
+
+def sum_wide(w: Wide) -> int:
+    return w.a + w.b + w.c + w.d + w.e + w.f
+
+
+def mk(i: int) -> Wide:
+    return Wide(a=i, b=i + 1, c=i + 2, d=i + 3, e=i + 4, f=i + 5)
+
+
+def score(s: Slot) -> int:
+    match s:
+        case Slot.empty:
+            return 0
+        case Slot.one(n):
+            return n
+        case Slot.many(w):
+            return sum_wide(w)
+        case Slot.pair(m):
+            return m.big + int(m.small) + int(m.half)
+
+
+def swap_loop(a0: Wide, b0: Wide, n: int) -> int:
+    a = a0
+    b = b0
+    for i in range(n):
+        t = a
+        a = widen(b, i)
+        b = t
+    return sum_wide(a) * 1000 + sum_wide(b)
+
+
+def tree_sum(t: Tree) -> int:
+    match t:
+        case Tree.leaf(w):
+            return sum_wide(w)
+        case Tree.node(l, r):
+            return tree_sum(l) + tree_sum(r)
+
+
+def pair_sum(p: Pair) -> int:
+    return sum_wide(p.left) * 7 + sum_wide(p.right)
+
+
+def main(out: Stream) -> int:
+    w = mk(1)
+    for i in range(3):
+        w = widen(w, i)
+    out.print(sum_wide(w), w.a, w.f)
+    xs: list[Wide] = []
+    for i in range(5):
+        xs.append(mk(i * 10))
+    xs[2].c = 99
+    xs[3] = widen(xs[3], 1000)
+    total = 0
+    for i in range(5):
+        total += sum_wide(xs[i]) + xs[i].c
+    out.print(total, len(xs))
+    slots: list[Slot] = [Slot.empty, Slot.one(5), Slot.many(mk(7)), Slot.pair(Mixed(tag=1u8, small=-5i32, flag=True, big=1000, half=7i16))]
+    s = 0
+    for i in range(4):
+        s += score(slots[i])
+    out.print(s)
+    o = Outer(id=1, inner=Mixed(tag=2u8, small=3i32, flag=False, big=4, half=5i16), wide=mk(2))
+    o.inner.big = o.inner.big + 100
+    o.wide.e = 0
+    out.print(o.inner.big, o.wide.e, sum_wide(o.wide), o.inner.flag)
+    out.print(swap_loop(mk(1), mk(100), 5), swap_loop(mk(3), mk(4), 0))
+    p = Pair(left=mk(1), right=mk(2))
+    p.right.b = 500
+    out.print(pair_sum(p))
+    t = Tree.node(Tree.leaf(mk(1)), Tree.node(Tree.leaf(mk(2)), Tree.leaf(widen(mk(3), 4))))
+    out.print(tree_sum(t))
+    return 0

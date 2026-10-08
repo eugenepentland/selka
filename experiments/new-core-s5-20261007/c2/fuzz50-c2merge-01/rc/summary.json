@@ -1,0 +1,71 @@
+{
+  "kind": "rc",
+  "cases_requested": 50,
+  "seed": 3303,
+  "cases_seen": 50,
+  "accepted": 50,
+  "old_rejected": 0,
+  "core_refused": 0,
+  "core_build_failed": 0,
+  "comparisons_expected": 450,
+  "native_runs": 900,
+  "harness": {
+    "cases": 50,
+    "refused": 0,
+    "rejected": 0,
+    "compared": 450,
+    "mismatch": 0
+  },
+  "harness_status": 0,
+  "complete": true,
+  "qualified": true,
+  "error": null,
+  "failures": [],
+  "elapsed_seconds": 24.77347719599493,
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/.mylang-cache/s5/fuzz/20261008T002836Z-b30c96d26d55/rc",
+  "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/.mylang-cache/s5/fuzz/20261008T002836Z-b30c96d26d55/rc/tmp",
+  "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/experiments/new-core-s5-20261007/c2/fuzz50-c2merge-01/rc/sources",
+  "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/.mylang-cache/s5/fuzz/20261008T002836Z-b30c96d26d55/rc/zig",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/experiments/new-core-s5-20261007/tools/frozen-old-core",
+      "sha256": "ca55bbb15d1ef6accc6aa834f23651d5b3182ddf2e59136b93115ac3e41a7091"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/.mylang-cache/s5/oracle/mylang-5e19f5be",
+      "sha256": "fee590cf3c32612f6b09a133903d4cf312c864b2802af24d4bc8804b51c4c034"
+    }
+  },
+  "oracle_unchanged": true,
+  "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/experiments/new-core-s1-20261005/lane-o/rc_fuzz.py",
+  "harness_sha256": "04b406c2208c812335b5ab2076968625a6064434c5bd61712e2819cf7aae7cf7",
+  "native_comparisons": 450,
+  "native_complete": true,
+  "command_count": 1100,
+  "references": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s5-int/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+    "sha256": "f8db2bd9ccebf42d5f4fbbf3974a15980d97204d46a4f8ac3ca5d93f41d8c1b0",
+    "oracle": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s3/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    }
+  }
+}

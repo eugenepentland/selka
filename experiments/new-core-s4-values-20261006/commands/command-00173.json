@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "from pathlib import Path; import importlib.util,json,re; p=Path(\"experiments/new-core-s4-values-20261006/final-core-conformance-v6/test-core.log\"); s=p.read_text(); verdicts=[json.loads(x) for x in re.findall(r\"guardian/test: RESULT (\\{[^\\n]+\\})\",s)]; spec=importlib.util.spec_from_file_location(\"gate\",\"experiments/new-core-s2-20261005/wave-b/integration/full_old_gate.py\"); gate=importlib.util.module_from_spec(spec); spec.loader.exec_module(gate); inspection=gate.inspect(s); result={\"source_commit\":\"a2daebc63c2427e4bda8fe4dc03297df9195c17f\",\"shards\":len(verdicts),\"tests\":{k:sum(v[k] for v in verdicts) for k in [\"passed\",\"failed\",\"skipped\"]},\"seconds\":float((p.parent/\"test-core.seconds\").read_text().splitlines()[-1]),\"longest_shard_seconds\":max(float(x) for x in re.findall(r\"guardian/test: test wall ([0-9.]+)s\",s)),\"inspection_errors\":inspection[\"errors\"],\"max_test_rss_bytes\":max(x[\"bytes\"] for x in inspection[\"maxrss\"] if x[\"test_run\"])}; assert result[\"shards\"]==64 and result[\"tests\"][\"failed\"]==0 and not result[\"inspection_errors\"] and result[\"seconds\"]<=300 and result[\"longest_shard_seconds\"]<=90; Path(\"experiments/new-core-s4-values-20261006/final-core-conformance-v6/core-component.json\").write_text(json.dumps(result,indent=2)+\"\\n\"); print(json.dumps(result,indent=2))"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2654988,
+  "status": 0,
+  "elapsed_seconds": 0.04679131484590471
+}

@@ -16,8 +16,8 @@ diagnostic and skip reason, and `--report PATH` writes a `doc-examples-v1` JSON 
 
 Units are independent, so they run on a bounded pool of workers that pull from
 one shared cursor — `--jobs N` or `MYLANG_JOBS` sets the width, and the default
-is the machine's cores capped by what its free memory affords, the same rule
-`mylang test <dir>` fans out under. Statuses are collected and only reported once
+is the machine's cores capped by what its free memory affords (`mylang test
+<dir>` now uses the cores alone). Statuses are collected and only reported once
 every unit has finished, so the tallies, the failure lines and the summary read
 exactly as they did when units ran one at a time; only `--verbose` progress
 lines interleave, each written whole.
@@ -57,9 +57,9 @@ written out. An unknown directive name fails the run.
 | `# doc: not-mylang` | Prose block that only looks like guest source; exempt from the mis-tag lint. |
 | `# doc: allow-read <dir>` | Run under `--restrict` with `--allow-read=docs/fixtures/<dir>`, granting only that fixture directory. |
 | `# doc: allow-write <dir>` | The same, with write authority on that directory. |
-| `# doc: value-semantics` | Check and run under `--value-semantics`. |
-| `# doc: legacy-sharing` | Check and run under the one-release `--legacy-sharing` mode (tracing GC). |
-| `# doc: gc-runtime` | Check and run under `--gc-runtime`, the tracing collector, instead of the default reference-counting runtime. |
+| `# doc: value-semantics` | Accepted and redundant: value semantics is always on, so the unit runs with no switch. |
+| `# doc: legacy-sharing` | Skip the unit: it documents legacy sharing, a mode the compiler retired (S5-D4). |
+| `# doc: gc-runtime` | Skip the unit: it documents the tracing collector, a mode the compiler retired (S5-D4). |
 
 A block with no directive and a `main` is run and must exit 0.
 
@@ -124,8 +124,6 @@ when every implemented feature gained a documented example, which
 | Document | Skipped block | Reason |
 | --- | --- | --- |
 | `docs/audits/language-simplicity-2026-09-12.md` | boilerplate probe | removed feature |
-| `docs/byte-io-bulk.md` | bulk declarations | fragment: declarations appended to an existing host `io.my` module |
-| `docs/byte-io-bulk.md` | copy loop | needs host capability: the `mylang-io` byte host and its `io.my` module |
 | `docs/experiments/module-discovery.md` | module header | fragment: header excerpt whose imported modules are not shown |
 | `docs/experiments/module-interfaces.md` | export placement | fragment: the imported `shared.units` module is not shown |
 | `docs/experiments/source-codecs.md` | codec match | fragment: statements without the `Positive` domain and `Wire` declarations |

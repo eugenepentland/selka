@@ -1,0 +1,74 @@
+module standard_json
+import json
+
+def roundtrip(source: str) -> str:
+    match json.loads(source):
+        case Ok(value):
+            return json.dumps(value)
+        case Err(error):
+            return "!" + json.message(error)
+
+
+def malformed(source: str) -> str:
+    match json.loads(source):
+        case Ok(_):
+            return "!accepted"
+        case Err(error):
+            return json.message(error)
+
+
+# spec-case: STANDARD-JSON-1
+public def test_json_quotes_every_control_and_preserves_unicode_spans() -> bool:
+    controls = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f"
+    escaped = "\"\\u0000\\u0001\\u0002\\u0003\\u0004\\u0005\\u0006\\u0007\\b\\t\\n\\u000b\\f\\r\\u000e\\u000f\\u0010\\u0011\\u0012\\u0013\\u0014\\u0015\\u0016\\u0017\\u0018\\u0019\\u001a\\u001b\\u001c\\u001d\\u001e\\u001f\""
+    if json.dumps(json.text(controls)) != escaped or roundtrip(escaped) != escaped:
+        return False
+    mixed = "\"ASCIIλ日本語😀/\\\"\\\\\\n-tail\""
+    if roundtrip(mixed) != mixed:
+        return False
+    return roundtrip("\"\\u0041\\u00e9\\ud83d\\ude00\"") == "\"Aé😀\"" and roundtrip("\"\"") == "\"\""
+
+
+# spec-case: STANDARD-JSON-1
+public def test_json_malformed_offsets_follow_the_original_cursor_contract() -> bool:
+    if malformed("\"a\nb\"") != "unescaped control character in JSON string at byte 3":
+        return False
+    if malformed("\"\\x\"") != "unknown JSON string escape at byte 3":
+        return False
+    if malformed("\"\\u00x0\"") != "invalid JSON unicode escape at byte 5":
+        return False
+    if malformed("\"\\u00") != "truncated JSON unicode escape at byte 5":
+        return False
+    if malformed("\"\\ud800x\"") != "JSON high surrogate needs a low surrogate at byte 7":
+        return False
+    if malformed("[1] x") != "trailing characters after a JSON value at byte 4":
+        return False
+    return malformed("{\"a\":1,\"a\":2}") == "JSON object has a duplicate key at byte 10"
+
+
+# spec-case: STANDARD-JSON-1
+public def test_json_keeps_object_order_number_spelling_and_full_grammar() -> bool:
+    source = "{\"z\":[-9223372036854775808,9223372036854775807,-0.0,1.5,true,null],\"a\":\"λ\"}"
+    if roundtrip(source) != source:
+        return False
+    if roundtrip("1e309") != "null" or roundtrip("-0.5e1") != "-5.0":
+        return False
+    invalid = ["01", "1.", "1e", "-", "[1,]", "{\"a\"1}", "tru", "nulll", "", "\"a", "[1", "\"\\ud800\"", "\"\\udc00\"", "{1:2}", "[01]"]
+    for document in invalid:
+        if malformed(document) == "!accepted":
+            return False
+    return json.dumps(json.number(0.0 / 0.0)) == "null" and json.dumps(json.number(1.0 / 0.0)) == "null"
+
+
+def retained() -> str:
+    return roundtrip("{\"escaped\\tkey\":\"beginλ\\n日本語😀end\"}")
+
+
+# spec-case: STANDARD-JSON-1
+public def test_json_keeps_results_after_sources_and_builders_are_released() -> bool:
+    kept = retained()
+    index = 0
+    while index < 20:
+        _ = roundtrip("{\"churn\":[1,2,3,\"λ\\n😀\"]}")
+        index += 1
+    return kept == "{\"escaped\\tkey\":\"beginλ\\n日本語😀end\"}"

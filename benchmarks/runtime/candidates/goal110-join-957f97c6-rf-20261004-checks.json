@@ -1,0 +1,51 @@
+{
+  "schema": "mylang-runtime-goal110-checks-v1",
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T03:05:44.948704+00:00",
+  "execution_identity_sha256": "eae9e7de7b53c2773937229a73bcb1e022235656c1bed259901c18baa2724bb5",
+  "coverage": [
+    "string_join",
+    "bytes_scan",
+    "string_search",
+    "mutate_nested"
+  ],
+  "checks": [
+    {
+      "name": "fresh RF session A qualification",
+      "kind": "qualification",
+      "status": "pass",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-integrated-rf-20261004/confirmation-a.json.gz",
+      "sha256": "db259c24ccec0af413eb4f2e3fef9b5fa5fcce88836bf7b0ece9735dd6379aa6"
+    },
+    {
+      "name": "fresh RF session B qualification",
+      "kind": "qualification",
+      "status": "pass",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-integrated-rf-20261004/confirmation-b.json.gz",
+      "sha256": "332d3c03bc0938118c0e884a3377ae808f48678d2276782812cdbf694e6264fb"
+    },
+    {
+      "name": "fresh exact-artifact nearby input holdouts",
+      "kind": "holdout",
+      "status": "pass",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/experiments/runtime-goal110-integrated-rf-20261004/holdouts.json.gz",
+      "sha256": "4033c30b4faca9acda5c60d438d305ec1ab105f88275a4e1d767f0647f2a38e7"
+    },
+    {
+      "name": "reviewed native join and text edge checks",
+      "kind": "holdout",
+      "status": "pass",
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/benchmarks/runtime/candidates/goal110-join-957f97c6-rf-20261004-correctness-review.json",
+      "sha256": "c53423aba4eb4976935461e6bfbc5e34d39dd6a82b4646d1371cbff13ee15c43"
+    }
+  ],
+  "review_receipt": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-20261003/benchmarks/runtime/candidates/goal110-join-957f97c6-rf-20261004-correctness-review.json",
+    "sha256": "c53423aba4eb4976935461e6bfbc5e34d39dd6a82b4646d1371cbff13ee15c43"
+  },
+  "limitations": [
+    "Native log retains an initial fixture-length failure followed by the corrected methods pass; the other four suites passed without runtime changes.",
+    "No fresh whole-repository semantic gate is claimed. Source-matched native checks and fresh exact-RF-artifact qualifications/holdouts support this focused acceptance; final whole-suite repository gates remain required.",
+    "Holdouts retain generator shapes, not every Unicode/alias/error topology. Per-comparison intervals are not simultaneous confidence over the entire campaign; small byte scan calibration hit the existing iteration cap."
+  ]
+}

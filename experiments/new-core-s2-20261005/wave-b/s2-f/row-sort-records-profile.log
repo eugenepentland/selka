@@ -1,0 +1,28 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 611  of event 'cpu_core/cycles/u'
+# Event count (approx.): 1129862585
+#
+# Overhead  Symbol                      IPC   [IPC Coverage]
+# ........  ..........................  ....................
+#
+    32.96%  [.] myl_core_s2_sort_keyed  -      -
+    21.48%  [.] main                    -      -
+    14.64%  [.] 0x0000000000197a66      -      -
+     8.13%  [.] 0x0000000000197a70      -      -
+     5.58%  [.] memcpy@plt              -      -
+     3.40%  [.] 0x0000000000197a6c      -      -
+     1.69%  [.] block_new               -      -
+     0.72%  [.] 0x00000000000b2317      -      -
+     0.58%  [.] 0x0000000000197a76      -      -
+     0.54%  [.] __libc_calloc           -      -
+     0.53%  [.] 0x0000000000197a62      -      -
+     0.52%  [.] 0x0000000000197c2f      -      -
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

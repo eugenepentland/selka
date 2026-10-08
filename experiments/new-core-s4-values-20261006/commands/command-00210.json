@@ -1,0 +1,28 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "gate",
+    "bash",
+    "-c",
+    "\"$@\"; s4_rebuild_status=$?; exit \"$s4_rebuild_status\"",
+    "--",
+    "scripts/build-slot.sh",
+    "build",
+    "python3",
+    "experiments/new-core-s3-20261006/wave-a/exclusive_core.py",
+    "--",
+    "flock",
+    "/run/user/1000/mylang-slots/cpu10.lock",
+    "taskset",
+    "-c",
+    "10",
+    "python3",
+    "experiments/new-core-s4-values-20261006/rebuild.py",
+    "--evidence",
+    "experiments/new-core-s4-values-20261006/final-rebuild-v1.json"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 2796613,
+  "status": 0,
+  "elapsed_seconds": 19.612093060975894
+}

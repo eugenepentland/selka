@@ -1,0 +1,379 @@
+{
+ "case": "dict_lookup",
+ "rounds": 7,
+ "cpu": "10",
+ "profiles": {
+  "small": {
+   "size": 64,
+   "iterations": 40000,
+   "rows": [
+    {
+     "label": "v1: today: generic read call, hint record, out-param",
+     "median_ns_per_iter": 570.221725,
+     "ns_per_unit": 8.909714453125,
+     "min_ns_per_iter": 553.620375,
+     "max_ns_per_iter": 630.37805,
+     "ratio_rust": 0.6581843438084579,
+     "ratio_fastest_b0": 1.7277604576542487
+    },
+    {
+     "label": "v2: + immutable dict: no hint record, hoisted fields",
+     "median_ns_per_iter": 323.3471,
+     "ns_per_unit": 5.0522984375,
+     "min_ns_per_iter": 307.606025,
+     "max_ns_per_iter": 372.139075,
+     "ratio_rust": 0.37322674585200666,
+     "ratio_fastest_b0": 0.9797352660970153
+    },
+    {
+     "label": "v3: + typed int/int, probe inlined",
+     "median_ns_per_iter": 286.891675,
+     "ns_per_unit": 4.482682421875,
+     "min_ns_per_iter": 268.695725,
+     "max_ns_per_iter": 339.705325,
+     "ratio_rust": 0.3311476932135204,
+     "ratio_fastest_b0": 0.869276055196238
+    },
+    {
+     "label": "v4: + inline {key,value} slots, load<=1/2, 1-mul hash",
+     "median_ns_per_iter": 213.5592,
+     "ns_per_unit": 3.3368625,
+     "min_ns_per_iter": 196.64625,
+     "max_ns_per_iter": 254.13085,
+     "ratio_rust": 0.24650292290469855,
+     "ratio_fastest_b0": 0.6470801180510533
+    },
+    {
+     "label": "v10: v4 layout with mylang hash (fold_multiply)",
+     "median_ns_per_iter": 277.680625,
+     "ns_per_unit": 4.338759765625,
+     "min_ns_per_iter": 261.305975,
+     "max_ns_per_iter": 303.716225,
+     "ratio_rust": 0.3205157431592903,
+     "ratio_fastest_b0": 0.8413667573463951
+    },
+    {
+     "label": "v5: + query-key induction (no div, no flags)",
+     "median_ns_per_iter": 128.651625,
+     "ns_per_unit": 2.010181640625,
+     "min_ns_per_iter": 112.237,
+     "max_ns_per_iter": 135.822825,
+     "ratio_rust": 0.14849747329517618,
+     "ratio_fastest_b0": 0.3898118586905169
+    },
+    {
+     "label": "v6: dense-key direct addressing (runtime flag)",
+     "median_ns_per_iter": 96.622525,
+     "ns_per_unit": 1.509726953125,
+     "min_ns_per_iter": 87.416125,
+     "max_ns_per_iter": 109.122525,
+     "ratio_rust": 0.11152755222407795,
+     "ratio_fastest_b0": 0.2927643242875551
+    },
+    {
+     "label": "v7: hand AVX2 gather over dense, i64 values",
+     "median_ns_per_iter": 57.74775,
+     "ns_per_unit": 0.90230859375,
+     "min_ns_per_iter": 53.814425,
+     "max_ns_per_iter": 67.37705,
+     "ratio_rust": 0.066655939740221,
+     "ratio_fastest_b0": 0.1749745311238416
+    },
+    {
+     "label": "v7n: hand AVX2 gather, u32 values",
+     "median_ns_per_iter": 32.53965,
+     "ns_per_unit": 0.50843203125,
+     "min_ns_per_iter": 28.825325,
+     "max_ns_per_iter": 34.935,
+     "ratio_rust": 0.03755922870705582,
+     "ratio_fastest_b0": 0.09859449072360242
+    },
+    {
+     "label": "v8: hand AVX2 4-slot buckets (general keys)",
+     "median_ns_per_iter": 195.19955,
+     "ns_per_unit": 3.04999296875,
+     "min_ns_per_iter": 187.666475,
+     "max_ns_per_iter": 227.609125,
+     "ratio_rust": 0.22531110635684087,
+     "ratio_fastest_b0": 0.5914507446062378
+    },
+    {
+     "label": "v20 holdout ref: today, identity keys from file",
+     "median_ns_per_iter": 607.5023,
+     "ns_per_unit": 9.4922234375,
+     "min_ns_per_iter": 557.1067,
+     "max_ns_per_iter": 825.28845,
+     "ratio_rust": 0.7012158343978019,
+     "ratio_fastest_b0": 1.8407198566031637
+    },
+    {
+     "label": "v21 holdout: + immutable dict, identity keys from file",
+     "median_ns_per_iter": 348.324575,
+     "ns_per_unit": 5.442571484375,
+     "min_ns_per_iter": 326.54665,
+     "max_ns_per_iter": 368.76675,
+     "ratio_rust": 0.40205725558550925,
+     "ratio_fastest_b0": 1.0554165173454617
+    },
+    {
+     "label": "v30 holdout: best scalar table, keys from file",
+     "median_ns_per_iter": 127.875525,
+     "ns_per_unit": 1.998055078125,
+     "min_ns_per_iter": 121.210625,
+     "max_ns_per_iter": 143.47385,
+     "ratio_rust": 0.14760165181585647,
+     "ratio_fastest_b0": 0.3874602911644191
+    },
+    {
+     "label": "v31 holdout: AVX2 buckets, keys from file",
+     "median_ns_per_iter": 212.157725,
+     "ns_per_unit": 3.314964453125,
+     "min_ns_per_iter": 180.7737,
+     "max_ns_per_iter": 293.245775,
+     "ratio_rust": 0.2448852558415242,
+     "ratio_fastest_b0": 0.6428336767436986
+    },
+    {
+     "label": "v5 baseline x86-64",
+     "median_ns_per_iter": 132.865975,
+     "ns_per_unit": 2.076030859375,
+     "min_ns_per_iter": 124.932775,
+     "max_ns_per_iter": 152.1545,
+     "ratio_rust": 0.15336193051895028,
+     "ratio_fastest_b0": 0.40258125516469573
+    },
+    {
+     "label": "B0 rust",
+     "median_ns_per_iter": 866.35565,
+     "ns_per_unit": 13.53680703125,
+     "min_ns_per_iter": 818.6031,
+     "max_ns_per_iter": 1019.953925,
+     "ratio_rust": 1.0,
+     "ratio_fastest_b0": 2.6250403460782628
+    },
+    {
+     "label": "B0 go",
+     "median_ns_per_iter": 641.95365,
+     "ns_per_unit": 10.03052578125,
+     "min_ns_per_iter": 595.9356,
+     "max_ns_per_iter": 647.915675,
+     "ratio_rust": 0.7409816626693668,
+     "ratio_fastest_b0": 1.9451067602112413
+    },
+    {
+     "label": "B0 zig-safe",
+     "median_ns_per_iter": 666.799375,
+     "ns_per_unit": 10.418740234375,
+     "min_ns_per_iter": 635.6566,
+     "max_ns_per_iter": 715.87315,
+     "ratio_rust": 0.7696600985980758,
+     "ratio_fastest_b0": 2.020388811586523
+    },
+    {
+     "label": "B0 zig-fast",
+     "median_ns_per_iter": 330.035175,
+     "ns_per_unit": 5.156799609375,
+     "min_ns_per_iter": 311.518625,
+     "max_ns_per_iter": 385.16555,
+     "ratio_rust": 0.3809465258292019,
+     "ratio_fastest_b0": 1.0
+    },
+    {
+     "label": "B0 my-llvm",
+     "median_ns_per_iter": 654.8742,
+     "ns_per_unit": 10.232409375,
+     "min_ns_per_iter": 620.927025,
+     "max_ns_per_iter": 804.6595,
+     "ratio_rust": 0.7558953415955676,
+     "ratio_fastest_b0": 1.9842557691009755
+    }
+   ]
+  },
+  "large": {
+   "size": 4096,
+   "iterations": 1500,
+   "rows": [
+    {
+     "label": "v1: today: generic read call, hint record, out-param",
+     "median_ns_per_iter": 67672.95666666667,
+     "ns_per_unit": 16.521717936197916,
+     "min_ns_per_iter": 64211.676,
+     "max_ns_per_iter": 71012.73866666667,
+     "ratio_rust": 1.2452310855570643,
+     "ratio_fastest_b0": 1.7388727115478646
+    },
+    {
+     "label": "v2: + immutable dict: no hint record, hoisted fields",
+     "median_ns_per_iter": 36352.44866666666,
+     "ns_per_unit": 8.875109537760416,
+     "min_ns_per_iter": 34800.72266666667,
+     "max_ns_per_iter": 41030.880666666664,
+     "ratio_rust": 0.6689112068624575,
+     "ratio_fastest_b0": 0.9340848116888526
+    },
+    {
+     "label": "v3: + typed int/int, probe inlined",
+     "median_ns_per_iter": 30974.598666666665,
+     "ns_per_unit": 7.562157877604166,
+     "min_ns_per_iter": 30121.274,
+     "max_ns_per_iter": 35528.97866666667,
+     "ratio_rust": 0.5699548981193876,
+     "ratio_fastest_b0": 0.7958996772952219
+    },
+    {
+     "label": "v4: + inline {key,value} slots, load<=1/2, 1-mul hash",
+     "median_ns_per_iter": 14136.068666666666,
+     "ns_per_unit": 3.4511886393229165,
+     "min_ns_per_iter": 12983.692666666666,
+     "max_ns_per_iter": 15853.639333333333,
+     "ratio_rust": 0.26011383273834404,
+     "ratio_fastest_b0": 0.3632296453974964
+    },
+    {
+     "label": "v10: v4 layout with mylang hash (fold_multiply)",
+     "median_ns_per_iter": 44570.88333333333,
+     "ns_per_unit": 10.881563313802083,
+     "min_ns_per_iter": 42088.86666666667,
+     "max_ns_per_iter": 49352.24,
+     "ratio_rust": 0.8201363169453746,
+     "ratio_fastest_b0": 1.1452594444730708
+    },
+    {
+     "label": "v5: + query-key induction (no div, no flags)",
+     "median_ns_per_iter": 7584.376666666667,
+     "ns_per_unit": 1.8516544596354167,
+     "min_ns_per_iter": 6953.503333333333,
+     "max_ns_per_iter": 8754.954,
+     "ratio_rust": 0.13955798675128578,
+     "ratio_fastest_b0": 0.19488236171987888
+    },
+    {
+     "label": "v6: dense-key direct addressing (runtime flag)",
+     "median_ns_per_iter": 5755.104,
+     "ns_per_unit": 1.4050546875,
+     "min_ns_per_iter": 4942.285333333333,
+     "max_ns_per_iter": 6610.131333333334,
+     "ratio_rust": 0.10589805373382982,
+     "ratio_fastest_b0": 0.14787876561996374
+    },
+    {
+     "label": "v7: hand AVX2 gather over dense, i64 values",
+     "median_ns_per_iter": 2238.5233333333335,
+     "ns_per_unit": 0.5465144856770834,
+     "min_ns_per_iter": 1971.0633333333333,
+     "max_ns_per_iter": 2321.3613333333333,
+     "ratio_rust": 0.04119043969279534,
+     "ratio_fastest_b0": 0.057519389283811374
+    },
+    {
+     "label": "v7n: hand AVX2 gather, u32 values",
+     "median_ns_per_iter": 971.3766666666667,
+     "ns_per_unit": 0.23715250651041667,
+     "min_ns_per_iter": 911.962,
+     "max_ns_per_iter": 1069.8126666666667,
+     "ratio_rust": 0.01787402946018963,
+     "ratio_fastest_b0": 0.024959754405602684
+    },
+    {
+     "label": "v8: hand AVX2 4-slot buckets (general keys)",
+     "median_ns_per_iter": 11567.848666666667,
+     "ns_per_unit": 2.8241818033854167,
+     "min_ns_per_iter": 10821.326,
+     "max_ns_per_iter": 13765.754,
+     "ratio_rust": 0.21285673720014067,
+     "ratio_fastest_b0": 0.29723862187463684
+    },
+    {
+     "label": "v20 holdout ref: today, identity keys from file",
+     "median_ns_per_iter": 68607.72866666666,
+     "ns_per_unit": 16.749933756510416,
+     "min_ns_per_iter": 65621.63066666666,
+     "max_ns_per_iter": 75450.854,
+     "ratio_rust": 1.2624315628177498,
+     "ratio_fastest_b0": 1.7628919003403007
+    },
+    {
+     "label": "v21 holdout: + immutable dict, identity keys from file",
+     "median_ns_per_iter": 38596.60666666667,
+     "ns_per_unit": 9.422999674479167,
+     "min_ns_per_iter": 36953.823333333334,
+     "max_ns_per_iter": 44606.48133333334,
+     "ratio_rust": 0.7102053284754126,
+     "ratio_fastest_b0": 0.9917489850723687
+    },
+    {
+     "label": "v30 holdout: best scalar table, keys from file",
+     "median_ns_per_iter": 7897.261333333333,
+     "ns_per_unit": 1.9280423177083332,
+     "min_ns_per_iter": 7112.508,
+     "max_ns_per_iter": 8580.576666666666,
+     "ratio_rust": 0.14531528970239804,
+     "ratio_fastest_b0": 0.20292200762168716
+    },
+    {
+     "label": "v31 holdout: AVX2 buckets, keys from file",
+     "median_ns_per_iter": 12261.284,
+     "ns_per_unit": 2.9934775390625,
+     "min_ns_per_iter": 10975.696,
+     "max_ns_per_iter": 13552.639333333333,
+     "ratio_rust": 0.2256164461802511,
+     "ratio_fastest_b0": 0.31505660763659726
+    },
+    {
+     "label": "v5 baseline x86-64",
+     "median_ns_per_iter": 7673.526666666667,
+     "ns_per_unit": 1.8734195963541667,
+     "min_ns_per_iter": 7004.305333333334,
+     "max_ns_per_iter": 9466.289333333334,
+     "ratio_rust": 0.1411984108844328,
+     "ratio_fastest_b0": 0.1971730921662826
+    },
+    {
+     "label": "B0 rust",
+     "median_ns_per_iter": 54345.70133333333,
+     "ns_per_unit": 13.267993489583333,
+     "min_ns_per_iter": 50956.45733333333,
+     "max_ns_per_iter": 57975.224,
+     "ratio_rust": 1.0,
+     "ratio_fastest_b0": 1.396425717054731
+    },
+    {
+     "label": "B0 go",
+     "median_ns_per_iter": 38917.717333333334,
+     "ns_per_unit": 9.501395833333333,
+     "min_ns_per_iter": 36923.604,
+     "max_ns_per_iter": 43094.888666666666,
+     "ratio_rust": 0.7161139957441836,
+     "ratio_fastest_b0": 1.0
+    },
+    {
+     "label": "B0 zig-safe",
+     "median_ns_per_iter": 68815.05933333334,
+     "ns_per_unit": 16.800551595052085,
+     "min_ns_per_iter": 66151.45266666666,
+     "max_ns_per_iter": 72777.01733333334,
+     "ratio_rust": 1.2662465962349283,
+     "ratio_fastest_b0": 1.7682193111154723
+    },
+    {
+     "label": "B0 zig-fast",
+     "median_ns_per_iter": 55600.369333333336,
+     "ns_per_unit": 13.574308919270834,
+     "min_ns_per_iter": 49815.503333333334,
+     "max_ns_per_iter": 57609.681333333334,
+     "ratio_rust": 1.0230867937889772,
+     "ratio_fastest_b0": 1.428664709625998
+    },
+    {
+     "label": "B0 my-llvm",
+     "median_ns_per_iter": 68843.76,
+     "ns_per_unit": 16.80755859375,
+     "min_ns_per_iter": 63523.94933333333,
+     "max_ns_per_iter": 73849.20866666667,
+     "ratio_rust": 1.2667747091484156,
+     "ratio_fastest_b0": 1.7689567815693745
+    }
+   ]
+  }
+ }
+}

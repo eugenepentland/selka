@@ -1,0 +1,147 @@
+{
+  "source_sha256": "5d04f87c6ac82baea8a988ae51a8d2c7939e178ba2d0ea8cf7cf08d63587235c",
+  "qualified": true,
+  "records": [
+    {
+      "role": "old-debug",
+      "compiler_sha256": "5f9fd4599bb8de25c7db51de8191e5724026a5dcc49603dfd7221d41a0c6e460",
+      "exit": 0,
+      "report": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "repro::test_append_after_counted_fill",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "8d8de5cca893d6c943a7d6c0eb1584a7b6b0109c5a1a4b60cfc51a9ee123799f",
+            "dependencies": [
+              "myl_f_40853751d0d8eb684f34a116237c839e13af8d3a3abe6f38da016ee9e9d3e7e8",
+              "myl_f_976f2589301cfcd540b8a94f24e42bdfce25d40a5c1f1aa477e9f315d45273a5"
+            ],
+            "cacheable": true,
+            "reasons": [],
+            "steps": 826,
+            "contract": "d5714b054ff1cda2b330e2fddc733a310917eae3d3c64f3f4be34502729f27c0",
+            "provider": "",
+            "source": "14f31fa9992eec11910f60a7cd9a6216677bfd0433ec1fc75120b58920d50bd0"
+          }
+        ],
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 1,
+        "modules": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/fill-boundary-repair/repro.my"
+        ]
+      },
+      "stderr": ""
+    },
+    {
+      "role": "old-release",
+      "compiler_sha256": "5f9fd4599bb8de25c7db51de8191e5724026a5dcc49603dfd7221d41a0c6e460",
+      "exit": 0,
+      "report": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "repro::test_append_after_counted_fill",
+            "status": "passed",
+            "actual": true,
+            "expected": true,
+            "reason": "",
+            "key": "ecff65b4c2e21b0be336d4314d78971632fec94a5e1404f68c3efc26981f524b",
+            "dependencies": [
+              "myl_f_40853751d0d8eb684f34a116237c839e13af8d3a3abe6f38da016ee9e9d3e7e8",
+              "myl_f_976f2589301cfcd540b8a94f24e42bdfce25d40a5c1f1aa477e9f315d45273a5"
+            ],
+            "cacheable": true,
+            "reasons": [],
+            "steps": 826,
+            "contract": "d5714b054ff1cda2b330e2fddc733a310917eae3d3c64f3f4be34502729f27c0",
+            "provider": "",
+            "source": "14f31fa9992eec11910f60a7cd9a6216677bfd0433ec1fc75120b58920d50bd0"
+          }
+        ],
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "executed": 1,
+        "modules": [
+          "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/fill-boundary-repair/repro.my"
+        ]
+      },
+      "stderr": ""
+    },
+    {
+      "role": "new-debug",
+      "compiler_sha256": "3c86ebb5ac9db377a2a2b7ae0cffd48cce09bee554aabfec856c9c5a2a6fc2bc",
+      "exit": 0,
+      "report": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "repro::test_append_after_counted_fill",
+            "status": "passed",
+            "reason": "",
+            "at": ""
+          }
+        ],
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "unsupported": 0
+      },
+      "stderr": ""
+    },
+    {
+      "role": "new-release",
+      "compiler_sha256": "3c86ebb5ac9db377a2a2b7ae0cffd48cce09bee554aabfec856c9c5a2a6fc2bc",
+      "exit": 0,
+      "report": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "repro::test_append_after_counted_fill",
+            "status": "passed",
+            "reason": "",
+            "at": ""
+          }
+        ],
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "unsupported": 0
+      },
+      "stderr": ""
+    },
+    {
+      "role": "new-verify",
+      "compiler_sha256": "3c86ebb5ac9db377a2a2b7ae0cffd48cce09bee554aabfec856c9c5a2a6fc2bc",
+      "exit": 1,
+      "report": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "repro::test_append_after_counted_fill",
+            "status": "failed",
+            "reason": "NativeTestProcessFailed: .{ .exited = 1 }\n/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/fill-boundary-repair/repro.my:5:5: error[R_CORE_FACT]: native execution failed (counted fill capacity and index: value 64, other 64)\n  in repro::finish at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/fill-boundary-repair/repro.my:5:5\n  in repro::test_append_after_counted_fill at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/fill-boundary-repair/repro.my:10:12\n  in __test_trial_0 at /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values/experiments/new-core-s4-values-20261006/fill-boundary-repair/repro.my:1:1\n",
+            "at": ""
+          }
+        ],
+        "passed": 0,
+        "failed": 1,
+        "skipped": 0,
+        "cached": 0,
+        "unsupported": 0
+      },
+      "stderr": ""
+    }
+  ],
+  "reduced_before_fix": true
+}

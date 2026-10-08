@@ -1,0 +1,8 @@
+module app
+def main(out: Stream) -> int:
+    empty: list[int] = []
+    buffer = byte_buffer(empty)
+    _ = buffer.append_int(-7)
+    _ = buffer.append_float(1.5)
+    out.print(bytes(buffer))
+    return 0

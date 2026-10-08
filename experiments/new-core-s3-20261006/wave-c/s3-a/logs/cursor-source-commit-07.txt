@@ -1,0 +1,10 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10323 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/new-core-s3-applications 8d1e135a8] core: inline trusted whitespace cursor loops
+ 6 files changed, 176 insertions(+), 1 deletion(-)
+ create mode 100644 src/core/emit_text_split.zig
+ create mode 100644 src/core/emit_text_split_test.zig

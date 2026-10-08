@@ -1,0 +1,18 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 28 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10264 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 3/88 failed (anytype-budget, debug-print-ban, bool-ops-per-condition)
+guardian: failures grouped by check (3):
+  anytype-budget (1 finding)
+    - src/core/emit_bytes.zig: 3 `anytype` parameters (limit: 2)
+      fix: replace anytype with comptime-typed generics where possible.
+  debug-print-ban (1 finding)
+    - src/core/byte_index_test.zig:93: std.debug.print reference outside allowed paths
+      fix: route through reporter.print/detail, or alias once at file scope and use the alias.
+  bool-ops-per-condition (1 finding)
+    - src/core/emit_bytes.zig:14: condition has 9 boolean ops (cap 3)
+      fix: split into nested/sequential ifs, or extract into a named bool.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

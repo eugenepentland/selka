@@ -24,21 +24,18 @@ def kept(table: mut dict[str, int]) -> int:
     return len(snapshot)
 
 
-# spec: RC-MUT-PAYLOAD-SNAPSHOT-1
 public def test_a_dead_snapshot_does_not_detach_the_mut_parameter() -> bool:
     table = {"a": 1, "b": 2}
     _ = keyed(mut table)
     return table == {"a": 1, "b": 2, "k2": 7}
 
 
-# spec-case: RC-MUT-PAYLOAD-SNAPSHOT-1
 public def test_snapshots_in_a_loop_do_not_detach_the_mut_parameter() -> bool:
     table = {"a": [1], "b": [2, 2]}
     rounds = keyed_in_loop(mut table)
     return rounds == 2 and table == {"a": [1], "b": [2, 2], "k2": [2], "k3": [3]}
 
 
-# spec-case: RC-MUT-PAYLOAD-SNAPSHOT-1
 public def test_a_live_snapshot_keeps_its_own_value() -> bool:
     table = {"a": 1}
     seen = kept(mut table)
@@ -63,7 +60,6 @@ def snapshot_rounds(parts: mut list[Part]) -> int:
     return extend_parts(mut parts)
 
 
-# spec-case: RC-MUT-PAYLOAD-SNAPSHOT-1
 public def test_dead_snapshots_in_a_loop_then_a_mut_call() -> bool:
     parts = [Part([1, 2], 3), Part([4], 5)]
     count = snapshot_rounds(mut parts)

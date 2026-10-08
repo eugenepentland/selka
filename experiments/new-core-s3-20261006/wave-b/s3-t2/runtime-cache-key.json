@@ -1,0 +1,25 @@
+{
+  "source_commit": "52a9e1ef8ca00775a5d4ac1e24b6f920eacf9766",
+  "core_binary_sha256": "4fdd299ed13d137beff5e69bcb0105d248bc618d1cd36d1a2004fa8f6d7f33da",
+  "zig_version": "0.17.0-dev.1683+5ceec001b",
+  "helper_sha256": {
+    "core_number_text.zig": "e2e4b6ce5941c0e80dac7f064196f93869a1f2c325bb9b3e8914805e8ffee046",
+    "core_number_parse.zig": "53ad97811d5888d72102b60cb7a6535ba8718900b360ca39d5b30f01df3e0e1e",
+    "core_number_format.zig": "002d54fdcf9409c54c43006ffc5da860cf730e6c80eb77021f1278f1719424a7"
+  },
+  "fingerprint": "Blake3(domain-v1 NUL, executing Zig version NUL, every target/build option NUL, each helper name NUL and complete Blake3 digest)",
+  "options": [
+    "-target",
+    "x86_64-linux-gnu",
+    "-mcpu",
+    "baseline",
+    "-O",
+    "ReleaseFast",
+    "-fPIC",
+    "-fno-stack-check",
+    "-fno-stack-protector",
+    "-lc"
+  ],
+  "helper_options_target_invalidation": "three independent pure fingerprint checks in s3_number_test.zig",
+  "actual_reuse_and_simulated_version_invalidation": "float-cold-final/summary.json"
+}

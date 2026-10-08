@@ -1,0 +1,418 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 2K of event 'cpu_core/cycles/u'
+# Event count (approx.): 5501241442
+#
+# Overhead  Command          Shared Object           Symbol                           IPC   [IPC Coverage]
+# ........  ...............  ......................  ...............................  ....................
+#
+    16.57%  row_json_transf  row_json_transform_new  [.] block_alloc                  -      -            
+            |          
+            |--11.66%--small_alloc (inlined)
+            |          block_alloc
+            |          block_new (inlined)
+            |          |          
+            |          |--7.88%--str_from (inlined)
+            |          |          |          
+            |          |           --7.77%--myl_core_bytes_decode_text
+            |          |                     json::decoded (inlined)
+            |          |                     json::read_string (inlined)
+            |          |                     0x43276
+            |          |          
+            |          |--2.01%--myl_core_buffer_new (inlined)
+            |          |          |          
+            |          |          |--1.03%--myl_core_buffer_from_list
+            |          |          |          json::read_string (inlined)
+            |          |          |          
+            |          |           --0.98%--core_buffer_grow (inlined)
+            |          |                     myl_core_buffer_push
+            |          |                     |          
+            |          |                      --0.81%--json::read_string (inlined)
+            |          |                                0x43276
+            |          |          
+            |           --1.58%--str_new (inlined)
+            |                     |          
+            |                     |--0.98%--myl_core_buffer_snapshot
+            |                     |          json::decoded (inlined)
+            |                     |          json::read_string (inlined)
+            |                     |          0x43276
+            |                     |          
+            |                      --0.61%--myl_core_str_from_i64
+            |                                json::write_value (inlined)
+            |          
+             --4.91%--block_alloc
+                       |          
+                       |--3.48%--block_new (inlined)
+                       |          |          
+                       |          |--1.59%--myl_core_buffer_new (inlined)
+                       |          |          |          
+                       |          |          |--0.83%--core_buffer_grow (inlined)
+                       |          |          |          myl_core_buffer_push
+                       |          |          |          |          
+                       |          |          |           --0.69%--json::read_string (inlined)
+                       |          |          |                     0x43276
+                       |          |          |          
+                       |          |           --0.76%--myl_core_buffer_from_list
+                       |          |                     json::read_string (inlined)
+                       |          |                     |          
+                       |          |                      --0.55%--0x4
+                       |          |          
+                       |          |--0.86%--str_from (inlined)
+                       |          |          |          
+                       |          |           --0.70%--myl_core_bytes_decode_text
+                       |          |                     json::decoded (inlined)
+                       |          |                     json::read_string (inlined)
+                       |          |                     0x43276
+                       |          |          
+                       |           --0.68%--str_new (inlined)
+                       |                     |          
+                       |                      --0.64%--myl_core_buffer_snapshot
+                       |                                json::decoded (inlined)
+                       |                                json::read_string (inlined)
+                       |                                0x43276
+                       |          
+                       |--0.71%--json::read_string (inlined)
+                       |          |          
+                       |           --0.60%--0x43276
+                       |          
+                        --0.56%--json::decoded (inlined)
+                                  json::read_string (inlined)
+                                  0x43276
+
+    12.26%  row_json_transf  row_json_transform_new  [.] myl_core_buffer_push         -      -            
+            |          
+            |--10.73%--myl_core_buffer_push
+            |          |          
+            |          |--3.34%--json::read_string (inlined)
+            |          |          0x43276
+            |          |          
+            |          |--2.55%--json::write_quoted (inlined)
+            |          |          
+            |          |--1.51%--0x43276
+            |          |          
+            |          |--0.63%--json::write_value (inlined)
+            |          |          
+            |           --0.53%--json::write_object (inlined)
+            |                     json::write_value (inlined)
+            |                     0x3
+            |          
+            |--0.74%--block_free (inlined)
+            |          core_buffer_grow (inlined)
+            |          myl_core_buffer_push
+            |          |          
+            |           --0.65%--json::read_string (inlined)
+            |                     0x43276
+            |          
+             --0.52%--core_buffer_grow (inlined)
+                       myl_core_buffer_push
+
+     7.73%  row_json_transf  row_json_transform_new  [.] myl_core_bytes_index_offset  -      -            
+            |
+            ---myl_core_bytes_index_offset
+               |          
+               |--2.11%--0x43276
+               |          
+                --1.09%--0x4
+
+     7.73%  row_json_transf  row_json_transform_new  [.] my.json::read_string         -      -            
+            |          
+            |--6.99%--json::read_string (inlined)
+            |          |          
+            |          |--5.02%--0x43276
+            |          |          
+            |           --1.00%--0x4
+            |          
+             --0.52%--json::read_escape (inlined)
+                       json::read_string (inlined)
+                       0x43276
+
+     7.48%  row_json_transf  row_json_transform_new  [.] my.json::read_value          -      -            
+            |          
+            |--2.15%--json::read_object (inlined)
+            |          json::read_value (inlined)
+            |          |          
+            |           --0.57%--0x4
+            |          
+            |--1.79%--json::read_member (inlined)
+            |          json::read_object (inlined)
+            |          json::read_value (inlined)
+            |          |          
+            |           --0.83%--0x4
+            |          
+            |--1.46%--json::read_value (inlined)
+            |          |          
+            |           --0.82%--0x1
+            |                     |          
+            |                      --0.51%--0x6
+            |          
+            |--0.86%--json::peek (inlined)
+            |          
+             --0.63%--json::read_array (inlined)
+                       json::read_value (inlined)
+                       0x4
+
+     7.35%  row_json_transf  row_json_transform_new  [.] myl_core_free_block          -      -            
+            |          
+            |--5.04%--core_dict_free_pending (inlined)
+            |          myl_core_free_block
+            |          row_json_transform::main (inlined)
+            |          myl.entry (inlined)
+            |          |          
+            |          |--1.54%--0x249a3f00
+            |          |          
+            |          |--1.38%--0x247f31a0
+            |          |          
+            |          |--1.07%--0x249a3f20
+            |          |          
+            |           --1.05%--0x249a3e40
+            |          
+            |--0.89%--myl_core_free_block
+            |          row_json_transform::main (inlined)
+            |          myl.entry (inlined)
+            |          
+            |--0.69%--guard_holds (inlined)
+            |          reference_at (inlined)
+            |          core_dict_free_pending (inlined)
+            |          myl_core_free_block
+            |          row_json_transform::main (inlined)
+            |          myl.entry (inlined)
+            |          
+             --0.54%--core_io_finalize (inlined)
+                       myl_core_free_block
+                       row_json_transform::main (inlined)
+                       myl.entry (inlined)
+
+     4.26%  row_json_transf  row_json_transform_new  [.] my.json::write_quoted        -      -            
+            |          
+             --3.97%--json::write_quoted (inlined)
+                       |          
+                        --0.90%--0x3
+
+     2.93%  row_json_transf  row_json_transform_new  [.] myl_core_dict_insert         -      -            
+            |          
+            |--1.30%--myl_core_dict_insert
+            |          |          
+            |           --0.99%--json::read_object (inlined)
+            |                     json::read_value (inlined)
+            |          
+            |--0.55%--dict_room (inlined)
+            |          myl_core_dict_insert
+            |          
+             --0.54%--dict_hash (inlined)
+                       myl_core_dict_insert
+
+     2.83%  row_json_transf  row_json_transform_new  [.] my.json::write_value         -      -            
+            |          
+            |--1.49%--json::write_object (inlined)
+            |          json::write_value (inlined)
+            |          |          
+            |           --0.94%--0x3
+            |          
+             --1.30%--json::write_value (inlined)
+
+     2.51%  row_json_transf  row_json_transform_new  [.] myl_core_span_utf8_count     -      -            
+            |
+            ---myl_core_span_utf8_count
+               |          
+               |--1.86%--json::decoded (inlined)
+               |          json::read_string (inlined)
+               |          0x43276
+               |          
+                --0.52%--json::dumps (inlined)
+
+     1.97%  row_json_transf  row_json_transform_new  [.] myl_core_parse_int_range     -      -            
+            |          
+             --1.52%--core_parse_int_range (inlined)
+                       myl_core_parse_int_range
+                       |          
+                        --1.33%--json::read_number (inlined)
+                                  json::read_value (inlined)
+
+     1.87%  row_json_transf  row_json_transform_new  [.] myl_core_str_hash            -      -            
+            |          
+             --1.56%--myl_core_span_hash (inlined)
+                       myl_core_str_hash
+
+     1.85%  row_json_transf  row_json_transform_new  [.] myl_core_str_eq              -      -            
+            |
+            ---myl_core_str_eq
+               |          
+                --0.86%--0x2
+                          |          
+                           --0.64%--0x2
+
+     1.54%  row_json_transf  row_json_transform_new  [.] main                         -      -            
+            |
+            ---row_json_transform::json_job (inlined)
+               row_json_transform::kernel (inlined)
+               row_json_transform::main (inlined)
+               myl.entry (inlined)
+
+     1.49%  row_json_transf  row_json_transform_new  [.] myl_core_bytes_decode_text   -      -            
+            |          
+             --0.82%--core_text_ascii (inlined)
+                       core_text_publish (inlined)
+                       str_from (inlined)
+                       myl_core_bytes_decode_text
+                       json::decoded (inlined)
+                       json::read_string (inlined)
+                       0x43276
+
+     1.31%  row_json_transf  row_json_transform_new  [.] memcpy@plt                   -      -            
+            |
+            ---_fini (inlined)
+               |          
+                --0.54%--json::decoded (inlined)
+                          json::read_string (inlined)
+                          0x43276
+
+     1.04%  row_json_transf  libc.so.6               [.] 0x0000000000197a66           -      -            
+            |
+            ---0x79e82bd97a66
+               |          
+                --0.68%--row_json_transform::json_job (inlined)
+                          row_json_transform::kernel (inlined)
+                          row_json_transform::main (inlined)
+                          myl.entry (inlined)
+
+     0.96%  row_json_transf  libc.so.6               [.] 0x000000000019759d           -      -            
+            |
+            ---0x79e82bd9759d
+               |          
+                --0.52%--json::read_literal (inlined)
+                          0x1
+
+     0.95%  row_json_transf  row_json_transform_new  [.] block_free                   -      -            
+            |
+            ---block_free
+               |          
+                --0.74%--myl_core_free_block
+                          row_json_transform::main (inlined)
+                          myl.entry (inlined)
+
+     0.90%  row_json_transf  row_json_transform_new  [.] myl_core_buffer_range_valid  -      -            
+            |
+            ---myl_core_buffer_range_valid
+
+     0.84%  row_json_transf  row_json_transform_new  [.] myl_core_buffer_snapshot     -      -            
+            |          
+             --0.62%--myl_core_buffer_snapshot
+
+     0.80%  row_json_transf  row_json_transform_new  [.] myl_core_bytes_valid_list    -      -            
+            |
+            ---myl_core_bytes_valid_list
+
+     0.76%  row_json_transf  libc.so.6               [.] __libc_calloc                -      -            
+            |
+            ---__libc_calloc
+               |          
+                --0.56%--json::read_value (inlined)
+                          0x4
+
+     0.61%  row_json_transf  libc.so.6               [.] 0x0000000000197d07           -      -            
+            |
+            ---0x79e82bd97d07
+
+     0.61%  row_json_transf  row_json_transform_new  [.] reference_at                 -      -            
+     0.60%  row_json_transf  row_json_transform_new  [.] myl_core_str_from_i64        -      -            
+     0.47%  row_json_transf  row_json_transform_new  [.] myl_core_dict_new            -      -            
+     0.41%  row_json_transf  row_json_transform_new  [.] myl_core_bytes_slice         -      -            
+     0.41%  row_json_transf  row_json_transform_new  [.] myl_core_dict_ordinal        -      -            
+     0.38%  row_json_transf  row_json_transform_new  [.] myl_core_buffer_from_list    -      -            
+     0.36%  row_json_transf  libc.so.6               [.] cfree                        -      -            
+     0.36%  row_json_transf  libc.so.6               [.] 0x0000000000197a85           -      -            
+     0.33%  row_json_transf  libc.so.6               [.] 0x0000000000197a70           -      -            
+     0.26%  row_json_transf  libc.so.6               [.] 0x0000000000197a76           -      -            
+     0.25%  row_json_transf  row_json_transform_new  [.] myl_core_bytes_utf8_count    -      -            
+     0.25%  row_json_transf  row_json_transform_new  [.] memset@plt                   -      -            
+     0.25%  row_json_transf  libc.so.6               [.] 0x00000000000b0f70           -      -            
+     0.21%  row_json_transf  libc.so.6               [.] 0x00000000000b2470           -      -            
+     0.20%  row_json_transf  libc.so.6               [.] 0x00000000000b08d0           -      -            
+     0.18%  row_json_transf  libc.so.6               [.] malloc                       -      -            
+     0.18%  row_json_transf  libc.so.6               [.] 0x0000000000198500           -      -            
+     0.18%  row_json_transf  row_json_transform_new  [.] my.json::read_literal        -      -            
+     0.17%  row_json_transf  row_json_transform_new  [.] bcmp@plt                     -      -            
+     0.17%  row_json_transf  libc.so.6               [.] 0x0000000000197a55           -      -            
+     0.16%  row_json_transf  libc.so.6               [.] 0x00000000000b3f43           -      -            
+     0.16%  row_json_transf  row_json_transform_new  [.] free@plt                     -      -            
+     0.16%  row_json_transf  libc.so.6               [.] 0x0000000000198504           -      -            
+     0.16%  row_json_transf  libc.so.6               [.] 0x00000000000b1e71           -      -            
+     0.15%  row_json_transf  libc.so.6               [.] 0x000000000019758e           -      -            
+     0.14%  row_json_transf  libc.so.6               [.] 0x0000000000197a6c           -      -            
+     0.14%  row_json_transf  libc.so.6               [.] 0x0000000000197a3f           -      -            
+     0.14%  row_json_transf  libc.so.6               [.] 0x00000000000b24be           -      -            
+     0.12%  row_json_transf  libc.so.6               [.] 0x00000000000b20e0           -      -            
+     0.12%  row_json_transf  libc.so.6               [.] 0x00000000000b2400           -      -            
+     0.11%  row_json_transf  libc.so.6               [.] 0x000000000019850a           -      -            
+     0.11%  row_json_transf  row_json_transform_new  [.] calloc@plt                   -      -            
+     0.11%  row_json_transf  libc.so.6               [.] 0x00000000000b2280           -      -            
+     0.10%  row_json_transf  libc.so.6               [.] 0x00000000000b250a           -      -            
+     0.10%  row_json_transf  libc.so.6               [.] 0x00000000000b27e8           -      -            
+     0.10%  row_json_transf  libc.so.6               [.] 0x00000000000b2492           -      -            
+     0.10%  row_json_transf  libc.so.6               [.] 0x00000000000b1caa           -      -            
+     0.10%  row_json_transf  libc.so.6               [.] 0x00000000000b3784           -      -            
+     0.10%  row_json_transf  libc.so.6               [.] 0x00000000000b2185           -      -            
+     0.09%  row_json_transf  libc.so.6               [.] 0x00000000000b3dc8           -      -            
+     0.09%  row_json_transf  libc.so.6               [.] 0x00000000000b2317           -      -            
+     0.08%  row_json_transf  libc.so.6               [.] 0x00000000000b0fd7           -      -            
+     0.08%  row_json_transf  libc.so.6               [.] 0x00000000000b2333           -      -            
+     0.08%  row_json_transf  libc.so.6               [.] 0x00000000000b37ef           -      -            
+     0.08%  row_json_transf  libc.so.6               [.] 0x00000000000b0f93           -      -            
+     0.08%  row_json_transf  libc.so.6               [.] 0x00000000000b24c6           -      -            
+     0.08%  row_json_transf  libc.so.6               [.] 0x00000000001975a8           -      -            
+     0.08%  row_json_transf  libc.so.6               [.] 0x00000000000b24ed           -      -            
+     0.08%  row_json_transf  libc.so.6               [.] 0x00000000000b1e54           -      -            
+     0.07%  row_json_transf  libc.so.6               [.] 0x00000000000b3796           -      -            
+     0.07%  row_json_transf  libc.so.6               [.] 0x00000000000b3e6b           -      -            
+     0.07%  row_json_transf  libc.so.6               [.] 0x00000000000b40af           -      -            
+     0.06%  row_json_transf  libc.so.6               [.] 0x00000000000b277a           -      -            
+     0.06%  row_json_transf  libc.so.6               [.] 0x00000000000b37d6           -      -            
+     0.06%  row_json_transf  libc.so.6               [.] 0x00000000000b379b           -      -            
+     0.06%  row_json_transf  libc.so.6               [.] 0x00000000000b2221           -      -            
+     0.06%  row_json_transf  libc.so.6               [.] 0x00000000001975ae           -      -            
+     0.06%  row_json_transf  row_json_transform_new  [.] malloc@plt                   -      -            
+     0.06%  row_json_transf  libc.so.6               [.] 0x00000000000b3e91           -      -            
+     0.06%  row_json_transf  libc.so.6               [.] 0x00000000000b403d           -      -            
+     0.06%  row_json_transf  libc.so.6               [.] 0x00000000000b2ef4           -      -            
+     0.05%  row_json_transf  libc.so.6               [.] 0x00000000000b2666           -      -            
+     0.05%  row_json_transf  libc.so.6               [.] 0x00000000000b37c1           -      -            
+     0.05%  row_json_transf  libc.so.6               [.] 0x00000000001975a3           -      -            
+     0.05%  row_json_transf  libc.so.6               [.] 0x00000000000b37e7           -      -            
+     0.05%  row_json_transf  libc.so.6               [.] 0x00000000000b292a           -      -            
+     0.05%  row_json_transf  libc.so.6               [.] 0x00000000000b0fa5           -      -            
+     0.05%  row_json_transf  libc.so.6               [.] 0x00000000001975b0           -      -            
+     0.05%  row_json_transf  libc.so.6               [.] 0x00000000000b2411           -      -            
+     0.05%  row_json_transf  libc.so.6               [.] 0x00000000000b3eac           -      -            
+     0.05%  row_json_transf  libc.so.6               [.] 0x00000000000b37a3           -      -            
+     0.05%  row_json_transf  libc.so.6               [.] 0x00000000000b212f           -      -            
+     0.05%  row_json_transf  libc.so.6               [.] 0x0000000000197a00           -      -            
+     0.05%  row_json_transf  libc.so.6               [.] 0x0000000000197a90           -      -            
+     0.05%  row_json_transf  libc.so.6               [.] 0x00000000000b37dd           -      -            
+     0.04%  row_json_transf  libc.so.6               [.] 0x00000000000b24d0           -      -            
+     0.04%  row_json_transf  libc.so.6               [.] 0x00000000000b20f1           -      -            
+     0.04%  row_json_transf  libc.so.6               [.] 0x00000000000b21da           -      -            
+     0.04%  row_json_transf  libc.so.6               [.] 0x00000000000b3caa           -      -            
+     0.04%  row_json_transf  libc.so.6               [.] 0x00000000000b2a56           -      -            
+     0.03%  row_json_transf  libc.so.6               [.] 0x00000000000b2190           -      -            
+     0.03%  row_json_transf  libc.so.6               [.] 0x0000000000197a5f           -      -            
+     0.03%  row_json_transf  libc.so.6               [.] 0x00000000000b24a0           -      -            
+     0.03%  row_json_transf  libc.so.6               [.] 0x00000000000b21d0           -      -            
+     0.03%  row_json_transf  libc.so.6               [.] 0x00000000000b0f89           -      -            
+     0.03%  row_json_transf  libc.so.6               [.] 0x00000000000b3779           -      -            
+     0.03%  row_json_transf  libc.so.6               [.] aligned_alloc                -      -            
+     0.03%  row_json_transf  libc.so.6               [.] 0x00000000000b3f0c           -      -            
+     0.02%  row_json_transf  libc.so.6               [.] 0x0000000000197ac7           -      -            
+     0.02%  row_json_transf  libc.so.6               [.] 0x00000000000b2310           -      -            
+     0.02%  row_json_transf  libc.so.6               [.] 0x00000000000b21ab           -      -            
+     0.02%  row_json_transf  [unknown]               [k] 0xffffffffbae00b90           -      -            
+     0.01%  row_json_transf  libc.so.6               [.] 0x00000000000b21b3           -      -            
+     0.01%  row_json_transf  libc.so.6               [.] 0x00000000000b37b3           -      -            
+     0.01%  row_json_transf  libc.so.6               [.] 0x00000000000b37ba           -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

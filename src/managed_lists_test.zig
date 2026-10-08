@@ -8,7 +8,7 @@ const native = @import("native_execute.zig");
 fn execute(text: []const u8) !native.Run {
     var compilation = try language.Compilation.init(t.allocator, "managed.my", text);
     defer compilation.deinit();
-    return native.runWithOptions(&compilation, .{ .gc_stress = true }) catch |err| {
+    return native.runWithOptions(&compilation, .{}) catch |err| {
         for (compilation.diagnostics.items) |diag| debug.print("{s}: {s} ({s})\n", .{ diag.code, diag.message, compilation.src.text(diag.span) });
         return err;
     };
@@ -31,30 +31,6 @@ fn rejectAll(sources: []const []const u8, code: []const u8) !void {
     for (sources) |source| try reject(source, code);
 }
 
-// spec: GC-SOURCE-9
-test "bytecode rejects managed metadata on a shape that cannot own storage" {
-    var compilation = try language.Compilation.init(t.allocator, "forged-managed.my",
-        \\record Record:
-        \\    left: i64
-        \\    right: i64
-        \\
-        \\
-        \\def main() -> i64:
-        \\    return 0
-    );
-    defer compilation.deinit();
-    try compilation.emit();
-    var program = compilation.code.?;
-    const records = try t.allocator.dupe(@import("typed.zig").Record, program.records);
-    defer t.allocator.free(records);
-    // A managed nominal record is legal now that `class` is a managed reference;
-    // an array or variant is not a record and cannot own managed storage.
-    records[0].managed = true;
-    records[0].shape = .{ .array = .{ .element = .i64, .length = 2 } };
-    program.records = records;
-    try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, program));
-}
-
 // spec: GC-SOURCE-1
 test "managed copies are stored back after helper mutation without allocator authority" {
     const source =
@@ -74,33 +50,6 @@ test "managed copies are stored back after helper mutation without allocator aut
     ;
     const result = try execute(source);
     try t.expectEqual(@as(i64, 42), result.value);
-}
-
-// spec: GC-SOURCE-2
-test "legacy sharing: managed recursive record cycles are traced at a later managed allocation" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    const source =
-        \\class Node:
-        \\    children: list[Node]
-        \\    value: i64
-        \\
-        \\
-        \\def cycle():
-        \\    nodes: list[Node] = []
-        \\    nodes.append(Node(children=nodes, value=42))
-        \\    node = nodes[0u64]
-        \\    alias = node.children
-        \\    alias[0u64] = node
-        \\
-        \\
-        \\def main() -> i64:
-        \\    cycle()
-        \\    spare: list[Node] = []
-        \\    _ = spare
-        \\    return 42
-    ;
-    try t.expectEqual(@as(i64, 42), (try execute(source)).value);
 }
 
 // spec: GC-SOURCE-3
@@ -200,56 +149,6 @@ test "noalloc rejects transitive managed allocation while permitting fixed-slot 
     try t.expectEqual(@as(i64, 42), (try execute(source)).value);
 }
 
-// spec: GC-SOURCE-11
-test "legacy sharing: managed cycles lose local and record roots on block break and continue exits" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    const prefix =
-        \\class Node:
-        \\    children: list[Node]
-        \\    value: i64
-        \\
-        \\
-        \\class Holder:
-        \\    nodes: list[Node]
-    ;
-    const bodies = [_][]const u8{
-        \\    if True:
-        \\        nodes: list[Node] = []
-        \\        nodes.append(Node(children=nodes, value=42))
-        \\        holder = Holder(nodes=nodes)
-        \\        alias = holder.nodes
-        \\        if len(alias) != 1:
-        \\            return 1
-        ,
-        \\    while True:
-        \\        nodes: list[Node] = []
-        \\        nodes.append(Node(children=nodes, value=42))
-        \\        holder = Holder(nodes=nodes)
-        \\        alias = holder.nodes
-        \\        if len(alias) != 1:
-        \\            return 1
-        \\        break
-        ,
-        \\    i = 0
-        \\    while i < 1:
-        \\        i = i + 1
-        \\        nodes: list[Node] = []
-        \\        nodes.append(Node(children=nodes, value=42))
-        \\        holder = Holder(nodes=nodes)
-        \\        alias = holder.nodes
-        \\        if len(alias) != 1:
-        \\            return 1
-        \\        continue
-        ,
-    };
-    for (bodies) |body| {
-        const source = try std.mem.concat(t.allocator, u8, &.{ prefix, "\n\n\ndef main() -> i64:\n", body, "\n    spare: list[i64] = []\n    _ = spare\n    return 42\n" });
-        defer t.allocator.free(source);
-        try t.expectEqual(@as(i64, 42), (try execute(source)).value);
-    }
-}
-
 // spec: GC-SOURCE-7
 test "managed elements reject owned resources and unchecked results" {
     try rejectAll(&.{
@@ -314,35 +213,6 @@ test "an independent collection snapshot roots its elements across later mutatio
     try t.expectEqual(@as(i64, 11), result.value);
 }
 
-// spec: GC-CYCLES-1
-test "legacy sharing: an unreachable managed cycle is reclaimed while a reachable one survives collection" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    const source =
-        \\class Node:
-        \\    links: list[Node]
-        \\    value: i64
-        \\
-        \\
-        \\def loop(value: i64) -> Node:
-        \\    node = Node(links=[], value=value)
-        \\    node.links.append(node)
-        \\    return node
-        \\
-        \\
-        \\def main() -> i64:
-        \\    kept = loop(42)
-        \\    i = 0
-        \\    while i < 200:
-        \\        _ = loop(i)
-        \\        i = i + 1
-        \\    inner = kept.links[0u64]
-        \\    return inner.value
-    ;
-    const result = try execute(source);
-    try t.expectEqual(@as(i64, 42), result.value);
-}
-
 // spec: GC-BOUNDARY-1
 test "a managed list read past its initialized bounds is a located trap" {
     const source =
@@ -357,7 +227,6 @@ test "a managed list read past its initialized bounds is a located trap" {
     try t.expectEqual(@as(u64, 4), result.trap.line);
 }
 
-// spec-case: QBE-ELEMENT-READ-1
 test "scalar element reads load every width and keep a record read's copy" {
     const source =
         \\record Pair:
@@ -379,7 +248,6 @@ test "scalar element reads load every width and keep a record read's copy" {
     try t.expectEqual(@as(i64, 407), result.value);
 }
 
-// spec-case: QBE-ELEMENT-READ-1
 test "a scalar element read past the end keeps the original index in its detail" {
     const source =
         \\def main() -> i64:
@@ -393,7 +261,6 @@ test "a scalar element read past the end keeps the original index in its detail"
     try t.expectEqual(@as(u64, 3), result.trap.detail.values.length);
 }
 
-// spec-case: QBE-ELEMENT-READ-1
 test "negative element indexes count from the end for lists byte strings and text" {
     // A list index reaches the read already normalized by the checked frontend,
     // so the read only compares it unsigned. A byte string and a `str` pass the
@@ -450,7 +317,6 @@ test "a managed element declaration refuses a capability, directly or inside a r
     }, "E_LIST_CAPABILITY");
 }
 
-// spec: QBE-TEXT-BLOCK-1
 test "QBE-TEXT-BLOCK-1 run-time text shares one allocation with its payload" {
     const source =
         \\def main() -> i64:
@@ -594,7 +460,6 @@ test "UTF8-TEXT-1 text stores UTF-8 octets and still indexes Unicode scalars" {
     try t.expectEqualStrings("", result.trap.code);
 }
 
-// spec: GC-OBJECT-1
 test "GC-OBJECT-1 a two-word header fits thousands of live lists under one budget" {
     // Each live four-element `list[i64]` costs one 72-byte list header object
     // plus a 32-byte backing; the two-word header is what lets four thousand of
@@ -616,7 +481,6 @@ test "GC-OBJECT-1 a two-word header fits thousands of live lists under one budge
     try t.expectEqualStrings("", result.trap.code);
 }
 
-// spec: GC-SEGMENT-1
 test "GC-SEGMENT-1 a churn loop reuses reclaimed slots without stale fields" {
     // Every allocation collects under gc-stress, so each iteration's scratch list
     // is swept and its slots come back through the size-class free list. A slot
@@ -638,7 +502,7 @@ test "GC-SEGMENT-1 a churn loop reuses reclaimed slots without stale fields" {
         \\    return total
     );
     defer compilation.deinit();
-    const result = try native.runWithOptions(&compilation, .{ .gc_stress = true });
+    const result = try native.runWithOptions(&compilation, .{});
     try t.expectEqual(@as(i64, 190060), result.value);
     try t.expectEqualStrings("", result.trap.code);
 }

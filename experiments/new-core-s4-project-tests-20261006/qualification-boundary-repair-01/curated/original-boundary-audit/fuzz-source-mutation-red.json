@@ -1,0 +1,339 @@
+{
+  "fixture_kind": "synthetic CompletedProcess results; NO compiler/native processes",
+  "before": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+    "sha256": "01659803ad7eb348591abac022d0be40ed90632fa4a75284d60b04108a8d2520"
+  },
+  "after": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+    "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+  },
+  "retained_first_source": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/fuzz-evidence/sources/case-01659803ad7e.my",
+    "sha256": "01659803ad7eb348591abac022d0be40ed90632fa4a75284d60b04108a8d2520"
+  },
+  "simulated_calls": [
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-old",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/fuzz-cache/frontend-old"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "01659803ad7eb348591abac022d0be40ed90632fa4a75284d60b04108a8d2520"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-old",
+        "0"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "01659803ad7eb348591abac022d0be40ed90632fa4a75284d60b04108a8d2520"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-old",
+        "1"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "01659803ad7eb348591abac022d0be40ed90632fa4a75284d60b04108a8d2520"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-old",
+        "2"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "01659803ad7eb348591abac022d0be40ed90632fa4a75284d60b04108a8d2520"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-old",
+        "3"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "01659803ad7eb348591abac022d0be40ed90632fa4a75284d60b04108a8d2520"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-old",
+        "4"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "01659803ad7eb348591abac022d0be40ed90632fa4a75284d60b04108a8d2520"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-private-02/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-debug",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/fuzz-cache/frontend-core"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-debug",
+        "0"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-debug",
+        "1"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-debug",
+        "2"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-debug",
+        "3"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-debug",
+        "4"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-private-02/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-release",
+        "--release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/fuzz-cache/frontend-core"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-release",
+        "0"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-release",
+        "1"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-release",
+        "2"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-release",
+        "3"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-release",
+        "4"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-private-02/bin/mylang-core",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-verify",
+        "--release",
+        "--verify-facts",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/fuzz-cache/frontend-core"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-verify",
+        "0"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-verify",
+        "1"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-verify",
+        "2"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-verify",
+        "3"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/guest-verify",
+        "4"
+      ],
+      "source_identity_at_call": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/case.my",
+        "sha256": "b03ed0c560dbc82c5baab76fa43a90b2baaa4e8b28f5e4745d4a6611b814a906"
+      }
+    }
+  ],
+  "strict_report": {
+    "kind": "s0",
+    "cases_requested": 1,
+    "seed": 1,
+    "cases_seen": 1,
+    "accepted": 1,
+    "old_rejected": 0,
+    "core_refused": 0,
+    "core_build_failed": 0,
+    "comparisons_expected": 15,
+    "native_runs": 20,
+    "harness": {
+      "cases": 1,
+      "compared": 15,
+      "mismatch": 0
+    },
+    "harness_status": 0,
+    "complete": true,
+    "qualified": true,
+    "error": null,
+    "failures": [],
+    "elapsed_seconds": 0.002719729905948043,
+    "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/fuzz-cache",
+    "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/fuzz-cache",
+    "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/fuzz-cache/sources",
+    "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/experiments/new-core-s4-frontend-20261006/qualification-boundary-audit-01/fixtures/fuzz-cache",
+    "affinity": [
+      0,
+      1,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "oracles": {
+      "old": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang",
+        "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+      },
+      "new": {
+        "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-private-02/bin/mylang-core",
+        "sha256": "b029d263018bc92ce56b138b82df1fa066ef22171af18613871b2b625df05339"
+      }
+    },
+    "oracle_unchanged": true,
+    "native_comparisons": 15,
+    "native_complete": true
+  },
+  "matrix_predicate_accepts": true
+}

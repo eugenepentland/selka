@@ -1,0 +1,15 @@
+{
+  "source_commit": "5ee5b8d2e1d1c697a98dfa590cbeda704ed7ae55",
+  "float_unit_sha256": {
+    "core_number_text.zig": "e2e4b6ce5941c0e80dac7f064196f93869a1f2c325bb9b3e8914805e8ffee046",
+    "core_number_parse.zig": "53ad97811d5888d72102b60cb7a6535ba8718900b360ca39d5b30f01df3e0e1e",
+    "core_number_format.zig": "002d54fdcf9409c54c43006ffc5da860cf730e6c80eb77021f1278f1719424a7"
+  },
+  "matches_cold_measurement_helpers": true,
+  "cold_measurement_receipt": "../../wave-b/s3-t2/float-cold-final/summary.json",
+  "cache_key_receipt": "../../wave-b/s3-t2/runtime-cache-key.json",
+  "tests_lang_difference_after_approved_d2": [],
+  "frozen_ir_ownership_and_protected_refs_receipt": "final-source-freeze-run01.json",
+  "source_and_runtime_qualification_receipt": "final-merge-run01/summary.json",
+  "scope": "Pure source/hash review; native behavior is qualified separately."
+}

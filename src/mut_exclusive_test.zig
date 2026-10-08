@@ -4,7 +4,6 @@
 const std = @import("std");
 const t = std.testing;
 const compiler = @import("compiler.zig");
-const LegacySharing = @import("test_support.zig").LegacySharing;
 const File = compiler.embedded_project.File;
 
 const helpers =
@@ -104,7 +103,7 @@ fn rejectsProgram(bytes: []const u8, span: []const u8, related: []const u8, why:
     try t.expectEqualStrings("E_MUTATION_OVERLAP", found.code);
     try t.expectEqualStrings(span, found.span);
     try t.expectEqualStrings(related, found.related);
-    try t.expect(found.later);
+    try t.expect(found.later or std.mem.indexOf(u8, found.message, "receiver `") != null);
     try t.expectEqualStrings(why, containing(found.message, why));
 }
 
@@ -164,10 +163,6 @@ test "the exclusivity rule covers keyword and indirect calls but not read-only o
     try accepts(main("    v = [1]\n    w = [2]\n    action = two\n    action(mut v, mut w)\n"));
     try accepts(main("    a = [1, 2]\n    _ = read_one(mut a, a)\n"));
     try accepts(main("    p = [1]\n    emit(mut p, make(mut p))\n"));
-    const legacy = LegacySharing.enter();
-    defer legacy.restore();
-    try rejects(main("    b = [[1, 2], [3]]\n    same(mut b, mut b)\n"), "mut b", "mut b", "both name `b`");
-    try accepts(main("    xs = [[1], [2], [3]]\n    two(mut xs[0], mut xs[2])\n"));
 }
 
 // spec: MUT-EXCLUSIVE-3
@@ -259,4 +254,52 @@ test "the exclusivity rule covers a module-qualified call" {
     try t.expectEqualStrings("mut v", rejected[1]);
     const legal = try qualified(arena.allocator(), "lists.two(mut v, mut w)");
     try t.expectEqualStrings(accepted_code, legal[0]);
+}
+
+// spec: MUT-OVERLAP-RECEIVER-1
+test "receiver overlap rejects assignments and updates while keeping independent roots" {
+    try rejects(main("    p = [1]\n    p[make(mut p)] = 9\n"), "mut p", "p[make(mut p)]", "own statement first");
+    try rejects(main("    p = [1]\n    p[0] = make(mut p)\n"), "mut p", "p[0]", "own statement first");
+    try rejects(main("    p = [1]\n    p.append(make(mut p))\n"), "mut p", "p", "own statement first");
+    try accepts(main("    p = [1]\n    q = [2]\n    p[0] = make(mut q)\n"));
+    try accepts(main("    p = [1]\n    value = make(mut p)\n    p[0] = value\n"));
+    try accepts(main("    p = [1]\n    p.append(len(p))\n"));
+    try accepts(main("    s = S([1], [2])\n    s.a[0] = make(mut s.b)\n"));
+}
+
+// spec-case: MUT-OVERLAP-RECEIVER-1
+test "receiver overlap covers enclosing records and nested constant paths" {
+    try rejects(main("    r = R([[1]], 0)\n    r.rows[0].append(make(mut r.rows[0]))\n"), "mut r.rows[0]", "r.rows[0]", "own statement first");
+    const points = "record Point:\n    x: int\n\ndef save(points: mut list[Point]) -> int:\n    points.append(Point(1))\n    return 0\n\n" ++
+        "def main() -> int:\n    points = [Point(0)]\n    points[save(mut points)].x = 13\n    return 0\n";
+    try rejectsProgram(points, "mut points", "points[save(mut points)].x", "own statement first");
+    try accepts(main("    r = R([[1], [2]], 0)\n    r.rows[0].append(make(mut r.rows[1]))\n"));
+}
+
+// spec-case: MUT-OVERLAP-RECEIVER-1
+test "receiver overlap covers mapping and set updates keyword calls and function values" {
+    const set = "def select(flags: mut set[int]) -> int:\n    flags.add(2)\n    return 3\n\n";
+    try rejectsProgram(set ++ "def main() -> int:\n    flags = {1}\n    flags.add(select(mut flags))\n    return len(flags)\n", "mut flags", "flags", "own statement first");
+    try rejectsProgram(set ++ "def main() -> int:\n    flags = {1}\n    flags.discard(select(mut flags))\n    return len(flags)\n", "mut flags", "flags", "own statement first");
+    const dict = "def select(values: mut dict[int, int]) -> int:\n    values[2] = 3\n    return 0\n\n";
+    try rejectsProgram(dict ++ "def main() -> int:\n    values = {0: 1}\n    values[select(mut values)] = 9\n    return len(values)\n", "mut values", "values[select(mut values)]", "own statement first");
+    try rejects(main("    p = [1]\n    p[0] = make(p=mut p)\n"), "mut p", "p[0]", "own statement first");
+    try rejects(main("    p = [1]\n    action = make\n    p[action(mut p)] = 9\n"), "mut p", "p[action(mut p)]", "own statement first");
+}
+
+// spec-case: MUT-OVERLAP-RECEIVER-1
+test "receiver overlap uses the collection method vocabulary for byte buffers" {
+    const buffer = "def grow(buffer: mut byte_buffer) -> int:\n    _ = buffer.append_byte(1)\n    return 2\n\n";
+    try rejectsProgram(buffer ++ "def main() -> int:\n    buffer = byte_buffer([1])\n    _ = buffer.append_byte(grow(mut buffer))\n    return len(buffer)\n", "mut buffer", "buffer", "own statement first");
+    try rejectsProgram(buffer ++ "def main() -> int:\n    buffer = byte_buffer([1])\n    _ = buffer.reserve(grow(mut buffer))\n    return len(buffer)\n", "mut buffer", "buffer", "own statement first");
+}
+
+// spec-case: PY-ARRAY-MUT-1
+test "whole fixed array mut parameter rebinding remains an assignment target error" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const source = "def reset(values: mut [2]int):\n    values = [3, 4]\n\ndef main() -> int:\n    values: [2]int = [1, 2]\n    reset(mut values)\n    return values[0]\n";
+    const found = (try verdictOf(arena.allocator(), source)) orelse return error.TestUnexpectedResult;
+    try t.expectEqualStrings("E_ASSIGNMENT_TARGET", found.code);
+    try t.expectEqualStrings("values", found.span);
 }

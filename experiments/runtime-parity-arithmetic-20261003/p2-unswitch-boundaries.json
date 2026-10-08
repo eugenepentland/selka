@@ -1,0 +1,673 @@
+{
+  "kind": "untimed-accounted-vs-fast-native-dispatch-oracle",
+  "compiler_mode": "Debug compiler, ReleaseFast guests",
+  "compiler_sha256": "d86224436b5fc0b0dd90381efb8abe4807c8dd7d0687d3f05ddb73784239cba7",
+  "qbe_sha256": "05030fa66864f44f28754425d644e46155c95bc5442fc2de705a85eee1443945",
+  "zig_version": "0.17.0-dev.1683+5ceec001b",
+  "compile_cost": "Each duration is a single build observation under build-slot affinity; cache state and concurrent load are uncontrolled. No statistical comparison.",
+  "records": [
+    {
+      "runtime": "rc",
+      "source": "unswitch-native.my",
+      "source_sha256": "d3fe81c61ed8e5e65a3dfdf5f2efd703f5524cd79996cd23f5e3cde6c93d975e",
+      "variants": {
+        "accounted-qbe": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-native.my",
+            "--qbe",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/qbe",
+            "--step-accounting",
+            "--keep-symbols",
+            "--timings=json",
+            "-o",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/unswitch-rc-accounted-qbe"
+          ],
+          "executable_sha256": "3a99023dfe1575aaa98e9e557ffd0480a020201b76c3280f6c0b4b191bf94fd2",
+          "single_build_observation_ns": 570189321,
+          "phases": [
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "frontend",
+              "duration_ns": 145702480,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "codegen",
+              "duration_ns": 177195264,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "link",
+              "duration_ns": 43488474,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "native",
+              "duration_ns": 232385440,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "total",
+              "duration_ns": 417083904,
+              "inclusive": true,
+              "counts": {},
+              "exit_code": 0
+            }
+          ]
+        },
+        "fast-qbe": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-native.my",
+            "--qbe",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/qbe",
+            "--keep-symbols",
+            "--timings=json",
+            "-o",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/unswitch-rc-fast-qbe"
+          ],
+          "executable_sha256": "3ea1127f5f945d8f564af468c1779c66bea0c8312820c303067a222b4ce7c654",
+          "single_build_observation_ns": 389898013,
+          "phases": [
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "frontend",
+              "duration_ns": 167086798,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "codegen",
+              "duration_ns": 39977910,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "link",
+              "duration_ns": 20115765,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "native",
+              "duration_ns": 70091386,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "total",
+              "duration_ns": 243291529,
+              "inclusive": true,
+              "counts": {},
+              "exit_code": 0
+            }
+          ]
+        },
+        "fast-llvm": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-native.my",
+            "--release",
+            "--keep-symbols",
+            "--timings=json",
+            "-o",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/unswitch-rc-fast-llvm"
+          ],
+          "executable_sha256": "9cc97d74f2a7d4f7c3c1b30316383492dff6e986ef01dfa0614e95eb4513ddf3",
+          "single_build_observation_ns": 2025926435,
+          "phases": [
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "frontend",
+              "duration_ns": 154134785,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "codegen",
+              "duration_ns": 363807592,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "link",
+              "duration_ns": 1311191492,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "native",
+              "duration_ns": 1686004287,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "total",
+              "duration_ns": 1873141819,
+              "inclusive": true,
+              "counts": {},
+              "exit_code": 0
+            }
+          ]
+        }
+      },
+      "cases": [
+        {
+          "arguments": [
+            -1,
+            0,
+            13
+          ],
+          "outcome": {
+            "returncode": 13,
+            "stdout": "3\n13\n",
+            "stderr": ""
+          }
+        },
+        {
+          "arguments": [
+            -1,
+            3,
+            0
+          ],
+          "outcome": {
+            "returncode": 250,
+            "stdout": "0\n1\n2\n3\n-6\n",
+            "stderr": ""
+          }
+        },
+        {
+          "arguments": [
+            0,
+            0,
+            13
+          ],
+          "outcome": {
+            "returncode": 13,
+            "stdout": "3\n13\n",
+            "stderr": ""
+          }
+        },
+        {
+          "arguments": [
+            0,
+            3,
+            0
+          ],
+          "outcome": {
+            "returncode": 6,
+            "stdout": "0\n1\n2\n3\n6\n",
+            "stderr": ""
+          }
+        },
+        {
+          "arguments": [
+            1,
+            0,
+            13
+          ],
+          "outcome": {
+            "returncode": 13,
+            "stdout": "3\n13\n",
+            "stderr": ""
+          }
+        },
+        {
+          "arguments": [
+            1,
+            3,
+            0
+          ],
+          "outcome": {
+            "returncode": 3,
+            "stdout": "0\n1\n2\n6\n3\n",
+            "stderr": ""
+          }
+        },
+        {
+          "arguments": [
+            2,
+            0,
+            13
+          ],
+          "outcome": {
+            "returncode": 13,
+            "stdout": "3\n13\n",
+            "stderr": ""
+          }
+        },
+        {
+          "arguments": [
+            2,
+            3,
+            0
+          ],
+          "outcome": {
+            "returncode": 1,
+            "stdout": "0\n1\n2\n",
+            "stderr": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-native.my:20:24: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 1, right 0)\n  in main at /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-native.my:20:24\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":1,\"right\":0}\n"
+          }
+        },
+        {
+          "arguments": [
+            3,
+            0,
+            13
+          ],
+          "outcome": {
+            "returncode": 13,
+            "stdout": "3\n13\n",
+            "stderr": ""
+          }
+        },
+        {
+          "arguments": [
+            3,
+            3,
+            0
+          ],
+          "outcome": {
+            "returncode": 250,
+            "stdout": "0\n1\n2\n3\n-6\n",
+            "stderr": ""
+          }
+        },
+        {
+          "arguments": [
+            99,
+            0,
+            13
+          ],
+          "outcome": {
+            "returncode": 13,
+            "stdout": "3\n13\n",
+            "stderr": ""
+          }
+        },
+        {
+          "arguments": [
+            99,
+            3,
+            0
+          ],
+          "outcome": {
+            "returncode": 250,
+            "stdout": "0\n1\n2\n3\n-6\n",
+            "stderr": ""
+          }
+        },
+        {
+          "arguments": [
+            0,
+            4,
+            0
+          ],
+          "outcome": {
+            "returncode": 1,
+            "stdout": "0\n1\n2\n3\n",
+            "stderr": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-native.my:15:22: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)\n  in main at /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-native.my:15:22\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":3,\"length\":3}\n"
+          }
+        },
+        {
+          "arguments": [
+            1,
+            3,
+            9223372036854775806
+          ],
+          "outcome": {
+            "returncode": 1,
+            "stdout": "0\n1\n2\n",
+            "stderr": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-native.my:18:19: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 2, width 64)\n  in main at /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-native.my:18:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":2,\"width\":64}\n"
+          }
+        },
+        {
+          "arguments": [
+            0,
+            3,
+            9223372036854775806
+          ],
+          "outcome": {
+            "returncode": 1,
+            "stdout": "0\n1\n",
+            "stderr": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-native.my:15:19: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 2, width 64)\n  in main at /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-native.my:15:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":2,\"width\":64}\n"
+          }
+        },
+        {
+          "arguments": [
+            3,
+            3,
+            -9223372036854775808
+          ],
+          "outcome": {
+            "returncode": 1,
+            "stdout": "0\n",
+            "stderr": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-native.my:22:19: error[R_OVERFLOW]: native execution failed (sub: left -9223372036854775808, right 1, width 64)\n  in main at /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-native.my:22:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"sub\",\"left\":-9223372036854775808,\"right\":1,\"width\":64}\n"
+          }
+        }
+      ]
+    },
+    {
+      "runtime": "gc",
+      "source": "unswitch-gc-native.my",
+      "source_sha256": "19b73262f80dce10c4bdbd30c1fb06724881f19fa251c102925fd77723b1e95a",
+      "variants": {
+        "accounted-qbe": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-gc-native.my",
+            "--qbe",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/qbe",
+            "--step-accounting",
+            "--gc-runtime",
+            "--keep-symbols",
+            "--timings=json",
+            "-o",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/unswitch-gc-accounted-qbe"
+          ],
+          "executable_sha256": "e8061f989bdc6f9734c5fd6ba76fa4d376e6891775d1cd00075a4750263aae36",
+          "single_build_observation_ns": 2831863389,
+          "phases": [
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "frontend",
+              "duration_ns": 81861053,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "codegen",
+              "duration_ns": 2553876456,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "link",
+              "duration_ns": 38945702,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "native",
+              "duration_ns": 2598803355,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "total",
+              "duration_ns": 2688778232,
+              "inclusive": true,
+              "counts": {},
+              "exit_code": 0
+            }
+          ]
+        },
+        "fast-qbe": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-gc-native.my",
+            "--qbe",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/qbe",
+            "--gc-runtime",
+            "--keep-symbols",
+            "--timings=json",
+            "-o",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/unswitch-gc-fast-qbe"
+          ],
+          "executable_sha256": "6c74f0c5bcae32f7d7296494c7f52e97e39f5581a1016c32697f8e567964e5e8",
+          "single_build_observation_ns": 279812978,
+          "phases": [
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "frontend",
+              "duration_ns": 85074563,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "codegen",
+              "duration_ns": 23269764,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "link",
+              "duration_ns": 17883616,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "native",
+              "duration_ns": 46464275,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "total",
+              "duration_ns": 137694059,
+              "inclusive": true,
+              "counts": {},
+              "exit_code": 0
+            }
+          ]
+        },
+        "fast-llvm": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/zig-out/focus/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-gc-native.my",
+            "--release",
+            "--gc-runtime",
+            "--keep-symbols",
+            "--timings=json",
+            "-o",
+            "/home/epentland/.cache/mylang-tmp/runtime-parity-arithmetic-20261003/unswitch-gc-fast-llvm"
+          ],
+          "executable_sha256": "c532b9709f397d7cfa39a52b7462ba33852091990d3fc4c74f7bb8594c5d95a5",
+          "single_build_observation_ns": 7792664345,
+          "phases": [
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "frontend",
+              "duration_ns": 64808567,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "codegen",
+              "duration_ns": 6219560446,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "link",
+              "duration_ns": 1307970681,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "native",
+              "duration_ns": 7532771507,
+              "inclusive": false,
+              "counts": {},
+              "exit_code": 0
+            },
+            {
+              "version": "phase-timings-v1",
+              "kind": "timing",
+              "tool": "compiler",
+              "name": "total",
+              "duration_ns": 7632098280,
+              "inclusive": true,
+              "counts": {},
+              "exit_code": 0
+            }
+          ]
+        }
+      },
+      "cases": [
+        {
+          "arguments": [
+            0,
+            3,
+            0
+          ],
+          "outcome": {
+            "returncode": 6,
+            "stdout": "0\n1\n2\n6\n6\n",
+            "stderr": ""
+          }
+        },
+        {
+          "arguments": [
+            99,
+            3,
+            0
+          ],
+          "outcome": {
+            "returncode": 250,
+            "stdout": "0\n1\n2\n6\n-6\n",
+            "stderr": ""
+          }
+        },
+        {
+          "arguments": [
+            0,
+            0,
+            13
+          ],
+          "outcome": {
+            "returncode": 13,
+            "stdout": "3\n13\n",
+            "stderr": ""
+          }
+        },
+        {
+          "arguments": [
+            0,
+            3,
+            9223372036854775806
+          ],
+          "outcome": {
+            "returncode": 1,
+            "stdout": "0\n1\n",
+            "stderr": "/home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-gc-native.my:16:19: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 2, width 64)\n  in main at /home/epentland/ai/canopy/mylang-worktrees/runtime-parity-arithmetic-20261003/experiments/runtime-parity-arithmetic-20261003/unswitch-gc-native.my:16:19\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":2,\"width\":64}\n"
+          }
+        }
+      ]
+    }
+  ]
+}

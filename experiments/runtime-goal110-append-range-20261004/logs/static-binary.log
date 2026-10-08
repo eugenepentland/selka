@@ -1,0 +1,1 @@
+PASS append6910: fast arithmetic checks removed; ordinary growth retained; complete checked fallback unchanged

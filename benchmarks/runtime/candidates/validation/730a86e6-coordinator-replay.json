@@ -1,0 +1,32 @@
+{
+  "schema": "runtime-parity-coordinator-replay-v1",
+  "status": "passed",
+  "production_source": "730a86e62b47c922dc1411d24b5868c3bd2132f3",
+  "report_sha256": "5120ad6c5f38f3c4cf8441fa832b8e85cb8550689a3aa6e068f2be2a9d4c55a9",
+  "comparison_sha256": "dbb1906bcac50cb015171cce52ff68a0297f728db81e9ec4927f4f158117d473",
+  "comparison_exact_bytes_match_committed_report": true,
+  "verifiers": {
+    "benchmarks/runtime/expanded/verify.py": "34c6a85cedf05e4f8bf7759b699f814b601c5cf22aca01fd4e1dfada7796202a",
+    "benchmarks/runtime/compare_candidate.py": "ca202996170e072e7b95ebf3b20896142ec794d14e336c958af277037a7d7123",
+    "benchmarks/runtime/diagnostics/holdouts.py": "1eeb8484148799594d5e76dfc6a793646073cfdb596e6ea2c46910040b34f3fc"
+  },
+  "results": {
+    "full_with_live_artifacts": "PASS complete expanded baseline: 480 groups, 7200 samples, 720 qualifications",
+    "comparisons_with_live_artifacts": "PASS complete: 160 candidate comparisons; 80 immutable targets",
+    "unseen_input_replay": "PASS holdout replay: 516 cells"
+  },
+  "scope": "Coordinator independently replayed saved evidence with repository verifier code. This is analysis replay, not a new timing session or independently attested build.",
+  "confirmation": {
+    "report_sha256": "9a1a112b939204496cc298122194fe276cdf13934b6ded79b25f5375ffe2ca15",
+    "verifier_sha256": "cfb7cb711c48cea87cbd0ded6ca67795f82f5eacbe7c3dc44af2a53fb7c28427",
+    "result": "PASS diagnostic replay: 154 groups",
+    "initial_rejection": "The old verifier expected the same original-reference arm at both sizes and rejected correct string-search qualification multiplicities. Corrected per-plan probe counting is regression-tested; raw capture unchanged.",
+    "initial_rejection_log_sha256": "12c53501d892aa211c0e5a7694fc2af37cfcc9381dcbd5d5b1baff1dc9a958c0"
+  },
+  "profiles": {
+    "profile_json_sha256": "9564257c84960b0dca1f3ce6135c470fa2f4b8f4a4cc9492df15df8bd1cd1607",
+    "archive_sha256": "db75fae788a3d5bcd70823c0652091cb71228f044ae127c32462e552b960a242",
+    "result": "PASS 40 exact oracle checksums,160 raw artifact hashes,unchanged identities and explicit CPU-core counter selections",
+    "scope": "Archive integrity and checksum replay only; sampling-quality flags remain false and no causal cost claim follows."
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "source_commit": "2168a7c9b8d5bb5ff4d0e403d14cf37d4e198f37",
+  "outputs": {
+    "old-bounds-debug": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/leaf-trap-provenance-before-01/old-bounds-debug/program"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "leaf.my:3:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 1)\n  in leaf::origin at leaf.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":1}\n"
+    },
+    "old-bounds-release": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/leaf-trap-provenance-before-01/old-bounds-release/program"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "leaf.my:3:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 1)\n  in leaf::origin at leaf.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":1}\n"
+    },
+    "old-overflow-debug": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/leaf-trap-provenance-before-01/old-overflow-debug/program"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "leaf.my:3:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in leaf::origin at leaf.my:3:14\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+    },
+    "old-overflow-release": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/leaf-trap-provenance-before-01/old-overflow-release/program"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "leaf.my:3:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in leaf::origin at leaf.my:3:14\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+    },
+    "s3-bounds-debug": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/leaf-trap-provenance-before-01/s3-bounds-debug/program"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "app.my:3:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 1)\n  in leaf::origin at app.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":1}\n"
+    },
+    "s3-bounds-release": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/leaf-trap-provenance-before-01/s3-bounds-release/program"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "app.my:3:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 1)\n  in leaf::origin at app.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":1}\n"
+    },
+    "s3-overflow-debug": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/leaf-trap-provenance-before-01/s3-overflow-debug/program"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "app.my:3:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in leaf::origin at app.my:3:14\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+    },
+    "s3-overflow-release": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/leaf-trap-provenance-before-01/s3-overflow-release/program"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "app.my:3:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in app::main at app.my:3:14\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+    },
+    "e-bounds-debug": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/leaf-trap-provenance-before-01/e-bounds-debug/program"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "leaf.my:3:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 1)\n  in leaf::origin at leaf.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":1}\n"
+    },
+    "e-bounds-release": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/leaf-trap-provenance-before-01/e-bounds-release/program"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "leaf.my:3:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 1)\n  in leaf::origin at leaf.my:3:12\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":2,\"length\":1}\n"
+    },
+    "e-overflow-debug": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/leaf-trap-provenance-before-01/e-overflow-debug/program"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "leaf.my:3:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in leaf::origin at leaf.my:3:14\n  in app::main at app.my:4:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+    },
+    "e-overflow-release": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/leaf-trap-provenance-before-01/e-overflow-release/program"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "leaf.my:3:14: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in app::main at leaf.my:3:14\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+    }
+  },
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    },
+    "s3": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/oracle/mylang-core-s3-c8313207",
+      "sha256": "c831320782bea20b63b7bf4d85362d8e813a89afa48f8feb0eb75df782522f59"
+    },
+    "e": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/debug-imports-always/bin/mylang-core",
+      "sha256": "de7d67e6a1961dd3a0077f9eaf9c202cd5a6bc9a9381e2ff7a5222c56054504a"
+    }
+  }
+}

@@ -16,8 +16,9 @@ would confirm it. The working language name and `.my` extension are provisional.
   repository: `mylang docs` lists them, and `mylang docs primer` (or `syntax`,
   `io`, `errors`, `tests`, `build`, ...) prints one.
 - **Commands:** `mylang --help` starts with the everyday ones. `run`, `build`
-  and `test` build with QBE, which takes about a second; add `--release` for the
-  optimized LLVM `-O3` + LTO build you ship or time.
+  and `test` make a debug build, one LLVM unit per module so an edit recompiles
+  only what changed; add `--release` for the optimized whole-program build you
+  ship or time.
 - **Working in a large project:** `mylang context ENTRY.my --symbol=module::name`
   answers one bounded question about a declaration (`--at=FILE:LINE:COLUMN`
   about a position), `mylang tests-for ENTRY.my module::name` lists the tests
@@ -30,51 +31,33 @@ would confirm it. The working language name and `.my` extension are provisional.
 
 ## Status
 
-The [incremental QBE native backend](docs/experiments/incremental-qbe.md) is the
-default runtime; an opt-in LLVM adapter supports optimized Linux x86-64 builds.
-`mylang build` produces an executable, reusing individual native
-function objects, and the ordinary frontend reuses checked ordinary bodies,
-symbolic generic templates and concrete specializations across processes by
-default while still collecting declarations, types and global
-effect/mutation/codec facts fresh (see [the caches guide](docs/tooling/caches.md)).
-`mylang run` is that same build followed by running the result. The bytecode
-interpreter that used to sit beside it was removed on 2026-09-14; bytecode
-survives only as the internal IR QBE consumes. The backend supports the current
-typed operations, managed collections, resources and embedding APIs on Linux
-x86-64. Native tests prepare checked facts without QBE lowering and emit only
-the selected tests' reachable closure. Project builds reuse every function
-whose QBE unit's inputs did not change and skip an unchanged build outright
-([incremental frontend](docs/tooling/native-build.md#incremental-frontend));
-incremental native linking remains open.
-[The plan](docs/plan.md#1-project-direction) tracks the remaining work.
+The compiler's back end is the new core (`src/core/`, designed in
+[docs/design](docs/design/new-core-ir.md)): the checked program becomes Core IR,
+then LLVM text, which the pinned Zig toolchain's clang compiles and links with the
+core C runtime into a Linux x86-64 executable. A debug build emits one unit per
+source module, and unit objects are kept in a content-keyed per-user store, so an
+edit recompiles only the units whose text changed and an unchanged build replays
+without starting a process; `--release` builds the whole program as one optimized
+unit ([native builds](docs/tooling/native-build.md)). The front end reuses checked
+bodies, symbolic generic templates and concrete specializations across processes
+([the caches guide](docs/tooling/caches.md)). `mylang run` is that build followed by
+running the result, and `mylang test` builds and runs each test as its own process.
 
-Typed host-library calls execute through explicit registrations. The
-[board-validation trial](experiments/board_trial/README.md)
-matches a standalone Zig baseline against 87 fixed oracle cases and 60 transformed
-cases. Three exploratory agent maintenance blocks have since completed; see
-[the audit](docs/audits/feature-completeness-2026-09-07.md). These do not establish
-a comparative productivity advantage.
-Expensive geometry can remain in Zig/C/Rust behind explicit typed wrappers.
-Build the optimized executable with `mylang build … --release` (LLVM `-O3` with
-full LTO); `--backend llvm --llvm-opt N [--lto]` picks another level.
-The installed adapter requires Python 3 and uses the selected Zig toolchain's
-LLVM. Guest functions retain that C driver's resolved CPU features through LTO;
-the CPU policy is part of the native object cache identity. QBE remains the
-default; the LLVM path is experimental. See the
-[schematic performance implementation](docs/audits/schematic-llvm-o3-implementation-2026-09-21.md)
-and [full SVG performance fixes](docs/audits/svg-performance-fixes-2026-09-21.md).
-The [GC versus arena benchmarks](experiments/svg-arenas-20260921/README.md)
-build both memory policies at LLVM O3, with separate LTO and tool-limit variants.
-Existing [`with arena()` scopes](docs/arenas.md) now use bulk bump allocation;
-ordinary managed allocation is reference counted by default, with the tracing
-collector available through `--gc-runtime`.
+Memory is one-count reference counting with copy-on-write: lists, dictionaries,
+sets, strings and records are values, released when their last owner goes away.
+Stage S5 of the new core (2026-10) retired the old back end: QBE, the bytecode IR,
+the QBE-to-LLVM adapter, the tracing collector, two-count reference counting,
+`with arena()` regions (now a plain block that warns `W_ARENA_RETIRED`), host
+functions (`host def`, `mylang invoke`) and the host applications built on them
+([removed features](docs/legacy/README.md)). C interop is `extern def` with
+`--link FILE.c` ([direct C imports](docs/c-ffi.md)).
+[The plan](docs/plan.md#1-project-direction) records the earlier direction.
 
 The language reads like Python: `def`, `record`, indented blocks, ordinary
 assignments, `list[T]`, strings, dictionaries, and automatic memory management
-(reference counting by default, a tracing GC with `--gc-runtime`) — with static types
-and checked results kept explicit. [The language guide](docs/python-syntax.md)
-covers it; see the [managed-memory example](examples/gc-default/main.my) and
-[schematic entry](src/schematic/guest/main.my).
+(reference counting with copy-on-write) — with static types and checked results
+kept explicit. [The language guide](docs/python-syntax.md) covers it; see the
+[managed-memory example](examples/gc-default/main.my).
 
 Current supported features and restrictions are indexed in the
 [current language reference](docs/current-language.md). Run `mylang --features`
@@ -100,9 +83,8 @@ Zig 0.15 APIs or update the compiler version as part of a language feature.
 
 ## Build a native application
 
-`zig build` also compiles the vendored QBE release (`vendor/qbe`, version pinned in
-`.qbeversion`) into `zig-out/bin/qbe`, so only the pinned Zig toolchain has to be
-installed:
+`zig build` installs `zig-out/bin/mylang`; the only other tool a build needs is the
+pinned Zig toolchain, whose clang compiles the emitted LLVM:
 
 ```sh
 zig-out/bin/mylang build examples/factorial.my -o /tmp/factorial --report
@@ -115,14 +97,12 @@ To compile and execute without keeping a final binary, use:
 zig-out/bin/mylang build examples/factorial.my --run
 ```
 
-Add `--project` for a module entry or `--library` for a shared library. The compiler
-runs the native build directly; Python is not needed for application builds.
-`--qbe` and `--zig` select tool paths; otherwise QBE is taken from beside the
-`mylang` executable, then `PATH`, so builds work from any working directory.
-Every build uses QBE unless `--release` asks for LLVM `-O3` with LTO (see
-[native builds](docs/tooling/native-build.md#backends)). See
-the [QBE build guide](docs/experiments/incremental-qbe.md) for the vendored
-toolchain, cache behavior, providers, and embedding.
+A module header or import makes the entry a project; the nearest `mylang.json`
+supplies its import policy and limits. `--zig` selects the toolchain (else `ZIG`,
+`MYLANG_ZIG`, then `PATH`). `--report` prints one `cache-report-v1` line saying what
+the caches served; `--release` builds the optimized whole-program unit. Python is
+not needed. See [native builds](docs/tooling/native-build.md) for the pipeline, the
+caches, `--verify-cache` and `--no-cache`.
 
 ## Run guest tests
 
@@ -131,35 +111,33 @@ zig-out/bin/mylang test path/to/main.my --filter '*test_*'
 zig-out/bin/mylang test path/to/main.my --cases cases.json --json
 ```
 
-Exported `test_` functions run as native QBE code with typed assertions and fresh
-execution state. Passed tests with unchanged semantic dependencies can be reused;
-`--force` reruns them. Python is not required. See the
-[guest test workflow](docs/experiments/guest-tests.md) for fixtures, budgets, and
-result-cache behavior.
+Exported `test_` functions run as native code, each test in a fresh process under
+step, frame, byte and time budgets. Passed tests whose program (keyed by its Core
+IR) and settings are unchanged replay their receipts; `--force` reruns them, and
+`--affected --against REF` runs only the tests an edit can reach. See
+[guest tests](docs/tooling/guest-tests.md).
 
 ## Managed-memory application preview
 
 Managed lists allocate and grow with no allocator parameters and no ownership
-annotations, under the default reference-counting runtime and the tracing
-collector alike. The schematic guest uses them throughout its application model. See
-[managed memory](docs/managed-memory.md) and [the runnable example](examples/gc-default/main.my).
-[Managed arenas](docs/arenas.md) are the one way to control when they are freed.
+annotations; the runtime counts and releases them. See
+[managed collections](docs/managed-memory.md) and
+[the runnable example](examples/gc-default/main.my).
 
 ## Real schematic pilot
 
-The [Straps LMX2595 SVG pilot](experiments/schematic/README.md) parses the local
-Netlisp DSL and renders a schematic from a natively built guest. It includes a generated
+The [Straps LMX2595 SVG pilot](experiments/schematic/README.md) (a record: its
+`schematic-svg` host application was retired in S5) parsed the local Netlisp DSL
+and rendered a schematic from a natively built guest. It includes a generated
 SVG, reproducible inputs and independent netlist acceptance. This is a bounded
 single-subcircuit application; full Netlisp evaluation remains outside its scope.
 
 ## Application development without rebuilding Zig
 
-Use an installed `mylang` binary to check/run `.my` projects from disk. The two
-pilot hosts also load disk source explicitly: `schematic-svg --project DIRECTORY`
-and `board-trial --project DIRECTORY`, followed by their input paths. The directory
-contains `main.my` and its imports. Each invocation reads the current source and
-builds it natively. No Zig or Guardian invocation is needed for
-application edits; rebuild the host when changing the implementation or wrappers.
+Use an installed `mylang` binary to check, run and test `.my` projects from disk.
+Each invocation reads the current source and builds it natively, reusing the
+units that did not change. No Zig or Guardian invocation is needed for application
+edits.
 
 See the [implementation and phased development plan](docs/experiments/incremental-development.md)
 for commands and acceptance. [Incremental verification](docs/experiments/verification-runtime.md)
@@ -188,12 +166,6 @@ The development tools keep the ordinary read/edit/check workflow:
   reachability and, optionally, how an API baseline changed — inside a byte
   budget that reports what it dropped: `mylang context app/main.my --symbol
   'model::validate'`.
-- [Invoking an export](docs/tooling/invocation.md) describes one exported
-  function's checked argument and result contract and whether it is callable at
-  all (`--describe`), or executes exactly one bounded call and reports a
-  `native-invocation-v1` result, distinguishing a returned `Result.Err` from a
-  trap, a timeout and a refused request: `mylang invoke app/main.my --function
-  'app::normalize' --input=request.json`.
 
 Run `zig build test-agent-tools --summary all` for their implementation regressions.
 These tests also belong to the default suite; they do not launch agent evaluations
@@ -205,7 +177,7 @@ or establish a development-speed improvement.
 zig build
 zig-out/bin/mylang run examples/arithmetic.my --print-result
 zig-out/bin/mylang check examples/arithmetic.my
-zig-out/bin/mylang dump-bytecode examples/arithmetic.my
+zig-out/bin/mylang dump-ir examples/arithmetic.my
 zig build test --summary all
 zig build test -Doptimize=ReleaseFast --summary all
 zig build fmt-check
@@ -214,29 +186,27 @@ zig build fmt-check
 `zig build test` runs the checker, actual CLI, and runtime/tooling integration
 acceptance. CI uses this default suite in Debug and ReleaseFast.
 
-Building and using mylang needs only the pinned Zig: `zig build` (with or
-without `-Dcompiler-only`) runs no Python, and the installed compiler's
-`check`, `build`, `run`, `test`, `fmt`, `docs`, `index-project`, `context` and
-`packages` run none either, `--release` included: its LLVM backend is built into
-the compiler (`USE-WITHOUT-PYTHON-1` and the `PACKAGES-*` tests check them under
-an empty `PATH`). Python 3 is used only by some `zig build test` drivers,
+Building and using mylang needs only the pinned Zig: `zig build` runs no Python,
+and the installed compiler's `check`, `build`, `run`, `test`, `fmt`, `docs`,
+`index-project`, `context` and `packages` run none either, `--release` included
+(`USE-WITHOUT-PYTHON-1` and the `PACKAGES-*` tests check them under an empty
+`PATH`). Python 3 is used only by some `zig build test` drivers,
 developer scripts and experiments.
 
 While iterating, `-Dtest-filter=SUBSTRING` narrows the Zig suites to the tests
-whose name contains that text. `zig build test-units -Dtest-filter=arena` runs
-that area of `src/root_test.zig` in a second or two instead of the whole
-889-test binary, and `zig build test-cli -Dtest-filter=…` does the same for
-`test/integration.zig`; neither step runs the Python drivers. A filter that
+whose name contains that text: `zig build test-core -Dtest-filter=…` for the new
+core's tests, `zig build test-units -Dtest-filter=…` for `src/root_test.zig` and
+`zig build test-cli -Dtest-filter=…` for `test/integration.zig`; none of them runs
+the Python drivers. A filter that
 selects nothing fails rather than reporting a green run, so narrow one root at a
 time. `-Dtest-filter` applies to `zig build test` and `test-compile` too.
 
-QBE native compilation and parity integration remain available on demand:
+The language suite runs on its own too:
 
 ```sh
-zig build test-qbe --summary all
-zig build test-qbe-build --summary all
-zig build test-native-tests --summary all
-zig build test-c-ffi --summary all
+zig build test-core --summary all
+zig build test-lang --summary all
+zig build test-docs --summary all
 ```
 
 Guardian gates each acceptance route. `-Doptimize` selects the host compiler's
@@ -293,12 +263,10 @@ cache is ignored.
 
 ## Current implementation
 
-The [typed host interface](docs/experiments/host-functions.md) supports explicit
-`host def` declarations, transitive effects and program-bound registrations. It
-copies ordinary values through bounded synchronous sessions, including imported
-calls and typed results. Host-enabled typed application invocation now accepts
-snapshots and returns owned reports through exported guest functions.
-Runtime-owned boundary values reject.
+The [typed host interface](docs/experiments/host-functions.md) (`host def`,
+registered providers and typed invocation) was retired in S5 (2026-10); the
+paragraphs below are the implementation history, and
+[current-language.md](docs/current-language.md) is the current surface.
 
 The scalar MVP (M0–M5) is implemented and audited: owned source buffers, source locations, lexer,
 parser, separate untyped/typed representations, per-function instructions with
@@ -319,8 +287,8 @@ rejected. Unused bindings produce advisory warnings.
 Arithmetic traps on overflow in every host optimization mode; checking does
 not evaluate arithmetic. `examples/locals.my` returns `21`.
 
-Run supports `--max-steps=N` (default 10,000,000) and `--max-frames=N`
-(default 1,024, including main) to bound execution. Calls support forward
+Run supports `--max-steps=N` and `--max-frames=N` (unbounded unless given; a test
+defaults to 1,000,000 steps and 1,024 frames) to bound execution. Calls support forward
 references, mutual recursion, and boolean or integer parameters/results.
 Guest traps include source locations and a bounded call trace.
 `examples/sum_inline.my` returns `4950`; `examples/gcd_inline.my` returns `6`.
@@ -389,10 +357,9 @@ rejecting oversized values without truncation.
 snapshots, explicit EOF, and actual write counts while retaining ownership.
 Operating-system adapters remain separate work.
 
-[Managed arenas](docs/arenas.md) provide the language's only manual-memory control:
-`with arena() as scratch:` frees everything a phase of work allocated in one step,
-and `scratch.escape(value)` copies a result out.
-`zig-out/bin/mylang run examples/arena-managed/main.my --print-result` returns `38`.
+[Managed arenas](docs/managed-memory.md#retired-arenas), which freed a phase of work's allocations in one
+step, were retired in S5: `with arena():` now runs as an ordinary block and warns
+`W_ARENA_RETIRED`; `mylang fix` removes them.
 
 [Approximate discovery](docs/experiments/approximate-discovery.md) is available with
 `discover-duplicates --approximate`. It reports canonical edits between near matches
@@ -462,9 +429,9 @@ at the CLI and host boundary.
 symbols, callers, references, types, effects and bounded source context:
 
 ```sh
-zig-out/bin/mylang index-project src/schematic/guest/main.my
-zig-out/bin/mylang context src/schematic/guest/main.my --symbol=layout::build
-zig-out/bin/mylang tests-for src/schematic/guest/main.my layout::build
+zig-out/bin/mylang index-project examples/modules/main.my
+zig-out/bin/mylang context examples/modules/main.my --symbol=shared.units::Distance.make
+zig-out/bin/mylang tests-for examples/modules/main.my shared.units::Distance.make
 ```
 
 Indexes carry source/compiler receipts, and failed bodies expose unchecked
@@ -568,8 +535,8 @@ one. Located embedding APIs retain the failure path independently of parsed docu
 large paths are bounded and explicitly marked as truncated. See
 [codec diagnostics](docs/experiments/codec-diagnostics.md) for path semantics and limits.
 
-[Direct C imports](docs/c-ffi.md) support `extern def` scalar calls through QBE,
-with repeatable `--link`, `--link-library`, and `--library-path` build/test options.
+[Direct C imports](docs/c-ffi.md) support `extern def` scalar calls with repeatable
+`--link FILE.c` on `build`, `run` and `test`.
 See [the libc example](examples/c-ffi/main.my).
 
 The [ordinary application corpus](examples/corpus/README.md) adds a multi-module
@@ -621,13 +588,12 @@ Automatic project watching is not part of the folded toolchain. The former
 `scripts/watch.py` driver was dropped; `mylang check-session` remains the
 persistent checking interface and `mylang test --filter` reuses cached results.
 
-Native builds support `--report` for emission and link timings and publication
-status. Failed builds preserve the last executable; byte-identical successful
-builds preserve its timestamp.
+Native builds support `--report` for what the caches served (`cache-report-v1`).
+A failed build preserves the last executable.
 
 When a program is not fast enough, the [performance page](docs/performance.md) is
 the front door: what ordinary managed code costs, that `mylang build` and
-`mylang run` build `ReleaseFast` with QBE by default and `--release` with LLVM, how to raise the `--max-steps` and
+`mylang run` make a debug build by default and `--release` the optimized one, how to raise the `--max-steps` and
 `--max-frames` budgets each trap now names, why a fixed `[N]T` belongs on the wire
 rather than in a hot loop, and how to measure with `--timings`, `--report` and the
 system timer.

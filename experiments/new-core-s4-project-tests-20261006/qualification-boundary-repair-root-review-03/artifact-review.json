@@ -1,0 +1,11 @@
+{
+  "qualification_claim": false,
+  "green": true,
+  "members_verified": 260,
+  "bytes_verified": 594616,
+  "no_compiler_source_diff": true,
+  "manifest": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-project-tests/experiments/new-core-s4-project-tests-20261006/qualification-boundary-repair-01/curated/artifact-manifest.json",
+    "sha256": "41be81409a33c8407285280c77df2c43a232e1baff478554cbb34dda2eafdb6a"
+  }
+}

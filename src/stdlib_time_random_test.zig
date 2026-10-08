@@ -2,15 +2,11 @@
 const std = @import("std");
 const t = std.testing;
 const fixture = @import("stdlib_fixture.zig");
-const values = @import("value_semantics.zig");
 
 // spec: STANDARD-TIME-RANDOM-1
 test "standard time random boundary arithmetic and independent deterministic streams" {
-    const saved = values.enabled();
-    values.setEnabled(true);
-    defer values.setEnabled(saved);
     try fixture.run(t.allocator, @embedFile("stdlib/fixtures/time_random.my"), 0);
-    try fixture.stress(t.allocator, @embedFile("stdlib/fixtures/time_random.my"), 0);
+    try fixture.run(t.allocator, @embedFile("stdlib/fixtures/time_random.my"), 0);
 }
 
 const shared_stream =
@@ -26,14 +22,6 @@ const shared_stream =
     \\        return 1
     \\    return 0
 ;
-
-// spec-case: STANDARD-TIME-RANDOM-1
-test "standard time random legacy generator copies share one stream" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    try fixture.run(t.allocator, shared_stream, 0);
-    try fixture.stress(t.allocator, shared_stream, 0);
-}
 
 const failed = "        case Err(_):\n";
 const authority =

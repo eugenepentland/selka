@@ -1,0 +1,117 @@
+guardian: error: unknown command '--help'
+Usage: guardian-check <command> [project-dir] [--quiet|--summary(default)|--verbose]
+
+Commands:
+  formatting     Require every src file to match zig fmt output
+  durable-write-errors Preserve errors from declared durable writes
+  persistent-read-errors Keep persistent read failures distinct from absence
+  mutation-boundary Require raw mutations to stay inside declared owners
+  request-decoding Require raw request parsing to stay inside declared decoders
+  edit-identity  Report edits lacking verified identity and revision evidence
+  contract-audit Report operation contracts read-only, with separate violation and review counts
+  spec           Verify SPEC.md ↔ // spec: tag coverage
+  spec-init      Generate starter SPEC.md from pub fn signatures
+  mutate         Mutation-test the suite (fast tier: changed lines; --full: whole tree)
+  optimize-divergence Run the suite under safe and fast; fail on divergence (nightly tier)
+  debt           Report baseline/snapshot debt totals with deltas (non-gating)
+  file-size      Warn on large files; block extreme ones
+  boundaries     Enforce @import boundary rules
+  deprecated-alias Reject deprecated 0.15 std spellings (ArrayListUnmanaged, managed hashmaps, usingnamespace, getStdOut)
+  spec-quality   Lint SPEC.md prose for vague phrases and stub behaviors
+  completeness   Require each SPEC.md feature section to address or waive 8 scenario categories (opt-in)
+  naming         Enforce Zig naming conventions (PascalCase types, camelCase fns)
+  measure-vocabulary Report names that disagree about a unit or quantity kind (opt-in, advisory)
+  function-size  Cap function parameter count
+  doc-comments   Require a real /// doc comment on every public fn/type (presence + quality)
+  imports        Detect cycles in the @import graph
+  import-resolution Require every path-shaped @import to name a file that exists
+  import-layering Enforce project-declared import directions from [[layering]] entries
+  pub-api-surface Snapshot every pub fn/type; diff fails build
+  panic-budget   Cap @panic / unreachable / TODO / FIXME counts via snapshot
+  catch-discipline Reject catch unreachable/undefined and empty catch blocks
+  unwrap-discipline Reject orelse unreachable / orelse undefined (crash-on-null)
+  error-discipline Require explicit error sets on pub fn
+  cognitive-complexity Cap per-function cognitive complexity score
+  anytype-budget Cap anytype parameter count per file
+  dead-pub       Flag unused public declarations
+  allocator-hygiene Reject hardcoded global allocators outside main/test
+  debug-print-ban Reject std.debug.print(...) calls outside main/test
+  orphan-files   Flag .zig files under src/ unreachable from any configured root
+  test-reachability Flag files whose test blocks no test root imports (they never compile)
+  stub-body-ban  Reject obvious stub function bodies (return undefined, placeholder panics, unreachable in value fns)
+  int-from-float-budget Track @intFromFloat call count via snapshot (new sites need a guard review)
+  unsafe-ops-budget Track unsafe-cast builtin and undefined re-assignment counts via snapshot
+  assert-density Ratchet per-module assertion density upward (advisory, never blocks)
+  type-size      Cap fields per pub struct/enum/union/opaque
+  function-length Warn on long functions; block extreme ones
+  nesting-depth  Cap brace-nesting depth inside fn bodies
+  test-coverage  Require every pub fn to be referenced from a test block (opt-in)
+  ban            Enforce project-declared banned symbol chains from [[ban]] entries
+  concept        Flag a [[concept]] literal used outside the module that owns it
+  canonical-idiom Flag an [[idiom]] expression shape hand-rolled outside its canonical home
+  twin-parity    Require a parity test for every capability a [[twin]] entry exposes on 2+ surfaces
+  divergent-const Flag one file-scope const name holding different values in two or more files
+  shadowed-const Flag a named constant's value reappearing as a bare literal in another file
+  twin-referent  Flag a mirrors/same-as comment whose named file or symbol does not resolve
+  twin-drift     Flag two same-named functions in different files whose copied bodies have drifted apart
+  duplicate-json-key Flag one JSON key written twice into the same object by one function
+  ban-time       Reject std.time wall-clock reads outside infra/clock
+  ban-rng        Reject RNG construction outside infra/random
+  ban-fs         Reject std.fs I/O calls outside infra/fs
+  ban-net        Reject std.net / std.http use outside adapters/http or infra/net
+  ban-env        Reject env-var reads outside config or main
+  ban-sleep      Reject sleep calls outside test infrastructure
+  ban-globals    Reject mutable pub var globals outside wiring/main
+  ban-hardcoded-paths Reject hardcoded absolute paths and URLs in string literals
+  ban-secrets    Reject hardcoded credentials (known token formats + entropy-gated secret assignments)
+  init-deinit-symmetry Require pub deinit on structs that own an allocator field
+  errdefer-in-init Require errdefer between multiple try calls inside init
+  test-has-assertion Require every test block to contain at least one expect* call
+  test-no-conditional Reject if/while/switch and extra for loops at the top level of a test body
+  test-skip-ban  Reject tests that are empty or unconditionally return error.SkipZigTest
+  prod-imports-no-test Reject production code @import-ing test files
+  bool-ops-per-condition Cap boolean operators per condition
+  line-length    Warn on long lines; block extreme ones
+  repeated-string-literal Reject 3+ repeats of a literal in a file and duplicate consts across files
+  stack-escape   Reject returning the address of a stack local (dangling pointer)
+  undefined-init Require a // SAFETY: justification for an undefined value (opt-in)
+  must-return-ref Reject returning a capacity-owning container field by value (leaks a copy)
+  pub-exposes-private Reject a pub fn signature naming a type or error set that is not pub
+  compound-assert Split a std.debug.assert conjunction into one assert per conjunct
+  try-in-return  Reject `return try <expr>` — bind the tried value to a local first
+  abi-layout     Pin extern/packed struct layout and reject an unaligned wide packed field (ziglang/zig#23564)
+  assert-doc-consistency Require a body assert() in any fn whose doc claims an Asserts precondition
+  fatal-exit     Reject a hand-rolled std.process.exit(nonzero) outside the entry/fatal path
+  change-classification Require a test or spec change alongside behavioral src changes (vs git ref)
+  error-path-test Require a test naming each error path the change adds (vs git ref)
+  test-erosion   Report a change whose test count or assertion count went backwards (advisory)
+  oom-discipline Flag allocation errors conflated with domain absence (opt-in)
+  fuzz-presence  Require a std.testing.fuzz call in each configured module (opt-in)
+  concurrency-test-presence Require a concurrency test in each configured module (opt-in)
+  script-string-safety Flag a script-blob JSON serializer that escapes " and \ but not < (stored XSS; opt-in)
+  dead-model-field Flag a struct field surfaced in output but read by no enforcement path (opt-in)
+  projection-completeness Flag a struct literal that projects only part of a declared field bundle (opt-in)
+  module-doc-header Require a //! module doc header on src files over [module_doc_header] min_lines (default 200)
+  external-gates Run project-defined non-Zig argv gates from [[external]] entries
+  policy-drift   Protect guardian.toml and accepted-debt files in trusted CI
+  merge-state    Reject .guardian metadata left unresolved or marked for regeneration by a merge
+
+Meta commands (composed / informational):
+  all            Run every hard-block check (filter with --only/--skip a,b)
+  nightly        Full suite + whole-tree mutation ratchet (scheduled/CI tier)
+  commit         Gate the tree, then auto-commit the change set with --intent
+  install-hook   Write a pre-commit hook that runs the blocking gate
+  install-merge-driver Point this clone's git at the .guardian metadata merge driver
+  merge-file     Merge one .guardian metadata file (git merge driver: %O %A %B)
+  explain        Explain a check: why it blocks, how to fix, how to exempt
+  doctor         Audit Guardian metadata/integration health (read-only)
+  spec-sync      Suggest missing SPEC.md bullets without editing files
+  test-filter    Report the diff-derived test-name filter for local runs (never gates)
+  accept         Preview, accept, and verify named baseline/snapshot drift
+  bench          Record, list, or remove measured metrics in the benchmark ledger
+  size           Print one file's current measurements against their caps and ratchet ceilings
+  version        Print the guardian-check version (also --version)
+
+Single-check introspection (read-only, writes nothing):
+  --list         one check's rows as NEW / LIVE / RESOLVED against its baseline
+  --dry-run      one check's current findings, unfiltered by any baseline

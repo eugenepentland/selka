@@ -1,0 +1,115 @@
+{
+  "tests": 19,
+  "mismatches": 2,
+  "pairs": [
+    {
+      "old": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/old-properties-run02.txt",
+      "core": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/properties-run04.txt",
+      "tests": 10,
+      "matching": 10,
+      "mismatches": []
+    },
+    {
+      "old": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/old-failures-run02.txt",
+      "core": "experiments/new-core-s3-20261006/wave-b/s3-runner/logs/failures-run03.txt",
+      "tests": 9,
+      "matching": 7,
+      "mismatches": [
+        {
+          "name": "c_runner_failures::test_ordinary_result_error",
+          "old": {
+            "name": "c_runner_failures::test_ordinary_result_error",
+            "status": "failed",
+            "reason": "expected {\"case\":\"ok\",\"value\":true}, got {\"case\":\"err\",\"value\":\"ordinary error\"}\n  c_runner_failures.my:34:12  c_runner_failures::test_ordinary_result_error  Err(...) created"
+          },
+          "core": {
+            "name": "c_runner_failures::test_ordinary_result_error",
+            "status": "failed",
+            "reason": "expected {\"case\":\"ok\",\"value\":true}, got {\"case\":\"err\",\"value\":\"ordinary error\"}\n  c_runner_failures.my:34:12  __test_trial_5  Err(...) created"
+          }
+        },
+        {
+          "name": "c_runner_failures::test_result_error",
+          "old": {
+            "name": "c_runner_failures::test_result_error",
+            "status": "failed",
+            "reason": "falsified after 0 passing runs (seed 7)\n  minimal input (1 shrink, 2 attempts):\n    n = 0\n  original input (run 1):\n    n = -1\n  reason: returned Err(\"counterexample\")\n    error return trace:\n      c_runner_failures.my:28:12  c_runner_failures::test_result_error  Err(...) created\n  reproduce: mylang test test/core/c_runner_failures.my --filter 'c_runner_failures::test_result_error' --seed 7 --property-runs 12",
+            "property": {
+              "seed": 7,
+              "counts": {
+                "runs": 12,
+                "passed": 0,
+                "discarded": 0,
+                "processes": 2,
+                "shrinks": 1,
+                "attempts": 2
+              },
+              "failure": {
+                "run": 0,
+                "minimal": {
+                  "arguments": {
+                    "n": "0"
+                  },
+                  "literals": {
+                    "n": "0"
+                  }
+                },
+                "original": {
+                  "arguments": {
+                    "n": "-1"
+                  },
+                  "literals": {
+                    "n": "-1"
+                  }
+                },
+                "reason": "returned Err(\"counterexample\")\nerror return trace:\n  c_runner_failures.my:28:12  c_runner_failures::test_result_error  Err(...) created",
+                "reproduce": "mylang test test/core/c_runner_failures.my --filter 'c_runner_failures::test_result_error' --seed 7 --property-runs 12",
+                "shrunk": true,
+                "first_reason": ""
+              }
+            }
+          },
+          "core": {
+            "name": "c_runner_failures::test_result_error",
+            "status": "failed",
+            "reason": "falsified after 0 passing runs (seed 7)\n  minimal input (1 shrink, 2 attempts):\n    n = 0\n  original input (run 1):\n    n = -1\n  reason: returned Err(\"counterexample\")\n    error return trace:\n      c_runner_failures.my:28:12  __test_trial_7  Err(...) created\n  reproduce: mylang test test/core/c_runner_failures.my --filter 'c_runner_failures::test_result_error' --seed 7 --property-runs 12",
+            "property": {
+              "seed": 7,
+              "counts": {
+                "runs": 12,
+                "passed": 0,
+                "discarded": 0,
+                "processes": 2,
+                "shrinks": 1,
+                "attempts": 2
+              },
+              "failure": {
+                "run": 0,
+                "minimal": {
+                  "arguments": {
+                    "n": "0"
+                  },
+                  "literals": {
+                    "n": "0"
+                  }
+                },
+                "original": {
+                  "arguments": {
+                    "n": "-1"
+                  },
+                  "literals": {
+                    "n": "-1"
+                  }
+                },
+                "reason": "returned Err(\"counterexample\")\nerror return trace:\n  c_runner_failures.my:28:12  __test_trial_7  Err(...) created",
+                "reproduce": "mylang test test/core/c_runner_failures.my --filter 'c_runner_failures::test_result_error' --seed 7 --property-runs 12",
+                "shrunk": true,
+                "first_reason": ""
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

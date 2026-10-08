@@ -1,0 +1,71 @@
+{
+  "status": "pass",
+  "reviewed_utc": "2026-10-04T12:23:45.470899+00:00",
+  "source_revision": "a2dfdfa994e19ac3c80373a443913c7ecdef23d7",
+  "checks": {
+    "qualification.json": 720,
+    "holdouts.json": 516
+  },
+  "frontend_substitutions": 2,
+  "machine_call_counts": {
+    "before": {
+      "myl_native_dictionary_read": 5,
+      "myl_native_dictionary_read_word": 0
+    },
+    "after": {
+      "myl_native_dictionary_read": 3,
+      "myl_native_dictionary_read_word": 2
+    }
+  },
+  "function_bytes": {
+    "before/myl_native_dictionary_read": 670,
+    "before/read_walk": 663,
+    "before/myl_f_4c388c09641a7cf53a57c584f19db2c37bf5f9318d201409d2cca2d83d777934": 52057,
+    "after/myl_native_dictionary_read": 670,
+    "after/read_walk": 663,
+    "after/myl_native_dictionary_read_word": 426,
+    "after/myl_f_4c388c09641a7cf53a57c584f19db2c37bf5f9318d201409d2cca2d83d777934": 52057
+  },
+  "controls": [
+    {
+      "name": "legacy/my-llvm",
+      "runtime_image_equal": true
+    },
+    {
+      "name": "legacy/my-qbe",
+      "runtime_image_equal": true
+    },
+    {
+      "name": "compute/my-llvm",
+      "runtime_image_equal": true
+    },
+    {
+      "name": "compute/my-qbe",
+      "runtime_image_equal": true
+    },
+    {
+      "name": "collections/my-llvm",
+      "runtime_image_equal": false
+    },
+    {
+      "name": "collections/my-qbe",
+      "runtime_image_equal": false
+    },
+    {
+      "name": "text/my-llvm",
+      "runtime_image_equal": true
+    },
+    {
+      "name": "text/my-qbe",
+      "runtime_image_equal": false
+    }
+  ],
+  "manifest_sha256": "35b9bdc1c2f99f1ad6040af002bab09d53a85e4decf11e5b1b827bf890aa50ba",
+  "static_receipt_sha256": "e38e9acf70aa8b23f374ce5ba26fcc40d625dce8d7c52e773a88469d5541a1e8",
+  "script_sha256": "ba44e26159771033c91d9cffb807b8223cf9f80ba72c917cd2ab0a7e76ab59a3",
+  "limitations": [
+    "Saved checksum outcomes and fresh read-only ELF/disassembly inspection; no new guest timing.",
+    "Five images match modulo nonexecuting ELF section-header offset; collections both and textQBE differ.",
+    "Native semantic/state proof is recorded separately; no goal confirmation."
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "command": [
+    "mv",
+    "experiments/new-core-s4-values-20261006/final-performance-artifacts-v2",
+    "experiments/new-core-s4-values-20261006/final-performance-artifacts-incomplete-233"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 3220337,
+  "status": 0,
+  "elapsed_seconds": 0.005177574930712581
+}

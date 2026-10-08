@@ -98,15 +98,6 @@ public def test_managed_field_survives_an_element_write() -> bool:
     return cells[0].name == "live 199" and cells[0].count == 199 and cells[1].name == "second"
 
 
-public def test_element_write_inside_an_arena_scope() -> bool:
-    answer = 0
-    with arena():
-        cells = [Cell(name="a", count=1), Cell(name="b", count=2)]
-        cells[1] = Cell(name="c", count=9)
-        answer = cells[1].count + len(cells)
-    return answer == 11
-
-
 public def test_field_read_through_an_element_sees_the_current_value() -> bool:
     cells = [Cell(name="a", count=1), Cell(name="b", count=2)]
     before = count_at(cells, 1)

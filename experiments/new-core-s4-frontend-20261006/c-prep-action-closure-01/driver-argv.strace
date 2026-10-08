@@ -1,0 +1,298 @@
+3588152 execve("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", ["/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", "cc", "-c", "-O0", "-target", "x86_64-linux-gnu.2.31", "-march=native", "-mllvm", "-x86-experimental-pref-innermost-loop-alignment=6", "-Wno-override-module", "-###", "-o", "fresh.o", "canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll"], 0x7ffca15b6ea8 /* 40 vars */) = 0
+3588152 mmap(NULL, 263616, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d72c000
+3588152 mmap(NULL, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d70d000
+3588152 mmap(0x788a0d6f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d6f1000
+3588152 mmap(0x788a0d6e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d6e1000
+3588152 mmap(0x788a0d6d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d6d1000
+3588152 mmap(0x788a0d6c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d6c1000
+3588152 mmap(0x788a0d6b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d6b1000
+3588152 mmap(0x788a0d6a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d6a1000
+3588152 mmap(0x788a0d691000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d691000
+3588152 mmap(0x788a0d681000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d681000
+3588152 mmap(0x788a0d671000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d671000
+3588152 mmap(0x788a0d661000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d661000
+3588152 mmap(0x788a0d651000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d651000
+3588152 mmap(0x788a0d641000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d641000
+3588152 mmap(0x788a0d631000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d631000
+3588152 mmap(0x788a0d621000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d621000
+3588152 mmap(0x788a0d611000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d611000
+3588152 mmap(0x788a0d601000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d601000
+3588152 mmap(0x788a0d5f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d5f1000
+3588152 mmap(0x788a0d5e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d5e1000
+3588152 mmap(0x788a0d5d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d5d1000
+3588152 mmap(0x788a0d5c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d5c1000
+3588152 mmap(0x788a0d5b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d5b1000
+3588152 mmap(0x788a0d5a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d5a1000
+3588152 mmap(0x788a0d591000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d591000
+3588152 mmap(0x788a0d581000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d581000
+3588152 mmap(0x788a0d571000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d571000
+3588152 mmap(0x788a0d561000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d561000
+3588152 mmap(0x788a0d551000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d551000
+3588152 mmap(0x788a0d553000, 53248, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d553000
+3588152 mmap(0x788a0d531000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d531000
+3588152 mmap(0x788a0d521000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d521000
+3588152 mmap(0x788a0d511000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d511000
+3588152 mmap(0x788a0d501000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d501000
+3588152 mmap(0x788a0d4f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d4f1000
+3588152 mmap(0x788a0d4e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d4e1000
+3588152 mmap(0x788a0d4d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d4d1000
+3588152 mmap(0x788a0d4c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d4c1000
+3588152 mmap(0x788a0d4b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d4b1000
+3588152 mmap(0x788a0d4a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d4a1000
+3588152 mmap(0x788a0d491000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d491000
+3588152 mmap(0x788a0d481000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d481000
+3588152 mmap(0x788a0d477000, 102400, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d477000
+3588152 mmap(0x788a0d451000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d451000
+3588152 mmap(0x788a0d441000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d441000
+3588152 mmap(0x788a0d431000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d431000
+3588152 mmap(0x788a0d421000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d421000
+3588152 mmap(0x788a0d411000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d411000
+3588152 mmap(0x788a0d401000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d401000
+3588152 mmap(0x788a0d3f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d3f1000
+3588152 mmap(0x788a0d3e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d3e1000
+3588152 mmap(0x788a0d3d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d3d1000
+3588152 mmap(0x788a0d3c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d3c1000
+3588152 mmap(0x788a0d3b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d3b1000
+3588152 mmap(0x788a0d3a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d3a1000
+3588152 mmap(0x788a0d391000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d391000
+3588152 mmap(0x788a0d381000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d381000
+3588152 mmap(0x788a0d371000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d371000
+3588152 mmap(0x788a0d361000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d361000
+3588152 mmap(0x788a0d351000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d351000
+3588152 mmap(0x788a0d341000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d341000
+3588152 mmap(0x788a0d331000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d331000
+3588152 readlinkat(AT_FDCWD</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv>, "/proc/self/exe", "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", 4096) = 60
+3588152 getcwd("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv", 4096) = 133
+3588152 openat(AT_FDCWD</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv>, "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = 3</home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b>
+3588152 openat(3</home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b>, "lib/zig", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 openat(3</home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b>, "lib", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = 4</home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib>
+3588152 openat(4</home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib>, "std/std.zig", O_RDONLY|O_NOCTTY|O_LARGEFILE|O_CLOEXEC) = 5</home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/std.zig>
+3588152 close(5</home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/std.zig>) = 0
+3588152 close(3</home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b>) = 0
+3588152 openat(AT_FDCWD</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv>, "zig-global", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 mkdirat(AT_FDCWD</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv>, "zig-global", 0777) = 0
+3588152 openat(AT_FDCWD</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv>, "zig-global", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = 3</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv/zig-global>
+3588152 openat(AT_FDCWD</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv>, "zig-local", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 mkdirat(AT_FDCWD</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv>, "zig-local", 0777) = 0
+3588152 openat(AT_FDCWD</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv>, "zig-local", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = 5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv/zig-local>
+3588152 openat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv/zig-local>, "h", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 mkdirat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv/zig-local>, "h", 0777) = 0
+3588152 openat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv/zig-local>, "h", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = 6</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv/zig-local/h>
+3588152 mmap(0x788a0d321000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d321000
+3588152 openat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv/zig-local>, "tmp/e79339930fab1e03", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 mkdirat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv/zig-local>, "tmp/e79339930fab1e03", 0777) = -1 ENOENT (No such file or directory)
+3588152 mkdirat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv/zig-local>, "tmp", 0777) = 0
+3588152 mkdirat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv/zig-local>, "tmp/e79339930fab1e03", 0777) = 0
+3588152 openat(5</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv/zig-local>, "tmp/e79339930fab1e03", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_PATH|O_DIRECTORY) = 7</home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv/zig-local/tmp/e79339930fab1e03>
+3588152 mmap(0x788a0d325000, 45056, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a0d325000
+3588152 mmap(NULL, 63184896, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a096e3000
+3588152 mmap(NULL, 63184896, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a05aa1000
+3588154 mmap(NULL, 63184896, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a01e5f000
+3588155 mmap(0x788a0d301000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a01e40000
+3588155 mmap(0x788a01e21000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x788a01e21000
+3588155 execve("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", ["/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", "clang", "canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll", "--no-default-config", "-target", "x86_64-unknown-linux5.10.0-gnu2.31.0", "-fno-PIE", "-fPIC", "-gdwarf-4", "-gdwarf32", "-fno-lto", "-fhosted", "-nostdinc", "-fsanitize=undefined", "-fno-sanitize=vptr", "-fno-sanitize=function", "-O0", "-mred-zone", "-fno-omit-frame-pointer", "-fstack-protector-strong", "--param", "ssp-buffer-size=4", "-fbuiltin", "-fno-function-sections", "-fno-data-sections", "-fasynchronous-unwind-tables", "-Xclang", "-target-cpu", "-Xclang", "alderlake", "-Xclang", "-target-feature", "-Xclang", "-16bit-mode", "-Xclang", "-target-feature", "-Xclang", "-32bit-mode", "-Xclang", "-target-feature", "-Xclang", "+64bit", "-Xclang", "-target-feature", "-Xclang", "+adx", "-Xclang", "-target-feature", "-Xclang", "+aes", "-Xclang", "-target-feature", "-Xclang", "+allow-light-256-bit", "-Xclang", "-target-feature", "-Xclang", "-amx-avx512", "-Xclang", "-target-feature", "-Xclang", "-amx-bf16", "-Xclang", "-target-feature", "-Xclang", "-amx-complex", "-Xclang", "-target-feature", "-Xclang", "-amx-fp16", "-Xclang", "-target-feature", "-Xclang", "-amx-fp8", "-Xclang", "-target-feature", "-Xclang", "-amx-int8", "-Xclang", "-target-feature", "-Xclang", "-amx-movrs", "-Xclang", "-target-feature", "-Xclang", "-amx-tf32", "-Xclang", "-target-feature", "-Xclang", "-amx-tile", "-Xclang", "-target-feature", "-Xclang", "+avx", "-Xclang", "-target-feature", "-Xclang", "-avx10.1", "-Xclang", "-target-feature", "-Xclang", "-avx10.2", "-Xclang", "-target-feature", "-Xclang", "+avx2", "-Xclang", "-target-feature", "-Xclang", "-avx512bf16", "-Xclang", "-target-feature", "-Xclang", "-avx512bitalg", "-Xclang", "-target-feature", "-Xclang", "-avx512bw", "-Xclang", "-target-feature", "-Xclang", "-avx512cd", "-Xclang", "-target-feature", "-Xclang", "-avx512dq", "-Xclang", "-target-feature", "-Xclang", "-avx512f", "-Xclang", "-target-feature", "-Xclang", "-avx512fp16", "-Xclang", "-target-feature", "-Xclang", "-avx512ifma", "-Xclang", "-target-feature", "-Xclang", "-avx512vbmi", "-Xclang", "-target-feature", "-Xclang", "-avx512vbmi2", "-Xclang", "-target-feature", "-Xclang", "-avx512vl", "-Xclang", "-target-feature", "-Xclang", "-avx512vnni", "-Xclang", "-target-feature", "-Xclang", "-avx512vp2intersect", "-Xclang", "-target-feature", "-Xclang", "-avx512vpopcntdq", "-Xclang", "-target-feature", "-Xclang", "-avxifma", "-Xclang", "-target-feature", "-Xclang", "-avxneconvert", "-Xclang", "-target-feature", "-Xclang", "+avxvnni", "-Xclang", "-target-feature", "-Xclang", "-avxvnniint16", "-Xclang", "-target-feature", "-Xclang", "-avxvnniint8", "-Xclang", "-target-feature", "-Xclang", "+bmi", "-Xclang", "-target-feature", "-Xclang", "+bmi2", "-Xclang", "-target-feature", "-Xclang", "-branch-hint", "-Xclang", "-target-feature", "-Xclang", "-branchfusion", "-Xclang", "-target-feature", "-Xclang", "-ccmp", "-Xclang", "-target-feature", "-Xclang", "-cf", "-Xclang", "-target-feature", "-Xclang", "-cldemote", "-Xclang", "-target-feature", "-Xclang", "+clflushopt", "-Xclang", "-target-feature", "-Xclang", "+clwb", "-Xclang", "-target-feature", "-Xclang", "-clzero", "-Xclang", "-target-feature", "-Xclang", "+cmov", "-Xclang", "-target-feature", "-Xclang", "-cmpccxadd", "-Xclang", "-target-feature", "-Xclang", "+crc32", "-Xclang", "-target-feature", "-Xclang", "+cx16", "-Xclang", "-target-feature", "-Xclang", "+cx8", "-Xclang", "-target-feature", "-Xclang", "-egpr", "-Xclang", "-target-feature", "-Xclang", "-enqcmd", "-Xclang", "-target-feature", "-Xclang", "-ermsb", "-Xclang", "-target-feature", "-Xclang", "+f16c", "-Xclang", "-target-feature", "-Xclang", "-false-deps-getmant", "-Xclang", "-target-feature", "-Xclang", "-false-deps-lzcnt-tzcnt", "-Xclang", "-target-feature", "-Xclang", "-false-deps-mulc", "-Xclang", "-target-feature", "-Xclang", "-false-deps-mullq", "-Xclang", "-target-feature", "-Xclang", "+false-deps-perm", "-Xclang", "-target-feature", "-Xclang", "-false-deps-popcnt", "-Xclang", "-target-feature", "-Xclang", "-false-deps-range", "-Xclang", "-target-feature", "-Xclang", "-fast-11bytenop", "-Xclang", "-target-feature", "-Xclang", "+fast-15bytenop", "-Xclang", "-target-feature", "-Xclang", "-fast-7bytenop", "-Xclang", "-target-feature", "-Xclang", "-fast-bextr", "-Xclang", "-target-feature", "-Xclang", "-fast-dpwssd", "-Xclang", "-target-feature", "-Xclang", "+fast-gather", "-Xclang", "-target-feature", "-Xclang", "-fast-hops", "-Xclang", "-target-feature", "-Xclang", "-fast-imm16", "-Xclang", "-target-feature", "-Xclang", "-fast-lzcnt", "-Xclang", "-target-feature", "-Xclang", "-fast-movbe", "-Xclang", "-target-feature", "-Xclang", "+fast-scalar-fsqrt", "-Xclang", "-target-feature", "-Xclang", "-fast-scalar-shift-masks", "-Xclang", "-target-feature", "-Xclang", "+fast-shld-rotate", "-Xclang", "-target-feature", "-Xclang", "+fast-variable-crosslane-shuffle", "-Xclang", "-target-feature", "-Xclang", "+fast-variable-perlane-shuffle", "-Xclang", "-target-feature", "-Xclang", "+fast-vector-fsqrt", "-Xclang", "-target-feature", "-Xclang", "-fast-vector-shift-masks", "-Xclang", "-target-feature", "-Xclang", "-faster-shift-than-shuffle", "-Xclang", "-target-feature", "-Xclang", "+fma", "-Xclang", "-target-feature", "-Xclang", "-fma4", "-Xclang", "-target-feature", "-Xclang", "+fsgsbase", "-Xclang", "-target-feature", "-Xclang", "-fsrm", "-Xclang", "-target-feature", "-Xclang", "+fxsr", "-Xclang", "-target-feature", "-Xclang", "+gfni", "-Xclang", "-target-feature", "-Xclang", "-harden-sls-ijmp", "-Xclang", "-target-feature", "-Xclang", "-harden-sls-ret", "-Xclang", "-target-feature", "-Xclang", "+hreset", "-Xclang", "-target-feature", "-Xclang", "-idivl-to-divb", "-Xclang", "-target-feature", "-Xclang", "+idivq-to-divl", "-Xclang", "-target-feature", "-Xclang", "-inline-asm-use-gpr32", "-Xclang", "-target-feature", "-Xclang", "+invpcid", "-Xclang", "-target-feature", "-Xclang", "+kl", "-Xclang", "-target-feature", "-Xclang", "-lea-sp", "-Xclang", "-target-feature", "-Xclang", "-lea-uses-ag", "-Xclang", "-target-feature", "-Xclang", "-lvi-cfi", "-Xclang", "-target-feature", "-Xclang", "-lvi-load-hardening", "-Xclang", "-target-feature", "-Xclang", "-lwp", "-Xclang", "-target-feature", "-Xclang", "+lzcnt", "-Xclang", "-target-feature", "-Xclang", "+macrofusion", "-Xclang", "-target-feature", "-Xclang", "+mmx", "-Xclang", "-target-feature", "-Xclang", "+movbe", "-Xclang", "-target-feature", "-Xclang", "+movdir64b", "-Xclang", "-target-feature", "-Xclang", "+movdiri", "-Xclang", "-target-feature", "-Xclang", "-movrs", "-Xclang", "-target-feature", "-Xclang", "-mwaitx", "-Xclang", "-target-feature", "-Xclang", "-ndd", "-Xclang", "-target-feature", "-Xclang", "-nf", "-Xclang", "-target-feature", "-Xclang", "-no-bypass-delay", "-Xclang", "-target-feature", "-Xclang", "+no-bypass-delay-blend", "-Xclang", "-target-feature", "-Xclang", "+no-bypass-delay-mov", "-Xclang", "-target-feature", "-Xclang", "+no-bypass-delay-shuffle", "-Xclang", "-target-feature", "-Xclang", "+nopl", "-Xclang", "-target-feature", "-Xclang", "-pad-short-functions", "-Xclang", "-target-feature", "-Xclang", "+pclmul", "-Xclang", "-target-feature", "-Xclang", "-pconfig", "-Xclang", "-target-feature", "-Xclang", "+pku", "-Xclang", "-target-feature", "-Xclang", "+popcnt", "-Xclang", "-target-feature", "-Xclang", "-ppx", "-Xclang", "-target-feature", "-Xclang", "-prefer-128-bit", "-Xclang", "-target-feature", "-Xclang", "-prefer-256-bit", "-Xclang", "-target-feature", "-Xclang", "-prefer-legacy-setcc", "-Xclang", "-target-feature", "-Xclang", "-prefer-mask-registers", "-Xclang", "-target-feature", "-Xclang", "+prefer-movmsk-over-vtest", "-Xclang", "-target-feature", "-Xclang", "-prefer-no-gather", "-Xclang", "-target-feature", "-Xclang", "-prefer-no-scatter", "-Xclang", "-target-feature", "-Xclang", "-prefetchi", "-Xclang", "-target-feature", "-Xclang", "+prfchw", "-Xclang", "-target-feature", "-Xclang", "+ptwrite", "-Xclang", "-target-feature", "-Xclang", "-push2pop2", "-Xclang", "-target-feature", "-Xclang", "-raoint", "-Xclang", "-target-feature", "-Xclang", "+rdpid", "-Xclang", "-target-feature", "-Xclang", "-rdpru", "-Xclang", "-target-feature", "-Xclang", "+rdrnd", "-Xclang", "-target-feature", "-Xclang", "+rdseed", "-Xclang", "-target-feature", "-Xclang", "-retpoline", "-Xclang", "-target-feature", "-Xclang", "-retpoline-external-thunk", "-Xclang", "-target-feature", "-Xclang", "-retpoline-indirect-branches", "-Xclang", "-target-feature", "-Xclang", "-retpoline-indirect-calls", "-Xclang", "-target-feature", "-Xclang", "-rtm", "-Xclang", "-target-feature", "-Xclang", "+sahf", "-Xclang", "-target-feature", "-Xclang", "-sbb-dep-breaking", "-Xclang", "-target-feature", "-Xclang", "+serialize", "-Xclang", "-target-feature", "-Xclang", "-seses", "-Xclang", "-target-feature", "-Xclang", "-sgx", "-Xclang", "-target-feature", "-Xclang", "+sha", "-Xclang", "-target-feature", "-Xclang", "-sha512", "-Xclang", "-target-feature", "-Xclang", "+shstk", "-Xclang", "-target-feature", "-Xclang", "+slow-3ops-lea", "-Xclang", "-target-feature", "-Xclang", "-slow-incdec", "-Xclang", "-target-feature", "-Xclang", "-slow-lea", "-Xclang", "-target-feature", "-Xclang", "-slow-pmaddwd", "-Xclang", "-target-feature", "-Xclang", "-slow-pmulld", "-Xclang", "-target-feature", "-Xclang", "+slow-pmullq", "-Xclang", "-target-feature", "-Xclang", "-slow-shld", "-Xclang", "-target-feature", "-Xclang", "-slow-two-mem-ops", "-Xclang", "-target-feature", "-Xclang", "-slow-unaligned-mem-16", "-Xclang", "-target-feature", "-Xclang", "-slow-unaligned-mem-32", "-Xclang", "-target-feature", "-Xclang", "-sm3", "-Xclang", "-target-feature", "-Xclang", "-sm4", "-Xclang", "-target-feature", "-Xclang", "+sse", "-Xclang", "-target-feature", "-Xclang", "+sse2", "-Xclang", "-target-feature", "-Xclang", "+sse3", "-Xclang", "-target-feature", "-Xclang", "+sse4.1", "-Xclang", "-target-feature", "-Xclang", "+sse4.2", "-Xclang", "-target-feature", "-Xclang", "-sse4a", "-Xclang", "-target-feature", "-Xclang", "-sse-unaligned-mem", "-Xclang", "-target-feature", "-Xclang", "+ssse3", "-Xclang", "-target-feature", "-Xclang", "-tagged-globals", "-Xclang", "-target-feature", "-Xclang", "-tbm", "-Xclang", "-target-feature", "-Xclang", "-tsxldtrk", "-Xclang", "-target-feature", "-Xclang", "+tuning-fast-imm-vector-shift", "-Xclang", "-target-feature", "-Xclang", "-uintr", "-Xclang", "-target-feature", "-Xclang", "-use-glm-div-sqrt-costs", "-Xclang", "-target-feature", "-Xclang", "-use-slm-arith-costs", "-Xclang", "-target-feature", "-Xclang", "-usermsr", "-Xclang", "-target-feature", "-Xclang", "+vaes", "-Xclang", "-target-feature", "-Xclang", "+vpclmulqdq", "-Xclang", "-target-feature", "-Xclang", "+vzeroupper", "-Xclang", "-target-feature", "-Xclang", "+waitpkg", "-Xclang", "-target-feature", "-Xclang", "-wbnoinvd", "-Xclang", "-target-feature", "-Xclang", "+widekl", "-Xclang", "-target-feature", "-Xclang", "+x87", "-Xclang", "-target-feature", "-Xclang", "-xop", "-Xclang", "-target-feature", "-Xclang", "+xsave", "-Xclang", "-target-feature", "-Xclang", "+xsavec", "-Xclang", "-target-feature", "-Xclang", "+xsaveopt", "-Xclang", "-target-feature", "-Xclang", "+xsaves", "-Xclang", "-target-feature", "-Xclang", "-zu", "-mllvm", "-x86-experimental-pref-innermost-loop-alignment=6", "-Wno-override-module", "-###", "-c", "-o", "fresh.o"], 0x788a01e356d0 /* 40 vars */ <unfinished ...>
+3588154 +++ exited with 0 +++
+3588153 +++ exited with 0 +++
+3588152 +++ superseded by execve in pid 3588155 +++
+3588152 <... execve resumed>)           = 0
+3588152 mmap(NULL, 263616, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae2174e000
+3588152 mmap(NULL, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae2172f000
+3588152 mmap(0x71ae21711000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21711000
+3588152 mmap(0x71ae21701000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21701000
+3588152 mmap(0x71ae216f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae216f1000
+3588152 mmap(0x71ae216e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae216e1000
+3588152 mmap(0x71ae216d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae216d1000
+3588152 mmap(0x71ae216c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae216c1000
+3588152 mmap(0x71ae216b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae216b1000
+3588152 mmap(0x71ae216a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae216a1000
+3588152 mmap(0x71ae21691000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21691000
+3588152 mmap(0x71ae21681000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21681000
+3588152 mmap(0x71ae21671000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21671000
+3588152 mmap(0x71ae21661000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21661000
+3588152 mmap(0x71ae21651000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21651000
+3588152 mmap(0x71ae21641000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21641000
+3588152 mmap(0x71ae21631000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21631000
+3588152 mmap(0x71ae21621000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21621000
+3588152 mmap(0x71ae21611000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21611000
+3588152 mmap(0x71ae21601000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21601000
+3588152 mmap(0x71ae215f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae215f1000
+3588152 mmap(0x71ae215e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae215e1000
+3588152 mmap(0x71ae215d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae215d1000
+3588152 mmap(0x71ae215c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae215c1000
+3588152 mmap(0x71ae215b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae215b1000
+3588152 mmap(0x71ae215a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae215a1000
+3588152 mmap(0x71ae21591000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21591000
+3588152 mmap(0x71ae21581000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21581000
+3588152 mmap(0x71ae21571000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21571000
+3588152 mmap(0x71ae21573000, 53248, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21573000
+3588152 mmap(0x71ae21551000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21551000
+3588152 mmap(0x71ae21541000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21541000
+3588152 mmap(0x71ae21531000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21531000
+3588152 mmap(0x71ae21521000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21521000
+3588152 mmap(0x71ae21511000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21511000
+3588152 mmap(0x71ae21501000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21501000
+3588152 mmap(0x71ae214f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae214f1000
+3588152 mmap(0x71ae214e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae214e1000
+3588152 mmap(0x71ae214d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae214d1000
+3588152 mmap(0x71ae214c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae214c1000
+3588152 mmap(0x71ae214b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae214b1000
+3588152 mmap(0x71ae214a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae214a1000
+3588152 mmap(0x71ae21497000, 102400, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21497000
+3588152 mmap(0x71ae21471000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21471000
+3588152 mmap(0x71ae21461000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21461000
+3588152 mmap(0x71ae21451000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21451000
+3588152 mmap(0x71ae21441000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21441000
+3588152 mmap(0x71ae21431000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21431000
+3588152 mmap(0x71ae21421000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21421000
+3588152 mmap(0x71ae21411000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21411000
+3588152 mmap(0x71ae21401000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21401000
+3588152 mmap(0x71ae213f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae213f1000
+3588152 mmap(0x71ae213e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae213e1000
+3588152 mmap(0x71ae213d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae213d1000
+3588152 mmap(0x71ae213c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae213c1000
+3588152 mmap(0x71ae213b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae213b1000
+3588152 mmap(0x71ae213a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae213a1000
+3588152 mmap(0x71ae21391000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21391000
+3588152 mmap(0x71ae21381000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21381000
+3588152 mmap(0x71ae21371000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21371000
+3588152 mmap(0x71ae21361000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21361000
+3588152 mmap(0x71ae21351000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21351000
+3588152 mmap(0x71ae21341000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21341000
+3588152 mmap(0x71ae21331000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21331000
+3588152 mmap(0x71ae21321000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21321000
+3588152 mmap(0x71ae21311000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21311000
+3588152 mmap(0x71ae21301000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21301000
+3588152 mmap(0x71ae212f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae212f1000
+3588152 mmap(0x71ae212e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae212e1000
+3588152 mmap(0x71ae212d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae212d1000
+3588152 mmap(0x71ae212c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae212c1000
+3588152 mmap(0x71ae212b1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae212b1000
+3588152 mmap(0x71ae212a1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae212a1000
+3588152 mmap(0x71ae21291000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21291000
+3588152 mmap(0x71ae21281000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21281000
+3588152 mmap(0x71ae21271000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21271000
+3588152 mmap(0x71ae21261000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21261000
+3588152 mmap(0x71ae21251000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21251000
+3588152 access("/proc/self/exe", F_OK)  = 0
+3588152 readlink("/proc/self/exe", "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", 4096) = 60
+3588152 readlink("/home", 0x7ffd3879a080, 4041) = -1 EINVAL (Invalid argument)
+3588152 readlink("/home/epentland", 0x7ffd3879a080, 4051) = -1 EINVAL (Invalid argument)
+3588152 readlink("/home/epentland/zig-toolchains", 0x7ffd3879a080, 4066) = -1 EINVAL (Invalid argument)
+3588152 readlink("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b", 0x7ffd3879a080, 4092) = -1 EINVAL (Invalid argument)
+3588152 readlink("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig", 0x7ffd3879a080, 4096) = -1 EINVAL (Invalid argument)
+3588152 mmap(0x71ae21241000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21241000
+3588152 mmap(0x71ae21231000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21231000
+3588152 mmap(0x71ae21221000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21221000
+3588152 stat("/home/epentland/zig-toolchains/lib/clang/22/lib/x86_64-unknown-linux5.10.0-gnu2.31.0", 0x7ffd3879d000) = -1 ENOENT (No such file or directory)
+3588152 stat("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/../lib/x86_64-unknown-linux5.10.0-gnu2.31.0", 0x7ffd3879d000) = -1 ENOENT (No such file or directory)
+3588152 stat("/home/epentland/zig-toolchains/lib/clang/22/lib/x86_64-unknown-linux5.10.0-gnu2.31.0", 0x7ffd3879d420) = -1 ENOENT (No such file or directory)
+3588152 stat("/home/epentland/zig-toolchains/lib/clang/22/lib/linux5.10.0/x86_64", 0x7ffd3879d420) = -1 ENOENT (No such file or directory)
+3588152 stat("/opt/rh", 0x7ffd3879c9a0) = -1 ENOENT (No such file or directory)
+3588152 stat("/etc/env.d/gcc", 0x7ffd3879cec0) = -1 ENOENT (No such file or directory)
+3588152 stat("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/..", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+3588152 stat("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/../lib64", 0x7ffd3879cff0) = -1 ENOENT (No such file or directory)
+3588152 stat("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/../lib", 0x7ffd3879cff0) = -1 ENOENT (No such file or directory)
+3588152 stat("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/../libx32", 0x7ffd3879cff0) = -1 ENOENT (No such file or directory)
+3588152 stat("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/../lib", 0x7ffd3879cff0) = -1 ENOENT (No such file or directory)
+3588152 stat("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/../lib32", 0x7ffd3879cff0) = -1 ENOENT (No such file or directory)
+3588152 stat("/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/../lib", 0x7ffd3879cff0) = -1 ENOENT (No such file or directory)
+3588152 stat("/usr", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588152 stat("/usr/lib64", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588152 stat("/usr/lib64/gcc", 0x7ffd3879cff0) = -1 ENOENT (No such file or directory)
+3588152 stat("/usr/lib64/gcc-cross", 0x7ffd3879cff0) = -1 ENOENT (No such file or directory)
+3588152 stat("/usr/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588152 stat("/usr/lib/gcc", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588152 stat("/usr/lib/gcc-cross", 0x7ffd3879cff0) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/x86_64-unknown-linux5.10.0-gnu2.31.0", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/x86_64-linux5.10.0-gnu2.31.0", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/x86_64-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = 3</usr/lib/gcc/x86_64-linux-gnu>
+3588152 mmap(0x71ae21211000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21211000
+3588152 getdents64(3</usr/lib/gcc/x86_64-linux-gnu>, 0x71ae21220028 /* 3 entries */, 2048) = 72
+3588152 stat("/usr/lib/gcc/x86_64-linux-gnu/15/64/crtbegin.o", 0x7ffd3879be20) = -1 ENOENT (No such file or directory)
+3588152 stat("/usr/lib/gcc/x86_64-linux-gnu/15/sparcv8plus/crtbegin.o", 0x7ffd3879be20) = -1 ENOENT (No such file or directory)
+3588152 stat("/usr/lib/gcc/x86_64-linux-gnu/15/crtbegin.o", {st_mode=S_IFREG|0644, st_size=2440, ...}) = 0
+3588152 stat("/usr/lib/gcc/x86_64-linux-gnu/15/64/crtbegin.o", 0x7ffd3879bd60) = -1 ENOENT (No such file or directory)
+3588152 stat("/usr/lib/gcc/x86_64-linux-gnu/15/32/crtbegin.o", 0x7ffd3879bd60) = -1 ENOENT (No such file or directory)
+3588152 stat("/usr/lib/gcc/x86_64-linux-gnu/15/x32/crtbegin.o", 0x7ffd3879bd60) = -1 ENOENT (No such file or directory)
+3588152 stat("/usr/lib/gcc/x86_64-linux-gnu/15/sparcv8plus/crtbegin.o", 0x7ffd3879bd60) = -1 ENOENT (No such file or directory)
+3588152 getdents64(3</usr/lib/gcc/x86_64-linux-gnu>, 0x71ae21220028 /* 0 entries */, 2048) = 0
+3588152 close(3</usr/lib/gcc/x86_64-linux-gnu>) = 0
+3588152 stat("/usr/lib/gcc/x86_64-linux-gnu/15/../../../../x86_64-linux-gnu/include/c++/15", 0x7ffd3879c130) = -1 ENOENT (No such file or directory)
+3588152 stat("/usr/lib/gcc/x86_64-linux-gnu/15/../../../gcc/x86_64-linux-gnu/15/include/c++/", 0x7ffd3879c130) = -1 ENOENT (No such file or directory)
+3588152 stat("/usr/lib/gcc/x86_64-linux-gnu/15/../../../../include/c++/15", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588152 stat("/usr/lib/gcc/x86_64-linux-gnu/15/../../../../include/x86_64-linux-gnu/c++/15", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588152 open("/usr/lib/gcc/x86_64-unknown-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/x86_64-pc-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/x86_64-redhat-linux6E", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/x86_64-redhat-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/x86_64-suse-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/x86_64-manbo-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/x86_64-slackware-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/x86_64-unknown-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/x86_64-amazon-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 stat("/usr/libx32", 0x7ffd3879cff0) = -1 ENOENT (No such file or directory)
+3588152 stat("/usr/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588152 stat("/usr/lib/gcc", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588152 stat("/usr/lib/gcc-cross", 0x7ffd3879cff0) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i386-linux5.10.0-gnu2.31.0", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/x86_64-linux-gnux32", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/x86_64-pc-linux-gnux32", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i586-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i686-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i686-pc-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i386-redhat-linux6E", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i686-redhat-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i386-redhat-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i586-suse-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i686-montavista-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i386-unknown-linux5.10.0-gnu2.31.0", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 stat("/usr/lib32", 0x7ffd3879cff0) = -1 ENOENT (No such file or directory)
+3588152 stat("/usr/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588152 stat("/usr/lib/gcc", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588152 stat("/usr/lib/gcc-cross", 0x7ffd3879cff0) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i386-linux5.10.0-gnu2.31.0", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/x86_64-linux-gnux32", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/x86_64-pc-linux-gnux32", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i586-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i686-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i686-pc-linux-gnu", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i386-redhat-linux6E", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i686-redhat-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i386-redhat-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i586-suse-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i686-montavista-linux", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 open("/usr/lib/gcc/i386-unknown-linux5.10.0-gnu2.31.0", O_RDONLY|O_LARGEFILE|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+3588152 mmap(0x71ae21201000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae21201000
+3588152 open("/etc/os-release", O_RDONLY|O_LARGEFILE|O_CLOEXEC) = 3</usr/lib/os-release>
+3588152 access("/proc/self/fd", R_OK)   = 0
+3588152 readlink("/proc/self/fd/3", "/usr/lib/os-release", 4096) = 19
+3588152 pread64(3</usr/lib/os-release>, "PRETTY_NAME=\"Ubuntu 26.04 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"26.04\"\nVERSION=\"26.04 (Resolute Raccoon)\"\nVERSION_CODENAME=resolute\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=resolute\nLOGO=ubuntu-logo\n", 402, 0) = 402
+3588152 close(3</usr/lib/os-release>)   = 0
+3588152 open("/etc/lsb-release", O_RDONLY|O_LARGEFILE|O_CLOEXEC) = 3</etc/lsb-release>
+3588152 readlink("/proc/self/fd/3", "/etc/lsb-release", 4096) = 16
+3588152 pread64(3</etc/lsb-release>, "DISTRIB_ID=Ubuntu\nDISTRIB_RELEASE=26.04\nDISTRIB_CODENAME=resolute\nDISTRIB_DESCRIPTION=\"Ubuntu 26.04 LTS\"\n", 105, 0) = 105
+3588152 close(3</etc/lsb-release>)      = 0
+3588152 stat("/usr/lib/gcc/x86_64-linux-gnu/15", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588152 stat("/usr/lib/gcc/x86_64-linux-gnu/15/../lib64", 0x7ffd3879d4b0) = -1 ENOENT (No such file or directory)
+3588152 stat("/usr/lib/gcc/x86_64-linux-gnu/15/../../../../x86_64-linux-gnu/lib/../lib64", 0x7ffd3879d4b0) = -1 ENOENT (No such file or directory)
+3588152 stat("/usr/lib/gcc/x86_64-linux-gnu/15/../../../../lib64", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588152 stat("/lib/x86_64-linux-gnu", {st_mode=S_IFDIR|0755, st_size=61440, ...}) = 0
+3588152 stat("/lib/../lib64", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588152 stat("/usr/lib/x86_64-linux-gnu", {st_mode=S_IFDIR|0755, st_size=61440, ...}) = 0
+3588152 stat("/usr/lib64", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588152 stat("/usr/lib/gcc/x86_64-linux-gnu/15/../../../../x86_64-linux-gnu/lib", 0x7ffd3879d500) = -1 ENOENT (No such file or directory)
+3588152 stat("/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588152 stat("/usr/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+3588152 mmap(0x71ae211f1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae211f1000
+3588152 stat("canonical-1c40b584bc71793ebd6e8a1d597b03c65677dd33857bed2370293efed1363e48.ll", {st_mode=S_IFREG|0444, st_size=5729, ...}) = 0
+3588152 mmap(0x71ae211e1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae211e1000
+3588152 mmap(0x71ae211d1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae211d1000
+3588152 mmap(0x71ae211c1000, 126976, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x71ae211c1000
+3588152 stat("/home/epentland/zig-toolchains/lib/clang/22/share/ubsan_ignorelist.txt", 0x7ffd3879c0f0) = -1 ENOENT (No such file or directory)
+3588152 stat("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+3588152 stat(".", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+3588152 getcwd("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv", 4096) = 133
+3588152 stat("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+3588152 stat(".", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+3588152 getcwd("/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-frontend/.mylang-cache/s4-frontend/c-prep-action-closure-01/driver-argv", 4096) = 133
+3588152 +++ exited with 0 +++

@@ -1,0 +1,102 @@
+{
+  "kind": "deterministic-gzip-archive-index",
+  "source_revision": "d14e26f4473d6c50f56751736ed8ef325adcaecd",
+  "records": [
+    {
+      "raw": "candidate-actual-main.ssa",
+      "raw_bytes": 689998,
+      "raw_sha256": "9fa0d9b54b096eabe01b8433b142081b3e6114a5818d749d6e1c301be2de555e",
+      "gzip": "candidate-actual-main.ssa.gz",
+      "gzip_bytes": 135271,
+      "gzip_sha256": "7815775ad48d9877dde3de741886e0384d4af2045800a27ecb57eae6d8d8bba7"
+    },
+    {
+      "raw": "candidate-translator-input.ll",
+      "raw_bytes": 3974188,
+      "raw_sha256": "545e03c8068bfa0d3aef2f634e6c514c1bf46ceabf5eccc30f9b56c690198fde",
+      "gzip": "candidate-translator-input.ll.gz",
+      "gzip_bytes": 542734,
+      "gzip_sha256": "e12d3c99bdf0a72dc76dd0370904e0ef40d5c887272a3977998f7515298e18e0"
+    },
+    {
+      "raw": "candidate-translator-input.sigs.json",
+      "raw_bytes": 1179,
+      "raw_sha256": "9386f1ef600347875cf92d2fbcd337f93668da9ac701610c1042f389d9e8e4d3",
+      "gzip": "candidate-translator-input.sigs.json.gz",
+      "gzip_bytes": 459,
+      "gzip_sha256": "75ce664bb169513b841bf68fd0c7a2dd16c665be04b79046ad7e05ca35f5d3c3"
+    },
+    {
+      "raw": "candidate-translator-input.ssa",
+      "raw_bytes": 722164,
+      "raw_sha256": "c8f83275630a449e386dff175e09fc0fa1cc2c662d32ef0ad4918aae8661f6b9",
+      "gzip": "candidate-translator-input.ssa.gz",
+      "gzip_bytes": 140828,
+      "gzip_sha256": "9e922b185229e3c9cc461bc84e8f6326c730d51c4784982e9f49c7bdb7264321"
+    },
+    {
+      "raw": "compiler-build-receipt.json",
+      "raw_bytes": 656518,
+      "raw_sha256": "173bb253db5f9d86ef808d5052515a14d0ecb0df5f4322b9e4a00c59212ab4aa",
+      "gzip": "compiler-build-receipt.json.gz",
+      "gzip_bytes": 246154,
+      "gzip_sha256": "8f0182e9269b0757851d9076fe7a55150180a22a76db3c973f89dec1bbc52fe8"
+    },
+    {
+      "raw": "guest-build-qualification.json",
+      "raw_bytes": 39621,
+      "raw_sha256": "5fa4dd0e364a18e11aa213883eb277cc736e079209c1329d616a53d19c8eb2ee",
+      "gzip": "guest-build-qualification.json.gz",
+      "gzip_bytes": 2998,
+      "gzip_sha256": "55d8a05afa7eb67f4c7635f5660aba67ff4cb0dc6aa4c9a249b5ab48fd76272c"
+    },
+    {
+      "raw": "joins-matrix-receipt.json",
+      "raw_bytes": 89600,
+      "raw_sha256": "4cc3af6470baf38e49e43cb4b8c43a88607ce0241ce3ef29d482e0a2837d4712",
+      "gzip": "joins-matrix-receipt.json.gz",
+      "gzip_bytes": 5788,
+      "gzip_sha256": "5ca24c9d6583d721a4e7bf7f3f9c91dc92ac7851d84918e2eda5729cce32ce38"
+    },
+    {
+      "raw": "llvm-before-entry.s",
+      "raw_bytes": 307945,
+      "raw_sha256": "1a6d47230ade0f4d1a6465ebf2e8da1fd4ae49b4179a5a152ae44ca28bc080e6",
+      "gzip": "llvm-before-entry.s.gz",
+      "gzip_bytes": 44851,
+      "gzip_sha256": "1b7185aa5ae9fb7c08d13ba665c71a2d590fbd67b2e33496b85fc9c4530b202f"
+    },
+    {
+      "raw": "llvm-candidate-entry.s",
+      "raw_bytes": 377532,
+      "raw_sha256": "224ad2e2460796286002acbcda92e4f00b58d8fbd458932df896df233f397ece",
+      "gzip": "llvm-candidate-entry.s.gz",
+      "gzip_bytes": 53363,
+      "gzip_sha256": "c652453e959924277b0b44f601cab77f02bede7d4868ec086938b3ba71f216e8"
+    },
+    {
+      "raw": "qbe-before-entry.s",
+      "raw_bytes": 636465,
+      "raw_sha256": "9612799408c24caea01996c8b383b47b4dcc048f6d832a0db8bcd193d7f0f5e7",
+      "gzip": "qbe-before-entry.s.gz",
+      "gzip_bytes": 85896,
+      "gzip_sha256": "609e81bfd21334bd98da6ab979c8d5bace40fe563ad4acbc45f424d1ec293747"
+    },
+    {
+      "raw": "qbe-candidate-entry.s",
+      "raw_bytes": 842615,
+      "raw_sha256": "33477c15193d1afcd807ef7fb2ab3b75ecb96f5b0ba274f17f1bae908b23273c",
+      "gzip": "qbe-candidate-entry.s.gz",
+      "gzip_bytes": 114761,
+      "gzip_sha256": "ea38fbadb4bd8d116fcd8f1432a87a23715316cecf2abad63eec6e325cf820e5"
+    },
+    {
+      "raw": "regression-screen.json",
+      "raw_bytes": 506895,
+      "raw_sha256": "0068da7d5398253ed52fa0df3caf2bee90f6154e1a701388e1ed5264c7577d2d",
+      "gzip": "regression-screen.json.gz",
+      "gzip_bytes": 21766,
+      "gzip_sha256": "439727996a345de1d7a34e67d276ff0d0573d339c1ff8c55c4866db94012b6e0"
+    }
+  ]
+}

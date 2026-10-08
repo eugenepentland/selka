@@ -1,0 +1,104 @@
+test-units
++- run test 16 pass, 3 fail (19 total)
+guardian/test: test wall 0.37s; slowest over 50ms:
+guardian/test:   0.35s  mut_exclusive_test.test.receiver overlap rejects assignments and updates while keeping independent roots
+guardian/test: FAIL — 3 failed of 19
+guardian/test: RESULT {"passed":16,"failed":3,"skipped":0}
+error: 'mut_exclusive_test.test.receiver overlap rejects assignments and updates while keeping independent roots' failed:
+       guardian/test: 19 test(s) selected by filter: "mut collection ABI", "receiver overlap", "physical bytecode preserves" (+1 more) — 7 match by name, 12 unnamed test block(s) run regardless
+
+       ====== expected this output: =========
+       p[make(mut p)]␃
+
+       ======== instead found this: =========
+       p␃
+
+       ======================================
+       First difference occurs on line 1:
+       expected:
+       p[make(mut p)]
+        ^ ('\x5b')
+       found:
+       p
+        ^ (end of string)
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x1e95e85 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/mut_exclusive_test.zig:106:5: 0x1e963c3 in rejectsProgram (root_test.zig)
+           try t.expectEqualStrings(related, found.related);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/mut_exclusive_test.zig:96:5: 0x1e9ba91 in rejects__anon_130396 (root_test.zig)
+           return rejectsProgram(helpers ++ body, span, related, why);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/mut_exclusive_test.zig:266:5: 0x1e9bd33 in test.receiver overlap rejects assignments and updates while keeping independent roots (root_test.zig)
+           try rejects(main("    p = [1]\n    p[make(mut p)] = 9\n"), "mut p", "p[make(mut p)]", "own statement first");
+           ^
+error: 'mut_exclusive_test.test.receiver overlap covers enclosing records and nested constant paths' failed:
+       ====== expected this output: =========
+       E_MUTATION_OVERLAP␃
+
+       ======== instead found this: =========
+       accepted␃
+
+       ======================================
+       First difference occurs on line 1:
+       expected:
+       E_MUTATION_OVERLAP
+       ^ ('\x45')
+       found:
+       accepted
+       ^ ('\x61')
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x1e95e85 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/mut_exclusive_test.zig:104:5: 0x1e96235 in rejectsProgram (root_test.zig)
+           try t.expectEqualStrings("E_MUTATION_OVERLAP", found.code);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/mut_exclusive_test.zig:96:5: 0x1e9a8f1 in rejects__anon_130308 (root_test.zig)
+           return rejectsProgram(helpers ++ body, span, related, why);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/mut_exclusive_test.zig:277:5: 0x1e9b093 in test.receiver overlap covers enclosing records and nested constant paths (root_test.zig)
+           try rejects(main("    r = R([[1]], 0)\n    r.rows[0].append(make(mut r.rows[0]))\n"), "mut r.rows[0]", "r.rows[0]", "own statement first");
+           ^
+error: 'mut_exclusive_test.test.receiver overlap covers mapping and set updates keyword calls and function values' failed:
+       ====== expected this output: =========
+       E_MUTATION_OVERLAP␃
+
+       ======== instead found this: =========
+       accepted␃
+
+       ======================================
+       First difference occurs on line 1:
+       expected:
+       E_MUTATION_OVERLAP
+       ^ ('\x45')
+       found:
+       accepted
+       ^ ('\x61')
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x1e95e85 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/mut_exclusive_test.zig:104:5: 0x1e96235 in rejectsProgram (root_test.zig)
+           try t.expectEqualStrings("E_MUTATION_OVERLAP", found.code);
+           ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/src/mut_exclusive_test.zig:287:5: 0x1e96aa0 in test.receiver overlap covers mapping and set updates keyword calls and function values (root_test.zig)
+           try rejectsProgram(set ++ "def main() -> int:\n    flags = {1}\n    flags.add(select(mut flags))\n    return len(flags)\n", "mut flags", "flags", "own statement first");
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_QBE=/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-language/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/f6830f36154ddea5b5dfe4a3bd0d1aae/test "--guardian-filter=mut collection ABI" "--guardian-filter=receiver overlap" "--guardian-filter=physical bytecode preserves" "--guardian-filter=caller storage ABI" --cache-dir=./.zig-cache --seed=0xe2d97222 --listen=-
+
+Build Summary: 9/11 steps succeeded (1 failed); 16/19 tests passed (3 failed)
+test-units transitive failure
++- run test 16 pass, 3 fail (19 total)
+   +- compile test debug native success 1s MaxRSS:338M
+   |  +- run exe qbe-build-assets (qbe_build_assets) cached
+   |  |  +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:36M
+   |  +- options cached
+   |     +- compile exe qbe fast native cached 14ms MaxRSS:35M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang cached
+      +- compile exe mylang debug native cached 7ms MaxRSS:41M
+         +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+affected-compiler success
++- install generated to mylang (+1 more reused dependencies)
++- install generated to qbe (+1 more reused dependencies)

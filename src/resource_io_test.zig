@@ -202,9 +202,12 @@ test "source IO traps at every instruction boundary release or complete exactly 
     var box: Sandbox = undefined;
     try sandbox(&box);
     defer box.deinit();
-    var compilation = try language.Compilation.init(t.allocator, "budgets.my", reading_only);
-    defer compilation.deinit();
     var options = box.options();
+    // The unbounded run first, then one run per budget, all of one build and run
+    // as one batch (NEW-CORE-S5-UNITS-BATCH-1).
+    var programs: native.Batch = .init(t.allocator);
+    defer programs.deinit();
+    try programs.add("budgets.my", reading_only, options);
     // Eighty-odd steps carry this program past its last instruction, so every
     // budget below that cuts it at a different boundary. An owner released twice
     // would abort the process rather than return or trap cleanly. The exit status
@@ -212,11 +215,11 @@ test "source IO traps at every instruction boundary release or complete exactly 
     // trapped with a runtime `R_*` code.
     for (1..85) |budget| {
         options.max_steps = budget;
-        const outcome = try native.runWithOptions(&compilation, options);
-        try t.expect(!outcome.trapped() or std.mem.startsWith(u8, outcome.trap.code, "R_"));
+        try programs.again(0, options);
     }
-    options.max_steps = null;
-    try t.expectEqual(@as(i64, 3), (try native.runWithOptions(&compilation, options)).value);
+    const runs = try programs.run();
+    try t.expectEqual(@as(i64, 3), runs[0].value);
+    try native.expectEndedCleanly(runs[1..]);
 }
 test "resource requests reject payloads that are not fixed byte arrays" {
     try reject(declarations ++
@@ -228,37 +231,4 @@ test "resource requests reject payloads that are not fixed byte arrays" {
         \\        case Open.err(code):
         \\            return code
     , "E_RESOURCE_REQUEST");
-}
-test "emission rejects forged resource IO metadata before provider callbacks" {
-    var c = try language.Compilation.init(t.allocator, "invalid.my", declarations ++
-        \\def work(fs: Filesystem) -> Status:
-        \\    request: [10]u8 = [114u8, 58u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8]
-        \\    file = acquire_resource[Open](fs, request)?
-        \\    chunk = read_resource[Read](file)?
-        \\    match complete_resource[Finish](file):
-        \\        case Finish.ok(done):
-        \\            _ = done
-        \\        case Finish.err(failure):
-        \\            return Err(failure.code)
-        \\    return Ok(i64(chunk.length))
-        \\
-        \\
-        \\def main(fs: Filesystem) -> i64:
-        \\    match work(fs):
-        \\        case Status.ok(value):
-        \\            return value
-        \\        case Status.err(code):
-        \\            return -code
-    );
-    defer c.deinit();
-    try c.emit();
-    const instruction = try @import("instruction_test.zig").find(@constCast(c.code.?.functions[0].scope.instructions), .resource_io);
-    const original = instruction.*;
-    instruction.op.resource_io.owner = @fromBackingInt(std.math.maxInt(usize));
-    try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
-    instruction.* = original;
-    instruction.op.resource_io.output = .i64;
-    try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
-    instruction.* = original;
-    try language.bytecode.validate(t.allocator, c.code.?);
 }

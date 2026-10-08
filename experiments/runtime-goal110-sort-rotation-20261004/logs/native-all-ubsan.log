@@ -1,0 +1,32 @@
+native argv: 15 passed
+native rc semantic history: 42 passed
+native RC live holds: 12 tests passed
+native rc loans: 19 passed
+native RC fast paths: 27 tests passed
+native file cleanup: 44 passed
+native RC arena: 10 passed
+MYLANG_RC_COUNTS {"version":1,"runtime":"rc-v5-counting","saturated":false,"owner_acquire":1,"owner_release":2,"hold_acquire":1,"hold_release":1,"owner_limit":0,"hold_limit":0,"heap_allocate":1,"arena_allocate":0,"retire":1,"clone_shell":0,"unique_check":2}
+native RC image: all6 host allocation and6 budget admission failures preserve old state
+native RC image: 15 contract cases passed
+native RC contract: 25 tests passed
+native RC collections: 53 passed
+native RC registered release: 13 passed
+native heap tests passed
+native collections tests passed
+native sort rotation: 78 stable run cases, 7 unchanged scratch refusals passed
+native text and dictionary tests passed
+native structural equality tests passed
+native-memory: attempts=30 peak=98304 live=0
+native equality scratch allocation tests passed
+native byte string tests passed
+native region tests passed
+native print tests passed
+native text method tests passed
+native-python: 4000 reverse oracles, periodic linear bounds, indexed Unicode views, trim budget, repr arena/refusal passed
+native text index tests passed
+native scoped provider tests passed
+streaming tails: owner=4096 views=1016 copied=36
+streaming tails: owner=32768 views=8184 copied=36
+native text view tests passed
+cow-stats {"marks":297,"checks":1,"hoisted":0,"copies":34,"copied_bytes":2868,"pinned_copies":5,"pins":0}
+native cow tests passed

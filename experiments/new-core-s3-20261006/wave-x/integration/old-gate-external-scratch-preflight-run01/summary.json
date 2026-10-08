@@ -1,0 +1,10 @@
+{
+  "qualified": true,
+  "scope": "Python syntax, cache-isolation path and exact incremental_diff absolute-path selection condition",
+  "scratch_parent": "/var/tmp",
+  "scratch_private_and_unique": true,
+  "outside_zig_cache": true,
+  "no_mylang_cache_ancestor": true,
+  "native_failed_commands_still_require_recheck": true,
+  "compiler_and_test_sources_unchanged": true
+}

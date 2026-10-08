@@ -1,0 +1,14 @@
+{
+  "command": [
+    "python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-integration/experiments/new-core-s3-20261006/wave-x/integration/c-identity-retrospective-run01/proof.py"
+  ],
+  "cwd": "/",
+  "status": 0,
+  "stdout_matches_saved_summary_byte_for_byte": true,
+  "stdout_sha256": "657033d7bfc94de3d304a361c820682215531530d66390d31c6353894fe0d5e5",
+  "stderr": "",
+  "elapsed_seconds": 0.419022,
+  "requires_other_worktree_cache": false,
+  "requires_build": false
+}

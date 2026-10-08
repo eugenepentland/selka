@@ -1,0 +1,9 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/.mylang-cache/s4-emission/import-entry-first-01/integer-debug/old"
+  ],
+  "status": 1,
+  "stdout": "",
+  "stderr": "error: generic failure\n  leaf.my:3:12  leaf::origin[i64]  Err(...) created\n  app.my:5:17   app::main          ? propagated\n",
+  "seconds": 0.000985319958999753
+}

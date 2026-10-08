@@ -1,0 +1,4 @@
+#!/bin/sh
+# Stands in for the retired old core in S5's fuzz tools, which answer it from frozen references.
+echo "frozen-old-core: the old core is retired; S5's tools answer it from experiments/new-core-s5-20261007/references" >&2
+exit 70

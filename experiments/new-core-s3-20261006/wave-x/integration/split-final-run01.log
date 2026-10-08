@@ -1,0 +1,17 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (61s so far)
+build-slot: all 3 build slot(s) busy; waiting (121s so far)
+build-slot: all 3 build slot(s) busy; waiting (181s so far)
+build-slot: all 3 build slot(s) busy; waiting (241s so far)
+build-slot: all 3 build slot(s) busy; waiting (301s so far)
+build-slot: build slot 1 after 306s (all 3 build slot(s) busy)
+qualification progress: text: seen=25 elapsed=86.99s
+qualification progress: text: seen=50 elapsed=169.58s
+qualification progress: text: seen=75 elapsed=252.05s
+qualification progress: text: seen=100 elapsed=334.86s
+qualification progress: text: seen=125 elapsed=417.84s
+qualification progress: text: seen=150 elapsed=501.37s
+qualification progress: text: seen=175 elapsed=584.61s
+qualification progress: text: seen=200 elapsed=668.08s
+cases=200 compared=3000 mismatch=0 fact=0 old_rejected=0 new_refused=0
+qualification {"kind": "text", "qualified": true, "accepted": 200, "native_comparisons": 3000, "elapsed_seconds": 671.438558367081}

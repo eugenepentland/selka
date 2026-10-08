@@ -1,0 +1,57 @@
+
+### integer_math (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core --release | 8.699 | 9.067 | same |
+| new core release | 0.356 | 0.492 | same |
+| spike L2 (compute) | 0.376 | 0.641 | same |
+| C ladder v5 (plain C) | 1.731 | 1.975 | same |
+| C ladder v7 (hand AVX2) | 0.334 | 0.471 | same |
+| Rust | 5.705 | 6.182 | same |
+| Zig ReleaseSafe | 7.812 | 8.315 | same |
+
+### float_math (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core --release | 8.297 | 8.429 | same |
+| new core release | 1.567 | 1.706 | same |
+| spike L2 (compute) | 1.605 | 1.848 | same |
+| C ladder v5 (plain C) | 1.381 | 1.605 | same |
+| C ladder v8 (hand AVX2) | 1.284 | 1.471 | same |
+| Rust | 6.969 | 7.326 | same |
+| Zig ReleaseSafe | 6.513 | 7.031 | same |
+
+### call_direct (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core --release | 3.039 | 3.158 | same |
+| new core release | 0.301 | 0.316 | same |
+| spike L2 (compute) | 0.306 | 0.491 | same |
+| Rust | 2.015 | 2.935 | same |
+| Zig ReleaseSafe | 3.020 | 4.115 | same |
+
+### branch_predictable (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core --release | 4.028 | 4.151 | same |
+| new core release | 0.396 | 0.497 | same |
+| Rust | 3.197 | 3.252 | same |
+| Zig ReleaseSafe | 7.704 | 7.910 | same |
+
+### branch_mixed (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core --release | 4.122 | 4.129 | same |
+| new core release | 0.396 | 0.494 | same |
+| C ladder v8 (plain C) | 0.622 | 0.822 | same |
+| C ladder v7 (hand AVX2) | 0.303 | 0.455 | same |
+| Rust | 4.873 | 4.519 | same |
+| Zig ReleaseSafe | 9.276 | 9.056 | same |
+
+### binary_search (cycles/element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 x 4000 | 64 x 250000 | checksum |
+|---|---:|---:|---|
+| old core --release | 143.852 | 32.946 | same |
+| new core release | 87.462 | 30.372 | same |
+| Rust | 38.108 | 19.530 | same |
+| Zig ReleaseSafe | 137.153 | 27.906 | same |

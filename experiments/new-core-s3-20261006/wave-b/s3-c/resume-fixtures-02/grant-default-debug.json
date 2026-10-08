@@ -1,0 +1,8 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s3-capabilities/.mylang-cache/s3/resume-fixtures-02/grants-debug"
+  ],
+  "status": 1,
+  "stdout": "inside\noutside\nwritten\n",
+  "stderr": "c_grants.my:23:11: error[R_CAPABILITY]: native execution failed\n  in c_grants::main at c_grants.my:23:11\n"
+}

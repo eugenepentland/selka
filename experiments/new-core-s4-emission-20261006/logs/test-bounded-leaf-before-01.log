@@ -1,0 +1,24 @@
+test-core
++- run test 0 pass, 1 fail (1 total)
+(root_test.zig)
+    try std.testing.expect(std.mem.indexOf(u8, main_text, "call i64 bounded") == null);
+    ^
+guardian/test: test wall 0.23s; slowest over 50ms:
+guardian/test:   0.23s  vector_test.test.a bounded signed remainder leaf inlines for both unknown and constant negative inputs
+guardian/test: FAIL — 1 failed of 1
+guardian/test: RESULT {"passed":0,"failed":1,"skipped":0}
+error: 'vector_test.test.a bounded signed remainder leaf inlines for both unknown and constant negative inputs' failed:
+       guardian/test: 1 test(s) selected
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1378079 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-emission/src/core/vector_test.zig:45:5: 0x1378426 in test.a bounded signed remainder leaf inlines for both unknown and constant negative inputs 
+failed command: ./.zig-cache/o/a130ad9ea6de9a37544c9f963ab6b56b/test --cache-dir=./.zig-cache --seed=0x5db52cbb --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 0/1 tests passed (1 failed)
+test-core transitive failure
++- run test 0 pass, 1 fail (1 total)
+   +- compile test debug native success 1s MaxRSS:300M
+      +- options cached
+         +- compile exe mylang-core debug native cached 7ms MaxRSS:41M
+

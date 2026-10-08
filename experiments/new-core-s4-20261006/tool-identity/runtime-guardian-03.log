@@ -1,0 +1,13 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 10s (all 3 build slot(s) busy)
+guardian: run-all: whole-tree run — --full was requested
+guardian: file-size: 24 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 29 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10532 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 11 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (orphan-files)
+guardian: failures grouped by check (1):
+  orphan-files (1 finding)
+    - src/config_core_tool_platform.zig: src/config_core_tool_platform.zig
+      fix: import the file from a reachable module, or add it to [orphan_files] roots in guardian.toml.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

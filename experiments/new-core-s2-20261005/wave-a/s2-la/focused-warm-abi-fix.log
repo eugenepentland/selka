@@ -1,0 +1,66 @@
+test-units
++- run test
+   +- compile test debug native 1 errors
+src/mut_callback_abi.zig:73:23: error: expected type 'T!?typed.FunctionId', found 'T!typed.FunctionId'
+        return adapter(self.a, self.code, &self.functions, &self.wrappers, target);
+               ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/mut_callback_abi.zig:73:23: note: T = error{InternalError,OutOfMemory}
+src/mut_callback_abi.zig:73:23: note: error union payload 'typed.FunctionId' cannot cast into error union payload '?typed.FunctionId'
+src/typed.zig:13:24: note: enum declared here
+pub const FunctionId = enum(usize) { _ };
+                       ^~~~~~~~~~~~~~~~~
+src/mut_callback_abi.zig:70:63: note: function return type declared here
+    fn reserve(self: *Builder, target: typed.FunctionId) Error!?typed.FunctionId {
+                                                         ~~~~~^~~~~~~~~~~~~~~~~~
+referenced by:
+    adapt: src/mut_callback_abi.zig:44:48
+    test.mut callback adapter preserves mixed canonical ABI and owned return metadata: src/mut_callback_abi_test.zig:69:37
+    1 reference(s) hidden; use '-freference-trace=3' to see all references
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test -cflags -std=c11 -Wall -Wextra -Werror -UNDEBUG -DMYL_RC_CONTRACT_LIBRARY -DMYL_NATIVE_RC_COUNTING=1 -DMYL_RC_STATS_LIBRARY -DMYL_RC_COLLECTIONS_LIBRARY -DMYL_RC_CODECS_LIBRARY -DMYL_RC_HOST_LIBRARY -ffunction-sections -fdata-sections -- ./src/native_regions.c ./tests/native_rc_arena_test.c ./tests/native_rc_hold_test.c ./tests/native_rc_fast_test.c ./tests/native_rc_image_test.c ./tests/native_rc_loan_test.c ./tests/native_rc_history_test.c ./tests/native_rc_stats_test.c ./tests/native_rc_contract_test.c ./tests/native_rc_collections_test.c ./tests/native_rc_registered_release_test.c ./tests/native_rc_codecs_test.c ./tests/native_rc_host_test.c ./src/native_print.c ./src/qbe_runtime.c ./src/native_cow.c ./src/native_rc.c ./src/native_rc_stats.c ./src/native_rc_shapes.c ./src/native_rc_walk.c ./src/native_rc_scope.c ./src/native_rc_transfer.c ./src/native_rc_alloc.c ./src/native_rc_values.c ./src/native_heap.c ./src/native_arena.c ./src/native_collections.c ./src/native_text.c ./src/native_search.c ./src/native_trim.c ./src/native_repr.c ./src/native_text_methods.c ./src/native_dictionary.c ./src/native_equal.c ./src/native_bytes.c -cflags -std=c11 -Wall -Wextra -Werror -UNDEBUG -DMYL_FILE_CLEANUP_LIBRARY -ffunction-sections -fdata-sections -- ./tests/native_file_cleanup_test.c ./src/qbe_files.c ./src/qbe_resources.c ./src/qbe_stand_ins.c -cflags -std=c11 -Wall -Wextra -Werror -UNDEBUG -DMYL_NATIVE_RC=1 -DMYL_NATIVE_ARGV_LIBRARY -DMYL_RC_CONTRACT_LIBRARY -DMYL_NATIVE_RC_COUNTING=1 -DMYL_RC_STATS_LIBRARY -ffunction-sections -fdata-sections -- ./tests/qbe_runtime_rc_test.c ./tests/native_argv_test.c ./src/qbe_runtime_rc.c -ferror-tracing -ODebug -I src --dep runtime_contract --dep native_test_root=root --dep qbe_build_assets --dep memory_budget --dep user-doc/primer --dep user-doc/syntax --dep user-doc/statements --dep user-doc/records --dep user-doc/functions --dep user-doc/errors --dep user-doc/text --dep user-doc/bytes --dep user-doc/io --dep user-doc/effects --dep user-doc/contracts --dep user-doc/modules --dep user-doc/memory --dep user-doc/sets --dep user-doc/arenas --dep user-doc/stdlib --dep user-doc/tests --dep user-doc/build --dep user-doc/navigation --dep user-doc/context --dep user-doc/api --dep user-doc/fix --dep native_test_options -Mroot=src/root_test.zig -ODebug -Mruntime_contract=src/runtime_contract.zig -ODebug -Mqbe_build_assets=.zig-cache/o/c3d00c94fb837aa4d6cd7bfcb5bda411/qbe_build_assets/assets.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig -Muser-doc/primer=docs/primer.md -Muser-doc/syntax=docs/python-syntax.md -Muser-doc/statements=docs/statements.md -Muser-doc/records=docs/records-and-unions.md -Muser-doc/functions=docs/functions.md -Muser-doc/errors=docs/results-and-options.md -Muser-doc/text=docs/text.md -Muser-doc/bytes=docs/bytes.md -Muser-doc/io=docs/io.md -Muser-doc/effects=docs/effects.md -Muser-doc/contracts=docs/contracts.md -Muser-doc/modules=docs/modules.md -Muser-doc/memory=docs/managed-memory.md -Muser-doc/sets=docs/sets.md -Muser-doc/arenas=docs/arenas.md -Muser-doc/stdlib=docs/standard-library.md -Muser-doc/tests=docs/tooling/guest-tests.md -Muser-doc/build=docs/tooling/native-build.md -Muser-doc/navigation=docs/tooling/navigation.md -Muser-doc/context=docs/tooling/agent-context.md -Muser-doc/api=docs/tooling/interface-files.md -Muser-doc/fix=docs/tooling/fix.md -Mnative_test_options=.zig-cache/o/8835e04a30b80d4e873b856e11a5ee13/options.zig -lc --test-filter "mut collection ABI" --test-filter "caller storage ABI" --test-filter "physical bytecode preserves" --test-filter "semantic stand in facts" --test-filter "mut callback adapter" --test-filter "receiver overlap" --test-filter "CLI warm imported direct" --test-runner ../guardian-zig/src/test_runner.zig --gc-sections --cache-dir .zig-cache --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name test --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+affected-compiler
++- install generated to mylang
+   +- compile exe mylang debug native 1 errors
+src/mut_callback_abi.zig:73:23: error: expected type 'T!?typed.FunctionId', found 'T!typed.FunctionId'
+        return adapter(self.a, self.code, &self.functions, &self.wrappers, target);
+               ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/mut_callback_abi.zig:73:23: note: T = error{InternalError,OutOfMemory}
+src/mut_callback_abi.zig:73:23: note: error union payload 'typed.FunctionId' cannot cast into error union payload '?typed.FunctionId'
+src/typed.zig:13:24: note: enum declared here
+pub const FunctionId = enum(usize) { _ };
+                       ^~~~~~~~~~~~~~~~~
+src/mut_callback_abi.zig:70:63: note: function return type declared here
+    fn reserve(self: *Builder, target: typed.FunctionId) Error!?typed.FunctionId {
+                                                         ~~~~~^~~~~~~~~~~~~~~~~~
+referenced by:
+    adapt: src/mut_callback_abi.zig:44:48
+    compile: src/module_compile.zig:219:53
+    9 reference(s) hidden; use '-freference-trace=11' to see all references
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang --dep memory_budget --dep runtime_contract --dep native_test_root=root --dep user-doc/primer --dep user-doc/syntax --dep user-doc/statements --dep user-doc/records --dep user-doc/functions --dep user-doc/errors --dep user-doc/text --dep user-doc/bytes --dep user-doc/io --dep user-doc/effects --dep user-doc/contracts --dep user-doc/modules --dep user-doc/memory --dep user-doc/sets --dep user-doc/arenas --dep user-doc/stdlib --dep user-doc/tests --dep user-doc/build --dep user-doc/navigation --dep user-doc/context --dep user-doc/api --dep user-doc/fix --dep qbe_build_assets -Mroot=src/main.zig -ODebug --dep runtime_contract -Mmylang=src/compiler.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig -ODebug -Mruntime_contract=src/runtime_contract.zig -Muser-doc/primer=docs/primer.md -Muser-doc/syntax=docs/python-syntax.md -Muser-doc/statements=docs/statements.md -Muser-doc/records=docs/records-and-unions.md -Muser-doc/functions=docs/functions.md -Muser-doc/errors=docs/results-and-options.md -Muser-doc/text=docs/text.md -Muser-doc/bytes=docs/bytes.md -Muser-doc/io=docs/io.md -Muser-doc/effects=docs/effects.md -Muser-doc/contracts=docs/contracts.md -Muser-doc/modules=docs/modules.md -Muser-doc/memory=docs/managed-memory.md -Muser-doc/sets=docs/sets.md -Muser-doc/arenas=docs/arenas.md -Muser-doc/stdlib=docs/standard-library.md -Muser-doc/tests=docs/tooling/guest-tests.md -Muser-doc/build=docs/tooling/native-build.md -Muser-doc/navigation=docs/tooling/navigation.md -Muser-doc/context=docs/tooling/agent-context.md -Muser-doc/api=docs/tooling/interface-files.md -Muser-doc/fix=docs/tooling/fix.md -ODebug -Mqbe_build_assets=.zig-cache/o/c3d00c94fb837aa4d6cd7bfcb5bda411/qbe_build_assets/assets.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name mylang --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 5/15 steps succeeded (2 failed)
+test-cli transitive failure
++- run test transitive failure
+   +- compile test debug native transitive failure
+   |  +- options transitive failure
+   |     +- compile exe mylang debug native 1 errors
+   |     |  +- run exe qbe-build-assets (qbe_build_assets) success 59ms
+   |     |     +- compile exe qbe-build-assets debug native cached 7ms MaxRSS:37M
+   |     +- compile exe qbe fast native cached 15ms MaxRSS:36M
+   +- install generated to qbe cached
+   |  +- compile exe qbe fast native (reused)
+   +- install generated to mylang transitive failure
+      +- compile exe mylang debug native (+1 more reused dependencies)
+test-units transitive failure
++- run test transitive failure
+   +- compile test debug native 1 errors
+   |  +- run exe qbe-build-assets (qbe_build_assets) (+1 more reused dependencies)
+   |  +- options cached
+   |     +- compile exe qbe fast native (reused)
+   +- install generated to qbe (+1 more reused dependencies)
+   +- install generated to mylang (+1 more reused dependencies)
+affected-compiler transitive failure
++- install generated to mylang (+1 more reused dependencies)
++- install generated to qbe (+1 more reused dependencies)

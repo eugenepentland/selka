@@ -1,8 +1,8 @@
 # Managed byte strings
 
-`bytes` is an immutable, garbage-collected byte string with the same runtime
-shape as `str`: a stable identity traced by the nonmoving collector, copied by
-reference on assignment, and usable wherever a managed value is allowed. Where
+`bytes` is an immutable, reference-counted byte string with the same runtime
+shape as `str`: assignment shares its storage, which is invisible because it never
+changes, and it is usable wherever a managed value is allowed. Where
 `str` holds Unicode scalar values, `bytes` holds raw octets, so byte-oriented
 code no longer needs fixed `[N]u8` arrays or explicit
 `u8` literals.
@@ -216,7 +216,7 @@ def main() -> int:
 
 `bytes` is a prelude type name like `str`. It nests in `list[bytes]`,
 `dict[str, bytes]`, record fields, and `Option`/`Result` payloads, and every copy
-shares one traced object. Dictionary keys remain `int` or `str`.
+shares one reference-counted storage block. Dictionary keys remain `int` or `str`.
 
 ```mylang
 # doc: expect 6
@@ -253,9 +253,9 @@ function cannot construct them. Building octets in place is what the separate
 
 Like `str`, `bytes` is accepted in exported module signatures but is not an
 ordinary data type at wire boundaries. JSON encoding and decoding reject it with
-`E_JSON_CODEC` and `host def` signatures reject it with `E_HOST_SIGNATURE`. Every
-byte-string operation runs on the QBE native backend, over a native byte runtime
-that mirrors the managed text runtime with a one-byte stride.
+`E_JSON_CODEC`, and an `extern def` signature rejects it with
+`E_EXTERN_SIGNATURE`. Every byte-string operation is native code over the C
+runtime's byte routines, which mirror its text routines with a one-byte stride.
 
 ## Views and owned copies
 

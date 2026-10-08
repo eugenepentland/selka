@@ -1,0 +1,38 @@
+module v_domain
+
+
+domain Millimeters: u32:
+    private def raw(value: u32) -> Millimeters:
+        return wrap[Millimeters](value)
+
+    def from(value: u32) -> Millimeters:
+        if value > 1000u32:
+            return Millimeters.raw(1000u32)
+        return Millimeters.raw(value)
+
+    def number(value: Millimeters) -> u32:
+        return unwrap(value)
+
+    def add(a: Millimeters, b: Millimeters) -> Millimeters:
+        return Millimeters.from(unwrap(a) + unwrap(b))
+
+
+domain Flag: bool:
+    def from(value: bool) -> Flag:
+        return wrap[Flag](value)
+
+    def on(value: Flag) -> bool:
+        return unwrap(value)
+
+
+record Measurement:
+    distance: Millimeters
+    name: Flag
+
+
+def main(out: Stream) -> int:
+    sample = Measurement(distance=Millimeters.add(Millimeters.from(700u32), Millimeters.from(500u32)), name=Flag.from(True))
+    out.print(Millimeters.number(sample.distance), Flag.on(sample.name), sample.distance == Millimeters.from(1000u32))
+    rows = [Millimeters.from(3u32), Millimeters.from(4u32)]
+    out.print(Millimeters.number(rows[1]), len(rows), rows[0] != rows[1])
+    return 0

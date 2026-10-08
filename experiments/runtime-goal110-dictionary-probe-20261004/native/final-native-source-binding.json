@@ -1,0 +1,27 @@
+{
+  "schema": "mylang-dictionary-probe-final-native-source-binding-v1",
+  "created_utc": "2026-10-04T10:06:41.887250+00:00",
+  "native_receipt": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/goal110-dict-read-20261004/.mylang-cache/goal110-dict-probe/native-proof/receipt.json",
+    "sha256": "108d79a74ce172bccc0e64489288319d294b0817b8b0e12b8a13a7623788f05f"
+  },
+  "rows": [
+    {
+      "path": "src/native_dictionary.c",
+      "tested_sha256": "d271a3be88227a39c0dc749a41ac7877f9c50fce14dbe7aaa8b31f85b78d3e44",
+      "final_sha256": "287cb8f739126c9feb375e6a0dce9a0d23362656e0804724e0e47d1a9d9c56a1",
+      "difference": "Only requirement tag in C comments changes DICT-PROBE-FOUND-1 to existing PY-DICT-4",
+      "reconstructed_tested_sha256": "d271a3be88227a39c0dc749a41ac7877f9c50fce14dbe7aaa8b31f85b78d3e44"
+    },
+    {
+      "path": "tests/native_dictionary_probe_test.c",
+      "tested_sha256": "57a339b6d8e0631db1c3cb99f2d45ab5effc7f2efbae107aa174101571d62a81",
+      "final_sha256": "8dfd1cfaa65b0fb0dac40c686de206375732374f6fb535ca350c5705d8937839",
+      "difference": "Only requirement tag in C comments changes DICT-PROBE-FOUND-1 to existing PY-DICT-4",
+      "reconstructed_tested_sha256": "57a339b6d8e0631db1c3cb99f2d45ab5effc7f2efbae107aa174101571d62a81"
+    }
+  ],
+  "other_tested_compiler_runtime_headers_and_tests_exact": true,
+  "spec_change": "Documentation-only refinement of existing PY-DICT-4 instead of unverified new requirement tag",
+  "timing": false
+}

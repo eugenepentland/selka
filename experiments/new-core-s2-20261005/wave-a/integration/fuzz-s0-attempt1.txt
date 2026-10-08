@@ -1,0 +1,28 @@
+qualification progress: s0: seen=25 elapsed=204.71s
+qualification progress: s0: seen=50 elapsed=404.69s
+qualification progress: s0: seen=75 elapsed=655.38s
+qualification progress: s0: seen=100 elapsed=859.14s
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/fuzz_qualification.py", line 204, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/fuzz_qualification.py", line 187, in main
+    status = harness.main()
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s0-20261005/fuzz.py", line 220, in main
+    ok, err = build([args.mylang, "build", path, "-o", old, "--release", "--cache-dir", os.path.join(work, "cache-old")])
+              ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s0-20261005/fuzz.py", line 196, in build
+    done = subprocess.run(argv, capture_output=True, text=True)
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s2-integration/experiments/new-core-s2-20261005/wave-a/integration/fuzz_qualification.py", line 91, in run
+    result = self.original_run(argv, *arguments, **options)
+  File "/usr/lib/python3.14/subprocess.py", line 557, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1221, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 2153, in _communicate
+    ready = selector.select(timeout)
+  File "/usr/lib/python3.14/selectors.py", line 398, in select
+    fd_event_list = self._selector.poll(timeout)
+KeyboardInterrupt

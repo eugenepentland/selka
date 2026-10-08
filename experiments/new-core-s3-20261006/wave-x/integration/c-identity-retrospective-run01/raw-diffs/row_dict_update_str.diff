@@ -1,0 +1,548 @@
+--- before/row_dict_update_str.ll
++++ after/row_dict_update_str.ll
+@@ -121,8 +121,11 @@
+   call void @myl_core_free_block(ptr %block)
+   ret void
+ }
++declare void @myl_core_io_at(i32) nounwind
+ declare ptr @myl_core_str_from_i64(i64) nounwind
+ declare i64 @runtime_bench_now() nounwind
++declare void @myl_core_host_check(i64) nounwind
++declare i64 @myl_core_host_grant() nounwind
+ define internal fastcc { i1, i64 } @myl_core_digits8(ptr %data, i64 %n) alwaysinline nounwind {
+ entry:
+   %eight = icmp eq i64 %n, 8
+@@ -274,6 +277,11 @@
+   %parsed = call zeroext i1 @myl_core_str_parse_int(ptr %text, ptr %out)
+   ret i1 %parsed
+ }
++declare ptr @myl_core_buffer_new(i64) nounwind
++declare ptr @myl_core_buffer_copy(ptr) nounwind
++declare ptr @myl_core_buffer_push(ptr, i8 zeroext) nounwind
++declare ptr @myl_core_buffer_set(ptr, i64, i8 zeroext) nounwind
++declare ptr @myl_core_buffer_pop(ptr) nounwind
+ define internal i64 @"my.row_dict_update_str::main"(ptr %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000003 {
+ entry:
+   %slot = alloca i64, align 8
+@@ -638,19 +646,21 @@
+ b37:
+   %v180 = call ptr @myl_core_dict_new(i64 0, ptr @myl.dict.17)
+   %v182 = call ptr @myl_core_dict_new(i64 0, ptr @myl.dict.18)
+-  %v195 = call i64 @runtime_bench_now(), !dbg !1000035
++  call void @myl_core_io_at(i32 27)
++  call void @myl_core_host_check(i64 %p1), !dbg !1000035
++  %v196 = call i64 @runtime_bench_now(), !dbg !1000036
+   br label %b38
+ b38:
+-  %v206 = phi i64 [ 0, %b37 ], [ %v228, %b40 ]
+-  %v222 = phi i64 [ 0, %b37 ], [ %v225, %b40 ]
+-  %v208 = icmp slt i64 %v206, %v34
+-  br i1 %v208, label %b39, label %b41
++  %v207 = phi i64 [ 0, %b37 ], [ %v229, %b40 ]
++  %v223 = phi i64 [ 0, %b37 ], [ %v226, %b40 ]
++  %v209 = icmp slt i64 %v207, %v34
++  br i1 %v209, label %b39, label %b41
+ b39:
+-  %v216 = call i64 @"my.row_dict_update_str::batch_result"(i64 %v21, i64 %v206, i64 %v47, ptr %v107, ptr %v167, ptr %v180, ptr %v182), !dbg !1000036
+-  %v218 = icmp slt i64 %v216, 0
+-  br i1 %v218, label %b42, label %b43
++  %v217 = call i64 @"my.row_dict_update_str::batch_result"(i64 %v21, i64 %v207, i64 %v47, ptr %v107, ptr %v167, ptr %v180, ptr %v182), !dbg !1000037
++  %v219 = icmp slt i64 %v217, 0
++  br i1 %v219, label %b42, label %b43
+ b40:
+-  %v228 = add nuw nsw i64 %v206, 1
++  %v229 = add nuw nsw i64 %v207, 1
+   br label %b38
+ b41:
+   %rc.125 = load i32, ptr %v107, align 8, !tbaa !3, !range !8
+@@ -709,18 +719,20 @@
+   call void @myl_core_free(ptr %v182)
+   br label %b41.128.136.144.152
+ b41.128.136.144.152:
+-  %v243 = call i64 @runtime_bench_now(), !dbg !1000037
+-  %p.157 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v243, i64 %v195)
+-  %v245 = extractvalue { i64, i1 } %p.157, 0
++  call void @myl_core_io_at(i32 28)
++  call void @myl_core_host_check(i64 %p1), !dbg !1000038
++  %v245 = call i64 @runtime_bench_now(), !dbg !1000039
++  %p.157 = call { i64, i1 } @llvm.ssub.with.overflow.i64(i64 %v245, i64 %v196)
++  %v247 = extractvalue { i64, i1 } %p.157, 0
+   %o.158 = extractvalue { i64, i1 } %p.157, 1
+   br i1 %o.158, label %trap.159, label %b41.128.136.144.152.160, !prof !0
+ trap.159:
+-  call void @myl_core_trap(i32 27, i64 %v243, i64 %v195), !dbg !1000038
++  call void @myl_core_trap(i32 29, i64 %v245, i64 %v196), !dbg !1000040
+   unreachable
+ b41.128.136.144.152.160:
+-  call void @myl_core_print_i64(i64 %p2, i64 %v222)
++  call void @myl_core_print_i64(i64 %p2, i64 %v223)
+   call void @myl_core_print_sep(i64 %p2)
+-  call void @myl_core_print_i64(i64 %p2, i64 %v245)
++  call void @myl_core_print_i64(i64 %p2, i64 %v247)
+   call void @myl_core_print_end(i64 %p2)
+   ret i64 0
+ b42:
+@@ -782,18 +794,18 @@
+ b42.164.172.180.188:
+   ret i64 2
+ b43:
+-  %p.193 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v222, i64 %v216)
+-  %v223 = extractvalue { i64, i1 } %p.193, 0
++  %p.193 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v223, i64 %v217)
++  %v224 = extractvalue { i64, i1 } %p.193, 0
+   %o.194 = extractvalue { i64, i1 } %p.193, 1
+   br i1 %o.194, label %trap.195, label %b43.196, !prof !0
+ trap.195:
+-  call void @myl_core_trap(i32 28, i64 %v222, i64 %v216), !dbg !1000039
++  call void @myl_core_trap(i32 30, i64 %v223, i64 %v217), !dbg !1000041
+   unreachable
+ b43.196:
+-  %v225 = urem i64 %v223, 1000000007
++  %v226 = urem i64 %v224, 1000000007
+   br label %b40
+ }
+-define internal i64 @"my.row_dict_update_str::parse_number"(ptr %p0) nounwind uwtable !dbg !1000040 {
++define internal i64 @"my.row_dict_update_str::parse_number"(ptr %p0) nounwind uwtable !dbg !1000042 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -815,7 +827,7 @@
+ b4:
+   ret i64 0
+ }
+-define internal i64 @"my.row_dict_update_str::batch_result"(i64 %p0, i64 %p1, i64 %p2, ptr %p3, ptr %p4, ptr %p5, ptr %p6) nounwind uwtable !dbg !1000041 {
++define internal i64 @"my.row_dict_update_str::batch_result"(i64 %p0, i64 %p1, i64 %p2, ptr %p3, ptr %p4, ptr %p5, ptr %p6) nounwind uwtable !dbg !1000043 {
+ entry:
+   %slot = alloca i64, align 8
+   %stack.35 = alloca [8 x i8], align 8
+@@ -849,7 +861,7 @@
+   %o.2 = extractvalue { i64, i1 } %p.1, 1
+   br i1 %o.2, label %trap.3, label %b4.4, !prof !0
+ trap.3:
+-  call void @myl_core_trap(i32 29, i64 %p0, i64 2), !dbg !1000042
++  call void @myl_core_trap(i32 31, i64 %p0, i64 2), !dbg !1000044
+   unreachable
+ b4.4:
+   br label %b12
+@@ -859,7 +871,7 @@
+   %hi.6 = icmp ugt i64 %v20, 9223372036854775807
+   br i1 %hi.6, label %trap.7, label %b5.8, !prof !0
+ trap.7:
+-  call void @myl_core_trap(i32 30, i64 %v20, i64 0), !dbg !1000043
++  call void @myl_core_trap(i32 32, i64 %v20, i64 0), !dbg !1000045
+   unreachable
+ b5.8:
+   %v21 = add i64 %v20, 0
+@@ -868,7 +880,7 @@
+   %o.10 = extractvalue { i64, i1 } %p.9, 1
+   br i1 %o.10, label %trap.11, label %b5.8.12, !prof !0
+ trap.11:
+-  call void @myl_core_trap(i32 31, i64 %v21, i64 %v12), !dbg !1000044
++  call void @myl_core_trap(i32 33, i64 %v21, i64 %v12), !dbg !1000046
+   unreachable
+ b5.8.12:
+   br label %b6
+@@ -879,7 +891,7 @@
+   %oob.15 = icmp uge i64 %v24, %len.14
+   br i1 %oob.15, label %trap.16, label %b6.17, !prof !0
+ trap.16:
+-  call void @myl_core_trap(i32 32, i64 %v24, i64 %len.14), !dbg !1000045
++  call void @myl_core_trap(i32 34, i64 %v24, i64 %len.14), !dbg !1000047
+   unreachable
+ b6.17:
+   %data.18 = getelementptr inbounds i8, ptr %p3, i64 32
+@@ -892,7 +904,7 @@
+   %hi.21 = icmp ugt i64 %v35, 9223372036854775807
+   br i1 %hi.21, label %trap.22, label %b7.23, !prof !0
+ trap.22:
+-  call void @myl_core_trap(i32 33, i64 %v35, i64 0), !dbg !1000046
++  call void @myl_core_trap(i32 35, i64 %v35, i64 0), !dbg !1000048
+   unreachable
+ b7.23:
+   %v36 = add i64 %v35, 0
+@@ -901,7 +913,7 @@
+   %o.25 = extractvalue { i64, i1 } %p.24, 1
+   br i1 %o.25, label %trap.26, label %b7.23.27, !prof !0
+ trap.26:
+-  call void @myl_core_trap(i32 34, i64 %v36, i64 %v12), !dbg !1000047
++  call void @myl_core_trap(i32 36, i64 %v36, i64 %v12), !dbg !1000049
+   unreachable
+ b7.23.27:
+   br label %b8
+@@ -912,7 +924,7 @@
+   %oob.30 = icmp uge i64 %v39, %len.29
+   br i1 %oob.30, label %trap.31, label %b8.32, !prof !0
+ trap.31:
+-  call void @myl_core_trap(i32 35, i64 %v39, i64 %len.29), !dbg !1000048
++  call void @myl_core_trap(i32 37, i64 %v39, i64 %len.29), !dbg !1000050
+   unreachable
+ b8.32:
+   %data.33 = getelementptr inbounds i8, ptr %p4, i64 32
+@@ -954,7 +966,7 @@
+   %o.46 = extractvalue { i64, i1 } %p.45, 1
+   br i1 %o.46, label %trap.47, label %b13.48, !prof !0
+ trap.47:
+-  call void @myl_core_trap(i32 36, i64 %v77, i64 17), !dbg !1000049
++  call void @myl_core_trap(i32 38, i64 %v77, i64 17), !dbg !1000051
+   unreachable
+ b13.48:
+   %p.49 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %p2, i64 %v83)
+@@ -962,7 +974,7 @@
+   %o.50 = extractvalue { i64, i1 } %p.49, 1
+   br i1 %o.50, label %trap.51, label %b13.48.52, !prof !0
+ trap.51:
+-  call void @myl_core_trap(i32 37, i64 %p2, i64 %v83), !dbg !1000050
++  call void @myl_core_trap(i32 39, i64 %p2, i64 %v83), !dbg !1000052
+   unreachable
+ b13.48.52:
+   %p.53 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v84, i64 %p1)
+@@ -970,7 +982,7 @@
+   %o.54 = extractvalue { i64, i1 } %p.53, 1
+   br i1 %o.54, label %trap.55, label %b13.48.52.56, !prof !0
+ trap.55:
+-  call void @myl_core_trap(i32 38, i64 %v84, i64 %p1), !dbg !1000051
++  call void @myl_core_trap(i32 40, i64 %v84, i64 %p1), !dbg !1000053
+   unreachable
+ b13.48.52.56:
+   %p.57 = call { i64, i1 } @llvm.smul.with.overflow.i64(i64 %p0, i64 2)
+@@ -978,13 +990,13 @@
+   %o.58 = extractvalue { i64, i1 } %p.57, 1
+   br i1 %o.58, label %trap.59, label %b13.48.52.56.60, !prof !0
+ trap.59:
+-  call void @myl_core_trap(i32 39, i64 %p0, i64 2), !dbg !1000052
++  call void @myl_core_trap(i32 41, i64 %p0, i64 2), !dbg !1000054
+   unreachable
+ b13.48.52.56.60:
+   %z.61 = icmp eq i64 %v89, 0
+   br i1 %z.61, label %trap.62, label %b13.48.52.56.60.63, !prof !0
+ trap.62:
+-  call void @myl_core_trap(i32 40, i64 %v86, i64 %v89), !dbg !1000053
++  call void @myl_core_trap(i32 42, i64 %v86, i64 %v89), !dbg !1000055
+   unreachable
+ b13.48.52.56.60.63:
+   %m.64 = icmp eq i64 %v89, -1
+@@ -1008,7 +1020,7 @@
+   %o.74 = extractvalue { i64, i1 } %p.73, 1
+   br i1 %o.74, label %trap.75, label %b15.76, !prof !0
+ trap.75:
+-  call void @myl_core_trap(i32 41, i64 %p0, i64 2), !dbg !1000054
++  call void @myl_core_trap(i32 43, i64 %p0, i64 2), !dbg !1000056
+   unreachable
+ b15.76:
+   br label %b26
+@@ -1025,7 +1037,7 @@
+   %oob.80 = icmp uge i64 %v100, %len.79
+   br i1 %oob.80, label %trap.81, label %b17.82, !prof !0
+ trap.81:
+-  call void @myl_core_trap(i32 42, i64 %v100, i64 %len.79), !dbg !1000055
++  call void @myl_core_trap(i32 44, i64 %v100, i64 %len.79), !dbg !1000057
+   unreachable
+ b17.82:
+   %data.83 = getelementptr inbounds i8, ptr %p4, i64 32
+@@ -1051,7 +1063,7 @@
+   %o.91 = extractvalue { i64, i1 } %p.90, 1
+   br i1 %o.91, label %trap.92, label %b20.93, !prof !0
+ trap.92:
+-  call void @myl_core_trap(i32 43, i64 %v111, i64 %v77), !dbg !1000056
++  call void @myl_core_trap(i32 45, i64 %v111, i64 %v77), !dbg !1000058
+   unreachable
+ b20.93:
+   %p.94 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v114, i64 %p1)
+@@ -1059,7 +1071,7 @@
+   %o.95 = extractvalue { i64, i1 } %p.94, 1
+   br i1 %o.95, label %trap.96, label %b20.93.97, !prof !0
+ trap.96:
+-  call void @myl_core_trap(i32 44, i64 %v114, i64 %p1), !dbg !1000057
++  call void @myl_core_trap(i32 46, i64 %v114, i64 %p1), !dbg !1000059
+   unreachable
+ b20.93.97:
+   %p.98 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v117, i64 1)
+@@ -1067,7 +1079,7 @@
+   %o.99 = extractvalue { i64, i1 } %p.98, 1
+   br i1 %o.99, label %trap.100, label %b20.93.97.101, !prof !0
+ trap.100:
+-  call void @myl_core_trap(i32 45, i64 %v117, i64 1), !dbg !1000058
++  call void @myl_core_trap(i32 47, i64 %v117, i64 1), !dbg !1000060
+   unreachable
+ b20.93.97.101:
+   %q.102 = sdiv i64 %v119, 1000003
+@@ -1093,7 +1105,7 @@
+   %oob.112 = icmp uge i64 %v135, %len.111
+   br i1 %oob.112, label %trap.113, label %b22.114, !prof !0
+ trap.113:
+-  call void @myl_core_trap(i32 46, i64 %v135, i64 %len.111), !dbg !1000059
++  call void @myl_core_trap(i32 48, i64 %v135, i64 %len.111), !dbg !1000061
+   unreachable
+ b22.114:
+   %data.115 = getelementptr inbounds i8, ptr %p4, i64 32
+@@ -1143,7 +1155,7 @@
+   %hi.128 = icmp ugt i64 %v193, 9223372036854775807
+   br i1 %hi.128, label %trap.129, label %b30.130, !prof !0
+ trap.129:
+-  call void @myl_core_trap(i32 47, i64 %v193, i64 0), !dbg !1000060
++  call void @myl_core_trap(i32 49, i64 %v193, i64 0), !dbg !1000062
+   unreachable
+ b30.130:
+   %v194 = add i64 %v193, 0
+@@ -1152,7 +1164,7 @@
+   %o.132 = extractvalue { i64, i1 } %p.131, 1
+   br i1 %o.132, label %trap.133, label %b30.130.134, !prof !0
+ trap.133:
+-  call void @myl_core_trap(i32 48, i64 %v194, i64 %v185), !dbg !1000061
++  call void @myl_core_trap(i32 50, i64 %v194, i64 %v185), !dbg !1000063
+   unreachable
+ b30.130.134:
+   br label %b31
+@@ -1163,7 +1175,7 @@
+   %oob.137 = icmp uge i64 %v197, %len.136
+   br i1 %oob.137, label %trap.138, label %b31.139, !prof !0
+ trap.138:
+-  call void @myl_core_trap(i32 49, i64 %v197, i64 %len.136), !dbg !1000062
++  call void @myl_core_trap(i32 51, i64 %v197, i64 %len.136), !dbg !1000064
+   unreachable
+ b31.139:
+   %data.140 = getelementptr inbounds i8, ptr %p4, i64 32
+@@ -1185,7 +1197,7 @@
+   %hi.145 = icmp ugt i64 %v213, 9223372036854775807
+   br i1 %hi.145, label %trap.146, label %b34.147, !prof !0
+ trap.146:
+-  call void @myl_core_trap(i32 50, i64 %v213, i64 0), !dbg !1000063
++  call void @myl_core_trap(i32 52, i64 %v213, i64 0), !dbg !1000065
+   unreachable
+ b34.147:
+   %v214 = add i64 %v213, 0
+@@ -1194,7 +1206,7 @@
+   %o.149 = extractvalue { i64, i1 } %p.148, 1
+   br i1 %o.149, label %trap.150, label %b34.147.151, !prof !0
+ trap.150:
+-  call void @myl_core_trap(i32 51, i64 %v214, i64 %v185), !dbg !1000064
++  call void @myl_core_trap(i32 53, i64 %v214, i64 %v185), !dbg !1000066
+   unreachable
+ b34.147.151:
+   br label %b35
+@@ -1205,7 +1217,7 @@
+   %oob.154 = icmp uge i64 %v217, %len.153
+   br i1 %oob.154, label %trap.155, label %b35.156, !prof !0
+ trap.155:
+-  call void @myl_core_trap(i32 52, i64 %v217, i64 %len.153), !dbg !1000065
++  call void @myl_core_trap(i32 54, i64 %v217, i64 %len.153), !dbg !1000067
+   unreachable
+ b35.156:
+   %data.157 = getelementptr inbounds i8, ptr %p4, i64 32
+@@ -1226,7 +1238,7 @@
+   %o.165 = extractvalue { i64, i1 } %p.164, 1
+   br i1 %o.165, label %trap.166, label %b36.167, !prof !0
+ trap.166:
+-  call void @myl_core_trap(i32 53, i64 %v185, i64 %v225), !dbg !1000066
++  call void @myl_core_trap(i32 55, i64 %v185, i64 %v225), !dbg !1000068
+   unreachable
+ b36.167:
+   %p.168 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v207, i64 %v226)
+@@ -1234,18 +1246,19 @@
+   %o.169 = extractvalue { i64, i1 } %p.168, 1
+   br i1 %o.169, label %trap.170, label %b36.167.171, !prof !0
+ trap.170:
+-  call void @myl_core_trap(i32 54, i64 %v207, i64 %v226), !dbg !1000067
++  call void @myl_core_trap(i32 56, i64 %v207, i64 %v226), !dbg !1000069
+   unreachable
+ b36.167.171:
+   br label %b33
+ b37:
+-  call void @myl_core_trap(i32 55, i64 0, i64 0), !dbg !1000068
++  call void @myl_core_trap(i32 57, i64 0, i64 0), !dbg !1000070
+   unreachable
+ }
+-define i32 @main(i32 %argc, ptr %argv) uwtable !dbg !1000069 {
++define i32 @main(i32 %argc, ptr %argv) uwtable !dbg !1000071 {
+ entry:
+   %args = call ptr @myl_core_args(i32 %argc, ptr %argv)
+-  %r = call i64 @"my.row_dict_update_str::main"(ptr %args, i64 1, i64 1), !dbg !1000070
++  %host1 = call i64 @myl_core_host_grant()
++  %r = call i64 @"my.row_dict_update_str::main"(ptr %args, i64 %host1, i64 1), !dbg !1000072
+   call void @myl_core_release(ptr %args)
+   %s = call i32 @myl_core_exit(i64 %r)
+   ret i32 %s
+@@ -1305,66 +1318,70 @@
+ @myl.fn.25 = private constant [26 x i8] c"row_dict_update_str::main\00"
+ @myl.op.26 = private constant [4 x i8] c"add\00"
+ @myl.fn.26 = private constant [26 x i8] c"row_dict_update_str::main\00"
+-@myl.op.27 = private constant [4 x i8] c"sub\00"
++@myl.op.27 = private constant [7 x i8] c"effect\00"
+ @myl.fn.27 = private constant [26 x i8] c"row_dict_update_str::main\00"
+-@myl.op.28 = private constant [4 x i8] c"add\00"
++@myl.op.28 = private constant [7 x i8] c"effect\00"
+ @myl.fn.28 = private constant [26 x i8] c"row_dict_update_str::main\00"
+-@myl.op.29 = private constant [4 x i8] c"mul\00"
+-@myl.fn.29 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.30 = private constant [5 x i8] c"cast\00"
+-@myl.fn.30 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.31 = private constant [4 x i8] c"add\00"
++@myl.op.29 = private constant [4 x i8] c"sub\00"
++@myl.fn.29 = private constant [26 x i8] c"row_dict_update_str::main\00"
++@myl.op.30 = private constant [4 x i8] c"add\00"
++@myl.fn.30 = private constant [26 x i8] c"row_dict_update_str::main\00"
++@myl.op.31 = private constant [4 x i8] c"mul\00"
+ @myl.fn.31 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.32 = private constant [6 x i8] c"index\00"
++@myl.op.32 = private constant [5 x i8] c"cast\00"
+ @myl.fn.32 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.33 = private constant [5 x i8] c"cast\00"
++@myl.op.33 = private constant [4 x i8] c"add\00"
+ @myl.fn.33 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.34 = private constant [4 x i8] c"add\00"
++@myl.op.34 = private constant [6 x i8] c"index\00"
+ @myl.fn.34 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.35 = private constant [6 x i8] c"index\00"
++@myl.op.35 = private constant [5 x i8] c"cast\00"
+ @myl.fn.35 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.36 = private constant [4 x i8] c"mul\00"
++@myl.op.36 = private constant [4 x i8] c"add\00"
+ @myl.fn.36 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.37 = private constant [4 x i8] c"add\00"
++@myl.op.37 = private constant [6 x i8] c"index\00"
+ @myl.fn.37 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.38 = private constant [4 x i8] c"add\00"
++@myl.op.38 = private constant [4 x i8] c"mul\00"
+ @myl.fn.38 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.39 = private constant [4 x i8] c"mul\00"
++@myl.op.39 = private constant [4 x i8] c"add\00"
+ @myl.fn.39 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.40 = private constant [10 x i8] c"floor_rem\00"
++@myl.op.40 = private constant [4 x i8] c"add\00"
+ @myl.fn.40 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+ @myl.op.41 = private constant [4 x i8] c"mul\00"
+ @myl.fn.41 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.42 = private constant [6 x i8] c"index\00"
++@myl.op.42 = private constant [10 x i8] c"floor_rem\00"
+ @myl.fn.42 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.43 = private constant [4 x i8] c"add\00"
++@myl.op.43 = private constant [4 x i8] c"mul\00"
+ @myl.fn.43 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.44 = private constant [4 x i8] c"add\00"
++@myl.op.44 = private constant [6 x i8] c"index\00"
+ @myl.fn.44 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+ @myl.op.45 = private constant [4 x i8] c"add\00"
+ @myl.fn.45 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.46 = private constant [6 x i8] c"index\00"
++@myl.op.46 = private constant [4 x i8] c"add\00"
+ @myl.fn.46 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.47 = private constant [5 x i8] c"cast\00"
++@myl.op.47 = private constant [4 x i8] c"add\00"
+ @myl.fn.47 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.48 = private constant [4 x i8] c"add\00"
++@myl.op.48 = private constant [6 x i8] c"index\00"
+ @myl.fn.48 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.49 = private constant [6 x i8] c"index\00"
++@myl.op.49 = private constant [5 x i8] c"cast\00"
+ @myl.fn.49 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.50 = private constant [5 x i8] c"cast\00"
++@myl.op.50 = private constant [4 x i8] c"add\00"
+ @myl.fn.50 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.51 = private constant [4 x i8] c"add\00"
++@myl.op.51 = private constant [6 x i8] c"index\00"
+ @myl.fn.51 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.52 = private constant [6 x i8] c"index\00"
++@myl.op.52 = private constant [5 x i8] c"cast\00"
+ @myl.fn.52 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+ @myl.op.53 = private constant [4 x i8] c"add\00"
+ @myl.fn.53 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.54 = private constant [4 x i8] c"add\00"
++@myl.op.54 = private constant [6 x i8] c"index\00"
+ @myl.fn.54 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl.op.55 = private constant [4 x i8] c"key\00"
++@myl.op.55 = private constant [4 x i8] c"add\00"
+ @myl.fn.55 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
+-@myl_core_site_count = constant i32 56
+-@myl_core_sites = constant [56 x %myl.site] [%myl.site { i32 4, i32 29, i32 25, i32 64, ptr @myl.op.0, ptr @myl.fn.0 }, %myl.site { i32 0, i32 29, i32 25, i32 64, ptr @myl.op.1, ptr @myl.fn.1 }, %myl.site { i32 2, i32 29, i32 25, i32 64, ptr @myl.op.2, ptr @myl.fn.2 }, %myl.site { i32 4, i32 30, i32 31, i32 64, ptr @myl.op.3, ptr @myl.fn.3 }, %myl.site { i32 0, i32 30, i32 31, i32 64, ptr @myl.op.4, ptr @myl.fn.4 }, %myl.site { i32 2, i32 30, i32 31, i32 64, ptr @myl.op.5, ptr @myl.fn.5 }, %myl.site { i32 4, i32 31, i32 25, i32 64, ptr @myl.op.6, ptr @myl.fn.6 }, %myl.site { i32 0, i32 31, i32 25, i32 64, ptr @myl.op.7, ptr @myl.fn.7 }, %myl.site { i32 2, i32 31, i32 25, i32 64, ptr @myl.op.8, ptr @myl.fn.8 }, %myl.site { i32 0, i32 34, i32 14, i32 64, ptr @myl.op.9, ptr @myl.fn.9 }, %myl.site { i32 4, i32 34, i32 14, i32 64, ptr @myl.op.10, ptr @myl.fn.10 }, %myl.site { i32 4, i32 34, i32 14, i32 64, ptr @myl.op.11, ptr @myl.fn.11 }, %myl.site { i32 0, i32 34, i32 14, i32 64, ptr @myl.op.12, ptr @myl.fn.12 }, %myl.site { i32 0, i32 34, i32 14, i32 64, ptr @myl.op.13, ptr @myl.fn.13 }, %myl.site { i32 4, i32 34, i32 14, i32 64, ptr @myl.op.14, ptr @myl.fn.14 }, %myl.site { i32 0, i32 34, i32 14, i32 64, ptr @myl.op.15, ptr @myl.fn.15 }, %myl.site { i32 0, i32 34, i32 14, i32 64, ptr @myl.op.16, ptr @myl.fn.16 }, %myl.site { i32 0, i32 34, i32 25, i32 64, ptr @myl.op.17, ptr @myl.fn.17 }, %myl.site { i32 0, i32 34, i32 21, i32 64, ptr @myl.op.18, ptr @myl.fn.18 }, %myl.site { i32 0, i32 36, i32 12, i32 64, ptr @myl.op.19, ptr @myl.fn.19 }, %myl.site { i32 4, i32 36, i32 12, i32 64, ptr @myl.op.20, ptr @myl.fn.20 }, %myl.site { i32 4, i32 36, i32 12, i32 64, ptr @myl.op.21, ptr @myl.fn.21 }, %myl.site { i32 0, i32 36, i32 12, i32 64, ptr @myl.op.22, ptr @myl.fn.22 }, %myl.site { i32 0, i32 36, i32 12, i32 64, ptr @myl.op.23, ptr @myl.fn.23 }, %myl.site { i32 4, i32 36, i32 12, i32 64, ptr @myl.op.24, ptr @myl.fn.24 }, %myl.site { i32 0, i32 36, i32 12, i32 64, ptr @myl.op.25, ptr @myl.fn.25 }, %myl.site { i32 0, i32 36, i32 12, i32 64, ptr @myl.op.26, ptr @myl.fn.26 }, %myl.site { i32 0, i32 46, i32 39, i32 64, ptr @myl.op.27, ptr @myl.fn.27 }, %myl.site { i32 0, i32 45, i32 30, i32 64, ptr @myl.op.28, ptr @myl.fn.28 }, %myl.site { i32 0, i32 10, i32 25, i32 64, ptr @myl.op.29, ptr @myl.fn.29 }, %myl.site { i32 4, i32 9, i32 33, i32 64, ptr @myl.op.30, ptr @myl.fn.30 }, %myl.site { i32 0, i32 9, i32 33, i32 64, ptr @myl.op.31, ptr @myl.fn.31 }, %myl.site { i32 2, i32 9, i32 33, i32 64, ptr @myl.op.32, ptr @myl.fn.32 }, %myl.site { i32 4, i32 9, i32 22, i32 64, ptr @myl.op.33, ptr @myl.fn.33 }, %myl.site { i32 0, i32 9, i32 22, i32 64, ptr @myl.op.34, ptr @myl.fn.34 }, %myl.site { i32 2, i32 9, i32 22, i32 64, ptr @myl.op.35, ptr @myl.fn.35 }, %myl.site { i32 0, i32 11, i32 25, i32 64, ptr @myl.op.36, ptr @myl.fn.36 }, %myl.site { i32 0, i32 11, i32 21, i32 64, ptr @myl.op.37, ptr @myl.fn.37 }, %myl.site { i32 0, i32 11, i32 30, i32 64, ptr @myl.op.38, ptr @myl.fn.38 }, %myl.site { i32 0, i32 11, i32 47, i32 64, ptr @myl.op.39, ptr @myl.fn.39 }, %myl.site { i32 1, i32 11, i32 39, i32 64, ptr @myl.op.40, ptr @myl.fn.40 }, %myl.site { i32 0, i32 13, i32 25, i32 64, ptr @myl.op.41, ptr @myl.fn.41 }, %myl.site { i32 2, i32 12, i32 53, i32 64, ptr @myl.op.42, ptr @myl.fn.42 }, %myl.site { i32 0, i32 12, i32 68, i32 64, ptr @myl.op.43, ptr @myl.fn.43 }, %myl.site { i32 0, i32 12, i32 72, i32 64, ptr @myl.op.44, ptr @myl.fn.44 }, %myl.site { i32 0, i32 12, i32 80, i32 64, ptr @myl.op.45, ptr @myl.fn.45 }, %myl.site { i32 2, i32 12, i32 22, i32 64, ptr @myl.op.46, ptr @myl.fn.46 }, %myl.site { i32 4, i32 14, i32 12, i32 64, ptr @myl.op.47, ptr @myl.fn.47 }, %myl.site { i32 0, i32 14, i32 12, i32 64, ptr @myl.op.48, ptr @myl.fn.48 }, %myl.site { i32 2, i32 14, i32 12, i32 64, ptr @myl.op.49, ptr @myl.fn.49 }, %myl.site { i32 4, i32 15, i32 39, i32 64, ptr @myl.op.50, ptr @myl.fn.50 }, %myl.site { i32 0, i32 15, i32 39, i32 64, ptr @myl.op.51, ptr @myl.fn.51 }, %myl.site { i32 2, i32 15, i32 39, i32 64, ptr @myl.op.52, ptr @myl.fn.52 }, %myl.site { i32 0, i32 15, i32 24, i32 64, ptr @myl.op.53, ptr @myl.fn.53 }, %myl.site { i32 0, i32 15, i32 19, i32 64, ptr @myl.op.54, ptr @myl.fn.54 }, %myl.site { i32 9, i32 15, i32 26, i32 64, ptr @myl.op.55, ptr @myl.fn.55 }]
++@myl.op.56 = private constant [4 x i8] c"add\00"
++@myl.fn.56 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
++@myl.op.57 = private constant [4 x i8] c"key\00"
++@myl.fn.57 = private constant [34 x i8] c"row_dict_update_str::batch_result\00"
++@myl_core_site_count = constant i32 58
++@myl_core_sites = constant [58 x %myl.site] [%myl.site { i32 4, i32 29, i32 25, i32 64, ptr @myl.op.0, ptr @myl.fn.0 }, %myl.site { i32 0, i32 29, i32 25, i32 64, ptr @myl.op.1, ptr @myl.fn.1 }, %myl.site { i32 2, i32 29, i32 25, i32 64, ptr @myl.op.2, ptr @myl.fn.2 }, %myl.site { i32 4, i32 30, i32 31, i32 64, ptr @myl.op.3, ptr @myl.fn.3 }, %myl.site { i32 0, i32 30, i32 31, i32 64, ptr @myl.op.4, ptr @myl.fn.4 }, %myl.site { i32 2, i32 30, i32 31, i32 64, ptr @myl.op.5, ptr @myl.fn.5 }, %myl.site { i32 4, i32 31, i32 25, i32 64, ptr @myl.op.6, ptr @myl.fn.6 }, %myl.site { i32 0, i32 31, i32 25, i32 64, ptr @myl.op.7, ptr @myl.fn.7 }, %myl.site { i32 2, i32 31, i32 25, i32 64, ptr @myl.op.8, ptr @myl.fn.8 }, %myl.site { i32 0, i32 34, i32 14, i32 64, ptr @myl.op.9, ptr @myl.fn.9 }, %myl.site { i32 4, i32 34, i32 14, i32 64, ptr @myl.op.10, ptr @myl.fn.10 }, %myl.site { i32 4, i32 34, i32 14, i32 64, ptr @myl.op.11, ptr @myl.fn.11 }, %myl.site { i32 0, i32 34, i32 14, i32 64, ptr @myl.op.12, ptr @myl.fn.12 }, %myl.site { i32 0, i32 34, i32 14, i32 64, ptr @myl.op.13, ptr @myl.fn.13 }, %myl.site { i32 4, i32 34, i32 14, i32 64, ptr @myl.op.14, ptr @myl.fn.14 }, %myl.site { i32 0, i32 34, i32 14, i32 64, ptr @myl.op.15, ptr @myl.fn.15 }, %myl.site { i32 0, i32 34, i32 14, i32 64, ptr @myl.op.16, ptr @myl.fn.16 }, %myl.site { i32 0, i32 34, i32 25, i32 64, ptr @myl.op.17, ptr @myl.fn.17 }, %myl.site { i32 0, i32 34, i32 21, i32 64, ptr @myl.op.18, ptr @myl.fn.18 }, %myl.site { i32 0, i32 36, i32 12, i32 64, ptr @myl.op.19, ptr @myl.fn.19 }, %myl.site { i32 4, i32 36, i32 12, i32 64, ptr @myl.op.20, ptr @myl.fn.20 }, %myl.site { i32 4, i32 36, i32 12, i32 64, ptr @myl.op.21, ptr @myl.fn.21 }, %myl.site { i32 0, i32 36, i32 12, i32 64, ptr @myl.op.22, ptr @myl.fn.22 }, %myl.site { i32 0, i32 36, i32 12, i32 64, ptr @myl.op.23, ptr @myl.fn.23 }, %myl.site { i32 4, i32 36, i32 12, i32 64, ptr @myl.op.24, ptr @myl.fn.24 }, %myl.site { i32 0, i32 36, i32 12, i32 64, ptr @myl.op.25, ptr @myl.fn.25 }, %myl.site { i32 0, i32 36, i32 12, i32 64, ptr @myl.op.26, ptr @myl.fn.26 }, %myl.site { i32 7, i32 40, i32 13, i32 64, ptr @myl.op.27, ptr @myl.fn.27 }, %myl.site { i32 7, i32 46, i32 15, i32 64, ptr @myl.op.28, ptr @myl.fn.28 }, %myl.site { i32 0, i32 46, i32 39, i32 64, ptr @myl.op.29, ptr @myl.fn.29 }, %myl.site { i32 0, i32 45, i32 30, i32 64, ptr @myl.op.30, ptr @myl.fn.30 }, %myl.site { i32 0, i32 10, i32 25, i32 64, ptr @myl.op.31, ptr @myl.fn.31 }, %myl.site { i32 4, i32 9, i32 33, i32 64, ptr @myl.op.32, ptr @myl.fn.32 }, %myl.site { i32 0, i32 9, i32 33, i32 64, ptr @myl.op.33, ptr @myl.fn.33 }, %myl.site { i32 2, i32 9, i32 33, i32 64, ptr @myl.op.34, ptr @myl.fn.34 }, %myl.site { i32 4, i32 9, i32 22, i32 64, ptr @myl.op.35, ptr @myl.fn.35 }, %myl.site { i32 0, i32 9, i32 22, i32 64, ptr @myl.op.36, ptr @myl.fn.36 }, %myl.site { i32 2, i32 9, i32 22, i32 64, ptr @myl.op.37, ptr @myl.fn.37 }, %myl.site { i32 0, i32 11, i32 25, i32 64, ptr @myl.op.38, ptr @myl.fn.38 }, %myl.site { i32 0, i32 11, i32 21, i32 64, ptr @myl.op.39, ptr @myl.fn.39 }, %myl.site { i32 0, i32 11, i32 30, i32 64, ptr @myl.op.40, ptr @myl.fn.40 }, %myl.site { i32 0, i32 11, i32 47, i32 64, ptr @myl.op.41, ptr @myl.fn.41 }, %myl.site { i32 1, i32 11, i32 39, i32 64, ptr @myl.op.42, ptr @myl.fn.42 }, %myl.site { i32 0, i32 13, i32 25, i32 64, ptr @myl.op.43, ptr @myl.fn.43 }, %myl.site { i32 2, i32 12, i32 53, i32 64, ptr @myl.op.44, ptr @myl.fn.44 }, %myl.site { i32 0, i32 12, i32 68, i32 64, ptr @myl.op.45, ptr @myl.fn.45 }, %myl.site { i32 0, i32 12, i32 72, i32 64, ptr @myl.op.46, ptr @myl.fn.46 }, %myl.site { i32 0, i32 12, i32 80, i32 64, ptr @myl.op.47, ptr @myl.fn.47 }, %myl.site { i32 2, i32 12, i32 22, i32 64, ptr @myl.op.48, ptr @myl.fn.48 }, %myl.site { i32 4, i32 14, i32 12, i32 64, ptr @myl.op.49, ptr @myl.fn.49 }, %myl.site { i32 0, i32 14, i32 12, i32 64, ptr @myl.op.50, ptr @myl.fn.50 }, %myl.site { i32 2, i32 14, i32 12, i32 64, ptr @myl.op.51, ptr @myl.fn.51 }, %myl.site { i32 4, i32 15, i32 39, i32 64, ptr @myl.op.52, ptr @myl.fn.52 }, %myl.site { i32 0, i32 15, i32 39, i32 64, ptr @myl.op.53, ptr @myl.fn.53 }, %myl.site { i32 2, i32 15, i32 39, i32 64, ptr @myl.op.54, ptr @myl.fn.54 }, %myl.site { i32 0, i32 15, i32 24, i32 64, ptr @myl.op.55, ptr @myl.fn.55 }, %myl.site { i32 0, i32 15, i32 19, i32 64, ptr @myl.op.56, ptr @myl.fn.56 }, %myl.site { i32 9, i32 15, i32 26, i32 64, ptr @myl.op.57, ptr @myl.fn.57 }]
+ !0 = !{!"branch_weights", i32 1, i32 1048575}
+ !1 = !{!"myl.tbaa"}
+ !2 = !{!"myl.count", !1, i64 0}
+@@ -1652,42 +1669,44 @@
+ !1000033 = !DILocation(line: 36, column: 12, scope: !1000003)
+ !1000034 = !DILocation(line: 36, column: 13, scope: !1000003)
+ !1000035 = !DILocation(line: 40, column: 13, scope: !1000003)
+-!1000036 = !DILocation(line: 42, column: 16, scope: !1000003)
+-!1000037 = !DILocation(line: 46, column: 15, scope: !1000003)
+-!1000038 = !DILocation(line: 46, column: 39, scope: !1000003)
+-!1000039 = !DILocation(line: 45, column: 30, scope: !1000003)
+-!1000040 = distinct !DISubprogram(name: "row_dict_update_str::parse_number", scope: !1000000, file: !1000000, line: 18, type: !1000002, scopeLine: 18, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
+-!1000041 = distinct !DISubprogram(name: "row_dict_update_str::batch_result", scope: !1000000, file: !1000000, line: 5, type: !1000002, scopeLine: 5, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
+-!1000042 = !DILocation(line: 10, column: 25, scope: !1000041)
+-!1000043 = !DILocation(line: 9, column: 33, scope: !1000041)
+-!1000044 = !DILocation(line: 9, column: 33, scope: !1000041)
+-!1000045 = !DILocation(line: 9, column: 33, scope: !1000041)
+-!1000046 = !DILocation(line: 9, column: 22, scope: !1000041)
+-!1000047 = !DILocation(line: 9, column: 22, scope: !1000041)
+-!1000048 = !DILocation(line: 9, column: 22, scope: !1000041)
+-!1000049 = !DILocation(line: 11, column: 25, scope: !1000041)
+-!1000050 = !DILocation(line: 11, column: 21, scope: !1000041)
+-!1000051 = !DILocation(line: 11, column: 30, scope: !1000041)
+-!1000052 = !DILocation(line: 11, column: 47, scope: !1000041)
+-!1000053 = !DILocation(line: 11, column: 39, scope: !1000041)
+-!1000054 = !DILocation(line: 13, column: 25, scope: !1000041)
+-!1000055 = !DILocation(line: 12, column: 53, scope: !1000041)
+-!1000056 = !DILocation(line: 12, column: 68, scope: !1000041)
+-!1000057 = !DILocation(line: 12, column: 72, scope: !1000041)
+-!1000058 = !DILocation(line: 12, column: 80, scope: !1000041)
+-!1000059 = !DILocation(line: 12, column: 22, scope: !1000041)
+-!1000060 = !DILocation(line: 14, column: 12, scope: !1000041)
+-!1000061 = !DILocation(line: 14, column: 12, scope: !1000041)
+-!1000062 = !DILocation(line: 14, column: 12, scope: !1000041)
+-!1000063 = !DILocation(line: 15, column: 39, scope: !1000041)
+-!1000064 = !DILocation(line: 15, column: 39, scope: !1000041)
+-!1000065 = !DILocation(line: 15, column: 39, scope: !1000041)
+-!1000066 = !DILocation(line: 15, column: 24, scope: !1000041)
+-!1000067 = !DILocation(line: 15, column: 19, scope: !1000041)
+-!1000068 = !DILocation(line: 15, column: 26, scope: !1000041)
+-!1000069 = distinct !DISubprogram(name: "myl.entry", scope: !1000000, file: !1000000, line: 1, type: !1000002, scopeLine: 1, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
+-!1000070 = !DILocation(line: 1, column: 1, scope: !1000069)
++!1000036 = !DILocation(line: 40, column: 13, scope: !1000003)
++!1000037 = !DILocation(line: 42, column: 16, scope: !1000003)
++!1000038 = !DILocation(line: 46, column: 15, scope: !1000003)
++!1000039 = !DILocation(line: 46, column: 15, scope: !1000003)
++!1000040 = !DILocation(line: 46, column: 39, scope: !1000003)
++!1000041 = !DILocation(line: 45, column: 30, scope: !1000003)
++!1000042 = distinct !DISubprogram(name: "row_dict_update_str::parse_number", scope: !1000000, file: !1000000, line: 18, type: !1000002, scopeLine: 18, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
++!1000043 = distinct !DISubprogram(name: "row_dict_update_str::batch_result", scope: !1000000, file: !1000000, line: 5, type: !1000002, scopeLine: 5, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
++!1000044 = !DILocation(line: 10, column: 25, scope: !1000043)
++!1000045 = !DILocation(line: 9, column: 33, scope: !1000043)
++!1000046 = !DILocation(line: 9, column: 33, scope: !1000043)
++!1000047 = !DILocation(line: 9, column: 33, scope: !1000043)
++!1000048 = !DILocation(line: 9, column: 22, scope: !1000043)
++!1000049 = !DILocation(line: 9, column: 22, scope: !1000043)
++!1000050 = !DILocation(line: 9, column: 22, scope: !1000043)
++!1000051 = !DILocation(line: 11, column: 25, scope: !1000043)
++!1000052 = !DILocation(line: 11, column: 21, scope: !1000043)
++!1000053 = !DILocation(line: 11, column: 30, scope: !1000043)
++!1000054 = !DILocation(line: 11, column: 47, scope: !1000043)
++!1000055 = !DILocation(line: 11, column: 39, scope: !1000043)
++!1000056 = !DILocation(line: 13, column: 25, scope: !1000043)
++!1000057 = !DILocation(line: 12, column: 53, scope: !1000043)
++!1000058 = !DILocation(line: 12, column: 68, scope: !1000043)
++!1000059 = !DILocation(line: 12, column: 72, scope: !1000043)
++!1000060 = !DILocation(line: 12, column: 80, scope: !1000043)
++!1000061 = !DILocation(line: 12, column: 22, scope: !1000043)
++!1000062 = !DILocation(line: 14, column: 12, scope: !1000043)
++!1000063 = !DILocation(line: 14, column: 12, scope: !1000043)
++!1000064 = !DILocation(line: 14, column: 12, scope: !1000043)
++!1000065 = !DILocation(line: 15, column: 39, scope: !1000043)
++!1000066 = !DILocation(line: 15, column: 39, scope: !1000043)
++!1000067 = !DILocation(line: 15, column: 39, scope: !1000043)
++!1000068 = !DILocation(line: 15, column: 24, scope: !1000043)
++!1000069 = !DILocation(line: 15, column: 19, scope: !1000043)
++!1000070 = !DILocation(line: 15, column: 26, scope: !1000043)
++!1000071 = distinct !DISubprogram(name: "myl.entry", scope: !1000000, file: !1000000, line: 1, type: !1000002, scopeLine: 1, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !1000001)
++!1000072 = !DILocation(line: 1, column: 1, scope: !1000071)
+ !llvm.dbg.cu = !{!1000001}
+-!llvm.module.flags = !{!1000071, !1000072}
+-!1000071 = !{i32 2, !"Debug Info Version", i32 3}
+-!1000072 = !{i32 7, !"Dwarf Version", i32 4}
++!llvm.module.flags = !{!1000073, !1000074}
++!1000073 = !{i32 2, !"Debug Info Version", i32 3}
++!1000074 = !{i32 7, !"Dwarf Version", i32 4}

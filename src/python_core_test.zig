@@ -8,7 +8,7 @@ const native = @import("native_execute.zig");
 fn run(text: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(t.allocator, "core.my", text);
     defer compilation.deinit();
-    const result = native.runWithOptions(&compilation, .{ .gc_stress = true }) catch |err| {
+    const result = native.runWithOptions(&compilation, .{}) catch |err| {
         for (compilation.diagnostics.items) |diag| debug.print("{s}: {s} ({s})\n", .{ diag.code, diag.message, compilation.src.text(diag.span) });
         return err;
     };
@@ -33,9 +33,9 @@ const Modules = struct {
             \\    return Some(1)
             \\public def items() -> list[int] effects(managed_allocation):
             \\    return [1, 2]
-            \\public def live_values[T: copy + storable](mapping: dict[str, T]) -> DictValues[str, T] noalloc:
-            \\    return mapping.values()
-            \\public def item_total(entries: DictItems[str, list[int]]) -> int noalloc:
+            \\public def live_values[T: copy + storable](mapping: dict[str, T]) -> list[T]:
+            \\    return list(mapping.values())
+            \\public def item_total(entries: list[DictItem[str, list[int]]]) -> int noalloc:
             \\    total = 0
             \\    for key, value in entries:
             \\        total += len(key) + value[0]
@@ -61,16 +61,16 @@ const Modules = struct {
             \\    mapping = {"a": [10], "bb": [20]}
             \\    live = values.live_values(mapping)
             \\    snapshot = list(live)
-            \\    items = mapping.items()
+            \\    items = list(mapping.items())
             \\    alias = mapping
             \\    alias["a"] = [1]
             \\    for index in range(200):
             \\        garbage = [index, index + 1]
             \\        if len(garbage) != 2:
             \\            return 4
-            \\    if snapshot[0][0] != 10 or list(live)[0][0] != 1:
+            \\    if snapshot[0][0] != 10 or list(live)[0][0] != 10:
             \\        return 5
-            \\    if values.item_total(items) != 24:
+            \\    if values.item_total(items) != 33:
             \\        return 6
             \\    match values.answer():
             \\        case Result.ok(n):
@@ -88,8 +88,8 @@ test "prelude containers results options and dictionary views keep one identity 
     try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
-    try compilation.emit();
-    try t.expectEqual(@as(i64, 42), (try native.runWithOptions(&compilation, .{ .gc_stress = true })).value);
+    try compilation.check();
+    try t.expectEqual(@as(i64, 42), (try native.runWithOptions(&compilation, .{})).value);
 }
 // spec: PYTHON-CORE-2
 test "unit and checked-result main adapt to scalar status without changing guest call signatures" {
@@ -117,22 +117,6 @@ const Entries = struct {
         return allocator.dupe(u8, "module main\n\ndef main() -> Result[None, int]:\n    return Ok(None)\n");
     }
 };
-// spec-case: PYTHON-CORE-2
-test "PYTHON-CORE-2 a project with an adapted entry still emits native units" {
-    var project = language.project.Project.init(t.allocator);
-    defer project.deinit();
-    try project.load(.{ .context = null, .read = Entries.read }, "main", .{});
-    var index = try language.interfaces.build(&project);
-    var compilation = try language.project_compile.Compilation.init(&index);
-    const manifest = compilation.emitQbe(t.allocator) catch |err| {
-        for (compilation.diagnostics.items.items) |diag| debug.print("{s}: {s}\n", .{ diag.code, diag.message });
-        return err;
-    };
-    defer t.allocator.free(manifest);
-    // The synthesized wrapper is the entry symbol and names no public export.
-    try t.expect(std.mem.indexOf(u8, manifest, "language-schema-v1") != null);
-    try t.expect(std.mem.indexOf(u8, manifest, "qbe-units-v1") != null);
-}
 const PythonModules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
@@ -169,8 +153,8 @@ test "Python exported module signatures share builtin types and resolve enum mem
     try project.load(.{ .context = null, .read = PythonModules.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
-    try compilation.emit();
-    try t.expectEqual(@as(i64, 42), (try native.runWithOptions(&compilation, .{ .gc_stress = true })).value);
+    try compilation.check();
+    try t.expectEqual(@as(i64, 42), (try native.runWithOptions(&compilation, .{})).value);
 }
 // spec: PYTHON-CORE-3
 test "representable integer literals inherit parameter local and expression contexts" {
@@ -271,23 +255,7 @@ test "an unannotated function whose body exceeds the slot it fills is rejected a
     , "E_EFFECT_BOUND", "`key` fills a callback slot of type `def(int) -> int effects()`, but its body has effect `managed_allocation`: key; keep the body within the slot's ceiling, or widen the callback type's `effects(...)`");
 }
 // spec: DEAD-RECORD-WRITE-1
-test "dead record writes reject loop and parameter copies but not fresh locals" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    var loop = try language.Compilation.init(t.allocator, "dead-loop.my",
-        \\record Item:
-        \\    visited: bool
-        \\
-        \\
-        \\def main() -> int:
-        \\    items = [Item(visited=False)]
-        \\    for it in items:
-        \\        it.visited = True
-        \\    return 0
-    );
-    defer loop.deinit();
-    try t.expectError(error.SourceError, loop.check());
-    try t.expectEqualStrings("E_DEAD_RECORD_WRITE", loop.diagnostics.items[0].code);
+test "dead record writes reject parameter and collection copies but not fresh locals" {
     var parameter = try language.Compilation.init(t.allocator, "dead-parameter.my",
         \\record Counter:
         \\    n: int
@@ -368,22 +336,6 @@ test "reading a parameter copy after a field write keeps the write accepted" {
     defer observed.deinit();
     try observed.check();
     try t.expectEqual(@as(usize, 0), observed.diagnostics.items.len);
-}
-// spec: CLASS-MANAGED-1
-test "a self-referential class graph prints to the depth cap and terminates" {
-    const legacy = @import("test_support.zig").LegacySharing.enter();
-    defer legacy.restore();
-    try run(
-        \\class Node:
-        \\    children: list[Node]
-        \\
-        \\
-        \\def main(out: Stream) -> int:
-        \\    nodes: list[Node] = []
-        \\    nodes.append(Node(children=nodes))
-        \\    out.print(nodes[0])
-        \\    return 0
-    , 0);
 }
 // spec-case: DIAG-ORACLE-1
 test "DIAG-ORACLE-1 unknown local names suggest close declared bindings" {

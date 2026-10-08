@@ -1,0 +1,69 @@
+Qualifying record_reads
+Qualifying tagged_stack
+Qualifying mutate_unique
+Qualifying mutate_shared
+Qualifying integer_math
+Qualifying float_math
+Qualifying branch_predictable
+Qualifying branch_mixed
+Qualifying record_construct
+Qualifying record_update
+Qualifying call_direct
+Qualifying call_indirect
+Qualifying option_handle
+Qualifying result_propagate
+Qualifying binary_search
+Qualifying packet_decode
+Qualifying list_scan
+Qualifying list_append
+Qualifying list_filter
+Qualifying dict_lookup
+Qualifying dict_lookup_str
+Qualifying dict_update
+Qualifying dict_update_str
+Qualifying set_dedup
+Qualifying alloc_short
+Qualifying alloc_retained
+Qualifying mutate_nested
+Qualifying sort_int
+Qualifying sort_records
+Qualifying lox_eval
+Qualifying bytes_scan
+Qualifying string_equal
+Qualifying string_search
+Qualifying string_split
+Qualifying string_join
+Qualifying int_parse
+Qualifying int_format
+Qualifying word_count
+Qualifying csv_aggregate
+Qualifying json_transform
+Calibrating dict_lookup/small
+Calibrating dict_lookup/large
+Calibrating dict_lookup_str/small
+Calibrating dict_lookup_str/large
+Calibrating dict_update/small
+Calibrating dict_update/large
+Calibrating dict_update_str/small
+Calibrating dict_update_str/large
+Calibrating set_dedup/small
+Calibrating set_dedup/large
+Calibrating mutate_nested/small
+Calibrating mutate_nested/large
+Calibrating string_search/small
+Calibrating string_search/large
+Measuring 1/14: dict_lookup/small x212304
+Measuring 2/14: dict_lookup/large x1795
+Measuring 3/14: dict_lookup_str/small x141208
+Measuring 4/14: dict_lookup_str/large x1244
+Measuring 5/14: dict_update/small x20357
+Measuring 6/14: dict_update/large x122
+Measuring 7/14: dict_update_str/small x10748
+Measuring 8/14: dict_update_str/large x75
+Measuring 9/14: set_dedup/small x185022
+Measuring 10/14: set_dedup/large x955
+Measuring 11/14: mutate_nested/small x73139
+Measuring 12/14: mutate_nested/large x7220
+Measuring 13/14: string_search/small x2699072
+Measuring 14/14: string_search/large x318911
+PASS subset: 420 samples; 720 qualifications; /home/epentland/ai/canopy/mylang-worktrees/goal110-dict-word-integrated-20261004/.mylang-cache/goal110-dict-word-debug/screen-raw.json

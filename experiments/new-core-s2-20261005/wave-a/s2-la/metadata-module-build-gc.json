@@ -1,0 +1,35 @@
+{
+ "totals": {
+  "programs": 4,
+  "equal": 4,
+  "reference_failed": 0,
+  "modules": 9,
+  "different": []
+ },
+ "results": [
+  {
+   "entry": "tests/lang/mut_argument_places.my",
+   "status": "equal",
+   "problems": [],
+   "modules": 2
+  },
+  {
+   "entry": "tests/lang/mut_rebind_caller.my",
+   "status": "equal",
+   "problems": [],
+   "modules": 2
+  },
+  {
+   "entry": "tests/lang/mut_rebind_modules.my",
+   "status": "equal",
+   "problems": [],
+   "modules": 3
+  },
+  {
+   "entry": "tests/lang/rc_pin_elide.my",
+   "status": "equal",
+   "problems": [],
+   "modules": 2
+  }
+ ]
+}

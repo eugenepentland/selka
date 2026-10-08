@@ -1,0 +1,13 @@
+status 1
+fixed heap.my: 34 edits (E_MUTATION_MARKER)
+fixed heap_test.my: 29 edits (E_MUTATION_MARKER)
+fixed lox_strings.my: 4 edits (E_MUTATION_MARKER)
+fixed lox_strings_test.my: 3 edits (E_MUTATION_MARKER)
+fixed table.my: 3 edits (E_MUTATION_MARKER)
+fixed table_test.my: 18 edits (E_MUTATION_MARKER)
+fix: 91 edits in 6 files over 3 rounds
+
+heap.my:403:17: error[E_MUTATION_OVERLAP]: receiver `rt.marker.gray` overlaps `mut rt` evaluated in this statement; make the call `blacken(mut rt, rt.marker.gray.pop())` in its own statement first, save its result in a local, then update the receiver using that local
+          blacken(mut rt, rt.marker.gray.pop())
+                  ^
+  note: heap.my:403:25: the assignment or update receiver names an overlapping place

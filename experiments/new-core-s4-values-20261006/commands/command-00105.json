@@ -1,0 +1,14 @@
+{
+  "command": [
+    "python3",
+    "experiments/new-core-s4-values-20261006/qualify_correctness.py",
+    "--shards",
+    "64",
+    "--evidence",
+    "experiments/new-core-s4-values-20261006/final-core-conformance-v4"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-new-core-s4-values",
+  "pid": 1546278,
+  "status": 1,
+  "elapsed_seconds": 1238.877675831085
+}
