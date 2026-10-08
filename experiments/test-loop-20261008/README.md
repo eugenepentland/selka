@@ -23,3 +23,7 @@ Evidence for `docs/audits/test-loop-plan-2026-10-08.md` §1 and §6.
 - **`keys_differential.py`** runs seeded edits and their reverts in both key modes; the results are in `keys-{eda,lox,lang}.json`.
 - **`matrix-t3b.sh`** times the items 1–3 compiler against T3b (`matrix-t3b.out`).
 - **`interleave.sh`** is the 5-round interleaved check (`interleave-t3b.out`, taken under outside load).
+
+**Item 4** (§6c of the plan):
+- **`batch_differential.py`** runs a corpus with `--force` batched and with `MYLANG_TEST_ISOLATE=1`, then after each seeded break edit (`--breaks N --seed S`), and compares every verdict; the results are in `batch-{eda,lox,lang,core}.json`.
+- **`interleave-batch.sh`** is the 5-round interleaved timing of T3b against item 4 (`interleave-batch.out`, load about 6).

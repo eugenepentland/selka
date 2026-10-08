@@ -1,0 +1,122 @@
+{
+ "corpus": "core",
+ "revision": "HEAD",
+ "compiler": "/home/epentland/.cache/mylang/batch-wip/bin/mylang",
+ "targets": [
+  {
+   "target": "c_runner_properties.my",
+   "exit": [
+    0,
+    0
+   ],
+   "wall": [
+    0.033,
+    0.032
+   ],
+   "tests": 10,
+   "counts": {
+    "passed": 10,
+    "failed": 0,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "c_runner_standins.my",
+   "exit": [
+    0,
+    0
+   ],
+   "wall": [
+    0.021,
+    0.02
+   ],
+   "tests": 1,
+   "counts": {
+    "passed": 1,
+    "failed": 0,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "c_runner_failures.my",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.214,
+    0.204
+   ],
+   "tests": 9,
+   "counts": {
+    "passed": 0,
+    "failed": 9,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "c_runner_state_capture.my",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.026,
+    0.023
+   ],
+   "tests": 1,
+   "counts": {
+    "passed": 0,
+    "failed": 1,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "c_runner_byte_buffer.my",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.033,
+    0.03
+   ],
+   "tests": 4,
+   "counts": {
+    "passed": 2,
+    "failed": 2,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "runner_cases.my",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.013,
+    0.016
+   ],
+   "tests": 10,
+   "counts": {
+    "passed": 6,
+    "failed": 4,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  }
+ ],
+ "differences": 0
+}

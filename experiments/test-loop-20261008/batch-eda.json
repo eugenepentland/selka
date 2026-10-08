@@ -1,0 +1,165 @@
+{
+ "corpus": "eda",
+ "revision": "7e938b6",
+ "compiler": "/home/epentland/.cache/mylang/batch-wip/bin/mylang",
+ "targets": [
+  {
+   "target": "src",
+   "exit": [
+    0,
+    0
+   ],
+   "wall": [
+    0.996,
+    1.4
+   ],
+   "tests": 310,
+   "counts": {
+    "passed": 310,
+    "failed": 0,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "src",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.976,
+    1.402
+   ],
+   "break": {
+    "file": "src/numeric.my",
+    "line": 58
+   },
+   "tests": 310,
+   "counts": {
+    "passed": 308,
+    "failed": 2,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "src",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    1.013,
+    1.191
+   ],
+   "break": {
+    "file": "src/stdlib_embed.my",
+    "line": 51
+   },
+   "tests": 310,
+   "counts": {
+    "passed": 303,
+    "failed": 7,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "src",
+   "exit": [
+    0,
+    0
+   ],
+   "wall": [
+    0.984,
+    1.394
+   ],
+   "break": {
+    "file": "src/placement_pin_roles.my",
+    "line": 30
+   },
+   "tests": 310,
+   "counts": {
+    "passed": 310,
+    "failed": 0,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "src",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.998,
+    1.4
+   ],
+   "break": {
+    "file": "src/numeric.my",
+    "line": 50
+   },
+   "tests": 310,
+   "counts": {
+    "passed": 297,
+    "failed": 13,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "src",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.96,
+    1.42
+   ],
+   "break": {
+    "file": "src/render_svg_context.my",
+    "line": 919
+   },
+   "tests": 310,
+   "counts": {
+    "passed": 308,
+    "failed": 2,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": "src",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.971,
+    1.408
+   ],
+   "break": {
+    "file": "src/support_parse.my",
+    "line": 21
+   },
+   "tests": 310,
+   "counts": {
+    "passed": 263,
+    "failed": 47,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  }
+ ],
+ "differences": 0
+}

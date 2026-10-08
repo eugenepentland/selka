@@ -71,6 +71,11 @@ Even a comment-only edit, where every test replays, cost 1.3–2.1 s, because ev
 
 ## 4. Item 4: one process per batch of tests
 
+**Status, 2026-10-08: done on `claude/test-batch`** (NEW-CORE-TEST-BATCH-1; results in §6c). The implementation follows the plan below, with three changes:
+- **No runtime reset was needed.** The harness already forks every trial from a parent that runs no guest code, so stand-ins, captured output, budgets and the managed heap start fresh for each test by construction. The audit of runtime globals reduced to that.
+- **No `isolate: true` cases-file setting.** With a fork per trial, a batch shares nothing a test can observe. `MYLANG_TEST_ISOLATE=1` (one process per test) stays as the differential oracle.
+- **A timeout is not rerun.** A trial's wall-clock limit is now exact to the millisecond (`setitimer`, not whole-second `alarm`), so a trial killed by `SIGALRM` gets `timed out after N ms`, the reason it gets alone, without paying the timeout twice. Any other ending is rerun alone, as planned.
+
 **Why.** Every test is its own native process, launched one at a time, at about 13 ms each. The hub edit launches 111 of them, and the 28-test file spends 0.33 s just launching.
 
 **What.**
@@ -199,6 +204,39 @@ Each compiler has its own warm cache. The raw rows are in `experiments/test-loop
 **Phase timing.** On the 28-test file, the shared key path costs 27 ms of lowering and 26 ms of digests and keys. It replaces about 600 ms of per-test lowering and hashing.
 
 **Against the benchmark** (all CPUs, the three timed edits): hub 1.39 s, leaf 1.22 s, interface 0.74 s; the median is **1.22 s**. Go's is 1.19 s, Rust's 1.64 s and Zig's 2.20 s.
+
+## 6c. Results of item 4
+
+**Correctness: `batch_differential.py`.** Every corpus ran with `--force` batched and with the `MYLANG_TEST_ISOLATE=1` oracle (one process per test), then again after each of 14 seeded break edits (an assertion that fails at run time, inserted into a function).
+- **Corpora:** EDA (310 tests, 6 breaks), Lox (65, 4 breaks), `tests/lang` (1505, 4 breaks), and the six `test/core` runner fixtures that need no linked helper (35 tests, 16 of them failing by design: traps, shrinks, discards, captured output, typed expectations).
+- **Result:** the same status, reason and property evidence for every test on every run, and the same exit status. The break edits failed up to 47 tests (EDA) and 23 (Lox).
+- **Fixtures** (`src/core/runner_batch_test.zig`): output, the memory ceiling and the timeout stay per test inside one process; a test that ends its process at its second trial (a linked probe) is rerun alone and the rest continue, all passing; a test whose every trial exits early fails with the same ending in both modes; the probe counts 1 process batched against 3 isolated.
+- **Evidence:** `batch-{eda,lox,lang,core}.json` (the `core` file is the clean run only).
+
+**Speed: the 28-test file** (`export_kicad_sch_test`, `--force`, all tests rerun, medians of 3):
+
+| `--jobs` | T3b | item 4 |
+|---:|---:|---:|
+| 1 | 1.10 s | **0.66 s** |
+| 4 | 0.69 s | **0.59 s** |
+| 16 | 0.67 s | **0.64 s** |
+
+Its tests now run in about 0.11 s of processes at `--jobs 4`, against 0.33 s. Batched against isolated with the same compiler at `--jobs 1`, each extra process costs about 15 ms, nearly all system time: the compiler forks its own 300–500 MB address space for every launch (Zig's `std.process.run` uses `fork`). The test binary itself starts in about 2 ms.
+
+**Speed: the EDA edits** (`interleave-batch.sh`, 5 interleaved rounds, each compiler in its own warm cache, load about 6; medians):
+
+| edit | all CPUs T3b | all CPUs item 4 | `--jobs 4` T3b | `--jobs 4` item 4 |
+|---|---:|---:|---:|---:|
+| hub body (111 rerun) | 1.40 s | **1.03 s** | 1.64 s | **1.44 s** |
+| leaf body (31 rerun) | 1.20 s | **0.85 s** | 1.17 s | **0.82 s** |
+| interface (0 rerun) | 0.70 s | 0.70 s | 1.09 s | 1.12 s |
+| comment only (0 rerun) | 0.71 s | 0.72 s | 1.07 s | 1.10 s |
+
+**Against the benchmark** (all CPUs, the three timed edits): hub 1.03 s, leaf 0.85 s, interface 0.70 s; the median is **0.85 s**, under Go's 1.19 s. T3b measured 1.20 s in the same rounds, matching its 1.22 s in §6b. These are the probe's numbers under outside load, not a benchmark-harness run.
+
+**What is left.**
+- **Process launches still fork the compiler** (about 13 ms of system time each, serialized on its address space). A `vfork`-style spawn (`clone` with `CLONE_VM | CLONE_VFORK`, then `execve`) would make each launch cost about what it costs from a shell. It matters more for item 5, where one large process would launch every test of the directory.
+- **The edited file's own check and build** (about 0.5 s on the hub edit's critical path) and the **58 child compilers** (no-rerun edits at 0.7 s) are item 5's.
 
 ## 7. Order and rules
 

@@ -1,0 +1,119 @@
+{
+ "corpus": "lang",
+ "revision": "HEAD",
+ "compiler": "/home/epentland/.cache/mylang/batch-wip/bin/mylang",
+ "targets": [
+  {
+   "target": ".",
+   "exit": [
+    0,
+    0
+   ],
+   "wall": [
+    0.949,
+    1.071
+   ],
+   "tests": 1505,
+   "counts": {
+    "passed": 1505,
+    "failed": 0,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": ".",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.946,
+    1.068
+   ],
+   "break": {
+    "file": "python_collections.my",
+    "line": 81
+   },
+   "tests": 1505,
+   "counts": {
+    "passed": 1504,
+    "failed": 1,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": ".",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.935,
+    1.055
+   ],
+   "break": {
+    "file": "rc_fresh_spans.my",
+    "line": 51
+   },
+   "tests": 1505,
+   "counts": {
+    "passed": 1504,
+    "failed": 1,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": ".",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.934,
+    1.044
+   ],
+   "break": {
+    "file": "python_expressions.my",
+    "line": 18
+   },
+   "tests": 1505,
+   "counts": {
+    "passed": 1504,
+    "failed": 1,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": ".",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.924,
+    1.055
+   ],
+   "break": {
+    "file": "python_collections.my",
+    "line": 64
+   },
+   "tests": 1505,
+   "counts": {
+    "passed": 1504,
+    "failed": 1,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  }
+ ],
+ "differences": 0
+}
