@@ -102,6 +102,16 @@ Even a comment-only edit, where every test replays, cost 1.3–2.1 s, because ev
 
 ## 5. Item 5: one-process directory runs
 
+**Status, 2026-10-08: done on `claude/test-union`** (NEW-CORE-TEST-UNION-1; results in §6d and §6e), after two smaller changes that the profiling for it turned up (§6d). Where it departs from the plan below:
+- **T5a is a shared check, not a multi-entry session.** The roots of one project that miss their recorded reports are checked once, as a synthetic entry that imports each of them. Each root then reads its share: the modules its own imports reach, with the synthetic entry's source segment named after the root, so an instruction without a span of its own is located, traced and keyed exactly as in the root's own check. Directory discovery loads the same roots through one such entry too, instead of one load per root.
+- **Eligibility, not every root.** A root shares the check when it opens with its `module` header and declares no `main`, its configuration names no import policy and no interface files, its cases file names no providers, and the run selects by no git revision. Every other root, and every root of a project whose shared check fails, keeps its child process, where its own check reports its own diagnostics. `MYLANG_TEST_CHILDREN=1` is the oracle.
+- **T5b is a permit pool, not a step scheduler.** Each root still selects, builds and runs on its worker. Each of its test processes holds one of the run's `overall` permits, and a child root holds its share for as long as it runs. The root that is still working therefore uses the cores the finished roots gave back, and the run never has more test processes than the budget.
+- **Found and fixed on the way:**
+  - the schema digest now covers only the types a test reaches, not every type of the program;
+  - a span-0 instruction was keyed by the entry file's name;
+  - `ETXTBSY` from a sibling thread's child is retried;
+  - the process-placement oracles no longer enter receipt keys.
+
 **Why.** 58 child processes each:
 - start a 50 MB compiler;
 - reload and re-hash the same cached modules (`persist_codec.decode`, BLAKE3, SHA-256);
@@ -237,6 +247,58 @@ Its tests now run in about 0.11 s of processes at `--jobs 4`, against 0.33 s. Ba
 **What is left.**
 - **Process launches still fork the compiler** (about 13 ms of system time each, serialized on its address space). A `vfork`-style spawn (`clone` with `CLONE_VM | CLONE_VFORK`, then `execve`) would make each launch cost about what it costs from a shell. It matters more for item 5, where one large process would launch every test of the directory.
 - **The edited file's own check and build** (about 0.5 s on the hub edit's critical path) and the **58 child compilers** (no-rerun edits at 0.7 s) are item 5's.
+
+## 6d. Fast launches and the cache sync
+
+**Fast launches (NEW-CORE-SPAWN-1, `process_spawn.zig`).** The core now starts test processes, build tools, directory-run children and the program `mylang run` runs with `clone(CLONE_VM | CLONE_VFORK)` and `execve`, instead of Zig's `fork`.
+- **Effect on launches:** on the 28-test file run isolated (one process per test), system time fell from 0.55 s to 0.16 s, and wall time from 1.08–1.49 s to 0.69–0.95 s.
+- **Effect on the EDA edits:** none measurable (`interleave-spawn.out`). After item 4, launches were no longer on the critical path.
+- **Correctness:** against `main`, it gives the same verdicts on every runner fixture and on an EDA break edit.
+
+**The semantic cache's sync (SEMANTIC-CACHE-15 amended).**
+- **The cause:** phase timing showed that after an edit, 89% of the directory run's child time was the front-end check, 200–270 ms per root. One root's check ran 150 ms with the semantic cache and 110 ms without it.
+- **The stall:** the cache ended every publication batch with `syncfs`. That waits for every dirty page of the filesystem, so on a busy machine a single check stalled for up to a second. The entries were already checksummed and renamed atomically, so the sync bought only durability, which a cache does not need. It is gone.
+- **Results** (`interleave-nosync.out`, 5 rounds, load about 3.5; fast launch plus no sync, against `main`):
+  - all CPUs: hub 1.12 → 0.94 s, leaf 0.97 → 0.86 s, interface 0.78 → 0.56 s, comment 0.73 → 0.54 s;
+  - `--jobs 4`: hub 1.48 → 1.14 s.
+
+## 6e. Results of item 5
+
+**Where the time went, and what changed.** On a comment edit, 28 roots each rechecked much the same import graph, 3.6 s of check in all. Now:
+- **Discovery:** one shared load, about 90 ms → 25–29 ms.
+- **The shared check:** 170–200 ms once. It runs without the semantic cache, which measured 40–50 ms slower here.
+- **Each root:** selects, builds and runs from its share of that check.
+- **Test processes:** a root's processes take the permits the finished roots return, so the hub edit's last root (`export_kicad_sch_test`, 28 tests) no longer runs its tests on one core.
+
+**Correctness.**
+- **Against children (`batch_differential.py --oracle MYLANG_TEST_CHILDREN`):** EDA, Lox and `tests/lang` with 14 break edits gave identical verdicts and exit statuses (`union-{eda,lox,lang}.json`).
+- **The first run found 22 differences, all `FileBusy`.** A sibling thread's child held a test executable's write descriptor between its `clone` and its `execve`. The spawn now retries `ETXTBSY` with a short backoff.
+- **Receipts carry across modes on EDA:**
+  - after a leaf edit, a run in children reruns exactly the 31 tests an in-process run reruns;
+  - a revert replays all 310 in either mode.
+
+  Two fixes made this possible: span-0 locations, and the schema digest scoped to reachable types.
+- **Regression checks on the final compiler:**
+  - `keys_differential.py`, 28 edits: 0 missed and 0 wrong (`final-keys-*.json`);
+  - the item 4 differential on EDA, 4 break edits: 0 differences (`final-batch-eda.json`).
+- **Gate:** 88/88, in 72 s.
+
+**Speed** (`interleave-final.out`: 5 interleaved rounds against `main` `4b666d7e9` (item 4), each in its own warm cache; outside load 11–13, so absolute numbers are high; medians):
+
+| edit | all CPUs `main` | all CPUs now | `--jobs 4` `main` | `--jobs 4` now |
+|---|---:|---:|---:|---:|
+| hub body (111 rerun) | 1.01 s | **0.61 s** | 1.59 s | **0.65 s** |
+| leaf body (31 rerun) | 0.87 s | **0.52 s** | 0.82 s | **0.52 s** |
+| interface (0 rerun) | 0.76 s | **0.40 s** | 1.14 s | **0.42 s** |
+| comment only (0 rerun) | 0.75 s | **0.40 s** | 1.07 s | **0.42 s** |
+
+A run with nothing changed is also faster: 0.46 s → 0.34 s in the same session.
+
+**Against the benchmark** (all CPUs, the three timed edits): hub 0.61 s, leaf 0.52 s, interface 0.40 s. The median is **0.52 s**, against Go's 1.19 s, Rust's 1.64 s and Zig's 2.20 s.
+
+**What is left.**
+- **The hub edit:** its critical path is now the shared check (about 200 ms), then the largest root's select, build and run. The build is lowering, LLVM emission and `zig cc` of the changed units.
+- **No-rerun edits:** discovery, the shared check, and each root's key derivation (about 50–70 ms for the largest root).
 
 ## 7. Order and rules
 

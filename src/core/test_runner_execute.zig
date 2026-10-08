@@ -20,6 +20,8 @@ const property_schema = @import("property_schema.zig");
 const property_execute = @import("property_execute.zig");
 const v = @import("property_value.zig");
 const Options = @import("test_runner_options.zig").Options;
+const spawn = @import("process_spawn.zig");
+const root_share = @import("test_runner_shared.zig");
 const Value = std.json.Value;
 
 /// What stops a run: memory, or an output stream that cannot be written.
@@ -32,16 +34,17 @@ pub const Selected = struct { case: discover.Case, verdict: report.Verdict, read
 /// The cases-file key holding a test's expected result.
 pub const expectation = "expected";
 
-/// The arena, child-output allocator and I/O the test processes use; the arena must be
-/// thread-safe.
-pub const Resources = struct { arena: std.mem.Allocator, backing: std.mem.Allocator, io: std.Io };
+/// The arena, child-output allocator, I/O and environment the test processes use; the
+/// arena must be thread-safe.
+pub const Resources = struct { arena: std.mem.Allocator, backing: std.mem.Allocator, io: std.Io, environment: spawn.Environment };
 
 /// A built test executable and the checked program its tests come from.
 pub const Executable = struct { path: []const u8, program: typed.Program };
 
 /// How many test processes run at once, and at most how many plain tests one answers:
 /// `MYLANG_TEST_ISOLATE=1` gives each its own, the differential oracle for batching.
-pub const Workers = struct { width: usize, batch: usize = std.math.maxInt(usize) };
+/// With a directory run's `permits`, each test process also holds one of them.
+pub const Workers = struct { width: usize, batch: usize = std.math.maxInt(usize), permits: ?*root_share.Permits = null };
 
 /// Whether `MYLANG_TEST_ISOLATE=1` asks for one process per plain test.
 pub fn isolated(environment: *const std.process.Environ.Map) bool {
@@ -57,7 +60,7 @@ pub fn run(resources: Resources, options: Options, executable: Executable, chose
         .options = options,
         .program = executable.program,
         .executor = .{
-            .context = .{ .arena = a, .backing = resources.backing, .io = resources.io },
+            .context = .{ .arena = a, .backing = resources.backing, .io = resources.io, .environment = resources.environment },
             .types = try property_schema.definitions(a, executable.program),
             .executable = executable.path,
             .table_index = 0,
@@ -73,7 +76,7 @@ pub fn run(resources: Resources, options: Options, executable: Executable, chose
         try (if (pending.search) &searches else &plains).append(a, pending);
     }
     const width = @max(1, @min(workers.width, searches.items.len + plains.items.len));
-    var queue: Queue = .{ .shared = &shared, .searches = searches.items, .plains = plains.items, .workers = .{ .width = width, .batch = @max(1, workers.batch) } };
+    var queue: Queue = .{ .shared = &shared, .searches = searches.items, .plains = plains.items, .workers = .{ .width = width, .batch = @max(1, workers.batch), .permits = workers.permits } };
     // NEW-CORE-TEST-QUEUE-1: each thread takes the next work as soon as its last ends.
     const threads = try a.alloc(std.Thread, width - 1);
     const failures = try a.alloc(?Error, width);
@@ -217,6 +220,9 @@ const Shared = struct {
 /// fixed inputs of its one plain trial or a property search.
 const Pending = struct { selected: *Selected, row: usize, function: Value, words: []const u64 = &.{}, search: bool = false };
 
+/// One unit of a worker's work: a property search, or a run of plain tests.
+const Work = union(enum) { search: Pending, plain: []const Pending };
+
 /// The pending work of one executable, taken by every worker thread: property searches
 /// first, one each, then runs of plain tests.
 const Queue = struct {
@@ -227,14 +233,16 @@ const Queue = struct {
     taken: struct { searches: std.atomic.Value(usize) = .init(0), plains: std.atomic.Value(usize) = .init(0) } = .{},
 
     fn drain(self: *Queue, failure: *?Error) void {
+        const io = self.shared.resources.io;
         while (true) {
             const searched = self.taken.searches.fetchAdd(1, .monotonic);
-            const result = if (searched < self.searches.len)
-                self.shared.search(self.searches[searched])
-            else if (self.next()) |batch|
-                self.shared.plain(batch)
-            else
-                return;
+            const work: Work = if (searched < self.searches.len) .{ .search = self.searches[searched] } else if (self.next()) |batch| .{ .plain = batch } else return;
+            if (self.workers.permits) |permits| permits.acquire(io, 1);
+            const result = switch (work) {
+                .search => |pending| self.shared.search(pending),
+                .plain => |batch| self.shared.plain(batch),
+            };
+            if (self.workers.permits) |permits| permits.release(io, 1);
             result catch |err| {
                 failure.* = err;
                 return;
@@ -323,8 +331,8 @@ test "Queue.drain stops its worker at the first error and reports it" {
     // A file where the cache directory should be: no private directory can be made.
     try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "cache", .data = "" });
     const cache = try temporary.dir.realPathFileAlloc(std.testing.io, "cache", a);
-    const resources: Resources = .{ .arena = a, .backing = std.testing.allocator, .io = std.testing.io };
-    const context: property_execute.Context = .{ .arena = a, .backing = std.testing.allocator, .io = std.testing.io };
+    const resources: Resources = .{ .arena = a, .backing = std.testing.allocator, .io = std.testing.io, .environment = .{ .block = .empty } };
+    const context: property_execute.Context = .{ .arena = a, .backing = std.testing.allocator, .io = std.testing.io, .environment = .{ .block = .empty } };
     const shared: Shared = .{
         .resources = resources,
         .options = .{ .path = "x.my", .build = .{ .zig = "zig", .cache = cache } },

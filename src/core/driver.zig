@@ -643,7 +643,7 @@ fn removeDirectory(io: std.Io, path: []const u8) void {
 /// Run one tool process (counted), appending its stderr to the log.
 fn run(native: Native, argv: []const []const u8) Error!void {
     native.counts.processes += 1;
-    const result = std.process.run(native.arena, native.io, .{ .argv = argv, .environ_map = native.environment }) catch |err| {
+    const result = @import("process_spawn.zig").run(native.arena, native.io, .{ .argv = argv, .environment = .{ .map = native.environment } }) catch |err| {
         try native.log.print(native.arena, "error: cannot run {s}: {s}\n", .{ argv[0], @errorName(err) });
         return error.ToolFailed;
     };

@@ -6,12 +6,11 @@
 //! name in the destination directory and atomically renamed over the stable key,
 //! so a concurrent reader either sees the previous complete entry or the new one.
 //!
-//! Publication through `beginBatch`/`endBatch` defers data durability: each
-//! entry is still written and atomically renamed, but the whole bounded group is
-//! flushed by one shared filesystem sync at `endBatch` instead of a synchronous
-//! flush per body. A crash before that sync can leave a torn image, which the
-//! entry checksum rejects as a miss; no partial or incompatible image is ever
-//! accepted. `--no-cache` never opens a store.
+//! Publication through `beginBatch`/`endBatch` writes and atomically renames each
+//! entry and inventories the namespace once per bounded group. Nothing is ever
+//! synchronized to disk (SEMANTIC-CACHE-15): a crash can leave a torn or missing
+//! image, which the entry checksum rejects as a miss; no partial or incompatible
+//! image is ever accepted. `--no-cache` never opens a store.
 //!
 //! Every decode is a miss unless the file's format version, contract fingerprint,
 //! mutation-contract version, stable declaration key, dependency context,
@@ -89,9 +88,6 @@ pub const Retained = struct {
     /// reconciliation and one final inventory, never one per published body.
     /// Exposed so tests can assert the population path is not per-body.
     inventories: usize = 0,
-    /// Shared filesystem synchronizations issued for publication. A batch of N
-    /// bodies issues one, so this scales with batches rather than bodies.
-    syncs: usize = 0,
 };
 
 /// One contract-namespaced durable directory. `deinit` releases only borrowed
@@ -124,9 +120,6 @@ const Batch = struct {
     /// True once `bytes`/`entries` describe the whole namespace. A namespace
     /// that did not exist at `beginBatch` is empty and starts seeded.
     seeded: bool,
-    /// True once at least one entry was renamed without its own data sync.
-    /// `endBatch` then issues one shared filesystem sync for the whole group.
-    dirty: bool = false,
 };
 /// How far a batch's incremental accounting may exceed a bound before it
 /// reconciles with the on-disk namespace. The slack is proportional to the
@@ -510,25 +503,11 @@ pub const Store = struct {
             self.statistics.bypassed += 1;
             return false;
         };
-        // A publication batch defers data durability to one shared filesystem
-        // sync in `endBatch`, so a batch of N bodies costs one sync instead of
-        // N. A single unbatched entry keeps its own flush. The rename below is
-        // atomic either way: a concurrent reader sees the complete image from
-        // the page cache, and a crash before the shared sync can only leave a
-        // torn image that the entry checksum rejects as a miss.
-        if (self.batch == null) {
-            file.sync(self.io) catch {
-                file.close(self.io);
-                open = false;
-                std.Io.Dir.cwd().deleteFile(self.io, staging) catch |err| switch (err) {
-                    error.FileNotFound => {},
-                    else => self.statistics.bypassed += 1,
-                };
-                self.statistics.bypassed += 1;
-                return false;
-            };
-            self.statistics.retained.syncs += 1;
-        }
+        // No data sync (SEMANTIC-CACHE-15): a cache needs no durability. The
+        // rename below is atomic, so a concurrent reader sees the complete image
+        // from the page cache, and a crash before the disk kept the data can only
+        // leave a torn or empty image that the entry checksum rejects as a miss.
+        // A sync would instead wait for every dirty page of the filesystem.
         file.close(self.io);
         open = false;
         std.Io.Dir.rename(.cwd(), staging, .cwd(), path, self.io) catch {
@@ -564,45 +543,18 @@ pub const Store = struct {
         self.batch = .{ .bytes = 0, .entries = 0, .seeded = !try self.namespaceExists() };
     }
 
-    /// Finish a publication batch with one shared filesystem sync (when the
-    /// batch published anything) and one final namespace inventory. The
+    /// Finish a publication batch with one final namespace inventory. The
     /// inventory reconciles files added or removed by concurrent publishers and
     /// converges the store on its byte and entry bounds. Safe with no active
     /// batch; the accounting is discarded first so an allocation failure cannot
     /// leave the store expecting a future reconciliation.
     pub fn endBatch(self: *Store) error{OutOfMemory}!void {
         if (self.batch == null) return;
-        const dirty = self.batch.?.dirty;
         self.batch = null;
-        if (dirty) self.flushBatch();
         self.trim() catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             error.WriteFailed => self.statistics.bypassed += 1,
         };
-    }
-
-    /// One shared filesystem synchronization for a whole publication batch.
-    /// Every entry was already written and atomically renamed, so a concurrent
-    /// reader observes the complete image; this call flushes the group's data
-    /// and directory updates once instead of once per body. A refused sync is a
-    /// cache bypass: the entries stay visible and validated, and the command is
-    /// never failed. A crash before this point can leave a torn image whose
-    /// entry checksum produces a miss, never a stale accepted result.
-    fn flushBatch(self: *Store) void {
-        const directory = self.namespace() catch return;
-        defer self.allocator.free(directory);
-        // `iterate = true` opens a real directory descriptor; the no-iterate
-        // form sets O_PATH, which `syncfs` rejects.
-        var dir = std.Io.Dir.cwd().openDir(self.io, directory, .{ .iterate = true }) catch return;
-        defer dir.close(self.io);
-        // The raw syscall is deliberate: `std.posix.syncfs` maps BADF/EINVAL/ROFS
-        // to `unreachable`, and a cache must treat an unsupported or refused
-        // flush as a bypass instead of aborting the compiler.
-        if (std.posix.errno(std.posix.system.syncfs(dir.handle)) != .SUCCESS) {
-            self.statistics.bypassed += 1;
-            return;
-        }
-        self.statistics.retained.syncs += 1;
     }
 
     /// Whether the contract namespace directory exists. This is a single
@@ -641,8 +593,6 @@ pub const Store = struct {
             .bytes = batch.bytes +| size,
             .entries = batch.entries +| 1,
             .seeded = batch.seeded,
-            // A renamed entry without its own data sync makes the batch dirty.
-            .dirty = true,
         };
         self.batch = updated;
         self.statistics.retained.bytes = updated.bytes;
@@ -663,7 +613,7 @@ pub const Store = struct {
             try self.countNamespace(&total, &count);
             // The inventory already includes this batch's published files, so
             // it replaces the incremental totals rather than adding to them.
-            batch = .{ .bytes = total, .entries = count, .seeded = true, .dirty = batch.dirty };
+            batch = .{ .bytes = total, .entries = count, .seeded = true };
             self.batch = batch;
         }
         if (!self.batchOverBound(batch)) return;
@@ -675,7 +625,6 @@ pub const Store = struct {
             .bytes = self.statistics.retained.bytes,
             .entries = self.statistics.retained.entries,
             .seeded = true,
-            .dirty = batch.dirty,
         };
     }
 

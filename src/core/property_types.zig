@@ -154,18 +154,26 @@ pub fn reaches(schema: Schema, from: []const u8, target: []const u8) error{OutOf
     while (pending.pop()) |name| {
         if (std.mem.eql(u8, name, target)) return true;
         if ((try seen.getOrPut(schema.arena, name)).found_existing) continue;
-        switch (try schema.shape(name)) {
-            .sequence => |sequence| try pending.append(schema.arena, sequence.element),
-            .keyed => |pair| try pending.appendSlice(schema.arena, &.{ pair.key, pair.value }),
-            .record => |fields| for (fields) |field| try pending.append(schema.arena, field.type),
-            .cases => |cases| for (cases.cases) |case| {
-                const payload = v.get(case, "payload");
-                if (payload == .string) try pending.append(schema.arena, payload.string);
-            },
-            .integer, .atom, .refused => {},
-        }
+        try pending.appendSlice(schema.arena, try parts(schema, name));
     }
     return false;
+}
+
+/// The type names type `name`'s shape refers to directly: an element, a key and
+/// value, record fields or case payloads.
+pub fn parts(schema: Schema, name: []const u8) error{OutOfMemory}![]const []const u8 {
+    var found: std.ArrayList([]const u8) = .empty;
+    switch (try schema.shape(name)) {
+        .sequence => |sequence| try found.append(schema.arena, sequence.element),
+        .keyed => |pair| try found.appendSlice(schema.arena, &.{ pair.key, pair.value }),
+        .record => |fields| for (fields) |field| try found.append(schema.arena, field.type),
+        .cases => |cases| for (cases.cases) |case| {
+            const payload = v.get(case, "payload");
+            if (payload == .string) try found.append(schema.arena, payload.string);
+        },
+        .integer, .atom, .refused => {},
+    }
+    return found.items;
 }
 
 /// Whether case `index` of union `name` can hold another `name`.

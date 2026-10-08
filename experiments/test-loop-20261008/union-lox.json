@@ -1,0 +1,120 @@
+{
+ "corpus": "lox",
+ "revision": "f44302d8",
+ "compiler": "/home/epentland/.cache/mylang/union-wip/bin/mylang",
+ "oracle": "MYLANG_TEST_CHILDREN",
+ "targets": [
+  {
+   "target": ".",
+   "exit": [
+    0,
+    0
+   ],
+   "wall": [
+    0.183,
+    0.23
+   ],
+   "tests": 65,
+   "counts": {
+    "passed": 65,
+    "failed": 0,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": ".",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.187,
+    0.244
+   ],
+   "break": {
+    "file": "interpreter.my",
+    "line": 108
+   },
+   "tests": 65,
+   "counts": {
+    "passed": 60,
+    "failed": 5,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": ".",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.196,
+    0.254
+   ],
+   "break": {
+    "file": "interpreter.my",
+    "line": 401
+   },
+   "tests": 65,
+   "counts": {
+    "passed": 57,
+    "failed": 8,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": ".",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.2,
+    0.247
+   ],
+   "break": {
+    "file": "driver_tests.my",
+    "line": 78
+   },
+   "tests": 65,
+   "counts": {
+    "passed": 64,
+    "failed": 1,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  },
+  {
+   "target": ".",
+   "exit": [
+    1,
+    1
+   ],
+   "wall": [
+    0.19,
+    0.249
+   ],
+   "break": {
+    "file": "heap.my",
+    "line": 241
+   },
+   "tests": 65,
+   "counts": {
+    "passed": 58,
+    "failed": 7,
+    "unsupported": 0,
+    "skipped": 0
+   },
+   "differ": []
+  }
+ ],
+ "differences": 0
+}

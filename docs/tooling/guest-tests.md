@@ -432,28 +432,40 @@ two such libraries where one imports the other, only the importer is a root. A
 library imported by a root is not run on its own: its tests run once, as part of
 that root.
 
-Each root runs as a child `mylang test ROOT --json` with the run's filter,
+Each root runs as `mylang test ROOT --json` would, with the run's filter,
 budgets, seed, property runs, `--release`, `--verify-facts`/`--no-facts`,
-`--force`, `--affected --against REF` and `--link` inputs. Children share one
-worker budget (NEW-CORE-S4-TEST-1): `--jobs N`, else `MYLANG_JOBS`, else the CPU
-count capped by how many per-test memory ceilings `MemAvailable` holds
-(NEW-CORE-S5-FANOUT-1). At most that many children run at once. They start largest
-root file first, and a worker starts the next root as soon as its last child exits
-(NEW-CORE-TEST-QUEUE-1). Each child gets the budget divided by the children that
-can still run beside it, for its own builds and test processes, so the last few
-roots of a run get the cores the finished ones gave back. They share the run's
-cache directory, so an unchanged program replays its results instead of
-rebuilding.
+`--force`, `--affected --against REF` and `--link` inputs. Most roots run in the
+directory run's own process (NEW-CORE-TEST-UNION-1). A root that opens with its
+`module` header and declares no `main`, in a project whose configuration names no
+import policy and no interface files, with no providers in its cases file, first
+replays its recorded results; the roots of a project that miss are then checked
+once, together, and each selects, builds and runs its tests from its share of that
+check: the modules its own imports reach, which are what its own check would have
+loaded. After an edit, a directory's roots used to check much the same import
+graph once each. Every other root, and every root of a project whose shared check
+fails, runs in a child process, whose own check reports its own diagnostics;
+`MYLANG_TEST_CHILDREN=1` gives every root a child.
 
-The children's reports merge into one listing in root order and one summary
-line. A child that produces no usable report (a project that does not check, a
+Roots share one worker budget (NEW-CORE-S4-TEST-1): `--jobs N`, else
+`MYLANG_JOBS`, else the CPU count capped by how many per-test memory ceilings
+`MemAvailable` holds (NEW-CORE-S5-FANOUT-1). At most that many roots run at once,
+largest root file first, and a worker starts the next root as soon as its last one
+ends (NEW-CORE-TEST-QUEUE-1). The budget also bounds the run's test processes: a
+root in the run's process holds one permit per test process, so the root still
+working uses the cores the finished ones gave back, and a child holds its share,
+the budget divided by the roots that can still run beside it. Roots share the
+run's cache directory, so an unchanged program replays its results instead of
+rebuilding, and a result recorded in either kind of process replays in the other.
+
+The roots' reports merge into one listing in root order and one summary
+line. A root that produces no usable report (a project that does not check, a
 setup failure) adds a failed line naming its path, with its diagnostics on
 stderr. Every test-declaring source beneath the directory must appear in some
-child's loaded `sources`; one that no child loaded fails the run as
+root's loaded `sources`; one that no root loaded fails the run as
 `test-declaring source was not loaded by any test program`, so a test file can
 fail a run but never silently drop out of one. A source, configuration or
 toolchain change during the run fails it with `SourceChanged`. The exit status
-is 2 if any child failed to set up (status 2), else that of the merged listing:
+is 2 if any root failed to set up (status 2), else that of the merged listing:
 1 if any line failed, 3 if nothing was selected or every selected test was
 skipped, 0 otherwise. `--cases` is refused for a directory run (status 2), because its
 keys name the tests of one project; each entry's own
@@ -495,7 +507,8 @@ A receipt's identity (NEW-CORE-S4-TEST-3) is:
   uses, and the bytes of `mylang.json` and its import policy;
 - **the environment variables that can change an outcome**
   (NEW-CORE-S4-TEST-5): every `MYL_` and `MYLANG_` variable except
-  `MYLANG_JOBS` and `MYLANG_CORE_RUNTIME_CACHE`, and the C compiler and Zig
+  `MYLANG_JOBS`, `MYLANG_CORE_RUNTIME_CACHE`, `MYLANG_TEST_ISOLATE` and
+  `MYLANG_TEST_CHILDREN`, and the C compiler and Zig
   toolchain inputs (`CPATH`, `C_INCLUDE_PATH`, `LIBRARY_PATH`, `ZIG`,
   `ZIG_LIB_DIR`, `SOURCE_DATE_EPOCH` and the like). A shell's `_` or `OLDPWD`,
   a terminal's variables or a wrapper such as `time` leave receipts valid.

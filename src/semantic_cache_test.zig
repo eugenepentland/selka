@@ -899,7 +899,7 @@ test "durable publication batch inventories a fresh namespace once instead of pe
 }
 
 // spec: SEMANTIC-CACHE-15
-test "durable batch publication issues one shared sync per batch and none when warm" {
+test "durable batch publication renames complete images without a filesystem sync, cold or warm" {
     var temporary = t.tmpDir(.{});
     defer temporary.cleanup();
     const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
@@ -921,9 +921,7 @@ test "durable batch publication issues one shared sync per batch and none when w
     cache.context.persistent = &store;
     try compare(t.allocator, &cache, source.items, 42);
     try t.expect(store.statistics.stored >= 2);
-    // One publication batch covers every fresh body, so the group costs one
-    // shared sync instead of a synchronous flush per body.
-    try t.expectEqual(@as(usize, 1), store.statistics.retained.syncs);
+    try t.expectEqual(@as(usize, 0), store.statistics.bypassed);
     var warm_store = language.semantic_cache.Store.init(t.allocator, t.io, root, cache_key.Contract.default, language.semantic_cache.mutation_contract_version);
     defer warm_store.deinit();
     var warm_cache = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, fingerprint);
@@ -931,8 +929,8 @@ test "durable batch publication issues one shared sync per batch and none when w
     warm_cache.context.persistent = &warm_store;
     try compare(t.allocator, &warm_cache, source.items, 42);
     try t.expectEqual(@as(usize, 65), warm_cache.statistics.reused);
-    // A warm request publishes nothing and must not synchronize at all.
-    try t.expectEqual(@as(usize, 0), warm_store.statistics.retained.syncs);
+    // A warm request publishes nothing.
+    try t.expectEqual(@as(usize, 0), warm_store.statistics.stored);
 }
 
 // spec-case: SEMANTIC-CACHE-15
@@ -962,9 +960,9 @@ test "a torn durable entry is a miss that rechecks and republishes in one batch"
     cache.context.persistent = &store;
     try compare(t.allocator, &cache, prefix ++ suffix, 42);
     // The torn image missed and its body checked fresh, then the fresh group was
-    // republished under one shared sync; acceptance and diagnostics still agree.
+    // republished; acceptance and diagnostics still agree.
     try t.expect(cache.statistics.checked > 0);
-    try t.expectEqual(@as(usize, 1), store.statistics.retained.syncs);
+    try t.expect(store.statistics.stored > 0);
 }
 
 // spec-case: SEMANTIC-CACHE-15
@@ -998,7 +996,7 @@ test "an interrupted staging file and a foreign entry are ignored" {
     try compare(t.allocator, &cache, prefix ++ suffix, 42);
     try t.expectEqual(@as(usize, 0), cache.statistics.checked);
     try t.expectEqual(@as(usize, 3), cache.statistics.reused);
-    try t.expectEqual(@as(usize, 0), store.statistics.retained.syncs);
+    try t.expectEqual(@as(usize, 0), store.statistics.stored);
 }
 
 /// Write one file directly into the contract namespace, bypassing publication.

@@ -27,3 +27,8 @@ Evidence for `docs/audits/test-loop-plan-2026-10-08.md` §1 and §6.
 **Item 4** (§6c of the plan):
 - **`batch_differential.py`** runs a corpus with `--force` batched and with `MYLANG_TEST_ISOLATE=1`, then after each seeded break edit (`--breaks N --seed S`), and compares every verdict; the results are in `batch-{eda,lox,lang,core}.json`.
 - **`interleave-batch.sh`** is the 5-round interleaved timing of T3b against item 4 (`interleave-batch.out`, load about 6).
+
+**Fast launches, the cache sync and item 5** (§6d and §6e of the plan):
+- **`interleave-spawn.sh`, `interleave-nosync.sh`, `interleave-union.sh`, `interleave-final.sh`** are the interleaved timings: item 4 against fast launch; `main` against fast launch plus no cache sync; that against item 5 (3 rounds); `main` against the final branch (5 rounds). Their `.out` files are the results.
+- **`batch_differential.py --oracle MYLANG_TEST_CHILDREN`** compares in-process directory runs with one child per root (`union-{eda,lox,lang}.json`, with break edits).
+- **`final-keys-*.json` and `final-batch-eda.json`** rerun the T3b and item 4 differentials on the final compiler.

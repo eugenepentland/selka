@@ -1,0 +1,208 @@
+{
+ "corpus": "lox",
+ "revision": "f44302d8",
+ "compiler": "/home/epentland/.cache/mylang/union-wip/bin/mylang",
+ "seed": 21,
+ "warm": {
+  "derived": {
+   "cold_wall": 7.106553751975298,
+   "cold_rerun": 65,
+   "warm_rerun": [],
+   "warm_wall": 0.0425270008854568
+  },
+  "oracle": {
+   "cold_wall": 7.342146653914824,
+   "cold_rerun": 65,
+   "warm_rerun": [],
+   "warm_wall": 0.044379772152751684
+  }
+ },
+ "edits": [
+  {
+   "kind": "body",
+   "file": "parser.my",
+   "line": 250,
+   "edit": {
+    "oracle_rerun": 23,
+    "derived_rerun": 23,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.419,
+    "derived_wall": 0.33,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.15,
+    "derived_wall": 0.11,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "parser.my",
+   "line": 250,
+   "edit": {
+    "oracle_rerun": 23,
+    "derived_rerun": 23,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.424,
+    "derived_wall": 0.304,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.069,
+    "derived_wall": 0.074,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "interpreter.my",
+   "line": 305,
+   "edit": {
+    "oracle_rerun": 13,
+    "derived_rerun": 13,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.406,
+    "derived_wall": 0.317,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.067,
+    "derived_wall": 0.071,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "interface",
+   "file": "interpreter.my",
+   "line": 746,
+   "edit": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.146,
+    "derived_wall": 0.073,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.146,
+    "derived_wall": 0.08,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "resolver.my",
+   "line": 132,
+   "edit": {
+    "oracle_rerun": 18,
+    "derived_rerun": 18,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.342,
+    "derived_wall": 0.249,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.049,
+    "derived_wall": 0.043,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "break",
+   "file": "scanner.my",
+   "line": 132,
+   "edit": {
+    "oracle_rerun": 40,
+    "derived_rerun": 40,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.331,
+    "derived_wall": 0.214,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.047,
+    "derived_wall": 0.045,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "body",
+   "file": "scanner.my",
+   "line": 111,
+   "edit": {
+    "oracle_rerun": 40,
+    "derived_rerun": 40,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.349,
+    "derived_wall": 0.225,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.153,
+    "derived_wall": 0.091,
+    "failed_same": true
+   }
+  },
+  {
+   "kind": "move",
+   "file": "lox_strings.my",
+   "line": 2,
+   "edit": {
+    "oracle_rerun": 40,
+    "derived_rerun": 40,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.347,
+    "derived_wall": 0.244,
+    "failed_same": true
+   },
+   "revert": {
+    "oracle_rerun": 0,
+    "derived_rerun": 0,
+    "missed": [],
+    "extra": [],
+    "oracle_wall": 0.149,
+    "derived_wall": 0.085,
+    "failed_same": true
+   }
+  }
+ ],
+ "missed_total": 0,
+ "wrong_total": 0
+}
