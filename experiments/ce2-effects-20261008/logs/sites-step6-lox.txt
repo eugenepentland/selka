@@ -1,0 +1,36 @@
+
+lox: | pattern | cex | step6 | change |
+| P1 | 304.92 k | 304.92 k | +0.0% |
+| P2 | 7.73 G | 9.22 M | -99.9% |
+| P3 | 4.67 G | 4.67 G | +0.0% |
+| P4 | 27.47 G | 1.94 G | -92.9% |
+| P6 | 19.53 M | 19.53 M | +0.0% |
+| P7 | 5.34 G | 6.40 M | -99.9% |
+| P8 | 3.30 G | 2.85 G | -13.5% |
+| P9 | 2.76 G | 2.76 G | +0.0% |
+| P13 | 23.00 M | 22.83 M | -0.7% |
+| P14 | 0 | 0 |  |
+| P2+P4 | 35.20 G | 1.95 G | -94.5% |
+| all | 51.32 G | 12.29 G | -76.0% |
+
+targets (lox, all functions):
+  P4 vm.my:433  11.09 G -> 0 -100.0%
+  P4 vm.my:534  11.09 G -> 0 -100.0%
+  P2 vm.my:254  3.56 G -> 0 -100.0%
+  P2 interpreter.my:667  2.96 G -> 0 -100.0%
+  P2 heap.my:106  1.19 G -> 7.00 k -100.0%
+  P4 vm.my:135  814.70 M -> 444.38 M -45.5%
+  P4 heap.my:124  1.50 G -> 1.50 G +0.0%
+  P4 heap.my:210  586.64 M -> 0 -100.0%
+
+top 10 sites still copying (lox):
+      1.85 G  (was     1.85 G)  P9 table.my:84 list_copy in table::set
+      1.84 G  (was     1.84 G)  P8 interpreter.my:346 list_get_field in interpreter::evaluate
+      1.51 G  (was     1.51 G)  P3 heap.my:361 list_get in heap::sweep
+      1.51 G  (was     1.51 G)  P3 heap.my:362 list_get in heap::sweep
+      1.50 G  (was     1.50 G)  P4 heap.my:124 list_set in heap::allocate
+    814.70 M  (was   814.70 M)  P3 vm.my:525 list_get in vm::run
+    661.48 M  (was   661.48 M)  P3 vm.my:503 list_get in vm::run
+    518.97 M  (was   518.97 M)  P8 interpreter.my:265 list_get_field in interpreter::call_node
+    486.04 M  (was   486.04 M)  P9 compiler.my:153 list_copy in compiler::emit_byte
+    453.99 M  (was   453.99 M)  P8 heap.my:144 list_get_field in heap::function_obj

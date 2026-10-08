@@ -509,3 +509,47 @@ test "a write-back takes its field from the record before updates of other field
     try std.testing.expectEqualStrings("5 1 3\n", ran.stdout);
     try std.testing.expectEqualStrings("", ran.stderr);
 }
+
+const construct_source =
+    \\record Frame:
+    \\    closure: int
+    \\    name: str
+    \\    ops: list[int]
+    \\    ip: int
+    \\    base: int
+    \\
+    \\
+    \\def put(frames: mut list[Frame], at: int, name: str, ops: list[int]) -> int:
+    \\    frames[at] = Frame(closure=at, name=name, ops=ops, ip=0, base=len(ops))
+    \\    return len(frames)
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    frames = [Frame(closure=0, name="a", ops=[1], ip=3, base=0), Frame(closure=1, name="b", ops=[], ip=4, base=1)]
+    \\    keep = frames
+    \\    n = put(mut frames, -1, "c", [7, 8])
+    \\    m = put(mut frames, 0, "d", [9])
+    \\    out.print(n, m, frames[0].name, frames[1].name, frames[1].base, keep[1].name, keep[0].ip)
+    \\    return 0
+    \\
+;
+
+/// What the base compiler prints for `construct_source`.
+const construct_expected = "2 2 d c 2 b 3\n";
+
+// spec: NEW-CORE-CE2-EFFECTS-6
+test "a record built for a whole-element store past the index's branches is built in the element" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    // `frames[at] = Frame(...)`: the store sits after the negative-index branch and the
+    // list's uniqueness test, in another block than the construction; the frame is still
+    // written straight into the element, with no copy of it.
+    const llvm = try support.llvmText(a, construct_source);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, try definition(llvm, "@\"my.put\"("), "@llvm.memcpy"));
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a, construct_source, &refusal);
+    const ran = try support.runOwned(a, &module, .{});
+    try std.testing.expectEqualStrings(construct_expected, ran.stdout);
+    try std.testing.expectEqualStrings("", ran.stderr);
+}

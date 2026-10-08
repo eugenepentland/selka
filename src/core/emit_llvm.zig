@@ -1121,10 +1121,14 @@ const FunctionEmitter = struct {
                 const ref = block.insts.items[at];
                 const inst = f.inst(ref);
                 if (inst.op != .record_make and inst.op != .union_make) continue;
-                if (use_count[ref.index()] != 1 or block_of[users[ref.index()].index()] != b) continue;
+                if (use_count[ref.index()] != 1) continue;
                 if (inst.op == .union_make and m.unionLayout(inst.ty).form == .niche) continue;
                 const user = users[ref.index()];
                 const consumer = f.inst(user);
+                // A whole-element store in a later block (past the index's negative-index branch
+                // or the list's uniqueness test) builds the construction in the element too: its
+                // operands are read there, and its homes keep them until then (CE2-A).
+                if (block_of[user.index()] != b and consumer.op != .list_set) continue;
                 mem.fused[ref.index()] = switch (consumer.op) {
                     .list_push => f.resolve(consumer.b) == ref,
                     .list_set => f.resolve(f.operands(consumer.data)[0]) == ref,
