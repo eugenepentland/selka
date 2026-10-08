@@ -429,9 +429,9 @@ at the CLI and host boundary.
 symbols, callers, references, types, effects and bounded source context:
 
 ```sh
-zig-out/bin/mylang index-project src/schematic/guest/main.my
-zig-out/bin/mylang context src/schematic/guest/main.my --symbol=layout::build
-zig-out/bin/mylang tests-for src/schematic/guest/main.my layout::build
+zig-out/bin/mylang index-project examples/modules/main.my
+zig-out/bin/mylang context examples/modules/main.my --symbol=shared.units::Distance.make
+zig-out/bin/mylang tests-for examples/modules/main.my shared.units::Distance.make
 ```
 
 Indexes carry source/compiler receipts, and failed bodies expose unchecked
