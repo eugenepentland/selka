@@ -57,9 +57,24 @@ pub fn buildModuleSource(allocator: std.mem.Allocator, program: typed.Program, s
     return buildRootsSource(allocator, program, &.{program.main}, source, refusal);
 }
 
+/// What a module is built from: the checked program, its loaded source, and whether
+/// `debug(...)` lines are dropped, as a `build --release` executable drops them
+/// (DEBUG-LINE-1); `run`, `build --run` and `test` keep them in every mode.
+pub const Input = struct { program: typed.Program, source: ?Source = null, drop_debug: bool = false };
+
+/// Build an executable's module from `input`, rooted at the program's `main`.
+pub fn buildExecutable(allocator: std.mem.Allocator, input: Input, refusal: *Refusal) Error!ir.Module {
+    return buildRootsInput(allocator, &.{input.program.main}, input, refusal);
+}
+
 /// Build selected roots with optional loaded source; digest-only inputs refuse blobs precisely.
 pub fn buildRootsSource(allocator: std.mem.Allocator, program: typed.Program, roots: []const typed.FunctionId, source: ?Source, refusal: *Refusal) Error!ir.Module {
-    var mb: ModuleBuilder = .{ .allocator = allocator, .input = .{ .program = program, .source = source }, .refusal = refusal };
+    return buildRootsInput(allocator, roots, .{ .program = program, .source = source }, refusal);
+}
+
+fn buildRootsInput(allocator: std.mem.Allocator, roots: []const typed.FunctionId, input: Input, refusal: *Refusal) Error!ir.Module {
+    const program = input.program;
+    var mb: ModuleBuilder = .{ .allocator = allocator, .input = input, .refusal = refusal };
     defer mb.ids.deinit(allocator);
     for (roots, 0..) |root, position| {
         const index = try mb.functionIndex(root);
@@ -149,7 +164,7 @@ fn ownedParameters(all: []const ir.Type, mutated: []const u16) u64 {
 
 const ModuleBuilder = struct {
     allocator: std.mem.Allocator,
-    input: struct { program: typed.Program, source: ?Source },
+    input: Input,
     refusal: *Refusal,
     module: ir.Module = .{},
     /// Checked function id → IR function index.
@@ -2236,6 +2251,8 @@ const FnBuilder = struct {
     }
 
     fn printNode(self: *FnBuilder, print: typed.Print, span: u32) Error!ir.Ref {
+        // A dropped debug line evaluates nothing, as the old core's lowering dropped it.
+        if (print.debug and self.mb.input.drop_debug) return .none;
         if (print.debug or print.separator != null or print.terminator != null) return build_cap.printOptions(*FnBuilder, self, print, span);
         var operands: std.ArrayList(ir.Ref) = .empty;
         defer operands.deinit(self.allocator());

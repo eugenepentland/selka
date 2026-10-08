@@ -251,3 +251,26 @@ test "test names a bad flag value or unknown option before printing its own usag
     try std.testing.expect(contains(missing.stderr, "missing value for '--filter'"));
     try std.testing.expect(!contains(missing.stderr, "mylang-core"));
 }
+
+const debug_line = "def main(out: Stream) -> int:\n    debug(\"debugging\", 41)\n    out.print(42)\n    return 0\n";
+
+// spec: NEW-CORE-S5-DEBUG-RELEASE-1
+test "a build --release executable drops debug lines, a debug build and a run keep them" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const context: Context = .{ .arena = arena.allocator(), .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator()) };
+    try context.write("main.my", debug_line);
+    try std.testing.expectEqual(@as(u8, 0), (try context.compiler(&.{ "build", "main.my", "-o", "released", "--release" })).status);
+    const released = try context.spawn(&.{try context.path("released")});
+    try std.testing.expectEqualStrings("42\n", released.stdout);
+    try std.testing.expectEqualStrings("", released.stderr);
+    try std.testing.expectEqual(@as(u8, 0), (try context.compiler(&.{ "build", "main.my", "-o", "debugged" })).status);
+    const debugged = try context.spawn(&.{try context.path("debugged")});
+    try std.testing.expectEqualStrings("42\n", debugged.stdout);
+    try std.testing.expectEqualStrings("debugging 41\n", debugged.stderr);
+    const ran = try context.compiler(&.{ "run", "main.my", "--release" });
+    try std.testing.expectEqualStrings("42\n", ran.stdout);
+    try std.testing.expect(contains(ran.stderr, "debugging 41\n"));
+}
