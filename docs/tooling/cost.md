@@ -67,8 +67,8 @@ Ordinary builds without `--stats` do not request this additional compile.
 `src/core/cost.zig` exports the instruction-level allocation classification used
 by this report and the build-time allocation promise. Stack-promoted lists and
 allocation-free borrow/identity helpers do not allocate. Managed construction,
-materialization, copy, growth, stable sorting scratch, compound-key lookup
-scratch, and other potentially allocating runtime helpers do. Runtime helpers
+materialization, copy, growth, dictionary deletion bitmaps, stable sorting
+scratch, compound-key lookup scratch, and other potentially allocating runtime helpers do. Runtime helpers
 have an explicit audited allocation-free allowlist; an unknown helper is
 conservative. Foreign and unresolved function-value calls may allocate.
 

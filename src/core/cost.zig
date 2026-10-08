@@ -17,7 +17,7 @@ pub fn allocation(module: *const ir.Module, function: *const ir.Function, inst: 
     return switch (inst.op) {
         .list_new => if (inst.data != 0 and inst.data != flags.fill_capacity) .never else .may,
         .list_push => if (inst.data == promote.stack_push) .never else .may,
-        .list_copy, .dict_new, .dict_copy, .dict_insert, .box_make, .str_char, .str_append, .str_append_char, .str_slice, .str_from_view, .list_sort, .buffer_new, .buffer_copy, .buffer_push => .may,
+        .list_copy, .dict_new, .dict_copy, .dict_insert, .dict_remove, .box_make, .str_char, .str_append, .str_append_char, .str_slice, .str_from_view, .list_sort, .buffer_new, .buffer_copy, .buffer_push => .may,
         // Compound keys may grow the runtime hash/equality scratch stack.
         .dict_find => if (module.compound(function.inst(function.resolve(inst.a)).ty).dict.key.isCompound()) .may else .never,
         .call_indirect => blk: {

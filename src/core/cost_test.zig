@@ -96,7 +96,11 @@ test "cost allocation classification includes growth scratch and unresolved call
     });
     var function: ir.Function = .{ .name = "test", .signature = .{ .params = &.{}, .ret = .void } };
     try function.insts.appendSlice(a, &.{ .{ .op = .func_ref, .ty = .void, .data = 0 }, .{ .op = .param, .ty = .void } });
-    for ([_]ir.Op{ .list_new, .list_push, .list_copy, .dict_new, .dict_copy, .dict_insert, .box_make, .str_char, .str_append, .str_append_char, .str_slice, .str_from_view, .list_sort, .buffer_new, .buffer_copy, .buffer_push }) |op| {
+    for ([_]ir.Op{
+        .list_new,    .list_push,  .list_copy,       .dict_new,  .dict_copy,     .dict_insert, .dict_remove, .box_make,
+        .str_char,    .str_append, .str_append_char, .str_slice, .str_from_view, .list_sort,   .buffer_new,  .buffer_copy,
+        .buffer_push,
+    }) |op| {
         try std.testing.expectEqual(cost.Allocation.may, cost.allocation(&module, &function, .{ .op = op, .ty = .void }));
     }
     try std.testing.expectEqual(cost.Allocation.never, cost.allocation(&module, &function, .{ .op = .list_new, .ty = .void, .data = 3 }));
@@ -106,6 +110,7 @@ test "cost allocation classification includes growth scratch and unresolved call
     try std.testing.expectEqual(cost.Allocation.never, cost.allocation(&module, &function, .{ .op = .call_indirect, .ty = .void, .a = @fromBackingInt(0) }));
     try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, &function, .{ .op = .call_indirect, .ty = .void, .a = @fromBackingInt(1) }));
     try std.testing.expect(!cost.runtimeAllocationFree("myl_core_future_helper"));
+    try deletionCount(a);
 }
 
 // spec-case: FRONTEND-COST-1
@@ -255,4 +260,19 @@ fn elidedCount(a: std.mem.Allocator) !void {
     try std.testing.expectEqual(result.own.elided, report.totals.rc.elided_pairs);
     try std.testing.expectEqual(@as(u32, 0), report.totals.rc.retains);
     try std.testing.expectEqual(@as(u32, 0), report.totals.rc.releases);
+}
+
+// A unique dictionary still allocates its tombstone bitmap on the first deletion.
+fn deletionCount(a: std.mem.Allocator) !void {
+    const report = try measured(a,
+        \\def remove(d: mut dict[int, int]) -> int:
+        \\    _ = d.pop(1)
+        \\    return len(d)
+        \\def main(out: Stream) -> int:
+        \\    d = {1: 2}
+        \\    out.print(remove(mut d))
+        \\    return 0
+    , null);
+    // The ownership copy branch and the dictionary's own deletion scratch count.
+    try std.testing.expectEqual(@as(u32, 2), named(report, "remove").allocation.sites);
 }
