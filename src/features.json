@@ -1041,6 +1041,11 @@
       "kind": "language",
       "summary": "Exact CPython scalar repr with Unicode16 printability and shortest float formatting.",
       "doc": "docs/python-text-surface.md#scalar-repr"
+    },
+    "memory-bounded-test-fanout": {
+      "kind": "tooling",
+      "summary": "A test run sizes its worker pool from free memory as well as cores (each per-test ceiling plus 256 MiB of headroom must fit in MemAvailable), with --jobs and MYLANG_JOBS to override it.",
+      "doc": "docs/tooling/runtime-budgets.md#test-fan-out"
     }
   },
   "unsupported": [
@@ -1188,10 +1193,6 @@
     "host-application-guest-bounds": {
       "date": "2026-10-08",
       "note": "Retired with the old back end in new-core stage S5 (2026-10): the host applications `schematic-svg`, `board-trial` and `mylang-io` and the ceilings they chose for their guests (S5-D5)."
-    },
-    "memory-bounded-test-fanout": {
-      "date": "2026-10-08",
-      "note": "Retired with the old back end in new-core stage S5 (2026-10): the old test runner sized a directory run's workers from `MemAvailable`. The new runner takes `--jobs`, `MYLANG_JOBS` or the CPU count."
     },
     "signature-pure-outcome-replay": {
       "date": "2026-10-08",
