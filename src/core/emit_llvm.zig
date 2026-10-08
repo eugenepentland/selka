@@ -761,6 +761,11 @@ const InOutAbi = struct {
     /// after the declared result); the others follow in parameter order.
     first: u32 = 0,
 
+    /// Whether parameter `param` is in-out (a signature of 64 or more parameters has none).
+    fn inOut(self: InOutAbi, param: usize) bool {
+        return param < 64 and self.params & (@as(u64, 1) << @intCast(param)) != 0;
+    }
+
     /// The result record's field holding parameter `param`'s final value.
     fn field(self: InOutAbi, signature: ir.Signature, param: usize) u32 {
         const below = signature.owned & ((@as(u64, 1) << @intCast(param)) - 1);
@@ -974,7 +979,7 @@ const FunctionEmitter = struct {
         // A value over four words is used where the caller keeps it: the parameter is its pointer.
         for (f.signature.params, 0..) |param, i| {
             const separator = if (i == 0 and !sret) "" else ", ";
-            if (abi.params & (@as(u64, 1) << @intCast(i)) != 0) {
+            if (abi.inOut(i)) {
                 try out.print(self.a(), "{s}ptr noalias align 8 %p{d}", .{ separator, i });
             } else if (m.passedInMemory(param)) {
                 try out.print(self.a(), "{s}ptr noalias readonly align 8 %p{d}", .{ separator, i });
@@ -1155,7 +1160,7 @@ const FunctionEmitter = struct {
                 if (abi.params == 0) continue;
                 var list: std.ArrayList(emit_homes.InOut) = .empty;
                 for (0..signature.params.len) |i| {
-                    if (abi.params & (@as(u64, 1) << @intCast(i)) == 0) continue;
+                    if (!abi.inOut(i)) continue;
                     try list.append(self.a(), .{ .argument = @intCast(i), .final = if (abi.whole) ref else .none });
                 }
                 calls[ref.index()] = list.items;
@@ -1875,7 +1880,7 @@ const FunctionEmitter = struct {
             // A whole record: copied to `%ret`, and each final value from there.
             try self.storeOperand(out, signature.ret, raw, "%ret");
             for (signature.params, 0..) |param, i| {
-                if (abi.params & (@as(u64, 1) << @intCast(i)) == 0) continue;
+                if (!abi.inOut(i)) continue;
                 const at = try self.offsetPointer(out, "%ret", m.fieldOffset(signature.ret, abi.field(signature, i)));
                 try self.copyBytes(out, try std.fmt.allocPrint(self.a(), "%p{d}", .{i}), at, m.size(param), false);
             }
@@ -1884,12 +1889,12 @@ const FunctionEmitter = struct {
         const operands = f.operands(f.inst(composite).data);
         for (m.compound(signature.ret).record, operands, 0..) |field_type, operand, k| {
             const final = for (0..signature.params.len) |i| {
-                if (abi.params & (@as(u64, 1) << @intCast(i)) != 0 and abi.field(signature, i) == k) break true;
+                if (abi.inOut(i) and abi.field(signature, i) == k) break true;
             } else false;
             if (!final) try self.storeOperand(out, field_type, operand, try self.offsetPointer(out, "%ret", m.fieldOffset(signature.ret, k)));
         }
         for (0..signature.params.len) |i| {
-            if (abi.params & (@as(u64, 1) << @intCast(i)) == 0) continue;
+            if (!abi.inOut(i)) continue;
             try moves.append(self.a(), try self.finalMove(out, i, operands[abi.field(signature, i)]));
         }
         try self.moveAll(out, moves.items);
@@ -3098,7 +3103,7 @@ const FunctionEmitter = struct {
                 continue;
             }
             if (!external and m.passedInMemory(param)) {
-                const in_out = abi.params & (@as(u64, 1) << @intCast(i)) != 0;
+                const in_out = abi.inOut(i);
                 try arguments.print(self.a(), "{s}ptr {s}", .{ separator, if (in_out) places[i] else try self.value(argument) });
                 continue;
             }

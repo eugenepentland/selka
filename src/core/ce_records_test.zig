@@ -253,6 +253,25 @@ test "a call's result record read whole gets its in-out final values copied in a
     try std.testing.expectEqualStrings(debug.stdout, release.stdout);
 }
 
+// spec-case: NEW-CORE-CE-RECORDS-4
+test "a function of more than 64 parameters is emitted and called with no in-out parameter" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const llvm = try support.llvmText(arena.allocator(), try wideSource(arena.allocator(), 70));
+    try std.testing.expect(contains(functionText(llvm, "@\"my.wide\""), "i64 %p69)"));
+}
+
+/// `wide(a0, ..., a{n-1}) -> int` and a `main` that calls it.
+fn wideSource(a: std.mem.Allocator, n: usize) ![]const u8 {
+    var source: std.ArrayList(u8) = .empty;
+    try source.appendSlice(a, "def wide(");
+    for (0..n) |i| try source.print(a, "{s}a{d}: int", .{ if (i == 0) "" else ", ", i });
+    try source.print(a, ") -> int:\n    return a0 + a{d}\n\n\ndef main(out: Stream) -> int:\n    out.print(wide(", .{n - 1});
+    for (0..n) |i| try source.print(a, "{s}{d}", .{ if (i == 0) "" else ", ", i });
+    try source.appendSlice(a, "))\n    return 0\n");
+    return source.items;
+}
+
 /// `bump(w: mut Wide, k) -> {i64, Wide}` called twice: once with its result pushed whole onto
 /// a list, once with the final value read out of the result twice. Both need the result record
 /// completed with the final value the callee wrote in place.
