@@ -270,6 +270,74 @@ def lent() -> str:
     return str(total) + " " + str(r) + " " + str(h.items[0].a) + " " + str(len(h.items)) + " " + str(xs[0].a) + " " + str(xs[1].a) + " " + str(sweep(objs)) + " " + str(sweep(shared))
 
 
+# ---- step 3: `sret` shared with a by-value argument that dies at the call ----
+
+record State:
+    f0: int
+    f1: int
+    f2: int
+    f3: int
+    f4: int
+    f5: int
+
+
+def rotate(s: State, x: int) -> State:
+    t = (s.f0 * 31 + x) % 1009
+    return State(f0=s.f1, f1=s.f2, f2=s.f3, f3=s.f4, f4=s.f5, f5=t)
+
+
+# Reads a half of `s` after storing the other: may not share (the halves would be overwritten).
+def swap_halves(p: Pair, k: int) -> Pair:
+    return Pair(x=p.y, y=Big(a=p.x.a + k, b=p.x.b, c=p.x.c, d=p.x.d, e=p.x.e))
+
+
+# Stores a half of `p` onto itself, then the other half from elsewhere: may share.
+def keep_x(p: Pair, k: int) -> Pair:
+    return Pair(x=p.x, y=Big(a=k, b=p.x.a, c=p.y.a, d=0, e=0))
+
+
+# A record updated in place and returned: lives in `%ret` before the return, so may not share.
+def bumped(s: State, k: int) -> State:
+    c = s
+    c.f0 += k
+    c.f5 = s.f0 * 2
+    return c
+
+
+# Called through a function value: the call passes distinct memories, whatever the callee allows.
+def both_ways(s: State, x: int) -> State:
+    return State(f0=s.f5, f1=s.f4 + x, f2=s.f3, f3=s.f2, f4=s.f1, f5=s.f0)
+
+
+def both(a: State, b: State) -> State:
+    return State(f0=a.f0 + b.f5, f1=a.f1, f2=a.f2, f3=a.f3, f4=a.f4, f5=b.f0)
+
+
+def sharing() -> str:
+    s = State(f0=1, f1=2, f2=3, f3=4, f4=5, f5=6)
+    for j in range(20):
+        s = rotate(s, j)
+    kept = s
+    t = rotate(s, 7)
+    p = Pair(x=Big(a=1, b=2, c=3, d=4, e=5), y=Big(a=6, b=7, c=8, d=9, e=10))
+    for k in range(3):
+        p = swap_halves(p, k)
+    q = Pair(x=Big(a=1, b=2, c=3, d=4, e=5), y=Big(a=6, b=7, c=8, d=9, e=10))
+    for k in range(3):
+        q = keep_x(q, k)
+    u = State(f0=1, f1=1, f2=1, f3=1, f4=1, f5=1)
+    for k in range(4):
+        u = bumped(u, k)
+    w = both(s, s)
+    w = both(w, w)
+    steps = [rotate, both_ways]
+    v = s
+    for j in range(3):
+        step = steps[(j + s.f0) % 2]
+        v = step(v, j)
+    return str(s.f0) + " " + str(s.f5) + " " + str(kept.f5) + " " + str(t.f5) + " | " + str(p.x.a) + " " + str(p.y.a) + " " + str(p.y.e) + " | " + str(q.x.a) + " " + str(q.y.b) + " " + str(q.y.c) + " | " + str(u.f0) + " " + str(u.f5) + " | " + str(w.f0) + " " + str(w.f5) + " | " + str(v.f5)
+
+
 # A trap between the build in %ret and the return.
 def trapping(k: int, t: mut Cursor) -> Result[Token, LexError]:
     tok = make_token(b"xyz", t, 3)
@@ -282,6 +350,7 @@ def main(args: list[str], out: Stream) -> int:
     out.print(tokens(b"!!x"))
     out.print(pairs())
     out.print(lent())
+    out.print(sharing())
     if len(args) > 0:
         t = Cursor(pos=0, line=0, col=9223372036854775807, error_span=Span(line=0, col=0, offset=0))
         match trapping(len(args), mut t):

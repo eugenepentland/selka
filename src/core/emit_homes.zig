@@ -66,6 +66,9 @@ pub const Plan = struct {
     view_offset: []u32,
     /// Per instruction: a `ret` that builds its value in a temporary first (`staged`); empty when none does.
     stage: []const bool = &.{},
+    /// Whether parameter `Results.share` may lie in the caller's destination `%ret` itself
+    /// (`Planner.shareable`): a caller may pass one memory as both.
+    shared: bool = false,
 
     /// The value whose home holds the bytes `ref` names: `ref` itself, or the root of a view.
     pub fn root(self: *const Plan, ref: ir.Ref) ir.Ref {
@@ -149,6 +152,9 @@ pub const Results = struct {
     /// Per instruction: an element read out of a list that is passed where it lies, with no home
     /// (an element lent to calls, `emit_llvm.zig`); empty when there is none.
     borrowed: []const bool = &.{},
+    /// A read-only memory parameter of the result's type that a caller may pass in its `sret`
+    /// destination (checked by `Planner.shareable`), or `none`.
+    share: u32 = none,
 };
 
 /// One store a `ret` makes into `%ret`, in the order the emitter makes them: `size` bytes at
@@ -936,6 +942,38 @@ const Planner = struct {
         }
         if (stage) |marks| self.plan.stage = marks;
     }
+
+    /// Whether parameter `results.share` may lie in `%ret` itself, so a caller may pass one memory
+    /// as both (`s = advance(s, x)`): nothing lives in `%ret` before a `ret` (every write to it is a
+    /// `ret`'s store), and no `ret` reads a byte of the parameter after one of its stores wrote that
+    /// byte — a store of the parameter's bytes to their own place copies them onto themselves.
+    fn shareable(self: *Planner) !bool {
+        const param = self.input.results.share;
+        if (param == none or !self.input.results.sret) return false;
+        for (self.tracked.refs.items, 0..) |_, d| if (self.retBase(@intCast(d)) != null) return false;
+        const f = self.fun();
+        const m = self.mod();
+        const holder = for (f.insts.items, 0..) |inst, index| {
+            if (inst.op == .param and inst.data == param) break self.dense[index];
+        } else none;
+        if (holder == none) return false;
+        for (try self.retSites()) |site| {
+            var written: std.ArrayList(Region) = .empty;
+            for (site.stores) |store| {
+                const region: Region = .{ .offset = store.offset, .size = store.size };
+                const from_param = store.leaf != .none and m.passedInMemory(f.inst(store.leaf).ty) and self.rootDense(store.leaf) == holder;
+                if (from_param) {
+                    const from = if (self.plan.view[store.leaf.index()] != .none) self.viewRegion(store.leaf).offset else 0;
+                    const read: Region = .{ .offset = from, .size = store.size };
+                    for (written.items) |earlier| if (overlaps(read, earlier)) return false;
+                    if (from == store.offset) continue;
+                    if (overlaps(read, region)) return false;
+                }
+                try written.append(self.arena, region);
+            }
+        }
+        return true;
+    }
 };
 
 /// One `ret` of a value: the instruction, its stores into `%ret` in order, and the values its
@@ -972,6 +1010,7 @@ pub fn plan(arena: std.mem.Allocator, input: Input) std.mem.Allocator.Error!Plan
     try p.coalesce();
     if (steps.write_backs) try p.embed();
     try p.buildInRet();
+    p.plan.shared = try p.shareable();
     try p.assign();
     return p.plan;
 }

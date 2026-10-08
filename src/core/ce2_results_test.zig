@@ -228,11 +228,77 @@ test "a list element passed by value to a call that cannot write it is passed wh
     try std.testing.expectEqualStrings(debug.stdout, release.stdout);
 }
 
+const sharing =
+    \\record State:
+    \\    f0: int
+    \\    f1: int
+    \\    f2: int
+    \\    f3: int
+    \\    f4: int
+    \\    f5: int
+    \\
+    \\
+    \\record Pair:
+    \\    x: State
+    \\    y: State
+    \\
+    \\
+    \\def advance(s: State, x: int) -> State:
+    \\    t = (s.f0 * 31 + x) % 1009
+    \\    return State(f0=s.f1, f1=s.f2, f2=s.f3, f3=s.f4, f4=s.f5, f5=t)
+    \\
+    \\
+    \\def swap(p: Pair) -> Pair:
+    \\    return Pair(x=p.y, y=p.x)
+    \\
+    \\
+    \\def run(n: int) -> int:
+    \\    s = State(f0=1, f1=2, f2=3, f3=4, f4=5, f5=6)
+    \\    for j in range(n):
+    \\        s = advance(s, j)
+    \\    return s.f0 * 1000 + s.f5
+    \\
+    \\
+    \\def swaps(n: int) -> int:
+    \\    p = Pair(x=State(f0=1, f1=0, f2=0, f3=0, f4=0, f5=0), y=State(f0=2, f1=0, f2=0, f3=0, f4=0, f5=0))
+    \\    for _ in range(n):
+    \\        p = swap(p)
+    \\    return p.x.f0 * 10 + p.y.f0
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(run(20), swaps(3), swaps(4))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-CE2-RESULTS-5
+test "s = advance(s, x): a by-value argument that dies at the call shares the callee's sret destination" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const llvm = try support.llvmText(arena.allocator(), sharing);
+    // `advance` reads every field of `s` before its `ret` stores any: one memory may be both.
+    try std.testing.expect(contains(llvm, "define internal fastcc void @\"my.advance\"(ptr sret([48 x i8]) align 8 %ret, ptr readonly align 8 %p0, i64 %p1)"));
+    // The loop's record lives in one home, passed as both: no copy on the back edge.
+    try std.testing.expectEqual(@as(usize, 0), copies(functionText(llvm, "@\"my.run\"")));
+    // `swap` reads `p.x` after storing over it: it may not share, and its caller copies.
+    try std.testing.expect(contains(llvm, "define internal fastcc void @\"my.swap\"(ptr noalias sret([96 x i8]) align 8 %ret, ptr noalias readonly align 8 %p0)"));
+    try std.testing.expect(copies(functionText(llvm, "@\"my.swaps\"")) >= 1);
+    var refusal: @import("build.zig").Refusal = .{};
+    var module = try support.buildSource(arena.allocator(), sharing, &refusal);
+    const debug = try support.runOwned(arena.allocator(), &module, .{});
+    try std.testing.expectEqualStrings("747179 21 12\n", debug.stdout);
+    var again = try support.buildSource(arena.allocator(), sharing, &refusal);
+    const release = try support.runOwned(arena.allocator(), &again, .{ .release = true });
+    try std.testing.expectEqualStrings(debug.stdout, release.stdout);
+}
+
 const fixture_expected =
     \\1:71@1.2 1:72@1.3 1:73@2.1 2:73@2.1 1:75@2.3 bad 1:77@2.5 0:@2.5 0:@2.5 1 5
     \\bad bad 1:33@1.4 0:@1.4 0:@1.4 2 1
     \\10 1 14 5 2 20 | 30 3 34 7 3 | 40 44 5 9 2 | 10 2 100 14 1 | 7 8 9 10 11 | 10 31 | early | 2 16
     \\617 5 -1 6 0 50 7 8
+    \\747 179 179 966 | 7 3 5 | 1 1 1 | 7 8 | 1673 926 | 388
     \\
 ;
 

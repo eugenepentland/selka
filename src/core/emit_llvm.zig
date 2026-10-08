@@ -320,6 +320,9 @@ const ModuleState = struct {
     local: Local = .{},
     /// Counter sites and function records of a counting build (`emit_count.zig`).
     count: emit_count.Table = .{},
+    /// Per internal function already asked: the parameter its callers may pass in its `%ret`, or
+    /// `emit_homes.none` (`FunctionEmitter.sharedArgument`).
+    shares: std.AutoHashMapUnmanaged(u32, u32) = .empty,
 
     fn contains(self: *ModuleState, index: u32) bool {
         const selected = self.local.selection orelse return true;
@@ -823,6 +826,18 @@ fn returnsThroughSret(m: *const ir.Module, signature: ir.Signature, abi: InOutAb
     return m.passedInMemory(signature.ret) and !abi.whole;
 }
 
+/// The read-only memory parameter of an internal function's result type that its callers may pass
+/// in their `sret` destination, if its plan allows it (`emit_homes.Planner.shareable`): the first
+/// one, of a function with no in-out parameter; `none` otherwise.
+fn shareCandidate(m: *const ir.Module, signature: ir.Signature, abi: InOutAbi) u32 {
+    if (signature.linkage != .internal or abi.params != 0 or !returnsThroughSret(m, signature, abi)) return emit_homes.none;
+    for (signature.params, 0..) |param, i| {
+        if (i >= 64) break;
+        if (param == signature.ret and signature.owned & (@as(u64, 1) << @intCast(i)) == 0) return @intCast(i);
+    }
+    return emit_homes.none;
+}
+
 /// Bit `k`: field `k` of the result record holds an in-out final value, which a `ret` moves to
 /// its caller's memory instead of storing it in `%ret` (`FunctionEmitter.returnFinals`).
 fn finalFields(signature: ir.Signature, abi: InOutAbi) u64 {
@@ -1004,20 +1019,8 @@ const FunctionEmitter = struct {
         // pointer in, through `sret` out (docs/design/new-core-s1.md §3); a `mut` one by a
         // pointer the callee updates in place (`InOutAbi`).
         const abi = inOutAbi(m, f.signature);
-        const sret = returnsThroughSret(m, f.signature, abi);
-        try out.print(self.a(), "define {s} fastcc {s} {s}(", .{ self.state.linkage(self.index), try self.state.returnType(f.signature, abi), try self.state.originalSymbol(self.index) });
-        if (sret) try out.print(self.a(), "ptr noalias sret({s}) align 8 %ret", .{try self.state.memoryType(f.signature.ret)});
-        var entry: Out = .empty;
-        // A value over four words is used where the caller keeps it: the parameter is its pointer.
-        for (f.signature.params, 0..) |param, i| {
-            const separator = if (i == 0 and !sret) "" else ", ";
-            if (abi.inOut(i)) {
-                try out.print(self.a(), "{s}ptr noalias align 8 %p{d}", .{ separator, i });
-            } else if (m.passedInMemory(param)) {
-                try out.print(self.a(), "{s}ptr noalias readonly align 8 %p{d}", .{ separator, i });
-            } else try out.print(self.a(), "{s}{s} %p{d}", .{ separator, try self.ty(param), i });
-        }
-        try self.analyzeMemory(&entry);
+        try self.analyzeMemory();
+        try self.defineLine(out, abi);
         try self.collectBoundLengths();
         if (self.state.options.counters) self.count_fn = try self.state.count.function(self.a(), f.name);
         // `uwtable`: a trap walks the stack through `.eh_frame`, which needs every frame's CFI.
@@ -1055,7 +1058,6 @@ const FunctionEmitter = struct {
         }
         try out.appendSlice(self.a(), "entry:\n  %slot = alloca i64, align 8\n");
         try out.appendSlice(self.a(), self.state.allocas.items);
-        try out.appendSlice(self.a(), entry.items);
         if (self.count_fn) |record| try emit_count.prologue(self.a(), out, record);
         try out.appendSlice(self.a(), "  br label %b0\n");
         for (f.blocks.items, 0..) |block, b| {
@@ -1079,11 +1081,38 @@ const FunctionEmitter = struct {
         try out.appendSlice(self.a(), "}\n");
     }
 
+    /// The `define` line up to its parameters: a value over four words is used where the caller keeps
+    /// it (the parameter is its pointer), and a parameter a caller may pass in `%ret` itself (CE2-B)
+    /// aliases it, so neither is `noalias`.
+    fn defineLine(self: *FunctionEmitter, out: *Out, abi: InOutAbi) !void {
+        const f = self.function;
+        const m = self.state.module;
+        const sret = returnsThroughSret(m, f.signature, abi);
+        const shared = if (self.memory.homes.shared) shareCandidate(m, f.signature, abi) else emit_homes.none;
+        try out.print(self.a(), "define {s} fastcc {s} {s}(", .{ self.state.linkage(self.index), try self.state.returnType(f.signature, abi), try self.state.originalSymbol(self.index) });
+        if (sret) try out.print(self.a(), "ptr {s}sret({s}) align 8 %ret", .{ if (shared == emit_homes.none) "noalias " else "", try self.state.memoryType(f.signature.ret) });
+        for (f.signature.params, 0..) |param, i| {
+            const separator = if (i == 0 and !sret) "" else ", ";
+            if (abi.inOut(i)) {
+                try out.print(self.a(), "{s}ptr noalias align 8 %p{d}", .{ separator, i });
+            } else if (m.passedInMemory(param)) {
+                try out.print(self.a(), "{s}ptr {s}readonly align 8 %p{d}", .{ separator, if (shared == i) "" else "noalias ", i });
+            } else try out.print(self.a(), "{s}{s} %p{d}", .{ separator, try self.ty(param), i });
+        }
+    }
+
     /// Count uses, decide which constructions are stored straight into their consumer, find each
     /// call's in-out arguments, and give every value in memory its home (`emit_homes.zig`): an
     /// entry-block slot, a parameter's memory or `%ret`, named in the entry block as `%vN`.
-    fn analyzeMemory(self: *FunctionEmitter, entry: *Out) !void {
-        _ = entry;
+    fn analyzeMemory(self: *FunctionEmitter) !void {
+        try self.prepareMemory();
+        self.memory.homes = try self.planMemory(true);
+        try self.nameHomes();
+    }
+
+    /// Count uses, find the constructions stored straight into their consumer, each call's in-out
+    /// arguments and the list elements lent to calls: what a home plan needs.
+    fn prepareMemory(self: *FunctionEmitter) Error!void {
         const f = self.function;
         const m = self.state.module;
         const count = f.insts.items.len;
@@ -1143,16 +1172,75 @@ const FunctionEmitter = struct {
         }
         try self.inOutCalls();
         mem.borrowed = try self.lentElements();
-        mem.homes = try emit_homes.plan(self.a(), .{
+    }
+
+    /// The home plan of the function (`emit_homes.zig`). With `share_calls`, a call to a callee whose
+    /// parameter may lie in its `%ret` (`sharedArgument`) treats that argument like an in-out one, so
+    /// a result and an argument that dies at the call may share one home and be passed as one
+    /// memory; a function that may itself share never does (its plan is the one callers checked).
+    fn planMemory(self: *FunctionEmitter, share_calls: bool) Error!emit_homes.Plan {
+        const f = self.function;
+        const m = self.state.module;
+        const mem = &self.memory;
+        const abi = inOutAbi(m, f.signature);
+        var input: emit_homes.Input = .{
             .module = m,
             .function = f,
             .fused = mem.fused,
             .in_out = abi.params,
             .calls = mem.in_out.args,
             .ret_home = emit_homes.steps.in_out and abi.params == 0 and returnsThroughSret(m, f.signature, abi),
-            .results = .{ .sret = returnsThroughSret(m, f.signature, abi), .finals = finalFields(f.signature, abi), .borrowed = mem.borrowed },
-        });
-        const plan = &mem.homes;
+            .results = .{ .sret = returnsThroughSret(m, f.signature, abi), .finals = finalFields(f.signature, abi), .borrowed = mem.borrowed, .share = shareCandidate(m, f.signature, abi) },
+        };
+        const own = try emit_homes.plan(self.a(), input);
+        if (!share_calls or own.shared) return own;
+        input.calls = try self.sharedCalls() orelse return own;
+        input.results.share = emit_homes.none;
+        return emit_homes.plan(self.a(), input);
+    }
+
+    /// The in-out arguments of every call, plus, for a direct call to a callee in this unit whose
+    /// parameter may lie in its `%ret`, that argument with the call's result as its final value; null
+    /// when no call has such an argument.
+    fn sharedCalls(self: *FunctionEmitter) Error!?[]const []const emit_homes.InOut {
+        const f = self.function;
+        var calls: ?[][]const emit_homes.InOut = null;
+        for (f.blocks.items, 0..) |block, b| {
+            if (b != 0 and block.preds.items.len == 0) continue;
+            for (block.insts.items) |ref| {
+                const inst = f.inst(ref);
+                if (inst.op != .call) continue;
+                const param = try self.sharedArgument(inst);
+                if (param == emit_homes.none) continue;
+                if (calls == null) calls = try self.a().dupe([]const emit_homes.InOut, self.memory.in_out.args);
+                calls.?[ref.index()] = try self.a().dupe(emit_homes.InOut, &.{.{ .argument = param, .final = ref }});
+            }
+        }
+        return calls;
+    }
+
+    /// The parameter of a direct call's callee that may lie in the callee's `%ret` (its plan says
+    /// `shared`), or `none`: only for a callee emitted in this unit, so the callee's own code is the
+    /// code that was checked.
+    fn sharedArgument(self: *FunctionEmitter, inst: ir.Inst) Error!u32 {
+        const m = self.state.module;
+        const callee: u32 = @intCast(inst.a.index());
+        const target = &m.functions.items[callee];
+        if (target.signature.linkage != .internal or !self.state.contains(callee)) return emit_homes.none;
+        if (shareCandidate(m, target.signature, inOutAbi(m, target.signature)) == emit_homes.none) return emit_homes.none;
+        if (self.state.shares.get(callee)) |known| return known;
+        var scratch: FunctionEmitter = .{ .state = self.state, .function = target, .index = callee };
+        try scratch.prepareMemory();
+        const plan = try scratch.planMemory(false);
+        const param = if (plan.shared) shareCandidate(m, target.signature, inOutAbi(m, target.signature)) else emit_homes.none;
+        try self.state.shares.put(self.a(), callee, param);
+        return param;
+    }
+
+    /// Name every home in the entry block (`analyzeMemory`).
+    fn nameHomes(self: *FunctionEmitter) !void {
+        const f = self.function;
+        const plan = &self.memory.homes;
         const names = try self.a().alloc([]const u8, plan.homes.len);
         for (plan.homes, names) |home, *name| name.* = switch (home) {
             .slot => |size| try self.stackSlot(size),
