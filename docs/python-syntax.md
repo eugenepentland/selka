@@ -42,8 +42,9 @@ def main() -> int:
 ```
 
 Save it as `main.my` too; `check` type-checks either file without building. The
-[schematic application](../src/schematic/guest/main.my) is a larger example; its
-[instructions](../experiments/schematic/README.md) describe rendering it.
+[named-constraints project](../examples/named-constraints/main.my) is a larger
+example: several modules, a generic contract and a test entry
+(`fake_tests.my`).
 
 Write `def`, `record`, four-space indentation, `#` comments, `True`, `False`,
 `None`, and `and`/`or`/`not`. A statement ends at its newline; a `;` separates two

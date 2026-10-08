@@ -53,32 +53,3 @@ test "break and continue target nearest loops and preserve generic flow and form
         try execute(source, 16);
     }
 }
-const cleanup_text =
-    \\def work() -> int:
-    \\    total = 0
-    \\    i = 0
-    \\    while i < 10:
-    \\        i = i + 1
-    \\        with arena() as outer:
-    \\            with arena() as inner:
-    \\                values: list[int] = []
-    \\                values.append(i)
-    \\                total = total + values[0]
-    \\                if i < 3:
-    \\                    continue
-    \\                break
-    \\    return total
-    \\
-    \\def main() -> int:
-    \\    return work()
-    \\
-;
-fn cleanupScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "cleanup.my", cleanup_text);
-    defer compilation.deinit();
-    const result = try native.run(&compilation);
-    try t.expectEqual(@as(i64, 6), result.value);
-}
-test "loop exits release the nested managed arenas they jump out of" {
-    try cleanupScenario(t.allocator);
-}

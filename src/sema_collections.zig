@@ -42,7 +42,6 @@ const isMutableBytes = sema_shared.isMutableBytes;
 const eCellEquality = sema_shared.eCellEquality;
 const eOptionTest = sema_shared.eOptionTest;
 const bufferOperation = sema_shared.bufferOperation;
-const eArenaBinding = sema_shared.eArenaBinding;
 const needs_list = "operation requires a managed list";
 const removed_names = @import("removed_names.zig");
 /// String methods whose only operand is a scalar width rather than more text.
@@ -79,9 +78,9 @@ fn methodAlternative(name: []const u8) ?[]const u8 {
     return null;
 }
 /// An already-evaluated managed receiver and the source arguments of its method.
-const ManagedAccess = struct { base: typed.NodeId, kind: BufferKind, inputs: []const ast.NodeId, receiver: ?typed.LocalId = null };
+const ManagedAccess = struct { base: typed.NodeId, kind: BufferKind, inputs: []const ast.NodeId };
 /// One list method call whose receiver and arguments are already evaluated.
-const ListMethodCall = struct { base: typed.NodeId, receiver: ?typed.LocalId, kind: BufferKind, inputs: []const ast.NodeId, temporaries: []const typed.Type, signed_length: bool = false };
+const ListMethodCall = struct { base: typed.NodeId, kind: BufferKind, inputs: []const ast.NodeId, temporaries: []const typed.Type, signed_length: bool = false };
 /// A list method call or element access whose receiver is still unchecked.
 const ListAccess = struct { base: ast.NodeId, kind: BufferKind, inputs: []const ast.NodeId, signed_length: bool = false };
 const impl = @This();
@@ -193,9 +192,10 @@ fn collectionSyntax(comptime Checker: type, self: *Checker, id: ast.NodeId) Erro
     var node = self.syntax.nodes.items[@backingInt(id)];
     if (node.data == .call) {
         const call = node.data.call;
-        if (call.owner) |owner| if (try self.arenaBinding(owner)) {
+        // NEW-CORE-S5-ARENA-2: `name.escape(value)` on an arena binding is `value`;
+        // any other use of the name is an unknown name.
+        if (call.owner) |owner| if (self.arenaBinding(owner) and std.mem.eql(u8, self.src.text(call.name), "escape")) {
             try call_arguments.positional(call, self.sink);
-            if (!std.mem.eql(u8, self.src.text(call.name), "escape")) return self.sink.fail(eArenaBinding, call.name, "an arena binding supports only `escape(value)`");
             if (call.type_arguments.len != 0 or call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "escape requires exactly one value argument");
             node.data = .{ .arena_escape = .{ .arena = owner, .value = call.arguments[0] } };
             return node;
@@ -541,7 +541,7 @@ fn checkNarrowedMethod(comptime Checker: type, self: *Checker, node: ast.Node, s
     try self.checkName(.{ .span = call.owner.?, .data = .{ .name = call.owner.? } }, call.owner.?, &value);
     const base: typed.NodeId = @fromBackingInt(self.nodes.items.len);
     try self.nodes.append(self.allocator, value);
-    return checkCollectionAccess(Checker, self, node, .{ .base = base, .receiver = slot, .kind = kind, .inputs = call.arguments, .temporaries = temporaries });
+    return checkCollectionAccess(Checker, self, node, .{ .base = base, .kind = kind, .inputs = call.arguments, .temporaries = temporaries });
 }
 /// Check one intrinsic `Option[T]` method against an already checked
 /// receiver. `unwrap_or`'s default is checked against the payload with the
@@ -685,7 +685,7 @@ fn checkConstantMethod(comptime Checker: type, self: *Checker, node: ast.Node, t
     try self.nodes.append(self.allocator, value);
     const kind = try methodKind(Checker, self, call.name, call.arguments.len, value.ty);
     if (try fusedByteRange(Checker, self, node, base, kind, call.arguments.len)) |fused| return fused;
-    return checkCollectionAccess(Checker, self, node, .{ .base = base, .receiver = null, .kind = kind, .inputs = call.arguments, .temporaries = temporaries });
+    return checkCollectionAccess(Checker, self, node, .{ .base = base, .kind = kind, .inputs = call.arguments, .temporaries = temporaries });
 }
 fn checkCollectionSlice(comptime Checker: type, self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
     const slice = node.data.slice;
@@ -713,7 +713,6 @@ fn checkListAccess(comptime Checker: type, self: *Checker, node: ast.Node, opera
     const base = try self.expressionWithTemporaries(operation.base, temporaries);
     return checkCollectionAccess(Checker, self, node, .{
         .base = base,
-        .receiver = self.arenaReceiver(operation.base),
         .kind = operation.kind,
         .inputs = operation.inputs,
         .temporaries = temporaries,
@@ -730,18 +729,17 @@ fn checkCollectionAccess(comptime Checker: type, self: *Checker, node: ast.Node,
     const dictionary = managed_owner and self.catalog.records[owner_type.recordIndex()].collection.kind == .dictionary;
     if (managed_owner) kind = buffer_operations.forFamily(kind, self.catalog.records[owner_type.recordIndex()].collection.kind);
     if (typed.setRecord(self.catalog.records, owner_type) != null)
-        return self.checkSetMethodSyntax(node, .{ .span = node.span, .base = base, .receiver = call.receiver, .kind = kind, .arguments = &.{} }, inputs, temporaries);
+        return self.checkSetMethodSyntax(node, .{ .span = node.span, .base = base, .kind = kind, .arguments = &.{} }, inputs, temporaries);
     // `pop` is one Python name with an optional argument; its arity selects the
     // list-tail, list-index, dictionary-key or dictionary-default form.
     if (kind == .pop) kind = if (dictionary) (if (inputs.len == 2) .pop_default else .pop_key) else (if (inputs.len == 1) .pop_at else .pop);
     if (managed_owner and self.catalog.records[owner_type.recordIndex()].collection.kind != .list) {
-        const receiver = call.receiver;
-        return checkManagedAccess(Checker, self, node, .{ .base = base, .kind = kind, .inputs = inputs, .receiver = receiver }, temporaries);
+        return checkManagedAccess(Checker, self, node, .{ .base = base, .kind = kind, .inputs = inputs }, temporaries);
     }
     if (switch (kind) {
         .extend, .insert, .pop, .pop_at, .remove, .index_of, .reverse, .sort, .copy, .clear => true,
         else => false,
-    }) return checkListMethod(Checker, self, node, .{ .base = base, .receiver = call.receiver, .kind = kind, .inputs = inputs, .temporaries = temporaries });
+    }) return checkListMethod(Checker, self, node, .{ .base = base, .kind = kind, .inputs = inputs, .temporaries = temporaries });
     const supported = switch (kind) {
         .append, .read, .write, .length, .contains => true,
         else => false,
@@ -765,7 +763,6 @@ fn checkCollectionAccess(comptime Checker: type, self: *Checker, node: ast.Node,
         const actual = self.nodes.items[@backingInt(argument.*)].ty;
         if (writes_element) try self.require(actual, element, node.span) else try self.requireInteger(actual, node.span);
     }
-    try self.requireArenaOperation(call.receiver, kind, arguments);
     return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, kind, arguments, call.signed_length);
 }
 /// Require a sort element type with a total order: an integer, float, str or bytes.
@@ -824,7 +821,6 @@ fn checkListMethod(comptime Checker: type, self: *Checker, node: ast.Node, call:
         .pop, .reverse, .sort, .copy, .clear => {},
         else => return self.sink.fail(eCollectionMethod, node.span, unsupported_list),
     }
-    try self.requireArenaOperation(call.receiver, kind, arguments);
     return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, kind, arguments, false);
 }
 fn checkManagedAccess(comptime Checker: type, self: *Checker, node: ast.Node, operation: ManagedAccess, temporaries: []const typed.Type) Error!typed.Node {
@@ -876,7 +872,6 @@ fn checkManagedAccess(comptime Checker: type, self: *Checker, node: ast.Node, op
         const actual = self.nodes.items[@backingInt(argument.*)].ty;
         if (integer) try self.requireInteger(actual, node.span) else try self.requireArgument(.{ .actual = actual, .expected = expected, .span = node.span, .kind = operation.kind, .names = names });
     }
-    try self.requireArenaOperation(operation.receiver, operation.kind, arguments);
     return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(operation.base, operation.kind, arguments, false);
 }
 /// Check a dictionary's Python-shaped methods against its key and value types.
@@ -915,7 +910,6 @@ fn checkDictionaryMethod(comptime Checker: type, self: *Checker, node: ast.Node,
         },
         else => return self.sink.fail(eCollectionMethod, node.span, "operation is not supported by dictionaries"),
     }
-    try self.requireArenaOperation(operation.receiver, operation.kind, arguments);
     return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(operation.base, operation.kind, arguments, false);
 }
 fn collectionListType(comptime Checker: type, self: *Checker, element: typed.Type, span: source.Span) Error!typed.Type {
@@ -1090,7 +1084,6 @@ fn checkDictionaryBufferMethod(comptime Checker: type, self: *Checker, operation
             else => {},
         }
     }
-    try self.requireArenaOperation(owner, kind, arguments);
     out.ty = collections.operationType(&self.catalog, owner_type, kind, operation.owner) catch |err| switch (err) {
         error.InternalError => return self.sink.fail(eCollectionMethod, operation.owner, unsupported_collection),
         else => return err,
@@ -1107,7 +1100,7 @@ fn checkBufferOperation(comptime Checker: type, self: *Checker, _: ast.Node, ope
         const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
         for (operation.arguments, arguments) |input, *argument| argument.* = self.resolved[@backingInt(input)].?;
         const b: collections.Builder(Checker) = .{ .checker = self, .span = out.span };
-        out.* = try self.checkSetMethod(.{ .span = out.span, .base = try b.read(owner), .receiver = owner, .kind = operation.kind, .arguments = arguments });
+        out.* = try self.checkSetMethod(.{ .span = out.span, .base = try b.read(owner), .kind = operation.kind, .arguments = arguments });
         return;
     }
     if (self.catalog.records[local.ty.recordIndex()].collection.kind == .dictionary) if (dictionary_views.operation(operation.kind)) |kind| {
@@ -1144,7 +1137,6 @@ fn checkBufferOperation(comptime Checker: type, self: *Checker, _: ast.Node, ope
             try self.requireInteger(actual, span);
         }
     }
-    try self.requireArenaOperation(owner, operation.kind, arguments);
     out.ty = if (operation.kind.mutates()) .unit else if (operation.kind == .read) element else if (operation.kind == .contains) .bool else .u64;
     out.data = .{ .buffer_operation = .{ .kind = operation.kind, .owner = owner, .arguments = arguments } };
 }
@@ -1179,7 +1171,6 @@ fn checkListBufferMethod(comptime Checker: type, self: *Checker, operation: @Fie
             else => {},
         }
     }
-    try self.requireArenaOperation(owner, kind, arguments);
     out.ty = collections.operationType(&self.catalog, owner_type, kind, operation.owner) catch |err| switch (err) {
         error.InternalError => return self.sink.fail(eCollectionMethod, operation.owner, unsupported_collection),
         else => return err,

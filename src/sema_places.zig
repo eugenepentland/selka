@@ -260,7 +260,6 @@ fn bindDestructured(comptime Checker: type, self: *Checker, name: source.Span, v
     if (self.active.get(text)) |slot| {
         if (!self.locals.items[@backingInt(slot)].mutable) return self.sink.fail(eImmutable, name, "this binding cannot be assigned");
         try requireRebindable(Checker, self, slot, name);
-        try self.requireArenaAssignment(slot, value);
         if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
             if (self.pendingObligation(self.locals.items[@backingInt(slot)])) return self.sink.fail("E_RESULT_OVERWRITE", name, "assignment would overwrite an unhandled result-bearing value");
             self.locals.items[@backingInt(slot)].ownership.transfer_available = true;
@@ -268,7 +267,6 @@ fn bindDestructured(comptime Checker: type, self: *Checker, name: source.Span, v
         }
         self.locals.items[@backingInt(slot)].usage.writes += 1;
         self.locals.items[@backingInt(slot)].ownership.initialized = true;
-        self.locals.items[@backingInt(slot)].ownership.arena_confined = false;
         self.option_facts.forget(@backingInt(slot));
         try statements.append(self.allocator, try b.stmt(.{ .assign = .{ .slot = slot, .value = value } }));
         return;
@@ -284,7 +282,6 @@ fn bindDestructured(comptime Checker: type, self: *Checker, name: source.Span, v
         .mutable = true,
     });
     try self.active.put(self.allocator, text, slot);
-    try self.requireArenaStore(slot, value);
     try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = slot, .value = value } }));
 }
 fn checkFieldAssignment(comptime Checker: type, self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
@@ -337,7 +334,6 @@ fn checkFieldAssignment(comptime Checker: type, self: *Checker, node: ast.Node, 
     if (extending) {
         // Capture the field before the RHS, extend that value, then publish it
         // through the same refreshed destination as other augmented fields.
-        if (destination.index == null) try self.requireArenaStore(destination.owner, value);
         const receiver = try b.local(expected);
         try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = receiver, .value = current } }));
         try statements.append(self.allocator, try b.stmt(.{ .discard = try b.operation(receiver, .extend, try self.allocator.dupe(typed.NodeId, &.{value})) }));
@@ -355,12 +351,11 @@ fn checkFieldAssignment(comptime Checker: type, self: *Checker, node: ast.Node, 
         // in its own slot after the destination is set up, so a narrowed owner's
         // refresh cannot run before the field it reads.
         const combined = try augmented(Checker, self, assignment.op, current, value, node.span);
-        if (destination.index == null) try self.requireArenaStore(destination.owner, combined);
         const stored = try b.local(expected);
         try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = stored, .value = combined } }));
         if (destination.refresh) |refresh| try statements.append(self.allocator, refresh);
         value = try b.read(stored);
-    } else if (destination.index == null) try self.requireArenaStore(destination.owner, value);
+    }
     // The value needs its own slot only to survive the destination refresh: it
     // must be computed before the refresh, which re-reads the binding. A managed
     // record needs no refresh, and its update reads the binding where it stands,
@@ -778,7 +773,6 @@ fn checkArrayPlace(comptime Checker: type, self: *Checker, node: ast.Node, place
         value = try augmented(Checker, self, write.op, current, right, node.span);
         if (!effectFreeValue(Checker, self, right, 0)) value = try spillValue(Checker, self, b, value, &statements);
     }
-    if (slot_index == null) try self.requireArenaStore(owner, if (write.op == .set) right else value);
     var i = place.steps.len;
     while (i > 0) {
         i -= 1;

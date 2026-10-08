@@ -55,11 +55,11 @@ DEFAULT_TOLERANCE = 0.15
 MAX_TOLERANCE = 0.50
 RUST_FLAGS = ["--edition", "2021", "-C", "opt-level=3", "-C", "codegen-units=1",
               "-C", "target-cpu=native", "-C", "panic=abort"]
-# The build every mylang arm but `my-qbe` times: ReleaseFast, LLVM O3 with full
-# LTO. `mylang build` defaulted to it until 2026-09-23 and now defaults to QBE;
-# it is spelled out rather than written `--release` so a compiler named by
-# `-Dbench-mylang` from before the shorthand builds exactly the same arm.
-RELEASE_FLAGS = ["--backend", "llvm", "--llvm-opt", "3", "--lto"]
+# The build every mylang arm times: the new core's `--release` build, the whole
+# program as one optimized LLVM unit. The old `--backend`, `--llvm-opt` and
+# `--lto` spellings were retired with the QBE back end (S5) and are refused, so
+# a compiler named by `-Dbench-mylang` must be one from the new core.
+RELEASE_FLAGS = ["--release"]
 # The plan's parity targets (docs/audits/performance-parity-plan-2026-09-22.md §1),
 # reported beside the suite's geometric means; they are goals, not gates.
 TARGETS = {"my": 1.2, "worst my": 1.5}
@@ -97,7 +97,7 @@ def ports_of(directory: Path, name: str) -> list[tuple[str, Path, str]]:
     return ports
 
 
-def arms_for(ports: list[tuple[str, Path, str]], qbe: bool) -> list[dict]:
+def arms_for(ports: list[tuple[str, Path, str]]) -> list[dict]:
     """The arms one benchmark builds, named as in the plan's tables."""
     arms = []
     for lang, path, variant in ports:
@@ -106,8 +106,6 @@ def arms_for(ports: list[tuple[str, Path, str]], qbe: bool) -> list[dict]:
                 arms.append(arm(f"my-{variant}", lang, path, RELEASE_FLAGS))
                 continue
             arms.append(arm("my", lang, path, RELEASE_FLAGS))
-            if qbe:
-                arms.append(arm("my-qbe", lang, path, ["--backend", "qbe"]))
         elif lang == "zig":
             if variant:
                 arms.append(arm(f"zig-{variant}", lang, path, ["-O", "ReleaseFast"]))
@@ -612,7 +610,7 @@ def command_run(opts: argparse.Namespace) -> int:
     for bench in benches:
         entry = {"group": bench["group"], "arms": {}}
         result["benchmarks"][bench["name"]] = entry
-        for job in arms_for(bench["ports"], opts.qbe):
+        for job in arms_for(bench["ports"]):
             if wanted_arms and job["arm"] not in wanted_arms and job["arm"] != REFERENCE:
                 continue
             if job["lang"] == "rust" and rustc is None:
@@ -880,7 +878,7 @@ def command_same_binaries(opts: argparse.Namespace) -> int:
     work = Path(opts.work).resolve()
     jobs = []
     for bench in benches:
-        for job in arms_for(bench["ports"], opts.qbe):
+        for job in arms_for(bench["ports"]):
             if job["lang"] != "my":
                 continue
             for side, compiler in compilers.items():
@@ -934,7 +932,6 @@ def main() -> int:
     run.add_argument("--warmups", type=int, default=2)
     run.add_argument("--filter", help="comma-separated substrings of GROUP/NAME")
     run.add_argument("--arms", nargs="*", help="time only these arms (zig-fast is always kept)")
-    run.add_argument("--qbe", action="store_true", help="also build the my-qbe arm (not thresholded by default)")
     run.add_argument("--jobs", type=int, default=4, help="concurrent builds (never while timing)")
     run.add_argument("--work", default=str(ROOT / ".mylang-cache/bench-parity"))
     run.add_argument("--json", default=str(ROOT / ".mylang-cache/bench-parity/result.json"))
@@ -958,7 +955,6 @@ def main() -> int:
     same.add_argument("--mylang", default=str(ROOT / "zig-out/bin/mylang"), help="first compiler (default: the Debug build)")
     same.add_argument("--other", required=True, help="second compiler, e.g. a ReleaseFast install's bin/mylang")
     same.add_argument("--filter", help="comma-separated substrings of GROUP/NAME")
-    same.add_argument("--qbe", action="store_true", help="also compare the my-qbe arm")
     same.add_argument("--jobs", type=int, default=4, help="concurrent builds")
     same.add_argument("--work", default=str(ROOT / ".mylang-cache/bench-parity"))
     opts = parser.parse_args()

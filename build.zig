@@ -538,7 +538,6 @@ pub fn build(b: *std.Build) void {
     boundedChecks(b.getInstallStep());
     const options = b.addOptions();
     options.addOptionPath("compiler_path", exe.getEmittedBin());
-    options.addOptionPath("arena_example_path", b.path("examples/arena-managed/main.my"));
     options.addOption([]const u8, "zig_path", b.graph.zig_exe);
     const integration = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .filters = test_filters, .root_module = b.createModule(.{
         .root_source_file = b.path("test/integration.zig"),

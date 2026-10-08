@@ -232,7 +232,7 @@ adopted on 2026-09-06 and reversed on 2026-09-14; read it as history. The gate i
 should make potentially allocating operations recognizable. Ordinary data uses value
 semantics; managed strings, lists and dictionaries are shared references reclaimed by
 a nonmoving tracing collector, with optional `with arena()` regions for bulk release
-([managed memory](managed-memory.md), [arenas](arenas.md)). Recoverable errors are
+([managed memory](managed-memory.md), [retired arenas](managed-memory.md#retired-arenas)). Recoverable errors are
 values with convenient propagation and no exception unwinding.
 
 **Removed storage-tier goals (2026-09-13).** The earlier direction required an
@@ -253,7 +253,7 @@ Experiment with small function contracts for no I/O and no allocation. Verify th
 **Removed storage-tier direction (2026-09-13):** owned values, shared and exclusive
 borrows, references, slices, pools and typed integer handles. The current model relies
 on the tracing collector, runtime checked handles/generations/leases, and managed
-arenas instead ([managed memory](managed-memory.md), [arenas](arenas.md)). Do not
+arenas instead ([managed memory](managed-memory.md), [retired arenas](managed-memory.md#retired-arenas)). Do not
 promise a borrow checker with no complexity, and prototype any lifetime rule on
 realistic graph, arena and container examples before making the syntax permanent. Raw
 pointers and hardware access still require explicit unsafe operations and documented

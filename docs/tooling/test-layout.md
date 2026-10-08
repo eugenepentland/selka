@@ -125,9 +125,9 @@ Summary by action, after the first pass:
 | audited to stay | 36 |
 
 These counts are the 2026-09-18 audit's. The sections for
-`src/arena_managed_test.zig` (11 tests) and `src/managed_cell_test.zig` (2) were
-removed when arenas and `Cell` were retired (S5-D3, S5-D4); their tests leave
-with those features instead of moving.
+`src/arena_managed_test.zig` (11 tests), `src/managed_cell_test.zig` (2) and
+`src/loop_exit_test.zig`'s arena test (1) were removed when arenas and `Cell` were
+retired (S5-D3, S5-D4); their tests leave with those features instead of moving.
 
 ### `src/effects_test.zig` (9)
 
@@ -405,12 +405,6 @@ with those features instead of moving.
 | Zig test | Spec tags | Action |
 | --- | --- | --- |
 | all integer widths accept their limits and reject one-past literals | `CORE-4` | split |
-
-### `src/loop_exit_test.zig` (1)
-
-| Zig test | Spec tags | Action |
-| --- | --- | --- |
-| loop exits release the nested managed arenas they jump out of | — | move |
 
 ### `src/managed_values_test.zig` (1)
 

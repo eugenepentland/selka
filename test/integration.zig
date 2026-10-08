@@ -130,11 +130,10 @@ test "CLI managed constants import run build installed and invalidate warm cache
     try managedConstantModes(&temporary, "module constants\npublic const TEXT: str = \"hà🙃\"\npublic const DATA: bytes = b\"\\x00\\xfe\"\n", "hà🙃\n2\n254\n");
 }
 
-test "CLI checks host declarations and refuses to run one with no registration" {
-    try invoke("check", host_program, 0, "", "");
-    // Nothing registers a host implementation for a plain `mylang run`, so the
-    // program cannot start; that is a host-boundary refusal, not a guest trap.
-    try invoke("run", host_program, 2, "", "HostMissingRegistration");
+// spec-case: NEW-CORE-S5-HOST-1
+test "CLI refuses a retired host declaration at check time and names extern def" {
+    try invoke("check", host_program, 1, "", "error[E_HOST_RETIRED]");
+    try invoke("run", host_program, 1, "", "declare the function `extern def`");
 }
 // spec: HOST-CAPABILITY-1
 test "CLI threads a Host capability through an extern call and runs it natively" {
@@ -181,7 +180,8 @@ test "CLI withholds Host under restrict and grants it with --allow-host" {
     try invokeOptions("run", source, &.{"--restrict"}, 2, "", "--allow-host");
     try invokeOptions("run", source, &.{ "--restrict", "--allow-host" }, 0, "7\n", "");
 }
-test "CLI reports managed arena escapes as machine-readable diagnostics" {
+// spec-case: NEW-CORE-S5-ARENA-2
+test "CLI checks and runs a managed value assigned across a retired arena block" {
     const source =
         \\def main() -> int:
         \\    keeper: list[int] = []
@@ -189,8 +189,8 @@ test "CLI reports managed arena escapes as machine-readable diagnostics" {
         \\        keeper = [1, 2]
         \\    return len(keeper)
     ;
-    try invoke("check", source, 1, "", "error[E_ARENA_ESCAPE]");
-    try invokeOptions("check", source, &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_ARENA_ESCAPE\"");
+    try invoke("check", source, 0, "", "warning[W_ARENA_RETIRED]");
+    try invoke("run", source, 0, "2\n", "warning[W_ARENA_RETIRED]");
 }
 fn invoke(command: []const u8, text: []const u8, expected_status: u8, expected_stdout: []const u8, stderr_part: []const u8) !void {
     return invokeOptions(command, text, &.{}, expected_status, expected_stdout, stderr_part);
@@ -5973,7 +5973,7 @@ const listing_module =
     \\    id: Count
     \\
     \\
-    \\host def measure(host: Host, x: i64) -> i64 effects(host)
+    \\extern def measure(host: Host, x: i64) -> i64 effects(host)
     \\
     \\
     \\

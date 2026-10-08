@@ -345,6 +345,81 @@ test "CLI warm imported direct and callback ABIs follow producer rebinding chang
     try testing.expectEqualStrings(abi_consumer, consumer);
 }
 
+// spec: NEW-CORE-S5-ARENA-3
+// spec-case: FIX-MIGRATION-1
+test "CLI fix removes retired arena blocks, dedents their bodies and unwraps escapes" {
+    const original = @embedFile("fixtures/fix-migration/arenas.my");
+    var project = try Project.init(&.{.{ .path = "main.my", .data = original }});
+    defer project.deinit();
+    const preview = try project.run("fix", "main.my", &.{"--check"});
+    defer preview.deinit();
+    try testing.expectEqual(@as(u8, 1), preview.status);
+    try testing.expect(contains(preview.stdout, "W_ARENA_RETIRED"));
+    const fixed = try project.run("fix", "main.my", &.{});
+    defer fixed.deinit();
+    try testing.expectEqual(@as(u8, 0), fixed.status);
+    try testing.expectEqualStrings("", fixed.stderr);
+    const after = try project.read("main.my");
+    defer testing.allocator.free(after);
+    try testing.expectEqualStrings(arenas_migrated, after);
+    const checked = try project.run("check", "main.my", &.{});
+    defer checked.deinit();
+    try testing.expectEqual(@as(u8, 0), checked.status);
+    try testing.expectEqualStrings("", checked.stderr);
+    const again = try project.run("fix", "main.my", &.{"--check"});
+    defer again.deinit();
+    try testing.expectEqual(@as(u8, 0), again.status);
+}
+
+/// `fixtures/fix-migration/arenas.my` after `mylang fix`.
+const arenas_migrated =
+    \\# Pre-S5 arena code: `mylang fix` deletes every `with arena():` line, dedents
+    \\# the block's body and rewrites each `name.escape(value)` to `value`.
+    \\record Reading:
+    \\    sensor: int
+    \\    samples: list[int]
+    \\
+    \\
+    \\def collect(sensors: int) -> list[Reading]:
+    \\    readings: list[Reading] = []
+    \\    for sensor in range(sensors):
+    \\        # one region per sensor
+    \\        samples: list[int] = []
+    \\        for index in range(3):
+    \\            samples.append(sensor * 3 + index)
+    \\
+    \\        # kept: a copy survives the region
+    \\        readings.append(Reading(sensor=sensor, samples=samples))
+    \\    return readings
+    \\
+    \\
+    \\def loudest(readings: list[Reading]) -> int:
+    \\    best = 0
+    \\# a comment at the left margin stays where it is
+    \\    for reading in readings:
+    \\        total = 0
+    \\        for sample in reading.samples:
+    \\            total = total + sample
+    \\        if total > best:
+    \\            best = total
+    \\    return best
+    \\
+    \\
+    \\def nested() -> int:
+    \\    kept = "z"
+    \\    joined = "-".join(["a", str(2)])
+    \\    kept = (joined + "!")
+    \\    size = len(joined)
+    \\    # after the inner block
+    \\    return len(kept) + size
+    \\
+    \\
+    \\def main() -> int:
+    \\    readings = collect(4)
+    \\    return len(readings) + loudest(readings) + nested()
+    \\
+;
+
 // spec-case: FIX-MIGRATION-1
 // spec-case: D2-VIEW-STORAGE-1
 test "D2 CLI fix materializes stored dictionary projections with contextual list snapshots" {

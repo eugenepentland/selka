@@ -123,10 +123,8 @@ const timings = @import("timings.zig");
 const generic_cache = @import("generic_cache.zig");
 const Names = @import("module_names.zig").Names;
 const LoopScope = struct { id: usize, before: []const Pending, arenas: usize = 0, exited: bool = false };
-const ArenaScope = struct { name: []const u8, declaration: source.Span, watermark: typed.LocalId };
-const eArenaEscape = "E_ARENA_ESCAPE";
+const ArenaScope = struct { name: []const u8, watermark: typed.LocalId };
 const eUnbound = "E_UNBOUND";
-const eArenaBinding = sema_shared.eArenaBinding;
 const eWithResource = sema_shared.eWithResource;
 const eFileArgument = sema_shared.eFileArgument;
 const Pending = sema_shared.Pending;
@@ -592,10 +590,9 @@ const Checker = struct {
     }
     const ResolvedCall = struct { declaration: instances.DeclarationId, call: @FieldType(@FieldType(ast.Node, "data"), "call") };
     /// Whether one in-scope local may appear in a hole snapshot as a usable
-    /// input: initialized, not consumed, not arena-confined, not synthetic.
+    /// input: initialized, not consumed, not synthetic.
     fn holeUsable(self: *Checker, local: typed.Local) bool {
         if (!local.ownership.initialized) return false;
-        if (local.ownership.arena_confined) return false;
         if (local.usage.temporary) return false;
         return !self.transfers(local.ty) or local.ownership.transfer_available;
     }
@@ -886,15 +883,9 @@ const Checker = struct {
         return self.sink.fail("E_ARITY", name, message);
     }
     /// Reject reading a function-scoped binding that no path reaching here has
-    /// assigned, or one that names a managed value confined to a released arena.
+    /// assigned.
     pub fn requireReadable(self: *Checker, slot: typed.LocalId, name: source.Span) Error!void {
         const local = self.locals.items[@backingInt(slot)];
-        if (local.ownership.arena_confined) return self.sink.failRelated(
-            eArenaEscape,
-            name,
-            "names a managed value that lives in a released `with arena()` scope; an arena value cannot be read after the block, so copy it out with `arena.escape(...)` into a binding declared before the block",
-            .{ .span = local.declaration, .message = "arena-managed binding first assigned here" },
-        );
         if (!local.ownership.initialized) return self.sink.failRelated(
             eUnbound,
             name,
@@ -1228,97 +1219,12 @@ const Checker = struct {
         }
         return self.managed_types[local_type.recordIndex()];
     }
-    /// Source spelling of the innermost arena binding, or `arena` when anonymous.
-    fn arenaName(self: *Checker) []const u8 {
-        const scope = self.arenas.items[self.arenas.items.len - 1];
-        return if (scope.name.len == 0) "arena" else scope.name;
-    }
-    /// Resolve an arena binding spelling, rejecting an enclosing rather than innermost scope.
-    pub fn arenaBinding(self: *Checker, name: source.Span) Error!bool {
+    /// Whether a name spells the binding of an enclosing `with arena() as name:`
+    /// block, whose one use is `name.escape(value)` (NEW-CORE-S5-ARENA-2).
+    pub fn arenaBinding(self: *Checker, name: source.Span) bool {
         const text = self.src.text(name);
-        var index = self.arenas.items.len;
-        while (index > 0) {
-            index -= 1;
-            if (!std.mem.eql(u8, self.arenas.items[index].name, text)) continue;
-            if (index + 1 != self.arenas.items.len) return self.sink.fail(eArenaEscape, name, "escape must name the innermost active arena scope");
-            return true;
-        }
+        for (self.arenas.items) |scope| if (std.mem.eql(u8, scope.name, text)) return true;
         return false;
-    }
-    /// Whether this slot names a binding that outlives the innermost arena scope.
-    fn outlivesArena(self: *Checker, slot: typed.LocalId) bool {
-        if (self.arenas.items.len == 0) return false;
-        return @backingInt(slot) < @backingInt(self.arenas.items[self.arenas.items.len - 1].watermark);
-    }
-    /// Whether a checked expression is the arena copy-out that re-homes its result.
-    fn isArenaEscape(self: *Checker, value: typed.NodeId) bool {
-        return self.nodes.items[@backingInt(value)].data == .arena_escape;
-    }
-    /// Reject a managed value leaving the innermost arena, naming scope and destination.
-    fn failArenaEscape(self: *Checker, span: source.Span, message: []const u8, destination: ?source.Span) Error {
-        const scope = self.arenas.items[self.arenas.items.len - 1];
-        const cause: diagnostic.Related = .{ .span = scope.declaration, .message = "arena scope opened here" };
-        if (destination) |at| return self.sink.failProvenance(eArenaEscape, span, message, cause, at);
-        return self.sink.failRelated(eArenaEscape, span, message, cause);
-    }
-    /// Resolve a plain-name collection receiver to its local slot for arena store checks.
-    pub fn arenaReceiver(self: *Checker, id: ast.NodeId) ?typed.LocalId {
-        if (self.arenas.items.len == 0) return null;
-        const node = self.syntax.nodes.items[@backingInt(id)];
-        if (node.data != .name) return null;
-        return self.active.get(self.src.text(node.data.name));
-    }
-    /// Reject an arena-allocated element stored through a collection mutation.
-    pub fn requireArenaOperation(self: *Checker, owner: ?typed.LocalId, kind: BufferKind, arguments: []const typed.NodeId) Error!void {
-        const slot = owner orelse return;
-        if (self.arenas.items.len == 0) return;
-        // `update` copies every entry of its operand in, exactly as `extend`
-        // copies every element, so an arena-held operand is refused the same way.
-        if ((kind == .append or kind == .extend or kind == .update) and arguments.len == 1) return self.requireArenaStore(slot, arguments[0]);
-        if (kind != .write or arguments.len != 2) return;
-        try self.requireArenaStore(slot, arguments[0]);
-        try self.requireArenaStore(slot, arguments[1]);
-    }
-    /// Reject storing a managed value into a container binding that outlives the arena.
-    pub fn requireArenaStore(self: *Checker, owner: typed.LocalId, value: typed.NodeId) Error!void {
-        if (!self.outlivesArena(owner)) return;
-        if (!try self.managedBearing(self.nodes.items[@backingInt(value)].ty)) return;
-        if (self.isArenaEscape(value)) return;
-        const local = self.locals.items[@backingInt(owner)];
-        const span = self.nodes.items[@backingInt(value)].span;
-        const message = try std.fmt.allocPrint(
-            self.allocator,
-            "`{s}` stores a managed value into `{s}`, which outlives arena `{s}`; store `{s}.escape(...)` instead",
-            .{ self.src.text(span), local.name, self.arenaName(), self.arenaName() },
-        );
-        return self.failArenaEscape(span, message, local.declaration);
-    }
-    /// Reject assigning a managed value to a binding declared outside the arena.
-    pub fn requireArenaAssignment(self: *Checker, slot: typed.LocalId, value: typed.NodeId) Error!void {
-        if (!self.outlivesArena(slot)) return;
-        if (!try self.managedBearing(self.locals.items[@backingInt(slot)].ty)) return;
-        if (self.isArenaEscape(value)) return;
-        const local = self.locals.items[@backingInt(slot)];
-        const span = self.nodes.items[@backingInt(value)].span;
-        const message = try std.fmt.allocPrint(
-            self.allocator,
-            "`{s}` is assigned to `{s}`, which outlives arena `{s}`; assign `{s}.escape(...)` instead",
-            .{ self.src.text(span), local.name, self.arenaName(), self.arenaName() },
-        );
-        return self.failArenaEscape(span, message, local.declaration);
-    }
-    /// Reject returning a managed value out of an arena scope. A copy-out of the
-    /// outermost arena in this function targets the caller's region and is allowed.
-    pub fn requireArenaReturn(self: *Checker, value: typed.NodeId, span: source.Span) Error!void {
-        if (self.arenas.items.len == 0) return;
-        if (!try self.managedBearing(self.nodes.items[@backingInt(value)].ty)) return;
-        if (self.arenas.items.len == 1 and self.isArenaEscape(value)) return;
-        const message = try std.fmt.allocPrint(
-            self.allocator,
-            "`{s}` returns a managed value from inside arena `{s}`; assign `{s}.escape(...)` to a binding declared before the block and return it afterwards",
-            .{ self.src.text(self.nodes.items[@backingInt(value)].span), self.arenaName(), self.arenaName() },
-        );
-        return self.failArenaEscape(span, message, null);
     }
     const contract_checks = sema_contracts.Checks(Checker);
     pub const indexInvariants = contract_checks.indexInvariants;
@@ -1486,7 +1392,7 @@ fn normalizeDiagnostics(sink: *diagnostic.Sink) void {
     const rejected = reportedError(sink.items.items);
     var count: usize = 0;
     for (sink.items.items) |item| {
-        if (rejected and std.mem.eql(u8, item.code, @import("sema_statements.zig").arena_retired_code)) continue;
+        if (rejected and std.mem.eql(u8, item.code, @import("arena_fix.zig").retired_code)) continue;
         if (count != 0) {
             const previous = sink.items.items[count - 1];
             if (previous.span.start == item.span.start and previous.span.end == item.span.end and
@@ -1975,6 +1881,7 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     try @import("alias_warning.zig").check(allocator, src, checked, sink);
     try warnBindings(allocator, checker.catalog.records, functions, stubs, sink);
     try warnImports(module_names, sink);
+    try @import("arena_fix.zig").warn(allocator, src, program, sink);
     const pass_items: []const diagnostic.Diagnostic = if (plan != null) try allocator.dupe(diagnostic.Diagnostic, sink.items.items[pass_start..]) else &.{};
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
     timingAdd(timing, "warning_derivation", warnings_start);
