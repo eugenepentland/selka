@@ -1,0 +1,32 @@
+[
+  {
+    "phase": "section2",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "d9deb9b70c13ba876689d0f8870c581ab43e44ba",
+    "status": 1,
+    "summary": "Build Summary: 92/94 steps succeeded (1 failed); 2288/23499 tests passed (21211 skipped)",
+    "test_verdicts": {
+      "passed": 2288,
+      "failed": 0,
+      "skipped": 0
+    },
+    "log_sha256": "acd4c0a907f53fc98d63f14b3e4b47dc9f62ac43c964ce01bb6f96a09495a66b",
+    "log_bytes": 400425,
+    "note": "five external-fixture TMPDIR failures; see D6"
+  },
+  {
+    "phase": "section2",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "d9deb9b70c13ba876689d0f8870c581ab43e44ba",
+    "status": 0,
+    "summary": "Build Summary: 94/94 steps succeeded; 2288/23499 tests passed (21211 skipped)",
+    "test_verdicts": {
+      "passed": 2288,
+      "failed": 0,
+      "skipped": 0
+    },
+    "log_sha256": "9c97402922113df242996a9af449dc6b4fba63670421962c4628476178df534c",
+    "log_bytes": 396020,
+    "note": "TMPDIR outside checkout; unchanged test sources"
+  }
+]
