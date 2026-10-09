@@ -25,7 +25,7 @@ pub fn reach(allocator: std.mem.Allocator, io: std.Io, entry: []const u8) Error!
     var loaded = project.Project.init(allocator);
     defer loaded.deinit();
     const module_name = try entryModule(allocator, name);
-    loaded.load(.{ .context = &provider, .read = DiskProvider.read }, module_name, .{}) catch |err| switch (err) {
+    loaded.load(.{ .context = &provider, .read = DiskProvider.read }, module_name, .{ .legacy_headers = true }) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => {},
     };

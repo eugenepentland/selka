@@ -98,7 +98,7 @@ SPEC_BULLET = re.compile(r'^\s*- \[([A-Z][A-Z0-9_-]*)\]')
 DIAGNOSTIC = re.compile(r'\b([ER]_[A-Z][A-Z0-9_]+)\b')
 ZIG_FN = re.compile(r'\bfn ([A-Za-z_][A-Za-z0-9_]*)\s*\(')
 IMPORT = re.compile(r'@import\("([^"]+\.zig)"\)')
-GUEST_TEST = re.compile(r'^(?:public )?def (test_[A-Za-z0-9_]*)\s*\(', re.M)
+GUEST_TEST = re.compile(r'^(?:public )?func (test_[A-Za-z0-9_]*)\s*\(', re.M)
 
 
 class Selection:
@@ -202,7 +202,7 @@ def zig_tests(text: str) -> list[tuple[str, set[str], str]]:
 
 
 def guest_tests(text: str) -> list[tuple[str, set[str]]]:
-    """Every ``def test_*`` in a guest file with its ``# spec:`` tags."""
+    """Every ``func test_*`` in a guest file with its ``# spec:`` tags."""
     tests = []
     lines = text.splitlines()
     for index, line in enumerate(lines):

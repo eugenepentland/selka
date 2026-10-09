@@ -1,33 +1,32 @@
-module main
 
-public def test_scale() -> bool effects():
+public func test_scale() -> bool effects():
     return bench_sum(4) == 6
 
 
-public def bench_sum(limit: int) -> int effects():
-    total: int = 0
-    index: int = 0
+public func bench_sum(limit: int) -> int effects():
+    mut total: int = 0
+    mut index: int = 0
     while index < limit:
         total = total + index
         index = index + 1
     return total
 
 
-def sum_values(values: list[int]) -> int effects():
-    total: int = 0
-    index: int = 0
+func sum_values(values: int[]) -> int effects():
+    mut total: int = 0
+    mut index: int = 0
     while index < len(values):
         total = total + values[index]
         index = index + 1
     return total
 
 
-public def bench_list_sum(size: int) -> int:
-    values: list[int] = []
+public func bench_list_sum(size: int) -> int:
+    mut values: int[] = []
     for index in range(size):
         values.append(index)
     return sum_values(values)
 
 
-def main() -> int:
+func main() -> int:
     return 0

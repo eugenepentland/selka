@@ -1,4 +1,4 @@
-def image() -> list[int]:
+func image() -> int[]:
     return [
         0, 1, 2, 3, 4, 5, 6, 7,
         8, 9, 10, 11, 12, 13, 14, 15,
@@ -10,32 +10,32 @@ def image() -> list[int]:
         56, 57, 58, 59, 60, 61, 62, 63,
     ]
 
-def append(items: mut list[int]) -> int:
-    before = items
+func append(mut items: int[]) -> int:
+    mut before = items
     items.append(64)
     return len(before)
 
-public def test_constant_list_image_detaches_before_write_and_growth() -> bool:
-    first = image()
-    second = image()
-    saved = first
+public func test_constant_list_image_detaches_before_write_and_growth() -> bool:
+    mut first = image()
+    mut second = image()
+    mut saved = first
     first[0] = -7
     first.append(64)
     return first[0] == -7 and len(first) == 65 and second[0] == 0 and len(second) == 64 and saved[0] == 0 and len(saved) == 64
 
-public def test_constant_list_image_mut_parameter_preserves_snapshot() -> bool:
-    items = image()
-    before = items
-    count = append(mut items)
+public func test_constant_list_image_mut_parameter_preserves_snapshot() -> bool:
+    mut items = image()
+    mut before = items
+    mut count = append(mut items)
     return count == 64 and len(items) == 65 and len(before) == 64 and len(image()) == 64
 
-def tick(counter: mut list[int]) -> int:
+func tick(mut counter: int[]) -> int:
     counter[0] += 1
     return counter[0]
 
-public def test_nonconstant_list_elements_keep_order_and_run_once() -> bool:
-    counter = [0]
-    items = [
+public func test_nonconstant_list_elements_keep_order_and_run_once() -> bool:
+    mut counter = [0]
+    mut items = [
         tick(mut counter),
         0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0,
@@ -49,7 +49,7 @@ public def test_nonconstant_list_elements_keep_order_and_run_once() -> bool:
     ]
     return counter[0] == 2 and items[0] == 1 and items[64] == 2
 
-def text_image() -> list[str]:
+func text_image() -> str[]:
     return [
         "", "é😀", "", "é😀", "", "é😀", "", "é😀",
         "", "é😀", "", "é😀", "", "é😀", "", "é😀",
@@ -61,7 +61,7 @@ def text_image() -> list[str]:
         "", "é😀", "", "é😀", "", "é😀", "", "é😀",
     ]
 
-def bytes_image() -> list[bytes]:
+func bytes_image() -> bytes[]:
     return [
         b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff",
         b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff",
@@ -73,13 +73,13 @@ def bytes_image() -> list[bytes]:
         b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff",
     ]
 
-public def test_immortal_list_elements_detach_and_preserve_empty_values() -> bool:
-    texts = text_image()
-    saved_texts = texts
+public func test_immortal_list_elements_detach_and_preserve_empty_values() -> bool:
+    mut texts = text_image()
+    mut saved_texts = texts
     texts[1] = "changed"
     texts.append("tail")
-    octets = bytes_image()
-    saved_octets = octets
+    mut octets = bytes_image()
+    mut saved_octets = octets
     octets[1] = b"changed"
     octets.append(b"tail")
     return (

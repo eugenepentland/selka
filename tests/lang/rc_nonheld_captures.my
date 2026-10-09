@@ -1,53 +1,53 @@
 # Canonical scalar-list captures remain distinct from real iterator holds.
 
 
-def test_writes_then_iteration_preserve_snapshot() -> bool:
-    flags = [True, True, True]
-    saved = flags
+func test_writes_then_iteration_preserve_snapshot() -> bool:
+    mut flags = [True, True, True]
+    mut saved = flags
     for at in range(20):
         flags[0] = False
-    count = 0
+    mut count = 0
     for flag in flags:
         if flag:
             count += 1
     return count == 2 and saved[0] and not flags[0]
 
 
-def test_earlier_iteration_then_writes_preserve_identity() -> bool:
-    flags = [True, True, False]
-    count = 0
+func test_earlier_iteration_then_writes_preserve_identity() -> bool:
+    mut flags = [True, True, False]
+    mut count = 0
     for flag in flags:
         if flag:
             count += 1
     for at in range(12):
         flags[1] = False
-    after = 0
+    mut after = 0
     for flag in flags:
         if flag:
             after += 1
     return count == 2 and after == 1
 
 
-def returned_flags() -> list[bool]:
+func returned_flags() -> bool[]:
     return [True, True]
 
 
-def test_helper_return_is_published_before_capture() -> bool:
-    flags = returned_flags()
+func test_helper_return_is_published_before_capture() -> bool:
+    mut flags = returned_flags()
     for at in range(8):
         flags[0] = False
-    count = 0
+    mut count = 0
     for flag in flags:
         if flag:
             count += 1
     return count == 1
 
 
-def test_user_loop_copy_remains_independent() -> bool:
-    groups = [[True, True], [True, True]]
-    count = 0
+func test_user_loop_copy_remains_independent() -> bool:
+    mut groups = [[True, True], [True, True]]
+    mut count = 0
     for element in groups:
-        flags = element
+        mut flags = element
         flags[0] = False
         for flag in flags:
             if flag:
@@ -55,42 +55,42 @@ def test_user_loop_copy_remains_independent() -> bool:
     return count == 2 and groups[0][0] and groups[1][0]
 
 
-def replace_index(flags: mut list[bool]) -> int:
+func replace_index(mut flags: bool[]) -> int:
     flags.clear()
     flags.append(True)
     flags.append(True)
     return 0
 
 
-def test_call_then_source_rebind_preserves_values() -> bool:
-    flags = [True, False]
-    mutation_result_67 = replace_index(mut flags)
+func test_call_then_source_rebind_preserves_values() -> bool:
+    mut flags = [True, False]
+    mut mutation_result_67 = replace_index(mut flags)
     flags[mutation_result_67] = False
-    count = 0
+    mut count = 0
     for flag in flags:
         if flag:
             count += 1
     flags = [True, True, True]
     flags[1] = False
-    second = 0
+    mut second = 0
     for flag in flags:
         if flag:
             second += 1
     return count == 1 and second == 2
 
 
-def mutate_parameter(flags: mut list[bool]) -> int:
+func mutate_parameter(mut flags: bool[]) -> int:
     flags[0] = False
-    count = 0
+    mut count = 0
     for flag in flags:
         if flag:
             count += 1
     return count
 
 
-def test_named_source_iteration_sees_element_changes() -> bool:
-    flags = [True, True]
-    count = 0
+func test_named_source_iteration_sees_element_changes() -> bool:
+    mut flags = [True, True]
+    mut count = 0
     for flag in flags:
         if flag:
             count += 1
@@ -98,7 +98,7 @@ def test_named_source_iteration_sees_element_changes() -> bool:
     return count == 1 and not flags[1]
 
 
-def main() -> int:
+func main() -> int:
     if not test_writes_then_iteration_preserve_snapshot():
         return 1
     if not test_earlier_iteration_then_writes_preserve_identity():

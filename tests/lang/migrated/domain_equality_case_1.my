@@ -1,25 +1,24 @@
-module domain_equality_case_1
 
 
 public domain Id: u64:
-    def make(n: u64) -> Id effects():
+    func make(n: u64) -> Id effects():
         return wrap[Id](n)
 
 
 domain Other: u64:
-    def make(n: u64) -> Other effects():
+    func make(n: u64) -> Other effects():
         return wrap[Other](n)
 
 
-def same[T: equality](a: T, b: T) -> bool:
+func same[T: equality](a: T, b: T) -> bool:
     return a == b
 
 
-def different[T: equality](a: T, b: T) -> bool:
+func different[T: equality](a: T, b: T) -> bool:
     return a != b
 
 
-public def program() -> i64:
+public func program() -> i64:
     if same[Id](Id.make(1u64), Id.make(1u64)) and different[Other](Other.make(1u64), Other.make(2u64)):
         return 1
     return 0

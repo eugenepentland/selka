@@ -10,14 +10,14 @@ test "standard pool reuses slots and reports stale handles as absent" {
 
 // spec-case: STANDARD-POOL-1
 test "standard pool handles stay valid across collection of the released values" {
-    try fixture.run(t.allocator, "module main\nimport pool\n" ++
-        "def main() -> int:\n" ++
-        "    seed: list[str] = []\n" ++
-        "    store = pool.create(seed)\n" ++
-        "    kept = pool.insert(mut store, \"kept\")\n" ++
-        "    index = 0\n" ++
+    try fixture.run(t.allocator, "import pool\n" ++
+        "func main() -> int:\n" ++
+        "    mut seed: str[] = []\n" ++
+        "    mut store = pool.create(seed)\n" ++
+        "    mut kept = pool.insert(mut store, \"kept\")\n" ++
+        "    mut index = 0\n" ++
         "    while index < 200:\n" ++
-        "        temporary = pool.insert(mut store, \"temporary\")\n" ++
+        "        mut temporary = pool.insert(mut store, \"temporary\")\n" ++
         "        if not pool.remove(mut store, temporary):\n" ++
         "            return 1\n" ++
         "        index += 1\n" ++

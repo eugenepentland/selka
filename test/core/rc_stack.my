@@ -1,32 +1,31 @@
-module rc_stack
 
 
-def short_sums(n: int, seed: int) -> int:
-    total = 0
+func short_sums(n: int, seed: int) -> int:
+    mut total = 0
     for j in range(n):
-        short = [seed + j + k for k in range(4)]
+        mut short = [for k in range(4) yield seed + j + k]
         for value in short:
             total += value
         short = []
-        tail = [j, j + 1]
+        mut tail = [j, j + 1]
         total += len(tail) + tail[1] + len(short)
     return total
 
 
-def bounded(seed: int) -> int:
-    m = seed % 5
-    xs = [k * 2 for k in range(m)]
-    total = len(xs)
+func bounded(seed: int) -> int:
+    mut m = seed % 5
+    mut xs = [for k in range(m) yield k * 2]
+    mut total = len(xs)
     for x in xs:
         total += x
     return total
 
 
-def escapes(n: int) -> list[int]:
-    out = [k for k in range(n)]
+func escapes(n: int) -> int[]:
+    mut out = [for k in range(n) yield k]
     return out
 
 
-def main(args: list[str], out: Stream) -> int:
+func main(args: str[], out: Stream) -> int:
     out.print(short_sums(10, len(args)), bounded(len(args)), len(escapes(3)))
     return 0

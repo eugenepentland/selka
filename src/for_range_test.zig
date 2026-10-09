@@ -4,8 +4,8 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const generic_text =
-    \\def sum_range[T: integer](start: T, end: T) -> i64:
-    \\    sum = 0
+    \\func sum_range[T: integer](start: T, end: T) -> i64:
+    \\    mut sum = 0
     \\    for i in range(start, end):
     \\        if i == T(2):
     \\            continue
@@ -16,20 +16,20 @@ const generic_text =
     \\    return sum
     \\
     \\
-    \\def main() -> i64:
-    \\    result = 0
+    \\func main() -> i64:
+    \\    mut result = 0
     \\    for i in range(0, 4):
     \\        result += i
     \\    return result + sum_range[u8](0u8, 5u8)
 ;
 const once_text =
-    \\def bound(counter: mut list[int], value: int) -> int:
+    \\func bound(mut counter: int[], value: int) -> int:
     \\    counter.append(1)
     \\    return value
     \\
-    \\def main() -> int:
-    \\    counter: list[int] = []
-    \\    result: int = 0
+    \\func main() -> int:
+    \\    mut counter: int[] = []
+    \\    mut result: int = 0
     \\    for i in range(bound(mut counter, 0), bound(mut counter, 4)):
     \\        result += i
     \\    return result + len(counter)

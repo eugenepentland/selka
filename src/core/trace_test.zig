@@ -29,17 +29,17 @@ fn trappedWith(arena: std.mem.Allocator, root: []const u8, release: bool, flags:
     try std.testing.expect(built.term == .exited and built.term.exited == 0);
     const ran = try std.process.run(arena, std.testing.io, .{ .argv = &.{ output, "a", "b" } });
     try std.testing.expectEqualStrings("2\n", ran.stdout);
-    return ran.stderr;
+    return std.mem.replaceOwned(u8, arena, ran.stderr, source, "trap_frames.my");
 }
 
-/// The old core's report of this trap, byte for byte: a module-headed file shows its
-/// path relative to the module root and module-qualified names, and the record follows
+/// The report of this trap, byte for byte, after normalizing its fixture path.
+/// A single-file entry uses local function names, and the record follows
 /// an ASCII record separator.
 const old_report =
-    "trap_frames.my:6:25: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)\n" ++
-    "  in trap_frames::leaf at trap_frames.my:6:25\n" ++
-    "  in trap_frames::mid at trap_frames.my:11:9\n" ++
-    "  in trap_frames::main at trap_frames.my:20:15\n" ++
+    "trap_frames.my:5:25: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)\n" ++
+    "  in leaf at trap_frames.my:5:25\n" ++
+    "  in mid at trap_frames.my:10:13\n" ++
+    "  in main at trap_frames.my:19:15\n" ++
     "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":3,\"length\":3}\n";
 
 fn sameFrames(stderr: []const u8) !void {
@@ -65,8 +65,8 @@ test "a build without the line tables names only the trapping frame and emits no
     defer dir.cleanup();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
     const stderr = try trappedWith(arena.allocator(), root, true, &.{"--trap-frames=posix_exit"});
-    try std.testing.expect(contains(stderr, "  in trap_frames::leaf at trap_frames.my:6:25\n\x1eMYLANG-TRAP {"));
-    try std.testing.expect(!contains(stderr, "  in trap_frames::mid at "));
+    try std.testing.expect(contains(stderr, "  in leaf at trap_frames.my:5:25\n\x1eMYLANG-TRAP {"));
+    try std.testing.expect(!contains(stderr, "  in mid at "));
 }
 
 /// `inner(n) -> Result[int, str]`: `Err("too big")` (a trace origin) when `n > 2`, else
@@ -122,7 +122,7 @@ test "main returning Err prints error: VALUE and the aligned trace, origin first
         const failed = try support.runOwned(arena.allocator(), &failing, resultOptions(mode));
         try std.testing.expectEqual(@as(u8, 1), failed.status);
         try std.testing.expectEqualStrings("", failed.stdout);
-        try std.testing.expectEqualStrings("error: too big\n  hand.my:1:11    inner  Err(...) created\n  hand.my:1:2001  main   ? propagated\n", failed.stderr);
+        try std.testing.expectEqualStrings("error: too big\n  hand.my:1:11    inner  Err(...) created\n  hand.my:1:2001  main   try propagated\n", failed.stderr);
         var passing = try resultProgram(arena.allocator(), 1);
         const passed = try support.runOwned(arena.allocator(), &passing, resultOptions(mode));
         try std.testing.expectEqual(@as(u8, 7), passed.status);
@@ -164,7 +164,7 @@ fn kindsReport(arena: std.mem.Allocator, propagated: usize, mode: support.RunOpt
 fn longReport(arena: std.mem.Allocator) ![]const u8 {
     var expected: std.ArrayList(u8) = .empty;
     try expected.appendSlice(arena, "error: bad\n  hand.my:1:11    main  Err(...) created\n  ... 10 more entries dropped ...\n");
-    for (4010..4042) |column| try expected.print(arena, "  hand.my:1:{d}  main  ? propagated\n", .{column});
+    for (4010..4042) |column| try expected.print(arena, "  hand.my:1:{d}  main  try propagated\n", .{column});
     return expected.items;
 }
 
@@ -175,8 +175,8 @@ test "trace modes: a returned site on its origin's line folds, a conversion name
     const expected = try longReport(arena.allocator());
     for (trace_modes) |mode| {
         try std.testing.expectEqualStrings(
-            "error: bad\n  hand.my:1:11    main  Err(...) created\n  hand.my:1:3001  main  ? converted to Wrapped.bad\n" ++
-                "  hand.my:1:4002  main  ? propagated\n  hand.my:1:4003  main  ? propagated\n",
+            "error: bad\n  hand.my:1:11    main  Err(...) created\n  hand.my:1:3001  main  try converted to Wrapped.bad\n" ++
+                "  hand.my:1:4002  main  try propagated\n  hand.my:1:4003  main  try propagated\n",
             try kindsReport(arena.allocator(), 2, mode),
         );
         // 42 appends: the ring keeps the last 32 (propagations 9 to 40).

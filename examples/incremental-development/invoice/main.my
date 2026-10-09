@@ -1,5 +1,4 @@
-module main
 import amount
 
-def main() -> int:
+func main() -> int:
     return amount.total()

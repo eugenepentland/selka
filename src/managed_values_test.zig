@@ -24,8 +24,8 @@ test "user nominal str declaration preserves its declared fields" {
         \\    n: i64
         \\
         \\
-        \\def main() -> i64:
-        \\    value = str(n=42)
+        \\func main() -> i64:
+        \\    mut value = str(n=42)
         \\    return value.n
     , 42);
 }

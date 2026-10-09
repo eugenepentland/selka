@@ -44,15 +44,15 @@ test "stream.write answers the scalars of a string and the bytes of a byte value
     defer dir.cleanup();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
     const source =
-        \\def send(log: Stream, data: bytes) -> int:
+        \\func send(log: Stream, data: bytes) -> int:
         \\    return log.write(data)
         \\
         \\
-        \\def show(log: Stream) -> int:
+        \\func show(log: Stream) -> int:
         \\    return log.write("abcd")
         \\
         \\
-        \\def main(out: Stream, err: Stream) -> int:
+        \\func main(out: Stream, err: Stream) -> int:
         \\    out.print(show(out))
         \\    err.print(send(err, b"B\x00\xff"))
         \\    out.print(out.write("λ"), out.write(b"λ"))
@@ -84,14 +84,14 @@ test "an unsigned overflow, division or cast trap quotes its operands unsigned a
     };
     for (cases, 0..) |case, index| {
         const source = try std.fmt.allocPrint(a,
-            \\def compute(x: u64, y: u64, z: i64) -> i64:
+            \\func compute(x: u64, y: u64, z: i64) -> i64:
             \\    _ = x
             \\    _ = y
             \\    _ = z
             \\    {s}
             \\
             \\
-            \\def main() -> i64:
+            \\func main() -> i64:
             \\    return compute(18446744073709551614, 5, 9223372036854775807)
         , .{case.body});
         const ran = try buildAndRun(a, root, try std.fmt.allocPrint(a, "unsigned{d}", .{index}), source, false);
@@ -111,13 +111,13 @@ test "a broken precondition names the caller that broke it, and a postcondition 
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
     const requires =
         \\@requires(x > 0, "must be positive")
-        \\def f(x: int) -> int:
+        \\func f(x: int) -> int:
         \\    return x
         \\
-        \\def g(y: int) -> int:
+        \\func g(y: int) -> int:
         \\    return f(y)
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return g(0)
     ;
     for ([_]bool{ false, true }) |release| {
@@ -128,7 +128,7 @@ test "a broken precondition names the caller that broke it, and a postcondition 
             "  in f at requires.my:1:11\n  in g at requires.my:6:12\n  in main at requires.my:9:12\n";
         try std.testing.expect(contains(ran.stderr, expected));
     }
-    const ensures = "@ensures(result < 10)\ndef clamp(x: int) -> int:\n    return x\n\ndef main() -> int:\n    return clamp(70)\n";
+    const ensures = "@ensures(result < 10)\nfunc clamp(x: int) -> int:\n    return x\n\nfunc main() -> int:\n    return clamp(70)\n";
     const broken = try buildAndRun(a, root, "ensures", ensures, false);
     try std.testing.expect(contains(broken.stderr, "error[R_ENSURES]: postcondition violated: clamp ensures `result < 10`\n  in clamp at"));
 }
@@ -142,16 +142,16 @@ test "an Err a runtime operation answers starts the trace as produced by the run
     const a = arena.allocator();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
     const source =
-        \\def main() -> Result[int, str]:
-        \\    data = b"\xff"
-        \\    text = data.decode()?
+        \\func main() -> Result[int, str]:
+        \\    mut data = b"\xff"
+        \\    mut text = try data.decode()
         \\    return Ok(len(text))
     ;
     const ran = try buildAndRun(a, root, "decode", source, false);
     try std.testing.expectEqual(@as(u8, 1), ran.status);
     try std.testing.expect(contains(ran.stderr, "error: invalid UTF-8 in byte string\n"));
-    try std.testing.expect(contains(ran.stderr, "decode.my:3:12  main  Err produced by the runtime\n"));
-    try std.testing.expect(std.mem.endsWith(u8, ran.stderr, "decode.my:3:12  main  ? propagated\n"));
+    try std.testing.expect(contains(ran.stderr, "decode.my:3:20  main  Err produced by the runtime\n"));
+    try std.testing.expect(std.mem.endsWith(u8, ran.stderr, "decode.my:3:16  main  try propagated\n"));
 }
 
 // spec: NEW-CORE-S5-EMBED-1
@@ -163,7 +163,7 @@ test "a header-less file embeds a file beside it, and an edit to that file alone
     const a = arena.allocator();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
     try dir.dir.writeFile(std.testing.io, .{ .sub_path = "data.bin", .data = "abc" });
-    const source = "def main() -> int:\n    return len(embed_bytes(\"data.bin\")) + len(embed_str(\"data.bin\")) + 40\n";
+    const source = "func main() -> int:\n    return len(embed_bytes(\"data.bin\")) + len(embed_str(\"data.bin\")) + 40\n";
     try std.testing.expectEqual(@as(u8, 46), (try buildAndRun(a, root, "embedded", source, false)).status);
     try dir.dir.writeFile(std.testing.io, .{ .sub_path = "data.bin", .data = "abcdef" });
     try std.testing.expectEqual(@as(u8, 52), (try buildAndRun(a, root, "embedded", source, false)).status);
@@ -187,7 +187,7 @@ test "a block that continues after a thousand checks builds, in debug and releas
 /// `main` returning the sum of `terms` checked additions of one, less 1000.
 fn chain(a: std.mem.Allocator, terms: usize) ![]const u8 {
     var text: std.Io.Writer.Allocating = .init(a);
-    try text.writer.writeAll("def main(args: list[str]) -> int:\n    one = len(args) + 1\n    return one");
+    try text.writer.writeAll("func main(args: str[]) -> int:\n    mut one = len(args) + 1\n    return one");
     for (1..terms) |_| try text.writer.writeAll(" + one");
     try text.writer.writeAll(" - 1000\n");
     return text.written();
@@ -201,7 +201,7 @@ test "a program whose standard output refuses its writes fails R_OUTPUT instead 
     defer dir.cleanup();
     const a = arena.allocator();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
-    const source = "def main(out: Stream) -> int:\n    out.print(\"line\")\n    _ = out.write(b\"raw\\x00\\xff\")\n    return 7\n";
+    const source = "func main(out: Stream) -> int:\n    out.print(\"line\")\n    _ = out.write(b\"raw\\x00\\xff\")\n    return 7\n";
     const ran = try buildAndRun(a, root, "full", source, false);
     try std.testing.expectEqual(@as(u8, 7), ran.status);
     const full = std.Io.Dir.openFileAbsolute(std.testing.io, "/dev/full", .{ .mode = .write_only }) catch return error.SkipZigTest;

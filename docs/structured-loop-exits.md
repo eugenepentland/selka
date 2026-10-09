@@ -1,13 +1,13 @@
 # Structured loop exits
 
-`break;` leaves the nearest enclosing `while` loop. `continue;` starts that
+`break` leaves the nearest enclosing `while` loop. `continue` starts that
 loop's next condition check. Both work in ordinary and generic functions,
 including inside `if`, `match` and `with` blocks.
 
 ```my
-def sum() -> i64:
-    total = 0
-    i = 0
+func sum() -> i64:
+    mut total = 0
+    mut i = 0
     while i < 10:
         i += 1
         if i == 2:

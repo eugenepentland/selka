@@ -32,7 +32,7 @@ const fixture =
     \\
     \\
     \\record Grow[T]:
-    \\    marker: Empty[Grow[[1]T]]
+    \\    marker: Empty[Grow[FixedArray[T, 1]]]
     \\
     \\
     \\record Left[T]:
@@ -44,7 +44,7 @@ const fixture =
     \\
     \\
     \\enum Key[T]:
-    \\    a,
+    \\    a
     \\    b
     \\
     \\
@@ -110,7 +110,7 @@ fn reject(text: []const u8, code: []const u8, detail: []const u8) !void {
 test "nominal layout expansion bounds argument growth without host stack recursion" {
     try reject(
         \\record Grow[T]:
-        \\    next: Grow[[1]T]
+        \\    next: Grow[FixedArray[T, 1]]
     , "E_GENERIC_LIMIT", "4096 type instances");
     try reject(
         \\record Box[T]:
@@ -128,7 +128,7 @@ fn identitySource(allocator: std.mem.Allocator, count: usize, wrap: bool) ![]u8 
     for (0..count) |i| {
         try text.writer.print("    f{d}: ", .{i});
         if (wrap) try text.writer.writeAll("Tag[");
-        try text.writer.print("[{d}]T", .{i + 1});
+        try text.writer.print("FixedArray[T, {d}]", .{i + 1});
         if (wrap) try text.writer.writeByte(']');
         try text.writer.writeByte('\n');
     }
@@ -156,7 +156,7 @@ fn workSource(allocator: std.mem.Allocator) ![]u8 {
     try text.writer.writeAll("record Big[T]:\n");
     for (0..512) |i| try text.writer.print("    f{d}: T\n", .{i});
     try text.writer.writeAll("\n\nrecord Uses[U]:\n");
-    for (0..256) |i| try text.writer.print("    f{d}: Big[[{d}]U]\n", .{ i, i + 1 });
+    for (0..256) |i| try text.writer.print("    f{d}: Big[FixedArray[U, {d}]]\n", .{ i, i + 1 });
     return text.toOwnedSlice();
 }
 test "nominal layout expansion bounds repeated field work independently of identity growth" {
@@ -174,7 +174,7 @@ fn sharedWorkSource(allocator: std.mem.Allocator, count: usize) ![]u8 {
     for (0..512) |i| try text.writer.print("    f{d}: T\n", .{i});
     for (0..2) |owner| {
         try text.writer.print("\n\nrecord Uses{d}[U]:\n", .{owner});
-        for (0..count) |i| try text.writer.print("    f{d}: Big[[{d}]U]\n", .{ i, owner * count + i + 1 });
+        for (0..count) |i| try text.writer.print("    f{d}: Big[FixedArray[U, {d}]]\n", .{ i, owner * count + i + 1 });
     }
     return text.toOwnedSlice();
 }
@@ -316,15 +316,13 @@ test "nominal layout cycle diagnostics preserve closing fields and clean up allo
 const Modules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
-            \\module main
             \\import model as m
             \\
             \\
-            \\def main() -> i64:
+            \\func main() -> i64:
             \\    return 0
         );
         if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8,
-            \\module model
             \\
             \\
             \\record Box[T]:
@@ -357,15 +355,15 @@ test "nominal layout cycles in unused private imported templates retain original
 // spec-case: RECURSIVE-VALUES-1
 test "finite recursive value layouts type-check while an endless record still reports its cycle" {
     var finite_value = try language.Compilation.init(t.allocator, "finite-recursive.my",
-        \\union Chain:
-        \\    stop,
-        \\    link: Pair
+        \\enum Chain:
+        \\    stop
+        \\    link(value: Pair)
         \\
         \\record Pair:
         \\    value: i64
         \\    tail: Chain
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     );
     defer finite_value.deinit();
@@ -376,7 +374,7 @@ test "finite recursive value layouts type-check while an endless record still re
         \\record Loop:
         \\    next: Loop
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     );
     defer endless.deinit();

@@ -31,14 +31,14 @@ fn largeProject(allocator: std.mem.Allocator) ![]File {
     for (entries[1..], imports, calls, 0..) |*entry, *import_, *call, i| {
         entry.* = .{
             .path = try std.fmt.allocPrint(allocator, "m{d}.my", .{i}),
-            .bytes = try std.fmt.allocPrint(allocator, "module m{d}\n\n\npublic def value() -> i64 effects():\n    return 1\n", .{i}),
+            .bytes = try allocator.dupe(u8, "public func value() -> i64 effects():\n    return 1\n"),
         };
         import_.* = try std.fmt.allocPrint(allocator, "import m{d}\n", .{i});
         call.* = try std.fmt.allocPrint(allocator, "m{d}.value()", .{i});
     }
     entries[0] = .{
         .path = "main.my",
-        .bytes = try std.fmt.allocPrint(allocator, "module main\n{s}\n\ndef main() -> i64:\n    return {s}\n", .{ try std.mem.join(allocator, "", imports), try std.mem.join(allocator, "+", calls) }),
+        .bytes = try std.fmt.allocPrint(allocator, "{s}\n\nfunc main() -> i64:\n    return {s}\n", .{ try std.mem.join(allocator, "", imports), try std.mem.join(allocator, "+", calls) }),
     };
     return entries;
 }
@@ -54,28 +54,24 @@ test "default syntax retention survives 97 modules and matches fresh execution a
     var fresh = language.syntax_cache.Cache.init(t.allocator, .{ .max_entries = 0 });
     defer fresh.deinit();
     const sources = [_][]const u8{
-        \\module m0
         \\
         \\
-        \\public def value() -> i64 effects():
+        \\public func value() -> i64 effects():
         \\    return 1
         ,
-        \\module m0
         \\
         \\
-        \\public def value() -> i64 effects():
+        \\public func value() -> i64 effects():
         \\    return 2
         ,
-        \\module m0
         \\
         \\
-        \\public def value() -> i64:
+        \\public func value() -> i64:
         \\    return True
         ,
-        \\module m0
         \\
         \\
-        \\public def value() -> i64 effects():
+        \\public func value() -> i64 effects():
         \\    return 1
         ,
     };

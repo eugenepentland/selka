@@ -119,7 +119,7 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
             try index.checkArguments(expression, scope.parameters);
         }
     }
-    inline for (.{ "applications", "arrays", "tuples", "callbacks" }) |category| for (@field(program.types.expressions, category)) |syntax| {
+    inline for (.{ "applications", "arrays", "tuples", "callbacks", "suffixes" }) |category| for (@field(program.types.expressions, category)) |syntax| {
         // `f[T](x)` parses as an application in call position; its base names a function, not a type.
         if (comptime std.mem.eql(u8, category, "applications")) {
             if (try @import("call_type_arguments.zig").functionApplication(src, program, index.context.names, syntax, sink)) continue;

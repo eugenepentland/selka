@@ -1,9 +1,8 @@
-module compiler_case_1
 
 
-public def program() -> i64:
-    total = 0
-    i = 0
+public func program() -> i64:
+    mut total = 0
+    mut i = 0
     while i < 100:
         total += i
         i += 1

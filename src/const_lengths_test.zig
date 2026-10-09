@@ -9,17 +9,17 @@ fn nominalScenario(allocator: std.mem.Allocator) !void {
         \\    items: [N]T
         \\
         \\
-        \\def make[T, const N: u64](items: [N]T) -> Chunk[T, N]:
+        \\func make[T, const N: u64](items: [N]T) -> Chunk[T, N]:
         \\    return Chunk[T, N](items=items)
         \\
         \\
-        \\def first[T, const N: u64](chunk: Chunk[T, N]) -> T:
+        \\func first[T, const N: u64](chunk: Chunk[T, N]) -> T:
         \\    return chunk.items[0]
         \\
         \\
-        \\def main() -> i64:
-        \\    a = make[i64, 2]([40, 0])
-        \\    b = make[i64, 3]([2, 0, 0])
+        \\func main() -> i64:
+        \\    mut a = make[i64, 2](FixedArray[int, 2]([40, 0]))
+        \\    mut b = make[i64, 3](FixedArray[int, 3]([2, 0, 0]))
         \\    return first[i64, 2](a) + first[i64, 3](b)
     ;
     var c = try language.Compilation.init(allocator, "lengths.my", text);
@@ -38,7 +38,7 @@ test "const length nominal parameters compose arrays across a reformat" {
 test "uncalled const length templates reject kind confusion unprovable construction and missing requirements" {
     const cases = [_]struct { source: []const u8, code: []const u8 }{
         .{ .source =
-        \\def bad[const N: u64](x: N) -> i64:
+        \\func bad[const N: u64](x: N) -> i64:
         \\    return 0
         , .code = "E_GENERIC_LENGTH" },
         .{ .source =
@@ -46,16 +46,16 @@ test "uncalled const length templates reject kind confusion unprovable construct
         \\    x: N
         , .code = "E_GENERIC_LENGTH" },
         .{ .source =
-        \\def bad[const N: u64]() -> [N]i64:
-        \\    return []
+        \\func bad[const N: u64]() -> FixedArray[i64, N]:
+        \\    return FixedArray[i64, N]([])
         , .code = "E_GENERIC_LENGTH" },
         .{ .source =
-        \\def bad[T, const N: u64](items: [N]T) -> i64:
+        \\func bad[T, const N: u64](items: [N]T) -> i64:
         \\    return items[0] + 1
         , .code = "E_GENERIC_TYPE" },
         .{ .source =
-        \\def bad[const N: u64]() -> u64:
-        \\    N = 1u64
+        \\func bad[const N: u64]() -> u64:
+        \\    mut N = 1u64
         \\    return N
         , .code = "E_SHADOWING" },
         .{ .source =
@@ -72,7 +72,7 @@ test "uncalled const length templates reject kind confusion unprovable construct
         , .code = "E_GENERIC_LENGTH" },
     };
     for (cases) |case| {
-        const text = try std.fmt.allocPrint(t.allocator, "{s}\n\n\ndef main() -> i64:\n    return 0\n", .{case.source});
+        const text = try std.fmt.allocPrint(t.allocator, "{s}\n\n\nfunc main() -> i64:\n    return 0\n", .{case.source});
         defer t.allocator.free(text);
         var c = try language.Compilation.init(t.allocator, "invalid.my", text);
         defer c.deinit();
@@ -96,23 +96,21 @@ test "constant specialization identity owns lengths and distinguishes equal scal
 }
 fn provider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
-        \\module main
         \\import shapes as s
         \\
         \\
-        \\def main() -> i64:
-        \\    chunk = s.make[i64, 2]([42, 0])
+        \\func main() -> i64:
+        \\    mut chunk = s.make[i64, 2](FixedArray[int, 2]([42, 0]))
         \\    return chunk.items[0]
     );
     if (std.mem.eql(u8, path, "shapes.my")) return allocator.dupe(u8,
-        \\module shapes
         \\
         \\
         \\public record Chunk[T, const N: u64]:
         \\    items: [N]T
         \\
         \\
-        \\public def make[T, const N: u64](items: [N]T) -> Chunk[T, N] effects():
+        \\public func make[T, const N: u64](items: [N]T) -> Chunk[T, N] effects():
         \\    return Chunk[T, N](items=items)
     );
     return error.NotFound;

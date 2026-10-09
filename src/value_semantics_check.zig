@@ -64,45 +64,6 @@ pub fn checkWrites(allocator: std.mem.Allocator, program: typed.Program, index: 
     return reported;
 }
 
-/// One named local a `mut` parameter's only change went to, and the value
-/// (a path into the parameter) it copied.
-pub const LostCopy = struct { local: typed.LocalId, value: typed.NodeId };
-
-/// VALUE-SEMANTICS-6: when parameter `position` of `function` is declared
-/// `mut` but never written, the named local that holds a copy of the
-/// parameter (or of a path into it) and is itself written, if there is one.
-pub fn lostCopy(allocator: std.mem.Allocator, program: typed.Program, function: typed.Function, position: usize) Error!?LostCopy {
-    if (function.policy.host != null) return null;
-    var scratch = std.heap.ArenaAllocator.init(allocator);
-    defer scratch.deinit();
-    const a = scratch.allocator();
-    const facts = try values.Facts.collect(a, program, function);
-    const copies = try a.alloc(?typed.NodeId, function.scope.locals.len);
-    @memset(copies, null);
-    var stores = try typed_walk.Walker.init(a, program, function.scope.body);
-    while (try stores.next()) |item| switch (item) {
-        .expression => {},
-        .statement => |id| switch (program.statements[@backingInt(id)].data) {
-            .initialize, .assign => |store| {
-                const slot = @backingInt(store.slot);
-                if (slot < function.signature.parameter_count or !facts.namedStore(store.slot)) continue;
-                const path = values.pathRoot(program, store.value) orelse continue;
-                const root = values.namedRoot(&facts, path) orelse continue;
-                if (@backingInt(root) == position) copies[slot] = store.value;
-            },
-            else => {},
-        },
-    };
-    var writes = try typed_walk.Walker.init(a, program, function.scope.body);
-    while (try writes.next()) |item| {
-        const site = writeAt(&facts, item) orelse continue;
-        const local = values.namedRoot(&facts, site.root) orelse continue;
-        const value = copies[@backingInt(local)] orelse continue;
-        return .{ .local = local, .value = value };
-    }
-    return null;
-}
-
 /// What kind of value binding a local is, if any.
 const Binding = enum { none, loop, payload };
 
@@ -210,8 +171,6 @@ fn statementWrite(facts: *const values.Facts, id: typed.StatementId) ?WriteSite 
 
 /// The value binding a write rooted at `slot` goes through: the slot itself,
 /// or the binding a synthetic temporary was read from.
-// twin-drift-ok: `values.namedRoot` follows temporaries to any named local;
-// this walk stops at a binding and refuses a path through a `class` object.
 fn bindingRoot(facts: *const values.Facts, slot: typed.LocalId, bindings: []const Binding) ?typed.LocalId {
     var current = slot;
     var hops: usize = 0;

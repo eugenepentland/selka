@@ -1,69 +1,68 @@
-module expected_type_inference
 
 record Entry:
     value: int
 
 record Holder:
-    values: list[Entry]
+    values: Entry[]
 
-def empty[T: copy + storable]() -> list[T]:
-    values: list[T] = []
+func empty[T: copy + storable]() -> T[]:
+    mut values: T[] = []
     return values
 
-def absent[T: copy + storable]() -> Option[T]:
+func absent[T: copy + storable]() -> T?:
     return None
 
-def identity[T: copy + storable](value: T) -> T:
+func identity[T: copy + storable](value: T) -> T:
     return value
 
-def zero[T: integer]() -> T:
+func zero[T: integer]() -> T:
     return T(0)
 
-def forwarded[U: integer]() -> U:
+func forwarded[U: integer]() -> U:
     return zero()
 
-def no_entries() -> list[Entry]:
+func no_entries() -> Entry[]:
     return empty()
 
-def count(values: list[Entry]) -> int:
+func count(values: Entry[]) -> int:
     return len(values)
 
-def nested() -> Option[int]:
+func nested() -> int?:
     return identity(absent())
 
-def array_identity[T: copy + storable, const N: u64](values: [N]T) -> [N]T:
+func array_identity[T: copy + storable, const N: u64](values: [N]T) -> [N]T:
     return values
 
-def array_forward[U: copy + storable, const M: u64](values: [M]U) -> [M]U:
+func array_forward[U: copy + storable, const M: u64](values: [M]U) -> [M]U:
     return array_identity(values)
 
 # spec: GENERIC-EXPECTED-1
-public def test_expected_type_inference_binding_return_argument_and_field() -> bool:
-    entries: list[Entry] = empty()
-    holder = Holder(values=empty())
+public func test_expected_type_inference_binding_return_argument_and_field() -> bool:
+    mut entries: Entry[] = empty()
+    mut holder = Holder(values=empty())
     return len(entries) + len(no_entries()) + count(empty()) + len(holder.values) == 0
 
 # spec: GENERIC-EXPECTED-2
-public def test_expected_type_inference_symbolic_forwarding_and_width() -> bool:
-    small: u8 = forwarded()
-    wide: int = forwarded()
+public func test_expected_type_inference_symbolic_forwarding_and_width() -> bool:
+    mut small: u8 = forwarded()
+    mut wide: int = forwarded()
     return int(small) + wide == 0
 
 # spec-case: GENERIC-EXPECTED-1
-public def test_expected_type_inference_nested_generic_calls() -> bool:
-    result = nested()
+public func test_expected_type_inference_nested_generic_calls() -> bool:
+    mut result = nested()
     return result is None
 
 # spec-case: GENERIC-EXPECTED-1
-public def test_expected_type_inference_contextual_constructor_argument() -> bool:
-    result: Option[int] = identity(Some(42))
+public func test_expected_type_inference_contextual_constructor_argument() -> bool:
+    mut result: int? = identity(Some(42))
     if result is None:
         return False
     return result == 42
 
 # spec-case: GENERIC-EXPECTED-1
 # spec-case: GENERIC-EXPECTED-2
-public def test_expected_type_inference_array_lengths_and_contextual_literals() -> bool:
-    values: [2]int = array_identity([40, 2])
-    copied: [2]int = array_forward(values)
+public func test_expected_type_inference_array_lengths_and_contextual_literals() -> bool:
+    mut values: FixedArray[int, 2] = array_identity(FixedArray[int, 2]([40, 2]))
+    mut copied: FixedArray[int, 2] = array_forward(values)
     return copied[0] + copied[1] == 42

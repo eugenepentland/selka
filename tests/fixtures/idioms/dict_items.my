@@ -1,6 +1,6 @@
-def main() -> int:
-    d = {"a": 1, "b": 2}
-    total = 0
+func main() -> int:
+    mut d = {"a": 1, "b": 2}
+    mut total = 0
     for key, value in d.items():
         total = total + value
     return total

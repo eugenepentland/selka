@@ -3,28 +3,31 @@
 # prints three order statistics and a checksum.
 
 
-def xorshift(x: u64) -> u64:
+func xorshift(input: u64) -> u64:
+    mut x = input
     x = bit_xor(x, shift_left(x, 13u64))
     x = bit_xor(x, shift_right(x, 7u64))
     return bit_xor(x, shift_left(x, 17u64))
 
 
-def mix(c: int, v: int) -> int:
+func mix(c: int, v: int) -> int:
     return (c * 31 + v) % 1000000007
 
 
-def quicksort(xs: mut list[int], lo: int, hi: int) -> None:
+func quicksort(mut xs: int[], input_lo: int, input_hi: int) -> Unit:
+    mut lo = input_lo
+    mut hi = input_hi
     while lo < hi:
-        pivot = xs[lo + (hi - lo) // 2]
-        i = lo
-        j = hi
+        mut pivot = xs[lo + (hi - lo) // 2]
+        mut i = lo
+        mut j = hi
         while i <= j:
             while xs[i] < pivot:
                 i = i + 1
             while xs[j] > pivot:
                 j = j - 1
             if i <= j:
-                temp = xs[i]
+                mut temp = xs[i]
                 xs[i] = xs[j]
                 xs[j] = temp
                 i = i + 1
@@ -37,16 +40,16 @@ def quicksort(xs: mut list[int], lo: int, hi: int) -> None:
             hi = j
 
 
-def main(out: Stream) -> int:
-    n = 2000000
-    state = 88172645463325252u64
-    values: list[int] = []
+func main(out: Stream) -> int:
+    mut n = 2000000
+    mut state = 88172645463325252u64
+    mut values: int[] = []
     for _ in range(n):
         state = xorshift(state)
         values.append(int(shift_right(state, 33u64)))
     quicksort(mut values, 0, n - 1)
     out.print(values[0], values[n // 2], values[n - 1])
-    c = 0
+    mut c = 0
     for v in values:
         c = mix(c, v)
     out.print(c)

@@ -1,7 +1,6 @@
-module rc_plain_projection
 
 enum Marker:
-    first,
+    first
     second
 
 
@@ -11,24 +10,24 @@ record Plain:
 
 
 record Owner:
-    keep: list[int]
+    keep: int[]
     plain: Plain
 
 
-def produce() -> Owner:
-    return Owner([1], Plain(Marker.second, 42))
+func produce() -> Owner:
+    return Owner(keep=[1], plain=Plain(marker=Marker.second, number=42))
 
 
-public def test_plain_record_projection_survives_parent_cleanup() -> bool:
-    value = produce().plain
+public func test_plain_record_projection_survives_parent_cleanup() -> bool:
+    mut value = produce().plain
     return value.number == 42 and value.marker == Marker.second
 
 
-public def test_plain_enum_projection_survives_parent_cleanup() -> bool:
+public func test_plain_enum_projection_survives_parent_cleanup() -> bool:
     return produce().plain.marker == Marker.second
 
 
-def main() -> int:
+func main() -> int:
     assert test_plain_record_projection_survives_parent_cleanup()
     assert test_plain_enum_projection_survives_parent_cleanup()
     return 0

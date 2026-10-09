@@ -2,18 +2,18 @@
 # fresh str until shared string slices land (plan section 5.4).
 
 
-def shared_text() -> str:
-    block = "".join([f"item{i},{(i * 7919) % 100003},{'xxxxxx'[:i % 7]}\n" for i in range(2000)])
-    return "".join([block for _ in range(110)])
+func shared_text() -> str:
+    mut block = "".join([for i in range(2000) yield f"item{i},{(i * 7919) % 100003},{'xxxxxx'[:i % 7]}\n"])
+    return "".join([for _ in range(110) yield block])
 
 
-def main(out: Stream) -> int:
-    text = shared_text()
-    lines = 0
-    width = 0
-    fields = 0
-    runs = 0
-    run_width = 0
+func main(out: Stream) -> int:
+    mut text = shared_text()
+    mut lines = 0
+    mut width = 0
+    mut fields = 0
+    mut runs = 0
+    mut run_width = 0
     for _ in range(3):
         for line in text.split("\n"):
             lines += 1

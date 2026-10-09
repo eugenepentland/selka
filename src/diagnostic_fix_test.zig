@@ -162,16 +162,16 @@ test "a symbolic note carrying a fix is never retained for replay" {
 }
 
 const call_sites =
-    \\def grow(xs: mut list[int]) -> None:
+    \\func grow(mut xs: int[]) -> Unit:
     \\    xs.append(1)
     \\
     \\
-    \\def peek(xs: list[int]) -> int:
+    \\func peek(xs: int[]) -> int:
     \\    return xs[0]
     \\
     \\
-    \\def main() -> int:
-    \\    xs: list[int] = []
+    \\func main() -> int:
+    \\    mut xs: int[] = []
     \\    grow(xs)
     \\    grow(xs)
     \\    return peek(mut xs)
@@ -189,37 +189,29 @@ test "call-site mut markers carry the insertion or deletion that repairs them" {
 }
 
 // spec-case: DIAGNOSTIC-FIX-2
-test "declaration-side mut markers are fixed at the parameter and then at every call" {
-    const unmarked =
-        \\def touch(values: list[int], other: list[int]) -> None:
+test "readonly parameters reject mutation without guessing a caller-update contract" {
+    const readonly = try round(
+        \\func touch(values: int[], other: int[]) -> Unit:
         \\    values[0] = other[0]
-        \\
-        \\
-        \\def main() -> int:
-        \\    values = [1]
-        \\    other = [2]
-        \\    touch(values, other)
-        \\    return values[0]
-    ;
-    const repaired = try settle(unmarked);
-    defer t.allocator.free(repaired);
-    try t.expect(std.mem.indexOf(u8, repaired, "def touch(values: mut list[int], other: list[int])") != null);
-    try t.expect(std.mem.indexOf(u8, repaired, "touch(mut values, other)") != null);
-    try t.expect(try checks(repaired));
-    const unused =
-        \\def look(values: mut list[int], n: mut int) -> int:
+        \\func main() -> int:
+        \\    return 0
+    );
+    defer readonly.deinit();
+    try t.expectEqual(@as(usize, 1), readonly.count("E_IMMUTABLE"));
+    try t.expectEqual(@as(usize, 0), readonly.fixes);
+    const writable =
+        \\func look(mut values: int[], mut n: int) -> int:
         \\    return values[0] + n
-        \\
-        \\
-        \\def main() -> int:
-        \\    values = [1]
-        \\    return look(mut values, 2)
+        \\func main() -> int:
+        \\    mut values = [1]
+        \\    mut number = 2
+        \\    return look(mut values, number)
     ;
-    const trimmed = try settle(unused);
-    defer t.allocator.free(trimmed);
-    try t.expect(std.mem.indexOf(u8, trimmed, "def look(values: list[int], n: int) -> int:") != null);
-    try t.expect(std.mem.indexOf(u8, trimmed, "return look(values, 2)") != null);
-    try t.expect(try checks(trimmed));
+    const repaired = try settle(writable);
+    defer t.allocator.free(repaired);
+    try t.expect(std.mem.indexOf(u8, repaired, "func look(mut values: int[], mut n: int)") != null);
+    try t.expect(std.mem.indexOf(u8, repaired, "look(mut values, mut number)") != null);
+    try t.expect(try checks(repaired));
 }
 
 // spec-case: DIAGNOSTIC-FIX-2
@@ -238,12 +230,12 @@ test "removed spellings with a rename, a stray discard and a mutates clause carr
     const repaired = try settle(removed);
     defer t.allocator.free(repaired);
     try t.expectEqualStrings(
-        \\def grow(xs: mut list[int]) -> None:
+        \\func grow(mut xs: int[]) -> Unit:
         \\    xs.append(1)
         \\
         \\
-        \\def main() -> int:
-        \\    xs: list[int] = []
+        \\func main() -> int:
+        \\    mut xs: int[] = []
         \\    grow(mut xs)
         \\    _ = xs.pop()
         \\    return len(xs)
@@ -251,17 +243,17 @@ test "removed spellings with a rename, a stray discard and a mutates clause carr
     try t.expect(try checks(repaired));
     const capability = try settle("def main(fs: filesystem_cap) -> int:\n    _ = fs\n    return 0\n");
     defer t.allocator.free(capability);
-    try t.expectEqualStrings("def main(fs: Filesystem) -> int:\n    _ = fs\n    return 0\n", capability);
+    try t.expectEqualStrings("func main(fs: Filesystem) -> int:\n    _ = fs\n    return 0\n", capability);
 }
 
 // spec-case: DIAGNOSTIC-FIX-2
 test "a positional operand on a keyword-only parameter is fixed by naming it" {
     const repaired = try settle(
-        \\def f(a: int, *, b: int, c: int) -> int:
+        \\func f(a: int, named b: int, named c: int) -> int:
         \\    return a + b + c
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return f(1, 2, c=3)
     );
     defer t.allocator.free(repaired);
@@ -271,11 +263,11 @@ test "a positional operand on a keyword-only parameter is fixed by naming it" {
 
 // spec-case: DIAGNOSTIC-FIX-2
 test "a discarded result and an unassignable mut argument carry no fix" {
-    const result = try round("def fail() -> Result[int, int]:\n    return Err(7)\n\ndef main() -> int:\n    fail()\n    return 0\n");
+    const result = try round("func rejected_result() -> Result[int, int]:\n    return Err(7)\n\nfunc main() -> int:\n    rejected_result()\n    return 0\n");
     defer result.deinit();
     try t.expectEqual(@as(usize, 1), result.count("E_EXPLICIT_DISCARD_REQUIRED"));
     try t.expectEqual(@as(usize, 0), result.fixes);
-    const literal = try round("def grow(xs: mut list[int]) -> None:\n    xs.append(1)\n\ndef main() -> int:\n    grow(mut [1])\n    return 0\n");
+    const literal = try round("func grow(mut xs: int[]) -> Unit:\n    xs.append(1)\n\nfunc main() -> int:\n    grow(mut [1])\n    return 0\n");
     defer literal.deinit();
     try t.expectEqual(@as(usize, 1), literal.count(marker_code));
     try t.expectEqual(@as(usize, 0), literal.fixes);
@@ -284,13 +276,13 @@ test "a discarded result and an unassignable mut argument carry no fix" {
 // spec: MUT-PARAM-8
 test "one check reports every call-site marker a function needs" {
     const outcome = try round(
-        \\def grow(xs: mut list[int]) -> None:
+        \\func grow(mut xs: int[]) -> Unit:
         \\    xs.append(1)
         \\
         \\
-        \\def main() -> int:
-        \\    a: list[int] = []
-        \\    b: list[int] = []
+        \\func main() -> int:
+        \\    mut a: int[] = []
+        \\    mut b: int[] = []
         \\    grow(a)
         \\    grow(b)
         \\    grow(a)
@@ -316,16 +308,16 @@ const Files = struct {
 // spec-case: DIAGNOSTIC-FIX-2
 test "an unused import's fix deletes its whole line, comment and newline included" {
     const edit = try unusedImportEdit();
-    try t.expectEqual(@as(i64, 12), edit.start);
-    try t.expectEqual(@as(i64, 39), edit.end);
+    try t.expectEqual(@as(i64, 0), edit.start);
+    try t.expectEqual(@as(i64, 27), edit.end);
     try t.expect(edit.deletes);
 }
 
 // spec-case: DIAGNOSTIC-FIX-2
-test "a wrong module name carries the path-derived name as its fix" {
+test "a legacy module header carries a deletion fix for path-derived identity" {
     var named: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main\nimport util.text\n\n\ndef main() -> int:\n    return 0\n" },
-        .{ .path = "util/text.my", .bytes = "module text\n\n\npublic def size() -> int:\n    return 1\n" },
+        .{ .path = "main.my", .bytes = "import util.text\n\n\nfunc main() -> int:\n    return 0\n" },
+        .{ .path = "util/text.my", .bytes = "module text\n\n\npublic func size() -> int:\n    return 1\n" },
     } };
     var project = language.project.Project.init(t.allocator);
     defer project.deinit();
@@ -336,17 +328,17 @@ test "a wrong module name carries the path-derived name as its fix" {
     defer parsed.deinit();
     const edit = field(field(field(parsed.value, "diagnostic"), "fix"), "edits").array.items[0];
     try t.expectEqualStrings("util/text.my", field(edit, "path").string);
-    try t.expectEqual(@as(i64, 7), field(field(edit, "bytes"), "start").integer);
+    try t.expectEqual(@as(i64, 0), field(field(edit, "bytes"), "start").integer);
     try t.expectEqual(@as(i64, 11), field(field(edit, "bytes"), "end").integer);
-    try t.expectEqualStrings("util.text", field(edit, "text").string);
+    try t.expectEqualStrings("", field(edit, "text").string);
 }
 
 /// Check a project whose entry imports a module it never uses, and return the
 /// byte range of the one edit its `W_UNUSED_IMPORT` fix makes in `main.my`.
 fn unusedImportEdit() !struct { start: i64, end: i64, deletes: bool } {
     var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main\nimport util.text  # unused\n\n\ndef main() -> int:\n    return 0\n" },
-        .{ .path = "util/text.my", .bytes = "module util.text\n\n\npublic def size() -> int:\n    return 1\n" },
+        .{ .path = "main.my", .bytes = "import util.text  # unused\n\n\nfunc main() -> int:\n    return 0\n" },
+        .{ .path = "util/text.my", .bytes = "\n\npublic func size() -> int:\n    return 1\n" },
     } };
     var project = language.project.Project.init(t.allocator);
     defer project.deinit();

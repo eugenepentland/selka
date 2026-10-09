@@ -1,4 +1,3 @@
-module slots
 
 # Generic records and templates a dependent instantiates from this module's
 # interface alone: the templates call a private helper whose body the
@@ -6,8 +5,8 @@ module slots
 
 
 public record Store[T: copy + storable]:
-    values: list[T]
-    generations: list[int]
+    values: T[]
+    generations: int[]
 
 
 public record Ticket[T: copy + storable]:
@@ -15,36 +14,36 @@ public record Ticket[T: copy + storable]:
     generation: int
 
 
-def bump(current: int) -> int:
+func bump(current: int) -> int:
     if current > 1000000:
         return bump(current - 1000000)
     return current + 1
 
 
-public def open[T: copy + storable](values: list[T]) -> Store[T]:
-    generations: list[int] = []
+public func open[T: copy + storable](values: T[]) -> Store[T]:
+    mut generations: int[] = []
     for value in values:
         generations.append(bump(len(generations)))
     return Store[T](values=values, generations=generations)
 
 
-public def issue[T: copy + storable](store: mut Store[T], value: T) -> Ticket[T]:
+public func issue[T: copy + storable](mut store: Store[T], value: T) -> Ticket[T]:
     store.values.append(value)
     store.generations.append(bump(0))
     return Ticket[T](index=len(store.values) - 1, generation=1)
 
 
-public def read[T: copy + storable](store: Store[T], ticket: Ticket[T]) -> Option[T] effects():
+public func read[T: copy + storable](store: Store[T], ticket: Ticket[T]) -> T? effects():
     if ticket.index < 0 or ticket.index >= len(store.values):
         return None
     return Some(store.values[ticket.index])
 
 
-public def smaller[T: integer](a: T, b: T) -> T noalloc:
+public func smaller[T: integer](a: T, b: T) -> T noalloc:
     if a <= b:
         return a
     return b
 
 
-public def ordered[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[T]:
+public func ordered[T: copy + storable](values: T[], key: func(T) -> int effects()) -> T[]:
     return sorted(values, key=key)

@@ -1,5 +1,4 @@
-module run_import_single_file
 import math
 
-def main() -> int:
+func main() -> int:
     return int(math.sqrt(1764.0))

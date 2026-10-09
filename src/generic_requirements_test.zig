@@ -26,11 +26,11 @@ fn namedType(records: []const typed.Record, name: []const u8) ?typed.Type {
 }
 fn resolution(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "resolve.my",
-        \\def f[T: copy + integer, U: equality](a: T, b: U) -> T:
+        \\func f[T: copy + integer, U: equality](a: T, b: U) -> T:
         \\    return a
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     );
     defer compilation.deinit();
@@ -51,31 +51,31 @@ test "generic requirement resolution owns normalized contracts across allocation
 test "generic requirements diagnose unknown names and builtin shadowing before unsupported specialization" {
     const cases = [_]struct { text: []const u8, code: []const u8, token: []const u8 }{
         .{ .text =
-        \\def f[T: unknown](x: T) -> T:
+        \\func f[T: unknown](x: T) -> T:
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         , .code = "E_GENERIC_REQUIREMENT", .token = "unknown" },
         .{ .text =
-        \\def f[i64: copy](x: i64) -> i64:
+        \\func f[i64: copy](x: i64) -> i64:
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         , .code = "E_SYNTAX", .token = "i64" },
         .{ .text =
-        \\def f[T](x: T) -> T:
+        \\func f[T](x: T) -> T:
         \\    return x
         \\
         \\
-        \\def g[U: bad](x: U) -> U:
+        \\func g[U: bad](x: U) -> U:
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         , .code = "E_GENERIC_REQUIREMENT", .token = "bad" },
     };
@@ -117,7 +117,7 @@ test "generic requirements preserve nominal identity and ownership obligations" 
         \\
         \\
         \\enum Color:
-        \\    red,
+        \\    red
         \\    blue
         \\
         \\
@@ -141,7 +141,7 @@ test "generic requirements preserve nominal identity and ownership obligations" 
         \\    file: File
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     );
     defer compilation.deinit();
@@ -170,22 +170,22 @@ const valid_named_bound =
     \\constraint Prices[P] = copy + field(tag: P)
     \\
     \\
-    \\def f[T: Prices](x: T) -> T:
+    \\func f[T: Prices](x: T) -> T:
     \\    return x
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return 0
 ;
 const invalid_named_bound =
     \\constraint Prices[P] = field(tag: P)
     \\
     \\
-    \\def f[T: Prices](x: T) -> T:
+    \\func f[T: Prices](x: T) -> T:
     \\    return x
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return 0
 ;
 

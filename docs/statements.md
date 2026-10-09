@@ -1,6 +1,6 @@
 # Statements and bindings
 
-A function body is a suite of statements over function-scoped locals, checked before
+A function body is a suite of statements over block-scoped locals, checked before
 anything runs. This page covers the four things a statement can assume: how a name
 comes into existence, where one statement ends and the next begins, how an
 invariant is stated, and what a condition is allowed to be.
@@ -10,22 +10,25 @@ statements live in.
 
 ## Assignments and value records
 
-`name = value` declares a mutable local and infers its type from the right-hand
-side; `name: T = value` annotates it when the value supplies nothing to infer
-from, as an empty list or dictionary literal does. Locals are function-scoped,
-like Python: an assignment to a name anywhere in the body is one binding, in scope
-from its first assignment to the end of the function, and a nested block
-reassigns the same binding rather than shadowing it. Its type is fixed at the
-first assignment. Reading a name on a control-flow path that may not have assigned
-it — the branch of an `if` with no matching `else`, for instance — is rejected
-with `E_UNBOUND`; a name never assigned before the read is still `E_UNKNOWN_NAME`.
-Because every `for` or `while` loop may execute zero times, an assignment made only
-in the loop body does not bind the name after the loop; predeclare it before the
-loop when it is read afterward. An assignment in every continuing `if`/`elif`/`else`
-branch does bind the name afterwards. The `for` loop variable itself, a `match`
-payload binding, and a move-only resource stay scoped to their own block; the
-loop rebinds its variable at the top of every iteration, so assigning it in the
-body never changes which iteration comes next. A `record` declares a value record with annotated fields and named
+`const name = value` introduces an immutable local. `mut name = value`
+introduces a writable local. Both infer the type from the initializer; add an
+annotation when needed, such as `mut points: Point[] = []`. A local `const`
+initializer runs normally at runtime.
+
+`name = value` updates an existing `mut` binding. It never creates a name, and
+writing through a `const` binding, including its nested fields or arrays, is an
+error. Ordinary data parameters are read-only unless declared `mut`.
+
+Locals belong to their enclosing block. A declaration may not shadow an active
+local or parameter. Loop variables and pattern bindings are read-only and
+belong to the loop body or case body. A name declared inside a branch is not
+available after the branch, even when every branch declares the same spelling.
+Declare a writable value in the surrounding block when several branches or
+iterations must update it, or use a conditional or match expression to choose
+one immutable value. Reading a name outside its scope reports a name error;
+reading an existing binding before it is definitely initialized is also rejected.
+
+A `record` declares a value record with annotated fields and named
 construction, and assigning a record copies its fields, so the copy's scalar
 fields move independently of the original. Managed fields are independent
 values too; the runtime can share their backing storage until a write, as
@@ -35,11 +38,11 @@ values too; the runtime can share their backing storage until a write, as
 # doc: expect 42
 record Tally:
     count: int
-    seen: list[int]
+    seen: int[]
 
-def main() -> int:
-    first = Tally(count=2, seen=[])
-    second = first
+func main() -> int:
+    mut first = Tally(count=2, seen=[])
+    mut second = first
     second.count = 40
     second.seen.append(7)
     if len(first.seen) != 0 or len(second.seen) != 1:
@@ -63,8 +66,8 @@ reports as `E_SHADOWING`.
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    total = 0
+func main() -> int:
+    mut total = 0
     for _ in range(2):
         for _ in range(3):
             total += 7
@@ -73,9 +76,8 @@ def main() -> int:
 
 ## Statement endings
 
-A statement ends at the end of its line. Semicolons are never required and new
-code should omit them, but a semicolon still separates two statements written on
-one line, which is the only place one is needed. An expression continues across a
+A statement ends at its newline. Semicolon-separated statements are rejected;
+write each statement on its own line. An expression continues across a
 line break only inside brackets — parentheses, a list or dictionary literal, a
 call's argument list, a subscript — because the Python surface takes its structure
 from indentation. A binary operator left dangling at the end of an unbracketed
@@ -85,9 +87,10 @@ newline under the same rule, and the formatter preserves the boundaries it finds
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    width = 6; height = 7
-    area = (width
+func main() -> int:
+    mut width = 6
+    mut height = 7
+    mut area = (width
         * height)
     return area
 ```
@@ -111,12 +114,12 @@ violate and a `Result` for errors it can.
 
 ```mylang
 # doc: expect 42
-def scaled(value: int, factor: int) -> int noalloc:
+func scaled(value: int, factor: int) -> int noalloc:
     assert factor > 0
     assert value <= 100, "value must fit the table"
     return value * factor
 
-def main() -> int:
+func main() -> int:
     return scaled(21, 2)
 ```
 
@@ -124,11 +127,11 @@ An f-string message renders through the same formatter `print` uses:
 
 ```mylang
 # doc: expect 42
-def half(value: int) -> int:
+func half(value: int) -> int:
     assert value % 2 == 0, f"half needs an even value, got {value}"
     return value // 2
 
-def main() -> int:
+func main() -> int:
     return half(84)
 ```
 
@@ -149,15 +152,15 @@ genuinely prevents that call.
 
 ```mylang
 # doc: expect 42
-def divides(value: int, divisor: int) -> bool:
+func divides(value: int, divisor: int) -> bool:
     return value % divisor == 0
 
-def main() -> int:
-    total = 0
-    ready = True
+func main() -> int:
+    mut total = 0
+    mut ready = True
     if ready and not divides(7, 2):
         total += 40
-    empty: list[int] = []
+    mut empty: int[] = []
     if len(empty) == 0 or divides(7, 0):
         total += 2
     return total

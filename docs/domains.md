@@ -3,7 +3,7 @@
 A `domain` declaration introduces a nominal type over a built-in scalar backing
 type (`int`, `u32`, `bool`, …). Two domains with the same backing type are
 distinct, and neither converts implicitly to the scalar or to the other. The
-domain is also the language's encapsulation mechanism: a `private def` member
+domain is also the language's encapsulation mechanism: a `private func` member
 can only be called from another member of the same domain.
 
 ## Declaring a domain
@@ -11,27 +11,27 @@ can only be called from another member of the same domain.
 ```mylang
 # doc: expect 1003
 domain Millimeters: u32:
-    private def raw(value: u32) -> Millimeters:
+    private func raw(value: u32) -> Millimeters:
         return wrap[Millimeters](value)
 
-    def from(value: u32) -> Millimeters:
+    func from(value: u32) -> Millimeters:
         # Clamp to the range this domain promises to represent.
         if value > 1000u32:
             return Millimeters.raw(1000u32)
         return Millimeters.raw(value)
 
-    def number(value: Millimeters) -> u32:
+    func number(value: Millimeters) -> u32:
         return unwrap(value)
 
-    def add(a: Millimeters, b: Millimeters) -> Millimeters:
+    func add(a: Millimeters, b: Millimeters) -> Millimeters:
         return Millimeters.from(unwrap(a) + unwrap(b))
 
 
 domain Seconds: u32:
-    def from(value: u32) -> Seconds:
+    func from(value: u32) -> Seconds:
         return wrap[Seconds](value)
 
-    def number(value: Seconds) -> u32:
+    func number(value: Seconds) -> u32:
         return unwrap(value)
 
 
@@ -40,8 +40,8 @@ record Measurement:
     elapsed: Seconds
 
 
-def main(out: Stream) -> int:
-    sample = Measurement(
+func main(out: Stream) -> int:
+    mut sample = Measurement(
         distance=Millimeters.add(Millimeters.from(700u32), Millimeters.from(500u32)),
         elapsed=Seconds.from(3u32),
     )
@@ -60,7 +60,7 @@ resolution.
 
 ## Private members and identity
 
-A `private def` is visible only to other members of its domain. Calling it from
+A `private func` is visible only to other members of its domain. Calling it from
 outside reports `E_PRIVATE_FUNCTION`, naming both the call site and the
 declaring domain. A private member may still be reached through a public member,
 which is how the clamping factory above keeps its invariant. To have the

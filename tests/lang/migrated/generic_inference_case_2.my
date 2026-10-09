@@ -1,17 +1,16 @@
-module generic_inference_case_2
 
 
 record Box[T]:
     value: T
 
 
-def unbox[T](x: Box[T]) -> T:
+func unbox[T](x: Box[T]) -> T:
     return x.value
 
 
-def forward[U](x: Box[U]) -> U:
+func forward[U](x: Box[U]) -> U:
     return unbox(x)
 
 
-public def program() -> i64:
+public func program() -> i64:
     return forward(Box[i64](value=9))

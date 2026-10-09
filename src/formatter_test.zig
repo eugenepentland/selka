@@ -42,31 +42,28 @@ fn expectCanonicalModule(allocator: std.mem.Allocator, input: []const u8, expect
 // spec: FMT-CLAUSE-SPACE-1
 test "formatter keeps the space between a bracketed return type and its effect clause" {
     try expectCanonicalModule(t.allocator,
-        \\module m
         \\
         \\
-        \\public def find(values: list[int]) -> Option[int] effects():
+        \\public func find(values: int[]) -> int? effects():
         \\    return None
         \\
         \\
-        \\def keys(pick: def(int) -> Option[int] effects(), xs: list[int]) -> list[int] noalloc:
+        \\func keys(pick: func(int) -> int? effects(), xs: int[]) -> int[] noalloc:
         \\    return xs
         \\
         \\
-        \\def first(xs: list[Point]) -> int:
+        \\func first(xs: Point[]) -> int:
         \\    return xs[0].x
     ,
-        \\module m
-        \\
-        \\public def find(values: list[int]) -> Option[int] effects():
+        \\public func find(values: int[]) -> int? effects():
         \\    return None
         \\
         \\
-        \\def keys(pick: def(int) -> Option[int] effects(), xs: list[int]) -> list[int] noalloc:
+        \\func keys(pick: func(int) -> int? effects(), xs: int[]) -> int[] noalloc:
         \\    return xs
         \\
         \\
-        \\def first(xs: list[Point]) -> int:
+        \\func first(xs: Point[]) -> int:
         \\    return xs[0].x
         \\
     );
@@ -75,18 +72,18 @@ test "formatter keeps the space between a bracketed return type and its effect c
     const formatted = try formatModuleOnce(t.allocator, "sort.my", sort_source);
     defer t.allocator.free(formatted);
     try t.expect(std.mem.indexOf(u8, formatted, "]effects(") == null);
-    try t.expect(std.mem.indexOf(u8, formatted, "-> Option[int] effects():") != null);
+    try t.expect(std.mem.indexOf(u8, formatted, "-> int? effects():") != null);
 }
 
 // spec: TOOL-5
 test "formatter canonicalizes operator and assignment spacing" {
     try expectCanonical(t.allocator,
-        \\def main() -> int:
-        \\    value=  40+2
+        \\func main() -> int:
+        \\    mut value=  40+2
         \\    return value*3-1
     ,
-        \\def main() -> int:
-        \\    value = 40 + 2
+        \\func main() -> int:
+        \\    mut value = 40 + 2
         \\    return value * 3 - 1
         \\
     );
@@ -96,21 +93,21 @@ test "formatter canonicalizes operator and assignment spacing" {
 test "formatter preserves comments, literal values and precedence" {
     try expectCanonical(t.allocator,
         \\# heading
-        \\def main() -> i64: # suite note
+        \\func main() -> i64: # suite note
         \\    # leading note
-        \\    raw = "a  b # not a comment"
-        \\    data = b"raw bytes"
-        \\    label = f"v={ 1+2 }"
-        \\    value=  40+2 # trailing
+        \\    mut raw = "a  b # not a comment"
+        \\    mut data = b"raw bytes"
+        \\    mut label = f"v={ 1+2 }"
+        \\    mut value=  40+2 # trailing
         \\    return value + len(raw) + len(data) + len(label)
     ,
         \\# heading
-        \\def main() -> i64: # suite note
+        \\func main() -> i64: # suite note
         \\    # leading note
-        \\    raw = "a  b # not a comment"
-        \\    data = b"raw bytes"
-        \\    label = f"v={ 1+2 }"
-        \\    value = 40 + 2 # trailing
+        \\    mut raw = "a  b # not a comment"
+        \\    mut data = b"raw bytes"
+        \\    mut label = f"v={ 1+2 }"
+        \\    mut value = 40 + 2 # trailing
         \\    return value + len(raw) + len(data) + len(label)
         \\
     );
@@ -119,9 +116,9 @@ test "formatter preserves comments, literal values and precedence" {
 // spec-case: TOOL-5
 test "formatter normalizes unary operators and nested blocks" {
     try expectCanonical(t.allocator,
-        \\def main() -> int:
-        \\    x=-1+2*3
-        \\    y=not x==0
+        \\func main() -> int:
+        \\    mut x=-1+2*3
+        \\    mut y=not x==0
         \\    if x>0:
         \\        while x>1:
         \\            x-=1
@@ -131,9 +128,9 @@ test "formatter normalizes unary operators and nested blocks" {
         \\                break
         \\    return x
     ,
-        \\def main() -> int:
-        \\    x = -1 + 2 * 3
-        \\    y = not x == 0
+        \\func main() -> int:
+        \\    mut x = -1 + 2 * 3
+        \\    mut y = not x == 0
         \\    if x > 0:
         \\        while x > 1:
         \\            x -= 1
@@ -149,29 +146,29 @@ test "formatter normalizes unary operators and nested blocks" {
 // spec-case: TOOL-5
 test "formatter preserves generics, named constraints and slices" {
     try expectCanonical(t.allocator,
-        \\def sum[T: integer](value: T) -> T:
+        \\func sum[T: integer](value: T) -> T:
         \\    return value+value
         \\
-        \\def score[T: copy+op(score(item: T) -> int effects())](item: T) -> int effects():
+        \\func score[T: copy+op(score(item: T) -> int effects())](item: T) -> int effects():
         \\    return T.score(item)
         \\
         \\constraint Prices[P] = copy+op(price(policy: P, subtotal: int) -> int effects())
         \\
-        \\def first(xs: list[int]) -> int:
+        \\func first(xs: int[]) -> int:
         \\    return xs[ 1 : 2 ][0]
     ,
-        \\def sum[T: integer](value: T) -> T:
+        \\func sum[T: integer](value: T) -> T:
         \\    return value + value
         \\
         \\
-        \\def score[T: copy + op(score(item: T) -> int effects())](item: T) -> int effects():
+        \\func score[T: copy + op(score(item: T) -> int effects())](item: T) -> int effects():
         \\    return T.score(item)
         \\
         \\
         \\constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
         \\
         \\
-        \\def first(xs: list[int]) -> int:
+        \\func first(xs: int[]) -> int:
         \\    return xs[1:2][0]
         \\
     );
@@ -180,22 +177,22 @@ test "formatter preserves generics, named constraints and slices" {
 // spec-case: TOOL-5
 test "top-level declarations get two blank lines and the header group one" {
     try expectCanonical(t.allocator,
-        \\def a() -> int:
+        \\func a() -> int:
         \\    return 1
-        \\def b() -> int:
+        \\func b() -> int:
         \\    return 2
-        \\def c() -> int:
+        \\func c() -> int:
         \\    return 3
     ,
-        \\def a() -> int:
+        \\func a() -> int:
         \\    return 1
         \\
         \\
-        \\def b() -> int:
+        \\func b() -> int:
         \\    return 2
         \\
         \\
-        \\def c() -> int:
+        \\func c() -> int:
         \\    return 3
         \\
     );
@@ -211,7 +208,6 @@ test "empty, whitespace-only and comment-only inputs have explicit fixtures" {
 // spec-case: TOOL-5
 test "module formatter canonicalizes headers, directives and unresolved drafts" {
     try expectCanonicalModule(t.allocator,
-        \\module app.main
         \\import contracts.missing as c
         \\
         \\
@@ -220,16 +216,15 @@ test "module formatter canonicalizes headers, directives and unresolved drafts" 
         \\
         \\
         \\
-        \\def total[P: c.Prices](policy: P, subtotal: int) -> int effects():
+        \\func total[P: c.Prices](policy: P, subtotal: int) -> int effects():
         \\    return policy.price(policy=policy, subtotal=subtotal)
     ,
-        \\module app.main
         \\import contracts.missing as c
         \\
         \\public constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
         \\
         \\
-        \\def total[P: c.Prices](policy: P, subtotal: int) -> int effects():
+        \\func total[P: c.Prices](policy: P, subtotal: int) -> int effects():
         \\    return policy.price(policy=policy, subtotal=subtotal)
         \\
     );
@@ -238,15 +233,15 @@ test "module formatter canonicalizes headers, directives and unresolved drafts" 
 // spec-case: TOOL-5
 test "formatting a program preserves its native execution result" {
     const input =
-        \\def total(values: list[int]) -> int:
-        \\    sum=0
+        \\func total(values: int[]) -> int:
+        \\    mut sum=0
         \\    for value in values:
         \\        sum+=value
         \\    return sum
         \\
-        \\def main() -> i64:
-        \\    values=[1,2,3,4]
-        \\    doubled=total(values)*2
+        \\func main() -> i64:
+        \\    mut values=[1,2,3,4]
+        \\    mut doubled=total(values)*2
         \\    return doubled+len(values)
     ;
     var before = try language.Compilation.init(t.allocator, "before.my", input);
@@ -268,8 +263,8 @@ test "formatting a program preserves its native execution result" {
 fn failureScenario(allocator: std.mem.Allocator) !void {
     const input =
         \\# draft
-        \\def unfinished(x: Unknown) -> [2]Unknown: # keep
-        \\    value=  40+2
+        \\func unfinished(x: Unknown) -> FixedArray[Unknown, 2]: # keep
+        \\    mut value=  40+2
         \\    # note
         \\    return missing(x)+value
     ;
@@ -287,21 +282,21 @@ test "formatter allocation failures release collectComments and collectTopStarts
 }
 
 // spec: FMT-MODULE-DETECT-1
-test "fmt formats a file that opens with a module header or an import instead of rejecting it" {
-    const module_text = "module calc\n\n\ndef twice(x: int) -> int:\n    return x*2\n";
+test "fmt accepts headerless imported modules and standalone declarations" {
+    const module_text = "\n\nfunc twice(x: int) -> int:\n    return x*2\n";
     const formatted = try formatOnce(t.allocator, "calc.my", module_text);
     defer t.allocator.free(formatted);
     const expected = try formatModuleOnce(t.allocator, "calc.my", module_text);
     defer t.allocator.free(expected);
     try t.expectEqualStrings(expected, formatted);
     try t.expect(std.mem.indexOf(u8, formatted, "x * 2") != null);
-    const script = "# a script\nimport math\n\n\ndef main() -> int:\n    return int(math.floor(2.5))\n";
+    const script = "# a script\nimport math\n\n\nfunc main() -> int:\n    return int(math.floor(2.5))\n";
     const imported = try formatOnce(t.allocator, "script.my", script);
     defer t.allocator.free(imported);
     const imported_module = try formatModuleOnce(t.allocator, "script.my", script);
     defer t.allocator.free(imported_module);
     try t.expectEqualStrings(imported_module, imported);
-    try t.expect(!language.opensAsModule("def module_count() -> int:\n    return 0\n"));
+    try t.expect(!language.opensAsModule("func module_count() -> int:\n    return 0\n"));
     try t.expect(!language.opensAsModule("# module notes\nmodulex = 1\n"));
 }
 
@@ -318,23 +313,23 @@ test "formatter still rejects invalid syntax and reports its source diagnostic" 
 // spec: MUT-PARAM-6
 test "formatter keeps the mut parameter and the mut argument marker canonical" {
     const expected =
-        \\def replace_first(values: mut list[int], replacement: int) -> None effects(mutation):
+        \\func replace_first(mut values: int[], replacement: int) -> Unit effects(mutation):
         \\    values[0] = replacement
         \\
         \\
-        \\def main() -> int:
-        \\    values = [1]
+        \\func main() -> int:
+        \\    mut values = [1]
         \\    replace_first(mut values, replacement=2)
         \\    return values[0] - 2
         \\
     ;
     const unformatted =
-        \\def replace_first(values:  mut   list[int],  replacement: int) -> None   effects(mutation):
+        \\func replace_first(mut values: int[],  replacement: int) -> Unit   effects(mutation):
         \\    values[0] = replacement
         \\
         \\
-        \\def main() -> int:
-        \\    values = [1]
+        \\func main() -> int:
+        \\    mut values = [1]
         \\    replace_first(  mut   values , replacement = 2 )
         \\    return values[0] - 2
         \\
@@ -346,27 +341,27 @@ test "formatter keeps the mut parameter and the mut argument marker canonical" {
 test "formatter round-trips declaration attributes beside their definition" {
     try expectCanonical(t.allocator,
         \\@deprecated(  "use square_v2" )
-        \\def square(x: int) -> int:
+        \\func square(x: int) -> int:
         \\    return x*x
         \\@test
-        \\def square_of_three() -> bool:
+        \\func square_of_three() -> bool:
         \\    return square(3)==9
         \\@allow( "dead-private" , reason = "kept" )
-        \\def helper() -> int:
+        \\func helper() -> int:
         \\    return 1
     ,
         \\@deprecated("use square_v2")
-        \\def square(x: int) -> int:
+        \\func square(x: int) -> int:
         \\    return x * x
         \\
         \\
         \\@test
-        \\def square_of_three() -> bool:
+        \\func square_of_three() -> bool:
         \\    return square(3) == 9
         \\
         \\
         \\@allow("dead-private", reason="kept")
-        \\def helper() -> int:
+        \\func helper() -> int:
         \\    return 1
         \\
     );
@@ -375,7 +370,7 @@ test "formatter round-trips declaration attributes beside their definition" {
 // spec-case: TOOL-5
 test "formatter round-trips triple-quoted docstrings with newlines and hashes" {
     try expectCanonical(t.allocator,
-        \\def area(width: int, height: int) -> int:
+        \\func area(width: int, height: int) -> int:
         \\    """The rectangle's area.
         \\
         \\    # a hash stays literal
@@ -383,16 +378,16 @@ test "formatter round-trips triple-quoted docstrings with newlines and hashes" {
         \\    return width * height
         \\
         \\
-        \\def tail() -> int:
+        \\func tail() -> int:
         \\    """First line
         \\    second line ends here"""
         \\    return 1
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return area(2, 7) + tail()
     ,
-        \\def area(width: int, height: int) -> int:
+        \\func area(width: int, height: int) -> int:
         \\    """The rectangle's area.
         \\
         \\    # a hash stays literal
@@ -400,13 +395,13 @@ test "formatter round-trips triple-quoted docstrings with newlines and hashes" {
         \\    return width * height
         \\
         \\
-        \\def tail() -> int:
+        \\func tail() -> int:
         \\    """First line
         \\    second line ends here"""
         \\    return 1
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return area(2, 7) + tail()
         \\
     );

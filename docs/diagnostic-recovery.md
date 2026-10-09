@@ -7,15 +7,15 @@ For example, both undefined names are reported here:
 
 ```my
 # doc: expect-error E_UNKNOWN_NAME
-def first() -> i64:
+func first() -> i64:
     return missing_first
 
 
-def second() -> i64:
+func second() -> i64:
     return missing_second
 
 
-def main() -> i64:
+func main() -> i64:
     return first() + second()
 ```
 

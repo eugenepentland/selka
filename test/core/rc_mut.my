@@ -1,33 +1,32 @@
-module rc_mut
 
 
 record Bag:
     name: str
-    items: list[int]
+    items: int[]
 
 
-def add(xs: mut list[int], v: int):
+func add(mut xs: int[], v: int):
     xs.append(v)
 
 
-def add_counted(xs: mut list[int], v: int) -> int:
+func add_counted(mut xs: int[], v: int) -> int:
     xs.append(v)
     return len(xs)
 
 
-def put(bag: mut Bag, v: int):
+func put(mut bag: Bag, v: int):
     bag.items.append(v)
 
 
-def fill(bag: mut Bag, n: int):
+func fill(mut bag: Bag, n: int):
     for i in range(n):
         bag.items.append(i)
 
 
-def grow(n: int) -> int:
-    xs: list[int] = []
-    bag = Bag(name="grown", items=[])
-    total = 0
+func grow(n: int) -> int:
+    mut xs: int[] = []
+    mut bag = Bag(name="grown", items=[])
+    mut total = 0
     for i in range(n):
         add(mut xs, i)
         total += add_counted(mut xs, i) % 7
@@ -35,21 +34,21 @@ def grow(n: int) -> int:
     return total + len(xs) + len(bag.items)
 
 
-def aliasing() -> int:
-    a = [1, 2]
-    b = a
+func aliasing() -> int:
+    mut a = [1, 2]
+    mut b = a
     add(mut a, 3)
     return len(a) * 10 + len(b)
 
 
-def bags() -> int:
-    bag = Bag(name="x", items=[])
+func bags() -> int:
+    mut bag = Bag(name="x", items=[])
     fill(mut bag, 5)
-    other = bag
+    mut other = bag
     fill(mut bag, 2)
     return len(bag.items) * 10 + len(other.items)
 
 
-def main(args: list[str], out: Stream) -> int:
+func main(args: str[], out: Stream) -> int:
     out.print(grow(len(args) * 100000), aliasing(), bags())
     return 0

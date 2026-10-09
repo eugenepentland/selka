@@ -1,5 +1,5 @@
-def main() -> int:
-    total = 0
+func main() -> int:
+    mut total = 0
     for i, v in enumerate([10, 20]):
         total = total + i + v
     return total

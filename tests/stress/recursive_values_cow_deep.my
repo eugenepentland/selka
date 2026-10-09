@@ -6,16 +6,16 @@
 
 record Node:
     value: int
-    next: Option[Node]
+    next: Node?
 
 
-def main(out: Stream) -> int:
-    node = Node(value=0, next=None)
-    i = 0
+func main(out: Stream) -> int:
+    mut node = Node(value=0, next=None)
+    mut i = 0
     while i < 1000000:
         node = Node(value=i + 1, next=Some(node))
         i += 1
-    copied = node
+    mut copied = node
     node.value = -1
     out.print(copied.value)
     out.print(node.value)

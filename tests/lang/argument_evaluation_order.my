@@ -9,7 +9,7 @@ record Point:
 record Pair:
     a: Point
     b: Point
-    items: list[int]
+    items: int[]
 
 
 record Shape:
@@ -17,44 +17,44 @@ record Shape:
     count: int
 
 
-def move(shape: mut Shape) -> int:
+func move(mut shape: Shape) -> int:
     shape.corner.a.x = 100
-    shape.corner.b = Point(7, 7)
+    shape.corner.b = Point(x=7, y=7)
     shape.count = 50
     return 5
 
 
-def weigh(point: Point, extra: int) -> int:
+func weigh(point: Point, extra: int) -> int:
     return point.x * 1000 + point.y * 10 + extra
 
 
-def span(pair: Pair, extra: int) -> int:
+func span(pair: Pair, extra: int) -> int:
     return pair.a.x * 10000 + pair.b.y * 100 + extra
 
 
-def moved_corner(shape: mut Shape) -> int:
+func moved_corner(mut shape: Shape) -> int:
     return weigh(shape.corner.a, move(mut shape))
 
 
-public def test_a_field_argument_keeps_its_value_across_a_later_mut_call() -> bool:
-    shape = Shape(Pair(Point(1, 2), Point(3, 4), [1]), 0)
-    first = weigh(shape.corner.a, move(mut shape))
+public func test_a_field_argument_keeps_its_value_across_a_later_mut_call() -> bool:
+    mut shape = Shape(corner=Pair(a=Point(x=1, y=2), b=Point(x=3, y=4), items=[1]), count=0)
+    mut first = weigh(shape.corner.a, move(mut shape))
     return first == 1025 and shape.corner.a.x == 100 and shape.count == 50
 
 
-public def test_a_nested_record_argument_keeps_its_value_across_a_later_mut_call() -> bool:
-    shape = Shape(Pair(Point(1, 2), Point(3, 4), [1]), 0)
-    seen = span(shape.corner, move(mut shape))
+public func test_a_nested_record_argument_keeps_its_value_across_a_later_mut_call() -> bool:
+    mut shape = Shape(corner=Pair(a=Point(x=1, y=2), b=Point(x=3, y=4), items=[1]), count=0)
+    mut seen = span(shape.corner, move(mut shape))
     return seen == 10405 and shape.corner.b.y == 7
 
 
-public def test_a_mut_parameter_field_argument_keeps_its_value() -> bool:
-    shape = Shape(Pair(Point(1, 2), Point(3, 4), [1]), 0)
-    seen = moved_corner(mut shape)
+public func test_a_mut_parameter_field_argument_keeps_its_value() -> bool:
+    mut shape = Shape(corner=Pair(a=Point(x=1, y=2), b=Point(x=3, y=4), items=[1]), count=0)
+    mut seen = moved_corner(mut shape)
     return seen == 1025 and shape.corner.a.x == 100
 
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(test_a_field_argument_keeps_its_value_across_a_later_mut_call())
     out.print(test_a_nested_record_argument_keeps_its_value_across_a_later_mut_call())
     out.print(test_a_mut_parameter_field_argument_keeps_its_value())

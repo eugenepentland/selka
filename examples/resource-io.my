@@ -7,7 +7,7 @@ result Open:
 
 
 record Chunk:
-    bytes: [16] u8
+    bytes: FixedArray[u8, 16]
     length: u64
     eof: bool
 
@@ -27,17 +27,17 @@ result Status:
     err: int
 
 
-def work(fs: Filesystem) -> Status effects(filesystem):
-    request: [1] u8 = [42u8]
-    file = acquire_resource[Open](fs, request)?
-    chunk = read_resource[Read](file)?
+func work(fs: Filesystem) -> Status effects(filesystem):
+    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([42u8])
+    mut file = try acquire_resource[Open](fs, request)
+    mut chunk = try read_resource[Read](file)
     # The count reports actual write progress. This example sends one byte.
-    payload: [1] u8 = [7u8]
-    written = write_resource[Written](file, payload)?
+    mut payload: FixedArray[u8, 1] = FixedArray[u8, 1]([7u8])
+    mut written = try write_resource[Written](file, payload)
     return Ok(int(chunk.length) + int(written))
 
 
-def main(fs: Filesystem) -> int noalloc:
+func main(fs: Filesystem) -> int noalloc:
     match work(fs):
         case Status.ok(value):
             return value

@@ -1,6 +1,5 @@
-module main
 import left
 import right
 
-def main() -> int:
+func main() -> int:
     return left.price(10) + right.quote(10)

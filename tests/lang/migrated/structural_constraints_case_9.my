@@ -1,4 +1,3 @@
-module structural_constraints_case_9
 
 
 record A:
@@ -10,13 +9,13 @@ record B:
     value: i64
 
 
-def get[T: copy + field(value: i64)](v: T) -> i64:
+func get[T: copy + field(value: i64)](v: T) -> i64:
     return v.value
 
 
-def forward[U: copy + field(value: i64)](v: U) -> i64:
+func forward[U: copy + field(value: i64)](v: U) -> i64:
     return get[U](v)
 
 
-public def program() -> i64:
+public func program() -> i64:
     return get[A](A(value=2)) + forward[B](B(tag=True, value=3))

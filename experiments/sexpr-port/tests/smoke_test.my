@@ -1,4 +1,3 @@
-module tests.smoke_test
 
 # Owned by the integrator: exercises whatever modules exist so the workspace
 # keeps compiling. Grows into the end-to-end suite once every module lands.
@@ -6,7 +5,7 @@ module tests.smoke_test
 import sexpr.tokenizer as tk
 
 
-public def test_tokenize_parens_and_atoms() -> bool:
+public func test_tokenize_parens_and_atoms() -> bool:
     match tk.tokenize(b"(a b)"):
         case Ok(tokens):
             return len(tokens) == 5 and tokens[0].kind == tk.Kind.lparen and tokens[1].text == "a"

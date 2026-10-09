@@ -1,8 +1,7 @@
-module v_loops
 
 
-def find_first(xs: list[int], target: int) -> int:
-    at = 0
+func find_first(xs: int[], target: int) -> int:
+    mut at = 0
     while True:
         if at >= len(xs):
             return -1
@@ -11,9 +10,9 @@ def find_first(xs: list[int], target: int) -> int:
         at += 1
 
 
-def count_up(n: int) -> int:
-    total = 0
-    at = 0
+func count_up(n: int) -> int:
+    mut total = 0
+    mut at = 0
     while True:
         if at == n:
             break
@@ -22,9 +21,9 @@ def count_up(n: int) -> int:
     return total
 
 
-def skip_odd(n: int) -> int:
-    total = 0
-    at = -1
+func skip_odd(n: int) -> int:
+    mut total = 0
+    mut at = -1
     while True:
         at += 1
         if at >= n:
@@ -35,17 +34,17 @@ def skip_odd(n: int) -> int:
     return total
 
 
-def rebinding(values: list[int]) -> int:
-    total = 0
-    names = values
+func rebinding(values: int[]) -> int:
+    mut total = 0
+    mut names = values
     for x in names:
         names = [7]
         total += x
     return total * 10 + len(names)
 
 
-def main(out: Stream) -> int:
-    xs = [4, 8, 15, 16, 23, 42]
+func main(out: Stream) -> int:
+    mut xs = [4, 8, 15, 16, 23, 42]
     out.print(find_first(xs, 15), find_first(xs, 5), find_first([], 1))
     out.print(count_up(10), count_up(0), skip_odd(11), skip_odd(0))
     out.print(rebinding([1, 2, 3]), rebinding([]))

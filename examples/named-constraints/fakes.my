@@ -1,8 +1,7 @@
-module fakes
 
 public domain FixedPrices: int:
-    def make(amount: int) -> FixedPrices effects():
+    func make(amount: int) -> FixedPrices effects():
         return wrap[FixedPrices](amount)
-    def price(policy: FixedPrices, subtotal: int) -> int effects():
+    func price(policy: FixedPrices, subtotal: int) -> int effects():
         _ = subtotal
         return unwrap(policy)

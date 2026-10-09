@@ -1,7 +1,6 @@
-module compiler___signed_division_and_remainder_implement_trun_7
 
-public def test_signed_division_and_remainder_implement_trun_7() -> bool:
+public func test_signed_division_and_remainder_implement_trun_7() -> bool:
     return remtrunc(-9223372036854775808, -1) == 0
 
-def main() -> int:
+func main() -> int:
     return 0

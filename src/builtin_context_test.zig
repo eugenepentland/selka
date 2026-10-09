@@ -24,12 +24,11 @@ fn reject(text: []const u8, code: []const u8) !void {
 const Modules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
-            \\module main
             \\import model
             \\
             \\
-            \\def main() -> i64:
-            \\    values: list[i64] = []
+            \\func main() -> i64:
+            \\    mut values: i64[] = []
             \\    values.append(42)
             \\    match model.answer(values):
             \\        case Result.ok(n):
@@ -38,10 +37,9 @@ const Modules = struct {
             \\            return e
         );
         if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8,
-            \\module model
             \\
             \\
-            \\public def answer(values: list[i64]) -> Result[i64, i64] effects():
+            \\public func answer(values: i64[]) -> Result[i64, i64] effects():
             \\    return Ok(values[0])
         );
         return error.NotFound;
@@ -62,25 +60,23 @@ test "builtin list and Result share identity across imported module signatures" 
 const ShadowModules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
-            \\module main
             \\import model
             \\
             \\
-            \\def main() -> i64:
-            \\    values: list[i64] = []
+            \\func main() -> i64:
+            \\    mut values: i64[] = []
             \\    values.append(21)
             \\    return values[0] + model.answer()
         );
         if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8,
-            \\module model
             \\
             \\
             \\record Bucket[T]:
             \\    value: T
             \\
             \\
-            \\public def answer() -> i64 effects():
-            \\    value = Bucket[i64](value=21)
+            \\public func answer() -> i64 effects():
+            \\    mut value = Bucket[i64](value=21)
             \\    return value.value
         );
         return error.NotFound;
@@ -102,23 +98,22 @@ const ConstructorModules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
         return allocator.dupe(u8,
-            \\module main
             \\
             \\
-            \\def Ok(value: i64) -> i64:
+            \\func Ok(value: i64) -> i64:
             \\    return value + 1
             \\
             \\
-            \\def Err(value: i64) -> i64:
+            \\func Err(value: i64) -> i64:
             \\    return value - 1
             \\
             \\
-            \\def combine[T](ignored: T) -> i64:
+            \\func combine[T](ignored: T) -> i64:
             \\    _ = ignored
             \\    return Ok(20) + Err(22)
             \\
             \\
-            \\def main() -> i64:
+            \\func main() -> i64:
             \\    if Ok(1) != 2:
             \\        return 1
             \\    if Err(1) != 0:
@@ -147,12 +142,12 @@ test "builtin list and declared Result types retain their own nominal identity" 
         \\    err: i64
         \\
         \\
-        \\def answer() -> Result:
+        \\func answer() -> Result:
         \\    return Ok(42)
         \\
         \\
-        \\def main() -> i64:
-        \\    values: list[i64] = []
+        \\func main() -> i64:
+        \\    mut values: i64[] = []
         \\    values.append(42)
         \\    if values[0u64] != 42:
         \\        return 0
@@ -167,16 +162,16 @@ test "builtin list and declared Result types retain their own nominal identity" 
 // spec: BUILTIN-CONTEXT-11
 test "list method operands and byte conversions give an empty list its expected type" {
     try run(
-        \\def main() -> int:
-        \\    rows: list[list[int]] = []
+        \\func main() -> int:
+        \\    mut rows: int[][] = []
         \\    rows.append([])
         \\    rows.insert(0, [])
         \\    rows.extend([])
         \\    rows[0].append(40)
-        \\    buffer = byte_buffer([])
+        \\    mut buffer = byte_buffer([])
         \\    _ = buffer.append_byte(1)
-        \\    empty = bytes([])
-        \\    octets: list[u8] = []
+        \\    mut empty = bytes([])
+        \\    mut octets: u8[] = []
         \\    octets.append(200)
         \\    return len(rows) + rows[0][0] + len(buffer) + len(empty) - 1 + int(octets[0]) - 200
     );
@@ -185,31 +180,31 @@ test "list method operands and byte conversions give an empty list its expected 
 // spec: BUILTIN-CONTEXT-6
 test "contextual constructors reject ambiguity mismatched payloads and capability storage" {
     try reject(
-        \\def main() -> i64:
-        \\    values = []
+        \\func main() -> i64:
+        \\    mut values = []
         \\    return 0
     , "E_LIST_INFERENCE");
     try reject(
-        \\def main() -> i64:
-        \\    value = Ok(42)
+        \\func main() -> i64:
+        \\    mut value = Ok(42)
         \\    return 0
     , "E_RESULT_INFERENCE");
     try reject(
-        \\def fail() -> Result[bool, i64]:
+        \\func fail() -> Result[bool, i64]:
         \\    return Ok(42)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_TYPE");
     try reject(
-        \\def main() -> i64:
-        \\    values: list[Clock] = []
+        \\func main() -> i64:
+        \\    mut values: Clock[] = []
         \\    return 0
     , "E_LIST_CAPABILITY");
     try reject(
-        \\def main() -> i64:
-        \\    values: list[i64, bool] = []
+        \\func main() -> i64:
+        \\    mut values: list[i64, bool] = []
         \\    return 0
     , "E_GENERIC_ARITY");
 }

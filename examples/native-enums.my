@@ -1,16 +1,16 @@
 enum State:
-    idle,
+    idle
     active
 
 
-def toggle(state: State) -> State:
+func toggle(state: State) -> State:
     if state == State.idle:
         return State.active
     return State.idle
 
 
-def main() -> int:
-    state = toggle(State.idle)
+func main() -> int:
+    mut state = toggle(State.idle)
     match state:
         case State.active:
             return 7

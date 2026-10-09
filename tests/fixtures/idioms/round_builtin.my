@@ -1,2 +1,2 @@
-def main() -> int:
+func main() -> int:
     return int(round(1.6))

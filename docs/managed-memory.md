@@ -10,9 +10,9 @@ behaves as a copy.
 ```mylang
 # doc: expect 1
 # doc: expect 2
-def main(out: Stream) -> int:
-    values: list[int] = [1]
-    alias = values
+func main(out: Stream) -> int:
+    mut values: int[] = [1]
+    mut alias = values
     alias.append(42)
     out.print(len(values))
     out.print(len(alias))
@@ -65,17 +65,17 @@ needs tracing, and identity-bearing graphs use pool handles.
 
 ```mylang
 # doc: expect 1225
-def batch(size: int) -> int:
-    scratch: list[str] = []
+func batch(size: int) -> int:
+    mut scratch: str[] = []
     for index in range(size):
         scratch.append(f"item {index}")
     return len(scratch)
 
-def main() -> int:
-    kept: list[int] = []
+func main() -> int:
+    mut kept: int[] = []
     for step in range(50):
         kept.append(batch(step))
-    total = 0
+    mut total = 0
     for value in kept:
         total += value
     return total
@@ -125,12 +125,12 @@ snapshot of that value, never an interior pointer into growable storage.
 
 ```mylang
 # doc: expect 42
-def widen(target: mut list[int]) -> None:
+func widen(mut target: int[]) -> Unit:
     target.append(2)
 
-def main() -> int:
-    values: list[int] = [40]
-    alias = values
+func main() -> int:
+    mut values: int[] = [40]
+    mut alias = values
     widen(mut alias)
     return values[0] + alias[1]
 ```
@@ -167,8 +167,8 @@ input untouched.
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    scores: list[int] = [30, 10, 20]
+func main() -> int:
+    mut scores: int[] = [30, 10, 20]
     scores.sort()
     scores.append(40)
     scores.insert(0, 5)
@@ -176,7 +176,7 @@ def main() -> int:
     scores.reverse()
     scores.extend([7])
     _ = scores.pop(0)
-    window = scores.copy()
+    mut window = scores.copy()
     window.append(100)
     if len(scores) != 4 or len(window) != 5:
         return 1
@@ -203,10 +203,10 @@ elements remain independent on later writes.
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    readings = [3, 12, 7, 20]
-    empty: list[int] = []
-    window = readings[1:3]
+func main() -> int:
+    mut readings = [3, 12, 7, 20]
+    mut empty: int[] = []
+    mut window = readings[1:3]
     window[0] = 0
     if readings[1] != 12:
         return 1
@@ -263,11 +263,11 @@ lists or pool ids; the former retained-view identity protocol is retired.
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    mapping = {"a": 10, "b": 20}
-    old_values = list(mapping.values())
+func main() -> int:
+    mut mapping = {"a": 10, "b": 20}
+    mut old_values = list(mapping.values())
     mapping["b"] = 31
-    total = 0
+    mut total = 0
     for key, value in mapping.items():
         total += value
     return total + old_values[1] - 19
@@ -275,8 +275,8 @@ def main() -> int:
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    counts: dict[str, int] = {}
+func main() -> int:
+    mut counts: dict[str, int] = {}
     counts["pear"] = 2
     counts["apple"] = 6
     counts["pear"] = counts["pear"] + 1
@@ -288,21 +288,21 @@ def main() -> int:
         return 2
     if counts.pop("kiwi", 7) != 7:
         return 3
-    order: list[str] = []
+    mut order: str[] = []
     for name in counts:
         order.append(name)
     if order[0] != "pear":
         return 4
     if counts.get("plum", 0) != 0:
         return 5
-    keys: list[str] = []
-    total = 0
+    mut keys: str[] = []
+    mut total = 0
     for name, value in counts.items():
         keys.append(name)
         total += value
     if keys[0] != "pear" or keys[1] != "apple" or keys[2] != "fig":
         return 7
-    copy = counts.copy()
+    mut copy = counts.copy()
     copy.clear()
     if len(copy) != 0 or len(counts) != 3:
         return 6
@@ -324,25 +324,25 @@ collection's length through the iterated place during iteration traps with
 
 ```mylang
 # doc: expect 19
-def main() -> int:
-    words = ["alpha", "beta"]
-    letters = 0
+func main() -> int:
+    mut words = ["alpha", "beta"]
+    mut letters = 0
     for word in words:
         for letter in word:
             letters += 1
-    weighted = 0
+    mut weighted = 0
     for index, word in enumerate(words):
         weighted += index * len(word)
-    octets = 0
+    mut octets = 0
     for octet in b"\x01\x02":
         octets += octet
-    counts: dict[str, int] = {"a": 1, "b": 2}
-    keyed = ""
+    mut counts: dict[str, int] = {"a": 1, "b": 2}
+    mut keyed = ""
     for key in counts:
         keyed = keyed + key
     if keyed != "ab":
         return 1
-    stepped = 0
+    mut stepped = 0
     for number in range(1, 5):
         if number == 3:
             continue
@@ -367,21 +367,21 @@ elements are equal.
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    left: list[int] = [1, 2, 3]
-    right: list[int] = [1, 2, 3]
+func main() -> int:
+    mut left: int[] = [1, 2, 3]
+    mut right: int[] = [1, 2, 3]
     if left != right:
         return 1
     if 2 not in left:
         return 2
     if 9 in left:
         return 3
-    nested: list[list[int]] = [left]
-    twin: list[list[int]] = [right]
+    mut nested: int[][] = [left]
+    mut twin: int[][] = [right]
     if nested != twin:
         return 4
-    counts: dict[str, int] = {"a": 1, "b": 2}
-    other: dict[str, int] = {"b": 2, "a": 1}
+    mut counts: dict[str, int] = {"a": 1, "b": 2}
+    mut other: dict[str, int] = {"b": 2, "a": 1}
     if counts != other:
         return 5
     if "a" not in counts:
@@ -403,24 +403,24 @@ record Point:
     y: int
 
 
-union Shape:
-    empty,
-    radius: int,
-    point: Point
+enum Shape:
+    empty
+    radius(value: int)
+    point(value: Point)
 
 
 record Node:
     value: int
 
 
-def main() -> int:
+func main() -> int:
     if Point(x=1, y=2) != Point(x=1, y=2):
         return 1
-    if Shape.radius(4) == Shape.point(Point(x=4, y=0)):
+    if Shape.radius(value=4) == Shape.point(value=Point(x=4, y=0)):
         return 2
     if Node(value=1) != Node(value=1):
         return 3
-    first = Node(value=1)
+    mut first = Node(value=1)
     if first != first:
         return 4
     return 42
@@ -428,30 +428,30 @@ def main() -> int:
 
 ## List comprehensions
 
-`[expression for name in source if condition]` builds a fresh managed list in one
-checked pass over a list, string, byte string or dictionary. With one clause and at
-most one filter it reserves the source's length first; the filter runs before the
-expression, and the binding exists only inside the comprehension and may not
-shadow an active name.
-The source collection is unchanged, and the produced value has to be a copyable
-storable list element. Two iteration names, several `for` clauses, dictionary and
-set comprehensions and generator arguments lower through their own loops; see
-[the language guide](python-syntax.md#dict-and-set-comprehensions).
+`[for name in source if condition yield expression]` builds a fresh managed list
+in one checked pass over a list, string, byte string or dictionary. The source
+evaluates first, then each optional Boolean filter before its produced expression.
+Unfiltered results reserve the source length; filtered results grow as needed.
+The readonly binding exists only inside the expression and may not shadow an
+active name. Combine filters with Boolean `and`.
 
-The set comprehension `{expression for name in source if condition}` follows the
-same rules and builds a [set](sets.md#set-literals-and-construction) instead.
+The source remains unchanged, and produced values must be copyable storable list
+elements. List sequences accept one binder and one source; nested iteration or
+destructuring requires explicit loops. Dict/set comprehensions and generator
+arguments retain their existing forms; see
+[the language guide](python-syntax.md#dict-and-set-comprehensions).
 
 The source may also be an integer `range(...)`, exactly as in a `for` loop:
 `range(end)` and `range(start, end)` walk a half-open ascending range and bind the
-name to each integer value, so `[i * i for i in range(5)]` collects the first five
+name to each integer value, so `[for i in range(5) yield i * i]` collects the first five
 squares. The bounds share one integer type and evaluate once before the loop, and
 an empty or reversed range yields an empty list.
 
 ```mylang
 # doc: expect 20
-def main() -> int:
-    squares = [i * i for i in range(5)]
-    total = 0
+func main() -> int:
+    mut squares = [for i in range(5) yield i * i]
+    mut total = 0
     for s in squares:
         total = total + s
     return total - 10
@@ -459,14 +459,14 @@ def main() -> int:
 
 ```mylang
 # doc: expect 21
-def main() -> int:
-    readings: list[int] = [3, 12, 7, 20]
-    doubled = [value * 2 for value in readings]
-    large = [value for value in readings if value > 10]
-    labels = [str(value) for value in large]
-    initials = [letter for letter in "mylang" if letter != "m"]
-    counts: dict[str, int] = {"a": 1, "bb": 2}
-    widths = [len(key) for key in counts]
+func main() -> int:
+    mut readings: int[] = [3, 12, 7, 20]
+    mut doubled = [for value in readings yield value * 2]
+    mut large = [for value in readings if value > 10 yield value]
+    mut labels = [for value in large yield str(value)]
+    mut initials = [for letter in "mylang" if letter != "m" yield letter]
+    mut counts: dict[str, int] = {"a": 1, "bb": 2}
+    mut widths = [for key in counts yield len(key)]
     if len(doubled) != 4:
         return 1
     if labels[0] != "12":

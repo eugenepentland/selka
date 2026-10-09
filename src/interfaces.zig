@@ -353,10 +353,15 @@ pub const Index = struct {
     }
     fn signatureType(self: *Index, module: usize, span: source.Span) diagnostic.Error!void {
         const syntax = self.units[module].syntax;
+        for (syntax.types.expressions.suffixes) |suffix| {
+            if (suffix.span.start == span.start and suffix.span.end == span.end) return self.signatureType(module, suffix.base);
+        }
         for (syntax.types.expressions.callbacks) |callback| {
             if (callback.span.start != span.start or callback.span.end != span.end) continue;
             for (callback.parameters) |parameter| try self.signatureType(module, parameter);
-            return self.signatureType(module, callback.return_type);
+            try self.signatureType(module, callback.return_type);
+            if (callback.failure_type) |failure| try self.signatureType(module, failure);
+            return;
         }
         for (syntax.types.expressions.arrays) |array| {
             if (array.span.start != span.start or array.span.end != span.end) continue;
@@ -371,6 +376,7 @@ pub const Index = struct {
             return;
         }
         const src = self.project.modules.items[module].src;
+        if (span.start == span.end or std.mem.eql(u8, src.text(span), "Unit") or std.mem.eql(u8, src.text(span), "()")) return;
         if (typed.Type.fromName(src.text(span)) != null) return;
         if (!self.units[module].names.contains(src.text(span)) and prelude.scalar(src.text(span))) return;
         for (syntax.types.expressions.applications) |application| {
@@ -448,6 +454,10 @@ pub const Index = struct {
         );
         const name = src.text(application.name);
         if (!self.units[module].names.contains(name)) {
+            if (std.mem.eql(u8, name, "FixedArray")) {
+                if (application.arguments.len != 2) return self.project.fail(eGenericArity, "FixedArray requires an element type and length", .{ .module = module, .span = application.span }, null);
+                return self.genericSignatureType(module, application.arguments[0], parameters);
+            }
             const arity = prelude.arity(name);
             if (arity) |count| {
                 if (application.arguments.len != count) return self.project.fail(eGenericArity, "builtin type argument count does not match", .{ .module = module, .span = application.span }, null);
@@ -517,6 +527,9 @@ pub const Index = struct {
     }
     fn genericSignatureType(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter) diagnostic.Error!void {
         const src = self.project.modules.items[module].src;
+        for (self.units[module].syntax.types.expressions.suffixes) |suffix| {
+            if (suffix.span.start == span.start and suffix.span.end == span.end) return self.genericSignatureType(module, suffix.base, parameters);
+        }
         for (parameters) |parameter| if (std.mem.eql(u8, src.text(parameter.name), src.text(span))) return;
         for (self.units[module].syntax.types.expressions.applications) |application| {
             if (application.span.start == span.start and application.span.end == span.end) return self.applicationType(module, application, parameters);
@@ -524,7 +537,9 @@ pub const Index = struct {
         for (self.units[module].syntax.types.expressions.callbacks) |callback| {
             if (callback.span.start != span.start or callback.span.end != span.end) continue;
             for (callback.parameters) |parameter| try self.genericSignatureType(module, parameter, parameters);
-            return self.genericSignatureType(module, callback.return_type, parameters);
+            try self.genericSignatureType(module, callback.return_type, parameters);
+            if (callback.failure_type) |failure| try self.genericSignatureType(module, failure, parameters);
+            return;
         }
         for (self.units[module].syntax.types.expressions.arrays) |array| {
             if (array.span.start != span.start or array.span.end != span.end) continue;
@@ -621,6 +636,7 @@ pub const Index = struct {
             }
             for (function.signature.parameters) |parameter| try self.genericSignatureType(module, parameter.ty, function.signature.type_parameters);
             try self.genericSignatureType(module, function.signature.return_type, function.signature.type_parameters);
+            if (function.signature.failure_type) |failure| try self.genericSignatureType(module, failure, function.signature.type_parameters);
         }
     }
     /// Render exported declarations after interface checking; output belongs to
@@ -925,7 +941,7 @@ pub const Index = struct {
     /// discovered without `export`: no generic parameters and a zero-argument
     /// `bool` result, which is the one shape discovery can default.
     fn testShape(declaration: ContractDeclaration) bool {
-        return declaration.generics.len == 0 and std.mem.eql(u8, declaration.signature, "def()->bool");
+        return declaration.generics.len == 0 and std.mem.eql(u8, declaration.signature, "func()->bool");
     }
     fn contractDeclaration(self: *Index, module: usize, symbol: Symbol) ContractError!ContractDeclaration {
         const origin = self.declarationSource(module, symbol);
@@ -986,14 +1002,14 @@ pub const Index = struct {
         const allocator = self.project.arena.allocator();
         const src = self.project.modules.items[module].src;
         var out: std.ArrayList(u8) = .empty;
-        try out.appendSlice(allocator, "def(");
+        try out.appendSlice(allocator, "func(");
         for (signature.parameters, 0..) |parameter, index| {
             if (index != 0) try out.appendSlice(allocator, ",");
-            // The bare `*` is part of the signature text: every parameter after
-            // it binds by name.
-            if (signature.keyword_only_from == index) try out.appendSlice(allocator, "*,");
+            // Each named parameter carries its published label contract.
+            if (parameter.named or (signature.keyword_only_from != null and index >= signature.keyword_only_from.?)) try out.appendSlice(allocator, "named ");
+            if (parameter.mut) try out.appendSlice(allocator, "mut ");
             try out.appendSlice(allocator, src.text(parameter.name));
-            try out.appendSlice(allocator, if (parameter.mut) ":mut " else ":");
+            try out.appendSlice(allocator, ":");
             try out.appendSlice(allocator, try self.contractTypeText(module, parameter.ty, signature.type_parameters));
             if (parameter.default_value) |value| {
                 const span = self.units[module].syntax.nodes.items[@backingInt(value)].span;
@@ -1003,6 +1019,10 @@ pub const Index = struct {
         }
         try out.appendSlice(allocator, ")->");
         try out.appendSlice(allocator, try self.contractTypeText(module, signature.return_type, signature.type_parameters));
+        if (signature.failure_type) |failure| {
+            try out.appendSlice(allocator, " fails ");
+            try out.appendSlice(allocator, try self.contractTypeText(module, failure, signature.type_parameters));
+        }
         return out.toOwnedSlice(allocator);
     }
     fn contractGenericsText(self: *Index, module: usize, parameters: []const ast.TypeParameter) ContractError![]const u8 {
@@ -1077,6 +1097,14 @@ pub const Index = struct {
         try out.appendSlice(allocator, "))");
         return out.toOwnedSlice(allocator);
     }
+    fn contractFieldDefault(self: *Index, shape: *std.ArrayList(u8), module: usize, default: ?ast.NodeId) ContractError!void {
+        const value = default orelse return;
+        const src = self.project.modules.items[module].src;
+        const span = self.units[module].syntax.nodes.items[@backingInt(value)].span;
+        const allocator = self.project.arena.allocator();
+        try shape.appendSlice(allocator, "=");
+        try shape.appendSlice(allocator, std.mem.trim(u8, src.text(span), " \t\r\n"));
+    }
     fn contractType(self: *Index, module: usize, symbol: Symbol) ContractError!ContractDeclaration {
         const unit = self.units[module];
         for (unit.syntax.types.records) |record| {
@@ -1089,7 +1117,7 @@ pub const Index = struct {
         }
         for (unit.syntax.types.variants) |variant| {
             if (variant.name.start != symbol.span.start) continue;
-            var out: ContractDeclaration = .{ .name = symbol.name, .kind = if (variant.fallible) "result" else if (variant.is_union) "union" else "enum" };
+            var out: ContractDeclaration = .{ .name = symbol.name, .kind = if (variant.fallible) "result" else "enum" };
             out.generics = try self.contractGenericsText(module, variant.type_parameters);
             var shape: std.ArrayList(u8) = .empty;
             const allocator = self.project.arena.allocator();
@@ -1109,7 +1137,7 @@ pub const Index = struct {
                         try shape.appendSlice(allocator, self.project.modules.items[module].src.text(field.name));
                         try shape.appendSlice(allocator, ":");
                         try shape.appendSlice(allocator, try self.contractTypeText(module, field.ty, variant.type_parameters));
-                        if (field.default_value != null) try shape.appendSlice(allocator, "=default");
+                        try self.contractFieldDefault(&shape, module, field.default_value);
                     }
                     try shape.appendSlice(allocator, ")");
                 }
@@ -1224,36 +1252,29 @@ pub const Index = struct {
         const allocator = self.project.arena.allocator();
         const src = self.project.modules.items[module].src;
         const text = src.text(span);
+        if (span.start == span.end or std.mem.eql(u8, text, "Unit") or std.mem.eql(u8, text, "()") or std.mem.eql(u8, text, "unit")) return allocator.dupe(u8, "Unit");
+        for (self.units[module].syntax.types.expressions.suffixes) |suffix| {
+            if (suffix.span.start != span.start or suffix.span.end != span.end) continue;
+            const base = try self.contractTypeTextPath(module, suffix.base, parameters, path);
+            return std.fmt.allocPrint(allocator, "{s}{s}", .{ base, if (suffix.kind == .growable) "[]" else "?" });
+        }
         for (parameters, 0..) |parameter, index| {
             if (std.mem.eql(u8, src.text(parameter.name), text)) return std.fmt.allocPrint(allocator, "${d}", .{index});
         }
         for (self.units[module].syntax.types.expressions.callbacks) |callback| {
             if (callback.span.start != span.start or callback.span.end != span.end) continue;
-            var out: std.ArrayList(u8) = .empty;
-            try out.appendSlice(allocator, "def(");
-            for (callback.parameters, 0..) |parameter, index| {
-                if (index != 0) try out.appendSlice(allocator, ",");
-                if (index < callback.mut_parameters.len and callback.mut_parameters[index]) try out.appendSlice(allocator, "mut ");
-                try out.appendSlice(allocator, try self.contractTypeTextPath(module, parameter, parameters, path));
-            }
-            try out.appendSlice(allocator, ")->");
-            try out.appendSlice(allocator, try self.contractTypeTextPath(module, callback.return_type, parameters, path));
-            try out.appendSlice(allocator, " effects(");
-            try appendEffectNames(&out, allocator, callback.effect_bound.allowed);
-            try out.appendSlice(allocator, ")");
-            return out.toOwnedSlice(allocator);
+            return self.contractCallbackText(module, callback, parameters, path);
         }
         for (self.units[module].syntax.types.expressions.arrays) |array| {
             if (array.span.start != span.start or array.span.end != span.end) continue;
-            var out: std.ArrayList(u8) = .empty;
-            try out.appendSlice(allocator, "[");
-            switch (array.index) {
-                .length => |length| try out.appendSlice(allocator, try canonicalLength(allocator, src.text(length))),
-                .enum_type => |enum_type| try out.appendSlice(allocator, try self.contractTypeTextPath(module, enum_type, parameters, path)),
+            if (array.index == .length) {
+                const element = try self.contractTypeTextPath(module, array.element, parameters, path);
+                const length = try canonicalLength(allocator, src.text(array.index.length));
+                return std.fmt.allocPrint(allocator, "FixedArray[{s},{s}]", .{ element, length });
             }
-            try out.appendSlice(allocator, "]");
-            try out.appendSlice(allocator, try self.contractTypeTextPath(module, array.element, parameters, path));
-            return out.toOwnedSlice(allocator);
+            const index = try self.contractTypeTextPath(module, array.index.enum_type, parameters, path);
+            const element = try self.contractTypeTextPath(module, array.element, parameters, path);
+            return std.fmt.allocPrint(allocator, "[{s}]{s}", .{ index, element });
         }
         for (self.units[module].syntax.types.expressions.tuples) |tuple| {
             if (tuple.span.start != span.start or tuple.span.end != span.end) continue;
@@ -1293,6 +1314,33 @@ pub const Index = struct {
             self.units[id.module].symbols.items[id.symbol].name,
         });
     }
+    fn contractCallbackText(self: *Index, module: usize, callback: ast.CallbackType, parameters: []const ast.TypeParameter, path: *std.ArrayList(Identity)) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        const src = self.project.modules.items[module].src;
+        var out: std.ArrayList(u8) = .empty;
+        try out.appendSlice(allocator, "func(");
+        for (callback.parameters, 0..) |parameter, index| {
+            if (index != 0) try out.appendSlice(allocator, ",");
+            const named = index < callback.parameter_modes.named.len and callback.parameter_modes.named[index];
+            if (named) try out.appendSlice(allocator, "named ");
+            if (index < callback.parameter_modes.mut.len and callback.parameter_modes.mut[index]) try out.appendSlice(allocator, "mut ");
+            if (named and index < callback.parameter_names.len) if (callback.parameter_names[index]) |name| {
+                try out.appendSlice(allocator, src.text(name));
+                try out.appendSlice(allocator, ": ");
+            };
+            try out.appendSlice(allocator, try self.contractTypeTextPath(module, parameter, parameters, path));
+        }
+        try out.appendSlice(allocator, ")->");
+        try out.appendSlice(allocator, try self.contractTypeTextPath(module, callback.return_type, parameters, path));
+        if (callback.failure_type) |failure| {
+            try out.appendSlice(allocator, " fails ");
+            try out.appendSlice(allocator, try self.contractTypeTextPath(module, failure, parameters, path));
+        }
+        try out.appendSlice(allocator, " effects(");
+        try appendEffectNames(&out, allocator, callback.effect_bound.allowed);
+        try out.appendSlice(allocator, ")");
+        return out.toOwnedSlice(allocator);
+    }
     fn aliasDeclaration(self: *Index, id: Identity) ?ast.TypeAlias {
         const symbol = self.units[id.module].symbols.items[id.symbol];
         for (self.units[id.module].syntax.types.expressions.aliases) |alias| {
@@ -1312,6 +1360,16 @@ pub const Index = struct {
         var out: std.ArrayList(u8) = .empty;
         const name = src.text(application.name);
         if (!self.units[module].names.contains(name)) {
+            if (std.mem.eql(u8, name, "FixedArray")) {
+                if (application.arguments.len != 2) return self.project.fail(eGenericArity, "FixedArray requires an element type and length", .{ .module = module, .span = application.span }, null);
+                const element = try self.contractTypeTextPath(module, application.arguments[0], parameters, path);
+                const length = try self.contractLengthText(module, application.arguments[1], parameters, path);
+                return std.fmt.allocPrint(allocator, "FixedArray[{s},{s}]", .{ element, length });
+            }
+            if ((std.mem.eql(u8, name, "list") or std.mem.eql(u8, name, "Option")) and application.arguments.len == 1) {
+                const element = try self.contractTypeTextPath(module, application.arguments[0], parameters, path);
+                return std.fmt.allocPrint(allocator, "{s}{s}", .{ element, if (std.mem.eql(u8, name, "list")) "[]" else "?" });
+            }
             if (prelude.arity(name)) |arity| {
                 if (application.arguments.len != arity) return self.project.fail(eGenericArity, "builtin type argument count does not match", .{ .module = module, .span = application.span }, null);
                 try out.appendSlice(allocator, name);
@@ -1332,6 +1390,14 @@ pub const Index = struct {
         try out.appendSlice(allocator, self.units[id.module].symbols.items[id.symbol].name);
         try self.appendTypeArgumentsPath(&out, module, application, parameters, path);
         return out.toOwnedSlice(allocator);
+    }
+    fn contractLengthText(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter, path: *std.ArrayList(Identity)) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        const text = self.project.modules.items[module].src.text(span);
+        return switch (number_literal.count(text)) {
+            .ok => |value| std.fmt.allocPrint(allocator, "{d}", .{value}),
+            else => self.contractTypeTextPath(module, span, parameters, path),
+        };
     }
     fn appendTypeArgumentsPath(self: *Index, out: *std.ArrayList(u8), module: usize, application: ast.TypeApplication, parameters: []const ast.TypeParameter, path: *std.ArrayList(Identity)) ContractError!void {
         const allocator = self.project.arena.allocator();
@@ -1572,12 +1638,26 @@ fn moduleSyntax(project: *graph.Project, module_id: usize, cache: ?*SyntaxCache,
     const syntax = parseModule(project, module_id, &sink) catch |err| {
         if (err != error.SourceError) return err;
         const problem = sink.items.items[0];
-        return project.fail(problem.code, problem.message, .{ .module = module_id, .span = problem.span }, null);
+        const failure = project.fail(problem.code, problem.message, .{ .module = module_id, .span = problem.span }, null);
+        try preserveParserFixes(project, sink.items.items);
+        return failure;
     };
     if (cache) |retained| try retained.remember(module.src, module.header.body_start, syntax);
     if (frontend) |disk| try disk.rememberSyntax(module.src, module.header.body_start, syntax);
     return syntax;
 }
+fn preserveParserFixes(project: *graph.Project, problems: []const diagnostic.Diagnostic) std.mem.Allocator.Error!void {
+    var edits: std.ArrayList(diagnostic.Edit) = .empty;
+    const allocator = project.arena.allocator();
+    for (problems) |problem| {
+        const fix = problem.provenance.fix orelse continue;
+        for (0..fix.count()) |index| try edits.append(allocator, fix.at(index));
+    }
+    if (edits.items.len == 0) return;
+    project.problem.?.fix = edits.items[0];
+    project.problem.?.fix_more = edits.items[1..];
+}
+
 fn parseModule(project: *graph.Project, module_id: usize, sink: *diagnostic.Sink) diagnostic.Error!ast.Program {
     const module = project.modules.items[module_id];
     // ARENA-BOUNDED-1: the syntax outlives the tokens, which nothing reads after

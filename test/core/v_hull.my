@@ -1,21 +1,20 @@
-module v_hull
 
 
-def parse_number(text: str) -> int:
-    match int(text):
+func parse_number(text: str) -> int:
+    match parse_int(text):
         case Some(value):
             return value
         case None:
             return 0
 
 
-def churn(size: int, rounds: int, seed: int) -> int:
+func churn(size: int, rounds: int, seed: int) -> int:
     if size < 2 or rounds < 1 or seed < 1 or seed > 1000000:
         return -1
-    values = [(seed + j * 13) % 1009 for j in range(size)]
-    checksum = 0
+    mut values = [for j in range(size) yield (seed + j * 13) % 1009]
+    mut checksum = 0
     for batch in range(rounds):
-        index = (seed + batch * 17) % size
+        mut index = (seed + batch * 17) % size
         values[index] = (values[index] + batch + 1) % 1000003
         checksum = (checksum + values[index]) % 1000000007
     for value in values:
@@ -23,49 +22,49 @@ def churn(size: int, rounds: int, seed: int) -> int:
     return checksum
 
 
-def backwards(size: int, rounds: int, seed: int) -> int:
+func backwards(size: int, rounds: int, seed: int) -> int:
     if size < 2 or rounds < 1:
         return -1
-    values = [(seed + j * 13) % 1009 for j in range(size)]
-    checksum = 0
+    mut values = [for j in range(size) yield (seed + j * 13) % 1009]
+    mut checksum = 0
     for batch in range(rounds):
-        index = (seed - batch * 17) % size
+        mut index = (seed - batch * 17) % size
         values[index] = (values[index] + batch) % 1000003
         checksum = (checksum + values[index]) % 1000000007
     return checksum
 
 
-def doubling(size: int, rounds: int) -> int:
+func doubling(size: int, rounds: int) -> int:
     if size < 2 or rounds < 1:
         return -1
-    values = [j + 1 for j in range(size)]
+    mut values = [for j in range(size) yield j + 1]
     for batch in range(rounds):
-        index = batch % size
+        mut index = batch % size
         values[index] = values[index] * 2 + 1
-    total = 0
+    mut total = 0
     for value in values:
         total += value
     return total
 
 
-def mixed(size: int, flag: bool) -> int:
+func mixed(size: int, flag: bool) -> int:
     if size < 3:
         return -1
-    values = [j % 5 for j in range(size)]
+    mut values = [for j in range(size) yield j % 5]
     if flag:
         values[size - 1] = 100
     else:
         values.append(7)
-    out = 0
+    mut out = 0
     for value in values:
         out += value * 3
     return out + values[size % len(values)]
 
 
-def main(args: list[str], out: Stream) -> int:
-    size = parse_number(args[0]) if len(args) > 0 else 64
-    rounds = parse_number(args[1]) if len(args) > 1 else 1000
-    seed = parse_number(args[2]) if len(args) > 2 else 7
+func main(args: str[], out: Stream) -> int:
+    mut size = if (len(args) > 0) then (parse_number(args[0])) else (64)
+    mut rounds = if (len(args) > 1) then (parse_number(args[1])) else (1000)
+    mut seed = if (len(args) > 2) then (parse_number(args[2])) else (7)
     out.print(churn(size, rounds, seed), churn(1, rounds, seed), churn(size, 0, seed), churn(size, rounds, 0))
     out.print(backwards(size, rounds, seed), backwards(2, 5, seed), doubling(size, 10), doubling(3, 4))
     out.print(mixed(size, True), mixed(size, False), mixed(2, True))

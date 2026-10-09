@@ -1,22 +1,21 @@
-module v_dynamic_repeat
 
 # spec-case: PY-REPEAT-2
-public def test_dynamic_repeat_list_context_and_cow() -> bool:
-    width = 3
-    a = [0] * width
-    b = width * [0]
-    octets: list[u8] = [0] * width
-    empty = [0] * -width
-    small = filled(width)
-    large = filled(4097)
-    negative = filled(-width)
-    rows = [a] * width
-    saved = rows
+public func test_dynamic_repeat_list_context_and_cow() -> bool:
+    mut width = 3
+    mut a = [0] * width
+    mut b = width * [0]
+    mut octets: u8[] = [0] * width
+    mut empty = [0] * -width
+    mut small = filled(width)
+    mut large = filled(4097)
+    mut negative = filled(-width)
+    mut rows = [a] * width
+    mut saved = rows
     rows[1][2] = 7
     return len(negative) == 0 and small == [0, 1, 2] and len(large) == 4097 and large[4096] == 4096 and a == b and len(octets) == 3 and len(empty) == 0 and rows[0][2] == 0 and rows[1][2] == 7 and rows[2][2] == 0 and saved[1][2] == 0
 
-def filled(count: int) -> list[int]:
-    return [j for j in range(count)]
+func filled(count: int) -> int[]:
+    return [for j in range(count) yield j]
 
-def main() -> int:
+func main() -> int:
     return 0

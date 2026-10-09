@@ -17,7 +17,7 @@ const declarations =
     \\
     \\record Chunk:
     \\    eof: bool
-    \\    bytes: [4]u8
+    \\    bytes: FixedArray[u8, 4]
     \\    length: u64
     \\
     \\
@@ -51,19 +51,19 @@ const declarations =
 // The native provider's request grammar is one mode byte, a colon and a
 // relative path: "r:data.bin" reads, "c:out.bin" creates, "r:absent.bin" fails.
 const requests =
-    \\def reading() -> [10]u8:
-    \\    return [114u8, 58u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8]
+    \\func reading() -> FixedArray[u8, 10]:
+    \\    return FixedArray[u8, 10]([114u8, 58u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8])
     \\
     \\
-    \\def creating() -> [9]u8:
-    \\    return [99u8, 58u8, 111u8, 117u8, 116u8, 46u8, 98u8, 105u8, 110u8]
+    \\func creating() -> FixedArray[u8, 9]:
+    \\    return FixedArray[u8, 9]([99u8, 58u8, 111u8, 117u8, 116u8, 46u8, 98u8, 105u8, 110u8])
     \\
     \\
-    \\def absent() -> [12]u8:
-    \\    return [114u8, 58u8, 97u8, 98u8, 115u8, 101u8, 110u8, 116u8, 46u8, 98u8, 105u8, 110u8]
+    \\func absent() -> FixedArray[u8, 12]:
+    \\    return FixedArray[u8, 12]([114u8, 58u8, 97u8, 98u8, 115u8, 101u8, 110u8, 116u8, 46u8, 98u8, 105u8, 110u8])
     \\
     \\
-    \\def finish(file: File) -> Status:
+    \\func finish(file: File) -> Status:
     \\    match complete_resource[Finish](file):
     \\        case Finish.ok(done):
     \\            _ = done
@@ -81,21 +81,21 @@ fn reject(text: []const u8, code: []const u8) !void {
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
 const source = declarations ++ requests ++
-    \\def work(fs: Filesystem) -> Status:
-    \\    file = acquire_resource[Open](fs, reading())?
-    \\    first = read_resource[Read](file)?
-    \\    second = read_resource[Read](file)?
-    \\    _ = finish(file)?
-    \\    sink = acquire_resource[Open](fs, creating())?
-    \\    payload: [3]u8 = [7u8, 8u8, 9u8]
-    \\    count = write_resource[Written](sink, payload)?
-    \\    _ = finish(sink)?
+    \\func work(fs: Filesystem) -> Status:
+    \\    mut file = try acquire_resource[Open](fs, reading())
+    \\    mut first = try read_resource[Read](file)
+    \\    mut second = try read_resource[Read](file)
+    \\    _ = try finish(file)
+    \\    mut sink = try acquire_resource[Open](fs, creating())
+    \\    mut payload: FixedArray[u8, 3] = FixedArray[u8, 3]([7u8, 8u8, 9u8])
+    \\    mut count = try write_resource[Written](sink, payload)
+    \\    _ = try finish(sink)
     \\    if first.eof or not second.eof or second.length != 0u64:
     \\        return Err(99)
     \\    return Ok(i64(first.length) + i64(first.bytes[0]) + i64(first.bytes[1]) + i64(first.bytes[2]) + i64(first.bytes[3]) + i64(count))
     \\
     \\
-    \\def main(fs: Filesystem) -> i64 noalloc:
+    \\func main(fs: Filesystem) -> i64 noalloc:
     \\    match work(fs):
     \\        case Status.ok(value):
     \\            return value
@@ -120,25 +120,25 @@ test "source resource reads expose partial data EOF and padding while writes rep
     try t.expectEqualSlices(u8, &.{ 7, 8, 9 }, written);
 }
 const cycles = declarations ++ requests ++
-    \\def completed(fs: Filesystem) -> Status:
-    \\    total = 0
+    \\func completed(fs: Filesystem) -> Status:
+    \\    mut total = 0
     \\    for index in range(2000):
-    \\        file = acquire_resource[Open](fs, reading())?
-    \\        _ = finish(file)?
+    \\        mut file = try acquire_resource[Open](fs, reading())
+    \\        _ = try finish(file)
     \\        total = total + 1
     \\    return Ok(total)
     \\
     \\
-    \\def dropped(fs: Filesystem) -> Status:
-    \\    total = 0
+    \\func dropped(fs: Filesystem) -> Status:
+    \\    mut total = 0
     \\    for index in range(2000):
-    \\        file = acquire_resource[Open](fs, reading())?
+    \\        mut file = try acquire_resource[Open](fs, reading())
     \\        _ = file
     \\        total = total + 1
     \\    return Ok(total)
     \\
     \\
-    \\def main(fs: Filesystem) -> i64:
+    \\func main(fs: Filesystem) -> i64:
     \\    match completed(fs):
     \\        case Status.ok(value):
     \\            _ = value
@@ -161,13 +161,13 @@ test "resource owners are released exactly once by completion and by scope exit"
     try t.expectEqual(@as(i64, 2000), outcome.value);
 }
 const failing = declarations ++ requests ++
-    \\def work(fs: Filesystem) -> Status:
-    \\    file = acquire_resource[Open](fs, absent())?
-    \\    _ = finish(file)?
+    \\func work(fs: Filesystem) -> Status:
+    \\    mut file = try acquire_resource[Open](fs, absent())
+    \\    _ = try finish(file)
     \\    return Ok(1)
     \\
     \\
-    \\def main(fs: Filesystem) -> i64:
+    \\func main(fs: Filesystem) -> i64:
     \\    match work(fs):
     \\        case Status.ok(value):
     \\            return value
@@ -184,14 +184,14 @@ test "a refused acquisition propagates its host category and leaves no owner beh
     try t.expectEqual(@as(i64, -3), outcome.value);
 }
 const reading_only = declarations ++ requests ++
-    \\def work(fs: Filesystem) -> Status:
-    \\    file = acquire_resource[Open](fs, reading())?
-    \\    chunk = read_resource[Read](file)?
-    \\    _ = finish(file)?
+    \\func work(fs: Filesystem) -> Status:
+    \\    mut file = try acquire_resource[Open](fs, reading())
+    \\    mut chunk = try read_resource[Read](file)
+    \\    _ = try finish(file)
     \\    return Ok(i64(chunk.length))
     \\
     \\
-    \\def main(fs: Filesystem) -> i64:
+    \\func main(fs: Filesystem) -> i64:
     \\    match work(fs):
     \\        case Status.ok(value):
     \\            return value
@@ -223,7 +223,7 @@ test "source IO traps at every instruction boundary release or complete exactly 
 }
 test "resource requests reject payloads that are not fixed byte arrays" {
     try reject(declarations ++
-        \\def main(fs: Filesystem) -> i64:
+        \\func main(fs: Filesystem) -> i64:
         \\    match acquire_resource[Open](fs, b"r:data.bin"):
         \\        case Open.ok(file):
         \\            _ = file

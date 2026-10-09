@@ -5,8 +5,10 @@
 //! recorded (`golden-outcomes-v1`).  This root discovers every checked-in
 //! `qbe_*.json` document, replays each reproducible case through the compiler
 //! selected by `test_options.compiler_path` — `mylang`, on the new core since
-//! S5 — and compares the native result with the recording, which is never
-//! edited.  It shells out only to that compiler (which in turn runs the `zig`
+//! S5 — and compares the native result with the recorded outcomes. Source
+//! payloads migrate with the frontend; entry keys, outcome bytes and skip rules
+//! remain unchanged apart from approved named-variant rendering. It shells out
+//! only to that compiler (which in turn runs the `zig`
 //! named by `test_options`); no Python is involved.
 //!
 //! How each entry maps
@@ -455,16 +457,27 @@ fn signaturesMatch(expected: Signature, actual: Signature) bool {
     return std.mem.eql(u8, expected.stdout, actual.stdout);
 }
 
-/// The first `R_*` diagnostic code in `text`, or an empty slice when absent.
+/// The first runtime code in a diagnostic or JSON code field, ignoring paths.
 fn firstDiagnosticCode(text: []const u8) []const u8 {
     var search_from: usize = 0;
     while (std.mem.indexOfPos(u8, text, search_from, "R_")) |start| {
-        var end = start + 2;
-        while (end < text.len and (std.ascii.isUpper(text[end]) or text[end] == '_')) : (end += 1) {}
-        if (end > start + 2) return text[start..end];
         search_from = start + 2;
+        const diagnostic_code = start > 0 and text[start - 1] == '[';
+        const json_code = std.mem.endsWith(u8, text[0..start], "\"code\":\"") or
+            std.mem.endsWith(u8, text[0..start], "\"code\": \"");
+        if (!diagnostic_code and !json_code) continue;
+        var end = start + 2;
+        while (end < text.len and (std.ascii.isUpper(text[end]) or std.ascii.isDigit(text[end]) or text[end] == '_')) : (end += 1) {}
+        const closing: u8 = if (diagnostic_code) ']' else '"';
+        if (end > start + 2 and end < text.len and text[end] == closing) return text[start..end];
     }
     return "";
+}
+
+test "runtime code extraction ignores scratch directory names containing R underscore" {
+    try testing.expectEqualStrings("R_FILE", firstDiagnosticCode("/tmp/R_PJ_random/case.my:2:4: error[R_FILE]: open failed"));
+    try testing.expectEqualStrings("", firstDiagnosticCode("/tmp/R_PJ_random/case.my:2:4: error[E_TYPE]: invalid type"));
+    try testing.expectEqualStrings("R_UTF8", firstDiagnosticCode("{\"code\":\"R_UTF8\",\"path\":\"/tmp/R_PJ_random/case.my\"}"));
 }
 
 /// The process exit code, or null when the child died another way.

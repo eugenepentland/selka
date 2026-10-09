@@ -36,11 +36,11 @@ def main():
     with tempfile.TemporaryDirectory(prefix='mylang-schema-receipt-') as temporary:
         root = Path(temporary)
         entry = root / 'main.my'
-        entry.write_text('module main\nimport left\nimport right\n\ndef main() -> i64:\n    return 0\n')
-        (root / 'left.my').write_text('module left\nimport shared\n')
-        (root / 'right.my').write_text('module right\nimport shared\n')
+        entry.write_text('import left\nimport right\n\nfunc main() -> i64:\n    return 0\n')
+        (root / 'left.my').write_text('import shared\n')
+        (root / 'right.my').write_text('import shared\n')
         shared = root / 'shared.my'
-        shared.write_text('module shared\n\n\npublic class Item:\n    value: u64\n\ndef hidden() -> i64:\n    return 7\n')
+        shared.write_text('\n\npublic class Item:\n    value: u64\n\nfunc hidden() -> i64:\n    return 7\n')
 
         def run(path=entry, flags=('--schema-report',), expected=0):
             result = subprocess.run([str(compiler), 'schema-project', str(path), *flags], capture_output=True, text=True, timeout=30)
@@ -82,10 +82,10 @@ def main():
         shared.write_text(original.replace('value: u64', 'value: u32'))
         assert run()['schema_sha256'] != first['schema_sha256']
         shared.write_text(original)
-        (root / 'left.my').write_text('module left\nimport shared as s\n')
+        (root / 'left.my').write_text('import shared as s\n')
         aliased = run()
         assert aliased['schema_sha256'] == first['schema_sha256'] and aliased['source_sha256'] != first['source_sha256']
-        shared.write_text(original + '\ndef broken() -> i64:\n    return True\n')
+        shared.write_text(original + '\nfunc broken() -> i64:\n    return True\n')
         assert 'E_TYPE' in run(expected=1)
         shared.write_text(original)
         run(flags=('--schema-report', '--schema-report'), expected=2)

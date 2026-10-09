@@ -1,39 +1,38 @@
-module c_runner_failures
 
-public def test_integer_threshold_shrinks(n: int) -> bool:
+public func test_integer_threshold_shrinks(n: int) -> bool:
     return n < 8
 
-public def test_list_threshold_shrinks(xs: list[int]) -> bool:
-    total = 0
+public func test_list_threshold_shrinks(xs: int[]) -> bool:
+    mut total = 0
     for value in xs:
         if value >= 100:
             return False
     return True
 
 @requires(n < 0 and n >= 0, "impossible precondition")
-public def test_discard_limit(n: int) -> bool:
+public func test_discard_limit(n: int) -> bool:
     return True
 
 @requires(n >= 0, "helper precondition is a failure")
-def helper(n: int) -> bool:
+func helper(n: int) -> bool:
     return True
 
-public def test_helper_requires_fails(n: int) -> bool:
+public func test_helper_requires_fails(n: int) -> bool:
     return helper(n)
 
-public def test_result_false(n: int) -> Result[bool, str]:
+public func test_result_false(n: int) -> Result[bool, str]:
     return Ok(False)
 
-public def test_result_error(n: int) -> Result[bool, str]:
+public func test_result_error(n: int) -> Result[bool, str]:
     return Err("counterexample")
 
-public def test_ordinary_result_false() -> Result[bool, str]:
+public func test_ordinary_result_false() -> Result[bool, str]:
     return Ok(False)
 
-public def test_ordinary_result_error() -> Result[bool, str]:
+public func test_ordinary_result_error() -> Result[bool, str]:
     return Err("ordinary error")
 
-public def test_failed_trial_captures_buffered_output(n: int, out: Stream, err: Stream) -> bool:
+public func test_failed_trial_captures_buffered_output(n: int, out: Stream, err: Stream) -> bool:
     out.print("trial", n)
     err.print("diagnostic", n)
     return False

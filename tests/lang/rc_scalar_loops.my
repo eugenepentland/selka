@@ -1,34 +1,34 @@
-def calculate(count: int, seed: int) -> int:
-    total = seed
+func calculate(count: int, seed: int) -> int:
+    mut total = seed
     for at in range(count):
         total = (total + at * 7) % 1000003
     return total
 
 
-def with_owner(items: list[int], count: int) -> int:
-    total = items[0]
+func with_owner(items: int[], count: int) -> int:
+    mut total = items[0]
     for at in range(count):
         total = (total + at * 7) % 1000003
     return total + items[-1]
 
 
-public def test_numeric_guards_keep_long_short_and_empty_results() -> bool:
+public func test_numeric_guards_keep_long_short_and_empty_results() -> bool:
     return calculate(64, 0) == 14112 and calculate(4, 0) == 42 and calculate(0, 17) == 17 and calculate(-3, 19) == 19
 
 
-public def test_negative_and_large_initial_values_keep_checked_fallback() -> bool:
+public func test_negative_and_large_initial_values_keep_checked_fallback() -> bool:
     return calculate(64, -31) == 14081 and calculate(0, 9223372036854775807) == 9223372036854775807
 
 
-public def test_ownership_outside_numeric_loop_remains_live() -> bool:
-    items = [3, 9]
-    saved = items
-    result = with_owner(items, 64)
+public func test_ownership_outside_numeric_loop_remains_live() -> bool:
+    mut items = [3, 9]
+    mut saved = items
+    mut result = with_owner(items, 64)
     items[0] = 12
     return result == 14124 and saved == [3, 9] and items == [12, 9]
 
 
-def main() -> int:
+func main() -> int:
     assert test_numeric_guards_keep_long_short_and_empty_results()
     assert test_negative_and_large_initial_values_keep_checked_fallback()
     assert test_ownership_outside_numeric_loop_remains_live()

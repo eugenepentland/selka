@@ -1,0 +1,15 @@
+record Point:
+    x: int
+
+def read_number(text: str) -> Option[int]:
+    return int(text)
+
+def shift(points: mut list[Point], *, delta: int) -> None:
+    for index in range(len(points)):
+        points[index].x += delta
+
+def main() -> int:
+    points: list[Point] = [Point(x=1)]
+    shift(mut points, delta=2)
+    answer = points[0].x if True else 0
+    return answer - 3

@@ -20,14 +20,14 @@ fn reject(text: []const u8, code: []const u8) !void {
 // spec: PY-GENERIC-2
 test "square type arguments on a call keep record construction and reject wrong arity" {
     try reject(
-        \\def identity[T](value: T) -> T:
+        \\func identity[T](value: T) -> T:
         \\    return value
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return identity[i64, bool](42)
     , "E_GENERIC_ARITY");
     try reject(
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return missing[i64](42)
     , "E_UNKNOWN_TYPE");
 }

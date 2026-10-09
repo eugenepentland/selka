@@ -21,12 +21,12 @@ abcdefghijklmnoé😀pqrstuvwxyz012345
 abcdefghijklmnoé😀pqrstuvwxyz012345"""
 
 
-public def test_literal_indexes_in_both_directions_and_ranges() -> bool:
-    line = "abcdefghijklmnoé😀pqrstuvwxyz012345"
-    ok = len(TEXT) == 699
+public func test_literal_indexes_in_both_directions_and_ranges() -> bool:
+    mut line = "abcdefghijklmnoé😀pqrstuvwxyz012345"
+    mut ok = len(TEXT) == 699
     for index in range(len(TEXT)):
-        column = index % 35
-        expected = "\n"
+        mut column = index % 35
+        mut expected = "\n"
         if column < 34:
             expected = line[column]
         ok = ok and TEXT[index] == expected and TEXT[index - len(TEXT)] == expected
@@ -34,5 +34,5 @@ public def test_literal_indexes_in_both_directions_and_ranges() -> bool:
     return ok and TEXT.count("é", 100, 300) == 6 and TEXT[128] == line[23]
 
 
-def main() -> int:
+func main() -> int:
     return 0

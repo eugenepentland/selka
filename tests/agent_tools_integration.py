@@ -8,9 +8,9 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 
-IO_SOURCE = 'module io\n\n\n\n\n\npublic host def length() -> i64 effects(host)\n\n\npublic host def byte(index: i64) -> u8 effects(host)\n\n\npublic host def put(value: u8) -> i64 effects(host)\n'
+IO_SOURCE = '\n\n\n\n\npublic host func length() -> i64 effects(host)\n\n\npublic host func byte(index: i64) -> u8 effects(host)\n\n\npublic host func put(value: u8) -> i64 effects(host)\n'
 
-MAIN_SOURCE = 'module main\nimport io\n\n\ndef main() -> i64:\n    index = 0\n    while index < io.length():\n        _ = io.put(io.byte(index))\n        index += 1\n    return 0\n'
+MAIN_SOURCE = 'import io\n\n\nfunc main() -> i64:\n    mut index = 0\n    while index < io.length():\n        _ = io.put(io.byte(index))\n        index += 1\n    return 0\n'
 
 
 def main():

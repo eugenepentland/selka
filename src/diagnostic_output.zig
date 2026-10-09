@@ -210,7 +210,7 @@ pub fn renderProject(allocator: std.mem.Allocator, loaded: *project.Project, for
         notes[0] = .{ .role = .related, .message = "related module/import declaration", .location = location(loaded.modules.items[related.module].src, related.span) };
         data.notes = &notes;
     }
-    if (problem.fix) |edit| return renderFixed(allocator, data, .{ .edit = edit }, src);
+    if (problem.fix) |edit| return renderFixed(allocator, data, .{ .edit = edit, .more = problem.fix_more }, src);
     return encode(allocator, .{ .version = version, .kind = diagnostic_kind, .diagnostic = data });
 }
 /// Preserve auxiliary CLI messages as distinct records rather than mixing raw text into JSON.

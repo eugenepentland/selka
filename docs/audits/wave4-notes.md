@@ -34,6 +34,7 @@ now threads `host: Host`.
 `docs/c-ffi.md`:
 
 ```mylang
+# doc: skip Historical pre-redesign syntax retained as audit evidence.
 # doc: check
 extern def abs(host: Host, value: i32) -> i32 effects(host)
 

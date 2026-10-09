@@ -1,17 +1,16 @@
-module c_runner_byte_buffer
 
 public record Packet:
     tag: int
     body: byte_buffer
 
-public def test_buffer_copy_appends_alone(buffer: byte_buffer) -> bool:
-    before = len(buffer)
-    copy = buffer
+public func test_buffer_copy_appends_alone(buffer: byte_buffer) -> bool:
+    mut before = len(buffer)
+    mut copy = buffer
     _ = copy.append_byte(7)
     return len(buffer) == before and len(copy) == before + 1 and copy[before] == 7
 
-public def test_buffers_inside_records_lists_and_options(packet: Packet, items: list[byte_buffer], frame: Option[byte_buffer]) -> bool:
-    total = len(packet.body)
+public func test_buffers_inside_records_lists_and_options(packet: Packet, items: byte_buffer[], frame: byte_buffer?) -> bool:
+    mut total = len(packet.body)
     for item in items:
         total = total + len(item)
     match frame:
@@ -21,10 +20,10 @@ public def test_buffers_inside_records_lists_and_options(packet: Packet, items: 
             total = total + 0
     return total >= 0
 
-public def test_short_buffer(buffer: byte_buffer) -> bool:
+public func test_short_buffer(buffer: byte_buffer) -> bool:
     return len(buffer) < 3
 
-public def test_buffer_error_result(buffer: byte_buffer) -> Result[bool, byte_buffer]:
+public func test_buffer_error_result(buffer: byte_buffer) -> Result[bool, byte_buffer]:
     if len(buffer) > 2:
         return Err(buffer)
     return Ok(True)

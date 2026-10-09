@@ -1,10 +1,9 @@
-module python_surface_case_2
 
 
 record Buffer:
     len: int
     replace: int
 
-public def program() -> int:
-    held = Buffer(len=20, replace=22)
+public func program() -> int:
+    mut held = Buffer(len=20, replace=22)
     return held.len + held.replace

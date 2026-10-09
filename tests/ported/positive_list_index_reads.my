@@ -1,40 +1,39 @@
-module positive_list_index_reads
 
 # Ported from the retired QBE positive-index tests: reads at both ends of a list
 # and a write made before the replacing call.
 
 record Frame:
-    code: list[int]
+    code: int[]
     ip: int
 
 
-def read(frame: mut Frame) -> int:
-    value = frame.code[frame.ip]
+func read(mut frame: Frame) -> int:
+    mut value = frame.code[frame.ip]
     frame.ip += 1
     return value
 
 
-def replace(frame: mut Frame) -> int:
+func replace(mut frame: Frame) -> int:
     frame.code = [17, 19]
     return 0
 
 
-def selected(frame: mut Frame) -> int:
+func selected(mut frame: Frame) -> int:
     return frame.code[replace(mut frame)]
 
 
-def at(values: list[int], index: int) -> int:
+func at(values: int[], index: int) -> int:
     return values[index]
 
 
-public def test_reads_at_both_ends_of_a_list_in_either_direction() -> bool:
-    values = [7, 11]
+public func test_reads_at_both_ends_of_a_list_in_either_direction() -> bool:
+    mut values = [7, 11]
     return at(values, 0) == 7 and at(values, 1) == 11 and at(values, -1) == 11 and at(values, -2) == 7
 
 
-public def test_a_write_before_the_replacing_call_is_what_the_selected_index_reads() -> bool:
-    frame = Frame([7, 11], 0)
-    before = frame
+public func test_a_write_before_the_replacing_call_is_what_the_selected_index_reads() -> bool:
+    mut frame = Frame(code=[7, 11], ip=0)
+    mut before = frame
     assert read(mut frame) == 7
     frame.code[0] = 13
     assert before.code == [7, 11] and before.ip == 0
@@ -42,7 +41,7 @@ public def test_a_write_before_the_replacing_call_is_what_the_selected_index_rea
     return frame.code == [17, 19]
 
 
-def main() -> int:
+func main() -> int:
     assert test_reads_at_both_ends_of_a_list_in_either_direction()
     assert test_a_write_before_the_replacing_call_is_what_the_selected_index_reads()
     return 0

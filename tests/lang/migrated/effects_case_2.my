@@ -1,21 +1,20 @@
-module effects_case_2
 
 
 record Box:
-    values: list[int]
+    values: int[]
 
 
-def write_text(pieces: mut list[str], box: Box) -> None:
+func write_text(mut pieces: str[], box: Box) -> Unit:
     pieces.append("x")
     _ = box
 
 
-def use(pieces: mut list[str], box: Box) -> None:
+func use(mut pieces: str[], box: Box) -> Unit:
     write_text(mut pieces, box)
 
 
-public def program() -> int:
-    pieces: list[str] = []
-    box = Box(values=[1])
+public func program() -> int:
+    mut pieces: str[] = []
+    mut box = Box(values=[1])
     use(mut pieces, box)
     return 0

@@ -18,21 +18,21 @@ record Entry:
     count: int
 
 
-def generate(length: int) -> list[int]:
-    codes: list[int] = []
-    seed = 42
+func generate(length: int) -> int[]:
+    mut codes: int[] = []
+    mut seed = 42
     for _ in range(length):
         seed = (seed * 3877 + 29573) % 139968
         codes.append(seed * 4 // 139968)
     return codes
 
 
-def frequencies(codes: list[int], k: int) -> dict[int, int]:
-    modulus = 1
+func frequencies(codes: int[], k: int) -> dict[int, int]:
+    mut modulus = 1
     for _ in range(k):
         modulus = modulus * 4
-    counts: dict[int, int] = {}
-    code = 0
+    mut counts: dict[int, int] = {}
+    mut code = 0
     for i, base in enumerate(codes):
         code = (code * 4 + base) % modulus
         if i >= k - 1:
@@ -40,16 +40,16 @@ def frequencies(codes: list[int], k: int) -> dict[int, int]:
     return counts
 
 
-def encode(key: str) -> int:
-    code = 0
+func encode(key: str) -> int:
+    mut code = 0
     for letter in key:
         code = code * 4 + "ACGT".find(letter)
     return code
 
 
-def decode(code: int, k: int) -> str:
-    letters: list[str] = []
-    rest = code
+func decode(code: int, k: int) -> str:
+    mut letters: str[] = []
+    mut rest = code
     for _ in range(k):
         letters.append("ACGT"[rest % 4])
         rest = rest // 4
@@ -57,16 +57,16 @@ def decode(code: int, k: int) -> str:
     return "".join(letters)
 
 
-def main(out: Stream) -> int:
-    codes = generate(1000000)
+func main(out: Stream) -> int:
+    mut codes = generate(1000000)
     for k in [1, 2]:
-        counts = frequencies(codes, k)
-        entries = [Entry(code=item.key, count=item.value) for item in counts.items()]
+        mut counts = frequencies(codes, k)
+        mut entries = [for item in counts.items() yield Entry(code=item.key, count=item.value)]
         # Two stable passes: key ascending, then count descending.
-        by_key = sorted(entries, key=lambda entry: entry.code)
+        mut by_key = sorted(entries, key=lambda entry: entry.code)
         for entry in sorted(by_key, key=lambda entry: -entry.count):
             out.print(decode(entry.code, k), entry.count)
     for key in ["GGT", "GGTA", "GGTATT", "GGTATTTTAATT", "GGTATTTTAATTTATAGT"]:
-        counts = frequencies(codes, len(key))
+        mut counts = frequencies(codes, len(key))
         out.print(f"{counts.get(encode(key), 0)}\t{key}")
     return 0

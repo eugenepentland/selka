@@ -15,7 +15,7 @@ project that has no copy of this directory:
 ```console
 $ mylang docs                 # list the topics
 $ mylang docs primer          # print the primer (Markdown) to stdout
-$ mylang docs errors          # Result, Option and `?`
+$ mylang docs errors          # fails, try, Result and optional values
 $ mylang reference --query E_MODULE_NAME   # one feature or error code, from the same executable
 ```
 
@@ -85,7 +85,7 @@ $ mylang reference --query E_MODULE_NAME   # one feature or error code, from the
   [linting](tooling/lint.md), [import policy](tooling/import-policy.md).
 - Compiler behaviour: [caches](tooling/caches.md), [phase timings](tooling/timings.md),
   [work and reuse reports](tooling/work-report.md), [module interfaces](tooling/module-interfaces.md).
-- C interop: [direct C imports](c-ffi.md) (`extern def` with `--link FILE.c`).
+- C interop: [direct C imports](c-ffi.md) (`extern func` with `--link FILE.c`).
   Host functions, `mylang invoke` and the host applications were retired; their
   pages are in [`legacy/`](legacy/README.md).
 
@@ -104,7 +104,8 @@ dated records and plans, not descriptions of the language you can rely on:
   [implementation plan](named-constraints-implementation.md) and
   [handoff](named-constraints-handoff.md)), [MVP audit](mvp-audit.md).
 - Working on the compiler: [where tests live](tooling/test-layout.md),
-  [documentation gates](tooling/documentation-gate.md).
+  [documentation gates](tooling/documentation-gate.md),
+  [frontend redesign and migration decisions](audits/frontend-syntax-redesign-2026-10-09.md).
 - Directories: [`audits/`](audits/) (dated audits and lane reports),
   [`experiments/`](experiments/) (design records and measurements),
   [`adr/`](adr/) (architecture decisions), [`legacy/`](legacy/) (removed

@@ -14,10 +14,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import navigate
 
 COMPILER = None
-MAIN = 'module main\nimport lib\n\n\ndef main() -> i64:\n    return lib.twice(2)\n'
-LIB = ('module lib\n\n\n\n'
-       'def add(x: i64) -> i64:\n    return x + 1\n\n\n'
-       'def twice(x: i64) -> i64:\n    return add(add(x))\n')
+MAIN = 'import lib\n\n\nfunc main() -> i64:\n    return lib.twice(2)\n'
+LIB = ('\n\n\nfunc add(x: i64) -> i64:\n    return x + 1\n\n\nfunc twice(x: i64) -> i64:\n    return add(add(x))\n')
 
 
 class NavigationTests(unittest.TestCase):
@@ -120,8 +118,8 @@ class NavigationTests(unittest.TestCase):
 
     def test_parse_error_partial_index_never_reuses_old_semantic_edges(self):
         self.load()
-        (self.root / 'lib.my').write_text('module lib\n\n\n\n'
-                                          'def twice(x: i64) -> i64:\n    return x +\n')
+        (self.root / 'lib.my').write_text('\n\n\n'
+                                          'func twice(x: i64) -> i64:\n    return x +\n')
         partial, reused = self.load()
         self.assertFalse(reused)
         self.assertFalse(partial['checked'])
@@ -135,9 +133,7 @@ class NavigationTests(unittest.TestCase):
 
     def test_compiler_standard_sources_cache_without_disk_copies_or_temporary_symbols(self):
         (self.root / 'main.my').write_text(
-            'module main\nimport math\n\n\n'
-            'def size(text: i64) -> i64:\n    return math.min[i64](text, 4)\n\n\n'
-            'def main() -> i64:\n    return size(3)\n')
+            'import math\n\n\nfunc size(text: i64) -> i64:\n    return math.min[i64](text, 4)\n\n\nfunc main() -> i64:\n    return size(3)\n')
         (self.root / 'math.my').write_text('reserved names cannot shadow the compiler library')
         index, reused = self.load()
         self.assertFalse(reused)

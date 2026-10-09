@@ -169,8 +169,7 @@ fn elementWriteInput(program: typed.Program, function: typed.Function, statement
     if (slot >= function.signature.parameter_count) return null;
     const ty = function.scope.locals[slot].ty;
     const array_write = store.element and typed.referenceArray(program.records, ty);
-    const caller_write = std.mem.indexOfScalar(u16, function.signature.declared_mutates, @intCast(slot)) != null and
-        (typed.referenceRecord(program.records, ty) or mut_abi.collection(program.records, ty));
+    const caller_write = std.mem.indexOfScalar(u16, function.signature.declared_mutates, @intCast(slot)) != null;
     if (!array_write and !caller_write) return null;
     return @intCast(slot);
 }
@@ -994,7 +993,7 @@ pub fn checkAbstract(allocator: std.mem.Allocator, functions: []const @import("a
         // unattributed write may be a local builder. Concrete specializations
         // re-check those bodies with full origin analysis; only writes tied to a
         // declared input position are enforced here.
-        const inferred = positionMask(function.signature.inferred_mutates);
+        const inferred = positionMask(function.signature.inferred.mutates);
         if (inferred == 0) continue;
         const bound = function.policy.effect_bound orelse continue;
         const has_permission = bound.allowed & sets.bit(.mutation) != 0;

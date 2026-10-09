@@ -1,0 +1,17 @@
+# spec: FRONTEND-NUMBERS-1
+public func test_frontend_text_parsing() -> bool:
+    return parse_int("42") == Some(42) and parse_int("bad") is None and parse_float("2.5") == Some(2.5)
+
+# spec-case: FRONTEND-NUMBERS-1
+public func test_frontend_numeric_conversion() -> bool:
+    return int(2.75) == 2 and float(7) == 7.0
+
+func parsed[T](text: str, witness: T) -> int:
+    const number = parse_int(text)
+    if number is None:
+        return 0
+    return number
+
+# spec-case: FRONTEND-NUMBERS-1
+public func test_frontend_generic_parsing() -> bool:
+    return parsed[int]("42", 7) == 42 and parsed[bool]("bad", False) == 0

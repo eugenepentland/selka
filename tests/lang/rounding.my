@@ -1,4 +1,3 @@
-module rounding
 
 import math
 
@@ -10,12 +9,12 @@ import math
 # entry. The tie cases are .5 and -.5; 1.4/1.6 are the non-tie cases.
 
 
-def rounded(value: float) -> float:
+func rounded(value: float) -> float:
     return round(value)
 
 
 # spec-case: PRELUDE-ROUND-1
-public def test_round_sends_halves_away_from_zero_for_both_signs() -> bool:
+public func test_round_sends_halves_away_from_zero_for_both_signs() -> bool:
     if rounded(2.5) != 3.0:
         return False
     if rounded(0.5) != 1.0:
@@ -31,7 +30,7 @@ public def test_round_sends_halves_away_from_zero_for_both_signs() -> bool:
     return True
 
 
-public def test_round_takes_the_nearest_integral_float_off_the_tie() -> bool:
+public func test_round_takes_the_nearest_integral_float_off_the_tie() -> bool:
     if rounded(1.4) != 1.0:
         return False
     if rounded(1.6) != 2.0:
@@ -47,8 +46,8 @@ public def test_round_takes_the_nearest_integral_float_off_the_tie() -> bool:
     return True
 
 
-public def test_round_answers_a_float_and_agrees_with_math_round() -> bool:
-    total = rounded(2.5) + 0.5
+public func test_round_answers_a_float_and_agrees_with_math_round() -> bool:
+    mut total = rounded(2.5) + 0.5
     if total != 3.5:
         return False
     if math.round(2.5) != rounded(2.5):
@@ -58,15 +57,15 @@ public def test_round_answers_a_float_and_agrees_with_math_round() -> bool:
     return True
 
 
-public def test_round_passes_not_a_number_and_infinities_through() -> bool:
-    infinite = 1.0 / 0.0
+public func test_round_passes_not_a_number_and_infinities_through() -> bool:
+    mut infinite = 1.0 / 0.0
     if rounded(infinite) != infinite:
         return False
-    not_a_number = 0.0 / 0.0
+    mut not_a_number = 0.0 / 0.0
     if rounded(not_a_number) == rounded(not_a_number):
         return False
     return True
 
 
-def main() -> int:
+func main() -> int:
     return 0

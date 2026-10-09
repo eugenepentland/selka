@@ -20,12 +20,13 @@ const records =
     \\    on: bool
     \\
     \\
-    \\def shift(line: Line, dx: int) -> int:
+    \\func shift(input: Line, dx: int) -> int:
+    \\    mut line = input
     \\    line.to_point.x = line.to_point.x + dx
     \\    return line.to_point.x - line.from_point.x
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(shift(Line(from_point=Point(x=1, y=2), to_point=Point(x=5, y=6), on=True), 3))
     \\    return 0
     \\
@@ -45,35 +46,35 @@ test "records are built with record_make, read with record_get and written with 
 }
 
 const unions =
-    \\union Shape:
-    \\    circle: int,
-    \\    square: int,
+    \\enum Shape:
+    \\    circle(value: int)
+    \\    square(value: int)
     \\    unit
     \\
     \\
-    \\def fail(x: int) -> Result[int, str]:
+    \\func failure(x: int) -> Result[int, str]:
     \\    if x < 0:
     \\        return Err("neg")
     \\    return Ok(x)
     \\
     \\
-    \\def go(x: int) -> Result[int, str]:
-    \\    v = fail(x)?
+    \\func go(x: int) -> Result[int, str]:
+    \\    mut v = try failure(x)
     \\    return Ok(v + 1)
     \\
     \\
-    \\def pick(s: Shape) -> int:
+    \\func pick(s: Shape) -> int:
     \\    match s:
-    \\        case Shape.circle(r):
+    \\        case Shape.circle(value=r):
     \\            return r
-    \\        case Shape.square(w):
+    \\        case Shape.square(value=w):
     \\            return w + 1
     \\        case Shape.unit:
     \\            return 0
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    out.print(pick(Shape.circle(3)))
+    \\func main(out: Stream) -> int:
+    \\    out.print(pick(Shape.circle(value=3)))
     \\    match go(3):
     \\        case Ok(v):
     \\            out.print(v)
@@ -88,8 +89,8 @@ test "a union is built with union_make, matched on its tag and read through unio
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const text = try support.irText(arena.allocator(), unions);
-    try std.testing.expect(contains(text, "union_make union{i64, i64, void} tag0 3:i64"));
-    try std.testing.expect(contains(text, "union_payload i64 tag1 param0"));
+    try std.testing.expect(contains(text, "union_make union{record{i64}, record{i64}, void} tag0"));
+    try std.testing.expect(contains(text, "union_payload record{i64} tag1 param0"));
     try std.testing.expect(contains(text, "union_make union{i64, str} tag0"));
 }
 
@@ -110,19 +111,19 @@ const element_writes =
     \\    flag: bool
     \\
     \\
-    \\def set_one(cells: list[Cell], v: int) -> int:
-    \\    copy = cells
+    \\func set_one(cells: Cell[], v: int) -> int:
+    \\    mut copy = cells
     \\    copy[1].code = v
     \\    return copy[1].code
     \\
     \\
-    \\def pop_last(xs: list[int]) -> int:
-    \\    copy = xs
-    \\    last = copy.pop()
+    \\func pop_last(xs: int[]) -> int:
+    \\    mut copy = xs
+    \\    mut last = copy.pop()
     \\    return last + len(copy)
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(set_one([Cell(code=1, flag=True), Cell(code=2, flag=False)], 5), pop_last([1, 2, 3]))
     \\    return 0
     \\
@@ -143,25 +144,25 @@ test "an element write is a list_set of the rebuilt element and a pop reads the 
 
 const receivers =
     \\record Hold:
-    \\    items: list[int]
+    \\    items: int[]
     \\    n: int
     \\
     \\
-    \\def hold(h0: Hold, v: int) -> int:
-    \\    h = h0
+    \\func hold(h0: Hold, v: int) -> int:
+    \\    mut h = h0
     \\    h.items.append(v)
     \\    return len(h.items)
     \\
     \\
-    \\def fill(items: mut list[int], n: int) -> int:
+    \\func fill(mut items: int[], n: int) -> int:
     \\    for i in range(n):
     \\        items.append(i)
     \\    return len(items)
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    h = Hold(items=[], n=0)
-    \\    xs: list[int] = []
+    \\func main(out: Stream) -> int:
+    \\    mut h = Hold(items=[], n=0)
+    \\    mut xs: int[] = []
     \\    out.print(hold(h, 4), fill(mut xs, 3), len(xs))
     \\    return 0
     \\
@@ -191,21 +192,21 @@ test "a function with a mut parameter and a result returns a record of both and 
 }
 
 const recursive =
-    \\union Expr:
-    \\    num(value: int),
+    \\enum Expr:
+    \\    num(value: int)
     \\    add(left: Expr, right: Expr)
     \\
     \\
-    \\def evaluate(e: Expr) -> int:
+    \\func evaluate(e: Expr) -> int:
     \\    match e:
-    \\        case Expr.num(v):
+    \\        case Expr.num(value=v):
     \\            return v
-    \\        case Expr.add(l, r):
+    \\        case Expr.add(left=l, right=r):
     \\            return evaluate(l) + evaluate(r)
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    out.print(evaluate(Expr.add(Expr.num(1), Expr.num(2))))
+    \\func main(out: Stream) -> int:
+    \\    out.print(evaluate(Expr.add(left=Expr.num(value=1), right=Expr.num(value=2))))
     \\    return 0
     \\
 ;
@@ -221,16 +222,16 @@ test "a recursive union stores the payload that closes the cycle in a box and re
 
 const capability_array_field =
     \\record Grid:
-    \\    ports: [2]Stream
+    \\    ports: FixedArray[Stream, 2]
     \\    label: str
     \\
     \\
-    \\def use(a: Grid, b: Grid) -> int:
+    \\func use(a: Grid, b: Grid) -> int:
     \\    return len(a.label) + len(b.label)
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    out.print(use(Grid(ports=[out, out], label="a"), Grid(ports=[out, out], label="b")))
+    \\func main(out: Stream) -> int:
+    \\    out.print(use(Grid(ports=FixedArray[stream_cap, 2]([out, out]), label="a"), Grid(ports=FixedArray[stream_cap, 2]([out, out]), label="b")))
     \\    return 0
     \\
 ;
@@ -241,11 +242,11 @@ const capability_field =
     \\    label: str
     \\
     \\
-    \\def use(a: Grid, b: Grid) -> int:
+    \\func use(a: Grid, b: Grid) -> int:
     \\    return len(a.label) + len(b.label)
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(use(Grid(port=out, label="a"), Grid(port=out, label="b")))
     \\    return 0
     \\
@@ -257,7 +258,7 @@ const rendered_capability =
     \\    label: str
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(Grid(port=out, label="a"))
     \\    return 0
     \\
@@ -300,25 +301,25 @@ const projections =
     \\    bias: int
     \\
     \\
-    \\union Value:
-    \\    integer: int,
-    \\    pair: Item
+    \\enum Value:
+    \\    integer(value: int)
+    \\    pair(value: Item)
     \\
     \\
-    \\def read_code(items: list[Item], i: int) -> int:
+    \\func read_code(items: Item[], i: int) -> int:
     \\    return items[i].code + items[i].bias
     \\
     \\
-    \\def peek(vs: list[Value], i: int) -> int:
+    \\func peek(vs: Value[], i: int) -> int:
     \\    match vs[i]:
-    \\        case Value.integer(n):
+    \\        case Value.integer(value=n):
     \\            return n
-    \\        case Value.pair(p):
+    \\        case Value.pair(value=p):
     \\            return p.code * 10 + p.bias
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    out.print(read_code([Item(code=1, bias=2)], 0), peek([Value.integer(5)], 0))
+    \\func main(out: Stream) -> int:
+    \\    out.print(read_code([Item(code=1, bias=2)], 0), peek([Value.integer(value=5)], 0))
     \\    return 0
     \\
 ;
@@ -334,45 +335,45 @@ test "a field read of a list element and a match on a union element read the par
     try std.testing.expect(contains(text, "list_get_field.exact i64 param0, %9, path 0"));
     try std.testing.expect(contains(text, "list_get_field.exact u32 param0, %9, path 0"));
     try std.testing.expect(contains(text, "list_get_field i64 param0, %9, path 1"));
-    // The payload record's fields are paths of two steps: case 1's payload (step 2), then the field.
-    try std.testing.expect(contains(text, "list_get_field i64 param0, %9, path 2.0"));
-    try std.testing.expect(contains(text, "list_get_field i64 param0, %9, path 2.1"));
+    // Named payload field `value` adds a record step before the Item's own field.
+    try std.testing.expect(contains(text, "list_get_field i64 param0, %9, path 2.0.0"));
+    try std.testing.expect(contains(text, "list_get_field i64 param0, %9, path 2.0.1"));
 }
 
 const append_to_element =
-    \\def grow(rows: list[list[int]], i: int, v: int) -> int:
-    \\    copy = rows
+    \\func grow(rows: int[][], i: int, v: int) -> int:
+    \\    mut copy = rows
     \\    copy[i].append(v)
     \\    return len(copy[i])
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(grow([[1], [2, 3]], 1, 9))
     \\    return 0
     \\
 ;
 
 const text_equality =
-    \\def same(a: str, b: str) -> bool:
+    \\func same(a: str, b: str) -> bool:
     \\    return a == b
     \\
     \\
-    \\def differ(a: str, b: str) -> bool:
+    \\func differ(a: str, b: str) -> bool:
     \\    return a != b
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(same("a", "b"), differ("a", "b"))
     \\    return 0
     \\
 ;
 
 const text_ordering =
-    \\def before(a: str, b: str) -> bool:
+    \\func before(a: str, b: str) -> bool:
     \\    return a < b
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(before("a", "b"))
     \\    return 0
     \\
@@ -380,21 +381,21 @@ const text_ordering =
 
 const callback_in_index =
     \\record Frame:
-    \\    code: list[int]
+    \\    code: int[]
     \\    ip: int
     \\
     \\
-    \\def replace(frame: mut Frame) -> int:
+    \\func replace(mut frame: Frame) -> int:
     \\    frame.code = [17, 19]
     \\    return 0
     \\
     \\
-    \\def selected(frame: mut Frame) -> int:
+    \\func selected(mut frame: Frame) -> int:
     \\    return frame.code[replace(mut frame)]
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    frame = Frame([7, 11], 0)
+    \\func main(out: Stream) -> int:
+    \\    mut frame = Frame(code=[7, 11], ip=0)
     \\    out.print(selected(mut frame))
     \\    return 0
     \\
@@ -417,17 +418,17 @@ test "nested append and text ordering build and a callback index reads its captu
 }
 
 const recursive_equality =
-    \\union Expr:
-    \\    num(value: int),
+    \\enum Expr:
+    \\    num(value: int)
     \\    add(left: Expr, right: Expr)
     \\
     \\
-    \\def same(a: Expr, b: Expr) -> bool:
+    \\func same(a: Expr, b: Expr) -> bool:
     \\    return a == b
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    out.print(same(Expr.num(1), Expr.num(1)))
+    \\func main(out: Stream) -> int:
+    \\    out.print(same(Expr.num(value=1), Expr.num(value=1)))
     \\    return 0
     \\
 ;
@@ -442,34 +443,34 @@ test "equality of a recursive value builds without recursively expanding its typ
 }
 
 const converting =
-    \\union Failure:
-    \\    text: str,
-    \\    code: int
+    \\enum Failure:
+    \\    text(value: str)
+    \\    code(value: int)
     \\
     \\
-    \\def parse(x: int) -> Result[int, str]:
+    \\func parse(x: int) -> Result[int, str]:
     \\    if x < 0:
     \\        return Err("negative")
     \\    return Ok(x)
     \\
     \\
-    \\def forward(x: int) -> Result[int, str]:
-    \\    r = parse(x)
+    \\func forward(x: int) -> Result[int, str]:
+    \\    mut r = parse(x)
     \\    return r
     \\
     \\
-    \\def same(x: int) -> Result[int, str]:
-    \\    v = parse(x)?
+    \\func same(x: int) -> Result[int, str]:
+    \\    mut v = try parse(x)
     \\    return Ok(v)
     \\
     \\
-    \\def lift(x: int) -> Result[int, Failure]:
-    \\    v = parse(x)?
+    \\func lift(x: int) -> Result[int, Failure]:
+    \\    mut v = try parse(x)
     \\    return Ok(v)
     \\
     \\
     \\
-    \\def good(r: Result[int, str]) -> bool:
+    \\func good(r: Result[int, str]) -> bool:
     \\    match r:
     \\        case Ok(_):
     \\            return True
@@ -477,7 +478,7 @@ const converting =
     \\            return False
     \\
     \\
-    \\def good_failure(r: Result[int, Failure]) -> bool:
+    \\func good_failure(r: Result[int, Failure]) -> bool:
     \\    match r:
     \\        case Ok(_):
     \\            return True
@@ -485,7 +486,7 @@ const converting =
     \\            return False
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(good(forward(1)), good(same(1)), good_failure(lift(1)))
     \\    return 0
     \\
@@ -510,10 +511,10 @@ test "a ? that passes the error on appends its site, one that wraps it into a ca
 fn lateCallee(arena: std.mem.Allocator) ![]const u8 {
     var source: std.ArrayList(u8) = .empty;
     try source.appendSlice(arena, "record Item:\n    a: int\n    b: int\n\n\n");
-    for (0..16) |i| try source.print(arena, "def g{d}() -> int:\n    return {d}\n\n\n", .{ i, i });
-    try source.appendSlice(arena, "def take(item: Item) -> int:\n    return item.a + item.b\n\n\n");
-    try source.appendSlice(arena, "def pick(xs: list[Item]) -> int:\n    return take(xs[0])\n\n\n");
-    try source.appendSlice(arena, "def main(out: Stream) -> int:\n    xs = [Item(a=1, b=2)]\n    out.print(g0() + g1() + g2() + g3() + pick(xs))\n    return 0\n");
+    for (0..16) |i| try source.print(arena, "func g{d}() -> int:\n    return {d}\n\n\n", .{ i, i });
+    try source.appendSlice(arena, "func take(item: Item) -> int:\n    return item.a + item.b\n\n\n");
+    try source.appendSlice(arena, "func pick(xs: Item[]) -> int:\n    return take(xs[0])\n\n\n");
+    try source.appendSlice(arena, "func main(out: Stream) -> int:\n    mut xs = [Item(a=1, b=2)]\n    out.print(g0() + g1() + g2() + g3() + pick(xs))\n    return 0\n");
     return source.items;
 }
 
@@ -529,30 +530,30 @@ test "an element read passed to a call is not a projection: fusion never treats 
 }
 
 const conditional_rebind =
-    \\def conditional(items: mut list[int], other: list[int], use_other: bool) -> list[int]:
+    \\func conditional(mut items: int[], other: int[], use_other: bool) -> int[]:
     \\    if use_other:
     \\        items = other
     \\    items[0] = 7
     \\    return items
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    original = [1]
+    \\func main(out: Stream) -> int:
+    \\    mut original = [1]
     \\    out.print(len(conditional(mut original, [2], False)))
     \\    return 0
     \\
 ;
 
 const loop_rebind =
-    \\def loop_rebind(items: mut list[int], other: list[int]) -> int:
+    \\func loop_rebind(mut items: int[], other: int[]) -> int:
     \\    items.append(0)
     \\    for i in range(2):
     \\        items = other
     \\    return len(items)
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    original = [1]
+    \\func main(out: Stream) -> int:
+    \\    mut original = [1]
     \\    out.print(loop_rebind(mut original, [2]))
     \\    return 0
     \\
@@ -582,10 +583,10 @@ test "str == and != call the authorized runtime byte comparison declared once" {
 }
 
 const arena_scopes =
-    \\def main(out: Stream) -> int:
-    \\    kept: list[int] = []
+    \\func main(out: Stream) -> int:
+    \\    mut kept: int[] = []
     \\    with arena() as scratch:
-    \\        built = [1, 2, 3]
+    \\        mut built = [1, 2, 3]
     \\        kept = scratch.escape(built)
     \\    out.print(len(kept))
     \\    return 0
@@ -603,12 +604,12 @@ test "a with arena() block is a plain block and n.escape(v) is v: no region oper
 }
 
 const assertions =
-    \\def clamp(x: int) -> int:
+    \\func clamp(x: int) -> int:
     \\    assert x >= 0, "negative"
     \\    return x
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(clamp(3))
     \\    return 0
     \\
@@ -625,13 +626,13 @@ test "an assert is a branch on its condition to a block that ends in a trap carr
 }
 
 const stale_write =
-    \\def poke(xs: mut list[int]) -> int:
+    \\func poke(mut xs: int[]) -> int:
     \\    xs[0] = 50
     \\    return 1
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    a = [1, 2, 3]
+    \\func main(out: Stream) -> int:
+    \\    mut a = [1, 2, 3]
     \\    a[poke(mut a)] = 9
     \\    out.print(len(a))
     \\    return 0
@@ -647,35 +648,35 @@ test "the checker rejects a receiver whose place an evaluated mut argument overl
 }
 
 const changed_mut_entry =
-    \\def replace_entry(root: mut list[list[int]]) -> list[list[int]]:
+    \\func replace_entry(mut root: int[][]) -> int[][]:
     \\    root[0] = [21]
     \\    return root
     \\
-    \\def rebind_selected(target: mut list[int], source: list[list[int]]) -> int:
-    \\    before = target[0]
+    \\func rebind_selected(mut target: int[], source: int[][]) -> int:
+    \\    mut before = target[0]
     \\    target = [13]
     \\    return before * 10000 + target[0] * 100 + source[0][0]
     \\
-    \\def main() -> int:
-    \\    items = [[7]]
+    \\func main() -> int:
+    \\    mut items = [[7]]
     \\    return rebind_selected(mut items[0], replace_entry(mut items))
 ;
 
 const changed_mut_field =
     \\record Box:
-    \\    items: list[int]
+    \\    items: int[]
     \\
-    \\def replace_field(box: mut Box) -> Box:
+    \\func replace_field(mut box: Box) -> Box:
     \\    box.items = [21]
     \\    return box
     \\
-    \\def rebind_selected(target: mut list[int], source: Box) -> int:
-    \\    before = target[0]
+    \\func rebind_selected(mut target: int[], source: Box) -> int:
+    \\    mut before = target[0]
     \\    target = [13]
     \\    return before * 10000 + target[0] * 100 + source.items[0]
     \\
-    \\def main() -> int:
-    \\    box = Box([7])
+    \\func main() -> int:
+    \\    mut box = Box(items=[7])
     \\    return rebind_selected(mut box.items, replace_field(mut box))
 ;
 
@@ -691,16 +692,16 @@ test "interior mut arguments capture the leaf and guard publishing after ancesto
 }
 
 const changed_mut_root =
-    \\def replace_root(items: mut list[int]) -> list[int]:
+    \\func replace_root(mut items: int[]) -> int[]:
     \\    items = [21]
     \\    return items
     \\
-    \\def append_current(items: mut list[int], source: list[int]) -> int:
+    \\func append_current(mut items: int[], source: int[]) -> int:
     \\    items.append(13)
     \\    return len(items) + source[0]
     \\
-    \\def main() -> int:
-    \\    items = [7]
+    \\func main() -> int:
+    \\    mut items = [7]
     \\    return append_current(mut items, replace_root(mut items))
 ;
 
@@ -714,13 +715,13 @@ test "whole mut arguments reread the current caller root after later rebinding" 
 }
 
 const stable_mut_entry =
-    \\def rebind_selected(target: mut list[int], source: list[list[int]]) -> int:
-    \\    before = target[0]
+    \\func rebind_selected(mut target: int[], source: int[][]) -> int:
+    \\    mut before = target[0]
     \\    target = [13]
     \\    return before + target[0] + source[0][0]
     \\
-    \\def main() -> int:
-    \\    items = [[7]]
+    \\func main() -> int:
+    \\    mut items = [[7]]
     \\    return rebind_selected(mut items[0], items)
 ;
 

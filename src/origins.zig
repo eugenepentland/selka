@@ -27,8 +27,6 @@ pub const overlap_code = "E_MUTATION_OVERLAP";
 pub const limit_code = "E_MUTATION_LIMIT";
 /// Error code for a `mut` marker that is missing, unneeded or unauthorizable.
 pub const mutation_marker_code = "E_MUTATION_MARKER";
-/// Error code for a parameter declared `mut` that the body never writes.
-pub const unused_mut_code = mutation_marker_code;
 
 /// A set of parameter positions, one bit per position. A position at or past
 /// `mask_positions` cannot be named exactly: an origin or footprint that reaches one
@@ -473,14 +471,28 @@ const Context = struct {
     /// local. Managed elements it holds are shared like any value's, so their
     /// origins still count.
     fn writtenArgumentOrigin(self: *const Context, function: typed.Function, origins: []const Origin, argument: typed.NodeId) Origin {
-        const node = self.program.nodes[@backingInt(argument)];
-        if (!typed.referenceMut(self.program.records, node.ty)) return self.nodeOrigin(function, origins, argument, 0);
-        const own: Origin = if (node.data == .local and @backingInt(node.data.local) < function.signature.parameter_count)
-            Origin.fromPosition(@intCast(@backingInt(node.data.local)))
-        else
-            .{};
-        if (!mayContainManaged(self.program, node.ty)) return own;
-        return Origin.merge(own, self.nodeOrigin(function, origins, argument, 0));
+        var current = argument;
+        var depth: usize = 0;
+        while (depth < 256) : (depth += 1) {
+            const node = self.program.nodes[@backingInt(current)];
+            switch (node.data) {
+                .local => |slot| {
+                    const index = @backingInt(slot);
+                    if (index < function.signature.parameter_count) return Origin.fromPosition(@intCast(index));
+                    if (index < function.scope.locals.len and function.scope.locals[index].usage.temporary)
+                        return self.localOrigin(function, origins, slot);
+                    return .{};
+                },
+                .block_value => |block| {
+                    applyBlockStatements(self, function, @constCast(origins), block.body, depth + 1);
+                    current = block.value;
+                },
+                .field => |field| current = field.base,
+                .index => |index| current = index.base,
+                else => return .{},
+            }
+        }
+        return .{ .unknown = true };
     }
 
     fn callResultOrigin(self: *const Context, function: typed.Function, origins: []const Origin, callee: typed.FunctionId, arguments: []const typed.NodeId, depth: usize) Origin {
@@ -567,9 +579,7 @@ fn absorbElementWrite(context: *const Context, function: typed.Function, origins
     // VALUE-SEMANTICS-3: any assignment to a `mut` record parameter (a field
     // write rebuilds it) lands in the caller's record.
     const declared_mut = declaredMut(function, slot);
-    const record_write = typed.referenceRecord(context.program.records, ty) and declared_mut;
-    const collection_write = @import("mut_abi.zig").collection(context.program.records, ty) and declared_mut;
-    const caller_write = array_write or record_write or collection_write;
+    const caller_write = array_write or declared_mut;
     if (!caller_write) return;
     const site = WriteSite{ .context = context, .function = function, .origins = origins, .arguments = &.{}, .summary = summary };
     site.absorbWrite(Origin.fromPosition(@intCast(slot)), span);
@@ -807,51 +817,7 @@ fn unmarkedWriteMessage(allocator: std.mem.Allocator, src: source.Source, declar
     return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
 }
 
-/// Build the rejection for a `mut` parameter the body never writes, with the
-/// parameter's own declaration as the paste that removes the marker.
-fn unusedMutMessage(allocator: std.mem.Allocator, src: source.Source, declared: ast.Function, function: typed.Function, position: u7) std.mem.Allocator.Error![]const u8 {
-    var text: std.Io.Writer.Allocating = .init(allocator);
-    defer text.deinit();
-    text.writer.writeAll("`") catch return error.OutOfMemory;
-    writeParameterName(&text.writer, function, position) catch return error.OutOfMemory;
-    text.writer.writeAll("` is declared `mut` but never written; remove `mut`: `") catch return error.OutOfMemory;
-    writeMutatedParameter(&text.writer, src, declared, function, position) catch return error.OutOfMemory;
-    text.writer.writeAll("`") catch return error.OutOfMemory;
-    return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
-}
-
-const lost_whole_text = "` is declared `mut` but never written: the only change goes to `{s}`, a copy of it; " ++
-    "change `{s}` in place so the change reaches the caller";
-const lost_part_text = "` is declared `mut` but never written: the only change goes to `{s}`, a copy of `{s}`; " ++
-    "store the copy back after changing it (`{s} = {s}`) so the change reaches the caller";
-
-/// One `mut` parameter whose only change went to a local copy of it.
-const LostCopyQuote = struct { src: source.Source, program: typed.Program, function: typed.Function, position: u7, copy: value_checks.LostCopy };
-
-/// VALUE-SEMANTICS-6: the rejection for a `mut` parameter whose only change
-/// went to a local copy. Removing `mut` would keep the program wrong, so the
-/// message says how the change reaches the caller: store the copy back, or,
-/// for a copy of a whole collection parameter (which rebinding cannot reach),
-/// change the parameter in place.
-fn lostCopyMessage(allocator: std.mem.Allocator, quote: LostCopyQuote) std.mem.Allocator.Error![]const u8 {
-    const function = quote.function;
-    var text: std.Io.Writer.Allocating = .init(allocator);
-    defer text.deinit();
-    const local = function.scope.locals[@backingInt(quote.copy.local)].name;
-    const value = quote.program.nodes[@backingInt(quote.copy.value)];
-    const place = quote.src.text(value.span);
-    text.writer.writeAll("`") catch return error.OutOfMemory;
-    writeParameterName(&text.writer, function, quote.position) catch return error.OutOfMemory;
-    const whole = value.data == .local and !typed.referenceMut(quote.program.records, value.ty);
-    if (whole) {
-        text.writer.print(lost_whole_text, .{ local, place }) catch return error.OutOfMemory;
-    } else {
-        text.writer.print(lost_part_text, .{ local, place, place, local }) catch return error.OutOfMemory;
-    }
-    return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
-}
-
-/// Write one `name: mut T` declaration per set bit of `positions`, comma
+/// Write one `mut name: T` declaration per set bit of `positions`, comma
 /// separated. Each is a paste-ready parameter annotation.
 fn writeMutatedParameters(writer: *std.Io.Writer, src: source.Source, declared: ast.Function, function: typed.Function, positions: Mask) std.mem.Allocator.Error!void {
     var listed = false;
@@ -866,12 +832,13 @@ fn writeMutatedParameters(writer: *std.Io.Writer, src: source.Source, declared: 
     }
 }
 
-/// One parameter's declaration as `name: mut T`. The type is the source text the
+/// One parameter's declaration as `mut name: T`. The type is the source text the
 /// reader actually wrote, so the paste is exactly the edit they need to make and
 /// appears verbatim in the message.
 fn writeMutatedParameter(writer: *std.Io.Writer, src: source.Source, declared: ast.Function, function: typed.Function, position: u7) std.mem.Allocator.Error!void {
+    writer.writeAll("mut ") catch return error.OutOfMemory;
     writeParameterName(writer, function, position) catch return error.OutOfMemory;
-    writer.writeAll(": mut ") catch return error.OutOfMemory;
+    writer.writeAll(": ") catch return error.OutOfMemory;
     const index: usize = position;
     if (index >= declared.signature.parameters.len) {
         writer.writeAll("T") catch return error.OutOfMemory;
@@ -921,7 +888,7 @@ fn declaringFunction(syntax: ast.Program, function: typed.Function) ast.Function
 }
 
 /// The declaration-side half of item 1: a written parameter must be declared
-/// `mut`, and a declared `mut` must be written. Every message carries the exact
+/// `mut`. Unused declared caller-update capabilities remain valid. Every message carries the exact
 /// replacement text. A position already rejected by `checkMutTypes` is not
 /// reported again here.
 fn checkMutDeclarations(allocator: std.mem.Allocator, program: typed.Program, request: Request, index: usize, summary: Summary) std.mem.Allocator.Error!bool {
@@ -947,26 +914,6 @@ fn checkMutDeclarations(allocator: std.mem.Allocator, program: typed.Program, re
         });
         violated = true;
     }
-    // A host declaration has no body to write, and a lambda implements a
-    // destination contract that may permit more positions than it writes.
-    if (function.policy.host != null or isLambdaName(function.name)) return violated;
-    var position: u7 = 0;
-    while (position < mask_positions) : (position += 1) {
-        if (declared & (bitOf(position)) == 0) continue;
-        if (summary.mutates & (bitOf(position)) != 0) continue;
-        const lost = try value_checks.lostCopy(allocator, program, function, position);
-        const message = if (lost) |copy|
-            try lostCopyMessage(allocator, .{ .src = src, .program = program, .function = function, .position = position, .copy = copy })
-        else
-            try unusedMutMessage(allocator, src, declaringFunction(request.syntax, function), function, position);
-        try sink.items.append(allocator, .{
-            .code = unused_mut_code,
-            .span = function.scope.locals[position].declaration,
-            .message = message,
-            .provenance = .{ .fix = unmarkParameter(src, request.syntax, function, position) },
-        });
-        violated = true;
-    }
     return violated;
 }
 
@@ -980,7 +927,7 @@ fn exactDeclaration(syntax: ast.Program, function: typed.Function) ?ast.Function
 }
 
 /// The fix for an unmarked written parameter: `mut ` in front of each written
-/// parameter's declared type, in parameter order.
+/// parameter's declared name, in parameter order.
 fn markParameters(allocator: std.mem.Allocator, syntax: ast.Program, function: typed.Function, positions: Mask) std.mem.Allocator.Error!?diagnostic.Fix {
     const declared = exactDeclaration(syntax, function) orelse return null;
     var edits: std.ArrayList(diagnostic.Edit) = .empty;
@@ -988,26 +935,11 @@ fn markParameters(allocator: std.mem.Allocator, syntax: ast.Program, function: t
     while (position < mask_positions) : (position += 1) {
         if (positions & (bitOf(position)) == 0) continue;
         if (position >= declared.signature.parameters.len) return null;
-        const at = declared.signature.parameters[position].ty.start;
+        const at = declared.signature.parameters[position].name.start;
         try edits.append(allocator, .{ .span = .{ .start = at, .end = at }, .text = "mut " });
     }
     if (edits.items.len == 0) return null;
     return .{ .edit = edits.items[0], .more = edits.items[1..] };
-}
-
-/// The fix for a `mut` parameter the body never writes: delete the `mut` and
-/// the blank that separates it from the declared type.
-fn unmarkParameter(src: source.Source, syntax: ast.Program, function: typed.Function, position: u7) ?diagnostic.Fix {
-    const declared = exactDeclaration(syntax, function) orelse return null;
-    if (position >= declared.signature.parameters.len) return null;
-    return diagnostic.removeMut(src.bytes, declared.signature.parameters[position].ty.start);
-}
-
-/// Whether one checked function is a lambda body rather than a declared
-/// function. Lambdas take their parameter contract from the destination
-/// callback type, which may permit writes the body does not perform.
-fn isLambdaName(name: []const u8) bool {
-    return std.mem.startsWith(u8, name, "lambda@");
 }
 
 fn checkDeclaredBound(allocator: std.mem.Allocator, program: typed.Program, index: usize, summary: Summary, sink: *diagnostic.Sink) std.mem.Allocator.Error!bool {

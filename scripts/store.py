@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import sqlite3
@@ -278,7 +279,7 @@ def split_module(formatted, document):
         gap = formatted[at:start]
         if gap.strip():
             if index != 0:
-                raise ValueError('module comment cannot be placed by the store: ' + repr(gap[:64]))
+                raise ValueError('' + repr(gap[:64]))
             parts['prelude'] = gap.strip('\n')
         elif gap.strip('\n \t') != '':
             raise ValueError('canonical module text has unexpected blank space')
@@ -337,15 +338,18 @@ def export_lines(meta, declarations):
 
 
 def render_module(meta, declarations, known=()):
-    """Prelude, header, imports and exports one line each; declarations follow two blank lines apart."""
+    """Imports precede declarations; exported declarations carry public visibility."""
     head = []
     if meta['prelude']:
         head.append(meta['prelude'])
-    if meta['header']:
-        head.append(meta['header'])
     head.extend(import_lines(meta, declarations, known))
-    head.extend(export_lines(meta, declarations))
-    blocks = [source_text(row).rstrip('\n') for row in declarations]
+    blocks = []
+    for row in declarations:
+        text = source_text(row).rstrip('\n')
+        if row['exported']:
+            text = re.sub(r'^(?=(?:extern )?(?:func|record|enum|result|domain|constraint|const)\b)',
+                          'public ', text, count=1, flags=re.MULTILINE)
+        blocks.append(text)
     if meta['trailing']:
         blocks.append(meta['trailing'])
     if head:
@@ -561,7 +565,7 @@ class Store:
     def parse_declaration(self, compiler, module, source, *, exported=False):
         """Canonicalize one declaration's source on its own; exactly one declaration must result."""
         text = source if isinstance(source, str) else source.decode('utf-8')
-        synthetic = f'module {module};\n{text}\n'.encode('utf-8')
+        synthetic = f'{text}\n'.encode('utf-8')
         formatted, document = compiler.parse(synthetic)
         if document['imports'] or document['exports'] or len(document['declarations']) != 1:
             raise ValueError('a declaration source is exactly one top-level declaration')

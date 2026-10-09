@@ -29,6 +29,15 @@ pub const SiteKind = enum { array, callback };
 /// thousand spellings with one shape each.
 pub const max_site_specializations = 4096;
 
+fn bareTypeName(name: []const u8) bool {
+    if (name.len == 0) return false;
+    if (!std.ascii.isAlphabetic(name[0]) and name[0] != '_') return false;
+    for (name) |byte| {
+        if (std.ascii.isAlphanumeric(byte) or byte == '_' or byte == '.') continue;
+        return false;
+    }
+    return true;
+}
 /// Arena-owned type identities, field indexes, and resolved aggregate layouts.
 pub const Catalog = struct {
     module_names: ?*Names = null,
@@ -45,7 +54,6 @@ pub const Catalog = struct {
 
     /// Resolve a source type name or interned array span, diagnosing unknown types.
     pub fn resolve(self: Catalog, src: Source, span: Span, sink: *diagnostic.Sink) Error!typed.Type {
-        if (self.arrays.resolved.get(span.start)) |ty| return ty;
         const name = src.text(span);
         if (typed.Type.fromName(name)) |builtin| return builtin;
         if (prelude.scalar(name)) if (self.names.get(name)) |ty| return ty;
@@ -54,6 +62,12 @@ pub const Catalog = struct {
         if (self.module_names) |names| if (try names.symbolKind(span) == null) {
             if (prelude.reservedType(name)) |reserved| return reserved;
         };
+        if (self.names.get(name)) |declared| return declared;
+        if (bareTypeName(name)) {
+            const declared_key = if (self.module_names) |names| try names.reference(span, .type, null, null, sink) else name;
+            if (self.names.get(declared_key)) |declared| return declared;
+        }
+        if (self.arrays.resolved.get(span.start)) |ty| return ty;
         const key = if (self.module_names) |names| try names.reference(span, .type, null, null, sink) else name;
         if (self.templates.names.contains(key)) return sink.fail("E_GENERIC_ARITY", span, "nominal template requires explicit type arguments");
         if (self.names.get(key)) |declared| return declared;

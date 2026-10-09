@@ -3,32 +3,34 @@
 # by 1000.
 
 
-def lcg(seed: int) -> int:
+func lcg(seed: int) -> int:
     return (seed * 3877 + 29573) % 139968
 
 
-def random_matrix(n: int, seed: int) -> tuple[list[float], int]:
-    values: list[float] = []
+func random_matrix(n: int, input_seed: int) -> tuple[float[], int]:
+    mut seed = input_seed
+    mut values: float[] = []
     for _ in range(n * n):
         seed = lcg(seed)
         values.append(float(seed) / 139968.0)
     return values, seed
 
 
-def main(out: Stream) -> int:
-    n = 500
-    a, seed = random_matrix(n, 42)
-    b, seed = random_matrix(n, seed)
-    c = [0.0 for _ in range(n * n)]
+func main(out: Stream) -> int:
+    mut n = 500
+    mut a, seed = random_matrix(n, 42)
+    const b, next_seed = random_matrix(n, seed)
+    seed = next_seed
+    mut c = [for _ in range(n * n) yield 0.0]
     for i in range(n):
         for k in range(n):
-            aik = a[i * n + k]
+            mut aik = a[i * n + k]
             for j in range(n):
                 c[i * n + j] = c[i * n + j] + aik * b[k * n + j]
-    trace = 0.0
+    mut trace = 0.0
     for i in range(n):
         trace = trace + c[i * n + i]
-    total = 0.0
+    mut total = 0.0
     for i in range(n):
         for j in range(n):
             total = total + c[i * n + j]

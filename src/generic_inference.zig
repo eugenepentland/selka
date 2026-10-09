@@ -36,6 +36,11 @@ pub const Context = struct {
             } else self.values[index] = actual;
             return;
         }
+        if (self.catalog.templates.store) |store| for (store.index.syntax.suffixes) |suffix| {
+            if (suffix.span.start != expected.start or suffix.span.end != expected.end) continue;
+            const declaration = store.index.names.get(if (suffix.kind == .growable) "list" else "Option").?;
+            return self.matchNominal(declaration, &.{suffix.base}, actual, depth);
+        };
         if (self.catalog.arrays.templates.get(expected.start)) |template| {
             const shape = symbolic.array(actual, self.catalog.records) orelse return self.mismatch();
             if (shape.key != null) return self.mismatch();
@@ -52,9 +57,9 @@ pub const Context = struct {
             for (syntax.elements, 0..) |element, index| try self.matchDepth(element, shapes.tupleElement(self.catalog, actual, index).?, depth + 1);
             return;
         };
-        if (self.catalog.templates.applications.get(expected.start)) |template| {
+        if (self.catalog.templates.applications.get(expected.start)) |template| if (template.syntax.span.end == expected.end) {
             return self.matchNominal(template.declaration, template.syntax.arguments, actual, depth);
-        }
+        };
         if (self.catalog.templates.store) |store| if (store.index.syntax.callbacks.get(expected.start)) |callback| {
             return self.matchCallback(callback, actual, depth);
         };

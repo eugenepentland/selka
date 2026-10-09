@@ -19,8 +19,8 @@ def main():
             for i in range(size):
                 carrier = 0 if i == size - 1 else i
                 declarations.append(
-                    f'def f{i}(x: D{carrier}, y: i64) -> i64:\n    _ = x\n    return y * 2 + {i}\n')
-            declarations.append('def main() -> i64:\n    return 0\n')
+                    f'func f{i}(x: D{carrier}, y: i64) -> i64:\n    _ = x\n    return y * 2 + {i}\n')
+            declarations.append('func main() -> i64:\n    return 0\n')
             source.write_text('\n'.join(declarations), encoding='utf-8')
             command = [args.compiler, 'discover-duplicates', str(source), '--approximate',
                        '--min-nodes=1', '--max-work=4000000']
@@ -40,9 +40,9 @@ def main():
 
         for statements in (50, 100, 200):
             body = '    _ = x\n' * statements
-            source.write_text(f'def a(x: i64) -> i64:\n{body}    return x * 2 + 1\n\n'
-                              f'def b(x: i64) -> i64:\n{body}    return x * 2 + 3\n\n'
-                              'def main() -> i64:\n    return 0\n', encoding='utf-8')
+            source.write_text(f'func a(x: i64) -> i64:\n{body}    return x * 2 + 1\n\n'
+                              f'func b(x: i64) -> i64:\n{body}    return x * 2 + 3\n\n'
+                              'func main() -> i64:\n    return 0\n', encoding='utf-8')
             command = [args.compiler, 'discover-duplicates', str(source), '--approximate',
                        '--min-nodes=1', '--max-work=4100000']
             result = subprocess.run(command, capture_output=True, text=True, timeout=90)

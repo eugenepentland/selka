@@ -2,7 +2,7 @@
 
 > **Historical design record (VM host registry).** The `language.vm_host` registry
 > and `vm.runWithHost`/`invokeWithHost` APIs below ran guest code in the bytecode
-> interpreter, which was removed on 2026-09-14. Explicit `host def` declarations
+> interpreter, which was removed on 2026-09-14. Explicit `host func` declarations
 > remain part of the language and run through the QBE native path; current host
 > capabilities are documented in [capabilities and effects](../effects.md) and
 > [printing, files and command-line authority](../io.md). Read the registry

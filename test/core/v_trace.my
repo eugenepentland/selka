@@ -1,40 +1,39 @@
-module v_trace
 
-union Failure:
-    text: str,
-    code: int
+enum Failure:
+    text(value: str)
+    code(value: int)
 
 
-def parse(x: int) -> Result[int, str]:
+func parse(x: int) -> Result[int, str]:
     if x < 0:
         return Err("negative")
     return Ok(x)
 
 
-def forward(x: int) -> Result[int, str]:
-    r = parse(x)
+func forward(x: int) -> Result[int, str]:
+    mut r = parse(x)
     return r
 
 
-def pass_on(x: int) -> Result[int, str]:
-    v = forward(x)?
+func pass_on(x: int) -> Result[int, str]:
+    mut v = try forward(x)
     return Ok(v + 1)
 
 
-def lift(x: int) -> Result[int, Failure]:
-    v = pass_on(x)?
+func lift(x: int) -> Result[int, Failure]:
+    mut v = try pass_on(x)
     return Ok(v * 2)
 
 
-def describe(f: Failure) -> str:
+func describe(f: Failure) -> str:
     match f:
-        case Failure.text(t):
+        case Failure.text(value=t):
             return t
-        case Failure.code(_):
+        case Failure.code(value=_):
             return "code"
 
 
-def run(x: int) -> Result[int, str]:
+func run(x: int) -> Result[int, str]:
     match lift(x):
         case Ok(v):
             return Ok(v)
@@ -42,8 +41,8 @@ def run(x: int) -> Result[int, str]:
             return Err(describe(f))
 
 
-def main(args: list[str], out: Stream) -> Result[int, str]:
-    a = pass_on(len(args) + 2)?
+func main(args: str[], out: Stream) -> Result[int, str]:
+    mut a = try pass_on(len(args) + 2)
     match run(3):
         case Ok(v):
             out.print("run", a, v)
@@ -54,5 +53,5 @@ def main(args: list[str], out: Stream) -> Result[int, str]:
             out.print("run", v)
         case Err(e):
             out.print("run failed", e)
-    b = pass_on(0 - len(args))?
+    mut b = try pass_on(0 - len(args))
     return Ok(a + b)

@@ -96,19 +96,17 @@ example below is the guest project they would govern.
 ```mylang
 # doc: project import-policy-example
 # doc: file helper.my
-module helper
 
-public def value() -> int effects():
+public func value() -> int effects():
     return 42
 ```
 
 ```mylang
 # doc: project import-policy-example
 # doc: file main.my
-module main
 import helper
 
-def main() -> int:
+func main() -> int:
     return helper.value() - 42
 ```
 

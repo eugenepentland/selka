@@ -1,9 +1,8 @@
-module v_nested_lengths
 
-def changed(w: int) -> bool:
-    grid = [[j for j in range(w)], [j for j in range(w)]]
-    saved = grid
-    inner = grid[0]
+func changed(w: int) -> bool:
+    mut grid = [[for j in range(w) yield j], [for j in range(w) yield j]]
+    mut saved = grid
+    mut inner = grid[0]
     inner.append(10)
     _ = grid[1].pop()
     grid[0].append(20)
@@ -11,31 +10,31 @@ def changed(w: int) -> bool:
     return len(saved[0]) == w and len(saved[1]) == w and len(inner) == w + 1 and len(grid[0]) == w + 1 and grid[0][w] == 20 and grid[1][0] == 30
 
 # spec-case: NEW-CORE-NESTED-LENGTH-S4-1
-public def test_uniform_child_lengths_follow_each_list_value() -> bool:
+public func test_uniform_child_lengths_follow_each_list_value() -> bool:
     return changed(1) and changed(3) and changed(8) and growing(1) and growing(3) and captured(3) and after_fill(0) and after_fill(1) and after_fill(64) and after_fill(4096) and after_fill(4097)
 
-def growing(size: int) -> bool:
-    items: list[int] = []
-    children: list[list[int]] = []
+func growing(size: int) -> bool:
+    mut items: int[] = []
+    mut children: int[][] = []
     for index in range(size):
         children.append(items)
         items.append(index)
     return len(children[0]) == 0 and len(children[size - 1]) == size - 1
 
-def captured(size: int) -> bool:
-    items: list[int] = []
-    saved: list[int] = []
+func captured(size: int) -> bool:
+    mut items: int[] = []
+    mut saved: int[] = []
     for index in range(size):
         saved = items
         items.append(index)
-    children = [saved]
+    mut children = [saved]
     return len(children[0]) == size - 1
 
 # spec-case: NEW-CORE-FILL-S4-1
-def after_fill(size: int) -> bool:
-    values = [j for j in range(size)]
+func after_fill(size: int) -> bool:
+    mut values = [for j in range(size) yield j]
     values.append(7)
     return len(values) == size + 1 and values[size] == 7
 
-def main() -> int:
+func main() -> int:
     return 0

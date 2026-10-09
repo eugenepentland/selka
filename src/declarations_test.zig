@@ -4,7 +4,6 @@ const t = std.testing;
 const language = @import("compiler.zig");
 
 const kinds_module =
-    \\module kinds
     \\import math
     \\import shared.units as units
     \\
@@ -28,13 +27,13 @@ const kinds_module =
     \\
     \\
     \\enum Colour:
-    \\    red,
+    \\    red
     \\    green
     \\
     \\
-    \\union Shape:
-    \\    dot: i64,
-    \\    line: i64
+    \\enum Shape:
+    \\    dot(value: i64)
+    \\    line(value: i64)
     \\
     \\
     \\result Outcome:
@@ -43,19 +42,19 @@ const kinds_module =
     \\
     \\
     \\domain Distance: i64:
-    \\    def make(x: i64) -> Distance:
+    \\    func make(x: i64) -> Distance:
     \\        return wrap[Distance](x)
     \\
     \\
     \\resource Handle: filesystem
     \\
     \\
-    \\extern def measure(host: Host, x: i64) -> i64 effects(host)
+    \\extern func measure(host: Host, x: i64) -> i64 effects(host)
     \\
     \\
     \\
     \\
-    \\public def main() -> i64:
+    \\public func main() -> i64:
     \\    return LIMIT
 ;
 
@@ -87,13 +86,13 @@ const expected_declarations = [_]Expected{
     },
     .{ .kind = "enum", .name = "Colour", .exported = false, .text =
     \\enum Colour:
-    \\    red,
+    \\    red
     \\    green
     },
-    .{ .kind = "union", .name = "Shape", .exported = false, .text =
-    \\union Shape:
-    \\    dot: i64,
-    \\    line: i64
+    .{ .kind = "enum", .name = "Shape", .exported = false, .text =
+    \\enum Shape:
+    \\    dot(value: i64)
+    \\    line(value: i64)
     },
     .{ .kind = "result", .name = "Outcome", .exported = false, .text =
     \\result Outcome:
@@ -102,13 +101,13 @@ const expected_declarations = [_]Expected{
     },
     .{ .kind = "domain", .name = "Distance", .exported = false, .text =
     \\domain Distance: i64:
-    \\    def make(x: i64) -> Distance:
+    \\    func make(x: i64) -> Distance:
     \\        return wrap[Distance](x)
     },
     .{ .kind = "resource", .name = "Handle", .exported = false, .text = "resource Handle: filesystem" },
-    .{ .kind = "extern_fn", .name = "measure", .exported = false, .text = "extern def measure(host: Host, x: i64) -> i64 effects(host)" },
+    .{ .kind = "extern_fn", .name = "measure", .exported = false, .text = "extern func measure(host: Host, x: i64) -> i64 effects(host)" },
     .{ .kind = "fn", .name = "main", .exported = true, .text =
-    \\public def main() -> i64:
+    \\public func main() -> i64:
     \\    return LIMIT
     },
 };
@@ -127,8 +126,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
     const wire = parsed.value;
     try t.expectEqualStrings("declarations-v1", wire.version);
     try t.expectEqualStrings("kinds", wire.module.?);
-    try t.expectEqual(@as(usize, 0), wire.header.?.start);
-    try t.expectEqualStrings("module kinds", kinds_module[wire.header.?.start..wire.header.?.end]);
+    try t.expect(wire.header == null);
     try t.expectEqual(@as(usize, 2), wire.imports.len);
     try t.expectEqualStrings("math", wire.imports[0].name);
     try t.expect(wire.imports[0].alias == null);
@@ -156,11 +154,10 @@ test "declaration listing reports every top-level kind with names exports and by
 
 test "declaration listing parses without checking and rejects unresolved exports" {
     const unchecked =
-        \\module m
         \\
         \\
-        \\def main() -> i64:
-        \\    flag: bool = 1
+        \\func main() -> i64:
+        \\    mut flag: bool = 1
         \\    return flag
     ;
     const listing = try list(t.allocator, "unchecked.my", unchecked);
@@ -168,28 +165,25 @@ test "declaration listing parses without checking and rejects unresolved exports
     try t.expect(std.mem.indexOf(u8, listing, "\"name\":\"main\"") != null);
     const cases = [_]struct { text: []const u8, code: []const u8 }{
         .{ .text =
-        \\module m
         \\export missing
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         , .code = "E_EXPORT_REMOVED" },
         .{ .text =
-        \\module m
         \\export main
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         , .code = "E_EXPORT_REMOVED" },
         .{ .text =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 1 +
         , .code = "E_EXPRESSION" },
         .{ .text =
-        \\module m
-        \\def broken(
+        \\func broken(
         , .code = "E_SYNTAX" },
     };
     for (cases) |case| {
@@ -210,7 +204,7 @@ test "single-file listings report no module header and preserve declaration orde
         \\    x: i64
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return X
     ;
     const listing = try list(t.allocator, "single.my", text);
@@ -235,13 +229,12 @@ test "single-file listings report no module header and preserve declaration orde
 /// local declaration because it publishes an imported one instead.
 fn reexportListing(allocator: std.mem.Allocator) !void {
     const text =
-        \\module facade
         \\import shared.units
         \\export shared.units.Distance
         \\export shared.units.make
         \\
         \\
-        \\def local() -> i64:
+        \\func local() -> i64:
         \\    return 0
     ;
     const listing = try list(allocator, "facade.my", text);
@@ -267,22 +260,21 @@ test "declaration listing reports a re-export directive with its qualifier" {
 // spec-case: ATTR-1
 test "declaration listing reports attributes inside the declaration byte range" {
     const text =
-        \\module attrs
         \\
         \\
         \\# keep for the next release
         \\@deprecated("use square_v2")
-        \\def square(x: i64) -> i64:
+        \\func square(x: i64) -> i64:
         \\    return x * x
         \\
         \\
         \\@test
-        \\def checks() -> bool:
+        \\func checks() -> bool:
         \\    return True
         \\
         \\
         \\@allow("dead-private", reason="kept")
-        \\def helper() -> i64:
+        \\func helper() -> i64:
         \\    return 1
     ;
     const listing = try list(t.allocator, "attrs.my", text);
@@ -308,14 +300,13 @@ test "declaration listing reports attributes inside the declaration byte range" 
 // spec: PUBLIC-DECL-2
 test "a public modifier marks the declaration exported without an export directive" {
     const text =
-        \\module published
         \\
         \\
-        \\public def helper() -> i64:
+        \\public func helper() -> i64:
         \\    return 1
         \\
         \\
-        \\def hidden() -> i64:
+        \\func hidden() -> i64:
         \\    return 2
     ;
     const listing = try list(t.allocator, "published.my", text);
@@ -327,7 +318,7 @@ test "a public modifier marks the declaration exported without an export directi
     try t.expectEqual(@as(usize, 2), wire.declarations.len);
     try t.expectEqualStrings("helper", wire.declarations[0].name);
     try t.expect(wire.declarations[0].exported);
-    try t.expect(std.mem.startsWith(u8, text[wire.declarations[0].bytes.start..wire.declarations[0].bytes.end], "public def helper() -> i64:"));
+    try t.expect(std.mem.startsWith(u8, text[wire.declarations[0].bytes.start..wire.declarations[0].bytes.end], "public func helper() -> i64:"));
     try t.expectEqualStrings("hidden", wire.declarations[1].name);
     try t.expect(!wire.declarations[1].exported);
 }
@@ -335,10 +326,9 @@ test "a public modifier marks the declaration exported without an export directi
 // spec: PUBLIC-DECL-3
 test "a bare export directive is removed and rejects with the migration diagnostic" {
     const text =
-        \\module clash
         \\
         \\
-        \\public def helper() -> i64:
+        \\public func helper() -> i64:
         \\    return 1
         \\
         \\

@@ -79,13 +79,12 @@ fn contains(haystack: []const u8, needle: []const u8) bool {
 }
 
 const fixable_main =
-    \\module main
     \\import util.helpers
     \\import util.unused
     \\
     \\
-    \\def main() -> int:
-    \\    xs: list[int] = []
+    \\func main() -> int:
+    \\    mut xs: int[] = []
     \\    helpers.grow(xs)
     \\    helpers.grow(xs)
     \\    return len(xs)
@@ -94,16 +93,14 @@ const fixable_main =
 const fixable_helpers =
     \\module helpers
     \\
-    \\
-    \\public def grow(xs: mut list[int]) -> None:
+    \\public func grow(mut xs: int[]) -> Unit:
     \\    xs.append(1)
     \\
 ;
 const unused_module =
-    \\module util.unused
     \\
     \\
-    \\public def nothing() -> int:
+    \\public func nothing() -> int:
     \\    return 0
     \\
 ;
@@ -120,27 +117,26 @@ test "CLI fix applies every structured fix across modules to a fixed point" {
     const preview = try project.run("fix", "main.my", &.{"--check"});
     defer preview.deinit();
     try testing.expectEqual(@as(u8, 1), preview.status);
-    try testing.expect(contains(preview.stdout, "would fix util/helpers.my: 1 edit (E_MODULE_NAME)"));
+    try testing.expect(contains(preview.stdout, "would fix util/helpers.my: 1 edit (E_MODULE_HEADER)"));
     const untouched = try project.read("util/helpers.my");
     defer testing.allocator.free(untouched);
     try testing.expectEqualStrings(fixable_helpers, untouched);
-    // A real run renames the module, marks both calls and drops the unused import.
+    // A real run removes the legacy module header, marks both calls and drops the unused import.
     const fixed = try project.run("fix", "main.my", &.{});
     defer fixed.deinit();
     try testing.expectEqual(@as(u8, 0), fixed.status);
     try testing.expectEqualStrings("", fixed.stderr);
     try testing.expect(contains(fixed.stdout, "fixed main.my: 3 edits (E_MUTATION_MARKER, W_UNUSED_IMPORT)"));
-    try testing.expect(contains(fixed.stdout, "fixed util/helpers.my: 1 edit (E_MODULE_NAME)"));
+    try testing.expect(contains(fixed.stdout, "fixed util/helpers.my: 1 edit (E_MODULE_HEADER)"));
     try testing.expect(contains(fixed.stdout, "fix: 4 edits in 2 files over 3 rounds"));
     const main = try project.read("main.my");
     defer testing.allocator.free(main);
     try testing.expectEqualStrings(
-        \\module main
         \\import util.helpers
         \\
         \\
-        \\def main() -> int:
-        \\    xs: list[int] = []
+        \\func main() -> int:
+        \\    mut xs: int[] = []
         \\    helpers.grow(mut xs)
         \\    helpers.grow(mut xs)
         \\    return len(xs)
@@ -156,6 +152,32 @@ test "CLI fix applies every structured fix across modules to a fixed point" {
     try testing.expectEqual(@as(u8, 0), checked.status);
 }
 
+// spec-case: FRONTEND-MIGRATION-1
+test "CLI fix migrates frontend syntax to a clean check and then reaches a fixed point" {
+    const original = @embedFile("fixtures/fix-migration/frontend.my");
+    var project = try Project.init(&.{.{ .path = "main.my", .data = original }});
+    defer project.deinit();
+    const preview = try project.run("fix", "main.my", &.{"--check"});
+    defer preview.deinit();
+    try testing.expectEqual(@as(u8, 1), preview.status);
+    const before = try project.read("main.my");
+    defer testing.allocator.free(before);
+    try testing.expectEqualStrings(original, before);
+    const fixed = try project.run("fix", "main.my", &.{});
+    defer fixed.deinit();
+    try testing.expectEqual(@as(u8, 0), fixed.status);
+    const after = try project.read("main.my");
+    defer testing.allocator.free(after);
+    try testing.expect(contains(after, "func shift(mut points: Point[], named delta: int) -> Unit:"));
+    try testing.expect(contains(after, "mut answer = (if (True) then (points[0].x) else (0))"));
+    const checked = try project.run("check", "main.my", &.{});
+    defer checked.deinit();
+    try testing.expectEqual(@as(u8, 0), checked.status);
+    const again = try project.run("fix", "main.my", &.{"--check"});
+    defer again.deinit();
+    try testing.expectEqual(@as(u8, 0), again.status);
+}
+
 // spec-case: FIX-MIGRATION-1
 test "CLI fix splits receiver overlap into a preceding call without repeating effects" {
     const original = @embedFile("fixtures/fix-migration/receiver-overlap.my");
@@ -164,7 +186,7 @@ test "CLI fix splits receiver overlap into a preceding call without repeating ef
     const preview = try project.run("fix", "main.my", &.{"--check"});
     defer preview.deinit();
     try testing.expectEqual(@as(u8, 1), preview.status);
-    try testing.expect(contains(preview.stdout, "E_MUTATION_OVERLAP"));
+    try testing.expect(contains(preview.stdout, "E_FRONTEND_SYNTAX"));
     const before = try project.read("main.my");
     defer testing.allocator.free(before);
     try testing.expectEqualStrings(original, before);
@@ -186,20 +208,18 @@ test "CLI fix splits receiver overlap into a preceding call without repeating ef
 // spec-case: FIX-MIGRATION-1
 test "CLI fix reports what it cannot fix once and exits 1" {
     const library =
-        \\module lib
         \\
         \\
-        \\public def grow(xs: mut list[int]) -> None:
+        \\public func grow(mut xs: int[]) -> Unit:
         \\    xs.append(missing)
         \\
     ;
     const first_test =
-        \\module first_test
         \\import lib
         \\
         \\
-        \\public def test_one() -> bool:
-        \\    xs: list[int] = []
+        \\public func test_one() -> bool:
+        \\    mut xs: int[] = []
         \\    lib.grow(xs)
         \\    return len(xs) == 1
         \\
@@ -207,7 +227,7 @@ test "CLI fix reports what it cannot fix once and exits 1" {
     var project = try Project.init(&.{
         .{ .path = "lib.my", .data = library },
         .{ .path = "first_test.my", .data = first_test },
-        .{ .path = "second_test.my", .data = "module second_test\nimport lib\n\n\npublic def test_two() -> bool:\n    xs: list[int] = []\n    lib.grow(mut xs)\n    return True\n" },
+        .{ .path = "second_test.my", .data = "import lib\n\n\npublic func test_two() -> bool:\n    mut xs: int[] = []\n    lib.grow(mut xs)\n    return True\n" },
     });
     defer project.deinit();
     const outcome = try project.run("fix", ".", &.{});
@@ -232,9 +252,9 @@ test "CLI fix reports what it cannot fix once and exits 1" {
 // spec-case: CHECK-LIBRARY-2
 test "CLI check checks a library module or a test file without main" {
     var project = try Project.init(&.{
-        .{ .path = "lib.my", .data = "module lib\n\n\npublic def one() -> int:\n    return 1\n" },
-        .{ .path = "broken.my", .data = "module broken\n\n\npublic def one() -> int:\n    return missing\n" },
-        .{ .path = "plain_test.my", .data = "def test_one() -> bool:\n    return True\n" },
+        .{ .path = "lib.my", .data = "\n\npublic func one() -> int:\n    return 1\n" },
+        .{ .path = "broken.my", .data = "\n\npublic func one() -> int:\n    return missing\n" },
+        .{ .path = "plain_test.my", .data = "func test_one() -> bool:\n    return True\n" },
     });
     defer project.deinit();
     const library = try project.run("check", "lib.my", &.{});
@@ -245,7 +265,7 @@ test "CLI check checks a library module or a test file without main" {
     const broken = try project.run("check", "broken.my", &.{});
     defer broken.deinit();
     try testing.expectEqual(@as(u8, 1), broken.status);
-    try testing.expect(contains(broken.stderr, "broken.my:5:12: error[E_UNKNOWN_NAME]"));
+    try testing.expect(contains(broken.stderr, "broken.my:4:12: error[E_UNKNOWN_NAME]"));
     try testing.expect(!contains(broken.stderr, "E_MAIN"));
     const headerless_test = try project.run("check", "plain_test.my", &.{});
     defer headerless_test.deinit();
@@ -283,14 +303,14 @@ fn rejectedFiles(project: *const Project) !usize {
 test "CLI fix migrates the pinned pre-marker Lox corpus with no hand edits" {
     var project = try Project.init(&lox_corpus);
     defer project.deinit();
-    // Before: the call-site marker rule rejects every file that reaches a call to a `mut` parameter.
-    try testing.expectEqual(@as(usize, 7), try rejectedFiles(&project));
+    // Before: every file uses retired source syntax; writable calls also lack markers.
+    try testing.expectEqual(@as(usize, 9), try rejectedFiles(&project));
     const migrated = try project.run("fix", ".", &.{});
     defer migrated.deinit();
     try testing.expectEqual(@as(u8, 0), migrated.status);
     try testing.expectEqualStrings("", migrated.stderr);
-    try testing.expect(contains(migrated.stdout, "fix: 91 edits in 6 files"));
-    try testing.expect(contains(migrated.stdout, "fixed heap.my: 34 edits (E_MUTATION_MARKER)"));
+    try testing.expect(contains(migrated.stdout, "fix: 412 edits in 9 files over 30 rounds"));
+    try testing.expect(contains(migrated.stdout, "fixed heap.my: 147 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_MUTATION_MARKER, E_NAMED_PATTERN, E_NAMED_FIELDS)"));
     // After: every entry checks, and a second pass finds nothing to do.
     try testing.expectEqual(@as(usize, 0), try rejectedFiles(&project));
     const settled = try project.run("fix", ".", &.{"--check"});
@@ -302,26 +322,25 @@ test "CLI fix migrates the pinned pre-marker Lox corpus with no hand edits" {
     try testing.expect(contains(heap, "    mark_table(mut marker, rt.globals)\n"));
 }
 
-const abi_append_producer = "module lib\n\npublic def change(items: mut list[int]):\n    items.append(9)\n\npublic def append_only(items: mut list[int]):\n    items.append(3)\n";
-const abi_rebind_producer = "module lib\n\npublic def change(items: mut list[int]):\n    items = [7]\n    items.append(8)\n\npublic def append_only(items: mut list[int]):\n    items.append(3)\n";
+const abi_append_producer = "\npublic func change(mut items: int[]):\n    items.append(9)\n\npublic func append_only(mut items: int[]):\n    items.append(3)\n";
+const abi_rebind_producer = "\npublic func change(mut items: int[]):\n    items = [7]\n    items.append(8)\n\npublic func append_only(mut items: int[]):\n    items.append(3)\n";
 const abi_consumer =
-    \\module main
     \\
     \\import lib
-    \\def main() -> int:
-    \\    first = [1]
-    \\    first_saved = first
+    \\func main() -> int:
+    \\    mut first = [1]
+    \\    mut first_saved = first
     \\    lib.change(mut first)
-    \\    action = lib.change
-    \\    second = [1]
-    \\    second_saved = second
+    \\    mut action = lib.change
+    \\    mut second = [1]
+    \\    mut second_saved = second
     \\    action(mut second)
-    \\    third = [1]
-    \\    third_saved = third
-    \\    append = lib.append_only
+    \\    mut third = [1]
+    \\    mut third_saved = third
+    \\    mut append = lib.append_only
     \\    append(mut third)
     \\    lib.append_only(mut third)
-    \\    return 1 if first == second and first != [1] and first_saved == [1] and second_saved == [1] and third == [1, 3, 3] and third_saved == [1] else 0
+    \\    return if (first == second and first != [1] and first_saved == [1] and second_saved == [1] and third == [1, 3, 3] and third_saved == [1]) then (1) else (0)
 ;
 
 fn abiRun(project: *const Project) !void {
@@ -354,7 +373,7 @@ test "CLI fix removes retired arena blocks, dedents their bodies and unwraps esc
     const preview = try project.run("fix", "main.my", &.{"--check"});
     defer preview.deinit();
     try testing.expectEqual(@as(u8, 1), preview.status);
-    try testing.expect(contains(preview.stdout, "W_ARENA_RETIRED"));
+    try testing.expect(contains(preview.stdout, "E_FRONTEND_SYNTAX"));
     const fixed = try project.run("fix", "main.my", &.{});
     defer fixed.deinit();
     try testing.expectEqual(@as(u8, 0), fixed.status);
@@ -377,14 +396,14 @@ const arenas_migrated =
     \\# the block's body and rewrites each `name.escape(value)` to `value`.
     \\record Reading:
     \\    sensor: int
-    \\    samples: list[int]
+    \\    samples: int[]
     \\
     \\
-    \\def collect(sensors: int) -> list[Reading]:
-    \\    readings: list[Reading] = []
+    \\func collect(sensors: int) -> Reading[]:
+    \\    mut readings: Reading[] = []
     \\    for sensor in range(sensors):
     \\        # one region per sensor
-    \\        samples: list[int] = []
+    \\        mut samples: int[] = []
     \\        for index in range(3):
     \\            samples.append(sensor * 3 + index)
     \\
@@ -393,11 +412,11 @@ const arenas_migrated =
     \\    return readings
     \\
     \\
-    \\def loudest(readings: list[Reading]) -> int:
-    \\    best = 0
+    \\func loudest(readings: Reading[]) -> int:
+    \\    mut best = 0
     \\# a comment at the left margin stays where it is
     \\    for reading in readings:
-    \\        total = 0
+    \\        mut total = 0
     \\        for sample in reading.samples:
     \\            total = total + sample
     \\        if total > best:
@@ -405,17 +424,17 @@ const arenas_migrated =
     \\    return best
     \\
     \\
-    \\def nested() -> int:
-    \\    kept = "z"
-    \\    joined = "-".join(["a", str(2)])
+    \\func nested() -> int:
+    \\    mut kept = "z"
+    \\    mut joined = "-".join(["a", str(2)])
     \\    kept = (joined + "!")
-    \\    size = len(joined)
+    \\    mut size = len(joined)
     \\    # after the inner block
     \\    return len(kept) + size
     \\
     \\
-    \\def main() -> int:
-    \\    readings = collect(4)
+    \\func main() -> int:
+    \\    mut readings = collect(4)
     \\    return len(readings) + loudest(readings) + nested()
     \\
 ;
@@ -429,7 +448,7 @@ test "D2 CLI fix materializes stored dictionary projections with contextual list
     const preview = try project.run("fix", "main.my", &.{"--check"});
     defer preview.deinit();
     try testing.expectEqual(@as(u8, 1), preview.status);
-    try testing.expect(contains(preview.stdout, "E_VIEW_STORED"));
+    try testing.expect(contains(preview.stdout, "E_MODULE_HEADER"));
     const fixed = try project.run("fix", "main.my", &.{});
     defer fixed.deinit();
     try testing.expectEqual(@as(u8, 0), fixed.status);

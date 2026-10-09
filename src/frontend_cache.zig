@@ -21,7 +21,7 @@ const project = @import("project.zig");
 const cache_key = @import("cache_key.zig");
 
 /// Bump when the on-disk layout or a stored serializer changes; older files miss.
-pub const format_version = "mylang-frontend-cache-v4";
+pub const format_version = "mylang-frontend-cache-v7";
 /// Default retention floor: entries above this are bypassed, and a run that
 /// stored anything trims the directory back to the larger of this and twice
 /// the bytes the run itself used (FRONTEND-CACHE-RETAIN-1).

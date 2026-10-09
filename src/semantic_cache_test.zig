@@ -9,21 +9,21 @@ const cache_key = @import("cache_key.zig");
 const semantic_store = @import("semantic_store.zig");
 const Cache = language.semantic_cache.Cache;
 const prefix =
-    \\def helper(n: i64) -> i64:
+    \\func helper(n: i64) -> i64:
     \\    return n + 1
     \\
     \\
     \\
 ;
 const suffix =
-    \\def keep(n: i64) -> i64:
-    \\    unused = 1
-    \\    x = n
+    \\func keep(n: i64) -> i64:
+    \\    mut unused = 1
+    \\    mut x = n
     \\    x = x + 1
     \\    return x
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return keep(helper(40))
 ;
 /// An allocator that never grows or shrinks a block in place, so every resize
@@ -92,7 +92,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try compare(allocator, &cache, prefix ++ suffix, 42);
     try t.expectEqual(@as(usize, 3), cache.statistics.checked);
     try compare(allocator, &cache,
-        \\def helper(n: i64) -> i64:
+        \\func helper(n: i64) -> i64:
         \\    return n + 2
         \\
         \\
@@ -101,7 +101,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try t.expectEqual(@as(usize, 2), cache.statistics.reused);
     try t.expectEqual(@as(usize, 4), cache.statistics.checked);
     try compare(allocator, &cache,
-        \\def helper(n: i64) -> i64:
+        \\func helper(n: i64) -> i64:
         \\    return True
         \\
         \\
@@ -127,7 +127,7 @@ test "declaration and type identity changes invalidate dependents while unrelate
     try t.expectEqual(@as(usize, 3), cache.statistics.checked);
     // The helper signature changes; every caller that references it misses.
     try compare(t.allocator, &cache,
-        \\def helper(n: bool) -> i64:
+        \\func helper(n: bool) -> i64:
         \\    return 1
         \\
         \\
@@ -152,29 +152,29 @@ test "declaration and type identity changes invalidate dependents while unrelate
         \\const N: i64 = 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return N
     , 1);
     try compare(t.allocator, &cache,
         \\const N: i64 = 2
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return N
     , 2);
     try compare(t.allocator, &cache,
-        \\def id[T](n: T) -> T:
+        \\func id[T](n: T) -> T:
         \\    return n
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return id[i64](42)
     , 42);
     try compare(t.allocator, &cache,
         \\type Number = i64
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return Number(42)
     , 42);
     try t.expectEqual(reused_before_unrelated + 3, cache.statistics.reused);
@@ -184,7 +184,7 @@ test "declaration and type identity changes invalidate dependents while unrelate
 test "managed constant edits invalidate dependent bodies while unrelated constants reuse" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
-    const main = "def main() -> int:\n    return len(S) + B[0]\n";
+    const main = "func main() -> int:\n    return len(S) + B[0]\n";
     try compare(t.allocator, &cache, "const S: str = \"a\"\nconst B: bytes = b\"A\"\n" ++ main, 66);
     try compare(t.allocator, &cache, "const S: str = \"é🙂\"\nconst B: bytes = b\"B\"\n" ++ main, 68);
     try compare(t.allocator, &cache, "const S: str = \"a\" + \"b\"\nconst B: bytes = b\"B\"\n" ++ main, null);
@@ -196,8 +196,8 @@ test "managed constant edits invalidate dependent bodies while unrelated constan
 }
 // spec: SEMANTIC-CACHE-16
 test "a same-length body edit misses the retained body and reuses its neighbours" {
-    const original = "def tweak(n: i64) -> i64:\n    return n + 1\n\n\ndef keep(n: i64) -> i64:\n    return n * 2\n\n\ndef main() -> i64:\n    return keep(tweak(20))\n";
-    const mutated = "def tweak(n: i64) -> i64:\n    return n + 2\n\n\ndef keep(n: i64) -> i64:\n    return n * 2\n\n\ndef main() -> i64:\n    return keep(tweak(20))\n";
+    const original = "func tweak(n: i64) -> i64:\n    return n + 1\n\n\nfunc keep(n: i64) -> i64:\n    return n * 2\n\n\nfunc main() -> i64:\n    return keep(tweak(20))\n";
+    const mutated = "func tweak(n: i64) -> i64:\n    return n + 2\n\n\nfunc keep(n: i64) -> i64:\n    return n * 2\n\n\nfunc main() -> i64:\n    return keep(tweak(20))\n";
     // The two sources are the same length and differ in exactly one body byte, so
     // only the byte comparison can tell them apart.
     try t.expectEqual(original.len, mutated.len);
@@ -215,8 +215,8 @@ test "a same-length body edit misses the retained body and reuses its neighbours
 
 // spec-case: SEMANTIC-CACHE-16
 test "a same-length declaration edit misses with the dependency reason it always did" {
-    const original = "def widen(n: i64) -> i64:\n    return n\n\n\ndef main() -> i64:\n    return widen(41)\n";
-    const mutated = "def widen(m: i64) -> i64:\n    return m\n\n\ndef main() -> i64:\n    return widen(41)\n";
+    const original = "func widen(n: i64) -> i64:\n    return n\n\n\nfunc main() -> i64:\n    return widen(41)\n";
+    const mutated = "func widen(m: i64) -> i64:\n    return m\n\n\nfunc main() -> i64:\n    return widen(41)\n";
     try t.expectEqual(original.len, mutated.len);
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
@@ -250,7 +250,7 @@ test "semantic cache keeps previous committed bodies when remember reports OutOf
     try compare(t.allocator, &cache, prefix ++ suffix, 42);
     failures.fail_index = failures.alloc_index;
     var interrupted = try language.Compilation.init(t.allocator, "edited.my",
-        \\def helper(n: i64) -> i64:
+        \\func helper(n: i64) -> i64:
         \\    return n + 2
         \\
         \\
@@ -270,19 +270,19 @@ test "semantic cache keeps inferred callback schemas fresh across changed bodies
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const caller =
-        \\def main() -> i64:
-        \\    cb = helper
+        \\func main() -> i64:
+        \\    mut cb = helper
         \\    return cb(40)
     ;
     try compare(t.allocator, &cache,
-        \\def helper(n: i64) -> i64 effects():
+        \\func helper(n: i64) -> i64 effects():
         \\    return n + 1
         \\
         \\
         \\
     ++ caller, 41);
     try compare(t.allocator, &cache,
-        \\def helper(n: i64) -> i64 effects():
+        \\func helper(n: i64) -> i64 effects():
         \\    return n + 2
         \\
         \\
@@ -296,35 +296,35 @@ test "constant-length and nominal specializations stay on the fresh path" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const function =
-        \\def size[const N: u64]() -> u64:
+        \\func size[const N: u64]() -> u64:
         \\    return N
         \\
         \\
         \\
     ;
     try compare(t.allocator, &cache, function ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return i64(size[2]())
     , 2);
     try compare(t.allocator, &cache, function ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return i64(size[3]())
     , 3);
     const nominal =
         \\record Chunk[const N: u64]:
-        \\    items: [N]i64
+        \\    items: FixedArray[i64, N]
         \\
         \\
         \\
     ;
     try compare(t.allocator, &cache, nominal ++
-        \\def main() -> i64:
-        \\    x = Chunk[1](items=[42])
+        \\func main() -> i64:
+        \\    mut x = Chunk[1](items=FixedArray[int, 1]([42]))
         \\    return x.items[0]
     , 42);
     try compare(t.allocator, &cache, nominal ++
-        \\def main() -> i64:
-        \\    x = Chunk[2](items=[43, 0])
+        \\func main() -> i64:
+        \\    mut x = Chunk[2](items=FixedArray[int, 2]([43, 0]))
         \\    return x.items[0]
     , 43);
     try t.expectEqual(@as(usize, 0), cache.statistics.reused);
@@ -338,24 +338,24 @@ test "semantic cache rechecks transitive effects when only a callee body changes
     // Only the callee body changes; the unchanged caller is reused but rechecked.
     // The extern declaration is never executed, so this stays a checking-only test.
     const shared =
-        \\extern def tick(host: Host) -> i64 effects(host)
+        \\extern func tick(host: Host) -> i64 effects(host)
         \\
         \\
-        \\def main(host: Host) -> i64 effects():
+        \\func main(host: Host) -> i64 effects():
         \\    return change(host)
         \\
         \\
         \\
     ;
     var first = try language.Compilation.init(t.allocator, "edited.my", shared ++
-        \\def change(host: Host) -> i64:
+        \\func change(host: Host) -> i64:
         \\    _ = host
         \\    return 42
     );
     defer first.deinit();
     try first.checkWithCache(&cache);
     var second = try language.Compilation.init(t.allocator, "edited.my", shared ++
-        \\def change(host: Host) -> i64:
+        \\func change(host: Host) -> i64:
         \\    return tick(host)
     );
     defer second.deinit();
@@ -425,13 +425,13 @@ test "semantic cache contract fingerprint forces a fresh check and identical con
 test "per-function reuse ignores an unused generic and reuses unchanged ordinary bodies" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
-    const generic = "def identity[T](value: T) -> T:\n    return value\n\n\n";
-    const second = "def second() -> i64:\n    return 7\n\n\n";
-    const main = "def main() -> i64:\n    return first() + second()\n";
-    try compare(t.allocator, &cache, "def first() -> i64:\n    return 1\n" ++ second ++ main ++ generic, 8);
+    const generic = "func identity[T](value: T) -> T:\n    return value\n\n\n";
+    const second = "func second() -> i64:\n    return 7\n\n\n";
+    const main = "func main() -> i64:\n    return first() + second()\n";
+    try compare(t.allocator, &cache, "func first() -> i64:\n    return 1\n" ++ second ++ main ++ generic, 8);
     try t.expectEqual(@as(usize, 3), cache.statistics.checked);
     try t.expectEqual(@as(usize, 0), cache.statistics.bypassed);
-    try compare(t.allocator, &cache, "def first() -> i64:\n    return 2\n" ++ second ++ main ++ generic, 9);
+    try compare(t.allocator, &cache, "func first() -> i64:\n    return 2\n" ++ second ++ main ++ generic, 9);
     // The edited body is rechecked; the other two ordinary bodies are reused even
     // though the program still contains an unused generic template.
     try t.expectEqual(@as(usize, 2), cache.statistics.reused);
@@ -450,17 +450,17 @@ test "insert delete and reorder unrelated declarations preserve function and typ
         \\    n: i64
         \\
         \\
-        \\def first() -> i64:
+        \\func first() -> i64:
         \\    return 1
         \\
         \\
-        \\def unused() -> i64:
+        \\func unused() -> i64:
         \\    return 9
         \\
         \\
-        \\def main() -> i64:
-        \\    a = A(n=40)
-        \\    b = B(n=1)
+        \\func main() -> i64:
+        \\    mut a = A(n=40)
+        \\    mut b = B(n=1)
         \\    return a.n + b.n + first()
     ;
     try compare(t.allocator, &cache, ordered, 42);
@@ -474,13 +474,13 @@ test "insert delete and reorder unrelated declarations preserve function and typ
         \\    n: i64
         \\
         \\
-        \\def main() -> i64:
-        \\    a = A(n=40)
-        \\    b = B(n=1)
+        \\func main() -> i64:
+        \\    mut a = A(n=40)
+        \\    mut b = B(n=1)
         \\    return a.n + b.n + first()
         \\
         \\
-        \\def first() -> i64:
+        \\func first() -> i64:
         \\    return 1
     ;
     const before = cache.statistics.reused;
@@ -497,7 +497,7 @@ test "a negative name lookup misses when a declaration is introduced later" {
     // `debug` is a reserved builtin (a recorded negative lookup) and, unlike a
     // stream write, leaves the native run's stderr clean, so this test checks
     // resolution without executing a program.
-    const base = "def main() -> i64:\n    debug(\"hi\")\n    return 1\n";
+    const base = "func main() -> i64:\n    debug(\"hi\")\n    return 1\n";
     var cached = try language.Compilation.init(t.allocator, "edited.my", base);
     defer cached.deinit();
     var fresh = try language.Compilation.init(t.allocator, "edited.my", base);
@@ -505,11 +505,11 @@ test "a negative name lookup misses when a declaration is introduced later" {
     try cached.checkWithCache(&cache);
     try fresh.check();
     const introduced =
-        \\def debug(message: str) -> None:
+        \\func debug(message: str) -> Unit:
         \\    _ = message
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    debug("hi")
         \\    return 1
     ;
@@ -529,17 +529,17 @@ test "reused bodies relocate diagnostics and warnings after code moves" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const base =
-        \\def helper() -> i64:
-        \\    unused = 41
+        \\func helper() -> i64:
+        \\    mut unused = 41
         \\    return 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return helper()
     ;
     try compare(t.allocator, &cache, base, 1);
     const moved =
-        \\def unrelated() -> i64:
+        \\func unrelated() -> i64:
         \\    return 9
         \\
         \\
@@ -556,24 +556,24 @@ test "mutation summaries are recomputed rather than copied with a reused body" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const writing =
-        \\def touch(values: mut list[int]) -> None:
+        \\func touch(mut values: int[]) -> Unit:
         \\    values[0] = 1
         \\
         \\
-        \\def main() -> i64:
-        \\    values = [1]
+        \\func main() -> i64:
+        \\    mut values = [1]
         \\    touch(mut values)
         \\    return values[0]
     ;
     try compare(t.allocator, &cache, writing, 1);
     const reading =
-        \\def touch(values: mut list[int]) -> None:
-        \\    first = 1
+        \\func touch(mut values: int[]) -> Unit:
+        \\    mut first = 1
         \\    values[0] = first
         \\
         \\
-        \\def main() -> i64:
-        \\    values = [1]
+        \\func main() -> i64:
+        \\    mut values = [1]
         \\    touch(mut values)
         \\    return values[0]
     ;
@@ -589,15 +589,15 @@ test "declared callback slots and matching function values reuse when the contra
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const program =
-        \\def apply(f: def(i64) -> i64 effects(), x: i64) -> i64 effects():
+        \\func apply(f: func(i64) -> i64 effects(), x: i64) -> i64 effects():
         \\    return f(x)
         \\
         \\
-        \\def one(x: i64) -> i64 effects():
+        \\func one(x: i64) -> i64 effects():
         \\    return x + 1
         \\
         \\
-        \\def main() -> i64 effects():
+        \\func main() -> i64 effects():
         \\    return apply(one, 41)
     ;
     try compare(t.allocator, &cache, program, 42);
@@ -610,15 +610,15 @@ test "declared callback slots and matching function values reuse when the contra
     // Only the callee body changes: `main` still stores the same declared
     // callback contract, so its body reuses and revalidates globally.
     const edited =
-        \\def apply(f: def(i64) -> i64 effects(), x: i64) -> i64 effects():
+        \\func apply(f: func(i64) -> i64 effects(), x: i64) -> i64 effects():
         \\    return f(x) + 0
         \\
         \\
-        \\def one(x: i64) -> i64 effects():
+        \\func one(x: i64) -> i64 effects():
         \\    return x + 1
         \\
         \\
-        \\def main() -> i64 effects():
+        \\func main() -> i64 effects():
         \\    return apply(one, 41)
     ;
     const before = cache.statistics.reused;
@@ -631,15 +631,15 @@ test "a function value with no matching declared callback misses with its exact 
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const program =
-        \\def apply(f: def(i64) -> i64 effects(output), x: i64) -> i64 effects(output):
+        \\func apply(f: func(i64) -> i64 effects(output), x: i64) -> i64 effects(output):
         \\    return f(x)
         \\
         \\
-        \\def one(x: i64) -> i64 effects():
+        \\func one(x: i64) -> i64 effects():
         \\    return x + 1
         \\
         \\
-        \\def main(out: Stream) -> i64:
+        \\func main(out: Stream) -> i64:
         \\    _ = out
         \\    return apply(one, 41)
     ;
@@ -663,11 +663,11 @@ test "generic specialization bodies reuse while their callers miss with their ex
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const program =
-        \\def identity[T](value: T) -> T:
+        \\func identity[T](value: T) -> T:
         \\    return value
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return identity[i64](42)
     ;
     try compare(t.allocator, &cache, program, 42);
@@ -688,11 +688,11 @@ test "pre-collected array types reuse while a changed referenced contract invali
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const program =
-        \\def pair() -> [2]i64:
-        \\    return [1, 2]
+        \\func pair() -> FixedArray[i64, 2]:
+        \\    return FixedArray[int, 2]([1, 2])
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return pair()[0]
     ;
     try compare(t.allocator, &cache, program, 1);
@@ -703,11 +703,11 @@ test "pre-collected array types reuse while a changed referenced contract invali
     try t.expectEqual(before + 2, cache.statistics.reused);
 
     const edited =
-        \\def pair() -> [3]i64:
-        \\    return [1, 2, 3]
+        \\func pair() -> FixedArray[i64, 3]:
+        \\    return FixedArray[int, 3]([1, 2, 3])
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return pair()[0]
     ;
     const before_signature = cache.statistics.reused;
@@ -866,10 +866,10 @@ test "durable publication batch inventories a fresh namespace once instead of pe
     defer t.allocator.free(root);
     var source: std.ArrayList(u8) = .empty;
     defer source.deinit(t.allocator);
-    try source.appendSlice(t.allocator, "def main() -> i64:\n    return 42\n\n");
+    try source.appendSlice(t.allocator, "func main() -> i64:\n    return 42\n\n");
     var line_buffer: [64]u8 = undefined;
     for (0..64) |i| {
-        const line = try std.fmt.bufPrint(&line_buffer, "def f{d}() -> i64:\n    return {d}\n\n", .{ i, i });
+        const line = try std.fmt.bufPrint(&line_buffer, "func f{d}() -> i64:\n    return {d}\n\n", .{ i, i });
         try source.appendSlice(t.allocator, line);
     }
     var store = language.semantic_cache.Store.init(t.allocator, t.io, root, cache_key.Contract.default, language.semantic_cache.mutation_contract_version);
@@ -906,10 +906,10 @@ test "durable batch publication renames complete images without a filesystem syn
     defer t.allocator.free(root);
     var source: std.ArrayList(u8) = .empty;
     defer source.deinit(t.allocator);
-    try source.appendSlice(t.allocator, "def main() -> i64:\n    return 42\n\n");
+    try source.appendSlice(t.allocator, "func main() -> i64:\n    return 42\n\n");
     var line_buffer: [64]u8 = undefined;
     for (0..64) |i| {
-        const line = try std.fmt.bufPrint(&line_buffer, "def f{d}() -> i64:\n    return {d}\n\n", .{ i, i });
+        const line = try std.fmt.bufPrint(&line_buffer, "func f{d}() -> i64:\n    return {d}\n\n", .{ i, i });
         try source.appendSlice(t.allocator, line);
     }
     var store = language.semantic_cache.Store.init(t.allocator, t.io, root, cache_key.Contract.default, language.semantic_cache.mutation_contract_version);
@@ -1038,7 +1038,7 @@ test "symbolic template direct results reuse while changed templates miss" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const template =
-        \\def size[T: integer](value: T) -> i64 effects():
+        \\func size[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 7
         \\
@@ -1046,7 +1046,7 @@ test "symbolic template direct results reuse while changed templates miss" {
         \\
     ;
     const program = template ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return size[u8](1u8)
     ;
     try compare(t.allocator, &cache, program, 7);
@@ -1059,11 +1059,11 @@ test "symbolic template direct results reuse while changed templates miss" {
     try t.expectEqual(first_checked, cache.reuse.symbolic.statistics.checked);
     // An unrelated ordinary body edit preserves the template's reuse.
     const unrelated = template ++
-        \\def helper(n: i64) -> i64:
+        \\func helper(n: i64) -> i64:
         \\    return n + 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return size[u8](1u8)
     ;
     const before_unrelated_reuse = cache.reuse.symbolic.statistics.reused;
@@ -1071,14 +1071,14 @@ test "symbolic template direct results reuse while changed templates miss" {
     try t.expect(cache.reuse.symbolic.statistics.reused > before_unrelated_reuse);
     // Editing the template body invalidates its retained direct result.
     const edited =
-        \\def size[T: integer](value: T) -> i64 effects():
+        \\func size[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 8
         \\
         \\
         \\
     ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return size[u8](1u8)
     ;
     const before_edit_checked = cache.reuse.symbolic.statistics.checked;
@@ -1116,11 +1116,11 @@ test "unused malformed generics are still checked on cold and warm requests" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const malformed =
-        \\def broken[T](value: T) -> i64 effects():
+        \\func broken[T](value: T) -> i64 effects():
         \\    return value
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     // The template is unused, but abstract checking must still reject the body
@@ -1231,15 +1231,15 @@ test "nested concrete specializations conservatively miss and self-recursion rem
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const nested =
-        \\def inner[T](x: T) -> T:
+        \\func inner[T](x: T) -> T:
         \\    return x
         \\
         \\
-        \\def outer[T](x: T) -> T:
+        \\func outer[T](x: T) -> T:
         \\    return inner[T](x)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return outer[i64](4)
     ;
     try compare(t.allocator, &cache, nested, 4);
@@ -1253,14 +1253,14 @@ test "nested concrete specializations conservatively miss and self-recursion rem
     try t.expect(nested_after.misses[@backingInt(spec_reason.missing_specialization)] > nested_before.misses[@backingInt(spec_reason.missing_specialization)]);
 
     const recursive =
-        \\def recur[T](x: T, n: i64) -> i64:
+        \\func recur[T](x: T, n: i64) -> i64:
         \\    _ = x
         \\    if n == 0:
         \\        return 0
         \\    return recur[T](x, n - 1)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return recur[i64](1, 3)
     ;
     try compare(t.allocator, &cache, recursive, 0);
@@ -1275,25 +1275,25 @@ test "const-length specialization keys keep identity and nominal generics miss c
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const size_fn =
-        \\def size[const N: u64]() -> u64:
+        \\func size[const N: u64]() -> u64:
         \\    return N
         \\
         \\
         \\
     ;
     try compare(t.allocator, &cache, size_fn ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return i64(size[2]())
     , 2);
     const stored_two = cache.reuse.specializations.statistics.stored;
     try compare(t.allocator, &cache, size_fn ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return i64(size[2]())
     , 2);
     try t.expectEqual(stored_two, cache.reuse.specializations.statistics.stored);
     try t.expect(cache.reuse.specializations.statistics.reused > 0);
     try compare(t.allocator, &cache, size_fn ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return i64(size[3]())
     , 3);
     // `size[3]` is a distinct positional length descriptor, never a hit on
@@ -1305,12 +1305,12 @@ test "const-length specialization keys keep identity and nominal generics miss c
         \\    value: T
         \\
         \\
-        \\def make[T](x: T) -> Box[T]:
+        \\func make[T](x: T) -> Box[T]:
         \\    return Box[T](value=x)
         \\
         \\
-        \\def main() -> i64:
-        \\    b = make[i64](3)
+        \\func main() -> i64:
+        \\    mut b = make[i64](3)
         \\    return b.value
     ;
     try compare(t.allocator, &cache, nominal, 3);
@@ -1333,9 +1333,9 @@ fn manyFunctionProgram(allocator: std.mem.Allocator, count: usize) ![]u8 {
     var line: [96]u8 = undefined;
     var index: usize = 0;
     while (index < count) : (index += 1) {
-        try out.appendSlice(allocator, try std.fmt.bufPrint(&line, "def step{d}(n: i64) -> i64:\n    return n + {d}\n\n", .{ index, index + 1 }));
+        try out.appendSlice(allocator, try std.fmt.bufPrint(&line, "func step{d}(n: i64) -> i64:\n    return n + {d}\n\n", .{ index, index + 1 }));
     }
-    try out.appendSlice(allocator, "def main() -> i64:\n    return ");
+    try out.appendSlice(allocator, "func main() -> i64:\n    return ");
     index = 0;
     while (index < count) : (index += 1) {
         if (index != 0) try out.appendSlice(allocator, " + ");
@@ -1405,7 +1405,7 @@ fn checkCachedOnly(allocator: std.mem.Allocator, cache: *Cache, bytes: []const u
     try compilation.checkWithCache(cache);
 }
 
-const one_body_source = "def main() -> i64:\n    return 1\n";
+const one_body_source = "func main() -> i64:\n    return 1\n";
 
 fn profileHas(profile: *const language.timings.Profile, name: []const u8) bool {
     for (profile.records.phases[0..profile.records.len]) |phase| {
@@ -1595,15 +1595,15 @@ test "semantic body relocation resolves only the references the body carries" {
 /// An ordinary body, a template and a concrete call, so one check exercises
 /// all three entry kinds.
 const all_kinds_program =
-    \\def helper(n: i64) -> i64:
+    \\func helper(n: i64) -> i64:
     \\    return n + 1
     \\
     \\
-    \\def identity[T](value: T) -> T:
+    \\func identity[T](value: T) -> T:
     \\    return value
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return identity[i64](helper(41))
 ;
 
@@ -1655,14 +1655,14 @@ test "clear releases ordinary symbolic and specialization entries and keeps retu
 
 /// Const-length template: every distinct `N` is a distinct specialization key.
 const size_template =
-    \\def size[const N: u64]() -> u64:
+    \\func size[const N: u64]() -> u64:
     \\    return N
     \\
     \\
 ;
 
 fn sizeProgram(allocator: std.mem.Allocator, n: usize) ![]u8 {
-    return std.fmt.allocPrint(allocator, "{s}def main() -> i64:\n    return i64(size[{d}]())\n", .{ size_template, n });
+    return std.fmt.allocPrint(allocator, "{s}func main() -> i64:\n    return i64(size[{d}]())\n", .{ size_template, n });
 }
 
 /// Fill every slot with a distinct const-length specialization program.
@@ -1804,9 +1804,9 @@ fn manyTemplateProgram(allocator: std.mem.Allocator, count: usize) ![]u8 {
     var line: [128]u8 = undefined;
     var index: usize = 0;
     while (index < count) : (index += 1) {
-        try out.appendSlice(allocator, try std.fmt.bufPrint(&line, "def t{d}[T: integer](value: T) -> i64 effects():\n    _ = value\n    return {d}\n\n", .{ index, index }));
+        try out.appendSlice(allocator, try std.fmt.bufPrint(&line, "func t{d}[T: integer](value: T) -> i64 effects():\n    _ = value\n    return {d}\n\n", .{ index, index }));
     }
-    try out.appendSlice(allocator, "def main() -> i64:\n    return 0\n");
+    try out.appendSlice(allocator, "func main() -> i64:\n    return 0\n");
     return out.toOwnedSlice(allocator);
 }
 
@@ -1878,7 +1878,7 @@ test "generic publication rolls back cleanly on allocation failure" {
 
 // spec: CONTRACT-CACHE-2
 test "invariant checks retain relocatable bodies including operator positions" {
-    const source = "@invariant(self.low <= self.high and -self.low <= 0)\nrecord Span:\n    low: int\n    high: int\n\ndef make() -> Span:\n    return Span(1, 2)\n\ndef main() -> int:\n    return make().high\n";
+    const source = "@invariant(self.low <= self.high and -self.low <= 0)\nrecord Span:\n    low: int\n    high: int\n\nfunc make() -> Span:\n    return Span(low=1, high=2)\n\nfunc main() -> int:\n    return make().high\n";
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     try compare(t.allocator, &cache, source, 2);
@@ -1886,4 +1886,29 @@ test "invariant checks retain relocatable bodies including operator positions" {
     try compare(t.allocator, &cache, "# Move every declaration down one line.\n" ++ source, 2);
     try t.expectEqual(@as(usize, 2), cache.statistics.reused);
     try t.expectEqual(@as(usize, 2), cache.statistics.checked);
+}
+
+// spec-case: SEMANTIC-CACHE-12
+test "callback provider identities retain named labels and mutation positions" {
+    const typed = @import("typed.zig");
+    const callback_type: typed.Type = @fromBackingInt(typed.Type.record_base);
+    const records = [_]typed.Record{.{
+        .id = callback_type,
+        .name = "mod::Callback",
+        .declaration = .{ .start = 0, .end = 0 },
+        .fields = &.{},
+        .contract = .{ .callback = .{ .parameters = &.{.i64}, .return_type = .unit, .effects = 0, .labels = &.{"amount"} } },
+    }};
+    var changed = records;
+    changed[0].contract.callback.?.mutates = &.{0};
+    const original = try semantic_key.providerIdentity(t.allocator, &.{callback_type}, &records);
+    defer t.allocator.free(original);
+    const mutable = try semantic_key.providerIdentity(t.allocator, &.{callback_type}, &changed);
+    defer t.allocator.free(mutable);
+    try t.expect(!std.mem.eql(u8, original, mutable));
+    changed[0].contract.callback.?.mutates = &.{};
+    changed[0].contract.callback.?.labels = &.{"count"};
+    const renamed = try semantic_key.providerIdentity(t.allocator, &.{callback_type}, &changed);
+    defer t.allocator.free(renamed);
+    try t.expect(!std.mem.eql(u8, original, renamed));
 }

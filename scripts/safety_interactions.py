@@ -5,20 +5,21 @@ def templates(rng):
     value = rng.randrange(1, 1000)
     count = rng.randrange(1, 8)
     odd = rng.randrange(2)
-    propagation = '''def halve(value: int) -> Result[int, int]:
+    propagation = '''func halve(value: int) -> Result[int, int]:
     if value % 2 != 0:
         return Err(1)
     return Ok(value // 2)
 
 
-def total(values: list[int]) -> Result[int, int]:
-    sum = 0
+func total(values: int[]) -> Result[int, int]:
+    mut sum = 0
     for value in values:
-        sum = sum + halve(value)?
+        const half = try halve(value)
+        sum = sum + half
     return Ok(sum)
 
 
-def main() -> int:
+func main() -> int:
     with arena():
         match total([FIRST, SECOND]):
             case Ok(found):
@@ -28,14 +29,14 @@ def main() -> int:
 '''.replace('FIRST', str(value * 2)).replace('SECOND', str(value * 2 + odd))
     yield propagation, -1 if odd else value * 2, 'managed-arena-propagation'
     midpoint = rng.randrange(5)
-    mutation = '''def change(values: list[int], index: int, x: int) -> int:
+    mutation = '''func change(values: int[], index: int, x: int) -> int:
     if index < len(values):
         values[index] = x
     return 0
 
 
-def main() -> int:
-    values = [1, 2, 3, 4]
+func main() -> int:
+    mut values = [1, 2, 3, 4]
     _ = change(values, MID, VALUE)
     return values[0] + values[1] + values[2] + values[3]
 '''.replace('MID', str(midpoint)).replace('VALUE', str(value))
@@ -43,14 +44,14 @@ def main() -> int:
     if midpoint < 4:
         numbers[midpoint] = value
     yield mutation, sum(numbers), 'managed-list-mutation'
-    escaping = '''def measure(values: list[int]) -> int:
+    escaping = '''func measure(values: int[]) -> int:
     return len(values)
 
 
-def main() -> int:
-    total = 0
+func main() -> int:
+    mut total = 0
     with arena():
-        values: list[int] = []
+        mut values: int[] = []
         for index in range(COUNT):
             values.append(index)
         total = measure(values)

@@ -1,21 +1,21 @@
 # Guard emission must use its own header's physical ownership context.
-def adjacent(times: int) -> int:
-    keys = ["al" + "pha", "beta"]
-    data = bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
-    counts: dict[str, int] = {}
+func adjacent(times: int) -> int:
+    mut keys = ["al" + "pha", "beta"]
+    mut data = bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
+    mut counts: dict[str, int] = {}
     for i in range(times):
-        key = keys[i % 2]
+        mut key = keys[i % 2]
         counts[key] = counts.get(key, 0) + 1
-    total = 0
+    mut total = 0
     for index in range(len(data)):
         total += int(data[index])
     assert len(keys) == 2
     return total + counts.get("alpha", 0)
 
-public def test_adjacent_dictionary_and_byte_loops_keep_their_own_guard_context() -> bool:
+public func test_adjacent_dictionary_and_byte_loops_keep_their_own_guard_context() -> bool:
     return adjacent(20) == 220 and adjacent(0) == 210
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     assert test_adjacent_dictionary_and_byte_loops_keep_their_own_guard_context()
     out.print(adjacent(20))
     return 0

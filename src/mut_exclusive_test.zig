@@ -8,49 +8,49 @@ const File = compiler.embedded_project.File;
 
 const helpers =
     \\record R:
-    \\    rows: list[list[int]]
+    \\    rows: int[][]
     \\    n: int
     \\
     \\record S:
-    \\    a: list[int]
-    \\    b: list[int]
+    \\    a: int[]
+    \\    b: int[]
     \\
     \\enum Status:
-    \\    ok,
+    \\    ok
     \\    failed
     \\
-    \\def two(a: mut list[int], b: mut list[int]) -> None:
+    \\func two(mut a: int[], mut b: int[]) -> Unit:
     \\    a.append(1)
     \\    b.append(2)
     \\
-    \\def nested(xs: mut list[list[int]], ys: mut list[int]) -> None:
+    \\func nested(mut xs: int[][], mut ys: int[]) -> Unit:
     \\    xs.append([5])
     \\    ys.append(9)
     \\
-    \\def same(xs: mut list[list[int]], ys: mut list[list[int]]) -> None:
+    \\func same(mut xs: int[][], mut ys: int[][]) -> Unit:
     \\    xs.append([5])
     \\    ys.append([9])
     \\
-    \\def rec(a: mut R, xs: mut list[list[int]]) -> None:
+    \\func rec(mut a: R, mut xs: int[][]) -> Unit:
     \\    a.n = a.n + 1
     \\    xs.append([1])
     \\
-    \\def records(a: mut S, b: mut S) -> None:
+    \\func records(mut a: S, mut b: S) -> Unit:
     \\    a.a.append(1)
     \\    b.b.append(2)
     \\
-    \\def read_one(a: mut list[int], b: list[int]) -> int:
+    \\func read_one(mut a: int[], b: int[]) -> int:
     \\    a.append(len(b))
     \\    return len(b)
     \\
-    \\def make(p: mut list[int]) -> int:
+    \\func make(mut p: int[]) -> int:
     \\    p.append(3)
     \\    return len(p)
     \\
-    \\def emit(p: mut list[int], c: int) -> None:
+    \\func emit(mut p: int[], c: int) -> Unit:
     \\    p.append(c)
     \\
-    \\def inner_first(ys: mut list[int], xs: mut list[list[int]]) -> None:
+    \\func inner_first(mut ys: int[], mut xs: int[][]) -> Unit:
     \\    ys.append(9)
     \\    xs.append([5])
     \\
@@ -117,59 +117,59 @@ fn accepts(body: []const u8) !void {
 }
 
 fn main(comptime statements: []const u8) []const u8 {
-    return "def main() -> int:\n" ++ statements ++ "    return 0\n";
+    return "func main() -> int:\n" ++ statements ++ "    return 0\n";
 }
 
 // spec: MUT-EXCLUSIVE-1
 test "two mut arguments naming one place or a place and its part are rejected" {
-    try rejects(main("    b = [[1, 2], [3]]\n    same(mut b, mut b)\n"), "mut b", "mut b", "both name `b`");
-    try rejects(main("    a = [[1, 2], [3]]\n    nested(mut a, mut a[0])\n"), "mut a[0]", "mut a", "`a[0]` is part of `a`");
-    try rejects(main("    r = R([[1, 2], [3]], 0)\n    rec(mut r, mut r.rows)\n"), "mut r.rows", "mut r", "`r.rows` is part of `r`");
-    try rejects(main("    xs = [[1], [2], [3]]\n    two(mut xs[0], mut xs[0])\n"), "mut xs[0]", "mut xs[0]", "both name `xs[0]`");
-    try rejects(main("    s = S([1], [2])\n    two(mut s.a, mut s.a)\n"), "mut s.a", "mut s.a", "both name `s.a`");
+    try rejects(main("    mut b = [[1, 2], [3]]\n    same(mut b, mut b)\n"), "mut b", "mut b", "both name `b`");
+    try rejects(main("    mut a = [[1, 2], [3]]\n    nested(mut a, mut a[0])\n"), "mut a[0]", "mut a", "`a[0]` is part of `a`");
+    try rejects(main("    mut r = R(rows=[[1, 2], [3]], n=0)\n    rec(mut r, mut r.rows)\n"), "mut r.rows", "mut r", "`r.rows` is part of `r`");
+    try rejects(main("    mut xs = [[1], [2], [3]]\n    two(mut xs[0], mut xs[0])\n"), "mut xs[0]", "mut xs[0]", "both name `xs[0]`");
+    try rejects(main("    mut s = S(a=[1], b=[2])\n    two(mut s.a, mut s.a)\n"), "mut s.a", "mut s.a", "both name `s.a`");
 }
 
 // spec-case: MUT-EXCLUSIVE-1
-test "two mut indices that are not two different constants may name one element" {
-    try rejects(main("    xs = [[1], [2], [3]]\n    i = 0\n    j = 1\n    two(mut xs[i], mut xs[j])\n"), "mut xs[j]", "mut xs[i]", "`i` and `j` are not");
-    try rejects(main("    xs = [[1], [2], [3]]\n    i = 0\n    two(mut xs[i], mut xs[0])\n"), "mut xs[0]", "mut xs[i]", "may name one element");
-    try rejects(main("    xs = [[1], [2], [3]]\n    two(mut xs[-1], mut xs[2])\n"), "mut xs[2]", "mut xs[-1]", "a negative index counts back from the end");
-    try rejects(main("    xs = [[1], [2], [3]]\n    two(mut xs[1 + 1], mut xs[0])\n"), "mut xs[0]", "mut xs[1 + 1]", "`1 + 1` and `0` are not");
-    try rejects(main("    d = {1: [1], 2: [2]}\n    k = 1\n    two(mut d[k], mut d[2])\n"), "mut d[2]", "mut d[k]", "may name one entry");
-    try rejects(main("    rows = [S([1], [2]), S([3], [4])]\n    i = 0\n    j = 1\n    two(mut rows[i].a, mut rows[j].a)\n"), "mut rows[j].a", "mut rows[i].a", "`i` and `j` are not");
-    const table = "    t: [Status]list[int] = {Status.ok: [1], Status.failed: [2]}\n    two(mut t[Status.ok], mut t[Status.ok])\n";
+test "dynamic mut indices defer exclusivity to runtime while known table overlap rejects" {
+    try accepts(main("    mut xs = [[1], [2], [3]]\n    mut i = 0\n    mut j = 1\n    two(mut xs[i], mut xs[j])\n"));
+    try accepts(main("    mut xs = [[1], [2], [3]]\n    mut i = 0\n    two(mut xs[i], mut xs[0])\n"));
+    try accepts(main("    mut xs = [[1], [2], [3]]\n    two(mut xs[-1], mut xs[2])\n"));
+    try accepts(main("    mut xs = [[1], [2], [3]]\n    two(mut xs[1 + 1], mut xs[0])\n"));
+    try accepts(main("    mut d = {1: [1], 2: [2]}\n    mut k = 1\n    two(mut d[k], mut d[2])\n"));
+    try accepts(main("    mut rows = [S(a=[1], b=[2]), S(a=[3], b=[4])]\n    mut i = 0\n    mut j = 1\n    two(mut rows[i].a, mut rows[j].a)\n"));
+    const table = "    mut t: [Status]int[] = {Status.ok: [1], Status.failed: [2]}\n    two(mut t[Status.ok], mut t[Status.ok])\n";
     try rejects(main(table), "mut t[Status.ok]", "mut t[Status.ok]", "both name `t[Status.ok]`");
 }
 
 // spec-case: MUT-EXCLUSIVE-1
 test "mut arguments naming provably disjoint places stay legal" {
-    try accepts(main("    s = S([1], [2])\n    two(mut s.a, mut s.b)\n"));
-    try accepts(main("    xs = [[1], [2], [3]]\n    two(mut xs[0], mut xs[2])\n"));
-    try accepts(main("    xs = [[1], [2], [3]]\n    two(mut xs[-1], mut xs[-2])\n"));
-    try accepts(main("    d = {\"a\": [1], \"b\": [2]}\n    two(mut d[\"a\"], mut d[\"b\"])\n"));
-    try accepts(main("    d = {-1: [1], 2: [2]}\n    two(mut d[-1], mut d[2])\n"));
-    try accepts(main("    rows = [S([1], [2]), S([3], [4])]\n    i = 0\n    j = 1\n    two(mut rows[i].a, mut rows[j].b)\n"));
-    try accepts(main("    t: [Status]list[int] = {Status.ok: [1], Status.failed: [2]}\n    two(mut t[Status.ok], mut t[Status.failed])\n"));
-    try accepts(main("    a = [1]\n    b = [2]\n    two(mut a, mut b)\n"));
-    try accepts("const LAST: int = 2\n\n" ++ comptime main("    xs = [[1], [2], [3]]\n    two(mut xs[0], mut xs[LAST])\n"));
-    try accepts(main("    s = S([1], [2])\n    o = S([3], [4])\n    records(mut s, mut o)\n"));
+    try accepts(main("    mut s = S(a=[1], b=[2])\n    two(mut s.a, mut s.b)\n"));
+    try accepts(main("    mut xs = [[1], [2], [3]]\n    two(mut xs[0], mut xs[2])\n"));
+    try accepts(main("    mut xs = [[1], [2], [3]]\n    two(mut xs[-1], mut xs[-2])\n"));
+    try accepts(main("    mut d = {\"a\": [1], \"b\": [2]}\n    two(mut d[\"a\"], mut d[\"b\"])\n"));
+    try accepts(main("    mut d = {-1: [1], 2: [2]}\n    two(mut d[-1], mut d[2])\n"));
+    try accepts(main("    mut rows = [S(a=[1], b=[2]), S(a=[3], b=[4])]\n    mut i = 0\n    mut j = 1\n    two(mut rows[i].a, mut rows[j].b)\n"));
+    try accepts(main("    mut t: [Status]int[] = {Status.ok: [1], Status.failed: [2]}\n    two(mut t[Status.ok], mut t[Status.failed])\n"));
+    try accepts(main("    mut a = [1]\n    mut b = [2]\n    two(mut a, mut b)\n"));
+    try accepts("const LAST: int = 2\n\n" ++ comptime main("    mut xs = [[1], [2], [3]]\n    two(mut xs[0], mut xs[LAST])\n"));
+    try accepts(main("    mut s = S(a=[1], b=[2])\n    mut o = S(a=[3], b=[4])\n    records(mut s, mut o)\n"));
 }
 
 // spec: MUT-EXCLUSIVE-2
 test "the exclusivity rule covers keyword and indirect calls but not read-only or nested arguments" {
-    try rejects(main("    xs = [[1], [2], [3]]\n    two(b=mut xs[0], a=mut xs[0])\n"), "mut xs[0]", "mut xs[0]", "both name `xs[0]`");
-    try accepts(main("    xs = [[1], [2], [3]]\n    two(b=mut xs[2], a=mut xs[0])\n"));
-    try rejects(main("    v = [1]\n    action = two\n    action(mut v, mut v)\n"), "mut v", "mut v", "both name `v`");
-    try accepts(main("    v = [1]\n    w = [2]\n    action = two\n    action(mut v, mut w)\n"));
-    try accepts(main("    a = [1, 2]\n    _ = read_one(mut a, a)\n"));
-    try accepts(main("    p = [1]\n    emit(mut p, make(mut p))\n"));
+    try rejects(main("    mut xs = [[1], [2], [3]]\n    two(b=mut xs[0], a=mut xs[0])\n"), "mut xs[0]", "mut xs[0]", "both name `xs[0]`");
+    try accepts(main("    mut xs = [[1], [2], [3]]\n    two(b=mut xs[2], a=mut xs[0])\n"));
+    try rejects(main("    mut v = [1]\n    mut action = two\n    action(mut v, mut v)\n"), "mut v", "mut v", "both name `v`");
+    try accepts(main("    mut v = [1]\n    mut w = [2]\n    mut action = two\n    action(mut v, mut w)\n"));
+    try accepts(main("    mut a = [1, 2]\n    _ = read_one(mut a, a)\n"));
+    try accepts(main("    mut p = [1]\n    emit(mut p, make(mut p))\n"));
 }
 
 // spec: MUT-EXCLUSIVE-3
 test "the exclusivity diagnostic points at the later argument and spells the rewrite" {
     var arena = std.heap.ArenaAllocator.init(t.allocator);
     defer arena.deinit();
-    const body = main("    a = [[1, 2], [3]]\n    nested(mut a, mut a[0])\n");
+    const body = main("    mut a = [[1, 2], [3]]\n    nested(mut a, mut a[0])\n");
     const found = (try verdict(arena.allocator(), body)) orelse accepted;
     try t.expectEqualStrings("E_MUTATION_OVERLAP", found.code);
     try t.expectEqualStrings("mut a[0]", found.span);
@@ -181,14 +181,11 @@ test "the exclusivity diagnostic points at the later argument and spells the rew
         found.message,
     );
     // A contained place is the one to copy even when it comes first.
-    const reversed = (try verdict(arena.allocator(), main("    a = [[1, 2], [3]]\n    inner_first(mut a[0], mut a)\n"))) orelse accepted;
+    const reversed = (try verdict(arena.allocator(), main("    mut a = [[1, 2], [3]]\n    inner_first(mut a[0], mut a)\n"))) orelse accepted;
     try t.expectEqualStrings("mut a", reversed.span);
     try t.expect(std.mem.indexOf(u8, reversed.message, "`a[0]` is part of `a`") != null);
     try t.expect(std.mem.indexOf(u8, reversed.message, "(`copy = a[0]`, pass `mut copy`, then `a[0] = copy`)") != null);
-    const keyword = (try verdict(arena.allocator(), main("    xs = [[1], [2]]\n    i = 1\n    two(b=mut xs[i], a=mut xs[0])\n"))) orelse accepted;
-    try t.expectEqualStrings("mut xs[0]", keyword.span);
-    try t.expectEqualStrings("mut xs[i]", keyword.related);
-    try t.expect(std.mem.indexOf(u8, keyword.message, "pass the enclosing value `mut xs` once") != null);
+    try accepts(main("    mut xs = [[1], [2]]\n    const i = 1\n    two(b=mut xs[i], a=mut xs[0])\n"));
 }
 
 // The aliasing calls guest tests made before MUT-EXCLUSIVE-1, each now rejected;
@@ -198,17 +195,17 @@ test "the exclusivity diagnostic points at the later argument and spells the rew
 // tests/value_semantics/{calls,field_return,index_return}.my).
 // spec-case: MUT-EXCLUSIVE-1
 test "the aliasing calls converted guest tests used to make are rejected" {
-    const dictionaries = "def write_twice(first: mut dict[int, int], second: mut dict[int, int]) -> int:\n    first[1] = 13\n    second[1] = 17\n    return first[1]\n\n";
-    try rejectsProgram(dictionaries ++ "def main() -> int:\n    original = {0: {1: 7}}\n    return write_twice(mut original[0], mut original[0])\n", "mut original[0]", "mut original[0]", "both name `original[0]`");
-    try rejectsProgram(dictionaries ++ "def main() -> int:\n    original = {1: 7}\n    action = write_twice\n    return action(mut original, mut original)\n", "mut original", "mut original", "both name `original`");
-    const frames = "record Frame:\n    rows: list[list[int]]\n    n: int\n\ndef interval(frame: mut Frame, other: mut Frame) -> int:\n    frame.n = frame.n + 1\n    other.rows = [[7]]\n    return 0\n\n" ++
-        "def contained(frame: mut Frame, rows: mut list[list[int]]) -> int:\n    frame.n = frame.n + 1\n    rows.clear()\n    return 0\n\n";
-    try rejectsProgram(frames ++ "def main() -> int:\n    frame = Frame([[1, 2], [3]], 0)\n    return interval(mut frame, mut frame)\n", "mut frame", "mut frame", "both name `frame`");
-    try rejectsProgram(frames ++ "def main() -> int:\n    frame = Frame([[1, 2], [3]], 0)\n    return contained(mut frame, mut frame.rows)\n", "mut frame.rows", "mut frame", "`frame.rows` is part of `frame`");
-    const lists = "def write_both(x: mut list[int], y: mut list[int]) -> None:\n    x[0] = 1\n    y[0] = 2\n\ndef use(values: mut list[int]) -> None:\n    write_both(mut values, mut values)\n\n";
-    try rejectsProgram(lists ++ "def main() -> int:\n    values = [0, 0]\n    use(mut values)\n    return values[0]\n", "mut values", "mut values", "both name `values`");
-    const both = "def touch_both(first: mut list[int], second: mut list[int], source: list[int]) -> int:\n    first.append(len(source))\n    second.append(len(source))\n    return len(source)\n\n";
-    try rejectsProgram(both ++ "def main() -> int:\n    items = [1, 2]\n    return touch_both(mut items, mut items, items)\n", "mut items", "mut items", "both name `items`");
+    const dictionaries = "func write_twice(mut first: dict[int, int], mut second: dict[int, int]) -> int:\n    first[1] = 13\n    second[1] = 17\n    return first[1]\n\n";
+    try rejectsProgram(dictionaries ++ "func main() -> int:\n    mut original = {0: {1: 7}}\n    return write_twice(mut original[0], mut original[0])\n", "mut original[0]", "mut original[0]", "both name `original[0]`");
+    try rejectsProgram(dictionaries ++ "func main() -> int:\n    mut original = {1: 7}\n    mut action = write_twice\n    return action(mut original, mut original)\n", "mut original", "mut original", "both name `original`");
+    const frames = "record Frame:\n    rows: int[][]\n    n: int\n\nfunc interval(mut frame: Frame, mut other: Frame) -> int:\n    frame.n = frame.n + 1\n    other.rows = [[7]]\n    return 0\n\n" ++
+        "func contained(mut frame: Frame, mut rows: int[][]) -> int:\n    frame.n = frame.n + 1\n    rows.clear()\n    return 0\n\n";
+    try rejectsProgram(frames ++ "func main() -> int:\n    mut frame = Frame(rows=[[1, 2], [3]], n=0)\n    return interval(mut frame, mut frame)\n", "mut frame", "mut frame", "both name `frame`");
+    try rejectsProgram(frames ++ "func main() -> int:\n    mut frame = Frame(rows=[[1, 2], [3]], n=0)\n    return contained(mut frame, mut frame.rows)\n", "mut frame.rows", "mut frame", "`frame.rows` is part of `frame`");
+    const lists = "func write_both(mut x: int[], mut y: int[]) -> Unit:\n    x[0] = 1\n    y[0] = 2\n\nfunc use(mut values: int[]) -> Unit:\n    write_both(mut values, mut values)\n\n";
+    try rejectsProgram(lists ++ "func main() -> int:\n    mut values = [0, 0]\n    use(mut values)\n    return values[0]\n", "mut values", "mut values", "both name `values`");
+    const both = "func touch_both(mut first: int[], mut second: int[], source: int[]) -> int:\n    first.append(len(source))\n    second.append(len(source))\n    return len(source)\n\n";
+    try rejectsProgram(both ++ "func main() -> int:\n    mut items = [1, 2]\n    return touch_both(mut items, mut items, items)\n", "mut items", "mut items", "both name `items`");
 }
 
 /// An embedded two-module project: `main` plus the `library.lists` module.
@@ -221,10 +218,9 @@ const Files = struct {
 };
 
 const library =
-    \\module library.lists
     \\
     \\
-    \\public def two(a: mut list[int], b: mut list[int]) -> None:
+    \\public func two(mut a: int[], mut b: int[]) -> Unit:
     \\    a.append(1)
     \\    b.append(2)
     \\
@@ -233,7 +229,7 @@ const library =
 /// The first diagnostic code of the project whose `main` calls `call`, and the
 /// source text it points at; "accepted" and "" when the project checks clean.
 fn qualified(allocator: std.mem.Allocator, comptime call: []const u8) ![2][]const u8 {
-    const main_source = "module main\nimport library.lists as lists\n\n\ndef main() -> int:\n    v = [1]\n    w = [2]\n    " ++ call ++ "\n    return len(v) + len(w)\n";
+    const main_source = "import library.lists as lists\n\n\nfunc main() -> int:\n    mut v = [1]\n    mut w = [2]\n    " ++ call ++ "\n    return len(v) + len(w)\n";
     var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = main_source }, .{ .path = "library/lists.my", .bytes = library } } };
     var project = compiler.project.Project.init(allocator);
     defer project.deinit();
@@ -258,48 +254,47 @@ test "the exclusivity rule covers a module-qualified call" {
 
 // spec: MUT-OVERLAP-RECEIVER-1
 test "receiver overlap rejects assignments and updates while keeping independent roots" {
-    try rejects(main("    p = [1]\n    p[make(mut p)] = 9\n"), "mut p", "p[make(mut p)]", "own statement first");
-    try rejects(main("    p = [1]\n    p[0] = make(mut p)\n"), "mut p", "p[0]", "own statement first");
-    try rejects(main("    p = [1]\n    p.append(make(mut p))\n"), "mut p", "p", "own statement first");
-    try accepts(main("    p = [1]\n    q = [2]\n    p[0] = make(mut q)\n"));
-    try accepts(main("    p = [1]\n    value = make(mut p)\n    p[0] = value\n"));
-    try accepts(main("    p = [1]\n    p.append(len(p))\n"));
-    try accepts(main("    s = S([1], [2])\n    s.a[0] = make(mut s.b)\n"));
+    try rejects(main("    mut p = [1]\n    p[make(mut p)] = 9\n"), "mut p", "p[make(mut p)]", "own statement first");
+    try rejects(main("    mut p = [1]\n    p[0] = make(mut p)\n"), "mut p", "p[0]", "own statement first");
+    try rejects(main("    mut p = [1]\n    p.append(make(mut p))\n"), "mut p", "p", "own statement first");
+    try accepts(main("    mut p = [1]\n    mut q = [2]\n    p[0] = make(mut q)\n"));
+    try accepts(main("    mut p = [1]\n    mut value = make(mut p)\n    p[0] = value\n"));
+    try accepts(main("    mut p = [1]\n    p.append(len(p))\n"));
+    try accepts(main("    mut s = S(a=[1], b=[2])\n    s.a[0] = make(mut s.b)\n"));
 }
 
 // spec-case: MUT-OVERLAP-RECEIVER-1
 test "receiver overlap covers enclosing records and nested constant paths" {
-    try rejects(main("    r = R([[1]], 0)\n    r.rows[0].append(make(mut r.rows[0]))\n"), "mut r.rows[0]", "r.rows[0]", "own statement first");
-    const points = "record Point:\n    x: int\n\ndef save(points: mut list[Point]) -> int:\n    points.append(Point(1))\n    return 0\n\n" ++
-        "def main() -> int:\n    points = [Point(0)]\n    points[save(mut points)].x = 13\n    return 0\n";
+    try rejects(main("    mut r = R(rows=[[1]], n=0)\n    r.rows[0].append(make(mut r.rows[0]))\n"), "mut r.rows[0]", "r.rows[0]", "own statement first");
+    const points = "record Point:\n    x: int\n\nfunc save(mut points: Point[]) -> int:\n    points.append(Point(x=1))\n    return 0\n\n" ++
+        "func main() -> int:\n    mut points = [Point(x=0)]\n    points[save(mut points)].x = 13\n    return 0\n";
     try rejectsProgram(points, "mut points", "points[save(mut points)].x", "own statement first");
-    try accepts(main("    r = R([[1], [2]], 0)\n    r.rows[0].append(make(mut r.rows[1]))\n"));
+    try accepts(main("    mut r = R(rows=[[1], [2]], n=0)\n    r.rows[0].append(make(mut r.rows[1]))\n"));
 }
 
 // spec-case: MUT-OVERLAP-RECEIVER-1
 test "receiver overlap covers mapping and set updates keyword calls and function values" {
-    const set = "def select(flags: mut set[int]) -> int:\n    flags.add(2)\n    return 3\n\n";
-    try rejectsProgram(set ++ "def main() -> int:\n    flags = {1}\n    flags.add(select(mut flags))\n    return len(flags)\n", "mut flags", "flags", "own statement first");
-    try rejectsProgram(set ++ "def main() -> int:\n    flags = {1}\n    flags.discard(select(mut flags))\n    return len(flags)\n", "mut flags", "flags", "own statement first");
-    const dict = "def select(values: mut dict[int, int]) -> int:\n    values[2] = 3\n    return 0\n\n";
-    try rejectsProgram(dict ++ "def main() -> int:\n    values = {0: 1}\n    values[select(mut values)] = 9\n    return len(values)\n", "mut values", "values[select(mut values)]", "own statement first");
-    try rejects(main("    p = [1]\n    p[0] = make(p=mut p)\n"), "mut p", "p[0]", "own statement first");
-    try rejects(main("    p = [1]\n    action = make\n    p[action(mut p)] = 9\n"), "mut p", "p[action(mut p)]", "own statement first");
+    const set = "func select(mut flags: set[int]) -> int:\n    flags.add(2)\n    return 3\n\n";
+    try rejectsProgram(set ++ "func main() -> int:\n    mut flags = {1}\n    flags.add(select(mut flags))\n    return len(flags)\n", "mut flags", "flags", "own statement first");
+    try rejectsProgram(set ++ "func main() -> int:\n    mut flags = {1}\n    flags.discard(select(mut flags))\n    return len(flags)\n", "mut flags", "flags", "own statement first");
+    const dict = "func select(mut values: dict[int, int]) -> int:\n    values[2] = 3\n    return 0\n\n";
+    try rejectsProgram(dict ++ "func main() -> int:\n    mut values = {0: 1}\n    values[select(mut values)] = 9\n    return len(values)\n", "mut values", "values[select(mut values)]", "own statement first");
+    try rejects(main("    mut p = [1]\n    p[0] = make(p=mut p)\n"), "mut p", "p[0]", "own statement first");
+    try rejects(main("    mut p = [1]\n    mut action = make\n    p[action(mut p)] = 9\n"), "mut p", "p[action(mut p)]", "own statement first");
 }
 
 // spec-case: MUT-OVERLAP-RECEIVER-1
 test "receiver overlap uses the collection method vocabulary for byte buffers" {
-    const buffer = "def grow(buffer: mut byte_buffer) -> int:\n    _ = buffer.append_byte(1)\n    return 2\n\n";
-    try rejectsProgram(buffer ++ "def main() -> int:\n    buffer = byte_buffer([1])\n    _ = buffer.append_byte(grow(mut buffer))\n    return len(buffer)\n", "mut buffer", "buffer", "own statement first");
-    try rejectsProgram(buffer ++ "def main() -> int:\n    buffer = byte_buffer([1])\n    _ = buffer.reserve(grow(mut buffer))\n    return len(buffer)\n", "mut buffer", "buffer", "own statement first");
+    const buffer = "func grow(mut buffer: byte_buffer) -> int:\n    _ = buffer.append_byte(1)\n    return 2\n\n";
+    try rejectsProgram(buffer ++ "func main() -> int:\n    mut buffer = byte_buffer([1])\n    _ = buffer.append_byte(grow(mut buffer))\n    return len(buffer)\n", "mut buffer", "buffer", "own statement first");
+    try rejectsProgram(buffer ++ "func main() -> int:\n    mut buffer = byte_buffer([1])\n    _ = buffer.reserve(grow(mut buffer))\n    return len(buffer)\n", "mut buffer", "buffer", "own statement first");
 }
 
 // spec-case: PY-ARRAY-MUT-1
-test "whole fixed array mut parameter rebinding remains an assignment target error" {
-    var arena = std.heap.ArenaAllocator.init(t.allocator);
-    defer arena.deinit();
-    const source = "def reset(values: mut [2]int):\n    values = [3, 4]\n\ndef main() -> int:\n    values: [2]int = [1, 2]\n    reset(mut values)\n    return values[0]\n";
-    const found = (try verdictOf(arena.allocator(), source)) orelse return error.TestUnexpectedResult;
-    try t.expectEqualStrings("E_ASSIGNMENT_TARGET", found.code);
-    try t.expectEqualStrings("values", found.span);
+test "whole fixed array mut parameter rebinding updates caller storage" {
+    var compilation = try compiler.Compilation.init(t.allocator, "mut-fixed-rebind.my", "func reset(mut values: FixedArray[int, 2]) -> Unit:\n    values = FixedArray[int, 2]([3, 4])\n\n" ++
+        "func main() -> int:\n    mut values = FixedArray[int, 2]([1, 2])\n    reset(mut values)\n    return values[0]\n");
+    defer compilation.deinit();
+    const result = try @import("native_execute.zig").run(&compilation);
+    try t.expectEqual(@as(i64, 3), result.value);
 }

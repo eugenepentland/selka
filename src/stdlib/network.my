@@ -1,4 +1,3 @@
-module network
 
 
 # One open stream returned by `connect`. It owns a host handle until `close`.
@@ -7,7 +6,7 @@ public resource Connection: network
 
 # One `read` result: up to `N` bytes, the count actually read, and the EOF flag.
 public record Chunk[const N: u64]:
-    bytes: [N]u8
+    bytes: FixedArray[u8, N]
     length: u64
     eof: bool
 
@@ -45,17 +44,17 @@ public result Closed:
 # A Network stand-in that reaches nothing: every acquisition through it, or
 # through a `net.host(...)` narrowing of it, fails with `denied_here`. It grants
 # no real authority, so building one needs no capability and is not an effect.
-public def denied() -> Network:
+public func denied() -> Network:
     return __stand_in[Network](0)
 
 
 # The `Connected.err` code a stand-in Network answers every request with.
-public def denied_here() -> int:
+public func denied_here() -> int:
     return 6
 
 
 # A readable reason for a `Connected.err` code.
-public def describe(code: int) -> str:
+public func describe(code: int) -> str:
     if code == 1:
         return "no network authority is available"
     if code == 2:
@@ -69,21 +68,23 @@ public def describe(code: int) -> str:
 
 # Connect through a Network already narrowed to a single endpoint. The narrowed
 # capability pins the request, so no endpoint string is passed here.
-public def connect(net: Network) -> Connected effects(network):
-    request: [1]u8 = [0u8]
+public func connect(net: Network) -> Connected effects(network):
+    const request = FixedArray[u8, 1]([0u8])
     return acquire_resource[Connected](net, request)
 
 
 # Read up to `N` bytes from a live connection; EOF is reported in the chunk.
-public def read[const N: u64](connection: Connection) -> Read[N] effects(network):
-    return read_resource[Read[N]](connection)
+public func read[const N: u64](connection: Connection) -> Read[N] effects(network):
+    mut owned_connection = connection
+    return read_resource[Read[N]](owned_connection)
 
 
 # Write a fixed byte array and report the bytes the provider accepted.
-public def write[const N: u64](connection: Connection, data: [N]u8) -> Written effects(network):
-    return write_resource[Written](connection, data)
+public func write[const N: u64](connection: Connection, data: FixedArray[u8, N]) -> Written effects(network):
+    mut owned_connection = connection
+    return write_resource[Written](owned_connection, data)
 
 
 # Complete a connection, releasing its host handle on success.
-public def close(connection: Connection) -> Closed effects(network):
+public func close(connection: Connection) -> Closed effects(network):
     return complete_resource[Closed](connection)

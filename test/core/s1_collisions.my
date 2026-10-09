@@ -5,7 +5,7 @@
 # indexed one. CPython's answers.
 
 
-def pairs() -> list[str]:
+func pairs() -> str[]:
     return [
         "dVC", "K9Q",  # 3 start
         "X2E3", "Rqc2",  # 4 start
@@ -60,26 +60,26 @@ def pairs() -> list[str]:
     ]
 
 
-def check(keys: list[str], filler: int) -> str:
-    out: list[str] = []
+func check(keys: str[], filler: int) -> str:
+    mut out: str[] = []
     for p in range(len(keys) // 2):
-        a = keys[2 * p]
-        b = keys[2 * p + 1]
-        d: dict[str, int] = {}
+        mut a = keys[2 * p]
+        mut b = keys[2 * p + 1]
+        mut d: dict[str, int] = {}
         for f in range(filler):
             d["f" + str(f)] = f
         d[a] = 1
-        src = "<" + b + ">" + a
-        n = len(b)
-        miss = d.get(src[1:n + 1], 0)
+        mut src = "<" + b + ">" + a
+        mut n = len(b)
+        mut miss = d.get(src[1:n + 1], 0)
         d[src[1:n + 1]] = d.get(src[1:n + 1], 0) + 2
-        hit = d.get(src[n + 2:], 0)
+        mut hit = d.get(src[n + 2:], 0)
         out.append(str(miss) + str(d[a]) + str(d[b]) + str(hit) + str(len(d) - filler))
     return ",".join(out)
 
 
-def main(out: Stream) -> int:
-    keys = pairs()
+func main(out: Stream) -> int:
+    mut keys = pairs()
     out.print(len(keys) // 2)
     out.print(check(keys, 0))
     out.print(check(keys, 20))

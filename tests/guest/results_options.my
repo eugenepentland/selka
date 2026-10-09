@@ -1,13 +1,12 @@
-module results_options
 
 
-def lookup(values: list[int], index: int) -> Option[int]:
+func lookup(values: int[], index: int) -> int?:
     if index < 0 or index >= len(values):
         return None
     return Some(values[index])
 
 
-def describe(value: Option[int]) -> int:
+func describe(value: int?) -> int:
     match value:
         case Some(number):
             return number
@@ -15,18 +14,18 @@ def describe(value: Option[int]) -> int:
             return -1
 
 
-def divide(numerator: int, denominator: int) -> Result[int, str]:
+func divide(numerator: int, denominator: int) -> Result[int, str]:
     if denominator == 0:
         return Err("division by zero")
     return Ok(numerator // denominator)
 
 
-def average(total: int, parts: int) -> Result[int, str]:
-    share = divide(total, parts)?
+func average(total: int, parts: int) -> Result[int, str]:
+    mut share = try divide(total, parts)
     return Ok(share + 1)
 
 
-def report(total: int, parts: int) -> int:
+func report(total: int, parts: int) -> int:
     match average(total, parts):
         case Ok(value):
             return value
@@ -34,15 +33,15 @@ def report(total: int, parts: int) -> int:
             return len(message)
 
 
-public def test_options() -> bool effects(managed_allocation):
-    values = [10, 20, 30]
+public func test_options() -> bool effects(managed_allocation):
+    mut values = [10, 20, 30]
     if describe(lookup(values, 1)) != 20 or describe(lookup(values, 9)) != -1:
         return False
-    blank: Option[int] = None
+    mut blank: int? = None
     return describe(blank) == -1
 
 
-public def test_results() -> bool effects(managed_allocation):
+public func test_results() -> bool effects(managed_allocation):
     match divide(21, 3):
         case Ok(value):
             if value != 7:
@@ -56,27 +55,27 @@ public def test_results() -> bool effects(managed_allocation):
             return message == "division by zero"
 
 
-public def test_propagation() -> bool effects(managed_allocation):
+public func test_propagation() -> bool effects(managed_allocation):
     return report(40, 2) == 21 and report(40, 0) == 16
 
 
-public def test_parsing_and_conversion() -> bool effects(managed_allocation):
-    if describe(int("22")) != 22 or describe(int(" 42 ")) != 42:
+public func test_parsing_and_conversion() -> bool effects(managed_allocation):
+    if describe(parse_int("22")) != 22 or describe(parse_int(" 42 ")) != 42:
         return False
-    if describe(int("0x10")) != -1 or describe(int("")) != -1:
+    if describe(parse_int("0x10")) != -1 or describe(parse_int("")) != -1:
         return False
-    match float("2.5"):
+    match parse_float("2.5"):
         case Some(value):
             if value != 2.5:
                 return False
         case None:
             return False
-    match float("nope"):
+    match parse_float("nope"):
         case Some(_):
             return False
         case None:
             return True
 
 
-def main() -> int:
+func main() -> int:
     return 0

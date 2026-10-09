@@ -1,4 +1,4 @@
-def main() -> int:
-    d = {"a": 1}
+func main() -> int:
+    mut d = {"a": 1}
     d["a"] += 41
     return d["a"]

@@ -102,7 +102,7 @@ test "friction record pins every JSON field name and type" {
     defer t.allocator.free(log_path);
     var environ = std.process.Environ.Map.init(t.allocator);
     defer environ.deinit();
-    const snapshot = try friction.snapshotHex(t.allocator, "def main() -> int:\n    return 0\n");
+    const snapshot = try friction.snapshotHex(t.allocator, "func main() -> int:\n    return 0\n");
     defer t.allocator.free(snapshot);
     var recorder = friction.Recorder.init(t.allocator, t.io, &environ, .{
         .flag = log_path,
@@ -261,7 +261,7 @@ test "friction record never carries source text or environment values" {
     defer t.allocator.free(log_path);
     const sentinel = "SENTINEL-DO-NOT-LOG-9137";
     const secret = "SENTINEL-ENVIRONMENT-VALUE-4207";
-    const text = try std.fmt.allocPrint(t.allocator, "module sentinel\n\n\ndef main() -> int:\n    x = \"{s}\"\n    return 0\n", .{sentinel});
+    const text = try std.fmt.allocPrint(t.allocator, "\n\nfunc main() -> int:\n    mut x = \"{s}\"\n    return 0\n", .{sentinel});
     defer t.allocator.free(text);
     try std.Io.Dir.cwd().writeFile(t.io, .{ .sub_path = source_path, .data = text });
     const bytes = try readAll(t.allocator, source_path);

@@ -1,13 +1,13 @@
-def repeated(count: int) -> list[int]:
-    items = [0, 0]
+func repeated(count: int) -> int[]:
+    mut items = [0, 0]
     for index in range(count):
         items[index % 2] = index
     return items
 
 
-public def test_zero_iterations_and_branch_exits_keep_loop_values() -> bool:
-    items = [1, 2]
-    before = items
+public func test_zero_iterations_and_branch_exits_keep_loop_values() -> bool:
+    mut items = [1, 2]
+    mut before = items
     for index in range(20):
         if index == 8:
             break
@@ -17,40 +17,40 @@ public def test_zero_iterations_and_branch_exits_keep_loop_values() -> bool:
     return items == [1, 7] and before == [1, 2] and repeated(0) == [0, 0]
 
 
-public def test_shared_nested_elements_detach_before_the_loop() -> bool:
-    row = [1, 2]
-    rows = [row, row]
-    before = rows
+public func test_shared_nested_elements_detach_before_the_loop() -> bool:
+    mut row = [1, 2]
+    mut rows = [row, row]
+    mut before = rows
     for index in range(20):
         rows[index % 2][-1] = index
     return rows == [[1, 18], [1, 19]] and row == [1, 2] and before == [[1, 2], [1, 2]]
 
 
-def selected(items: mut list[int]) -> int:
+func selected(mut items: int[]) -> int:
     items[0] = 9
     return 1
 
 
-public def test_callback_and_named_snapshot_keep_checks_inside_the_loop() -> bool:
-    items = [1, 2]
-    before = items
+public func test_callback_and_named_snapshot_keep_checks_inside_the_loop() -> bool:
+    mut items = [1, 2]
+    mut before = items
     for index in range(5):
         before = items
-        mutation_result_42 = selected(mut items)
+        mut mutation_result_42 = selected(mut items)
         items[mutation_result_42] = index
     return items == [9, 4] and before == [9, 3]
 
 
-public def test_nested_loops_preserve_captured_scalar_receivers() -> bool:
-    rows = [[1, 2], [3, 4]]
-    before = rows
+public func test_nested_loops_preserve_captured_scalar_receivers() -> bool:
+    mut rows = [[1, 2], [3, 4]]
+    mut before = rows
     for index in range(10):
         for inner in range(3):
             rows[index % 2][inner % 2] = index + inner
     return rows == [[10, 9], [11, 10]] and before == [[1, 2], [3, 4]]
 
 
-def main() -> int:
+func main() -> int:
     assert test_zero_iterations_and_branch_exits_keep_loop_values()
     assert test_shared_nested_elements_detach_before_the_loop()
     assert test_callback_and_named_snapshot_keep_checks_inside_the_loop()

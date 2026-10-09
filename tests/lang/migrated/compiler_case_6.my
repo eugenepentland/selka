@@ -1,7 +1,6 @@
-module compiler_case_6
 
 
-public def program() -> i64:
-    x = 5
+public func program() -> i64:
+    mut x = 5
     x -= 2
     return x

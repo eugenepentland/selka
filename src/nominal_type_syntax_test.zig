@@ -11,9 +11,9 @@ const fixture =
     \\    second: U
     \\
     \\
-    \\union Slot[T]:
-    \\    none,
-    \\    some: T
+    \\enum Slot[T]:
+    \\    none
+    \\    some(value: T)
     \\
     \\
     \\result Outcome[T, E]:
@@ -22,21 +22,21 @@ const fixture =
     \\
     \\
     \\enum Tag[T]:
-    \\    left,
+    \\    left
     \\    right
     \\
     \\
-    \\def sample[T](x: T) -> Pair[T, bool]:
-    \\    p: Pair[T, bool] = Pair[T, bool](first=x, second=True)
-    \\    slots: [1]Slot[Pair[T, bool]] = [Slot.some(p)]
+    \\func sample[T](x: T) -> Pair[T, bool]:
+    \\    mut p: Pair[T, bool] = Pair[T, bool](first=x, second=True)
+    \\    mut slots: FixedArray[Slot[Pair[T, bool]], 1] = FixedArray[Slot[Pair[T, bool]], 1]([Slot.some(value=p)])
     \\    match slots[0]:
     \\        case Slot.none:
     \\            return p
-    \\        case Slot.some(value):
+    \\        case Slot.some(value=value):
     \\            return value
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return 0
 ;
 fn parseScenario(allocator: std.mem.Allocator) !void {
@@ -94,22 +94,22 @@ test "nominal templates reject malformed declarations and application lists" {
         \\    some: T
     , "E_GENERIC_REQUIREMENT");
     try parseReject(
-        \\def f(x: Box[]) -> i64:
+        \\func f(x: Box[,]) -> i64:
         \\    return 0
     , "E_TYPE");
     try parseReject(
-        \\def f(x: Box[i64,]) -> i64:
+        \\func f(x: Box[i64,]) -> i64:
         \\    return 0
     , "E_TYPE");
     try parseReject(
-        \\def f(x: Box[i64) -> i64:
+        \\func f(x: Box[i64) -> i64:
         \\    return 0
     , "E_SYNTAX");
 }
 fn listSource(allocator: std.mem.Allocator, count: usize, nested: bool) ![]u8 {
     var out: std.Io.Writer.Allocating = .init(allocator);
     defer out.deinit();
-    try out.writer.writeAll("def f(x: ");
+    try out.writer.writeAll("func f(x: ");
     if (nested) {
         for (0..count) |_| try out.writer.writeAll("Box[");
         try out.writer.writeAll("i64");
@@ -147,15 +147,15 @@ test "unused nominal templates retain only unconditional concrete prelude schema
         \\    value: T
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         ,
-        \\union Slot[T]:
-        \\    none,
-        \\    some: T
+        \\enum Slot[T]:
+        \\    none
+        \\    some(value: T)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         ,
         \\result R[T]:
@@ -163,15 +163,15 @@ test "unused nominal templates retain only unconditional concrete prelude schema
         \\    err: i64
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         ,
         \\enum Tag[T]:
-        \\    first,
+        \\    first
         \\    second
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         ,
     };
@@ -186,7 +186,7 @@ test "unused nominal templates retain only unconditional concrete prelude schema
         \\    value: T
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     );
     defer invalid.deinit();
@@ -200,12 +200,11 @@ const Modules = struct {
         const self: *Modules = @ptrCast(@alignCast(context.?));
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, self.main);
         if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8,
-            \\module model
             \\
             \\
-            \\public union Slot[T]:
-            \\    none,
-            \\    some: T
+            \\public enum Slot[T]:
+            \\    none
+            \\    some(value: T)
             \\
             \\
             \\record Hidden[T]:
@@ -222,19 +221,18 @@ const Modules = struct {
     }
 };
 const public_module =
-    \\module main
     \\import model as m
     \\
     \\
     \\public record Box[T]:
-    \\    value: m.Slot[[2]T]
+    \\    value: m.Slot[FixedArray[T, 2]]
     \\
     \\
-    \\public def echo[T](x: Box[T]) -> Box[T] effects():
+    \\public func echo[T](x: Box[T]) -> Box[T] effects():
     \\    return x
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return 0
 ;
 fn moduleScenario(allocator: std.mem.Allocator) !void {
@@ -247,10 +245,15 @@ fn moduleScenario(allocator: std.mem.Allocator) !void {
         try project.load(files.provider(), "main", .{});
         var index = try language.interfaces.buildWithCache(&project, &cache, null);
         const merged = try @import("project_syntax.zig").build(&index);
-        try t.expectEqual(@as(usize, 3), merged.syntax.types.expressions.applications.len);
-        const application = merged.syntax.types.expressions.applications[0];
+        try t.expectEqual(@as(usize, 4), merged.syntax.types.expressions.applications.len);
+        const application = find: {
+            for (merged.syntax.types.expressions.applications) |candidate| {
+                if (std.mem.eql(u8, merged.src.text(candidate.name), "m.Slot")) break :find candidate;
+            }
+            return error.TestUnexpectedResult;
+        };
         try t.expectEqualStrings("m.Slot", merged.src.text(application.name));
-        try t.expectEqualStrings("[2]T", merged.src.text(application.arguments[0]));
+        try t.expectEqualStrings("FixedArray[T, 2]", merged.src.text(application.arguments[0]));
         try t.expectEqual(@as(usize, iteration * 2), cache.statistics.hits);
         var compilation = try language.project_compile.Compilation.init(&index);
         try compilation.check();
@@ -272,7 +275,6 @@ fn interfaceReject(text: []const u8, code: []const u8) !void {
 }
 test "nominal template interfaces enforce privacy arity kind and parameter scope" {
     try interfaceReject(
-        \\module main
         \\import model as m
         \\
         \\
@@ -280,7 +282,6 @@ test "nominal template interfaces enforce privacy arity kind and parameter scope
         \\    slot: m.Hidden[i64]
     , "E_PRIVATE_SYMBOL");
     try interfaceReject(
-        \\module main
         \\import model as m
         \\
         \\
@@ -292,7 +293,6 @@ test "nominal template interfaces enforce privacy arity kind and parameter scope
         \\    slot: m.Slot[Secret]
     , "E_PRIVATE_INTERFACE");
     try interfaceReject(
-        \\module main
         \\import model as m
         \\
         \\
@@ -300,7 +300,6 @@ test "nominal template interfaces enforce privacy arity kind and parameter scope
         \\    slot: m.Slot[i64, bool]
     , "E_GENERIC_ARITY");
     try interfaceReject(
-        \\module main
         \\import model as m
         \\
         \\
@@ -308,7 +307,6 @@ test "nominal template interfaces enforce privacy arity kind and parameter scope
         \\    slot: m.Slot
     , "E_GENERIC_ARITY");
     try interfaceReject(
-        \\module main
         \\
         \\
         \\public record Plain:
@@ -319,24 +317,21 @@ test "nominal template interfaces enforce privacy arity kind and parameter scope
         \\    value: Plain[i64]
     , "E_GENERIC_ARITY");
     try interfaceReject(
-        \\module main
         \\
         \\
         \\public record Outer[T]:
         \\    value: T[i64]
     , "E_TYPE_APPLICATION");
     try interfaceReject(
-        \\module main
         \\
         \\
         \\public record Outer[T]:
         \\    value: Missing[T]
     , "E_UNKNOWN_SYMBOL");
     try interfaceReject(
-        \\module main
         \\
         \\
-        \\public def helper() -> i64:
+        \\public func helper() -> i64:
         \\    return 0
         \\
         \\
@@ -344,7 +339,6 @@ test "nominal template interfaces enforce privacy arity kind and parameter scope
         \\    value: helper[i64]
     , "E_SYMBOL_KIND");
     try interfaceReject(
-        \\module main
         \\
         \\
         \\record T:
@@ -355,7 +349,6 @@ test "nominal template interfaces enforce privacy arity kind and parameter scope
         \\    value: T
     , "E_SHADOWING");
     try interfaceReject(
-        \\module main
         \\import model as m
         \\
         \\
@@ -363,7 +356,6 @@ test "nominal template interfaces enforce privacy arity kind and parameter scope
         \\    value: m
     , "E_SHADOWING");
     try interfaceReject(
-        \\module main
         \\
         \\
         \\record Outer[T: bad]:

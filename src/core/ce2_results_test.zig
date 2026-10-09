@@ -52,7 +52,7 @@ const results =
     \\
     \\
     \\enum LexError:
-    \\    bad,
+    \\    bad
     \\    eof
     \\
     \\
@@ -69,26 +69,26 @@ const results =
     \\    y: Big
     \\
     \\
-    \\def make_token(t: Cursor, tag: int) -> Token:
+    \\func make_token(t: Cursor, tag: int) -> Token:
     \\    return Token(tag=tag, text=str(t.pos), span=Span(line=t.line, col=t.col, offset=t.pos))
     \\
     \\
-    \\def next_in(src: bytes, t: mut Cursor) -> Result[Token, LexError]:
+    \\func next_in(src: bytes, mut t: Cursor) -> Result[Token, LexError]:
     \\    if t.pos >= len(src):
     \\        return Err(LexError.eof)
     \\    t.pos += 1
     \\    return Ok(make_token(t, 1))
     \\
     \\
-    \\def next(t: mut Tokenizer) -> Result[Token, LexError]:
-    \\    src = t.source
-    \\    cur = t.cur
-    \\    r = next_in(src, mut cur)
+    \\func next(mut t: Tokenizer) -> Result[Token, LexError]:
+    \\    mut src = t.source
+    \\    mut cur = t.cur
+    \\    mut r = next_in(src, mut cur)
     \\    t.cur = cur
     \\    return r
     \\
     \\
-    \\def next_token(tok: mut Tokenizer) -> Result[Token, str]:
+    \\func next_token(mut tok: Tokenizer) -> Result[Token, str]:
     \\    match next(mut tok):
     \\        case Ok(token):
     \\            return Ok(token)
@@ -96,27 +96,27 @@ const results =
     \\            return Err("lex")
     \\
     \\
-    \\def make_pair(k: int) -> Pair:
+    \\func make_pair(k: int) -> Pair:
     \\    return Pair(x=Big(a=k, b=k, c=k, d=k, e=k), y=Big(a=10 * k, b=0, c=0, d=0, e=1))
     \\
     \\
-    \\def pick(k: int, flag: bool) -> Pair:
-    \\    w = make_pair(k)
+    \\func pick(k: int, flag: bool) -> Pair:
+    \\    mut w = make_pair(k)
     \\    if flag:
     \\        return w
     \\    return Pair(x=w.y, y=w.x)
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    tok = Tokenizer(source=b"abc", cur=Cursor(pos=0, line=1, col=1, error_span=Span(line=0, col=0, offset=0)))
+    \\func main(out: Stream) -> int:
+    \\    mut tok = Tokenizer(source=b"abc", cur=Cursor(pos=0, line=1, col=1, error_span=Span(line=0, col=0, offset=0)))
     \\    for _ in range(4):
     \\        match next_token(mut tok):
     \\            case Ok(token):
     \\                out.print(token.text, token.span.offset)
     \\            case Err(e):
     \\                out.print(e)
-    \\    p = pick(1, False)
-    \\    q = pick(2, True)
+    \\    mut p = pick(1, False)
+    \\    mut q = pick(2, True)
     \\    out.print(p.x.a, p.y.a, p.x.e, p.y.e, q.x.a, q.y.a)
     \\    return 0
     \\
@@ -166,40 +166,40 @@ const lending =
     \\
     \\
     \\record Holder:
-    \\    items: list[Big]
+    \\    items: Big[]
     \\    n: int
     \\
     \\
-    \\def weight(x: Big) -> int:
+    \\func weight(x: Big) -> int:
     \\    return x.a + 2 * x.e
     \\
     \\
-    \\def grow(h: mut Holder, x: Big) -> int:
+    \\func grow(mut h: Holder, x: Big) -> int:
     \\    h.items[0] = Big(a=-1, b=-1, c=-1, d=-1, e=-1)
     \\    return x.a + h.items[0].a
     \\
     \\
-    \\def lend(xs: list[Big]) -> int:
-    \\    total = 0
+    \\func lend(xs: Big[]) -> int:
+    \\    mut total = 0
     \\    for i in range(len(xs)):
     \\        total += weight(xs[i])
     \\    return total
     \\
     \\
-    \\def reach(h: mut Holder) -> int:
+    \\func reach(mut h: Holder) -> int:
     \\    return grow(mut h, h.items[0])
     \\
     \\
-    \\def stale(source: list[Big]) -> int:
-    \\    xs = source
-    \\    y = xs[1]
+    \\func stale(source: Big[]) -> int:
+    \\    mut xs = source
+    \\    mut y = xs[1]
     \\    xs[1] = Big(a=50, b=0, c=0, d=0, e=0)
     \\    return weight(y) + xs[1].a
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    xs = [Big(a=i, b=i, c=i, d=i, e=i * 3) for i in range(5)]
-    \\    h = Holder(items=xs, n=0)
+    \\func main(out: Stream) -> int:
+    \\    mut xs = [for i in range(5) yield Big(a=i, b=i, c=i, d=i, e=i * 3)]
+    \\    mut h = Holder(items=xs, n=0)
     \\    out.print(lend(xs), reach(mut h), stale(xs), h.items[0].a, xs[0].a)
     \\    return 0
     \\
@@ -243,30 +243,30 @@ const sharing =
     \\    y: State
     \\
     \\
-    \\def advance(s: State, x: int) -> State:
-    \\    t = (s.f0 * 31 + x) % 1009
+    \\func advance(s: State, x: int) -> State:
+    \\    mut t = (s.f0 * 31 + x) % 1009
     \\    return State(f0=s.f1, f1=s.f2, f2=s.f3, f3=s.f4, f4=s.f5, f5=t)
     \\
     \\
-    \\def swap(p: Pair) -> Pair:
+    \\func swap(p: Pair) -> Pair:
     \\    return Pair(x=p.y, y=p.x)
     \\
     \\
-    \\def run(n: int) -> int:
-    \\    s = State(f0=1, f1=2, f2=3, f3=4, f4=5, f5=6)
+    \\func run(n: int) -> int:
+    \\    mut s = State(f0=1, f1=2, f2=3, f3=4, f4=5, f5=6)
     \\    for j in range(n):
     \\        s = advance(s, j)
     \\    return s.f0 * 1000 + s.f5
     \\
     \\
-    \\def swaps(n: int) -> int:
-    \\    p = Pair(x=State(f0=1, f1=0, f2=0, f3=0, f4=0, f5=0), y=State(f0=2, f1=0, f2=0, f3=0, f4=0, f5=0))
+    \\func swaps(n: int) -> int:
+    \\    mut p = Pair(x=State(f0=1, f1=0, f2=0, f3=0, f4=0, f5=0), y=State(f0=2, f1=0, f2=0, f3=0, f4=0, f5=0))
     \\    for _ in range(n):
     \\        p = swap(p)
     \\    return p.x.f0 * 10 + p.y.f0
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(run(20), swaps(3), swaps(4))
     \\    return 0
     \\
@@ -317,44 +317,44 @@ const globals =
     \\
     \\
     \\record Table:
-    \\    entries: list[Entry]
+    \\    entries: Entry[]
     \\    count: int
     \\
     \\
     \\record Runtime:
-    \\    names: list[str]
+    \\    names: str[]
     \\    globals: Table
     \\
     \\
-    \\def hash_of(rt: Runtime, k: int) -> int:
+    \\func hash_of(rt: Runtime, k: int) -> int:
     \\    return len(rt.names[k % len(rt.names)]) + len(rt.globals.entries)
     \\
     \\
-    \\def put(t: mut Table, k: int, h: int, v: int) -> bool:
-    \\    i = (k + h) % len(t.entries)
-    \\    fresh = t.entries[i].key == -1
+    \\func put(mut t: Table, k: int, h: int, v: int) -> bool:
+    \\    mut i = (k + h) % len(t.entries)
+    \\    mut fresh = t.entries[i].key == -1
     \\    t.entries[i] = Entry(key=k, value=v)
     \\    return fresh
     \\
     \\
-    \\def set_global(rt: mut Runtime, k: int, v: int) -> bool:
-    \\    wb = rt.globals
-    \\    r = put(mut wb, k, hash_of(rt, k), v)
+    \\func set_global(mut rt: Runtime, k: int, v: int) -> bool:
+    \\    mut wb = rt.globals
+    \\    mut r = put(mut wb, k, hash_of(rt, k), v)
     \\    rt.globals = wb
     \\    return r
     \\
     \\
-    \\def peek_after(rt: mut Runtime, k: int) -> int:
-    \\    wb = rt.globals
-    \\    r = put(mut wb, k, 0, 7)
-    \\    seen = hash_of(rt, k) + rt.globals.entries[k % len(rt.globals.entries)].value
+    \\func peek_after(mut rt: Runtime, k: int) -> int:
+    \\    mut wb = rt.globals
+    \\    mut r = put(mut wb, k, 0, 7)
+    \\    mut seen = hash_of(rt, k) + rt.globals.entries[k % len(rt.globals.entries)].value
     \\    rt.globals = wb
-    \\    return seen + (1 if r else 0)
+    \\    return seen + (if (r) then (1) else (0))
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    rt = Runtime(names=["a", "bb"], globals=Table(entries=[Entry(key=-1, value=0) for _ in range(8)], count=0))
-    \\    snapshot = rt.globals
+    \\func main(out: Stream) -> int:
+    \\    mut rt = Runtime(names=["a", "bb"], globals=Table(entries=[for _ in range(8) yield Entry(key=-1, value=0)], count=0))
+    \\    mut snapshot = rt.globals
     \\    for k in range(12):
     \\        _ = set_global(mut rt, k, k * 2)
     \\    out.print(rt.globals.entries[3].value, snapshot.entries[3].value, peek_after(mut rt, 5), rt.globals.entries[5].value)
@@ -387,27 +387,27 @@ test "a field taken for a mut call survives a call that borrows its record first
 const element_fields =
     \\record Bucket:
     \\    name: str
-    \\    items: list[int]
+    \\    items: int[]
     \\    a: int
     \\    b: int
     \\    c: int
     \\
     \\
-    \\def fill(n: int) -> int:
-    \\    xs = [Bucket(name="b", items=[], a=k, b=0, c=0) for k in range(4)]
-    \\    before = xs
-    \\    keep = xs[1].items
+    \\func fill(n: int) -> int:
+    \\    mut xs = [for k in range(4) yield Bucket(name="b", items=[], a=k, b=0, c=0)]
+    \\    mut before = xs
+    \\    mut keep = xs[1].items
     \\    for i in range(n):
     \\        xs[i % 4].items.append(i)
     \\        if i % 7 == 0:
     \\            _ = xs[i % 4].items.pop()
-    \\    total = 0
+    \\    mut total = 0
     \\    for x in xs:
     \\        total += len(x.items) * 100 + x.items[len(x.items) - 1]
     \\    return total * 10 + len(before[0].items) + len(keep)
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(fill(100))
     \\    return 0
     \\
@@ -479,7 +479,7 @@ test "results, arguments and pushes in place keep value semantics, debug, releas
         const trapped = try fixtureRun(arena.allocator(), root, tag, flags, &.{"x"});
         try std.testing.expectEqualStrings(fixture_expected, trapped.stdout);
         try std.testing.expect(contains(trapped.stderr, "error[R_OVERFLOW]"));
-        try std.testing.expect(contains(trapped.stderr, "in ce2_results::trapping"));
+        try std.testing.expect(contains(trapped.stderr, "in trapping"));
         try std.testing.expect(trapped.term == .exited and trapped.term.exited == 1);
     }
 }

@@ -1,13 +1,12 @@
-module shop.money
 
 """Money amounts in whole cents."""
 
 
 public domain Cents: int:
-    private def raw(value: int) -> Cents:
+    private func raw(value: int) -> Cents:
         return wrap[Cents](value)
     @requires(value >= 0, "an amount is never negative")
-    def of(value: int) -> Cents effects():
+    func of(value: int) -> Cents effects():
         return Cents.raw(value)
-    def value(amount: Cents) -> int effects():
+    func value(amount: Cents) -> int effects():
         return unwrap(amount)

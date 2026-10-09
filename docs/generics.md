@@ -8,7 +8,7 @@ calls still has to type-check.
 
 ## Generic functions
 
-`def name[T](...)` declares a function template. Each parameter may carry a
+`func name[T](...)` declares a function template. Each parameter may carry a
 requirement — `copy`, `equality` or `integer`, where `integer` implies `equality`
 and `equality` implies `copy` — and the body is checked once against that
 requirement alone, without substituting a representative type. A requirement the
@@ -19,15 +19,15 @@ whole list when the value arguments determine every parameter; see
 
 ```mylang
 # doc: expect 42
-def pick[T](first: T, second: T, take_first: bool) -> T:
+func pick[T](first: T, second: T, take_first: bool) -> T:
     if take_first:
         return first
     return second
 
-def double[T: integer](value: T) -> T:
+func double[T: integer](value: T) -> T:
     return value + value
 
-def main() -> int:
+func main() -> int:
     return double[int](pick[int](21, 0, True))
 ```
 
@@ -49,21 +49,21 @@ and `E_GENERIC_INFERENCE` is reported when no context supplies them.
 record Box[T]:
     value: T
 
-union Slot[T]:
-    none,
-    some: T
+enum Slot[T]:
+    none
+    some(value: T)
 
-def contents[T](slot: Slot[T], fallback: T) -> T:
+func contents[T](slot: Slot[T], fallback: T) -> T:
     match slot:
         case Slot.none:
             return fallback
-        case Slot.some(value):
+        case Slot.some(value=value):
             return value
 
-def main() -> int:
-    box = Box[int](value=7)
-    filled: Slot[int] = Slot.some(box.value)
-    empty: Slot[int] = Slot.none
+func main() -> int:
+    mut box = Box[int](value=7)
+    mut filled: Slot[int] = Slot.some(value=box.value)
+    mut empty: Slot[int] = Slot.none
     return contents[int](filled, 0) + contents[int](empty, 35)
 ```
 
@@ -89,13 +89,13 @@ record TaggedReading:
     tag: bool
     value: int
 
-def value_of[T: copy + field(value: int)](item: T) -> int:
+func value_of[T: copy + field(value: int)](item: T) -> int:
     return item.value
 
-def forward[U: copy + field(value: int)](item: U) -> int:
+func forward[U: copy + field(value: int)](item: U) -> int:
     return value_of[U](item)
 
-def main() -> int:
+func main() -> int:
     return value_of[Reading](Reading(value=12)) + forward[TaggedReading](TaggedReading(tag=True, value=30))
 ```
 
@@ -121,14 +121,14 @@ record Box[U]:
     value: U
 
 record Frame:
-    items: [2]int
+    items: FixedArray[int, 2]
     box: Box[int]
 
-def boxed[T: copy + field(items: [2]U) + field(box: Box[U]), U: copy](frame: T) -> U:
+func boxed[T: copy + field(items: FixedArray[U, 2]) + field(box: Box[U]), U: copy](frame: T) -> U:
     return frame.box.value
 
-def main() -> int:
-    frame = Frame(items=[1, 2], box=Box[int](value=42))
+func main() -> int:
+    mut frame = Frame(items=FixedArray[int, 2]([1, 2]), box=Box[int](value=42))
     return boxed[Frame, int](frame)
 ```
 
@@ -136,7 +136,7 @@ def main() -> int:
 
 A constraint names a structural contract once so several functions can share it.
 `constraint Name[Subject] = REQUIREMENTS` binds exactly one subject type; a
-function parameter uses it as a bound, `def f[T: Name](...)`. The subject is
+function parameter uses it as a bound, `func f[T: Name](...)`. The subject is
 local to the declaration, so the same contract can be written with any binder
 spelling. A bound may combine names with builtins and inline requirements —
 `T: Prices + codec + field(tag: bool)` — and a qualified import works:
@@ -150,17 +150,17 @@ bound is only valid on a function type parameter.
 # doc: expect 42
 constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
 
-def total[P: Prices](policy: P, subtotal: int) -> int effects():
+func total[P: Prices](policy: P, subtotal: int) -> int effects():
     return P.price(policy, subtotal)
 
 domain DiscountPrices: int:
-    def make(discount: int) -> DiscountPrices:
+    func make(discount: int) -> DiscountPrices:
         return wrap[DiscountPrices](discount)
 
-    def price(policy: DiscountPrices, subtotal: int) -> int effects():
+    func price(policy: DiscountPrices, subtotal: int) -> int effects():
         return subtotal - unwrap(policy)
 
-def main() -> int:
+func main() -> int:
     return total(DiscountPrices.make(8), 50)
 ```
 

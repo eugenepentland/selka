@@ -11,11 +11,10 @@ test "standard strings classify search trim pad and convert text at signed bound
 // spec-case: STANDARD-STRINGS-1
 test "standard float wrapper shares the pinned parser and stays noalloc" {
     try fixture.run(t.allocator,
-        \\module main
         \\import strings
         \\
         \\
-        \\def parse(text: str) -> int noalloc:
+        \\func parse(text: str) -> int noalloc:
         \\    match strings.to_float(text):
         \\        case Some(value):
         \\            if value == 1000.5:
@@ -25,7 +24,7 @@ test "standard float wrapper shares the pinned parser and stays noalloc" {
         \\            return 2
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    if parse(" 1_000.5 ") != 42:
         \\        return 3
         \\    match strings.to_float("inf"):
@@ -40,9 +39,9 @@ test "standard float wrapper shares the pinned parser and stays noalloc" {
 
 // spec-case: STANDARD-STRINGS-1
 test "standard string results survive collection at every managed allocation" {
-    try fixture.run(t.allocator, "module main\nimport strings\n" ++
-        "def main() -> int:\n" ++
-        "    total = 0\n" ++
+    try fixture.run(t.allocator, "import strings\n" ++
+        "func main() -> int:\n" ++
+        "    mut total = 0\n" ++
         "    for line in strings.lines(\"a\\r\\nbb\\nccc\"):\n" ++
         "        total += len(strings.strip(line))\n" ++
         "    match strings.pad_left(strings.upper(\"ff\"), 4, \"0\"):\n" ++
@@ -57,23 +56,22 @@ test "standard string results survive collection at every managed allocation" {
 // spec-case: STDLIB-ERROR-UNION-1
 test "standard strings error unions expose the category and message of a rejected builder" {
     try fixture.run(t.allocator,
-        \\module main
         \\import strings
         \\
         \\
-        \\def describe(produced: Result[str, strings.Error]) -> int:
+        \\func describe(produced: Result[str, strings.Error]) -> int:
         \\    match produced:
         \\        case Ok(_):
         \\            return 0
         \\        case Err(error):
         \\            match error:
-        \\                case strings.Error.Invalid(detail):
+        \\                case strings.Error.Invalid(value=detail):
         \\                    return len(detail)
-        \\                case strings.Error.Overflow(detail):
+        \\                case strings.Error.Overflow(value=detail):
         \\                    return 0 - len(detail)
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    if describe(strings.repeat("a", 0 - 1)) != len("repeat count must not be negative"):
         \\        return 1
         \\    if describe(strings.pad_left("x", 2, " ")) != 0:
@@ -87,11 +85,10 @@ test "standard strings error unions expose the category and message of a rejecte
 // spec: STANDARD-FORMAT-FLOAT-EXACT-1
 test "format_float rounds the exact binary value, not the rounded scaled product" {
     try fixture.run(t.allocator,
-        \\module main
         \\import strings
         \\
         \\
-        \\def text(produced: Result[str, strings.Error]) -> str:
+        \\func text(produced: Result[str, strings.Error]) -> str:
         \\    match produced:
         \\        case Ok(rendered):
         \\            return rendered
@@ -99,7 +96,7 @@ test "format_float rounds the exact binary value, not the rounded scaled product
         \\            return "error"
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    if text(strings.format_float(2.675, 2)) != "2.67":
         \\        return 1
         \\    if text(strings.format_float(0.0 - 8.345, 2)) != "-8.35":

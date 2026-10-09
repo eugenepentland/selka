@@ -53,7 +53,7 @@ Wave 2 is complete in the current compiler:
 - UTF-8 source, `#` comments, newline/indentation suites, and parentheses for
   continuation; no brace dialect or semicolon-dependent style.
 - `module`, `import`, and `export`; top-level `const`, `type`, `record`, `enum`,
-  `union`, `result`, and `def` declarations. `class` remains the compatibility
+  `union`, `result`, and `func` declarations. `class` remains the compatibility
   declaration head during the migration window.
 - Annotated parameters, fields, non-unit results, generic `[T]` parameters with
   the existing `copy`, `storable`, `integer`, and `equality` requirements, and

@@ -1,2 +1,2 @@
-def main() -> int:
+func main() -> int:
     return abs(0 - 42)

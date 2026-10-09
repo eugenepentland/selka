@@ -7,6 +7,7 @@ as a bare `InternalError` and gave no hint of where to look.
 ## Symptom
 
 ```mylang
+# doc: skip Historical pre-redesign syntax retained as audit evidence.
 module call
 
 

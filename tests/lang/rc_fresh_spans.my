@@ -2,18 +2,18 @@
 record Branch:
     depth: int
     enabled: bool
-    left: Option[Branch]
-    right: Option[Branch]
+    left: Branch?
+    right: Branch?
 
 
-def branch(depth: int) -> Branch:
+func branch(depth: int) -> Branch:
     if depth == 0:
-        return Branch(0, False, None, None)
+        return Branch(depth=0, enabled=False, left=None, right=None)
     return Branch(right=Some(branch(depth - 1)), enabled=True, depth=depth, left=Some(branch(depth - 1)))
 
 
-def total(value: Branch) -> int:
-    result = value.depth
+func total(value: Branch) -> int:
+    mut result = value.depth
     match value.left:
         case Some(child):
             result += total(child)
@@ -27,57 +27,55 @@ def total(value: Branch) -> int:
     return result
 
 
-public def test_nullable_literal_and_reordered_fields_publish_the_complete_value() -> bool:
-    value = branch(5)
+public func test_nullable_literal_and_reordered_fields_publish_the_complete_value() -> bool:
+    mut value = branch(5)
     return total(value) == 57 and value.enabled and not branch(0).enabled
 
 
-def nested() -> Branch:
-    with arena() as outer:
-        parent_value = Branch(0, False, None, None)
-        with arena() as inner:
-            value = branch(5)
-            parent_value = inner.escape(value)
-        assert total(parent_value) == 57
-        return outer.escape(parent_value)
+func nested() -> Branch:
+    mut parent_value = Branch(depth=0, enabled=False, left=None, right=None)
+    mut value = branch(5)
+    parent_value = value
+    assert total(parent_value) == 57
+    return parent_value
 
 
-def callback(depth: int) -> Branch:
-    child: Option[Branch] = Some(branch(depth))
-    return Branch(0, True, child, child)
+func callback(depth: int) -> Branch:
+    mut child: Branch? = Some(branch(depth))
+    return Branch(depth=0, enabled=True, left=child, right=child)
 
 
-public def test_uncertified_aliases_keep_their_generic_ownership() -> bool:
-    value = callback(4)
-    snapshot = value
+public func test_uncertified_aliases_keep_their_generic_ownership() -> bool:
+    mut value = callback(4)
+    mut snapshot = value
     value.left = None
     return total(snapshot) == 52 and total(value) == 26
 
 
-union LiteralChain:
-    number(value: int),
+enum LiteralChain:
+    number(value: int)
     next(rest: LiteralChain)
 
 
-def literal_chain(depth: int) -> LiteralChain:
+func literal_chain(depth: int) -> LiteralChain:
     if depth == 0:
-        return LiteralChain.number(17)
-    return LiteralChain.next(literal_chain(depth - 1))
+        return LiteralChain.number(value=17)
+    return LiteralChain.next(rest=literal_chain(depth - 1))
 
 
-def last(value: LiteralChain) -> int:
+func last(value: LiteralChain) -> int:
     match value:
-        case LiteralChain.number(number):
+        case LiteralChain.number(value=number):
             return number
-        case LiteralChain.next(rest):
+        case LiteralChain.next(rest=rest):
             return last(rest)
 
 
-public def test_inactive_counted_variant_fields_keep_literal_payload_bits() -> bool:
+public func test_inactive_counted_variant_fields_keep_literal_payload_bits() -> bool:
     return last(literal_chain(12)) == 17
 
 
-def main() -> int:
+func main() -> int:
     assert test_nullable_literal_and_reordered_fields_publish_the_complete_value()
     assert test_uncertified_aliases_keep_their_generic_ownership()
     assert test_inactive_counted_variant_fields_keep_literal_payload_bits()

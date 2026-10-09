@@ -14,7 +14,7 @@
     },
     "tuples": {
       "kind": "language",
-      "summary": "`tuple[T1, ..., Tn]` (two to eight elements) is an immutable, fixed-arity anonymous record: it is built with `(a, b)` and the bare forms after `return`, taken apart only by destructuring (`x, y = value`, `for a, b in pairs`, `_` for a value not needed), compares structurally, prints as `(1, 'a')`, and is rejected when indexed, named by field, called as a method or measured with `len`.",
+      "summary": "`tuple[T1, ..., Tn]` (two to eight elements) is an immutable, fixed-arity anonymous record: it is built with `(a, b)` and the bare forms after `return`, taken apart only by destructuring (`const x, y = value` or `mut x, y = value`; assignment destructuring updates existing writable bindings, `for a, b in pairs`, `_` for a value not needed), compares structurally, prints as `(1, 'a')`, and is rejected when indexed, named by field, called as a method or measured with `len`.",
       "doc": "docs/tuples.md#tuples"
     },
     "typed-hole-obligations": {
@@ -69,7 +69,7 @@
     },
     "direct-c-scalar-imports": {
       "kind": "tooling",
-      "summary": "`extern def` declarations call fixed-arity C scalar functions directly from every native build, passing narrow integers sign- or zero-extended as SysV C callers do and any NaN `float` argument as the canonical quiet NaN.",
+      "summary": "`extern func` declarations call fixed-arity C scalar functions directly from every native build, passing narrow integers sign- or zero-extended as SysV C callers do and any NaN `float` argument as the canonical quiet NaN.",
       "doc": "docs/c-ffi.md#direct-c-imports"
     },
     "explicit-native-link-inputs": {
@@ -124,12 +124,12 @@
     },
     "positional-and-named-record-constructors": {
       "kind": "language",
-      "summary": "A record is constructed by calling its type with positional or named fields.",
-      "doc": "docs/records-and-unions.md#positional-and-named-constructors"
+      "summary": "Records are constructed with explicit field labels, such as Point(x=1, y=2); scalar field defaults may be omitted.",
+      "doc": "docs/records-and-unions.md#named-constructors"
     },
     "recursive-value-types": {
       "kind": "language",
-      "summary": "Records and unions can contain themselves through finite recursive paths; immutable managed boxes preserve value behavior for construction, reads and updates.",
+      "summary": "Records and enums can contain themselves through finite recursive paths; immutable managed boxes preserve value behavior for construction, reads and updates.",
       "doc": "docs/records-and-unions.md#recursive-payloads"
     },
     "record-field-defaults": {
@@ -144,27 +144,27 @@
     },
     "collection-membership-and-value-equality": {
       "kind": "language",
-      "summary": "`in`, `not in`, `==` and `!=` compare managed collection contents rather than identities; records, fixed arrays, unions, `Result` and `Option` compare structurally.",
+      "summary": "`in`, `not in`, `==` and `!=` compare managed collection contents rather than identities; records, fixed arrays, enums, `Result` and `Option` compare structurally.",
       "doc": "docs/managed-memory.md#membership-and-value-equality"
     },
     "python-indented-syntax": {
       "kind": "language",
-      "summary": "`def`, `record`, four-space indentation and `#` comments are the source syntax; there is no second spelling.",
+      "summary": "`func`, `record`, enum, explicit const/mut declarations, four-space indentation and # comments are canonical source syntax; legacy forms are rejected with structured migration fixes.",
       "doc": "docs/python-syntax.md#the-language"
     },
     "python-payload-variant-construction": {
       "kind": "language",
-      "summary": "`Shape.radius(4)` builds a payload variant and `case Shape.radius(r)` takes it apart.",
+      "summary": "`enum Shape` declares named payload cases; `Shape.radius(value=4)` constructs one and `case Shape.radius(value=r)` binds its payload.",
       "doc": "docs/records-and-unions.md#payload-variant-construction"
     },
     "python-named-variant-case-fields": {
       "kind": "language",
-      "summary": "`union Node: form(items: list[Node], span: Span)` declares named case fields, constructed positionally or by keyword with record-style defaults and matched with one binding per field.",
+      "summary": "`enum Node` declares cases with named payload fields such as `form(items: Node[], span: Span)`, constructed and matched with explicit field labels.",
       "doc": "docs/records-and-unions.md#named-variant-case-fields"
     },
     "python-contextual-array-and-table-literals": {
       "kind": "language",
-      "summary": "A list literal becomes a fixed `[N]T` array and a dict literal an enum-indexed `[Kind]T` table when the context demands one.",
+      "summary": "`[a, b]` constructs a growable array; `FixedArray[T, N]([a, b])` explicitly constructs a fixed array and checks its length. Enum tables retain their indexed table syntax.",
       "doc": "docs/records-and-unions.md#fixed-arrays-and-enum-tables"
     },
     "fixed-array-element-writes": {
@@ -174,7 +174,7 @@
     },
     "mut-fixed-array-parameters": {
       "kind": "language",
-      "summary": "A `values: mut [N]T` parameter names the caller's array, so `f(mut values)` lets the callee write its elements; an array parameter without `mut` is the callee's own copy.",
+      "summary": "`mut values: FixedArray[T, N]` names caller storage; rebinding and element writes reach the caller, including fields and elements passed as mut targets. A readonly array parameter is an independent snapshot.",
       "doc": "docs/records-and-unions.md#passing-an-array-to-be-written"
     },
     "fixed-array-iteration": {
@@ -204,7 +204,7 @@
     },
     "contracts": {
       "kind": "language",
-      "summary": "`@requires(cond[, \"message\"])` and `@ensures(cond[, \"message\"])` on a `def` are checked at entry and at every normal return in every build mode and backend, with `result`, entry-time `old(expr)` and `Ok`-only postconditions for `Result`; a violation traps `R_REQUIRES` (naming the caller) or `R_ENSURES`, and conditions must be effect-free apart from allocation.",
+      "summary": "`@requires(cond[, \"message\"])` and `@ensures(cond[, \"message\"])` on a `func` are checked at entry and at every normal return in every build mode and backend, with `result`, entry-time `old(expr)` and `Ok`-only postconditions for `Result`; a violation traps `R_REQUIRES` (naming the caller) or `R_ENSURES`, and conditions must be effect-free apart from allocation.",
       "doc": "docs/contracts.md#preconditions-and-postconditions"
     },
     "type-invariants": {
@@ -269,12 +269,12 @@
     },
     "list-comprehensions": {
       "kind": "language",
-      "summary": "`[expression for name in source if condition]` builds a managed list in one expression.",
+      "summary": "`[for name in source if condition yield expression]` eagerly builds a managed list with one source and one readonly binder; combine filters with Boolean and, and use explicit loops for nested iteration.",
       "doc": "docs/managed-memory.md#list-comprehensions"
     },
     "dict-and-set-comprehensions": {
       "kind": "language",
-      "summary": "`{k: v for ...}` and `{x for ...}` build a dictionary or a set, and every comprehension takes two names, several `for` clauses and several `if` filters, each clause accepting what a `for` loop accepts.",
+      "summary": "`{k: v for ...}` and `{x for ...}` build a dictionary or a set, and these forms accept two names, several `for` clauses and several `if` filters, each clause accepting what a `for` loop accepts.",
       "doc": "docs/python-syntax.md#dict-and-set-comprehensions"
     },
     "generator-arguments": {
@@ -289,7 +289,7 @@
     },
     "wildcard-match-arms": {
       "kind": "language",
-      "summary": "A final `case _` covers every variant no earlier arm named.",
+      "summary": "A final case _ covers the remaining variants or disjoint nested pattern combinations; enum payload patterns use declared labels. Match expressions produce one value with yield in each arm.",
       "doc": "docs/match-expressions.md#wildcard-arms"
     },
     "prelude-float-operations": {
@@ -309,12 +309,12 @@
     },
     "string-to-number-parsing": {
       "kind": "language",
-      "summary": "`int(text)` and `float(text)` answer `Option` rather than raising on text that is not a number.",
+      "summary": "`parse_int(text)` and `parse_float(text)` answer optional values rather than raising on text that is not a number.",
       "doc": "docs/text.md#parsing-numbers-from-text"
     },
     "python-assignments-and-value-records": {
       "kind": "language",
-      "summary": "Assignment creates a mutable function-scoped local; records and managed collections are independent values.",
+      "summary": "`const` and `mut` explicitly declare locals with lexical block scope and no active-name shadowing; assignment only updates writable bindings. Ordinary records and managed collections have independent snapshot semantics.",
       "doc": "docs/statements.md#assignments-and-value-records"
     },
     "discard-name": {
@@ -394,7 +394,7 @@
     },
     "hashable-keys": {
       "kind": "language",
-      "summary": "Dictionary keys and set elements may be any integer, `bool`, `str`, `bytes`, or a tuple, record, union, enum, domain, `Option` or fixed array built only from those, hashed and compared structurally with no seed; `float`, collections, `byte_buffer`, `class`, function and capability keys are rejected with `E_DICT_KEY` or `E_SET_ELEMENT` naming the offending part.",
+      "summary": "Dictionary keys and set elements may be any integer, `bool`, `str`, `bytes`, or a tuple, record, enum, domain, optional or fixed array built only from those, hashed and compared structurally with no seed; `float`, collections, `byte_buffer`, `class`, function and capability keys are rejected with `E_DICT_KEY` or `E_SET_ELEMENT` naming the offending part.",
       "doc": "docs/sets.md#hashable-keys"
     },
     "dictionary-methods": {
@@ -419,17 +419,17 @@
     },
     "contextual-option-constructors": {
       "kind": "language",
-      "summary": "`Some(value)` and a bare `None` take their `Option[T]` type from the surrounding context.",
+      "summary": "`Some(value)` and a bare `None` take their `T?` optional type from context; an ordinary T value is promoted when an optional destination requires it.",
       "doc": "docs/results-and-options.md#option-constructors"
     },
     "unit-and-result-entry": {
       "kind": "language",
-      "summary": "`main` may return `int`, `None` or `Result[int, int]` / `Result[None, int]`.",
+      "summary": "`main` may return int or Unit, optionally with `fails E`; explicit Result return types remain supported. Integer success supplies the exit status, integer failure supplies its status, and other failures exit one.",
       "doc": "docs/functions.md#entry-point-signatures"
     },
     "optional-semicolons": {
       "kind": "language",
-      "summary": "A statement ends at a newline; semicolons remain valid for several statements on one line.",
+      "summary": "Statements end at newlines; explicit semicolons are rejected with a structured newline repair when it is safe. Lexer-inserted statement boundaries remain internal.",
       "doc": "docs/statements.md#statement-endings"
     },
     "dotted-module-qualification": {
@@ -439,7 +439,7 @@
     },
     "builtin-list-and-result-types": {
       "kind": "language",
-      "summary": "`list[T]` and `Result[T, E]` are prelude types that need no declaration or import.",
+      "summary": "`T[]`, `T?`, `FixedArray[T, N]`, `Unit` and `Result[T, E]` are prelude types that need no declaration or import.",
       "doc": "docs/results-and-options.md#builtin-list-and-result-types"
     },
     "contextual-empty-list-and-result-constructors": {
@@ -454,7 +454,7 @@
     },
     "postfix-error-propagation": {
       "kind": "language",
-      "summary": "`expression?` returns a failed `Result` to the caller and unwraps a successful one.",
+      "summary": "Prefix `try` unwraps success and propagates failure at a statement boundary, including return, binding, discard and resource acquisition heads; embedded expression propagation is rejected.",
       "doc": "docs/results-and-options.md#postfix-error-propagation"
     },
     "fixed-width-integers": {
@@ -484,7 +484,7 @@
     },
     "unit-procedures": {
       "kind": "language",
-      "summary": "A procedure omits its return annotation or writes `-> None`, ends naturally or with bare `return`.",
+      "summary": "A procedure omits its return annotation or writes `-> Unit`, returns `()` or uses bare return, and may end naturally.",
       "doc": "docs/functions.md#unit-procedures"
     },
     "byte-literals": {
@@ -504,17 +504,17 @@
     },
     "tagged-unions": {
       "kind": "language",
-      "summary": "`union` declares a tagged variant type whose cases are matched exhaustively.",
+      "summary": "`enum` declares a closed variant type with named payload cases and exhaustive matching; rare nominal result declarations remain supported.",
       "doc": "docs/records-and-unions.md#tagged-unions"
     },
     "checked-results": {
       "kind": "language",
-      "summary": "`Result[T, E]` carries `Ok`/`Err` and must be handled before it is discarded.",
+      "summary": "`func f(...) -> T fails E` separates successful T returns from fail E; explicit Result[T, E] still carries Ok/Err. Failures must be handled or propagated with prefix try before a value is discarded.",
       "doc": "docs/results-and-options.md#checked-results"
     },
     "generic-functions": {
       "kind": "language",
-      "summary": "`def name[T](...)` declares a template specialized per concrete argument type.",
+      "summary": "`func name[T](...)` declares a template specialized per concrete argument type.",
       "doc": "docs/generics.md#generic-functions"
     },
     "generic-call-argument-inference": {
@@ -529,12 +529,12 @@
     },
     "flow-sensitive-option-guards": {
       "kind": "language",
-      "summary": "Local Option payloads are available on paths guarded by `is None` or `is not None`.",
+      "summary": "Local T? payloads are available on paths guarded by is None or is not None.",
       "doc": "docs/results-and-options.md#flow-sensitive-option-guards"
     },
     "option-methods": {
       "kind": "language",
-      "summary": "`Option[T]` answers `unwrap_or(default)`, `is_none()` and `is_some()`; the default is checked against the payload and an integer literal adopts it, the methods are pure, allocation-free and usable in generic bodies, and the `sentinel-int` lint names the `Option[int]` rewrite for a `-1` convention.",
+      "summary": "`T?` supports unwrap_or(default), is_none() and is_some(); defaults use the payload type, the methods are pure and allocation-free, and generic bodies preserve optional contracts.",
       "doc": "docs/results-and-options.md#option-methods"
     },
     "const-length-generics": {
@@ -544,7 +544,7 @@
     },
     "generic-nominals": {
       "kind": "language",
-      "summary": "`record` and `union` declarations take type parameters and specialize by argument identity.",
+      "summary": "Record and enum declarations take type parameters and specialize by argument identity.",
       "doc": "docs/generics.md#generic-records-and-unions"
     },
     "structural-contracts": {
@@ -559,7 +559,7 @@
     },
     "disk-modules": {
       "kind": "language",
-      "summary": "A project is `module`/`import`/`export` declarations over files resolved from disk.",
+      "summary": "Module identities derive from paths beneath the project root; source files use import and public declarations without module headers. Redundant legacy headers carry a deletion fix.",
       "doc": "docs/modules.md#disk-modules"
     },
     "headerless-standard-imports": {
@@ -714,7 +714,7 @@
     },
     "module-interfaces": {
       "kind": "tooling",
-      "summary": "`mylang interfaces emit` writes one `module-interface-v5` artifact per module from the whole-program check (declaration text with only the bodies a dependent reads, the facts that stand in for the rest, interface fingerprints and reached shapes) with an interface hash that a body-only edit keeps and an implementation hash; `interfaces check` checks one module against interfaces alone and `interfaces oracle` proves every module's such check equals the whole-program check.",
+      "summary": "`mylang interfaces emit` writes one `module-interface-v8` artifact per module from the whole-program check (declaration text with only the bodies a dependent reads, the facts that stand in for the rest, interface fingerprints and reached shapes) with an interface hash that a body-only edit keeps and an implementation hash; `interfaces check` checks one module against interfaces alone and `interfaces oracle` proves every module's such check equals the whole-program check.",
       "doc": "docs/tooling/module-interfaces.md#module-interfaces"
     },
     "persistent-checked-bodies": {
@@ -739,17 +739,17 @@
     },
     "checked-mutation-contracts": {
       "kind": "language",
-      "summary": "A parameter a function writes through is declared `name: mut T`, that set is the function's mutation footprint, and every argument bound to one is written `mut argument`, so a call shows exactly what it changes; deep origins, return aliasing and conservative overlap rejection are checked through calls, generics and callbacks.",
+      "summary": "`mut name: T` declares caller storage and `mut argument` marks its call site; updates include scalar or whole-value rebinding and nested fields or elements. Readonly arguments are independent snapshots; mut capabilities and named callback labels are preserved by callable contracts.",
       "doc": "docs/effects.md#mutation-contracts"
     },
     "mut-parameters": {
       "kind": "language",
-      "summary": "`name: mut T` declares a written parameter and `mut argument` marks the call site, in both directions: a write through an unmarked parameter and a `mut` the body never writes are `E_MUTATION_MARKER` with the exact replacement, `mut` is accepted only on a type with writable storage, and receivers stay unmarked.",
+      "summary": "`mut name: T` accepts writable scalar and ordinary aggregate storage; other parameters are readonly snapshots. Call sites mark exactly declared mut positions, and callable assignment preserves those positions exactly. A mut parameter may be unused.",
       "doc": "docs/effects.md#declaration-site-mutation-errors"
     },
     "exclusive-mut-arguments": {
       "kind": "language",
-      "summary": "The places two `mut` arguments of one call name must be disjoint: one place passed twice (`f(mut b, mut b)`), a value with one of its parts (`f(mut a, mut a[0])`) or two indices that are not two different constants (`f(mut xs[i], mut xs[j])`) is `E_MUTATION_OVERLAP`, pointing at the later argument with the copy-and-store-back rewrite, while different fields, constant indices and keys stay legal.",
+      "summary": "Mut arguments must name disjoint caller places. Known overlap rejects statically with E_MUTATION_OVERLAP; dynamic indices and keys are compared after evaluation and trap before the call when they overlap.",
       "doc": "docs/value-semantics.md#the-rules"
     },
     "per-function-body-reuse": {
@@ -804,7 +804,7 @@
     },
     "managed-lists": {
       "kind": "language",
-      "summary": "`list[T]` is a growing managed sequence; assignment, arguments and stores give independent values over copy-on-write storage.",
+      "summary": "`T[]` is a growable managed array; assignment, arguments and stores preserve independent values over copy-on-write storage.",
       "doc": "docs/managed-memory.md#managed-lists"
     },
     "standard-math": {
@@ -939,7 +939,7 @@
     },
     "environment-python-surface": {
       "kind": "language",
-      "summary": "`env.get(\"NAME\")` returns `Option[str]`, `env.only(...)` narrows an `Environment` to literal names, and `env.names()` lists the visible names as `list[str]`.",
+      "summary": "`env.get(\"NAME\")` returns str?, `env.only(...)` narrows an Environment to literal names, and `env.names()` lists visible names as str[].",
       "doc": "docs/io.md#environment"
     },
     "filesystem-methods": {
@@ -964,7 +964,7 @@
     },
     "host-capability-foreign-calls": {
       "kind": "tooling",
-      "summary": "Every `extern def` takes `host: Host` as its first parameter and declares `effects(host)`; the checker verifies it at each call and the C ABI drops it before the foreign call, with `--allow-host` under `--restrict`.",
+      "summary": "Every `extern func` takes `host: Host` as its first parameter and declares `effects(host)`; the checker verifies it at each call and the C ABI drops it before the foreign call, with `--allow-host` under `--restrict`.",
       "doc": "docs/c-ffi.md#the-host-parameter"
     },
     "buffered-stream-write": {
@@ -984,17 +984,17 @@
     },
     "error-conversion": {
       "kind": "language",
-      "summary": "`?` wraps a propagated result's error into the case of the enclosing function's error union whose payload is that error type.",
+      "summary": "Prefix `try` converts a propagated error into the enclosing failure type when its enum has a case whose payload is that error type.",
       "doc": "docs/results-and-options.md#postfix-error-propagation"
     },
     "error-return-traces": {
       "kind": "language",
-      "summary": "An `Err` reaching the end of `main` or failing a test is reported with its error return trace: the `Err(...)` construction or runtime call that made it, then every `?` (and the union case it converted to) and `return` that passed it on, kept in a 32-entry ring recorded only on the error path in every build.",
+      "summary": "An error reaching main or a test is reported with its return trace: its construction or runtime call, every prefix try propagation and conversion, and each return that passed it on, retained in a bounded ring only on error paths.",
       "doc": "docs/results-and-options.md#error-return-traces"
     },
     "standard-error-unions": {
       "kind": "language",
-      "summary": "A standard module whose operations can fail exports an error union with one `str` payload per case and a `message(error)` helper instead of returning `Result[_, str]`.",
+      "summary": "Fallible standard modules export error enums with named string payload fields and a message(error) helper, rather than returning unstructured string errors.",
       "doc": "docs/standard-library.md#error-unions"
     },
     "reference-command": {
@@ -1009,12 +1009,12 @@
     },
     "keyword-only-parameters": {
       "kind": "language",
-      "summary": "A bare `*` in a parameter list makes every following parameter keyword-only, so it binds by name in any order, and a call that passes one positionally is `E_KEYWORD_ONLY` with the whole call rewritten using the parameter names.",
+      "summary": "`named name: T` marks each parameter individually; calls supply its explicit label in any order, and callable types retain named labels as part of their contract.",
       "doc": "docs/functions.md#keyword-only-parameters"
     },
     "conditional-expression": {
       "kind": "language",
-      "summary": "`value_if_true if condition else value_if_false` is one expression whose condition is bool, whose arms take the expected type when the context supplies one, and of which only the chosen arm is evaluated.",
+      "summary": "`if condition then value_if_true else value_if_false` is an expression with a Boolean condition and contextual arm types; only the selected arm is evaluated.",
       "doc": "docs/python-syntax.md#conditional-expressions"
     },
     "derived-effect-ceilings": {
@@ -1068,27 +1068,27 @@
   "native_exclusions": [],
   "limits": {
     "generic_calls": "explicit arguments or complete inference from call inputs; ambiguous and unmaterialized phantom arguments require explicit specialization",
-    "unit": "unit/None procedures; main accepts int, unit, or Result[int/unit,int]; copied host/JSON unit signatures remain excluded",
+    "unit": "Unit/() procedures; None is only an optional absence; main accepts int or Unit, optionally fails E, and explicit Result return types",
     "container_elements": "managed list/dict elements: copyable values without must-handle obligations, owned resources, or capability grants",
     "noalloc": "managed-backing-operations-only",
     "type_aliases": "non-parameterized",
     "constants": "bounded-scalar-expressions-and-nongeneric-source-functions-plus-str-bytes-literals",
     "iteration": "range(end/start,end), list/str/dict/fixed-array foreach and enumerate; fixed bounds and structural mutation checks",
-    "native_runtime": "the new core: Core IR to LLVM text, compiled with the pinned Zig toolchain's clang and linked with the core C runtime; amd64 Linux (SysV) only; foreign calls through scalar `extern def` with `--link FILE.c`",
+    "native_runtime": "the new core: Core IR to LLVM text, compiled with the pinned Zig toolchain's clang and linked with the core C runtime; amd64 Linux (SysV) only; foreign calls through scalar `extern func` with `--link FILE.c`",
     "workers": "no host worker facility and no guest spawn syntax; parallelism is one guest process per task",
     "floating_point": "float literals, ordinary operators, signed int conversions; IEEE binary64; standard sqrt is the correctly rounded binary64 operation, decimal parsing is accurate rather than correctly rounded; no transcendentals",
-    "callbacks": "generic signatures, exact effect ceilings, explicit readonly context borrows, no captures or reference results",
+    "callbacks": "exact parameter types, named labels, mutation positions and effect ceilings; failure types and suffixes are preserved; no capturing closures or reference results",
     "semantic_reuse": "ordinary checked bodies and concrete specializations replay across processes; symbolic templates keep abstract checking; unresolved nested or interned-identity references stay conservative; in-memory retention is bounded by one shared reuse.max_bytes budget and a zero budget disables reuse",
     "text_data": "managed Unicode scalar strings and managed bytes; foreign calls take scalars only",
     "time_random": "Unix wall clock and explicit entropy capabilities; deterministic noncryptographic SplitMix64",
     "managed_lists": "independent values with copy-on-write payloads; automatic growth; no owned/resource elements, borrowed interiors or host escape",
-    "python": "static fixed-width types, function-scoped locals with E_UNBOUND definite assignment, value records; indentation is the only block syntax",
-    "dictionaries": "managed insertion order; homogeneous hashable keys (integers, bool, str, bytes, and tuples, records, unions, enums, domains, Option and fixed arrays of those) and copyable values",
-    "value_semantics": "the only model: independent collection and aggregate values with copy-on-write transfers; a copy is not a `managed_allocation` effect. `class` declarations and builtin Cell are rejected. A `mut` collection parameter writes the caller's collection but whole-parameter rebinding does not; a `mut` record parameter is inout and cannot be a function value",
+    "python": "static fixed-width types, explicit const/mut bindings with lexical block scope and no active shadowing, value snapshots; indentation is the block syntax",
+    "dictionaries": "managed insertion order; homogeneous hashable keys (integers, bool, str, bytes, and tuples, records, enums, domains, optional values and fixed arrays of those) and copyable values",
+    "value_semantics": "independent collection and aggregate snapshots with copy-on-write transfers; copies do not add managed_allocation. class and Cell are rejected. Prefix mut parameters and mut arguments preserve caller storage, including whole-value rebinding, fields and elements, through callable contracts.",
     "sets": "managed insertion order over hashable elements; `set()` needs an expected type; no frozenset, no augmented operators (`|=`); generic bodies key only by integer-bounded parameters, `str` or concrete hashable types; a module that declares its own function named `set` keeps it, and there the type spelling `set[T]` is unavailable while literals still work",
-    "generators": "generator expressions only as the argument of sum, any, all, min, max, sorted, list, set, dict or str.join; no yield and no generator values",
+    "generators": "generator expressions only as the argument of sum, any, all, min, max, sorted, list, set, dict or str.join; no suspended generator functions or stored generator values; yield belongs to source-first array comprehensions and match-expression arms",
     "native_tests": "one native process per test; exported test_ functions returning bool or Result[bool, E]; positive deterministic receipts keyed by the test program's Core IR, settings, toolchain and outcome-relevant environment; a run with --link or --verify-facts never reuses a receipt; directory runs share one worker budget (--jobs, MYLANG_JOBS or CPUs)",
-    "standard_library": "ten embedded Python-syntax modules over managed types: math, strings, sort, path, hex, base64, json, pool, random, time",
+    "standard_library": "fourteen embedded modules using the canonical frontend: math, strings, sort, path, hex, base64, json, pool, random, time, byte_builder, filesystem, network, environment",
     "memory": "one-count reference counting with copy-on-write; no tracing collector; value semantics prevents cycles, and identity graphs use pool handles; `with arena()` is a retired plain block"
   },
   "removed": {
@@ -1142,7 +1142,7 @@
     },
     "mandatory-mutation-footprint-warning": {
       "date": "2026-09-21",
-      "note": "`W_MUTATES_MISSING` and the reference-typed `class` exemption, with the `mutates(...)` clause and the opt-in `&` / `--mutation-markers` marker beside them. A parameter a function writes through is declared `name: mut T` and every argument bound to one is written `mut argument`; see the implemented `mut-parameters` entry."
+      "note": "`W_MUTATES_MISSING` and the reference-typed `class` exemption, with the `mutates(...)` clause and the opt-in `&` / `--mutation-markers` marker beside them. A parameter a function writes through is declared `mut name: T` and every argument bound to one is written `mut argument`; see the implemented `mut-parameters` entry."
     },
     "unchecked-release-builds": {
       "date": "2026-09-24",

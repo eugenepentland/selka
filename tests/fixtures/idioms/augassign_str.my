@@ -1,4 +1,4 @@
-def main() -> int:
-    s = "a"
+func main() -> int:
+    mut s = "a"
     s += "b"
     return len(s)

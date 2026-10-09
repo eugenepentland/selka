@@ -5,7 +5,7 @@ import strings
 
 # 'x' * count: str has no repetition operator; strings.repeat is the library
 # spelling, and it answers a Result because a negative count is an error.
-def pad(count: int) -> str:
+func pad(count: int) -> str:
     match strings.repeat("x", count):
         case Ok(text):
             return text
@@ -13,14 +13,14 @@ def pad(count: int) -> str:
             return ""
 
 
-def main(out: Stream) -> int:
-    text = "\n".join([f"item{i},{(i * 7919) % 100003},{pad(i % 7)}" for i in range(200000)])
-    total = 0
-    widths = 0
-    sevens = 0
+func main(out: Stream) -> int:
+    mut text = "\n".join([for i in range(200000) yield f"item{i},{(i * 7919) % 100003},{pad(i % 7)}"])
+    mut total = 0
+    mut widths = 0
+    mut sevens = 0
     for line in text.split("\n"):
-        fields = line.split(",")
-        match int(fields[1]):
+        mut fields = line.split(",")
+        match parse_int(fields[1]):
             case Some(value):
                 total += value
             case None:
@@ -28,7 +28,7 @@ def main(out: Stream) -> int:
         widths += len(fields[2])
         if fields[0].endswith("7"):
             sevens += 1
-    rewritten = text.replace("item", "it")
+    mut rewritten = text.replace("item", "it")
     out.print(f"{total} {widths} {sevens}")
     out.print(f"{len(text)} {len(rewritten)} {text.count(',1')}")
     return 0

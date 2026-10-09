@@ -236,15 +236,9 @@ pub const friction_log = @import("friction_log.zig");
 
 /// Whether a source's first line that is neither blank nor a comment is a
 /// `module` header or an `import` directive: the openings of a module file.
+pub const module_syntax = @import("module_syntax.zig");
+
+/// Recognize leading project directives with the same rules as CLI routing.
 pub fn opensAsModule(source_bytes: []const u8) bool {
-    var lines = std.mem.splitScalar(u8, source_bytes, '\n');
-    while (lines.next()) |raw| {
-        const line = std.mem.trim(u8, raw, " \t\r");
-        if (line.len == 0 or line[0] == '#') continue;
-        for ([_][]const u8{ "module", "import" }) |word| {
-            if (std.mem.startsWith(u8, line, word) and line.len > word.len and (line[word.len] == ' ' or line[word.len] == '\t')) return true;
-        }
-        return false;
-    }
-    return false;
+    return module_syntax.usesModuleSyntax(source_bytes);
 }

@@ -9,19 +9,19 @@ const module = "nominal-providers.my";
 // The native provider reads "r:data.bin", creates "c:out.bin" and refuses
 // "r:absent.bin"; every request is the mode byte, a colon and a relative path.
 const helpers =
-    \\def reading() -> [10]u8:
-    \\    return [114u8, 58u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8]
+    \\func reading() -> FixedArray[u8, 10]:
+    \\    return FixedArray[u8, 10]([114u8, 58u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8])
     \\
     \\
-    \\def creating() -> [9]u8:
-    \\    return [99u8, 58u8, 111u8, 117u8, 116u8, 46u8, 98u8, 105u8, 110u8]
+    \\func creating() -> FixedArray[u8, 9]:
+    \\    return FixedArray[u8, 9]([99u8, 58u8, 111u8, 117u8, 116u8, 46u8, 98u8, 105u8, 110u8])
     \\
     \\
-    \\def missing() -> [12]u8:
-    \\    return [114u8, 58u8, 97u8, 98u8, 115u8, 101u8, 110u8, 116u8, 46u8, 98u8, 105u8, 110u8]
+    \\func missing() -> FixedArray[u8, 12]:
+    \\    return FixedArray[u8, 12]([114u8, 58u8, 97u8, 98u8, 115u8, 101u8, 110u8, 116u8, 46u8, 98u8, 105u8, 110u8])
     \\
     \\
-    \\def finish[T](file: File) -> Finish[T]:
+    \\func finish[T](file: File) -> Finish[T]:
     \\    match complete_resource[Finish[T]](file):
     \\        case Finish.ok(done):
     \\            return Ok(done)
@@ -32,14 +32,14 @@ const helpers =
     \\
 ;
 const program = fixture.declarations ++ helpers ++
-    \\def work[T](fs: Filesystem) -> Status[T]:
-    \\    file = acquire_resource[Open[T]](fs, reading())?
-    \\    chunk = read_resource[Read[T]](file)?
-    \\    second = read_resource[Read[T]](file)?
-    \\    sink = acquire_resource[Open[T]](fs, creating())?
-    \\    n = write_resource[Written[T]](sink, singleton[u8](9u8))?
-    \\    payload: [2]u8 = [chunk.bytes[0], chunk.bytes[1]]
-    \\    m = write_resource[Written[T]](sink, payload)?
+    \\func work[T](fs: Filesystem) -> Status[T]:
+    \\    mut file = try acquire_resource[Open[T]](fs, reading())
+    \\    mut chunk = try read_resource[Read[T]](file)
+    \\    mut second = try read_resource[Read[T]](file)
+    \\    mut sink = try acquire_resource[Open[T]](fs, creating())
+    \\    mut n = try write_resource[Written[T]](sink, singleton[u8](9u8))
+    \\    mut payload: FixedArray[u8, 2] = FixedArray[u8, 2]([chunk.bytes[0], chunk.bytes[1]])
+    \\    mut m = try write_resource[Written[T]](sink, payload)
     \\    match finish[T](file):
     \\        case Finish.ok(done):
     \\            if not done:
@@ -57,7 +57,7 @@ const program = fixture.declarations ++ helpers ++
     \\    return Ok(i64(chunk.length) + i64(chunk.bytes[0]) + i64(chunk.bytes[1]) + i64(chunk.bytes[2]) + i64(chunk.bytes[3]) + i64(n) + i64(second.length) + i64(m))
     \\
     \\
-    \\def restricted(fs: Filesystem) -> i64 effects(filesystem):
+    \\func restricted(fs: Filesystem) -> i64 effects(filesystem):
     \\    match acquire_resource[Open[bool]](fs.read_only(), reading()):
     \\        case Open.ok(file):
     \\            match finish[bool](file):
@@ -71,7 +71,7 @@ const program = fixture.declarations ++ helpers ++
     \\            return e
     \\
     \\
-    \\def main(fs: Filesystem) -> i64:
+    \\func main(fs: Filesystem) -> i64:
     \\    match work[bool](fs):
     \\        case Status.ok(n):
     \\            return n * 10 + restricted(fs)
@@ -108,16 +108,16 @@ test "nominal providers unwind every compiler allocation failure" {
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
 const failing = fixture.declarations ++ helpers ++
-    \\def work[T](fs: Filesystem) -> Status[T]:
-    \\    file = acquire_resource[Open[T]](fs, reading())?
-    \\    absent = acquire_resource[Open[T]](fs, missing())?
+    \\func work[T](fs: Filesystem) -> Status[T]:
+    \\    mut file = try acquire_resource[Open[T]](fs, reading())
+    \\    mut absent = try acquire_resource[Open[T]](fs, missing())
     \\    _ = file
     \\    _ = absent
     \\    return Ok(0)
     \\
     \\
-    \\def main(fs: Filesystem) -> i64:
-    \\    total = 0
+    \\func main(fs: Filesystem) -> i64:
+    \\    mut total = 0
     \\    for index in range(2000):
     \\        match work[bool](fs):
     \\            case Status.ok(value):
@@ -139,9 +139,9 @@ test "nominal providers propagate host failures and release acquired owners exac
     try t.expectEqual(@as(i64, 2000), outcome.value);
 }
 const trapping = fixture.declarations ++ helpers ++
-    \\def work[T](fs: Filesystem) -> Status[T]:
-    \\    file = acquire_resource[Open[T]](fs, reading())?
-    \\    chunk = read_resource[Read[T]](file)?
+    \\func work[T](fs: Filesystem) -> Status[T]:
+    \\    mut file = try acquire_resource[Open[T]](fs, reading())
+    \\    mut chunk = try read_resource[Read[T]](file)
     \\    match finish[T](file):
     \\        case Finish.ok(done):
     \\            if not done:
@@ -151,7 +151,7 @@ const trapping = fixture.declarations ++ helpers ++
     \\    return Ok(i64(chunk.length))
     \\
     \\
-    \\def main(fs: Filesystem) -> i64:
+    \\func main(fs: Filesystem) -> i64:
     \\    match work[bool](fs):
     \\        case Status.ok(n):
     \\            return n

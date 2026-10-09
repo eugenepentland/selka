@@ -1,5 +1,4 @@
-module main
 import message
 
-def main() -> int:
+func main() -> int:
     return 0

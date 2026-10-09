@@ -1,9 +1,9 @@
-def load(fs: Filesystem) -> Result[str, str]:
-    with fs.open("notes.txt", "r")? as f:
+func load(fs: Filesystem) -> Result[str, str]:
+    with try fs.open("notes.txt", "r") as f:
         return Ok(f.read())
 
 
-def main(fs: Filesystem, out: Stream) -> int:
+func main(fs: Filesystem, out: Stream) -> int:
     out.print(fs.exists("notes.txt"))
     out.print(fs.read_text("notes.txt"))
     out.print(fs.read_file("notes.txt"))

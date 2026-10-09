@@ -36,19 +36,20 @@ test "an arena block has no escape, confinement or binding rules of its own" {
     defer arena.deinit();
     const a = arena.allocator();
     // Assigning, storing and returning a managed value across the block, and
-    // reading a binding first assigned inside it afterwards, check as they would
+    // updating a binding declared outside it, check as they would
     // without the block: only the retirement warning remains.
     try t.expectEqualStrings("W_ARENA_RETIRED", try accepted(a,
-        \\def main() -> int:
-        \\    keeper: list[int] = []
+        \\func main() -> int:
+        \\    mut keeper: int[] = []
         \\    with arena() as scratch:
         \\        keeper = [1, 2]
         \\    return len(keeper)
     ));
     try t.expectEqualStrings("W_ARENA_RETIRED", try accepted(a,
-        \\def main() -> int:
-        \\    outer: list[str] = []
-        \\    seen: set[str] = set()
+        \\func main() -> int:
+        \\    mut outer: str[] = []
+        \\    mut seen: set[str] = set()
+        \\    mut inside = ""
         \\    with arena():
         \\        inside = "a" + str(1)
         \\        outer.append(inside)
@@ -56,17 +57,17 @@ test "an arena block has no escape, confinement or binding rules of its own" {
         \\    return len(outer) + len(seen) + len(inside)
     ));
     try t.expectEqualStrings("W_ARENA_RETIRED", try accepted(a,
-        \\def build() -> list[int]:
+        \\func build() -> int[]:
         \\    with arena():
         \\        return [1, 2, 3]
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return len(build())
     ));
     // `name.escape(value)` is `value`, from any enclosing arena, nested or not.
     try t.expectEqualStrings("W_ARENA_RETIRED,W_ARENA_RETIRED", try accepted(a,
-        \\def main() -> int:
-        \\    kept = "z"
+        \\func main() -> int:
+        \\    mut kept = "z"
         \\    with arena() as outer:
         \\        with arena() as inner:
         \\            kept = outer.escape("a" + str(2))
@@ -75,13 +76,13 @@ test "an arena block has no escape, confinement or binding rules of its own" {
     // The binding name has no other use: anything else is diagnosed as the
     // same use of an undefined name is.
     try rejected(
-        \\def main() -> int:
+        \\func main() -> int:
         \\    with arena() as scratch:
-        \\        other = scratch
+        \\        mut other = scratch
         \\    return 0
     , "E_UNKNOWN_NAME");
     try rejected(
-        \\def main() -> int:
+        \\func main() -> int:
         \\    with arena() as scratch:
         \\        scratch.reset()
         \\    return 0
@@ -121,9 +122,9 @@ test "the arena retirement fix deletes the header, dedents the body and keeps co
     defer arena.deinit();
     const a = arena.allocator();
     const source =
-        \\def main() -> int:
+        \\func main() -> int:
         \\    with arena():  # phase one
-        \\        x = 1
+        \\        mut x = 1
         \\
         \\# margin comment
         \\        if x > 0:
@@ -134,9 +135,9 @@ test "the arena retirement fix deletes the header, dedents the body and keeps co
     ;
     const fix = (try arena_fix.retirementFix(a, source, blockOf(source), &.{})).?;
     try t.expectEqualStrings(
-        \\def main() -> int:
+        \\func main() -> int:
         \\    # phase one
-        \\    x = 1
+        \\    mut x = 1
         \\
         \\# margin comment
         \\    if x > 0:
@@ -153,27 +154,28 @@ test "the arena retirement fix is withheld wherever the edit is not certain" {
     defer arena.deinit();
     const a = arena.allocator();
     // A tab in the body's indentation.
-    const tabbed = "def main() -> int:\n    with arena():\n\tx = 1\n    return x\n";
+    const tabbed = "func main() -> int:\n    with arena():\n\tx = 1\n    return x\n";
     try t.expectEqual(@as(?diagnostic.Fix, null), try arena_fix.retirementFix(a, tabbed, .{ .with_start = 23, .body_start = 38, .body_end = 43 }, &.{}));
     // A triple-quoted string, whose continuation lines must not move.
-    const quoted = "def main() -> int:\n    with arena():\n        s = \"\"\"a\n  b\"\"\"\n    return len(s)\n";
+    const quoted = "func main() -> int:\n    with arena():\n        s = \"\"\"a\n  b\"\"\"\n    return len(s)\n";
     try t.expectEqual(@as(?diagnostic.Fix, null), try arena_fix.retirementFix(a, quoted, blockOf(quoted), &.{}));
     // A body that starts on the header's own line.
-    const inline_body = "def main() -> int:\n    with arena(): x = 1\n    return x\n";
+    const inline_body = "func main() -> int:\n    with arena(): x = 1\n    return x\n";
     const inline_with = std.mem.indexOf(u8, inline_body, "with").?;
     try t.expectEqual(@as(?diagnostic.Fix, null), try arena_fix.retirementFix(a, inline_body, .{ .with_start = inline_with, .body_start = inline_with + 14, .body_end = inline_with + 19 }, &.{}));
 }
 
 // spec-case: NEW-CORE-S5-ARENA-3
 test "the arena warning carries the fix that unwraps its escapes" {
-    var c = try language.Compilation.init(t.allocator, "retired.my", "def main() -> int:\n    kept = \"z\"\n    with arena() as s:\n        kept = s.escape(\"a\" + str(1))\n        n = len(s.escape(kept))\n    return n\n");
+    var c = try language.Compilation.init(t.allocator, "retired.my", "func main() -> int:\n    mut kept = \"z\"\n    mut n = 0" ++
+        "\n    with arena() as s:\n        kept = s.escape(\"a\" + str(1))\n        n = len(s.escape(kept))\n    return n\n");
     defer c.deinit();
     try c.check();
     try t.expectEqualStrings("W_ARENA_RETIRED", c.diagnostics.items[0].code);
     var arena = std.heap.ArenaAllocator.init(t.allocator);
     defer arena.deinit();
     try t.expectEqualStrings(
-        "def main() -> int:\n    kept = \"z\"\n    kept = (\"a\" + str(1))\n    n = len(kept)\n    return n\n",
+        "func main() -> int:\n    mut kept = \"z\"\n    mut n = 0\n    kept = (\"a\" + str(1))\n    n = len(kept)\n    return n\n",
         try applied(arena.allocator(), c.src.bytes, c.diagnostics.items[0].provenance.fix.?),
     );
 }
@@ -181,10 +183,10 @@ test "the arena warning carries the fix that unwraps its escapes" {
 // spec: NEW-CORE-S5-HOST-1
 test "a host declaration is refused at check time with the extern replacement named" {
     var c = try language.Compilation.init(t.allocator, "retired.my",
-        \\host def measure(host: Host, x: i64) -> i64 effects(host)
+        \\host func measure(host: Host, x: i64) -> i64 effects(host)
         \\
         \\
-        \\def main(host: Host) -> i64:
+        \\func main(host: Host) -> i64:
         \\    return measure(host, 6)
     );
     defer c.deinit();
@@ -193,14 +195,14 @@ test "a host declaration is refused at check time with the extern replacement na
     const refusal = c.diagnostics.items[0];
     try t.expectEqualStrings("E_HOST_RETIRED", refusal.code);
     try t.expectEqualStrings("host", c.src.text(refusal.span));
-    try t.expect(std.mem.indexOf(u8, refusal.message, "declare the function `extern def`") != null);
+    try t.expect(std.mem.indexOf(u8, refusal.message, "declare the function `extern func`") != null);
     try t.expect(std.mem.indexOf(u8, refusal.message, "--link FILE.c") != null);
-    // The same declaration spelled `extern def` checks.
+    // The same declaration spelled `extern func` checks.
     var extern_unit = try language.Compilation.init(t.allocator, "extern.my",
-        \\extern def measure(host: Host, x: i64) -> i64 effects(host)
+        \\extern func measure(host: Host, x: i64) -> i64 effects(host)
         \\
         \\
-        \\def main(host: Host) -> i64:
+        \\func main(host: Host) -> i64:
         \\    return measure(host, 6)
     );
     defer extern_unit.deinit();

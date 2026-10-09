@@ -57,9 +57,9 @@ public record Line:
     unit_cents: int
 
 @ensures(result >= 0)
-public def total(lines: list[Line], *, taxed: bool = True) -> int ceiling(managed_allocation)
+public func total(lines: list[Line], *, taxed: bool = True) -> int ceiling(managed_allocation)
 
-public def charge(lines: list[Line]) -> shop.money.Cents ceiling(managed_allocation)
+public func charge(lines: list[Line]) -> shop.money.Cents ceiling(managed_allocation)
 ```
 
 The file is mylang declaration syntax without bodies:
@@ -110,8 +110,8 @@ api: app is stale (app.api)
 @@ -2,3 +2,3 @@
  module app
  
--public def compute(value: int) -> int ceiling(managed_allocation)
-+public def compute(value: int, extra: int = 1) -> int ceiling(managed_allocation)
+-public func compute(value: int) -> int ceiling(managed_allocation)
++public func compute(value: int, extra: int = 1) -> int ceiling(managed_allocation)
 api: 1 interface files out of date; run `mylang api main.my --write`
 $ mylang api main.my --check --json
 {"version":"interface-files-v1","mode":"check","status":"stale","files":2,"modules":[{"module":"app","path":"app.api","state":"stale","added":[],"removed":[],"changed":["compute"]}]}

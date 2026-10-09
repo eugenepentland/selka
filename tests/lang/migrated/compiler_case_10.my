@@ -1,19 +1,18 @@
-module compiler_case_10
 
 
-def even(n: i64) -> bool:
+func even(n: i64) -> bool:
     if n == 0:
         return True
     return odd(n - 1)
 
 
-public def program() -> i64:
+public func program() -> i64:
     if even(100) and not odd(100):
         return 7
     return 0
 
 
-def odd(n: i64) -> bool:
+func odd(n: i64) -> bool:
     if n == 0:
         return False
     return even(n - 1)

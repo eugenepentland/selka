@@ -15,6 +15,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try t.expectEqualStrings(generated, formatted);
     try t.expect(std.mem.indexOf(u8, generated, "return 18446744073709551615u64") != null);
 }
+// spec-case: FRONTEND-FUNC-1
 test "input manifests generate canonical syntax and release every failed allocation" {
     try scenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });

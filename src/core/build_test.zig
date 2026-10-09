@@ -5,14 +5,14 @@ const support = @import("test_support.zig");
 const build = @import("build.zig");
 
 const counted_loop =
-    \\def total(n: int) -> int:
-    \\    acc = 0
+    \\func total(n: int) -> int:
+    \\    mut acc = 0
     \\    for i in range(n):
     \\        acc += i * 2
     \\    return acc
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(total(4))
     \\    return 0
     \\
@@ -51,11 +51,11 @@ test "a counted loop becomes header, body, latch and exit blocks with phis for i
 }
 
 const short_circuit =
-    \\def pick(a: int, b: int) -> bool:
+    \\func pick(a: int, b: int) -> bool:
     \\    return a > 0 and b > 0 or a == b
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(pick(1, 2))
     \\    return 0
     \\
@@ -72,15 +72,15 @@ test "and/or evaluate their right operand in its own block and join with a phi" 
 }
 
 const option_match =
-    \\def parse(text: str) -> int:
-    \\    match int(text):
+    \\func parse(text: str) -> int:
+    \\    match parse_int(text):
     \\        case Some(value):
     \\            return value
     \\        case None:
     \\            return 0
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(parse("12"))
     \\    return 0
     \\
@@ -98,10 +98,10 @@ test "a match on an option tests the tag and binds the payload in its arm" {
 }
 
 const stored_view =
-    \\def main(out: Stream) -> int:
-    \\    table = {"a": 1}
-    \\    holder = [table]
-    \\    view = holder[0].values()
+    \\func main(out: Stream) -> int:
+    \\    mut table = {"a": 1}
+    \\    mut holder = [table]
+    \\    mut view = holder[0].values()
     \\    out.print(len(view))
     \\    return 0
     \\
@@ -119,9 +119,9 @@ test "D2 rejects an interior stored dictionary view before core lowering" {
 }
 
 const iterate_and_grow =
-    \\def main(out: Stream) -> int:
-    \\    xs = [1, 2, 3]
-    \\    total = 0
+    \\func main(out: Stream) -> int:
+    \\    mut xs = [1, 2, 3]
+    \\    mut total = 0
     \\    for v in xs:
     \\        total += v
     \\        if total < 4:
@@ -132,9 +132,9 @@ const iterate_and_grow =
 ;
 
 const iterate_only =
-    \\def main(out: Stream) -> int:
-    \\    xs = [1, 2, 3]
-    \\    total = 0
+    \\func main(out: Stream) -> int:
+    \\    mut xs = [1, 2, 3]
+    \\    mut total = 0
     \\    for v in xs:
     \\        total += v
     \\    out.print(total)
@@ -155,12 +155,12 @@ test "a loop over a list place refreshes writes and guards changing length" {
 }
 
 const mutating_helper =
-    \\def grow(xs: mut list[int]) -> None:
+    \\func grow(mut xs: int[]) -> Unit:
     \\    xs.append(4)
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    xs = [1, 2, 3]
+    \\func main(out: Stream) -> int:
+    \\    mut xs = [1, 2, 3]
     \\    grow(mut xs)
     \\    out.print(len(xs))
     \\    return 0
@@ -179,20 +179,20 @@ test "a mut parameter is passed by value and returned: the caller writes the cal
 }
 
 const aliased_pushes =
-    \\def grow(xs: list[int]) -> int:
-    \\    copy = xs
+    \\func grow(xs: int[]) -> int:
+    \\    mut copy = xs
     \\    copy.append(1)
     \\    return len(copy)
     \\
     \\
-    \\def fill(n: int) -> int:
-    \\    xs = [0]
+    \\func fill(n: int) -> int:
+    \\    mut xs = [0]
     \\    for j in range(n):
     \\        xs.append(j)
     \\    return len(xs)
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(grow([1, 2]) + fill(3))
     \\    return 0
     \\

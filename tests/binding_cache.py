@@ -15,20 +15,18 @@ driver = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(driver)
 
 
-ENTRY_SOURCE = """module main
-
+ENTRY_SOURCE = """
 
 
 public class Point:
     n: i64
 
 
-def main() -> i64:
+func main() -> i64:
     return 0
 """
 
-SHAPE_SOURCE = """module main
-
+SHAPE_SOURCE = """
 
 
 public class Point:
@@ -36,7 +34,7 @@ public class Point:
     flag: bool
 
 
-def main() -> i64:
+func main() -> i64:
     return 0
 """
 
@@ -136,7 +134,7 @@ def main():
         document['sha256'] = driver.digest(document['payload'])
         corruptions.append(driver.canonical(document).encode())
         document = json.loads(stored)
-        document['payload']['source'] = 'def broken('
+        document['payload']['source'] = 'func broken('
         document['payload']['report']['bytes'] = len(document['payload']['source'])
         document['payload']['report']['sha256'] = hashlib.sha256(document['payload']['source'].encode()).hexdigest()
         document['sha256'] = driver.digest(document['payload'])
@@ -187,7 +185,7 @@ def main():
         valid_source = entry.read_text()
         valid_output = output.read_bytes()
         before_entries = set(cache.iterdir())
-        entry.write_text(valid_source + '\n\ndef broken() -> i64:\n    return True\n')
+        entry.write_text(valid_source + '\n\nfunc broken() -> i64:\n    return True\n')
         with patch.object(driver, 'generate', wraps=driver.generate) as generation:
             try:
                 build()

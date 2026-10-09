@@ -7,14 +7,14 @@ const facts = @import("facts.zig");
 const passes = @import("passes.zig");
 
 const affine =
-    \\def affine(x: int) -> int:
+    \\func affine(x: int) -> int:
     \\    return x * 3 + 7
     \\
     \\
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    n = len(args) + 100
-    \\    values = [(j * 37) % 1009 for j in range(n)]
-    \\    total = 0
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut n = len(args) + 100
+    \\    mut values = [for j in range(n) yield (j * 37) % 1009]
+    \\    mut total = 0
     \\    for j in range(n):
     \\        total += affine(values[j] + 5)
     \\    out.print(total)
@@ -37,18 +37,18 @@ test "a release build inlines a single-block helper, so its arithmetic is proven
 test "a bounded signed remainder leaf inlines for both unknown and constant negative inputs" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    const text = try support.optimizedText(arena.allocator(), "def bounded(x: int) -> int:\n    return x % 1000 + 1\n" ++
-        "def main(args: list[str], out: Stream) -> int:\n    out.print(bounded(len(args) - 2000), bounded(-1))\n    return 0\n");
+    const text = try support.optimizedText(arena.allocator(), "func bounded(x: int) -> int:\n    return x % 1000 + 1\n" ++
+        "func main(args: str[], out: Stream) -> int:\n    out.print(bounded(len(args) - 2000), bounded(-1))\n    return 0\n");
     const start = std.mem.indexOf(u8, text, "fn main(").?;
     const main_text = text[start..][0..std.mem.indexOf(u8, text[start..], "fn bounded").?];
     try std.testing.expect(std.mem.indexOf(u8, main_text, "call i64 bounded") == null);
 }
 
 const kernel =
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    n = len(args) + 100
-    \\    values = [(j * 37 + 5) % 1009 for j in range(n)]
-    \\    total = 0
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut n = len(args) + 100
+    \\    mut values = [for j in range(n) yield (j * 37 + 5) % 1009]
+    \\    mut total = 0
     \\    for j in range(n):
     \\        total += ((values[j] + 3) * 17 + 23) // 7 % 1009
     \\    out.print(total)
@@ -81,14 +81,14 @@ test "the multiply-high reciprocal is exact over the whole proven dividend range
 }
 
 const branchy =
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    n = len(args) + 100
-    \\    values = [(j * 37 + 5) % 1009 for j in range(n)]
-    \\    flags = [(values[j] * 73 + j) % 101 < 50 for j in range(n)]
-    \\    total = 0
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut n = len(args) + 100
+    \\    mut values = [for j in range(n) yield (j * 37 + 5) % 1009]
+    \\    mut flags = [for j in range(n) yield (values[j] * 73 + j) % 101 < 50]
+    \\    mut total = 0
     \\    for j in range(n):
-    \\        x = values[j]
-    \\        value = 0
+    \\        mut x = values[j]
+    \\        mut value = 0
     \\        if flags[j]:
     \\            value = x * 3 + 1
     \\        else:
@@ -111,10 +111,10 @@ test "an if/else over a list[bool] becomes a lane select whose mask is permuted 
 }
 
 const float_sum =
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    n = len(args) + 100
-    \\    values = [(j * 37) % 1009 for j in range(n)]
-    \\    total = 0
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut n = len(args) + 100
+    \\    mut values = [for j in range(n) yield (j * 37) % 1009]
+    \\    mut total = 0
     \\    for j in range(n):
     \\        total += int((float(values[j]) / 8.0 + 0.5) * 128000.0)
     \\    out.print(total)
@@ -146,14 +146,14 @@ test "a reduction too wide for 2^47 trips gets a guarded copy where its sum is p
 }
 
 const dispatch =
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    kind = len(args)
-    \\    n = len(args) + 100
-    \\    values = [(j * 37 + 5) % 1009 for j in range(n)]
-    \\    total = 0
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut kind = len(args)
+    \\    mut n = len(args) + 100
+    \\    mut values = [for j in range(n) yield (j * 37 + 5) % 1009]
+    \\    mut total = 0
     \\    for j in range(n):
-    \\        x = values[j]
-    \\        value = 0
+    \\        mut x = values[j]
+    \\        mut value = 0
     \\        if kind == 0:
     \\            value = x * 3
     \\        elif kind == 1:
@@ -192,13 +192,13 @@ test "target choices come from one description, and without x86 intrinsics the v
 }
 
 const counter_arm =
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    n = len(args) + 100
-    \\    second = [(j * 38 + 3) % 64 for j in range(n)]
-    \\    flags = [j % 3 != 0 for j in range(n)]
-    \\    total = 0
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut n = len(args) + 100
+    \\    mut second = [for j in range(n) yield (j * 38 + 3) % 64]
+    \\    mut flags = [for j in range(n) yield j % 3 != 0]
+    \\    mut total = 0
     \\    for j in range(n):
-    \\        v = second[j]
+    \\        mut v = second[j]
     \\        if flags[j]:
     \\            v = j
     \\        else:
@@ -220,15 +220,15 @@ test "a select arm that is the loop counter keeps the loop scalar instead of spl
 }
 
 const byte_helper =
-    \\def score(raw: bytes, mask: int) -> int:
-    \\    total = 0
+    \\func score(raw: bytes, mask: int) -> int:
+    \\    mut total = 0
     \\    for value in raw:
     \\        total += value ^ mask
     \\    return total
     \\
     \\
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    raw = bytes([(j * 37) % 256 for j in range(len(args) + 100)])
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut raw = bytes([for j in range(len(args) + 100) yield (j * 37) % 256])
     \\    out.print(score(raw, 3) + score(raw, 200))
     \\    return 0
     \\
@@ -307,13 +307,14 @@ test "loop helper inlining verifies cloned edges and projects mut return values"
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const source =
-        \\def find(parent: mut list[int], x: int) -> int:
+        \\func find(mut parent: int[], start: int) -> int:
+        \\    mut x = start
         \\    while parent[x] != x:
         \\        parent[x] = parent[parent[x]]
         \\        x = parent[x]
         \\    return x
-        \\def main(out: Stream) -> int:
-        \\    parent = [0, 0, 1]
+        \\func main(out: Stream) -> int:
+        \\    mut parent = [0, 0, 1]
         \\    out.print(find(mut parent, 2), parent[2])
         \\    return 0
     ;

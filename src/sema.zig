@@ -88,7 +88,7 @@ fn fileAccessSignature(kind: file_operations.Access) []const u8 {
         .write_file => "write_file(fs: Filesystem, path: str, data: bytes) -> Result[None, str]",
         .write_text => "write_text(fs: Filesystem, path: str, text: str) -> Result[None, str]",
         .exists => "exists(fs: Filesystem, path: str) -> bool",
-        .listdir => "listdir(fs: Filesystem, path: str) -> Result[list[str], str]",
+        .listdir => "listdir(fs: Filesystem, path: str) -> Result[str[], str]",
         .mkdir => "mkdir(fs: Filesystem, path: str) -> Result[None, str]",
         .remove => "remove(fs: Filesystem, path: str) -> Result[None, str]",
     };
@@ -98,7 +98,7 @@ fn fileMethodSignature(kind: file_operations.Method) []const u8 {
     return switch (kind) {
         .read => "read() -> str, or read(size: int) -> str",
         .readline => "readline() -> str",
-        .readlines => "readlines() -> list[str]",
+        .readlines => "readlines() -> str[]",
         .write => "write(data) -> int",
         .flush => "flush() -> None",
         .close => "close() -> None",
@@ -196,6 +196,8 @@ const Checker = struct {
     /// counts on a hidden local instead (`PY-FOR-REBIND-1`).
     counters: std.AutoHashMapUnmanaged(typed.LocalId, void) = .empty,
     return_type: typed.Type = .i64,
+    success_type: typed.Type = .unit,
+    failure_type: ?typed.Type = null,
     arenas: std.ArrayList(ArenaScope) = .empty,
     catalog: records.Catalog,
     conversion_fields: ?[]bool = null,
@@ -207,6 +209,7 @@ const Checker = struct {
     contract: sema_contracts.State = .{},
     /// The comprehensions and generator expressions being checked, innermost
     /// last, and the use each consuming call gave its generator argument.
+    match_yield: ?struct { slot: typed.LocalId, ty: ?typed.Type } = null,
     gathers: @import("sema_gathers.zig").State = .{},
 
     /// Reset the per-function state and bind one ordinary instance's signature:
@@ -224,7 +227,9 @@ const Checker = struct {
         self.counters.clearRetainingCapacity();
         self.active.clearRetainingCapacity();
         self.owner = if (function.policy.owner) |owner| try self.ty(owner) else null;
-        self.return_type = try self.ty(function.signature.return_type);
+        self.success_type = try self.ty(function.signature.return_type);
+        self.failure_type = if (function.signature.failure_type) |failure| try self.ty(failure) else null;
+        self.return_type = if (self.failure_type) |failure| try @import("frontend_failures.zig").resultType(&self.catalog, self.allocator, self.success_type, failure, function.name, self.sink) else self.success_type;
         self.contract.ensures = &.{};
         self.contract.olds = &.{};
         try self.bindParameters(function);
@@ -254,6 +259,7 @@ const Checker = struct {
             .scope = .{
                 .body = body,
                 .locals = try self.locals.toOwnedSlice(self.allocator),
+                .parameter_labels = try callables.functionLabels(self.allocator, self.src, function.signature.parameters),
             },
             .id = @fromBackingInt(i),
             .name = try self.instanceName(@fromBackingInt(i)),
@@ -334,7 +340,7 @@ const Checker = struct {
                 }
             }
         }
-        const implicit_unit = self.return_type == .unit;
+        const implicit_unit = self.success_type == .unit;
         if (function.policy.host == null and !body.terminates and implicit_unit) body = try self.unitFallthrough(body, function.name);
         if (function.policy.host == null and !body.terminates) return sink.fail(
             "E_MISSING_RETURN",
@@ -394,6 +400,8 @@ const Checker = struct {
         self.active.clearRetainingCapacity();
         self.owner = null;
         self.return_type = contract.return_type;
+        self.success_type = contract.return_type;
+        self.failure_type = null;
         for (lambda.parameters, contract.parameters) |parameter, parameter_type| {
             const name = self.src.text(parameter);
             if (self.active.contains(name)) return self.sink.fail("E_DUPLICATE_PARAMETER", parameter, "lambda parameter name is already declared");
@@ -402,7 +410,7 @@ const Checker = struct {
                 .name = name,
                 .declaration = parameter,
                 .ty = parameter_type,
-                .mutable = false,
+                .mutable = std.mem.indexOfScalar(u16, contract.mutates, @intCast(@backingInt(slot))) != null,
                 .ownership = .{ .initialized = true, .transfer_available = self.transfers(parameter_type) },
             });
             try self.active.put(self.allocator, name, slot);
@@ -423,7 +431,7 @@ const Checker = struct {
                 .return_origin = contract.return_origin,
                 .declared_mutates = contract.mutates,
             },
-            .scope = .{ .body = body, .locals = try self.locals.toOwnedSlice(self.allocator) },
+            .scope = .{ .body = body, .locals = try self.locals.toOwnedSlice(self.allocator), .parameter_labels = contract.labels },
             .id = @fromBackingInt(self.lambda_start + index),
             .name = name,
             .declaration = lambda.span,
@@ -733,7 +741,7 @@ const Checker = struct {
             const index = if (table_key) |key| try self.catalog.variant(key, self.src, field.name, self.sink) else try self.catalog.field(record_type, self.src, field.name, self.sink);
             if (seen[index]) return self.sink.fail(if (table_key != null) "E_DUPLICATE_KEY" else "E_DUPLICATE_FIELD", field.name, "named entry is initialized more than once");
             seen[index] = true;
-            const value = self.resolved[@backingInt(field.value)].?;
+            const value = try self.expressionExpected(field.value, record.fields[index].ty);
             try self.require(self.nodes.items[@backingInt(value)].ty, record.fields[index].ty, self.syntax.nodes.items[@backingInt(field.value)].span);
             out.* = .{ .index = index, .value = value };
         }
@@ -971,7 +979,6 @@ const Checker = struct {
     }
     fn obviousType(self: *Checker, id: ast.NodeId) ?typed.Type {
         const node = self.syntax.nodes.items[@backingInt(id)];
-        if (self.expected_types.get(node.span)) |expected| return expected;
         if (node.data == .name) {
             if (self.active.get(self.src.text(node.data.name))) |slot| {
                 const declared = self.locals.items[@backingInt(slot)].ty;
@@ -980,6 +987,7 @@ const Checker = struct {
             }
             return self.constantType(node.data.name);
         }
+        if (self.expected_types.get(node.span)) |expected| return expected;
         // A field access over an obviously typed base is itself obvious, so
         // `node.literal == ...` and `node.kind == Kind.atom("x")` can hint the
         // constructor on the other operand the way a plain binding does.
@@ -1072,7 +1080,8 @@ const Checker = struct {
     /// Check an expression after recording the type its context expects.
     pub fn expressionExpected(self: *Checker, id: ast.NodeId, expected: typed.Type) Error!typed.NodeId {
         try self.hint(id, expected);
-        return self.expression(id);
+        const value = try self.expression(id);
+        return @import("frontend_failures.zig").injectOptional(Checker, self, value, expected, self.syntax.nodes.items[@backingInt(id)].span);
     }
     /// Recognize an unshadowed `Ok(...)` (true) or `Err(...)` (false) call.
     pub fn resultConstructor(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?bool {
@@ -1155,6 +1164,8 @@ const Checker = struct {
     pub const augmented = place_checks.augmented;
     pub const checkArrayPlace = place_checks.checkArrayPlace;
     pub const checkFieldAssignment = place_checks.checkFieldAssignment;
+    /// Require a writable root for an ordinary nested data update.
+    pub const requireWritableRoot = place_checks.requireWritableRoot;
     pub const checkFixedArray = place_checks.checkFixedArray;
     pub const checkIndexAugmented = place_checks.checkIndexAugmented;
     pub const checkTuple = place_checks.checkTuple;
@@ -1268,7 +1279,7 @@ const Checker = struct {
             // aggregate parameters exactly in an `origins.Mask`. An aggregate past it
             // is a located error, not a conservative answer that would demand `mut`
             // on every parameter; scalar parameters are never tracked and stay unlimited.
-            if (position >= origins.mask_positions and parameter_type.isAggregate()) return sink.fail(
+            if (position >= origins.mask_positions and (parameter_type.isAggregate() or parameter.mut)) return sink.fail(
                 "E_PARAMETER_POSITION",
                 parameter.name,
                 "a list, string, record or other aggregate parameter must be one of a function's first 64 parameters; move it earlier or group parameters into a record",
@@ -1295,17 +1306,6 @@ const Checker = struct {
                     return sink.fail(mutation_marker_code, parameter.ty, if (array) "a `mut` fixed array needs copyable elements without pending results" else "a `mut` record needs copyable fields without pending results");
                 }
             }
-            const writable = reference or typed.carriesWritableStorage(self.catalog.records, parameter_type);
-            if (parameter.mut and !writable) {
-                try markMutRejected(self);
-                const message = try std.fmt.allocPrint(
-                    allocator,
-                    "`mut` on `{s}` has nothing to write; {s}",
-                    .{ typed.typeName(parameter_type, self.catalog.records), "a number, bool, `str` or `bytes` cannot change the caller's value, so return the new value instead" },
-                );
-                const fix = diagnostic.removeMut(src.bytes, parameter.ty.start) orelse return sink.fail(mutation_marker_code, parameter.ty, message);
-                return sink.failFix(mutation_marker_code, parameter.ty, message, fix.edit);
-            }
             if (parameter.default_value) |value| {
                 const checked = try self.expressionExpected(value, parameter_type);
                 try self.require(self.nodes.items[@backingInt(checked)].ty, parameter_type, parameter.ty);
@@ -1316,7 +1316,7 @@ const Checker = struct {
                     .name = name,
                     .declaration = parameter.name,
                     .ty = parameter_type,
-                    .mutable = function.policy.host == null,
+                    .mutable = parameter.mut and function.policy.host == null,
                     .origin = .parameter,
                     .ownership = .{
                         .initialized = true,
@@ -1658,7 +1658,7 @@ fn entryParameterStart(parameters: []const ast.Parameter, checker: *Checker, sin
     const first_ty = try checker.ty(parameters[0].ty);
     if (entry_adapter.argvElement(first_ty, checker.catalog.records) != null) return 1;
     if (first_ty.capabilityIndex() != null) return 0;
-    return sink.fail("E_MAIN", parameters[0].ty, "entry parameters must be `args: list[str]` followed by capabilities");
+    return sink.fail("E_MAIN", parameters[0].ty, "entry parameters must be `args: str[]` followed by capabilities");
 }
 
 /// Validate the capability tail of the entry signature, splitting Streams by
@@ -1676,7 +1676,7 @@ fn validateEntryParameters(src: source.Source, checker: *Checker, sink: *diagnos
             entry_streams[slot] = true;
             continue;
         }
-        const index = parameter_ty.capabilityIndex() orelse return sink.fail("E_MAIN", parameter.ty, "entry parameters must be `args: list[str]` followed by capabilities");
+        const index = parameter_ty.capabilityIndex() orelse return sink.fail("E_MAIN", parameter.ty, "entry parameters must be `args: str[]` followed by capabilities");
         const bit = @as(u8, 1) << index;
         if (entry_capabilities & bit != 0) return sink.fail("E_MAIN", parameter.name, "entry requests at most one value parameter of each capability kind");
         entry_capabilities |= bit;
@@ -1857,7 +1857,7 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink) catch |err| return retryOr(&plan, err);
     timingAdd(timing, "domain_codec_validation", codecs_start);
     const warnings_start = timingStart(timing);
-    try warnBindings(allocator, checker.catalog.records, functions, stubs, sink);
+    try warnBindings(allocator, functions, stubs, sink);
     try warnImports(module_names, sink);
     try @import("arena_fix.zig").warn(allocator, src, program, sink);
     const pass_items: []const diagnostic.Diagnostic = if (plan != null) try allocator.dupe(diagnostic.Diagnostic, sink.items.items[pass_start..]) else &.{};
@@ -1888,12 +1888,12 @@ fn checkEntry(checker: *Checker, module_names: ?*Names, failed: bool) Error!type
     const main_name = if (module_names) |names| try std.fmt.allocPrint(allocator, "{s}::main", .{names.index.project.modules.items[0].name}) else "main";
     const main_declaration = checker.functions.get(main_name) orelse {
         if (failed) return error.SourceError;
-        return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires an entry point: def main() -> int; `mylang check FILE` type-checks a library that has no main");
+        return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main");
     };
     const entry = program.functions[@backingInt(main_declaration)];
     const main = checker.ordinary_ids[@backingInt(main_declaration)] orelse return sink.fail("E_MAIN", entry.name, "main cannot have type parameters");
     if (entry.policy.host != null or entry.policy.constant) return sink.fail("E_MAIN", entry.name, "main must have a guest function body");
-    // An entry point may take `args: list[str]` first, followed by at most one
+    // An entry point may take `args: str[]` first, followed by at most one
     // capability of each kind. Streams split by name, so `out: Stream` and
     // `err: Stream` may both appear; any other Stream name is rejected.
     try validateEntryParameters(src, checker, sink, entry);
@@ -1933,7 +1933,7 @@ fn conversionBody(self: *Checker, function: ast.Function) Error!void {
 fn constructsRecord(self: *Checker, node: ast.Node) Error!bool {
     if (node.data == .record) return true;
     if (node.data != .call) return false;
-    const lowered = try @import("record_calls.zig").lower(self.allocator, self.src, self.catalog, node.data.call, self.sink);
+    const lowered = try @import("record_calls.zig").lower(self.allocator, self.src, self.catalog, self.syntax.nodes.items, node.data.call, self.sink);
     return lowered != null;
 }
 
@@ -1946,41 +1946,24 @@ fn checkHostType(allocator: std.mem.Allocator, catalog: []const typed.Record, ty
     };
 }
 
-/// Whether local `slot` is a `mut` record or collection parameter whose
-/// assignment changes the caller's variable.
-fn callerBinding(catalog: []const typed.Record, function: typed.Function, slot: usize) bool {
+/// Whether local `slot` names caller storage through a declared mut parameter.
+fn callerBinding(function: typed.Function, slot: usize) bool {
     if (slot >= function.signature.parameter_count) return false;
-    for (function.signature.declared_mutates) |position| if (position == slot) {
-        const ty = function.scope.locals[slot].ty;
-        return typed.referenceRecord(catalog, ty) or @import("mut_abi.zig").collection(catalog, ty);
-    };
+    for (function.signature.declared_mutates) |position| if (position == slot) return true;
     return false;
 }
 
-fn warnBindings(allocator: std.mem.Allocator, catalog: []const typed.Record, functions: []const typed.Function, stubs: []const ?origins.Fact, sink: *diagnostic.Sink) Error!void {
+fn warnBindings(allocator: std.mem.Allocator, functions: []const typed.Function, stubs: []const ?origins.Fact, sink: *diagnostic.Sink) Error!void {
     for (functions, 0..) |function, index| {
         if (function.policy.host != null) continue;
         // A stood-in body has only its parameters here; its summary replays
         // the binding warnings its checked body reported.
         if (origins.standIn(stubs, index) != null) continue;
         for (function.scope.locals, 0..) |local, slot| {
-            if (local.usage.dead_write_span) |span| {
-                // Each field write reads its destination once; a read beyond that
-                // means the copied binding is observed after the write. A copy
-                // whose only reads are the write itself can never reach the
-                // original storage, so the mistake is rejected rather than
-                // shipped with a warning.
-                if (local.origin != .local and local.usage.reads == local.usage.dead_write_reads) try sink.items.append(allocator, .{
-                    .severity = .err,
-                    .code = "E_DEAD_RECORD_WRITE",
-                    .span = span,
-                    .message = "field write to a record copy is never observed; the write cannot reach the original; declare the parameter `mut` to change the caller's record, or return the updated record",
-                });
-            }
             if (local.usage.temporary or local.usage.reads != 0) continue;
             // Rebinding a `mut` caller variable uses the parameter even when
             // the body never reads its previous value.
-            if (callerBinding(catalog, function, slot)) continue;
+            if (callerBinding(function, slot)) continue;
             // A capability parameter is the signature's whole claim to an
             // effect: a body that never reads it promises authority it does not
             // use, so the over-claim is rejected rather than warned about.

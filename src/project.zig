@@ -61,6 +61,8 @@ pub const Options = struct {
     /// per-module compile serves its precompiled interface), and read the
     /// compiler's own source only when the provider has none.
     standard_from_provider: bool = false,
+    /// Accept redundant source headers when explicitly migrating legacy files.
+    legacy_headers: bool = false,
 };
 /// A source span paired with the module whose bytes it indexes.
 pub const Site = struct { module: usize, span: source.Span };
@@ -68,7 +70,7 @@ pub const Site = struct { module: usize, span: source.Span };
 pub const ModuleName = struct { text: []const u8, last: []const u8, span: source.Span };
 /// Project diagnostic, optional related declaration/import location, and the
 /// exact edit that repairs it, indexing the problem module's own bytes.
-pub const Problem = struct { code: []const u8, message: []const u8, site: Site, related: ?Site = null, fix: ?diagnostic.Edit = null };
+pub const Problem = struct { code: []const u8, message: []const u8, site: Site, related: ?Site = null, fix: ?diagnostic.Edit = null, fix_more: []const diagnostic.Edit = &.{} };
 /// Declared public name and its source location. A re-export directive
 /// (`export shared.units.Distance`) records `name` as the final member and
 /// `alias` as the imported module qualifier; a plain `export Name` leaves
@@ -257,7 +259,7 @@ pub const Project = struct {
         }
         self.progress.complete = true;
     }
-    fn header(self: *Project, id: usize, options: Options, is_entry: bool, scratch: *std.heap.ArenaAllocator) diagnostic.Error!void {
+    fn header(self: *Project, id: usize, options: Options, _: bool, scratch: *std.heap.ArenaAllocator) diagnostic.Error!void {
         const allocator = self.arena.allocator();
         const src = self.modules.items[id].src;
         // Diagnostics outlive the header in the project arena; only the tokens
@@ -271,23 +273,7 @@ pub const Project = struct {
             return self.fail(problem.code, problem.message, .{ .module = id, .span = problem.span }, null);
         };
         var scanner: Scanner = .{ .project = self, .id = id, .tokens = tokens };
-        if (try self.moduleDeclaration(&scanner, is_entry)) |declared| {
-            self.modules.items[id].header.declaration = declared.span;
-            if (!std.mem.eql(u8, declared.text, self.modules.items[id].name)) {
-                // State the rule and the exact replacement: an agent that copied
-                // `module main` from an example into `csvstats.my` needs both.
-                const expected = self.modules.items[id].name;
-                const message = try std.fmt.allocPrint(
-                    allocator,
-                    "declared `module {s}`, but this file is `{s}`, so its module name is `{s}`: " ++
-                        "a module's name is its path from the project root without `.my`; write `module {s}`",
-                    .{ declared.text, self.modules.items[id].src.path, expected, expected },
-                );
-                const failure = self.fail("E_MODULE_NAME", message, .{ .module = id, .span = declared.span }, null);
-                self.problem.?.fix = .{ .span = declared.span, .text = expected };
-                return failure;
-            }
-        }
+        _ = try self.moduleDeclaration(&scanner, options.legacy_headers);
         var imports: std.ArrayList(Import) = .empty;
         var aliases: std.StringHashMapUnmanaged(source.Span) = .empty;
         var imported_names: std.StringHashMapUnmanaged(source.Span) = .empty;
@@ -341,51 +327,21 @@ pub const Project = struct {
         // The tokens are in hand, so find the module's embed calls here rather than lexing again.
         if (embed.mayEmbed(src.bytes)) self.modules.items[id].src.embeds = try embed.sites(allocator, src, tokens);
     }
-    /// Consume the `module NAME;` header, or the headerless opening of an entry
-    /// script whose every import names an embedded standard module. Answers the
-    /// declared name when there is one, null for the headerless form, and reports
-    /// `E_MODULE_HEADER` for every other opening, including an imported file that
-    /// declares nothing.
-    fn moduleDeclaration(self: *Project, scanner: *Scanner, is_entry: bool) diagnostic.Error!?ModuleName {
-        if (scanner.isWord("module")) {
-            scanner.pos += 1;
-            const declared = try scanner.name();
-            _ = try scanner.expect(.semicolon);
-            return declared;
+    /// Paths determine module identity. Migration may consume a redundant header.
+    fn moduleDeclaration(self: *Project, scanner: *Scanner, legacy_headers: bool) diagnostic.Error!?ModuleName {
+        if (!scanner.isWord("module")) return null;
+        const start = scanner.tokens[scanner.pos].span;
+        scanner.pos += 1;
+        const declared = try scanner.name();
+        const end = try scanner.expect(.semicolon);
+        if (!legacy_headers) {
+            const span: source.Span = .join(start, end.span);
+            const failure = self.fail(eModuleHeader, "module names come from file paths; remove the redundant module header", .{ .module = scanner.id, .span = span }, null);
+            self.problem.?.fix = .{ .span = span, .text = "" };
+            return failure;
         }
-        if (!is_entry or !try standardImportOpening(self.arena.allocator(), self.modules.items[scanner.id].src, scanner.tokens, scanner.pos)) {
-            const site: Site = .{ .module = scanner.id, .span = scanner.tokens[scanner.pos].span };
-            if (is_entry) if (try self.projectImport(scanner)) |name| {
-                // `import heapq` in a script is usually a Python import, not a
-                // missing header: say which module is not standard and what is.
-                const allocator = self.arena.allocator();
-                const message = try std.fmt.allocPrint(
-                    allocator,
-                    "`{s}` is not a standard module ({s}); a file without a `module` header can import only those. " ++
-                        "To import `{s}.my` from this project, start this file with `module {s}`",
-                    .{ name, try standard_library.names(allocator), name, self.modules.items[scanner.id].name },
-                );
-                return self.fail(eModuleHeader, message, site, null);
-            };
-            return self.fail(eModuleHeader, "file must begin with a module declaration", site, null);
-        }
-        return null;
-    }
-    /// The first imported name in a headerless opening that is not an embedded
-    /// standard module, or null when the opening is not an import list.
-    fn projectImport(self: *Project, scanner: *Scanner) diagnostic.Error!?[]const u8 {
-        const src = self.modules.items[scanner.id].src;
-        const tokens = scanner.tokens;
-        var cursor = scanner.pos;
-        while (cursor + 1 < tokens.len and tokens[cursor].tag == .ident and std.mem.eql(u8, src.text(tokens[cursor].span), "import")) {
-            if (tokens[cursor + 1].tag != .ident) return null;
-            const name = src.text(tokens[cursor + 1].span);
-            if (!try isStandardModule(self.arena.allocator(), name)) return name;
-            cursor += 2;
-            if (cursor < tokens.len and tokens[cursor].tag == .kw_as) cursor += 2;
-            if (cursor < tokens.len and tokens[cursor].tag == .semicolon) cursor += 1;
-        }
-        return null;
+        self.modules.items[scanner.id].header.declaration = declared.span;
+        return declared;
     }
     /// Allocate the completed dependency graph report; reject incomplete loading state.
     pub fn render(self: *Project, allocator: std.mem.Allocator) RenderError![]u8 {
@@ -525,37 +481,4 @@ pub fn modulePath(allocator: std.mem.Allocator, name: []const u8) ModulePathErro
         byte.* = '/';
     };
     return path;
-}
-/// Whether `name` resolves to a compiler-embedded standard module. The embedded
-/// set is fixed at compile time, so this is a table lookup, never a disk read.
-pub fn isStandardModule(allocator: std.mem.Allocator, name: []const u8) diagnostic.Error!bool {
-    const path = modulePath(allocator, name) catch |err| switch (err) {
-        error.InvalidModuleName => return false,
-        error.OutOfMemory => return error.OutOfMemory,
-    };
-    defer allocator.free(path);
-    return standard_library.source(path) != null;
-}
-/// Whether the token run at `at` opens a headerless file whose imports all name
-/// embedded standard modules: the script shape that needs no `module`
-/// declaration. A dotted path, a project module, or any other opening answers
-/// false, so the caller keeps the header requirement. Parser and project loader
-/// share this one policy.
-pub fn standardImportOpening(allocator: std.mem.Allocator, src: source.Source, tokens: []const lex.Token, at: usize) diagnostic.Error!bool {
-    var cursor = at;
-    while (cursor + 1 < tokens.len and tokens[cursor].tag == .ident and std.mem.eql(u8, src.text(tokens[cursor].span), "import")) {
-        if (tokens[cursor + 1].tag != .ident) return false;
-        if (!try isStandardModule(allocator, src.text(tokens[cursor + 1].span))) return false;
-        cursor += 2;
-        if (cursor < tokens.len and tokens[cursor].tag == .kw_as) {
-            if (cursor + 1 >= tokens.len or tokens[cursor + 1].tag != .ident) return false;
-            cursor += 2;
-        }
-        // A directive ends at its explicit semicolon or at the line break the
-        // module-header grammar accepts in its place.
-        if (cursor < tokens.len and tokens[cursor].tag == .semicolon) {
-            cursor += 1;
-        } else if (!lex.implicitTerminator(src.bytes, tokens, cursor)) return false;
-    }
-    return cursor != at;
 }

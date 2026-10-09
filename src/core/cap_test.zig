@@ -10,15 +10,15 @@ const options = @import("core_test_options");
 const raw_environment =
     \\record Entry:
     \\    present: bool
-    \\    bytes: [4]u8
+    \\    bytes: FixedArray[u8, 4]
     \\    length: u64
     \\
     \\result Lookup:
     \\    err: int,
     \\    ok: Entry
     \\
-    \\def main(env: Environment) -> int:
-    \\    match environment_get[Lookup](env, [75u8]):
+    \\func main(env: Environment) -> int:
+    \\    match environment_get[Lookup](env, FixedArray[u8, 1]([75u8])):
     \\        case Lookup.ok(entry):
     \\            return int(entry.length)
     \\        case Lookup.err(code):
@@ -39,9 +39,9 @@ test "Core Host extern authority is checked before its scalar erasing call" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const text = try support.irText(arena.allocator(),
-        \\extern def identity(host: Host, value: int) -> int effects(host)
+        \\extern func identity(host: Host, value: int) -> int effects(host)
         \\
-        \\def main(host: Host) -> int:
+        \\func main(host: Host) -> int:
         \\    return identity(host, 42)
     );
     const check = std.mem.indexOf(u8, text, "myl_core_host_check").?;
@@ -63,7 +63,7 @@ test "Core literal network narrowing copies fixed octets into a verified pointer
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const text = try support.irText(arena.allocator(),
-        \\def main(net: Network) -> int:
+        \\func main(net: Network) -> int:
         \\    _ = net.host("127.0.0.1:1234")
         \\    return 0
     );
@@ -74,7 +74,7 @@ test "Core literal network narrowing copies fixed octets into a verified pointer
 fn nestedScopeOrder(a: std.mem.Allocator) !void {
     var refusal: build.Refusal = .{};
     const module = try support.buildSource(a,
-        \\def main(fs: Filesystem) -> int:
+        \\func main(fs: Filesystem) -> int:
         \\    with fs.open("first", "r") as first:
         \\        with fs.open("second", "r") as second:
         \\            return 0

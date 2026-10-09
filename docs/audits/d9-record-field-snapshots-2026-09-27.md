@@ -11,6 +11,7 @@ and Stage 4 acceptance remain separate requirements.
 ## Reproduction and applicability
 
 ```mylang
+# doc: skip Historical pre-redesign syntax retained as audit evidence.
 record State:
     values: list[int]
 

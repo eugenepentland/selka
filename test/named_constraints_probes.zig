@@ -22,28 +22,25 @@ pub const probes = [_]Probe{
         .diagnostic = "E_GENERIC_REQUIREMENT",
         .files = &.{
             .{ .name = "a.my", .body =
-            \\module a
             \\public record ID:
             \\    value: int
             \\public constraint Has[T] = copy + field(value: ID)
             \\
             },
             .{ .name = "b.my", .body =
-            \\module b
             \\public record ID:
             \\    value: int
             \\public constraint Has[T] = copy + field(value: ID)
             \\
             },
             .{ .name = "main.my", .body =
-            \\module main
             \\import a
             \\import b
             \\record Row:
             \\    value: a.ID
-            \\def accept[T: a.Has + b.Has](row: T) -> int:
+            \\func accept[T: a.Has + b.Has](row: T) -> int:
             \\    return 0
-            \\def main() -> int:
+            \\func main() -> int:
             \\    return accept(Row(value=a.ID(value=7)))
             \\
             },
@@ -56,28 +53,25 @@ pub const probes = [_]Probe{
         .diagnostic = "E_GENERIC_REQUIREMENT",
         .files = &.{
             .{ .name = "a.my", .body =
-            \\module a
             \\public record ID:
             \\    value: int
             \\public constraint Has[T] = copy + field(value: ID)
             \\
             },
             .{ .name = "b.my", .body =
-            \\module b
             \\public record ID:
             \\    value: int
             \\public constraint Has[T] = copy + field(value: ID)
             \\
             },
             .{ .name = "main.my", .body =
-            \\module main
             \\import a
             \\import b
             \\record Row:
             \\    value: a.ID
-            \\def accept[T: b.Has + a.Has](row: T) -> int:
+            \\func accept[T: b.Has + a.Has](row: T) -> int:
             \\    return 0
-            \\def main() -> int:
+            \\func main() -> int:
             \\    return accept(Row(value=a.ID(value=7)))
             \\
             },
@@ -90,23 +84,21 @@ pub const probes = [_]Probe{
         .diagnostic = "E_GENERIC_TYPE",
         .files = &.{
             .{ .name = "contracts.my", .body =
-            \\module contracts
             \\public record Token:
             \\    value: int
             \\public constraint Use[S] = copy + op(use(s: S, token: Token) -> int effects())
             \\
             },
             .{ .name = "main.my", .body =
-            \\module main
             \\import contracts
             \\domain Provider: int:
-            \\    def make() -> Provider:
+            \\    func make() -> Provider:
             \\        return wrap[Provider](0)
-            \\    def use(s: Provider, token: int) -> int effects():
+            \\    func use(s: Provider, token: int) -> int effects():
             \\        return token
-            \\def call[Token, P: contracts.Use](p: P, token: Token) -> int effects():
+            \\func call[Token, P: contracts.Use](p: P, token: Token) -> int effects():
             \\    return P.use(p, token)
-            \\def main() -> int:
+            \\func main() -> int:
             \\    return call(Provider.make(), 0)
             \\
             },
@@ -119,23 +111,21 @@ pub const probes = [_]Probe{
         .diagnostic = "E_GENERIC_TYPE",
         .files = &.{
             .{ .name = "contracts.my", .body =
-            \\module contracts
             \\public record Token:
             \\    value: int
             \\public constraint Use[S] = copy + op(use(s: S, token: Token) -> int effects())
             \\
             },
             .{ .name = "main.my", .body =
-            \\module main
             \\import contracts
             \\domain Provider: int:
-            \\    def make() -> Provider:
+            \\    func make() -> Provider:
             \\        return wrap[Provider](0)
-            \\    def use(s: Provider, token: int) -> int effects():
+            \\    func use(s: Provider, token: int) -> int effects():
             \\        return token
-            \\def call[U, P: contracts.Use](p: P, token: U) -> int effects():
+            \\func call[U, P: contracts.Use](p: P, token: U) -> int effects():
             \\    return P.use(p, token)
-            \\def main() -> int:
+            \\func main() -> int:
             \\    return call(Provider.make(), 0)
             \\
             },
@@ -149,9 +139,9 @@ pub const probes = [_]Probe{
         .files = &.{
             .{ .name = "main.my", .body =
             \\constraint Id[P] = copy + op(identity(x: P) -> P effects())
-            \\def forward[T: Id + op(identity(x: T) -> T effects())](x: T) -> T effects():
+            \\func forward[T: Id + op(identity(x: T) -> T effects())](x: T) -> T effects():
             \\    return T.identity(x)
-            \\def main() -> int:
+            \\func main() -> int:
             \\    return 0
             \\
             },
@@ -164,11 +154,11 @@ pub const probes = [_]Probe{
         .diagnostic = "",
         .files = &.{
             .{ .name = "main.my", .body =
-            \\constraint A[P] = copy + op(identity(x: list[P]) -> int effects())
-            \\constraint B[Q] = copy + op(identity(x: list[Q]) -> int effects())
-            \\def use[T: A + B](x: T) -> int:
+            \\constraint A[P] = copy + op(identity(x: P[]) -> int effects())
+            \\constraint B[Q] = copy + op(identity(x: Q[]) -> int effects())
+            \\func use[T: A + B](x: T) -> int:
             \\    return 0
-            \\def main() -> int:
+            \\func main() -> int:
             \\    return 0
             \\
             },
@@ -181,9 +171,9 @@ pub const probes = [_]Probe{
         .diagnostic = "",
         .files = &.{
             .{ .name = "main.my", .body =
-            \\def value[T: equality + field(value: int)](x: T) -> int:
+            \\func value[T: equality + field(value: int)](x: T) -> int:
             \\    return x.value
-            \\def main() -> int:
+            \\func main() -> int:
             \\    return 0
             \\
             },
@@ -196,10 +186,9 @@ pub const probes = [_]Probe{
         .diagnostic = "",
         .files = &.{
             .{ .name = "main.my", .body =
-            \\module main
-            \\def value[T: equality + field(value: int)](x: T) -> int:
+            \\func value[T: equality + field(value: int)](x: T) -> int:
             \\    return x.value
-            \\def main() -> int:
+            \\func main() -> int:
             \\    return 0
             \\
             },
@@ -212,11 +201,10 @@ pub const probes = [_]Probe{
         .diagnostic = "",
         .files = &.{
             .{ .name = "main.my", .body =
-            \\module main
             \\constraint C[T] = copy
-            \\def value[T: C + field(value: int)](x: T) -> int:
+            \\func value[T: C + field(value: int)](x: T) -> int:
             \\    return x.value
-            \\def main() -> int:
+            \\func main() -> int:
             \\    return 0
             \\
             },
@@ -229,7 +217,6 @@ pub const probes = [_]Probe{
         .diagnostic = "",
         .files = &.{
             .{ .name = "contracts.my", .body =
-            \\module contracts
             \\record One:
             \\    a: int
             \\record Two:
@@ -240,11 +227,10 @@ pub const probes = [_]Probe{
             \\
             },
             .{ .name = "main.my", .body =
-            \\module main
             \\import contracts
-            \\public def f[T: contracts.C](x: T) -> T effects():
+            \\public func f[T: contracts.C](x: T) -> T effects():
             \\    return x
-            \\def main() -> int:
+            \\func main() -> int:
             \\    return 0
             \\
             },
@@ -257,18 +243,16 @@ pub const probes = [_]Probe{
         .diagnostic = "",
         .files = &.{
             .{ .name = "contracts.my", .body =
-            \\module contracts
             \\record One:
             \\    a: int
             \\public constraint C[T] = copy
             \\
             },
             .{ .name = "main.my", .body =
-            \\module main
             \\import contracts
-            \\public def f[T: contracts.C](x: T) -> T effects():
+            \\public func f[T: contracts.C](x: T) -> T effects():
             \\    return x
-            \\def main() -> int:
+            \\func main() -> int:
             \\    return 0
             \\
             },
@@ -283,7 +267,7 @@ pub const probes = [_]Probe{
             .{ .name = "main.my", .body =
             \\constraint C[T] = copy
             \\constraint C[T] = equality
-            \\def main() -> int:
+            \\func main() -> int:
             \\    return 0
             \\
             },
@@ -299,7 +283,7 @@ pub const probes = [_]Probe{
             \\record C:
             \\    value: int
             \\constraint C[T] = copy
-            \\def main() -> int:
+            \\func main() -> int:
             \\    return 0
             \\
             },
@@ -314,9 +298,9 @@ pub const probes = [_]Probe{
             .{ .name = "main.my", .body =
             \\constraint A[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int)
             \\constraint B[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int)
-            \\def f[T: A + B](x: T) -> int:
+            \\func f[T: A + B](x: T) -> int:
             \\    return 0
-            \\def main() -> int:
+            \\func main() -> int:
             \\    return 0
             \\
             },
@@ -329,12 +313,11 @@ pub const probes = [_]Probe{
         .diagnostic = "",
         .files = &.{
             .{ .name = "main.my", .body =
-            \\module main
             \\constraint A[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int)
             \\constraint B[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int)
-            \\def f[T: A + B](x: T) -> int:
+            \\func f[T: A + B](x: T) -> int:
             \\    return 0
-            \\def main() -> int:
+            \\func main() -> int:
             \\    return 0
             \\
             },
@@ -348,7 +331,7 @@ pub const probes = [_]Probe{
         .files = &.{
             .{ .name = "main.my", .body =
             \\constraint Bad[T] = copy + field(value: Result[int, int])
-            \\def main() -> int:
+            \\func main() -> int:
             \\    return 0
             \\
             },
@@ -362,9 +345,9 @@ pub const probes = [_]Probe{
         .files = &.{
             .{ .name = "main.my", .body =
             \\constraint Bad[T] = copy + field(value: Result[int, int])
-            \\def bad[T: Bad](x: T) -> int:
+            \\func bad[T: Bad](x: T) -> int:
             \\    return 0
-            \\def main() -> int:
+            \\func main() -> int:
             \\    return 0
             \\
             },
@@ -379,9 +362,9 @@ pub const probes = [_]Probe{
             .{ .name = "main.my", .body =
             \\constraint C[T] = copy
             \\constraint C[T] = integer
-            \\def identity[T: C](x: T) -> T:
+            \\func identity[T: C](x: T) -> T:
             \\    return x
-            \\def main() -> int:
+            \\func main() -> int:
             \\    assert identity(True)
             \\    return 0
             \\

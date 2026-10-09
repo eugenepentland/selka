@@ -20,7 +20,7 @@ provide scoped tasks and typed channels. Each task owns its mutable heap;
 arguments and results cross task boundaries as snapshots. The runtime schedules
 tasks over a bounded pool of OS threads. A task is not an OS thread or a process.
 
-Use the same task semantics for I/O and CPU work. No `async def`, mandatory
+Use the same task semantics for I/O and CPU work. No `async func`, mandatory
 `await`, or separate process-pool programming model. Ordinary calls remain
 sequential; only explicit concurrency operations start additional tasks.
 
@@ -75,7 +75,7 @@ For different operations, expose the underlying scope:
 
 ```text
 # Proposed syntax; referenced application types/functions are illustrative.
-def page(id: int, net: NetworkCap) -> Result[Page, TaskError[FetchError]]:
+func page(id: int, net: NetworkCap) -> Result[Page, TaskError[FetchError]]:
     with TaskGroup() as group:
         user_task = group.spawn(fetch_user, id, net)
         orders_task = group.spawn(fetch_orders, id, net)

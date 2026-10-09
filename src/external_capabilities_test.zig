@@ -36,12 +36,12 @@ fn rejectRaw(source: []const u8) !void {
 // spec: CLOCK-INTRINSIC-1
 test "ordinary source cannot spell the raw clock and random provider reads" {
     try rejectRaw(declarations ++
-        \\def main(c: Clock) -> i64:
+        \\func main(c: Clock) -> i64:
         \\    _ = clock_now[Time](c)
         \\    return 0
     );
     try rejectRaw(declarations ++
-        \\def main(r: Entropy) -> i64:
+        \\func main(r: Entropy) -> i64:
         \\    _ = random_u64[Random](r)
         \\    return 0
     );
@@ -53,11 +53,11 @@ const forwarded = declarations ++
     \\    clock: Clock
     \\
     \\
-    \\def read(auth: Authority) -> Time effects(clock):
+    \\func read(auth: Authority) -> Time effects(clock):
     \\    return clock_now[Time](auth.clock)
     \\
     \\
-    \\def main(rng: Entropy, clock: Clock) -> i64 noio:
+    \\func main(rng: Entropy, clock: Clock) -> i64 noio:
     \\    match read(Authority(clock=clock)):
     \\        case Time.ok(now):
     \\            match random_u64[Random](rng):
@@ -82,7 +82,7 @@ test "external execution and emission release every failed allocation" {
 }
 test "every grant an entry point names is materialized before its body runs" {
     var c = try language.Compilation.init(t.allocator, module,
-        \\def main(rng: Entropy, clock: Clock) -> i64 effects():
+        \\func main(rng: Entropy, clock: Clock) -> i64 effects():
         \\    _ = rng
         \\    _ = clock
         \\    return 1
@@ -92,7 +92,7 @@ test "every grant an entry point names is materialized before its body runs" {
     try t.expectEqualStrings("CapabilityUnavailable", withheld.trap.code);
     try t.expectEqualStrings("", withheld.stdout);
     var unused = try language.Compilation.initTrusted(t.allocator, "unused.my",
-        \\def main(clock: Clock) -> i64 effects():
+        \\func main(clock: Clock) -> i64 effects():
         \\    _ = clock
         \\    return 1
     );
@@ -102,10 +102,10 @@ test "every grant an entry point names is materialized before its body runs" {
     try t.expectEqualStrings("CapabilityUnavailable", refused.trap.code);
 }
 const generic_provider_source = declarations ++
-    \\def read[G](clock: Clock, random: Entropy) -> Time effects(clock,random):
-    \\    now = clock_now[Time](clock)?
-    \\    first = random_u64[Random](random)?
-    \\    second = random_u64[Random](random)?
+    \\func read[G](clock: Clock, random: Entropy) -> Time effects(clock,random):
+    \\    mut now = try clock_now[Time](clock)
+    \\    mut first = try random_u64[Random](random)
+    \\    mut second = try random_u64[Random](random)
     \\    if first == second:
     \\        return Time.err(9)
     \\    if now <= 0:
@@ -113,7 +113,7 @@ const generic_provider_source = declarations ++
     \\    return Time.ok(42)
     \\
     \\
-    \\def main(clock: Clock, random: Entropy) -> i64:
+    \\func main(clock: Clock, random: Entropy) -> i64:
     \\    match read[bool](clock, random):
     \\        case Time.ok(n):
     \\            return n
@@ -127,26 +127,26 @@ fn genericProviderScenario(allocator: std.mem.Allocator) !void {
 }
 test "clock and random bounds propagate through calls independently of noio and noalloc" {
     try reject(declarations ++
-        \\def read(c: Clock) -> Time:
+        \\func read(c: Clock) -> Time:
         \\    return clock_now[Time](c)
         \\
         \\
-        \\def main(c: Clock) -> i64 effects():
+        \\func main(c: Clock) -> i64 effects():
         \\    _ = read(c)
         \\    return 0
     , "E_EFFECT_BOUND");
     try reject(declarations ++
-        \\def read(r: Entropy) -> Random:
+        \\func read(r: Entropy) -> Random:
         \\    return random_u64[Random](r)
         \\
         \\
-        \\def main(r: Entropy, c: Clock) -> i64 effects(clock):
+        \\func main(r: Entropy, c: Clock) -> i64 effects(clock):
         \\    _ = c
         \\    _ = read(r)
         \\    return 0
     , "E_EFFECT_BOUND");
     var c = try language.Compilation.initTrusted(t.allocator, module, declarations ++
-        \\def main(c: Clock, r: Entropy) -> i64 noalloc:
+        \\func main(c: Clock, r: Entropy) -> i64 noalloc:
         \\    _ = clock_now[Time](c)
         \\    _ = random_u64[Random](r)
         \\    return 0

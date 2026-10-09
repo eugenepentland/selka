@@ -1,8 +1,7 @@
-module compiler___precedence_grouping_left_associativity_and_o_5
 
 # spec-case: CORE-1
-public def test_precedence_grouping_left_associativity_and_o_5() -> bool:
+public func test_precedence_grouping_left_associativity_and_o_5() -> bool:
     return 00 == 0 and 1_2 == 12
 
-def main() -> int:
+func main() -> int:
     return 0

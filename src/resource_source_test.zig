@@ -34,12 +34,12 @@ const declarations =
 ;
 // The native provider reads "r:data.bin" and refuses "r:absent.bin".
 const helpers =
-    \\def request() -> [10]u8:
-    \\    return [114u8, 58u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8]
+    \\func request() -> FixedArray[u8, 10]:
+    \\    return FixedArray[u8, 10]([114u8, 58u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8])
     \\
     \\
-    \\def missing() -> [12]u8:
-    \\    return [114u8, 58u8, 97u8, 98u8, 115u8, 101u8, 110u8, 116u8, 46u8, 98u8, 105u8, 110u8]
+    \\func missing() -> FixedArray[u8, 12]:
+    \\    return FixedArray[u8, 12]([114u8, 58u8, 97u8, 98u8, 115u8, 101u8, 110u8, 116u8, 46u8, 98u8, 105u8, 110u8])
     \\
     \\
     \\
@@ -54,11 +54,11 @@ const retry = declarations ++
     \\    fs: Filesystem
     \\
     \\
-    \\def open(auth: Authority) -> Open effects(filesystem):
+    \\func open(auth: Authority) -> Open effects(filesystem):
     \\    return acquire_resource[Open](auth.fs, request())
     \\
     \\
-    \\def retry(file: File) -> Finish:
+    \\func retry(file: File) -> Finish:
     \\    match complete_resource[Finish](file):
     \\        case Finish.ok(done):
     \\            return Ok(done)
@@ -67,7 +67,7 @@ const retry = declarations ++
     \\
     \\
 ++ helpers ++
-    \\def attempt(fs: Filesystem) -> i64 effects(filesystem):
+    \\func attempt(fs: Filesystem) -> i64 effects(filesystem):
     \\    match open(Authority(fs=fs)):
     \\        case Open.ok(file):
     \\            match retry(file):
@@ -82,7 +82,7 @@ const retry = declarations ++
     \\            return e
     \\
     \\
-    \\def main(fs: Filesystem) -> i64 noalloc:
+    \\func main(fs: Filesystem) -> i64 noalloc:
     \\    return attempt(fs) * 100 + attempt(fs.read_only())
 ;
 fn retryScenario(allocator: std.mem.Allocator) !void {
@@ -106,7 +106,7 @@ test "source acquisition delegates authority and failed completion returns owned
 /// One completion per attempt: a full grant completes, a read-only one refuses
 /// and hands the handle back inside its failure record.
 const complete_once = declarations ++ helpers ++
-    \\def attempt(fs: Filesystem) -> i64 effects(filesystem):
+    \\func attempt(fs: Filesystem) -> i64 effects(filesystem):
     \\    match acquire_resource[Open](fs, request()):
     \\        case Open.ok(file):
     \\            match complete_resource[Finish](file):
@@ -120,7 +120,7 @@ const complete_once = declarations ++ helpers ++
     \\            return e
     \\
     \\
-    \\def main(fs: Filesystem) -> i64 noalloc:
+    \\func main(fs: Filesystem) -> i64 noalloc:
     \\    return attempt(fs) * 100 + attempt(fs.read_only())
 ;
 
@@ -149,11 +149,11 @@ test "ownExternal and source acquisition completion retry clean every allocation
     try t.checkAllAllocationFailures(no_resize.allocator(), retryScenario, .{});
 }
 const write_denial = declarations ++
-    \\def writeRequest() -> [10]u8:
-    \\    return [119u8, 58u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8]
+    \\func writeRequest() -> FixedArray[u8, 10]:
+    \\    return FixedArray[u8, 10]([119u8, 58u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8])
     \\
     \\
-    \\def acquires(fs: Filesystem) -> i64 effects(filesystem):
+    \\func acquires(fs: Filesystem) -> i64 effects(filesystem):
     \\    match acquire_resource[Open](fs, writeRequest()):
     \\        case Open.ok(file):
     \\            match complete_resource[Finish](file):
@@ -165,7 +165,7 @@ const write_denial = declarations ++
     \\            return 0
     \\
     \\
-    \\def main(fs: Filesystem) -> i64:
+    \\func main(fs: Filesystem) -> i64:
     \\    return acquires(fs) * 10 + acquires(fs.read_only())
 ;
 // spec: CAPABILITY-METHOD-NARROWING-1
@@ -178,16 +178,16 @@ test "fs.read_only denies a write acquisition the full capability allows" {
     try t.expectEqual(@as(i64, 10), outcome.value);
 }
 const partial = declarations ++ helpers ++
-    \\def work(fs: Filesystem) -> Status:
-    \\    a = acquire_resource[Open](fs, request())?
-    \\    b = acquire_resource[Open](fs, missing())?
+    \\func work(fs: Filesystem) -> Status:
+    \\    mut a = try acquire_resource[Open](fs, request())
+    \\    mut b = try acquire_resource[Open](fs, missing())
     \\    _ = a
     \\    _ = b
     \\    return Ok(True)
     \\
     \\
-    \\def main(fs: Filesystem) -> i64:
-    \\    total = 0
+    \\func main(fs: Filesystem) -> i64:
+    \\    mut total = 0
     \\    for index in range(2000):
     \\        match work(fs):
     \\            case Status.ok(done):
@@ -225,12 +225,15 @@ const wrappers = declarations ++ helpers ++
     \\    err: i64
     \\
     \\
-    \\def pair(fs: Filesystem) -> PairResult:
-    \\    return Ok(Pair(first=Inner(file=acquire_resource[Open](fs, request())?), second=acquire_resource[Open](fs, request())?))
+    \\func pair(fs: Filesystem) -> PairResult:
+    \\    const first_file = try acquire_resource[Open](fs, request())
+    \\    const first = Inner(file=first_file)
+    \\    const second = try acquire_resource[Open](fs, request())
+    \\    return Ok(Pair(first=first, second=second))
     \\
     \\
-    \\def main(fs: Filesystem) -> i64:
-    \\    total = 0
+    \\func main(fs: Filesystem) -> i64:
+    \\    mut total = 0
     \\    for index in range(1000):
     \\        match pair(fs):
     \\            case PairResult.ok(value):
@@ -265,22 +268,22 @@ test "nested resource wrappers release at scope exit and traps unwind every inst
 
 test "resource acquisition identity and cleanup contracts survive exact duplicate discovery" {
     const source = declarations ++
-        \\def a(fs: Filesystem) -> Open effects(filesystem):
-        \\    request: [1]u8 = [42u8]
+        \\func a(fs: Filesystem) -> Open effects(filesystem):
+        \\    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([42u8])
         \\    return acquire_resource[Open](fs, request)
         \\
         \\
-        \\def b(dir: Filesystem) -> Open effects(filesystem):
-        \\    request: [1]u8 = [42u8]
+        \\func b(dir: Filesystem) -> Open effects(filesystem):
+        \\    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([42u8])
         \\    return acquire_resource[Open](dir, request)
         \\
         \\
-        \\def c(dir: Filesystem) -> Open effects(filesystem):
-        \\    request: [1]u8 = [43u8]
+        \\func c(dir: Filesystem) -> Open effects(filesystem):
+        \\    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([43u8])
         \\    return acquire_resource[Open](dir, request)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     var compilation = try language.Compilation.init(t.allocator, "duplicates.my", source);
@@ -296,11 +299,11 @@ test "source frame traps release the resource moved through recursive calls" {
     try sandbox(&box);
     defer box.deinit();
     var compilation = try language.Compilation.init(t.allocator, "recursive.my", declarations ++ helpers ++
-        \\def recurse(file: File) -> i64:
+        \\func recurse(file: File) -> i64:
         \\    return recurse(file)
         \\
         \\
-        \\def main(fs: Filesystem) -> i64:
+        \\func main(fs: Filesystem) -> i64:
         \\    match acquire_resource[Open](fs, request()):
         \\        case Open.ok(file):
         \\            return recurse(file)
@@ -321,20 +324,20 @@ const generic_cleanup = declarations ++ helpers ++
     \\    code: i64
     \\
     \\
-    \\def forward[T](file: File) -> File effects(filesystem):
+    \\func forward[T](file: File) -> File effects(filesystem):
     \\    return file
     \\
     \\
-    \\def drop[T](file: File) -> i64 effects(filesystem):
+    \\func drop[T](file: File) -> i64 effects(filesystem):
     \\    return 1
     \\
     \\
-    \\def fields[T](value: Owned) -> i64 effects(filesystem):
+    \\func fields[T](value: Owned) -> i64 effects(filesystem):
     \\    _ = value
     \\    return 7
     \\
     \\
-    \\def handle[T](r: Open) -> i64 effects(filesystem):
+    \\func handle[T](r: Open) -> i64 effects(filesystem):
     \\    match r:
     \\        case Open.ok(file):
     \\            return fields[bool](Owned(file=forward[bool](file), code=7))
@@ -342,10 +345,10 @@ const generic_cleanup = declarations ++ helpers ++
     \\            return code
     \\
     \\
-    \\def main(fs: Filesystem) -> i64:
-    \\    total = 0
+    \\func main(fs: Filesystem) -> i64:
+    \\    mut total = 0
     \\    for index in range(1000):
-    \\        first = handle[bool](acquire_resource[Open](fs, request()))
+    \\        mut first = handle[bool](acquire_resource[Open](fs, request()))
     \\        match acquire_resource[Open](fs, request()):
     \\            case Open.ok(file):
     \\                total = first + drop[bool](file)
@@ -374,11 +377,11 @@ test "generic owned resources clean up explicit and implicit drops under allocat
 }
 
 const generic_retry = declarations ++
-    \\def open[G](cap: Filesystem) -> Open effects(filesystem):
+    \\func open[G](cap: Filesystem) -> Open effects(filesystem):
     \\    return acquire_resource[Open](cap, request())
     \\
     \\
-    \\def finish[G](file: File) -> Finish effects(filesystem):
+    \\func finish[G](file: File) -> Finish effects(filesystem):
     \\    match complete_resource[Finish](file):
     \\        case Finish.ok(done):
     \\            return Ok(done)
@@ -387,11 +390,11 @@ const generic_retry = declarations ++
     \\
     \\
 ++ helpers ++
-    \\def narrow[G](cap: Filesystem) -> Filesystem:
+    \\func narrow[G](cap: Filesystem) -> Filesystem:
     \\    return cap.read_only()
     \\
     \\
-    \\def attempt(cap: Filesystem) -> i64 effects(filesystem):
+    \\func attempt(cap: Filesystem) -> i64 effects(filesystem):
     \\    match open[bool](cap):
     \\        case Open.ok(file):
     \\            match finish[bool](file):
@@ -403,7 +406,7 @@ const generic_retry = declarations ++
     \\            return e
     \\
     \\
-    \\def main(cap: Filesystem) -> i64:
+    \\func main(cap: Filesystem) -> i64:
     \\    return attempt(cap) * 100 + attempt(narrow[bool](cap))
 ;
 fn genericRetryScenario(allocator: std.mem.Allocator) !void {
@@ -424,11 +427,11 @@ test "generic resource acquisition and completion return ownership for retry und
 }
 
 const directory_scope = declarations ++ helpers ++
-    \\def escapeRequest() -> [13]u8:
-    \\    return [114u8, 58u8, 46u8, 46u8, 47u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8]
+    \\func escapeRequest() -> FixedArray[u8, 13]:
+    \\    return FixedArray[u8, 13]([114u8, 58u8, 46u8, 46u8, 47u8, 100u8, 97u8, 116u8, 97u8, 46u8, 98u8, 105u8, 110u8])
     \\
     \\
-    \\def openAndFinish(d: Filesystem) -> i64 effects(filesystem):
+    \\func openAndFinish(d: Filesystem) -> i64 effects(filesystem):
     \\    match acquire_resource[Open](d, request()):
     \\        case Open.ok(file):
     \\            match complete_resource[Finish](file):
@@ -440,7 +443,7 @@ const directory_scope = declarations ++ helpers ++
     \\            return code
     \\
     \\
-    \\def escapeAndFinish(d: Filesystem) -> i64 effects(filesystem):
+    \\func escapeAndFinish(d: Filesystem) -> i64 effects(filesystem):
     \\    match acquire_resource[Open](d, escapeRequest()):
     \\        case Open.ok(file):
     \\            match complete_resource[Finish](file):
@@ -452,8 +455,8 @@ const directory_scope = declarations ++ helpers ++
     \\            return code
     \\
     \\
-    \\def main(fs: Filesystem) -> i64:
-    \\    d = fs.dir("nested")
+    \\func main(fs: Filesystem) -> i64:
+    \\    mut d = fs.dir("nested")
     \\    return openAndFinish(d) * 100 + escapeAndFinish(d)
 ;
 /// A granted directory with a nested subdirectory for `fs.dir` scope tests.
@@ -473,8 +476,8 @@ test "fs.dir confines a derived filesystem to its root and refuses escapes" {
     try t.expectEqual(@as(i64, 102), outcome.value);
 }
 const directory_lazy =
-    \\def main(fs: Filesystem) -> i64 effects():
-    \\    d = fs.dir("absent-directory")
+    \\func main(fs: Filesystem) -> i64 effects():
+    \\    mut d = fs.dir("absent-directory")
     \\    _ = d
     \\    return 7
 ;
@@ -488,9 +491,9 @@ test "fs.dir records a scope without opening the directory or adding an effect" 
     try t.expectEqual(@as(i64, 7), outcome.value);
 }
 const directory_readonly = declarations ++ helpers ++
-    \\def main(fs: Filesystem) -> i64:
-    \\    d = fs.dir("nested")
-    \\    r = d.read_only()
+    \\func main(fs: Filesystem) -> i64:
+    \\    mut d = fs.dir("nested")
+    \\    mut r = d.read_only()
     \\    match acquire_resource[Open](r, request()):
     \\        case Open.ok(file):
     \\            _ = file
@@ -515,15 +518,15 @@ test "fs.read_only preserves a dir scope while narrowing permissions" {
     try t.expectEqual(@as(i64, 1), outcome.value);
 }
 const dynamic_dir = declarations ++
-    \\def main(fs: Filesystem) -> i64:
-    \\    path = "nested"
-    \\    d = fs.dir(path)
+    \\func main(fs: Filesystem) -> i64:
+    \\    mut path = "nested"
+    \\    mut d = fs.dir(path)
     \\    _ = d
     \\    return 0
 ;
 const escaping_dir = declarations ++
-    \\def main(fs: Filesystem) -> i64:
-    \\    d = fs.dir("../escape")
+    \\func main(fs: Filesystem) -> i64:
+    \\    mut d = fs.dir("../escape")
     \\    _ = d
     \\    return 0
 ;
@@ -539,12 +542,12 @@ test "fs.dir rejects a dynamic path and a path escaping the current root" {
     try t.expectEqualStrings("E_FILESYSTEM_DIR", try dirDiagnostic("escaping-dir.my", escaping_dir));
 }
 const generic_dir = declarations ++ helpers ++
-    \\def openIn[G](cap: Filesystem) -> Open effects(filesystem):
-    \\    scoped = cap.dir("nested")
+    \\func openIn[G](cap: Filesystem) -> Open effects(filesystem):
+    \\    mut scoped = cap.dir("nested")
     \\    return acquire_resource[Open](scoped, request())
     \\
     \\
-    \\def main(fs: Filesystem) -> i64:
+    \\func main(fs: Filesystem) -> i64:
     \\    match openIn[bool](fs):
     \\        case Open.ok(file):
     \\            match complete_resource[Finish](file):

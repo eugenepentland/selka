@@ -1,13 +1,10 @@
 # Records, unions and enums
 
-These are the language's user-declared data types. `record` groups named fields into
-one value, `union` names a closed set of alternatives with optional payloads, and
-`enum` names a closed set with no payloads at all. All three are nominal: two
-declarations with identical shapes are different types, and a value of one is never
-accepted where the other is expected. There is no inheritance, no method table and no
-open extension point, so the set of shapes a declaration can take is fixed where it is
-written. For the syntax these examples use, see the
-[Python-style application guide](python-syntax.md).
+`record` groups named fields into a value. `enum` declares a closed set of
+payload-free or named-payload alternatives. Both are nominal: declarations with
+the same shape remain different types. Rare nominal `result` declarations keep
+their existing identity and handling rules. There is no inheritance or open
+extension of a declaration's cases.
 
 ## Records
 
@@ -28,18 +25,19 @@ record Segment:
     start: Point
     end: Point
 
-def shift(point: Point, dx: int) -> Point:
+func shift(source: Point, dx: int) -> Point:
+    mut point = source
     point.x = point.x + dx
     return point
 
-def main() -> int:
-    origin = Point(x=1, y=2)
-    moved = shift(origin, 10)
-    line = Segment(start=origin, end=moved)
+func main() -> int:
+    mut origin = Point(x=1, y=2)
+    mut moved = shift(origin, 10)
+    mut line = Segment(start=origin, end=moved)
     return line.start.x + line.end.x + line.end.y
 ```
 
-This returns `14`. `shift` reassigns its own parameter, so `origin.x` is still `1`
+This returns `14`. `shift` updates its own mutable local copy, so `origin.x` is still `1`
 afterwards and only `moved.x` is `11`. A record that holds a list, dictionary or
 string is a value too; see [value semantics](value-semantics.md) for how its
 managed fields are shared until a write.
@@ -61,12 +59,12 @@ builtin `Cell` with `E_VALUE_CELL`.
 record Counter:
     n: int
 
-def bump(counter: mut Counter):
+func bump(mut counter: Counter):
     counter.n = counter.n + 1
 
-def main() -> int:
-    a = Counter(n=1)
-    b = a
+func main() -> int:
+    mut a = Counter(n=1)
+    mut b = a
     b.n = 7
     bump(mut a)
     return a.n
@@ -77,15 +75,13 @@ changes `a`. Recursive value fields that would be infinitely large are stored
 in immutable boxes; writing a nested path copies its boxes. A record copy write
 that nothing reads afterwards is `E_DEAD_RECORD_WRITE`.
 
-## Positional and named constructors
+## Named constructors
 
-A record is constructed by calling its type. Positional arguments bind to fields in
-declaration order, named arguments bind by field name in any order, and the two may be
-mixed as long as every positional argument precedes the first named one. Construction is
-complete: every field must be supplied unless its declaration carries a default, and a
-missing one without a default is rejected with `E_INCOMPLETE_CONSTRUCTION` naming the
-field and its declaration. An empty record declares `pass` and is constructed with no
-arguments.
+Construct a record by calling its type and naming every supplied field.
+Fields may appear in any order; expressions evaluate once in written order.
+Every field needs a value unless its declaration provides a default. Missing
+required fields report `E_INCOMPLETE_CONSTRUCTION`. An empty record declares
+`pass` and is constructed with no arguments.
 
 ```mylang
 # doc: expect 321
@@ -97,16 +93,16 @@ record Colour:
 record Marker:
     pass
 
-def main() -> int:
-    positional = Colour(1, 2, 3)
-    named = Colour(blue=30, red=10, green=20)
-    mixed = Colour(100, blue=300, green=200)
+func main() -> int:
+    const first = Colour(red=1, green=2, blue=3)
+    const second = Colour(blue=30, red=10, green=20)
+    const third = Colour(red=100, blue=300, green=200)
     _ = Marker()
-    return positional.red + named.green + mixed.blue
+    return first.red + second.green + third.blue
 ```
 
-This returns `321`. The same positional-then-keyword rules apply to ordinary function
-calls, which also accept trailing defaults.
+This returns `321`. Ordinary functions may also have positional parameters;
+record field labels are always required.
 
 ## Field defaults and functional update
 
@@ -125,16 +121,16 @@ record Config:
     verbose: bool = False
     label: str = "auto"
 
-def main() -> int:
-    base = Config(verbose=True)
-    fixed = Config(7)
+func main() -> int:
+    mut base = Config(verbose=True)
+    mut fixed = Config(retries=7)
     if base.verbose and len(base.label) == 4:
         return base.retries + fixed.retries + 2
     return 0
 ```
 
 This returns `12`: `base.retries` is the declared `3`, `fixed.retries` is the
-positional `7`, and `base.label` defaults to `"auto"`.
+explicit `7`, and `base.label` defaults to `"auto"`.
 
 `replace(record, field=value, …)` is the functional update: it returns a copy of the
 record with only the named fields changed and every other field preserved, leaving the
@@ -149,9 +145,9 @@ record Settings:
     retries: int = 3
     verbose: bool = False
 
-def main() -> int:
-    base = Settings(verbose=True)
-    changed = replace(base, retries=5)
+func main() -> int:
+    mut base = Settings(verbose=True)
+    mut changed = replace(base, retries=5)
     return changed.retries + 2
 ```
 
@@ -159,67 +155,60 @@ This returns `7`. `changed` keeps `verbose` from `base` and `base.retries` is st
 
 ## Tagged unions
 
-`union` declares a closed set of cases. A case is either payload-free or carries exactly
-one declared payload type. `enum` is the payload-free form and nothing more: its cases
-are ordinary comparable values and can index a table. A union value is read only through
-`match`, which must have an arm for every case — adding a case to the declaration turns
-every existing match into an `E_INCOMPLETE_MATCH` error rather than a silent fallthrough.
-There is no `.case` projection that reads a payload without matching. A trailing
-`case _` arm covers every case no earlier arm named, discarding the payload of each one
-it covers; it must be last, must cover at least one case, and is rejected when it would
-drop a payload carrying an unhandled [result](results-and-options.md#checked-results).
+`enum` declares a closed set of cases, each on its own line. A case may have no
+payload or declare named fields, such as `number(value: int)` or
+`point(x: int, y: int)`. Construct fields by name and bind them by name in a
+`match`. Matching checks coverage; adding a case makes incomplete matches fail
+at compile time. A final `case _` covers the remaining alternatives, subject
+to the existing checked-result handling obligations.
 
 ```mylang
 # doc: expect 21
 enum Level:
-    debug,
-    warning,
+    debug
+    warning
     failure
 
-union Event:
-    heartbeat,
-    count: int,
-    message: str
+enum Event:
+    heartbeat
+    count(value: int)
+    message(value: str)
 
-def weight(event: Event) -> int:
+func weight(event: Event) -> int:
     match event:
         case Event.heartbeat:
             return 1
-        case Event.count(n):
+        case Event.count(value=n):
             return n
-        case Event.message(text):
+        case Event.message(value=text):
             return len(text)
 
-def urgency(level: Level) -> int:
+func urgency(level: Level) -> int:
     match level:
         case Level.failure:
             return 10
         case _:
             return 0
 
-def main() -> int:
-    events = [Event.heartbeat, Event.count(6), Event.message("down")]
-    total = 0
+func main() -> int:
+    mut events = [Event.heartbeat, Event.count(value=6), Event.message(value="down")]
+    mut total = 0
     for event in events:
         total = total + weight(event)
     return total + urgency(Level.failure) + urgency(Level.debug)
 ```
 
-This returns `21`. `match` is a statement, not an expression; see
+This returns `21`. `match` supports statement bodies and expression bodies with `yield`; see
 [match expressions](match-expressions.md) for how a value is produced from one.
 
 ## Payload variant construction
 
-`Type.case` without parentheses constructs a payload-free case and `Type.case(value)`
-constructs one carrying its declared payload. The payload expression is evaluated once.
-Supplying no payload, more than one, a payload to an empty case, or a payload of the
-wrong type is rejected with `E_VARIANT_PAYLOAD`. Patterns use the same spelling:
-`case Type.case(binding)` names the payload and `case Type.case(_)` discards it. A
-generic union names only its template at a use site — `Slot.filled(v)`, never
-`Slot[int].filled(v)`, because the compiler cannot tell that spelling apart from an
-index followed by a call — and takes its type arguments from the expected type of the
-annotation, parameter, field or result it fills, reporting `E_GENERIC_INFERENCE` when
-nothing supplies them.
+`Type.case` constructs a payload-free case. `Type.case(value=expression)`
+constructs a case whose field is named `value`; every payload argument names its
+field and evaluates once in written order. A pattern such as
+`case Type.case(value=binding)` binds that field; `value=_` discards it.
+Nested patterns may inspect variants inside payloads. Generic type arguments
+follow the existing expected-type inference rules.
 
 ```mylang
 # doc: expect 26
@@ -227,34 +216,34 @@ record Point:
     x: int
     y: int
 
-union Shape:
-    empty,
-    radius: int,
-    point: Point
+enum Shape:
+    empty
+    radius(value: int)
+    point(value: Point)
 
-union Slot[T]:
-    empty,
-    filled: T
+enum Slot[T]:
+    empty
+    filled(value: T)
 
-def area(shape: Shape) -> int:
+func area(shape: Shape) -> int:
     match shape:
         case Shape.empty:
             return 0
-        case Shape.radius(r):
+        case Shape.radius(value=r):
             return r * r
-        case Shape.point(_):
+        case Shape.point(value=_):
             return 1
 
-def main() -> int:
-    shapes = [Shape.radius(4), Shape.point(Point(x=1, y=2)), Shape.empty]
-    total = 0
+func main() -> int:
+    mut shapes = [Shape.radius(value=4), Shape.point(value=Point(x=1, y=2)), Shape.empty]
+    mut total = 0
     for shape in shapes:
         total = total + area(shape)
-    taken: Slot[int] = Slot.filled(9)
+    mut taken: Slot[int] = Slot.filled(value=9)
     match taken:
         case Slot.empty:
             return total
-        case Slot.filled(value):
+        case Slot.filled(value=value):
             return total + value
 ```
 
@@ -264,19 +253,17 @@ not a declared case stays an ordinary call.
 
 ## Named variant case fields
 
-A case may declare parenthesized named fields, `case(f1: T1, f2: T2 = default)`. The
-fields follow the record rules: a required field may not follow a defaulted one, and a
-default is one of the immutable scalar literals a parameter accepts. `Type.case(v1, v2)`
-binds positionally, `Type.case(f1=v1)` by name, and the two mix as long as every
-positional argument precedes the first named one; a field left out because it declared a
-default is filled with that literal. A `case: T` payload and a payload-free `case` keep
-their existing spelling and meaning, so existing declarations are unaffected.
+A case may declare named fields, `case(f1: T1, f2: T2 = default)`. Required
+fields precede defaulted fields, and defaults use the same immutable literals
+as record fields. Construction names every supplied field:
+`Type.case(f1=value, f2=other)`. Omitted defaults are filled from the declaration.
+A payload-free case needs no parentheses. A single payload is an explicitly
+named field, for example `item(value: T)`.
 
-A pattern binds exactly one name per declared field — `case Type.case(p1, p2)` — with `_`
-discarding that field; a single-payload case still takes one binding and a payload-free
-case takes none. A missing or extra field argument, an unknown field name, a duplicate
-field, a required field after a defaulted one, and a pattern whose binding count differs
-from the field count are all located diagnostics. A field whose type carries a handling
+Patterns name the fields too: `case Type.case(f1=first, f2=_)`. `_` discards
+that field; a nested pattern can match an enum or optional payload. A missing,
+extra, unknown or duplicate field receives a located diagnostic. Patterns bind
+read-only locals and must exhaustively cover the possible values. A field whose type carries a handling
 obligation keeps it, so `case _` over a case with a `Result` field still reports
 `E_RESULT_DISCARD` and needs its own arm.
 
@@ -287,19 +274,19 @@ record Span:
     col: int
 
 
-union Node:
-    form(items: list[Node], span: Span),
-    atom(text: str, span: Span),
-    decimal(value: float, span: Span, literal: Option[str] = None)
+enum Node:
+    form(items: Node[], span: Span)
+    atom(text: str, span: Span)
+    decimal(value: float, span: Span, literal: str? = None)
 
 
-def width(node: Node) -> int:
+func width(node: Node) -> int:
     match node:
-        case Node.form(items, _):
+        case Node.form(items=items, span=_):
             return len(items)
-        case Node.atom(text, _):
+        case Node.atom(text=text, span=_):
             return len(text)
-        case Node.decimal(_, _, literal):
+        case Node.decimal(value=_, span=_, literal=literal):
             match literal:
                 case Some(_):
                     return 1
@@ -307,10 +294,10 @@ def width(node: Node) -> int:
                     return 2
 
 
-def main() -> int:
-    home = Span(line=1, col=1)
-    tree = Node.form([Node.atom("x", home), Node.decimal(0.0000001, home, Some("100nF"))], home)
-    return width(tree) + width(Node.atom("abc", home)) * 2 + width(Node.decimal(1.5, home))
+func main() -> int:
+    mut home = Span(line=1, col=1)
+    mut tree = Node.form(items=[Node.atom(text="x", span=home), Node.decimal(value=0.0000001, span=home, literal=Some("100nF"))], span=home)
+    return width(tree) + width(Node.atom(text="abc", span=home)) * 2 + width(Node.decimal(value=1.5, span=home))
 ```
 
 This returns `10`. The case's payload stays a single value, so named fields do not change
@@ -319,7 +306,7 @@ how a union is laid out, compared, copied, or passed across a module boundary.
 ## Recursive payloads
 
 A record or union can refer to itself directly or through another value type when
-there is a way to finish the value. An `Option` field has `None`, and a union can
+there is a way to finish the value. An optional field has `None`, and a union can
 have a case with no recursive payload. The compiler puts the recursive field or
 case in an immutable managed box; source code still reads and writes its value.
 Copies share boxes until a nested write creates new boxes along that path.
@@ -330,25 +317,25 @@ record Binary:
     left: Expr
     right: Expr
 
-union Expr:
-    number: int,
-    binary: Binary
+enum Expr:
+    number(value: int)
+    binary(value: Binary)
 
-def total(expr: Expr) -> int:
+func total(expr: Expr) -> int:
     match expr:
-        case Expr.number(n):
+        case Expr.number(value=n):
             return n
-        case Expr.binary(node):
+        case Expr.binary(value=node):
             return total(node.left) + total(node.right)
 
-def main() -> int:
-    tree: Expr = Expr.binary(Binary(left=Expr.number(20), right=Expr.number(22)))
+func main() -> int:
+    mut tree: Expr = Expr.binary(value=Binary(left=Expr.number(value=20), right=Expr.number(value=22)))
     return total(tree)
 ```
 
 This returns `42`; the `number` case ends the recursion. `record Loop: next: Loop`
 still gets `E_RECURSIVE_RECORD`, because it has no finite value. Recursion through
-`list[...]` or `dict[...]` already has indirection and needs no box. Nested
+`...[]` or `dict[...]` already has indirection and needs no box. Nested
 recursive values compare, hash, print and cross typed JSON boundaries as values.
 Printing stops with `...` at the renderer's depth cap.
 
@@ -360,9 +347,9 @@ pass a newly opened handle directly. The type is rejected before execution:
 # doc: expect-error E_RECURSIVE_RECORD
 record OpenChain:
     file: TextFile
-    next: Option[OpenChain]
+    next: OpenChain?
 
-def main() -> int:
+func main() -> int:
     return 0
 ```
 
@@ -373,39 +360,35 @@ fields and lists changed independently.
 
 ## Fixed arrays and enum tables
 
-A fixed array `[N]T` and an enum-indexed table `[Kind]T` are value types with no
-constructor keyword of their own. A list literal builds the array and a dict literal
-keyed by `Kind.case` builds the table, but only where the surrounding context demands
-one — an annotation, a parameter, a record field or a return type. In every other
-position a list literal is still a managed `list` and a dict literal still a managed
-`dict`. An array literal's length is checked statically against the expected array and
-reports `E_ARRAY_LENGTH` when it disagrees; a table literal needs exactly one entry per
-case of its own key enum, so missing cases, duplicates, non-case keys and cases of a
-different enum are all rejected. Table entries are stored in enum layout order whatever
-order the literal writes them in. Both are fixed-size values rather than collections:
-they are copied by assignment, have no `append`, and `replace(value, index, element)`
-answers a new one with a single slot changed.
+`T[]` is a growable array value. An array literal always creates a growable
+array; an expected fixed type does not change its meaning. Construct a fixed
+array explicitly as `FixedArray[T, N]([elements])`. Its length belongs to its
+type, it has no `append`, and writes require a writable binding.
+
+The separate enum-indexed table spelling remains `[Kind]T`. A table literal
+needs exactly one entry per key case. Fixed arrays and tables have independent
+value semantics; `replace(value, index, element)` returns a changed copy.
 
 ```mylang
 # doc: expect 115
 enum Status:
-    ok,
-    missing,
+    ok
+    missing
     failed
 
 record Window:
-    samples: [3]int
+    samples: FixedArray[int, 3]
 
-def codes() -> [Status]int:
+func codes() -> [Status]int:
     return {Status.failed: 500, Status.ok: 200, Status.missing: 404}
 
-def total(values: [3]int) -> int:
+func total(values: FixedArray[int, 3]) -> int:
     return values[0] + values[1] + values[2]
 
-def main() -> int:
-    window = Window(samples=[1, 2, 3])
-    widened = replace(window.samples, 2, 10)
-    table = codes()
+func main() -> int:
+    mut window = Window(samples=FixedArray[int, 3]([1, 2, 3]))
+    mut widened = replace(window.samples, 2, 10)
+    mut table = codes()
     return total(window.samples) + total(widened) + table[Status.failed] - table[Status.missing]
 ```
 
@@ -428,12 +411,12 @@ record Point:
     x: int
     y: int
 
-def main() -> int:
-    counts: [4]int = [0, 0, 0, 0]
-    before = counts
+func main() -> int:
+    mut counts: FixedArray[int, 4] = FixedArray[int, 4]([0, 0, 0, 0])
+    mut before = counts
     for step in range(4):
         counts[step] = step + 1
-    points: [2]Point = [Point(x=0, y=0), Point(x=5, y=5)]
+    mut points: FixedArray[Point, 2] = FixedArray[Point, 2]([Point(x=0, y=0), Point(x=5, y=5)])
     points[1].y = 9
     return points[1].y * 10000 + counts[0] * 1000 + counts[1] * 100 + counts[2] * 10 + counts[3] + before[3] + points[0].y
 ```
@@ -455,9 +438,9 @@ enum table is indexed by its key and has no negative positions.
 
 ```mylang
 # doc: expect 2144
-def main() -> int:
-    values: [4]int = [1, 2, 3, 4]
-    back = -2
+func main() -> int:
+    mut values: FixedArray[int, 4] = FixedArray[int, 4]([1, 2, 3, 4])
+    mut back = -2
     values[-1] += 10
     values[back] = values[-4] * 30
     values[0], values[-3] = values[-3], values[0]
@@ -472,33 +455,31 @@ never negative — a constant (`a[-1]` is compiled as `a[N - 1]`), a `range` or
 
 ### Passing an array to be written
 
-A parameter declared `mut [N]T` names the caller's array for the whole call, and
+A parameter declared `mut values: FixedArray[T, N]` names the caller's array for the whole call, and
 the caller marks the argument `mut`, as for a list. The callee's element writes
 land in the caller's variable; nothing is copied in or out.
 
 ```mylang
 # doc: expect 1023
-def fill(values: mut [3]int, start: int) -> None:
+func fill(mut values: FixedArray[int, 3], start: int) -> Unit:
     for index in range(3):
         values[index] = start + index
 
-def main() -> int:
-    values: [3]int = [0, 0, 0]
+func main() -> int:
+    mut values: FixedArray[int, 3] = FixedArray[int, 3]([0, 0, 0])
     fill(mut values, 10)
     fill(mut values, values[2] - 11)
     return values[0] * 1000 + values[1] * 10 + values[2]
 ```
 
 This returns `1023`: the second call starts from the `12` the first one left.
-The rules are the list rules. A function that writes an element of an array
-parameter it did not declare `mut` is `E_MUTATION_MARKER`, naming the
-declaration to write, and so is a `mut` array parameter the body never writes.
-The argument must be a variable: `fill(mut box.cells, 0)` is rejected with a
-message that says to copy the field into a local, pass that, and store it back.
-Because the name is the caller's array, rebinding it as a whole
-(`values = [0, 0, 0]`) is `E_ASSIGNMENT_TARGET`; write its elements instead. An
-array parameter without `mut` is still the callee's own copy, which it may
-rebind, or copy into a local and change freely.
+The same rules apply to growable and fixed arrays. Writing through an ordinary
+parameter is `E_IMMUTABLE`; declare both the parameter and the argument `mut`
+when the caller should change. A writable local, field or indexed element can
+be passed, including `fill(mut box.cells, 0)`. Whole-value reassignment through
+the parameter updates the caller too, using an explicit constructor for fixed
+arrays. To keep changes local, make an independent `mut` copy of the readonly
+parameter. Unused mutation permission is allowed.
 
 ### Iterating a fixed array
 
@@ -509,13 +490,13 @@ the loop visits. An enum table is indexed by its key rather than walked.
 
 ```mylang
 # doc: expect 124
-def main() -> int:
-    values: [4]int = [3, 1, 4, 1]
-    total = 0
+func main() -> int:
+    mut values: FixedArray[int, 4] = FixedArray[int, 4]([3, 1, 4, 1])
+    mut total = 0
     for index, value in enumerate(values):
         total += index * value
         values[index] = 0
-    doubled = [value * 2 for value in values]
+    mut doubled = [for value in values yield value * 2]
     return total * 10 + len(doubled) + doubled[0]
 ```
 

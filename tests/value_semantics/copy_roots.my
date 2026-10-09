@@ -1,27 +1,26 @@
-module copy_roots
 
 
-def snapshot(xs: list[int]) -> list[int]:
+func snapshot(xs: int[]) -> int[]:
     return xs
 
 
-def keep_then_grow(xs: mut list[int], survivor: list[int]) -> list[int]:
-    saved = snapshot(xs)
+func keep_then_grow(mut xs: int[], survivor: int[]) -> int[]:
+    mut saved = snapshot(xs)
     xs.append(survivor[0])
     return saved
 
 
-public def test_pinned_transfer_keeps_original_and_other_live_values() -> bool:
-    xs = [1, 2]
-    survivor = [9]
-    saved = keep_then_grow(mut xs, survivor)
+public func test_pinned_transfer_keeps_original_and_other_live_values() -> bool:
+    mut xs = [1, 2]
+    mut survivor = [9]
+    mut saved = keep_then_grow(mut xs, survivor)
     saved.append(3)
     return saved == [1, 2, 3] and xs == [1, 2, 9] and survivor == [9]
 
 
-public def test_fast_transfer_keeps_independent_snapshots() -> bool:
-    xs = [1, 2]
-    saved = snapshot(xs)
+public func test_fast_transfer_keeps_independent_snapshots() -> bool:
+    mut xs = [1, 2]
+    mut saved = snapshot(xs)
     xs.append(9)
     saved.append(3)
     return saved == [1, 2, 3] and xs == [1, 2, 9]

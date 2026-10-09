@@ -45,24 +45,23 @@ const Context = struct {
     }
 };
 const project_source =
-    \\module app
     \\import dep
     \\
-    \\public def test_dependency() -> bool:
+    \\public func test_dependency() -> bool:
     \\    return dep.value() == 3
     \\
-    \\public def test_constant() -> bool:
+    \\public func test_constant() -> bool:
     \\    return True
     \\
-    \\public def test_property(x: int) -> bool:
+    \\public func test_property(x: int) -> bool:
     \\    return x == x
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
     \\
 ;
-const dependency_three = "module dep\n\npublic def value() -> int:\n    return 3\n";
-const dependency_four = "module dep\n\npublic def value() -> int:\n    return 4\n";
+const dependency_three = "\npublic func value() -> int:\n    return 3\n";
+const dependency_four = "\npublic func value() -> int:\n    return 4\n";
 
 // spec-case: NEW-CORE-S4-TEST-3
 test "guestTool refuses a missing executable before checking or replaying tests" {
@@ -109,7 +108,7 @@ test "directory receipts account for orphan libraries and rerun only the edited 
     const context: Context = .{ .arena = arena.allocator(), .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator()) };
     try context.write("app.my", project_source);
     try context.write("dep.my", dependency_three);
-    try context.write("orphan.my", "module orphan\n\ndef test_orphan() -> bool:\n    return True\n");
+    try context.write("orphan.my", "\nfunc test_orphan() -> bool:\n    return True\n");
     const cold = try context.run(".", &.{});
     try expectStatus(context, cold, 0);
     try std.testing.expectEqual(@as(u64, 4), v.number(v.get(cold.report, "passed")));
@@ -129,16 +128,15 @@ test "directory receipts account for orphan libraries and rerun only the edited 
 }
 
 const whole_source =
-    \\module app
     \\import dep
     \\
-    \\public def test_dependency() -> bool:
+    \\public func test_dependency() -> bool:
     \\    return dep.value() == 3
     \\
-    \\public def test_constant() -> bool:
+    \\public func test_constant() -> bool:
     \\    return True
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
     \\
 ;
@@ -207,31 +205,30 @@ test "sharedKeys: a program's whole-file receipt alone replays every test, and a
 }
 
 const keys_app =
-    \\module app
     \\import dep
     \\
-    \\public def test_value() -> bool:
+    \\public func test_value() -> bool:
     \\    return dep.value() == 3
     \\
-    \\public def test_greeting() -> bool:
+    \\public func test_greeting() -> bool:
     \\    return len(dep.greeting()) == 2
     \\
-    \\public def test_point() -> bool:
+    \\public func test_point() -> bool:
     \\    return dep.origin().x == 0
     \\
-    \\public def test_alone() -> bool:
+    \\public func test_alone() -> bool:
     \\    return True
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
     \\
 ;
 const keys_dep_parts = [_][]const u8{
-    "module dep\n\npublic record Point:\n    x: int\n    y: int\n\n",
-    "public def value() -> int:\n    return 3\n\n",
-    "public def greeting() -> str:\n    return \"hi\"\n\n",
-    "public def origin() -> Point:\n    return Point(x=0, y=0)\n\n",
-    "public def unused() -> int:\n    return 1\n",
+    "\npublic record Point:\n    x: int\n    y: int\n\n",
+    "public func value() -> int:\n    return 3\n\n",
+    "public func greeting() -> str:\n    return \"hi\"\n\n",
+    "public func origin() -> Point:\n    return Point(x=0, y=0)\n\n",
+    "public func unused() -> int:\n    return 1\n",
 };
 /// One step of the key differential: the dependency's source after it, and the tests
 /// whose program it changes.
@@ -275,12 +272,12 @@ test "derived per-test keys rerun exactly the tests the per-test oracle reruns a
     try context.write("app.my", keys_app);
     try context.write("dep.my", try std.mem.concat(a, u8, &parts));
     try sameReruns(context, &.{ "app::test_value", "app::test_greeting", "app::test_point", "app::test_alone" });
-    const value_sum = "public def value() -> int:\n    return 1 + 2\n\n";
-    const unused_text = "public def unused() -> int:\n    _ = \"new text\"\n    return 1\n";
-    const greeting_ho = "public def greeting() -> str:\n    return \"ho\"\n\n";
-    const point_z = "module dep\n\npublic record Point:\n    x: int\n    y: int\n    z: int\n\n";
-    const origin_z = "public def origin() -> Point:\n    return Point(x=0, y=0, z=0)\n\n";
-    const added = "\npublic def added() -> int:\n    return 2\n";
+    const value_sum = "public func value() -> int:\n    return 1 + 2\n\n";
+    const unused_text = "public func unused() -> int:\n    _ = \"new text\"\n    return 1\n";
+    const greeting_ho = "public func greeting() -> str:\n    return \"ho\"\n\n";
+    const point_z = "\npublic record Point:\n    x: int\n    y: int\n    z: int\n\n";
+    const origin_z = "public func origin() -> Point:\n    return Point(x=0, y=0, z=0)\n\n";
+    const added = "\npublic func added() -> int:\n    return 2\n";
     const edits = [_]KeyEdit{
         .{ .dep = try std.mem.concat(a, u8, &.{ parts[0], value_sum, parts[2], parts[3], parts[4] }), .rerun = &.{"app::test_value"} },
         .{ .dep = try std.mem.concat(a, u8, &.{ parts[0], value_sum, parts[2], parts[3], unused_text }), .rerun = &.{} },
@@ -337,18 +334,18 @@ test "provider-only imports and embedded assets participate in receipt invalidat
     const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
     try context.write("app.my", project_source);
     try context.write("dep.my", dependency_three);
-    try context.write("extra.my", "module extra\n\npublic def value() -> int:\n    return 3\n");
-    const provided = "module dep\nimport extra\n\npublic def value() -> int:\n    return extra.value() + len(embed_bytes(\"data.bin\")) - 1\n";
+    try context.write("extra.my", "\npublic func value() -> int:\n    return 3\n");
+    const provided = "import extra\n\npublic func value() -> int:\n    return extra.value() + len(embed_bytes(\"data.bin\")) - 1\n";
     try context.write("data.bin", "x");
     try context.write("app.cases.json", try std.json.Stringify.valueAlloc(a, .{ .@"app::test_dependency" = .{ .providers = .{ .@"dep.my" = provided } } }, .{}));
     try expectStatus(context, try context.run("app.my", &.{ "--filter", "test_dependency" }), 0);
     const warm = try context.run("app.my", &.{ "--filter", "test_dependency" });
     try verdict(warm.report, "app::test_dependency", "cached");
-    try context.write("extra.my", "module extra\n\npublic def value() -> int:\n    return 4\n");
+    try context.write("extra.my", "\npublic func value() -> int:\n    return 4\n");
     const changed = try context.run("app.my", &.{ "--filter", "test_dependency" });
     try expectStatus(context, changed, 1);
     try verdict(changed.report, "app::test_dependency", "failed");
-    try context.write("extra.my", "module extra\n\npublic def value() -> int:\n    return 3\n");
+    try context.write("extra.my", "\npublic func value() -> int:\n    return 3\n");
     try context.write("data.bin", "xx");
     try expectStatus(context, try context.run("app.my", &.{ "--filter", "test_dependency" }), 1);
 }
@@ -361,7 +358,7 @@ test "configuredCases require canonical discovered names and never ignore an exp
     defer temporary.cleanup();
     const a = arena.allocator();
     const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
-    try context.write("plain.my", "def test_value() -> bool:\n    return True\n");
+    try context.write("plain.my", "func test_value() -> bool:\n    return True\n");
     try context.write("plain.cases.json", "{\"test_value\":{\"expected\":false}}");
     const alias = try context.run("plain.my", &.{});
     try expectStatus(context, alias, 2);
@@ -380,13 +377,13 @@ test "a run whose selected tests were all skipped exits 3 and an invalid cases f
     defer temporary.cleanup();
     const a = arena.allocator();
     const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
-    try context.write("skipped_test.my", "public def test_later() -> bool:\n    return True\n");
+    try context.write("skipped_test.my", "public func test_later() -> bool:\n    return True\n");
     try context.write("skipped_test.cases.json", "{\"skipped_test::test_later\":{\"skip\":\"not yet\"}}");
     const skipped = try context.run("skipped_test.my", &.{});
     try expectStatus(context, skipped, 3);
     try verdict(skipped.report, "skipped_test::test_later", "skipped");
     try expectStatus(context, try context.run(".", &.{}), 3);
-    try context.write("passing_test.my", "public def test_now() -> bool:\n    return True\n");
+    try context.write("passing_test.my", "public func test_now() -> bool:\n    return True\n");
     try expectStatus(context, try context.run(".", &.{}), 0);
     try context.write("skipped_test.cases.json", "{\"skipped_test::test_later\":{\"bogus\":1}}");
     const invalid = try context.run("skipped_test.my", &.{});
@@ -404,7 +401,7 @@ test "embedded bytes and stricter project budgets invalidate unchanged test mani
     defer temporary.cleanup();
     const a = arena.allocator();
     const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
-    try context.write("asset.my", "module asset\n\ndef test_asset() -> bool:\n    return len(embed_bytes(\"data.bin\")) == 1\n");
+    try context.write("asset.my", "\nfunc test_asset() -> bool:\n    return len(embed_bytes(\"data.bin\")) == 1\n");
     try context.write("data.bin", "x");
     try expectStatus(context, try context.run("asset.my", &.{}), 0);
     const cached = try context.run("asset.my", &.{});
@@ -429,14 +426,14 @@ test "native test step and wall bounds are honored while force bypasses reuse" {
     defer temporary.cleanup();
     const a = arena.allocator();
     const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
-    try context.write("loop.my", "module loop\n\ndef test_loop() -> bool:\n    total = 0\n    for i in range(100):\n        total = total + i\n    return total == 4950\n");
+    try context.write("loop.my", "\nfunc test_loop() -> bool:\n    mut total = 0\n    for i in range(100):\n        total = total + i\n    return total == 4950\n");
     try context.write("mylang.json", "{\"version\":1,\"limits\":{\"test\":{\"max_steps\":2}}}");
     try expectStatus(context, try context.run("loop.my", &.{}), 1);
     try expectStatus(context, try context.run("loop.my", &.{ "--max-steps", "100000" }), 0);
     const limited = try context.run("loop.my", &.{ "--max-steps", "2" });
     try expectStatus(context, limited, 1);
     try verdict(limited.report, "loop::test_loop", "failed");
-    try context.write("loop.my", "module loop\n\ndef test_loop() -> bool:\n    while True:\n        pass\n    return True\n");
+    try context.write("loop.my", "\nfunc test_loop() -> bool:\n    while True:\n        pass\n    return True\n");
     try expectStatus(context, try context.run("loop.my", &.{ "--max-steps", "0", "--timeout-ms", "50" }), 1);
 }
 
@@ -448,7 +445,7 @@ test "the default step budget charges one step per executed block, like the old 
     defer temporary.cleanup();
     const a = arena.allocator();
     const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
-    try context.write("long.my", "module long\n\ndef test_long() -> bool:\n    values: list[int] = []\n    for i in range(200000):\n        values.append(i * 3 + 1)\n    return len(values) == 200000\n");
+    try context.write("long.my", "\nfunc test_long() -> bool:\n    mut values: int[] = []\n    for i in range(200000):\n        values.append(i * 3 + 1)\n    return len(values) == 200000\n");
     try expectStatus(context, try context.run("long.my", &.{}), 0);
     const limited = try context.run("long.my", &.{ "--max-steps", "1000" });
     try expectStatus(context, limited, 1);
@@ -477,8 +474,8 @@ fn runSmallStack(context: Context, source: []const u8, extra: []const u8) !Outco
     }, .report = parsed, .stderr = result.stderr };
 }
 
-const deep_source = "module deep\n\ndef down(n: int) -> int:\n    if n == 0:\n        return 0\n    return 1 + down(n - 1)\n\n" ++
-    "def test_deep() -> bool:\n    return down(40000) == 40000\n\ndef test_shallow() -> bool:\n    return down(10) == 10\n";
+const deep_source = "\nfunc down(n: int) -> int:\n    if n == 0:\n        return 0\n    return 1 + down(n - 1)\n\n" ++
+    "func test_deep() -> bool:\n    return down(40000) == 40000\n\nfunc test_shallow() -> bool:\n    return down(10) == 10\n";
 
 // spec: NEW-CORE-S4-FRAMES-1
 // spec-case: NEW-CORE-S5-TRACE-1
@@ -525,9 +522,9 @@ test "a test's managed heap is bounded by --max-memory and a runaway allocation 
     defer temporary.cleanup();
     const a = arena.allocator();
     const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
-    const source = "module grow\n\ndef fill(rounds: int) -> int:\n    values: list[int] = []\n    for r in range(rounds):\n        values.append(r)\n    return len(values)\n\n" ++
-        "def test_runaway() -> bool:\n    return fill(100000000) > 0\n\ndef test_modest() -> bool:\n    return fill(1000000) == 1000000\n\n" ++
-        "def test_words() -> bool:\n    words: list[str] = []\n    for i in range(200000):\n        words.append(str(i))\n    return len(words) == 200000\n";
+    const source = "\nfunc fill(rounds: int) -> int:\n    mut values: int[] = []\n    for r in range(rounds):\n        values.append(r)\n    return len(values)\n\n" ++
+        "func test_runaway() -> bool:\n    return fill(100000000) > 0\n\nfunc test_modest() -> bool:\n    return fill(1000000) == 1000000\n\n" ++
+        "func test_words() -> bool:\n    mut words: str[] = []\n    for i in range(200000):\n        words.append(str(i))\n    return len(words) == 200000\n";
     try context.write("grow.my", source);
     const bounded = try context.run("grow.my", &.{ "--max-steps", "0", "--max-memory", "64M" });
     try expectStatus(context, bounded, 1);
@@ -558,7 +555,7 @@ test "warm project tests revalidate import policy and required generated interfa
     defer temporary.cleanup();
     const a = arena.allocator();
     const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
-    const source = "module app\nimport dep\n\npublic def test_dependency() -> bool:\n    return dep.value() == 3\n";
+    const source = "import dep\n\npublic func test_dependency() -> bool:\n    return dep.value() == 3\n";
     try context.write("app.my", source);
     try context.write("dep.my", dependency_three);
     try expectStatus(context, try context.run("app.my", &.{}), 0);
@@ -590,9 +587,9 @@ test "providers preserve exported record layouts behind unchanged function signa
     defer temporary.cleanup();
     const a = arena.allocator();
     const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
-    try context.write("app.my", "module app\nimport dep\n\npublic def test_answer() -> bool:\n    return dep.answer()\n");
-    const old = "module dep\n\npublic record Cell:\n    value: int\n\npublic def answer() -> bool:\n    return Cell(value=1).value == 1\n";
-    const changed = "module dep\n\npublic record Cell:\n    value: bool\n\npublic def answer() -> bool:\n    return Cell(value=True).value\n";
+    try context.write("app.my", "import dep\n\npublic func test_answer() -> bool:\n    return dep.answer()\n");
+    const old = "\npublic record Cell:\n    value: int\n\npublic func answer() -> bool:\n    return Cell(value=1).value == 1\n";
+    const changed = "\npublic record Cell:\n    value: bool\n\npublic func answer() -> bool:\n    return Cell(value=True).value\n";
     try context.write("dep.my", old);
     try context.write("app.cases.json", try std.json.Stringify.valueAlloc(a, .{ .@"app::test_answer" = .{ .providers = .{ .@"dep.my" = old } } }, .{}));
     try expectStatus(context, try context.run("app.my", &.{}), 0);
@@ -611,9 +608,9 @@ test "a provider may drop an import while its module keeps the same exports" {
     defer temporary.cleanup();
     const a = arena.allocator();
     const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
-    try context.write("app.my", "module app\nimport dep\n\npublic def test_answer() -> bool:\n    return dep.answer() == 3\n");
-    try context.write("dep.my", "module dep\nimport math\n\npublic def answer() -> int:\n    return math.clamp(9, 0, 3)\n");
-    const stub = "module dep\n\npublic def answer() -> int:\n    return 3\n";
+    try context.write("app.my", "import dep\n\npublic func test_answer() -> bool:\n    return dep.answer() == 3\n");
+    try context.write("dep.my", "import math\n\npublic func answer() -> int:\n    return math.clamp(9, 0, 3)\n");
+    const stub = "\npublic func answer() -> int:\n    return 3\n";
     try context.write("app.cases.json", try std.json.Stringify.valueAlloc(a, .{ .@"app::test_answer" = .{ .providers = .{ .@"dep.my" = stub } } }, .{}));
     const accepted = try context.run("app.my", &.{});
     try expectStatus(context, accepted, 0);
@@ -628,9 +625,9 @@ test "providers preserve private parameter layouts of marked property tests" {
     defer temporary.cleanup();
     const a = arena.allocator();
     const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
-    try context.write("app.my", "module app\nimport dep\n\npublic def test_answer() -> bool:\n    return dep.answer()\n");
-    const old = "module dep\n\nrecord Cell:\n    value: int\n\n@test\ndef property(x: Cell) -> bool:\n    return x.value == x.value\n\npublic def answer() -> bool:\n    return True\n";
-    const changed = "module dep\n\nrecord Cell:\n    value: bool\n\n@test\ndef property(x: Cell) -> bool:\n    return x.value == x.value\n\npublic def answer() -> bool:\n    return True\n";
+    try context.write("app.my", "import dep\n\npublic func test_answer() -> bool:\n    return dep.answer()\n");
+    const old = "\nrecord Cell:\n    value: int\n\n@test\nfunc property(x: Cell) -> bool:\n    return x.value == x.value\n\npublic func answer() -> bool:\n    return True\n";
+    const changed = "\nrecord Cell:\n    value: bool\n\n@test\nfunc property(x: Cell) -> bool:\n    return x.value == x.value\n\npublic func answer() -> bool:\n    return True\n";
     try context.write("dep.my", old);
     try context.write("app.cases.json", try std.json.Stringify.valueAlloc(a, .{ .@"dep::property" = .{ .providers = .{ .@"dep.my" = old } } }, .{}));
     try expectStatus(context, try context.run("app.my", &.{ "--filter", "dep::property" }), 0);
@@ -650,7 +647,7 @@ test "nested standalone test entries use the configured project import root" {
     const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
     try context.write("mylang.json", "{\"version\":1}");
     try context.write("dep.my", dependency_three);
-    try context.write("tests/suite_test.my", "module tests.suite_test\nimport dep\n\npublic def test_dependency() -> bool:\n    return dep.value() == 3\n");
+    try context.write("tests/suite_test.my", "import dep\n\npublic func test_dependency() -> bool:\n    return dep.value() == 3\n");
     const result = try context.run("tests/suite_test.my", &.{});
     try expectStatus(context, result, 0);
     try verdict(result.report, "tests.suite_test::test_dependency", "passed");
@@ -683,8 +680,8 @@ test "reserved embedded module names cannot account for an untested disk source"
     defer temporary.cleanup();
     const a = arena.allocator();
     const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
-    try context.write("app.my", "module app\nimport strings\n\npublic def test_ok() -> bool:\n    return True\n\ndef main() -> int:\n    return 0\n");
-    try context.write("strings.my", "module strings\n\ndef test_hidden() -> bool:\n    return False\n");
+    try context.write("app.my", "import strings\n\npublic func test_ok() -> bool:\n    return True\n\nfunc main() -> int:\n    return 0\n");
+    try context.write("strings.my", "\nfunc test_hidden() -> bool:\n    return False\n");
     const result = try context.run(".", &.{});
     try expectStatus(context, result, 1);
     try std.testing.expect(v.number(v.get(result.report, "failed")) != 0);
@@ -700,21 +697,21 @@ test "runSelected and expectedResult malformed typed cases fail individually and
     const a = arena.allocator();
     const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
     const fixtures = [_]InvalidCase{
-        .{ .name = "answer", .body = "public def test_answer() -> bool:\n    return True\n", .settings = "{\"arguments\":{\"unused\":\"x\"}}" },
-        .{ .name = "answer", .body = "public def test_answer() -> bool:\n    return True\n", .settings = "{\"expected\":\"true\"}" },
-        .{ .name = "zero", .body = "public def test_zero() -> int:\n    return 0\n", .settings = "{\"expected\":\"18446744073709551616\"}" },
-        .{ .name = "zero", .body = "public def test_zero() -> int:\n    return 0\n", .settings = "{\"expected\":\"00\"}" },
-        .{ .name = "text", .body = "public def test_text() -> str:\n    return \"\"\n", .settings = "{\"expected\":7}" },
-        .{ .name = "list", .body = "public def test_list() -> list[int]:\n    return []\n", .settings = "{\"expected\":null}" },
-        .{ .name = "dict", .body = "public def test_dict() -> dict[int, int]:\n    return {1: 2}\n", .settings = "{\"expected\":[[\"1\"]]}" },
-        .{ .name = "argument", .body = "public def test_argument(x: u8) -> bool:\n    return x == 0\n", .settings = "{\"arguments\":{\"x\":\"256\"}}" },
-        .{ .name = "argument", .body = "public def test_argument(x: int) -> bool:\n    return True\n", .settings = "{\"arguments\":{\"x\":\"00\"}}" },
-        .{ .name = "argument", .body = "public def test_argument(x: int) -> bool:\n    return True\n", .settings = "{\"arguments\":{\"x\":\"+0\"}}" },
-        .{ .name = "argument", .body = "public def test_argument(x: int) -> bool:\n    return True\n", .settings = "{\"arguments\":{\"x\":\"-0\"}}" },
-        .{ .name = "argument", .body = "public def test_argument(x: int) -> bool:\n    return True\n", .settings = "{\"arguments\":{\"x\":\"1_0\"}}" },
+        .{ .name = "answer", .body = "public func test_answer() -> bool:\n    return True\n", .settings = "{\"arguments\":{\"unused\":\"x\"}}" },
+        .{ .name = "answer", .body = "public func test_answer() -> bool:\n    return True\n", .settings = "{\"expected\":\"true\"}" },
+        .{ .name = "zero", .body = "public func test_zero() -> int:\n    return 0\n", .settings = "{\"expected\":\"18446744073709551616\"}" },
+        .{ .name = "zero", .body = "public func test_zero() -> int:\n    return 0\n", .settings = "{\"expected\":\"00\"}" },
+        .{ .name = "text", .body = "public func test_text() -> str:\n    return \"\"\n", .settings = "{\"expected\":7}" },
+        .{ .name = "list", .body = "public func test_list() -> int[]:\n    return []\n", .settings = "{\"expected\":null}" },
+        .{ .name = "dict", .body = "public func test_dict() -> dict[int, int]:\n    return {1: 2}\n", .settings = "{\"expected\":[[\"1\"]]}" },
+        .{ .name = "argument", .body = "public func test_argument(x: u8) -> bool:\n    return x == 0\n", .settings = "{\"arguments\":{\"x\":\"256\"}}" },
+        .{ .name = "argument", .body = "public func test_argument(x: int) -> bool:\n    return True\n", .settings = "{\"arguments\":{\"x\":\"00\"}}" },
+        .{ .name = "argument", .body = "public func test_argument(x: int) -> bool:\n    return True\n", .settings = "{\"arguments\":{\"x\":\"+0\"}}" },
+        .{ .name = "argument", .body = "public func test_argument(x: int) -> bool:\n    return True\n", .settings = "{\"arguments\":{\"x\":\"-0\"}}" },
+        .{ .name = "argument", .body = "public func test_argument(x: int) -> bool:\n    return True\n", .settings = "{\"arguments\":{\"x\":\"1_0\"}}" },
     };
     for (fixtures) |fixture| {
-        const source = try std.fmt.allocPrint(a, "module app\n\n{s}\npublic def test_z_survivor() -> bool:\n    return True\n", .{fixture.body});
+        const source = try std.fmt.allocPrint(a, "\n{s}\npublic func test_z_survivor() -> bool:\n    return True\n", .{fixture.body});
         const name = try std.fmt.allocPrint(a, "app::test_{s}", .{fixture.name});
         try context.write("app.my", source);
         try context.write("app.cases.json", try std.fmt.allocPrint(a, "{{\"{s}\":{s}}}", .{ name, fixture.settings }));
@@ -764,7 +761,7 @@ fn sameDirectoryReports(together: Outcome, children: Outcome) !void {
     for (sources, expected_sources) |one, other| try std.testing.expectEqualStrings(v.text(other), v.text(one));
 }
 
-const union_dep = "module dep\n\npublic def value() -> int:\n    return 3\n\npublic def test_dep_value() -> bool:\n    return value() == 3\n";
+const union_dep = "\npublic func value() -> int:\n    return 3\n\npublic func test_dep_value() -> bool:\n    return value() == 3\n";
 
 // spec: NEW-CORE-TEST-UNION-1
 test "a directory run that checks its roots together in process reports what one child per root reports" {
@@ -776,18 +773,18 @@ test "a directory run that checks its roots together in process reports what one
     const context: Context = .{ .arena = a, .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a) };
     try context.write("mylang.json", "{\"version\": 1}\n");
     try context.write("dep.my", union_dep);
-    try context.write("a_test.my", "module a_test\nimport dep\n\npublic def test_a() -> bool:\n    return dep.value() == 3\n\npublic def test_a_fails() -> bool:\n    return dep.value() == 4\n");
-    try context.write("b_test.my", "module b_test\nimport dep\n\npublic def test_b(out: Stream) -> bool:\n    out.print(\"from b\")\n    return dep.value() > 0\n");
-    try context.write("c_test.my", "public def test_c() -> bool:\n    return 3 == 3\n");
-    try context.write("app.my", "module app\nimport dep\n\ndef main() -> int:\n    return dep.value()\n\npublic def test_app() -> bool:\n    return True\n");
+    try context.write("a_test.my", "import dep\n\npublic func test_a() -> bool:\n    return dep.value() == 3\n\npublic func test_a_fails() -> bool:\n    return dep.value() == 4\n");
+    try context.write("b_test.my", "import dep\n\npublic func test_b(out: Stream) -> bool:\n    out.print(\"from b\")\n    return dep.value() > 0\n");
+    try context.write("c_test.my", "public func test_c() -> bool:\n    return 3 == 3\n");
+    try context.write("app.my", "import dep\n\nfunc main() -> int:\n    return dep.value()\n\npublic func test_app() -> bool:\n    return True\n");
     try sameDirectoryReports(try runDirectory(context, .shared_check), try runDirectory(context, .children));
     // After an edit both rerun the same tests and replay the rest.
-    try context.write("dep.my", "module dep\n\npublic def value() -> int:\n    total = 1\n    return total + 2\n\npublic def test_dep_value() -> bool:\n    return value() == 3\n");
+    try context.write("dep.my", "\npublic func value() -> int:\n    mut total = 1\n    return total + 2\n\npublic func test_dep_value() -> bool:\n    return value() == 3\n");
     const edited = try runDirectory(context, .shared_check);
     try sameDirectoryReports(edited, try runDirectory(context, .children));
     try expectStatus(context, edited, 1);
     // A root that does not check fails alone in both, its diagnostics on stderr.
-    try context.write("b_test.my", "module b_test\nimport dep\n\npublic def test_b() -> bool:\n    return dep.value() == \"three\"\n");
+    try context.write("b_test.my", "import dep\n\npublic func test_b() -> bool:\n    return dep.value() == \"three\"\n");
     const broken = try runDirectory(context, .shared_check);
     try sameDirectoryReports(broken, try runDirectory(context, .children));
     try std.testing.expect(std.mem.indexOf(u8, broken.stderr, "b_test.my") != null);

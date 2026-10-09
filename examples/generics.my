@@ -1,16 +1,16 @@
-def identity[T](value: T) -> T:
+func identity[T](value: T) -> T:
     return value
 
 
-def sum[T: integer](value: T) -> T:
+func sum[T: integer](value: T) -> T:
     if value == T(0):
         return value
     return value + sum[T](value - T(1))
 
 
-def main() -> int:
-    small = sum[u8](4u8)
-    large = sum[int](5)
+func main() -> int:
+    mut small = sum[u8](4u8)
+    mut large = sum[int](5)
     if identity[bool](True):
         return int(small) + large
     return 0

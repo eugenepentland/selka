@@ -106,7 +106,7 @@ fn find(declarations: []const Declared, wanted: []const u8) Declared {
     return .{};
 }
 
-/// The top-level `def` lines of `text`, each with its `public` and `@test` markers.
+/// The top-level function lines of `text`, each with its visibility and test markers.
 fn scan(allocator: std.mem.Allocator, text: []const u8) std.mem.Allocator.Error![]const Declared {
     var found: std.ArrayList(Declared) = .empty;
     var marked = false;
@@ -119,8 +119,8 @@ fn scan(allocator: std.mem.Allocator, text: []const u8) std.mem.Allocator.Error!
         }
         const public = std.mem.startsWith(u8, line, "public ");
         if (public) line = std.mem.trimStart(u8, line["public ".len..], " \t");
-        if (!std.mem.startsWith(u8, line, "def ")) continue;
-        const rest = std.mem.trimStart(u8, line["def ".len..], " \t");
+        const length: usize = if (std.mem.startsWith(u8, line, "func ")) 5 else if (std.mem.startsWith(u8, line, "def ")) 4 else continue;
+        const rest = std.mem.trimStart(u8, line[length..], " \t");
         const end = std.mem.indexOfAny(u8, rest, "([ \t") orelse rest.len;
         try found.append(allocator, .{ .name = rest[0..end], .public = public, .marked = marked });
         marked = false;

@@ -2,9 +2,9 @@
 
 When the compiler rejects code and knows the exact edit that repairs it, the
 diagnostic carries that edit as data, and `mylang fix` applies every such edit
-across a project. This is the stability contract for code outside this
-repository: a breaking language change is one command for the projects it
-breaks, not a hand migration and not a one-off script.
+across a project. Certain changes can therefore be migrated with one command. Changes to lexical
+scope or failure propagation inside a larger expression may still need a
+deliberate rewrite; the compiler leaves those edits to the author.
 
 ## Structured fixes in diagnostics
 
@@ -16,7 +16,7 @@ that module's file, not the entry's, and a diagnostic without a certain repair
 has no `fix` key at all.
 
 For a `main.my` whose seventh line is `    grow(xs)` and whose `grow` declares
-`xs: mut list[int]`:
+`mut xs: int[]`:
 
 ```console
 $ mylang check main.my --diagnostics=json
@@ -27,15 +27,24 @@ The diagnostics that carry a fix today:
 
 | Code | Edit |
 | --- | --- |
-| `E_MUTATION_MARKER` | insert `mut ` before an argument bound to a `mut` parameter; delete a `mut` the callee does not declare; insert `mut ` before the type of each parameter the body writes; delete a `mut` the body never writes or that marks a type with nothing to write |
+| `E_MUTATION_MARKER` | insert `mut ` before an argument bound to a `mut` parameter; delete a call-site `mut` the callee does not declare |
 | `E_MUTATION_OVERLAP` | move a single unconditional mut call out of a simple receiver update into a fresh result local, then substitute that local |
-| `E_MODULE_NAME` | replace the declared module name with the one the file's path gives it |
+| `E_MODULE_HEADER` | remove a redundant source header; module names come from paths |
+| `E_FRONTEND_SYNTAX` | replace parsed legacy `def`, type spellings, parameter modifiers, conditionals, or postfix propagation with canonical syntax |
+| `E_BINDING_DECLARATION` | introduce `mut` where an implicit local is confined to its block |
+| `E_FRONTEND_VARIANT` | migrate a local union declaration and its known payload fields to named enum syntax |
+| `E_NAMED_FIELDS`, `E_NAMED_PATTERN` | add labels from the resolved record or enum field declaration, preserving operand order |
+| `E_NUMERIC_PARSE` | replace text calls to numeric casts with `parse_int` or `parse_float` |
+| `E_FIXED_ARRAY_LITERAL` | wrap a known fixed-length literal in an explicit `FixedArray[T, N]` constructor |
+| `E_NONE_UNIT` | replace an old Unit value `None` with `()` where its expected type is known |
 | `E_REMOVED_SPELLING` | rename `push`→`append`, `List`→`list`, `filesystem_cap` and the other `*_cap` names→their capability types, `f64_sqrt`/`floor`/`ceil`/`trunc`/`abs`→the float builtin; `&value` in an argument→`mut value`; a declaration's `mutates(a, b)` clause→`mut` on `a` and `b` |
 | `E_EXPLICIT_DISCARD_REQUIRED` | insert `_ = ` before a standalone value that is not a result |
 | `E_KEYWORD_ONLY` | insert `name=` before each positional operand that reaches a keyword-only parameter |
 | `W_UNUSED_IMPORT` | delete the import's line when it holds only that import |
 
-A repair that needs judgement carries no fix: discarding a `Result` would drop
+A repair that needs judgement carries no fix: an escaping implicit block local
+(`E_BINDING_SCOPE_MIGRATION`) or embedded propagation (`E_TRY_POSITION`) needs
+a control-flow rewrite, discarding a `Result` would drop
 its error, two overlapping writable arguments (`E_MUTATION_OVERLAP`) need a
 snapshot or a split call, and a `mut` on a literal needs a local first.
 
@@ -49,6 +58,8 @@ fix.
 and checks again until nothing mechanical is left. It then prints what changed
 per file and passes on whatever diagnostics remain, so the one thing left for a
 person is the part a machine cannot decide:
+
+The following historical report records the earlier call-site marker migration:
 
 ```console
 $ mylang fix main.my

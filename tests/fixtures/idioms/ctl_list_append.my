@@ -1,4 +1,4 @@
-def main() -> int:
-    xs = [1]
+func main() -> int:
+    mut xs = [1]
     xs.append(2)
     return len(xs)

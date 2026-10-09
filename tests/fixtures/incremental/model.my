@@ -1,9 +1,8 @@
-module model
 
 
 public enum Color:
-    red,
-    green,
+    red
+    green
     blue
 
 
@@ -14,20 +13,20 @@ public record Point:
 
 public record Node:
     value: int
-    children: list[Node]
-    tag: Option[str]
+    children: Node[]
+    tag: str?
 
 
-public union Shape:
-    dot: Point,
-    circle(center: Point, radius: int),
+public enum Shape:
+    dot(value: Point)
+    circle(center: Point, radius: int)
     empty
 
 
 public record Scene:
-    shapes: list[Shape]
+    shapes: Shape[]
     index: dict[str, Point]
-    root: Option[Node]
+    root: Node?
     tint: Color
-    pairs: list[tuple[int, Point]]
+    pairs: tuple[int, Point][]
     count: int

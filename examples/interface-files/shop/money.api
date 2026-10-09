@@ -4,5 +4,5 @@ module shop.money
 
 public domain Cents: int:
     @requires(value >= 0, "an amount is never negative")
-    def of(value: int) -> Cents effects() ceiling()
-    def value(amount: Cents) -> int effects() ceiling()
+    func of(value: int) -> Cents effects() ceiling()
+    func value(amount: Cents) -> int effects() ceiling()

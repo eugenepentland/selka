@@ -1,5 +1,5 @@
-def main() -> int:
-    value: Option[int] = None
+func main() -> int:
+    mut value: int? = None
     if value == None:
         return 42
     return 0

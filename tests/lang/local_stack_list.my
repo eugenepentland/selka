@@ -1,54 +1,53 @@
-module local_stack_list
 
-def closed(value: int, index: int) -> int:
-    values = [value, value + 1, value + 2]
-    alias = values
+func closed(value: int, index: int) -> int:
+    mut values = [value, value + 1, value + 2]
+    mut alias = values
     return alias[index] + values[1] + alias[-1] + len(values)
 
 
-def overlapping(value: int) -> int:
-    first = [value, value + 1, value + 2]
-    second = [value + 3, value + 4, value + 5, value + 6]
+func overlapping(value: int) -> int:
+    mut first = [value, value + 1, value + 2]
+    mut second = [value + 3, value + 4, value + 5, value + 6]
     return first[-1] + second[0]
 
 
-def escaped(value: int) -> list[int]:
+func escaped(value: int) -> int[]:
     return [value, value + 1, value + 2]
 
 
-def changed(value: int) -> int:
-    values = [value, value + 1, value + 2]
-    before = values
+func changed(value: int) -> int:
+    mut values = [value, value + 1, value + 2]
+    mut before = values
     values[0] = value + 10
     return before[0] + values[0]
 
 
-def unsigned(value: u8, index: int) -> u8:
-    values = [value, value]
+func unsigned(value: u8, index: int) -> u8:
+    mut values = [value, value]
     return values[index]
 
 
-def same_class(value: int) -> int:
-    values = [value, value, value, value, value, value, value, value, value, value]
+func same_class(value: int) -> int:
+    mut values = [value, value, value, value, value, value, value, value, value, value]
     return values[-1] + len(values)
 
 
-def narrow(value: i16) -> i16:
-    values = [value, value]
+func narrow(value: i16) -> i16:
+    mut values = [value, value]
     return values[-1]
 
 
-def flags(value: bool, index: int) -> bool:
-    values = [value, not value]
+func flags(value: bool, index: int) -> bool:
+    mut values = [value, not value]
     return values[index]
 
 
-def units(value: None) -> int:
-    values = [value, value]
+func units(value: Unit) -> int:
+    mut values = [value, value]
     return len(values)
 
 
-public def test_local_lists_keep_values_aliases_and_cold_then_warm_results() -> bool:
+public func test_local_lists_keep_values_aliases_and_cold_then_warm_results() -> bool:
     assert closed(12, 0) == 42
     assert closed(12, -3) == 42
     assert closed(12, 2) == 44
@@ -65,7 +64,7 @@ public def test_local_lists_keep_values_aliases_and_cold_then_warm_results() -> 
     assert narrow(i16(32767)) == i16(32767)
     assert flags(True, 0)
     assert flags(False, -1)
-    assert units(None) == 2
+    assert units(()) == 2
     for i in range(40):
         assert closed(i, 0) == i * 3 + 6
     return True

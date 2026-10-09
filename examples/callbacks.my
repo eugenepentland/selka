@@ -1,21 +1,21 @@
 record Pair:
-    values: [2]int
+    values: FixedArray[int, 2]
 
 
-def build(n: int) -> Pair effects():
-    return Pair(values=[n, n + 1])
+func build(n: int) -> Pair effects():
+    return Pair(values=FixedArray[int, 2]([n, n + 1]))
 
 
-def apply(callback: def(int) -> Pair effects(), n: int) -> Pair:
+func apply(callback: func(int) -> Pair effects(), n: int) -> Pair:
     return callback(n)
 
 
-def identity(callback: def(int) -> Pair effects()) -> def(int) -> Pair effects():
+func identity(callback: func(int) -> Pair effects()) -> func(int) -> Pair effects():
     return callback
 
 
-def main() -> int:
-    callback = identity(build)
-    a = apply(callback, 7)
-    b = callback(9)
+func main() -> int:
+    mut callback = identity(build)
+    mut a = apply(callback, 7)
+    mut b = callback(9)
     return a.values[0] + b.values[1]

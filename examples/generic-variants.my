@@ -3,45 +3,45 @@ record Payload:
 
 
 enum Color:
-    red,
+    red
     blue
 
 
-union Choice:
-    none,
-    value: Payload
+enum Choice:
+    none
+    value(value: Payload)
 
 
-union Scalar:
-    empty,
-    number: int
+enum Scalar:
+    empty
+    number(value: int)
 
 
-def make[T: integer](value: T) -> Choice:
-    return Choice.value(Payload(n=int(value)))
+func make[T: integer](value: T) -> Choice:
+    return Choice.value(value=Payload(n=int(value)))
 
 
-def score[T](context: T, value: Choice) -> int:
+func score[T](context: T, value: Choice) -> int:
     _ = context
     match value:
         case Choice.none:
             return 0
-        case Choice.value(payload):
+        case Choice.value(value=payload):
             return payload.n
 
 
-def scalar[T](context: T, value: Scalar) -> int:
+func scalar[T](context: T, value: Scalar) -> int:
     _ = context
     match value:
         case Scalar.empty:
             return 0
-        case Scalar.number(payload):
+        case Scalar.number(value=payload):
             return payload
 
 
-def table[T: integer](value: T) -> [Color]int:
+func table[T: integer](value: T) -> [Color]int:
     return {Color.red: int(value), Color.blue: 9}
 
 
-def main() -> int:
-    return score[bool](True, make[u8](7u8)) + scalar[int](0, Scalar.number(table[u16](1u16)[Color.blue]))
+func main() -> int:
+    return score[bool](True, make[u8](7u8)) + scalar[int](0, Scalar.number(value=table[u16](1u16)[Color.blue]))

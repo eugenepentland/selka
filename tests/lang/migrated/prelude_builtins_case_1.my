@@ -1,10 +1,9 @@
-module prelude_builtins_case_1
 
 
-def sum(xs: list[int]) -> int:
+func sum(xs: int[]) -> int:
     _ = xs
     return 7
 
 
-public def program() -> int:
+public func program() -> int:
     return sum([1, 2, 3])

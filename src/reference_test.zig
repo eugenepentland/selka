@@ -240,7 +240,7 @@ test "a standard-library declaration answers with its checked signature and stat
     const declarations = section(parsed.value, "declarations");
     const declaration = find(declarations, "name", "sort::sort_ints") orelse return error.TestUnexpectedResult;
     try t.expectEqualStrings("function", stringAt(declaration, "kind"));
-    try t.expectEqualStrings("def(values:list[i64])->list[i64]", stringAt(declaration, "signature"));
+    try t.expectEqualStrings("func(values:i64[])->i64[]", stringAt(declaration, "signature"));
     try t.expectEqualStrings("checked", stringAt(declaration, "analysis"));
     const effects = (try stringsAt(t.allocator, declaration, "effects")).?;
     defer t.allocator.free(effects);
@@ -387,12 +387,12 @@ test "an unmatched query is a normal answer and a malformed one is a usage error
 
 // spec: REFERENCE-9
 test "the embedded project reads exactly one in-memory path and no checkout file" {
-    var reader: Reader = .{ .entry = "module reference\n" };
+    var reader: Reader = .{ .entry = "" };
     try t.expectError(error.NotFound, Reader.read(&reader, t.allocator, "sort.my", 1 << 20));
     try t.expectError(error.NotFound, Reader.read(&reader, t.allocator, "src/stdlib/sort.my", 1 << 20));
     const served = try Reader.read(&reader, t.allocator, reference.entry_path, 1 << 20);
     defer t.allocator.free(served);
-    try t.expectEqualStrings("module reference\n", served);
+    try t.expectEqualStrings("", served);
     try t.expect(try standardModulesMatchCheckout(&reference.standard_modules));
     // The stand-in modules are part of the reference project too (TEST-CAPS-1).
     try t.expectEqual(@as(usize, 14), reference.standard_modules.len);

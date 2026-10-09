@@ -47,7 +47,7 @@ Memory safety combines automatic reclamation (one-count reference counting) with
 the runtime's checked pool handles and generations. The guest runtime is single-threaded and the language
 has no spawn syntax: parallelism is one guest process per task, arranged by the host.
 `noalloc` restricts managed guest allocation, not all compiler/runtime/host allocation.
-C functions called through `extern def` are trusted implementations of their
+C functions called through `extern func` are trusted implementations of their
 declared signatures. These limits are
 part of the current model, not guarantees supplied by a future thread system.
 
@@ -77,7 +77,7 @@ A statement ends at its newline, at the dedent that closes its suite, or at end 
 
 The brace dialect this language grew out of was removed on 2026-09-13, together with the `migrate` tool that converted it; [the removed-features index](legacy/README.md) records what each spelling became.
 
-The bytecode interpreter was removed on 2026-09-14, and the QBE back end, the tracing collector, managed arenas, legacy sharing and host functions (`host def`, `mylang invoke`) were retired with the switch to the new compiler core in October 2026. `mylang run`, `run-project` and `test` build a program before executing it, and the retired commands (`invoke`, `emit-qbe`, `dump-bytecode` and others) are refused with status 2 and a line naming what replaces them.
+The bytecode interpreter was removed on 2026-09-14, and the QBE back end, the tracing collector, managed arenas, legacy sharing and host functions (`host func`, `mylang invoke`) were retired with the switch to the new compiler core in October 2026. `mylang run`, `run-project` and `test` build a program before executing it, and the retired commands (`invoke`, `emit-qbe`, `dump-bytecode` and others) are refused with status 2 and a line naming what replaces them.
 
 ## Feature reference pages
 

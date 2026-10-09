@@ -14,7 +14,6 @@ top-level declarations:
 
 ```mylang
 # doc: skip fragment: header excerpt whose imported modules are not shown
-module main
 import shared.units
 import shared.types as types
 ```

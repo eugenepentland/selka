@@ -3,12 +3,12 @@
 # reversed bounds, and slices of slices. CPython's answers.
 
 
-def reads(s: str, t: str) -> str:
-    out: list[str] = []
-    n = len(s)
+func reads(s: str, t: str) -> str:
+    mut out: str[] = []
+    mut n = len(s)
     for i in range(-2, n + 2):
         for j in range(i - 1, n + 3):
-            row = 0
+            mut row = 0
             if s[i:j] == t:
                 row += 1
             if s[i:j] != "é":
@@ -28,11 +28,11 @@ def reads(s: str, t: str) -> str:
 
 
 # A view read after its source is rebound in the same iteration.
-def rebound(s: str) -> int:
-    total = 0
-    t = s
+func rebound(s: str) -> int:
+    mut total = 0
+    mut t = s
     for i in range(len(s)):
-        head = t[0:i]
+        mut head = t[0:i]
         t = t + "x"
         if head.startswith("ab"):
             total += len(head)
@@ -43,13 +43,13 @@ def rebound(s: str) -> int:
 
 # The source is handed to a list while the view is live, and the list's copy is then
 # extended: the view still reads the original octets.
-def stored(s: str) -> str:
-    xs: list[str] = []
-    t = s + "!"
-    head = t[0:3]
+func stored(s: str) -> str:
+    mut xs: str[] = []
+    mut t = s + "!"
+    mut head = t[0:3]
     xs.append(t)
     xs[0] += "?"
-    out = ""
+    mut out = ""
     if head == "abc":
         out = "same"
     if head.startswith("ab"):
@@ -58,10 +58,10 @@ def stored(s: str) -> str:
 
 
 # A slice that is also printed stays a copy; one that is only compared is a view.
-def mixed(s: str, out: Stream) -> int:
-    hits = 0
+func mixed(s: str, out: Stream) -> int:
+    mut hits = 0
     for i in range(len(s) - 1):
-        pair = s[i:i + 2]
+        mut pair = s[i:i + 2]
         if pair == "ab":
             hits += 1
         if s[i:i + 2] == "ba":
@@ -69,7 +69,7 @@ def mixed(s: str, out: Stream) -> int:
     return hits
 
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(reads("abébé", "bé"))
     out.print(reads("abcab", "ab"))
     out.print(reads("", ""))

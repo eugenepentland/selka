@@ -1,77 +1,76 @@
-module row_string_split
 
 # Split from benchmarks/runtime/expanded/text/main.my; identical timed work.
 
-extern def runtime_bench_now(host: Host) -> i64 effects(host)
+extern func runtime_bench_now(host: Host) -> i64 effects(host)
 
 record Inputs:
     raw: bytes
-    texts: list[str]
-    other: list[str]
-    numbers: list[int]
-    fragments: list[str]
+    texts: str[]
+    other: str[]
+    numbers: int[]
+    fragments: str[]
 
 
 
-def number(text: str) -> int:
-    match int(text):
+func number(text: str) -> int:
+    match parse_int(text):
         case Some(value):
             return value
         case None:
             return 0
 
-def repeated(text: str, count: int) -> str:
-    result = ""
+func repeated(text: str, count: int) -> str:
+    mut result = ""
     for j in range(count):
         result += text
     return result
 
-def score(text: str) -> int:
-    raw = text.encode()
-    result = len(raw)
+func score(text: str) -> int:
+    mut raw = text.encode()
+    mut result = len(raw)
     for value in raw:
         result += value
     return result
 
-def split_job(text: str, separator: str) -> int:
-    parts = text.split(separator)
-    result = len(parts) * 7
+func split_job(text: str, separator: str) -> int:
+    mut parts = text.split(separator)
+    mut result = len(parts) * 7
     for part in parts:
         result += score(part)
     return result
 
-def inputs(kind: str, size: int, seed: int) -> Inputs:
-    raw = b""
-    texts: list[str] = []
-    other: list[str] = []
-    numbers: list[int] = []
-    fragments: list[str] = []
-    options = ["", "alpha", "café", "x", "naïve"]
-    fragments = [options[(seed + j) % 5] for j in range(size)]
+func inputs(kind: str, size: int, seed: int) -> Inputs:
+    mut raw = b""
+    mut texts: str[] = []
+    mut other: str[] = []
+    mut numbers: int[] = []
+    mut fragments: str[] = []
+    mut options = ["", "alpha", "café", "x", "naïve"]
+    fragments = [for j in range(size) yield options[(seed + j) % 5]]
     texts = ["|".join(fragments), "::".join(fragments)]
     return Inputs(raw=raw, texts=texts, other=other, numbers=numbers, fragments=fragments)
 
-def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
-    checksum = 0
+func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+    mut checksum = 0
     for step in range(iterations):
-        cursor = seed + step
-        value = split_job(data.texts[cursor % 2], "|" if cursor % 2 == 0 else "::")
+        mut cursor = seed + step
+        mut value = split_job(data.texts[cursor % 2], if (cursor % 2 == 0) then ("|") else ("::"))
         checksum = (checksum + value) % 1000000007
     return checksum
 
-def main(args: list[str], host: Host, out: Stream) -> int:
+func main(args: str[], host: Host, out: Stream) -> int:
     if len(args) != 3:
         return 2
-    kind = "string_split"
-    size = number(args[0])
-    iterations = number(args[1])
-    seed = number(args[2])
+    mut kind = "string_split"
+    mut size = number(args[0])
+    mut iterations = number(args[1])
+    mut seed = number(args[2])
     if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
         return 2
-    data = inputs(kind, size, seed)
-    checksum = 0
-    start = runtime_bench_now(host)
+    mut data = inputs(kind, size, seed)
+    mut checksum = 0
+    mut start = runtime_bench_now(host)
     checksum = kernel(kind, data, iterations, seed)
-    elapsed = runtime_bench_now(host) - start
+    mut elapsed = runtime_bench_now(host) - start
     out.print(checksum, elapsed)
     return 0

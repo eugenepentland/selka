@@ -24,8 +24,8 @@ as list and byte-string slices do. Literals accept ordinary escapes including
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    greeting = "héllo"
+func main() -> int:
+    mut greeting = "héllo"
     if len(greeting) != 5:
         return 1
     if greeting[1] != "é":
@@ -38,13 +38,13 @@ def main() -> int:
         return 5
     if greeting[3:1] != "":
         return 6
-    joined = greeting + " " + "world"
-    parts = joined.split(" ")
+    mut joined = greeting + " " + "world"
+    mut parts = joined.split(" ")
     if len(parts) != 2:
         return 7
     if "-".join(parts) != "héllo-world":
         return 8
-    alias = greeting
+    mut alias = greeting
     if alias != greeting:
         return 9
     if str(7) != "7":
@@ -70,15 +70,15 @@ rebinds the name (a list `*=` repeats the list in place, so aliases see it).
 
 ```mylang
 # doc: expect 42
-def main() -> int:
+func main() -> int:
     if not ("apple" < "banana" <= "banana" and "ab" < "abc" and "Zebra" < "apple"):
         return 1
     if b"\xff" < b"a":
         return 2
-    rule = "-" * 3
+    mut rule = "-" * 3
     if rule != "---" or 2 * "ab" != "abab" or "x" * 0 != "":
         return 3
-    grid = [0] * 4
+    mut grid = [0] * 4
     if grid != [0, 0, 0, 0]:
         return 4
     return len("ab" * 3) * 7
@@ -96,15 +96,15 @@ keep:
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    text = "".join([f"line {i}\n" for i in range(10000)])
-    start = 0
-    lines = 0
+func main() -> int:
+    mut text = "".join([for i in range(10000) yield f"line {i}\n"])
+    mut start = 0
+    mut lines = 0
     while start < len(text):
-        end = text.find("\n", start)
+        mut end = text.find("\n", start)
         start = end + 1
         lines += 1
-    half = text[len(text) // 2:]
+    mut half = text[len(text) // 2:]
     if lines != 10000 or not half.startswith("5055\nline"):
         return 1
     return len(text.strip().splitlines()[9999]) - 7 + 40
@@ -127,17 +127,17 @@ is always one octet per element:
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    text = "".join(["(pin 12 " for _ in range(20000)]) + "é" + "".join(["(pin 12 " for _ in range(20000)])
-    data = text.encode()
-    opens = 0
+func main() -> int:
+    mut text = "".join([for _ in range(20000) yield "(pin 12 "]) + "é" + "".join([for _ in range(20000) yield "(pin 12 "])
+    mut data = text.encode()
+    mut opens = 0
     for octet in data:
         if octet == 40:
             opens += 1
-    start = 0
-    pins = 0
+    mut start = 0
+    mut pins = 0
     while start < len(data):
-        at = data.find(b"(pin", start)
+        mut at = data.find(b"(pin", start)
         if at < 0:
             break
         pins += 1
@@ -168,11 +168,11 @@ representation.
 
 ```mylang
 # doc: expect 43
-def main() -> int:
-    escaped = "caf\u00e9"
+func main() -> int:
+    mut escaped = "caf\u00e9"
     if escaped != "café":
         return 1
-    padded = "  ready  "
+    mut padded = "  ready  "
     if padded.strip() != "ready":
         return 2
     if padded.lstrip() != "ready  ":
@@ -207,7 +207,7 @@ def main() -> int:
         return 17
     if not " \t".isspace():
         return 18
-    lines = "a\nb\r\nc".splitlines()
+    mut lines = "a\nb\r\nc".splitlines()
     if len(lines) != 3:
         return 19
     if padded != "  ready  ":
@@ -231,8 +231,8 @@ rejection also carries the accepted spelling as an `alternative` note.
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    words = "  one two\tthree  ".split()
+func main() -> int:
+    mut words = "  one two\tthree  ".split()
     if len(words) != 3:
         return 1
     if words[1] != "two":
@@ -260,14 +260,14 @@ module](standard-library.md#strings) keeps its `Result` forms — `strings.ord` 
 
 ```mylang
 # doc: expect 42
-def byte_code(marker: str) -> bool:
+func byte_code(marker: str) -> bool:
     return ord(marker) == 109
 
 
-def main() -> int:
+func main() -> int:
     if ord("A") != 65:
         return 1
-    marker = "m"
+    mut marker = "m"
     if ord(marker) != 109:
         return 2
     if not byte_code(marker):
@@ -307,11 +307,11 @@ record Point:
     x: int
     y: int
 
-def main() -> int:
-    name = "ada"
-    count = 3
-    ratio = 1.5
-    line = f"{name} has {count} items"
+func main() -> int:
+    mut name = "ada"
+    mut count = 3
+    mut ratio = 1.5
+    mut line = f"{name} has {count} items"
     if line != "ada has 3 items":
         return 1
     if f"{count + 1}" != "4":
@@ -324,14 +324,14 @@ def main() -> int:
         return 5
     if f"" != "":
         return 6
-    values = [1, 2, 3]
+    mut values = [1, 2, 3]
     if f"{len(values)}" != "3":
         return 7
     if f"{values[0]}" != "1":
         return 8
     if f"outer {f'inner {count}'}" != "outer inner 3":
         return 9
-    spot = Point(x=1, y=2)
+    mut spot = Point(x=1, y=2)
     if f"{spot.x}" != "1":
         return 10
     if f"{name.upper()}" != "ADA":
@@ -379,8 +379,8 @@ empty specification, `f"{value:}"`, is the value's ordinary text.
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    price = 3.14159
+func main() -> int:
+    mut price = 3.14159
     if f"{price:.2f}" != "3.14" or f"{2.675:.2f}" != "2.67" or f"{0.125:.2f}" != "0.12":
         return 1
     if f"{42:05d}" != "00042" or f"{42:>6}" != "    42" or f"{price:^10.3f}" != "  3.142   ":
@@ -389,7 +389,7 @@ def main() -> int:
         return 3
     if f"{1234.5678:.3e}" != "1.235e+03" or f"{0.25:.0%}" != "25%" or f"{-7:+}" != "-7":
         return 4
-    name = "héllo"
+    mut name = "héllo"
     if f"{name:*^9}" != "**héllo**" or f"{name:.3}" != "hél":
         return 5
     return len(f"{price:08.3f}") * 6 - 6
@@ -397,7 +397,7 @@ def main() -> int:
 
 ## Parsing numbers from text
 
-`int(text)` answers `Option[int]` and `float(text)` answers `Option[float]`. The
+`parse_int(text)` answers `Option[int]` and `parse_float(text)` answers `Option[float]`. The
 language has no exceptions, so text that is not a number produces `None` and the
 caller decides what that means; `match` with `case Some(value)` and `case None`
 is the way to read the answer.
@@ -420,14 +420,14 @@ cannot disagree about which text is a number or about the value it names.
 
 ```mylang
 # doc: expect 8122
-def port_of(text: str) -> int:
-    match int(text):
+func port_of(text: str) -> int:
+    match parse_int(text):
         case Some(value):
             return value
         case None:
             return -1
 
-def main() -> int:
+func main() -> int:
     if port_of("8080") != 8080:
         return 1
     if port_of("+7") != 7:
@@ -448,19 +448,19 @@ def main() -> int:
         return 9
     if port_of("1_") != -1:
         return 10
-    match float("2.5"):
+    match parse_float("2.5"):
         case Some(value):
             if value != 2.5:
                 return 11
         case None:
             return 12
-    match float("nan"):
+    match parse_float("nan"):
         case Some(value):
             if value == value:
                 return 13
         case None:
             return 14
-    match float("two"):
+    match parse_float("two"):
         case Some(value):
             return int(value)
         case None:

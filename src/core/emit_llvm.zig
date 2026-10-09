@@ -3150,9 +3150,9 @@ const FunctionEmitter = struct {
         const action: []const u8 = switch (inst.data) {
             0 => "Err(...) created",
             2 => "Err produced by the runtime",
-            3 => try std.fmt.allocPrint(self.a(), "? converted to {s}", .{self.caseName(inst.a)}),
+            3 => try std.fmt.allocPrint(self.a(), "try converted to {s}", .{self.caseName(inst.a)}),
             4 => "returned",
-            else => "? propagated",
+            else => "try propagated",
         };
         const action_symbol: []const u8 = if (inst.data == 0 or inst.data == 2) "origin" else "append";
         const index = try self.state.site(.{ .kind = .trace, .location = location, .width = 0, .operation = action, .function = self.sourceFunction().name });

@@ -21,7 +21,7 @@ test "managed nominal indirection does not admit recursive by value records" {
         \\    nested: Bad[T]
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     );
     defer compilation.deinit();
@@ -33,12 +33,12 @@ test "managed nominal indirection does not admit recursive by value records" {
 test "managed list formatting preserves contextual list case identifiers" {
     var compilation = try language.Compilation.init(t.allocator, "managed-format.my",
         \\enum Kind:
-        \\    list,
+        \\    list
         \\    atom
         \\
         \\
-        \\def main() -> i64:
-        \\    values: list[i64] = []
+        \\func main() -> i64:
+        \\    mut values: i64[] = []
         \\    values.append(42)
         \\    return values[0]
     );
@@ -53,19 +53,19 @@ test "managed list formatting preserves contextual list case identifiers" {
 test "managed lists reject nested and generic capabilities before helper alias escape" {
     const cases = [_][]const u8{
         \\record Box:
-        \\    value: [1]Clock
+        \\    value: FixedArray[Clock, 1]
         \\
         \\
-        \\def main() -> i64:
-        \\    values: list[Box] = []
+        \\func main() -> i64:
+        \\    mut values: Box[] = []
         \\    return i64(len(values))
         ,
-        \\def hold[T](sample: T) -> i64:
-        \\    values: list[T] = []
+        \\func hold[T](sample: T) -> i64:
+        \\    mut values: T[] = []
         \\    return i64(len(values))
         \\
         \\
-        \\def main(clock: Clock) -> i64:
+        \\func main(clock: Clock) -> i64:
         \\    return hold[Clock](clock)
         ,
     };

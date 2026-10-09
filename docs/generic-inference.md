@@ -4,20 +4,20 @@ Generic function calls can omit their type arguments when the argument types and
 
 ```mylang
 # doc: expect 42
-def identity[T](value: T) -> T:
+func identity[T](value: T) -> T:
     return value
 
 
-def first[T, const N: u64](items: [N]T) -> T:
+func first[T, const N: u64](items: [N]T) -> T:
     return items[0]
 
 
-def forward[U](value: U) -> U:
+func forward[U](value: U) -> U:
     return identity(value)
 
 
-def main() -> i64:
-    values: [2]i64 = [40, 2]
+func main() -> i64:
+    mut values: FixedArray[i64, 2] = FixedArray[int, 2]([40, 2])
     return forward(first(values)) + values[1]
 ```
 
@@ -41,24 +41,24 @@ inside generic functions.
 record Node:
     value: int
 
-def empty[T: copy + storable]() -> list[T]:
+func empty[T: copy + storable]() -> T[]:
     return []
 
-def zero[T: integer]() -> T:
+func zero[T: integer]() -> T:
     return T(0)
 
-def forward[U: integer]() -> U:
+func forward[U: integer]() -> U:
     return zero()
 
-def main() -> int:
-    nodes: list[Node] = empty()
-    small: u8 = forward()
+func main() -> int:
+    mut nodes: Node[] = empty()
+    mut small: u8 = forward()
     return 42 + len(nodes) + int(small)
 ```
 
 When the expected result determines every generic parameter, the resulting parameter
 types also guide nested calls and constructors: `value: Option[int] = identity(Some(42))`
-works for `def identity[T: copy + storable](value: T) -> T`. Context propagates inward
+works for `func identity[T: copy + storable](value: T) -> T`. Context propagates inward
 from an already known type; it does not search later statements for a possible type.
 
 Every source of inference must agree. An `int` destination cannot accept

@@ -4,12 +4,12 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const program =
-    \\def first[T](x: T) -> T:
+    \\func first[T](x: T) -> T:
     \\    return x
     \\
     \\
-    \\def main() -> i64:
-    \\    a = first[[4]u8](b"A\x00\xffB")
+    \\func main() -> i64:
+    \\    mut a = first[FixedArray[u8, 4]](b"A\x00\xffB")
     \\    return i64(a[0]) + i64(a[2]) + i64(len(b"µ"))
 ;
 fn scenario(allocator: std.mem.Allocator) !void {
@@ -34,11 +34,11 @@ test "byte literals reject invalid escapes and retain ordinary array type checks
         .{ .text = "def main() -> i64:\n    return len(\"\\x0\")\n", .code = "E_BYTE_ESCAPE" },
         .{ .text = "def main() -> i64:\n    return len(\"x\n\")\n", .code = "E_BYTE_LITERAL" },
         .{ .text =
-        \\def f() -> [1]u8:
+        \\func f() -> FixedArray[u8, 1]:
         \\    return b"ab"
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         , .code = "E_TYPE" },
     }) |case| {

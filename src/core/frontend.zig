@@ -154,7 +154,10 @@ pub const Session = struct {
                 return error.ReadFailed;
             },
         };
-        if (language.opensAsModule(bytes)) return self.check(allocator, self.graph.settings.entry orelse entryOf(path).module, report);
+        if (language.opensAsModule(bytes)) {
+            return self.check(allocator, self.graph.settings.entry orelse entryOf(path).module, report);
+        }
+        try self.checkSourceBudget(allocator, path, bytes.len, report);
         const full = if (self.entry_suffix.len == 0) bytes else try std.mem.concat(allocator, u8, &.{ bytes, self.entry_suffix });
         const name = if (self.graph.settings.given_path) path else std.fs.path.basename(path);
         self.single = try language.Compilation.init(self.project.arena.child_allocator, name, full);
@@ -168,6 +171,14 @@ pub const Session = struct {
             },
         };
         return .{ .program = unit.program.?, .src = unit.src };
+    }
+
+    fn checkSourceBudget(self: *Session, allocator: std.mem.Allocator, path: []const u8, size: usize, report: *std.ArrayList(u8)) Error!void {
+        const options = self.graph.settings.options;
+        const limit = @min(options.max_file_bytes, options.max_total_bytes);
+        if (size <= limit) return;
+        try report.print(allocator, "{s}: error[E_PROJECT_BYTES]: source exceeds the {d}-byte configured budget\n", .{ path, limit });
+        return error.SourceError;
     }
 
     /// Read the files a header-less unit's `embed_bytes`/`embed_str` calls name, against

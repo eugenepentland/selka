@@ -1,11 +1,10 @@
-module python_string_find
 
 # `str.find` answers the first scalar index for one-scalar, multi-scalar and
 # longer-than-the-receiver needles, including multi-byte scalars whose low byte
 # also occurs inside another scalar (from the retired `qbe_text_test.zig`).
 # spec-case: PY-STR-2
-public def test_find_answers_the_first_scalar_index_for_short_long_and_overlong_needles() -> bool:
-    text = "the quick brown fox"
+public func test_find_answers_the_first_scalar_index_for_short_long_and_overlong_needles() -> bool:
+    mut text = "the quick brown fox"
     assert text.find("t") == 0
     assert text.find("q") == 4
     assert text.find("quick") == 4
@@ -19,5 +18,5 @@ public def test_find_answers_the_first_scalar_index_for_short_long_and_overlong_
     return True
 
 
-def main() -> int:
+func main() -> int:
     return 0

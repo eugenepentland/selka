@@ -9,14 +9,14 @@ const fixture =
     \\    second: U
     \\
     \\
-    \\union Slot[T]:
-    \\    none,
-    \\    some: T
+    \\enum Slot[T]:
+    \\    none
+    \\    some(value: T)
     \\
     \\
     \\record Row[T: equality]:
     \\    pair: Pair[T, bool]
-    \\    slots: [2]Slot[T]
+    \\    slots: FixedArray[Slot[T], 2]
     \\
     \\
     \\resource File: filesystem
@@ -37,7 +37,7 @@ const fixture =
     \\
     \\
     \\enum Tag[T]:
-    \\    left,
+    \\    left
     \\    right
     \\
     \\
@@ -46,10 +46,10 @@ const fixture =
     \\
     \\
     \\record Empty:
-    \\    zero: [0]File
+    \\    zero: FixedArray[File, 0]
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return 0
 ;
 fn collect(compilation: *language.Compilation, sink: *language.diagnostic.Sink) !templates.Index {
@@ -151,9 +151,9 @@ test "unused nominal template fields reject unknown names duplicate members and 
     , "E_DUPLICATE_FIELD", "value");
     // An enum or union suite cannot be empty, so E_EMPTY_VARIANTS has no source form.
     try reject(
-        \\union Slot[T]:
-        \\    some: T,
-        \\    some: i64
+        \\enum Slot[T]:
+        \\    some(value: T)
+        \\    some(value: i64)
     , "E_DUPLICATE_VARIANT", "some");
     try reject(
         \\result Answer[T]:
@@ -206,7 +206,7 @@ test "nominal template applications check arity and constructor kinds inside unu
     , "E_TYPE_APPLICATION", "T");
     try reject(
         \\record Bad[T]:
-        \\    value: [2]Missing[T]
+        \\    value: FixedArray[Missing[T], 2]
     , "E_UNKNOWN_TYPE", "Missing");
 }
 test "nominal template requirements reject insufficient symbolic promises and concrete operations" {
@@ -243,8 +243,8 @@ test "nominal template requirements reject insufficient symbolic promises and co
     , "E_GENERIC_REQUIREMENT", "Id");
     try reject(prefix ++
         \\record Bad[T]:
-        \\    value: Key[[0]T]
-    , "E_GENERIC_REQUIREMENT", "[0]T");
+        \\    value: Key[FixedArray[T, 0]]
+    , "E_GENERIC_REQUIREMENT", "FixedArray[T, 0]");
     try reject(prefix ++
         \\record Bad[T]:
         \\    value: Key[Key[i64]]
@@ -299,8 +299,8 @@ test "nominal template requirements preserve transitive owner and pending result
         \\
         \\
         \\record Bad:
-        \\    value: Box[[1]Pending]
-    , "E_GENERIC_REQUIREMENT", "[1]Pending");
+        \\    value: Box[FixedArray[Pending, 1]]
+    , "E_GENERIC_REQUIREMENT", "FixedArray[Pending, 1]");
     try reject(prefix ++
         \\record Owner[T]:
         \\    file: File
@@ -318,11 +318,11 @@ test "nominal template requirements preserve transitive owner and pending result
 test "nominal template arrays validate lengths keys and symbolic enum table boundaries" {
     try reject(
         \\record Box[T]:
-        \\    value: [2u8]T
+        \\    value: FixedArray[T, 2u8]
     , "E_ARRAY_LENGTH", "2u8");
     try reject(
         \\enum Key:
-        \\    one,
+        \\    one
         \\    two
         \\
         \\
@@ -339,7 +339,7 @@ test "nominal template arrays validate lengths keys and symbolic enum table boun
     , "E_TABLE_KEY", "Key");
     try reject(
         \\enum Key[T: integer]:
-        \\    one,
+        \\    one
         \\    two
         \\
         \\
@@ -355,20 +355,20 @@ test "nominal template arrays validate lengths keys and symbolic enum table boun
         \\
         \\
         \\enum Key:
-        \\    one,
+        \\    one
         \\    two
         \\
         \\
         \\enum Tag[T]:
-        \\    first,
+        \\    first
         \\    second
         \\
         \\
         \\record Valid[U: integer]:
-        \\    empty: Box[[0]File]
+        \\    empty: Box[FixedArray[File, 0]]
         \\    table: [Key]Box[i64]
         \\    tags: [Tag[i64]]bool
-        \\    pair: Box[[2]U]
+        \\    pair: Box[FixedArray[U, 2]]
     );
     defer compilation.deinit();
     var sink: language.diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
@@ -442,7 +442,6 @@ const Modules = struct {
     fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         const self: *Modules = @ptrCast(@alignCast(context.?));
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
-            \\module main
             \\import left as l
             \\import right as r
             \\
@@ -453,24 +452,21 @@ const Modules = struct {
             \\    c: l.Box[T]
             \\
             \\
-            \\def main() -> i64:
+            \\func main() -> i64:
             \\    return 0
         );
         if (std.mem.eql(u8, path, "left.my")) return allocator.dupe(u8, if (self.strict)
-            \\module left
             \\
             \\
             \\public record Box[U: equality]:
             \\    value: U
         else
-            \\module left
             \\
             \\
             \\public record Box[U]:
             \\    value: U
         );
         if (std.mem.eql(u8, path, "right.my")) return allocator.dupe(u8,
-            \\module right
             \\
             \\
             \\public record Box[U]:

@@ -593,7 +593,7 @@ fn position(text: []const u8) ?struct { path: []const u8, line: u64, column: u64
 // spec: NEW-CORE-S5-UNITS-1
 test "native execution reports entry results, guest output and located traps" {
     const source =
-        \\def main(out: Stream) -> i64:
+        \\func main(out: Stream) -> i64:
         \\    out.print("hello")
         \\    return 7
     ;
@@ -606,7 +606,7 @@ test "native execution reports entry results, guest output and located traps" {
     try std.testing.expect(!outcome.trapped());
     try std.testing.expectEqual(@as(u8, 7), outcome.status);
     var trapped = try language.Compilation.init(std.testing.allocator, "trap.my",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return divtrunc(1, 0)
     );
     defer trapped.deinit();
@@ -626,9 +626,9 @@ test "native execution reports entry results, guest output and located traps" {
 test "a batch runs its programs together and returns each run in job order" {
     var batch: Batch = .init(std.testing.allocator);
     defer batch.deinit();
-    try batch.add("first.my", "def main() -> i64:\n    return 1\n", .{});
-    try batch.add("second.my", "def main() -> i64:\n    return divtrunc(1, 0)\n", .{});
-    try batch.add("loop.my", "def main() -> i64:\n    while True:\n        pass\n    return 0\n", .{ .max_steps = 5 });
+    try batch.add("first.my", "func main() -> i64:\n    return 1\n", .{});
+    try batch.add("second.my", "func main() -> i64:\n    return divtrunc(1, 0)\n", .{});
+    try batch.add("loop.my", "func main() -> i64:\n    while True:\n        pass\n    return 0\n", .{ .max_steps = 5 });
     // A rerun under another budget shares the program's written tree.
     try batch.again(2, .{ .max_steps = 9 });
     const runs = try batch.run();
@@ -641,16 +641,16 @@ test "a batch runs its programs together and returns each run in job order" {
     // A program the front end rejects stops its batch before anything runs.
     var rejected: Batch = .init(std.testing.allocator);
     defer rejected.deinit();
-    try rejected.add("fine.my", "def main() -> i64:\n    return 0\n", .{});
-    try rejected.add("bad.my", "def main() -> i64:\n    return missing\n", .{});
+    try rejected.add("fine.my", "func main() -> i64:\n    return 0\n", .{});
+    try rejected.add("bad.my", "func main() -> i64:\n    return missing\n", .{});
     try std.testing.expectError(error.SourceError, rejected.run());
 }
 
 // spec-case: NEW-CORE-S5-UNITS-1
 test "native execution separates the build's warnings from the program's standard error" {
     var compilation = try language.Compilation.init(std.testing.allocator, "warned.my",
-        \\def main(err: Stream) -> i64:
-        \\    x = 1
+        \\func main(err: Stream) -> i64:
+        \\    mut x = 1
         \\    with arena():
         \\        x = 2
         \\    err.print("to err")
@@ -671,17 +671,17 @@ test "a program only trusted source may spell is refused by mylang, and a path t
         \\    err: i64
         \\
         \\
-        \\def main(c: Clock) -> i64:
+        \\func main(c: Clock) -> i64:
         \\    match clock_now[Time](c):
         \\        case Time.ok(now):
-        \\            return 0 if now > 0 else 1
+        \\            return if (now > 0) then (0) else (1)
         \\        case Time.err(e):
         \\            return e
     );
     defer trusted.deinit();
     // The front end accepts a compiler-owned source; `mylang` builds user source only.
     try std.testing.expectError(error.NewCoreBuildFailed, run(&trusted));
-    var escaping = try language.Compilation.init(std.testing.allocator, "../escape.my", "def main() -> i64:\n    return 0\n");
+    var escaping = try language.Compilation.init(std.testing.allocator, "../escape.my", "func main() -> i64:\n    return 0\n");
     defer escaping.deinit();
     try std.testing.expectError(error.NativeHostFailed, run(&escaping));
 }
@@ -692,8 +692,8 @@ const record_element_write =
     \\    name: str
     \\
     \\
-    \\def main() -> i64:
-    \\    rows = [Row(name="a")]
+    \\func main() -> i64:
+    \\    mut rows = [Row(name="a")]
     \\    rows[3] = Row(name="b")
     \\    return 0
 ;
@@ -710,21 +710,42 @@ test "native execution reports original bounds indexes for read write pop array 
         text: []const u8,
     };
     const cases = [_]Case{
-        .{ .source = "def main() -> i64:\n    xs = [1]\n    return xs[14]\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = 14, .length = 1, .text = "(index 14, length 1)" },
-        .{ .source = "def main() -> i64:\n    xs = [1, 2]\n    return xs[-5]\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -5, .length = 2, .text = "(index -5, length 2)" },
-        .{ .source = "def main() -> i64:\n    xs = [1, 2]\n    xs[-5] = 9\n    return 0\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -5, .length = 2, .text = "(index -5, length 2)" },
-        .{ .source = "def main() -> i64:\n    xs = [1, 2]\n    xs[14] = 9\n    return 0\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = 14, .length = 2, .text = "(index 14, length 2)" },
+        .{ .source = "func main() -> i64:\n    mut xs = [1]\n    return xs[14]\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = 14, .length = 1, .text = "(index 14, length 1)" },
+        .{ .source = "func main() -> i64:\n    mut xs = [1, 2]\n    return xs[-5]\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -5, .length = 2, .text = "(index -5, length 2)" },
+        .{ .source = "func main() -> i64:\n    mut xs = [1, 2]\n    xs[-5] = 9\n    return 0\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -5, .length = 2, .text = "(index -5, length 2)" },
+        .{ .source = "func main() -> i64:\n    mut xs = [1, 2]\n    xs[14] = 9\n    return 0\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = 14, .length = 2, .text = "(index 14, length 2)" },
         .{ .source = record_element_write, .code = "R_LIST_BOUNDS", .operation = .index, .index = 3, .length = 1, .text = "(index 3, length 1)" },
-        .{ .source = "def main() -> i64:\n    xs: list[i64] = []\n    return xs.pop()\n", .code = "R_LIST_BOUNDS", .operation = .pop, .index = null, .length = 0, .text = "(length 0)" },
-        .{ .source = "def main() -> i64:\n    xs = [1, 2]\n    return xs.pop(7)\n", .code = "R_LIST_BOUNDS", .operation = .pop, .index = 7, .length = 2, .text = "(index 7, length 2)" },
-        .{ .source = "def main() -> i64:\n    xs: [3]int = [1, 2, 3]\n    return xs[7]\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = 7, .length = 3, .text = "(index 7, length 3)" },
-        .{ .source = "def main() -> i64:\n    xs: [3]int = [1, 2, 3]\n    xs = replace(xs, 7, 9)\n    return xs[0]\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = 7, .length = 3, .text = "(index 7, length 3)" },
+        .{ .source = "func main() -> i64:\n    mut xs: i64[] = []\n    return xs.pop()\n", .code = "R_LIST_BOUNDS", .operation = .pop, .index = null, .length = 0, .text = "(length 0)" },
+        .{ .source = "func main() -> i64:\n    mut xs = [1, 2]\n    return xs.pop(7)\n", .code = "R_LIST_BOUNDS", .operation = .pop, .index = 7, .length = 2, .text = "(index 7, length 2)" },
+        .{ .source = "func main() -> i64:\n    mut xs: FixedArray[int, 3] = FixedArray[int, 3]([1, 2, 3])\n    return xs[7]\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = 7, .length = 3, .text = "(index 7, length 3)" },
+        .{
+            .source = "func main() -> i64:\n    mut xs: FixedArray[int, 3] = FixedArray[int, 3]([1, 2, 3])\n    xs = replace(xs, 7, 9)\n    return xs[0]\n",
+            .code = "R_LIST_BOUNDS",
+            .operation = .index,
+            .index = 7,
+            .length = 3,
+            .text = "(index 7, length 3)",
+        },
         // PY-ARRAY-NEGATIVE-1: a fixed array reports the index as written,
         // before it counts from the end, exactly as the list above does.
-        .{ .source = "def main() -> i64:\n    xs: [2]int = [1, 2]\n    i = -5\n    return xs[i]\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -5, .length = 2, .text = "(index -5, length 2)" },
-        .{ .source = "def main() -> i64:\n    xs: [2]int = [1, 2]\n    xs[-5] = 9\n    return 0\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -5, .length = 2, .text = "(index -5, length 2)" },
-        .{ .source = "def main() -> i64:\n    s = \"abc\"\n    _ = s[9]\n    return 0\n", .code = "R_TEXT_BOUNDS", .operation = .index, .index = 9, .length = 3, .text = "(index 9, length 3)" },
-        .{ .source = "def main() -> i64:\n    b = b\"abc\"\n    _ = b[-9]\n    return 0\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -9, .length = 3, .text = "(index -9, length 3)" },
+        .{
+            .source = "func main() -> i64:\n    mut xs: FixedArray[int, 2] = FixedArray[int, 2]([1, 2])\n    mut i = -5\n    return xs[i]\n",
+            .code = "R_LIST_BOUNDS",
+            .operation = .index,
+            .index = -5,
+            .length = 2,
+            .text = "(index -5, length 2)",
+        },
+        .{
+            .source = "func main() -> i64:\n    mut xs: FixedArray[int, 2] = FixedArray[int, 2]([1, 2])\n    xs[-5] = 9\n    return 0\n",
+            .code = "R_LIST_BOUNDS",
+            .operation = .index,
+            .index = -5,
+            .length = 2,
+            .text = "(index -5, length 2)",
+        },
+        .{ .source = "func main() -> i64:\n    mut s = \"abc\"\n    _ = s[9]\n    return 0\n", .code = "R_TEXT_BOUNDS", .operation = .index, .index = 9, .length = 3, .text = "(index 9, length 3)" },
+        .{ .source = "func main() -> i64:\n    mut b = b\"abc\"\n    _ = b[-9]\n    return 0\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -9, .length = 3, .text = "(index -9, length 3)" },
     };
     for (cases) |case| {
         var compilation = try language.Compilation.init(std.testing.allocator, "bounds.my", case.source);
@@ -762,11 +783,11 @@ test "unsigned overflow cast and division traps quote their operands unsigned an
     };
     for (cases) |case| {
         const source = try std.fmt.allocPrint(std.testing.allocator,
-            \\def compute(a: u64, b: u64, c: i64, d: i64) -> i64:
+            \\func compute(a: u64, b: u64, c: i64, d: i64) -> i64:
             \\    {s}
             \\
             \\
-            \\def main() -> i64:
+            \\func main() -> i64:
             \\    return compute(18446744073709551614, 5, 9223372036854775807, -9223372036854775807)
         , .{case.body});
         defer std.testing.allocator.free(source);
@@ -783,7 +804,7 @@ test "unsigned overflow cast and division traps quote their operands unsigned an
 // spec-case: QBE-TRAP-DETAIL-1
 test "native execution keeps the first trap detail and leaves budget traps detail-free" {
     var first = try language.Compilation.init(std.testing.allocator, "first.my",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return divtrunc(1, 0) + (9223372036854775807 + 1)
     );
     defer first.deinit();
@@ -791,7 +812,7 @@ test "native execution keeps the first trap detail and leaves budget traps detai
     try std.testing.expectEqualStrings("R_DIVISION_BY_ZERO", outcome.trap.code);
     try std.testing.expectEqual(trap_detail.Operation.div, outcome.trap.detail.operation);
     var loop = try language.Compilation.init(std.testing.allocator, "budget.my",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    while True:
         \\        pass
         \\    return 0
@@ -804,7 +825,7 @@ test "native execution keeps the first trap detail and leaves budget traps detai
 
 test "native execution honours step budgets and separates the result line from output" {
     var compilation = try language.Compilation.init(std.testing.allocator, "budget.my",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    while True:
         \\        pass
         \\    return 0
@@ -822,8 +843,8 @@ test "native execution honours step budgets and separates the result line from o
 // spec: RUNTIME-UNBOUNDED-1
 test "a native run completes a loop that outgrows the old default step budget" {
     var compilation = try language.Compilation.init(std.testing.allocator, "unbounded.my",
-        \\def main() -> i64:
-        \\    i = 0
+        \\func main() -> i64:
+        \\    mut i = 0
         \\    while i < 3000000:
         \\        i += 1
         \\    return i
@@ -839,7 +860,7 @@ test "a native run completes a loop that outgrows the old default step budget" {
 // spec: RUNTIME-TIMEOUT-1
 test "a wall-clock timeout ends an unbounded native run with R_TIMEOUT" {
     var compilation = try language.Compilation.init(std.testing.allocator, "timeout.my",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    while True:
         \\        pass
         \\    return 0

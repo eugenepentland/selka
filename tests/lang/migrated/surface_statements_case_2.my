@@ -1,12 +1,11 @@
-module surface_statements_case_2
 
 
 record Holder[T]:
     value: T
 
 
-public def program() -> i64:
-    holder = Holder[list[i64]](value=[])
-    values = holder.value
+public func program() -> i64:
+    mut holder = Holder[i64[]](value=[])
+    mut values = holder.value
     values.append(42)
     return values[0]

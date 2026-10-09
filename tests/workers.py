@@ -12,8 +12,7 @@ import time
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from workers import Limits, Pool, canonical, schema_identity
 
-SOURCE = b'''module main
-
+SOURCE = b'''
 
 
 
@@ -31,7 +30,7 @@ public result Time:
     err: i64
 
 
-public def analyze(values: [4]i64) -> Stats:
+public func analyze(values: [4]i64) -> Stats:
     sum = 0
     squares = 0
     i = 0u64
@@ -43,7 +42,7 @@ public def analyze(values: [4]i64) -> Stats:
     return Stats(sum=sum, squares=squares)
 
 
-public def loop(n: i64) -> i64:
+public func loop(n: i64) -> i64:
     i = n
     while True:
         i += 1
@@ -52,15 +51,15 @@ public def loop(n: i64) -> i64:
     return i
 
 
-public def nodata():
+public func nodata():
     pass
 
 
-public def clock(c: clock_cap) -> Time:
+public func clock(c: clock_cap) -> Time:
     return clock_now[Time](c)
 
 
-def main() -> i64:
+func main() -> i64:
     return 0
 '''
 

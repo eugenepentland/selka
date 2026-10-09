@@ -15,8 +15,8 @@ def main():
     with tempfile.TemporaryDirectory(prefix='mylang-check-session-') as directory:
         root = Path(directory)
         entry, data = root / 'main.my', root / 'data.my'
-        entry.write_text('module main\nimport data\n\n\ndef main() -> i64:\n    return data.value()\n')
-        valid = 'module data\n\n\n\npublic def value() -> i64:\n    unused = 3\n    return 7\n'
+        entry.write_text('import data\n\n\nfunc main() -> i64:\n    return data.value()\n')
+        valid = '\n\n\npublic func value() -> i64:\n    mut unused = 3\n    return 7\n'
         data.write_text(valid)
         with tempfile.TemporaryFile() as diagnostics:
             process = subprocess.Popen([compiler, 'check-session', str(entry)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=diagnostics)
@@ -53,7 +53,7 @@ def main():
                     data.write_text(valid.replace('return 7', 'return True'))
                     assert request('check', 1)['reuse'] == {'hits': 1, 'misses': 1}
                     assert request('check', 1)['reuse'] == {'hits': 2, 'misses': 0}
-                    data.write_text(valid.replace('public def value', 'def value'))
+                    data.write_text(valid.replace('public func value', 'func value'))
                     request('check', 1)
                     data.unlink()
                     request('check', 1)
@@ -86,7 +86,7 @@ def main():
         bad = subprocess.run([compiler, 'check-session', str(entry), '--max-steps=1'], input=b'check\n', capture_output=True)
         assert bad.returncode == 2 and not bad.stdout
         manifest = root / 'inputs.json'
-        entry.write_text('module main\nimport config\n\n\ndef main() -> i64:\n    return config.value()\n')
+        entry.write_text('import config\n\n\nfunc main() -> i64:\n    return config.value()\n')
         manifest.write_text(json.dumps({'version': 1, 'module': 'config', 'values': [{'name': 'value', 'type': 'i64', 'value': '7'}]}))
         with tempfile.TemporaryFile() as diagnostics:
             process = subprocess.Popen([compiler, 'check-session', str(entry), '--inputs=' + str(manifest)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=diagnostics)

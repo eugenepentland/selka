@@ -1,50 +1,49 @@
-module python_comprehension
 
 
-def total(values: list[int]) -> int:
-    sum = 0
+func total(values: int[]) -> int:
+    mut sum = 0
     for value in values:
         sum = sum + value
     return sum
 
 
 # spec: PY-COMPREHENSION-1
-public def test_a_comprehension_maps_one_generator_optionally_filtered_into_a_fresh_list() -> bool:
-    source = [1, 2, 3, 4]
-    doubled = [value * 2 for value in source]
-    kept = [value for value in source if value > 2]
+public func test_a_comprehension_maps_one_generator_optionally_filtered_into_a_fresh_list() -> bool:
+    mut source = [1, 2, 3, 4]
+    mut doubled = [for value in source yield value * 2]
+    mut kept = [for value in source if value > 2 yield value]
     return total(doubled) + total(kept) * 3 + 1 == 42
 
 
 # spec-case: PY-COMPREHENSION-1
-public def test_comprehensions_read_strings_and_dictionaries_and_leave_the_source_unchanged() -> bool:
-    counts: dict[str, int] = {}
+public func test_comprehensions_read_strings_and_dictionaries_and_leave_the_source_unchanged() -> bool:
+    mut counts: dict[str, int] = {}
     counts["a"] = 20
     counts["b"] = 22
-    values = [counts[key] for key in counts]
-    letters = [piece for piece in "abc" if piece != "b"]
-    source = [1, 2]
-    _ = [value for value in source]
+    mut values = [for key in counts yield counts[key]]
+    mut letters = [for piece in "abc" if piece != "b" yield piece]
+    mut source = [1, 2]
+    _ = [for value in source yield value]
     return values[0] + values[1] + len(letters) * 0 + len(source) * 0 == 42
 
 
 # spec: PY-COMPREHENSION-3
-public def test_a_comprehension_accepts_range_as_a_source_in_one_and_two_argument_forms() -> bool:
-    squares = [i * i for i in range(5)]
-    span = [n for n in range(3, 7)]
-    kept = [k for k in range(6) if k > 2]
-    empty = [j for j in range(5, 5)]
+public func test_a_comprehension_accepts_range_as_a_source_in_one_and_two_argument_forms() -> bool:
+    mut squares = [for i in range(5) yield i * i]
+    mut span = [for n in range(3, 7) yield n]
+    mut kept = [for k in range(6) if k > 2 yield k]
+    mut empty = [for j in range(5, 5) yield j]
     return total(squares) + total(span) + total(kept) + len(empty) == 60
 
 
 # spec-case: PY-COMPREHENSION-3
-public def test_range_comprehension_capacity_math_preserves_signed_and_unsigned_results() -> bool:
-    crossed = [i for i in range(-3i8, 4i8)]
-    unsigned = [i for i in range(2u8, 6u8)]
-    reversed = [i for i in range(6u8, 2u8)]
-    materialized = list(range(-2i16, 3i16))
+public func test_range_comprehension_capacity_math_preserves_signed_and_unsigned_results() -> bool:
+    mut crossed = [for i in range(-3i8, 4i8) yield i]
+    mut unsigned = [for i in range(2u8, 6u8) yield i]
+    mut reversed = [for i in range(6u8, 2u8) yield i]
+    mut materialized = list(range(-2i16, 3i16))
     return len(crossed) + len(unsigned) * 2 + len(reversed) + len(materialized) * 5 == 40
 
 
-def main() -> int:
+func main() -> int:
     return 0

@@ -33,39 +33,39 @@ fn functionIr(text: []const u8, name: []const u8) []const u8 {
 }
 
 const forms =
-    \\def borrowed(xs: list[int]) -> int:
-    \\    ys = xs
+    \\func borrowed(xs: int[]) -> int:
+    \\    mut ys = xs
     \\    ys.append(1)
     \\    return len(ys) + len(xs)
     \\
     \\
-    \\def fresh(n: int) -> int:
-    \\    out: list[int] = []
+    \\func fresh(n: int) -> int:
+    \\    mut out: int[] = []
     \\    for i in range(n):
     \\        out.append(i)
     \\    return len(out)
     \\
     \\
-    \\def make(n: int) -> list[int]:
-    \\    out: list[int] = []
+    \\func make(n: int) -> int[]:
+    \\    mut out: int[] = []
     \\    out.append(n)
     \\    return out
     \\
     \\
-    \\def maybe_shared(n: int) -> int:
-    \\    a = make(n)
+    \\func maybe_shared(n: int) -> int:
+    \\    mut a = make(n)
     \\    a.append(2)
     \\    return len(a)
     \\
     \\
-    \\def kept(n: int) -> int:
-    \\    a = make(n)
-    \\    b = a
+    \\func kept(n: int) -> int:
+    \\    mut a = make(n)
+    \\    mut b = a
     \\    b.append(3)
     \\    return len(a) * 10 + len(b)
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(borrowed([1]), fresh(3), maybe_shared(1), kept(1))
     \\    return 0
     \\
@@ -105,25 +105,25 @@ test "the copy-on-write forms print the old core's values with nothing left live
 }
 
 const unique_frees =
-    \\def fresh(n: int) -> int:
-    \\    out: list[int] = []
+    \\func fresh(n: int) -> int:
+    \\    mut out: int[] = []
     \\    for i in range(n):
     \\        out.append(i)
     \\    return len(out)
     \\
     \\
-    \\def keep(xs: list[int]) -> list[int]:
+    \\func keep(xs: int[]) -> int[]:
     \\    return xs
     \\
     \\
-    \\def passed(n: int) -> int:
-    \\    out: list[int] = []
+    \\func passed(n: int) -> int:
+    \\    mut out: int[] = []
     \\    out.append(n)
-    \\    kept = keep(out)
+    \\    mut kept = keep(out)
     \\    return len(kept)
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(fresh(3), passed(4))
     \\    return 0
     \\
@@ -549,26 +549,26 @@ test "a wrong length bound behind a stack list is caught by the verify build" {
 const handed_over =
     \\record Bag:
     \\    name: str
-    \\    items: list[int]
+    \\    items: int[]
     \\
     \\
-    \\def add(xs: mut list[int], v: int):
+    \\func add(mut xs: int[], v: int):
     \\    xs.append(v)
     \\
     \\
-    \\def add_counted(xs: mut list[int], v: int) -> int:
+    \\func add_counted(mut xs: int[], v: int) -> int:
     \\    xs.append(v)
     \\    return len(xs)
     \\
     \\
-    \\def put(bag: mut Bag, v: int):
+    \\func put(mut bag: Bag, v: int):
     \\    bag.items.append(v)
     \\
     \\
-    \\def grow(n: int) -> int:
-    \\    xs: list[int] = []
-    \\    bag = Bag(name="b", items=[])
-    \\    total = 0
+    \\func grow(n: int) -> int:
+    \\    mut xs: int[] = []
+    \\    mut bag = Bag(name="b", items=[])
+    \\    mut total = 0
     \\    for i in range(n):
     \\        add(mut xs, i)
     \\        total += add_counted(mut xs, i)
@@ -576,7 +576,7 @@ const handed_over =
     \\    return total + len(xs) + len(bag.items)
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(grow(4))
     \\    return 0
     \\
@@ -608,31 +608,31 @@ test "a mut argument is handed over: the callee updates it in place when unique,
 const branch_taken =
     \\record Bag:
     \\    name: str
-    \\    items: list[int]
+    \\    items: int[]
     \\
     \\
     \\record Sink:
     \\    buffer: byte_buffer
     \\
     \\
-    \\def put(bag: mut Bag, v: int):
+    \\func put(mut bag: Bag, v: int):
     \\    if v >= 0:
     \\        bag.items.append(v)
     \\
     \\
-    \\def put_byte(sink: mut Sink, v: int) -> bool:
+    \\func put_byte(mut sink: Sink, v: int) -> bool:
     \\    return sink.buffer.append_byte(v)
     \\
     \\
-    \\def put_range(sink: mut Sink, data: bytes, v: int):
+    \\func put_range(mut sink: Sink, data: bytes, v: int):
     \\    if v > 0:
     \\        _ = sink.buffer.append_range(data, 0, v)
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    bag = Bag(name="b", items=[])
-    \\    empty: list[int] = []
-    \\    sink = Sink(buffer=byte_buffer(empty))
+    \\func main(out: Stream) -> int:
+    \\    mut bag = Bag(name="b", items=[])
+    \\    mut empty: int[] = []
+    \\    mut sink = Sink(buffer=byte_buffer(empty))
     \\    for i in range(4):
     \\        put(mut bag, i)
     \\        _ = put_byte(mut sink, i)
@@ -666,33 +666,33 @@ test "a mut record's field updated on one arm of a branch, or by a byte_buffer a
 
 const field_take =
     \\record Runtime:
-    \\    objects: list[int]
+    \\    objects: int[]
     \\    count: int
     \\
     \\
-    \\def allocate(rt: mut Runtime, obj: int) -> int:
-    \\    slot = len(rt.objects)
+    \\func allocate(mut rt: Runtime, obj: int) -> int:
+    \\    mut slot = len(rt.objects)
     \\    rt.objects.append(obj)
     \\    rt.count = rt.count + 1
     \\    return slot
     \\
     \\
-    \\def put(rt: mut Runtime, at: int, v: int):
+    \\func put(mut rt: Runtime, at: int, v: int):
     \\    rt.objects[at] = v
     \\
     \\
     \\record Marker:
-    \\    marks: list[bool]
+    \\    marks: bool[]
     \\
     \\
     \\record Heap:
-    \\    objects: list[int]
+    \\    objects: int[]
     \\    marker: Marker
-    \\    free_slots: list[int]
+    \\    free_slots: int[]
     \\
     \\
-    \\def heap_allocate(h: mut Heap, obj: int) -> int:
-    \\    slot = len(h.objects)
+    \\func heap_allocate(mut h: Heap, obj: int) -> int:
+    \\    mut slot = len(h.objects)
     \\    if len(h.free_slots) > 0:
     \\        slot = h.free_slots.pop()
     \\        h.objects[slot] = obj
@@ -702,12 +702,12 @@ const field_take =
     \\    return slot
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    rt = Runtime(objects=[], count=0)
+    \\func main(out: Stream) -> int:
+    \\    mut rt = Runtime(objects=[], count=0)
     \\    for i in range(4):
     \\        _ = allocate(mut rt, i)
     \\        put(mut rt, -1, i)
-    \\    h = Heap(objects=[], marker=Marker(marks=[]), free_slots=[])
+    \\    mut h = Heap(objects=[], marker=Marker(marks=[]), free_slots=[])
     \\    for j in range(4):
     \\        _ = heap_allocate(mut h, j)
     \\    out.print(len(rt.objects))
@@ -825,14 +825,14 @@ test "a block shared on one of several paths into a loop is tested before the lo
 }
 
 const taken_and_read =
-    \\def bump_and_count(xs: mut list[int], view: list[int]) -> int:
+    \\func bump_and_count(mut xs: int[], view: int[]) -> int:
     \\    xs[0] = 2
     \\    return len(view) + view[0] * 10
     \\
     \\
-    \\public def test_a_mut_argument_also_read_is_a_snapshot_and_freed() -> bool:
-    \\    xs = [1, 2]
-    \\    n = bump_and_count(mut xs, xs)
+    \\public func test_a_mut_argument_also_read_is_a_snapshot_and_freed() -> bool:
+    \\    mut xs = [1, 2]
+    \\    mut n = bump_and_count(mut xs, xs)
     \\    return n == 12 and xs == [2, 2]
     \\
 ;

@@ -10,10 +10,10 @@ test "standard path joins splits and normalizes without filesystem authority" {
 
 // spec-case: STANDARD-PATH-1
 test "standard path helpers need no capability and stay inside a noio ceiling" {
-    try fixture.run(t.allocator, "module main\nimport path\n" ++
-        "def cleaned(value: str) -> str noio:\n" ++
+    try fixture.run(t.allocator, "import path\n" ++
+        "func cleaned(value: str) -> str noio:\n" ++
         "    return path.normalize(value)\n" ++
-        "def main() -> int:\n" ++
+        "func main() -> int:\n" ++
         "    if cleaned(\"/a/b/../c//\") != \"/a/c\":\n" ++
         "        return 1\n" ++
         "    return len(cleaned(\"/usr/local/lib/mylang\")) + 21\n", 42);

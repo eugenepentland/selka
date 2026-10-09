@@ -37,7 +37,7 @@ const gc_runtime = "gc-runtime";
 /// Why a unit documenting legacy sharing or the collector is skipped.
 const retired_mode = "documents a mode the new core retired (S5-D4)";
 /// Neutral entry point appended to declaration-only examples before checking.
-const stub = "def main() -> int:\n    return 0\n";
+const stub = "func main() -> int:\n    return 0\n";
 /// Most bytes the runner reads from one documentation page.
 const read_limit: std.Io.Limit = .limited(8 * 1024 * 1024);
 /// Seconds one compiler invocation may run before the unit is failed.
@@ -682,11 +682,11 @@ fn hasMain(source: []const u8) bool {
     var split = std.mem.splitScalar(u8, source, '\n');
     while (split.next()) |line| {
         var i = skipSpace(line, 0);
-        if (std.mem.startsWith(u8, line[i..], "pub") and i + "pub".len < line.len and (line[i + "pub".len] == ' ' or line[i + "pub".len] == '\t')) {
-            i = skipSpace(line, i + "pub".len);
+        if (std.mem.startsWith(u8, line[i..], "public") and i + "public".len < line.len and (line[i + "public".len] == ' ' or line[i + "public".len] == '\t')) {
+            i = skipSpace(line, i + "public".len);
         }
-        if (!std.mem.startsWith(u8, line[i..], "def")) continue;
-        var j = i + "def".len;
+        if (!std.mem.startsWith(u8, line[i..], "func")) continue;
+        var j = i + "func".len;
         if (j >= line.len or (line[j] != ' ' and line[j] != '\t')) continue;
         j = skipSpace(line, j);
         if (!std.mem.startsWith(u8, line[j..], "main")) continue;
@@ -721,7 +721,7 @@ fn moduleLine(source: []const u8) ?[]const u8 {
 fn guestShape(source: []const u8) bool {
     var split = std.mem.splitScalar(u8, source, '\n');
     while (split.next()) |line| {
-        if (std.mem.startsWith(u8, line, "def main") or std.mem.startsWith(u8, line, "module ")) return true;
+        if (std.mem.startsWith(u8, line, "func main") or std.mem.startsWith(u8, line, "module ")) return true;
     }
     return false;
 }
@@ -1305,14 +1305,14 @@ const testing = std.testing;
 /// Eight independent skip units — more units than the pool width the concurrency
 /// test bounds itself to, so at least one worker has to take several of them.
 const pool_document =
-    "```mylang\n# doc: skip reason-1\ndef main() -> int:\n    return 0\n```\n" ++
-    "```mylang\n# doc: skip reason-2\ndef main() -> int:\n    return 0\n```\n" ++
-    "```mylang\n# doc: skip reason-3\ndef main() -> int:\n    return 0\n```\n" ++
-    "```mylang\n# doc: skip reason-4\ndef main() -> int:\n    return 0\n```\n" ++
-    "```mylang\n# doc: skip reason-5\ndef main() -> int:\n    return 0\n```\n" ++
-    "```mylang\n# doc: skip reason-6\ndef main() -> int:\n    return 0\n```\n" ++
-    "```mylang\n# doc: skip reason-7\ndef main() -> int:\n    return 0\n```\n" ++
-    "```mylang\n# doc: skip reason-8\ndef main() -> int:\n    return 0\n```\n";
+    "```mylang\n# doc: skip reason-1\nfunc main() -> int:\n    return 0\n```\n" ++
+    "```mylang\n# doc: skip reason-2\nfunc main() -> int:\n    return 0\n```\n" ++
+    "```mylang\n# doc: skip reason-3\nfunc main() -> int:\n    return 0\n```\n" ++
+    "```mylang\n# doc: skip reason-4\nfunc main() -> int:\n    return 0\n```\n" ++
+    "```mylang\n# doc: skip reason-5\nfunc main() -> int:\n    return 0\n```\n" ++
+    "```mylang\n# doc: skip reason-6\nfunc main() -> int:\n    return 0\n```\n" ++
+    "```mylang\n# doc: skip reason-7\nfunc main() -> int:\n    return 0\n```\n" ++
+    "```mylang\n# doc: skip reason-8\nfunc main() -> int:\n    return 0\n```\n";
 
 /// The summary those eight units must render, whatever order they finish in.
 const pool_report =
@@ -1329,7 +1329,7 @@ test "doctest a fence carries its info tag, flags and directives and strips them
         "```mylang extra\n" ++
         "# doc: expect hello\n" ++
         "# doc: allow-read fixtures-dir\n" ++
-        "def main() -> int:\n" ++
+        "func main() -> int:\n" ++
         "    return 0\n" ++
         "```\n" ++
         "\n" ++
@@ -1345,7 +1345,7 @@ test "doctest a fence carries its info tag, flags and directives and strips them
     try testing.expectEqual(@as(usize, 2), found[0].directives.len);
     try testing.expectEqualStrings("expect", found[0].directives[0].name);
     try testing.expectEqualStrings("hello", found[0].directives[0].rest);
-    try testing.expectEqualStrings("def main() -> int:\n    return 0", found[0].source);
+    try testing.expectEqualStrings("func main() -> int:\n    return 0", found[0].source);
     try testing.expectEqualStrings("", found[1].tag);
 }
 
@@ -1353,7 +1353,7 @@ test "doctest an unknown directive is reported and a missing skip reason invalid
     const text =
         "```mylang\n" ++
         "# doc: skpi because typo\n" ++
-        "def main() -> int:\n" ++
+        "func main() -> int:\n" ++
         "    return 0\n" ++
         "```\n";
     var arena = std.heap.ArenaAllocator.init(testing.allocator);
@@ -1375,22 +1375,22 @@ test "doctest grouping folds project fences and plan picks run or check" {
         "```mylang\n" ++
         "# doc: project greeting\n" ++
         "# doc: file helper.my\n" ++
-        "module helper\n" ++
+        "" ++
         "\n" ++
-        "public def answer() -> int:\n" ++
+        "public func answer() -> int:\n" ++
         "    return 42\n" ++
         "```\n" ++
         "```mylang\n" ++
         "# doc: project greeting\n" ++
         "# doc: file main.my\n" ++
-        "module main\n" ++
+        "" ++
         "import helper\n" ++
         "\n" ++
-        "def main() -> int:\n" ++
+        "func main() -> int:\n" ++
         "    return helper.answer()\n" ++
         "```\n" ++
         "```python\n" ++
-        "def main() -> int:\n" ++
+        "func main() -> int:\n" ++
         "    return 0\n" ++
         "```\n";
     var arena = std.heap.ArenaAllocator.init(testing.allocator);
@@ -1412,16 +1412,16 @@ test "doctest selects explicit value and legacy modes while plain units use the 
         "```mylang\n" ++
         "# doc: value-semantics\n" ++
         "# doc: expect 1\n" ++
-        "def main() -> int:\n" ++
+        "func main() -> int:\n" ++
         "    return 1\n" ++
         "```\n" ++
         "```mylang\n" ++
-        "def main() -> int:\n" ++
+        "func main() -> int:\n" ++
         "    return 2\n" ++
         "```\n" ++
         "```mylang\n" ++
         "# doc: legacy-sharing\n" ++
-        "def main() -> int:\n" ++
+        "func main() -> int:\n" ++
         "    return 3\n" ++
         "```\n";
     var arena = std.heap.ArenaAllocator.init(testing.allocator);
@@ -1446,17 +1446,17 @@ test "doctest skips units of retired modes and runs value-semantics units withou
     const text =
         "```mylang\n" ++
         "# doc: value-semantics\n" ++
-        "def main() -> int:\n" ++
+        "func main() -> int:\n" ++
         "    return 1\n" ++
         "```\n" ++
         "```mylang\n" ++
         "# doc: legacy-sharing\n" ++
-        "def main() -> int:\n" ++
+        "func main() -> int:\n" ++
         "    return 2\n" ++
         "```\n" ++
         "```mylang\n" ++
         "# doc: gc-runtime\n" ++
-        "def main() -> int:\n" ++
+        "func main() -> int:\n" ++
         "    return 3\n" ++
         "```\n";
     var arena = std.heap.ArenaAllocator.init(testing.allocator);
@@ -1475,11 +1475,11 @@ test "doctest runs a gc-runtime unit under the collector and plain units under t
     const text =
         "```mylang\n" ++
         "# doc: gc-runtime\n" ++
-        "def main() -> int:\n" ++
+        "func main() -> int:\n" ++
         "    return 1\n" ++
         "```\n" ++
         "```mylang\n" ++
-        "def main() -> int:\n" ++
+        "func main() -> int:\n" ++
         "    return 2\n" ++
         "```\n";
     var arena = std.heap.ArenaAllocator.init(testing.allocator);
@@ -1500,12 +1500,12 @@ test "doctest runs a gc-runtime unit under the collector and plain units under t
 test "doctest mis-tagged prose fences look like guest source and not-mylang opts out" {
     const text =
         "```python\n" ++
-        "def main() -> int:\n" ++
+        "func main() -> int:\n" ++
         "    return 0\n" ++
         "```\n" ++
         "```text\n" ++
         "# doc: not-mylang\n" ++
-        "def main() -> int:\n" ++
+        "func main() -> int:\n" ++
         "    return 0\n" ++
         "```\n";
     var arena = std.heap.ArenaAllocator.init(testing.allocator);

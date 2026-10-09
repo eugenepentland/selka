@@ -9,20 +9,16 @@ import subprocess
 import tempfile
 import time
 
-IO = ('module io\n\n\n\n'
+IO = ('\n\n\n'
       'public class Block:\n    bytes: [256]u8\n    count: i64\n\n\n'
-      'host def length() -> i64 effects(host)\n\n\n'
-      'host def byte(index: i64) -> u8 effects(host)\n\n\n'
-      'host def put(value: u8) -> i64 effects(host)\n\n\n'
-      'host def read_block(offset: i64) -> Block effects(host)\n\n\n'
-      'host def write_block(block: Block) -> i64 effects(host)\n')
+      'host func length() -> i64 effects(host)\n\n\n'
+      'host func byte(index: i64) -> u8 effects(host)\n\n\n'
+      'host func put(value: u8) -> i64 effects(host)\n\n\n'
+      'host func read_block(offset: i64) -> Block effects(host)\n\n\n'
+      'host func write_block(block: Block) -> i64 effects(host)\n')
 SOURCES = {
-    'scalar': ('def main() -> i64:\n    size = io.length()\n    i = 0\n'
-               '    while i < size:\n        _ = io.put(io.byte(i))\n        i += 1\n    return 0\n'),
-    'block256': ('def main() -> i64:\n    size = io.length()\n    i = 0\n'
-                 '    while i < size:\n        block = io.read_block(i)\n        count = block.count\n'
-                 '        if io.write_block(block) != count:\n            return 1\n'
-                 '        i += count\n    return 0\n'),
+    'scalar': ('func main() -> i64:\n    mut size = io.length()\n    mut i = 0\n    while i < size:\n        _ = io.put(io.byte(i))\n        i += 1\n    return 0\n'),
+    'block256': ('func main() -> i64:\n    mut size = io.length()\n    mut i = 0\n    while i < size:\n        mut block = io.read_block(i)\n        mut count = block.count\n        if io.write_block(block) != count:\n            return 1\n        i += count\n    return 0\n'),
 }
 
 
@@ -45,7 +41,7 @@ def main():
         root = Path(directory)
         (root / 'io.my').write_text(IO)
         for mode, source in SOURCES.items():
-            (root / 'main.my').write_text('module main;import io;' + source)
+            (root / 'main.my').write_text('' + source)
             count = 2 * (len(payload) if mode == 'scalar' else (len(payload) + 255) // 256) + 1
             command = [str(runner), '--project', str(root), f'--max-calls={count}']
             samples = []

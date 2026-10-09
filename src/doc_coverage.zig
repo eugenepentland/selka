@@ -8,7 +8,7 @@ pub const executable_tags = [_][]const u8{ "mylang", "my" };
 /// Info-string tags that show a command or a transcript for a tooling feature.
 pub const command_tags = [_][]const u8{ "bash", "sh", "console", "text" };
 /// Source keywords that introduce a definition a standard module can export.
-pub const definition_keywords = [_][]const u8{ "def", "record", "class", "union", "enum", "type", "const", "result", "resource" };
+pub const definition_keywords = [_][]const u8{ "func", "record", "enum", "type", "const", "result", "resource" };
 
 /// One fenced code block: its info string and the text between the fences.
 pub const Fence = struct { info: []const u8, body: []const u8 };
@@ -267,9 +267,9 @@ fn defines(text: []const u8, name: []const u8) bool {
 
 const testing = std.testing;
 const page =
-    "# Managed arenas\n\nIntro prose.\n\n```mylang\n# doc: expect 42\ndef main() -> int:\n    return 42\n```\n" ++
+    "# Managed arenas\n\nIntro prose.\n\n```mylang\n# doc: expect 42\nfunc main() -> int:\n    return 42\n```\n" ++
     "\n## Limits\n\nOnly prose here.\n\n## Running it\n\n```bash\nmylang run main.my\n```\n" ++
-    "\n### Deeper\n\nNested prose.\n\n## Signatures\n\n```text\n# doc: not-mylang\ndef answer() -> int\n```\n";
+    "\n### Deeper\n\nNested prose.\n\n## Signatures\n\n```text\n# doc: not-mylang\nfunc answer() -> int\n```\n";
 
 // spec: DOCCOV-1
 test "sections resolve by anchor and end at the next heading of the same or higher level" {
@@ -311,14 +311,14 @@ test "a language section needs an executed example and a tooling section a comma
 
 // spec-case: DOCCOV-1
 test "a skipped or prose-tagged block is not an executed example" {
-    try testing.expect(!hasRunnableExample("```mylang\n# doc: skip fragment\ndef main() -> int:\n    return 1\n```\n"));
-    try testing.expect(hasRunnableExample("```my\n\n# doc: check\ndef answer() -> int:\n    return 1\n```\n"));
-    try testing.expect(hasRunnableExample("~~~mylang\ndef main() -> int:\n    return 1\n~~~\n"));
-    try testing.expect(hasDirective("# doc: expect 42\ndef main() -> int:\n    return 42\n", "expect"));
-    try testing.expect(!hasDirective("def main() -> int:\n# doc: skip late\n    return 1\n", "skip"));
+    try testing.expect(!hasRunnableExample("```mylang\n# doc: skip fragment\nfunc main() -> int:\n    return 1\n```\n"));
+    try testing.expect(hasRunnableExample("```my\n\n# doc: check\nfunc answer() -> int:\n    return 1\n```\n"));
+    try testing.expect(hasRunnableExample("~~~mylang\nfunc main() -> int:\n    return 1\n~~~\n"));
+    try testing.expect(hasDirective("# doc: expect 42\nfunc main() -> int:\n    return 42\n", "expect"));
+    try testing.expect(!hasDirective("func main() -> int:\n# doc: skip late\n    return 1\n", "skip"));
 }
 
-const module = "module hex\n\n\n# Lowercase hexadecimal text.\npublic def encode(data: bytes) -> str:\n    return data.hex()\n\n\npublic def decode(text: str) -> bytes:\n    return text\n";
+const module = "\n\n# Lowercase hexadecimal text.\npublic func encode(data: bytes) -> str:\n    return data.hex()\n\n\npublic func decode(text: str) -> bytes:\n    return text\n";
 
 // spec: DOCCOV-2
 test "standard exports are read from source and need a doc comment directly above" {
@@ -342,7 +342,7 @@ test "an export counts as documented only when the section names it as a whole w
 
 // spec-case: DOCCOV-2
 test "result and resource definitions count as documented exports" {
-    const source = "module net\n\n\n# One live stream.\npublic resource Connection: network\n\n\n# One acquisition result.\npublic result Connected:\n    ok: Connection,\n    err: int\n";
+    const source = "\n\n# One live stream.\npublic resource Connection: network\n\n\n# One acquisition result.\npublic result Connected:\n    ok: Connection,\n    err: int\n";
     try testing.expect(documentsExport(source, "Connection"));
     try testing.expect(documentsExport(source, "Connected"));
     try testing.expect(documentsExport(source, "absent") == false);

@@ -7,7 +7,7 @@ const module = "environment.my";
 const declarations =
     \\record Entry:
     \\    present: bool
-    \\    bytes: [4]u8
+    \\    bytes: FixedArray[u8, 4]
     \\    length: u64
     \\
     \\
@@ -43,11 +43,11 @@ const forwarded = declarations ++
     \\    env: Environment
     \\
     \\
-    \\def lookup(auth: Authority) -> Lookup effects(environment):
-    \\    return environment_get[Lookup](auth.env, [75u8])
+    \\func lookup(auth: Authority) -> Lookup effects(environment):
+    \\    return environment_get[Lookup](auth.env, FixedArray[u8, 1]([75u8]))
     \\
     \\
-    \\def main(environment: Environment) -> i64 noio:
+    \\func main(environment: Environment) -> i64 noio:
     \\    match lookup(Authority(env=environment)):
     \\        case Lookup.ok(entry):
     \\            if entry.present:
@@ -66,8 +66,8 @@ fn scenario(allocator: std.mem.Allocator) !void {
 }
 test "environment grants are rejected outside a capability parameter" {
     try reject(declarations ++
-        \\def main() -> i64:
-        \\    match environment_get[Lookup](7, [75u8]):
+        \\func main() -> i64:
+        \\    match environment_get[Lookup](7, FixedArray[u8, 1]([75u8])):
         \\        case Lookup.ok(entry):
         \\            return i64(entry.length)
         \\        case Lookup.err(code):
@@ -80,7 +80,7 @@ test "environment execution reporting and byte conversions release all failed al
 }
 const zero_capacity = declarations ++
     \\record Empty:
-    \\    bytes: [0]u8
+    \\    bytes: FixedArray[u8, 0]
     \\    length: u64
     \\    present: bool
     \\
@@ -90,8 +90,8 @@ const zero_capacity = declarations ++
     \\    err: i64
     \\
     \\
-    \\def main(env: Environment) -> i64:
-    \\    match environment_get[Absent](env, [75u8]):
+    \\func main(env: Environment) -> i64:
+    \\    match environment_get[Absent](env, FixedArray[u8, 1]([75u8])):
     \\        case Absent.ok(entry):
     \\            if entry.present:
     \\                return 1
@@ -101,12 +101,12 @@ const zero_capacity = declarations ++
     \\            return -code
 ;
 const generic_environment = declarations ++
-    \\def lookup[G](cap: Environment) -> Lookup effects(environment):
-    \\    name: [1]u8 = [75u8]
+    \\func lookup[G](cap: Environment) -> Lookup effects(environment):
+    \\    mut name: FixedArray[u8, 1] = [75u8]
     \\    return environment_get[Lookup](cap, name)
     \\
     \\
-    \\def main(cap: Environment) -> i64:
+    \\func main(cap: Environment) -> i64:
     \\    match lookup[bool](cap):
     \\        case Lookup.ok(e):
     \\            return i64(e.length) + i64(e.bytes[0]) + i64(e.bytes[1])
@@ -119,7 +119,7 @@ fn genericEnvironmentScenario(allocator: std.mem.Allocator) !void {
     try c.check();
 }
 const python_get =
-    \\def main(env: Environment) -> i64 effects(environment):
+    \\func main(env: Environment) -> i64 effects(environment):
     \\    match env.get("K"):
     \\        case Some(value):
     \\            return len(value)
@@ -135,8 +135,8 @@ test "python env.get returns Some for present names and None for absent ones" {
 // spec-case: ENVIRONMENT-GET-1
 test "python env.get rejects a dynamic name at check time" {
     try reject(
-        \\def main(env: Environment) -> i64:
-        \\    name = "HOME"
+        \\func main(env: Environment) -> i64:
+        \\    mut name = "HOME"
         \\    _ = env.get(name)
         \\    return 0
     , "E_ENVIRONMENT_NAME");
@@ -149,8 +149,8 @@ test "the raw environment_get spelling is reserved for standard-library sources"
         \\    err: i64
         \\
         \\
-        \\def main(env: Environment) -> i64:
-        \\    _ = environment_get[Lookup](env, [75u8])
+        \\func main(env: Environment) -> i64:
+        \\    _ = environment_get[Lookup](env, FixedArray[u8, 1]([75u8]))
         \\    return 0
     );
     defer c.deinit();
@@ -168,8 +168,8 @@ test "python env.get traps when the grant allowlist denies the name" {
     try t.expectEqualStrings("R_CAPABILITY", denied.trap.code);
 }
 const python_only =
-    \\def main(env: Environment) -> i64 effects(environment):
-    \\    narrowed = env.only("K")
+    \\func main(env: Environment) -> i64 effects(environment):
+    \\    mut narrowed = env.only("K")
     \\    match narrowed.get("K"):
     \\        case Some(value):
     \\            return len(value)
@@ -184,8 +184,8 @@ test "python env.only narrows a read to its literal names" {
 // spec-case: ENVIRONMENT-ONLY-1
 test "python env.only refuses a name outside its scope and a dynamic name" {
     var c = try language.Compilation.initTrusted(t.allocator, module,
-        \\def main(env: Environment) -> i64 effects(environment):
-        \\    narrowed = env.only("OTHER")
+        \\func main(env: Environment) -> i64 effects(environment):
+        \\    mut narrowed = env.only("OTHER")
         \\    match narrowed.get("K"):
         \\        case Some(value):
         \\            return len(value)
@@ -199,15 +199,15 @@ test "python env.only refuses a name outside its scope and a dynamic name" {
     const denied = try native.runWithOptions(&c, .{ .environment = &guest, .arguments = &.{} });
     try t.expectEqualStrings("R_CAPABILITY", denied.trap.code);
     try reject(
-        \\def main(env: Environment) -> i64:
-        \\    name = "K"
+        \\func main(env: Environment) -> i64:
+        \\    mut name = "K"
         \\    _ = env.only(name)
         \\    return 0
     , "E_ENVIRONMENT_NAME");
 }
 const python_names =
-    \\def main(env: Environment) -> i64 effects(environment):
-    \\    names = env.names()
+    \\func main(env: Environment) -> i64 effects(environment):
+    \\    mut names = env.names()
     \\    if names[0] == "HOME":
     \\        return len(names)
     \\    return -1
@@ -219,8 +219,8 @@ test "python env.names reports the sorted allowlist as a list[str]" {
 // spec-case: ENVIRONMENT-NAMES-1
 test "python env.names lists the process environment when no allowlist is set" {
     try lookup(
-        \\def main(env: Environment) -> i64 effects(environment):
-        \\    names = env.names()
+        \\func main(env: Environment) -> i64 effects(environment):
+        \\    mut names = env.names()
         \\    for name in names:
         \\        if name == "K":
         \\            return 1
@@ -230,9 +230,9 @@ test "python env.names lists the process environment when no allowlist is set" {
 // spec-case: ENVIRONMENT-NAMES-1
 test "python env.names on a narrowed environment lists its scope" {
     try lookup(
-        \\def main(env: Environment) -> i64 effects(environment):
-        \\    narrowed = env.only("K")
-        \\    names = narrowed.names()
+        \\func main(env: Environment) -> i64 effects(environment):
+        \\    mut narrowed = env.only("K")
+        \\    mut names = narrowed.names()
         \\    if names[0] == "K":
         \\        return len(names)
         \\    return -1

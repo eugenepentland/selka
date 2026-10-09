@@ -1,4 +1,3 @@
-module byte_builder
 
 # Mutable assembly state for an immutable byte string. The buffer is one managed
 # `byte_buffer`: its header keeps spare capacity, so every append writes straight
@@ -12,14 +11,14 @@ public record Builder:
 
 
 # An empty byte builder.
-public def create() -> Builder:
-    empty: list[int] = []
+public func create() -> Builder:
+    mut empty: int[] = []
     return Builder(buffer=byte_buffer(empty))
 
 
 # Append one octet directly into the buffer's capacity. An out-of-range value
 # leaves the builder unchanged.
-public def append_byte(builder: mut Builder, value: int) -> bool:
+public func append_byte(mut builder: Builder, value: int) -> bool:
     return builder.buffer.append_byte(value)
 
 
@@ -28,18 +27,18 @@ public def append_byte(builder: mut Builder, value: int) -> bool:
 # `len(data)` is rejected with `False` before anything is written, so a rejected
 # range leaves the builder unchanged. An empty range succeeds and changes
 # nothing. `data` may be any byte string or another buffer.
-public def append_range(builder: mut Builder, data: bytes, start: int, end: int) -> bool:
+public func append_range(mut builder: Builder, data: bytes, start: int, end: int) -> bool:
     return builder.buffer.append_range(data, start, end)
 
 
 # Append every octet of `data` in order. An empty span changes nothing.
-public def append(builder: mut Builder, data: bytes):
+public func append(mut builder: Builder, data: bytes):
     _ = builder.buffer.append_range(data, 0, len(data))
 
 
 # Append the UTF-8 encoding of `text`, which the encoder writes straight into
 # the buffer's capacity: no intermediate `bytes` value is built for the text.
-public def append_text(builder: mut Builder, text: str):
+public func append_text(mut builder: Builder, text: str):
     _ = builder.buffer.append_utf8(text)
 
 
@@ -47,7 +46,7 @@ public def append_text(builder: mut Builder, text: str):
 # the buffer's capacity: no intermediate `str` or `bytes` value is built. Every
 # `int` value has a spelling, including the minimum signed value, which has no
 # positive counterpart.
-public def append_int(builder: mut Builder, value: int):
+public func append_int(mut builder: Builder, value: int):
     _ = builder.buffer.append_int(value)
 
 
@@ -56,17 +55,17 @@ public def append_int(builder: mut Builder, value: int):
 # has no fractional part, and `nan`, `inf` and `-inf` for the non-finite values.
 # The spelling is formatted into the buffer's own capacity, so no temporary text
 # or byte value is built for it.
-public def append_float(builder: mut Builder, value: float) -> bool:
+public func append_float(mut builder: Builder, value: float) -> bool:
     return builder.buffer.append_float(value)
 
 
 # Append `count` ASCII spaces, copying them out of one shared literal span. A
 # negative count leaves the builder unchanged.
-public def append_spaces(builder: mut Builder, count: int) -> bool:
+public func append_spaces(mut builder: Builder, count: int) -> bool:
     if count < 0:
         return False
-    spaces = b"                                                                "
-    remaining = count
+    mut spaces = b"                                                                "
+    mut remaining = count
     while remaining >= 64:
         if not builder.buffer.append_range(spaces, 0, 64):
             return False
@@ -80,7 +79,7 @@ public def append_spaces(builder: mut Builder, count: int) -> bool:
 # Grow the buffer's capacity so `extra` more octets fit without reallocating,
 # without changing the finished length. A negative count is rejected with
 # `False` and leaves the builder unchanged.
-public def reserve(builder: mut Builder, extra: int) -> bool:
+public func reserve(mut builder: Builder, extra: int) -> bool:
     return builder.buffer.reserve(extra)
 
 
@@ -88,5 +87,5 @@ public def reserve(builder: mut Builder, extra: int) -> bool:
 # snapshot is a fresh copy that shares no storage with the builder, so later
 # appends — including an append of the snapshot itself — never change an earlier
 # result, and the builder stays usable.
-public def finish(builder: Builder) -> bytes:
+public func finish(builder: Builder) -> bytes:
     return bytes(builder.buffer)

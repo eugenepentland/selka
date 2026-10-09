@@ -1,42 +1,41 @@
-module row_call_indirect
 
-extern def runtime_bench_now(host: Host) -> i64 effects(host)
+extern func runtime_bench_now(host: Host) -> i64 effects(host)
 
-def parse_number(text: str) -> int:
-    match int(text):
+func parse_number(text: str) -> int:
+    match parse_int(text):
         case Some(value):
             return value
         case None:
             return 0
 
-def affine_a(x: int) -> int:
+func affine_a(x: int) -> int:
     return x * 3 + 7
 
 
-def affine_b(x: int) -> int:
+func affine_b(x: int) -> int:
     return x * 5 + 11
 
 
-def main(args: list[str], host: Host, out: Stream) -> int:
+func main(args: str[], host: Host, out: Stream) -> int:
     if len(args) != 3:
         return 2
-    size = parse_number(args[0])
-    iterations = parse_number(args[1])
-    seed = parse_number(args[2])
+    mut size = parse_number(args[0])
+    mut iterations = parse_number(args[1])
+    mut seed = parse_number(args[2])
     if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
         return 2
-    values = [(seed + j * 37) % 1009 for j in range(size)]
-    function = affine_a if seed % 2 == 0 else affine_b
-    checksum = 0
-    start = runtime_bench_now(host)
+    mut values = [for j in range(size) yield (seed + j * 37) % 1009]
+    mut function = if (seed % 2 == 0) then (affine_a) else (affine_b)
+    mut checksum = 0
+    mut start = runtime_bench_now(host)
     for batch in range(iterations):
-        phase = batch % 17
-        pass_total = 0
+        mut phase = batch % 17
+        mut pass_total = 0
         for j in range(size):
-            x = values[j]
-            value = function(x + phase)
+            mut x = values[j]
+            mut value = function(x + phase)
             pass_total += value
         checksum = (checksum + pass_total) % 1000000007
-    elapsed = runtime_bench_now(host) - start
+    mut elapsed = runtime_bench_now(host) - start
     out.print(checksum, elapsed)
     return 0

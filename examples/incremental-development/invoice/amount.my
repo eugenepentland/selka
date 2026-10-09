@@ -1,4 +1,3 @@
-module amount
 
-public def total() -> int effects():
+public func total() -> int effects():
     return 42

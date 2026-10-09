@@ -132,7 +132,7 @@ pub fn Checks(comptime Checker: type) type {
             return impl.checkListAccess(Checker, self, node, operation, temporaries);
         }
         /// Check a list literal, inferring the element type from context or the first
-        /// element; a context that demands `[N]T` builds a fixed array instead.
+        /// element; a fixed-array context requires an explicit constructor.
         pub fn checkListLiteral(self: *Checker, node: ast.Node, inputs: []const ast.NodeId, temporaries: []const typed.Type) Error!typed.Node {
             return impl.checkListLiteral(Checker, self, node, inputs, temporaries);
         }
@@ -200,7 +200,7 @@ fn collectionSyntax(comptime Checker: type, self: *Checker, id: ast.NodeId) Erro
             node.data = .{ .arena_escape = .{ .arena = owner, .value = call.arguments[0] } };
             return node;
         };
-        if (try @import("record_calls.zig").lower(self.allocator, self.src, self.catalog, call, self.sink)) |record| {
+        if (try @import("record_calls.zig").lower(self.allocator, self.src, self.catalog, self.syntax.nodes.items, call, self.sink)) |record| {
             node.data = record.data;
             return node;
         }
@@ -284,9 +284,17 @@ fn listElement(comptime Checker: type, self: *Checker, ty_value: typed.Type, spa
 fn requiresCellEquality(comptime Checker: type, self: *Checker, ty_value: typed.Type) bool {
     return ty_value.isAggregate() and self.catalog.records[ty_value.recordIndex()].collection.contains_cell;
 }
+/// Wrap a growable literal in the exact fixed-array constructor required by its context.
+fn fixedLiteralFix(comptime Checker: type, self: *Checker, node: ast.Node, shape: typed.Array) Error {
+    const element = try typed.surfaceTypeName(self.allocator, shape.element, self.catalog.records);
+    const replacement = try std.fmt.allocPrint(self.allocator, "FixedArray[{s}, {d}]({s})", .{ element, shape.length, self.src.text(node.span) });
+    return self.sink.failFix("E_FIXED_ARRAY_LITERAL", node.span, "an array literal creates a growable array; construct the fixed array explicitly", .{ .span = node.span, .text = replacement });
+}
+
 fn checkListLiteral(comptime Checker: type, self: *Checker, node: ast.Node, inputs: []const ast.NodeId, temporaries: []const typed.Type) Error!typed.Node {
     var expected = self.expected_types.get(node.span);
-    if (expected) |ty_value| if (arrays.fixed(self.catalog, ty_value) != null) return self.checkFixedArray(node, inputs, temporaries, ty_value);
+    if (expected) |ty_value| if (arrays.fixed(self.catalog, ty_value)) |shape|
+        return fixedLiteralFix(Checker, self, node, shape);
     var element: ?typed.Type = if (expected) |ty_value| try listElement(Checker, self, ty_value, node.span) else null;
     if (inputs.len == 0 and expected == null) return self.sink.fail("E_LIST_INFERENCE", node.span, "empty list requires an expected List type");
     const values = try self.allocator.alloc(typed.NodeId, inputs.len);
@@ -305,6 +313,7 @@ fn checkListLiteral(comptime Checker: type, self: *Checker, node: ast.Node, inpu
 fn bindElement(comptime Checker: type, self: *Checker, name: source.Span, slot: typed.LocalId) Error!?typed.LocalId {
     const text = self.src.text(name);
     if (try self.shadows(name)) return self.sink.fail(eShadowing, name, "comprehension binding shadows an active declaration");
+    self.locals.items[@backingInt(slot)].mutable = false;
     self.locals.items[@backingInt(slot)].name = text;
     self.locals.items[@backingInt(slot)].declaration = name;
     self.locals.items[@backingInt(slot)].ownership.initialized = true;
@@ -339,7 +348,10 @@ fn checkComprehension(comptime Checker: type, self: *Checker, node: ast.Node, ea
     const parts = try comprehensionBody(Checker, self, b, node, each, value_slot);
     const slots: ComprehensionSlots = .{ .owner = owner, .index = index, .limit = limit, .slot = value_slot };
     const source_values: ComprehensionSource = .{
-        .iterable = .{ .value = iterable, .body = .{ .expression = each.output } },
+        .iterable = .{ .value = iterable, .body = if (each.filter) |filter|
+            .{ .expressions = try self.allocator.dupe(ast.NodeId, &.{ each.output, filter }) }
+        else
+            .{ .expression = each.output } },
         .output = parts.output,
         .kind = schema.collection.kind,
         .reserve = each.filter == null and !each.set,
@@ -389,6 +401,14 @@ fn checkSetFromIterable(comptime Checker: type, self: *Checker, span: source.Spa
 fn comprehensionBody(comptime Checker: type, self: *Checker, b: collections.Builder(Checker), node: ast.Node, each: ast.Comprehension, slot: typed.LocalId) Error!struct { output: typed.LocalId, body: typed.StatementId } {
     const hidden = try bindElement(Checker, self, each.name, slot);
     defer self.unbindScoped(self.src.text(each.name), hidden);
+    const facts = try self.option_facts.snapshot(self.allocator);
+    defer self.option_facts.restore(facts);
+    const condition_value = if (each.filter) |condition| checked: {
+        const value = try self.expression(condition);
+        try self.require(self.nodes.items[@backingInt(value)].ty, .bool, self.syntax.nodes.items[@backingInt(condition)].span);
+        try self.assumeOption(condition, true);
+        break :checked value;
+    } else null;
     const produced = try self.expression(each.output);
     const produced_type = self.nodes.items[@backingInt(produced)].ty;
     // `{value for ...}` adds each value to a fresh set instead (SET-1).
@@ -398,11 +418,10 @@ fn comprehensionBody(comptime Checker: type, self: *Checker, b: collections.Buil
     const output = try b.local(if (each.set) try set_lower.setType(&self.catalog, produced_type, node.span) else try collections.listType(&self.catalog, produced_type, node.span));
     const sets: set_lower.Builder(Checker) = .{ .b = b };
     const kept = if (each.set) try sets.add(output, produced) else try b.stmt(.{ .discard = try b.operation(output, .append, &.{produced}) });
-    const body = if (each.filter) |condition| guarded: {
-        const test_value = try self.expression(condition);
-        try self.require(self.nodes.items[@backingInt(test_value)].ty, .bool, self.syntax.nodes.items[@backingInt(condition)].span);
-        break :guarded try b.stmt(.{ .branch = .{ .condition = test_value, .then_body = kept, .else_body = null } });
-    } else kept;
+    const body = if (condition_value) |condition|
+        try b.stmt(.{ .branch = .{ .condition = condition, .then_body = kept, .else_body = null } })
+    else
+        kept;
     return .{ .output = output, .body = body };
 }
 /// Build `[value for name in range(...)]` as an ascending integer loop, resolving the
@@ -625,7 +644,10 @@ fn checkCollectionMethod(comptime Checker: type, self: *Checker, node: ast.Node,
     }
     // Only a list's `sort` takes named operands, and passing any operand
     // to it is the Python keyword form.
-    if (std.mem.eql(u8, name, "sort") and call.arguments.len != 0) return self.checkMethodListSort(node, base, temporaries);
+    if (std.mem.eql(u8, name, "sort") and call.arguments.len != 0) {
+        try self.requireWritableRoot(call.base);
+        return self.checkMethodListSort(node, base, temporaries);
+    }
     if (call.argument_names.len != 0) return self.sink.fail(call_argument_code, call.name, "collection methods take their arguments by position; only a list's sort takes key= and reverse=");
     const kind = try methodKind(Checker, self, call.name, call.arguments.len, owner_type);
     if (try fusedByteRange(Checker, self, node, base, kind, call.arguments.len)) |fused| return fused;
@@ -710,6 +732,7 @@ fn checkCollectionSlice(comptime Checker: type, self: *Checker, node: ast.Node, 
 /// Check a list method call or element access whose receiver is still unchecked:
 /// check the receiver, then the access against it.
 fn checkListAccess(comptime Checker: type, self: *Checker, node: ast.Node, operation: ListAccess, temporaries: []const typed.Type) Error!typed.Node {
+    if (operation.kind.mutates()) try self.requireWritableRoot(operation.base);
     const base = try self.expressionWithTemporaries(operation.base, temporaries);
     return checkCollectionAccess(Checker, self, node, .{
         .base = base,
@@ -1095,6 +1118,10 @@ fn checkBufferOperation(comptime Checker: type, self: *Checker, _: ast.Node, ope
     const local = &self.locals.items[@backingInt(owner)];
     if (!local.ty.isAggregate() or !self.catalog.records[local.ty.recordIndex()].isCollection()) return self.sink.fail(eListType, operation.owner, needs_list);
     local.usage.reads += 1;
+    if (operation.kind.mutates()) {
+        if (!local.mutable) return self.sink.fail(eImmutable, operation.owner, "collection update requires a writable binding");
+        self.option_facts.forget(@backingInt(owner));
+    }
     if (typed.isSet(self.catalog.records[local.ty.recordIndex()])) {
         if (operation.kind.mutates()) local.usage.writes += 1;
         const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);

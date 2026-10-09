@@ -12,7 +12,7 @@ fn reject(text: []const u8, code: []const u8) !void {
 fn rejectBody(body: []const u8, code: []const u8) !void {
     const text = try std.mem.concat(t.allocator, u8, &.{
         fixture.declarations, body, "\n\n\n",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     });
     defer t.allocator.free(text);
@@ -26,12 +26,12 @@ const env_call =
     \\    err: i64
     \\
     \\
-    \\def f[T](env: Environment) -> Lookup[T]:
-    \\    name: [0]u8 = []
+    \\func f[T](env: Environment) -> Lookup[T]:
+    \\    mut name: FixedArray[u8, 0] = FixedArray[u8, 0]([])
     \\    return environment_get[Lookup[T]](env, name)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return 0
 ;
 /// The same source is checked as written and with every type parameter erased,
@@ -47,17 +47,17 @@ test "nominal provider environment contracts reject wrong missing extra and rena
         \\record Entry[T]:
         \\    present: bool
         \\    length: u64
-        \\    bytes: [4]i64
+        \\    bytes: FixedArray[i64, 4]
         ,
         \\record Entry[T]:
         \\    present: bool
         \\    length: i64
-        \\    bytes: [4]u8
+        \\    bytes: FixedArray[u8, 4]
         ,
         \\record Entry[T]:
         \\    present: i64
         \\    length: u64
-        \\    bytes: [4]u8
+        \\    bytes: FixedArray[u8, 4]
         ,
         \\record Entry[T]:
         \\    present: bool
@@ -66,18 +66,18 @@ test "nominal provider environment contracts reject wrong missing extra and rena
         \\record Entry[T]:
         \\    present: bool
         \\    length: u64
-        \\    bytes: [4]u8
+        \\    bytes: FixedArray[u8, 4]
         \\    extra: bool
         ,
         \\record Entry[T]:
         \\    exists: bool
         \\    length: u64
-        \\    bytes: [4]u8
+        \\    bytes: FixedArray[u8, 4]
         ,
-        \\union Entry[T]:
-        \\    present: bool,
-        \\    length: u64,
-        \\    bytes: [4]u8
+        \\enum Entry[T]:
+        \\    present(value: bool)
+        \\    length(value: u64)
+        \\    bytes(value: FixedArray[u8, 4])
         ,
     };
     for (schemas) |schema| {
@@ -89,7 +89,7 @@ test "nominal provider environment contracts reject wrong missing extra and rena
         \\record Entry[T: integer]:
         \\    present: bool
         \\    length: u64
-        \\    bytes: [4]T
+        \\    bytes: FixedArray[T, 4]
         \\
         \\
         \\result Lookup[T: integer]:
@@ -97,18 +97,18 @@ test "nominal provider environment contracts reject wrong missing extra and rena
         \\    err: i64
         \\
         \\
-        \\def f[T: integer](env: Environment) -> Lookup[T]:
+        \\func f[T: integer](env: Environment) -> Lookup[T]:
         \\    return environment_get[Lookup[T]](env, [])
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_ENVIRONMENT_RESULT");
     try reject(
         \\record Entry[T]:
         \\    present: bool
         \\    length: u64
-        \\    bytes: [4]u8
+        \\    bytes: FixedArray[u8, 4]
         \\
         \\
         \\result Lookup[T]:
@@ -116,11 +116,11 @@ test "nominal provider environment contracts reject wrong missing extra and rena
         \\    err: i64
         \\
         \\
-        \\def f[T: integer](env: Environment, name: [1]T) -> Lookup[T]:
+        \\func f[T: integer](env: Environment, name: FixedArray[T, 1]) -> Lookup[T]:
         \\    return environment_get[Lookup[T]](env, name)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_ENVIRONMENT_NAME");
 }
@@ -153,7 +153,7 @@ test "nominal provider completion and read contracts reject wrong named shapes i
         , .code = "E_COMPLETION_RESULT" },
         .{ .declaration =
         \\record Chunk[T]:
-        \\    bytes: [4]u8
+        \\    bytes: FixedArray[u8, 4]
         \\    length: u64
         \\    present: bool
         \\
@@ -162,12 +162,12 @@ test "nominal provider completion and read contracts reject wrong named shapes i
         \\    ok: Chunk[T],
         \\    err: i64
         , .body =
-        \\    file = input
+        \\    mut file = input
         \\    return read_resource[R[T]](file)
         , .code = "E_RESOURCE_IO_RESULT" },
         .{ .declaration =
         \\record Chunk[T]:
-        \\    bytes: [4]u8
+        \\    bytes: FixedArray[u8, 4]
         \\    length: u64
         \\    eof: bool
         \\
@@ -176,7 +176,7 @@ test "nominal provider completion and read contracts reject wrong named shapes i
         \\    ok: Chunk[T],
         \\    err: bool
         , .body =
-        \\    file = input
+        \\    mut file = input
         \\    return read_resource[R[T]](file)
         , .code = "E_RESOURCE_IO_RESULT" },
         .{ .declaration =
@@ -184,15 +184,15 @@ test "nominal provider completion and read contracts reject wrong named shapes i
         \\    ok: i64,
         \\    err: i64
         , .body =
-        \\    file = input
-        \\    empty: [0]u8 = []
+        \\    mut file = input
+        \\    mut empty: FixedArray[u8, 0] = FixedArray[u8, 0]([])
         \\    return write_resource[R[T]](file, empty)
         , .code = "E_RESOURCE_IO_RESULT" },
     };
     for (cases) |case| {
         const text = try std.fmt.allocPrint(
             t.allocator,
-            "resource File: filesystem\n\n\n{s}\n\n\ndef f[T](input: File) -> R[T]:\n{s}\n\n\ndef main() -> i64:\n    return 0",
+            "resource File: filesystem\n\n\n{s}\n\n\nfunc f[T](input: File) -> R[T]:\n{s}\n\n\nfunc main() -> i64:\n    return 0",
             .{ case.declaration, case.body },
         );
         defer t.allocator.free(text);
@@ -202,7 +202,7 @@ test "nominal provider completion and read contracts reject wrong named shapes i
         \\resource Other: filesystem
         \\
         \\
-        \\def f[T](input: Other) -> Finish[T]:
+        \\func f[T](input: Other) -> Finish[T]:
         \\    return complete_resource[Finish[T]](input)
     , "E_GENERIC_TYPE");
 }

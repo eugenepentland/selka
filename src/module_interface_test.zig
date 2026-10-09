@@ -9,7 +9,6 @@ const oracle = language.module_interface_oracle;
 const effect_set = language.effect_set;
 
 const shapes_source =
-    \\module shapes
     \\
     \\
     \\public record Inner:
@@ -17,12 +16,11 @@ const shapes_source =
     \\
     \\
     \\public record Outer:
-    \\    items: list[Inner]
+    \\    items: Inner[]
     \\
 ;
 
 const lib_source =
-    \\module lib
     \\import shapes
     \\
     \\
@@ -33,38 +31,38 @@ const lib_source =
     \\    note: int
     \\
     \\
-    \\public def firsts(o: shapes.Outer) -> list[shapes.Inner]:
+    \\public func firsts(o: shapes.Outer) -> shapes.Inner[]:
     \\    return o.items
     \\
     \\
-    \\public def count(o: shapes.Outer) -> int:
-    \\    total = 0
+    \\public func count(o: shapes.Outer) -> int:
+    \\    mut total = 0
     \\    for item in o.items:
     \\        total += item.x
     \\    return total + 3
     \\
     \\
-    \\def helper(n: int) -> int:
+    \\func helper(n: int) -> int:
     \\    if n > 100:
     \\        return helper(n - 1)
     \\    return n + LIMIT
     \\
     \\
-    \\public def twice(x: int) -> int:
+    \\public func twice(x: int) -> int:
     \\    return x * 2
     \\
     \\
-    \\public def first[T](values: list[T]) -> T:
+    \\public func first[T](values: T[]) -> T:
     \\    return values[helper(0) - LIMIT]
     \\
     \\
     \\@deprecated("use count")
-    \\public def old_count(o: shapes.Outer) -> int:
+    \\public func old_count(o: shapes.Outer) -> int:
     \\    return count(o)
     \\
     \\
-    \\def triangle(n: int) -> int:
-    \\    total = 0
+    \\func triangle(n: int) -> int:
+    \\    mut total = 0
     \\    for k in range(n):
     \\        total += k + LIMIT
     \\    return total
@@ -75,14 +73,13 @@ const lib_source =
 ;
 
 const main_source =
-    \\module main
     \\import shapes
     \\import lib
     \\
     \\
-    \\def main() -> int:
-    \\    o = shapes.Outer(items=[shapes.Inner(x=1)])
-    \\    xs = lib.firsts(o)
+    \\func main() -> int:
+    \\    mut o = shapes.Outer(items=[shapes.Inner(x=1)])
+    \\    mut xs = lib.firsts(o)
     \\    return lib.count(o) + lib.twice(xs[0].x) + lib.first([1, 2]) + lib.old_count(o) + lib.TRIANGLE
     \\
 ;
@@ -207,7 +204,7 @@ test "an interface keeps each exported declaration and what it reaches, and only
     try t.expectEqual(@as(usize, 1), lib.imports.len);
     try t.expectEqualStrings("shapes", lib.imports[0]);
     // A declared body is `pass`; the facts that stand in for it travel beside it.
-    try t.expect(std.mem.indexOf(u8, lib.text, "public def count(o: shapes.Outer) -> int:\n    pass") != null);
+    try t.expect(std.mem.indexOf(u8, lib.text, "public func count(o: shapes.Outer) -> int:\n    pass") != null);
     try t.expectEqual(iface.Role.declared, built.role("lib", "count").?);
     // A template keeps its body, and the private helper and constant it names come along.
     try t.expect(std.mem.indexOf(u8, lib.text, "return values[helper(0) - LIMIT]") != null);
@@ -217,7 +214,7 @@ test "an interface keeps each exported declaration and what it reaches, and only
     // A small leaf is declared like any other body; the deprecation stays on its declaration.
     try t.expectEqual(iface.Role.declared, built.role("lib", "twice").?);
     try t.expect(std.mem.indexOf(u8, lib.text, "return x * 2") == null);
-    try t.expect(std.mem.indexOf(u8, lib.text, "@deprecated(\"use count\")\npublic def old_count") != null);
+    try t.expect(std.mem.indexOf(u8, lib.text, "@deprecated(\"use count\")\npublic func old_count") != null);
     // A constant is evaluated where it is used, running the bodies it calls.
     try t.expectEqual(iface.Role.constant, built.role("lib", "TRIANGLE").?);
     try t.expectEqual(iface.Role.evaluated, built.role("lib", "triangle").?);
@@ -302,7 +299,7 @@ test "every edit a dependent can observe changes the interface hash" {
     const base = try hashOf(.{}, "lib");
     // A signature, a fact, a template body, a constant and a deprecation.
     try t.expect(changed(base, try hashOf(.{ .lib = try edit(a, lib_source, "count(o: shapes.Outer) -> int", "count(o: shapes.Outer, bias: int = 0) -> int") }, "lib")));
-    try t.expect(changed(base, try hashOf(.{ .lib = try edit(a, lib_source, "    total = 0\n", "    total = 0\n    extra: list[int] = [1]\n    total += len(extra)\n") }, "lib")));
+    try t.expect(changed(base, try hashOf(.{ .lib = try edit(a, lib_source, "    mut total = 0\n", "    mut total = 0\n    const extra: int[] = [1]\n    total += len(extra)\n") }, "lib")));
     try t.expect(changed(base, try hashOf(.{ .lib = try edit(a, lib_source, "values[helper(0) - LIMIT]", "values[helper(1) - LIMIT - 1]") }, "lib")));
     // A small leaf's body is a declared body like any other: no dependent reads it.
     try t.expectEqualSlices(u8, &base, &(try hashOf(.{ .lib = try edit(a, lib_source, "x * 2", "x * 3") }, "lib")));
@@ -311,7 +308,7 @@ test "every edit a dependent can observe changes the interface hash" {
     try t.expect(changed(base, try hashOf(.{ .lib = try edit(a, lib_source, "use count", "use count instead") }, "lib")));
     // A private helper's fact reaches the interface through the template that
     // calls it; no declared function calls it.
-    try t.expect(changed(base, try hashOf(.{ .lib = try edit(a, lib_source, "    return n + LIMIT", "    grow: list[int] = [n]\n    return len(grow) + LIMIT") }, "lib")));
+    try t.expect(changed(base, try hashOf(.{ .lib = try edit(a, lib_source, "    return n + LIMIT", "    const grow: int[] = [n]\n    return len(grow) + LIMIT") }, "lib")));
     // A field added to a record `lib` reaches only through `list[shapes.Inner]`
     // changes `shapes` and `lib` alike.
     const reshaped = try edit(a, shapes_source, "    x: int\n", "    x: int\n    y: int = 0\n");
@@ -389,4 +386,29 @@ test "a library read from a directory decodes only the interfaces a check import
     try t.expect(single.declaredOnly());
     try t.expectEqual(@as(u32, 2), library.by_name.count());
     try t.expect(library.text("absent.my") == null);
+}
+
+// spec-case: MODULE-INTERFACE-3
+test "module interfaces retain nested static error pattern declarations" {
+    const text =
+        \\enum ParseError:
+        \\    invalid
+        \\    empty
+        \\func parse() -> int fails ParseError:
+        \\    fail ParseError.invalid
+        \\public func check() -> bool:
+        \\    match parse():
+        \\        case Ok(value):
+        \\            return False
+        \\        case Err(ParseError.invalid):
+        \\            return True
+        \\        case Err(ParseError.empty):
+        \\            return False
+        \\func main() -> int:
+        \\    return 0
+    ;
+    var whole: *oracle.Whole = undefined;
+    try oracle.Whole.open(t.allocator, t.io, .{ .root = "", .name = "main", .bytes = text }, &whole);
+    defer whole.deinit();
+    _ = try whole.buildInterfaces();
 }

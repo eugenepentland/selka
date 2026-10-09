@@ -1,28 +1,27 @@
-module i_live_place
 
 
-def change(items: mut list[int]) -> None:
+func change(mut items: int[]) -> Unit:
     items[1] = 9
 
 
 record Box:
-    items: list[int]
+    items: int[]
 
 
-public def test_shared_element_write() -> bool:
-    items = [1, 2]
-    saved = items
-    total = 0
+public func test_shared_element_write() -> bool:
+    mut items = [1, 2]
+    mut saved = items
+    mut total = 0
     for value in items:
         total += value
         items[1] = 9
     return total == 10 and saved == [1, 2]
 
 
-public def test_append_continue_growth() -> bool:
-    items = [1]
-    saved = items
-    total = 0
+public func test_append_continue_growth() -> bool:
+    mut items = [1]
+    mut saved = items
+    mut total = 0
     for value in items:
         total += value
         if value < 4:
@@ -31,29 +30,29 @@ public def test_append_continue_growth() -> bool:
     return total == 10 and saved == [1]
 
 
-public def test_mut_callee_write() -> bool:
-    items = [1, 2]
-    saved = items
-    total = 0
+public func test_mut_callee_write() -> bool:
+    mut items = [1, 2]
+    mut saved = items
+    mut total = 0
     for value in items:
         total += value
         change(mut items)
     return total == 10 and saved == [1, 2]
 
 
-public def test_record_field_write() -> bool:
-    box = Box([1, 2])
-    saved = box
-    total = 0
+public func test_record_field_write() -> bool:
+    mut box = Box(items=[1, 2])
+    mut saved = box
+    mut total = 0
     for value in box.items:
         total += value
         box.items[1] = 9
     return total == 10 and saved.items == [1, 2]
 
 
-public def test_root_rebind_snapshot() -> bool:
-    items = [1, 2]
-    total = 0
+public func test_root_rebind_snapshot() -> bool:
+    mut items = [1, 2]
+    mut total = 0
     for value in items:
         items[1] = 9
         items = [7, 8]
@@ -61,7 +60,7 @@ public def test_root_rebind_snapshot() -> bool:
     return total == 3 and items == [7, 8]
 
 
-def main() -> int:
+func main() -> int:
     assert test_shared_element_write()
     assert test_append_continue_growth()
     assert test_mut_callee_write()

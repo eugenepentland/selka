@@ -22,17 +22,16 @@ const Files = struct {
 };
 const diamond = [_]File{
     .{ .path = "main.my", .bytes =
-    \\module main
     \\import left
     \\import right as r
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return 1
     },
-    .{ .path = "left.my", .bytes = "module left\nimport shared . data\n" },
-    .{ .path = "right.my", .bytes = "module right\nimport shared.data\n" },
-    .{ .path = "shared/data.my", .bytes = "# shared\nmodule shared.data\n" },
+    .{ .path = "left.my", .bytes = "import shared . data\n" },
+    .{ .path = "right.my", .bytes = "import shared.data\n" },
+    .{ .path = "shared/data.my", .bytes = "# shared\n" },
 };
 fn scenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &diamond };
@@ -66,45 +65,41 @@ fn rejection(entries: []const File, options: p.Options, code: []const u8) !void 
     defer t.allocator.free(message);
     try t.expect(std.mem.indexOf(u8, message, code) != null);
 }
-test "module headers reject mismatch duplicate aliases duplicate imports and invalid syntax" {
+test "module imports reject duplicate aliases duplicate imports and invalid syntax" {
     for ([_]struct { text: []const u8, code: []const u8 }{
-        .{ .text = "module other\n", .code = "E_MODULE_NAME" },
-        .{ .text =
-        \\def main() -> i64:
-        \\    return 0
-        , .code = "E_MODULE_HEADER" },
-        .{ .text = "module main\nimport x.a\nimport y.a\n", .code = "E_IMPORT_ALIAS" },
-        .{ .text = "module main\nimport x as a\nimport x as b\n", .code = "E_DUPLICATE_IMPORT" },
-        .{ .text = "module main\nimport ../secret\n", .code = "E_MODULE_HEADER" },
-        .{ .text = "module main\nimport", .code = "E_MODULE_HEADER" },
+        .{ .text = "module other\n", .code = "E_MODULE_HEADER" },
+        .{ .text = "import x.a\nimport y.a\n", .code = "E_IMPORT_ALIAS" },
+        .{ .text = "import x as a\nimport x as b\n", .code = "E_DUPLICATE_IMPORT" },
+        .{ .text = "import ../secret\n", .code = "E_MODULE_HEADER" },
+        .{ .text = "import", .code = "E_MODULE_HEADER" },
     }) |case| try rejection(&.{.{ .path = "main.my", .bytes = case.text }}, .{}, case.code);
 }
 // spec: PROJ-MODULE-NAME-FIX-1
-test "a mismatched module name reports the expected name and the exact header to write" {
+test "a redundant module name reports an exact header deletion" {
     var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main\nimport sexpr.parser\n" },
+        .{ .path = "main.my", .bytes = "import sexpr.parser\n" },
         .{ .path = "sexpr/parser.my", .bytes = "module parser\n" },
     } };
     var project = p.Project.init(t.allocator);
     defer project.deinit();
     try t.expectError(error.SourceError, project.load(files.provider(), "main", .{}));
-    try t.expectEqualStrings("E_MODULE_NAME", project.problem.?.code);
-    try t.expectEqualStrings("declared `module parser`, but this file is `sexpr/parser.my`, so its module name is `sexpr.parser`: " ++
-        "a module's name is its path from the project root without `.my`; write `module sexpr.parser`", project.problem.?.message);
+    try t.expectEqualStrings("E_MODULE_HEADER", project.problem.?.code);
+    try t.expectEqualStrings("", project.problem.?.fix.?.text);
+    try t.expectEqualStrings("sexpr.parser", project.modules.items[project.problem.?.site.module].name);
 }
 // spec: PROJ-2
 test "module cycles report importing and related file locations" {
     var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main\nimport child\n" },
-        .{ .path = "child.my", .bytes = "module child\nimport main\n" },
+        .{ .path = "main.my", .bytes = "import child\n" },
+        .{ .path = "child.my", .bytes = "import main\n" },
     } };
     var project = p.Project.init(t.allocator);
     defer project.deinit();
     try t.expectError(error.SourceError, project.load(files.provider(), "main", .{}));
     const text = try project.renderProblem(t.allocator);
     defer t.allocator.free(text);
-    for ([_][]const u8{ "E_IMPORT_CYCLE", "main -> child -> main", "child.my:2:", "main.my:1:" }) |part| try t.expect(std.mem.indexOf(u8, text, part) != null);
-    try rejection(&.{.{ .path = "main.my", .bytes = "module main\nimport main\n" }}, .{}, "E_IMPORT_CYCLE");
+    for ([_][]const u8{ "E_IMPORT_CYCLE", "main -> child -> main", "child.my:1:", "main.my:1:" }) |part| try t.expect(std.mem.indexOf(u8, text, part) != null);
+    try rejection(&.{.{ .path = "main.my", .bytes = "import main\n" }}, .{}, "E_IMPORT_CYCLE");
 }
 test "module budgets and missing files fail without a partial report" {
     try rejection(&diamond, .{ .max_modules = 2 }, "E_MODULE_LIMIT");
@@ -156,7 +151,7 @@ test "module paths exclude traversal and incomplete state cannot render" {
 }
 
 fn cycleFailure(allocator: std.mem.Allocator) !void {
-    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = "module main\nimport main\n" }} };
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = "import main\n" }} };
     var project = p.Project.init(allocator);
     defer project.deinit();
     project.load(files.provider(), "main", .{}) catch |err| {
@@ -192,10 +187,9 @@ test "module graph reports are deterministic and source digests track body edits
     try t.expectEqualStrings(a, b);
     var changed_files = diamond;
     changed_files[3].bytes =
-        \\module shared.data
         \\
         \\
-        \\def helper() -> i64:
+        \\func helper() -> i64:
         \\    return 42
     ;
     files.entries = &changed_files;
@@ -223,33 +217,31 @@ const report_identity: @import("source_receipt.zig").Identity = .{ .compiler_sha
 fn schemaScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\import data
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         },
         .{ .path = "data.my", .bytes =
-        \\module data
         \\
         \\
         \\public record Point:
         \\    x: u64
-        \\    y: [2]bool
+        \\    y: FixedArray[bool, 2]
         \\
         \\
-        \\public union Choice:
-        \\    empty,
-        \\    point: Point
+        \\public enum Choice:
+        \\    empty
+        \\    point(value: Point)
         \\
         \\
         \\public domain Identity: i16:
-        \\    private def raw(x: i16) -> Identity:
+        \\    private func raw(x: i16) -> Identity:
         \\        return wrap[Identity](x)
         \\
         \\
-        \\public def select(x: Choice) -> Choice effects():
+        \\public func select(x: Choice) -> Choice effects():
         \\    return x
         \\
         \\
@@ -282,15 +274,13 @@ test "checked public schemas retain structure and privacy with allocation failur
 fn schemaReceiptScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\import data
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         },
         .{ .path = "data.my", .bytes =
-        \\module data
         \\
         \\
         \\public record Item:
@@ -325,7 +315,7 @@ fn fillModuleChain(allocator: std.mem.Allocator, entries: []File) !void {
     for (entries, 0..) |*file, i| {
         const name = if (i == 0) "main" else try std.fmt.allocPrint(allocator, "m{d}", .{i});
         file.path = try std.fmt.allocPrint(allocator, "{s}.my", .{name});
-        file.bytes = if (i + 1 == entries.len) try std.fmt.allocPrint(allocator, "module {s}\n", .{name}) else try std.fmt.allocPrint(allocator, "module {s}\nimport m{d}\n", .{ name, i + 1 });
+        file.bytes = if (i + 1 == entries.len) try allocator.dupe(u8, "") else try std.fmt.allocPrint(allocator, "import m{d}\n", .{i + 1});
     }
 }
 
@@ -344,16 +334,14 @@ test "project lifecycle rejects invalid budgets repeated loading and absent diag
 test "project discovery respects newline imports exports and multiline declaration signatures" {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\import helper as h
         \\export h.value
         \\
         \\
-        \\public def main() -> i64 effects():
+        \\public func main() -> i64 effects():
         \\    return h.value()
         },
         .{ .path = "helper.my", .bytes =
-        \\module helper
         \\
         \\
         \\public type Number = i64
@@ -362,7 +350,7 @@ test "project discovery respects newline imports exports and multiline declarati
         \\const ANSWER: Number = 42
         \\
         \\
-        \\public def value() -> Number effects():
+        \\public func value() -> Number effects():
         \\    return ANSWER
         \\
         \\

@@ -2,26 +2,26 @@
 # (NEW-CORE-S5-EXTERN-ABI-1): the C callee reads the register widened to 32 bits,
 # so each argument carries its SysV sign or zero extension. Built with `--link
 # v_extern_narrow.c`; the values come from runtime inputs and from constants.
-extern def widen_i8(host: Host, x: i8) -> i64 effects(host)
-extern def widen_i16(host: Host, x: i16) -> i64 effects(host)
-extern def widen_u8(host: Host, x: u8) -> i64 effects(host)
-extern def widen_u16(host: Host, x: u16) -> i64 effects(host)
-extern def widen_i32(host: Host, x: i32) -> i64 effects(host)
-extern def widen_u32(host: Host, x: u32) -> i64 effects(host)
-extern def widen_bool(host: Host, x: bool) -> i64 effects(host)
-extern def neg_i8(host: Host, x: i64) -> i8 effects(host)
-extern def make_u8(host: Host, x: i64) -> u8 effects(host)
-extern def neg_i16(host: Host, x: i64) -> i16 effects(host)
-extern def make_u16(host: Host, x: i64) -> u16 effects(host)
-extern def is_odd(host: Host, x: i64) -> bool effects(host)
-extern def many(host: Host, a: i64, b: i64, c: i64, d: i64, e: i64, f: i64, g: i64, h: i8, i: u16, x: float, y: float, z: float) -> i64 effects(host)
+extern func widen_i8(host: Host, x: i8) -> i64 effects(host)
+extern func widen_i16(host: Host, x: i16) -> i64 effects(host)
+extern func widen_u8(host: Host, x: u8) -> i64 effects(host)
+extern func widen_u16(host: Host, x: u16) -> i64 effects(host)
+extern func widen_i32(host: Host, x: i32) -> i64 effects(host)
+extern func widen_u32(host: Host, x: u32) -> i64 effects(host)
+extern func widen_bool(host: Host, x: bool) -> i64 effects(host)
+extern func neg_i8(host: Host, x: i64) -> i8 effects(host)
+extern func make_u8(host: Host, x: i64) -> u8 effects(host)
+extern func neg_i16(host: Host, x: i64) -> i16 effects(host)
+extern func make_u16(host: Host, x: i64) -> u16 effects(host)
+extern func is_odd(host: Host, x: i64) -> bool effects(host)
+extern func many(host: Host, a: i64, b: i64, c: i64, d: i64, e: i64, f: i64, g: i64, h: i8, i: u16, x: float, y: float, z: float) -> i64 effects(host)
 
 
-def main(host: Host, out: Stream) -> int:
+func main(host: Host, out: Stream) -> int:
     out.print(widen_i8(host, -5i8), widen_i16(host, -300i16), widen_u8(host, 250u8), widen_u16(host, 65000u16), widen_i32(host, -70000i32), widen_u32(host, 4000000000u32))
     out.print(widen_bool(host, True), widen_bool(host, False), widen_bool(host, is_odd(host, 3)))
-    small = neg_i8(host, 5)
-    wide = neg_i16(host, 300)
+    mut small = neg_i8(host, 5)
+    mut wide = neg_i16(host, 300)
     out.print(small, make_u8(host, 300), wide, make_u16(host, 70000))
     out.print(widen_i8(host, small), widen_i16(host, wide), widen_u8(host, make_u8(host, 255)), widen_u16(host, make_u16(host, 65535)))
     out.print(many(host, 1, 2, 3, 4, 5, 6, 7, small, make_u16(host, 9), 1.0, 2.0, 3.0))

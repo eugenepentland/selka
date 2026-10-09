@@ -1,5 +1,5 @@
-def len(value: int) -> int:
+func len(value: int) -> int:
     return value + 1
 
-def main() -> int:
+func main() -> int:
     return len(41)

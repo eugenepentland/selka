@@ -1,35 +1,34 @@
-module row_word_count
 
 # Split from benchmarks/runtime/expanded/text/main.my; identical timed work.
 
-extern def runtime_bench_now(host: Host) -> i64 effects(host)
+extern func runtime_bench_now(host: Host) -> i64 effects(host)
 
 record Inputs:
     raw: bytes
-    texts: list[str]
-    other: list[str]
-    numbers: list[int]
-    fragments: list[str]
+    texts: str[]
+    other: str[]
+    numbers: int[]
+    fragments: str[]
 
-def number(text: str) -> int:
-    match int(text):
+func number(text: str) -> int:
+    match parse_int(text):
         case Some(value):
             return value
         case None:
             return 0
 
-def score(text: str) -> int:
-    raw = text.encode()
-    result = len(raw)
+func score(text: str) -> int:
+    mut raw = text.encode()
+    mut result = len(raw)
     for value in raw:
         result += value
     return result
 
-def word_job(text: str) -> int:
-    counts: dict[str, int] = {}
+func word_job(text: str) -> int:
+    mut counts: dict[str, int] = {}
     for word in text.split():
-        counts[word] = counts[word] + 1 if word in counts else 1
-    result = 0
+        counts[word] = if (word in counts) then (counts[word] + 1) else (1)
+    mut result = 0
     for word in counts:
         result += score(word) * counts[word] * counts[word]
     return result
@@ -37,40 +36,40 @@ def word_job(text: str) -> int:
 
 # Fixture CSV subset: quoted commas/doubled quotes; LF records; no embedded LF.
 
-def inputs(kind: str, size: int, seed: int) -> Inputs:
-    raw = b""
-    texts: list[str] = []
-    other: list[str] = []
-    numbers: list[int] = []
-    fragments: list[str] = []
-    vocabulary = ["red", "blue", "café", "red", "green", "blue", "naïve", "red"]
-    separators = [" ", "\t", "\n", "  "]
-    chunks = [vocabulary[(seed + j) % 8] + separators[j % 4] for j in range(size)]
-    document = "".join(chunks)
+func inputs(kind: str, size: int, seed: int) -> Inputs:
+    mut raw = b""
+    mut texts: str[] = []
+    mut other: str[] = []
+    mut numbers: int[] = []
+    mut fragments: str[] = []
+    mut vocabulary = ["red", "blue", "café", "red", "green", "blue", "naïve", "red"]
+    mut separators = [" ", "\t", "\n", "  "]
+    mut chunks = [for j in range(size) yield vocabulary[(seed + j) % 8] + separators[j % 4]]
+    mut document = "".join(chunks)
     texts = [document + "red", document + "blue"]
     return Inputs(raw=raw, texts=texts, other=other, numbers=numbers, fragments=fragments)
 
-def kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
-    checksum = 0
+func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+    mut checksum = 0
     for step in range(iterations):
-        cursor = seed + step
-        value = word_job(data.texts[cursor % 2])
+        mut cursor = seed + step
+        mut value = word_job(data.texts[cursor % 2])
         checksum = (checksum + value) % 1000000007
     return checksum
 
-def main(args: list[str], host: Host, out: Stream) -> int:
+func main(args: str[], host: Host, out: Stream) -> int:
     if len(args) != 3:
         return 2
-    kind = "word_count"
-    size = number(args[0])
-    iterations = number(args[1])
-    seed = number(args[2])
+    mut kind = "word_count"
+    mut size = number(args[0])
+    mut iterations = number(args[1])
+    mut seed = number(args[2])
     if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
         return 2
-    data = inputs(kind, size, seed)
-    checksum = 0
-    start = runtime_bench_now(host)
+    mut data = inputs(kind, size, seed)
+    mut checksum = 0
+    mut start = runtime_bench_now(host)
     checksum = kernel(kind, data, iterations, seed)
-    elapsed = runtime_bench_now(host) - start
+    mut elapsed = runtime_bench_now(host) - start
     out.print(checksum, elapsed)
     return 0

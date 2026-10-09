@@ -2,18 +2,18 @@ record Box[T]:
     value: T
 
 
-union Slot[T]:
-    none,
-    some: T
+enum Slot[T]:
+    none
+    some(value: T)
 
 
-def main() -> int:
-    original = Box[int](value=7)
-    changed = original
+func main() -> int:
+    mut original = Box[int](value=7)
+    mut changed = original
     changed.value = 9
-    slot: Slot[Box[int]] = Slot.some(changed)
+    mut slot: Slot[Box[int]] = Slot.some(value=changed)
     match slot:
         case Slot.none:
             return 0
-        case Slot.some(box):
+        case Slot.some(value=box):
             return original.value + box.value

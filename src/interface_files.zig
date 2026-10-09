@@ -58,9 +58,11 @@ pub fn declaredModule(bytes: []const u8) ?[]const u8 {
 }
 
 /// Render one module's interface file. The text is the header, the `module`
-/// line, the first paragraph of the module docstring, then every public
+/// metadata line, the first paragraph of the module docstring, then every public
 /// declaration in source order as a blank-line separated block. The caller
 /// owns the returned bytes; intermediate text lives in the project arena.
+/// The `.api` module line is artifact metadata, not a `.my` source header; its
+/// identity is always the project loader's path-derived module name.
 pub fn render(allocator: std.mem.Allocator, index: *interfaces.Index, module: usize) Error![]u8 {
     var renderer: Renderer = .{ .index = index, .module = module, .arena = index.project.arena.allocator() };
     try renderer.line(header);
@@ -156,13 +158,14 @@ const Renderer = struct {
         const declared = self.index.findFunction(self.index.units[self.module], name) orelse return error.InternalError;
         const signature = declared.signature;
         if (declared.policy.constant) return self.constantLine(declared);
-        try self.print("{s}def {s}", .{ prefix, self.src().text(name) });
+        try self.print("{s}func {s}", .{ prefix, self.src().text(name) });
         try self.typeParameters(signature.type_parameters);
         try self.text("(");
         for (signature.parameters, 0..) |parameter, position| {
             if (position != 0) try self.text(", ");
-            if (signature.keyword_only_from == position) try self.text("*, ");
-            try self.print("{s}: {s}", .{ self.src().text(parameter.name), if (parameter.mut) "mut " else "" });
+            if (parameter.named or (signature.keyword_only_from != null and position >= signature.keyword_only_from.?)) try self.text("named ");
+            if (parameter.mut) try self.text("mut ");
+            try self.print("{s}: ", .{self.src().text(parameter.name)});
             try self.typeText(parameter.ty, signature.type_parameters);
             if (parameter.default_value) |value| {
                 try self.text(" = ");
@@ -171,6 +174,10 @@ const Renderer = struct {
         }
         try self.text(") -> ");
         try self.typeText(signature.return_type, signature.type_parameters);
+        if (signature.failure_type) |failure| {
+            try self.text(" fails ");
+            try self.typeText(failure, signature.type_parameters);
+        }
         if (declared.policy.effect_bound) |bound| {
             try self.text(" ");
             try self.folded(bound.span);
@@ -239,25 +246,30 @@ const Renderer = struct {
     }
 
     fn variantsBlock(self: *Renderer, declared: ast.Variants) Error!void {
-        const keyword = if (declared.fallible) "result" else if (declared.is_union) "union" else "enum";
+        const keyword = if (declared.fallible) "result" else "enum";
         try self.print("public {s} {s}", .{ keyword, self.src().text(declared.name) });
         try self.typeParameters(declared.type_parameters);
         try self.line(":");
         for (declared.cases, 0..) |case, position| {
             try self.print(indent ++ "{s}", .{self.src().text(case.name)});
             if (case.payload) |payload| {
-                try self.text(": ");
+                try self.text(if (declared.fallible) ": " else "(value: ");
                 try self.typeText(payload, declared.type_parameters);
+                if (!declared.fallible) try self.text(")");
             } else if (case.fields.len != 0) {
                 try self.text("(");
                 for (case.fields, 0..) |field, field_position| {
                     if (field_position != 0) try self.text(", ");
                     try self.print("{s}: ", .{self.src().text(field.name)});
                     try self.typeText(field.ty, declared.type_parameters);
+                    if (field.default_value) |value| {
+                        try self.text(" = ");
+                        try self.folded(self.syntax().nodes.items[@backingInt(value)].span);
+                    }
                 }
                 try self.text(")");
             }
-            try self.line(if (position + 1 == declared.cases.len) "" else ",");
+            try self.line(if (declared.fallible and position + 1 != declared.cases.len) "," else "");
         }
     }
 
@@ -366,7 +378,7 @@ const Renderer = struct {
             try out.appendSlice(self.arena, capabilityName(word) orelse word);
         }
         const spelled = typed.surfaceTypeText(self.arena, out.items) catch return error.OutOfMemory;
-        // A callback type reads `def(int) -> int`, as a declaration writes it.
+        // A callback type reads `func(int) -> int`, as a declaration writes it.
         const arrow = std.mem.replaceOwned(u8, self.arena, spelled, ")->", ") -> ") catch return error.OutOfMemory;
         return arrow;
     }
@@ -435,7 +447,7 @@ fn splitBlock(arena: std.mem.Allocator, out: *std.ArrayList(Declaration), block:
             if (!std.mem.startsWith(u8, line, "@")) owner = declarationName(line);
             continue;
         }
-        const definition = std.mem.startsWith(u8, line, indent ++ "def ");
+        const definition = std.mem.startsWith(u8, line, indent ++ "func ") or std.mem.startsWith(u8, line, indent ++ "def ");
         if (!definition and !std.mem.startsWith(u8, line, indent ++ "@")) continue;
         if (member_start == null) member_start = offset;
         head_end = @min(head_end, offset - 1);

@@ -1,4 +1,3 @@
-module number_literals
 
 # Python's numeric literal spellings: hexadecimal, octal and binary integers,
 # underscores between digits, and leading-dot, trailing-dot and underscored
@@ -20,21 +19,21 @@ const ABOVE: bool = 0x10 > 0xF
 const EXTENT: i64 = 0b1000_0000
 
 
-def twice(value: u32) -> u32:
+func twice(value: u32) -> u32:
     return value * 2
 
 
-def clamp_low(value: u32) -> u8:
-    low: u8 = 0xFF
-    total: u32 = 0
+func clamp_low(value: u32) -> u8:
+    mut low: u8 = 0xFF
+    mut total: u32 = 0
     total += 0x10
     if value > 0x0F:
         return low
     return u8(total)
 
 
-def repeat(value: u32) -> u32:
-    total: u32 = 0
+func repeat(value: u32) -> u32:
+    mut total: u32 = 0
     for step in range(0x4):
         total += value
     return total
@@ -51,24 +50,24 @@ record Header:
     flags: u8
 
 
-def scale(value: u32, factor: u32 = 0x10) -> u32:
+func scale(value: u32, factor: u32 = 0x10) -> u32:
     return value * factor
 
 
-def low_byte(value: u32) -> u32:
+func low_byte(value: u32) -> u32:
     return bit_and(value, 0xFF)
 
 
-def magic() -> u32:
+func magic() -> u32:
     return 0xCAFE_BABE
 
 
-def half(value: float) -> float:
+func half(value: float) -> float:
     return value * .5
 
 
 # spec: NUM-LITERAL-1
-public def test_hexadecimal_octal_and_binary_literals_have_their_decimal_value() -> bool:
+public func test_hexadecimal_octal_and_binary_literals_have_their_decimal_value() -> bool:
     if 0xFF != 255 or 0XfF != 255:
         return False
     if 0o17 != 15 or 0O17 != 15:
@@ -81,7 +80,7 @@ public def test_hexadecimal_octal_and_binary_literals_have_their_decimal_value()
 
 
 # spec-case: NUM-LITERAL-1
-public def test_underscores_separate_digits_and_may_follow_a_base_prefix() -> bool:
+public func test_underscores_separate_digits_and_may_follow_a_base_prefix() -> bool:
     if 1_000 != 1000 or 1_0_0_0 != 1000:
         return False
     if 0xDEAD_BEEF != 3735928559 or 0x_FF != 255:
@@ -92,7 +91,7 @@ public def test_underscores_separate_digits_and_may_follow_a_base_prefix() -> bo
 
 
 # spec: NUM-LITERAL-2
-public def test_integer_suffixes_combine_with_every_base() -> bool:
+public func test_integer_suffixes_combine_with_every_base() -> bool:
     if i64(0xFFu8) != 255 or i64(0x7Fi8) != 127:
         return False
     if i64(0b1010u16) != 10 or i64(0o17i32) != 15:
@@ -103,7 +102,7 @@ public def test_integer_suffixes_combine_with_every_base() -> bool:
 
 
 # spec-case: NUM-LITERAL-2
-public def test_a_hexadecimal_suffix_starts_at_the_first_letter_that_is_not_a_digit() -> bool:
+public func test_a_hexadecimal_suffix_starts_at_the_first_letter_that_is_not_a_digit() -> bool:
     if i64(0xABCDEFu32) != 11259375 or i64(0xE5u8) != 229:
         return False
     if i64(0xEu8) != 14 or i64(0x7Bi8) != 123:
@@ -112,7 +111,7 @@ public def test_a_hexadecimal_suffix_starts_at_the_first_letter_that_is_not_a_di
 
 
 # spec-case: NUM-LITERAL-3
-public def test_float_literals_take_leading_dots_trailing_dots_and_underscores() -> bool:
+public func test_float_literals_take_leading_dots_trailing_dots_and_underscores() -> bool:
     if .5 != 0.5 or 5. != 5.0 or -.25 != -0.25:
         return False
     if 1_000.5 != 1000.5 or 0.1_5 != 0.15:
@@ -127,7 +126,7 @@ public def test_float_literals_take_leading_dots_trailing_dots_and_underscores()
 
 
 # spec: NUM-LITERAL-4
-public def test_unsuffixed_literals_take_the_declared_type_in_constants() -> bool:
+public func test_unsuffixed_literals_take_the_declared_type_in_constants() -> bool:
     if i64(MASK) != 4278190080 or i64(TOP) != 4278190080:
         return False
     if MASK != TOP or i64(LOW) != 255 or WIDE != 18446744073709551615:
@@ -138,9 +137,9 @@ public def test_unsuffixed_literals_take_the_declared_type_in_constants() -> boo
 
 
 # spec-case: NUM-LITERAL-4
-public def test_unsuffixed_literals_take_the_declared_type_in_locals_fields_arguments_and_returns() -> bool:
-    wide: u32 = 0xFFFF_FFFF
-    header = Header(magic=0xCAFEBABE, flags=0x80)
+public func test_unsuffixed_literals_take_the_declared_type_in_locals_fields_arguments_and_returns() -> bool:
+    mut wide: u32 = 0xFFFF_FFFF
+    mut header = Header(magic=0xCAFEBABE, flags=0x80)
     if i64(wide) != 4294967295 or i64(header.magic) != 3405691582:
         return False
     if header.magic != 0xCAFEBABE or i64(header.flags) != 128:
@@ -151,35 +150,35 @@ public def test_unsuffixed_literals_take_the_declared_type_in_locals_fields_argu
 
 
 # spec-case: NUM-LITERAL-4
-public def test_compile_time_functions_type_literals_in_bindings_arguments_returns_and_assignments() -> bool:
+public func test_compile_time_functions_type_literals_in_bindings_arguments_returns_and_assignments() -> bool:
     if i64(DOUBLED) != 32 or i64(TWICE_MORE) != 65:
         return False
     return i64(CLAMPED) == 255 and i64(REPEATED) == 64
 
 
 # spec-case: NUM-LITERAL-4
-public def test_a_module_qualified_enum_beside_constants_needs_no_constant_hint() -> bool:
+public func test_a_module_qualified_enum_beside_constants_needs_no_constant_hint() -> bool:
     # The literal hint looks up plain names as constants; a module name such as
     # `number_literal_helpers` is not one and must not be reported as a wrong kind.
-    token = number_literal_helpers.second()
+    mut token = number_literal_helpers.second()
     if token.kind == number_literal_helpers.Kind.A:
         return False
     return number_literal_helpers.second().kind == number_literal_helpers.Kind.B and LOW == 0xFF
 
 
 # spec: NUM-LITERAL-7
-public def test_array_lengths_take_unsuffixed_integer_spellings() -> bool:
-    by_hex: [0x4]i64 = [1, 2, 3, 4]
-    by_decimal: [4]i64 = by_hex
+public func test_array_lengths_take_unsuffixed_integer_spellings() -> bool:
+    mut by_hex: FixedArray[i64, 0x4] = FixedArray[int, 4]([1, 2, 3, 4])
+    mut by_decimal: FixedArray[i64, 4] = by_hex
     if len(by_decimal) != 4 or by_decimal[3] != 4:
         return False
-    by_groups: [1_0]u8 = [1u8, 2u8, 3u8, 4u8, 5u8, 6u8, 7u8, 8u8, 9u8, 10u8]
+    mut by_groups: FixedArray[u8, 1_0] = FixedArray[u8, 10]([1u8, 2u8, 3u8, 4u8, 5u8, 6u8, 7u8, 8u8, 9u8, 10u8])
     if len(by_groups) != 10 or by_groups[9] != 10u8:
         return False
-    by_binary: [0b11]i64 = [7, 8, 9]
-    by_octal: [0o3]i64 = by_binary
+    mut by_binary: FixedArray[i64, 0b11] = FixedArray[int, 3]([7, 8, 9])
+    mut by_octal: FixedArray[i64, 0o3] = by_binary
     return by_octal[2] == 9 and first_of(by_hex) == 1
 
 
-def first_of(items: [0x04]i64) -> i64:
+func first_of(items: FixedArray[i64, 0x04]) -> i64:
     return items[0]

@@ -117,6 +117,7 @@ pub const Type = enum(usize) {
     }
     /// Resolve a builtin type spelling without consulting nominal schemas.
     pub fn fromName(name: []const u8) ?Type {
+        if (std.mem.eql(u8, name, "Unit")) return .unit;
         if (name.len == 0 or std.mem.eql(u8, name, "None")) return .unit;
         if (std.mem.eql(u8, name, "int")) return .i64;
         if (name.len >= 2 and name[0] == '(' and name[name.len - 1] == ')') {

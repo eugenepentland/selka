@@ -43,10 +43,10 @@ test "a named unit used after an indexed-place join remains a valid record repla
     defer arena.deinit();
     const source =
         \\record Holder:
-        \\    value: None
-        \\def main() -> int:
-        \\    empty: None = None
-        \\    values = [Holder(empty)]
+        \\    value: Unit
+        \\func main() -> int:
+        \\    mut empty: Unit = ()
+        \\    mut values = [Holder(value=empty)]
         \\    values[0].value = empty
         \\    return len(values)
     ;
@@ -93,24 +93,24 @@ test "S3 mut places refuse unmodeled selection and interior ancestor pin cases w
     defer arena.deinit();
     const a = arena.allocator();
     const selection =
-        \\def replace_index(rows: mut list[list[int]]) -> int:
+        \\func replace_index(mut rows: int[][]) -> int:
         \\    rows = [[8]]
         \\    return 0
-        \\def add(row: mut list[int], ignored: int) -> None:
+        \\func add(mut row: int[], ignored: int) -> Unit:
         \\    row.append(9)
-        \\def main() -> int:
-        \\    rows = [[1]]
+        \\func main() -> int:
+        \\    mut rows = [[1]]
         \\    add(mut rows[replace_index(mut rows)], 0)
         \\    return len(rows)
     ;
     const interior =
-        \\def tick(parent: mut list[list[int]]) -> int:
+        \\func tick(mut parent: int[][]) -> int:
         \\    parent.append([7])
         \\    return 0
-        \\def add(row: mut list[int], ignored: int) -> None:
+        \\func add(mut row: int[], ignored: int) -> Unit:
         \\    row.append(9)
-        \\def main() -> int:
-        \\    rows = [[[1]], [[2]]]
+        \\func main() -> int:
+        \\    mut rows = [[[1]], [[2]]]
         \\    add(mut rows[1][0], tick(mut rows[1]))
         \\    return len(rows)
     ;

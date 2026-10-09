@@ -1,9 +1,8 @@
-module managed_values_case_4
 
 
-public def program() -> i64:
-    a = {1: 10, 2: 20}
-    b = {2: 20, 1: 10}
+public func program() -> i64:
+    mut a = {1: 10, 2: 20}
+    mut b = {2: 20, 1: 10}
     if a == b:
         return 42
     return 0

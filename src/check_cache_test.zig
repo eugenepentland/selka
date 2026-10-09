@@ -4,11 +4,10 @@ const language = @import("compiler.zig");
 const Cache = language.check_cache.Cache;
 const Files = struct {
     bytes: []const u8 =
-        \\module main
         \\
         \\
-        \\def main() -> i64:
-        \\    unused = 7
+        \\func main() -> i64:
+        \\    mut unused = 7
         \\    return 0
     ,
     fn read(context: ?*anyopaque, allocator: std.mem.Allocator, _: []const u8, _: usize) language.project.ReadError![]u8 {
@@ -38,17 +37,16 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try load(&project, &files);
     const warnings = cache.lookup(&project).?;
     try t.expect(std.mem.indexOf(u8, warnings, "W_UNUSED_BINDING") != null);
-    try t.expect(std.mem.indexOf(u8, warnings, "main.my:5:") != null);
+    try t.expect(std.mem.indexOf(u8, warnings, "main.my:4:") != null);
     const original = project.modules.items[0].src.path;
     project.modules.items[0].src.path = "renamed.my";
     try t.expect(cache.lookup(&project) == null);
     project.modules.items[0].src.path = original;
     try t.expect(cache.lookup(&project) != null);
     files.bytes =
-        \\module main
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 1
     ;
     var changed = language.project.Project.init(allocator);
@@ -101,10 +99,9 @@ test "check cache replacement OutOfMemory preserves the prior successful verdict
     try load(&original, &files);
     failing.fail_index = failing.alloc_index;
     files.bytes =
-        \\module main
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 9
     ;
     try t.expectError(error.OutOfMemory, remember(t.allocator, &cache, &files));

@@ -17,8 +17,10 @@ Each fixture is classified in `selfhost/tests/fixtures/lexer/expect.json`:
   are for cases a stage-0 lexical comparison cannot decide (a later-phase
   error, or a limit a small fixture cannot reach).
 
-The selfhost lexer is built natively once per run with the pinned stage 0
-(or --compiler for the live-compiler gate)
+The selfhost lexer is built natively once per run with the pinned stage 0.
+With --compiler, the live gate copies the import closure to a temporary
+directory, hoists two legacy branch-local state bindings, and applies the live
+compiler's native fix command. The pinned sources and fixture bytes stay intact.
 (``build ... --project``; a module entry is a project entry), and every fixture
 uses that binary.  ``--via-run`` keeps the slower ``mylang run selfhost/lexer.my``
 path for a comparison baseline.  ``--fixture SUBSTRING`` (repeatable) restricts
@@ -32,6 +34,7 @@ import argparse
 import concurrent.futures
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -143,12 +146,43 @@ def first_difference(expected, actual):
     return None
 
 
+def prepare_live_program(directory: Path) -> str:
+    """Migrate a private import closure while retaining the stage-0 sources.
+
+    Two legacy locals cross branch boundaries. Hoist their explicit state
+    before running the compiler's native migration; no token fixtures change.
+    """
+    for name in ("lexer", "source", "token", "diagnostic"):
+        shutil.copyfile(ROOT / "selfhost" / (name + ".my"), directory / (name + ".my"))
+    source_path = directory / "source.my"
+    source_text = source_path.read_text()
+    source_text = source_text.replace("    if len(raw) == len(text):", "    mut offset = 0\n    mut index = 0\n    if len(raw) == len(text):", 1)
+    source_text = source_text.replace("        offset = 0\n", "").replace("        index = 0\n", "")
+    source_path.write_text(source_text)
+    lexer_path = directory / "lexer.my"
+    lexer_text = lexer_path.read_text().replace(
+        "    tokens: list[token.Token] = []\n    index = 0\n",
+        "    tokens: list[token.Token] = []\n    index = 0\n    mut kind = token.TokenKind.ident\n",
+        1,
+    )
+    lexer_path.write_text(lexer_text)
+    program = str(lexer_path)
+    for _ in range(8):
+        result = run(["fix", program])
+        if result.returncode == 0:
+            return program
+        detail = result.stderr.strip() or result.stdout.strip() or "live source migration failed"
+        if "fixes did not settle after 200 rounds" not in detail:
+            raise RuntimeError(detail)
+    raise RuntimeError("live source migration exceeded eight bounded native fix passes")
+
+
 def build_program(output: Path, program: str = PROGRAM) -> int:
     """Build ``program`` once into ``output``; 0 on success, 2 with a message.
 
-    The selfhost programs open with a module header, so the build needs
-    ``--project``: a module entry is a project entry. The compiler has one
-    back end, so the build names none.
+    The program imports sibling modules, so build it with ``--project``.
+    Pinned inputs keep their headers; migrated live inputs derive identity
+    from their temporary file paths.
     """
     command = [str(compiler()), "build", program, "--project", "-o", str(output), "--cache-dir", str(output.parent / "objects")]
     result = subprocess.run(
@@ -236,7 +270,7 @@ def parse_args(argv):
 
 
 def main() -> int:
-    global CURRENT_COMPILER
+    global CURRENT_COMPILER, PROGRAM
     args = parse_args(sys.argv[1:])
     if args.compiler is not None:
         CURRENT_COMPILER = args.compiler.resolve()
@@ -254,10 +288,16 @@ def main() -> int:
     selected = [name for name in names if matches_filter(name, args.fixture)]
     jobs = max(1, min(args.jobs, min(8, os.cpu_count() or 1)))
     with tempfile.TemporaryDirectory(prefix="mylang-lexer-diff-") as tmp:
+        if CURRENT_COMPILER is not None:
+            try:
+                PROGRAM = prepare_live_program(Path(tmp))
+            except RuntimeError as error:
+                print("lexer diff: {}".format(error))
+                return 2
         built = None
         if not args.via_run:
             built = Path(tmp) / "lexer"
-            code = build_program(built)
+            code = build_program(built, PROGRAM)
             if code != 0:
                 return 2
         results = collect(selected, manifest, built, args.via_run, jobs)

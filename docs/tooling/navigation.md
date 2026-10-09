@@ -135,13 +135,13 @@ summary prints exactly what it always printed.
 $ mylang list-interfaces main.my
 module interfaces v1; declarations/signature visibility checked; bodies not type checked
 module main
-  export function double def(x:i64)->i64 effects() ceiling(managed_allocation) tests(0)
-  export function parse def(value:i64)->i64 effects() tests(1)
+  export function double func(x:i64)->i64 effects() ceiling(managed_allocation) tests(0)
+  export function parse func(value:i64)->i64 effects() tests(1)
 $ mylang list-interfaces hole.my
 module interfaces v1; declarations/signature visibility checked; bodies not type checked
 module hole
-  export function double def(x:i64)->i64 effects(unavailable) analysis(declaration-only) ceiling(managed_allocation) tests(unavailable)
-  export function unfinished def(x:i64)->i64 effects(unavailable) analysis(declaration-only) tests(unavailable)
+  export function double func(x:i64)->i64 effects(unavailable) analysis(declaration-only) ceiling(managed_allocation) tests(unavailable)
+  export function unfinished func(x:i64)->i64 effects(unavailable) analysis(declaration-only) tests(unavailable)
 ```
 
 ## Fact status in interface and navigation output

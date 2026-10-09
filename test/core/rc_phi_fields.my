@@ -5,15 +5,15 @@
 
 record Bucket:
     count: int
-    items: list[int]
+    items: int[]
 
 
-def main(args: list[str], out: Stream) -> int:
-    acc = len(args)
-    xs = [j for j in range(3)]
-    ys = [j for j in range(3)]
-    b = Bucket(3, xs)
-    c = Bucket(1, [7])
+func main(args: str[], out: Stream) -> int:
+    mut acc = len(args)
+    mut xs = [for j in range(3) yield j]
+    mut ys = [for j in range(3) yield j]
+    mut b = Bucket(count=3, items=xs)
+    mut c = Bucket(count=1, items=[7])
     for r in range(2):
         acc = acc + len(ys) * 3 + xs[0]
         b.items.append(acc)

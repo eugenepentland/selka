@@ -1,11 +1,10 @@
-module n_float_text
 
 # spec-case: NEW-CORE-S3-NUMBER-1
-public def test_float_text_matches_exact_old_spellings() -> bool:
+public func test_float_text_matches_exact_old_spellings() -> bool:
     return str(-0.0) == "-0.0" and str(0.1) == "0.1" and str(1.0) == "1.0" and f"{0.125:.2f}" == "0.12" and f"{2.675:.2f}" == "2.67" and f"{255:#06x}" == "0x00ff"
 
 # spec-case: NEW-CORE-S3-NUMBER-1
-public def test_float_and_octet_parsing_keep_the_pinned_grammar() -> bool:
+public func test_float_and_octet_parsing_keep_the_pinned_grammar() -> bool:
     match b"prefix  -1_2.5e1 suffix".parse_float_range(6, 16):
         case Some(value):
             if value != -125.0:
@@ -15,7 +14,7 @@ public def test_float_and_octet_parsing_keep_the_pinned_grammar() -> bool:
     return b" \t+4_2\r".parse_int() == Some(42) and "nan".parse_float() != None and "1e+".parse_float() == None
 
 # spec-case: NEW-CORE-S3-NUMBER-1
-public def test_hex_keeps_nul_and_arbitrary_octets() -> bool:
+public func test_hex_keeps_nul_and_arbitrary_octets() -> bool:
     match bytes.fromhex("00aAff80"):
         case Ok(raw):
             if raw != b"\x00\xaa\xff\x80" or raw.hex() != "00aaff80":
@@ -28,6 +27,6 @@ public def test_hex_keeps_nul_and_arbitrary_octets() -> bool:
         case Err(reason):
             return reason == "hexadecimal text requires an even number of hex digits"
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(str(-0.0), str(0.1), f"{0.125:.2f}", f"{255:#06x}")
     return 0

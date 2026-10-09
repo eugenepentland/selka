@@ -1,8 +1,7 @@
-module main
 import strings
 
 
-def expect_int(text: str, wanted: int) -> bool:
+func expect_int(text: str, wanted: int) -> bool:
     match strings.to_int(text):
         case Some(value):
             return value == wanted
@@ -10,7 +9,7 @@ def expect_int(text: str, wanted: int) -> bool:
             return False
 
 
-def rejects_int(text: str) -> bool:
+func rejects_int(text: str) -> bool:
     match strings.to_int(text):
         case Some(_):
             return False
@@ -18,7 +17,7 @@ def rejects_int(text: str) -> bool:
             return True
 
 
-def expect_float(text: str, wanted: float) -> bool:
+func expect_float(text: str, wanted: float) -> bool:
     match strings.to_float(text):
         case Some(value):
             return value == wanted
@@ -26,7 +25,7 @@ def expect_float(text: str, wanted: float) -> bool:
             return False
 
 
-def expect_text(produced: Result[str, strings.Error], wanted: str) -> bool:
+func expect_text(produced: Result[str, strings.Error], wanted: str) -> bool:
     match produced:
         case Ok(text):
             return text == wanted
@@ -34,7 +33,7 @@ def expect_text(produced: Result[str, strings.Error], wanted: str) -> bool:
             return False
 
 
-def rejects_text(produced: Result[str, strings.Error]) -> bool:
+func rejects_text(produced: Result[str, strings.Error]) -> bool:
     match produced:
         case Ok(_):
             return False
@@ -42,7 +41,7 @@ def rejects_text(produced: Result[str, strings.Error]) -> bool:
             return True
 
 
-def classes() -> int:
+func classes() -> int:
     if not strings.is_digit("0123") or strings.is_digit("") or strings.is_digit("1a"):
         return 1
     if not strings.is_alpha("abcZ") or strings.is_alpha("a1"):
@@ -54,7 +53,7 @@ def classes() -> int:
     return 0
 
 
-def searches() -> int:
+func searches() -> int:
     if not strings.starts_with("hello", "hell") or strings.starts_with("h", "hello"):
         return 10
     if not strings.starts_with("hello", "") or not strings.ends_with("hello", ""):
@@ -77,7 +76,7 @@ def searches() -> int:
     return 0
 
 
-def trims() -> int:
+func trims() -> int:
     if strings.strip("  hi \t") != "hi" or strings.strip("   ") != "":
         return 20
     if strings.lstrip(" hi ") != "hi " or strings.rstrip(" hi ") != " hi":
@@ -93,7 +92,7 @@ def trims() -> int:
     return 0
 
 
-def numbers() -> int:
+func numbers() -> int:
     if not expect_int("42", 42) or not expect_int("-42", 0 - 42) or not expect_int("+7", 7):
         return 30
     if not expect_int("-9223372036854775808", 0 - 9223372036854775807 - 1):
@@ -132,7 +131,7 @@ def numbers() -> int:
     return 0
 
 
-def renders() -> int:
+func renders() -> int:
     if not expect_text(strings.format_int(0 - 9223372036854775807 - 1, 10), "-9223372036854775808"):
         return 40
     if not expect_text(strings.format_int(255, 16), "ff") or not expect_text(strings.format_int(0, 2), "0"):
@@ -154,7 +153,7 @@ def renders() -> int:
     return 0
 
 
-def builders() -> int:
+func builders() -> int:
     if not expect_text(strings.pad_left("7", 3, "0"), "007"):
         return 50
     if not expect_text(strings.pad_right("7", 3, "."), "7.."):
@@ -174,8 +173,8 @@ def builders() -> int:
     return 0
 
 
-def main() -> int:
-    checks = [classes(), searches(), trims(), numbers(), renders(), builders()]
+func main() -> int:
+    mut checks = [classes(), searches(), trims(), numbers(), renders(), builders()]
     for value in checks:
         if value != 0:
             return value

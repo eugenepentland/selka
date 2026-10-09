@@ -1,11 +1,10 @@
-module structural_constraints_case_7
 
 
 constraint A[P] = copy + field(value: int)
 constraint B[Q] = copy + field(value: int)
 record Box:
     value: int
-def f[T: A + B](v: T) -> int:
+func f[T: A + B](v: T) -> int:
     return v.value
-public def program() -> int:
+public func program() -> int:
     return f[Box](Box(value=3))

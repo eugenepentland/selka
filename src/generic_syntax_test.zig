@@ -8,11 +8,11 @@ const lexer = @import("lexer.zig");
 const parser = @import("parser.zig");
 const source = @import("source.zig");
 const fixture =
-    \\def choose[T: copy + equality, U: integer](x: T, y: U) -> T:
+    \\func choose[T: copy + equality, U: integer](x: T, y: U) -> T:
     \\    return x
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return choose[i64, u8](1, 2u8)
 ;
 fn scenario(allocator: std.mem.Allocator) !void {
@@ -62,15 +62,15 @@ test "generic syntax retains requirements type arguments and relocated owned met
 test "generic syntax rejects incomplete duplicate and uncallable annotations" {
     const cases = [_]struct { text: []const u8, code: []const u8 }{
         .{ .text =
-        \\def f[](x: i64) -> i64:
+        \\func f[](x: i64) -> i64:
         \\    return x
         , .code = "E_SYNTAX" },
         .{ .text =
-        \\def f[T: copy, T: integer](x: T) -> T:
+        \\func f[T: copy, T: integer](x: T) -> T:
         \\    return x
         , .code = "E_GENERIC_PARAMETER" },
         .{ .text =
-        \\def f[T: copy + copy](x: T) -> T:
+        \\func f[T: copy + copy](x: T) -> T:
         \\    return x
         , .code = "E_GENERIC_REQUIREMENT" },
     };
@@ -81,11 +81,11 @@ test "generic syntax rejects incomplete duplicate and uncallable annotations" {
         try t.expectEqualStrings(case.code, compilation.diagnostics.items[0].code);
     }
     var compilation = try language.Compilation.init(t.allocator, "bad-call.my",
-        \\def f(x: i64) -> i64:
+        \\func f(x: i64) -> i64:
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return f[i64](1)
     );
     defer compilation.deinit();
@@ -100,7 +100,7 @@ test "generic syntax list limits accept sixteen and reject seventeen entries" {
             defer text.deinit();
             const arguments = std.mem.eql(u8, kind, "arguments");
             const parameters = std.mem.eql(u8, kind, "parameters");
-            try text.writer.writeAll(if (arguments) "def main() -> i64:\n    return f[" else if (parameters) "def f[" else "def f[T: ");
+            try text.writer.writeAll(if (arguments) "func main() -> i64:\n    return f[" else if (parameters) "func f[" else "func f[T: ");
             for (0..count) |i| {
                 if (i != 0) try text.writer.writeAll(if (parameters or arguments) ", " else " + ");
                 if (arguments) try text.writer.writeAll("i64") else if (parameters) try text.writer.print("T{d}: copy", .{i}) else try text.writer.print("R{d}", .{i});
@@ -118,11 +118,10 @@ test "generic syntax list limits accept sixteen and reject seventeen entries" {
 
 test "generic syntax preserves qualified module type arguments when formatting" {
     const text =
-        \\module main
         \\import api
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return api.identity[api.Number](1)
     ;
     var compilation = try language.Compilation.init(t.allocator, "main.my", text);
@@ -140,22 +139,21 @@ const named_fixture =
     \\constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
     \\
     \\
-    \\def bare[P: Prices](x: P) -> P:
+    \\func bare[P: Prices](x: P) -> P:
     \\    return x
     \\
     \\
-    \\def mixed[P: Prices + codec + field(tag: bool)](x: P) -> P:
+    \\func mixed[P: Prices + codec + field(tag: bool)](x: P) -> P:
     \\    return x
 ;
 const named_module_fixture =
-    \\module checkout
     \\import contracts
     \\
     \\
     \\constraint Local[P] = copy
     \\
     \\
-    \\public def total[P: contracts.Prices](policy: P) -> int:
+    \\public func total[P: contracts.Prices](policy: P) -> int:
     \\    return 0
 ;
 /// Parse `text` expecting a source error and return the first diagnostic code.
@@ -176,7 +174,7 @@ fn errorMessage(text: []const u8) ![]const u8 {
 fn boundCountParses(count: usize) !bool {
     var text: std.Io.Writer.Allocating = .init(t.allocator);
     defer text.deinit();
-    try text.writer.writeAll("def f[P: ");
+    try text.writer.writeAll("func f[P: ");
     for (0..count) |i| {
         if (i != 0) try text.writer.writeAll(" + ");
         try text.writer.print("N{d}", .{i});
@@ -277,11 +275,11 @@ test "named constraints reject named right-hand references" {
 // spec-case: NAMED-CONSTRAINT-SYNTAX-1
 test "named constraints reject applied bounds and constant-length bounds" {
     try t.expectEqualStrings("E_GENERIC_REQUIREMENT", try errorCode(
-        \\def f[P: Prices[int]](x: P) -> P:
+        \\func f[P: Prices[int]](x: P) -> P:
         \\    return x
     ));
     try t.expectEqualStrings("E_GENERIC_REQUIREMENT", try errorCode(
-        \\def f[const N: Prices](x: i64) -> i64:
+        \\func f[const N: Prices](x: i64) -> i64:
         \\    return x
     ));
 }

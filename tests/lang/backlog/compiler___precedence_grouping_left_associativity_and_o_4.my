@@ -1,8 +1,7 @@
-module compiler___precedence_grouping_left_associativity_and_o_4
 
 # spec-case: CORE-1
-public def test_precedence_grouping_left_associativity_and_o_4() -> bool:
+public func test_precedence_grouping_left_associativity_and_o_4() -> bool:
     return 1 - 3 * 4 == -11
 
-def main() -> int:
+func main() -> int:
     return 0

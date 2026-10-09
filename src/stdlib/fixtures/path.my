@@ -1,8 +1,7 @@
-module main
 import path
 
 
-def joins() -> int:
+func joins() -> int:
     if path.join("/usr", "lib") != "/usr/lib" or path.join("/usr/", "lib") != "/usr/lib":
         return 1
     if path.join("usr", "/lib") != "/lib" or path.join("", "lib") != "lib":
@@ -11,13 +10,13 @@ def joins() -> int:
         return 3
     if path.join_all(["a", "b", "c"]) != "a/b/c":
         return 4
-    empty: list[str] = []
+    mut empty: str[] = []
     if path.join_all(empty) != "":
         return 5
     return 0
 
 
-def splits() -> int:
+func splits() -> int:
     if path.basename("/a/b.txt") != "b.txt" or path.basename("/a/b/") != "":
         return 10
     if path.basename("b.txt") != "b.txt":
@@ -37,7 +36,7 @@ def splits() -> int:
     return 0
 
 
-def shapes() -> int:
+func shapes() -> int:
     if path.normalize("/a//b/./c/../d") != "/a/b/d":
         return 20
     if path.normalize("a/../../b") != "../b" or path.normalize("/../a") != "/a":
@@ -55,8 +54,8 @@ def shapes() -> int:
     return 0
 
 
-def main() -> int:
-    checks = [joins(), splits(), shapes()]
+func main() -> int:
+    mut checks = [joins(), splits(), shapes()]
     for value in checks:
         if value != 0:
             return value

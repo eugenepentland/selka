@@ -33,14 +33,14 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
         \\    value: i64
         \\
         \\
-        \\conversion def convert(src: Source) -> Target:
+        \\conversion func convert(src: Source) -> Target:
         \\    _ = src.ignored
         \\    return Target(value=src.inner.x)
         \\
         \\
-        \\def main() -> i64:
-        \\    source = Source(ignored=True, inner=Inner(x=7))
-        \\    next = source
+        \\func main() -> i64:
+        \\    mut source = Source(ignored=True, inner=Inner(x=7))
+        \\    mut next = source
         \\    next.inner = Inner(x=9)
         \\    return convert(next).value
     );
@@ -69,23 +69,23 @@ test "duplicate discovery retains nominal record and resolved field identities" 
         \\    y: i64
         \\
         \\
-        \\def a(v: A) -> i64:
+        \\func a(v: A) -> i64:
         \\    return v.x
         \\
         \\
-        \\def b(v: B) -> i64:
+        \\func b(v: B) -> i64:
         \\    return v.x
         \\
         \\
-        \\def c(v: A) -> i64:
+        \\func c(v: A) -> i64:
         \\    return v.y
         \\
         \\
-        \\def d(renamed: A) -> i64:
+        \\func d(renamed: A) -> i64:
         \\    return renamed.x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     );
     defer compilation.deinit();
@@ -110,12 +110,12 @@ test "complete conversion accounts named source fields and requires complete des
         \\    y: i64
         \\
         \\
-        \\conversion def convert(src: Source) -> Target:
+        \\conversion func convert(src: Source) -> Target:
         \\    _ = src.ignored
         \\    return Target(y=src.x * 2)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return convert(Source(x=4, ignored=True)).y
     , 8);
     try reject(
@@ -128,11 +128,11 @@ test "complete conversion accounts named source fields and requires complete des
         \\    y: i64
         \\
         \\
-        \\conversion def convert(src: Source) -> Target:
+        \\conversion func convert(src: Source) -> Target:
         \\    return Target(y=src.x)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_INCOMPLETE_CONVERSION");
     try reject(
@@ -145,11 +145,11 @@ test "complete conversion accounts named source fields and requires complete des
         \\    added: bool
         \\
         \\
-        \\conversion def convert(src: Source) -> Target:
+        \\conversion func convert(src: Source) -> Target:
         \\    return Target(y=src.x)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_INCOMPLETE_CONSTRUCTION");
     try result(
@@ -158,11 +158,11 @@ test "complete conversion accounts named source fields and requires complete des
         \\    added: bool
         \\
         \\
-        \\def geometry(src: Source) -> i64:
+        \\func geometry(src: Source) -> i64:
         \\    return src.x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return geometry(Source(x=5, added=True))
     , 5);
     try reject(
@@ -174,15 +174,15 @@ test "complete conversion accounts named source fields and requires complete des
         \\    y: i64
         \\
         \\
-        \\def helper(src: Source) -> i64:
+        \\func helper(src: Source) -> i64:
         \\    return src.x
         \\
         \\
-        \\conversion def convert(src: Source) -> Target:
+        \\conversion func convert(src: Source) -> Target:
         \\    return Target(y=helper(src))
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_INCOMPLETE_CONVERSION");
     try reject(
@@ -194,12 +194,12 @@ test "complete conversion accounts named source fields and requires complete des
         \\    y: i64
         \\
         \\
-        \\conversion def convert(src: Source) -> Target:
-        \\    unused = src.x
+        \\conversion func convert(src: Source) -> Target:
+        \\    mut unused = src.x
         \\    return Target(y=0)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_CONVERSION_BODY");
     try reject(
@@ -207,11 +207,11 @@ test "complete conversion accounts named source fields and requires complete des
         \\    x: i64
         \\
         \\
-        \\conversion def convert(src: Source) -> Source:
+        \\conversion func convert(src: Source) -> Source:
         \\    return src
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_CONVERSION_BODY");
 }
@@ -226,28 +226,28 @@ test "record schemas conversion checking construction update projection and dump
 // spec: EQUALITY-CONTEXT-1
 test "equality carries a field access type into a contextual constructor" {
     try result(
-        \\union Kind:
-        \\    atom: str,
+        \\enum Kind:
+        \\    atom(value: str)
         \\    flag
         \\
         \\
         \\record Hold:
-        \\    opt: Option[str]
+        \\    opt: str?
         \\    kind: Kind
         \\
         \\
-        \\def check(hold: Hold) -> bool:
-        \\    return hold.opt == Some("x") and hold.opt != None and hold.kind == Kind.atom("x")
+        \\func check(hold: Hold) -> bool:
+        \\    return hold.opt == Some("x") and hold.opt != None and hold.kind == Kind.atom(value="x")
         \\
         \\
-        \\def main() -> i64:
-        \\    if check(Hold(opt=Some("x"), kind=Kind.atom("x"))):
+        \\func main() -> i64:
+        \\    if check(Hold(opt=Some("x"), kind=Kind.atom(value="x"))):
         \\        return 7
         \\    return 1
     , 7);
     try reject(
-        \\def main() -> i64:
-        \\    value = Some("x") == Some("x")
+        \\func main() -> i64:
+        \\    mut value = Some("x") == Some("x")
         \\    return 1
     , "E_OPTION_INFERENCE");
 }
@@ -255,7 +255,7 @@ test "equality carries a field access type into a contextual constructor" {
 // spec-case: EQUALITY-CONTEXT-2
 test "equality does not invent an element type for two empty lists" {
     try reject(
-        \\def main() -> int:
+        \\func main() -> int:
         \\    if [] == []:
         \\        return 0
         \\    return 1
@@ -271,9 +271,9 @@ test "record field defaults fill omitted fields in positional and named construc
         \\    label: str = "auto"
         \\
         \\
-        \\def main() -> i64:
-        \\    positional = Config(7)
-        \\    named = Config(label="x")
+        \\func main() -> i64:
+        \\    mut positional = Config(retries=7)
+        \\    mut named = Config(label="x")
         \\    return positional.retries + named.retries + 3
     , 13);
     try reject(
@@ -295,25 +295,25 @@ test "functional record update copies only named fields and leaves the base alon
         \\    verbose: bool = False
         \\
         \\
-        \\def main() -> i64:
-        \\    base = Config(verbose=True)
-        \\    changed = replace(base, retries=5)
+        \\func main() -> i64:
+        \\    mut base = Config(verbose=True)
+        \\    mut changed = replace(base, retries=5)
         \\    if base.retries == 3 and changed.retries == 5 and changed.verbose:
         \\        return 9
         \\    return 0
     , 9);
     try result(
-        \\def main() -> i64:
-        \\    values: [3]int = [1, 2, 3]
-        \\    changed = replace(values, 1, 9)
+        \\func main() -> i64:
+        \\    mut values: FixedArray[int, 3] = FixedArray[int, 3]([1, 2, 3])
+        \\    mut changed = replace(values, 1, 9)
         \\    return changed[0] + changed[1] + changed[2]
     , 13);
     try result(
-        \\def replace(a: int, b: int = 0) -> int:
+        \\func replace(a: int, b: int = 0) -> int:
         \\    return a + b
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return replace(1, b=2)
     , 3);
     try reject(
@@ -321,15 +321,15 @@ test "functional record update copies only named fields and leaves the base alon
         \\    x: int
         \\
         \\
-        \\def main() -> i64:
-        \\    p = P(x=1)
-        \\    q = replace(p, y=2)
+        \\func main() -> i64:
+        \\    mut p = P(x=1)
+        \\    mut q = replace(p, y=2)
         \\    return q.x
     , "E_UNKNOWN_FIELD");
     try reject(
-        \\def main() -> i64:
-        \\    n = 3
-        \\    q = replace(n, x=2)
+        \\func main() -> i64:
+        \\    mut n = 3
+        \\    mut q = replace(n, x=2)
         \\    return q
     , "E_TYPE");
 }

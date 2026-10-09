@@ -2,7 +2,7 @@
  "entries": {
   "09ed6228e9d78a1a761408c5ce8f7550": {
    "case": [
-    "def main() -> int:\n    return len(b\"abc\".split(b\"\"))\n",
+    "func main() -> int:\n    return len(b\"abc\".split(b\"\"))\n",
     []
    ],
    "returncode": 1,
@@ -11,7 +11,7 @@
   },
   "11284280abd25e4907783c0c6d2ff872": {
    "case": [
-    "def make() -> list[bytes]:\n    return b\"a,b,c\".split(b\",\")\n\ndef main() -> int:\n    kept = make()\n    i = 0\n    while i < 60:\n        garbage = (b\"x\" + b\"y\").split(b\"x\")\n        i += 1\n    if kept[2] != b\"c\":\n        return 1\n    return len(kept) + len(b\"-\".join(kept))\n",
+    "func make() -> bytes[]:\n    return b\"a,b,c\".split(b\",\")\n\nfunc main() -> int:\n    mut kept = make()\n    mut i = 0\n    while i < 60:\n        mut garbage = (b\"x\" + b\"y\").split(b\"x\")\n        i += 1\n    if kept[2] != b\"c\":\n        return 1\n    return len(kept) + len(b\"-\".join(kept))\n",
     []
    ],
    "returncode": 8,
@@ -20,7 +20,7 @@
   },
   "2706af214a74c5dea35ae5785703fe6c": {
    "case": [
-    "def main() -> int:\n    values: list[int] = [72, 105]\n    greeting = bytes(values)\n    if greeting != b\"Hi\":\n        return 1\n    octets = greeting.to_list()\n    if len(octets) != 2 or octets[1] != 105:\n        return 2\n    if len(bytes(octets)) != 2:\n        return 3\n    empty: list[int] = []\n    if len(bytes(empty)) != 0:\n        return 4\n    return octets[0] + octets[1]\n",
+    "func main() -> int:\n    mut values: int[] = [72, 105]\n    mut greeting = bytes(values)\n    if greeting != b\"Hi\":\n        return 1\n    mut octets = greeting.to_list()\n    if len(octets) != 2 or octets[1] != 105:\n        return 2\n    if len(bytes(octets)) != 2:\n        return 3\n    mut empty: int[] = []\n    if len(bytes(empty)) != 0:\n        return 4\n    return octets[0] + octets[1]\n",
     []
    ],
    "returncode": 177,
@@ -29,7 +29,7 @@
   },
   "2a6c157c86dbd0cb6bbde91d1c4dd044": {
    "case": [
-    "def main() -> int:\n    values: list[int] = [256]\n    return len(bytes(values))\n",
+    "func main() -> int:\n    mut values: int[] = [256]\n    return len(bytes(values))\n",
     []
    ],
    "returncode": 1,
@@ -38,7 +38,7 @@
   },
   "354878fe763598424e9c4bcbf85f83c1": {
    "case": [
-    "record Packet:\n    kind: str\n    payload: bytes\n\ndef main() -> int:\n    packets: list[Packet] = [Packet(kind=\"hello\", payload=b\"\\x01\"), Packet(kind=\"data\", payload=b\"\\x02\\x03\")]\n    index: dict[str, bytes] = {}\n    for packet in packets:\n        index[packet.kind] = packet.payload\n    if len(index) != 2 or index[\"data\"] != b\"\\x02\\x03\":\n        return 1\n    alias = packets[1]\n    if alias.payload != packets[1].payload:\n        return 2\n    total = 0\n    for value in index[\"data\"]:\n        total += value\n    return total + len(index[\"hello\"])\n",
+    "record Packet:\n    kind: str\n    payload: bytes\n\nfunc main() -> int:\n    mut packets: Packet[] = [Packet(kind=\"hello\", payload=b\"\\x01\"), Packet(kind=\"data\", payload=b\"\\x02\\x03\")]\n    mut index: dict[str, bytes] = {}\n    for packet in packets:\n        index[packet.kind] = packet.payload\n    if len(index) != 2 or index[\"data\"] != b\"\\x02\\x03\":\n        return 1\n    mut alias = packets[1]\n    if alias.payload != packets[1].payload:\n        return 2\n    mut total = 0\n    for value in index[\"data\"]:\n        total += value\n    return total + len(index[\"hello\"])\n",
     []
    ],
    "returncode": 6,
@@ -47,7 +47,7 @@
   },
   "3585866739024396d0ce78d00c2e1f83": {
    "case": [
-    "def main() -> int:\n    header = b\"my\"\n    body = b\"lang\"\n    whole = header + body\n    if len(whole) != 6:\n        return 1\n    if whole[0] != 109 or whole[-1] != 103:\n        return 2\n    if whole[2:6] != body or whole[2:99] != body:\n        return 3\n    if len(whole[-1:0]) != 0 or whole[-99:99] != whole:\n        return 4\n    return whole[0] - 67\n",
+    "func main() -> int:\n    mut header = b\"my\"\n    mut body = b\"lang\"\n    mut whole = header + body\n    if len(whole) != 6:\n        return 1\n    if whole[0] != 109 or whole[-1] != 103:\n        return 2\n    if whole[2:6] != body or whole[2:99] != body:\n        return 3\n    if len(whole[-1:0]) != 0 or whole[-99:99] != whole:\n        return 4\n    return whole[0] - 67\n",
     []
    ],
    "returncode": 42,
@@ -56,7 +56,7 @@
   },
   "4f2cc539409718f4fd95ad91b54ce7ef": {
    "case": [
-    "def text_of(raw: bytes) -> Result[str, str]:\n    return raw.decode()\n\ndef main() -> int:\n    encoded = \"h\\u00e9llo\".encode()\n    if len(encoded) != 6:\n        return 1\n    match text_of(encoded):\n        case Ok(value):\n            if value != \"h\\u00e9llo\":\n                return 2\n        case Err(message):\n            return 0 - len(message)\n    match text_of(b\"\\xff\"):\n        case Ok(other):\n            return 0 - len(other)\n        case Err(message):\n            return len(encoded)\n",
+    "func text_of(raw: bytes) -> Result[str, str]:\n    return raw.decode()\n\nfunc main() -> int:\n    mut encoded = \"h\\u00e9llo\".encode()\n    if len(encoded) != 6:\n        return 1\n    match text_of(encoded):\n        case Ok(value):\n            if value != \"h\\u00e9llo\":\n                return 2\n        case Err(message):\n            return 0 - len(message)\n    match text_of(b\"\\xff\"):\n        case Ok(other):\n            return 0 - len(other)\n        case Err(message):\n            return len(encoded)\n",
     []
    ],
    "returncode": 6,
@@ -65,7 +65,7 @@
   },
   "8768a1365193464c08a7327429fa2576": {
    "case": [
-    "def main() -> int:\n    frame = b\"\\x01\\x02\\x03\\x04\"\n    total = 0\n    for value in frame:\n        total += value\n    for index, value in enumerate(frame):\n        total += index * value\n    return total\n",
+    "func main() -> int:\n    mut frame = b\"\\x01\\x02\\x03\\x04\"\n    mut total = 0\n    for value in frame:\n        total += value\n    for index, value in enumerate(frame):\n        total += index * value\n    return total\n",
     []
    ],
    "returncode": 30,
@@ -74,7 +74,7 @@
   },
   "d0ae9380297d2c294adefc7283678c67": {
    "case": [
-    "def main() -> int:\n    return b\"ab\"[2]\n",
+    "func main() -> int:\n    return b\"ab\"[2]\n",
     []
    ],
    "returncode": 1,
@@ -83,7 +83,7 @@
   },
   "d2d22ec415b791df3316818b2ad72698": {
    "case": [
-    "def main() -> int:\n    values: list[int] = [0 - 1]\n    return len(bytes(values))\n",
+    "func main() -> int:\n    mut values: int[] = [0 - 1]\n    return len(bytes(values))\n",
     []
    ],
    "returncode": 1,
@@ -92,7 +92,7 @@
   },
   "d897a9476bb4f65d4bc6af12ac2415bd": {
    "case": [
-    "def main() -> int:\n    record = b\"GET /index.html\"\n    if not record.startswith(b\"GET \"):\n        return 1\n    if record.endswith(b\".css\"):\n        return 2\n    if record.find(b\"/index\") != 4 or record.find(b\"?query\") != -1:\n        return 3\n    if 47 not in record or b\"html\" not in record:\n        return 4\n    if record == b\"GET /\" or record != b\"GET /index.html\":\n        return 5\n    if b\"\" not in record or record.find(b\"\") != 0:\n        return 6\n    return len(record)\n",
+    "func main() -> int:\n    mut record = b\"GET /index.html\"\n    if not record.startswith(b\"GET \"):\n        return 1\n    if record.endswith(b\".css\"):\n        return 2\n    if record.find(b\"/index\") != 4 or record.find(b\"?query\") != -1:\n        return 3\n    if 47 not in record or b\"html\" not in record:\n        return 4\n    if record == b\"GET /\" or record != b\"GET /index.html\":\n        return 5\n    if b\"\" not in record or record.find(b\"\") != 0:\n        return 6\n    return len(record)\n",
     []
    ],
    "returncode": 15,
@@ -101,7 +101,7 @@
   },
   "e7cd6b995dcd7e20c5b5f9ec67175c9c": {
    "case": [
-    "def parse(digits: str) -> Result[bytes, str]:\n    return bytes.fromhex(digits)\n\ndef main() -> int:\n    raw = b\"\\x0f\\xa0\"\n    if raw.hex() != \"0fa0\":\n        return 1\n    if len(b\"\".hex()) != 0:\n        return 2\n    match parse(\"0fa0\"):\n        case Ok(value):\n            if value != raw:\n                return 3\n        case Err(message):\n            return 0 - len(message)\n    match parse(\"0f0\"):\n        case Ok(value):\n            return 0 - len(value)\n        case Err(message):\n            return len(message)\n",
+    "func parse(digits: str) -> Result[bytes, str]:\n    return bytes.fromhex(digits)\n\nfunc main() -> int:\n    mut raw = b\"\\x0f\\xa0\"\n    if raw.hex() != \"0fa0\":\n        return 1\n    if len(b\"\".hex()) != 0:\n        return 2\n    match parse(\"0fa0\"):\n        case Ok(value):\n            if value != raw:\n                return 3\n        case Err(message):\n            return 0 - len(message)\n    match parse(\"0f0\"):\n        case Ok(value):\n            return 0 - len(value)\n        case Err(message):\n            return len(message)\n",
     []
    ],
    "returncode": 54,
@@ -110,7 +110,7 @@
   },
   "fbf2f4ad4b0490330e90eb1aeaab3090": {
    "case": [
-    "def main() -> int:\n    line = b\"name,age,city\"\n    fields = line.split(b\",\")\n    if len(fields) != 3 or fields[1] != b\"age\":\n        return 1\n    if b\",\".join(fields) != line:\n        return 2\n    edges = b\",a,\".split(b\",\")\n    if len(edges) != 3 or len(edges[0]) != 0 or len(edges[2]) != 0:\n        return 3\n    widths = 0\n    for field in fields:\n        widths += len(field)\n    return widths\n",
+    "func main() -> int:\n    mut line = b\"name,age,city\"\n    mut fields = line.split(b\",\")\n    if len(fields) != 3 or fields[1] != b\"age\":\n        return 1\n    if b\",\".join(fields) != line:\n        return 2\n    mut edges = b\",a,\".split(b\",\")\n    if len(edges) != 3 or len(edges[0]) != 0 or len(edges[2]) != 0:\n        return 3\n    mut widths = 0\n    for field in fields:\n        widths += len(field)\n    return widths\n",
     []
    ],
    "returncode": 11,

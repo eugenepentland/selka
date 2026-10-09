@@ -1,14 +1,13 @@
-module structural_constraints_case_4
 
 
-type Reader = def(int) -> int effects()
-constraint A[P] = copy + op(make(p: P, callback: def([2]P) -> list[P] effects()) -> def(P) -> P effects(output) effects())
-constraint B[Q] = copy + op(make(p: Q, callback: def([2]Q) -> list[Q] effects()) -> def(Q) -> Q effects(output) effects())
+type Reader = func(int) -> int effects()
+constraint A[P] = copy + op(make(p: P, callback: func(FixedArray[P, 2]) -> P[] effects()) -> func(P) -> P effects(output) effects())
+constraint B[Q] = copy + op(make(p: Q, callback: func(FixedArray[Q, 2]) -> Q[] effects()) -> func(Q) -> Q effects(output) effects())
 constraint C[T] = copy + op(read(p: T, reader: Reader) -> int effects())
-constraint D[T] = copy + op(read(p: T, reader: def(int) -> int effects()) -> int effects())
-def unused[T: A + B + op(make(p: T, callback: def([2]T) -> list[T] effects()) -> def(T) -> T effects(output) effects())](p: T) -> int:
+constraint D[T] = copy + op(read(p: T, reader: func(int) -> int effects()) -> int effects())
+func unused[T: A + B + op(make(p: T, callback: func(FixedArray[T, 2]) -> T[] effects()) -> func(T) -> T effects(output) effects())](p: T) -> int:
     return 0
-def concrete[T: C + D](p: T) -> int:
+func concrete[T: C + D](p: T) -> int:
     return 0
-public def program() -> int:
+public func program() -> int:
     return 0

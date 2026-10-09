@@ -1,20 +1,19 @@
-module rc_view_receivers
 
 # spec-case: D2-VIEW-STORAGE-1
-public def test_explicit_snapshot_preserves_prior_values() -> bool:
-    mapping = {1: 7}
-    saved = list(mapping.values())
+public func test_explicit_snapshot_preserves_prior_values() -> bool:
+    mut mapping = {1: 7}
+    mut saved = list(mapping.values())
     mapping[1] = 9
     mapping[2] = 11
     return saved == [7] and list(mapping.values()) == [9, 11]
 
-def replace(values: mut list[int]):
+func replace(mut values: int[]):
     values = [9, 11]
 
 # spec-case: D2-VIEW-STORAGE-1
-public def test_snapshot_mutation_and_rebinding_leave_mapping_independent() -> bool:
-    mapping = {1: 7}
-    saved = list(mapping.values())
+public func test_snapshot_mutation_and_rebinding_leave_mapping_independent() -> bool:
+    mut mapping = {1: 7}
+    mut saved = list(mapping.values())
     saved.append(8)
     replace(mut saved)
     return saved == [9, 11] and mapping[1] == 7

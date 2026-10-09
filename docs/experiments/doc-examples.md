@@ -80,26 +80,24 @@ Grouped blocks become one project checked or run through `run-project`:
 # doc: project greeting
 # doc: file helper.my
 # doc: expect 42
-module helper
 
-public def answer() -> int effects():
+public func answer() -> int effects():
     return 42
 ```
 
 ```mylang
 # doc: project greeting
 # doc: file main.my
-module main
 import helper
 
-def main() -> int:
+func main() -> int:
     return helper.answer()
 ```
 
 ## The mis-tag lint
 
 A block tagged `text`, `rust`, `python`, `go`, or left untagged, whose content has
-`def main`, `fn main` or `module ` at the start of a line, is reported as a mis-tagged
+`func main`, `fn main` or `module ` at the start of a line, is reported as a mis-tagged
 example and fails the run. Otherwise a stale example could hide behind a fence that
 never executes. Genuinely non-mylang blocks opt out with `# doc: not-mylang` as the
 first line, or with an info string like `text notest` when the block should not carry

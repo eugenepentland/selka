@@ -1,4 +1,3 @@
-module propagation_case_6
 
 
 enum E:
@@ -15,11 +14,12 @@ result Output:
     err: E
 
 
-def mig_test_value(r: Input) -> Output:
-    return Ok(r? > 5)
+func mig_test_value(r: Input) -> Output:
+    const value = try r
+    return Ok(value > 5)
 
 
-def handle(r: Output) -> i64:
+func handle(r: Output) -> i64:
     match r:
         case Output.ok(value):
             if value:
@@ -31,5 +31,5 @@ def handle(r: Output) -> i64:
                     return 3
 
 
-public def program() -> i64:
+public func program() -> i64:
     return handle(mig_test_value(Ok(8))) + handle(mig_test_value(Err(E.missing)))

@@ -38,6 +38,14 @@ pub const Walker = struct {
             try self.expr(values[i]);
         }
     }
+    fn orderedArguments(self: *Walker, values: []const typed.NodeId, order: []const usize) !void {
+        if (order.len == 0) return self.arguments(values);
+        var i = order.len;
+        while (i != 0) {
+            i -= 1;
+            try self.expr(values[order[i]]);
+        }
+    }
     fn fields(self: *Walker, values: []const typed.FieldInit) !void {
         var i = values.len;
         while (i != 0) {
@@ -103,11 +111,12 @@ pub const Walker = struct {
                 .record => |values| try self.fields(values),
                 .buffer_operation => |op| try self.arguments(op.arguments),
                 .invoke => |call| {
-                    try self.arguments(call.arguments);
+                    try self.orderedArguments(call.arguments, call.evaluation_order);
+                    if (call.evaluation) |evaluation| try self.stmt(evaluation.body);
                     try self.expr(call.callee);
                 },
                 .call => |call| {
-                    try self.arguments(call.arguments);
+                    try self.orderedArguments(call.arguments, call.evaluation_order);
                     if (call.evaluation) |evaluation| try self.stmt(evaluation.body);
                 },
                 .field => |field| try self.expr(field.base),

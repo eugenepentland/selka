@@ -1,10 +1,9 @@
-module python_strings
 
 
 # spec: PY-STR-1
-public def test_trimming_case_mapping_and_padding_copy_the_receiver_without_changing_it() -> bool:
-    padded = "  value  "
-    score = 0
+public func test_trimming_case_mapping_and_padding_copy_the_receiver_without_changing_it() -> bool:
+    mut padded = "  value  "
+    mut score = 0
     if padded.strip() == "value":
         score = score + 1
     if padded.lstrip() == "value  ":
@@ -21,9 +20,9 @@ public def test_trimming_case_mapping_and_padding_copy_the_receiver_without_chan
 
 
 # spec: PY-STR-2
-public def test_search_replacement_and_classification_follow_python_answers() -> bool:
-    text = "a,b,a"
-    score = 0
+public func test_search_replacement_and_classification_follow_python_answers() -> bool:
+    mut text = "a,b,a"
+    mut score = 0
     if text.replace("a", "z") == "z,b,z":
         score = score + 1
     if text.find("b") == 2 and text.find("q") == -1:
@@ -40,20 +39,20 @@ public def test_search_replacement_and_classification_follow_python_answers() ->
 
 
 # spec: PY-STR-3
-public def test_splitlines_drops_terminators_and_int_float_parse_a_whole_string() -> bool:
-    lines = "a\nb\r\nc".splitlines()
-    total = len(lines) * 10
-    match int("12"):
+public func test_splitlines_drops_terminators_and_int_float_parse_a_whole_string() -> bool:
+    mut lines = "a\nb\r\nc".splitlines()
+    mut total = len(lines) * 10
+    match parse_int("12"):
         case Some(value):
             total = total + value
         case None:
             total = total - 1
-    match int("12x"):
+    match parse_int("12x"):
         case Some(value):
             total = total + value
         case None:
             total = total
-    match float("0.5"):
+    match parse_float("0.5"):
         case Some(value):
             total = total + int(value * 2.0)
         case None:
@@ -61,5 +60,5 @@ public def test_splitlines_drops_terminators_and_int_float_parse_a_whole_string(
     return total - 1 == 42
 
 
-def main() -> int:
+func main() -> int:
     return 0

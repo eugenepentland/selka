@@ -1,61 +1,60 @@
-module rc_semantic_publication
 
 
-public def test_repeated_optional_unwrap_replaces_a_private_loan_with_an_owner() -> bool:
-    words: list[Option[str]] = [Some("left" + "0"), None, Some("right" + "2"), None]
-    joined = ""
+public func test_repeated_optional_unwrap_replaces_a_private_loan_with_an_owner() -> bool:
+    mut words: str?[] = [Some("left" + "0"), None, Some("right" + "2"), None]
+    mut joined = ""
     for word in words:
         joined = joined + word.unwrap_or(".")
     return joined == "left0.right2."
 
 
-public def test_shallow_copy_marks_reused_children_before_a_later_view() -> bool:
-    source = [{1: 7}]
-    copied = source.copy()
-    live = list(copied[0].values())
+public func test_shallow_copy_marks_reused_children_before_a_later_view() -> bool:
+    mut source = [{1: 7}]
+    mut copied = source.copy()
+    mut live = list(copied[0].values())
     copied[0][1] = 13
     return list(live) == [7] and copied[0][1] == 13 and source[0][1] == 7
 
 
-public def test_slice_marks_reused_children_before_a_later_view() -> bool:
-    source = [{1: 7}]
-    copied = source[:]
-    live = list(copied[0].values())
+public func test_slice_marks_reused_children_before_a_later_view() -> bool:
+    mut source = [{1: 7}]
+    mut copied = source[:]
+    mut live = list(copied[0].values())
     copied[0][1] = 13
     return list(live) == [7] and copied[0][1] == 13 and source[0][1] == 7
 
 
 record PlaceFields:
-    items: list[int]
-    rows: list[list[int]]
-    mapping: dict[int, list[int]]
+    items: int[]
+    rows: int[][]
+    mapping: dict[int, int[]]
 
 
-def fields() -> PlaceFields:
-    return PlaceFields([1], [[3]], {0: [5]})
+func fields() -> PlaceFields:
+    return PlaceFields(items=[1], rows=[[3]], mapping={0: [5]})
 
 
-def selected(indices: mut list[int]) -> int:
+func selected(mut indices: int[]) -> int:
     return indices.pop()
 
 
-public def test_augmented_field_detaches_an_owned_edge_from_a_private_capture() -> bool:
-    receiver = fields()
-    before = receiver
+public func test_augmented_field_detaches_an_owned_edge_from_a_private_capture() -> bool:
+    mut receiver = fields()
+    mut before = receiver
     receiver.items += [2]
     return receiver.items == [1, 2] and before.items == [1]
 
 
-public def test_dictionary_field_detachment_preserves_the_captured_snapshot() -> bool:
-    receiver = fields()
-    before = receiver
+public func test_dictionary_field_detachment_preserves_the_captured_snapshot() -> bool:
+    mut receiver = fields()
+    mut before = receiver
     receiver.mapping[0].append(6)
     return receiver.mapping[0] == [5, 6] and before.mapping[0] == [5]
 
 
-public def test_scoped_field_path_keeps_the_original_snapshot_during_a_callback() -> bool:
-    receiver = fields()
-    before = receiver
-    indices = [0]
+public func test_scoped_field_path_keeps_the_original_snapshot_during_a_callback() -> bool:
+    mut receiver = fields()
+    mut before = receiver
+    mut indices = [0]
     receiver.rows[selected(mut indices)].append(4)
     return receiver.rows[0] == [3, 4] and before.rows[0] == [3] and len(indices) == 0

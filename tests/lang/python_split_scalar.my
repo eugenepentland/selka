@@ -1,11 +1,10 @@
-module python_split_scalar
 
 
 # The no-argument split breaks on runs of ASCII whitespace and drops empty parts.
 # spec: PY-SPLIT-1
-public def test_whitespace_split_drops_empty_parts() -> bool:
-    words = "  one two\tthree  ".split()
-    score = 0
+public func test_whitespace_split_drops_empty_parts() -> bool:
+    mut words = "  one two\tthree  ".split()
+    mut score = 0
     if len(words) == 3:
         score = score + 1
     if words[0] == "one" and words[1] == "two" and words[2] == "three":
@@ -23,8 +22,8 @@ public def test_whitespace_split_drops_empty_parts() -> bool:
 
 # The separator form keeps its exact-separator meaning, byte strings included.
 # spec: PY-SPLIT-2
-public def test_separator_split_is_unchanged() -> bool:
-    score = 0
+public func test_separator_split_is_unchanged() -> bool:
+    mut score = 0
     if len("a,b,c".split(",")) == 3:
         score = score + 1
     if len("a,,b".split(",")) == 3:
@@ -42,10 +41,10 @@ public def test_separator_split_is_unchanged() -> bool:
 
 # A byte string splits on the same six ASCII whitespace octets.
 # spec: PY-SPLIT-3
-public def test_byte_string_whitespace_split_follows_python() -> bool:
-    raw = b" a\tb "
-    parts = raw.split()
-    score = 0
+public func test_byte_string_whitespace_split_follows_python() -> bool:
+    mut raw = b" a\tb "
+    mut parts = raw.split()
+    mut score = 0
     if len(parts) == 2:
         score = score + 1
     if parts[0] == b"a" and parts[1] == b"b":
@@ -63,13 +62,13 @@ public def test_byte_string_whitespace_split_follows_python() -> bool:
 
 # `ord` of a one-scalar literal folds, and the runtime forms agree with Python.
 # spec: PY-SCALAR-1
-public def test_ord_and_chr_answer_one_unicode_scalar() -> bool:
-    score = 0
+public func test_ord_and_chr_answer_one_unicode_scalar() -> bool:
+    mut score = 0
     if ord("A") == 65 and ord("m") == 109:
         score = score + 1
     if ord("é") == 233 and ord("😀") == 128512:
         score = score + 2
-    marker = "m"
+    mut marker = "m"
     if ord(marker) == ord("m"):
         score = score + 4
     if chr(65) == "A" and chr(233) == "é" and chr(128512) == "😀":
@@ -81,5 +80,5 @@ public def test_ord_and_chr_answer_one_unicode_scalar() -> bool:
     return score == 42
 
 
-def main() -> int:
+func main() -> int:
     return 0

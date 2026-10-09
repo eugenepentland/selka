@@ -1,9 +1,8 @@
-module c_trap_handles
 import network
 
-extern def trap_flag(host: Host) -> int effects(host)
+extern func trap_flag(host: Host) -> int effects(host)
 
-def main(net: Network, host: Host) -> int:
+func main(net: Network, host: Host) -> int:
     match network.connect(net.host("127.0.0.1:1234")):
         case network.Connected.err(_):
             return 2

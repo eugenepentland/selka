@@ -2,28 +2,28 @@
 # inline shape: wide records, fixed arrays, variants, list element writes and
 # appends (including a value read from the same list) and arena values.
 record Wide:
-    a: list[int]
-    b: list[int]
+    a: int[]
+    b: int[]
     c: bytes
-    d: list[int]
+    d: int[]
     e: bytes
-    f: list[int]
-    g: list[int]
+    f: int[]
+    g: int[]
     h: bytes
-    i: list[int]
-    j: list[int]
+    i: int[]
+    j: int[]
     count: int
 
 
-union Piece:
-    none,
-    text: bytes,
-    items: list[int],
-    pair: Wide
+enum Piece:
+    none
+    text(value: bytes)
+    items(value: int[])
+    pair(value: Wide)
 
 
 record Grid:
-    rows: [3]list[int]
+    rows: FixedArray[int[], 3]
     label: bytes
 
 
@@ -33,45 +33,45 @@ record Point:
 
 
 record Aliased:
-    left: list[int]
-    right: list[int]
+    left: int[]
+    right: int[]
 
 
-union AliasChoice:
-    none,
-    both: Aliased
+enum AliasChoice:
+    none
+    both(value: Aliased)
 
 
-def wide(seed: int) -> Wide:
-    return Wide([seed], [seed + 1], b"c", [seed + 3], b"e", [seed + 5], [seed + 6], b"h", [seed + 8], [seed + 9], 10)
+func wide(seed: int) -> Wide:
+    return Wide(a=[seed], b=[seed + 1], c=b"c", d=[seed + 3], e=b"e", f=[seed + 5], g=[seed + 6], h=b"h", i=[seed + 8], j=[seed + 9], count=10)
 
 
-def total(value: Wide) -> int:
+func total(value: Wide) -> int:
     return value.a[0] + value.b[0] + value.d[0] + value.f[0] + value.g[0] + value.i[0] + value.j[0] + value.count
 
 
-def piece_size(piece: Piece) -> int:
+func piece_size(piece: Piece) -> int:
     match piece:
         case Piece.none:
             return 0
-        case Piece.text(data):
+        case Piece.text(value=data):
             return len(data)
-        case Piece.items(values):
+        case Piece.items(value=values):
             return len(values)
-        case Piece.pair(value):
+        case Piece.pair(value=value):
             return total(value)
 
 
-def grid(seed: int) -> Grid:
-    return Grid([[seed], [seed, seed], [seed, seed, seed]], b"grid")
+func grid(seed: int) -> Grid:
+    return Grid(rows=FixedArray[int[], 3]([[seed], [seed, seed], [seed, seed, seed]]), label=b"grid")
 
 
-public def test_wide_records_copy_and_release_every_edge() -> bool:
-    kept = wide(0)
-    index = 0
+public func test_wide_records_copy_and_release_every_edge() -> bool:
+    mut kept = wide(0)
+    mut index = 0
     while index < 200:
-        value = wide(index)
-        copy = value
+        mut value = wide(index)
+        mut copy = value
         value.a = [99]
         if index == 7:
             kept = copy
@@ -79,75 +79,75 @@ public def test_wide_records_copy_and_release_every_edge() -> bool:
     return total(kept) == 7 * 7 + 42 and kept.a[0] == 7
 
 
-public def test_fixed_arrays_of_lists_keep_independent_rows() -> bool:
-    first = grid(1)
-    second = first
+public func test_fixed_arrays_of_lists_keep_independent_rows() -> bool:
+    mut first = grid(1)
+    mut second = first
     second.rows[1] = [5]
-    index = 0
-    sum = 0
+    mut index = 0
+    mut sum = 0
     while index < 3:
         sum += len(first.rows[index]) + len(second.rows[index])
         index += 1
     return sum == 1 + 2 + 3 + 1 + 1 + 3 and first.rows[1][1] == 1 and second.rows[1][0] == 5
 
 
-public def test_variant_arms_move_through_lists() -> bool:
-    pieces: list[Piece] = []
-    index = 0
+public func test_variant_arms_move_through_lists() -> bool:
+    mut pieces: Piece[] = []
+    mut index = 0
     while index < 60:
         if index % 3 == 0:
-            pieces.append(Piece.text(b"abc"))
+            pieces.append(Piece.text(value=b"abc"))
         elif index % 3 == 1:
-            pieces.append(Piece.items([index, index]))
+            pieces.append(Piece.items(value=[index, index]))
         else:
-            pieces.append(Piece.pair(wide(1)))
+            pieces.append(Piece.pair(value=wide(1)))
         index += 1
     pieces[1] = Piece.none
     pieces[2] = pieces[2]
-    sum = 0
+    mut sum = 0
     for piece in pieces:
         sum += piece_size(piece)
     return sum == 20 * 3 + 19 * 2 + 20 * (7 + 42)
 
 
-public def test_list_appends_of_own_elements_and_plain_records() -> bool:
-    rows: list[list[int]] = [[1], [2]]
-    index = 0
+public func test_list_appends_of_own_elements_and_plain_records() -> bool:
+    mut rows: int[][] = [[1], [2]]
+    mut index = 0
     while index < 40:
         rows.append(rows[index])
         index += 1
-    points: list[Point] = []
-    step = 0
+    mut points: Point[] = []
+    mut step = 0
     while step < 100:
-        points.append(Point(step, step + 1))
+        points.append(Point(x=step, y=step + 1))
         step += 1
     rows[0].append(5)
     return len(rows) == 42 and rows[41][0] == 2 and len(rows[40]) == 1 and len(rows[0]) == 2 and points[99].y == 100
 
 
-public def test_list_element_replacement_releases_the_old_value() -> bool:
-    values: list[Wide] = [wide(0), wide(1)]
-    saved = values[0]
-    index = 0
+public func test_list_element_replacement_releases_the_old_value() -> bool:
+    mut values: Wide[] = [wide(0), wide(1)]
+    mut saved = values[0]
+    mut index = 0
     while index < 50:
         values[index % 2] = wide(index)
         index += 1
     return total(values[0]) == 7 * 48 + 42 and total(values[1]) == 7 * 49 + 42 and saved.a[0] == 0
 
 
-public def test_repeated_variant_edges_retain_an_independent_snapshot() -> bool:
-    row = [17]
-    pair = Aliased(row, row)
-    variants = [AliasChoice.both(pair)]
-    index = 0
+public func test_repeated_variant_edges_retain_an_independent_snapshot() -> bool:
+    mut row = [17]
+    mut pair = Aliased(left=row, right=row)
+    mut variants = [AliasChoice.both(value=pair)]
+    mut index = 0
     while index < 40:
         variants.append(variants[index])
         index += 1
-    snapshot = variants[20]
+    mut snapshot = variants[20]
     pair.left.append(29)
     row.append(31)
     match snapshot:
         case AliasChoice.none:
             return False
-        case AliasChoice.both(saved):
+        case AliasChoice.both(value=saved):
             return len(variants) == 41 and len(saved.left) == 1 and len(saved.right) == 1 and saved.left[0] == 17 and saved.right[0] == 17 and len(pair.left) == 2 and len(pair.right) == 1 and len(row) == 2

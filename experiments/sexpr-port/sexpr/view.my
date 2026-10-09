@@ -1,4 +1,3 @@
-module sexpr.view
 
 # A byte range of an immutable source buffer, without a copy.
 #
@@ -23,18 +22,18 @@ public record View:
 
 
 # A view of an empty suffix of `source`; the start of a scan.
-public def at(source: bytes, start: int) -> View:
+public func at(source: bytes, start: int) -> View:
     return View(source=source, start=start, end=start)
 
 
 # The number of bytes the view covers.
-public def view_len(found: View) -> int:
+public func view_len(found: View) -> int:
     return found.end - found.start
 
 
 # The covered bytes. This is a copy of the range, not a share of it; use it only
 # where a real `bytes` value is required.
-public def bytes_of(found: View) -> bytes:
+public func bytes_of(found: View) -> bytes:
     if found.end <= found.start:
         return b""
     return found.source[found.start:found.end]
@@ -42,14 +41,14 @@ public def bytes_of(found: View) -> bytes:
 
 # The text of the covered range, or a reason when those bytes are not UTF-8.
 # A parser that only retains spellings never calls this.
-public def text_of(found: View) -> Result[str, str]:
+public func text_of(found: View) -> Result[str, str]:
     return found.source[found.start:found.end].decode()
 
 
 # Whether the range repeats the ASCII text `spelling`. Used for operators, unit
 # suffixes and every other fixed word the reader compares against, so those
 # comparisons need no decoded string at all.
-public def matches(found: View, spelling: str) -> bool:
+public func matches(found: View, spelling: str) -> bool:
     match text_of(found):
         case Ok(decoded):
             return decoded == spelling
@@ -60,7 +59,7 @@ public def matches(found: View, spelling: str) -> bool:
 # Whether two views cover the same bytes of the same buffer. Two views of equal
 # content in different buffers are not equal, exactly as two equal `bytes`
 # values are not identical.
-public def equal(first: View, second: View) -> bool:
+public func equal(first: View, second: View) -> bool:
     if view_len(first) != view_len(second):
         return False
     return bytes_of(first) == bytes_of(second)
@@ -68,27 +67,27 @@ public def equal(first: View, second: View) -> bool:
 
 # The leading byte of the range, or -1 for an empty view, so a caller can
 # classify a suffix without decoding it.
-public def first_byte(found: View) -> int:
+public func first_byte(found: View) -> int:
     if found.start >= found.end:
         return -1
     return found.source[found.start]
 
 
 # The view of the first `count` bytes, clamped to what the range holds.
-public def take(found: View, count: int) -> View:
+public func take(found: View, count: int) -> View:
     if count <= 0:
         return View(source=found.source, start=found.start, end=found.start)
-    stop = found.start + count
+    mut stop = found.start + count
     if stop > found.end:
         stop = found.end
     return View(source=found.source, start=found.start, end=stop)
 
 
 # The view that starts `count` bytes in, clamped to the end of the range.
-public def skip(found: View, count: int) -> View:
+public func skip(found: View, count: int) -> View:
     if count <= 0:
         return found
-    start = found.start + count
+    mut start = found.start + count
     if start > found.end:
         start = found.end
     return View(source=found.source, start=start, end=found.end)
@@ -99,7 +98,7 @@ public def skip(found: View, count: int) -> View:
 # tokens — a keyword and the value that follows it — into one range without
 # copying either. A reversed or mismatched pair yields an empty view, so a
 # caller that gets the order wrong reads nothing instead of reading nonsense.
-public def through(first: View, second: View) -> View:
+public func through(first: View, second: View) -> View:
     if first.source != second.source or second.end < first.end:
         return View(source=first.source, start=first.end, end=first.end)
     return View(source=first.source, start=first.end, end=second.end)

@@ -1,9 +1,9 @@
 # mylang
 
 An experimental statically checked, compiled language implemented in Zig.
-Programs are compiled to native code. The design goal is for mylang to be the
-fastest language for AI agents to develop in: the default path is the easy path —
-Python-like syntax, static types, incremental compilation and testing — with
+Programs are compiled to native code. The frontend emphasizes code that humans
+can read and review, with explicit declarations, mutation and failure handling.
+Static types, incremental compilation and testing should also help AI agents develop reliably, with
 opt-in escape hatches for performance when a measurement calls for them. That goal
 is still a hypothesis; [the plan](docs/plan.md) tracks the application evidence that
 would confirm it. The working language name and `.my` extension are provisional.
@@ -49,13 +49,14 @@ sets, strings and records are values, released when their last owner goes away.
 Stage S5 of the new core (2026-10) retired the old back end: QBE, the bytecode IR,
 the QBE-to-LLVM adapter, the tracing collector, two-count reference counting,
 `with arena()` regions (now a plain block that warns `W_ARENA_RETIRED`), host
-functions (`host def`, `mylang invoke`) and the host applications built on them
-([removed features](docs/legacy/README.md)). C interop is `extern def` with
+functions (`host func`, `mylang invoke`) and the host applications built on them
+([removed features](docs/legacy/README.md)). C interop is `extern func` with
 `--link FILE.c` ([direct C imports](docs/c-ffi.md)).
 [The plan](docs/plan.md#1-project-direction) records the earlier direction.
 
-The language reads like Python: `def`, `record`, indented blocks, ordinary
-assignments, `list[T]`, strings, dictionaries, and automatic memory management
+The language keeps Python-inspired indentation with `func`, `record`, explicit
+`const` and `mut` declarations, block scope, `T[]`, optional `T?`, strings,
+dictionaries, and automatic memory management
 (reference counting with copy-on-write) — with static types and checked results
 kept explicit. [The language guide](docs/python-syntax.md) covers it; see the
 [managed-memory example](examples/gc-default/main.my).
@@ -98,7 +99,7 @@ To compile and execute without keeping a final binary, use:
 zig-out/bin/mylang build examples/factorial.my --run
 ```
 
-A module header or import makes the entry a project; the nearest `mylang.json`
+An import makes the entry a project; the nearest `mylang.json`
 supplies its import policy and limits. `--zig` selects the toolchain (else `ZIG`,
 `MYLANG_ZIG`, then `PATH`). `--report` prints one `cache-report-v1` line saying what
 the caches served; `--release` builds the optimized whole-program unit. Python is
@@ -213,7 +214,7 @@ zig build test-docs --summary all
 Guardian gates each acceptance route. `-Doptimize` selects the host compiler's
 mode. Use a disk-backed `TMPDIR` with sufficient space for large native runs.
 
-The example prints `7` and exits `7`. `def main() -> int`'s return value is the
+The example prints `7` and exits `7`. `func main() -> int`'s return value is the
 process exit status, the way a Python or Go program returns an exit code,
 truncated to the low 8 bits (POSIX `waitpid` semantics: status = value & 0xFF),
 for `mylang run`, `run-project`, and a native executable from `mylang build`.
@@ -264,7 +265,7 @@ cache is ignored.
 
 ## Current implementation
 
-The [typed host interface](docs/experiments/host-functions.md) (`host def`,
+The [typed host interface](docs/experiments/host-functions.md) (`host func`,
 registered providers and typed invocation) was retired in S5 (2026-10); the
 paragraphs below are the implementation history, and
 [current-language.md](docs/current-language.md) is the current surface.
@@ -274,7 +275,7 @@ parser, separate untyped/typed representations, per-function instructions with
 typed locals, jumps and explicit call frames, deterministic dumps, binding
 diagnostics, and actual-CLI tests.
 
-The accepted subset has one `def main() -> int` and typed helper functions, with
+The accepted subset has one `func main() -> int` and typed helper functions, with
 local bindings, assignment,
 nested blocks, branches, loops, discarded expression statements (`_ = expr`),
 and typed returns.
@@ -333,7 +334,7 @@ See [the language reference](docs/current-language.md) and [verification/progres
 [Typed recoverable results](docs/experiments/results.md) now carry handling
 obligations through bindings, helpers, and wrappers. Exhaustive matches and
 returns handle them; a silently overwritten obligation is rejected.
-`examples/results.my` returns 7. [Postfix `?` propagation](docs/experiments/propagation.md)
+`examples/results.my` returns 7. [Prefix `try` propagation](docs/results-and-options.md#postfix-error-propagation)
 checks early-return obligations; `examples/propagation.my` returns 20.
 
 [Transitive effect bounds](docs/experiments/effects.md)
@@ -398,7 +399,7 @@ now retain exact payload types and exhaustive cases.
 handling, propagation and obligations across control-flow paths.
 [Generic provider operations](docs/experiments/generic-providers.md) now retain
 capability, result and effect contracts.
-[Generic fixed arrays](docs/experiments/generic-arrays.md) now support `[N]T`
+[Generic fixed arrays](docs/experiments/generic-arrays.md) now support `FixedArray[T, N]`
 construction, nested substitution and nominal-ID membership.
 `examples/generic-arrays.my` returns `3`.
 [Nominal template syntax and interfaces](docs/experiments/nominal-type-syntax.md)
@@ -536,7 +537,7 @@ one. Located embedding APIs retain the failure path independently of parsed docu
 large paths are bounded and explicitly marked as truncated. See
 [codec diagnostics](docs/experiments/codec-diagnostics.md) for path semantics and limits.
 
-[Direct C imports](docs/c-ffi.md) support `extern def` scalar calls with repeatable
+[Direct C imports](docs/c-ffi.md) support `extern func` scalar calls with repeatable
 `--link FILE.c` on `build`, `run` and `test`.
 See [the libc example](examples/c-ffi/main.my).
 
@@ -595,7 +596,7 @@ A failed build preserves the last executable.
 When a program is not fast enough, the [performance page](docs/performance.md) is
 the front door: what ordinary managed code costs, that `mylang build` and
 `mylang run` make a debug build by default and `--release` the optimized one, how to raise the `--max-steps` and
-`--max-frames` budgets each trap now names, why a fixed `[N]T` belongs on the wire
+`--max-frames` budgets each trap now names, why a fixed `FixedArray[T, N]` belongs on the wire
 rather than in a hot loop, and how to measure with `--timings`, `--report` and the
 system timer.
 

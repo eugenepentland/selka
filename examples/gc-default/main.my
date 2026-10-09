@@ -1,13 +1,12 @@
-module main
 
 # Assignment preserves a list value; a marked call changes only its receiver.
-def add_pin(pins: mut list[int], pin: int):
+func add_pin(mut pins: int[], pin: int):
     pins.append(pin)
 
 
-def main() -> int:
-    pins: list[int] = []
-    alias = pins
+func main() -> int:
+    mut pins: int[] = []
+    mut alias = pins
     for pin in range(100):
         add_pin(mut alias, pin)
     alias[0] = 42

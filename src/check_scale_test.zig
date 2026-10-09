@@ -113,7 +113,6 @@ fn checkAfterEdit(original: []const File, changed: []const File) !struct { warm:
 }
 
 const lib_source =
-    \\module lib
     \\
     \\
     \\public record Acc:
@@ -121,50 +120,48 @@ const lib_source =
     \\    count: int
     \\
     \\
-    \\public def gather(n: int) -> int:
-    \\    xs: list[int] = []
+    \\public func gather(n: int) -> int:
+    \\    mut xs: int[] = []
     \\    for k in range(n):
     \\        xs.append(k * 2)
-    \\    acc = Acc(total=0, count=0)
+    \\    mut acc = Acc(total=0, count=0)
     \\    for x in xs:
     \\        acc = Acc(total=acc.total + x, count=acc.count + 1)
     \\    return acc.total
     \\
     \\
-    \\public def spread(n: int) -> int:
-    \\    ys: list[int] = [n, n + 1]
-    \\    unused = 3
+    \\public func spread(n: int) -> int:
+    \\    mut ys: int[] = [n, n + 1]
+    \\    mut unused = 3
     \\    return ys[0] + ys[1]
     \\
     \\
-    \\public def plain(n: int) -> int:
+    \\public func plain(n: int) -> int:
     \\    return n + 1
     \\
 ;
 const mid_source =
-    \\module mid
     \\import lib
     \\
     \\
-    \\public def twice(n: int) -> int:
+    \\public func twice(n: int) -> int:
     \\    return lib.gather(n) + lib.gather(n + 1)
     \\
     \\
-    \\public def bounded(n: int) -> int noalloc:
+    \\public func bounded(n: int) -> int noalloc:
     \\    return lib.plain(n) * 2
     \\
     \\
-    \\public def count(n: int) -> int:
-    \\    zs: list[int] = [n]
+    \\public func count(n: int) -> int:
+    \\    mut zs: int[] = [n]
     \\    return lib.spread(zs[0])
     \\
 ;
 const main_source =
-    \\module main
     \\import mid
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return mid.twice(3) + mid.bounded(2) + mid.count(1)
     \\
 ;
@@ -236,7 +233,7 @@ test "a record shape edit re-checks every body that uses the record" {
 test "a callee whose inferred effects change makes the check repeat in full" {
     const original = projectFiles(lib_source);
     // `plain` now allocates, which the stood-in `noalloc` caller `bounded` forbids.
-    const allocating = projectFiles(libEdited("    return n + 1\n", "    ws: list[int] = [n]\n    return ws[0] + 1\n"));
+    const allocating = projectFiles(libEdited("    return n + 1\n", "    mut ws: int[] = [n]\n    return ws[0] + 1\n"));
     const outcome = try checkAfterEdit(&original, &allocating);
     defer outcome.warm.deinit();
     defer outcome.cold.deinit();
@@ -249,27 +246,25 @@ test "a callee whose inferred effects change makes the check repeat in full" {
 // A signature that names no identifier (not even a return type) leaves
 // nothing module-scoped in its fingerprint but the defining module itself.
 const alpha_source =
-    \\module alpha
     \\
     \\
-    \\public def value():
+    \\public func value():
     \\    pass
     \\
 ;
 // The same declaration text as `alpha.value`, but its body allocates.
 const beta_source =
-    \\module beta
     \\
     \\
-    \\public def value():
-    \\    xs: list[int] = [1]
+    \\public func value():
+    \\    mut xs: int[] = [1]
     \\    assert xs[0] == 1
     \\
 ;
 
 fn aliasProject(user: []const u8) [4]File {
     return .{
-        .{ .path = "main.my", .bytes = "module main\nimport user\nimport beta\n\n\ndef main() -> int:\n    user.bounded()\n    beta.value()\n    return 0\n" },
+        .{ .path = "main.my", .bytes = "import user\nimport beta\n\n\nfunc main() -> int:\n    user.bounded()\n    beta.value()\n    return 0\n" },
         .{ .path = "user.my", .bytes = user },
         .{ .path = "alpha.my", .bytes = alpha_source },
         .{ .path = "beta.my", .bytes = beta_source },
@@ -278,8 +273,8 @@ fn aliasProject(user: []const u8) [4]File {
 
 // spec: SEMANTIC-KEY-IDENTITY-1
 test "an import alias retargeted to an identical declaration elsewhere re-checks its users" {
-    const through_alpha = aliasProject("module user\nimport alpha as source\n\n\npublic def bounded() -> None noalloc:\n    source.value()\n");
-    const through_beta = aliasProject("module user\nimport beta as source\n\n\npublic def bounded() -> None noalloc:\n    source.value()\n");
+    const through_alpha = aliasProject("import alpha as source\n\n\npublic func bounded() -> Unit noalloc:\n    source.value()\n");
+    const through_beta = aliasProject("import beta as source\n\n\npublic func bounded() -> Unit noalloc:\n    source.value()\n");
     const outcome = try checkAfterEdit(&through_alpha, &through_beta);
     defer outcome.warm.deinit();
     defer outcome.cold.deinit();
@@ -292,7 +287,7 @@ test "an import alias retargeted to an identical declaration elsewhere re-checks
 // spec-case: SEMANTIC-KEY-IDENTITY-1
 test "deprecating a callee in another module warns at its stood-in callers" {
     const original = projectFiles(lib_source);
-    const deprecated = projectFiles(libEdited("public def plain(", "@deprecated(\"use twice\")\npublic def plain("));
+    const deprecated = projectFiles(libEdited("public func plain(", "@deprecated(\"use twice\")\npublic func plain("));
     const outcome = try checkAfterEdit(&original, &deprecated);
     defer outcome.warm.deinit();
     defer outcome.cold.deinit();
@@ -321,7 +316,7 @@ test "a lowering command checks every body and stands summaries in only for thei
 // spec-case: CHECK-SUMMARY-2
 test "a lowering command whose edit changes a callee's facts publishes the facts it computed in full" {
     const original = projectFiles(lib_source);
-    const allocating = projectFiles(libEdited("    return n + 1\n", "    ws: list[int] = [n]\n    return ws[0] + 1\n"));
+    const allocating = projectFiles(libEdited("    return n + 1\n", "    mut ws: int[] = [n]\n    return ws[0] + 1\n"));
     const outcome = try checkAfterEditAs(&original, &allocating, .lowering);
     defer outcome.warm.deinit();
     defer outcome.cold.deinit();
@@ -332,7 +327,7 @@ test "a lowering command whose edit changes a callee's facts publishes the facts
     try t.expect(outcome.warm.summaries == null);
     // `spread` stops allocating: a changed fact in a still-valid program. The
     // command repeats in full and publishes, so the next one stands in again.
-    const pure = projectFiles(libEdited("    ys: list[int] = [n, n + 1]\n    unused = 3\n    return ys[0] + ys[1]\n", "    unused = 3\n    return n + n + 1\n"));
+    const pure = projectFiles(libEdited("    mut ys: int[] = [n, n + 1]\n    mut unused = 3\n    return ys[0] + ys[1]\n", "    mut unused = 3\n    return n + n + 1\n"));
     const repeated = try checkAfterEditAs(&original, &pure, .lowering);
     defer repeated.warm.deinit();
     defer repeated.cold.deinit();
@@ -397,9 +392,9 @@ test "header discovery keeps its diagnostics and import facts after its scratch 
     // Every module's tokens are released before the next module is read, so
     // what discovery keeps must live in the project arena.
     const files = [_]File{
-        .{ .path = "main.my", .bytes = "module main\nimport lib\nimport unused\n\n\ndef main() -> int:\n    return lib.value()\n" },
-        .{ .path = "lib.my", .bytes = "module lib\n\n\npublic def value() -> int:\n    return 1\n" },
-        .{ .path = "unused.my", .bytes = "module unused\n\n\npublic def other() -> int:\n    return 2\n" },
+        .{ .path = "main.my", .bytes = "import lib\nimport unused\n\n\nfunc main() -> int:\n    return lib.value()\n" },
+        .{ .path = "lib.my", .bytes = "\n\npublic func value() -> int:\n    return 1\n" },
+        .{ .path = "unused.my", .bytes = "\n\npublic func other() -> int:\n    return 2\n" },
     };
     var provider: Files = .{ .entries = &files };
     var project = language.project.Project.init(t.allocator);
@@ -412,7 +407,7 @@ test "header discovery keeps its diagnostics and import facts after its scratch 
     try t.expect(!imports[1].seen);
     // A lexical failure in an imported module reports its located message.
     const broken = [_]File{
-        .{ .path = "main.my", .bytes = "module main\nimport lib\n\n\ndef main() -> int:\n    return lib.value()\n" },
+        .{ .path = "main.my", .bytes = "import lib\n\n\nfunc main() -> int:\n    return lib.value()\n" },
         .{ .path = "lib.my", .bytes = "module lib\n\n\npublic def value() -> int:\n    return 1 $ 2\n" },
     };
     var broken_provider: Files = .{ .entries = &broken };
@@ -456,42 +451,40 @@ test "cached syntax decodes in place and a damaged entry is still a counted miss
 // `user` reaches `shapes.Inner` only through a list element, a dictionary
 // value, an Option payload and a call's return type, never by naming it.
 const reach_shapes =
-    \\module shapes
     \\public record Inner:
     \\    x: int
     \\public record Outer:
-    \\    items: list[Inner]
+    \\    items: Inner[]
     \\    table: dict[str, Inner]
-    \\    maybe: Option[Inner]
-    \\public def make() -> Outer:
-    \\    items: list[Inner] = []
+    \\    maybe: Inner?
+    \\public func make() -> Outer:
+    \\    mut items: Inner[] = []
     \\    items.append(Inner(x=1))
-    \\    table: dict[str, Inner] = {}
+    \\    mut table: dict[str, Inner] = {}
     \\    return Outer(items=items, table=table, maybe=None)
     \\
 ;
 const reach_user =
-    \\module user
     \\import shapes
-    \\public def first(o: shapes.Outer) -> int:
-    \\    v = o.items[0]
+    \\public func first(o: shapes.Outer) -> int:
+    \\    mut v = o.items[0]
     \\    return v.x
-    \\public def looked(o: shapes.Outer) -> int:
+    \\public func looked(o: shapes.Outer) -> int:
     \\    return o.table["k"].x
-    \\public def maybe(o: shapes.Outer) -> int:
+    \\public func maybe(o: shapes.Outer) -> int:
     \\    match o.maybe:
     \\        case Some(v):
     \\            return v.x
     \\        case None:
     \\            return 0
-    \\public def chained() -> int:
+    \\public func chained() -> int:
     \\    return shapes.make().items[0].x
     \\
 ;
 
 fn reachFiles(shapes: []const u8) [3]File {
     return .{
-        .{ .path = "main.my", .bytes = "module main\nimport shapes\nimport user\ndef main() -> int:\n    o = shapes.make()\n    return user.first(o) + user.looked(o) + user.maybe(o) + user.chained()\n" },
+        .{ .path = "main.my", .bytes = "import shapes\nimport user\nfunc main() -> int:\n    mut o = shapes.make()\n    return user.first(o) + user.looked(o) + user.maybe(o) + user.chained()\n" },
         .{ .path = "user.my", .bytes = reach_user },
         .{ .path = "shapes.my", .bytes = shapes },
     };
@@ -534,7 +527,7 @@ test "retyping a field reached only through element and return types re-checks e
     try t.expectEqualStrings(outcome.cold.diagnostics, outcome.warm.diagnostics);
     // A field type edit that keeps every body valid still re-checks them, and
     // the facts a lowering command publishes are the cold ones.
-    const widened = reachFiles(shapesEdited(&.{ .{ "    x: int", "    x: int\n    tags: list[int]" }, .{ "Inner(x=1)", "Inner(x=1, tags=[])" } }));
+    const widened = reachFiles(shapesEdited(&.{ .{ "    x: int", "    x: int\n    tags: int[]" }, .{ "Inner(x=1)", "Inner(x=1, tags=[])" } }));
     const lowering = try checkAfterEditAs(&original, &widened, .lowering);
     defer lowering.warm.deinit();
     defer lowering.cold.deinit();

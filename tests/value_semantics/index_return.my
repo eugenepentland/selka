@@ -1,158 +1,159 @@
-module index_return
 
 
 record Payload:
     number: int
-    items: list[int]
+    items: int[]
 
 
-union Item:
-    payload: Payload,
+enum Item:
+    payload(value: Payload)
     empty
 
 
-def change(items: mut list[Item], index: int, value: int):
+func change(mut items: Item[], index: int, value: int):
     match items[index]:
-        case Item.payload(old):
-            number = old.number
-            fields = old.items
+        case Item.payload(value=old):
+            mut number = old.number
+            mut fields = old.items
             fields.append(value)
-            items[index] = Item.payload(Payload(number, fields))
+            items[index] = Item.payload(value=Payload(number=number, items=fields))
         case Item.empty:
             pass
 
 
-def contents(items: list[Item], index: int) -> list[int]:
+func contents(items: Item[], index: int) -> int[]:
     match items[index]:
-        case Item.payload(old):
+        case Item.payload(value=old):
             return old.items
         case Item.empty:
             return []
 
 
-public def test_mut_list_caller_detaches_shared_outer_before_projection() -> bool:
-    items = [Item.payload(Payload(0, [1]))]
-    saved = items
+public func test_mut_list_caller_detaches_shared_outer_before_projection() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
+    mut saved = items
     change(mut items, -1, 2)
     return contents(items, 0) == [1, 2] and contents(saved, 0) == [1]
 
 
-def observe(items: mut list[Item], index: int) -> int:
-    seen = -1
+func observe(mut items: Item[], index: int) -> int:
+    mut seen = -1
     match items[index]:
-        case Item.payload(old):
-            fields = old.items
+        case Item.payload(value=old):
+            mut fields = old.items
             fields.append(2)
             seen = len(contents(items, index))
-            items[index] = Item.payload(Payload(0, fields))
+            items[index] = Item.payload(value=Payload(number=0, items=fields))
         case Item.empty:
             pass
     return seen
 
 
-public def test_parent_observation_keeps_snapshot() -> bool:
-    items = [Item.payload(Payload(0, [1]))]
+public func test_parent_observation_keeps_snapshot() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     return observe(mut items, 0) == 1 and contents(items, 0) == [1, 2]
 
 
-def observe_payload(items: mut list[Item], index: int) -> int:
-    seen = -1
+func observe_payload(mut items: Item[], index: int) -> int:
+    mut seen = -1
     match items[index]:
-        case Item.payload(old):
-            fields = old.items
+        case Item.payload(value=old):
+            mut fields = old.items
             fields.append(2)
             seen = len(old.items)
-            items[index] = Item.payload(Payload(0, fields))
+            items[index] = Item.payload(value=Payload(number=0, items=fields))
         case Item.empty:
             pass
     return seen
 
 
-public def test_payload_observation_keeps_snapshot() -> bool:
-    items = [Item.payload(Payload(0, [1]))]
+public func test_payload_observation_keeps_snapshot() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     return observe_payload(mut items, 0) == 1 and contents(items, 0) == [1, 2]
 
 
-def leave_early(items: mut list[Item], index: int, stop: bool):
+func leave_early(mut items: Item[], index: int, stop: bool):
     match items[index]:
-        case Item.payload(old):
-            fields = old.items
+        case Item.payload(value=old):
+            mut fields = old.items
             fields.append(2)
             if stop:
                 return
-            items[index] = Item.payload(Payload(0, fields))
+            items[index] = Item.payload(value=Payload(number=0, items=fields))
         case Item.empty:
             pass
 
 
-public def test_early_return_keeps_original_element() -> bool:
-    items = [Item.payload(Payload(0, [1]))]
+public func test_early_return_keeps_original_element() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     leave_early(mut items, 0, True)
     return contents(items, 0) == [1]
 
 
-def change_index(items: mut list[Item], index: int):
+func change_index(mut items: Item[], initial: int):
+    mut index = initial
     match items[index]:
-        case Item.payload(old):
-            fields = old.items
+        case Item.payload(value=old):
+            mut fields = old.items
             fields.append(2)
             index = 1
-            items[index] = Item.payload(Payload(0, fields))
+            items[index] = Item.payload(value=Payload(number=0, items=fields))
         case Item.empty:
             pass
 
 
-public def test_changed_index_keeps_original_element() -> bool:
-    items = [Item.payload(Payload(0, [1])), Item.empty]
+public func test_changed_index_keeps_original_element() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1])), Item.empty]
     change_index(mut items, 0)
     return contents(items, 0) == [1] and contents(items, 1) == [1, 2]
 
 
-def capture_index(items: mut list[Item], index: int):
+func capture_index(mut items: Item[], initial: int):
+    mut index = initial
     match items[index]:
-        case Item.payload(old):
+        case Item.payload(value=old):
             index = old.number
-            fields = old.items
+            mut fields = old.items
             fields.append(2)
-            items[index] = Item.payload(Payload(0, fields))
+            items[index] = Item.payload(value=Payload(number=0, items=fields))
         case Item.empty:
             pass
 
 
-public def test_index_changed_before_extraction_keeps_original() -> bool:
-    items = [Item.payload(Payload(1, [1])), Item.empty]
+public func test_index_changed_before_extraction_keeps_original() -> bool:
+    mut items = [Item.payload(value=Payload(number=1, items=[1])), Item.empty]
     capture_index(mut items, 0)
     return contents(items, 0) == [1] and contents(items, 1) == [1, 2]
 
 
-def survive(items: mut list[Item], index: int) -> list[int]:
-    fields: list[int] = []
+func survive(mut items: Item[], index: int) -> int[]:
+    mut fields: int[] = []
     match items[index]:
-        case Item.payload(old):
+        case Item.payload(value=old):
             fields = old.items
             fields.append(2)
-            items[index] = Item.payload(Payload(0, fields))
+            items[index] = Item.payload(value=Payload(number=0, items=fields))
             fields.append(3)
         case Item.empty:
             pass
     return fields
 
 
-public def test_surviving_temporary_keeps_independent_post_store_value() -> bool:
-    items = [Item.payload(Payload(0, [1]))]
-    fields = survive(mut items, 0)
+public func test_surviving_temporary_keeps_independent_post_store_value() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
+    mut fields = survive(mut items, 0)
     return fields == [1, 2, 3] and contents(items, 0) == [1, 2]
 
 
-def alias_parameter(items: mut list[Item], other: mut list[Item], index: int) -> int:
-    seen = -1
+func alias_parameter(mut items: Item[], mut other: Item[], index: int) -> int:
+    mut seen = -1
     match items[index]:
-        case Item.payload(old):
-            fields = old.items
+        case Item.payload(value=old):
+            mut fields = old.items
             fields.append(2)
             seen = len(contents(other, index))
             other.append(Item.empty)
-            items[index] = Item.payload(Payload(0, fields))
+            items[index] = Item.payload(value=Payload(number=0, items=fields))
         case Item.empty:
             pass
     return seen
@@ -160,100 +161,100 @@ def alias_parameter(items: mut list[Item], other: mut list[Item], index: int) ->
 
 # `alias_parameter(mut items, mut items, 0)` is E_MUTATION_OVERLAP
 # (MUT-EXCLUSIVE-1); a copy sharing the element must not see the early write.
-public def test_other_mut_parameter_cannot_observe_early_mutation() -> bool:
-    items = [Item.payload(Payload(0, [1]))]
-    other = items
-    seen = alias_parameter(mut items, mut other, 0)
+public func test_other_mut_parameter_cannot_observe_early_mutation() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
+    mut other = items
+    mut seen = alias_parameter(mut items, mut other, 0)
     return seen == 1 and contents(items, 0) == [1, 2] and len(items) == 1 and contents(other, 0) == [1] and len(other) == 2
 
 
-def grow_parent(items: mut list[Item], index: int):
+func grow_parent(mut items: Item[], index: int):
     match items[index]:
-        case Item.payload(old):
-            fields = old.items
+        case Item.payload(value=old):
+            mut fields = old.items
             fields.append(2)
             items.append(Item.empty)
-            items[index] = Item.payload(Payload(0, fields))
+            items[index] = Item.payload(value=Payload(number=0, items=fields))
         case Item.empty:
             pass
 
 
-public def test_parent_growth_keeps_checked_original_index() -> bool:
-    items = [Item.payload(Payload(0, [1]))]
+public func test_parent_growth_keeps_checked_original_index() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     grow_parent(mut items, -1)
     return contents(items, 0) == [1] and contents(items, 1) == [1, 2]
 
 
-def local_parent(items: list[Item], index: int) -> list[Item]:
-    changed = items
+func local_parent(items: Item[], index: int) -> Item[]:
+    mut changed = items
     match changed[index]:
-        case Item.payload(old):
-            fields = old.items
+        case Item.payload(value=old):
+            mut fields = old.items
             fields.append(2)
-            changed[index] = Item.payload(Payload(0, fields))
+            changed[index] = Item.payload(value=Payload(number=0, items=fields))
         case Item.empty:
             pass
     return changed
 
 
-public def test_local_parent_retains_outer_snapshot() -> bool:
-    items = [Item.payload(Payload(0, [1]))]
-    changed = local_parent(items, 0)
+public func test_local_parent_retains_outer_snapshot() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
+    mut changed = local_parent(items, 0)
     return contents(items, 0) == [1] and contents(changed, 0) == [1, 2]
 
 
-def loop_commit(items: mut list[Item], index: int):
+func loop_commit(mut items: Item[], index: int):
     match items[index]:
-        case Item.payload(old):
-            fields = old.items
+        case Item.payload(value=old):
+            mut fields = old.items
             for i in range(80):
                 fields.append(i)
-            items[index] = Item.payload(Payload(0, fields))
+            items[index] = Item.payload(value=Payload(number=0, items=fields))
         case Item.empty:
             pass
 
 
-public def test_closed_loop_commits_and_preserves_a_caller_snapshot() -> bool:
-    items = [Item.payload(Payload(0, [1]))]
-    saved = items
+public func test_closed_loop_commits_and_preserves_a_caller_snapshot() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
+    mut saved = items
     loop_commit(mut items, 0)
     return len(contents(items, 0)) == 81 and contents(saved, 0) == [1]
 
 
-def leave_loop(items: mut list[Item], index: int, breaking: bool):
-    i = 0
+func leave_loop(mut items: Item[], index: int, breaking: bool):
+    mut i = 0
     while i < 1:
         i += 1
         match items[index]:
-            case Item.payload(old):
-                fields = old.items
+            case Item.payload(value=old):
+                mut fields = old.items
                 fields.append(2)
                 if breaking:
                     break
                 if i == 1:
                     continue
-                items[index] = Item.payload(Payload(0, fields))
+                items[index] = Item.payload(value=Payload(number=0, items=fields))
             case Item.empty:
                 pass
 
 
-public def test_break_and_continue_cannot_skip_commit() -> bool:
-    first = [Item.payload(Payload(0, [1]))]
-    second = [Item.payload(Payload(0, [3]))]
+public func test_break_and_continue_cannot_skip_commit() -> bool:
+    mut first = [Item.payload(value=Payload(number=0, items=[1]))]
+    mut second = [Item.payload(value=Payload(number=0, items=[3]))]
     leave_loop(mut first, 0, True)
     leave_loop(mut second, 0, False)
     return contents(first, 0) == [1] and contents(second, 0) == [3]
 
 
-def earlier_match(items: mut list[Item], index: int) -> int:
+func earlier_match(mut items: Item[], index: int) -> int:
     match items[index]:
-        case Item.payload(before):
+        case Item.payload(value=before):
             match items[index]:
-                case Item.payload(old):
-                    fields = old.items
+                case Item.payload(value=old):
+                    mut fields = old.items
                     fields.append(2)
-                    seen = len(before.items)
-                    items[index] = Item.payload(Payload(0, fields))
+                    mut seen = len(before.items)
+                    items[index] = Item.payload(value=Payload(number=0, items=fields))
                     return seen
                 case Item.empty:
                     pass
@@ -261,101 +262,101 @@ def earlier_match(items: mut list[Item], index: int) -> int:
             pass
     return -1
 
-public def test_earlier_match_binding_stays_independent() -> bool:
-    items = [Item.payload(Payload(0, [1]))]
+public func test_earlier_match_binding_stays_independent() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     return earlier_match(mut items, 0) == 1 and contents(items, 0) == [1, 2]
 
-def earlier_local(items: mut list[Item], index: int) -> int:
-    before = items[index]
+func earlier_local(mut items: Item[], index: int) -> int:
+    mut before = items[index]
     match items[index]:
-        case Item.payload(old):
-            fields = old.items
+        case Item.payload(value=old):
+            mut fields = old.items
             fields.append(2)
-            seen = 0
+            mut seen = 0
             match before:
-                case Item.payload(saved):
+                case Item.payload(value=saved):
                     seen = len(saved.items)
                 case Item.empty:
                     pass
-            items[index] = Item.payload(Payload(0, fields))
+            items[index] = Item.payload(value=Payload(number=0, items=fields))
             return seen
         case Item.empty:
             pass
     return -1
 
-public def test_earlier_element_local_stays_independent() -> bool:
-    items = [Item.payload(Payload(0, [1]))]
+public func test_earlier_element_local_stays_independent() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     return earlier_local(mut items, 0) == 1 and contents(items, 0) == [1, 2]
 
-def earlier_parent(items: mut list[Item], index: int) -> int:
-    before = items
+func earlier_parent(mut items: Item[], index: int) -> int:
+    mut before = items
     match items[index]:
-        case Item.payload(old):
-            fields = old.items
+        case Item.payload(value=old):
+            mut fields = old.items
             fields.append(2)
-            seen = len(contents(before, index))
-            items[index] = Item.payload(Payload(0, fields))
+            mut seen = len(contents(before, index))
+            items[index] = Item.payload(value=Payload(number=0, items=fields))
             return seen
         case Item.empty:
             pass
     return -1
 
-public def test_earlier_parent_snapshot_stays_independent() -> bool:
-    items = [Item.payload(Payload(0, [1]))]
+public func test_earlier_parent_snapshot_stays_independent() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     return earlier_parent(mut items, 0) == 1 and contents(items, 0) == [1, 2]
 
-def readonly_alias(items: mut list[Item], before: list[Item], index: int) -> int:
+func readonly_alias(mut items: Item[], before: Item[], index: int) -> int:
     match items[index]:
-        case Item.payload(old):
-            fields = old.items
+        case Item.payload(value=old):
+            mut fields = old.items
             fields.append(2)
-            seen = len(contents(before, index))
-            items[index] = Item.payload(Payload(0, fields))
+            mut seen = len(contents(before, index))
+            items[index] = Item.payload(value=Payload(number=0, items=fields))
             return seen
         case Item.empty:
             pass
     return -1
 
-public def test_readonly_parameter_alias_is_a_snapshot() -> bool:
-    items = [Item.payload(Payload(0, [1]))]
+public func test_readonly_parameter_alias_is_a_snapshot() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     return readonly_alias(mut items, items, 0) == 1 and contents(items, 0) == [1, 2]
 
-def iterator_alias(items: mut list[Item], index: int) -> int:
+func iterator_alias(mut items: Item[], index: int) -> int:
     for before in items:
         match items[index]:
-            case Item.payload(old):
-                fields = old.items
+            case Item.payload(value=old):
+                mut fields = old.items
                 fields.append(2)
-                seen = 0
+                mut seen = 0
                 match before:
-                    case Item.payload(saved):
+                    case Item.payload(value=saved):
                         seen = len(saved.items)
                     case Item.empty:
                         pass
-                items[index] = Item.payload(Payload(0, fields))
+                items[index] = Item.payload(value=Payload(number=0, items=fields))
                 return seen
             case Item.empty:
                 pass
     return -1
 
-public def test_iteration_binding_stays_independent() -> bool:
-    items = [Item.payload(Payload(0, [1]))]
+public func test_iteration_binding_stays_independent() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     return iterator_alias(mut items, 0) == 1 and contents(items, 0) == [1, 2]
 
-public def test_earlier_match_with_caller_snapshot_stays_independent() -> bool:
-    items = [Item.payload(Payload(0, [1]))]
-    saved = items
+public func test_earlier_match_with_caller_snapshot_stays_independent() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
+    mut saved = items
     return earlier_match(mut items, -1) == 1 and contents(items, 0) == [1, 2] and contents(saved, 0) == [1]
 
-def earlier_match_after(items: mut list[Item], index: int) -> int:
+func earlier_match_after(mut items: Item[], index: int) -> int:
     match items[index]:
-        case Item.payload(before):
+        case Item.payload(value=before):
             match items[index]:
-                case Item.payload(old):
-                    fields = old.items
+                case Item.payload(value=old):
+                    mut fields = old.items
                     fields.append(2)
-                    items[index] = Item.payload(Payload(0, fields))
-                    seen = len(before.items)
+                    items[index] = Item.payload(value=Payload(number=0, items=fields))
+                    mut seen = len(before.items)
                     return seen
                 case Item.empty:
                     pass
@@ -363,20 +364,20 @@ def earlier_match_after(items: mut list[Item], index: int) -> int:
             pass
     return -1
 
-public def test_earlier_match_observed_after_store() -> bool:
-    items = [Item.payload(Payload(0, [1]))]
+public func test_earlier_match_observed_after_store() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     return earlier_match_after(mut items, 0) == 1 and contents(items, 0) == [1, 2]
 
-def earlier_child(items: mut list[Item], index: int) -> int:
+func earlier_child(mut items: Item[], index: int) -> int:
     match items[index]:
-        case Item.payload(before):
-            saved = before.items
+        case Item.payload(value=before):
+            mut saved = before.items
             match items[index]:
-                case Item.payload(old):
-                    fields = old.items
+                case Item.payload(value=old):
+                    mut fields = old.items
                     fields.append(2)
-                    seen = len(saved)
-                    items[index] = Item.payload(Payload(0, fields))
+                    mut seen = len(saved)
+                    items[index] = Item.payload(value=Payload(number=0, items=fields))
                     return seen
                 case Item.empty:
                     pass
@@ -384,6 +385,6 @@ def earlier_child(items: mut list[Item], index: int) -> int:
             pass
     return -1
 
-public def test_earlier_borrowed_child_survives_dead_match_binding() -> bool:
-    items = [Item.payload(Payload(0, [1]))]
+public func test_earlier_borrowed_child_survives_dead_match_binding() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     return earlier_child(mut items, 0) == 1 and contents(items, 0) == [1, 2]

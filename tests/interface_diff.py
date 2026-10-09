@@ -37,7 +37,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-DEF = re.compile(r"^(public )?def (\w+)(\[[^\]]*\])?\((.*)\)( -> [^:]+)?:$", re.M)
+DEF = re.compile(r"^(public )?func (\w+)(\[[^\]]*\])?\((.*)\)( -> [^:]+)?:$", re.M)
 SHOW_FUNCTION = re.compile(r"^  (\S+)::(\S+) (declared|template|constant|conversion|foreign|inlined|evaluated)( exported)? effects=\{([^}]*)\}")
 LITERAL = re.compile(r"(?<![\w.])(\d+)(?![\w.])")
 
@@ -77,8 +77,8 @@ def show(compiler, path):
 
 
 def body_range(text, name):
-    """Start and end offsets of the indented body of top-level def `name`."""
-    m = re.search(rf"^(public )?def {re.escape(name)}(\[[^\]]*\])?\(.*\)( -> [^:]+)?:\n", text, re.M)
+    """Start and end offsets of the indented body of top-level func `name`."""
+    m = re.search(rf"^(public )?func {re.escape(name)}(\[[^\]]*\])?\(.*\)( -> [^:]+)?:\n", text, re.M)
     if not m:
         return None
     start = m.end()
@@ -114,9 +114,9 @@ def catalog(sources, roles, rng):
                 changed = with_literal_changed(text, body_start, body_end, rng)
                 if changed:
                     out.append(("body literal", "same", module, changed, None))
-                out.append(("body no-op", "same", module, text[:body_start] + "    zz_ok = 1\n" + text[body_start:], None))
+                out.append(("body no-op", "same", module, text[:body_start] + "    const zz_ok = 1\n" + text[body_start:], None))
                 if public and "managed_allocation" not in effects:
-                    fact = text[:body_start] + "    zz_fresh: list[int] = [1]\n" + text[body_start:]
+                    fact = text[:body_start] + "    const zz_fresh: int[] = [1]\n" + text[body_start:]
                     out.append(("fact: allocation", "changed", module, fact, None))
             elif role in ("template", "inlined", "evaluated"):
                 changed = with_literal_changed(text, body_start, body_end, rng)
@@ -126,14 +126,14 @@ def catalog(sources, roles, rng):
             if public and role == "declared" and m.group(4):
                 out.append(("signature: defaulted parameter", "changed", module, text.replace(line, line.replace(")", ", zz_extra: int = 0)", 1), 1), None))
             if public:
-                out.append(("signature: rename", "changed", module, text.replace(line, line.replace(f"def {name}", f"def {name}_renamed", 1), 1), None))
+                out.append(("signature: rename", "changed", module, text.replace(line, line.replace(f"func {name}", f"func {name}_renamed", 1), 1), None))
                 out.append(("visibility: unpublic", "changed", module, text.replace(line, line[len("public "):], 1), None))
-            if ": mut " in line:
-                out.append(("signature: drop mut", "changed", module, text.replace(line, line.replace(": mut ", ": ", 1), 1), None))
+            if "mut " in line:
+                out.append(("signature: drop mut", "changed", module, text.replace(line, line.replace("mut ", "", 1), 1), None))
             if text[max(0, header_start - 2):header_start] == "\n\n":
                 out.append(("comment between declarations", "same", module, text[:header_start] + "# zz note\n\n\n" + text[header_start:], None))
-        out.append(("private addition", "same", module, text.rstrip("\n") + "\n\n\ndef zz_private(n: int) -> int:\n    return n + 1\n", None))
-        out.append(("public addition", "changed", module, text.rstrip("\n") + "\n\n\npublic def zz_public(n: int) -> int:\n    return n + 1\n", None))
+        out.append(("private addition", "same", module, text.rstrip("\n") + '\n\n\nfunc zz_private(n: int) -> int:\n    return n + 1\n', None))
+        out.append(("public addition", "changed", module, text.rstrip("\n") + '\n\n\npublic func zz_public(n: int) -> int:\n    return n + 1\n', None))
         for c in re.finditer(r"^const (\w+): int = (\d+)$", text, re.M):
             out.append(("constant value", "changed", module, text[: c.start(2)] + str(int(c.group(2)) + 1) + text[c.end(2):], None))
         for d in re.finditer(r'^@deprecated\("([^"]*)"\)$', text, re.M):
@@ -145,11 +145,11 @@ def catalog(sources, roles, rng):
         out.append(("shape: field retyped", "changed", "shapes", shapes.replace("    z: int = 0\n", "    z: bool = False\n", 1), "shapes::Inner"))
         out.append(("shape: field renamed", "changed", "shapes", shapes.replace("    z: int = 0\n", "    z_renamed: int = 0\n", 1), "shapes::Inner"))
         out.append(("shape: used field retyped", "changed", "shapes", shapes.replace("    y: int\n", "    y: i32\n", 1), "shapes::Inner"))
-        out.append(("shape: enum case added", "changed", "shapes", shapes.replace("    blue\n", "    blue,\n    cyan\n", 1), "shapes::Color"))
+        out.append(("shape: enum case added", "changed", "shapes", shapes.replace("    blue\n", "    blue\n    cyan\n", 1), "shapes::Color"))
         out.append(("shape: union case renamed", "changed", "shapes", shapes.replace("    idle\n", "    idle_renamed\n", 1), "shapes::Event"))
         out.append(("shape: union payload retyped", "changed", "shapes", shapes.replace("steps: int)", "steps: i32)", 1), "shapes::Event"))
-        out.append(("shape: union case payload retyped", "changed", "shapes", shapes.replace("    tagged: Inner,\n", "    tagged: Color,\n", 1), "shapes::Event"))
-        out.append(("shape: list element retyped", "changed", "shapes", shapes.replace("items: list[Inner]", "items: list[Color]", 1), "shapes::Holder"))
+        out.append(("shape: union case payload retyped", "changed", "shapes", shapes.replace("    tagged(value: Inner)\n", "    tagged(value: Color)\n", 1), "shapes::Event"))
+        out.append(("shape: list element retyped", "changed", "shapes", shapes.replace("items: Inner[]", "items: Color[]", 1), "shapes::Holder"))
         out.append(("private record edit", "same", "shapes", shapes.replace("    secret: int\n", "    secret: bool\n", 1), None))
     lib = sources.get("lib", "")
     if lib:

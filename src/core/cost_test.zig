@@ -10,24 +10,24 @@ const remarks = @import("cost_remarks.zig");
 const flags = @import("flags.zig");
 
 const program =
-    \\def leaf(x: int) -> int:
+    \\func leaf(x: int) -> int:
     \\    return x & 7
-    \\def borrowed(xs: list[int]) -> list[int]:
-    \\    ys = xs
+    \\func borrowed(xs: int[]) -> int[]:
+    \\    mut ys = xs
     \\    ys[0] = 4
     \\    return ys
-    \\def consuming(xs: mut list[int]) -> int:
+    \\func consuming(mut xs: int[]) -> int:
     \\    xs[0] = 5
     \\    return xs[0]
-    \\def fresh(n: int) -> int:
-    \\    xs: list[int] = []
+    \\func fresh(n: int) -> int:
+    \\    mut xs: int[] = []
     \\    xs.append(n)
     \\    return xs[0] + leaf(n)
-    \\def main(out: Stream) -> int:
-    \\    xs = [1, 2]
-    \\    snapshots = [xs, xs]
+    \\func main(out: Stream) -> int:
+    \\    mut xs = [1, 2]
+    \\    mut snapshots = [xs, xs]
     \\    out.print(snapshots)
-    \\    ys = borrowed(xs)
+    \\    mut ys = borrowed(xs)
     \\    out.print(ys, consuming(mut xs), fresh(3))
     \\    return 0
 ;
@@ -171,10 +171,10 @@ fn directCalls(module: *const ir.Module, function: *const ir.Function) !void {
 }
 
 const reduction =
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    n = len(args) + 100
-    \\    values = [(j * 37 + 5) % 1009 for j in range(n)]
-    \\    total = 0
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut n = len(args) + 100
+    \\    mut values = [for j in range(n) yield (j * 37 + 5) % 1009]
+    \\    mut total = 0
     \\    for j in range(n):
     \\        total += ((values[j] + 3) * 17 + 23) // 7 % 1009
     \\    out.print(total)
@@ -188,10 +188,10 @@ test "a reduction loop is versioned only when its body makes no call and holds n
     const a = arena.allocator();
     // A flat body: the clone proves the sum, so the loop is versioned.
     const flat = try measured(a,
-        \\def main(args: list[str], out: Stream) -> int:
-        \\    n = len(args) + 100
-        \\    values = [(j * 37) % 1009 for j in range(n)]
-        \\    total = 0
+        \\func main(args: str[], out: Stream) -> int:
+        \\    mut n = len(args) + 100
+        \\    mut values = [for j in range(n) yield (j * 37) % 1009]
+        \\    mut total = 0
         \\    for j in range(n):
         \\        total += int((float(values[j]) / 8.0 + 0.5) * 128000.0)
         \\    out.print(total)
@@ -200,20 +200,20 @@ test "a reduction loop is versioned only when its body makes no call and holds n
     try std.testing.expect(flat.totals.loops.versioned > 0);
     // The sum of a call's results (its return interval bounds each summand): no clone.
     const called = try measured(a,
-        \\def search(values: list[int], key: int) -> int:
-        \\    low = 0
-        \\    high = len(values)
+        \\func search(values: int[], key: int) -> int:
+        \\    mut low = 0
+        \\    mut high = len(values)
         \\    while low < high:
-        \\        middle = (low + high) // 2
+        \\        mut middle = (low + high) // 2
         \\        if values[middle] < key:
         \\            low = middle + 1
         \\        else:
         \\            high = middle
         \\    return low
-        \\def main(args: list[str], out: Stream) -> int:
-        \\    n = len(args) + 100
-        \\    values = [j * 3 for j in range(n)]
-        \\    total = 0
+        \\func main(args: str[], out: Stream) -> int:
+        \\    mut n = len(args) + 100
+        \\    mut values = [for j in range(n) yield j * 3]
+        \\    mut total = 0
         \\    for j in range(n):
         \\        total += search(values, j)
         \\    out.print(total)
@@ -222,15 +222,15 @@ test "a reduction loop is versioned only when its body makes no call and holds n
     try std.testing.expectEqual(@as(u32, 0), called.totals.loops.versioned);
     // The same sum with the search written inline, an inner loop: no clone either.
     const nested = try measured(a,
-        \\def main(args: list[str], out: Stream) -> int:
-        \\    n = len(args) + 100
-        \\    values = [j * 3 for j in range(n)]
-        \\    total = 0
+        \\func main(args: str[], out: Stream) -> int:
+        \\    mut n = len(args) + 100
+        \\    mut values = [for j in range(n) yield j * 3]
+        \\    mut total = 0
         \\    for j in range(n):
-        \\        low = 0
-        \\        high = len(values)
+        \\        mut low = 0
+        \\        mut high = len(values)
         \\        while low < high:
-        \\            middle = (low + high) // 2
+        \\            mut middle = (low + high) // 2
         \\            if values[middle] < j:
         \\                low = middle + 1
         \\            else:
@@ -250,10 +250,10 @@ test "cost includes real vector plans loop guards and unswitched cloned body eve
     const vectorized = try measured(a, reduction, .trusted);
     try std.testing.expect(vectorized.totals.loops.vector_plans > 0);
     const guarded = try measured(a,
-        \\def main(args: list[str], out: Stream) -> int:
-        \\    n = len(args) + 100
-        \\    values = [(j * 37) % 1009 for j in range(n)]
-        \\    total = 0
+        \\func main(args: str[], out: Stream) -> int:
+        \\    mut n = len(args) + 100
+        \\    mut values = [for j in range(n) yield (j * 37) % 1009]
+        \\    mut total = 0
         \\    for j in range(n):
         \\        total += int((float(values[j]) / 8.0 + 0.5) * 128000.0)
         \\    out.print(total)
@@ -261,17 +261,17 @@ test "cost includes real vector plans loop guards and unswitched cloned body eve
     , .trusted);
     try std.testing.expect(guarded.totals.loops.versioned > 0);
     const unswitched = try measured(a,
-        \\def origin(xs: mut list[int], x: int, kind: int) -> int:
+        \\func origin(mut xs: int[], x: int, kind: int) -> int:
         \\    xs.append(2)
-        \\    total = 0
+        \\    mut total = 0
         \\    for i in range(x):
         \\        if kind == 0:
         \\            total += xs[i]
         \\        else:
         \\            total += xs[i] + 1
         \\    return total
-        \\def main(args: list[str]) -> int:
-        \\    xs = [1]
+        \\func main(args: str[]) -> int:
+        \\    mut xs = [1]
         \\    return origin(mut xs, 3, len(args))
     , .verify);
     try std.testing.expect(unswitched.totals.loops.unswitched > 0);
@@ -282,16 +282,16 @@ test "cost allocation sites remain in cold callees two calls down before release
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const debug = try measured(arena.allocator(),
-        \\def deep(flag: bool) -> int:
+        \\func deep(flag: bool) -> int:
         \\    if flag:
-        \\        xs = [1]
+        \\        mut xs = [1]
         \\        return len(xs)
         \\    return 0
-        \\def second(flag: bool) -> int:
+        \\func second(flag: bool) -> int:
         \\    return deep(flag)
-        \\def first(flag: bool) -> int:
+        \\func first(flag: bool) -> int:
         \\    return second(flag)
-        \\def main(out: Stream) -> int:
+        \\func main(out: Stream) -> int:
         \\    out.print(first(False))
         \\    return 0
     , null);
@@ -326,11 +326,11 @@ fn elidedCount(a: std.mem.Allocator) !void {
 // A unique dictionary still allocates its tombstone bitmap on the first deletion.
 fn deletionCount(a: std.mem.Allocator) !void {
     const report = try measured(a,
-        \\def remove(d: mut dict[int, int]) -> int:
+        \\func remove(mut d: dict[int, int]) -> int:
         \\    _ = d.pop(1)
         \\    return len(d)
-        \\def main(out: Stream) -> int:
-        \\    d = {1: 2}
+        \\func main(out: Stream) -> int:
+        \\    mut d = {1: 2}
         \\    out.print(remove(mut d))
         \\    return 0
     , null);

@@ -1,70 +1,70 @@
 record Payload:
-    left: list[int]
-    right: list[int]
+    left: int[]
+    right: int[]
 
 
-union Item:
-    empty,
-    value: Payload,
-    number: int
+enum Item:
+    empty
+    value(value: Payload)
+    number(value: int)
 
 
 record Pool:
-    items: list[Item]
+    items: Item[]
 
 
-def selected(pool: Pool, at: int) -> Payload:
+func selected(pool: Pool, at: int) -> Payload:
     match pool.items[at]:
-        case Item.value(payload):
+        case Item.value(value=payload):
             return payload
         case _:
-            return Payload([], [])
+            return Payload(left=[], right=[])
 
 
-def replace_and_grow(pool: mut Pool):
+func replace_and_grow(mut pool: Pool):
     pool.items = []
-    i = 0
+    mut i = 0
     while i < 300:
-        pool.items.append(Item.number(i))
+        pool.items.append(Item.number(value=i))
         i += 1
 
 
-def through_callback(pool: mut Pool, at: int) -> Payload:
+func through_callback(mut pool: Pool, at: int) -> Payload:
     match pool.items[at]:
-        case Item.value(payload):
+        case Item.value(value=payload):
             replace_and_grow(mut pool)
-            result = payload
+            mut result = payload
             result.left.append(11)
             return result
         case _:
-            return Payload([], [])
+            return Payload(left=[], right=[])
 
 
-public def test_returned_payload_outlives_rebound_and_grown_pool() -> bool:
-    pool = Pool([Item.value(Payload([3], [7]))])
-    result = selected(pool, -1)
+public func test_returned_payload_outlives_rebound_and_grown_pool() -> bool:
+    mut pool = Pool(items=[Item.value(value=Payload(left=[3], right=[7]))])
+    mut result = selected(pool, -1)
     replace_and_grow(mut pool)
     result.left.append(9)
     return result.left == [3, 9] and result.right == [7] and len(pool.items) == 300
 
 
-public def test_arm_callback_keeps_snapshot_and_duplicate_children() -> bool:
-    values = [5]
-    pool = Pool([Item.value(Payload(values, values))])
-    saved = pool
-    result = through_callback(mut pool, 0)
-    old = selected(saved, 0)
+public func test_arm_callback_keeps_snapshot_and_duplicate_children() -> bool:
+    mut values = [5]
+    mut pool = Pool(items=[Item.value(value=Payload(left=values, right=values))])
+    mut saved = pool
+    mut result = through_callback(mut pool, 0)
+    mut old = selected(saved, 0)
     return result.left == [5, 11] and result.right == [5] and old.left == [5] and old.right == [5] and values == [5]
 
 
-def repeated(pool: Pool) -> int:
-    total = 0
-    i = 0
+func repeated(pool: Pool) -> int:
+    mut total = 0
+    mut i = 0
     while i < len(pool.items):
         match pool.items[i]:
-            case Item.value(payload):
+            case Item.value(value=payload):
                 total = total + payload.left[0] + payload.right[0]
-            case Item.number(number):
+            case Item.number(value=number):
                 total = total + number
             case Item.empty:
                 total += 1
@@ -72,63 +72,63 @@ def repeated(pool: Pool) -> int:
     return total
 
 
-public def test_repeated_pattern_slots_switch_between_owned_and_plain_arms() -> bool:
-    pool = Pool([Item.value(Payload([2], [3])), Item.empty, Item.number(7), Item.value(Payload([11], [13]))])
+public func test_repeated_pattern_slots_switch_between_owned_and_plain_arms() -> bool:
+    mut pool = Pool(items=[Item.value(value=Payload(left=[2], right=[3])), Item.empty, Item.number(value=7), Item.value(value=Payload(left=[11], right=[13]))])
     return repeated(pool) == 37
 
 
-union Outer:
-    empty,
-    values: list[Item]
+enum Outer:
+    empty
+    values(value: Item[])
 
 
-def nested(rows: list[Outer]) -> Payload:
+func nested(rows: Outer[]) -> Payload:
     match rows[0]:
-        case Outer.values(inner):
+        case Outer.values(value=inner):
             match inner[-1]:
-                case Item.value(payload):
+                case Item.value(value=payload):
                     return payload
                 case _:
-                    return Payload([], [])
+                    return Payload(left=[], right=[])
         case _:
-            return Payload([], [])
+            return Payload(left=[], right=[])
 
 
-public def test_nested_matches_publish_the_selected_payload() -> bool:
-    rows = [Outer.values([Item.value(Payload([23], [29]))])]
-    result = nested(rows)
+public func test_nested_matches_publish_the_selected_payload() -> bool:
+    mut rows = [Outer.values(value=[Item.value(value=Payload(left=[23], right=[29]))])]
+    mut result = nested(rows)
     rows.clear()
     result.right.append(31)
     return result.left == [23] and result.right == [29, 31]
 
 
-def changing_index(pool: mut Pool) -> int:
-    pool.items = [Item.value(Payload([41], [43]))]
+func changing_index(mut pool: Pool) -> int:
+    pool.items = [Item.value(value=Payload(left=[41], right=[43]))]
     return 0
 
 
-def index_callback(pool: mut Pool) -> Payload:
+func index_callback(mut pool: Pool) -> Payload:
     match pool.items[changing_index(mut pool)]:
-        case Item.value(payload):
+        case Item.value(value=payload):
             return payload
         case _:
-            return Payload([], [])
+            return Payload(left=[], right=[])
 
 
-public def test_index_callback_keeps_the_original_receiver_snapshot() -> bool:
-    pool = Pool([Item.value(Payload([37], [39]))])
-    result = index_callback(mut pool)
+public func test_index_callback_keeps_the_original_receiver_snapshot() -> bool:
+    mut pool = Pool(items=[Item.value(value=Payload(left=[37], right=[39]))])
+    mut result = index_callback(mut pool)
     return result.left == [37] and selected(pool, 0).left == [41]
 
 
-public def test_payload_free_arm_and_empty_return_keep_clean_guards() -> bool:
-    pool = Pool([Item.empty, Item.number(53)])
-    first = selected(pool, 0)
-    second = selected(pool, -1)
+public func test_payload_free_arm_and_empty_return_keep_clean_guards() -> bool:
+    mut pool = Pool(items=[Item.empty, Item.number(value=53)])
+    mut first = selected(pool, 0)
+    mut second = selected(pool, -1)
     return len(first.left) == 0 and len(second.right) == 0
 
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(test_returned_payload_outlives_rebound_and_grown_pool())
     out.print(test_arm_callback_keeps_snapshot_and_duplicate_children())
     out.print(test_repeated_pattern_slots_switch_between_owned_and_plain_arms())

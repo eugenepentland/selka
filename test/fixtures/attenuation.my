@@ -6,7 +6,7 @@ result Open:
 
 
 record Chunk:
-    bytes: [16]u8
+    bytes: FixedArray[u8, 16]
     length: u64
     eof: bool
 
@@ -16,17 +16,17 @@ result Read:
     err: int
 
 
-def delegate(fs: Filesystem) -> Filesystem effects():
-    scoped = fs.dir("nested")
+func delegate(fs: Filesystem) -> Filesystem effects():
+    mut scoped = fs.dir("nested")
     return scoped.read_only()
 
 
-def main(fs: Filesystem) -> int:
-    reader = delegate(fs)
-    request: [1]u8 = [42u8]
+func main(fs: Filesystem) -> int:
+    mut reader = delegate(fs)
+    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([42u8])
     match acquire_resource[Open](reader, request):
         case Open.ok(input):
-            file = input
+            mut file = input
             match read_resource[Read](file):
                 case Read.ok(chunk):
                     return int(chunk.length)

@@ -1,14 +1,13 @@
 {
   "version": "friction-classifier-v1",
   "note": "diagnostic code plus a source regex maps to an idiom name; the first matching row wins; no match is 'unclassified'. `hints` names the idioms the parser itself answers with a targeted message: the `declaration_hints` table in `src/parser.zig` and this array are one table, and `src/declaration_hints_test.zig` plus `tests/parser_hints.py` fail when either side gains a form the other lacks.",
-  "hints": ["union-cases", "module-constant", "method", "from-import", "chained-assign", "exceptions", "match-literal", "del", "string-prefix", "main-guard", "option-unwrap", "walrus"],
+  "hints": ["module-constant", "method", "from-import", "chained-assign", "exceptions", "match-literal", "del", "string-prefix", "main-guard", "option-unwrap", "walrus"],
   "rules": [
     {"code": "E_SYNTAX", "regex": "^\\s*from\\s+[A-Za-z_][A-Za-z_0-9]*(\\.[A-Za-z_][A-Za-z_0-9]*)*\\s+import\\b", "idiom": "from-import"},
     {"code": "E_SYNTAX", "regex": "^\\s*\"\"\"|^\\s*'''", "idiom": "docstring"},
     {"code": "E_BYTE_LITERAL", "regex": "\"\"\"", "idiom": "docstring"},
     {"code": "E_SYNTAX", "regex": "^[A-Z_][A-Z_0-9]*\\s*=", "idiom": "module-constant"},
     {"code": "E_SYNTAX", "regex": "def\\s+\\w+\\(self", "idiom": "method"},
-    {"code": "E_SYNTAX", "regex": "\\b(union|enum|result)\\s+[A-Za-z_][A-Za-z_0-9]*\\s*:", "idiom": "union-cases"},
     {"code": "E_FORMAT_STRING", "regex": ":\\.?\\d*[fdxs<>^]", "idiom": "format-spec"},
     {"code": "E_EXPRESSION", "regex": "\\*\\*", "idiom": "power"},
     {"code": "E_REMOVED_SPELLING", "regex": "[&|^~]|<<|>>", "idiom": "bit-operator"},

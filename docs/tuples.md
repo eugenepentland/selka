@@ -16,16 +16,16 @@ element, and a tuple prints as `(1, 'a')`.
 
 ```mylang
 # doc: expect 11
-def split_first(text: str, sep: str) -> tuple[str, str]:
-    at = text.find(sep)
+func split_first(text: str, sep: str) -> tuple[str, str]:
+    mut at = text.find(sep)
     if at < 0:
         return text, ""
     return text[0:at], text[at + 1:len(text)]
 
-def main() -> int:
-    head, rest = split_first("key=value", "=")
-    total = len(head) + len(rest)
-    pairs: list[tuple[int, str]] = [(1, "a"), (2, "b")]
+func main() -> int:
+    const head, rest = split_first("key=value", "=")
+    mut total = len(head) + len(rest)
+    mut pairs: tuple[int, str][] = [(1, "a"), (2, "b")]
     for number, letter in pairs:
         total = total + number
     return total
@@ -37,15 +37,15 @@ idiom works with no helper:
 
 ```mylang
 # doc: expect 21
-def main() -> int:
-    a = 1
-    b = 2
+func main() -> int:
+    mut a = 1
+    mut b = 2
     a, b = b, a
     return a * 10 + b
 ```
 
 This returns `21`. A name you do not need is written `_`, which binds nothing and reads
-nothing: `head, _ = split_first("key=value", "=")` binds only `head`.
+nothing: `const head, _ = split_first("key=value", "=")` binds only `head`.
 
 ### Element and field targets
 
@@ -60,12 +60,12 @@ record Point:
     x: int
     y: int
 
-def main() -> int:
-    values: [4]int = [1, 2, 3, 4]
+func main() -> int:
+    mut values: FixedArray[int, 4] = FixedArray[int, 4]([1, 2, 3, 4])
     values[0], values[2] = values[2], values[0]
-    items = [4, 1]
+    mut items = [4, 1]
     items[0], items[-1] = items[-1], items[0]
-    point = Point(x=0, y=0)
+    mut point = Point(x=0, y=0)
     point.x, point.y = items[0], items[1]
     return values[0] * 1000 + point.x * 100 + point.y * 10 + values[-3]
 ```
@@ -78,17 +78,17 @@ tuple and changing the copy's list leaves the original's list unchanged.
 
 ```mylang
 # doc: expect 117
-def pair_with(value: int) -> tuple[int, list[int]]:
-    seen: list[int] = []
+func pair_with(value: int) -> tuple[int, int[]]:
+    mut seen: int[] = []
     seen.append(value)
     return 1, seen
 
-def main() -> int:
-    kept = pair_with(7)
-    copy = kept
-    number, values = copy
+func main() -> int:
+    mut kept = pair_with(7)
+    mut copy = kept
+    mut number, values = copy
     values.append(8)
-    _, original = kept
+    const _, original = kept
     return number * 100 + len(original) * 10 + original[0]
 ```
 

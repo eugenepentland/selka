@@ -40,7 +40,7 @@ const v = @import("property_value.zig");
 const test_contracts = @import("test_runner_contracts.zig");
 
 /// The old runner's stub, appended to a file that defines no `main` of its own.
-pub const check_stub = "\n\ndef main() -> int:\n    return 0\n";
+pub const check_stub = "\n\nfunc main() -> int:\n    return 0\n";
 
 /// What stops a run: memory, or an output stream that cannot be written.
 pub const Error = property.Error;
@@ -179,7 +179,7 @@ fn finish(init: std.process.Init, ready: Ready, setup: Setup) Error!u8 {
     // first provider graph then answers discovery, and a case without providers fails.
     var first_provider = frontend.Session.init(init.gpa, init.io, located.root);
     defer first_provider.deinit();
-    const base_checked: ?frontend.Checked = if (view) |share| share.checked else session.checkFile(allocator, options.path, &problems) catch |err| switch (err) {
+    const base_checked: ?frontend.Checked = if (view) |share| share.checked else checkEntry(&session, allocator, located, &problems) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => if (provider_sets.len == 0) return failWith(init, problems.items, 1) else null,
     };
@@ -298,7 +298,7 @@ const GroupRun = struct {
             located.configure(&provider_session);
             try provider_session.enableCache(init.gpa, context.options.build.cache);
             self.entry.apply(&provider_session, overlays);
-            program = provider_session.checkFile(a, located.path, &problems) catch |err| return checkFailure(init, err, problems.items, 1);
+            program = checkEntry(&provider_session, a, located, &problems) catch |err| return checkFailure(init, err, problems.items, 1);
             try out.before.appendSlice(a, try receipt.captured(context, &provider_session, overlays));
             located.validate(a, &provider_session, &problems) catch |err| return checkFailure(init, err, problems.items, project_entry.status(err));
             const discovered = try discover.discover(a, program.program, entry_module, try moduleSources(a, try Loaded.of(a, &provider_session), entry_module));
@@ -386,6 +386,12 @@ fn keeps(a: std.mem.Allocator, production: *frontend.Session, replacement: *fron
     return null;
 }
 
+/// Test discovery uses path-qualified module identities for every valid entry.
+fn checkEntry(session: *frontend.Session, allocator: std.mem.Allocator, located: project_entry.Entry, problems: *std.ArrayList(u8)) (frontend.Error || error{ReadFailed})!frontend.Checked {
+    if (@import("mylang").project.validName(located.name)) return session.check(allocator, located.name, problems);
+    return session.checkFile(allocator, located.path, problems);
+}
+
 /// The first provider graph, fully checked, which answers discovery when the
 /// production graph's bodies are not checked; null after printing nothing when it
 /// does not check (its diagnostics are the production check's concern).
@@ -395,7 +401,7 @@ fn providerGraph(init: std.process.Init, options: Options, located: project_entr
     located.configure(session);
     try session.enableCache(init.gpa, options.build.cache);
     entry_text.apply(session, try std.mem.concat(a, frontend.Provider, &.{ set, entry_text.overlay }));
-    if (session.checkFile(a, located.path, &problems)) |checked| return checked else |err| _ = try checkFailure(init, err, problems.items, 1);
+    if (checkEntry(session, a, located, &problems)) |checked| return checked else |err| _ = try checkFailure(init, err, problems.items, 1);
     return null;
 }
 
@@ -450,9 +456,8 @@ fn siblingHint(init: std.process.Init, loaded: Loaded, located: project_entry.En
     try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(a, "mylang test: no tests selected; sibling test file {s} is not included by this entry. Run that file explicitly with mylang test, or test its directory.\n", .{sibling}));
 }
 
-/// FMT-TEST-MODULE-1: a header-less `*_test.my` file that imports project modules is
-/// checked as the module its stem names, as the old runner checked it: its text with
-/// `module NAME; ` on the first line, so every line keeps its number. Empty otherwise.
+/// FMT-TEST-MODULE-1: preserve headerless test bytes in the provider overlay.
+/// The project loader obtains module identity from the overlay path.
 fn headerlessTest(a: std.mem.Allocator, located: project_entry.Entry, bytes: []const u8) Error![]const frontend.Provider {
     if (!std.mem.endsWith(u8, located.path, "_test.my")) return &.{};
     var lines = std.mem.splitScalar(u8, bytes, '\n');
@@ -462,8 +467,7 @@ fn headerlessTest(a: std.mem.Allocator, located: project_entry.Entry, bytes: []c
     } else return &.{};
     if (!std.mem.startsWith(u8, opening, "import ")) return &.{};
     const relative = try std.mem.concat(a, u8, &.{ try std.mem.replaceOwned(u8, a, located.name, ".", "/"), ".my" });
-    const text = try std.fmt.allocPrint(a, "module {s}; {s}", .{ located.name, bytes });
-    return a.dupe(frontend.Provider, &.{.{ .path = relative, .text = text }});
+    return a.dupe(frontend.Provider, &.{.{ .path = relative, .text = bytes }});
 }
 
 /// The cases `--filter` selects and, with `--against`, the ones `--affected` keeps of
@@ -941,7 +945,7 @@ fn addSources(a: std.mem.Allocator, paths: *std.ArrayList([]const u8), context: 
 fn definesMain(bytes: []const u8) bool {
     var lines = std.mem.splitScalar(u8, bytes, '\n');
     while (lines.next()) |line| {
-        if (std.mem.startsWith(u8, line, "def main(") or std.mem.startsWith(u8, line, "public def main(")) return true;
+        if (std.mem.startsWith(u8, line, "func main(") or std.mem.startsWith(u8, line, "public func main(") or std.mem.startsWith(u8, line, "def main(") or std.mem.startsWith(u8, line, "public def main(")) return true;
     }
     return false;
 }
@@ -1100,7 +1104,7 @@ test "programIdentity propagates allocation failure instead of inventing a reusa
     var temporary = std.testing.tmpDir(.{});
     defer temporary.cleanup();
     const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
-    const source = "module app\n\npublic def test_value() -> bool:\n    return True\n\ndef main() -> int:\n    return 0\n";
+    const source = "\npublic func test_value() -> bool:\n    return True\n\nfunc main() -> int:\n    return 0\n";
     try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = source });
     const path = try std.fs.path.join(a, &.{ root, "app.my" });
     var diagnostics: std.ArrayList(u8) = .empty;

@@ -1,5 +1,4 @@
-//! A headerless script may import compiler-embedded standard modules and stay a
-//! single unit; importing a project module still needs the `module` declaration.
+//! File paths determine module identities for standard and project imports.
 const std = @import("std");
 const t = std.testing;
 const ast = @import("ast.zig");
@@ -12,13 +11,13 @@ const source = @import("source.zig");
 const script =
     \\import strings
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return 0
 ;
 const project_import =
     \\import helper
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return 0
 ;
 
@@ -55,34 +54,6 @@ fn parseModuleSource(arena: *std.heap.ArenaAllocator, bytes: []const u8) !Parsed
     return .{ .syntax = try p.parseModule(), .src = src };
 }
 
-/// The code and location of the one diagnostic a rejected file reports.
-const Failure = struct { code: []const u8, line: usize, column: usize };
-
-/// Parse one module program that must be rejected, answering its first
-/// diagnostic's code and location.
-fn moduleFailure(arena: *std.heap.ArenaAllocator, bytes: []const u8) !Failure {
-    const allocator = arena.allocator();
-    var sink: diagnostic.Sink = .{ .allocator = allocator };
-    const src = try source.Source.init(allocator, "script.my", bytes);
-    const tokens = try lexer.lex(allocator, bytes, &sink);
-    var p: parser.Parser = .{ .src = src, .storage = arena.allocator(), .tokens = tokens, .sink = &sink };
-    try t.expectError(error.SourceError, p.parseModule());
-    const first = sink.items.items[0];
-    const at = src.locate(first.span.start);
-    return .{ .code = first.code, .line = at.line, .column = at.column };
-}
-
-/// Load `entry` from an in-memory project that must be rejected, answering the
-/// diagnostic that stopped it.
-fn loadFailure(files: *Files, entry: []const u8) !Failure {
-    var loaded = project.Project.init(t.allocator);
-    defer loaded.deinit();
-    try t.expectError(error.SourceError, loaded.load(files.provider(), entry, .{}));
-    const problem = loaded.problem.?;
-    const at = loaded.modules.items[problem.site.module].src.locate(problem.site.span.start);
-    return .{ .code = problem.code, .line = at.line, .column = at.column };
-}
-
 // spec: HEADERLESS-STD-IMPORT-1
 test "a headerless entry imports an embedded standard module and stays one unit" {
     var arena = std.heap.ArenaAllocator.init(t.allocator);
@@ -101,47 +72,35 @@ test "a headerless entry imports an embedded standard module and stays one unit"
 }
 
 // spec: HEADERLESS-STD-IMPORT-2
-test "a headerless file that needs a project module keeps the module header rule" {
+test "headerless project imports preserve deterministic path identities" {
     var arena = std.heap.ArenaAllocator.init(t.allocator);
     defer arena.deinit();
-    const headerless = try moduleFailure(&arena, project_import);
-    try t.expectEqualStrings("E_MODULE_HEADER", headerless.code);
-    try t.expectEqual(@as(usize, 1), headerless.line);
-    try t.expectEqual(@as(usize, 1), headerless.column);
+    const parsed = try parseModuleSource(&arena, project_import);
+    try t.expectEqual(@as(usize, 1), parsed.syntax.functions.len);
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes = project_import },
-        .{ .path = "helper.my", .bytes = "module helper\n" },
+        .{ .path = "helper.my", .bytes = "func value() -> int:\n    return 1\n" },
     } };
-    const unimported = try loadFailure(&files, "main");
-    try t.expectEqualStrings("E_MODULE_HEADER", unimported.code);
-    try t.expectEqual(@as(usize, 1), unimported.line);
-    try t.expectEqual(@as(usize, 1), unimported.column);
-    var imported: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main\nimport helper\n" },
-        .{ .path = "helper.my", .bytes = script },
-    } };
-    const nested = try loadFailure(&imported, "main");
-    try t.expectEqualStrings("E_MODULE_HEADER", nested.code);
-    try t.expectEqual(@as(usize, 1), nested.line);
-    try t.expectEqual(@as(usize, 1), nested.column);
-    var declarations: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = "def main() -> i64:\n    return 0\n" }} };
-    const declared = try loadFailure(&declarations, "main");
-    try t.expectEqualStrings("E_MODULE_HEADER", declared.code);
-    try t.expectEqual(@as(usize, 1), declared.line);
-    try t.expectEqual(@as(usize, 1), declared.column);
+    var loaded = project.Project.init(t.allocator);
+    defer loaded.deinit();
+    try loaded.load(files.provider(), "main", .{});
+    const imported = loaded.modules.items[0].imports[0].target;
+    try t.expectEqualStrings("helper", loaded.modules.items[imported].name);
+    try t.expectEqualStrings("helper.my", loaded.modules.items[imported].src.path);
 }
 
 // spec: HEADERLESS-STD-IMPORT-HINT-1
-test "a headerless script importing a non-standard module is told which module and what is standard" {
-    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = "import math\nimport heapq\n\ndef main() -> int:\n    return 0\n" }} };
+test "redundant headers have a deletion fix and migration uses path identity" {
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = "module copied_name\n" }} };
     var loaded = project.Project.init(t.allocator);
     defer loaded.deinit();
     try t.expectError(error.SourceError, loaded.load(files.provider(), "main", .{}));
-    const problem = loaded.problem.?;
-    try t.expectEqualStrings("E_MODULE_HEADER", problem.code);
-    try t.expect(std.mem.startsWith(u8, problem.message, "`heapq` is not a standard module (base64, byte_builder, environment, filesystem, hex, json, math,"));
-    try t.expect(std.mem.endsWith(u8, problem.message, "start this file with `module main`"));
-    try t.expectEqual(@as(usize, 0), problem.site.span.start);
+    try t.expectEqualStrings("E_MODULE_HEADER", loaded.problem.?.code);
+    try t.expectEqualStrings("", loaded.problem.?.fix.?.text);
+    var migration = project.Project.init(t.allocator);
+    defer migration.deinit();
+    try migration.load(files.provider(), "main", .{ .legacy_headers = true });
+    try t.expectEqualStrings("main", migration.modules.items[0].name);
 }
 
 // The fixture provider is what makes the loader tests above mean anything, so
@@ -151,4 +110,51 @@ test "the in-memory provider reports a missing path and an oversized file" {
     var provider = files.provider();
     try t.expectError(error.NotFound, provider.read(provider.context, t.allocator, "missing.my", 64));
     try t.expectError(error.TooLarge, provider.read(provider.context, t.allocator, "small.my", 4));
+}
+
+// spec-case: HEADERLESS-STD-IMPORT-HINT-1
+test "target module parsing repairs a redundant header while migration consumes it" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    const bytes = "module copied_name\nfunc value() -> int:\n    return 1\n";
+    const src = try source.Source.init(allocator, "helper.my", bytes);
+    var sink: diagnostic.Sink = .{ .allocator = allocator };
+    const tokens = try lexer.lex(allocator, bytes, &sink);
+    var target: parser.Parser = .{ .src = src, .storage = allocator, .tokens = tokens, .sink = &sink };
+    try t.expectError(error.SourceError, target.parseModule());
+    const fix = sink.items.items[0].provenance.fix.?.edit;
+    try t.expectEqualStrings("", fix.text);
+    var migration: parser.Parser = .{ .src = src, .storage = allocator, .tokens = tokens, .sink = &sink, .cursor = .{ .dialect = .migration } };
+    const syntax = try migration.parseModule();
+    try t.expectEqual(@as(usize, 1), syntax.functions.len);
+}
+
+// spec-case: HEADERLESS-STD-IMPORT-HINT-1
+test "project parser diagnostics preserve declaration repair edits" {
+    var files: Files = .{ .entries = &.{.{
+        .path = "main.my",
+        .bytes = "func main() -> int:\n    value = 1\n    return value\n",
+    }} };
+    var loaded = project.Project.init(t.allocator);
+    defer loaded.deinit();
+    try loaded.load(files.provider(), "main", .{});
+    try t.expectError(error.SourceError, @import("interfaces.zig").build(&loaded));
+    try t.expectEqualStrings("E_BINDING_DECLARATION", loaded.problem.?.code);
+    try t.expect(loaded.problem.?.fix != null);
+    try t.expect(loaded.problem.?.fix.?.text.len != 0);
+}
+
+// spec-case: HEADERLESS-STD-IMPORT-HINT-1
+test "project parser retains every edit in a variant migration batch" {
+    var files: Files = .{ .entries = &.{.{
+        .path = "main.my",
+        .bytes = "union Value:\n    boolean: bool,\n    integer: int\n",
+    }} };
+    var loaded = project.Project.init(t.allocator);
+    defer loaded.deinit();
+    try loaded.load(files.provider(), "main", .{});
+    try t.expectError(error.SourceError, @import("interfaces.zig").build(&loaded));
+    try t.expect(loaded.problem.?.fix != null);
+    try t.expect(loaded.problem.?.fix_more.len >= 2);
 }
