@@ -1,0 +1,35 @@
+version = 1
+name = "f2-lox-vm"
+adapter = "mylang"
+sources = ["*.my"]
+inputs = ["inputs/*.lox"]
+
+[build]
+compiler = "mylang"
+entry = "main.my"
+counter_semantics = "core-count-p1-c26c95de7"
+tools = []
+
+[[workloads]]
+name = "vm-step"
+family = "lox-vm-step"
+args = ["--engine=vm", "inputs/step.10000000.lox"]
+unit = "iteration"
+units = 10000000
+expected_stdout = "49999995000000\n"
+
+[[workloads]]
+name = "vm-string-equality"
+family = "lox-vm-string-equality"
+args = ["--engine=vm", "inputs/string_equality.100000.lox"]
+unit = "iteration"
+units = 100000
+expected_stdout = "100000\n"
+
+[[workloads]]
+name = "vm-fib"
+family = "lox-vm-fib"
+args = ["--engine=vm", "inputs/fib.34.lox"]
+unit = "call"
+units = 18454929
+expected_stdout = "5702887\n"

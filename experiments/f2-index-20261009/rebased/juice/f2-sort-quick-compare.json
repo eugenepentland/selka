@@ -1,0 +1,258 @@
+{
+  "version": "juice-comparison-v1",
+  "identity_scheme": "mylang-juice-native-v1",
+  "base": "base-ab85-1",
+  "candidate": "f2-ab85-1",
+  "mode": "backend",
+  "context_id": "2f9e3756342562c8f307fcb1ab7ad0b1b8fdb09f189749553443b8479a8344bf",
+  "collector": {
+    "kind": "perf",
+    "tool": {
+      "path": "/usr/bin/perf",
+      "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+      "version": "perf version 7.0.14"
+    },
+    "event": "cpu_core/instructions/u",
+    "cpu": 8,
+    "scope": "user instructions; process and inherited children; whole workload"
+  },
+  "source_roots": {
+    "base": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce2-results/.tmp/f2/juice/sortq",
+    "candidate": "/home/epentland/ai/canopy/mylang-worktrees/claude-ce2-results/.tmp/f2/juice/sortq"
+  },
+  "library_changes": {},
+  "base_id": "522740db662a1210ca01cfb7fb05a132dc01fdb5d2ccf262ec16b8e3b3e38aaa",
+  "candidate_id": "b7c862095589a34141f78e0d41109c83e51b2587f2a2af7a67445423bf1b38a0",
+  "workloads": {
+    "sort-quick": {
+      "units": 2000000,
+      "unit": "element",
+      "family": "sort-quick",
+      "tier": "quick",
+      "scope": "complete scenario",
+      "weight": 1,
+      "assessment": "less-work",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "less-work",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "functions": [],
+      "instruction_ratio": 0.7961405496430601,
+      "juice": 79.614054964306,
+      "lines": [],
+      "metrics": {
+        "instructions": {
+          "base": {
+            "samples": [
+              1098691940,
+              1098691945,
+              1098691933
+            ],
+            "median": 1098691940,
+            "min": 1098691933,
+            "max": 1098691945,
+            "spread": 0.00000001092207884950899
+          },
+          "candidate": {
+            "samples": [
+              874713196,
+              874713222,
+              874713205
+            ],
+            "median": 874713205,
+            "min": 874713196,
+            "max": 874713222,
+            "spread": 0.000000029724028231630504
+          }
+        }
+      },
+      "ratio_envelope": [
+        0.7961405378283719,
+        0.7961405701883859
+      ],
+      "repeatable": true,
+      "risks": [],
+      "semantic": {
+        "status": "compatible",
+        "totals": {},
+        "contextual_metrics": [
+          "alloc_bytes",
+          "free_bytes",
+          "realloc_added_bytes",
+          "realloc_moves",
+          "realloc_moved_bytes",
+          "peak_live_bytes"
+        ],
+        "functions": [],
+        "sites": [
+          {
+            "function": "quicksort",
+            "origin": "quicksort",
+            "path": "main.my",
+            "line": 29,
+            "column": 17,
+            "kind": "bounds_check",
+            "detail": "list_set",
+            "base": {
+              "count": 10272504,
+              "bytes": 0,
+              "extra": 0
+            },
+            "candidate": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "match": "added or removed location"
+          },
+          {
+            "function": "quicksort",
+            "origin": "quicksort",
+            "path": "main.my",
+            "line": 27,
+            "column": 24,
+            "kind": "bounds_check",
+            "detail": "list_get",
+            "base": {
+              "count": 10272504,
+              "bytes": 0,
+              "extra": 0
+            },
+            "candidate": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "match": "added or removed location"
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "main.my",
+            "line": 50,
+            "column": 5,
+            "kind": "bounds_check",
+            "detail": "list_get",
+            "base": {
+              "count": 2000000,
+              "bytes": 0,
+              "extra": 0
+            },
+            "candidate": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "match": "added or removed location"
+          },
+          {
+            "function": "quicksort",
+            "origin": "quicksort",
+            "path": "main.my",
+            "line": 28,
+            "column": 25,
+            "kind": "bounds_check",
+            "detail": "list_get",
+            "base": {
+              "count": 10272504,
+              "bytes": 0,
+              "extra": 0
+            },
+            "candidate": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "match": "added or removed location"
+          },
+          {
+            "function": "quicksort",
+            "origin": "quicksort",
+            "path": "main.my",
+            "line": 28,
+            "column": 17,
+            "kind": "bounds_check",
+            "detail": "list_set",
+            "base": {
+              "count": 10272504,
+              "bytes": 0,
+              "extra": 0
+            },
+            "candidate": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "match": "added or removed location"
+          }
+        ],
+        "requested_allocation_bytes": {
+          "status": "unavailable",
+          "reason": "v1 counters expose allocated class/usable sizes"
+        },
+        "kinds": {
+          "bounds_check": {
+            "base": {
+              "count": 101152963,
+              "bytes": 0,
+              "extra": 0
+            },
+            "candidate": {
+              "count": 58062947,
+              "bytes": 0,
+              "extra": 0
+            }
+          }
+        },
+        "site_scope": "before LLVM optimization; source sites retained in capture records"
+      }
+    }
+  },
+  "change_id": "6397ece164408c52549af3c6232edf595d2ad48ce577aabdfed2736e9e56102d",
+  "meaning": "100 × candidate instructions per completed unit / baseline; not a time ratio",
+  "max_spread": 0.005,
+  "min_change": 0.001,
+  "runtime_prediction": {
+    "status": "uncalibrated"
+  },
+  "code": {
+    "available": true,
+    "sections": {
+      ".data.rel.ro": {
+        "base": 936,
+        "candidate": 792
+      },
+      ".debug_line": {
+        "base": 2022,
+        "candidate": 1985
+      },
+      ".relro_padding": {
+        "base": 4056,
+        "candidate": 616
+      },
+      ".rodata": {
+        "base": 16674,
+        "candidate": 16242
+      },
+      ".text": {
+        "base": 200534,
+        "candidate": 200470
+      }
+    },
+    "functions": {
+      "my.quicksort": {
+        "base": {
+          "bytes": 984
+        },
+        "candidate": {
+          "bytes": 920
+        }
+      }
+    },
+    "scope": "static bytes and instruction sites, not executions"
+  },
+  "static_cost": {
+    "status": "unavailable or incompatible"
+  },
+  "suite_juice": 79.614054964306,
+  "suite_meaning": "weighted geometric mean of selected scenarios; not whole-job runtime"
+}
