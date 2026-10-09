@@ -60,22 +60,31 @@ pub const Store = struct {
     /// Validate a known canonical payload digest during the ordinary checksum
     /// pass, avoiding a second hash by callers that already know its identity.
     pub fn loadExpected(self: *const Store, a: std.mem.Allocator, digest: Digest, expected: ?Digest) Error!?[]u8 {
+        const bytes = try self.loadRecord(digest, expected) orelse return null;
+        defer self.backing.free(bytes);
+        const owned = try a.dupe(u8, bytes[header_size..]);
+        return owned;
+    }
+
+    // Keep the verified record owned until decoding finishes; slice fields are
+    // copied by Reader into the caller's arena rather than borrowing this buffer.
+    fn loadRecord(self: *const Store, digest: Digest, expected: ?Digest) Error!?[]u8 {
         var scratch = std.heap.ArenaAllocator.init(self.backing);
         defer scratch.deinit();
-        const work = scratch.allocator();
-        const bytes = std.Io.Dir.cwd().readFileAlloc(self.io, try self.path(work, digest), work, .limited(maximum_bytes + header_size)) catch |err| {
+        const bytes = std.Io.Dir.cwd().readFileAlloc(self.io, try self.path(scratch.allocator(), digest), self.backing, .limited(maximum_bytes + header_size)) catch |err| {
             if (err == error.OutOfMemory) return error.OutOfMemory;
             return null;
         };
+        var retained = false;
+        defer if (!retained) self.backing.free(bytes);
         if (bytes.len < header_size or !std.mem.eql(u8, bytes[0..magic.len], magic)) return null;
         if (!std.mem.eql(u8, bytes[magic.len..][0..32], &digest)) return null;
         if (expected) |known| if (!std.mem.eql(u8, bytes[magic.len + 32 ..][0..32], &known)) return null;
-        const payload = bytes[header_size..];
         var actual: Digest = undefined;
-        std.crypto.hash.Blake3.hash(payload, &actual, .{});
+        std.crypto.hash.Blake3.hash(bytes[header_size..], &actual, .{});
         if (!std.mem.eql(u8, bytes[magic.len + 32 ..][0..32], &actual)) return null;
-        const owned = try a.dupe(u8, payload);
-        return owned;
+        retained = true;
+        return bytes;
     }
 
     /// Publish one complete record by an atomic rename on the cache filesystem.
@@ -105,9 +114,9 @@ pub const Store = struct {
     /// Decode plain slice-owned data into the caller's arena; invalid schemas miss.
     /// Callers validate stage-specific indices before applying the restored value.
     pub fn loadValue(self: *const Store, arena: std.mem.Allocator, digest: Digest, comptime T: type) Error!?T {
-        const bytes = try self.load(self.backing, digest) orelse return null;
+        const bytes = try self.loadRecord(digest, null) orelse return null;
         defer self.backing.free(bytes);
-        var reader = codec.Reader.init(arena, bytes);
+        var reader = codec.Reader.init(arena, bytes[header_size..]);
         const value = reader.read(T) catch |err| {
             if (err == error.OutOfMemory) return error.OutOfMemory;
             return null;

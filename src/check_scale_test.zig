@@ -862,3 +862,49 @@ test "summary validation and retained body caches both reject dotted import sign
     try t.expectEqualStrings(lowering.cold.diagnostics, lowering.warm.diagnostics);
     try t.expect(std.mem.indexOf(u8, lowering.warm.diagnostics, "E_ARITY") != null);
 }
+
+// spec-case: CHECK-SHAPES-1
+test "summary record shape admission preserves reordered touched lists" {
+    var arena_state = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    const files = reachFiles(reach_shapes);
+    const seed = try checkProject(&files, null, .check);
+    defer seed.deinit();
+    const decoded = summary.decode(arena, seed.summaries.?).?;
+    const changed = try arena.dupe(summary.Summary, decoded.summaries);
+    for (changed) |*entry| {
+        const reordered = try arena.dupe(u32, entry.uses.records);
+        std.mem.reverse(u32, reordered);
+        entry.uses.records = reordered;
+    }
+    const payload = try summary.encode(arena, .{ .records = decoded.records, .summaries = changed });
+    const warm = try checkProject(&files, payload, .check);
+    defer warm.deinit();
+    const unchanged = try checkProject(&files, seed.summaries.?, .check);
+    defer unchanged.deinit();
+    try t.expectEqual(unchanged.checked, warm.checked);
+    try t.expectEqual(unchanged.stood_in, warm.stood_in);
+    try t.expectEqualStrings(unchanged.diagnostics, warm.diagnostics);
+    try t.expectEqualStrings(unchanged.facts, warm.facts);
+}
+
+// spec-case: CHECK-SUMMARY-1
+test "summary callee ordinals remain valid after preceding declarations are inserted" {
+    const original = projectFiles(lib_source);
+    const changed = projectFiles("func inserted(n: int) -> int:\n    return n + 2\n" ++ lib_source);
+    const seed = try checkProject(&original, null, .check);
+    defer seed.deinit();
+    const warm = try checkProject(&changed, seed.summaries.?, .demand);
+    defer warm.deinit();
+    const cold = try checkProject(&changed, null, .demand);
+    defer cold.deinit();
+    try t.expect(warm.stood_in > 0);
+    try t.expectEqualStrings(cold.diagnostics, warm.diagnostics);
+    try t.expectEqualStrings(cold.facts, warm.facts);
+    const repeated = try checkProject(&changed, warm.summaries.?, .demand);
+    defer repeated.deinit();
+    try t.expect(repeated.checked < warm.checked);
+    try t.expectEqualStrings(cold.diagnostics, repeated.diagnostics);
+    try t.expectEqualStrings(cold.facts, repeated.facts);
+}

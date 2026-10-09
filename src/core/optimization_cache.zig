@@ -22,7 +22,7 @@ pub const Statistics = struct {
     bypassed: usize = 0,
     active_functions: usize = 0,
     fresh_work: usize = 0,
-    final_restores: usize = 0,
+    restores: struct { final: usize = 0, checkpoints: usize = 0 } = .{},
     final_loaded: usize = 0,
 };
 /// Outside facts and earlier pass events consulted by the requested stage.
@@ -42,6 +42,22 @@ pub const Request = struct {
     inputs: Inputs = .{},
 };
 
+/// Exact output identity of an ordered mutation checkpoint.
+pub const Checkpoint = struct {
+    key: [32]u8,
+    output: [32]u8,
+    provenance: Provenance,
+    changed: u32,
+    graph: struct { calls: []const u32, references: []const u32 },
+};
+/// Compact callee identities avoid decoding a body merely to form a stage key.
+pub const CheckpointProvider = struct {
+    pointer: *anyopaque,
+    identity_fn: *const fn (*anyopaque, Stage, u32, u32) ?CheckpointIdentity,
+};
+/// Body and local ancestry observed by an inlining stage.
+pub const CheckpointIdentity = struct { digest: [32]u8, ancestry: Provenance };
+
 /// One build's portable source/catalog context and mutable body digest memo.
 pub const Context = struct {
     store: *store.Store,
@@ -50,7 +66,7 @@ pub const Context = struct {
     prepared: ?struct { layout: [32]u8, canon: identity.Canon, digests: []?[32]u8, before: []?[32]u8 } = null,
     statistics: Statistics = .{},
     /// Optional lowering handles for development optimizer demand loading.
-    lazy: struct { raw: ?*@import("demand_ir.zig").Context = null, finals: []?FinalMetadata = &.{}, loaded: []bool = &.{} } = .{},
+    lazy: struct { raw: ?*@import("demand_ir.zig").Context = null, finals: []?FinalMetadata = &.{}, loaded: []bool = &.{}, checkpoints: ?CheckpointProvider = null } = .{},
     /// Deferred tables keep verified encoded facts for development emission misses.
     deferred: ?*deferred_facts.Table = null,
 
@@ -137,12 +153,13 @@ pub const Context = struct {
             };
             try writer.write(u32, target);
             if (inline_body) {
-                const callee = self.body(target) catch |err| switch (err) {
+                const saved = if (self.lazy.checkpoints) |provider| provider.identity_fn(provider.pointer, stage, function, target) else null;
+                const callee = if (saved) |checkpoint| checkpoint.digest else self.body(target) catch |err| switch (err) {
                     error.OutOfMemory => return error.OutOfMemory,
                     error.UnknownMetadata => return null,
                 };
                 try writer.write([32]u8, callee);
-                const callee_ancestry = Provenance.capture(a, self.source, provenance, target) catch |err| switch (err) {
+                const callee_ancestry = if (saved) |checkpoint| checkpoint.ancestry else Provenance.capture(a, self.source, provenance, target) catch |err| switch (err) {
                     error.OutOfMemory => return error.OutOfMemory,
                     error.InvalidSnapshot => return null,
                 };
@@ -427,7 +444,8 @@ pub const Provenance = struct {
         return .{ .frames = frame_list.items, .blocks = blocks.items, .instructions = instructions.items, .present = table.functions.contains(function) };
     }
 
-    fn equal(self: Provenance, other: Provenance) bool {
+    /// Compare canonical local ancestry independently of interned global frame IDs.
+    pub fn equal(self: Provenance, other: Provenance) bool {
         if (self.present != other.present) return false;
         if (!equalItems(Frame, self.frames, other.frames)) return false;
         if (!equalItems(Block, self.blocks, other.blocks)) return false;

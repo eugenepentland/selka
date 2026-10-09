@@ -7,7 +7,7 @@ const source = @import("mylang").source;
 const codec = @import("mylang").persist_codec;
 
 // spec: NEW-CORE-STAGE-CACHE-1
-test "stage store validates payloads and separates compiler stage and delimited inputs" {
+test "stage store loadRecord validates payloads and separates compiler stage and delimited inputs" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();

@@ -135,7 +135,7 @@ pub const Deferred = struct {
         if (handle.new_strings > prefix.strings.items.len or handle.string_count > prefix.strings.items.len - handle.new_strings) return error.CacheMiss;
         prefix.strings.items = prefix.strings.items[0 .. handle.new_strings + handle.string_count];
         const source: snapshot.Context = .{ .module = &prefix, .source = self.input.source };
-        const candidate = restoreFunction(a, source, handle.start, wire.function, handle.old_strings, handle.new_strings) catch |err| switch (err) {
+        const candidate = restoreFunction(self.arena, source, handle.start, wire.function, handle.old_strings, handle.new_strings) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             error.InvalidSnapshot => return error.CacheMiss,
         };
@@ -143,10 +143,7 @@ pub const Deferred = struct {
         if (!std.mem.eql(u8, candidate.name, declared.name)) return error.CacheMiss;
         if (!sameSignature(candidate.signature, declared.signature)) return error.CacheMiss;
         if (!try safeFunction(a, self.input.module, candidate)) return error.CacheMiss;
-        self.input.module.functions.items[index] = restoreFunction(self.arena, source, handle.start, wire.function, handle.old_strings, handle.new_strings) catch |err| switch (err) {
-            error.OutOfMemory => return error.OutOfMemory,
-            error.InvalidSnapshot => return error.CacheMiss,
-        };
+        self.input.module.functions.items[index] = candidate;
         try @import("lowering_finish.zig").function(self.arena, self.input.module, index);
         self.restored += 1;
     }

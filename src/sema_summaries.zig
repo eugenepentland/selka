@@ -49,7 +49,7 @@ pub const Plan = struct {
     /// Instance index of the entry point, which is always checked.
     main: usize,
     /// Previous summary positions invalidated through their actual consumers.
-    affected: []bool = &.{},
+    history: struct { affected: []bool = &.{}, current: []const ?u32 = &.{} } = .{},
 
     /// Plan stand-ins for one request. `main` is the entry point's instance.
     pub fn init(allocator: std.mem.Allocator, request: *summary.Request, session: *semantic_cache.Session, main: usize) error{OutOfMemory}!Plan {
@@ -74,6 +74,8 @@ pub const Plan = struct {
             const shapes = try allocator.alloc(ShapeState, previous.records.len);
             defer allocator.free(shapes);
             @memset(shapes, .unknown);
+            var combinations: std.StringHashMapUnmanaged(?[32]u8) = .empty;
+            defer combinations.deinit(allocator);
             for (prepared.ordinary_ast, 0..) |ast_index, instance| {
                 if (instance == main) continue;
                 const position = previous.find(prepared.keys[ast_index]) orelse continue;
@@ -83,12 +85,13 @@ pub const Plan = struct {
                 const region = prepared.regions[ast_index];
                 if (region.end - region.start != stored.region.len) continue;
                 if (!std.mem.eql(u8, &prepared.recalled.digests[ast_index], &stored.region.digest)) continue;
-                if (!try touchedShapesMatch(allocator, session, previous, stored.uses, shapes)) continue;
+                if (!try touchedShapesMatch(allocator, session, previous, stored.uses, shapes, &combinations)) continue;
                 stand_ins[instance] = position;
                 request.stood_in += 1;
             }
         }
         var plan: Plan = .{ .request = request, .prepared = prepared, .session = session, .stand_ins = stand_ins, .main = main };
+        plan.history.current = try plan.currentPositions(allocator);
         if (!request.policy.declared) try plan.prepareConsumers(allocator);
         if (request.policy.demand != null) try plan.prepareDemand(allocator);
         return plan;
@@ -98,21 +101,21 @@ pub const Plan = struct {
     /// dependency graph, including names syntax-only keys may not resolve.
     fn prepareConsumers(self: *Plan, allocator: std.mem.Allocator) error{OutOfMemory}!void {
         const previous = self.request.previous orelse return;
-        self.affected = try allocator.alloc(bool, previous.summaries.len);
-        @memset(self.affected, true);
+        self.history.affected = try allocator.alloc(bool, previous.summaries.len);
+        @memset(self.history.affected, true);
         const body_changes = self.request.policy.demand != null;
         for (self.prepared.ordinary_ast, 0..) |ast_index, instance| {
             const position = previous.find(self.prepared.keys[ast_index]) orelse continue;
             const stored = previous.summaries[position];
-            self.affected[position] = !std.mem.eql(u8, &stored.context, &self.prepared.contexts[ast_index]) or
+            self.history.affected[position] = !std.mem.eql(u8, &stored.context, &self.prepared.contexts[ast_index]) or
                 (body_changes and !std.mem.eql(u8, &stored.region.digest, &self.prepared.recalled.digests[ast_index])) or
                 (stored.stubbable and self.stand_ins[instance] == null and
                     std.mem.eql(u8, &stored.region.digest, &self.prepared.recalled.digests[ast_index]));
         }
-        try invalidateConsumers(allocator, previous, self.affected);
+        try invalidateConsumers(allocator, previous, self.history.affected);
         for (self.stand_ins) |*stand| {
             const position = stand.* orelse continue;
-            if (!self.affected[position]) continue;
+            if (!self.history.affected[position]) continue;
             stand.* = null;
             self.request.stood_in -= 1;
         }
@@ -199,7 +202,7 @@ pub const Plan = struct {
         for (self.prepared.ordinary_ast, 0..) |ast_index, instance| {
             if (self.standIn(instance) != null or instance >= facts.len) continue;
             const position = previous.find(self.prepared.keys[ast_index]) orelse continue;
-            if (self.request.policy.demand != null and position < self.affected.len and self.affected[position]) continue;
+            if (self.request.policy.demand != null and position < self.history.affected.len and self.history.affected[position]) continue;
             if (!summary.sameFact(summary.fromFact(facts[instance]), previous.summaries[position].fact)) return false;
         }
         return !try self.mixedCycle(allocator, program);
@@ -208,7 +211,7 @@ pub const Plan = struct {
     /// Whether a checked body reaches itself through a stood-in body. Stood-in
     /// facts are fixed, so a cycle through one could keep a stale fixed point.
     fn mixedCycle(self: *const Plan, allocator: std.mem.Allocator, program: typed.Program) error{OutOfMemory}!bool {
-        const current = try self.currentPositions(allocator);
+        const current = self.history.current;
         // Only bodies whose facts the passes computed walk their own edges; a
         // stood-in body's facts rest on its stored callees.
         const checked_edges = try allocator.alloc(?[]const u32, program.functions.len);
@@ -262,7 +265,7 @@ pub const Plan = struct {
         const count = self.prepared.ordinary_ast.len;
         const table = try allocator.alloc(summary.Summary, count);
         var names: RecordNames = .{};
-        const current = try self.currentPositions(allocator);
+        const current = self.history.current;
         const records = try allocator.alloc(?usize, count);
         @memset(records, null);
         for (self.checked.items, 0..) |record, position| {
@@ -425,11 +428,21 @@ fn storedCallTargets(allocator: std.mem.Allocator, program: typed.Program, recor
 /// Map stored callee positions to this request's instances; a callee that no
 /// longer exists is dropped (the caller then records the entry unstubbable).
 fn remapCallees(allocator: std.mem.Allocator, callees: []const u32, current: []const ?u32) error{OutOfMemory}![]const u32 {
+    if (unchangedCallees(callees, current)) return callees;
     var out: std.ArrayList(u32) = .empty;
     for (callees) |position| {
         if (position < current.len) if (current[position]) |instance| try out.append(allocator, instance);
     }
     return out.toOwnedSlice(allocator);
+}
+
+fn unchangedCallees(callees: []const u32, current: []const ?u32) bool {
+    for (callees) |position| {
+        if (position >= current.len) return false;
+        const instance = current[position] orelse return false;
+        if (instance != position) return false;
+    }
+    return true;
 }
 
 /// Diagnostics as region-relative notes; one that cannot be stored makes the
@@ -474,21 +487,30 @@ const ShapeState = union(enum) { unknown, missing, known: [32]u8 };
 
 /// Whether every record a stored body touched still exists with the shape it
 /// had, compared through the order-independent combined digest.
-fn touchedShapesMatch(allocator: std.mem.Allocator, session: *semantic_cache.Session, previous: *const summary.Index, uses: summary.Uses, shapes: []ShapeState) error{OutOfMemory}!bool {
-    const touched = try allocator.alloc(summary.Shape, uses.records.len);
+fn touchedShapesMatch(allocator: std.mem.Allocator, session: *semantic_cache.Session, previous: *const summary.Index, uses: summary.Uses, shapes: []ShapeState, combinations: *std.StringHashMapUnmanaged(?[32]u8)) error{OutOfMemory}!bool {
+    // Many ordinary bodies touch the same record list. Its positions borrow
+    // immutable previous-table storage, and the fresh catalog is fixed here.
+    // Memoize the current digest, then compare each body's own expected digest.
+    const cached = try combinations.getOrPut(allocator, std.mem.sliceAsBytes(uses.records));
+    if (!cached.found_existing) cached.value_ptr.* = try touchedShapeDigest(allocator, session, previous, uses.records, shapes);
+    const combined = cached.value_ptr.* orelse return false;
+    return std.mem.eql(u8, &combined, &uses.shape);
+}
+
+fn touchedShapeDigest(allocator: std.mem.Allocator, session: *semantic_cache.Session, previous: *const summary.Index, records: []const u32, shapes: []ShapeState) error{OutOfMemory}!?[32]u8 {
+    const touched = try allocator.alloc(summary.Shape, records.len);
     defer allocator.free(touched);
-    for (uses.records, touched) |position, *shape| {
+    for (records, touched) |position, *shape| {
         if (shapes[position] == .unknown) {
             shapes[position] = if (try session.shapeOf(previous.records[position])) |digest| .{ .known = digest } else .missing;
         }
         const digest = switch (shapes[position]) {
             .known => |known| known,
-            else => return false,
+            else => return null,
         };
         shape.* = .{ .name = previous.records[position], .digest = digest };
     }
-    const combined = summary.combineShapes(touched);
-    return std.mem.eql(u8, &combined, &uses.shape);
+    return summary.combineShapes(touched);
 }
 
 /// The record-name list of the table being produced.

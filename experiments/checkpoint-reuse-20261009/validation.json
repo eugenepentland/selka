@@ -1,0 +1,231 @@
+{
+  "source_parent_commit": "bf85fcf6b",
+  "branch": "codex/demand-artifacts-20261009",
+  "candidate_compiler_sha256": "3bb9d1b2c2c15056334a9577e966c984782a8b33aae83f5c3137756efbbea518",
+  "host_compiler_mode": "ReleaseFast",
+  "guest_mode": "optimized_debug",
+  "runtime_C_optimization": "O2",
+  "full_suite": {
+    "command": "zig build test fmt-check -j1 --summary all",
+    "exit_code": 0,
+    "steps": 93,
+    "passed_tests": 2300,
+    "unselected_shard_tests": 21231,
+    "test_runner_results": [
+      {
+        "passed": 118,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 118,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 40,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 40,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 40,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 43,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 118,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 125,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 40,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 40,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 117,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 118,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 118,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 118,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 118,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 118,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 117,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 117,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 79,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 78,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 78,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 78,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 78,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 79,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 79,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 79,
+        "failed": 0,
+        "skipped": 0
+      }
+    ]
+  },
+  "guardian": {
+    "command": "guardian-check all . --full --summary",
+    "checks": 88,
+    "exit_code": 0,
+    "policy_or_baseline_changes": false,
+    "final_run_after_spec_and_experiment_documentation": true
+  },
+  "initial_comparison": {
+    "builds": 40,
+    "binary_pairs": 20,
+    "all_binaries_identical": true,
+    "all_allocated_sections_identical": true,
+    "all_execution_checks_passed": true,
+    "maximum_candidate_510k_edit_seconds": 11.536993758985773
+  },
+  "integration_smoke": {
+    "builds": 8,
+    "purpose": "Unreserved-CPU correctness check; excluded from headline timings"
+  },
+  "checkpoint_recovery": {
+    "removed_transformed_callee_artifacts": 1,
+    "fallbacks": [
+      0,
+      1,
+      0,
+      0,
+      0
+    ],
+    "both_edited_binaries_match_fresh": true
+  },
+  "raw_final_llvm_recovery": {
+    "fallbacks": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "execution_and_binary_identity": "passed"
+  },
+  "resource_method": "Full suite used one build worker on nonreserved CPUs; initial comparison held cpu10.lock and used reserved CPUs 2,3,10,11. Initial comparison overlapped that suite. Warm repeat follows suite completion; independent shared-host jobs can still run.",
+  "warm_comparison": {
+    "builds": 36,
+    "binary_pairs": 18,
+    "all_binaries_identical": true,
+    "all_allocated_sections_identical": true,
+    "all_edited_objects_identical": true,
+    "all_execution_checks_passed": true,
+    "all_fallbacks_zero": true,
+    "maximum_candidate_510k_edit_seconds": 10.094602911965922
+  },
+  "single_build_cache": {
+    "builds": 2,
+    "zero_native_or_lowering_reuse": true,
+    "all_execution_checks_passed": true,
+    "allocated_bytes_verified_with_du": true,
+    "sizes": [
+      {
+        "copies": 12,
+        "total": {
+          "allocated_bytes": 1306664960,
+          "logical_file_bytes": 1004243702,
+          "files": 89589
+        }
+      },
+      {
+        "copies": 32,
+        "total": {
+          "allocated_bytes": 3472842752,
+          "logical_file_bytes": 2669950508,
+          "files": 237589
+        }
+      }
+    ]
+  }
+}

@@ -148,6 +148,8 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
         const drop_debug = options.mode == .release and budget == null;
         var demand = try lowering_demand.Context.init(lowered_arena.allocator(), &storage, entry.path, drop_debug);
         if (!options.show.verify_cache) try session.enableCache(init.gpa, options.cache);
+        var frontend_profile = language.timings.Profile.init(init.io, options.show.cache_report != .off, .compiler);
+        session.setProfile(&frontend_profile);
         if (demand_enabled) session.configureDemand(demand.callback());
         const checked = session.checkFile(allocator, if (options.show.diagnostics == .errors) entry.path else path, report) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
@@ -158,6 +160,7 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
         try entry.validate(allocator, &session, report);
         stages.nanoseconds.frontend += stage_metrics.elapsed(init.io, checked_start);
         stages.frontend = session.statistics();
+        stages.nanoseconds.frontend_phases = try stage_metrics.frontendPhases(allocator, &frontend_profile);
         frontendMetrics(&stages, &session);
         if (session.demandState()) |state| demand.attach(state.prepared, state.omitted);
         const lowering_start = stage_metrics.now(init.io);
