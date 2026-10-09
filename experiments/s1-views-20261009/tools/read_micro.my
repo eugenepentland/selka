@@ -1,0 +1,21 @@
+def scan(text: str) -> int:
+    hits = 0
+    for i in range(len(text) - 3):
+        if text[i:i + 2] == "//":
+            hits += 1
+        if text[i:i + 4].startswith("ab"):
+            hits += 2
+        hits += len(text[i:i + 3])
+    return hits
+
+
+def main(out: Stream) -> int:
+    parts: list[str] = []
+    for i in range(200000):
+        parts.append("ab// x" + str(i % 10))
+    text = "".join(parts)
+    total = 0
+    for _ in range(3):
+        total += scan(text)
+    out.print(total)
+    return 0

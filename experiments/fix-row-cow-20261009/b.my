@@ -1,0 +1,17 @@
+# Base wrong answer (main cafe7fea7, found by lane F1, not caused by it): debug prints
+# "8.0 4.0", release prints "8.0 8.0". After `scale` is inlined into `main`, the
+# inlined row update `c[i][j] = ...` has no uniqueness test on the row although
+# `keep3 = rows3[1]` shares row 1 (count 2), so the shared row is written in place.
+
+def scale(c: mut list[list[float]], n: int):
+    for i in range(n):
+        for j in range(n):
+            c[i][j] = c[i][j] * 2.0
+
+
+def main(out: Stream) -> int:
+    rows3 = [[1.0, 2.0], [3.0, 4.0]]
+    keep3 = rows3[1]
+    scale(mut rows3, 2)
+    out.print(rows3[1][1], keep3[1])
+    return 0

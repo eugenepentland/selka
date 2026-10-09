@@ -435,3 +435,16 @@ Guardian’s whole-tree commit check caught that SHARED-COUNTS-1 still described
 - **Evidence:** Candidate C completed all five old-base corpora below the 1.03 premise boundary, although rows, EDA, parity and Lox tree miss strict targets. Candidate G finished only rows and EDA before main moved. Its own parity orchestration was terminated (status -15), and Lox never began. No other lane's processes were stopped.
 - **Choice:** The user's direct instruction supersedes the plan's mandatory repeated timing gate and corresponding §9.1 gate-relaxation stop. Merge main with a real merge commit, adopt the simpler, fully measured candidate C, and run all final correctness gates. Do not schedule another timed suite or wait for idle hardware. Retain all earlier timings, including partial G, as historical evidence. Use exact counted/plain outputs, allocation counts and generated-code invariants as deterministic proxies; these cannot certify elapsed-time overhead. Report merged-version performance as unverified, never as a passed tax gate.
 - **Reversal:** Easy: the timing tools, inputs, earlier raw evidence and candidate patches remain available for a later explicitly requested measurement. No numeric threshold is changed.
+
+## 2026-10-09 — main integration: preserve F1/S1 and P1 metadata
+
+- **Question:** Incoming F1 reserves LLVM metadata nodes 11–22 for scalar element TBAA; P1 previously used 11 for the 32:1 count branch hint.
+- **Options/evidence:** Dropping either metadata family would discard an accepted optimization. The only merge conflict is in the allowed emitter; all frozen files merge exactly to incoming main.
+- **Choice:** Preserve upstream nodes 11–22 and its free-path compiler barrier. Move P1's branch-weight node and countBlock reference to 23, and start dynamically allocated fact nodes after it. Keep the task bridge and place the allocator comment directly above its paths. Auto-merged text cache writes retain P1's shared/immortal guard, and the new span-counting hook is retained.
+- **Reversal:** Straightforward metadata renumbering; no semantic change.
+
+## 2026-10-09 — reclaim completed private candidate archives
+
+- **Question:** Available disk fell to 5.6 GB after other workspace activity; final correctness needs working space.
+- **Evidence/choice:** Delete only this task's `.tmp/p1-final-C-src` through `-G-src` reconstructed source archives and their local caches (about 8.5 GB). Their committed source pins, patches, compiler hashes/binaries and evidence are retained. No live own candidate build remains. No shared caches or another lane's files are touched.
+- **Reversal:** Reconstruct from the recorded commit and patch.

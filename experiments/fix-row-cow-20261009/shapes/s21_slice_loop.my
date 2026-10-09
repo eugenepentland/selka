@@ -1,0 +1,25 @@
+# A for loop over a list iterates the live place (docs/managed-memory.md), a slice a snapshot.
+# expect: 4 9
+# expect: 10 9
+# expect: 10 9
+def main(out: Stream) -> int:
+    b = [[1, 2], [3, 4]]
+    acc = 0
+    for r in b[0:2]:
+        b[1][0] = 9
+        acc += r[0]
+    out.print(acc, b[1][0])
+    c = [[1, 2], [3, 4]]
+    acc2 = 0
+    for r in c:
+        c[1][0] = 9
+        acc2 += r[0]
+    out.print(acc2, c[1][0])
+    d = [[1, 2], [3, 4]]
+    acc3 = 0
+    for i in range(2):
+        r = d[i]
+        d[1][0] = 9
+        acc3 += r[0]
+    out.print(acc3, d[1][0])
+    return 0

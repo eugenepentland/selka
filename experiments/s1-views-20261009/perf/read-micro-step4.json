@@ -1,0 +1,172 @@
+{
+ "cpu": 6,
+ "rounds": 5,
+ "events": [
+  "instructions",
+  "cycles",
+  "branches",
+  "branch-misses",
+  "L1-dcache-loads",
+  "L1-dcache-load-misses",
+  "LLC-load-misses",
+  "mem_inst_retired.all_stores"
+ ],
+ "arms": [
+  {
+   "program": "readmicro",
+   "arm": "base",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 2907421680,
+    "cycles": 651715834,
+    "branches": 558238311,
+    "branch-misses": 637655,
+    "L1-dcache-loads": 532448222,
+    "L1-dcache-load-misses": 273915,
+    "LLC-load-misses": 105482,
+    "mem_inst_retired.all_stores": 470832920
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 2907421675,
+     "cycles": 651889403,
+     "branches": 558238306,
+     "branch-misses": 636118,
+     "L1-dcache-loads": 532448217,
+     "L1-dcache-load-misses": 273915,
+     "LLC-load-misses": 126567,
+     "mem_inst_retired.all_stores": 470832920
+    },
+    {
+     "status": 0,
+     "instructions": 2907421687,
+     "cycles": 651715834,
+     "branches": 558238318,
+     "branch-misses": 635852,
+     "L1-dcache-loads": 532448229,
+     "L1-dcache-load-misses": 266099,
+     "LLC-load-misses": 141505,
+     "mem_inst_retired.all_stores": 470832920
+    },
+    {
+     "status": 0,
+     "instructions": 2907421679,
+     "cycles": 651967330,
+     "branches": 558238310,
+     "branch-misses": 638006,
+     "L1-dcache-loads": 532448221,
+     "L1-dcache-load-misses": 277745,
+     "LLC-load-misses": 96735,
+     "mem_inst_retired.all_stores": 470832920
+    },
+    {
+     "status": 0,
+     "instructions": 2907421705,
+     "cycles": 650869469,
+     "branches": 558238336,
+     "branch-misses": 637655,
+     "L1-dcache-loads": 532448247,
+     "L1-dcache-load-misses": 272382,
+     "LLC-load-misses": 105482,
+     "mem_inst_retired.all_stores": 470832920
+    },
+    {
+     "status": 0,
+     "instructions": 2907421680,
+     "cycles": 651681237,
+     "branches": 558238311,
+     "branch-misses": 638536,
+     "L1-dcache-loads": 532448222,
+     "L1-dcache-load-misses": 277343,
+     "LLC-load-misses": 73303,
+     "mem_inst_retired.all_stores": 470832920
+    }
+   ]
+  },
+  {
+   "program": "readmicro",
+   "arm": "step4",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 823874084,
+    "cycles": 185789534,
+    "branches": 178800579,
+    "branch-misses": 42743,
+    "L1-dcache-loads": 140957699,
+    "L1-dcache-load-misses": 270821,
+    "LLC-load-misses": 102117,
+    "mem_inst_retired.all_stores": 59233805
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 823874083,
+     "cycles": 185789534,
+     "branches": 178800578,
+     "branch-misses": 42616,
+     "L1-dcache-loads": 140957698,
+     "L1-dcache-load-misses": 270821,
+     "LLC-load-misses": 86493,
+     "mem_inst_retired.all_stores": 59233805
+    },
+    {
+     "status": 0,
+     "instructions": 823874092,
+     "cycles": 186066083,
+     "branches": 178800587,
+     "branch-misses": 42743,
+     "L1-dcache-loads": 140957707,
+     "L1-dcache-load-misses": 262033,
+     "LLC-load-misses": 102117,
+     "mem_inst_retired.all_stores": 59233805
+    },
+    {
+     "status": 0,
+     "instructions": 823874086,
+     "cycles": 184322613,
+     "branches": 178800581,
+     "branch-misses": 42952,
+     "L1-dcache-loads": 140957701,
+     "L1-dcache-load-misses": 288238,
+     "LLC-load-misses": 101686,
+     "mem_inst_retired.all_stores": 59233805
+    },
+    {
+     "status": 0,
+     "instructions": 823874084,
+     "cycles": 185422867,
+     "branches": 178800579,
+     "branch-misses": 42636,
+     "L1-dcache-loads": 140957699,
+     "L1-dcache-load-misses": 262499,
+     "LLC-load-misses": 104356,
+     "mem_inst_retired.all_stores": 59233805
+    },
+    {
+     "status": 0,
+     "instructions": 823874084,
+     "cycles": 186910074,
+     "branches": 178800579,
+     "branch-misses": 45305,
+     "L1-dcache-loads": 140957699,
+     "L1-dcache-load-misses": 423725,
+     "LLC-load-misses": 144226,
+     "mem_inst_retired.all_stores": 59233805
+    }
+   ]
+  }
+ ]
+}

@@ -382,6 +382,9 @@ pub const Op = enum(u8) {
     /// `extra[1]` (`i64`) appended, or `a` unchanged when that range is not inside `b`;
     /// consumes `a`.
     buffer_append,
+    /// Borrow string `a` between scalar positions `b: i64` and `extra[0]: i64`, clamped
+    /// exactly as `str_slice` clamps them: the `str_view` of the octets `str_slice` would copy.
+    str_slice_view,
 
     /// Whether this operation ends a block.
     pub fn terminates(self: Op) bool {
@@ -394,7 +397,7 @@ pub const Op = enum(u8) {
     /// Whether `data` packs an `extra` operand list (an `ExtraSlice`).
     pub fn hasExtra(self: Op) bool {
         return switch (self) {
-            .phi, .call, .call_indirect, .print, .record_make, .list_set, .list_set_field, .buffer_append, .dict_set_value, .dict_insert, .str_append_char, .str_slice, .str_view_of, .array_set, .buffer_set => true,
+            .phi, .call, .call_indirect, .print, .record_make, .list_set, .list_set_field, .buffer_append, .dict_set_value, .dict_insert, .str_append_char, .str_slice, .str_view_of, .str_slice_view, .array_set, .buffer_set => true,
             else => false,
         };
     }
@@ -754,6 +757,25 @@ pub const Module = struct {
             }
         }
         return .{ .ty = current, .offset = offset, .tag_of = tag_of };
+    }
+
+    /// Whether `path` inside a `ty` value passes through a union (its tag or a case's
+    /// payload): bytes a union's cases share, which keep the generic data tag.
+    pub fn pathCrossesUnion(self: *const Module, ty: Type, path: FieldPath) bool {
+        var current = ty;
+        for (path.slice()) |step| {
+            const k = self.kind(current) orelse return false;
+            switch (k) {
+                .array => current = self.compound(current).array.elem,
+                .record => {
+                    const fields = self.compound(current).record;
+                    if (step >= fields.len) return false;
+                    current = fields[step];
+                },
+                else => return true,
+            }
+        }
+        return false;
     }
 };
 

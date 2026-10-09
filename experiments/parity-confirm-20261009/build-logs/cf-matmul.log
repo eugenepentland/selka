@@ -1,0 +1,7 @@
+## matmul run
+| variant | Minstr | Mcycles | instr ÷ base | cycles ÷ base | output | lines edited |
+|---|---:|---:|---:|---:|---|---:|
+| real | 1313 | 648 | 1.000 | 1.005 | ok |  |
+| base | 1313 | 645 | 1.000 | 1.000 | ok | 0 |
+| tbaa | 143 | 74 | 0.109 | 0.115 | ok | 76 |
+| checks+tbaa | 120 | 73 | 0.092 | 0.113 | ok | 284 |

@@ -1,0 +1,6 @@
+## nbody run
+| variant | Minstr | Mcycles | instr ÷ base | cycles ÷ base | output | lines edited |
+|---|---:|---:|---:|---:|---|---:|
+| real | 3485 | 935 | 1.000 | 1.000 | ok |  |
+| base | 3485 | 935 | 1.000 | 1.000 | ok | 0 |
+| unique | 2350 | 765 | 0.674 | 0.818 | ok | 19 |

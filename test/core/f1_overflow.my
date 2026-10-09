@@ -1,0 +1,145 @@
+module f1_overflow
+
+# Overflow facts (NEW-CORE-F1-OVERFLOW-1..4): counters bounded by their loop's trips,
+# loop variables bounded by their loop condition (`i * i <= n` included), and a
+# callee's return interval at its calls. `main` runs every scenario; a first argument
+# names one scenario, and each further argument makes it larger. Every answer here is
+# the base compiler's (main cafe7fea7).
+
+
+# A counter that grows by at most one per inner iteration, conditionally, and by the
+# outer loop's index per outer iteration (bytes_scan's shape).
+def counters(text: str, passes: int) -> int:
+    data = text.encode()
+    count = 0
+    for pass_index in range(passes):
+        count += pass_index
+        for i in range(len(data)):
+            if data[i] == 109:
+                count += 1
+    flags = [c == 109 for c in data]
+    for flag in flags:
+        if flag:
+            count += 1
+    return count
+
+
+# Eratosthenes up to `n` (sieve's shape): `i` is bounded by `i * i <= n`, `j` by `j <= n`.
+def primes(n: int) -> int:
+    flags = [True for _ in range(n + 1)]
+    flags[0] = False
+    flags[1] = False
+    i = 2
+    while i * i <= n:
+        if flags[i]:
+            j = i * i
+            while j <= n:
+                flags[j] = False
+                j = j + i
+        i = i + 1
+    count = 0
+    for flag in flags:
+        if flag:
+            count += 1
+    return count
+
+
+# A counter that starts near the top of `int`: its growth over the loop's trips leaves
+# the type, so its check stays and traps once it does.
+def near_max(trips: int) -> int:
+    count = 9223372036854775800
+    for i in range(trips):
+        if i % 2 == 0:
+            count += 1
+    return count - 9223372036854775800
+
+
+# A step the facts cannot bound: each element's value.
+def unbounded(xs: list[int]) -> int:
+    total = 0
+    for i in range(len(xs)):
+        total += xs[i]
+    return total
+
+
+# Loops whose bound changes in the body.
+def moving(steps: int) -> int:
+    j = 0
+    limit = 10 + steps
+    while j <= limit:
+        j = j + 2
+        if j % 3 == 0:
+            limit = limit + 1
+    i = 1
+    m = 50 + steps
+    while i * i <= m:
+        m = m - 1
+        i = i + 1
+    return j * 1000 + i * 10 + m
+
+
+# Floor modulo into a callee: `modulo` sees a negative argument at one call, so its floor
+# fix-up stays; `small` sees only non-negative ones, so it is an unsigned remainder.
+def modulo(a: int, b: int) -> int:
+    return (a + b) % 1000003
+
+
+def small(a: int, b: int) -> int:
+    return (a + b) % 7
+
+
+def modulos(rounds: int) -> int:
+    total = 0
+    tiny = 0
+    for i in range(rounds):
+        total = modulo(total, i)
+        tiny = small(tiny, i)
+    negative = 0
+    for k in range(3):
+        negative = negative + modulo(k - 5 - rounds, 3 - k)
+    return total * 100000000 + negative * 10 + tiny
+
+
+# Probes that reach each rule's bound exactly, so a fact one off on the inside fails:
+# `i` reaches the square root of a constant `n`, and the counter one per element.
+def square_probe() -> int:
+    n = 10000
+    i = 1
+    while i * i <= n:
+        i = i + 1
+    return i
+
+
+def counter_probe(xs: list[int]) -> int:
+    count = 0
+    for x in xs:
+        count += 1
+    return count
+
+
+def scenario(name: str, size: int, out: Stream) -> int:
+    if name == "square" or name == "all":
+        out.print(square_probe())
+    if name == "counter" or name == "all":
+        out.print(counter_probe([size, 2, 3]))
+    if name == "counters" or name == "all":
+        out.print(counters("mylang mmm micro mm" * (1 + size), 4 + size))
+    if name == "primes" or name == "all":
+        out.print(primes(10000 + size), primes(97 + size))
+    if name == "near" or name == "all":
+        out.print(near_max(8 + size * 20))
+    if name == "unbounded" or name == "all":
+        out.print(unbounded([1, 2, 3 * (1 + size)]))
+    if name == "huge":
+        out.print(unbounded([4611686018427387904, 4611686018427387904 + size]))
+    if name == "moving" or name == "all":
+        out.print(moving(size))
+    if name == "modulos" or name == "all":
+        out.print(modulos(1000 + size))
+    return 0
+
+
+def main(args: list[str], out: Stream) -> int:
+    if len(args) == 0:
+        return scenario("all", 0, out)
+    return scenario(args[0], len(args) - 1, out)

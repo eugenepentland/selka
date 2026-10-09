@@ -351,7 +351,7 @@ const Analysis = struct {
                     break :blk .borrowed;
                 } else .owned,
                 .copy => .none,
-                .list_get, .list_get_field, .record_get, .union_payload, .box_get, .dict_entry_key, .dict_entry_value, .array_get, .str_view_of => blk: {
+                .list_get, .list_get_field, .record_get, .union_payload, .box_get, .dict_entry_key, .dict_entry_value, .array_get, .str_view_of, .str_slice_view => blk: {
                     if (self.marks.owned_get.contains(@intCast(i))) break :blk .owned;
                     self.parent[i] = f.resolve(instruction.a);
                     break :blk .borrowed;
@@ -691,8 +691,12 @@ fn staticallyUnique(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool 
 }
 
 /// A fresh collection owns unique child blocks when all stores moved unique
-/// values and no ordinary child read was promoted, stored, returned or lent to a
-/// call. A real collection copy does not establish this claim: its children share.
+/// values into it in place and no ordinary child read was promoted, stored, returned
+/// or lent to a call. A real collection copy does not establish this claim: its
+/// children share. Nor does an update that may have copied its collection (a
+/// count-tested or copied push or store): the copy shares every child it carried
+/// over (NEW-CORE-ROW-COW-2). A promoted child read holds a second count of its
+/// child, from the read on (NEW-CORE-ROW-COW-1).
 fn exclusiveChildren(a: *const Analysis, root: ir.Ref) Error!bool {
     var values: std.ArrayList(ir.Ref) = .empty;
     try values.append(a.arena, a.f.resolve(root));
@@ -715,9 +719,12 @@ fn exclusiveChildren(a: *const Analysis, root: ir.Ref) Error!bool {
             },
             .list_push, .list_set => {
                 const child = a.f.resolve(if (inst.op == .list_push) inst.b else a.f.operands(inst.data)[0]);
+                const list = a.f.resolve(inst.a);
                 const at = location(a.f, ref);
                 if (a.liveAfter(child, at.block, at.pos) or !try staticallyUnique(a, child, ref)) return false;
-                try addUnique(a.arena, &values, a.f.resolve(inst.a));
+                const in_place = a.counted(list) and !a.liveAfter(list, at.block, at.pos);
+                if (!in_place or !try staticallyUnique(a, list, ref)) return false;
+                try addUnique(a.arena, &values, list);
             },
             else => return false,
         }
@@ -725,7 +732,7 @@ fn exclusiveChildren(a: *const Analysis, root: ir.Ref) Error!bool {
     for (a.f.insts.items, 0..) |inst, index| {
         if (inst.op != .list_get or !a.module.managed(inst.ty) or flags.transferredRead(inst)) continue;
         if (std.mem.indexOfScalar(ir.Ref, values.items, a.f.resolve(inst.a)) == null) continue;
-        if (a.class[index] == .owned) return false;
+        if (a.counted(@fromBackingInt(@intCast(index)))) return false;
         for (a.uses[index].items) |use| {
             if (use.consume != 0) return false;
             const user = a.f.inst(a.f.blocks.items[use.block].insts.items[use.pos]);
@@ -958,7 +965,10 @@ fn useUpdatedOperand(e: Editor, update: ir.Ref, value: ir.Ref) Error!void {
     const inst = e.f.inst(update);
     if (inst.op == .dict_insert) {
         const old_probe = e.f.inst(e.f.resolve(inst.b));
-        const probe = try e.insertBefore(update, .{ .op = .dict_find, .ty = .i64, .a = value, .b = old_probe.b, .span = inst.span });
+        // A borrowed span's lifetime ends where liveness put it; the copy is probed
+        // with the owned key the insert itself consumes (NEW-CORE-S1-VIEW-1).
+        const key = if (e.f.inst(e.f.resolve(old_probe.b)).ty == .str_view) e.f.operands(inst.data)[0] else old_probe.b;
+        const probe = try e.insertBefore(update, .{ .op = .dict_find, .ty = .i64, .a = value, .b = key, .span = inst.span });
         e.f.insts.items[update.index()].b = probe;
     }
     e.f.insts.items[update.index()].a = value;

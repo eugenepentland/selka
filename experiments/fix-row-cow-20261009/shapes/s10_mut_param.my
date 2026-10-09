@@ -1,0 +1,31 @@
+# expect: 3 14 3
+# expect: 3 14
+def bump(c: mut list[list[int]], n: int):
+    for i in range(n):
+        c[i][0] = c[i][0] * 2
+
+
+def bump_big(c: mut list[list[int]], n: int, out: Stream) effects(output, mutation):
+    for i in range(n):
+        j = 0
+        while j < len(c[i]):
+            c[i][j] = c[i][j] * 2
+            j += 1
+        if i > 100:
+            out.print("never")
+
+
+def main(out: Stream) -> int:
+    b = [[1, 2], [3, 4]]
+    k = b[1]
+    bump(mut b, 2)
+    bump(mut b, 2)
+    k2 = b[1]
+    bump(mut b, 2)
+    out.print(k[0], b[1][0] - 10, k2[0] - 9)
+    c = [[1, 2], [3, 4]]
+    kc = c[1]
+    bump_big(mut c, 2, out)
+    bump_big(mut c, 2, out)
+    out.print(kc[0], c[1][0] + 2)
+    return 0

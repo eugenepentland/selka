@@ -1,0 +1,230 @@
+module s1_views
+
+# Slices used as dictionary keys borrow their source (NEW-CORE-S1-VIEW-1..4). Every
+# answer here is the base compiler's (`main` cafe7fea7, debug) and CPython's.
+
+
+def summary(d: dict[str, int]) -> str:
+    keys = sorted(list(d.keys()))
+    parts: list[str] = []
+    for key in keys:
+        parts.append(key + "=" + str(d[key]))
+    return ",".join(parts)
+
+
+# The knucleotide shape: a fused get-then-set count of every k-letter slice.
+def counts(seq: str, k: int) -> dict[str, int]:
+    d: dict[str, int] = {}
+    for i in range(len(seq) - k + 1):
+        key = seq[i:i + k]
+        d[key] = d.get(key, 0) + 1
+    return d
+
+
+# A key inserted, then its source rebound and changed while the slice is still live.
+def rebound(seq: str) -> str:
+    d: dict[str, int] = {}
+    s = seq + "!"
+    for i in range(len(seq) - 1):
+        key = s[i:i + 2]
+        s = s + str(i % 10)
+        d[key] = d.get(key, 0) + len(s)
+    return summary(d) + "|" + s
+
+
+# The source is an element of a list that is replaced while the slice is live.
+def element_source(words: mut list[str]) -> str:
+    d: dict[str, int] = {}
+    for i in range(len(words)):
+        key = words[i][0:3]
+        words[i] = "zz" + str(i)
+        d[key] = d.get(key, 0) + 1
+    return summary(d) + "|" + ",".join(words)
+
+
+# One slice is the key of two dictionaries.
+def two_dicts(seq: str) -> str:
+    a: dict[str, int] = {}
+    b: dict[str, int] = {}
+    for i in range(len(seq) - 1):
+        key = seq[i:i + 2]
+        a[key] = a.get(key, 0) + 1
+        if key not in b:
+            b[key] = len(b)
+    return summary(a) + "|" + summary(b)
+
+
+# Unicode: slices index scalars, never octets.
+def scalars(seq: str) -> str:
+    d: dict[str, int] = {}
+    for i in range(len(seq)):
+        for w in range(4):
+            key = seq[i:i + w]
+            d[key] = d.get(key, 0) + 1
+    return summary(d)
+
+
+# Clamped, negative, reversed, empty and past-the-end bounds.
+def bounds(seq: str) -> str:
+    d: dict[str, int] = {}
+    n = len(seq)
+    for lo in range(-n - 3, n + 4):
+        for hi in [-n - 5, -2, -1, 0, 1, n - 1, n, n + 7]:
+            key = seq[lo:hi]
+            d[key] = d.get(key, 0) + 1
+    return summary(d)
+
+
+# Probes of keys inserted from other sources: literals and other strings' slices.
+def foreign(seq: str, other: str) -> str:
+    d: dict[str, int] = {"ab": 1, "": 2, "abcdefgh": 3, "abcdefghijklmno": 4, "abcdefghijklmnop": 5, "abcdefghijklmnopq": 6}
+    found: list[str] = []
+    for lo in range(len(other)):
+        for hi in range(lo, len(other) + 1):
+            key = other[lo:hi]
+            if key in d:
+                found.append(str(lo) + ":" + str(hi) + "=" + str(d[key]))
+            v = d.get(seq[lo:hi], -1)
+            if v >= 0:
+                found.append("s" + str(lo) + ":" + str(hi) + "=" + str(v))
+    return ",".join(found)
+
+
+# Near misses at every length up to 20: equal lengths, one octet different at the start,
+# the middle or the end, so a short-key compare must look at every octet.
+def near_misses(base: str) -> str:
+    d: dict[str, int] = {}
+    for n in range(21):
+        d[base[0:n]] = n
+    hits = 0
+    misses = 0
+    for n in range(21):
+        for at in range(n):
+            changed = base[0:at] + "#" + base[at + 1:n]
+            if d.get(changed[0:n], -1) >= 0:
+                hits += 1
+            else:
+                misses += 1
+        if d.get(base[0:n], -1) == n:
+            hits += 1
+    return str(hits) + " " + str(misses)
+
+
+# Deletions leave dead entries, in a small table and in an indexed one.
+def deletions(seq: str, size: int) -> str:
+    d: dict[str, int] = {}
+    for i in range(size):
+        d[seq[i:i + 3]] = i
+    for i in range(0, size, 3):
+        key = seq[i:i + 3]
+        if key in d:
+            _ = d.pop(key)
+    total = 0
+    for i in range(size + 3):
+        total = total * 3 + d.get(seq[i:i + 3], -1)
+        total = total % 1000003
+    d[seq[1:4]] = 99
+    return str(total) + " " + str(len(d)) + " " + str(d.get(seq[1:4], -1))
+
+
+def add_one(d: mut dict[str, int], key: str) -> None:
+    d[key] = d.get(key, 0) + 1
+
+
+# A slice probed, then the dictionary changed by a call, then the slice inserted.
+def across_call(seq: str) -> str:
+    d: dict[str, int] = {}
+    for i in range(len(seq) - 1):
+        key = seq[i:i + 2]
+        before = d.get(key, 0)
+        add_one(mut d, seq[i + 1:i + 3])
+        d[key] = before + 10
+    return summary(d)
+
+
+# The slice escapes into a call, so it stays a string.
+def measured(key: str) -> int:
+    return len(key) * 2
+
+
+def escaping(seq: str) -> str:
+    d: dict[str, int] = {}
+    for i in range(len(seq) - 1):
+        key = seq[i:i + 2]
+        d[key] = d.get(key, 0) + measured(key)
+    return summary(d)
+
+
+# `break`, `continue` and an early return between the probe and the insert.
+def control(seq: str, stop: int) -> str:
+    d: dict[str, int] = {}
+    for i in range(len(seq) - 1):
+        key = seq[i:i + 2]
+        if key in d:
+            if d[key] > 3:
+                break
+            d[key] = d[key] + 1
+            continue
+        if i == stop:
+            return "stopped " + summary(d)
+        d[key] = 1
+    return summary(d)
+
+
+# A shared dictionary is copied before the insert; the original must not change (value
+# semantics: CPython's oracle reads `e = d` as `e = dict(d)`).
+def shared(seq: str) -> str:
+    d: dict[str, int] = {"zz": 0}
+    e = d
+    for i in range(len(seq) - 2):
+        key = seq[i:i + 3]
+        e[key] = e.get(key, 0) + 1
+    return summary(d) + "|" + summary(e)
+
+
+# Many distinct keys: the table grows (and its index is rebuilt) between probes and inserts.
+def growth(n: int) -> str:
+    parts: list[str] = []
+    for i in range(n):
+        parts.append(str(i * 7919 % 10007))
+    seq = "".join(parts)
+    d: dict[str, int] = {}
+    for i in range(len(seq) - 4):
+        key = seq[i:i + 5]
+        d[key] = d.get(key, 0) + 1
+    total = 0
+    for stored in d.keys():
+        total = (total * 31 + d[stored] * len(stored)) % 1000003
+    return str(len(d)) + " " + str(total) + " " + str(d.get(seq[0:5], 0))
+
+
+# Lookups only: `in`, `get` and indexing with a slice, no insert.
+def lookups(seq: str, d: dict[str, int]) -> int:
+    total = 0
+    for i in range(len(seq) - 1):
+        if seq[i:i + 2] in d:
+            total += d[seq[i:i + 2]]
+        total += d.get(seq[i:i + 1], 100)
+    return total
+
+
+def main(out: Stream) -> int:
+    dna = "GGTATTTTAATTTATAGTACGTACGTGGTATTTTAATT"
+    out.print(summary(counts(dna, 1)), summary(counts(dna, 2)))
+    out.print(len(counts(dna, 12)), len(counts(dna, 17)), len(counts(dna, 40)), len(counts("", 3)))
+    out.print(rebound("abcabcab"))
+    words = ["alpha", "beta", "alps", "be", ""]
+    out.print(element_source(mut words), words[0])
+    out.print(two_dicts("abracadabra"))
+    out.print(scalars("héé€😀a"))
+    out.print(bounds("abcdé"))
+    out.print(foreign("abcdefghijklmnopqrs", "xabcdefghijklmnopq"))
+    out.print(near_misses("0123456789abcdefghijklmn"))
+    out.print(deletions("abcdefghijklmnopqrstuvwxyz0123456789", 6), deletions("abcdefghijklmnopqrstuvwxyz0123456789", 30))
+    out.print(across_call("abcabd"))
+    out.print(escaping("abcab"))
+    out.print(control("abababab", 100), control("abcabcabc", 3), control("abcdefabc", 100))
+    out.print(shared("abcabcab"))
+    out.print(growth(300))
+    out.print(lookups("abcab", {"ab": 1, "b": 20, "bc": 300}))
+    return 0

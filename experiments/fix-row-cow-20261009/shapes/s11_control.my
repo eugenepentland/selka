@@ -1,0 +1,50 @@
+# expect: 3 7
+# expect: 3 7
+# expect: 3 7
+# expect: 3 0
+# expect: 3 7
+def early(b: mut list[list[int]], stop: int) -> int:
+    for i in range(len(b)):
+        if i == stop:
+            return i
+        b[i][0] = 7
+    return -1
+
+
+def main(out: Stream) -> int:
+    b = [[1, 2], [3, 4], [5, 6]]
+    k = b[1]
+    i = 0
+    while i < 3:
+        b[i][0] = 7
+        i += 1
+    out.print(k[0], b[1][0])
+    c = [[1, 2], [3, 4], [5, 6]]
+    kc = c[1]
+    for i2 in range(3):
+        for j in range(2):
+            if j == 1:
+                continue
+            c[i2][j] = 7
+    out.print(kc[0], c[1][0])
+    d = [[1, 2], [3, 4], [5, 6]]
+    kd = d[1]
+    for i3 in range(3):
+        d[i3][0] = 7
+        if i3 == 1:
+            break
+    out.print(kd[0], d[1][0])
+    e = [[1, 2], [3, 4], [5, 6]]
+    ke = e[1]
+    stopped = early(mut e, 2)
+    out.print(ke[0], e[2][0] - 5 + stopped - 2)
+    g = [[1, 2], [3, 4], [5, 6]]
+    kg = g[1]
+    n = 0
+    for i4 in range(3):
+        if i4 == 0:
+            continue
+        g[i4][0] = 7
+        n += 1
+    out.print(kg[0], g[1][0])
+    return 0

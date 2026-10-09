@@ -1,0 +1,37 @@
+bench-parity: building 72 arms of 28 benchmark(s) with 4 job(s)
+bench-parity: warning: the timing core is shared before timing starts (CPU 10 100% busy); run builds through scripts/build-slot.sh, or pick an idle core with --cpu
+parity_locked: took /run/user/1000/mylang-slots/cpu10.lock after 1678.1 s
+binary_trees: zig-fast 246.5 ms | my=0.99x  my-arena=0.96x  zig-fast=1.00x
+fannkuch_redux: zig-fast 225.6 ms | my=0.87x  my-array=3.11x  my-tuned=2.64x  zig-fast=1.00x
+knucleotide: zig-fast 111.3 ms | my=2.26x  my-arena=2.28x  my-tuned=0.65x  zig-fast=1.00x
+mandelbrot: zig-fast 131.7 ms | my=1.01x  zig-fast=1.00x
+matmul: zig-fast 42.7 ms | my=3.96x  my-flat=1.95x  my-tuned=2.71x  zig-fast=1.00x
+nbody: zig-fast 155.5 ms | my=1.80x  my-class=1.78x  zig-fast=1.00x
+raytrace: zig-fast 68.6 ms | my=1.10x  my-tuned=1.09x  zig-fast=1.00x
+sieve: zig-fast 53.7 ms | my=1.60x  my-tuned=1.59x  zig-fast=1.00x
+sort_builtin: zig-fast 205.2 ms | my=0.50x  zig-fast=1.00x
+sort_quick: zig-fast 175.5 ms | my=1.30x  zig-fast=1.00x
+sort_records: zig-fast 118.5 ms | my=0.26x  my-keyed=0.26x  my-sorted=0.26x  zig-fast=1.00x
+spectral_norm: zig-fast 160.8 ms | my=1.04x  my-tuned=0.98x  zig-fast=1.00x
+text_ops: zig-fast 26.6 ms | my=2.17x  my-tuned=0.86x  zig-fast=1.00x
+scan_count: zig-fast 134.4 ms | my=0.96x  zig-fast=1.00x
+scan_replace: zig-fast 157.6 ms | my=0.51x  zig-fast=1.00x
+scan_split: zig-fast 34.6 ms | my=2.19x  zig-fast=1.00x
+alloc_churn: zig-fast 70.9 ms | my=0.82x  my-arena=0.82x  zig-fast=1.00x
+bytes_scan: zig-fast 37.2 ms | my=1.51x  my-wrapping=0.50x  zig-fast=1.00x
+calls: zig-fast 113.2 ms | my=1.11x  zig-fast=1.00x
+dict_count: zig-fast 27.8 ms | my=0.38x  zig-fast=1.00x
+fib: zig-fast 33.9 ms | my=2.01x  zig-fast=1.00x
+float_loop: zig-fast 34.7 ms | my=1.04x  zig-fast=1.00x
+intloop: zig-fast 107.5 ms | my=1.03x  zig-fast=1.00x
+list_append_sum: zig-fast 45.1 ms | my=1.05x  zig-fast=1.00x
+list_records: zig-fast 45.3 ms | my=1.11x  my-wrapping=0.96x  zig-fast=1.00x
+records: zig-fast 83.1 ms | my=0.83x  zig-fast=1.00x
+str_build: zig-fast 42.3 ms | my=2.24x  zig-fast=1.00x
+bench-parity: re-measuring 6 program(s) that exceeded a threshold: binary_trees, fannkuch_redux, knucleotide, scan_replace, str_build, text_ops
+binary_trees (confirmation): my=1.02x  my-arena=1.03x  zig-fast=1.00x
+fannkuch_redux (confirmation): my=0.90x  my-array=3.20x  my-tuned=2.65x  zig-fast=1.00x
+knucleotide (confirmation): my=2.38x  my-arena=2.29x  my-tuned=0.66x  zig-fast=1.00x
+scan_replace (confirmation): my=0.51x  zig-fast=1.00x
+str_build (confirmation): my=2.24x  zig-fast=1.00x
+text_ops (confirmation): my=2.13x  my-tuned=0.87x  zig-fast=1.00x

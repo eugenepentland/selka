@@ -421,7 +421,7 @@ const Verifier = struct {
     }
 
     fn viewUses(self: *Verifier, b: usize, ref: ir.Ref, s: Shape) Error!void {
-        if (s.inst.ty == .str_view and s.inst.op != .str_view_of and s.inst.op != .copy) return self.fail(b, ref, "str_view may only be defined by str_view_of", .{});
+        if (s.inst.ty == .str_view and s.inst.op != .str_view_of and s.inst.op != .str_slice_view and s.inst.op != .copy) return self.fail(b, ref, "str_view may only be defined by str_view_of or str_slice_view", .{});
         const operands = self.f.valueOperands(s.inst);
         for (0..operands.len()) |i| {
             if (self.typeOf(operands.get(i)) != .str_view) continue;
@@ -442,7 +442,14 @@ const Verifier = struct {
     fn insertProbe(self: *Verifier, s: Shape) bool {
         if (s.inst.b == .none or s.extra.len != 2) return false;
         const probe = self.f.inst(self.f.resolve(s.inst.b));
-        return probe.op == .dict_find and self.f.resolve(probe.a) == self.f.resolve(s.inst.a) and self.f.resolve(probe.b) == self.f.resolve(s.extra[0]);
+        if (probe.op != .dict_find or self.f.resolve(probe.a) != self.f.resolve(s.inst.a)) return false;
+        const looked_up = self.f.resolve(probe.b);
+        const key = self.f.resolve(s.extra[0]);
+        if (looked_up == key) return true;
+        // A borrowed span's probe serves the key materialized from that same span: both
+        // hash and compare the same octets (NEW-CORE-S1-VIEW-1).
+        const materialized = self.f.inst(key);
+        return materialized.op == .str_from_view and self.f.resolve(materialized.a) == looked_up;
     }
 
     fn s2Signature(self: *Verifier, s: Shape) ?bool {
@@ -465,6 +472,7 @@ const Verifier = struct {
             .str_append_char => inst.ty == .str and s.a == .str and s.b == .str and self.typesMatch(s.extra, &.{.u64}),
             .str_slice => inst.ty == .str and s.a == .str and s.b == .i64 and self.typesMatch(s.extra, &.{.i64}),
             .str_view_of => inst.ty == .str_view and s.a == .str and s.b == .u64 and self.typesMatch(s.extra, &.{.u64}),
+            .str_slice_view => inst.ty == .str_view and s.a == .str and s.b == .i64 and self.typesMatch(s.extra, &.{.i64}),
             .str_from_view => inst.ty == .str and s.a == .str_view,
             .list_sort => self.compoundOf(s.a, .list) != null and inst.ty == s.a and s.b == .bool,
             .array_get => if (self.compoundOf(s.a, .array)) |array| inst.ty == array.elem and isInteger(s.b) else false,

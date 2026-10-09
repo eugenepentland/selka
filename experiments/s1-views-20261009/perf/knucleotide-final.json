@@ -1,0 +1,646 @@
+{
+ "cpu": 6,
+ "rounds": 9,
+ "events": [
+  "instructions",
+  "cycles",
+  "branches",
+  "branch-misses",
+  "L1-dcache-loads",
+  "L1-dcache-load-misses",
+  "LLC-load-misses",
+  "mem_inst_retired.all_stores"
+ ],
+ "arms": [
+  {
+   "program": "knucleotide",
+   "arm": "base",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 2852739348,
+    "cycles": 908644175,
+    "branches": 568298118,
+    "branch-misses": 1208557,
+    "L1-dcache-loads": 624669735,
+    "L1-dcache-load-misses": 7598815,
+    "LLC-load-misses": 59957,
+    "mem_inst_retired.all_stores": 413002132
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 2852739348,
+     "cycles": 905965256,
+     "branches": 568298118,
+     "branch-misses": 1194582,
+     "L1-dcache-loads": 624669735,
+     "L1-dcache-load-misses": 7589949,
+     "LLC-load-misses": 57006,
+     "mem_inst_retired.all_stores": 413002132
+    },
+    {
+     "status": 0,
+     "instructions": 2852739360,
+     "cycles": 904783317,
+     "branches": 568298130,
+     "branch-misses": 1197684,
+     "L1-dcache-loads": 624669747,
+     "L1-dcache-load-misses": 7571474,
+     "LLC-load-misses": 59779,
+     "mem_inst_retired.all_stores": 413002132
+    },
+    {
+     "status": 0,
+     "instructions": 2852739342,
+     "cycles": 901858828,
+     "branches": 568298112,
+     "branch-misses": 1212339,
+     "L1-dcache-loads": 624669729,
+     "L1-dcache-load-misses": 7789740,
+     "LLC-load-misses": 57720,
+     "mem_inst_retired.all_stores": 413002132
+    },
+    {
+     "status": 0,
+     "instructions": 2852739335,
+     "cycles": 919348245,
+     "branches": 568298105,
+     "branch-misses": 1209551,
+     "L1-dcache-loads": 624669722,
+     "L1-dcache-load-misses": 7600259,
+     "LLC-load-misses": 104454,
+     "mem_inst_retired.all_stores": 413002132
+    },
+    {
+     "status": 0,
+     "instructions": 2852739359,
+     "cycles": 905055993,
+     "branches": 568298129,
+     "branch-misses": 1208557,
+     "L1-dcache-loads": 624669746,
+     "L1-dcache-load-misses": 7598815,
+     "LLC-load-misses": 59957,
+     "mem_inst_retired.all_stores": 413002132
+    },
+    {
+     "status": 0,
+     "instructions": 2852739372,
+     "cycles": 911214545,
+     "branches": 568298142,
+     "branch-misses": 1211202,
+     "L1-dcache-loads": 624669759,
+     "L1-dcache-load-misses": 7607914,
+     "LLC-load-misses": 72353,
+     "mem_inst_retired.all_stores": 413002132
+    },
+    {
+     "status": 0,
+     "instructions": 2852739346,
+     "cycles": 908644175,
+     "branches": 568298116,
+     "branch-misses": 1187304,
+     "L1-dcache-loads": 624669733,
+     "L1-dcache-load-misses": 7611099,
+     "LLC-load-misses": 58386,
+     "mem_inst_retired.all_stores": 413002132
+    },
+    {
+     "status": 0,
+     "instructions": 2852739331,
+     "cycles": 917025211,
+     "branches": 568298101,
+     "branch-misses": 1211343,
+     "L1-dcache-loads": 624669718,
+     "L1-dcache-load-misses": 7587748,
+     "LLC-load-misses": 93584,
+     "mem_inst_retired.all_stores": 413002132
+    },
+    {
+     "status": 0,
+     "instructions": 2852739354,
+     "cycles": 910765109,
+     "branches": 568298124,
+     "branch-misses": 1199744,
+     "L1-dcache-loads": 624669741,
+     "L1-dcache-load-misses": 7588856,
+     "LLC-load-misses": 68010,
+     "mem_inst_retired.all_stores": 413002132
+    }
+   ]
+  },
+  {
+   "program": "knucleotide",
+   "arm": "final",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 1189724190,
+    "cycles": 392421277,
+    "branches": 210567775,
+    "branch-misses": 1334166,
+    "L1-dcache-loads": 248318232,
+    "L1-dcache-load-misses": 8140340,
+    "LLC-load-misses": 54560,
+    "mem_inst_retired.all_stores": 91679750
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 1189724193,
+     "cycles": 392421277,
+     "branches": 210567778,
+     "branch-misses": 1345066,
+     "L1-dcache-loads": 248318235,
+     "L1-dcache-load-misses": 8100138,
+     "LLC-load-misses": 54855,
+     "mem_inst_retired.all_stores": 91679750
+    },
+    {
+     "status": 0,
+     "instructions": 1189724179,
+     "cycles": 391134696,
+     "branches": 210567764,
+     "branch-misses": 1329668,
+     "L1-dcache-loads": 248318221,
+     "L1-dcache-load-misses": 8126289,
+     "LLC-load-misses": 54560,
+     "mem_inst_retired.all_stores": 91679750
+    },
+    {
+     "status": 0,
+     "instructions": 1189724189,
+     "cycles": 396837322,
+     "branches": 210567774,
+     "branch-misses": 1346739,
+     "L1-dcache-loads": 248318231,
+     "L1-dcache-load-misses": 8140340,
+     "LLC-load-misses": 52784,
+     "mem_inst_retired.all_stores": 91679750
+    },
+    {
+     "status": 0,
+     "instructions": 1189724175,
+     "cycles": 390180954,
+     "branches": 210567760,
+     "branch-misses": 1349407,
+     "L1-dcache-loads": 248318217,
+     "L1-dcache-load-misses": 8162011,
+     "LLC-load-misses": 36618,
+     "mem_inst_retired.all_stores": 91679750
+    },
+    {
+     "status": 0,
+     "instructions": 1189724190,
+     "cycles": 394967712,
+     "branches": 210567775,
+     "branch-misses": 1349301,
+     "L1-dcache-loads": 248318232,
+     "L1-dcache-load-misses": 8119524,
+     "LLC-load-misses": 59232,
+     "mem_inst_retired.all_stores": 91679750
+    },
+    {
+     "status": 0,
+     "instructions": 1189724190,
+     "cycles": 395671850,
+     "branches": 210567775,
+     "branch-misses": 1334166,
+     "L1-dcache-loads": 248318232,
+     "L1-dcache-load-misses": 8396558,
+     "LLC-load-misses": 80050,
+     "mem_inst_retired.all_stores": 91679750
+    },
+    {
+     "status": 0,
+     "instructions": 1189724190,
+     "cycles": 394231971,
+     "branches": 210567775,
+     "branch-misses": 1321963,
+     "L1-dcache-loads": 248318232,
+     "L1-dcache-load-misses": 8141688,
+     "LLC-load-misses": 57281,
+     "mem_inst_retired.all_stores": 91679750
+    },
+    {
+     "status": 0,
+     "instructions": 1189724190,
+     "cycles": 392161381,
+     "branches": 210567775,
+     "branch-misses": 1333679,
+     "L1-dcache-loads": 248318232,
+     "L1-dcache-load-misses": 8139991,
+     "LLC-load-misses": 50237,
+     "mem_inst_retired.all_stores": 91679750
+    },
+    {
+     "status": 0,
+     "instructions": 1189724192,
+     "cycles": 392143759,
+     "branches": 210567777,
+     "branch-misses": 1321560,
+     "L1-dcache-loads": 248318234,
+     "L1-dcache-load-misses": 8141920,
+     "LLC-load-misses": 48196,
+     "mem_inst_retired.all_stores": 91679750
+    }
+   ]
+  },
+  {
+   "program": "knucleotide",
+   "arm": "zig-safe",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 1377192321,
+    "cycles": 416177895,
+    "branches": 287777856,
+    "branch-misses": 3320796,
+    "L1-dcache-loads": 292517825,
+    "L1-dcache-load-misses": 8309573,
+    "LLC-load-misses": 4249,
+    "mem_inst_retired.all_stores": 144174868
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 1377192330,
+     "cycles": 417016630,
+     "branches": 287777868,
+     "branch-misses": 3324896,
+     "L1-dcache-loads": 292517838,
+     "L1-dcache-load-misses": 8308398,
+     "LLC-load-misses": 4722,
+     "mem_inst_retired.all_stores": 144174867
+    },
+    {
+     "status": 0,
+     "instructions": 1377192321,
+     "cycles": 416177895,
+     "branches": 287777859,
+     "branch-misses": 3323366,
+     "L1-dcache-loads": 292517829,
+     "L1-dcache-load-misses": 8311490,
+     "LLC-load-misses": 4249,
+     "mem_inst_retired.all_stores": 144174867
+    },
+    {
+     "status": 0,
+     "instructions": 1377192321,
+     "cycles": 416196863,
+     "branches": 287777856,
+     "branch-misses": 3325119,
+     "L1-dcache-loads": 292517825,
+     "L1-dcache-load-misses": 8308103,
+     "LLC-load-misses": 7475,
+     "mem_inst_retired.all_stores": 144174868
+    },
+    {
+     "status": 0,
+     "instructions": 1377192311,
+     "cycles": 413682600,
+     "branches": 287777846,
+     "branch-misses": 3317744,
+     "L1-dcache-loads": 292517815,
+     "L1-dcache-load-misses": 8310306,
+     "LLC-load-misses": 1900,
+     "mem_inst_retired.all_stores": 144174868
+    },
+    {
+     "status": 0,
+     "instructions": 1377192316,
+     "cycles": 414480551,
+     "branches": 287777851,
+     "branch-misses": 3315870,
+     "L1-dcache-loads": 292517820,
+     "L1-dcache-load-misses": 8309923,
+     "LLC-load-misses": 3640,
+     "mem_inst_retired.all_stores": 144174868
+    },
+    {
+     "status": 0,
+     "instructions": 1377192322,
+     "cycles": 423183736,
+     "branches": 287777857,
+     "branch-misses": 3313892,
+     "L1-dcache-loads": 292517826,
+     "L1-dcache-load-misses": 8301648,
+     "LLC-load-misses": 4712,
+     "mem_inst_retired.all_stores": 144174868
+    },
+    {
+     "status": 0,
+     "instructions": 1377192324,
+     "cycles": 416070893,
+     "branches": 287777859,
+     "branch-misses": 3320796,
+     "L1-dcache-loads": 292517828,
+     "L1-dcache-load-misses": 8309573,
+     "LLC-load-misses": 4131,
+     "mem_inst_retired.all_stores": 144174868
+    },
+    {
+     "status": 0,
+     "instructions": 1377192315,
+     "cycles": 425010203,
+     "branches": 287777853,
+     "branch-misses": 3324049,
+     "L1-dcache-loads": 292517823,
+     "L1-dcache-load-misses": 8301968,
+     "LLC-load-misses": 3902,
+     "mem_inst_retired.all_stores": 144174867
+    },
+    {
+     "status": 0,
+     "instructions": 1377192311,
+     "cycles": 414883405,
+     "branches": 287777846,
+     "branch-misses": 3319295,
+     "L1-dcache-loads": 292517815,
+     "L1-dcache-load-misses": 8322661,
+     "LLC-load-misses": 5167,
+     "mem_inst_retired.all_stores": 144174868
+    }
+   ]
+  },
+  {
+   "program": "knucleotide",
+   "arm": "zig-fast",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 1064685119,
+    "cycles": 369959961,
+    "branches": 183499453,
+    "branch-misses": 3371010,
+    "L1-dcache-loads": 248246398,
+    "L1-dcache-load-misses": 8242199,
+    "LLC-load-misses": 13825,
+    "mem_inst_retired.all_stores": 82774082
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 1064685120,
+     "cycles": 372479371,
+     "branches": 183499457,
+     "branch-misses": 3371010,
+     "L1-dcache-loads": 248246403,
+     "L1-dcache-load-misses": 8246387,
+     "LLC-load-misses": 21393,
+     "mem_inst_retired.all_stores": 82774082
+    },
+    {
+     "status": 0,
+     "instructions": 1064685123,
+     "cycles": 370140426,
+     "branches": 183499457,
+     "branch-misses": 3363805,
+     "L1-dcache-loads": 248246402,
+     "L1-dcache-load-misses": 8242199,
+     "LLC-load-misses": 13664,
+     "mem_inst_retired.all_stores": 82774083
+    },
+    {
+     "status": 0,
+     "instructions": 1064685112,
+     "cycles": 370005915,
+     "branches": 183499449,
+     "branch-misses": 3362066,
+     "L1-dcache-loads": 248246395,
+     "L1-dcache-load-misses": 8227044,
+     "LLC-load-misses": 15842,
+     "mem_inst_retired.all_stores": 82774082
+    },
+    {
+     "status": 0,
+     "instructions": 1064685112,
+     "cycles": 369959961,
+     "branches": 183499449,
+     "branch-misses": 3374627,
+     "L1-dcache-loads": 248246395,
+     "L1-dcache-load-misses": 8237604,
+     "LLC-load-misses": 14319,
+     "mem_inst_retired.all_stores": 82774082
+    },
+    {
+     "status": 0,
+     "instructions": 1064685106,
+     "cycles": 367712515,
+     "branches": 183499443,
+     "branch-misses": 3367779,
+     "L1-dcache-loads": 248246389,
+     "L1-dcache-load-misses": 8253834,
+     "LLC-load-misses": 9811,
+     "mem_inst_retired.all_stores": 82774082
+    },
+    {
+     "status": 0,
+     "instructions": 1064685114,
+     "cycles": 369772938,
+     "branches": 183499451,
+     "branch-misses": 3371499,
+     "L1-dcache-loads": 248246397,
+     "L1-dcache-load-misses": 8233612,
+     "LLC-load-misses": 13825,
+     "mem_inst_retired.all_stores": 82774082
+    },
+    {
+     "status": 0,
+     "instructions": 1064685122,
+     "cycles": 370792853,
+     "branches": 183499459,
+     "branch-misses": 3369966,
+     "L1-dcache-loads": 248246405,
+     "L1-dcache-load-misses": 8235393,
+     "LLC-load-misses": 14992,
+     "mem_inst_retired.all_stores": 82774082
+    },
+    {
+     "status": 0,
+     "instructions": 1064685119,
+     "cycles": 369943802,
+     "branches": 183499453,
+     "branch-misses": 3371173,
+     "L1-dcache-loads": 248246398,
+     "L1-dcache-load-misses": 8250942,
+     "LLC-load-misses": 13784,
+     "mem_inst_retired.all_stores": 82774083
+    },
+    {
+     "status": 0,
+     "instructions": 1064685121,
+     "cycles": 369143058,
+     "branches": 183499455,
+     "branch-misses": 3371269,
+     "L1-dcache-loads": 248246400,
+     "L1-dcache-load-misses": 8246529,
+     "LLC-load-misses": 13782,
+     "mem_inst_retired.all_stores": 82774083
+    }
+   ]
+  },
+  {
+   "program": "knucleotide",
+   "arm": "rust-checked",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 2058714056,
+    "cycles": 516847505,
+    "branches": 242095575,
+    "branch-misses": 308057,
+    "L1-dcache-loads": 357943780,
+    "L1-dcache-load-misses": 6206301,
+    "LLC-load-misses": 56581,
+    "mem_inst_retired.all_stores": 263643631
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 2058802058,
+     "cycles": 520191148,
+     "branches": 242113519,
+     "branch-misses": 308057,
+     "L1-dcache-loads": 357973636,
+     "L1-dcache-load-misses": 6191605,
+     "LLC-load-misses": 62660,
+     "mem_inst_retired.all_stores": 263645508
+    },
+    {
+     "status": 0,
+     "instructions": 2058438111,
+     "cycles": 516847505,
+     "branches": 242040875,
+     "branch-misses": 303769,
+     "L1-dcache-loads": 357852884,
+     "L1-dcache-load-misses": 6208811,
+     "LLC-load-misses": 44825,
+     "mem_inst_retired.all_stores": 263636287
+    },
+    {
+     "status": 0,
+     "instructions": 2058732680,
+     "cycles": 517557141,
+     "branches": 242100477,
+     "branch-misses": 310935,
+     "L1-dcache-loads": 357943780,
+     "L1-dcache-load-misses": 6216630,
+     "LLC-load-misses": 51070,
+     "mem_inst_retired.all_stores": 263643631
+    },
+    {
+     "status": 0,
+     "instructions": 2059375389,
+     "cycles": 515042166,
+     "branches": 242228070,
+     "branch-misses": 328908,
+     "L1-dcache-loads": 358142069,
+     "L1-dcache-load-misses": 6210043,
+     "LLC-load-misses": 49663,
+     "mem_inst_retired.all_stores": 263658524
+    },
+    {
+     "status": 0,
+     "instructions": 2059317369,
+     "cycles": 518789347,
+     "branches": 242216987,
+     "branch-misses": 322849,
+     "L1-dcache-loads": 358132069,
+     "L1-dcache-load-misses": 6215929,
+     "LLC-load-misses": 56969,
+     "mem_inst_retired.all_stores": 263656991
+    },
+    {
+     "status": 0,
+     "instructions": 2058714056,
+     "cycles": 519367766,
+     "branches": 242095575,
+     "branch-misses": 309832,
+     "L1-dcache-loads": 357946941,
+     "L1-dcache-load-misses": 6206301,
+     "LLC-load-misses": 60846,
+     "mem_inst_retired.all_stores": 263644631
+    },
+    {
+     "status": 0,
+     "instructions": 2058562310,
+     "cycles": 516352982,
+     "branches": 242065353,
+     "branch-misses": 302851,
+     "L1-dcache-loads": 357895457,
+     "L1-dcache-load-misses": 6197224,
+     "LLC-load-misses": 56581,
+     "mem_inst_retired.all_stores": 263640082
+    },
+    {
+     "status": 0,
+     "instructions": 2058471365,
+     "cycles": 516663331,
+     "branches": 242047837,
+     "branch-misses": 301760,
+     "L1-dcache-loads": 357863291,
+     "L1-dcache-load-misses": 6203345,
+     "LLC-load-misses": 63417,
+     "mem_inst_retired.all_stores": 263637430
+    },
+    {
+     "status": 0,
+     "instructions": 2058501763,
+     "cycles": 514821620,
+     "branches": 242053577,
+     "branch-misses": 301624,
+     "L1-dcache-loads": 357870766,
+     "L1-dcache-load-misses": 6201256,
+     "LLC-load-misses": 56388,
+     "mem_inst_retired.all_stores": 263638795
+    }
+   ]
+  }
+ ]
+}

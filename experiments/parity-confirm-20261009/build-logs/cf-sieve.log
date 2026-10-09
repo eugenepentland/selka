@@ -1,0 +1,7 @@
+## sieve run
+| variant | Minstr | Mcycles | instr ÷ base | cycles ÷ base | output | lines edited |
+|---|---:|---:|---:|---:|---|---:|
+| real | 675 | 336 | 1.000 | 1.022 | ok |  |
+| base | 675 | 329 | 1.000 | 1.000 | ok | 0 |
+| overflow | 537 | 250 | 0.795 | 0.760 | ok | 14 |
+| checks | 407 | 245 | 0.602 | 0.747 | ok | 26 |

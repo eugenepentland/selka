@@ -1,0 +1,6 @@
+vm/fib same b'5702887\n'
+vm/string_equality same b'100000\n'
+vm/invocation same b'1500000\n'
+vm/method_call same b'true\ntrue\n'
+tree/invocation same b'150000\n'
+tree/equality same b'300000\n'

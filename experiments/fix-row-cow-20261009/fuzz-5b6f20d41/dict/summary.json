@@ -1,0 +1,74 @@
+{
+  "kind": "dict",
+  "cases_requested": 50,
+  "seed": 3306,
+  "cases_seen": 50,
+  "accepted": 50,
+  "old_rejected": 0,
+  "core_refused": 0,
+  "core_build_failed": 0,
+  "comparisons_expected": 750,
+  "native_runs": 1000,
+  "harness": {
+    "cases": 50,
+    "old_rejected": 0,
+    "refused": 0,
+    "compared": 750,
+    "mismatch": 0,
+    "fact": 0,
+    "traps": 24,
+    "caught": 0
+  },
+  "harness_status": 0,
+  "complete": true,
+  "qualified": true,
+  "error": null,
+  "failures": [],
+  "elapsed_seconds": 137.79311824101023,
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T014352Z-e5de6907eaba/dict",
+  "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T014352Z-e5de6907eaba/dict/tmp",
+  "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/fuzz-5b6f20d41/dict/sources",
+  "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T014352Z-e5de6907eaba/dict/zig",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/new-core-s5-20261007/tools/frozen-old-core",
+      "sha256": "ca55bbb15d1ef6accc6aa834f23651d5b3182ddf2e59136b93115ac3e41a7091"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.tmp/compilers/mylang-fuzz",
+      "sha256": "e5a81dfd6a03b5d649d479718c7a3d4267495745fd51508461c8f81a611c84a5"
+    }
+  },
+  "oracle_unchanged": true,
+  "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/new-core-s2-20261005/wave-b/s2-d/fuzz_dict.py",
+  "harness_sha256": "1266fb7256490c975587c137f5c216c87870a79701c7dfc0dc0db235713de234",
+  "native_comparisons": 750,
+  "native_complete": true,
+  "command_count": 1200,
+  "references": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+    "sha256": "f8db2bd9ccebf42d5f4fbbf3974a15980d97204d46a4f8ac3ca5d93f41d8c1b0",
+    "oracle": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s3/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    }
+  }
+}

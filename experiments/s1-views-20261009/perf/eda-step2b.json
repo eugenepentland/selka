@@ -1,0 +1,340 @@
+{
+ "cpu": 6,
+ "rounds": 3,
+ "events": [
+  "instructions",
+  "cycles",
+  "branches",
+  "branch-misses",
+  "L1-dcache-loads",
+  "L1-dcache-load-misses",
+  "LLC-load-misses",
+  "mem_inst_retired.all_stores"
+ ],
+ "arms": [
+  {
+   "program": "eda rds3+flat",
+   "arm": "base",
+   "status": [
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 988186071,
+    "cycles": 275189416,
+    "branches": 218066173,
+    "branch-misses": 690098,
+    "L1-dcache-loads": 199479454,
+    "L1-dcache-load-misses": 2086913,
+    "LLC-load-misses": 293739,
+    "mem_inst_retired.all_stores": 117707755
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 988186056,
+     "cycles": 275189416,
+     "branches": 218066174,
+     "branch-misses": 690098,
+     "L1-dcache-loads": 199479454,
+     "L1-dcache-load-misses": 2086913,
+     "LLC-load-misses": 297149,
+     "mem_inst_retired.all_stores": 117707755
+    },
+    {
+     "status": 0,
+     "instructions": 988186097,
+     "cycles": 274933212,
+     "branches": 218066173,
+     "branch-misses": 688095,
+     "L1-dcache-loads": 199479453,
+     "L1-dcache-load-misses": 2095018,
+     "LLC-load-misses": 293739,
+     "mem_inst_retired.all_stores": 117707755
+    },
+    {
+     "status": 0,
+     "instructions": 988186071,
+     "cycles": 275602888,
+     "branches": 218066167,
+     "branch-misses": 691320,
+     "L1-dcache-loads": 199479477,
+     "L1-dcache-load-misses": 2076342,
+     "LLC-load-misses": 289160,
+     "mem_inst_retired.all_stores": 117707795
+    }
+   ]
+  },
+  {
+   "program": "eda labstation",
+   "arm": "base",
+   "status": [
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 741465656,
+    "cycles": 191546201,
+    "branches": 149456158,
+    "branch-misses": 639926,
+    "L1-dcache-loads": 145675703,
+    "L1-dcache-load-misses": 1884056,
+    "LLC-load-misses": 43893,
+    "mem_inst_retired.all_stores": 105109931
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 741465683,
+     "cycles": 191546201,
+     "branches": 149456157,
+     "branch-misses": 640069,
+     "L1-dcache-loads": 145675702,
+     "L1-dcache-load-misses": 1884056,
+     "LLC-load-misses": 39998,
+     "mem_inst_retired.all_stores": 105109931
+    },
+    {
+     "status": 0,
+     "instructions": 741465612,
+     "cycles": 191525062,
+     "branches": 149456166,
+     "branch-misses": 639590,
+     "L1-dcache-loads": 145675711,
+     "L1-dcache-load-misses": 1940361,
+     "LLC-load-misses": 45180,
+     "mem_inst_retired.all_stores": 105109931
+    },
+    {
+     "status": 0,
+     "instructions": 741465656,
+     "cycles": 191819509,
+     "branches": 149456158,
+     "branch-misses": 639926,
+     "L1-dcache-loads": 145675703,
+     "L1-dcache-load-misses": 1874594,
+     "LLC-load-misses": 43893,
+     "mem_inst_retired.all_stores": 105109931
+    }
+   ]
+  },
+  {
+   "program": "eda rds3+flat",
+   "arm": "step3",
+   "status": [
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 987971110,
+    "cycles": 275926885,
+    "branches": 217934319,
+    "branch-misses": 689254,
+    "L1-dcache-loads": 199562708,
+    "L1-dcache-load-misses": 2083476,
+    "LLC-load-misses": 292253,
+    "mem_inst_retired.all_stores": 117860448
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 987971224,
+     "cycles": 275429460,
+     "branches": 217934319,
+     "branch-misses": 688895,
+     "L1-dcache-loads": 199562738,
+     "L1-dcache-load-misses": 2084789,
+     "LLC-load-misses": 290861,
+     "mem_inst_retired.all_stores": 117860488
+    },
+    {
+     "status": 0,
+     "instructions": 987971110,
+     "cycles": 276448842,
+     "branches": 217934319,
+     "branch-misses": 690598,
+     "L1-dcache-loads": 199562708,
+     "L1-dcache-load-misses": 2083476,
+     "LLC-load-misses": 301052,
+     "mem_inst_retired.all_stores": 117860448
+    },
+    {
+     "status": 0,
+     "instructions": 987970986,
+     "cycles": 275926885,
+     "branches": 217934307,
+     "branch-misses": 689254,
+     "L1-dcache-loads": 199562696,
+     "L1-dcache-load-misses": 2079919,
+     "LLC-load-misses": 292253,
+     "mem_inst_retired.all_stores": 117860448
+    }
+   ]
+  },
+  {
+   "program": "eda labstation",
+   "arm": "step3",
+   "status": [
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 741267449,
+    "cycles": 191666843,
+    "branches": 149364514,
+    "branch-misses": 637114,
+    "L1-dcache-loads": 145722615,
+    "L1-dcache-load-misses": 1886774,
+    "LLC-load-misses": 36933,
+    "mem_inst_retired.all_stores": 105201545
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 741267445,
+     "cycles": 192396997,
+     "branches": 149364509,
+     "branch-misses": 639817,
+     "L1-dcache-loads": 145722610,
+     "L1-dcache-load-misses": 1886774,
+     "LLC-load-misses": 36109,
+     "mem_inst_retired.all_stores": 105201545
+    },
+    {
+     "status": 0,
+     "instructions": 741267449,
+     "cycles": 191666843,
+     "branches": 149364539,
+     "branch-misses": 637114,
+     "L1-dcache-loads": 145722640,
+     "L1-dcache-load-misses": 1893091,
+     "LLC-load-misses": 36933,
+     "mem_inst_retired.all_stores": 105201545
+    },
+    {
+     "status": 0,
+     "instructions": 741267466,
+     "cycles": 191107965,
+     "branches": 149364514,
+     "branch-misses": 635118,
+     "L1-dcache-loads": 145722615,
+     "L1-dcache-load-misses": 1881568,
+     "LLC-load-misses": 38228,
+     "mem_inst_retired.all_stores": 105201545
+    }
+   ]
+  },
+  {
+   "program": "eda rds3+flat",
+   "arm": "step2b",
+   "status": [
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 972364890,
+    "cycles": 272796983,
+    "branches": 213044079,
+    "branch-misses": 685935,
+    "L1-dcache-loads": 198453107,
+    "L1-dcache-load-misses": 2084525,
+    "LLC-load-misses": 289259,
+    "mem_inst_retired.all_stores": 117860488
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 972361840,
+     "cycles": 272880706,
+     "branches": 213043417,
+     "branch-misses": 684172,
+     "L1-dcache-loads": 198452367,
+     "L1-dcache-load-misses": 2084525,
+     "LLC-load-misses": 301566,
+     "mem_inst_retired.all_stores": 117859992
+    },
+    {
+     "status": 0,
+     "instructions": 972364894,
+     "cycles": 272081448,
+     "branches": 213044089,
+     "branch-misses": 688024,
+     "L1-dcache-loads": 198453117,
+     "L1-dcache-load-misses": 2133458,
+     "LLC-load-misses": 286841,
+     "mem_inst_retired.all_stores": 117860488
+    },
+    {
+     "status": 0,
+     "instructions": 972364890,
+     "cycles": 272796983,
+     "branches": 213044079,
+     "branch-misses": 685935,
+     "L1-dcache-loads": 198453107,
+     "L1-dcache-load-misses": 2055275,
+     "LLC-load-misses": 289259,
+     "mem_inst_retired.all_stores": 117860488
+    }
+   ]
+  },
+  {
+   "program": "eda labstation",
+   "arm": "step2b",
+   "status": [
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 726625210,
+    "cycles": 189369594,
+    "branches": 144787028,
+    "branch-misses": 627470,
+    "L1-dcache-loads": 144700170,
+    "L1-dcache-load-misses": 1870545,
+    "LLC-load-misses": 38277,
+    "mem_inst_retired.all_stores": 105201545
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 726611483,
+     "cycles": 189227147,
+     "branches": 144783927,
+     "branch-misses": 628822,
+     "L1-dcache-loads": 144696728,
+     "L1-dcache-load-misses": 1923774,
+     "LLC-load-misses": 38277,
+     "mem_inst_retired.all_stores": 105199257
+    },
+    {
+     "status": 0,
+     "instructions": 726625476,
+     "cycles": 189483057,
+     "branches": 144787063,
+     "branch-misses": 627470,
+     "L1-dcache-loads": 144700280,
+     "L1-dcache-load-misses": 1870545,
+     "LLC-load-misses": 36276,
+     "mem_inst_retired.all_stores": 105201645
+    },
+    {
+     "status": 0,
+     "instructions": 726625210,
+     "cycles": 189369594,
+     "branches": 144787028,
+     "branch-misses": 625573,
+     "L1-dcache-loads": 144700170,
+     "L1-dcache-load-misses": 1862809,
+     "LLC-load-misses": 38614,
+     "mem_inst_retired.all_stores": 105201545
+    }
+   ]
+  }
+ ]
+}

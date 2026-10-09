@@ -31,8 +31,9 @@ pub const Options = struct {
     /// is also checked at run time and traps `R_CORE_FACT` when it does not hold),
     /// or `sabotage` (`--sabotage-facts`, test only: verify with one wrong rule), with
     /// `sabotage_widening` and `sabotage_length` for the other wrong rules of `facts.Sabotage`
-    /// (`--sabotage-facts=widening`, `--sabotage-facts=length`).
-    facts: enum { on, off, verify, sabotage, sabotage_widening, sabotage_length } = .on,
+    /// (`--sabotage-facts=widening`, `--sabotage-facts=length`), and `sabotage_overflow`
+    /// for the overflow facts' rules (`--sabotage-facts=overflow`).
+    facts: enum { on, off, verify, sabotage, sabotage_widening, sabotage_length, sabotage_overflow } = .on,
 };
 
 /// Extra outputs of a build.
@@ -268,6 +269,7 @@ pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, opt
         .sabotage => .sabotage,
         .sabotage_widening => .sabotage_widening,
         .sabotage_length => .sabotage_length,
+        .sabotage_overflow => .sabotage_overflow,
     };
     var result = if (options.release) try passes.run(allocator, module, mode) else try passes.debug(allocator, module);
     if (verify_ir.enabled) try verify_ir.check(allocator, module, result.plans, report);

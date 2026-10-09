@@ -1,0 +1,6 @@
+## bytes_scan run
+| variant | Minstr | Mcycles | instr ÷ base | cycles ÷ base | output | lines edited |
+|---|---:|---:|---:|---:|---|---:|
+| real | 959 | 194 | 1.000 | 1.000 | ok |  |
+| base | 959 | 194 | 1.000 | 1.000 | ok | 0 |
+| overflow | 195 | 58 | 0.204 | 0.299 | ok | 2 |

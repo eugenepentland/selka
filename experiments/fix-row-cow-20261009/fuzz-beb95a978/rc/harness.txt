@@ -1,0 +1,3 @@
+qualification progress: rc: seen=25 elapsed=7.46s
+qualification progress: rc: seen=50 elapsed=15.73s
+cases=50 refused=0 rejected=0 compared=450 mismatch=0

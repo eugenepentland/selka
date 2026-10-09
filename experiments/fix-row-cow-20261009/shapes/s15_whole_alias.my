@@ -1,0 +1,14 @@
+# expect: 3 7
+# expect: 1 7
+def main(out: Stream) -> int:
+    b = [[1, 2], [3, 4]]
+    c = b
+    for i in range(2):
+        b[i][0] = 7
+    out.print(c[1][0], b[1][0])
+    r = [1, 2]
+    d = [r, [3, 4]]
+    for i in range(2):
+        d[i][0] = 7
+    out.print(r[0], d[0][0])
+    return 0

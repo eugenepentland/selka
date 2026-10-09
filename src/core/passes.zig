@@ -17,8 +17,9 @@ pub const Error = std.mem.Allocator.Error;
 
 /// How the fact pass runs: `trusted` facts drive the vector lowering; `verify` keeps
 /// comparisons unfolded and plans no vectors; `sabotage`, `sabotage_widening` and
-/// `sabotage_length` are verify with one wrong rule (`facts.Sabotage`).
-pub const Mode = enum { off, trusted, verify, sabotage, sabotage_widening, sabotage_length };
+/// `sabotage_length` are verify with one wrong rule (`facts.Sabotage`), and
+/// `sabotage_overflow` verify with the overflow facts' rules off by one.
+pub const Mode = enum { off, trusted, verify, sabotage, sabotage_widening, sabotage_length, sabotage_overflow };
 
 /// What the passes produced, per function, and what they did.
 pub const Result = struct {
@@ -69,6 +70,7 @@ pub fn debug(arena: std.mem.Allocator, module: *ir.Module) Error!Result {
 /// Run the release passes over `module`.
 pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Result {
     try @import("fuse_text.zig").whitespace(arena, module);
+    _ = try @import("fuse_slice_key.zig").run(arena, module);
     var result: Result = .{
         .known = try arena.alloc(?facts.Facts, module.functions.items.len),
         .plans = try arena.alloc([]const vector.Plan, module.functions.items.len),
@@ -96,19 +98,28 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         .sabotage => .remainder,
         .sabotage_widening => .widening,
         .sabotage_length => .length,
+        .sabotage_overflow => .overflow,
         else => .none,
     };
     // A first fact pass with every parameter unknown gives each call site's argument
     // intervals; `parameterRanges` turns them into the parameter intervals the real
-    // pass starts from. It changes no function.
+    // pass starts from. It changes no function. It runs callees first, so each
+    // function's return interval (NEW-CORE-F1-OVERFLOW-3) is known at its calls.
     const first = try arena.alloc(?facts.Facts, module.functions.items.len);
-    for (module.functions.items, first, 0..) |*function, *slot, index| {
-        slot.* = null;
+    const returns = try arena.alloc(?facts.Interval, module.functions.items.len);
+    @memset(first, null);
+    @memset(returns, null);
+    for (module.functions.items, 0..) |*function, index| {
         if (function.signature.linkage != .internal) continue;
         const changed = try version.unswitch(arena, function, result.provenance.context(@intCast(index)));
         result.per_function[index].counts.unswitched = changed;
         result.counts.unswitched += changed;
-        slot.* = try facts.analyze(arena, function, .{ .fold = !verify, .sabotage = sabotage, .mark = false });
+    }
+    for (try calleesFirst(arena, module)) |index| {
+        const function = &module.functions.items[index];
+        const known = try facts.analyze(arena, function, .{ .fold = !verify, .sabotage = sabotage, .mark = false, .returns = returns });
+        first[index] = known;
+        returns[index] = facts.returnRange(&known, function, sabotage);
     }
     const parameters = try parameterRanges(arena, module, first);
     // Closed caller bounds can prove an affine callback safe only after the
@@ -118,7 +129,7 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
     const summaries = try effects.analyze(arena, module);
     for (module.functions.items, result.known, result.plans, parameters, 0..) |*function, *slot, *plan, params, index| {
         if (function.signature.linkage != .internal) continue;
-        const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage, .params = params };
+        const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage, .params = params, .returns = returns };
         var known = try facts.analyze(arena, function, options);
         if (!verify and @import("byte_index.zig").forward(module, function, &known) != 0) {
             // The existing fact and vector rules now see the original counted index.
@@ -147,6 +158,40 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         result.counts.vectorized += @intCast(plan.len);
     }
     return result;
+}
+
+/// The internal functions in an order that puts each callee before its callers
+/// (a depth-first postorder of the direct-call graph); a cycle is broken where the
+/// search meets a function still open, whose calls then see no return interval.
+fn calleesFirst(arena: std.mem.Allocator, module: *const ir.Module) Error![]const u32 {
+    const count = module.functions.items.len;
+    const state = try arena.alloc(enum { new, open, done }, count);
+    @memset(state, .new);
+    var order: std.ArrayList(u32) = .empty;
+    var stack: std.ArrayList(struct { function: u32, next: usize }) = .empty;
+    for (module.functions.items, 0..) |root, root_index| {
+        if (root.signature.linkage != .internal or state[root_index] != .new) continue;
+        state[root_index] = .open;
+        try stack.append(arena, .{ .function = @intCast(root_index), .next = 0 });
+        while (stack.items.len != 0) {
+            const top = &stack.items[stack.items.len - 1];
+            const insts = module.functions.items[top.function].insts.items;
+            if (top.next < insts.len) {
+                const inst = insts[top.next];
+                top.next += 1;
+                if (inst.op != .call) continue;
+                const callee = inst.a.index();
+                if (callee >= count or state[callee] != .new or module.functions.items[callee].signature.linkage != .internal) continue;
+                state[callee] = .open;
+                try stack.append(arena, .{ .function = @intCast(callee), .next = 0 });
+                continue;
+            }
+            state[top.function] = .done;
+            try order.append(arena, top.function);
+            _ = stack.pop();
+        }
+    }
+    return order.items;
 }
 
 /// Per function, the interval of each parameter over every call that reaches it

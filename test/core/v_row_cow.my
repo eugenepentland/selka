@@ -1,0 +1,177 @@
+module v_row_cow
+
+# A write to an element of an inner list never changes another variable that holds
+# that inner list (NEW-CORE-ROW-COW-1, NEW-CORE-ROW-COW-2): the row a nested store
+# updates in place is unique only when nothing read it out and kept it, and when every
+# store that built the outer list ran in place.
+
+
+record Bag:
+    n: int
+    items: list[int]
+
+
+def scale(c: mut list[list[float]], n: int):
+    for i in range(n):
+        for j in range(n):
+            c[i][j] = c[i][j] * 2.0
+
+
+def row_of(xs: list[list[int]], i: int) -> list[int]:
+    return xs[i]
+
+
+def same(xs: list[list[int]]) -> list[list[int]]:
+    return xs
+
+
+def write_until(b: mut list[list[int]], stop: int) -> int:
+    for i in range(len(b)):
+        if i == stop:
+            return i
+        b[i][0] = 7
+    return -1
+
+
+# spec-case: NEW-CORE-ROW-COW-1
+public def test_a_row_read_out_before_a_loop_keeps_its_value() -> bool:
+    b = [[1, 2], [3, 4]]
+    kb = b[1]
+    ka = b[0]
+    for i in range(2):
+        b[i][0] = 7
+    c = [[1, 2], [3, 4]]
+    kc = c[1]
+    for i in range(2):
+        c[i][0] = c[i][0] * 2
+    return kb == [3, 4] and ka == [1, 2] and b == [[7, 2], [7, 4]] and kc == [3, 4] and c == [[2, 2], [6, 4]]
+
+
+# spec-case: NEW-CORE-ROW-COW-1
+public def test_a_row_kept_across_an_inlined_mut_loop_keeps_its_value() -> bool:
+    rows = [[1.0, 2.0], [3.0, 4.0]]
+    keep = rows[1]
+    scale(mut rows, 2)
+    scale(mut rows, 2)
+    return keep == [3.0, 4.0] and rows[1] == [12.0, 16.0]
+
+
+# spec-case: NEW-CORE-ROW-COW-1
+public def test_rows_of_built_and_comprehended_lists_keep_their_aliases() -> bool:
+    b = [[i * 2 + j + 1 for j in range(2)] for i in range(3)]
+    k = b[1]
+    for i in range(3):
+        b[i][0] = 7
+    filled: list[list[int]] = []
+    for i in range(3):
+        row: list[int] = []
+        for j in range(2):
+            row.append(i * 2 + j + 1)
+        filled.append(row)
+    first = filled[0]
+    i2 = 0
+    while i2 < 3:
+        for j in range(2):
+            filled[i2][j] = 7
+        i2 += 1
+    return k == [3, 4] and b[1] == [7, 4] and first == [1, 2] and filled[2] == [7, 7]
+
+
+# spec-case: NEW-CORE-ROW-COW-1
+public def test_appends_augmented_stores_and_other_element_types_keep_aliases() -> bool:
+    b = [[1, 2], [3, 4]]
+    k = b[1]
+    for i in range(2):
+        b[i].append(9)
+    c = [[1, 2], [3, 4]]
+    kc = c[1]
+    for i in range(2):
+        c[i][0] += 10
+    t = [["a", "b"], ["c", "d"]]
+    kt = t[1]
+    for i in range(2):
+        t[i][0] = "z"
+    f = [[False, False], [False, True]]
+    kf = f[1]
+    for i in range(2):
+        f[i][0] = True
+    x = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]
+    kx = x[1]
+    for i in range(2):
+        for j in range(2):
+            x[i][j][0] = 7
+    return k == [3, 4] and len(b[1]) == 3 and kc[0] == 3 and c[1][0] == 13 and kt == ["c", "d"] and t[1][0] == "z" and kf == [False, True] and f[1][0] and kx == [[5, 6], [7, 8]] and x[1][0][0] == 7
+
+
+# spec-case: NEW-CORE-ROW-COW-1
+public def test_rows_kept_through_calls_breaks_and_early_returns_keep_their_values() -> bool:
+    b = [[1, 2], [3, 4]]
+    k = row_of(b, 1)
+    for i in range(2):
+        b[i][0] = 7
+    d = [[1, 2], [3, 4], [5, 6]]
+    kd = d[1]
+    for i in range(3):
+        d[i][0] = 7
+        if i == 1:
+            break
+    e = [[1, 2], [3, 4], [5, 6]]
+    ke = e[1]
+    stopped = write_until(mut e, 2)
+    g = [[1, 2], [3, 4], [5, 6]]
+    kg = [0]
+    for i in range(3):
+        if i == 1:
+            kg = g[2]
+        g[i][0] = 9
+    return k == [3, 4] and b[1][0] == 7 and kd == [3, 4] and d[1][0] == 7 and ke == [3, 4] and e[1][0] == 7 and stopped == 2 and kg == [5, 6] and g[2][0] == 9
+
+
+# spec-case: NEW-CORE-ROW-COW-1
+public def test_records_and_dictionaries_holding_rows_keep_aliases() -> bool:
+    xs = [Bag(n=1, items=[1, 2]), Bag(n=2, items=[3, 4])]
+    kept = xs[1]
+    ki = xs[1].items
+    for i in range(2):
+        xs[i].items[0] = 7
+    d = {"a": [1, 2], "b": [3, 4]}
+    kd = d["b"]
+    for key in ["a", "b"]:
+        d[key][0] = 7
+    return kept.items == [3, 4] and ki == [3, 4] and xs[1].items[0] == 7 and kd == [3, 4] and d["b"][0] == 7
+
+
+# spec-case: NEW-CORE-ROW-COW-2
+public def test_an_outer_list_shared_while_it_was_built_keeps_its_rows() -> bool:
+    b = [[1, 2]]
+    snap = b
+    b.append([3, 4])
+    for i in range(2):
+        b[i][0] = 7
+    c = [[1, 2]]
+    t = same(c)
+    c.append([3, 4])
+    for i in range(2):
+        c[i][0] = 7
+    d = [[1, 2], [5, 6]]
+    u = d
+    d[1] = [3, 4]
+    for i in range(2):
+        d[i][0] = 7
+    return snap == [[1, 2]] and b == [[7, 2], [7, 4]] and t == [[1, 2]] and c[0][0] == 7 and u == [[1, 2], [5, 6]] and d == [[7, 2], [7, 4]]
+
+
+# spec-case: NEW-CORE-ROW-COW-1
+public def test_rows_nothing_kept_are_still_updated() -> bool:
+    n = 3
+    a = [[float(i + j) for j in range(n)] for i in range(n)]
+    c = [[0.0 for j in range(n)] for i in range(n)]
+    for i in range(n):
+        for j in range(n):
+            for k in range(n):
+                c[i][j] += a[i][k] * a[k][j]
+    return c[0] == [5.0, 8.0, 11.0] and c[2][2] == 29.0
+
+
+def main() -> int:
+    return 0

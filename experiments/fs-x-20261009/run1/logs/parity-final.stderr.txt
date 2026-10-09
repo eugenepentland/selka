@@ -1,0 +1,35 @@
+bench-parity: building 153 arms of 28 benchmark(s) with 4 job(s)
+parity_locked: took /run/user/1000/mylang-slots/cpu10.lock after 0.0 s
+binary_trees: zig-fast 234.4 ms | my=1.00x  my-arena=1.02x  zig-fast=1.00x  zig-safe=1.12x  zig-gpa=1.04x  rust=1.78x  rust-checked=1.83x
+fannkuch_redux: zig-fast 211.6 ms | my=0.88x  my-array=3.13x  my-tuned=2.62x  zig-fast=1.00x  zig-safe=1.18x  rust=1.02x  rust-checked=1.00x
+knucleotide: zig-fast 107.1 ms | my=1.00x  my-arena=0.99x  my-tuned=0.65x  zig-fast=1.00x  zig-safe=1.14x  rust=1.35x  rust-checked=1.36x
+mandelbrot: zig-fast 125.7 ms | my=1.01x  zig-fast=1.00x  zig-safe=1.01x  rust=1.02x  rust-checked=1.04x
+matmul: zig-fast 41.7 ms | my=0.50x  my-flat=1.93x  my-tuned=2.72x  zig-fast=1.00x  zig-safe=1.65x  rust=2.17x  rust-checked=2.93x
+nbody: zig-fast 144.5 ms | my=1.81x  my-class=1.80x  zig-fast=1.00x  zig-safe=1.00x  rust=1.14x  rust-checked=1.13x
+raytrace: zig-fast 69.8 ms | my=1.07x  my-tuned=1.07x  zig-fast=1.00x  zig-safe=1.05x  rust=0.97x  rust-checked=0.99x
+sieve: zig-fast 53.0 ms | my=1.18x  my-tuned=1.18x  zig-fast=1.00x  zig-safe=1.37x  rust=1.03x  rust-checked=1.18x
+sort_builtin: zig-fast 206.3 ms | my=0.50x  zig-fast=1.00x  zig-safe=1.18x  rust=0.30x  rust-checked=0.30x
+sort_quick: zig-fast 172.7 ms | my=1.30x  zig-fast=1.00x  zig-safe=1.19x  rust=0.91x  rust-checked=0.94x
+sort_records: zig-fast 116.1 ms | my=0.26x  my-keyed=0.26x  my-sorted=0.26x  zig-fast=1.00x  zig-safe=1.18x  rust=0.39x  rust-checked=0.39x
+spectral_norm: zig-fast 160.2 ms | my=1.04x  my-tuned=0.98x  zig-fast=1.00x  zig-safe=1.40x  rust=1.00x  rust-checked=1.20x
+text_ops: zig-fast 26.7 ms | my=2.12x  my-tuned=0.85x  zig-fast=1.00x  zig-safe=0.85x  rust=1.58x  rust-checked=1.61x
+scan_count: zig-fast 150.3 ms | my=0.83x  zig-fast=1.00x  zig-safe=1.75x
+scan_replace: zig-fast 155.5 ms | my=0.50x  zig-fast=1.00x  zig-safe=1.88x
+scan_split: zig-fast 36.3 ms | my=2.04x  zig-fast=1.00x  zig-safe=1.51x
+alloc_churn: zig-fast 69.4 ms | my=0.82x  my-arena=0.83x  zig-fast=1.00x  zig-safe=1.09x  zig-gpa=0.87x  rust=1.37x  rust-checked=1.37x  rust-reuse=0.72x
+bytes_scan: zig-fast 37.3 ms | my=0.50x  my-wrapping=0.50x  zig-fast=1.00x  zig-safe=1.30x  rust=0.37x  rust-checked=1.48x
+calls: zig-fast 111.8 ms | my=1.01x  zig-fast=1.00x  zig-safe=1.02x  zig-inline=1.08x  rust=0.80x  rust-checked=0.82x
+dict_count: zig-fast 28.0 ms | my=0.38x  zig-fast=1.00x  zig-safe=1.34x  zig-getorput=0.56x  rust=2.12x  rust-checked=2.15x  rust-entry=1.20x
+fib: zig-fast 30.0 ms | my=2.02x  zig-fast=1.00x  zig-safe=1.96x  rust=1.10x  rust-checked=2.22x
+float_loop: zig-fast 33.3 ms | my=1.01x  zig-fast=1.00x  zig-safe=1.00x  rust=1.02x  rust-checked=1.01x
+intloop: zig-fast 106.7 ms | my=1.03x  zig-fast=1.00x  zig-safe=1.00x  rust=0.96x  rust-checked=0.85x
+list_append_sum: zig-fast 50.4 ms | my=1.09x  zig-fast=1.00x  zig-safe=1.03x  rust=1.08x  rust-checked=1.11x
+list_records: zig-fast 45.1 ms | my=1.15x  my-wrapping=0.94x  zig-fast=1.00x  zig-safe=1.11x  rust=0.96x  rust-checked=1.13x
+records: zig-fast 95.0 ms | my=0.83x  zig-fast=1.00x  zig-safe=0.91x  rust=0.83x  rust-checked=0.74x
+str_build: zig-fast 40.4 ms | my=2.26x  zig-fast=1.00x  zig-safe=1.26x  rust=1.09x  rust-checked=1.09x
+bench-parity: re-measuring 5 program(s) that exceeded a threshold: binary_trees, fannkuch_redux, scan_replace, str_build, text_ops
+binary_trees (confirmation): my=0.98x  my-arena=0.97x  zig-fast=1.00x  zig-safe=1.14x  zig-gpa=1.04x  rust=1.71x  rust-checked=1.76x
+fannkuch_redux (confirmation): my=0.87x  my-array=3.28x  my-tuned=2.72x  zig-fast=1.00x  zig-safe=1.20x  rust=1.05x  rust-checked=1.00x
+scan_replace (confirmation): my=0.48x  zig-fast=1.00x  zig-safe=1.80x
+str_build (confirmation): my=2.24x  zig-fast=1.00x  zig-safe=1.27x  rust=1.09x  rust-checked=1.09x
+text_ops (confirmation): my=2.09x  my-tuned=0.84x  zig-fast=1.00x  zig-safe=0.84x  rust=1.55x  rust-checked=1.57x

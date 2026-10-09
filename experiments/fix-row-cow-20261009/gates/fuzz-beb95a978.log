@@ -1,0 +1,11 @@
+evidence=/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/fuzz-beb95a978
+source_commit=beb95a9786ff47f0b7dfc58f5f867c2d77023aae
+s0: PASS; 23.104241905966774s
+number: PASS; 28.852412465959787s
+s1: PASS; 28.790518762078136s
+rc: PASS; 16.063284073024988s
+rebinding: PASS; 27.056645320961252s
+text: PASS; 13.540721929864958s
+iteration: PASS; 42.57131849019788s
+functions: PASS; 21.597525916993618s
+dict: PASS; 59.578004370909184s
