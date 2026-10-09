@@ -1,13 +1,9 @@
-
-
 # Bounds versioning (lane F2, NEW-CORE-F2-VERSION-1): a small flat counted loop whose list
 # indexes move with the counter gets a copy with those checks proven, behind one guard that
 # tests every trip's index before the loop. Each scenario must give the base compiler's
 # answer whether the guard passes or fails, and trap where the base traps. `main` runs every
 # scenario that must succeed; a first argument names one, and each further argument makes
 # it larger.
-
-
 # `I + i`, `i - I` and `I - i` over a list of unknown length.
 func forms(xs: int[], off: int, top: int, n: int) -> int:
     mut total = 0

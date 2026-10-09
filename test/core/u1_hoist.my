@@ -1,12 +1,8 @@
-
-
 # Uniqueness tests hoisted out of loops (NEW-CORE-U1-HOIST-1): one test on the edge
 # entering a loop replaces the test of every update in it, unless the loop may share
 # the value. Each function below either shares the value inside its loop (the per-update
 # test must stay) or holds a second owner from before the loop (the entry test copies
 # it once). Every answer here is the base compiler's (main 35df839be).
-
-
 record Holder:
     name: str
     items: int[]

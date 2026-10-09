@@ -1,11 +1,7 @@
-
-
 # Appends in loops with the length and capacity in registers (NEW-CORE-U1-STATE-2):
 # the header must be current wherever anything else reads the list, frees it or hands
 # it on. Every answer here is the base compiler's (main 35df839be). Any argument makes
 # `main` trap in a loop that appends.
-
-
 record Item:
     key: int
     name: str

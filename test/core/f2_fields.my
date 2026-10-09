@@ -1,12 +1,8 @@
-
-
 # Whole-program field intervals (lane F2, NEW-CORE-F2-FIELD-1): a record field's interval
 # is the hull of every value any write in the program stores into it. Each scenario below
 # writes a field far from where it is read: through a `mut` callee, an element field store,
 # a copy changed afterwards, recursion, and a function value. `main` runs every scenario;
 # a first argument names one, and each further argument makes it larger.
-
-
 record Pos:
     i: int
     tag: int

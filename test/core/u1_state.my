@@ -1,12 +1,8 @@
-
-
 # Loop-carried state (NEW-CORE-U1-STATE-1): scalar fields a loop reads and writes in a
 # record (a VM's frame and stack pointer) are kept in SSA values, while the record's
 # memory still holds every field for the calls, copies and returns that read it there.
 # Every answer here is the base compiler's (main 35df839be). Any argument makes `main`
 # trap inside a loop after printing what it has.
-
-
 record Frame:
     code: int[]
     ip: int

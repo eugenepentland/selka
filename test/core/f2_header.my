@@ -1,12 +1,8 @@
-
-
 # Checks made on every edge into a loop header (lane F2, NEW-CORE-F2-INDEX-5): `run` reads
 # `m.items[m.top - 1]` before its loop and at the end of each pass, so the same read at the
 # top of each pass is covered on both edges into the loop; `unguarded` makes no read
 # before its loop, so its top read keeps its check. Each further argument adds a pass;
 # enough passes take `top` below zero (the reads wrap) and then past the list (a trap).
-
-
 record Machine:
     items: int[]
     top: int

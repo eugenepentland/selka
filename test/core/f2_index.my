@@ -1,12 +1,8 @@
-
-
 # Index facts (lane F2, NEW-CORE-F2-*): a written index tested as written before its
 # normalization from the end, a fill loop's length only after the loop, a dominating
 # `i < len(other)` for a list of the same length, and checks a dominating check already
 # made. `main` runs every scenario that must succeed; a first argument names one scenario
 # (some of them must trap), and each further argument makes it larger.
-
-
 record Point:
     x: int
     y: int

@@ -112,7 +112,7 @@ test "F2 index: written indexes keep every answer and trap where they must: nega
         try std.testing.expectEqual(@as(u8, 0), more.status);
         const next = try leakChecked(a, root, "f2_index", flags, &.{"next_trap"});
         try std.testing.expectEqual(@as(u8, 1), next.status);
-        try std.testing.expect(contains(next.stderr, "f2_index.my:163:13: error[R_LIST_BOUNDS]: native execution failed (index 7, length 7)"));
+        try std.testing.expect(contains(next.stderr, "f2_index.my:159:13: error[R_LIST_BOUNDS]: native execution failed (index 7, length 7)"));
     }
 }
 
@@ -181,7 +181,7 @@ test "F2 index: a list read inside its own fill loop traps in every build mode" 
     for (modes) |flags| {
         const ran = try leakChecked(a, root, "f2_index", flags, &.{"fill_inside"});
         try std.testing.expectEqual(@as(u8, 1), ran.status);
-        try std.testing.expect(contains(ran.stderr, "f2_index.my:59:25: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)"));
+        try std.testing.expect(contains(ran.stderr, "f2_index.my:55:25: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)"));
     }
 }
 
@@ -281,16 +281,16 @@ test "F2 index: dominating checks keep every answer and trap where they must: a 
     for (modes) |flags| {
         const shrink = try leakChecked(a, root, "f2_index", flags, &.{"shrink_trap"});
         try std.testing.expectEqual(@as(u8, 1), shrink.status);
-        try std.testing.expect(contains(shrink.stderr, "f2_index.my:79:13: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)"));
+        try std.testing.expect(contains(shrink.stderr, "f2_index.my:75:13: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)"));
         const loop = try leakChecked(a, root, "f2_index", flags, &.{ "loop_shrink", "x" });
         try std.testing.expectEqual(@as(u8, 1), loop.status);
-        try std.testing.expect(contains(loop.stderr, "f2_index.my:91:25: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)"));
+        try std.testing.expect(contains(loop.stderr, "f2_index.my:87:25: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)"));
         const bump = try leakChecked(a, root, "f2_index", flags, &.{"bump_trap"});
         try std.testing.expectEqual(@as(u8, 1), bump.status);
-        try std.testing.expect(contains(bump.stderr, "f2_index.my:104:13: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)"));
+        try std.testing.expect(contains(bump.stderr, "f2_index.my:100:13: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)"));
         const shorter = try leakChecked(a, root, "f2_index", flags, &.{"same_length_trap"});
         try std.testing.expectEqual(@as(u8, 1), shorter.status);
-        try std.testing.expect(contains(shorter.stderr, "f2_index.my:136:25: error[R_LIST_BOUNDS]: native execution failed (index 7, length 7)"));
+        try std.testing.expect(contains(shorter.stderr, "f2_index.my:132:25: error[R_LIST_BOUNDS]: native execution failed (index 7, length 7)"));
     }
 }
 
@@ -304,7 +304,7 @@ test "F2 index: a verify build catches a dominating check taken to cover the nex
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
     const ran = try leakChecked(a, root, "f2_index", &.{ "--release", "--sabotage-facts=index" }, &.{"next_trap"});
     try std.testing.expectEqual(@as(u8, 1), ran.status);
-    try std.testing.expect(contains(ran.stderr, "f2_index.my:163:13: error[R_CORE_FACT]: native execution failed (index: value 7, other 7)"));
+    try std.testing.expect(contains(ran.stderr, "f2_index.my:159:13: error[R_CORE_FACT]: native execution failed (index: value 7, other 7)"));
     // Unsabotaged, the same program traps on the index itself.
     const plain = try leakChecked(a, root, "f2_index", &.{ "--release", "--verify-facts" }, &.{"next_trap"});
     try std.testing.expect(contains(plain.stderr, "error[R_LIST_BOUNDS]"));
@@ -381,7 +381,7 @@ test "F2 index: field intervals keep every answer: fields written negative far a
         try std.testing.expectEqualStrings("14151 44751\n201051\n40 40\n30 20\n70\n14 6\n", more.stdout);
         const deep = try leakChecked(a, root, "f2_fields", flags, &.{"deep"});
         try std.testing.expectEqual(@as(u8, 1), deep.status);
-        try std.testing.expect(contains(deep.stderr, "f2_fields.my:63:16: error[R_LIST_BOUNDS]: native execution failed (index -6, length 5)"));
+        try std.testing.expect(contains(deep.stderr, "f2_fields.my:59:16: error[R_LIST_BOUNDS]: native execution failed (index -6, length 5)"));
     }
 }
 
@@ -396,14 +396,14 @@ test "F2 index: a verify build catches a field interval that lost its top" {
     const sabotaged: []const []const u8 = &.{ "--release", "--sabotage-facts=field" };
     const slots = try leakChecked(a, root, "f2_fields", sabotaged, &.{"slots"});
     try std.testing.expectEqual(@as(u8, 1), slots.status);
-    try std.testing.expect(contains(slots.stderr, "f2_fields.my:84:18: error[R_CORE_FACT]: native execution failed (range [0, 2]: value 3"));
+    try std.testing.expect(contains(slots.stderr, "f2_fields.my:80:18: error[R_CORE_FACT]: native execution failed (range [0, 2]: value 3"));
     const small = try leakChecked(a, root, "f2_fields", sabotaged, &.{ "small", "x" });
     try std.testing.expectEqual(@as(u8, 1), small.status);
     // Field forwarding (NEW-CORE-U1-STATE-1) replaces the read of `s.v` by the value stored
     // there, so the wrong interval [3, 6] is caught where it reaches an asserted value: the read
-    // itself, or `s.v * 2` with [6, 12]. Either way verify traps in `small`, on line 101.
+    // itself, or `s.v * 2` with [6, 12]. Either way verify traps in `small`, on line 97.
     try std.testing.expect(contains(small.stderr, "error[R_CORE_FACT]: native execution failed (range ["));
-    try std.testing.expect(contains(small.stderr, "in small at f2_fields.my:101:"));
+    try std.testing.expect(contains(small.stderr, "in small at f2_fields.my:97:"));
 }
 
 const element_writes =
@@ -511,11 +511,11 @@ test "F2 index: versioned loops keep every answer and trap where they must: guar
         const show = try leakChecked(a, root, "f2_version", flags, &.{"show"});
         try std.testing.expectEqual(@as(u8, 1), show.status);
         try std.testing.expectEqualStrings("0\n1\n2\n3\n4\n5\n6\n7\n8\n", show.stdout);
-        try std.testing.expect(contains(show.stderr, "f2_version.my:43:25: error[R_LIST_BOUNDS]: native execution failed (index 8, length 8)"));
+        try std.testing.expect(contains(show.stderr, "f2_version.my:39:25: error[R_LIST_BOUNDS]: native execution failed (index 8, length 8)"));
         const forms = try leakChecked(a, root, "f2_version", flags, &.{"forms_trap"});
-        try std.testing.expect(contains(forms.stderr, "f2_version.my:15:25: error[R_LIST_BOUNDS]: native execution failed (index 8, length 8)"));
+        try std.testing.expect(contains(forms.stderr, "f2_version.my:11:25: error[R_LIST_BOUNDS]: native execution failed (index 8, length 8)"));
         const huge = try leakChecked(a, root, "f2_version", flags, &.{"huge"});
-        try std.testing.expect(contains(huge.stderr, "f2_version.my:15:25: error[R_LIST_BOUNDS]: native execution failed (index 4611686018427387904, length 8)"));
+        try std.testing.expect(contains(huge.stderr, "f2_version.my:11:25: error[R_LIST_BOUNDS]: native execution failed (index 4611686018427387904, length 8)"));
     }
 }
 
@@ -529,7 +529,7 @@ test "F2 index: a verify build catches a bounds guard that admits one index past
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
     const ran = try leakChecked(a, root, "f2_version", &.{ "--release", "--sabotage-facts=version" }, &.{"show"});
     try std.testing.expectEqual(@as(u8, 1), ran.status);
-    try std.testing.expect(contains(ran.stderr, "f2_version.my:43:25: error[R_CORE_FACT]: native execution failed (index: value 8, other 8)"));
+    try std.testing.expect(contains(ran.stderr, "f2_version.my:39:25: error[R_CORE_FACT]: native execution failed (index: value 8, other 8)"));
 }
 
 const header_edges =
@@ -598,6 +598,6 @@ test "F2 index: header-edge coverage keeps every answer: indexes that wrap below
         try std.testing.expectEqualStrings("119 -3\n111 -3\n", wrapped.stdout);
         const trapped = try leakChecked(a, root, "f2_header", flags, &(eight ++ eight ++ [_][]const u8{ "x", "x", "x", "x" }));
         try std.testing.expectEqual(@as(u8, 1), trapped.status);
-        try std.testing.expect(contains(trapped.stderr, "f2_header.my:23:25: error[R_LIST_BOUNDS]: native execution failed (index -9, length 8)"));
+        try std.testing.expect(contains(trapped.stderr, "f2_header.my:19:25: error[R_LIST_BOUNDS]: native execution failed (index -9, length 8)"));
     }
 }

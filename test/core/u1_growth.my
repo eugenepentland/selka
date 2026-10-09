@@ -1,12 +1,8 @@
-
-
 # Growth of byte buffers and lists (NEW-CORE-U1-GROW-1): a large block grows with
 # `realloc`. Appends start from an empty buffer, cross the small-block classes, the
 # small-to-large boundary and many large doublings (some through `reserve`); a buffer
 # another name still holds is copied before its append. Every answer here
 # is the base compiler's (main 35df839be).
-
-
 func checksum(buffer: byte_buffer) -> int:
     mut total = 0
     for i in range(len(buffer)):

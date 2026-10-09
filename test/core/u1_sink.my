@@ -1,13 +1,9 @@
-
-
 # A store ahead of an if-elif ladder sinks to the arms that observe it
 # (NEW-CORE-U1-SINK-1): `vm.frames[vm.count - 1] = frame` runs only on the paths where
 # a call reads the frames list, where the loop returns the machine, or where a trap can
 # report; the bounds check stays at the store's place. The ladder's first arm observes
 # nothing, which is where the sinking starts. Every answer here is the base
 # compiler's (main 35df839be). Any argument makes the last program trap.
-
-
 record Frame:
     code: int[]
     ip: int
