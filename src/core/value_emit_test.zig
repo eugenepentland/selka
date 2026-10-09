@@ -145,7 +145,8 @@ test "a match on a union list element loads its tag word, then only the payload 
     // No whole element is loaded: no struct is built from the union's words.
     try std.testing.expect(!contains(peek, "insertvalue"));
     try std.testing.expect(!contains(peek, "memcpy"));
-    // One tag load (with the bounds check), then loads of the two payload fields of the cell arm.
-    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, peek, "icmp uge i64"));
+    // One tag load (with the bounds check: the written index, then on its cold path the
+    // normalized one, NEW-CORE-F2-WRAP-1), then loads of the two payload fields of the cell arm.
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, peek, "icmp uge i64"));
     try std.testing.expect(std.mem.count(u8, peek, "load i64, ptr") >= 4);
 }

@@ -1,0 +1,44 @@
+module f2_header
+
+# Checks made on every edge into a loop header (lane F2, NEW-CORE-F2-INDEX-5): `run` reads
+# `m.items[m.top - 1]` before its loop and at the end of each pass, so the same read at the
+# top of each pass is covered on both edges into the loop; `unguarded` makes no read
+# before its loop, so its top read keeps its check. Each further argument adds a pass;
+# enough passes take `top` below zero (the reads wrap) and then past the list (a trap).
+
+
+record Machine:
+    items: list[int]
+    top: int
+
+
+def run(m: mut Machine, steps: int) -> int:
+    total = m.items[m.top - 1]
+    k = 0
+    while k < steps:
+        total = total + m.items[m.top - 1]
+        if total % 2 == 0:
+            m.top = m.top - 1
+        k += 1
+        total = total + m.items[m.top - 1]
+    return total
+
+
+def unguarded(m: mut Machine, steps: int) -> int:
+    total = 0
+    k = 0
+    while k < steps:
+        total = total + m.items[m.top - 1]
+        if total % 2 == 0:
+            m.top = m.top - 1
+        k += 1
+        total = total + m.items[m.top - 1]
+    return total
+
+
+def main(args: list[str], out: Stream) -> int:
+    m = Machine(items=[1, 2, 3, 4, 5, 6, 7, 8], top=8)
+    out.print(run(mut m, 3 + len(args)), m.top)
+    m2 = Machine(items=[1, 2, 3, 4, 5, 6, 7, 8], top=8)
+    out.print(unguarded(mut m2, 3 + len(args)), m2.top)
+    return 0

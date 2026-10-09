@@ -1,0 +1,496 @@
+{
+  "source_commit": "8ba982ad0076f4f9c10c320fecc5038832e7f46a",
+  "references_sha256": "b6703c9fc0f135844131130cab4c0c8e263d2966ac5e85d24d380ae5deece3bc",
+  "compiler": "zig-out/bin/mylang",
+  "core_shards": 64,
+  "results": [
+    {
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "python3",
+        "experiments/new-core-s3-20261006/wave-a/exclusive_core.py",
+        "--",
+        "/usr/bin/time",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-ce2-results/experiments/f2-index-20261009/gates/qualify-8ba982ad/install-core.seconds",
+        "zig",
+        "build",
+        "install",
+        "--summary",
+        "all"
+      ],
+      "log": "experiments/f2-index-20261009/gates/qualify-8ba982ad/install-core.log",
+      "status": 0,
+      "seconds": 2.15,
+      "wall_including_admission": 7.225088380044326
+    },
+    {
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "/usr/bin/time",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-ce2-results/experiments/f2-index-20261009/gates/qualify-8ba982ad/test-core.seconds",
+        "zig",
+        "build",
+        "test-core",
+        "-Dcore-shards=64",
+        "--summary",
+        "all"
+      ],
+      "log": "experiments/f2-index-20261009/gates/qualify-8ba982ad/test-core.log",
+      "status": 0,
+      "seconds": 298.4,
+      "wall_including_admission": 411.3942861801479,
+      "build_inspection": {
+        "build_summaries": [
+          "71/71 steps succeeded; 544/34816 tests passed (34272 skipped)"
+        ],
+        "maxrss": [
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 1s MaxRSS:72M",
+            "display": "72M",
+            "bytes": 75497472.0,
+            "test_run": true
+          },
+          {
+            "line": "|  +- compile test debug native cached 5ms MaxRSS:41M",
+            "display": "41M",
+            "bytes": 42991616.0,
+            "test_run": false
+          },
+          {
+            "line": "|     |  +- compile exe build-identity debug native cached 5ms MaxRSS:40M",
+            "display": "40M",
+            "bytes": 41943040.0,
+            "test_run": false
+          },
+          {
+            "line": "|     |  +- compile exe mylang debug native cached 6ms MaxRSS:41M",
+            "display": "41M",
+            "bytes": 42991616.0,
+            "test_run": false
+          },
+          {
+            "line": "|     |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:41M",
+            "display": "41M",
+            "bytes": 42991616.0,
+            "test_run": false
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 2s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 4m MaxRSS:2G",
+            "display": "2G",
+            "bytes": 2147483648.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 1s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 1s MaxRSS:70M",
+            "display": "70M",
+            "bytes": 73400320.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 1s MaxRSS:52M",
+            "display": "52M",
+            "bytes": 54525952.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 3s MaxRSS:57M",
+            "display": "57M",
+            "bytes": 59768832.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 1s MaxRSS:52M",
+            "display": "52M",
+            "bytes": 54525952.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 611ms MaxRSS:52M",
+            "display": "52M",
+            "bytes": 54525952.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 3s MaxRSS:68M",
+            "display": "68M",
+            "bytes": 71303168.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 5s MaxRSS:52M",
+            "display": "52M",
+            "bytes": 54525952.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 12s MaxRSS:72M",
+            "display": "72M",
+            "bytes": 75497472.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 3s MaxRSS:101M",
+            "display": "101M",
+            "bytes": 105906176.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 1s MaxRSS:46M",
+            "display": "46M",
+            "bytes": 48234496.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 6s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 16s MaxRSS:467M",
+            "display": "467M",
+            "bytes": 489684992.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 2s MaxRSS:47M",
+            "display": "47M",
+            "bytes": 49283072.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 1s MaxRSS:47M",
+            "display": "47M",
+            "bytes": 49283072.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 1s MaxRSS:47M",
+            "display": "47M",
+            "bytes": 49283072.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 1s MaxRSS:47M",
+            "display": "47M",
+            "bytes": 49283072.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 1s MaxRSS:47M",
+            "display": "47M",
+            "bytes": 49283072.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 2s MaxRSS:55M",
+            "display": "55M",
+            "bytes": 57671680.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 2s MaxRSS:52M",
+            "display": "52M",
+            "bytes": 54525952.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 6s MaxRSS:148M",
+            "display": "148M",
+            "bytes": 155189248.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 6s MaxRSS:196M",
+            "display": "196M",
+            "bytes": 205520896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 3s MaxRSS:193M",
+            "display": "193M",
+            "bytes": 202375168.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 10s MaxRSS:158M",
+            "display": "158M",
+            "bytes": 165675008.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 1s MaxRSS:62M",
+            "display": "62M",
+            "bytes": 65011712.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 1s MaxRSS:62M",
+            "display": "62M",
+            "bytes": 65011712.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 469ms MaxRSS:47M",
+            "display": "47M",
+            "bytes": 49283072.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 626ms MaxRSS:46M",
+            "display": "46M",
+            "bytes": 48234496.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 9 pass, 535 skip (544 total) 1s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 1s MaxRSS:46M",
+            "display": "46M",
+            "bytes": 48234496.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 689ms MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 1s MaxRSS:47M",
+            "display": "47M",
+            "bytes": 49283072.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 1s MaxRSS:61M",
+            "display": "61M",
+            "bytes": 63963136.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 590ms MaxRSS:47M",
+            "display": "47M",
+            "bytes": 49283072.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 849ms MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 1s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 1s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 1s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 2s MaxRSS:70M",
+            "display": "70M",
+            "bytes": 73400320.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 1s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 6s MaxRSS:160M",
+            "display": "160M",
+            "bytes": 167772160.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 11s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 3s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 4s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 1s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 1s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 6s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 1s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 1s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 2s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 2s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 2s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 2s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 1s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 1s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 1s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 3s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 1s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 1s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 2s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 8 pass, 536 skip (544 total) 3s MaxRSS:71M",
+            "display": "71M",
+            "bytes": 74448896.0,
+            "test_run": true
+          }
+        ],
+        "rss_overrun_notices": [
+          "error: memory usage peaked at 2.03GB (2025938944 bytes), exceeding the declared upper bound of 1.07GB (1073741824 bytes)"
+        ],
+        "reported_admission_seconds": {
+          "gate": 0,
+          "build": 110
+        },
+        "errors": [
+          "build runner reported an RSS or memory overrun"
+        ]
+      }
+    }
+  ],
+  "qualified": false,
+  "core_sha256": "e75aca867a7110a6a47c06f10a4ee0dfecf8c247c1e64672647a2f61b3e12be1",
+  "error": "test-core summary/RSS failed: build runner reported an RSS or memory overrun"
+}

@@ -1,0 +1,45 @@
+scan_count: base 1440Mi 475Mc i/base 1.000 c/base 1.000 | s3 1440Mi 476Mc i/base 1.000 c/base 1.001
+scan_replace: base 950Mi 279Mc i/base 1.000 c/base 1.000 | s3 950Mi 279Mc i/base 1.000 c/base 1.002
+scan_split: base 840Mi 241Mc i/base 1.000 c/base 1.000 | s3 836Mi 240Mc i/base 0.996 c/base 0.993 | zig-safe 718Mi 218Mc i/base 0.854 c/base 0.903 | base/zig-safe c 1.108 s3/zig-safe c 1.100
+alloc_churn: base 244Mi 237Mc i/base 1.000 c/base 1.000 | s3 244Mi 237Mc i/base 1.000 c/base 1.000
+alloc_churn_arena: base 244Mi 237Mc i/base 1.000 c/base 1.000 | s3 244Mi 237Mc i/base 1.000 c/base 1.000
+bytes_scan: base 195Mi 55Mc i/base 1.000 c/base 1.000 | s3 195Mi 55Mc i/base 1.000 c/base 1.001 | zig-safe 389Mi 176Mc i/base 1.991 c/base 3.195 | base/zig-safe c 0.313 s3/zig-safe c 0.313
+bytes_scan_wrapping: base 195Mi 55Mc i/base 1.000 c/base 1.000 | s3 195Mi 55Mc i/base 1.000 c/base 1.001
+calls: base 465Mi 472Mc i/base 1.000 c/base 1.000 | s3 465Mi 472Mc i/base 1.000 c/base 1.000 | zig-safe 690Mi 474Mc i/base 1.483 c/base 1.003 | base/zig-safe c 0.997 s3/zig-safe c 0.997
+dict_count: base 167Mi 37Mc i/base 1.000 c/base 1.000 | s3 155Mi 36Mc i/base 0.928 c/base 0.993
+fib: base 749Mi 253Mc i/base 1.000 c/base 1.000 | s3 749Mi 253Mc i/base 1.000 c/base 1.000 | zig-safe 749Mi 244Mc i/base 1.000 c/base 0.965 | base/zig-safe c 1.037 s3/zig-safe c 1.037
+float_loop: base 104Mi 141Mc i/base 1.000 c/base 1.000 | s3 104Mi 141Mc i/base 1.000 c/base 1.000
+intloop: base 480Mi 466Mc i/base 1.000 c/base 1.000 | s3 480Mi 466Mc i/base 1.000 c/base 1.000 | zig-safe 510Mi 454Mc i/base 1.062 c/base 0.974 | base/zig-safe c 1.026 s3/zig-safe c 1.026
+list_append_sum: base 151Mi 75Mc i/base 1.000 c/base 1.000 | s3 153Mi 75Mc i/base 1.012 c/base 0.991
+list_records: base 178Mi 141Mc i/base 1.000 c/base 1.000 | s3 178Mi 139Mc i/base 1.000 c/base 0.985
+list_records_wrapping: base 68Mi 104Mc i/base 1.000 c/base 1.000 | s3 68Mi 104Mc i/base 1.000 c/base 0.998
+records: base 324Mi 281Mc i/base 1.000 c/base 1.000 | s3 324Mi 281Mc i/base 1.000 c/base 1.000
+str_build: base 255Mi 140Mc i/base 1.000 c/base 1.000 | s3 255Mi 141Mc i/base 1.000 c/base 1.004 | zig-safe 339Mi 87Mc i/base 1.329 c/base 0.623 | base/zig-safe c 1.605 s3/zig-safe c 1.610
+binary_trees: base 3191Mi 819Mc i/base 1.000 c/base 1.000 | s3 3191Mi 812Mc i/base 1.000 c/base 0.991
+binary_trees_arena: base 3191Mi 829Mc i/base 1.000 c/base 1.000 | s3 3191Mi 812Mc i/base 1.000 c/base 0.979
+binary_trees_recursive: base 1764Mi 462Mc i/base 1.000 c/base 1.000 | s3 1764Mi 466Mc i/base 1.000 c/base 1.008
+fannkuch_redux: base 1201Mi 667Mc i/base 1.000 c/base 1.000 | s3 1428Mi 627Mc i/base 1.189 c/base 0.940 | zig-safe 1595Mi 927Mc i/base 1.328 c/base 1.390 | base/zig-safe c 0.719 s3/zig-safe c 0.676
+fannkuch_redux_array: base 7961Mi 2556Mc i/base 1.000 c/base 1.000 | s3 7961Mi 2571Mc i/base 1.000 c/base 1.006
+fannkuch_redux_tuned: base 6788Mi 2118Mc i/base 1.000 c/base 1.000 | s3 6788Mi 2117Mc i/base 1.000 c/base 0.999
+knucleotide: base 1190Mi 392Mc i/base 1.000 c/base 1.000 | s3 1190Mi 392Mc i/base 1.000 c/base 0.999 | zig-safe 1377Mi 414Mc i/base 1.158 c/base 1.058 | base/zig-safe c 0.945 s3/zig-safe c 0.945
+knucleotide_arena: base 1190Mi 390Mc i/base 1.000 c/base 1.000 | s3 1190Mi 390Mc i/base 1.000 c/base 1.001
+knucleotide_tuned: base 586Mi 255Mc i/base 1.000 c/base 1.000 | s3 586Mi 255Mc i/base 1.000 c/base 0.997
+mandelbrot: base 869Mi 527Mc i/base 1.000 c/base 1.000 | s3 869Mi 527Mc i/base 1.000 c/base 1.000
+matmul: base 143Mi 72Mc i/base 1.000 c/base 1.000 | s3 143Mi 72Mc i/base 1.000 c/base 1.000 | zig-safe 1011Mi 231Mc i/base 7.082 c/base 3.198 | base/zig-safe c 0.313 s3/zig-safe c 0.313
+matmul_flat: base 1390Mi 277Mc i/base 1.000 c/base 1.000 | s3 125Mi 68Mc i/base 0.090 c/base 0.243
+matmul_tuned: base 2072Mi 388Mc i/base 1.000 c/base 1.000 | s3 1447Mi 308Mc i/base 0.699 c/base 0.795
+nbody: base 3485Mi 935Mc i/base 1.000 c/base 1.000 | s3 2910Mi 950Mc i/base 0.835 c/base 1.016 | zig-safe 1435Mi 577Mc i/base 0.412 c/base 0.618 | base/zig-safe c 1.619 s3/zig-safe c 1.646
+nbody_class: base 3485Mi 935Mc i/base 1.000 c/base 1.000 | s3 2910Mi 949Mc i/base 0.835 c/base 1.015
+raytrace: base 767Mi 306Mc i/base 1.000 c/base 1.000 | s3 767Mi 306Mc i/base 1.000 c/base 1.000
+raytrace_tuned: base 767Mi 307Mc i/base 1.000 c/base 1.000 | s3 767Mi 307Mc i/base 1.000 c/base 1.000
+sieve: base 510Mi 238Mc i/base 1.000 c/base 1.000 | s3 417Mi 237Mc i/base 0.817 c/base 0.996 | zig-safe 337Mi 279Mc i/base 0.661 c/base 1.174 | base/zig-safe c 0.852 s3/zig-safe c 0.848
+sieve_tuned: base 510Mi 236Mc i/base 1.000 c/base 1.000 | s3 417Mi 237Mc i/base 0.817 c/base 1.006
+sort_builtin: base 713Mi 399Mc i/base 1.000 c/base 1.000 | s3 713Mi 398Mc i/base 1.000 c/base 0.998 | zig-safe 1578Mi 927Mc i/base 2.212 c/base 2.324 | base/zig-safe c 0.430 s3/zig-safe c 0.430
+sort_quick: base 1110Mi 853Mc i/base 1.000 c/base 1.000 | s3 842Mi 758Mc i/base 0.759 c/base 0.888 | zig-safe 1222Mi 772Mc i/base 1.101 c/base 0.905 | base/zig-safe c 1.105 s3/zig-safe c 0.982
+sort_records: base 141Mi 80Mc i/base 1.000 c/base 1.000 | s3 141Mi 79Mc i/base 1.000 c/base 0.995
+sort_records_keyed: base 146Mi 78Mc i/base 1.000 c/base 1.000 | s3 141Mi 78Mc i/base 0.966 c/base 0.995
+sort_records_sorted: base 146Mi 78Mc i/base 1.000 c/base 1.000 | s3 141Mi 78Mc i/base 0.966 c/base 0.999
+spectral_norm: base 2642Mi 641Mc i/base 1.000 c/base 1.000 | s3 2642Mi 641Mc i/base 1.000 c/base 1.000
+spectral_norm_tuned: base 2002Mi 640Mc i/base 1.000 c/base 1.000 | s3 1702Mi 640Mc i/base 0.850 c/base 1.000
+text_ops: base 720Mi 183Mc i/base 1.000 c/base 1.000 | s3 719Mi 182Mc i/base 0.999 c/base 0.992 | zig-safe 367Mi 74Mc i/base 0.510 c/base 0.403 | base/zig-safe c 2.479 s3/zig-safe c 2.460
+text_ops_tuned: base 270Mi 67Mc i/base 1.000 c/base 1.000 | s3 270Mi 67Mc i/base 1.000 c/base 0.997

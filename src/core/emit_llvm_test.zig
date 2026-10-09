@@ -225,7 +225,9 @@ test "a bounds trap recovers the index the program wrote on the trap's cold path
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const text = try support.llvmText(arena.allocator(), from_end_index);
-    const block = blockOf(text, "%fromend") orelse return error.TestExpectedRecovery;
+    // A list index is tested as written first (NEW-CORE-F2-WRAP-1), so its trap reports the
+    // written index `%p1` itself, from the trap's cold block, with nothing to recover.
+    const block = blockOf(text, "i64 %p1, i64 %len") orelse return error.TestExpectedRecovery;
     try std.testing.expect(std.mem.startsWith(u8, block, "trap"));
 }
 

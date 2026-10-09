@@ -10,6 +10,8 @@ const vector = @import("vector.zig");
 const version = @import("version.zig");
 const own = @import("own.zig");
 const forward = @import("forward.zig");
+const index_checks = @import("index_checks.zig");
+const fields = @import("fields.zig");
 const effects = @import("effects.zig");
 const origins = @import("inline_origins.zig");
 
@@ -19,8 +21,11 @@ pub const Error = std.mem.Allocator.Error;
 /// How the fact pass runs: `trusted` facts drive the vector lowering; `verify` keeps
 /// comparisons unfolded and plans no vectors; `sabotage`, `sabotage_widening` and
 /// `sabotage_length` are verify with one wrong rule (`facts.Sabotage`), and
-/// `sabotage_overflow` verify with the overflow facts' rules off by one.
-pub const Mode = enum { off, trusted, verify, sabotage, sabotage_widening, sabotage_length, sabotage_overflow };
+/// `sabotage_overflow` verify with the overflow facts' rules off by one, and `sabotage_index`
+/// verify with a dominating check taken to cover the next index too (`index_checks`), and
+/// `sabotage_field` verify with each field interval's top dropped (`fields.zig`), and
+/// `sabotage_version` verify with each bounds guard admitting one index too many (`version.zig`).
+pub const Mode = enum { off, trusted, verify, sabotage, sabotage_widening, sabotage_length, sabotage_overflow, sabotage_index, sabotage_field, sabotage_version };
 
 /// What the passes produced, per function, and what they did.
 pub const Result = struct {
@@ -100,6 +105,9 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         .sabotage_widening => .widening,
         .sabotage_length => .length,
         .sabotage_overflow => .overflow,
+        .sabotage_index => .index,
+        .sabotage_field => .field,
+        .sabotage_version => .version,
         else => .none,
     };
     // A first fact pass with every parameter unknown gives each call site's argument
@@ -116,11 +124,19 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         result.per_function[index].counts.unswitched = changed;
         result.counts.unswitched += changed;
     }
-    for (try calleesFirst(arena, module)) |index| {
-        const function = &module.functions.items[index];
-        const known = try facts.analyze(arena, function, .{ .fold = !verify, .sabotage = sabotage, .mark = false, .returns = returns });
-        first[index] = known;
-        returns[index] = facts.returnRange(&known, function, sabotage);
+    // The whole-program field intervals (NEW-CORE-F2-FIELD-1) come from the writes under the
+    // first pass's facts; a second round sees them, and each round's hulls hold on their own.
+    const order = try calleesFirst(arena, module);
+    const closed = try fields.closedTypes(arena, module);
+    var field_table: facts.FieldIntervals = .{ .module = module };
+    for (0..2) |_| {
+        for (order) |index| {
+            const function = &module.functions.items[index];
+            const known = try facts.analyze(arena, function, .{ .fold = !verify, .sabotage = sabotage, .mark = false, .returns = returns, .fields = field_table });
+            first[index] = known;
+            returns[index] = facts.returnRange(&known, function, sabotage);
+        }
+        field_table = try fields.hulls(arena, module, first, closed, sabotage == .field);
     }
     const parameters = try parameterRanges(arena, module, first);
     // Closed caller bounds can prove an affine callback safe only after the
@@ -130,7 +146,7 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
     const summaries = try effects.analyze(arena, module);
     for (module.functions.items, result.known, result.plans, parameters, 0..) |*function, *slot, *plan, params, index| {
         if (function.signature.linkage != .internal) continue;
-        const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage, .params = params, .returns = returns };
+        const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage, .params = params, .returns = returns, .fields = field_table };
         var known = try facts.analyze(arena, function, options);
         if (!verify and @import("byte_index.zig").forward(module, function, &known) != 0) {
             // The existing fact and vector rules now see the original counted index.
@@ -145,12 +161,24 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
             result.counts.proven += known.proven;
             result.per_function[index].counts.proven += known.proven;
         }
-        result.counts.versioned += guarded;
-        result.per_function[index].counts.versioned = guarded;
+        // A small flat counted loop whose list indexes a guard can range-check before it gets
+        // a copy with those checks proven (NEW-CORE-F2-VERSION-1); the facts then run again.
+        const ranged = try version.versionBounds(arena, function, known, .{ .provenance = result.provenance.context(@intCast(index)), .sabotage = sabotage == .version });
+        if (ranged != 0) {
+            known = try facts.analyze(arena, function, options);
+            result.counts.proven += known.proven;
+            result.per_function[index].counts.proven += known.proven;
+        }
+        result.counts.versioned += guarded + ranged;
+        result.per_function[index].counts.versioned = guarded + ranged;
         result.per_function[index].counts.inlined = inlined[index];
         // Ownership after the facts: the instructions and blocks it adds have none.
         result.per_function[index].own = try own.function(arena, module, function, .{ .verify = verify, .facts = &known, .provenance = &result.provenance, .function_index = @intCast(index), .effects = &summaries });
         result.own.add(result.per_function[index].own);
+        // Checks a dominating check already made, among them those ownership split (NEW-CORE-F2-INDEX-3).
+        const covered = try index_checks.run(arena, function, &known, sabotage == .index);
+        result.counts.proven += covered;
+        result.per_function[index].counts.proven += covered;
         // Scalar fields a loop carries in a record stay in SSA values (NEW-CORE-U1-STATE-1).
         const forwarded = try forward.run(arena, module, function);
         try extend(arena, &known, function);

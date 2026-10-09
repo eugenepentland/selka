@@ -1,0 +1,19 @@
+dispatches 514200034
+bounds_check: 6.253 per dispatch
+overflow_check: 5.258 per dispatch
+unique_test: 1.625 per dispatch
+   1.500 bounds_check    vm::read_byte             253 list_get
+   1.500 overflow_check  vm::read_byte             254 add
+   1.000 bounds_check    vm::run                   433 list_get
+   1.000 overflow_check  vm::run                   433 sub
+   1.000 overflow_check  vm::run                   534 sub
+   1.000 bounds_check    vm::run                   534 list_get
+   1.000 unique_test     vm::run                   433 is_unique
+   1.000 bounds_check    vm::run                   433 list_set_field
+   0.625 unique_test     heap::push                101 is_unique
+   0.625 bounds_check    heap::push                101 list_set
+   0.625 overflow_check  heap::push                102 add
+   0.625 overflow_check  heap::pop                 106 sub
+   0.625 bounds_check    heap::pop                 107 list_get
+   0.499 bounds_check    vm::run                   446 list_get
+   0.499 overflow_check  vm::run                   446 add

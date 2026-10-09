@@ -1,0 +1,18 @@
+version = 1
+name = "f2-sort-quick"
+adapter = "mylang"
+sources = ["main.my"]
+
+[build]
+compiler = "mylang"
+entry = "main.my"
+counter_semantics = "core-count-p1-c26c95de7"
+tools = []
+
+[[workloads]]
+name = "sort-quick"
+family = "sort-quick"
+args = []
+unit = "element"
+units = 2000000
+expected_stdout = "321 1074397298 2147483273\n318620633\n"
