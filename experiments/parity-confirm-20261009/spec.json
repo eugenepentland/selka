@@ -1,0 +1,181 @@
+{
+ "matmul": {
+  "check": "my",
+  "arms": {
+   "my": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/cf/matmul/real"
+   ],
+   "cf-base": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/cf/matmul/base.exe"
+   ],
+   "cf-tbaa": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/cf/matmul/tbaa.exe"
+   ],
+   "cf-checks+tbaa": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/cf/matmul/checks+tbaa.exe"
+   ],
+   "rung0": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/ladders/matmul.r0"
+   ],
+   "rung2": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/ladders/matmul.r2"
+   ],
+   "rung6": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/ladders/matmul.r6"
+   ],
+   "zig-safe": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/matmul.zig-safe"
+   ],
+   "zig-fast": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/matmul.zig-fast"
+   ],
+   "rust-checked": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/matmul.rust-checked"
+   ],
+   "rust": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/matmul.rust"
+   ]
+  }
+ },
+ "bytes_scan": {
+  "check": "my",
+  "arms": {
+   "my": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/cf/bytes_scan/real"
+   ],
+   "cf-base": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/cf/bytes_scan/base.exe"
+   ],
+   "cf-overflow": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/cf/bytes_scan/overflow.exe"
+   ],
+   "zig-safe": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/bytes_scan.zig-safe"
+   ],
+   "zig-fast": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/bytes_scan.zig-fast"
+   ],
+   "rust-checked": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/bytes_scan.rust-checked"
+   ]
+  }
+ },
+ "knucleotide": {
+  "check": "my",
+  "arms": {
+   "my": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/knucleotide.my"
+   ],
+   "rung0": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/ladders/knucleotide.r0"
+   ],
+   "rung1": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/ladders/knucleotide.r1"
+   ],
+   "rung2": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/ladders/knucleotide.r2"
+   ],
+   "zig-safe": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/knucleotide.zig-safe"
+   ],
+   "zig-fast": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/knucleotide.zig-fast"
+   ],
+   "rust-checked": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/knucleotide.rust-checked"
+   ]
+  }
+ },
+ "scan_split": {
+  "check": "my",
+  "arms": {
+   "my": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/scan_split.my"
+   ],
+   "rung0": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/ladders/scan_split.r0"
+   ],
+   "rung1": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/ladders/scan_split.r1"
+   ],
+   "rung2": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/ladders/scan_split.r2"
+   ],
+   "zig-safe": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/scan_split.zig-safe"
+   ],
+   "zig-fast": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/scan_split.zig-fast"
+   ]
+  }
+ },
+ "sieve": {
+  "check": "my",
+  "arms": {
+   "my": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/cf/sieve/real"
+   ],
+   "cf-base": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/cf/sieve/base.exe"
+   ],
+   "cf-overflow": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/cf/sieve/overflow.exe"
+   ],
+   "cf-checks": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/cf/sieve/checks.exe"
+   ],
+   "zig-safe": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/sieve.zig-safe"
+   ],
+   "rust-checked": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/sieve.rust-checked"
+   ]
+  }
+ },
+ "str_build": {
+  "check": "my",
+  "arms": {
+   "my": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/str_build.my"
+   ],
+   "rung0": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/ladders/str_build.r0"
+   ],
+   "rung1": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/ladders/str_build.r1"
+   ],
+   "rung2": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/ladders/str_build.r2"
+   ],
+   "zig-safe": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/str_build.zig-safe"
+   ],
+   "zig-fast": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/str_build.zig-fast"
+   ],
+   "rust-checked": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/str_build.rust-checked"
+   ]
+  }
+ },
+ "nbody": {
+  "check": "my",
+  "arms": {
+   "my": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/cf/nbody/real"
+   ],
+   "cf-base": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/cf/nbody/base.exe"
+   ],
+   "cf-unique": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm/cf/nbody/unique.exe"
+   ],
+   "zig-safe": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/nbody.zig-safe"
+   ],
+   "rust-checked": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/parity/work/bin/nbody.rust-checked"
+   ]
+  }
+ }
+}
