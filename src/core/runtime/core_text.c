@@ -452,7 +452,7 @@ static int64_t core_span_find(const unsigned char *data, int64_t len, const unsi
 }
 
 static int64_t core_text_find_bytes(const myl_block *text, const myl_block *needle, int64_t start) {
-    return core_span_find(block_data(text), text->len, block_data(needle), needle->len, start);
+    return core_span_find((const unsigned char *)text + MYL_HEADER, text->len, (const unsigned char *)needle + MYL_HEADER, needle->len, start);
 }
 
 /* Scalars that start in bytes [from, to): every byte that is not a UTF-8 continuation. */
