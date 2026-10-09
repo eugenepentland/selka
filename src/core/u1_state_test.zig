@@ -132,3 +132,60 @@ test "hoisted tests keep every answer: aliases made, kept or dropped in the loop
         try std.testing.expectEqual(@as(u8, 0), more.status);
     }
 }
+
+const state_expected = "601814 6 132 7\n476744 90\n501100 5 6\n6000 0 10\n";
+
+// spec: NEW-CORE-U1-STATE-1
+test "a scalar field a loop carries in a record is read from SSA values, not from the record's memory" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const llvm = try support.releaseLlvmText(a,
+        \\record Frame:
+        \\    code: list[int]
+        \\    ip: int
+        \\    base: int
+        \\    name: str
+        \\    hits: int
+        \\
+        \\
+        \\def run(frame: mut Frame, n: int) -> int:
+        \\    total = 0
+        \\    while frame.ip < n:
+        \\        total = total + frame.code[frame.ip % 4]
+        \\        frame.ip = frame.ip + 1
+        \\    return total
+        \\
+        \\
+        \\def main(args: list[str], out: Stream) -> int:
+        \\    frame = Frame(code=[1, 2, 3, 4], ip=0, base=0, name="f", hits=0)
+        \\    out.print(run(mut frame, 10 + len(args)), frame.ip)
+        \\    return 0
+        \\
+    );
+    // `frame.ip` is a phi of the loop: its memory is read once, before the loop.
+    const body = llvm[std.mem.indexOf(u8, llvm, "@\"my.run\"(ptr noalias sret").?..];
+    const end = std.mem.indexOf(u8, body, "\n}\n").?;
+    try std.testing.expect(std.mem.indexOf(u8, body[0..end], "phi i64") != null);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body[0..end], "load i64, ptr %fp."));
+}
+
+// spec-case: NEW-CORE-U1-STATE-1
+test "promoted record state keeps every answer: calls that read or write it, copies, break, continue, early return, traps" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for (modes) |flags| {
+        const plain = try leakChecked(a, root, "u1_state", flags, &.{});
+        try std.testing.expectEqualStrings(state_expected, plain.stdout);
+        try std.testing.expectEqualStrings("", plain.stderr);
+        // The trap reports the index the promoted stack pointer gives, after the earlier output.
+        const trapped = try leakChecked(a, root, "u1_state", flags, &.{"x"});
+        try std.testing.expectEqualStrings("601814 6 132 7\n476744 90\n501100 5 6\n", trapped.stdout);
+        try std.testing.expectEqual(@as(u8, 1), trapped.status);
+        try std.testing.expect(std.mem.indexOf(u8, trapped.stderr, "error[R_LIST_BOUNDS]: native execution failed (index 101, length 64)") != null);
+    }
+}
