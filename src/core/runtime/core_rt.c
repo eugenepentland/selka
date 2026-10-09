@@ -689,6 +689,8 @@ myl_block *myl_core_box_new(int64_t size) {
 typedef void (*core_child_visitor)(myl_block *, void *);
 static void core_dict_children(myl_block *dict, core_child_visitor visit, void *context);
 static void core_dict_finalize(myl_block *dict);
+static void core_task_finalize(myl_block *block);
+static void core_tasks_quiesce(void);
 static void core_io_finalize(myl_block *block);
 static void core_text_walk_report(void);
 static int64_t core_io_live_handles(void);
@@ -726,6 +728,7 @@ __attribute__((cold)) void myl_core_free_block(myl_block *block) {
     while (pending) {
         myl_block *dying = pending;
         pending = (myl_block *)(intptr_t)dying->cap;
+        core_task_finalize(dying);
         core_io_finalize(dying);
         core_children(dying, core_release_child, &pending);
         if (kind_of(dying) == MYL_KIND_DICT) core_dict_finalize(dying);
@@ -1475,6 +1478,7 @@ static bool print_result_requested(void) {
 /* `main`'s result is the exit status, truncated to the low 8 bits; `--print-result`
    also prints the whole value on its own line. */
 int32_t myl_core_exit(int64_t status) {
+    core_tasks_quiesce();
     if (print_result_requested()) {
         char line[32];
         int length = snprintf(line, sizeof line, "%lld\n", (long long)status);

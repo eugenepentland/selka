@@ -1,6 +1,7 @@
 #include "core_rt.c"
 #undef NDEBUG
 #include <assert.h>
+myl_block *myl_core_task_call(void *run, myl_block *env) { return ((myl_block *(*)(myl_block *))run)(env); }
 static pthread_barrier_t gate;
 static myl_block *transferred[8];
 static myl_block *clock_cap;

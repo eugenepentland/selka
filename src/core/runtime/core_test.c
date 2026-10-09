@@ -15,6 +15,7 @@ static char *core_test_path;
 static uint64_t core_test_trials;
 static uint64_t core_test_steps;
 static bool core_test_bounded;
+static bool core_test_batch_parent;
 /* Compatible additive helpers; existing runtime signatures and layouts stay fixed. */
 /* A trial's wall-clock limit is exact to the millisecond: the trials of a batch
  * (NEW-CORE-TEST-BATCH-1) are each held to `--timeout-ms`, as a test alone is. */
@@ -452,6 +453,8 @@ void myl_core_test_register(void (*trial)(void)){
     core_test_table[core_test_rows++]=trial;
 }
 bool myl_core_test_open(myl_block *input,myl_block *output){
+    if (core_parallel()) core_io_fail("R_TASK_FORK");
+    core_test_batch_parent = true;
     core_test_input=fopen((const char *)block_data(input),"rb");
     core_test_output=fopen((const char *)block_data(output),"wb");
     core_test_path=strdup((const char *)block_data(output));
@@ -460,6 +463,7 @@ bool myl_core_test_open(myl_block *input,myl_block *output){
     core_test_trials=core_test_word(core_test_input);return true;
 }
 int64_t myl_core_test_run(void){
+    if (core_parallel()) core_io_fail("R_TASK_FORK");
     for(uint64_t i=0;i<core_test_trials;++i){
         uint64_t row=core_test_word(core_test_input);
         if(row>=core_test_rows)_exit(70);
@@ -471,6 +475,7 @@ int64_t myl_core_test_run(void){
         flush_all();if(fflush(NULL))_exit(70);
         int64_t baseline=live_count();pid_t parent=getpid();pid_t child=fork();if(child<0)_exit(70);
         if(child==0){
+            core_test_batch_parent = false;
 #if defined(__linux__)
             if(prctl(PR_SET_PDEATHSIG,SIGKILL)<0||getppid()!=parent)_exit(70);
 #else
@@ -478,7 +483,7 @@ int64_t myl_core_test_run(void){
 #endif
             core_test_values=tmpfile();if(!core_test_values)_exit(70);
             core_test_capture(".out",1);core_test_capture(".err",2);
-            alarm(60);error_trace.origin=NULL;error_trace.count=0;core_test_on_stack(trial);alarm(0);flush_all();
+            alarm(60);error_trace.origin=NULL;error_trace.count=0;core_test_on_stack(trial);core_tasks_quiesce();alarm(0);flush_all();
             core_io_cleanup();
             const char *check=getenv("MYL_CORE_LEAKCHECK");
             if(check&&strcmp(check,"0")&&live_count()!=baseline){

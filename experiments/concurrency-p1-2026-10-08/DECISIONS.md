@@ -243,3 +243,23 @@ Guardian’s whole-tree commit check caught that SHARED-COUNTS-1 still described
 - **Evidence:** The whole-tree commit gate caught `dead-pub` on `native_fixture.exportBinary` and `errdefer-in-init` on the environment map in `Fixture.init`. Focused build gates were diff-scoped and did not cover that newly staged file until commit.
 - **Choice:** Defer the export method to P1-5, where sanitizer repetitions use it; add `errdefer environment.deinit()` after constructing the environment. No exemptions or dummy references. Retain the failed commit-gate log and rerun focused tests/formatting after the helper change.
 - **Reversal:** Easy; the export method is already staged for its actual consumer.
+
+
+## 2026-10-09 — P1-4: scheduler implementation and ABI bridge
+
+- **Question:** Which concrete queue, wait, lifetime and bridge details implement the accepted fork/join design?
+- **Options:** Recursive blocking waits or helping waits; reclaim resized deque rings eagerly or keep old rings until process exit; LLVM linkonce_odr or an externally retained weak definition for the bridge.
+- **Evidence:** Native tests at 1/2/8 threads pass 1,010,000 simple submits, binary nesting depth 12, a 2,048-level chain, waits with work on the caller's own deque, repeated results after group release, and zero live blocks. Separate modes verify no workers for empty groups, budget-forced sequential execution and rejection of batch-parent start/post-pool fork. Isolated actual LLVM tests prove the C-to-fastcc call path and exact range-item reporting; production integration follows in P1-5.
+- **Choice:** Use Chase–Lev deques with atomic slots, signed indices, retained old rings, round-robin victims, 32 bounded search spins and futex epochs sampled before completion/search. Wake on both enqueue and completion. The first submit starts N−1 workers with inherited stack limits, guard pages and SIGALRM blocked. One-thread tasks borrow their environment synchronously; parallel tasks share/retain it and publish a shared result with release/acquire. Group-owned handle lists keep queued tasks alive; close and finalization join before release. Global pending reaches zero only after per-thread runtime writes, providing the report barrier.
+- **Bridge:** `weak_odr hidden` survives LLVM dead stripping when only the separately compiled C runtime calls it, and still merges across units. Native-only C fixtures supply an explicit C adapter; actual IR tests exercise the real fastcc bridge. No IR vocabulary change.
+- **Files:** `src/core/driver.zig` includes the new runtime asset; existing native fixtures receive C adapters and `root_test.zig` imports scheduler tests. These integration/test changes are allowed outside the runtime expected list and do not touch the front end or ownership pass.
+- **Reversal:** Private runtime details are reversible. Memory ordering, task lifetime, fork guards and the bridge must preserve the tested semantics.
+
+
+## 2026-10-09 — P1-4/P1-5: pass test allocators through fixture helpers
+
+- **Question:** How should the stress and emitted-IR matrix helpers allocate their arenas?
+- **Options:** Use a hardcoded testing allocator inside a helper or pass the allocator from each test body.
+- **Evidence:** The P1-4 whole-tree commit gate rejected `task_scheduler_test.matrix` under `allocator-hygiene`; review found the same pattern in P1-5's matrix/fatal helpers.
+- **Choice:** Pass `std.mem.Allocator` from the actual test blocks to each helper. Preserve the failed gate and rerun the affected matrix. No allocator exemption or test reduction.
+- **Reversal:** Straightforward, but the explicit dependency is the repository's required style.

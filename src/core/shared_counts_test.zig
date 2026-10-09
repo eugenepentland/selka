@@ -11,6 +11,7 @@ const harness =
     \\#include <pthread.h>
     \\#undef NDEBUG
     \\#include <assert.h>
+    \\myl_block *myl_core_task_call(void *run, myl_block *env) { return ((myl_block *(*)(myl_block *))run)(env); }
     \\static int workers_started;
     \\static myl_block shared = {MYL_SHARED + 1, 0, 0, 0, 0};
     \\static myl_block saturated = {MYL_SATURATED - 100, 0, 0, 0, 0};

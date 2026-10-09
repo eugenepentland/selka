@@ -556,6 +556,7 @@ const ModuleState = struct {
             \\
         );
         if (self.options.counters) try out.appendSlice(self.allocator, emit_count.declarations);
+        try out.appendSlice(self.allocator, task_bridge);
         try fastPaths(self.allocator, out, if (self.options.counters) emit_count.fast_paths else runtime_fast_paths, body, self.layouts.text.items);
         try out.appendSlice(self.allocator, self.externs.items);
         var number: Out = .empty;
@@ -3686,6 +3687,16 @@ const Debug = struct {
 /// list with room, and the free of a small block that holds no blocks. Everything
 /// else calls the runtime. Free-list accesses carry no TBAA tag; nothing is counted
 /// here (the leak check counts free-list entries at exit).
+// R4: weak_odr survives LLVM dead stripping when its only caller is the
+// separately compiled C runtime, while the linker merges one copy per unit.
+const task_bridge =
+    \\define weak_odr hidden ptr @myl_core_task_call(ptr %run, ptr %env) nounwind {
+    \\  %result = call fastcc ptr %run(ptr %env)
+    \\  ret ptr %result
+    \\}
+    \\
+;
+
 const runtime_fast_paths =
     \\@myl_core_free_lists = external thread_local(initialexec) global [33 x ptr]
     \\declare preserve_mostcc void @myl_core_retain_slow(ptr) nounwind cold
