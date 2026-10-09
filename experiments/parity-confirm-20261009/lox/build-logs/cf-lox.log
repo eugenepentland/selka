@@ -1,0 +1,36 @@
+## lox step
+| variant | Minstr | Mcycles | instr ÷ base | cycles ÷ base | output | lines edited |
+|---|---:|---:|---:|---:|---|---:|
+| real | 16720 | 2545 | 1.000 | 1.001 | ok |  |
+| base | 16720 | 2543 | 1.000 | 1.000 | ok | 0 |
+| bounds | 11810 | 2147 | 0.706 | 0.844 | ok | 371 |
+| checks | 9810 | 2457 | 0.587 | 0.966 | ok | 678 |
+| norc | 15270 | 2380 | 0.913 | 0.936 | ok | 2121 |
+| checks+norc | 9100 | 2410 | 0.544 | 0.948 | ok | 2799 |
+## lox vm/fib
+| variant | Minstr | Mcycles | instr ÷ base | cycles ÷ base | output | lines edited |
+|---|---:|---:|---:|---:|---|---:|
+| real | 36652 | 6882 | 1.000 | 0.973 | ok |  |
+| base | 36652 | 7076 | 1.000 | 1.000 | ok | 0 |
+| bounds | 29002 | 6117 | 0.791 | 0.864 | ok | 371 |
+| checks | 26040 | 5796 | 0.710 | 0.819 | ok | 678 |
+| norc | 28163 | 5607 | 0.768 | 0.792 | ok | 2121 |
+| checks+norc | 18492 | 4941 | 0.505 | 0.698 | ok | 2799 |
+## lox vm/string_equality
+| variant | Minstr | Mcycles | instr ÷ base | cycles ÷ base | output | lines edited |
+|---|---:|---:|---:|---:|---|---:|
+| real | 49596 | 7888 | 1.000 | 1.009 | ok |  |
+| base | 49596 | 7819 | 1.000 | 1.000 | ok | 0 |
+| bounds | 33529 | 5547 | 0.676 | 0.709 | ok | 371 |
+| checks | 27548 | 5500 | 0.555 | 0.703 | ok | 678 |
+| norc | 46358 | 7376 | 0.935 | 0.943 | ok | 2121 |
+| checks+norc | 26751 | 5625 | 0.539 | 0.719 | ok | 2799 |
+## lox vm/invocation
+| variant | Minstr | Mcycles | instr ÷ base | cycles ÷ base | output | lines edited |
+|---|---:|---:|---:|---:|---|---:|
+| real | 66074 | 14589 | 1.000 | 1.087 | ok |  |
+| base | 66074 | 13423 | 1.000 | 1.000 | ok | 0 |
+| bounds | 56273 | 11673 | 0.852 | 0.870 | ok | 371 |
+| checks | 51719 | 10699 | 0.783 | 0.797 | ok | 678 |
+| norc | 45557 | 9089 | 0.689 | 0.677 | ok | 2121 |
+| checks+norc | 32314 | 6782 | 0.489 | 0.505 | ok | 2799 |
