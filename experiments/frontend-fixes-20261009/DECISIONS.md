@@ -68,3 +68,11 @@ Choice: copy the frozen EDA snapshot into private scratch and add noalloc to tha
 Reversibility: only the private copied input changes; the frozen snapshot is read-only.
 
 F1 after measurement: the identical private input and five fresh cache arms report median bounded-edit 213.885 ms and later unrelated-edit 195.536 ms (before: 273.107 ms / 271.453 ms). Both arms report 1,205 bodies performed and 8 reused after each edit; this EDA workload does not demonstrate a body-count improvement. Report that unchanged count explicitly rather than attributing elapsed variation to summary reuse. The validation-session regression separately proves summaries can stand in without running Core allocation contracts.
+
+## D9 — F2 retains publication after a concrete fallback
+
+Question: how can allocation-contract requests publish after a bounded-body edit without changing lowering-only requests?
+Options: add a body-policy enum case, widen the shared request, or remember the fallback on its per-check plan.
+Evidence: the new three-run regression passes in validation mode and fails in allocation-contract mode because the edited run publishes no summaries. The plan currently has six fields.
+Choice: add one allocation_fallback flag to the plan, set only when a new/changed noalloc body requests concrete trees. Publication remains enabled for that run. Existing concrete lowering requests keep their publication rule. The regression requires third-run stand-ins and cold/warm equality in both modes.
+Reversibility: a local planning flag, no persistent format or language semantics change.

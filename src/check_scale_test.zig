@@ -720,3 +720,32 @@ test "allocation contract summaries retain concrete bounded closures across reor
     try t.expectEqualStrings(moved.cold.facts, moved.warm.facts);
     try t.expectEqualStrings(moved.cold.diagnostics, moved.warm.diagnostics);
 }
+
+// spec: FRONTEND-ALLOCATION-SUMMARY-1
+test "F2 bounded body edits publish summaries for the next unrelated edit" {
+    for ([_]Mode{ .check, .allocation_contracts }) |mode| try boundedSummarySequence(mode);
+}
+
+fn boundedSummarySequence(mode: Mode) !void {
+    var original = projectFiles(lib_source);
+    original[1].bytes = try std.mem.replaceOwned(u8, t.allocator, mid_source, "effects()", "noalloc");
+    defer t.allocator.free(original[1].bytes);
+    const seed = try checkProject(&original, null, mode);
+    defer seed.deinit();
+    var edited = original;
+    edited[1].bytes = try std.mem.replaceOwned(u8, t.allocator, original[1].bytes, "lib.plain(n) * 2", "lib.plain(n) * 3");
+    defer t.allocator.free(edited[1].bytes);
+    const changed = try checkProject(&edited, seed.summaries.?, mode);
+    defer changed.deinit();
+    try t.expect(changed.summaries != null);
+    var unrelated = edited;
+    unrelated[2].bytes = libEdited("    return n + 1\n", "    return n + 2\n");
+    const third = try checkProject(&unrelated, changed.summaries.?, mode);
+    defer third.deinit();
+    const cold = try checkProject(&unrelated, null, mode);
+    defer cold.deinit();
+    try t.expect(third.stood_in > 0);
+    try t.expect(third.summaries != null);
+    try t.expectEqualStrings(cold.facts, third.facts);
+    try t.expectEqualStrings(cold.diagnostics, third.diagnostics);
+}
