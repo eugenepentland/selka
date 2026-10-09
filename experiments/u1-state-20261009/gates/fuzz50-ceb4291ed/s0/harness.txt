@@ -1,0 +1,3 @@
+qualification progress: s0: seen=25 elapsed=25.15s
+qualification progress: s0: seen=50 elapsed=48.07s
+cases=50 old_rejected=0 new_refused=0 compared=750 mismatch=0 fact=0 traps=103 caught=0 vectorized=15 versioned=1

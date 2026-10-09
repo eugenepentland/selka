@@ -9,6 +9,7 @@ const inline_leaves = @import("inline.zig");
 const vector = @import("vector.zig");
 const version = @import("version.zig");
 const own = @import("own.zig");
+const forward = @import("forward.zig");
 const effects = @import("effects.zig");
 const origins = @import("inline_origins.zig");
 
@@ -150,7 +151,10 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         // Ownership after the facts: the instructions and blocks it adds have none.
         result.per_function[index].own = try own.function(arena, module, function, .{ .verify = verify, .facts = &known, .provenance = &result.provenance, .function_index = @intCast(index), .effects = &summaries });
         result.own.add(result.per_function[index].own);
+        // Scalar fields a loop carries in a record stay in SSA values (NEW-CORE-U1-STATE-1).
+        const forwarded = try forward.run(arena, module, function);
         try extend(arena, &known, function);
+        forward.ranges(&known, forwarded.made);
         slot.* = known;
         // Vector code comes only from trusted facts, never in a verify build.
         if (!verify) plan.* = try vector.plan(arena, function, known);

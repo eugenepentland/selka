@@ -30,6 +30,7 @@ const emit_constants = @import("emit_constants.zig");
 const emit_count = @import("emit_count.zig");
 const origins = @import("inline_origins.zig");
 const emit_homes = @import("emit_homes.zig");
+const emit_state = @import("emit_state.zig");
 const effects = @import("effects.zig");
 const fuse = @import("fuse.zig");
 
@@ -817,6 +818,8 @@ const MemoryState = struct {
     uses: []u32 = &.{},
     /// Per instruction: a list element over four words lent to calls where it lies (CE2-B).
     borrowed: []bool = &.{},
+    /// The lists and buffers whose length a loop keeps in slots while it appends (`emit_state.zig`).
+    states: emit_state.Plan = .{},
 };
 
 /// Per instruction, what an in-out call (CE-A P7) needs: its in-out arguments, and whether its
@@ -1085,6 +1088,8 @@ const FunctionEmitter = struct {
         // pointer the callee updates in place (`InOutAbi`).
         const abi = inOutAbi(m, f.signature);
         try self.analyzeMemory();
+        self.memory.states = try emit_state.plan(self.a(), m, f);
+        try emit_state.allocas(&self.memory.states, &self.state.allocas, self.a());
         try self.defineLine(out, abi);
         try self.collectBoundLengths();
         if (self.state.options.counters) self.count_fn = try self.state.count.function(self.a(), f.name);
@@ -1105,6 +1110,7 @@ const FunctionEmitter = struct {
                 const inst = f.inst(ref);
                 if (inst.op == .phi) {
                     self.selectInstruction(@intCast(b), ref);
+                    try self.currentHeader(&bodies[b], ref);
                     try self.captureBoundLength(&bodies[b], ref);
                     try self.assertFacts(&bodies[b], ref, inst);
                 }
@@ -1115,6 +1121,7 @@ const FunctionEmitter = struct {
                 self.selectInstruction(@intCast(b), ref);
                 self.current = ref;
                 try self.instruction(&bodies[b], ref, inst);
+                if (!inst.op.terminates()) try self.currentHeader(&bodies[b], ref);
                 if (inst.op != .param and inst.op != .str_const) try self.captureBoundLength(&bodies[b], ref);
                 // A construction stored straight into its consumer never exists as a value to assert about.
                 if (!inst.op.terminates() and !self.memory.fused[ref.index()]) try self.assertFacts(&bodies[b], ref, inst);
@@ -1144,6 +1151,14 @@ const FunctionEmitter = struct {
             try out.appendSlice(self.a(), bodies[b].items);
         }
         try out.appendSlice(self.a(), "}\n");
+    }
+
+    /// Verify builds read a list's header to check its facts: a list whose length is kept in
+    /// slots (`emit_state.zig`) has it stored back first.
+    fn currentHeader(self: *FunctionEmitter, out: *Out, ref: ir.Ref) !void {
+        if (self.knownFacts() == null) return;
+        const slots = self.memory.states.of(ref) orelse return;
+        try emit_state.store(*FunctionEmitter, self, out, try self.value(ref), slots);
     }
 
     /// The `define` line up to its parameters: a value over four words is used where the caller keeps
@@ -1598,14 +1613,19 @@ const FunctionEmitter = struct {
         const sides = [2]usize{ targets.then.index(), targets.otherwise.index() };
         var labels: [2][]const u8 = undefined;
         var moves: [2][]const Move = undefined;
-        for (sides, &labels, &moves) |target, *label, *side| {
+        // An edge that leaves a region whose appends keep the length in slots stores it back
+        // there (`emit_state.zig`), in a block of its own.
+        var leaving: [2][]const emit_state.Exit = .{ &.{}, &.{} };
+        for (sides, &labels, &moves, &leaving) |target, *label, *side, *exits| {
             side.* = try self.edgeMoves(pred, target);
-            label.* = if (side.len != 0) try self.fresh("edge") else try std.fmt.allocPrint(self.a(), "b{d}", .{target});
+            exits.* = self.memory.states.exit(@intCast(pred), @intCast(target));
+            label.* = if (side.len != 0 or exits.len != 0) try self.fresh("edge") else try std.fmt.allocPrint(self.a(), "b{d}", .{target});
         }
         try out.print(self.a(), "  br i1 {s}, label %{s}, label %{s}\n", .{ try self.value(inst.a), labels[0], labels[1] });
-        for (sides, labels, moves) |target, label, side| {
-            if (side.len == 0) continue;
+        for (sides, labels, moves, leaving) |target, label, side, exits| {
+            if (side.len == 0 and exits.len == 0) continue;
             try out.print(self.a(), "{s}:\n", .{label});
+            for (exits) |stored| try emit_state.store(*FunctionEmitter, self, out, try self.value(stored.value), stored.slots);
             try self.moveAll(out, side);
             try out.print(self.a(), "  br label %b{d}\n", .{target});
             try self.memory.edges.put(self.a(), edgeKey(pred, target), label);
@@ -2084,6 +2104,7 @@ const FunctionEmitter = struct {
             .call => try self.call(out, name, inst),
             .print => try self.print(out, inst),
             .jump => {
+                try emit_state.jump(*FunctionEmitter, self, out, self.vectors.block, @intCast(inst.data));
                 try self.vectorPrologue(out, @intCast(inst.data));
                 try self.fillMemoryPhis(out, self.vectors.block, @intCast(inst.data));
                 try out.print(self.a(), "  br label %b{d}\n", .{inst.data});
@@ -3483,6 +3504,8 @@ const FunctionEmitter = struct {
 
     /// Append in place: `myl_core_list_reserve` returns a block with room for one more element.
     fn listPush(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+        // A push that is one of a web's updates (`emit_state.zig`), not merely of a web value.
+        if (self.memory.states.of(self.current)) |slots| return self.slotPush(out, name, inst, slots);
         const element = self.state.module.compound(inst.ty).list;
         const len_at = try self.fresh("%pl");
         const counter = if (inst.data == flags.fill_push) self.fillCounter(inst.a) else null;
@@ -3508,6 +3531,42 @@ const FunctionEmitter = struct {
             try out.print(self.a(), "  store {s}, ptr {s}, align {d}, {s}\n", .{ try self.typedValue(inst.b), slot, elementSize(element), self.dataTag(storageType(element)) });
         }
         try out.print(self.a(), "  {s} = add nuw nsw i64 {s}, 1\n  store i64 {s}, ptr {s}, align 8, " ++ tbaa_header ++ "\n", .{ next, len, next, len_at });
+    }
+
+    /// A push into a list whose length and capacity a loop keeps in slots (NEW-CORE-U1-STATE-2):
+    /// room is the slots' test; growth stores the length back, grows the block and loads the
+    /// grown capacity; the element goes at the slots' length, which then advances.
+    fn slotPush(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst, slots: emit_state.Slots) !void {
+        const element = self.state.module.compound(inst.ty).list;
+        const list = try self.value(inst.a);
+        const len = try self.fresh("%spl");
+        const cap = try self.fresh("%spc");
+        const room = try self.fresh("%spr");
+        const fits = try self.fresh("push.fits");
+        const grow = try self.fresh("push.grow");
+        const join = try self.fresh(self.label);
+        const grown = try self.fresh("%spg");
+        try out.print(self.a(), "  {s} = load i64, ptr {s}, align 8\n  {s} = load i64, ptr {s}, align 8\n  {s} = icmp ult i64 {s}, {s}\n", .{ len, slots.len, cap, slots.cap, room, len, cap });
+        try out.print(self.a(), "  br i1 {s}, label %{s}, label %{s}, !prof !10\n{s}:\n", .{ room, fits, grow, grow });
+        try emit_state.store(*FunctionEmitter, self, out, list, slots);
+        try out.print(self.a(), "  {s} = call ptr @myl_core_list_grow(ptr {s}, i64 {d})\n", .{ grown, list, self.state.stride(element) });
+        const cap_at = try self.fresh("%spc");
+        const grown_cap = try self.fresh("%spc");
+        try out.print(self.a(), header_tagged_line, .{ cap_at, grown, cap_offset, grown_cap, cap_at });
+        try out.print(self.a(), "  store i64 {s}, ptr {s}, align 8\n  br label %{s}\n{s}:\n  br label %{s}\n{s}:\n", .{ grown_cap, slots.cap, join, fits, join, join });
+        try out.print(self.a(), "  {s} = phi ptr [ {s}, %{s} ], [ {s}, %{s} ]\n", .{ name, list, fits, grown, grow });
+        self.label = join;
+        if (self.count_fn != null) try out.appendSlice(self.a(), "  store ptr null, ptr @myl_count_push_site, align 8\n");
+        const slot = try self.elementSlot(out, name, len, element);
+        const saved = self.tagElements(true);
+        defer _ = self.tagElements(saved);
+        if (element == .bool or element.isCompound()) {
+            try self.storeOperand(out, element, inst.b, slot);
+        } else {
+            try out.print(self.a(), "  store {s}, ptr {s}, align {d}, {s}\n", .{ try self.typedValue(inst.b), slot, elementSize(element), self.dataTag(storageType(element)) });
+        }
+        const next = try self.fresh("%spn");
+        try out.print(self.a(), "  {s} = add nuw nsw i64 {s}, 1\n  store i64 {s}, ptr {s}, align 8\n", .{ next, len, next, slots.len });
     }
 
     fn fillCounter(self: *FunctionEmitter, list: ir.Ref) ?ir.Ref {

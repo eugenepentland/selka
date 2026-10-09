@@ -1,0 +1,137 @@
+module u1_state
+
+# Loop-carried state (NEW-CORE-U1-STATE-1): scalar fields a loop reads and writes in a
+# record (a VM's frame and stack pointer) are kept in SSA values, while the record's
+# memory still holds every field for the calls, copies and returns that read it there.
+# Every answer here is the base compiler's (main 35df839be). Any argument makes `main`
+# trap inside a loop after printing what it has.
+
+
+record Frame:
+    code: list[int]
+    ip: int
+    base: int
+    name: str
+    hits: int
+    seen: list[int]
+
+
+record Machine:
+    stack: list[int]
+    top: int
+    frames: list[Frame]
+    depth: int
+    steps: int
+    log: list[int]
+
+
+def read(frame: mut Frame) -> int:
+    op = frame.code[frame.ip]
+    frame.ip = frame.ip + 1
+    return op
+
+
+def push(m: mut Machine, v: int) -> None:
+    m.stack[m.top] = v
+    m.top = m.top + 1
+
+
+def pop(m: mut Machine) -> int:
+    m.top = m.top - 1
+    return m.stack[m.top]
+
+
+# A call that reads the promoted fields through the record it is given.
+def peek_sum(m: Machine, frame: Frame) -> int:
+    return m.top * 1000 + frame.ip * 10 + m.stack[m.top - 1]
+
+
+# A call that writes the promoted fields through `mut`.
+def jump(m: mut Machine, frame: mut Frame, to: int) -> None:
+    frame.ip = to
+    m.top = m.top - 1
+    m.steps = m.steps + 100
+
+
+def new_machine() -> Machine:
+    stack: list[int] = []
+    for i in range(64):
+        stack.append(0)
+    return Machine(stack=stack, top=0, frames=[], depth=0, steps=0, log=[])
+
+
+# A small machine: 0 halt, 1 push the next code word, 2 add, 3 jump back while the top
+# is positive (decrementing it), 4 duplicate, 5 log a call's view, 6 copy the frame,
+# 7 a trap when asked, 8 a jump through a `mut` call, 9 return early.
+def run(m: mut Machine, code: list[int], trap: bool) -> int:
+    frame = Frame(code=code, ip=0, base=0, name="main", hits=0, seen=[])
+    copies: list[Frame] = []
+    while True:
+        op = read(mut frame)
+        m.steps = m.steps + 1
+        if op == 0:
+            break
+        if op == 1:
+            push(mut m, frame.code[frame.ip])
+            frame.ip = frame.ip + 1
+            continue
+        if op == 2:
+            b = pop(mut m)
+            a = pop(mut m)
+            push(mut m, a + b)
+        elif op == 3:
+            t = pop(mut m)
+            if t > 0:
+                push(mut m, t - 1)
+                frame.ip = frame.code[frame.ip]
+            else:
+                frame.ip = frame.ip + 1
+        elif op == 4:
+            v = pop(mut m)
+            push(mut m, v)
+            push(mut m, v)
+        elif op == 5:
+            m.log.append(peek_sum(m, frame))
+        elif op == 6:
+            kept = frame
+            kept.hits = kept.hits + 1
+            copies.append(kept)
+            frame.hits = frame.hits + 2
+        elif op == 7:
+            if trap:
+                m.log.append(m.stack[m.top + 100])
+        elif op == 8:
+            jump(mut m, mut frame, frame.code[frame.ip])
+        elif op == 9:
+            if m.top > 3:
+                return m.top * 100000 + frame.ip * 100 + frame.hits
+    total = frame.ip * 1000 + frame.hits * 10 + len(copies)
+    for c in copies:
+        total = total + c.ip + c.hits
+    return total
+
+
+# A field no path of the loop writes: every read is the value the loop started with.
+def unchanged(m: Machine, n: int) -> int:
+    t = 0
+    for i in range(n):
+        t = t + m.depth + m.top
+    return t
+
+
+def main(args: list[str], out: Stream) -> int:
+    m = new_machine()
+    m.depth = 3
+    # push 5; loop: dup, log, push 1, add... (see `run`)
+    code = [1, 5, 4, 5, 6, 3, 2, 1, 7, 2, 5, 6, 1, 2, 8, 17, 0, 9, 7, 0]
+    out.print(run(mut m, code, False), m.top, m.steps, len(m.log))
+    total = 0
+    for v in m.log:
+        total = (total * 31 + v) % 1000003
+    out.print(total, unchanged(m, 10))
+    m2 = new_machine()
+    code2 = [1, 9, 1, 9, 1, 9, 1, 9, 1, 1, 9, 0]
+    out.print(run(mut m2, code2, False), m2.top, m2.steps)
+    m3 = new_machine()
+    out.print(run(mut m3, [1, 3, 7, 3, 2, 0], len(args) > 0), m3.top, m3.steps)
+    return 0

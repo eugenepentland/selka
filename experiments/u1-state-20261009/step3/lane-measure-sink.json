@@ -1,0 +1,623 @@
+{
+ "lox vm/step.10000000": {
+  "median": {
+   "base": {
+    "instructions": 16720488403,
+    "cycles": 2535541707
+   },
+   "sink": {
+    "instructions": 14730488593,
+    "cycles": 2268166433
+   },
+   "sink2": {
+    "instructions": 15020488575,
+    "cycles": 2279421112
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 16720488383,
+     "cycles": 2532475031
+    },
+    {
+     "status": 0,
+     "instructions": 16720488403,
+     "cycles": 2535541707
+    },
+    {
+     "status": 0,
+     "instructions": 16720488427,
+     "cycles": 2536284188
+    }
+   ],
+   "sink": [
+    {
+     "status": 0,
+     "instructions": 14730488590,
+     "cycles": 2268004005
+    },
+    {
+     "status": 0,
+     "instructions": 14730488599,
+     "cycles": 2269241002
+    },
+    {
+     "status": 0,
+     "instructions": 14730488593,
+     "cycles": 2268166433
+    }
+   ],
+   "sink2": [
+    {
+     "status": 0,
+     "instructions": 15020488575,
+     "cycles": 2279398047
+    },
+    {
+     "status": 0,
+     "instructions": 15020488567,
+     "cycles": 2279421112
+    },
+    {
+     "status": 0,
+     "instructions": 15020488590,
+     "cycles": 2280605093
+    }
+   ]
+  }
+ },
+ "lox vm/fib.34": {
+  "median": {
+   "base": {
+    "instructions": 36651967315,
+    "cycles": 7049337382
+   },
+   "sink": {
+    "instructions": 35157118359,
+    "cycles": 7203378005
+   },
+   "sink2": {
+    "instructions": 35258620362,
+    "cycles": 6916533576
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 36651967304,
+     "cycles": 7049337382
+    },
+    {
+     "status": 0,
+     "instructions": 36651967315,
+     "cycles": 6947744516
+    },
+    {
+     "status": 0,
+     "instructions": 36651967465,
+     "cycles": 7478839825
+    }
+   ],
+   "sink": [
+    {
+     "status": 0,
+     "instructions": 35157118359,
+     "cycles": 7203378005
+    },
+    {
+     "status": 0,
+     "instructions": 35157119069,
+     "cycles": 9090440319
+    },
+    {
+     "status": 0,
+     "instructions": 35157118307,
+     "cycles": 6872433768
+    }
+   ],
+   "sink2": [
+    {
+     "status": 0,
+     "instructions": 35258620348,
+     "cycles": 6916533576
+    },
+    {
+     "status": 0,
+     "instructions": 35258622545,
+     "cycles": 11183639379
+    },
+    {
+     "status": 0,
+     "instructions": 35258620362,
+     "cycles": 6662455908
+    }
+   ]
+  }
+ },
+ "lox vm/string_equality.100000": {
+  "median": {
+   "base": {
+    "instructions": 49596172675,
+    "cycles": 7562111391
+   },
+   "sink": {
+    "instructions": 40931792438,
+    "cycles": 6290017125
+   },
+   "sink2": {
+    "instructions": 40807992434,
+    "cycles": 6358614219
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 49596172725,
+     "cycles": 7563645907
+    },
+    {
+     "status": 0,
+     "instructions": 49596172670,
+     "cycles": 7559078422
+    },
+    {
+     "status": 0,
+     "instructions": 49596172675,
+     "cycles": 7562111391
+    }
+   ],
+   "sink": [
+    {
+     "status": 0,
+     "instructions": 40931792464,
+     "cycles": 6290017125
+    },
+    {
+     "status": 0,
+     "instructions": 40931792438,
+     "cycles": 6277587812
+    },
+    {
+     "status": 0,
+     "instructions": 40931792403,
+     "cycles": 6317727072
+    }
+   ],
+   "sink2": [
+    {
+     "status": 0,
+     "instructions": 40807992434,
+     "cycles": 6352180890
+    },
+    {
+     "status": 0,
+     "instructions": 40807992419,
+     "cycles": 6358614219
+    },
+    {
+     "status": 0,
+     "instructions": 40807992437,
+     "cycles": 6361453557
+    }
+   ]
+  }
+ },
+ "lox vm/invocation.1500000": {
+  "median": {
+   "base": {
+    "instructions": 66073596125,
+    "cycles": 13766023011
+   },
+   "sink": {
+    "instructions": 64390600034,
+    "cycles": 13639073111
+   },
+   "sink2": {
+    "instructions": 64099599639,
+    "cycles": 12537321685
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 66073596125,
+     "cycles": 13766023011
+    },
+    {
+     "status": 0,
+     "instructions": 66073596248,
+     "cycles": 14290665956
+    },
+    {
+     "status": 0,
+     "instructions": 66073596047,
+     "cycles": 13451387699
+    }
+   ],
+   "sink": [
+    {
+     "status": 0,
+     "instructions": 64390600364,
+     "cycles": 13639073111
+    },
+    {
+     "status": 0,
+     "instructions": 64390599886,
+     "cycles": 12923352628
+    },
+    {
+     "status": 0,
+     "instructions": 64390600034,
+     "cycles": 13668829245
+    }
+   ],
+   "sink2": [
+    {
+     "status": 0,
+     "instructions": 64099599639,
+     "cycles": 12537321685
+    },
+    {
+     "status": 0,
+     "instructions": 64099599580,
+     "cycles": 12311162416
+    },
+    {
+     "status": 0,
+     "instructions": 64099600107,
+     "cycles": 12664890052
+    }
+   ]
+  }
+ },
+ "lox vm/method_call.500000": {
+  "median": {
+   "base": {
+    "instructions": 59179931051,
+    "cycles": 11614447227
+   },
+   "sink": {
+    "instructions": 57162265645,
+    "cycles": 11189447993
+   },
+   "sink2": {
+    "instructions": 56857265307,
+    "cycles": 10547724536
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 59179930660,
+     "cycles": 11058178598
+    },
+    {
+     "status": 0,
+     "instructions": 59179931051,
+     "cycles": 12117472664
+    },
+    {
+     "status": 0,
+     "instructions": 59179931098,
+     "cycles": 11614447227
+    }
+   ],
+   "sink": [
+    {
+     "status": 0,
+     "instructions": 57162265677,
+     "cycles": 11189447993
+    },
+    {
+     "status": 0,
+     "instructions": 57162265645,
+     "cycles": 11001959315
+    },
+    {
+     "status": 0,
+     "instructions": 57162265616,
+     "cycles": 11194614303
+    }
+   ],
+   "sink2": [
+    {
+     "status": 0,
+     "instructions": 56857265239,
+     "cycles": 10557879078
+    },
+    {
+     "status": 0,
+     "instructions": 56857265307,
+     "cycles": 10501995483
+    },
+    {
+     "status": 0,
+     "instructions": 56857265340,
+     "cycles": 10547724536
+    }
+   ]
+  }
+ },
+ "lox tree/invocation.150000": {
+  "median": {
+   "base": {
+    "instructions": 10098859477,
+    "cycles": 2097837561
+   },
+   "sink": {
+    "instructions": 10117296138,
+    "cycles": 2148525648
+   },
+   "sink2": {
+    "instructions": 10117146122,
+    "cycles": 2163823237
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 10098859452,
+     "cycles": 2099511452
+    },
+    {
+     "status": 0,
+     "instructions": 10098859477,
+     "cycles": 2070580751
+    },
+    {
+     "status": 0,
+     "instructions": 10098859517,
+     "cycles": 2097837561
+    }
+   ],
+   "sink": [
+    {
+     "status": 0,
+     "instructions": 10117296059,
+     "cycles": 2148525648
+    },
+    {
+     "status": 0,
+     "instructions": 10117296196,
+     "cycles": 2145153620
+    },
+    {
+     "status": 0,
+     "instructions": 10117296138,
+     "cycles": 2251157324
+    }
+   ],
+   "sink2": [
+    {
+     "status": 0,
+     "instructions": 10117146068,
+     "cycles": 2163823237
+    },
+    {
+     "status": 0,
+     "instructions": 10117146122,
+     "cycles": 2104082987
+    },
+    {
+     "status": 0,
+     "instructions": 10117146244,
+     "cycles": 2469713142
+    }
+   ]
+  }
+ },
+ "lox tree/equality.300000": {
+  "median": {
+   "base": {
+    "instructions": 7416823991,
+    "cycles": 1288546354
+   },
+   "sink": {
+    "instructions": 7418603992,
+    "cycles": 1269433410
+   },
+   "sink2": {
+    "instructions": 7418004013,
+    "cycles": 1301244792
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 7416823991,
+     "cycles": 1286992442
+    },
+    {
+     "status": 0,
+     "instructions": 7416823973,
+     "cycles": 1288546354
+    },
+    {
+     "status": 0,
+     "instructions": 7416824029,
+     "cycles": 1301036583
+    }
+   ],
+   "sink": [
+    {
+     "status": 0,
+     "instructions": 7418603976,
+     "cycles": 1270516204
+    },
+    {
+     "status": 0,
+     "instructions": 7418603992,
+     "cycles": 1266999781
+    },
+    {
+     "status": 0,
+     "instructions": 7418604033,
+     "cycles": 1269433410
+    }
+   ],
+   "sink2": [
+    {
+     "status": 0,
+     "instructions": 7418003976,
+     "cycles": 1285324826
+    },
+    {
+     "status": 0,
+     "instructions": 7418004019,
+     "cycles": 1345668689
+    },
+    {
+     "status": 0,
+     "instructions": 7418004013,
+     "cycles": 1301244792
+    }
+   ]
+  }
+ },
+ "eda rds3+flat": {
+  "median": {
+   "base": {
+    "instructions": 970706569,
+    "cycles": 284866219
+   },
+   "sink": {
+    "instructions": 971881169,
+    "cycles": 290562516
+   },
+   "sink2": {
+    "instructions": 971881190,
+    "cycles": 285208372
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 970706547,
+     "cycles": 280713292
+    },
+    {
+     "status": 0,
+     "instructions": 970706596,
+     "cycles": 284866219
+    },
+    {
+     "status": 0,
+     "instructions": 970706569,
+     "cycles": 285927785
+    }
+   ],
+   "sink": [
+    {
+     "status": 0,
+     "instructions": 971881169,
+     "cycles": 290562516
+    },
+    {
+     "status": 0,
+     "instructions": 971881177,
+     "cycles": 286236662
+    },
+    {
+     "status": 0,
+     "instructions": 971881167,
+     "cycles": 291706898
+    }
+   ],
+   "sink2": [
+    {
+     "status": 0,
+     "instructions": 971881212,
+     "cycles": 285208372
+    },
+    {
+     "status": 0,
+     "instructions": 971881190,
+     "cycles": 285246514
+    },
+    {
+     "status": 0,
+     "instructions": 971881141,
+     "cycles": 283633317
+    }
+   ]
+  }
+ },
+ "eda labstation": {
+  "median": {
+   "base": {
+    "instructions": 725052837,
+    "cycles": 197663549
+   },
+   "sink": {
+    "instructions": 726132122,
+    "cycles": 197906550
+   },
+   "sink2": {
+    "instructions": 726132085,
+    "cycles": 194792665
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 725052837,
+     "cycles": 197663549
+    },
+    {
+     "status": 0,
+     "instructions": 725052893,
+     "cycles": 222874624
+    },
+    {
+     "status": 0,
+     "instructions": 725052806,
+     "cycles": 193969772
+    }
+   ],
+   "sink": [
+    {
+     "status": 0,
+     "instructions": 726132122,
+     "cycles": 199559106
+    },
+    {
+     "status": 0,
+     "instructions": 726132166,
+     "cycles": 196682195
+    },
+    {
+     "status": 0,
+     "instructions": 726132047,
+     "cycles": 197906550
+    }
+   ],
+   "sink2": [
+    {
+     "status": 0,
+     "instructions": 726132168,
+     "cycles": 193189262
+    },
+    {
+     "status": 0,
+     "instructions": 726132085,
+     "cycles": 194792665
+    },
+    {
+     "status": 0,
+     "instructions": 726131930,
+     "cycles": 205402393
+    }
+   ]
+  }
+ }
+}

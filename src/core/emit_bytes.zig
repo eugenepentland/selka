@@ -3,6 +3,7 @@ const std = @import("std");
 const ir = @import("ir.zig");
 const flags = @import("flags.zig");
 const buffers = @import("buffers.zig");
+const emit_state = @import("emit_state.zig");
 const byte_index = @import("byte_index.zig");
 
 /// Byte emission has the LLVM emitter's allocation/unsupported failures.
@@ -100,8 +101,10 @@ fn append(comptime Context: type, context: Context, out: *std.ArrayList(u8), sit
     const start = try context.value(range[0]);
     const end = try context.value(range[1]);
     try declare(Context, context, buffers.append_symbol, "ptr, ptr, i64, i64");
-    const len = try header(Context, context, out, .{ .block = buffer, .offset = 8 });
-    const cap = try header(Context, context, out, .{ .block = buffer, .offset = 16 });
+    // A buffer a loop appends to keeps its length and capacity in slots (NEW-CORE-U1-STATE-2).
+    const slots = context.memory.states.of(context.current);
+    const len = if (slots) |kept| try slotField(Context, context, out, kept.len) else try header(Context, context, out, .{ .block = buffer, .offset = 8 });
+    const cap = if (slots) |kept| try slotField(Context, context, out, kept.cap) else try header(Context, context, out, .{ .block = buffer, .offset = 16 });
     const source_len = try header(Context, context, out, .{ .block = source, .offset = 8 });
     const count = try context.fresh("%apn");
     const room = try context.fresh("%apr");
@@ -130,10 +133,16 @@ fn append(comptime Context: type, context: Context, out: *std.ArrayList(u8), sit
     try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n  {s}.at = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ to, buffer, to, to, len.value });
     try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n  {s}.at = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ from, source, from, from, start });
     try out.print(a, "  call void @llvm.memmove.p0.p0.i64(ptr {s}.at, ptr {s}.at, i64 {s}, i1 false)\n", .{ to, from, count });
-    try out.print(a, "  {s} = add i64 {s}, {s}\n  store i64 {s}, ptr {s}, align 8, !tbaa !5\n  br label %{s}\n", .{ grown, len.value, count, grown, len.at, join });
+    const tag = if (slots == null) ", !tbaa !5" else "";
+    try out.print(a, "  {s} = add i64 {s}, {s}\n  store i64 {s}, ptr {s}, align 8{s}\n  br label %{s}\n", .{ grown, len.value, count, grown, len.at, tag, join });
     const called = try context.fresh("%apcall");
-    // The call keeps the append's source position, so a trap while growing names it.
-    try out.print(a, "{s}:\n  {s} = call ptr @{s}(ptr {s}, ptr {s}, i64 {s}, i64 {s}){s}\n  br label %{s}\n", .{ slow, called, buffers.append_symbol, buffer, source, start, end, try context.callLocation(inst.span), join });
+    // The call keeps the append's source position, so a trap while growing names it. A
+    // buffer whose length is in slots has it stored back first and the result's loaded after.
+    try out.print(a, "{s}:\n", .{slow});
+    if (slots) |kept| try emit_state.store(Context, context, out, buffer, kept);
+    try out.print(a, "  {s} = call ptr @{s}(ptr {s}, ptr {s}, i64 {s}, i64 {s}){s}\n", .{ called, buffers.append_symbol, buffer, source, start, end, try context.callLocation(inst.span) });
+    if (slots) |kept| try emit_state.load(Context, context, out, called, kept);
+    try out.print(a, "  br label %{s}\n", .{join});
     try out.print(a, "{s}:\n  {s} = phi ptr [ {s}, %{s} ], [ {s}, %{s} ]\n", .{ join, name, buffer, fast, called, slow });
     context.label = join;
 }
@@ -146,6 +155,13 @@ const Field = struct { at: []const u8, value: []const u8 };
 
 /// A header field to load: the block and the field's offset.
 const HeaderField = struct { block: []const u8, offset: u32 };
+
+/// A slot's value (`emit_state.zig`): its address is the slot itself.
+fn slotField(comptime Context: type, context: Context, out: *std.ArrayList(u8), slot: []const u8) Error!Field {
+    const value = try context.fresh("%aps");
+    try out.print(context.a(), "  {s} = load i64, ptr {s}, align 8\n", .{ value, slot });
+    return .{ .at = slot, .value = value };
+}
 
 fn header(comptime Context: type, context: Context, out: *std.ArrayList(u8), field: HeaderField) Error!Field {
     const at = try context.fresh("%aph");
