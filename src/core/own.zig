@@ -691,8 +691,12 @@ fn staticallyUnique(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool 
 }
 
 /// A fresh collection owns unique child blocks when all stores moved unique
-/// values and no ordinary child read was promoted, stored, returned or lent to a
-/// call. A real collection copy does not establish this claim: its children share.
+/// values into it in place and no ordinary child read was promoted, stored, returned
+/// or lent to a call. A real collection copy does not establish this claim: its
+/// children share. Nor does an update that may have copied its collection (a
+/// count-tested or copied push or store): the copy shares every child it carried
+/// over (NEW-CORE-ROW-COW-2). A promoted child read holds a second count of its
+/// child, from the read on (NEW-CORE-ROW-COW-1).
 fn exclusiveChildren(a: *const Analysis, root: ir.Ref) Error!bool {
     var values: std.ArrayList(ir.Ref) = .empty;
     try values.append(a.arena, a.f.resolve(root));
@@ -715,9 +719,12 @@ fn exclusiveChildren(a: *const Analysis, root: ir.Ref) Error!bool {
             },
             .list_push, .list_set => {
                 const child = a.f.resolve(if (inst.op == .list_push) inst.b else a.f.operands(inst.data)[0]);
+                const list = a.f.resolve(inst.a);
                 const at = location(a.f, ref);
                 if (a.liveAfter(child, at.block, at.pos) or !try staticallyUnique(a, child, ref)) return false;
-                try addUnique(a.arena, &values, a.f.resolve(inst.a));
+                const in_place = a.counted(list) and !a.liveAfter(list, at.block, at.pos);
+                if (!in_place or !try staticallyUnique(a, list, ref)) return false;
+                try addUnique(a.arena, &values, list);
             },
             else => return false,
         }
@@ -725,7 +732,7 @@ fn exclusiveChildren(a: *const Analysis, root: ir.Ref) Error!bool {
     for (a.f.insts.items, 0..) |inst, index| {
         if (inst.op != .list_get or !a.module.managed(inst.ty) or flags.transferredRead(inst)) continue;
         if (std.mem.indexOfScalar(ir.Ref, values.items, a.f.resolve(inst.a)) == null) continue;
-        if (a.class[index] == .owned) return false;
+        if (a.counted(@fromBackingInt(@intCast(index)))) return false;
         for (a.uses[index].items) |use| {
             if (use.consume != 0) return false;
             const user = a.f.inst(a.f.blocks.items[use.block].insts.items[use.pos]);

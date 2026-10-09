@@ -1,0 +1,94 @@
+r_b                          debug    ok
+r_b                          release  WRONG got=['8.0 8.0'] want=['8.0 4.0'] rc=0 err=
+r_b                          verify   WRONG got=[] want=['8.0 4.0'] rc=1 err=worktrees/claude-main-ce/experiments/fix-row-cow-20261009/shapes/r_b.my:10:13
+  in main at /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/shapes/r_b.my:16:5
+r_c                          debug    WRONG got=['8.0 8.0'] want=['8.0 4.0'] rc=0 err=
+r_c                          release  WRONG got=['8.0 8.0'] want=['8.0 4.0'] rc=0 err=
+r_c                          verify   WRONG got=[] want=['8.0 4.0'] rc=1 err=ive execution failed (count == 1 before an in-place update: value 0, other 1)
+  in main at /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/shapes/r_c.my:7:13
+r_d                          debug    ok
+r_d                          release  WRONG got=['16.0 16.0'] want=['16.0 4.0'] rc=0 err=
+r_d                          verify   WRONG got=[] want=['16.0 4.0'] rc=1 err=-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/shapes/r_d.my:5:13
+  in main at /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/shapes/r_d.my:11:5
+r_f                          debug    WRONG got=['readwrite-const 6 3', 'loop-write 7 7', 'loop-readwrite 6 6', 'var-readwrite 13 3'] want=['readwrite-const 6 3', 'loop-write 7 3', 'loop-readwrite 6 3', 'var-readwrite 13 3'] rc=0 err=
+r_f                          release  WRONG got=['readwrite-const 6 3', 'loop-write 7 7', 'loop-readwrite 6 6', 'var-readwrite 13 3'] want=['readwrite-const 6 3', 'loop-write 7 3', 'loop-readwrite 6 3', 'var-readwrite 13 3'] rc=0 err=
+r_f                          verify   WRONG got=['readwrite-const 6 3'] want=['readwrite-const 6 3', 'loop-write 7 3', 'loop-readwrite 6 3', 'var-readwrite 13 3'] rc=1 err=ive execution failed (count == 1 before an in-place update: value 0, other 1)
+  in main at /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/shapes/r_f.my:13:9
+s01_int_loop                 debug    WRONG got=['7 7 7 7'] want=['7 3 7 1'] rc=0 err=
+s01_int_loop                 release  WRONG got=['7 7 7 7'] want=['7 3 7 1'] rc=0 err=
+s01_int_loop                 verify   WRONG got=[] want=['7 3 7 1'] rc=1 err=ution failed (count == 1 before an in-place update: value 0, other 1)
+  in main at /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/shapes/s01_int_loop.my:7:9
+s02_alias_inside_loop        debug    ok
+s02_alias_inside_loop        release  ok
+s02_alias_inside_loop        verify   ok
+s03_callee_alias             debug    ok
+s03_callee_alias             release  WRONG got=['3 7', '7 7'] want=['3 7', '3 7'] rc=0 err=
+s03_callee_alias             verify   WRONG got=['3 7'] want=['3 7', '3 7'] rc=1 err= failed (count == 1 before an in-place update: value 0, other 1)
+  in main at /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/shapes/s03_callee_alias.my:21:9
+s04_record_items             debug    ok
+s04_record_items             release  ok
+s04_record_items             verify   ok
+s05_append_aug               debug    WRONG got=['3 3', '13 13'] want=['2 3', '3 13'] rc=0 err=
+s05_append_aug               release  WRONG got=['3 3', '13 13'] want=['2 3', '3 13'] rc=0 err=
+s05_append_aug               verify   WRONG got=[] want=['2 3', '3 13'] rc=1 err=ion failed (count == 1 before an in-place update: value 0, other 1)
+  in main at /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/shapes/s05_append_aug.my:7:9
+s06_dict                     debug    ok
+s06_dict                     release  ok
+s06_dict                     verify   ok
+s07_record_rows              debug    ok
+s07_record_rows              release  ok
+s07_record_rows              verify   ok
+s08_comprehension            debug    WRONG got=['7 7 2'] want=['3 7 0'] rc=0 err=
+s08_comprehension            release  WRONG got=['7 7 2'] want=['3 7 0'] rc=0 err=
+s08_comprehension            verify   WRONG got=[] want=['3 7 0'] rc=1 err= failed (count == 1 before an in-place update: value 0, other 1)
+  in main at /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/shapes/s08_comprehension.my:7:9
+s09_append_filled            debug    WRONG got=['7 7 7'] want=['3 7 1'] rc=0 err=
+s09_append_filled            release  WRONG got=['7 7 7'] want=['3 7 1'] rc=0 err=
+s09_append_filled            verify   WRONG got=[] want=['3 7 1'] rc=1 err=ailed (count == 1 before an in-place update: value 0, other 1)
+  in main at /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/shapes/s09_append_filled.my:13:13
+s10_mut_param                debug    ok
+s10_mut_param                release  WRONG got=['24 14 15', '3 14'] want=['3 14 3', '3 14'] rc=0 err=
+s10_mut_param                verify   WRONG got=[] want=['3 14 3', '3 14'] rc=1 err=ain-ce/experiments/fix-row-cow-20261009/shapes/s10_mut_param.my:5:9
+  in main at /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/shapes/s10_mut_param.my:21:5
+s11_control                  debug    WRONG got=['7 7', '7 7', '7 7', '3 0', '7 7'] want=['3 7', '3 7', '3 7', '3 0', '3 7'] rc=0 err=
+s11_control                  release  WRONG got=['7 7', '7 7', '7 7', '7 0', '7 7'] want=['3 7', '3 7', '3 7', '3 0', '3 7'] rc=0 err=
+s11_control                  verify   WRONG got=[] want=['3 7', '3 7', '3 7', '3 0', '3 7'] rc=1 err=ution failed (count == 1 before an in-place update: value 0, other 1)
+  in main at /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/shapes/s11_control.my:19:9
+s12_other_iteration          debug    ok
+s12_other_iteration          release  ok
+s12_other_iteration          verify   ok
+s13_text_bool                debug    WRONG got=['z z', 'True True', '9.0 9.0'] want=['c z', 'False True', '1.5 9.0'] rc=0 err=
+s13_text_bool                release  WRONG got=['z z', 'True True', '9.0 9.0'] want=['c z', 'False True', '1.5 9.0'] rc=0 err=
+s13_text_bool                verify   WRONG got=[] want=['c z', 'False True', '1.5 9.0'] rc=1 err=tion failed (count == 1 before an in-place update: value 0, other 1)
+  in main at /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/shapes/s13_text_bool.my:8:9
+s14_copies                   debug    ok
+s14_copies                   release  ok
+s14_copies                   verify   ok
+s15_whole_alias              debug    ok
+s15_whole_alias              release  ok
+s15_whole_alias              verify   ok
+s16_alias_write              debug    ok
+s16_alias_write              release  ok
+s16_alias_write              verify   ok
+s17_three_level              debug    WRONG got=['5 7', '7 7'] want=['5 7', '5 7'] rc=0 err=
+s17_three_level              release  WRONG got=['5 7', '7 7'] want=['5 7', '5 7'] rc=0 err=
+s17_three_level              verify   WRONG got=['5 7'] want=['5 7', '5 7'] rc=1 err= failed (count == 1 before an in-place update: value 0, other 1)
+  in main at /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/shapes/s17_three_level.my:14:13
+s18_alias_after_constant     debug    WRONG got=['7 7 4'] want=['3 7 4'] rc=0 err=
+s18_alias_after_constant     release  WRONG got=['7 7 4'] want=['3 7 4'] rc=0 err=
+s18_alias_after_constant     verify   WRONG got=[] want=['3 7 4'] rc=1 err= (count == 1 before an in-place update: value 0, other 1)
+  in main at /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/shapes/s18_alias_after_constant.my:7:9
+s19_shared_during_build      debug    WRONG got=['7 7', '7 7', '7 7'] want=['1 7', '1 7', '1 7'] rc=0 err=
+s19_shared_during_build      release  WRONG got=['7 7', '7 7', '7 7'] want=['1 7', '1 7', '1 7'] rc=0 err=
+s19_shared_during_build      verify   WRONG got=[] want=['1 7', '1 7', '1 7'] rc=1 err= (count == 1 before an in-place update: value 0, other 1)
+  in main at /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fix-row-cow-20261009/shapes/s19_shared_during_build.my:13:9
+s20_calls_in_loop            debug    ok
+s20_calls_in_loop            release  ok
+s20_calls_in_loop            verify   ok
+s21_slice_loop               debug    ok
+s21_slice_loop               release  ok
+s21_slice_loop               verify   ok
+s22_row_aliases_row          debug    ok
+s22_row_aliases_row          release  ok
+s22_row_aliases_row          verify   ok
+37/78 ok

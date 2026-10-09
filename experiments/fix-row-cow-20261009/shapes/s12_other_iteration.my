@@ -1,0 +1,20 @@
+# expect: 5 9
+# expect: 5 9
+def main(out: Stream) -> int:
+    b = [[1, 2], [3, 4], [5, 6]]
+    k = [0]
+    for i in range(3):
+        if i == 1:
+            k = b[2]
+        b[i][0] = 9
+    out.print(k[0], b[2][0])
+    c = [[1, 2], [3, 4], [5, 6]]
+    kc = [0]
+    i = 0
+    while i < 3:
+        c[i][0] = 9
+        if i == 0:
+            kc = c[2]
+        i += 1
+    out.print(kc[0], c[2][0])
+    return 0

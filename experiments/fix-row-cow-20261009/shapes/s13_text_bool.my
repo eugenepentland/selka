@@ -1,0 +1,20 @@
+# expect: c z
+# expect: False True
+# expect: 1.5 9.0
+def main(out: Stream) -> int:
+    t = [["a", "b"], ["c", "d"]]
+    k = t[1]
+    for i in range(2):
+        t[i][0] = "z"
+    out.print(k[0], t[1][0])
+    f = [[False, False], [False, True]]
+    kf = f[1]
+    for i in range(2):
+        f[i][0] = True
+    out.print(kf[0], f[1][0])
+    g = [[0.5, 1.0], [1.5, 2.0]]
+    kg = g[1]
+    for i in range(2):
+        g[i][0] = 9.0
+    out.print(kg[0], g[1][0])
+    return 0

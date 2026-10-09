@@ -1,0 +1,23 @@
+# expect: 3 7
+# expect: 3 7
+def row(xs: list[list[int]], i: int) -> list[int]:
+    return xs[i]
+
+
+def grab(xs: mut list[list[int]], i: int) -> list[int]:
+    xs[0][1] = xs[0][1] + 0
+    return xs[i]
+
+
+def main(out: Stream) -> int:
+    b = [[1, 2], [3, 4]]
+    k = row(b, 1)
+    for i in range(2):
+        b[i][0] = 7
+    out.print(k[0], b[1][0])
+    c = [[1, 2], [3, 4]]
+    kc = grab(mut c, 1)
+    for i in range(2):
+        c[i][0] = 7
+    out.print(kc[0], c[1][0])
+    return 0

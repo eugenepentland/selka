@@ -1,0 +1,15 @@
+# expect: 3 7 1
+def main(out: Stream) -> int:
+    b: list[list[int]] = []
+    for i in range(3):
+        row: list[int] = []
+        for j in range(2):
+            row.append(i * 2 + j + 1)
+        b.append(row)
+    k = b[1]
+    first = b[0]
+    for i in range(3):
+        for j in range(2):
+            b[i][j] = 7
+    out.print(k[0], b[1][0], first[0])
+    return 0

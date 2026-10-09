@@ -1,0 +1,27 @@
+# expect: 1 7
+# expect: 1 7
+# expect: 1 7
+def same(xs: list[list[int]]) -> list[list[int]]:
+    return xs
+
+
+def main(out: Stream) -> int:
+    b = [[1, 2]]
+    snap = b
+    b.append([3, 4])
+    for i in range(2):
+        b[i][0] = 7
+    out.print(snap[0][0], b[0][0])
+    c = [[1, 2]]
+    t = same(c)
+    c.append([3, 4])
+    for i in range(2):
+        c[i][0] = 7
+    out.print(t[0][0], c[0][0])
+    d = [[1, 2], [5, 6]]
+    u = d
+    d[1] = [3, 4]
+    for i in range(2):
+        d[i][0] = 7
+    out.print(u[0][0], d[0][0])
+    return 0
