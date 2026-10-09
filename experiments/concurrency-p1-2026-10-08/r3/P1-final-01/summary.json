@@ -1,0 +1,21 @@
+{
+  "source": "f4eb26606c22c63065744a02684d033ea8fae98b",
+  "steps": [
+    {
+      "name": "full-gate",
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "zig",
+        "build",
+        "test",
+        "--summary",
+        "all"
+      ],
+      "status": 1,
+      "seconds": 136.7877815971151,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/P1-final-01/full-gate.log"
+    }
+  ],
+  "pass": false
+}

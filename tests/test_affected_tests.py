@@ -58,6 +58,11 @@ class SyntheticRepo(unittest.TestCase):
 
 
 class Mapping(SyntheticRepo):
+    def test_performance_proxy_selects_its_integrity_tests(self) -> None:
+        for path in ("scripts/juice", "scripts/juice_tool/engine.py", "scripts/juice_validate.py", "tests/test_juice.py", "tests/test_juice_native.py", "examples/juice/native/kernel.c"):
+            sel = self.select({path: ["changed"]})
+            self.assertEqual(sorted(sel.steps), ["test-juice"])
+
     def test_a_compiler_source_selects_its_tests_its_test_file_and_callers(self) -> None:
         sel = self.select({"src/foo.zig": ["pub fn computeThing() void {}"]})
         self.assertIn("foo.test.", sel.unit)

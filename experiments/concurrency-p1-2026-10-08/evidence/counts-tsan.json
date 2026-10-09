@@ -1,0 +1,30 @@
+{
+  "source_commit": "07b0b3dc3ed783f8191354666e8fcc0f041df4aa",
+  "source": "src/core/shared_counts_test.zig: harness, combined with driver.runtime_source",
+  "build": [
+    "scripts/build-slot.sh",
+    "build",
+    "zig",
+    "cc",
+    "-O1",
+    "-g",
+    "-fsanitize=thread",
+    "-pthread",
+    ".tmp/p1-counts-tsan/harness.c",
+    "-o",
+    ".tmp/p1-counts-tsan/test"
+  ],
+  "run": [
+    "taskset",
+    "-c",
+    "0,1,4-9,12-19",
+    ".tmp/p1-counts-tsan/test"
+  ],
+  "TSAN_OPTIONS": "halt_on_error=1:exitcode=66",
+  "exit": 0,
+  "stdout": "shared counts ok\n",
+  "reports": 0,
+  "repetitions": 1,
+  "worker_threads": 8,
+  "limitation": "Count-only C harness. It does not establish P1-5 scheduler or generated thunk correctness."
+}

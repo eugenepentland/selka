@@ -1,0 +1,139 @@
+{
+  "source": "c26c95de73529132755e2bb39d98c6e5aa2e5d94",
+  "steps": [
+    {
+      "name": "full-gate",
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "zig",
+        "build",
+        "test",
+        "--summary",
+        "all"
+      ],
+      "status": 0,
+      "seconds": 179.80910519999452,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/P1-final-03/full-gate.log"
+    },
+    {
+      "name": "fmt-check",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "zig",
+        "build",
+        "fmt-check",
+        "--summary",
+        "all"
+      ],
+      "status": 0,
+      "seconds": 0.24534506304189563,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/P1-final-03/fmt-check.log"
+    },
+    {
+      "name": "debug-install",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "zig",
+        "build",
+        "install",
+        "--summary",
+        "all"
+      ],
+      "status": 0,
+      "seconds": 6.028365382924676,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/P1-final-03/debug-install.log"
+    },
+    {
+      "name": "qualify",
+      "command": [
+        "python3",
+        "experiments/new-core-s5-20261007/tools/qualify_merge.py",
+        "--shards",
+        "64",
+        "--compiler",
+        "zig-out/bin/mylang",
+        "--install",
+        "install",
+        "--evidence",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/experiments/concurrency-p1-2026-10-08/r3/P1-final-03/P1-final-03-qualify"
+      ],
+      "status": 0,
+      "seconds": 197.4688095971942,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/P1-final-03/qualify.log"
+    },
+    {
+      "name": "fuzz50",
+      "command": [
+        "python3",
+        "experiments/new-core-s5-20261007/tools/fuzz_matrix.py",
+        "--references",
+        "experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+        "--new",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/zig-out/bin/mylang",
+        "--cases",
+        "50",
+        "--evidence",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/experiments/concurrency-p1-2026-10-08/r3/P1-final-03/fuzz50",
+        "--jobs",
+        "3",
+        "--qualified-head",
+        "c26c95de73529132755e2bb39d98c6e5aa2e5d94"
+      ],
+      "status": 0,
+      "seconds": 209.0215189459268,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/P1-final-03/fuzz50.log"
+    },
+    {
+      "name": "fuzz200",
+      "command": [
+        "python3",
+        "experiments/new-core-s5-20261007/tools/fuzz_matrix.py",
+        "--references",
+        "experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+        "--new",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/zig-out/bin/mylang",
+        "--cases",
+        "200",
+        "--evidence",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/experiments/concurrency-p1-2026-10-08/r3/P1-final-03/fuzz200",
+        "--jobs",
+        "3",
+        "--qualified-head",
+        "c26c95de73529132755e2bb39d98c6e5aa2e5d94"
+      ],
+      "status": 0,
+      "seconds": 620.5491975040641,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/P1-final-03/fuzz200.log"
+    }
+  ],
+  "pass": true,
+  "compiler_sha256": "2f33427ad427a3f00d7446107959418fba4f10f3b3b83af38fb40ca972b5cb98",
+  "failed_attempts": [
+    {
+      "name": "fuzz50",
+      "command": [
+        "python3",
+        "experiments/new-core-s5-20261007/tools/fuzz_matrix.py",
+        "--references",
+        "experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+        "--new",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/zig-out/bin/mylang",
+        "--cases",
+        "50",
+        "--evidence",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/experiments/concurrency-p1-2026-10-08/r3/P1-final-03/fuzz50",
+        "--jobs",
+        "3",
+        "--qualified-head",
+        "c26c95de73529132755e2bb39d98c6e5aa2e5d94"
+      ],
+      "status": 2,
+      "seconds": 0.1939391610212624,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/P1-final-03/fuzz50-preflight-failed.log"
+    }
+  ],
+  "retry_reason": "Tracked documentation drafts moved aside without changing committed source or oracles."
+}

@@ -22,6 +22,7 @@ const tool_identity = @import("tool_identity.zig");
 const emit_units = @import("emit_units.zig");
 const unit_cache = @import("unit_cache.zig");
 const count_runtime = @import("count_runtime.zig");
+const sanitize_llvm = @import("sanitize_llvm.zig");
 const Digest = unit_cache.Digest;
 
 /// The runtime C source, compiled into every program.
@@ -31,7 +32,7 @@ pub const runtime_source = @embedFile("runtime/core_rt.c") ++ "\n" ++
     @embedFile("runtime/core_text.c") ++ "\n" ++
     @embedFile("runtime/core_sort.c") ++ "\n" ++ @embedFile("runtime/core_number.c") ++ "\n" ++
     @embedFile("runtime/core_io.c") ++ "\n" ++ @embedFile("runtime/core_host.c") ++ "\n" ++
-    @embedFile("runtime/core_bytes.c") ++ "\n" ++ @embedFile("runtime/core_values.c") ++ "\n" ++ @embedFile("runtime/core_test.c");
+    @embedFile("runtime/core_bytes.c") ++ "\n" ++ @embedFile("runtime/core_values.c") ++ "\n" ++ @embedFile("runtime/core_test.c") ++ "\n" ++ @embedFile("runtime/core_tasks.c");
 
 /// One build: tools, directories, the program and how to optimize it.
 pub const Request = struct {
@@ -129,6 +130,8 @@ const Object = struct { path: []const u8, digest: Digest };
 
 /// Compile and link `request.units` into `request.output`; failures append the tool's stderr to `log`.
 pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8)) Error!Outcome {
+    try validateLayout(allocator, environ, log);
+    try validateSanitize(allocator, environ, log);
     const cwd = std.Io.Dir.cwd();
     cwd.createDirPath(io, request.work) catch return error.WriteFailed;
     var environment = environ.clone(allocator) catch return error.OutOfMemory;
@@ -159,7 +162,7 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     };
     var needs: Dependencies = .{};
     for (request.units) |unit| needs = .{ .number = needs.number or unit.number, .math = needs.math or unit.math, .counting = needs.counting or unit.counting };
-    const runtime = try runtimeFor(allocator, needs.counting, log);
+    const runtime = try runtimeFor(allocator, needs.counting, environ, log);
     const settings: unit_cache.Settings = .{ .tool = guest.digest, .cpu = guest.native_target, .release = request.release, .runtime = runtime.abi };
     var objects: std.ArrayList(Object) = .empty;
     try objects.append(allocator, try runtimeObject(native, places.shared, runtime));
@@ -180,6 +183,8 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     try argv.appendSlice(allocator, &.{ guest.path, "cc", unit_cache.level(request.release), "-target", target_policy.native_link_target });
     try argv.appendSlice(allocator, target.cpu_flags);
     if (sanitizer.len != 0) try argv.append(allocator, sanitizer);
+    try argv.appendSlice(allocator, sanitizeArguments(environ));
+    try argv.append(allocator, "-pthread");
     try argv.appendSlice(allocator, &.{ "-Wno-override-module", "-o", linked });
     for (objects.items) |object| try argv.append(allocator, object.path);
     if (needs.math) try argv.append(allocator, "-lm");
@@ -201,7 +206,7 @@ const Dependencies = struct { number: bool = false, math: bool = false, counting
 /// unit emitted with `--counters` the counting runtime (`count_runtime.zig`).
 const Runtime = struct { source: []const u8, abi: Digest };
 
-fn runtimeFor(allocator: std.mem.Allocator, counting: bool, log: *std.ArrayList(u8)) Error!Runtime {
+fn runtimeFor(allocator: std.mem.Allocator, counting: bool, environment: *const std.process.Environ.Map, log: *std.ArrayList(u8)) Error!Runtime {
     const source = if (!counting) runtime_source else count_runtime.source(allocator, runtime_source) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.AnchorMissing => {
@@ -210,8 +215,50 @@ fn runtimeFor(allocator: std.mem.Allocator, counting: bool, log: *std.ArrayList(
         },
     };
     var abi: Digest = undefined;
-    std.crypto.hash.Blake3.hash(source, &abi, .{});
+    var hash = std.crypto.hash.Blake3.init(.{});
+    hash.update(source);
+    for (layoutArguments(environment)) |argument| unit_cache.field(&hash, argument);
+    for (sanitizeArguments(environment)) |argument| unit_cache.field(&hash, argument);
+    hash.final(&abi);
     return .{ .source = source, .abi = abi };
+}
+
+// LAYOUT-SWITCH-1: internal paired-measurement control, also salted into the
+// runtime ABI so all unit, runtime and program stores distinguish the options.
+const layout_variable = "MYLANG_CORE_LAYOUT";
+
+fn layoutArguments(environment: *const std.process.Environ.Map) []const []const u8 {
+    const value = environment.get(layout_variable) orelse return &.{};
+    if (std.mem.eql(u8, value, "4")) return &.{ "-mllvm", "-align-all-functions=4" };
+    if (std.mem.eql(u8, value, "5")) return &.{ "-mllvm", "-align-all-functions=5" };
+    if (std.mem.eql(u8, value, "6")) return &.{ "-mllvm", "-align-all-functions=6" };
+    return &.{};
+}
+
+fn validateLayout(a: std.mem.Allocator, environment: *const std.process.Environ.Map, log: *std.ArrayList(u8)) Error!void {
+    if (environment.get(layout_variable) == null or layoutArguments(environment).len != 0) return;
+    try log.appendSlice(a, "error: MYLANG_CORE_LAYOUT must be 4, 5 or 6\n");
+    return error.ToolFailed;
+}
+
+// TSAN-BUILD-1: instrument C and every emitted LLVM definition; the same
+// option salts the runtime ABI and foreign settings, separating every cache.
+const sanitize_variable = "MYLANG_CORE_SANITIZE";
+const thread_sanitizer = "-fsanitize=thread";
+
+fn sanitizeArguments(environment: *const std.process.Environ.Map) []const []const u8 {
+    const value = environment.get(sanitize_variable) orelse return &.{};
+    return if (std.mem.eql(u8, value, "thread")) &.{thread_sanitizer} else &.{};
+}
+
+fn validateSanitize(a: std.mem.Allocator, environment: *const std.process.Environ.Map, log: *std.ArrayList(u8)) Error!void {
+    if (environment.get(sanitize_variable) == null or sanitizeArguments(environment).len != 0) return;
+    try log.appendSlice(a, "error: MYLANG_CORE_SANITIZE must be thread\n");
+    return error.ToolFailed;
+}
+
+fn instrumented(a: std.mem.Allocator, environment: *const std.process.Environ.Map, llvm: []const u8) std.mem.Allocator.Error![]const u8 {
+    return if (sanitizeArguments(environment).len != 0) sanitize_llvm.instrument(a, llvm) else llvm;
 }
 
 /// Optional LLVM optimization records from a separate compile of the exact units.
@@ -222,6 +269,8 @@ pub const OptimizationRemarks = struct { yaml: ?[]const u8 = null, processes: u3
 /// Compile only when requested by cost/--stats; identical-input remark caching is
 /// deferred until timings justify it. Every spawn is timed and tool-validated.
 pub fn optimizationRemarks(a: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request) std.mem.Allocator.Error!OptimizationRemarks {
+    if (environ.get(layout_variable) != null and layoutArguments(environ).len == 0) return .{};
+    if (environ.get(sanitize_variable) != null and sanitizeArguments(environ).len == 0) return .{};
     const staging = privateDirectory(a, io, request.work, "llvm-remarks") catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         return .{};
@@ -245,7 +294,7 @@ pub fn optimizationRemarks(a: std.mem.Allocator, io: std.Io, environ: *const std
         const source = try std.fmt.allocPrint(a, "{s}/{d}.ll", .{ staging, index });
         const object = try std.fmt.allocPrint(a, "{s}/{d}.o", .{ staging, index });
         const records = try std.fmt.allocPrint(a, "{s}/{d}.opt.yaml", .{ staging, index });
-        std.Io.Dir.cwd().writeFile(io, .{ .sub_path = source, .data = unit.llvm }) catch return result;
+        std.Io.Dir.cwd().writeFile(io, .{ .sub_path = source, .data = try instrumented(a, environ, unit.llvm) }) catch return result;
         var args: std.ArrayList([]const u8) = .empty;
         try args.appendSlice(a, try compileArguments(native, request.release, object, source));
         try args.appendSlice(a, &.{ "-fsave-optimization-record", try std.fmt.allocPrint(a, "-foptimization-record-file={s}", .{records}) });
@@ -343,7 +392,7 @@ fn unitObjects(native: Native, places: Places, settings: unit_cache.Settings, re
         const object = if (served != null) try std.fmt.allocPrint(a, "{s}.verify.o", .{stem}) else if (places.cacheable) try store.partial(a, native.io, key, ".o") else try std.fmt.allocPrint(a, "{s}.o", .{stem});
         const source = try std.fmt.allocPrint(a, "{s}.ll", .{stem});
         // Only units that compile are written out; a hit never rewrites its text.
-        std.Io.Dir.cwd().writeFile(native.io, .{ .sub_path = source, .data = unit.llvm }) catch return error.WriteFailed;
+        std.Io.Dir.cwd().writeFile(native.io, .{ .sub_path = source, .data = try instrumented(a, native.environment, unit.llvm) }) catch return error.WriteFailed;
         try pending.append(a, .{ .unit = unit, .key = key, .object = object, .slot = objects.items.len - 1, .served = served });
         try jobs.append(a, .{ .argv = try compileArguments(native, request.release, object, source), .weight = unit.llvm.len });
     }
@@ -379,6 +428,8 @@ fn compileArguments(native: Native, release: bool, object: []const u8, source: [
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(native.arena, &.{ native.zig, "cc", "-c", unit_cache.level(release), "-target", target_policy.native_link_target });
     try argv.appendSlice(native.arena, target.cpu_flags);
+    try argv.appendSlice(native.arena, layoutArguments(native.environment));
+    try argv.appendSlice(native.arena, sanitizeArguments(native.environment));
     try argv.appendSlice(native.arena, &.{ "-Wno-override-module", "-o", object, source });
     return argv.items;
 }
@@ -419,6 +470,7 @@ fn foreignObjects(native: Native, places: Places, settings: unit_cache.Settings,
         var argv: std.ArrayList([]const u8) = .empty;
         try argv.appendSlice(a, &.{ native.zig, "cc", "-c", unit_cache.level(settings.release), "-target", target_policy.native_link_target });
         try argv.appendSlice(a, target.cpu_flags);
+        try argv.appendSlice(a, sanitizeArguments(native.environment));
         try argv.appendSlice(a, &.{ "-MMD", "-MF", depfile, "-o", object, source });
         try jobs.append(a, .{ .argv = argv.items, .weight = links.len - index });
         try compiles.append(a, .{ .manifest = manifest, .manifest_key = manifest_key, .object = object, .depfile = depfile, .slot = objects.items.len - 1 });
@@ -471,6 +523,7 @@ fn foreignKey(native: Native, settings: unit_cache.Settings, source: []const u8)
     };
     var hash = std.crypto.hash.Blake3.init(.{});
     unit_cache.field(&hash, "core-foreign-v1");
+    for (sanitizeArguments(native.environment)) |argument| unit_cache.field(&hash, argument);
     unit_cache.field(&hash, absolute);
     // The source's spelling and the working directory reach its debug information.
     unit_cache.field(&hash, source);
@@ -623,7 +676,9 @@ fn runtimeObject(native: Native, directory: []const u8, runtime: Runtime) Error!
     try argv.appendSlice(allocator, &.{ native.zig, "cc", "-c", "-O2", "-g0", "-falign-functions=64" });
     try argv.appendSlice(allocator, &.{ "-target", target_policy.native_link_target });
     try argv.appendSlice(allocator, target.cpu_flags);
-    try argv.appendSlice(allocator, &.{ "-std=c11", "-o", partial, source });
+    try argv.appendSlice(allocator, layoutArguments(native.environment));
+    try argv.appendSlice(allocator, sanitizeArguments(native.environment));
+    try argv.appendSlice(allocator, &.{ "-std=c11", "-pthread", "-o", partial, source });
     try run(native, argv.items);
     try native.guard.check(native.log);
     cwd.rename(partial, cwd, object, io) catch return error.WriteFailed;
@@ -727,6 +782,30 @@ fn testNative(a: std.mem.Allocator, environment: *const std.process.Environ.Map,
     const resources: tool_identity.Request = .{ .arena = a, .io = std.testing.io, .environment = environment, .executable = "zig", .cache = "" };
     const identity: tool_identity.Identity = .{ .path = "zig", .digest = @splat(0), .generation = @splat(0), .native_target = @splat(0), .inputs = 0, .memo_hit = false };
     return .{ .arena = a, .io = std.testing.io, .environment = environment, .zig = "zig", .log = log, .guard = .{ .resources = resources, .identity = identity }, .counts = counts };
+}
+
+// spec-case: LAYOUT-SWITCH-1
+test "layout compile arguments and runtime identity include the internal alignment switch" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var environment: std.process.Environ.Map = .init(a);
+    var log: std.ArrayList(u8) = .empty;
+    var counts: Counts = .{};
+    const native = testNative(a, &environment, &log, &counts);
+    const default = try runtimeFor(a, false, &environment, &log);
+    var expected: Digest = undefined;
+    std.crypto.hash.Blake3.hash(runtime_source, &expected, .{});
+    try std.testing.expectEqualSlices(u8, &expected, &default.abi);
+    try environment.put("MYLANG_CORE_LAYOUT", "5");
+    const aligned = try runtimeFor(a, false, &environment, &log);
+    try std.testing.expect(!std.mem.eql(u8, &default.abi, &aligned.abi));
+    const arguments = try compileArguments(native, true, "out.o", "in.ll");
+    try std.testing.expectEqualStrings("-mllvm", arguments[arguments.len - 6]);
+    try std.testing.expectEqualStrings("-align-all-functions=5", arguments[arguments.len - 5]);
+    try environment.put("MYLANG_CORE_LAYOUT", "7");
+    try std.testing.expectError(error.ToolFailed, validateLayout(a, &environment, &log));
+    try std.testing.expectEqualStrings("error: MYLANG_CORE_LAYOUT must be 4, 5 or 6\n", log.items);
 }
 
 // spec-case: NEW-CORE-S4-CACHE-1

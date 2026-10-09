@@ -93,6 +93,39 @@ const Project = struct {
 /// The numbers of one `--cache-report` line.
 const Report = struct { units: u32, reused: u32, compiled: u32, verified: u32, program: []const u8, processes: u32, replayed: bool };
 
+// spec: LAYOUT-SWITCH-1
+test "layout changes rebuild units and runtime and returning to a layout reuses objects programs and replay" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var project = try Project.prepare(arena.allocator(), &directory, true);
+    try project.environment.put("MYLANG_CORE_LAYOUT", "4");
+    const four = try report(try project.build(&.{}));
+    const expected = try project.output();
+    try std.testing.expectEqual(four.units, four.compiled);
+    try std.testing.expectEqual(four.compiled + 2, four.processes);
+    try std.testing.expect((try report(try project.build(&.{}))).replayed);
+    try project.environment.put("MYLANG_CORE_LAYOUT", "5");
+    const five = try report(try project.build(&.{}));
+    try std.testing.expectEqual(five.units, five.compiled);
+    try std.testing.expectEqual(five.compiled + 2, five.processes);
+    try std.testing.expectEqualStrings(expected, try project.output());
+    try project.environment.put("MYLANG_CORE_LAYOUT", "6");
+    const six = try report(try project.build(&.{}));
+    try std.testing.expectEqual(six.units, six.compiled);
+    try std.testing.expectEqual(six.compiled + 2, six.processes);
+    try std.testing.expectEqualStrings(expected, try project.output());
+    try project.environment.put("MYLANG_CORE_LAYOUT", "4");
+    try std.testing.expect((try report(try project.build(&.{}))).replayed);
+    try project.forgetReplays();
+    const reused = try report(try project.build(&.{}));
+    try std.testing.expectEqual(@as(u32, 0), reused.processes);
+    try std.testing.expectEqual(four.units, reused.reused);
+    try std.testing.expectEqualStrings("reused", reused.program);
+    try std.testing.expectEqualStrings(expected, try project.output());
+}
+
 fn report(stderr: []const u8) !Report {
     if (std.mem.indexOf(u8, stderr, "mylang-core: cache: replayed") != null) return .{ .units = 0, .reused = 0, .compiled = 0, .verified = 0, .program = "replayed", .processes = 0, .replayed = true };
     const start = std.mem.indexOf(u8, stderr, "mylang-core: cache: ") orelse return error.NoCacheReport;
@@ -319,4 +352,39 @@ test "the cache report reader refuses output without a complete cache line" {
     try std.testing.expectError(error.BadCacheReport, report("mylang-core: cache: 3 units, 1 reused\n"));
     try std.testing.expectError(error.BadCacheReport, report("mylang-core: cache: 1 units, 2 reused, 3 compiled, 4 verified; program linked; 5 processes 6\n"));
     try std.testing.expect((try report("mylang-core: cache: replayed the last identical build\n")).replayed);
+}
+
+// spec-case: TSAN-BUILD-1
+test "thread sanitizer separates runtime units foreign objects programs and replay from ordinary builds" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var project = try Project.prepare(arena.allocator(), &directory, true);
+    _ = project.environment.swapRemove("MYLANG_CORE_SANITIZE");
+    try directory.dir.writeFile(io, .{ .sub_path = "foreign.c", .data = "int native_probe(int *value) { return *value + 1; }\n" });
+    const extra = &[_][]const u8{ "--link", try project.path("foreign.c") };
+    const ordinary = try report(try project.build(extra));
+    const expected = try project.output();
+    try std.testing.expectEqual(ordinary.units, ordinary.compiled);
+    try std.testing.expectEqual(ordinary.compiled + 3, ordinary.processes);
+    try project.environment.put("MYLANG_CORE_SANITIZE", "thread");
+    const sanitized = try report(try project.build(extra));
+    try std.testing.expectEqual(sanitized.units, sanitized.compiled);
+    try std.testing.expectEqual(sanitized.compiled + 3, sanitized.processes);
+    try std.testing.expectEqualStrings(expected, try project.output());
+    try std.testing.expect((try report(try project.build(extra))).replayed);
+    try project.forgetReplays();
+    const reused = try report(try project.build(extra));
+    try std.testing.expectEqual(@as(u32, 0), reused.processes);
+    try std.testing.expectEqual(sanitized.units, reused.reused);
+    try std.testing.expectEqualStrings("reused", reused.program);
+    _ = project.environment.swapRemove("MYLANG_CORE_SANITIZE");
+    const normal_again = try report(try project.build(extra));
+    try std.testing.expectEqual(@as(u32, 0), normal_again.processes);
+    try std.testing.expectEqualStrings(expected, try project.output());
+    try project.environment.put("MYLANG_CORE_SANITIZE", "address");
+    const invalid = try project.attempt(extra);
+    try std.testing.expect(invalid.term == .exited and invalid.term.exited != 0);
+    try std.testing.expect(std.mem.indexOf(u8, invalid.stderr, "MYLANG_CORE_SANITIZE must be thread") != null);
 }

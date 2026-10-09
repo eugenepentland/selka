@@ -1,0 +1,70 @@
+{
+  "version": "juice-evidence-v1",
+  "capture_archive": {
+    "path": "captures.tar.xz",
+    "sha256": "8baa8bff0c3efa6c3884363c0f768a15cd5a880dd4e802615288e5158f31347c",
+    "bytes": 62412,
+    "members": 371
+  },
+  "files": {
+    "DECISIONS.md": "5ffb22d37cf0ec511bc5732a2325e0464cc14f6ef4e8baae0c8ca1ee28bce66a",
+    "docs-final.log.xz": "15b0b416a584816080040c3e8e29c60c9ba55dac4496fdb74c1151f7709f2363",
+    "final-full.log.xz": "6cbd9c74da55e118b22d7024921cd19d24be1dab01984d9bacfb1bf0b2e6bc50",
+    "fmt.log.xz": "0040f94d11d0039505328a90b2ff48968db873e9e7967307631bf40ef5679275",
+    "full.log.xz": "9c7a6b43d2bf7de556d9ac2812680d11fa083a8c11a05d7a1e5a5789e61bcf3f",
+    "initial-short-scenario-rejected.json": "48dc956bdd080ac0210885018e9124f97b7f1d4ed4b67c0698f9df566f223a2b",
+    "qualification-release.log.xz": "f6905ce570cc0f054e753a6c04feee2238ed664dd07c2f0a7fb464b754f6d8b0",
+    "qualification.json": "f0fa1d34b922a97252c4c8798bb50f1dd77b7cca06303c219472d1c17448bb1d",
+    "recovered-full.log.xz": "f9f0114489feb2d90ab82bb262fd23ecf279fc350ce2c2e7f4100b0952c26680",
+    "reports/application-improvement.json": "86b39eec54cd8b71f6074e3097fa6d086a11addd9eb30a51a19594e5537c821c",
+    "reports/application-improvement.md": "86d3ae9cb7ac2814bff730120d700db29df8583b62f949c955cac701303618eb",
+    "reports/atomic-regression.json": "542f5909f123ca457ff2297625b62028ad056f0ecde67435ab411f6f8490a3c0",
+    "reports/atomic-regression.md": "f071d9b1200a642b3e892c04eaf1bf4b78f1b319c367922e1409c5dd2947f0a4",
+    "reports/backend-regression.json": "3dee68a24145b6f58b7cdf1ac25e1dc3111e4038ab70a217012f109634525007",
+    "reports/backend-regression.md": "8f9ed604c6404808176c7a25e42bf80db417f461c3f23eb1198fcef90bf9759b",
+    "reports/copy-regression.json": "4453413ddcbda94d58fac63d705fa564162aca648b8bb7446b67a0d774df00d4",
+    "reports/copy-regression.md": "c49f9541dbac6a2325f8161915daa2590b709321f98a2511b4d18bd50ab63021",
+    "reports/identical.json": "d8ac2fd1ffde69f61d16c54c89bfa0bbd7937c922e560641b7354941f5c7b032",
+    "reports/identical.md": "8d0011c803f94b582c8f5af64530593997588ca72e121b34a66877f812ddc068",
+    "reports/mylang-copy-removal.json": "3c8ac136118d0f1dea8fbc7be8fc68972c7fa83e07f5012cc8195a91b74bc921",
+    "reports/mylang-copy-removal.md": "c3cc1c5cf9c1ffac8b381a16c3a6300e03f133c8132971edaa82c33797c7ca71",
+    "reports/mylang-identical.json": "e34ce3f9d20c848dac6ed2b46e4dd12c3343711f1a7f98bc16476db8d31001c0",
+    "reports/mylang-identical.md": "eadda4a22be1aea5f64a511f84bdf6c5f8c6cfc77acc327ad06a5008ce57f982",
+    "reports/mylang-scenario-validation.json": "de3efe10293213d191b92312dd915deb0a044710ba936595bc69a5f0519122ea",
+    "reports/p1-backend-change.json": "0db7fd5f81f0182856338c6b54a5c39c5a6d4d48d63b4853526f9e0dc67b06aa",
+    "reports/p1-backend-change.md": "c9a062a3c07b15c8e22ed26b6cab2feff0151835249400f6569b50d0eba26575",
+    "reports/reference-identical.json": "a1e538921b89880b679b16523b3a16bade75f98b60e4d7d126de7eccb50bcce5",
+    "reports/reference-identical.md": "9643e6e06293522a267771e4c9b77d67d0ac5b1431a9b6ccd54f3c3421e288f6",
+    "reports/scenario-validation.json": "4933c943ac6efa4ced515ea36d0e531a19aeeec6333516eb3f96acc56e574956",
+    "reports/under-load.json": "e24447885de6add875a6dfe66a008ba02cb19b9335204066c7c392771aa32947",
+    "reports/under-load.md": "a931680eb8b8d89196092aab972163f9f980b37c0469530cbbb39301266fc133",
+    "reports/vectorization-regression.json": "03f43153bf76aa330154612107ccea2f9ebf699cff72f10ec4a41708d672e65f",
+    "reports/vectorization-regression.md": "6e1eb5b2ddad46b9ec862d0d224a135b13a564df7985ce344a71747fdc28c905"
+  },
+  "implementation": {
+    "scripts/juice_tool/__init__.py": "a05ec087f7b84b29dcae6f7ebd16d4f96dbb34bc52d94256b05ae72c08b82a3d",
+    "scripts/juice_tool/calibration.py": "87d5d27d45150c03e7e79528d82787a2c4b37b18a3340ff5d81e4a907243be46",
+    "scripts/juice_tool/cli.py": "539a8e83dffbb0fe6c0753a4a8fca2cd751e81b9ad65f1cb394d1eec6006d11a",
+    "scripts/juice_tool/collectors.py": "fe3be7ede054ac0775211b0991e7fe4c13787a549ad2a5f645b8f88bf92b4c31",
+    "scripts/juice_tool/common.py": "100efe726cdcf956dc89518284515eca6a330fdb0db12fb31e621e3c816ccf5d",
+    "scripts/juice_tool/engine.py": "5c1613e6101ef93b2e2ef869c204f391307244b3506c35a05c68f8df89cb8d61",
+    "scripts/juice_tool/manifest.py": "697fc770f4395404b6a1ab59a21db5ceeeb9b1de681c31ffd4b7536ff4db603b",
+    "scripts/juice_tool/report.py": "5379afbfea6b8d6758818f7471e2693e62d3fd40772377a865f5d236898668da"
+  },
+  "verification": {
+    "proxy_tests": 38,
+    "qualification_checks": 15,
+    "full_gate_steps": "90/90",
+    "zig_tests_executed": 2144,
+    "guardian_checks": 88,
+    "fmt_check": "passed",
+    "docs_steps": "16/16",
+    "guardian_feedback_commit": "43de8e9",
+    "disk_failure_log": "final-full.log.xz",
+    "successful_recovery_log": "recovered-full.log.xz"
+  },
+  "native_followup": {
+    "manifest": "native/manifest.json",
+    "sha256": "912423a6ae34783ddac59ed91b2a9bbdd2e4a540757a888ff22fbd175d57bd5b"
+  }
+}

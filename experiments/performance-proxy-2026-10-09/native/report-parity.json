@@ -1,0 +1,92 @@
+{
+  "existing_captures_reused": true,
+  "comparisons": [
+    {
+      "report": "copy-regression.json",
+      "workloads": [
+        "bits-quick",
+        "bits-validation"
+      ],
+      "matched": true
+    },
+    {
+      "report": "application-improvement.json",
+      "workloads": [
+        "bits-quick",
+        "bits-validation"
+      ],
+      "matched": true
+    },
+    {
+      "report": "under-load.json",
+      "workloads": [
+        "bits-quick",
+        "bits-validation"
+      ],
+      "matched": true
+    },
+    {
+      "report": "mylang-copy-removal.json",
+      "workloads": [
+        "sum-quick",
+        "sum-validation"
+      ],
+      "matched": true
+    },
+    {
+      "report": "backend-regression.json",
+      "workloads": [
+        "bits-quick",
+        "bits-validation"
+      ],
+      "matched": true
+    },
+    {
+      "report": "identical.json",
+      "workloads": [
+        "bits-quick",
+        "bits-validation"
+      ],
+      "matched": true
+    },
+    {
+      "report": "vectorization-regression.json",
+      "workloads": [
+        "vector"
+      ],
+      "matched": true
+    },
+    {
+      "report": "p1-backend-change.json",
+      "workloads": [
+        "sum-quick",
+        "sum-validation"
+      ],
+      "matched": true
+    },
+    {
+      "report": "mylang-identical.json",
+      "workloads": [
+        "sum-quick",
+        "sum-validation"
+      ],
+      "matched": true
+    },
+    {
+      "report": "reference-identical.json",
+      "workloads": [
+        "bits-quick",
+        "bits-validation"
+      ],
+      "matched": true
+    },
+    {
+      "report": "atomic-regression.json",
+      "workloads": [
+        "bits-quick",
+        "bits-validation"
+      ],
+      "matched": true
+    }
+  ]
+}

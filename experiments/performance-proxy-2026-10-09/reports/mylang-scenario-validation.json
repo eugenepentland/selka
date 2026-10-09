@@ -1,0 +1,18 @@
+{
+  "families": {
+    "list-sum": {
+      "sum-quick": {
+        "directions_agree": [
+          true
+        ],
+        "passed": true,
+        "relative_errors": [
+          0.007157632957552895
+        ]
+      }
+    }
+  },
+  "passed": true,
+  "scope": "agreement for these changes and inputs, not a universal coverage guarantee",
+  "version": "juice-scenario-validation-v1"
+}

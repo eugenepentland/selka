@@ -1,0 +1,44 @@
+{
+  "implementation_commit": "07b0b3dc3ed783f8191354666e8fcc0f041df4aa",
+  "resume_plan": "a633dbd5d5a3436ecb37e8d321db52b919baeca3",
+  "comparison_base": "54eda9012525b7f3c15ef247a4a4082210578ece",
+  "zig": "0.17.0-dev.1683+5ceec001b",
+  "candidate_runtime_sources": {
+    "src/core/emit_llvm.zig": "cdffe76f2ace07eb1f49b3bdbfe62a81f1dc834cc7ea186ea441503351caa074",
+    "src/core/emit_count.zig": "ce6391b27dba0e6af13247b9d09d1e162737710a330b265ab0463c4d5520095f",
+    "src/core/count_runtime.zig": "5e330893b6360d322c71002a62c0afb38ad57d000ce8144ad2373fb3c7ff8897",
+    "src/core/runtime/core_bytes.c": "6272920d340d91995b4816358857c5456c0ddfd87655a4f63150e293e65f6c44",
+    "src/core/runtime/core_count.c": "e54504f3b7c5f8a7e265f8702e259a8c7dac9c2c159b40028a49293af9f2efde",
+    "src/core/runtime/core_count.h": "3a39d1ece245f90d88a9812e29bb59467d95d34566e33da2c384d41622eaaee7",
+    "src/core/runtime/core_dict.c": "595431492682b9cc3d9c5ccfd5419ba4623ddee8020c500c09a05988a4faa402",
+    "src/core/runtime/core_host.c": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+    "src/core/runtime/core_io.c": "8764618f4e3722722d132fdac011b663b1fbfb42302e5836486a7925bf0c24e1",
+    "src/core/runtime/core_number.c": "0db77b29dbff7b36fc46a93776bf83fbca5f9533ce5ac848b456e844810ab4d3",
+    "src/core/runtime/core_number_format.zig": "002d54fdcf9409c54c43006ffc5da860cf730e6c80eb77021f1278f1719424a7",
+    "src/core/runtime/core_number_parse.zig": "53ad97811d5888d72102b60cb7a6535ba8718900b360ca39d5b30f01df3e0e1e",
+    "src/core/runtime/core_number_text.zig": "f96a4e88d290ab3587b8f90c64ad67eb1045f9143ecb7622bfccba3942ca05ea",
+    "src/core/runtime/core_rt.c": "6dea393260010dbe06401bde6b8809470dacc1fae445afd51302ba6f2915fe9e",
+    "src/core/runtime/core_sort.c": "a20021e45073e7b7ca9e2b1003d5d8dd4211f48dfa7a5e77c169e374fa170ffe",
+    "src/core/runtime/core_test.c": "046cee18f1ef022d6185f3903fca4287b75e8ec1b585d136d936c814e7db40e6",
+    "src/core/runtime/core_text.c": "84f98f3cf44133a14f5a0a6ad8bf6b5cec2d66dd7c2a74bc119ef20fda5d0a0d",
+    "src/core/runtime/core_unicode_data.h": "668ed92a73281c3d22138b64719b4a30f2cd7472e31db9b6162f2e272292aeea",
+    "src/core/runtime/core_values.c": "bdf84a2b84e85d3120a65bb4e9d7acd768fb9ae1ac61fa5f2423a6f4749b9534"
+  },
+  "compilers": {
+    "base": {
+      "path": "/home/epentland/.cache/mylang/conc-base-54eda9012/bin/mylang",
+      "sha256": "b0f2933a8446332c2b64ee1c7e8007eefc1a52f23d1aadeae6c5bdfec40f35ba"
+    },
+    "p1": {
+      "path": "/home/epentland/.cache/mylang/conc-p1-p1-1/bin/mylang",
+      "sha256": "512f9b7a979e990ee0bfd16ecd95ebfe9d9844f2be093b5168c09764f17605ed"
+    },
+    "plain": {
+      "path": "/home/epentland/.cache/mylang/conc-p1-plain-07b0b3dc3/bin/mylang",
+      "sha256": "fe276d8acbc8c38786128f6f0ce16040e9c815b15a3a9759ff8e12ac45594c1d",
+      "diagnostic_only": true,
+      "source": "07b0b3dc3 plus evidence/plain-loads.patch.gz (emitter and C count reads plain; encoding unchanged)"
+    }
+  },
+  "note": "The P1 compiler was installed while P1-1 was uncommitted on the merge base. Its compiler/runtime sources match implementation_commit; subsequent changes before commit affected tests only."
+}

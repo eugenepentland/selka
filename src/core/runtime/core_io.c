@@ -1,3 +1,19 @@
+/* RUNTIME-THREADS-1: serialize complete capability/provider operations, including
+   callbacks into a shared embedding provider and the handle/scratch registries.
+   Nesting occurs through convenience wrappers and finalizers; only the outer
+   operation takes the mutex. Startup freezes options before worker publication. */
+static pthread_mutex_t core_io_mutex = PTHREAD_MUTEX_INITIALIZER;
+static MYL_TLS unsigned core_io_depth;
+static bool core_io_enter(void) {
+    if (!core_parallel()) return false;
+    if (core_io_depth++ == 0) pthread_mutex_lock(&core_io_mutex);
+    return true;
+}
+static void core_io_leave(bool *active) {
+    if (*active && --core_io_depth == 0) pthread_mutex_unlock(&core_io_mutex);
+}
+#define CORE_IO_GUARD bool core_io_guard __attribute__((cleanup(core_io_leave))) = core_io_enter()
+
 static int core_io_utf8(const unsigned char *p,size_t n);
 /* Core capability/provider/resource runtime. Algorithms ported from
  * native_scoped.c and qbe_stand_ins.c; no old runtime object or header is linked.
@@ -972,15 +988,15 @@ static myl_block *core_io_string(const void *bytes,size_t len,int text) {
     if(text){block_data(value)[len]=0;core_text_publish(value);}
     return value;
 }
-static void core_io_retain(myl_block *block) { if(block&&block->count!=MYL_SATURATED)++block->count; }
+static void core_io_retain(myl_block *block) { count_retain(block); }
 static const int32_t core_io_cap_layout[]={32,3,0,8,0,16,0,24,0};
 static const int32_t core_io_resource_layout[]={64,1,0,0,0};
-static const int32_t core_io_provider_layout[]={1,0,0};
 static const int32_t core_io_result_pointer_layout[]={24,2,0,8,0,16,0};
 static const int32_t core_io_result_scalar_layout[]={24,1,0,16,0};
 static const int32_t core_io_list_layout[]={8,1,0,0,0};
 typedef struct { unsigned family,rights;myl_block *provider,*parent,*scope; } CoreIoAuthority;
 typedef struct { unsigned family,test;int64_t value;MemoryFs *memory;myl_block *pairs;CoreIoResourceProvider adapter; } CoreIoState;
+static const int32_t core_io_provider_layout[]={sizeof(CoreIoState),1,0,offsetof(CoreIoState,pairs),0};
 typedef struct CoreIoResource { myl_block *authority;uint64_t handle;unsigned family,rights,open,text;struct CoreIoResource *previous,*next;myl_block *block; } CoreIoResource;
 static CoreIoResource *core_io_tail;
 static int64_t core_io_open_count;static unsigned core_io_family_open[2];
@@ -1012,8 +1028,8 @@ static myl_block *core_io_cap(unsigned family,unsigned rights,myl_block *provide
 }
 typedef struct CoreIoScratch {struct CoreIoScratch *next;unsigned char data[];} CoreIoScratch;
 static CoreIoScratch *core_io_scratch_head;
-static unsigned char *core_io_copy(const unsigned char *source,size_t length){CoreIoScratch *copy=malloc(sizeof(*copy)+(length?length:1));if(!copy)out_of_memory();copy->next=core_io_scratch_head;core_io_scratch_head=copy;if(source&&length)memcpy(copy->data,source,length);return copy->data;}
-static void core_io_copy_free(unsigned char *bytes){CoreIoScratch **at=&core_io_scratch_head;while(*at&&(*at)->data!=bytes)at=&(*at)->next;if(!*at)core_io_fail("InvalidProvider");CoreIoScratch *copy=*at;*at=copy->next;free(copy);}
+static unsigned char *core_io_copy(const unsigned char *source,size_t length){CORE_IO_GUARD;CoreIoScratch *copy=malloc(sizeof(*copy)+(length?length:1));if(!copy)out_of_memory();copy->next=core_io_scratch_head;core_io_scratch_head=copy;if(source&&length)memcpy(copy->data,source,length);return copy->data;}
+static void core_io_copy_free(unsigned char *bytes){CORE_IO_GUARD;CoreIoScratch **at=&core_io_scratch_head;while(*at&&(*at)->data!=bytes)at=&(*at)->next;if(!*at)core_io_fail("InvalidProvider");CoreIoScratch *copy=*at;*at=copy->next;free(copy);}
 static void core_io_unlink(CoreIoResource *resource) {
     if(resource->previous)resource->previous->next=resource->next;
     if(resource->next)resource->next->previous=resource->previous;else core_io_tail=resource->previous;
@@ -1024,16 +1040,19 @@ static void core_io_close(CoreIoResource *resource) {
     CoreIoState *state=core_io_state(resource->authority);
     resource->open=0;core_io_unlink(resource);state->adapter.release(state->adapter.context,resource->handle);
 }
-static int64_t core_io_live_handles(void){return core_io_open_count;}
-static void core_io_cleanup(void) {
+static int64_t core_io_live_handles(void){CORE_IO_GUARD;return core_io_open_count;}
+static void core_io_cleanup(void) {CORE_IO_GUARD;
     for(unsigned family=3;family>=2;--family){CoreIoResource *resource=core_io_tail;while(resource){CoreIoResource *previous=resource->previous;if(resource->family==family)core_io_close(resource);resource=previous;}}
     while(core_io_scratch_head){CoreIoScratch *copy=core_io_scratch_head;core_io_scratch_head=copy->next;free(copy);}
     if(core_io_initialized){core_io_scoped_close(&core_io_real);core_io_initialized=0;}
     free(core_io_options);core_io_options=NULL;core_host_cleanup();
 }
 static void core_io_finalize(myl_block *block) {
+    unsigned kind = kind_of(block);
+    if (kind != 7 && kind != 8) return;
+    CORE_IO_GUARD;
     if(kind_of(block)==7)core_io_close((CoreIoResource *)block_data(block));
-    if(kind_of(block)==8){CoreIoState *state=(CoreIoState *)block_data(block);if(state->memory)core_io_memory_free(state->memory);myl_core_release(state->pairs);}
+    if(kind_of(block)==8){CoreIoState *state=(CoreIoState *)block_data(block);if(state->memory)core_io_memory_free(state->memory);}
 }
 /* Three fields in an explicit result slot. Pointer/scalar helpers choose the
    matching child descriptor, never scanning a status or numeric word. */
@@ -1094,24 +1113,24 @@ static void core_io_initialize(void) {
     if(core_io_restricted){core_io_embedding=0;for(size_t i=0;i<core_io_grant_count;++i)if(!core_io_scoped_grant(&core_io_real,core_io_grants[i].path,core_io_grants[i].writable))core_io_option_error("mylang: a requested directory grant could not be opened\n%s","");}
     if(!core_io_restricted){core_io_scoped_close(&core_io_real);core_io_scoped_init(&core_io_real);if(!core_io_embedding){if(!core_io_scoped_working_directory(&core_io_real))core_io_option_error("mylang: a requested directory grant could not be opened\n%s","");core_io_scoped_endpoint(&core_io_real,"*");}core_io_clock=core_io_environment=core_io_host=1;if(!core_io_entropy&&!core_io_embedding){struct timespec now={0};clock_gettime(CLOCK_REALTIME,&now);core_io_seed=(uint64_t)now.tv_sec*1000000000+(uint64_t)now.tv_nsec;}core_io_entropy=1;}
 }
-myl_block *myl_core_cap_grant(uint32_t family) {
+myl_block *myl_core_cap_grant(uint32_t family) {CORE_IO_GUARD;
     core_io_initialize();
     int available=core_io_embedding?(family==0?core_io_native.clock_now!=NULL:family==1?core_io_native.random_u64!=NULL:family==2?(core_io_native.filesystem.acquire&&core_io_native.filesystem.complete&&core_io_native.filesystem.release):family==3?(core_io_native.network.acquire&&core_io_native.network.complete&&core_io_native.network.release):core_io_native.environment_get!=NULL):family==0?core_io_clock:family==1?core_io_entropy:family==2?core_io_real.count!=0:family==3?core_io_real.endpoint_count!=0:core_io_environment;
     if(!available){const char *flag=family==0?"--allow-clock":family==1?"--allow-random":family==2?"--allow-read=DIR":family==3?"--allow-endpoint=IP:PORT":"--allow-env";core_io_missing_grant(flag);}
     unsigned rights=7;if(family==2&&core_io_restricted){rights=5;for(size_t i=0;i<core_io_real.count;++i)if(core_io_real.roots[i].writable)rights=7;}
     myl_block *provider=core_io_provider(family,0,(int64_t)core_io_seed,NULL);if(family==2||family==3){unsigned permissions=((CoreIoState *)block_data(provider))->adapter.permissions;if(permissions&~7u)core_io_fail("InvalidCapability");rights&=permissions;}myl_block *cap=core_io_cap(family,rights,provider,NULL,NULL);myl_core_release(provider);return cap;
 }
-int64_t myl_core_host_grant(void){core_io_initialize();if(!core_io_host)core_io_missing_grant("--allow-host");return -6;}
-void myl_core_host_check(int64_t token){core_io_initialize();if(token!=-6||!core_io_host)core_io_fail("R_CAPABILITY");}
-myl_block *myl_core_stand_in(uint32_t family,int64_t value){myl_block *state=core_io_provider(family,1,value,NULL);myl_block *cap=core_io_cap(family,7,state,NULL,NULL);myl_core_release(state);return cap;}
-myl_block *myl_core_environment_fixed(myl_block *pairs){if(!core_io_memory_valid_pairs(block_data(pairs),(size_t)pairs->len))core_io_fail("R_ENVIRONMENT");myl_block *state=core_io_provider(4,1,0,pairs);myl_block *cap=core_io_cap(4,7,state,NULL,NULL);myl_core_release(state);return cap;}
-int64_t myl_core_clock_advance(myl_block *clock,int64_t delta){CoreIoState *state=core_io_state(clock);if(state->family!=0)core_io_fail("InvalidCapability");if(!state->test)return 1;if((delta>0&&state->value>INT64_MAX-delta)||(delta<0&&state->value<INT64_MIN-delta))return 2;state->value+=delta;return 0;}
-myl_block *myl_core_external_read(myl_block *cap,uint32_t family){CoreIoState *state=core_io_state(cap);if(state->family!=family||family>1)core_io_fail("InvalidCapability");uint64_t value=0;int status=0;if(family==0){if(state->test)value=(uint64_t)state->value;else if(core_io_embedding){CoreIoClockResult result=core_io_native.clock_now(core_io_native.clock_context);status=(int)result.status;value=(uint64_t)result.value;}else{struct timespec now={0};status=clock_gettime(CLOCK_REALTIME,&now)||now.tv_sec>(INT64_MAX-now.tv_nsec)/1000000000?3:0;value=status?0:(uint64_t)now.tv_sec*1000000000+(uint64_t)now.tv_nsec;}}else if(!state->test&&core_io_embedding){CoreIoRandomResult result=core_io_native.random_u64(core_io_native.random_context);status=(int)result.status;value=result.value;}else{state->value=(int64_t)((uint64_t)state->value+UINT64_C(0x9e3779b97f4a7c15));value=(uint64_t)state->value;value=(value^(value>>30))*UINT64_C(0xbf58476d1ce4e5b9);value=(value^(value>>27))*UINT64_C(0x94d049bb133111eb);value^=value>>31;}if(status==4)out_of_memory();if(status<0||status>3)core_io_fail("InvalidProviderResult");return core_io_result(status,status?0:value,NULL,0);}
-myl_block *myl_core_cap_restrict(myl_block *cap,uint32_t rights){CoreIoAuthority *a=core_io_authority(cap);return core_io_cap(a->family,a->rights&rights,a->provider,cap,a->scope);}
+int64_t myl_core_host_grant(void){CORE_IO_GUARD;core_io_initialize();if(!core_io_host)core_io_missing_grant("--allow-host");return -6;}
+void myl_core_host_check(int64_t token){CORE_IO_GUARD;core_io_initialize();if(token!=-6||!core_io_host)core_io_fail("R_CAPABILITY");}
+myl_block *myl_core_stand_in(uint32_t family,int64_t value){CORE_IO_GUARD;myl_block *state=core_io_provider(family,1,value,NULL);myl_block *cap=core_io_cap(family,7,state,NULL,NULL);myl_core_release(state);return cap;}
+myl_block *myl_core_environment_fixed(myl_block *pairs){CORE_IO_GUARD;if(!core_io_memory_valid_pairs(block_data(pairs),(size_t)pairs->len))core_io_fail("R_ENVIRONMENT");myl_block *state=core_io_provider(4,1,0,pairs);myl_block *cap=core_io_cap(4,7,state,NULL,NULL);myl_core_release(state);return cap;}
+int64_t myl_core_clock_advance(myl_block *clock,int64_t delta){CORE_IO_GUARD;CoreIoState *state=core_io_state(clock);if(state->family!=0)core_io_fail("InvalidCapability");if(!state->test)return 1;if((delta>0&&state->value>INT64_MAX-delta)||(delta<0&&state->value<INT64_MIN-delta))return 2;state->value+=delta;return 0;}
+myl_block *myl_core_external_read(myl_block *cap,uint32_t family){CORE_IO_GUARD;CoreIoState *state=core_io_state(cap);if(state->family!=family||family>1)core_io_fail("InvalidCapability");uint64_t value=0;int status=0;if(family==0){if(state->test)value=(uint64_t)state->value;else if(core_io_embedding){CoreIoClockResult result=core_io_native.clock_now(core_io_native.clock_context);status=(int)result.status;value=(uint64_t)result.value;}else{struct timespec now={0};status=clock_gettime(CLOCK_REALTIME,&now)||now.tv_sec>(INT64_MAX-now.tv_nsec)/1000000000?3:0;value=status?0:(uint64_t)now.tv_sec*1000000000+(uint64_t)now.tv_nsec;}}else if(!state->test&&core_io_embedding){CoreIoRandomResult result=core_io_native.random_u64(core_io_native.random_context);status=(int)result.status;value=result.value;}else{state->value=(int64_t)((uint64_t)state->value+UINT64_C(0x9e3779b97f4a7c15));value=(uint64_t)state->value;value=(value^(value>>30))*UINT64_C(0xbf58476d1ce4e5b9);value=(value^(value>>27))*UINT64_C(0x94d049bb133111eb);value^=value>>31;}if(status==4)out_of_memory();if(status<0||status>3)core_io_fail("InvalidProviderResult");return core_io_result(status,status?0:value,NULL,0);}
+myl_block *myl_core_cap_restrict(myl_block *cap,uint32_t rights){CORE_IO_GUARD;CoreIoAuthority *a=core_io_authority(cap);return core_io_cap(a->family,a->rights&rights,a->provider,cap,a->scope);}
 static myl_block *core_io_scope(myl_block *cap,myl_block *scope,unsigned family,int append){CoreIoAuthority *a=core_io_authority(cap);if(a->family!=family)core_io_fail("InvalidCapability");myl_block *joined=scope;if(append&&a->scope&&a->scope->len){size_t length=(size_t)(a->scope->len+scope->len+(scope->len!=0));unsigned char *bytes=malloc(length);if(!bytes)out_of_memory();memcpy(bytes,block_data(a->scope),(size_t)a->scope->len);if(scope->len){bytes[a->scope->len]='/';memcpy(bytes+a->scope->len+1,block_data(scope),(size_t)scope->len);}joined=core_io_string(bytes,length,1);free(bytes);}else core_io_retain(joined);myl_block *out=core_io_cap(family,a->rights,a->provider,cap,joined);myl_core_release(joined);return out;}
-myl_block *myl_core_cap_dir(myl_block *cap,myl_block *path){if(path->len&&!core_io_memory_valid_path(block_data(path),(size_t)path->len,'m'))core_io_fail("InvalidCapability");return core_io_scope(cap,path,2,1);}
-myl_block *myl_core_cap_host(myl_block *cap,myl_block *name){CoreIoAuthority *a=core_io_authority(cap);if(!name->len||name->len>4096||memchr(block_data(name),0,(size_t)name->len))core_io_fail("InvalidCapability");if(a->scope&&!myl_core_str_eq(a->scope,name))core_io_fail("InvalidCapability");return core_io_scope(cap,name,3,0);}
-myl_block *myl_core_environment_only(myl_block *cap,myl_block *names){CoreIoAuthority *a=core_io_authority(cap);if(a->family!=4||a->scope)core_io_fail("R_CAPABILITY");if(!names->len||block_data(names)[names->len-1]!=0)core_io_fail("InvalidCapability");return core_io_scope(cap,names,4,0);}
+myl_block *myl_core_cap_dir(myl_block *cap,myl_block *path){CORE_IO_GUARD;if(path->len&&!core_io_memory_valid_path(block_data(path),(size_t)path->len,'m'))core_io_fail("InvalidCapability");return core_io_scope(cap,path,2,1);}
+myl_block *myl_core_cap_host(myl_block *cap,myl_block *name){CORE_IO_GUARD;CoreIoAuthority *a=core_io_authority(cap);if(!name->len||name->len>4096||memchr(block_data(name),0,(size_t)name->len))core_io_fail("InvalidCapability");if(a->scope&&!myl_core_str_eq(a->scope,name))core_io_fail("InvalidCapability");return core_io_scope(cap,name,3,0);}
+myl_block *myl_core_environment_only(myl_block *cap,myl_block *names){CORE_IO_GUARD;CoreIoAuthority *a=core_io_authority(cap);if(a->family!=4||a->scope)core_io_fail("R_CAPABILITY");if(!names->len||block_data(names)[names->len-1]!=0)core_io_fail("InvalidCapability");return core_io_scope(cap,names,4,0);}
 
 static int core_io_resource_acquire(myl_block *cap,const unsigned char *request,size_t length,myl_block **output) {
     CoreIoAuthority *authority=core_io_authority(cap);CoreIoState *state=core_io_state(cap);
@@ -1133,7 +1152,7 @@ static int core_io_resource_acquire(myl_block *cap,const unsigned char *request,
 }
 static CoreIoResource *core_io_resource(myl_block *owner){if(!owner||kind_of(owner)!=7)core_io_fail("InvalidOwner");return (CoreIoResource *)block_data(owner);}
 static int core_io_complete(myl_block *owner){CoreIoResource *resource=core_io_resource(owner);if(!resource->open)return 3;if(!(resource->rights&4))return 2;CoreIoState *state=core_io_state(resource->authority);int status=(int)state->adapter.complete(state->adapter.context,resource->handle);if(status==4)out_of_memory();if(status<0||status>3)core_io_fail("InvalidProvider");if(!status){resource->open=0;core_io_unlink(resource);}return status;}
-void myl_core_file_scope_close(myl_block *owner){if(!owner)return;CoreIoResource *resource=core_io_resource(owner);if(!resource->open)return;if(core_io_complete(owner))core_io_fail("R_FILE");}
+void myl_core_file_scope_close(myl_block *owner){CORE_IO_GUARD;if(!owner)return;CoreIoResource *resource=core_io_resource(owner);if(!resource->open)return;if(core_io_complete(owner))core_io_fail("R_FILE");}
 static int core_io_read(myl_block *owner,unsigned char *out,size_t cap,size_t *written,int *eof){
     CoreIoResource *resource=core_io_resource(owner);*written=0;*eof=0;if(!resource->open)core_io_fail("InvalidOwner");if(!(resource->rights&1))return 2;CoreIoState *state=core_io_state(resource->authority);if(!state->adapter.read)return 1;
     unsigned char *copy=core_io_copy(NULL,cap);CoreIoResourceRead result=state->adapter.read(state->adapter.context,resource->handle,copy,cap);
@@ -1147,8 +1166,8 @@ static int core_io_write(myl_block *owner,const unsigned char *data,size_t len,s
     if(result.status==4)out_of_memory();if(result.status>3)core_io_fail("InvalidProvider");if(!result.status){if(result.length>len)core_io_fail("InvalidProvider");*written=result.length;}core_io_copy_free(copy);return (int)result.status;
 }
 
-myl_block *myl_core_resource_acquire(myl_block *cap,myl_block *request){myl_block *resource=NULL;int status=core_io_resource_acquire(cap,block_data(request),(size_t)request->len,&resource);return core_io_result(status,(uint64_t)(uintptr_t)resource,NULL,1);}
-int64_t myl_core_resource_complete(myl_block *owner){return core_io_complete(owner);}
+myl_block *myl_core_resource_acquire(myl_block *cap,myl_block *request){CORE_IO_GUARD;myl_block *resource=NULL;int status=core_io_resource_acquire(cap,block_data(request),(size_t)request->len,&resource);return core_io_result(status,(uint64_t)(uintptr_t)resource,NULL,1);}
+int64_t myl_core_resource_complete(myl_block *owner){CORE_IO_GUARD;return core_io_complete(owner);}
 static const char *core_io_reason(int status){if(status==1)return "no filesystem authority is available";if(status==2)return "denied: outside the granted directories, or the mode needs a write grant";if(status==4)return "too many files are open";if(status==5)return "the bytes read are not valid UTF-8 text";return "failed: the path does not exist or could not be used";}
 static myl_block *core_io_file_error(unsigned kind,myl_block *path,int status){static const char *verbs[]={"open","read","read","write","write","stat","listdir","mkdir","remove"};const char *verb=verbs[kind],*reason=core_io_reason(status);size_t length=strlen(verb)+strlen(reason)+(size_t)path->len+5;char *message=malloc(length+1);if(!message)out_of_memory();size_t at=(size_t)sprintf(message,"%s '",verb);memcpy(message+at,block_data(path),(size_t)path->len);at+=(size_t)path->len;at+=(size_t)sprintf(message+at,"': %s",reason);myl_block *text=core_io_string(message,at,1);free(message);return text;}
 typedef struct {unsigned char *bytes;size_t length,capacity;} CoreIoBytes;
@@ -1160,14 +1179,14 @@ static myl_block *core_io_list_new(size_t capacity){myl_block *list=block_new(MY
 static void core_io_list_add(myl_block **list,myl_block *item){*list=myl_core_list_grow(*list,8);myl_block **data=(myl_block **)block_data(*list);data[(*list)->len++]=item;}
 static myl_block *core_io_listing(CoreIoBytes *raw,int *status){myl_block *list=core_io_list_new(0);if(!raw->length||raw->bytes[0]!=1){*status=3;return list;}size_t at=1;while(at<raw->length){if(at+3>raw->length){*status=3;break;}size_t width=(size_t)raw->bytes[at+1]|((size_t)raw->bytes[at+2]<<8);at+=3;if(at+width>raw->length||!core_io_utf8(raw->bytes+at,width)){*status=5;break;}core_io_list_add(&list,core_io_string(raw->bytes+at,width,1));at+=width;}return list;}
 /* request packs Access, open mode and text bit, as qbe_files.c. */
-myl_block *myl_core_file_access(myl_block *cap,uint32_t request,myl_block *path,myl_block *input){unsigned kind=request&255,mode=(request>>8)&255;int text=(request>>16)&1;static const unsigned char letters[]={0,'r','r','w','w','m','l','k','x'};if(kind>8)core_io_fail("R_FILE");unsigned char frame[4096];int status=0;myl_block *owner=NULL;uint64_t value=0;if(path->len>4094)status=2;else{frame[0]=kind?letters[kind]:(unsigned char)mode;frame[1]=':';if(path->len)memcpy(frame+2,block_data(path),(size_t)path->len);if(frame[0]=='w'){frame[0]='c';status=core_io_resource_acquire(cap,frame,(size_t)path->len+2,&owner);if(status>0){frame[0]='t';status=core_io_resource_acquire(cap,frame,(size_t)path->len+2,&owner);}}else status=core_io_resource_acquire(cap,frame,(size_t)path->len+2,&owner);}
+myl_block *myl_core_file_access(myl_block *cap,uint32_t request,myl_block *path,myl_block *input){CORE_IO_GUARD;unsigned kind=request&255,mode=(request>>8)&255;int text=(request>>16)&1;static const unsigned char letters[]={0,'r','r','w','w','m','l','k','x'};if(kind>8)core_io_fail("R_FILE");unsigned char frame[4096];int status=0;myl_block *owner=NULL;uint64_t value=0;if(path->len>4094)status=2;else{frame[0]=kind?letters[kind]:(unsigned char)mode;frame[1]=':';if(path->len)memcpy(frame+2,block_data(path),(size_t)path->len);if(frame[0]=='w'){frame[0]='c';status=core_io_resource_acquire(cap,frame,(size_t)path->len+2,&owner);if(status>0){frame[0]='t';status=core_io_resource_acquire(cap,frame,(size_t)path->len+2,&owner);}}else status=core_io_resource_acquire(cap,frame,(size_t)path->len+2,&owner);}
     if(!status){CoreIoBytes raw={0};if(kind==0){core_io_resource(owner)->text=(unsigned)text;return (request&(1u<<17))?owner:core_io_result(0,(uint64_t)(uintptr_t)owner,NULL,1);}if(kind==1||kind==2||kind==5||kind==6){status=core_io_read_all(owner,64u*1024u*1024u,0,&raw);if(!status){if(kind==5)value=1;else if(kind==6)value=(uint64_t)(uintptr_t)core_io_listing(&raw,&status);else value=(uint64_t)(uintptr_t)core_io_sequence(&raw,kind==2,&status);}}else if(kind==3||kind==4){size_t written;status=core_io_write_all(owner,input,&written);}(void)core_io_complete(owner);free(raw.bytes);myl_core_release(owner);}
     if(kind==0&&(request&(1u<<17)))core_io_fail("R_FILE");
     if(kind==5)return core_io_result(0,status?0:value,NULL,0);
     int pointer=kind==0||kind==1||kind==2||kind==6;if(status&&pointer&&value){myl_core_release((myl_block *)(uintptr_t)value);value=0;}
     return core_io_result(status,value,status?core_io_file_error(kind,path,status):NULL,pointer);
 }
-myl_block *myl_core_file_method(myl_block *owner,uint32_t request,int64_t count,myl_block *input){unsigned kind=request&255;int text=(request>>16)&1;CoreIoResource *resource=core_io_resource(owner);if(!resource->open)core_io_fail("R_FILE");int status=0;uint64_t value=0;int pointer=kind<=2;CoreIoBytes raw={0};if(kind==0||kind==1){status=core_io_read_all(owner,count<0?64u*1024u*1024u:(size_t)count,kind==1,&raw);if(!status)value=(uint64_t)(uintptr_t)core_io_sequence(&raw,text,&status);}else if(kind==2){myl_block *list=core_io_list_new(0);for(;;){CoreIoBytes line={0};status=core_io_read_all(owner,64u*1024u*1024u,1,&line);if(status||!line.length){free(line.bytes);break;}myl_block *part=core_io_sequence(&line,text,&status);free(line.bytes);if(status)break;core_io_list_add(&list,part);}value=(uint64_t)(uintptr_t)list;}else if(kind==3){size_t written;status=core_io_write_all(owner,input,&written);value=(uint64_t)written;}else if(kind==5)status=core_io_complete(owner);else if(kind!=4)core_io_fail("R_FILE");free(raw.bytes);if(status){if(pointer&&value)myl_core_release((myl_block *)(uintptr_t)value);core_io_fail("R_FILE");}return core_io_result(0,value,NULL,pointer);}
+myl_block *myl_core_file_method(myl_block *owner,uint32_t request,int64_t count,myl_block *input){CORE_IO_GUARD;unsigned kind=request&255;int text=(request>>16)&1;CoreIoResource *resource=core_io_resource(owner);if(!resource->open)core_io_fail("R_FILE");int status=0;uint64_t value=0;int pointer=kind<=2;CoreIoBytes raw={0};if(kind==0||kind==1){status=core_io_read_all(owner,count<0?64u*1024u*1024u:(size_t)count,kind==1,&raw);if(!status)value=(uint64_t)(uintptr_t)core_io_sequence(&raw,text,&status);}else if(kind==2){myl_block *list=core_io_list_new(0);for(;;){CoreIoBytes line={0};status=core_io_read_all(owner,64u*1024u*1024u,1,&line);if(status||!line.length){free(line.bytes);break;}myl_block *part=core_io_sequence(&line,text,&status);free(line.bytes);if(status)break;core_io_list_add(&list,part);}value=(uint64_t)(uintptr_t)list;}else if(kind==3){size_t written;status=core_io_write_all(owner,input,&written);value=(uint64_t)written;}else if(kind==5)status=core_io_complete(owner);else if(kind!=4)core_io_fail("R_FILE");free(raw.bytes);if(status){if(pointer&&value)myl_core_release((myl_block *)(uintptr_t)value);core_io_fail("R_FILE");}return core_io_result(0,value,NULL,pointer);}
 static int core_io_allowed(const char *names,const unsigned char *name,size_t length){if(!*names)return 1;for(const char *p=names;*p;){const char *comma=strchr(p,',');size_t width=comma?(size_t)(comma-p):strlen(p);if(width==length&&!memcmp(p,name,length))return 1;if(!comma)break;p=comma+1;}return 0;}
 static int core_io_environment_read(myl_block *cap,myl_block *name,unsigned char *output,size_t capacity,size_t *written,int *present){
     CoreIoAuthority *a=core_io_authority(cap);CoreIoState *state=core_io_state(cap);*written=0;*present=0;
@@ -1180,7 +1199,7 @@ static int core_io_environment_read(myl_block *cap,myl_block *name,unsigned char
     char key[256];memcpy(key,block_data(name),(size_t)name->len);key[name->len]=0;const char *value=getenv(key);if(!value)return 0;
     size_t length=strlen(value);if(length>capacity)return 4;if(length)memcpy(output,value,length);*written=length;*present=1;return 0;
 }
-myl_block *myl_core_environment_text(myl_block *cap,myl_block *name){unsigned char output[16384];size_t length;int present;int status=core_io_environment_read(cap,name,output,sizeof output,&length,&present);if(status)core_io_fail("R_CAPABILITY");if(!present)return NULL;if(!core_io_utf8(output,length))core_io_fail("R_ENVIRONMENT");return core_io_string(output,length,1);}
+myl_block *myl_core_environment_text(myl_block *cap,myl_block *name){CORE_IO_GUARD;unsigned char output[16384];size_t length;int present;int status=core_io_environment_read(cap,name,output,sizeof output,&length,&present);if(status)core_io_fail("R_CAPABILITY");if(!present)return NULL;if(!core_io_utf8(output,length))core_io_fail("R_ENVIRONMENT");return core_io_string(output,length,1);}
 
 typedef struct { const unsigned char *bytes;size_t length; } CoreIoName;
 static int core_io_name_order(const void *left,const void *right){const CoreIoName *a=left,*b=right;size_t width=a->length<b->length?a->length:b->length;int order=memcmp(a->bytes,b->bytes,width);return order?order:a->length<b->length?-1:a->length>b->length;}
@@ -1190,7 +1209,7 @@ static void core_io_name_add(CoreIoName *names,unsigned *count,const unsigned ch
     for(unsigned i=0;i<*count;++i)if(names[i].length==width&&!memcmp(names[i].bytes,name,width))return;
     names[(*count)++]=(CoreIoName){name,width};
 }
-myl_block *myl_core_environment_names(myl_block *cap){
+myl_block *myl_core_environment_names(myl_block *cap){CORE_IO_GUARD;
     CoreIoAuthority *a=core_io_authority(cap);CoreIoState *state=core_io_state(cap);
     if(a->family!=4)core_io_fail("InvalidCapability");
     myl_block *list=core_io_list_new(0),*blob=a->scope?a->scope:state->pairs;
@@ -1214,14 +1233,14 @@ myl_block *myl_core_environment_names(myl_block *cap){
     for(unsigned i=0;i<count;++i)if(core_io_utf8(names[i].bytes,names[i].length))core_io_list_add(&list,core_io_string(names[i].bytes,names[i].length,1));
     return list;
 }
-void myl_core_stream_write(int64_t fd,myl_block *text){myl_core_print_str(fd,text);}
+void myl_core_stream_write(int64_t fd,myl_block *text){myl_core_print_str(fd,text);stream_commit(stream_for(fd));}
 /* `Stream.write(bytes)`: the same length-prefixed block as `str`, declared with its own type. */
-void myl_core_stream_write_bytes(int64_t fd,myl_block *data){myl_core_print_str(fd,data);}
+void myl_core_stream_write_bytes(int64_t fd,myl_block *data){myl_core_print_str(fd,data);stream_commit(stream_for(fd));}
 /* `Stream.write(byte_buffer)`: the buffer's current octets. */
-void myl_core_stream_write_buffer(int64_t fd,myl_block *buffer){myl_core_print_str(fd,buffer);}
+void myl_core_stream_write_buffer(int64_t fd,myl_block *buffer){myl_core_print_str(fd,buffer);stream_commit(stream_for(fd));}
 int64_t myl_core_s3_token_roundtrip(int64_t token){return token;}
 
-myl_block *myl_core_io_bytes_from_u8_list(myl_block *list){return core_io_string(block_data(list),(size_t)list->len,0);}
+myl_block *myl_core_io_bytes_from_u8_list(myl_block *list){CORE_IO_GUARD;return core_io_string(block_data(list),(size_t)list->len,0);}
 
 /* Fixed provider payloads carry a padded byte block plus count/flag. The
    builder copies octets into its checked fixed array and owns this box normally. */
@@ -1234,16 +1253,16 @@ static myl_block *core_io_padded(size_t capacity){
     if(capacity>64u*1024u*1024u)out_of_memory();
     myl_block *bytes=block_new(MYL_KIND_BYTES,(int64_t)capacity+1,1);bytes->len=(int64_t)capacity;memset(block_data(bytes),0,capacity+1);return bytes;
 }
-myl_block *myl_core_resource_read(myl_block *owner,uint64_t capacity){
+myl_block *myl_core_resource_read(myl_block *owner,uint64_t capacity){CORE_IO_GUARD;
     myl_block *bytes=core_io_padded((size_t)capacity);size_t written;int eof;
     int status=core_io_read(owner,block_data(bytes),(size_t)capacity,&written,&eof);
     return core_io_raw_result(status,bytes,status?0:written,status?0:eof);
 }
-myl_block *myl_core_resource_write(myl_block *owner,myl_block *input){
+myl_block *myl_core_resource_write(myl_block *owner,myl_block *input){CORE_IO_GUARD;
     size_t written;int status=core_io_write(owner,block_data(input),(size_t)input->len,&written);
     return core_io_result(status,status?0:written,NULL,0);
 }
-myl_block *myl_core_environment_raw(myl_block *cap,myl_block *name,uint64_t capacity){
+myl_block *myl_core_environment_raw(myl_block *cap,myl_block *name,uint64_t capacity){CORE_IO_GUARD;
     myl_block *bytes=core_io_padded((size_t)capacity);size_t length;int present;int status=core_io_environment_read(cap,name,block_data(bytes),(size_t)capacity,&length,&present);
     if(status)memset(block_data(bytes),0,(size_t)capacity);else if(capacity>length)memset(block_data(bytes)+length,0,(size_t)capacity-length);
     return core_io_raw_result(status,bytes,status?0:length,status?0:present);

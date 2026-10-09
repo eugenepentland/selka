@@ -1,0 +1,14 @@
+{
+  "implementation_source": "9d2524f5ea9ff92bb17546f8ce413a3a3e013468",
+  "measurement_head": "9f911528f36e06afc798548b20d6ac810d837aa5",
+  "IE": 1.015030600500331,
+  "LE": 1.0124433780427067,
+  "LE_over_IE": 0.997902816552309,
+  "IE_misses": 20,
+  "LE_misses": 18,
+  "load_1min": [
+    0.47314453125,
+    1.9775390625
+  ],
+  "selected": "local-exec"
+}

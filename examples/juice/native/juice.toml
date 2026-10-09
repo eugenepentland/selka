@@ -1,0 +1,26 @@
+version = 1
+name = "juice-native-example"
+adapter = "native"
+sources = ["kernel.c"]
+
+[build]
+compiler = "cc"
+command = ["{compiler}", "-O2", "-g", "{root}/kernel.c", "-o", "{binary}"]
+
+[[workloads]]
+name = "bits-quick"
+family = "bit-counting"
+tier = "quick"
+args = ["4096", "64"]
+unit = "record"
+units = 262144
+expected_stdout = "4166528\n"
+
+[[workloads]]
+name = "bits-validation"
+family = "bit-counting"
+tier = "validation"
+args = ["4096", "128"]
+unit = "record"
+units = 524288
+expected_stdout = "8333056\n"

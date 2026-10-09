@@ -15,6 +15,7 @@ static char *core_test_path;
 static uint64_t core_test_trials;
 static uint64_t core_test_steps;
 static bool core_test_bounded;
+static bool core_test_batch_parent;
 /* Compatible additive helpers; existing runtime signatures and layouts stay fixed. */
 /* A trial's wall-clock limit is exact to the millisecond: the trials of a batch
  * (NEW-CORE-TEST-BATCH-1) are each held to `--timeout-ms`, as a test alone is. */
@@ -54,9 +55,11 @@ void myl_core_test_ceilings(uint32_t frames, uint64_t memory) {
  * wall-clock limit that ends the process as the old core's `--timeout` does. */
 static void core_run_timed_out(int signal_number) {
     (void)signal_number;
+    core_fatal_begin();
     static const char message[] = "R_TIMEOUT: wall-clock budget exhausted; raise it with --timeout=SECONDS\n";
     ssize_t ignored = write(STDERR_FILENO, message, sizeof message - 1);
     (void)ignored;
+    core_task_report();
     _exit(1);
 }
 static void core_run_arm(uint64_t timeout_seconds) {
@@ -169,7 +172,8 @@ static void core_start_refuse(const char *code, const char *description, const c
  * innermost call site, with at most 16 frames, exit status 1. Any other fault keeps
  * its default action. The report runs on its own signal stack. */
 enum { CORE_FLOOR_FRAMES = 16 };
-static uintptr_t core_stack_top;
+static MYL_TLS uintptr_t core_stack_top;
+static MYL_TLS size_t core_stack_bytes;
 /* The report's signal stack is mapped at start, not a 256 KiB .bss array: a static array
    that large moves where the program's heap begins, which made allocation-heavy rows run
    slower or faster from one run to the next. */
@@ -179,15 +183,15 @@ static void core_floor_default(int signal_number) {
 }
 static void core_floor_fault(int signal_number, siginfo_t *info, void *context) {
     (void)context;
-    struct rlimit limit;
     uintptr_t at = (uintptr_t)info->si_addr;
     const uintptr_t slack = 1u << 20;
-    bool overflow = core_stack_top && !getrlimit(RLIMIT_STACK, &limit) && limit.rlim_cur != RLIM_INFINITY && at <= core_stack_top &&
-        core_stack_top - at + slack >= (uintptr_t)limit.rlim_cur && core_stack_top - at <= (uintptr_t)limit.rlim_cur + slack;
+    bool overflow = core_stack_top && core_stack_bytes && at <= core_stack_top &&
+        core_stack_top - at + slack >= core_stack_bytes && core_stack_top - at <= core_stack_bytes + slack;
     if (!overflow) {
         core_floor_default(signal_number);
         return;
     }
+    core_fatal_begin();
     void *pcs[160];
     int count = os_stack(pcs, 160);
     /* The interrupted instruction follows the signal frame: a `call` that could not push
@@ -218,21 +222,50 @@ static void core_floor_fault(int signal_number, siginfo_t *info, void *context) 
         if (dwarf_frames(pc, 0) == 0) break;
     }
     flush_all();
+    core_task_report();
     _exit(1);
 }
-static void core_floor_install(void) {
+static void core_floor_thread_install(bool worker) {
     unsigned char here;
     core_stack_top = (uintptr_t)&here;
+    struct rlimit limit;
+    core_stack_bytes = !getrlimit(RLIMIT_STACK, &limit) && limit.rlim_cur != RLIM_INFINITY ? (size_t)limit.rlim_cur : 0;
+    if (worker) {
+        pthread_attr_t attributes;
+        if (pthread_getattr_np(pthread_self(), &attributes)) out_of_memory();
+        void *base; size_t size;
+        if (pthread_attr_getstack(&attributes, &base, &size)) out_of_memory();
+        core_stack_top = (uintptr_t)base + size;
+        core_stack_bytes = size;
+        pthread_attr_destroy(&attributes);
+    }
     void *floor_stack = mmap(NULL, CORE_FLOOR_STACK, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if (floor_stack == MAP_FAILED) return;
+    if (floor_stack == MAP_FAILED) { if (worker) out_of_memory(); return; }
     stack_t alternate = { .ss_sp = floor_stack, .ss_size = CORE_FLOOR_STACK, .ss_flags = 0 };
-    if (sigaltstack(&alternate, NULL)) return;
+    if (sigaltstack(&alternate, NULL)) { if (worker) out_of_memory(); return; }
+}
+/* Installed by the submitting thread before worker publication. Reinstalling
+   deeper in that thread would move its recorded stack top and leak the old
+   alternate stack; workers install only their own per-thread metadata. */
+static bool core_floor_ready;
+static void core_floor_install(void) {
+    if (core_floor_ready) return;
+    core_floor_thread_install(false);
     struct sigaction action;
     memset(&action, 0, sizeof action);
     action.sa_sigaction = core_floor_fault;
     action.sa_flags = SA_SIGINFO | SA_ONSTACK;
     sigemptyset(&action.sa_mask);
     (void)sigaction(SIGSEGV, &action, NULL);
+    core_floor_ready = true;
+}
+static void core_worker_runtime_start(void) {
+    sigset_t blocked;
+    sigemptyset(&blocked);
+    sigaddset(&blocked, SIGALRM);
+    if (pthread_sigmask(SIG_BLOCK, &blocked, NULL)) out_of_memory();
+    core_thread_register();
+    core_floor_thread_install(true);
 }
 void myl_core_start(void) {
     core_floor_install();
@@ -420,6 +453,8 @@ void myl_core_test_register(void (*trial)(void)){
     core_test_table[core_test_rows++]=trial;
 }
 bool myl_core_test_open(myl_block *input,myl_block *output){
+    if (core_parallel()) core_io_fail("R_TASK_FORK");
+    core_test_batch_parent = true;
     core_test_input=fopen((const char *)block_data(input),"rb");
     core_test_output=fopen((const char *)block_data(output),"wb");
     core_test_path=strdup((const char *)block_data(output));
@@ -428,6 +463,7 @@ bool myl_core_test_open(myl_block *input,myl_block *output){
     core_test_trials=core_test_word(core_test_input);return true;
 }
 int64_t myl_core_test_run(void){
+    if (core_parallel()) core_io_fail("R_TASK_FORK");
     for(uint64_t i=0;i<core_test_trials;++i){
         uint64_t row=core_test_word(core_test_input);
         if(row>=core_test_rows)_exit(70);
@@ -439,6 +475,7 @@ int64_t myl_core_test_run(void){
         flush_all();if(fflush(NULL))_exit(70);
         int64_t baseline=live_count();pid_t parent=getpid();pid_t child=fork();if(child<0)_exit(70);
         if(child==0){
+            core_test_batch_parent = false;
 #if defined(__linux__)
             if(prctl(PR_SET_PDEATHSIG,SIGKILL)<0||getppid()!=parent)_exit(70);
 #else
@@ -446,7 +483,7 @@ int64_t myl_core_test_run(void){
 #endif
             core_test_values=tmpfile();if(!core_test_values)_exit(70);
             core_test_capture(".out",1);core_test_capture(".err",2);
-            alarm(60);error_trace.origin=NULL;error_trace.count=0;core_test_on_stack(trial);alarm(0);flush_all();
+            alarm(60);error_trace.origin=NULL;error_trace.count=0;core_test_on_stack(trial);core_tasks_quiesce();alarm(0);flush_all();
             core_io_cleanup();
             const char *check=getenv("MYL_CORE_LEAKCHECK");
             if(check&&strcmp(check,"0")&&live_count()!=baseline){

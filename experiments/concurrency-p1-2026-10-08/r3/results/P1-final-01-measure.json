@@ -1,0 +1,33 @@
+{
+  "source": "98cb3a49fff3ba4ad438cb9087f86aa517a32760",
+  "compiler_source": "f4eb26606c22c63065744a02684d033ea8fae98b",
+  "tag": "P1-final-01",
+  "correctness_source": "98cb3a49fff3ba4ad438cb9087f86aa517a32760",
+  "steps": [
+    {
+      "group": "rows",
+      "status": 0,
+      "seconds": 147.7028440251015,
+      "log": "r3/logs/P1-final-01-tax-measure-rows.log"
+    },
+    {
+      "group": "eda",
+      "status": 0,
+      "seconds": 67.01792713487521,
+      "log": "r3/logs/P1-final-01-tax-measure-eda.log"
+    },
+    {
+      "group": "parity",
+      "status": 0,
+      "seconds": 351.6807479849085,
+      "log": "r3/logs/P1-final-01-tax-measure-parity.log"
+    },
+    {
+      "group": "lox",
+      "status": 0,
+      "seconds": 785.1265514770057,
+      "log": "r3/logs/P1-final-01-tax-measure-lox.log"
+    }
+  ],
+  "complete": true
+}

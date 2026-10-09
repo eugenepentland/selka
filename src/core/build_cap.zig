@@ -274,12 +274,14 @@ pub fn printOptions(comptime Context: type, c: Context, print: typed.Print, span
     for (print.arguments, arguments) |source, *argument| argument.* = try c.expression(source);
     const separator = if (print.separator) |source| try c.expression(source) else try literal(Context, c, " ");
     const terminator = if (print.terminator) |source| try c.expression(source) else try literal(Context, c, "\n");
+    _ = try c.effectCall("myl_core_output_begin", &.{.cap}, .void, &.{stream}, span);
     for (arguments, 0..) |argument, index| {
         if (index != 0) _ = try c.effectCall(stream_write_symbol, &.{ .cap, .str }, .void, &.{ stream, separator }, span);
         const text = try c.textOf(argument, c.nodeOf(print.arguments[index]).ty, span);
         _ = try c.effectCall(stream_write_symbol, &.{ .cap, .str }, .void, &.{ stream, text }, span);
     }
-    return c.effectCall(stream_write_symbol, &.{ .cap, .str }, .void, &.{ stream, terminator }, span);
+    _ = try c.effectCall(stream_write_symbol, &.{ .cap, .str }, .void, &.{ stream, terminator }, span);
+    return c.effectCall("myl_core_output_end", &.{.cap}, .void, &.{stream}, span);
 }
 fn literal(comptime Context: type, c: Context, bytes: []const u8) Error!ir.Ref {
     const index = c.module().strings.items.len;

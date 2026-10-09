@@ -1,0 +1,182 @@
+{
+  "base": "mylang-baseline",
+  "base_id": "2686d6d2e195718f4bde2720e164cc048f69c10098fd0a7527293732c13cfae9",
+  "candidate": "mylang-repeat",
+  "candidate_id": "49f1222ca88698f0e44f686c6f963bccb7291a72fb419eb8c4ce9fffa1f6527b",
+  "change_id": "905c08b57c903742cd9c52032fc5c9f7ee11a8aa4b1af9e88efde9313e573b89",
+  "code": {
+    "available": true,
+    "functions": {},
+    "scope": "static bytes and instruction sites, not executions",
+    "sections": {}
+  },
+  "collector": {
+    "cpu": 0,
+    "event": "cpu_core/instructions/u",
+    "kind": "perf",
+    "scope": "user instructions; process and inherited children; whole workload",
+    "tool": {
+      "path": "/usr/bin/perf",
+      "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+      "version": "perf version 7.0.14"
+    }
+  },
+  "context_id": "9195565a2577804bc85904e05e7890228646cbead0c8a692c6a240587836fdb4",
+  "library_changes": {},
+  "max_spread": 0.005,
+  "meaning": "100 \u00d7 candidate instructions per completed unit / baseline; not a time ratio",
+  "min_change": 0.001,
+  "mode": "application",
+  "runtime_prediction": {
+    "status": "uncalibrated"
+  },
+  "source_roots": {
+    "base": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/mylang",
+    "candidate": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/mylang"
+  },
+  "static_cost": {
+    "scope": "static Core sites/LLVM remarks, not executions",
+    "totals": {}
+  },
+  "suite_juice": 99.99999857326037,
+  "suite_meaning": "weighted geometric mean of selected scenarios; not whole-job runtime",
+  "version": "juice-comparison-v1",
+  "workloads": {
+    "sum-quick": {
+      "assessment": "unchanged",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "unchanged",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "family": "list-sum",
+      "functions": [],
+      "instruction_ratio": 1.0,
+      "juice": 100.0,
+      "lines": [],
+      "metrics": {
+        "instructions": {
+          "base": {
+            "max": 4548199,
+            "median": 4548199,
+            "min": 4548198,
+            "samples": [
+              4548199,
+              4548199,
+              4548198
+            ],
+            "spread": 2.1986724855266887e-07
+          },
+          "candidate": {
+            "max": 4548206,
+            "median": 4548199,
+            "min": 4548198,
+            "samples": [
+              4548199,
+              4548206,
+              4548198
+            ],
+            "spread": 1.758937988421351e-06
+          }
+        }
+      },
+      "ratio_envelope": [
+        0.9999997801327515,
+        1.0000017589383752
+      ],
+      "repeatable": true,
+      "risks": [],
+      "scope": "complete scenario",
+      "semantic": {
+        "contextual_metrics": [
+          "alloc_bytes",
+          "free_bytes",
+          "peak_live_bytes",
+          "realloc_added_bytes",
+          "realloc_moved_bytes",
+          "realloc_moves"
+        ],
+        "functions": [],
+        "kinds": {},
+        "requested_allocation_bytes": {
+          "reason": "v1 counters expose allocated class/usable sizes",
+          "status": "unavailable"
+        },
+        "site_scope": "before LLVM optimization; source sites retained in capture records",
+        "sites": [],
+        "status": "compatible",
+        "totals": {}
+      },
+      "tier": "quick",
+      "unit": "record",
+      "units": 262144,
+      "weight": 1
+    },
+    "sum-validation": {
+      "assessment": "unchanged",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "unchanged",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "family": "list-sum",
+      "functions": [],
+      "instruction_ratio": 0.9999999714652077,
+      "juice": 99.99999714652077,
+      "lines": [],
+      "metrics": {
+        "instructions": {
+          "base": {
+            "max": 35044943,
+            "median": 35044937,
+            "min": 35044937,
+            "samples": [
+              35044937,
+              35044937,
+              35044943
+            ],
+            "spread": 1.712087540633901e-07
+          },
+          "candidate": {
+            "max": 35044940,
+            "median": 35044936,
+            "min": 35044935,
+            "samples": [
+              35044940,
+              35044935,
+              35044936
+            ],
+            "spread": 1.4267396579066373e-07
+          }
+        }
+      },
+      "ratio_envelope": [
+        0.9999997717217003,
+        1.0000000856043771
+      ],
+      "repeatable": true,
+      "risks": [],
+      "scope": "complete scenario",
+      "semantic": {
+        "contextual_metrics": [
+          "alloc_bytes",
+          "free_bytes",
+          "peak_live_bytes",
+          "realloc_added_bytes",
+          "realloc_moved_bytes",
+          "realloc_moves"
+        ],
+        "functions": [],
+        "kinds": {},
+        "requested_allocation_bytes": {
+          "reason": "v1 counters expose allocated class/usable sizes",
+          "status": "unavailable"
+        },
+        "site_scope": "before LLVM optimization; source sites retained in capture records",
+        "sites": [],
+        "status": "compatible",
+        "totals": {}
+      },
+      "tier": "validation",
+      "unit": "record",
+      "units": 2097152,
+      "weight": 1
+    }
+  }
+}

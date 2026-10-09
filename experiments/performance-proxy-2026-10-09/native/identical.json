@@ -1,0 +1,95 @@
+{
+  "version": "juice-comparison-v1",
+  "identity_scheme": "mylang-juice-native-v1",
+  "base": "native-base",
+  "candidate": "native-repeat",
+  "mode": "application",
+  "context_id": "75047346a50f79f7ea173b352fe3c27afa3d3af4a3be660ad6cd38d67cbd36ee",
+  "collector": {
+    "kind": "perf",
+    "tool": {
+      "path": "/usr/bin/perf",
+      "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+      "version": "perf version 7.0.14"
+    },
+    "event": "cpu_core/instructions/u",
+    "cpu": 0,
+    "scope": "user instructions; process and inherited children; whole workload"
+  },
+  "source_roots": {
+    "base": "/home/epentland/.cache/mylang/performance-proxy-guest-cache/juice-native-qualified/native",
+    "candidate": "/home/epentland/.cache/mylang/performance-proxy-guest-cache/juice-native-qualified/native"
+  },
+  "library_changes": {},
+  "base_id": "9bc36d918addb63df35ed772a3dedc77d674a05dba76523287bc7cb2843b8502",
+  "candidate_id": "8b236a7cae809e7ca66902087b158155491989780f3fc472da07a671ba64ffac",
+  "workloads": {
+    "bits-quick": {
+      "units": 262144,
+      "unit": "record",
+      "family": "bit-counting",
+      "tier": "quick",
+      "scope": "complete scenario",
+      "weight": 1,
+      "assessment": "unchanged",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "unchanged",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "functions": [],
+      "instruction_ratio": 1.000000023878997,
+      "juice": 100.0000023878997,
+      "lines": [],
+      "metrics": {
+        "instructions": {
+          "base": {
+            "samples": [
+              62816709,
+              62816709
+            ],
+            "median": 62816709,
+            "min": 62816709,
+            "max": 62816709,
+            "spread": 0
+          },
+          "candidate": {
+            "samples": [
+              62816712,
+              62816709
+            ],
+            "median": 62816710.5,
+            "min": 62816709,
+            "max": 62816712,
+            "spread": 0.00000004775799267616855
+          }
+        }
+      },
+      "ratio_envelope": [
+        1,
+        1.0000000477579938
+      ],
+      "repeatable": true,
+      "risks": [],
+      "semantic": {
+        "status": "unavailable"
+      }
+    }
+  },
+  "change_id": "ff79d5eff5a09fe6a156684fb77eebf3fb811baad9509d2044e9b66d1a520186",
+  "meaning": "100 × candidate instructions per completed unit / baseline; not a time ratio",
+  "max_spread": 0.005,
+  "min_change": 0.001,
+  "runtime_prediction": {
+    "status": "uncalibrated"
+  },
+  "code": {
+    "available": true,
+    "sections": {},
+    "functions": {},
+    "scope": "static bytes and instruction sites, not executions"
+  },
+  "static_cost": {
+    "status": "unavailable or incompatible"
+  },
+  "suite_juice": 100.0000023878997,
+  "suite_meaning": "weighted geometric mean of selected scenarios; not whole-job runtime"
+}

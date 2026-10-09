@@ -1,0 +1,140 @@
+{
+  "base": {
+    "main": {
+      "address": "00000000010450c0",
+      "bytes": 7859
+    },
+    "my.json::append_code_point": {
+      "address": "0000000001044fc0",
+      "bytes": 251
+    },
+    "my.json::dumps": {
+      "address": "0000000001041280",
+      "bytes": 586
+    },
+    "my.json::fail": {
+      "address": "0000000001043e30",
+      "bytes": 913
+    },
+    "my.json::read_hex4": {
+      "address": "0000000001044da0",
+      "bytes": 539
+    },
+    "my.json::read_literal": {
+      "address": "0000000001044c20",
+      "bytes": 373
+    },
+    "my.json::read_string": {
+      "address": "00000000010441d0",
+      "bytes": 2639
+    },
+    "my.json::read_value": {
+      "address": "0000000001042290",
+      "bytes": 7068
+    },
+    "my.json::write_quoted": {
+      "address": "0000000001041ba0",
+      "bytes": 1770
+    },
+    "my.json::write_value": {
+      "address": "00000000010414d0",
+      "bytes": 1734
+    },
+    "myl_core_str_hash": {
+      "address": "000000000101bbc0",
+      "bytes": 322
+    }
+  },
+  "p1": {
+    "main": {
+      "address": "0000000001045c10",
+      "bytes": 8444
+    },
+    "my.json::append_code_point": {
+      "address": "0000000001045b10",
+      "bytes": 251
+    },
+    "my.json::dumps": {
+      "address": "0000000001041500",
+      "bytes": 785
+    },
+    "my.json::fail": {
+      "address": "00000000010446c0",
+      "bytes": 1093
+    },
+    "my.json::read_hex4": {
+      "address": "00000000010458f0",
+      "bytes": 539
+    },
+    "my.json::read_literal": {
+      "address": "0000000001045760",
+      "bytes": 395
+    },
+    "my.json::read_string": {
+      "address": "0000000001044b10",
+      "bytes": 3149
+    },
+    "my.json::read_value": {
+      "address": "00000000010426e0",
+      "bytes": 8160
+    },
+    "my.json::write_quoted": {
+      "address": "0000000001041f50",
+      "bytes": 1932
+    },
+    "my.json::write_value": {
+      "address": "0000000001041820",
+      "bytes": 1837
+    },
+    "myl_core_str_hash": {
+      "address": "000000000101bb80",
+      "bytes": 323
+    }
+  },
+  "plain": {
+    "main": {
+      "address": "0000000001045bf0",
+      "bytes": 8502
+    },
+    "my.json::append_code_point": {
+      "address": "0000000001045af0",
+      "bytes": 251
+    },
+    "my.json::dumps": {
+      "address": "00000000010414c0",
+      "bytes": 780
+    },
+    "my.json::fail": {
+      "address": "0000000001044680",
+      "bytes": 1093
+    },
+    "my.json::read_hex4": {
+      "address": "00000000010458d0",
+      "bytes": 539
+    },
+    "my.json::read_literal": {
+      "address": "0000000001045740",
+      "bytes": 395
+    },
+    "my.json::read_string": {
+      "address": "0000000001044ad0",
+      "bytes": 3173
+    },
+    "my.json::read_value": {
+      "address": "00000000010426a0",
+      "bytes": 8155
+    },
+    "my.json::write_quoted": {
+      "address": "0000000001041f10",
+      "bytes": 1932
+    },
+    "my.json::write_value": {
+      "address": "00000000010417d0",
+      "bytes": 1853
+    },
+    "myl_core_str_hash": {
+      "address": "000000000101bb80",
+      "bytes": 322
+    }
+  }
+}

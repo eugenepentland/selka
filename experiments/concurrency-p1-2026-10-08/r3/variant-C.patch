@@ -1,0 +1,20 @@
+--- a/src/core/emit_llvm.zig
++++ b/src/core/emit_llvm.zig
+@@ -3196,6 +3196,8 @@
+         }
+         const count = try self.fresh("%rc");
+         const plain = try self.fresh("%rp");
++        const saturated = try self.fresh("%rs");
++        const shared = try self.fresh("rc.shared");
+         const update = try self.fresh(if (mode == .retain) "rc.inc" else "rc.dec");
+         const slow = try self.fresh("rc.slow");
+         const done = try self.fresh(self.label);
+@@ -3212,7 +3214,7 @@
+             try out.print(self.a(), "{s}:\n  store i32 {s}, ptr {s}, align 8, " ++ tbaa_count ++ "\n  br label %{s}\n", .{ keep, next, block, done });
+             try out.print(self.a(), "{s}:\n  call void @myl_core_free(ptr {s})\n  br label %{s}\n", .{ free, block, done });
+         }
+-        try out.print(self.a(), "{s}:\n", .{slow});
++        try out.print(self.a(), "{s}:\n  {s} = icmp eq i32 {s}, -1\n  br i1 {s}, label %{s}, label %{s}\n{s}:\n", .{ slow, saturated, count, saturated, done, shared, shared });
+         try out.print(self.a(), "  call preserve_mostcc void @myl_core_{s}_slow(ptr {s})\n  br label %{s}\n{s}:\n", .{ @tagName(mode), block, done, done });
+         self.label = done;
+     }

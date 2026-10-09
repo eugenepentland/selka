@@ -1,0 +1,210 @@
+{
+  "command": [
+    "nm",
+    "-S",
+    "--size-sort",
+    "BINARY"
+  ],
+  "layout": 5,
+  "program": "string_split",
+  "binary_sha256": {
+    "base": "03263c356654484fe0cd2897a4937dd1439847269eefba7aaec36a20dece1a6b",
+    "P1-final-01": "bfa6c228b4625363b9692470cb12ace6eebebffb8275234c18fbb58dd5d49cfb",
+    "P1-final-A": "31a6406850f9b8521c7054e5cc3dd1c618aa3f5fa7a13ea7d7483210eb1c2cc8",
+    "P1-final-B": "d74221fa20d944ffdc5156ff723bfebc1b622e298e80bf127b3ef54db70f4264",
+    "P1-final-C": "4789d3c5a3e5ce42b1b03f7099e0d8b9d1b8c3ca644a8bf31ba3265702e88bd5",
+    "P1-final-D": "8119b09febdde1227c294f3811b24474438add43b836601a495d446a1a25693f",
+    "P1-final-E": "fe6d54a12922bece7f5fd65bf4581d9b01fef03c0736a90764fd3f009ee634bf",
+    "P1-final-F": "abab25fd12e67309bfc8d779f54c331013f302889df4f915522fd53db075fd26"
+  },
+  "symbols": {
+    "base": [
+      {
+        "symbol": "block_free",
+        "bytes": 115
+      },
+      {
+        "symbol": "block_alloc",
+        "bytes": 389
+      },
+      {
+        "symbol": "myl_core_free_block",
+        "bytes": 940
+      }
+    ],
+    "P1-final-01": [
+      {
+        "symbol": "core_release_child",
+        "bytes": 54
+      },
+      {
+        "symbol": "block_free",
+        "bytes": 161
+      },
+      {
+        "symbol": "core_thread_register",
+        "bytes": 180
+      },
+      {
+        "symbol": "block_alloc",
+        "bytes": 554
+      },
+      {
+        "symbol": "core_children",
+        "bytes": 588
+      },
+      {
+        "symbol": "myl_core_free_block",
+        "bytes": 620
+      }
+    ],
+    "P1-final-A": [
+      {
+        "symbol": "block_free",
+        "bytes": 161
+      },
+      {
+        "symbol": "core_thread_register",
+        "bytes": 180
+      },
+      {
+        "symbol": "block_alloc",
+        "bytes": 554
+      },
+      {
+        "symbol": "myl_core_free_block",
+        "bytes": 1015
+      }
+    ],
+    "P1-final-B": [
+      {
+        "symbol": "core_thread_register_slow",
+        "bytes": 186
+      },
+      {
+        "symbol": "block_free",
+        "bytes": 224
+      },
+      {
+        "symbol": "block_alloc",
+        "bytes": 580
+      },
+      {
+        "symbol": "myl_core_free_block",
+        "bytes": 1015
+      }
+    ],
+    "P1-final-C": [
+      {
+        "symbol": "core_release_child",
+        "bytes": 54
+      },
+      {
+        "symbol": "core_thread_register_slow",
+        "bytes": 186
+      },
+      {
+        "symbol": "block_free",
+        "bytes": 224
+      },
+      {
+        "symbol": "core_dict_children",
+        "bytes": 344
+      },
+      {
+        "symbol": "block_alloc",
+        "bytes": 580
+      },
+      {
+        "symbol": "myl_core_free_block",
+        "bytes": 786
+      }
+    ],
+    "P1-final-D": [
+      {
+        "symbol": "core_release_child",
+        "bytes": 54
+      },
+      {
+        "symbol": "core_thread_register_slow",
+        "bytes": 186
+      },
+      {
+        "symbol": "block_free",
+        "bytes": 224
+      },
+      {
+        "symbol": "block_alloc",
+        "bytes": 580
+      },
+      {
+        "symbol": "core_children",
+        "bytes": 588
+      },
+      {
+        "symbol": "myl_core_free_block",
+        "bytes": 620
+      }
+    ],
+    "P1-final-E": [
+      {
+        "symbol": "core_release_child",
+        "bytes": 54
+      },
+      {
+        "symbol": "block_free_registered",
+        "bytes": 154
+      },
+      {
+        "symbol": "core_thread_register_slow",
+        "bytes": 186
+      },
+      {
+        "symbol": "block_free",
+        "bytes": 234
+      },
+      {
+        "symbol": "block_alloc",
+        "bytes": 580
+      },
+      {
+        "symbol": "core_children",
+        "bytes": 588
+      },
+      {
+        "symbol": "myl_core_free_block",
+        "bytes": 641
+      }
+    ],
+    "P1-final-F": [
+      {
+        "symbol": "core_release_child",
+        "bytes": 54
+      },
+      {
+        "symbol": "block_free_registered",
+        "bytes": 154
+      },
+      {
+        "symbol": "core_thread_register_slow",
+        "bytes": 186
+      },
+      {
+        "symbol": "block_free",
+        "bytes": 234
+      },
+      {
+        "symbol": "core_dict_children",
+        "bytes": 344
+      },
+      {
+        "symbol": "block_alloc",
+        "bytes": 580
+      },
+      {
+        "symbol": "myl_core_free_block",
+        "bytes": 817
+      }
+    ]
+  }
+}

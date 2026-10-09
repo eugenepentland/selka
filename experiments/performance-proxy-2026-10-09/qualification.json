@@ -1,0 +1,235 @@
+{
+  "checks": {
+    "algorithm_improvement": true,
+    "atomic_sensitivity": true,
+    "backend_sensitivity": true,
+    "cachegrind_source_attribution": true,
+    "extra_copy_sensitivity": true,
+    "identical_build": true,
+    "missed_vectorization": true,
+    "mylang_counter_explanation": true,
+    "mylang_repeatability": true,
+    "mylang_short_scenario_agreement": true,
+    "p1_counter_contract_boundary": true,
+    "phase_collection": true,
+    "short_scenario_agreement": true,
+    "software_count_repeatability": true,
+    "unrelated_cpu_load": true
+  },
+  "passed": true,
+  "records": {
+    "cachegrind": {
+      "path": "cache/juice-native-example/records/cachegrind/record.json",
+      "seconds_including_build": 1.3328961639199406
+    },
+    "mylang-baseline": {
+      "path": "cache/juice-mylang-example/records/mylang-baseline/record.json",
+      "seconds_including_build": 1.052129935938865
+    },
+    "mylang-improved": {
+      "path": "cache/juice-mylang-example/records/mylang-improved/record.json",
+      "seconds_including_build": 0.8074783789925277
+    },
+    "mylang-repeat": {
+      "path": "cache/juice-mylang-example/records/mylang-repeat/record.json",
+      "seconds_including_build": 0.504480400821194
+    },
+    "native-baseline": {
+      "path": "cache/juice-native-example/records/native-baseline/record.json",
+      "seconds_including_build": 0.3861338631249964
+    },
+    "native-copy": {
+      "path": "cache/juice-native-example/records/native-copy/record.json",
+      "seconds_including_build": 0.3515412912238389
+    },
+    "native-improved": {
+      "path": "cache/juice-native-example/records/native-improved/record.json",
+      "seconds_including_build": 0.3325967360287905
+    },
+    "native-loaded": {
+      "path": "cache/juice-native-example/records/native-loaded/record.json",
+      "seconds_including_build": 0.6292296859901398
+    },
+    "native-repeat": {
+      "path": "cache/juice-native-example/records/native-repeat/record.json",
+      "seconds_including_build": 0.2915454551111907
+    },
+    "native-unoptimized": {
+      "path": "cache/juice-native-example/records/native-unoptimized/record.json",
+      "seconds_including_build": 0.5804084441624582
+    },
+    "pre-p1": {
+      "path": "cache/juice-mylang-example/records/pre-p1/record.json",
+      "seconds_including_build": 0.698016770882532
+    },
+    "reference-atomic": {
+      "path": "cache/juice-native-example/records/reference-atomic/record.json",
+      "seconds_including_build": 3.3248705649748445
+    },
+    "reference-improved": {
+      "path": "cache/juice-native-example/records/reference-improved/record.json",
+      "seconds_including_build": 2.1429413419682533
+    },
+    "reference-region": {
+      "path": "cache/juice-native-example/records/reference-region/record.json",
+      "seconds_including_build": 4.595952373929322
+    },
+    "reference-repeat": {
+      "path": "cache/juice-native-example/records/reference-repeat/record.json",
+      "seconds_including_build": 2.4900806138757616
+    },
+    "scalar": {
+      "path": "cache/juice-vector-example/records/scalar/record.json",
+      "seconds_including_build": 0.22958418284542859
+    },
+    "vectorized": {
+      "path": "cache/juice-vector-example/records/vectorized/record.json",
+      "seconds_including_build": 0.276848565088585
+    }
+  },
+  "reports": {
+    "application-improvement": {
+      "bits-quick": {
+        "assessment": "less-work",
+        "juice": 14.450291278373639,
+        "risks": []
+      },
+      "bits-validation": {
+        "assessment": "less-work",
+        "juice": 14.338538376234888,
+        "risks": []
+      }
+    },
+    "atomic-regression": {
+      "bits-quick": {
+        "assessment": "more-work",
+        "juice": 102.88361352820252,
+        "risks": [
+          "static atomic_sites increased (0 \u2192 1); hotness unresolved",
+          "atomics per completed unit increased"
+        ]
+      },
+      "bits-validation": {
+        "assessment": "more-work",
+        "juice": 102.91204538518,
+        "risks": [
+          "static atomic_sites increased (0 \u2192 1); hotness unresolved",
+          "atomics per completed unit increased"
+        ]
+      }
+    },
+    "backend-regression": {
+      "bits-quick": {
+        "assessment": "more-work",
+        "juice": 145.5266896884592,
+        "risks": []
+      },
+      "bits-validation": {
+        "assessment": "more-work",
+        "juice": 145.56666777902166,
+        "risks": []
+      }
+    },
+    "copy-regression": {
+      "bits-quick": {
+        "assessment": "more-work",
+        "juice": 224.19228929455986,
+        "risks": []
+      },
+      "bits-validation": {
+        "assessment": "more-work",
+        "juice": 225.31858762331095,
+        "risks": []
+      }
+    },
+    "identical": {
+      "bits-quick": {
+        "assessment": "unchanged",
+        "juice": 100.0,
+        "risks": []
+      },
+      "bits-validation": {
+        "assessment": "unchanged",
+        "juice": 100.00000318802478,
+        "risks": []
+      }
+    },
+    "mylang-copy-removal": {
+      "sum-quick": {
+        "assessment": "less-work",
+        "juice": 84.32682914709757,
+        "risks": []
+      },
+      "sum-validation": {
+        "assessment": "less-work",
+        "juice": 83.72753816050518,
+        "risks": []
+      }
+    },
+    "mylang-identical": {
+      "sum-quick": {
+        "assessment": "unchanged",
+        "juice": 100.0,
+        "risks": []
+      },
+      "sum-validation": {
+        "assessment": "unchanged",
+        "juice": 99.99999714652077,
+        "risks": []
+      }
+    },
+    "p1-backend-change": {
+      "sum-quick": {
+        "assessment": "more-work",
+        "juice": 100.62217980405639,
+        "risks": [
+          "linked library set changed; costs include library startup/work",
+          "static atomic_sites increased (0 \u2192 45); hotness unresolved",
+          "semantic counter contracts changed"
+        ]
+      },
+      "sum-validation": {
+        "assessment": "unchanged",
+        "juice": 100.07519717233731,
+        "risks": [
+          "linked library set changed; costs include library startup/work",
+          "static atomic_sites increased (0 \u2192 45); hotness unresolved",
+          "semantic counter contracts changed"
+        ]
+      }
+    },
+    "reference-identical": {
+      "bits-quick": {
+        "assessment": "unchanged",
+        "juice": 100.0,
+        "risks": []
+      },
+      "bits-validation": {
+        "assessment": "unchanged",
+        "juice": 100.0,
+        "risks": []
+      }
+    },
+    "under-load": {
+      "bits-quick": {
+        "assessment": "unchanged",
+        "juice": 100.0,
+        "risks": []
+      },
+      "bits-validation": {
+        "assessment": "unchanged",
+        "juice": 99.9999992029938,
+        "risks": []
+      }
+    },
+    "vectorization-regression": {
+      "vector": {
+        "assessment": "more-work",
+        "juice": 212.03376672159106,
+        "risks": []
+      }
+    }
+  },
+  "scope": "work sensitivity and repeatability; no elapsed-time calibration",
+  "version": "juice-qualification-v1"
+}

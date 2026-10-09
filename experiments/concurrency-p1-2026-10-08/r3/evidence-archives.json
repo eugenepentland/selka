@@ -1,0 +1,65 @@
+{
+  "r3/p1-1-fuzz50": {
+    "sha256": "b20837810cf993240d952c5fe4b92c8ce2d443f7c3851e9ff02b5f3233d603b2",
+    "bytes": 435244,
+    "superseded_by": "r3/fuzz-history.tar.xz",
+    "original_archive": "r3/p1-1-fuzz50.tar.xz"
+  },
+  "r3/p1-1-fuzz200": {
+    "sha256": "876b25ca09ee02b6278d8a3e45e6768178efdb9ddd7222ae1b8bd00a0347a74a",
+    "bytes": 1655404,
+    "superseded_by": "r3/fuzz-history.tar.xz",
+    "original_archive": "r3/p1-1-fuzz200.tar.xz"
+  },
+  "raw/r3-p1-1": {
+    "sha256": "9caf1d66ee37a1bb3feeadcf9fdd63d00efd4263f6522c0cf0d3b5a6fe9a3ca1",
+    "bytes": 1060460,
+    "format": "Exact original counter JSON bytes; .gz members decoded before xz aggregation",
+    "superseded_by": "raw/r3-counter-history.tar.xz",
+    "original_archive": "raw/r3-p1-1.tar.xz"
+  },
+  "r3/p1-1-logs": {
+    "archive": "r3/p1-1-logs.tar.xz",
+    "sha256": "f9c1edfe9b23c1682c5859ffe8a4733721cd688d016f067ac9153779601e93c3",
+    "bytes": 86232
+  },
+  "raw/r3-C1.tar.xz": {
+    "sha256": "f1a3778eb0449a842febbee0a5b5a14d1962fcbcdc0caa5aa9e74f4af234873d",
+    "bytes": 1060356,
+    "superseded_by": "raw/r3-counter-history.tar.xz"
+  },
+  "r3/helper-logs.tar.xz": {
+    "sha256": "ebfc0476f0ad2996f77ac15a378bbf544c39d33dda9e01e972462be9fc4b194b",
+    "bytes": 65540
+  },
+  "r3/fuzz-history.tar.xz": {
+    "archive": "r3/fuzz-history.tar.xz",
+    "sha256": "02953d81b5d2a9eaa7bfbec22bcd226d4fe1a299c3993dcb68adfa9c78174243",
+    "bytes": 2074768,
+    "members": 4884,
+    "previous_archive_sha256": "11effe7871785be46742fc1f5bc870044388e22ac43108b6bfaa1924b67dc617",
+    "manifest": "r3/fuzz-history-manifest.json.xz",
+    "verified": "Every restored member SHA-256 matches its original bytes.",
+    "encoding": "decoded-command-streams-v1",
+    "restore": "python3 tools/fuzz_archive.py r3/fuzz-history.tar.xz DESTINATION",
+    "compression": "LZMA2 128 MiB; output bytes decoded from base64 and exact elapsed doubles packed before compression; reconstruction restores original JSON byte for byte.",
+    "historical_raw_reference": "r3/historical-fuzz-reference.json"
+  },
+  "raw/r3-counter-history.tar.xz": {
+    "archive": "raw/r3-counter-history.tar.xz",
+    "sha256": "c0d910e70275324efd1af50a47382f61ab5598214ea2aee1107bcfa2f5665399",
+    "bytes": 1281476,
+    "members": 1056,
+    "previous_archive_sha256": "480eca169613773e28ae65011049b2c91d38286d930d67ff5a9691d6911ccf78",
+    "manifest": "raw/r3-counter-history-manifest.json.xz",
+    "verified": "Every restored member SHA-256 matches its original bytes."
+  },
+  "r3/loose-logs.tar.xz": {
+    "archive": "r3/loose-logs.tar.xz",
+    "sha256": "d9f6275dd64def861fcbfc029f6cba81ebce42de8512837dfe87417ba259bb2b",
+    "bytes": 181916,
+    "members": 2619,
+    "manifest": "r3/loose-logs-manifest.json.xz",
+    "verified": "Every decoded log member byte/hash verified; former gzip layers removed. Original paths and compressed-byte hashes remain in the manifest."
+  }
+}

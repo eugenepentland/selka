@@ -1,0 +1,76 @@
+{
+  "source": "f4eb26606c22c63065744a02684d033ea8fae98b",
+  "tag": "P1-final-01",
+  "compiler": "/home/epentland/.cache/mylang/conc-p1-final-f4eb26606/bin/mylang",
+  "steps": [
+    {
+      "name": "compiler",
+      "status": 0,
+      "seconds": 263.9425121899694,
+      "log": "r3/logs/P1-final-01-compiler.log"
+    },
+    {
+      "name": "count-build",
+      "status": 0,
+      "seconds": 42.67286529298872,
+      "log": "r3/logs/P1-final-01-count-build.log"
+    },
+    {
+      "name": "count-run",
+      "status": 0,
+      "seconds": 26.767277541803196,
+      "log": "r3/logs/P1-final-01-count-run.log"
+    },
+    {
+      "name": "lox-conformance",
+      "status": 0,
+      "seconds": 6.647507376968861,
+      "log": "r3/logs/P1-final-01-lox-conformance.log"
+    },
+    {
+      "name": "lox-port-tests",
+      "status": 0,
+      "seconds": 0.7575274081900716,
+      "log": "r3/logs/P1-final-01-lox-port-tests.log"
+    },
+    {
+      "name": "eda-tests",
+      "status": 0,
+      "seconds": 4.317289532162249,
+      "log": "r3/logs/P1-final-01-eda-tests.log"
+    },
+    {
+      "name": "tax-build-rows",
+      "status": 0,
+      "seconds": 16.71826205193065,
+      "log": "r3/logs/P1-final-01-tax-build-rows.log"
+    },
+    {
+      "name": "tax-build-eda",
+      "status": 2,
+      "seconds": 0.04611498210579157,
+      "log": "r3/logs/P1-final-01-tax-build-eda.log"
+    },
+    {
+      "name": "tax-build-resume-eda",
+      "status": 0,
+      "seconds": 29.68547551194206,
+      "log": "r3/logs/P1-final-01-tax-build-resume-eda.log"
+    },
+    {
+      "name": "tax-build-resume-lox",
+      "status": 0,
+      "seconds": 6.078831976046786,
+      "log": "r3/logs/P1-final-01-tax-build-resume-lox.log"
+    },
+    {
+      "name": "tax-build-resume-parity",
+      "status": 0,
+      "seconds": 7.481628478039056,
+      "log": "r3/logs/P1-final-01-tax-build-resume-parity.log"
+    }
+  ],
+  "complete": true,
+  "compiler_sha256": "1998f0500a27fc4f22e9fdb76ea07fa649d1b4110a65a473ac3690b791279570",
+  "counted_plain_cells": 132
+}
